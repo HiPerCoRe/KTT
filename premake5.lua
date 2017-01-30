@@ -1,46 +1,8 @@
--- Helper functions to find OpenCL headers and libraries --
+-- Helper function to find OpenCL headers and libraries --
 
-function initOpenCL_AMD()
-    local amdopenclpath = os.getenv("AMDAPPSDKROOT")
-    if (amdopenclpath) then
-        defines { "CL_PLATFORM_AMD" }
-        includedirs { "$(AMDAPPSDKROOT)/include" }
-        
-		filter "platforms:x86"
-			libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
-        
-		filter "platforms:x86_64"
-			libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
-        
-		filter {}
-		links { "OpenCL" }
-        return true
-    end
-    return false
-end
-
-function initOpenCL_Nvidia()
-    local nvidiaopenclpath = os.getenv("CUDA_PATH")
-    if (nvidiaopenclpath) then
-        defines { "CL_PLATFORM_NVIDIA" }
-        includedirs { "$(CUDA_PATH)/include" }
-		
-        filter "platforms:x86"
-			libdirs { "$(CUDA_PATH)/lib/Win32" }
-            
-		filter "platforms:x86_64"
-			libdirs { "$(CUDA_PATH)/lib/x64" }
-            
-        filter {}
-		links { "OpenCL" }
-		return true
-	end
-	return false
-end
-
-function initOpenCL_Intel()
-	local intelopenclpath = os.getenv("INTELOCLSDKROOT")
-	if (intelopenclpath) then
+function initOpenCL()
+	local path = os.getenv("INTELOCLSDKROOT")
+	if (path) then
 		defines { "CL_PLATFORM_INTEL" }
 		includedirs { "$(INTELOCLSDKROOT)/include" }
 		
@@ -54,6 +16,39 @@ function initOpenCL_Intel()
 		links {"OpenCL"}
 		return true
 	end
+    
+    path = os.getenv("CUDA_PATH")
+    if (path) then
+        defines { "CL_PLATFORM_NVIDIA" }
+        includedirs { "$(CUDA_PATH)/include" }
+		
+        filter "platforms:x86"
+			libdirs { "$(CUDA_PATH)/lib/Win32" }
+            
+		filter "platforms:x86_64"
+			libdirs { "$(CUDA_PATH)/lib/x64" }
+            
+        filter {}
+		links { "OpenCL" }
+		return true
+	end
+    
+    path = os.getenv("AMDAPPSDKROOT")
+    if (path) then
+        defines { "CL_PLATFORM_AMD" }
+        includedirs { "$(AMDAPPSDKROOT)/include" }
+        
+		filter "platforms:x86"
+			libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
+        
+		filter "platforms:x86_64"
+			libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
+        
+		filter {}
+		links { "OpenCL" }
+        return true
+    end
+    
 	return false
 end
 
@@ -98,14 +93,13 @@ project "KernelTuningToolkit"
     filter {}
     
     targetdir("build/ktt/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir ("build/ktt/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir("build/ktt/obj/%{cfg.platform}_%{cfg.buildcfg}")
     
     if not _OPTIONS["cuda"] then
         defines { "USE_OPENCL" }
-        
-        initOpenCL_AMD()
-        initOpenCL_Nvidia()
-        initOpenCL_Intel()
+        if not initOpenCL() then
+            printf("Warning: OpenCL libraries weren't found.")
+        end
     else
         defines { "USE_CUDA" }
     end
@@ -131,7 +125,7 @@ project "Examples"
     filter {}
     
     targetdir("build/examples/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir ("build/examples/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir("build/examples/obj/%{cfg.platform}_%{cfg.buildcfg}")
 
 -- Unit tests configuration --    
     
@@ -155,4 +149,4 @@ project "Tests"
     filter {}
     
     targetdir("build/tests/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir ("build/tests/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir("build/tests/obj/%{cfg.platform}_%{cfg.buildcfg}")
