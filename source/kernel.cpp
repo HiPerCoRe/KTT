@@ -7,52 +7,71 @@ Kernel::Kernel(const std::string& name, const std::string& source):
     name(name),
     source(source),
     searchMethod(SearchMethod::FullSearch),
-    argumentsCount(static_cast<size_t>(0))
+    argumentCount(static_cast<size_t>(0))
 {}
 
-bool Kernel::addParameter(const std::string& name, const std::vector<size_t>& values)
+bool Kernel::addParameter(const KernelParameter& parameter)
 {
-    auto result = parameters.insert( std::pair<std::string, std::vector<size_t>>(name, values));
-    return result.second; // return whether insertion was successful
+    if (parameterExists(parameter))
+    {
+        return false;
+    }
+
+    parameters.push_back(parameter);
+    return true;
 }
 
 void Kernel::addArgumentInt(const std::vector<int>& data)
 {
     if (data.size() == 1)
     {
-        argumentsInt.push_back(KernelArgument<int>(argumentsCount, data, KernelArgumentType::Scalar));
+        argumentsInt.push_back(KernelArgument<int>(argumentCount, data, KernelArgumentType::Scalar));
     }
     else
     {
-        argumentsInt.push_back(KernelArgument<int>(argumentsCount, data, KernelArgumentType::Vector));
+        argumentsInt.push_back(KernelArgument<int>(argumentCount, data, KernelArgumentType::Vector));
     }
-    argumentsCount++;
+    argumentCount++;
 }
 
 void Kernel::addArgumentFloat(const std::vector<float>& data)
 {
     if (data.size() == 1)
     {
-        argumentsFloat.push_back(KernelArgument<float>(argumentsCount, data, KernelArgumentType::Scalar));
+        argumentsFloat.push_back(KernelArgument<float>(argumentCount, data, KernelArgumentType::Scalar));
     }
     else
     {
-        argumentsFloat.push_back(KernelArgument<float>(argumentsCount, data, KernelArgumentType::Vector));
+        argumentsFloat.push_back(KernelArgument<float>(argumentCount, data, KernelArgumentType::Vector));
     }
-    argumentsCount++;
+    argumentCount++;
 }
 
 void Kernel::addArgumentDouble(const std::vector<double>& data)
 {
     if (data.size() == 1)
     {
-        argumentsDouble.push_back(KernelArgument<double>(argumentsCount, data, KernelArgumentType::Scalar));
+        argumentsDouble.push_back(KernelArgument<double>(argumentCount, data, KernelArgumentType::Scalar));
     }
     else
     {
-        argumentsDouble.push_back(KernelArgument<double>(argumentsCount, data, KernelArgumentType::Vector));
+        argumentsDouble.push_back(KernelArgument<double>(argumentCount, data, KernelArgumentType::Vector));
     }
-    argumentsCount++;
+    argumentCount++;
+}
+
+bool Kernel::useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+{
+    if (searchMethod == SearchMethod::RandomSearch && searchArguments.size() < 1
+        || searchMethod == SearchMethod::Annealing && searchArguments.size() < 2
+        || searchMethod == SearchMethod::PSO && searchArguments.size() < 5)
+    {
+        return false;
+    }
+    
+    this->searchArguments = searchArguments;
+    this->searchMethod = searchMethod;
+    return true;
 }
 
 std::string Kernel::getName() const
@@ -65,24 +84,14 @@ std::string Kernel::getSource() const
     return source;
 }
 
-SearchMethod Kernel::getSearchMethod() const
-{
-    return searchMethod;
-}
-
-std::vector<double> Kernel::getSearchArguments() const
-{
-    return searchArguments;
-}
-
-std::map<std::string, std::vector<size_t>> Kernel::getParameters() const
+std::vector<KernelParameter> Kernel::getParameters() const
 {
     return parameters;
 }
 
-size_t Kernel::getArgumentsCount() const
+size_t Kernel::getArgumentCount() const
 {
-    return argumentsCount;
+    return argumentCount;
 }
 
 std::vector<KernelArgument<int>> Kernel::getArgumentsInt() const
@@ -98,6 +107,28 @@ std::vector<KernelArgument<float>> Kernel::getArgumentsFloat() const
 std::vector<KernelArgument<double>> Kernel::getArgumentsDouble() const
 {
     return argumentsDouble;
+}
+
+SearchMethod Kernel::getSearchMethod() const
+{
+    return searchMethod;
+}
+
+std::vector<double> Kernel::getSearchArguments() const
+{
+    return searchArguments;
+}
+
+bool Kernel::parameterExists(const KernelParameter& parameter) const
+{
+    for (auto& currentParameter : parameters)
+    {
+        if (currentParameter.getName() == parameter.getName())
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace ktt

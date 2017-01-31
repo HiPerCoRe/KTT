@@ -15,17 +15,17 @@ public:
         kernelArgumentType(kernelArgumentType)
     {}
     
-    size_t getIndex()
+    size_t getIndex() const
     {
         return index;
     }
 
-    std::vector<T> getData()
+    std::vector<T> getData() const
     {
         return data;
     }
 
-    KernelArgumentType getKernelArgumentType()
+    KernelArgumentType getKernelArgumentType() const
     {
         return kernelArgumentType;
     }
