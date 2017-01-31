@@ -3,9 +3,11 @@
 namespace ktt
 {
 
-Kernel::Kernel(const std::string& name, const std::string& source):
+Kernel::Kernel(const std::string& name, const std::string& source, const DimensionVector& globalSize, const DimensionVector& localSize):
     name(name),
     source(source),
+    globalSize(globalSize),
+    localSize(localSize),
     searchMethod(SearchMethod::FullSearch),
     argumentCount(static_cast<size_t>(0))
 {}
@@ -82,6 +84,16 @@ std::string Kernel::getName() const
 std::string Kernel::getSource() const
 {
     return source;
+}
+
+DimensionVector Kernel::getGlobalSize() const
+{
+    return globalSize;
+}
+
+DimensionVector Kernel::getLocalSize() const
+{
+    return localSize;
 }
 
 std::vector<KernelParameter> Kernel::getParameters() const

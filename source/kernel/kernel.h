@@ -3,9 +3,10 @@
 #include <string>
 #include <vector>
 
+#include "../ktt_aliases.h"
+#include "../enums/search_method.h"
 #include "kernel_argument.h"
 #include "kernel_parameter.h"
-#include "search_method.h"
 
 namespace ktt
 {
@@ -14,7 +15,7 @@ class Kernel
 {
 public:
     // Constructor
-    explicit Kernel(const std::string& name, const std::string& source);
+    explicit Kernel(const std::string& name, const std::string& source, const DimensionVector& globalSize, const DimensionVector& localSize);
 
     // Core methods
     bool addParameter(const KernelParameter& parameter);
@@ -26,6 +27,8 @@ public:
     // Getters
     std::string getName() const;
     std::string getSource() const;
+    DimensionVector getGlobalSize() const;
+    DimensionVector getLocalSize() const;
     std::vector<KernelParameter> getParameters() const;
     size_t getArgumentCount() const;
     std::vector<KernelArgument<int>> getArgumentsInt() const;
@@ -38,6 +41,8 @@ private:
     // Attributes
     std::string name;
     std::string source;
+    DimensionVector globalSize;
+    DimensionVector localSize;
     std::vector<KernelParameter> parameters;
     size_t argumentCount;
     std::vector<KernelArgument<int>> argumentsInt;

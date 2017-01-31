@@ -1,7 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "kernel_argument_type.h"
+
+#include "../enums/kernel_argument_type.h"
 
 namespace ktt
 {

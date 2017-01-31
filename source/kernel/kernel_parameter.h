@@ -1,7 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "thread_modifier_type.h"
+
+#include "../enums/thread_modifier_type.h"
 
 namespace ktt
 {
