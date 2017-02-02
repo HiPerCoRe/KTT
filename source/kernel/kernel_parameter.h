@@ -10,7 +10,8 @@ namespace ktt
 class KernelParameter
 {
 public:
-    explicit KernelParameter(const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType):
+    explicit KernelParameter(const std::string& name, const std::vector<size_t>& values,
+        const ThreadModifierType& threadModifierType = ThreadModifierType::None):
         name(name),
         values(values),
         threadModifierType(threadModifierType)

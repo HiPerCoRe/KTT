@@ -3,24 +3,23 @@
 namespace ktt
 {
 
-Kernel::Kernel(const std::string& name, const std::string& source, const DimensionVector& globalSize, const DimensionVector& localSize):
-    name(name),
+Kernel::Kernel(const std::string& source, const std::string& name, const DimensionVector& globalSize, const DimensionVector& localSize):
     source(source),
+    name(name),
     globalSize(globalSize),
     localSize(localSize),
     searchMethod(SearchMethod::FullSearch),
     argumentCount(static_cast<size_t>(0))
 {}
 
-bool Kernel::addParameter(const KernelParameter& parameter)
+void Kernel::addParameter(const KernelParameter& parameter)
 {
     if (parameterExists(parameter))
     {
-        return false;
+        throw std::runtime_error("Kernel parameter with given name already exists");
     }
 
     parameters.push_back(parameter);
-    return true;
 }
 
 void Kernel::addArgumentInt(const std::vector<int>& data)
@@ -62,28 +61,27 @@ void Kernel::addArgumentDouble(const std::vector<double>& data)
     argumentCount++;
 }
 
-bool Kernel::useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+void Kernel::useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
     if (searchMethod == SearchMethod::RandomSearch && searchArguments.size() < 1
         || searchMethod == SearchMethod::Annealing && searchArguments.size() < 2
         || searchMethod == SearchMethod::PSO && searchArguments.size() < 5)
     {
-        return false;
+        throw std::runtime_error("Insufficient number of search arguments provided for specified search method");
     }
     
     this->searchArguments = searchArguments;
     this->searchMethod = searchMethod;
-    return true;
-}
-
-std::string Kernel::getName() const
-{
-    return name;
 }
 
 std::string Kernel::getSource() const
 {
     return source;
+}
+
+std::string Kernel::getName() const
+{
+    return name;
 }
 
 DimensionVector Kernel::getGlobalSize() const

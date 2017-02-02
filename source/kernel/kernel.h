@@ -15,18 +15,18 @@ class Kernel
 {
 public:
     // Constructor
-    explicit Kernel(const std::string& name, const std::string& source, const DimensionVector& globalSize, const DimensionVector& localSize);
+    explicit Kernel(const std::string& source, const std::string& name, const DimensionVector& globalSize, const DimensionVector& localSize);
 
     // Core methods
-    bool addParameter(const KernelParameter& parameter);
+    void addParameter(const KernelParameter& parameter);
     void addArgumentInt(const std::vector<int>& data);
     void addArgumentFloat(const std::vector<float>& data);
     void addArgumentDouble(const std::vector<double>& data);
-    bool useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+    void useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Getters
-    std::string getName() const;
     std::string getSource() const;
+    std::string getName() const;
     DimensionVector getGlobalSize() const;
     DimensionVector getLocalSize() const;
     std::vector<KernelParameter> getParameters() const;
@@ -39,8 +39,8 @@ public:
 
 private:
     // Attributes
-    std::string name;
     std::string source;
+    std::string name;
     DimensionVector globalSize;
     DimensionVector localSize;
     std::vector<KernelParameter> parameters;
