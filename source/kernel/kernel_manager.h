@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include "kernel.h"
@@ -20,21 +21,14 @@ public:
         const DimensionVector& localSize);
     std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration);
 
-    // Kernel handling methods
-    void addParameter(const size_t id, const KernelParameter& parameter);
-    void addArgumentInt(const size_t id, const std::vector<int>& data);
-    void addArgumentFloat(const size_t id, const std::vector<float>& data);
-    void addArgumentDouble(const size_t id, const std::vector<double>& data);
-    void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
-
     // Getters
-    Kernel getKernel(const size_t id) const;
     size_t getKernelCount() const;
+    const std::shared_ptr<Kernel> getKernel(const size_t id);
 
 private:
     // Attributes
     size_t kernelCount;
-    std::vector<Kernel> kernels;
+    std::vector<std::shared_ptr<Kernel>> kernels;
 
     // Helper methods
     std::string loadFileToString(const std::string& filename) const;

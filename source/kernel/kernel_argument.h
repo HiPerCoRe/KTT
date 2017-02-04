@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "../enums/kernel_argument_type.h"
+#include "../enums/kernel_argument_quantity.h"
 
 namespace ktt
 {
@@ -10,31 +10,24 @@ namespace ktt
 template <typename T> class KernelArgument
 {
 public:
-    explicit KernelArgument(const size_t index, const std::vector<T>& data, const KernelArgumentType& kernelArgumentType):
-        index(index),
+    explicit KernelArgument(const std::vector<T>& data, const KernelArgumentQuantity& kernelArgumentQuantity):
         data(data),
-        kernelArgumentType(kernelArgumentType)
+        kernelArgumentQuantity(kernelArgumentQuantity)
     {}
-    
-    size_t getIndex() const
-    {
-        return index;
-    }
 
     std::vector<T> getData() const
     {
         return data;
     }
 
-    KernelArgumentType getKernelArgumentType() const
+    KernelArgumentQuantity getKernelArgumentQuantity() const
     {
-        return kernelArgumentType;
+        return kernelArgumentQuantity;
     }
 
 private:
-    size_t index;
     std::vector<T> data;
-    KernelArgumentType kernelArgumentType;
+    KernelArgumentQuantity kernelArgumentQuantity;
 };
 
 } // namespace ktt

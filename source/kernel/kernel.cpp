@@ -16,7 +16,7 @@ void Kernel::addParameter(const KernelParameter& parameter)
 {
     if (parameterExists(parameter))
     {
-        throw std::runtime_error("Kernel parameter with given name already exists");
+        throw std::runtime_error("Parameter with given name already exists: " + parameter.getName());
     }
 
     parameters.push_back(parameter);
@@ -26,12 +26,13 @@ void Kernel::addArgumentInt(const std::vector<int>& data)
 {
     if (data.size() == 1)
     {
-        argumentsInt.push_back(KernelArgument<int>(argumentCount, data, KernelArgumentType::Scalar));
+        argumentsInt.push_back(KernelArgument<int>(data, KernelArgumentQuantity::Scalar));
     }
     else
     {
-        argumentsInt.push_back(KernelArgument<int>(argumentCount, data, KernelArgumentType::Vector));
+        argumentsInt.push_back(KernelArgument<int>(data, KernelArgumentQuantity::Vector));
     }
+    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Int, argumentsInt.size() - static_cast<size_t>(1)));
     argumentCount++;
 }
 
@@ -39,12 +40,13 @@ void Kernel::addArgumentFloat(const std::vector<float>& data)
 {
     if (data.size() == 1)
     {
-        argumentsFloat.push_back(KernelArgument<float>(argumentCount, data, KernelArgumentType::Scalar));
+        argumentsFloat.push_back(KernelArgument<float>(data, KernelArgumentQuantity::Scalar));
     }
     else
     {
-        argumentsFloat.push_back(KernelArgument<float>(argumentCount, data, KernelArgumentType::Vector));
+        argumentsFloat.push_back(KernelArgument<float>(data, KernelArgumentQuantity::Vector));
     }
+    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Float, argumentsFloat.size() - static_cast<size_t>(1)));
     argumentCount++;
 }
 
@@ -52,12 +54,13 @@ void Kernel::addArgumentDouble(const std::vector<double>& data)
 {
     if (data.size() == 1)
     {
-        argumentsDouble.push_back(KernelArgument<double>(argumentCount, data, KernelArgumentType::Scalar));
+        argumentsDouble.push_back(KernelArgument<double>(data, KernelArgumentQuantity::Scalar));
     }
     else
     {
-        argumentsDouble.push_back(KernelArgument<double>(argumentCount, data, KernelArgumentType::Vector));
+        argumentsDouble.push_back(KernelArgument<double>(data, KernelArgumentQuantity::Vector));
     }
+    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Double, argumentsDouble.size() - static_cast<size_t>(1)));
     argumentCount++;
 }
 
@@ -67,7 +70,7 @@ void Kernel::useSearchMethod(const SearchMethod& searchMethod, const std::vector
         || searchMethod == SearchMethod::Annealing && searchArguments.size() < 2
         || searchMethod == SearchMethod::PSO && searchArguments.size() < 5)
     {
-        throw std::runtime_error("Insufficient number of search arguments provided for specified search method");
+        throw std::runtime_error("Insufficient number of arguments given for specified search method");
     }
     
     this->searchArguments = searchArguments;
@@ -102,6 +105,11 @@ std::vector<KernelParameter> Kernel::getParameters() const
 size_t Kernel::getArgumentCount() const
 {
     return argumentCount;
+}
+
+std::vector<ArgumentIndex> Kernel::getArgumentIndices() const
+{
+    return argumentIndices;
 }
 
 std::vector<KernelArgument<int>> Kernel::getArgumentsInt() const

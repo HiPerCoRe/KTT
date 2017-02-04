@@ -5,8 +5,9 @@ namespace ktt
 
 enum class KernelArgumentType
 {
-    Scalar,
-    Vector
+    Int,
+    Float,
+    Double
 };
 
 } // namespace ktt

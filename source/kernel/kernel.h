@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../ktt_aliases.h"
+#include "../enums/kernel_argument_type.h"
 #include "../enums/search_method.h"
 #include "kernel_argument.h"
 #include "kernel_parameter.h"
@@ -31,6 +32,7 @@ public:
     DimensionVector getLocalSize() const;
     std::vector<KernelParameter> getParameters() const;
     size_t getArgumentCount() const;
+    std::vector<ArgumentIndex> getArgumentIndices() const;
     std::vector<KernelArgument<int>> getArgumentsInt() const;
     std::vector<KernelArgument<float>> getArgumentsFloat() const;
     std::vector<KernelArgument<double>> getArgumentsDouble() const;
@@ -45,6 +47,7 @@ private:
     DimensionVector localSize;
     std::vector<KernelParameter> parameters;
     size_t argumentCount;
+    std::vector<ArgumentIndex> argumentIndices;
     std::vector<KernelArgument<int>> argumentsInt;
     std::vector<KernelArgument<float>> argumentsFloat;
     std::vector<KernelArgument<double>> argumentsDouble;

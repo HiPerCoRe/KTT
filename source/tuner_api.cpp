@@ -25,11 +25,11 @@ void Tuner::addParameter(const size_t id, const KernelParameter& parameter)
 {
     try
     {
-        tunerCore->getKernelManager()->addParameter(id, parameter);
+        tunerCore->getKernelManager()->getKernel(id)->addParameter(parameter);
     }
     catch (const std::runtime_error& error)
     {
-        std::cout << error.what();
+        std::cerr << error.what() << std::endl;
     }
 }
 
@@ -37,11 +37,11 @@ void Tuner::addArgumentInt(const size_t id, const std::vector<int>& data)
 {
     try
     {
-        tunerCore->getKernelManager()->addArgumentInt(id, data);
+        tunerCore->getKernelManager()->getKernel(id)->addArgumentInt(data);
     }
     catch (const std::runtime_error& error)
     {
-        std::cout << error.what();
+        std::cerr << error.what() << std::endl;
     }
 }
 
@@ -49,11 +49,11 @@ void Tuner::addArgumentFloat(const size_t id, const std::vector<float>& data)
 {
     try
     {
-        tunerCore->getKernelManager()->addArgumentFloat(id, data);
+        tunerCore->getKernelManager()->getKernel(id)->addArgumentFloat(data);
     }
     catch (const std::runtime_error& error)
     {
-        std::cout << error.what();
+        std::cerr << error.what() << std::endl;
     }
 }
 
@@ -61,11 +61,11 @@ void Tuner::addArgumentDouble(const size_t id, const std::vector<double>& data)
 {
     try
     {
-        tunerCore->getKernelManager()->addArgumentDouble(id, data);
+        tunerCore->getKernelManager()->getKernel(id)->addArgumentDouble(data);
     }
     catch (const std::runtime_error& error)
     {
-        std::cout << error.what();
+        std::cerr << error.what() << std::endl;
     }
 }
 
@@ -73,11 +73,11 @@ void Tuner::useSearchMethod(const size_t id, const SearchMethod& searchMethod, c
 {
     try
     {
-        tunerCore->getKernelManager()->useSearchMethod(id, searchMethod, searchArguments);
+        tunerCore->getKernelManager()->getKernel(id)->useSearchMethod(searchMethod, searchArguments);
     }
     catch (const std::runtime_error& error)
     {
-        std::cout << error.what();
+        std::cerr << error.what() << std::endl;
     }
 }
 
