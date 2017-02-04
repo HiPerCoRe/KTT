@@ -29,8 +29,8 @@ int main(int argc, char** argv)
 
     // Declare kernel parameters
     const int numberOfElements = 4096 * 4096;
-    std::vector<size_t> ndRangeDimensions{ 4096 * 4096, 1 };
-    std::vector<size_t> workGroupDimensions{ 256, 1 };
+    ktt::DimensionVector ndRangeDimensions(4096 * 4096, 1, 1);
+    ktt::DimensionVector workGroupDimensions(256, 1, 1);
 
     // Declare data variables
     std::vector<float> a(numberOfElements);
@@ -46,7 +46,13 @@ int main(int argc, char** argv)
         b.at(i) = (float)rand() / (RAND_MAX / UPPER_INTERVAL_BOUNDARY);
     }
     
-    // to do
+    // WIP
+    ktt::Tuner tuner;
+    size_t kernelId = tuner.addKernelFromFile(kernelName, std::string("multirunKernel"), ndRangeDimensions, workGroupDimensions);
+    tuner.addArgumentFloat(kernelId, a);
+    tuner.addArgumentFloat(kernelId, b);
+    tuner.addArgumentFloat(kernelId, result);
 
+    tuner.useSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.5 });
     return 0;
 }

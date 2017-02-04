@@ -6,7 +6,9 @@
 namespace ktt
 {
 
-KernelManager::KernelManager() {}
+KernelManager::KernelManager():
+    kernelCount(static_cast<size_t>(0))
+{}
 
 size_t KernelManager::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)

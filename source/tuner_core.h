@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "kernel/kernel_manager.h"
+#include "tuning_runner/tuning_runner.h"
 
 namespace ktt
 {
@@ -13,18 +14,14 @@ public:
     // Constructor
     TunerCore();
 
-    // Core methods
-    // none
-
     // Getters
     const std::shared_ptr<KernelManager> getKernelManager();
+    const std::shared_ptr<TuningRunner> getTuningRunner();
 
 private:
     // Attributes
     std::shared_ptr<KernelManager> kernelManager;
-
-    // Helper methods
-    // none
+    std::shared_ptr<TuningRunner> tuningRunner;
 };
 
 } // namespace ktt
