@@ -3,10 +3,12 @@
 namespace ktt
 {
 
-enum class KernelArgumentQuantity
+enum class Dimension
 {
-    Scalar,
-    Vector
+    None,
+    X,
+    Y,
+    Z
 };
 
 } // namespace ktt

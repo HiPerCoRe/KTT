@@ -12,20 +12,20 @@ Tuner::Tuner():
 size_t Tuner::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    return tunerCore->getKernelManager()->addKernel(source, kernelName, globalSize, localSize);
+    return tunerCore->addKernel(source, kernelName, globalSize, localSize);
 }
 
 size_t Tuner::addKernelFromFile(const std::string& filename, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    return tunerCore->getKernelManager()->addKernelFromFile(filename, kernelName, globalSize, localSize);
+    return tunerCore->addKernelFromFile(filename, kernelName, globalSize, localSize);
 }
 
 void Tuner::addParameter(const size_t id, const KernelParameter& parameter)
 {
     try
     {
-        tunerCore->getKernelManager()->getKernel(id)->addParameter(parameter);
+        tunerCore->addParameter(id, parameter);
     }
     catch (const std::runtime_error& error)
     {
@@ -37,7 +37,7 @@ void Tuner::addArgumentInt(const size_t id, const std::vector<int>& data)
 {
     try
     {
-        tunerCore->getKernelManager()->getKernel(id)->addArgumentInt(data);
+        tunerCore->addArgumentInt(id, data);
     }
     catch (const std::runtime_error& error)
     {
@@ -49,7 +49,7 @@ void Tuner::addArgumentFloat(const size_t id, const std::vector<float>& data)
 {
     try
     {
-        tunerCore->getKernelManager()->getKernel(id)->addArgumentFloat(data);
+        tunerCore->addArgumentFloat(id, data);
     }
     catch (const std::runtime_error& error)
     {
@@ -61,7 +61,7 @@ void Tuner::addArgumentDouble(const size_t id, const std::vector<double>& data)
 {
     try
     {
-        tunerCore->getKernelManager()->getKernel(id)->addArgumentDouble(data);
+        tunerCore->addArgumentDouble(id, data);
     }
     catch (const std::runtime_error& error)
     {
@@ -73,7 +73,7 @@ void Tuner::useSearchMethod(const size_t id, const SearchMethod& searchMethod, c
 {
     try
     {
-        tunerCore->getKernelManager()->getKernel(id)->useSearchMethod(searchMethod, searchArguments);
+        tunerCore->useSearchMethod(id, searchMethod, searchArguments);
     }
     catch (const std::runtime_error& error)
     {

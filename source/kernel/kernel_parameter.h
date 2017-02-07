@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "../enums/dimension.h"
 #include "../enums/thread_modifier_type.h"
 
 namespace ktt
@@ -11,10 +12,11 @@ class KernelParameter
 {
 public:
     explicit KernelParameter(const std::string& name, const std::vector<size_t>& values,
-        const ThreadModifierType& threadModifierType = ThreadModifierType::None):
+        const ThreadModifierType& threadModifierType = ThreadModifierType::None, const Dimension& modifierDimension = Dimension::None):
         name(name),
         values(values),
-        threadModifierType(threadModifierType)
+        threadModifierType(threadModifierType),
+        modifierDimension(modifierDimension)
     {}
     
     std::string getName() const
@@ -32,10 +34,16 @@ public:
         return threadModifierType;
     }
 
+    Dimension getModifierDimension() const
+    {
+        return modifierDimension;
+    }
+
 private:
     std::string name;
     std::vector<size_t> values;
     ThreadModifierType threadModifierType;
+    Dimension modifierDimension;
 };
 
 } // namespace ktt

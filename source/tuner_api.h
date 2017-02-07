@@ -8,8 +8,6 @@
 namespace ktt
 {
 
-class TunerCore;
-
 class Tuner
 {
 public:

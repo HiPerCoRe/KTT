@@ -106,10 +106,10 @@ project "KernelTuningToolkit"
 
 -- Examples configuration --    
 
-project "Examples"
+project "ExampleSimple"
     kind "ConsoleApp"
     
-    files { "examples/**.cpp", "examples/**.cl" }
+    files { "examples/simple/*.cpp", "examples/simple/*.cl" }
     includedirs { "include/**" }
     
     links { "KernelTuningToolkit" }
@@ -124,8 +124,8 @@ project "Examples"
         
     filter {}
     
-    targetdir("build/examples/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/examples/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    targetdir("build/examples/simple/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir("build/examples/simple/obj/%{cfg.platform}_%{cfg.buildcfg}")
 
 -- Unit tests configuration --    
     
