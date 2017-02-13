@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+#include "../enums/dimension_vector_type.h"
 #include "kernel.h"
 #include "kernel_configuration.h"
 
@@ -43,6 +44,8 @@ private:
     void computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
         std::vector<ParameterValue> computedParameterValues, DimensionVector computedGlobalSize, DimensionVector computedLocalSize,
         std::vector<KernelConfiguration>& finalResult) const;
+    DimensionVector modifyDimensionVector(const DimensionVector& vector, const DimensionVectorType& dimensionVectorType,
+        const KernelParameter& parameter, const size_t parameterValue) const;
 };
 
 } // namespace ktt
