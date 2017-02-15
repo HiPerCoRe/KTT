@@ -3,16 +3,23 @@
 #include <memory>
 #include <string>
 
-#include "tuner_core.h"
+// headers relevant to usage of API methods
+#include "ktt_type_aliases.h"
+#include "enums/search_method.h"
+#include "kernel/kernel_configuration.h"
+#include "kernel/kernel_parameter.h"
 
 namespace ktt
 {
 
+class TunerCore; // forward declaration of TunerCore class
+
 class Tuner
 {
 public:
-    // Constructor
+    // Constructor and destructor
     Tuner();
+    ~Tuner();
 
     // Kernel handling methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);

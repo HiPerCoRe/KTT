@@ -5,7 +5,6 @@ namespace ktt
 
 enum class Dimension
 {
-    None,
     X,
     Y,
     Z

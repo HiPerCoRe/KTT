@@ -42,7 +42,7 @@ private:
     // Helper methods
     std::string loadFileToString(const std::string& filename) const;
     void computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
-        std::vector<ParameterValue> computedParameterValues, DimensionVector computedGlobalSize, DimensionVector computedLocalSize,
+        const std::vector<ParameterValue>& parameterValues, const DimensionVector& globalSize, const DimensionVector& localSize,
         std::vector<KernelConfiguration>& finalResult) const;
     DimensionVector modifyDimensionVector(const DimensionVector& vector, const DimensionVectorType& dimensionVectorType,
         const KernelParameter& parameter, const size_t parameterValue) const;

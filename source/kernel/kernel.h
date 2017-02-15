@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "../ktt_aliases.h"
+#include "../ktt_type_aliases.h"
 #include "../enums/kernel_argument_type.h"
 #include "../enums/search_method.h"
 #include "kernel_argument.h"
@@ -56,6 +56,7 @@ private:
 
     // Helper methods
     bool parameterExists(const KernelParameter& parameter) const;
+    std::string getSearchMethodName(const SearchMethod& searchMethod) const;
 };
 
 } // namespace ktt

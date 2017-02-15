@@ -70,7 +70,7 @@ void Kernel::useSearchMethod(const SearchMethod& searchMethod, const std::vector
         || searchMethod == SearchMethod::Annealing && searchArguments.size() < 2
         || searchMethod == SearchMethod::PSO && searchArguments.size() < 5)
     {
-        throw std::runtime_error("Insufficient number of arguments given for specified search method");
+        throw std::runtime_error("Insufficient number of arguments given for specified search method: " + getSearchMethodName(searchMethod));
     }
     
     this->searchArguments = searchArguments;
@@ -147,6 +147,23 @@ bool Kernel::parameterExists(const KernelParameter& parameter) const
         }
     }
     return false;
+}
+
+std::string Kernel::getSearchMethodName(const SearchMethod& searchMethod) const
+{
+    switch (searchMethod)
+    {
+    case SearchMethod::FullSearch:
+        return std::string("FullSearch");
+    case SearchMethod::RandomSearch:
+        return std::string("RandomSearch");
+    case SearchMethod::PSO:
+        return std::string("PSO");
+    case SearchMethod::Annealing:
+        return std::string("Annealing");
+    default:
+        return std::string("UnknownSearchMethod");
+    }
 }
 
 } // namespace ktt

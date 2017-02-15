@@ -48,7 +48,7 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
     }
 
     std::vector<KernelConfiguration> configurations;
-    computeConfigurations(static_cast<size_t>(0), kernels.at(id)->getParameters(), std::vector<ParameterValue>(0), kernels.at(id)->getGlobalSize(),
+    computeConfigurations(0, kernels.at(id)->getParameters(), std::vector<ParameterValue>(0), kernels.at(id)->getGlobalSize(),
         kernels.at(id)->getLocalSize(), configurations);
     return configurations;
 }
@@ -121,12 +121,12 @@ std::string KernelManager::loadFileToString(const std::string& filename) const
 }
 
 void KernelManager::computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
-    std::vector<ParameterValue> computedParameterValues, DimensionVector computedGlobalSize, DimensionVector computedLocalSize,
+    const std::vector<ParameterValue>& parameterValues, const DimensionVector& globalSize, const DimensionVector& localSize,
     std::vector<KernelConfiguration>& finalResult) const
 {
     if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
-        KernelConfiguration configuration(computedGlobalSize, computedLocalSize, computedParameterValues);
+        KernelConfiguration configuration(globalSize, localSize, parameterValues);
         finalResult.push_back(configuration);
         return;
     }
@@ -134,20 +134,20 @@ void KernelManager::computeConfigurations(const size_t currentParameterIndex, co
     KernelParameter parameter = parameters.at(currentParameterIndex); // process next parameter
     for (auto& value : parameter.getValues()) // recursively build tree of configurations for each parameter value
     {
-        auto copy = computedParameterValues;
-        copy.push_back(ParameterValue(parameter.getName(), value));
+        auto newParameterValues = parameterValues;
+        newParameterValues.push_back(ParameterValue(parameter.getName(), value));
 
-        DimensionVector newGlobalSize = modifyDimensionVector(computedGlobalSize, DimensionVectorType::Global, parameter, value);
-        DimensionVector newLocalSize = modifyDimensionVector(computedLocalSize, DimensionVectorType::Local, parameter, value);
+        auto newGlobalSize = modifyDimensionVector(globalSize, DimensionVectorType::Global, parameter, value);
+        auto newLocalSize = modifyDimensionVector(localSize, DimensionVectorType::Local, parameter, value);
 
-        computeConfigurations(currentParameterIndex + 1, parameters, copy, newGlobalSize, newLocalSize, finalResult);
+        computeConfigurations(currentParameterIndex + 1, parameters, newParameterValues, newGlobalSize, newLocalSize, finalResult);
     }
 }
 
 DimensionVector KernelManager::modifyDimensionVector(const DimensionVector& vector, const DimensionVectorType& dimensionVectorType,
     const KernelParameter& parameter, const size_t parameterValue) const
 {
-    if (parameter.getThreadModifierType() == ThreadModifierType::None || parameter.getModifierDimension() == Dimension::None
+    if (parameter.getThreadModifierType() == ThreadModifierType::None
         || dimensionVectorType == DimensionVectorType::Global && parameter.getThreadModifierType() == ThreadModifierType::DivideLocal
         || dimensionVectorType == DimensionVectorType::Global && parameter.getThreadModifierType() == ThreadModifierType::MultiplyLocal
         || dimensionVectorType == DimensionVectorType::Local && parameter.getThreadModifierType() == ThreadModifierType::DivideGlobal
@@ -163,7 +163,7 @@ DimensionVector KernelManager::modifyDimensionVector(const DimensionVector& vect
         size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) / parameterValue : std::get<1>(vector);
         size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) / parameterValue : std::get<2>(vector);
 
-        return DimensionVector(x, y, z); // do same thing for local / global, relevant checks were done in first if statement
+        return DimensionVector(x, y, z); // handle local / global in the same way, relevant checks were done in first if statement
     }
     else // multiply
     {
@@ -171,7 +171,7 @@ DimensionVector KernelManager::modifyDimensionVector(const DimensionVector& vect
         size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) * parameterValue : std::get<1>(vector);
         size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) * parameterValue : std::get<2>(vector);
 
-        return DimensionVector(x, y, z); // do same thing for local / global, relevant checks were done in first if statement
+        return DimensionVector(x, y, z); // handle local / global in the same way, relevant checks were done in first if statement
     }
 }
 

@@ -1,13 +1,16 @@
 #include <iostream>
 
 #include "tuner_api.h"
+#include "tuner_core.h"
 
 namespace ktt
 {
 
 Tuner::Tuner():
-    tunerCore(new TunerCore())
+    tunerCore(std::make_unique<TunerCore>())
 {}
+
+Tuner::~Tuner() = default;
 
 size_t Tuner::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)

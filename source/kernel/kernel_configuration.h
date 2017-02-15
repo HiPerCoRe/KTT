@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "../ktt_aliases.h"
+#include "../ktt_type_aliases.h"
 
 namespace ktt
 {

@@ -4,8 +4,8 @@ namespace ktt
 {
 
 TunerCore::TunerCore():
-    kernelManager(new KernelManager()),
-    tuningRunner(new TuningRunner())
+    kernelManager(std::make_unique<KernelManager>()),
+    tuningRunner(std::make_unique<TuningRunner>())
 {}
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,

@@ -14,7 +14,7 @@ public:
     // Constructor
     TunerCore();
 
-    // Kernel manager wrapper methods
+    // Kernel manager methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
     size_t addKernelFromFile(const std::string& filename, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
@@ -32,8 +32,8 @@ public:
 
 private:
     // Attributes
-    std::shared_ptr<KernelManager> kernelManager;
-    std::shared_ptr<TuningRunner> tuningRunner;
+    std::unique_ptr<KernelManager> kernelManager;
+    std::unique_ptr<TuningRunner> tuningRunner;
 };
 
 } // namespace ktt
