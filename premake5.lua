@@ -130,9 +130,9 @@ project "ExampleSimple"
 -- Unit tests configuration --    
     
 project "Tests"
-    kind "None"
+    kind "ConsoleApp"
     
-    files { "tests/**.cpp" }
+    files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl" }
     includedirs { "include/**", "tests/**" }
     
     links { "KernelTuningToolkit" }

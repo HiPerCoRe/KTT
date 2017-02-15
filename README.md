@@ -42,9 +42,8 @@ KTT can be built as a static library using premake.
 Examples
 --------
 
-Examples showcasing KTT functionality are currently under development
+Examples showcasing KTT functionality are located inside examples folder. List of currently
+available examples:
 
-Unit Tests
-----------
-
-Unit tests are currently under development. They will utilize [Catch framework](https://github.com/philsquared/Catch).
+* simple - short example showcasing basic functionality (kernel addition, parameter addition,
+  search method specification...)
