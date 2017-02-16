@@ -19,10 +19,10 @@ size_t KernelManager::addKernel(const std::string& source, const std::string& ke
     return kernelCount++;
 }
 
-size_t KernelManager::addKernelFromFile(const std::string& filename, const std::string& kernelName, const DimensionVector& globalSize,
+size_t KernelManager::addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    std::string source = loadFileToString(filename);
+    std::string source = loadFileToString(filePath);
     return addKernel(source, kernelName, globalSize, localSize);
 }
 
@@ -30,7 +30,7 @@ std::string KernelManager::getKernelSourceWithDefines(const size_t id, const Ker
 {
     std::string source = getKernel(id)->getSource();
 
-    for (auto& parameterValue : kernelConfiguration.getParameterValues())
+    for (const auto& parameterValue : kernelConfiguration.getParameterValues())
     {
         std::stringstream stream;
         stream << std::get<1>(parameterValue); // clean way to convert number to string
@@ -112,9 +112,9 @@ const std::shared_ptr<const Kernel> KernelManager::getKernel(const size_t id) co
     return kernels.at(id);
 }
 
-std::string KernelManager::loadFileToString(const std::string& filename) const
+std::string KernelManager::loadFileToString(const std::string& filePath) const
 {
-    std::ifstream file(filename);
+    std::ifstream file(filePath);
     std::stringstream stream;
     stream << file.rdbuf();
     return stream.str();
@@ -132,7 +132,7 @@ void KernelManager::computeConfigurations(const size_t currentParameterIndex, co
     }
 
     KernelParameter parameter = parameters.at(currentParameterIndex); // process next parameter
-    for (auto& value : parameter.getValues()) // recursively build tree of configurations for each parameter value
+    for (const auto& value : parameter.getValues()) // recursively build tree of configurations for each parameter value
     {
         auto newParameterValues = parameterValues;
         newParameterValues.push_back(ParameterValue(parameter.getName(), value));

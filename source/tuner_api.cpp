@@ -18,10 +18,10 @@ size_t Tuner::addKernel(const std::string& source, const std::string& kernelName
     return tunerCore->addKernel(source, kernelName, globalSize, localSize);
 }
 
-size_t Tuner::addKernelFromFile(const std::string& filename, const std::string& kernelName, const DimensionVector& globalSize,
+size_t Tuner::addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    return tunerCore->addKernelFromFile(filename, kernelName, globalSize, localSize);
+    return tunerCore->addKernelFromFile(filePath, kernelName, globalSize, localSize);
 }
 
 void Tuner::addParameter(const size_t id, const KernelParameter& parameter)

@@ -16,7 +16,7 @@ public:
 
     // Kernel manager methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
-    size_t addKernelFromFile(const std::string& filename, const std::string& kernelName, const DimensionVector& globalSize,
+    size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
     std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const size_t id) const;

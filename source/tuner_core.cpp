@@ -14,10 +14,10 @@ size_t TunerCore::addKernel(const std::string& source, const std::string& kernel
     return kernelManager->addKernel(source, kernelName, globalSize, localSize);
 }
 
-size_t TunerCore::addKernelFromFile(const std::string& filename, const std::string& kernelName, const DimensionVector& globalSize,
+size_t TunerCore::addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    return kernelManager->addKernelFromFile(filename, kernelName, globalSize, localSize);
+    return kernelManager->addKernelFromFile(filePath, kernelName, globalSize, localSize);
 }
 
 std::string TunerCore::getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const

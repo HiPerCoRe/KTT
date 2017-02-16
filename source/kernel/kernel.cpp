@@ -139,7 +139,7 @@ std::vector<double> Kernel::getSearchArguments() const
 
 bool Kernel::parameterExists(const KernelParameter& parameter) const
 {
-    for (auto& currentParameter : parameters)
+    for (const auto& currentParameter : parameters)
     {
         if (currentParameter.getName() == parameter.getName())
         {

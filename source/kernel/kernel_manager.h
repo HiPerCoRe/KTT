@@ -18,7 +18,7 @@ public:
 
     // Core methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
-    size_t addKernelFromFile(const std::string& filename, const std::string& kernelName, const DimensionVector& globalSize,
+    size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
     std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const size_t id) const;
@@ -40,7 +40,7 @@ private:
     std::vector<std::shared_ptr<Kernel>> kernels;
 
     // Helper methods
-    std::string loadFileToString(const std::string& filename) const;
+    std::string loadFileToString(const std::string& filePath) const;
     void computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
         const std::vector<ParameterValue>& parameterValues, const DimensionVector& globalSize, const DimensionVector& localSize,
         std::vector<KernelConfiguration>& finalResult) const;
