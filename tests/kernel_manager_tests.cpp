@@ -40,7 +40,8 @@ TEST_CASE("kernel handling operations", "[kernelManager]")
 TEST_CASE("kernel configuration retrieval", "[kernelManager]")
 {
     ktt::KernelManager manager;
-    size_t id = manager.addKernelFromFile(std::string("test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024, 1, 1), ktt::DimensionVector(16, 16, 1));
+    size_t id = manager.addKernelFromFile(std::string("test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024, 1, 1),
+        ktt::DimensionVector(16, 16, 1));
     manager.addParameter(id, ktt::KernelParameter(std::string("param_one"), std::vector<size_t>{1, 2, 3}));
     manager.addParameter(id, ktt::KernelParameter(std::string("param_two"), std::vector<size_t>{5, 10}));
 
