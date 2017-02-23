@@ -9,29 +9,18 @@ OpenCLCore::OpenCLCore() = default;
 
 std::vector<OpenCLPlatform> OpenCLCore::getOpenCLPlatforms() const
 {
-    cl_uint platformsCount;
-    clGetPlatformIDs(0, nullptr, &platformsCount);
+    cl_uint platformCount;
+    clGetPlatformIDs(0, nullptr, &platformCount);
 
-    std::vector<cl_platform_id> platformIds(platformsCount);
-    clGetPlatformIDs(platformsCount, platformIds.data(), nullptr);
+    std::vector<cl_platform_id> platformIds(platformCount);
+    clGetPlatformIDs(platformCount, platformIds.data(), nullptr);
 
     std::vector<OpenCLPlatform> platforms;
     for (const auto platformId : platformIds)
     {
-        size_t nameSize;
-        clGetPlatformInfo(platformId, CL_PLATFORM_NAME, 0, nullptr, &nameSize);
-        std::string name(nameSize, ' ');
-        clGetPlatformInfo(platformId, CL_PLATFORM_NAME, nameSize, (void*)name.data(), nullptr);
-
-        size_t versionSize;
-        clGetPlatformInfo(platformId, CL_PLATFORM_VERSION, 0, nullptr, &versionSize);
-        std::string version(versionSize, ' ');
-        clGetPlatformInfo(platformId, CL_PLATFORM_VERSION, versionSize, (void*)version.data(), nullptr);
-
-        size_t vendorSize;
-        clGetPlatformInfo(platformId, CL_PLATFORM_VENDOR, 0, nullptr, &vendorSize);
-        std::string vendor(vendorSize, ' ');
-        clGetPlatformInfo(platformId, CL_PLATFORM_VENDOR, vendorSize, (void*)vendor.data(), nullptr);
+        std::string name = getPlatformInfo(platformId, CL_PLATFORM_NAME);
+        std::string version = getPlatformInfo(platformId, CL_PLATFORM_VERSION);
+        std::string vendor = getPlatformInfo(platformId, CL_PLATFORM_VENDOR);
 
         platforms.push_back(OpenCLPlatform(platformId, version, name, vendor));
     }
@@ -41,13 +30,23 @@ std::vector<OpenCLPlatform> OpenCLCore::getOpenCLPlatforms() const
 
 std::vector<OpenCLDevice> OpenCLCore::getOpenCLDevices(const OpenCLPlatform& platform) const
 {
-    cl_uint devicesCount;
-    clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &devicesCount);
+    cl_uint deviceCount;
+    clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount);
 
     throw std::runtime_error("Unfinished method");
     // to do
 
     return std::vector<OpenCLDevice>();
+}
+
+std::string OpenCLCore::getPlatformInfo(const cl_platform_id id, const cl_platform_info info) const
+{
+    size_t infoSize;
+    clGetPlatformInfo(id, info, 0, nullptr, &infoSize);
+    std::string infoString(infoSize, ' ');
+    clGetPlatformInfo(id, info, infoSize, &infoString[0], nullptr);
+    
+    return infoString;
 }
 
 } // namespace ktt
