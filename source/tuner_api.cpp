@@ -6,8 +6,8 @@
 namespace ktt
 {
 
-Tuner::Tuner():
-    tunerCore(std::make_unique<TunerCore>())
+Tuner::Tuner(const size_t platformIndex, const size_t deviceIndex):
+    tunerCore(std::make_unique<TunerCore>(platformIndex, deviceIndex))
 {}
 
 Tuner::~Tuner() = default;
@@ -82,6 +82,11 @@ void Tuner::useSearchMethod(const size_t id, const SearchMethod& searchMethod, c
     {
         std::cerr << error.what() << std::endl;
     }
+}
+
+void Tuner::printOpenCLInfo(std::ostream& outputTarget) const
+{
+    tunerCore->printOpenCLInfo(outputTarget);
 }
 
 } // namespace ktt

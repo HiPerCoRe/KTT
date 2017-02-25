@@ -75,7 +75,7 @@ workspace "KernelTuningToolkit"
         architecture "x86_64"
     
     filter {}
-
+    
 project "KernelTuningToolkit"
     kind "StaticLib"
     

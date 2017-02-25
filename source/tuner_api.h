@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-// headers relevant to usage of API methods
+// Headers relevant to usage of API methods
 #include "ktt_type_aliases.h"
 #include "enums/search_method.h"
 #include "kernel/kernel_configuration.h"
@@ -12,13 +12,13 @@
 namespace ktt
 {
 
-class TunerCore; // forward declaration of TunerCore class
+class TunerCore; // Forward declaration of TunerCore class
 
 class Tuner
 {
 public:
     // Constructor and destructor
-    Tuner();
+    Tuner(const size_t platformIndex, const size_t deviceIndex);
     ~Tuner();
 
     // Kernel handling methods
@@ -30,6 +30,9 @@ public:
     void addArgumentFloat(const size_t id, const std::vector<float>& data);
     void addArgumentDouble(const size_t id, const std::vector<double>& data);
     void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+
+    // OpenCL methods
+    void printOpenCLInfo(std::ostream& outputTarget) const;
 
 private:
     // Attributes

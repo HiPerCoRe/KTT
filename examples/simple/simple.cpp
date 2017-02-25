@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     }
 
     // Declare constants
-    const float UPPER_INTERVAL_BOUNDARY = 1000.0f; // used for generating random test data
+    const float upperBoundary = 1000.0f; // used for generating random test data
     const std::string kernelName = std::string("simple_kernel.cl");
     const std::string referenceKernelName = std::string("simple_reference_kernel.cl");
 
@@ -42,12 +42,14 @@ int main(int argc, char** argv)
 
     for (int i = 0; i < numberOfElements; i++)
     {
-        a.at(i) = (float)rand() / (RAND_MAX / UPPER_INTERVAL_BOUNDARY);
-        b.at(i) = (float)rand() / (RAND_MAX / UPPER_INTERVAL_BOUNDARY);
+        a.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
+        b.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
     }
     
     // WIP
-    ktt::Tuner tuner;
+    ktt::Tuner tuner(platformIndex, deviceIndex);
+    tuner.printOpenCLInfo(std::cout);
+
     size_t kernelId = tuner.addKernelFromFile(kernelName, std::string("multirunKernel"), ndRangeDimensions, workGroupDimensions);
     tuner.addArgumentFloat(kernelId, a);
     tuner.addArgumentFloat(kernelId, b);

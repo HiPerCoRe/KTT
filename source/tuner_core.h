@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "compute_api_drivers/opencl_core.h"
 #include "kernel/kernel_manager.h"
 #include "tuning_runner/tuning_runner.h"
 
@@ -12,7 +13,7 @@ class TunerCore
 {
 public:
     // Constructor
-    TunerCore();
+    TunerCore(const size_t platformIndex, const size_t deviceIndex);
 
     // Kernel manager methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
@@ -30,10 +31,16 @@ public:
     size_t getKernelCount() const;
     const std::shared_ptr<const Kernel> getKernel(const size_t id) const;
 
+    // OpenCL methods
+    std::vector<OpenCLPlatform> getOpenCLPlatforms() const;
+    std::vector<OpenCLDevice> getOpenCLDevices(const OpenCLPlatform& platform) const;
+    void printOpenCLInfo(std::ostream& outputTarget) const;
+
 private:
     // Attributes
     std::unique_ptr<KernelManager> kernelManager;
     std::unique_ptr<TuningRunner> tuningRunner;
+    std::unique_ptr<OpenCLCore> openCLCore;
 };
 
 } // namespace ktt
