@@ -10,15 +10,15 @@
 int main(int argc, char** argv)
 {
     // Initialize platform and device index
-    int platformIndex = 0;
-    int deviceIndex = 0;
+    size_t platformIndex = 0;
+    size_t deviceIndex = 0;
 
     if (argc >= 2)
     {
-        platformIndex = std::stoi(std::string{ argv[1] });
+        platformIndex = std::stoul(std::string{ argv[1] });
         if (argc >= 3)
         {
-            deviceIndex = std::stoi(std::string{ argv[2] });
+            deviceIndex = std::stoul(std::string{ argv[2] });
         }
     }
 
@@ -47,8 +47,8 @@ int main(int argc, char** argv)
     }
     
     // WIP
-    ktt::Tuner tuner(platformIndex, deviceIndex);
-    tuner.printOpenCLInfo(std::cout);
+    ktt::Tuner::printOpenCLInfo(std::cout);
+    ktt::Tuner tuner(platformIndex, { deviceIndex });
 
     size_t kernelId = tuner.addKernelFromFile(kernelName, std::string("multirunKernel"), ndRangeDimensions, workGroupDimensions);
     tuner.addArgumentFloat(kernelId, a);

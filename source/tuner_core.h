@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "compute_api_drivers/opencl_core.h"
 #include "kernel/kernel_manager.h"
@@ -13,7 +14,7 @@ class TunerCore
 {
 public:
     // Constructor
-    TunerCore(const size_t platformIndex, const size_t deviceIndex);
+    explicit TunerCore(const size_t platformIndex, const std::vector<size_t>& deviceIndices);
 
     // Kernel manager methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
@@ -34,7 +35,7 @@ public:
     // OpenCL methods
     std::vector<OpenCLPlatform> getOpenCLPlatforms() const;
     std::vector<OpenCLDevice> getOpenCLDevices(const OpenCLPlatform& platform) const;
-    void printOpenCLInfo(std::ostream& outputTarget) const;
+    static void printOpenCLInfo(std::ostream& outputTarget);
 
 private:
     // Attributes

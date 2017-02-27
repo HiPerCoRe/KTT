@@ -162,7 +162,7 @@ std::string Kernel::getSearchMethodName(const SearchMethod& searchMethod) const
     case SearchMethod::Annealing:
         return std::string("Annealing");
     default:
-        return std::string("UnknownSearchMethod");
+        return std::string("Unknown search method");
     }
 }
 

@@ -3,10 +3,10 @@
 namespace ktt
 {
 
-TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex):
+TunerCore::TunerCore(const size_t platformIndex, const std::vector<size_t>& deviceIndices):
     kernelManager(std::make_unique<KernelManager>()),
     tuningRunner(std::make_unique<TuningRunner>()),
-    openCLCore(std::make_unique<OpenCLCore>())
+    openCLCore(std::make_unique<OpenCLCore>(platformIndex, deviceIndices))
 {}
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -76,9 +76,9 @@ std::vector<OpenCLDevice> TunerCore::getOpenCLDevices(const OpenCLPlatform& plat
     return openCLCore->getOpenCLDevices(platform);
 }
 
-void TunerCore::printOpenCLInfo(std::ostream& outputTarget) const
+void TunerCore::printOpenCLInfo(std::ostream& outputTarget)
 {
-    openCLCore->printOpenCLInfo(outputTarget);
+    OpenCLCore::printOpenCLInfo(outputTarget);
 }
 
 } // namespace ktt

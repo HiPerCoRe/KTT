@@ -6,7 +6,6 @@
 // Headers relevant to usage of API methods
 #include "ktt_type_aliases.h"
 #include "enums/search_method.h"
-#include "kernel/kernel_configuration.h"
 #include "kernel/kernel_parameter.h"
 
 namespace ktt
@@ -18,7 +17,7 @@ class Tuner
 {
 public:
     // Constructor and destructor
-    Tuner(const size_t platformIndex, const size_t deviceIndex);
+    explicit Tuner(const size_t platformIndex, const std::vector<size_t>& deviceIndices);
     ~Tuner();
 
     // Kernel handling methods
@@ -32,7 +31,7 @@ public:
     void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // OpenCL methods
-    void printOpenCLInfo(std::ostream& outputTarget) const;
+    static void printOpenCLInfo(std::ostream& outputTarget);
 
 private:
     // Attributes

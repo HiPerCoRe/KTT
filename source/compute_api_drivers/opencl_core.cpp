@@ -5,15 +5,35 @@
 namespace ktt
 {
 
-OpenCLCore::OpenCLCore() = default;
+OpenCLCore::OpenCLCore(const size_t platformIndex, const std::vector<size_t>& deviceIndices)
+{
+    auto platforms = getOpenCLPlatforms();
+    if (platformIndex >= platforms.size())
+    {
+        throw std::runtime_error("Invalid platform index: " + platformIndex);
+    }
 
-std::vector<OpenCLPlatform> OpenCLCore::getOpenCLPlatforms() const
+    auto devices = getOpenCLDevices(platforms.at(platformIndex));
+    std::vector<cl_device_id> deviceIds;
+    for (const auto deviceIndex : deviceIndices)
+    {
+        if (deviceIndex >= devices.size())
+        {
+            throw std::runtime_error("Invalid device index: " + deviceIndex);
+        }
+        deviceIds.push_back(devices.at(deviceIndex).getId());
+    }
+
+    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), deviceIds);
+}
+
+std::vector<OpenCLPlatform> OpenCLCore::getOpenCLPlatforms()
 {
     cl_uint platformCount;
-    clGetPlatformIDs(0, nullptr, &platformCount);
+    checkOpenCLError(clGetPlatformIDs(0, nullptr, &platformCount));
 
     std::vector<cl_platform_id> platformIds(platformCount);
-    clGetPlatformIDs(platformCount, platformIds.data(), nullptr);
+    checkOpenCLError(clGetPlatformIDs(platformCount, platformIds.data(), nullptr));
 
     std::vector<OpenCLPlatform> platforms;
     for (const auto platformId : platformIds)
@@ -28,13 +48,13 @@ std::vector<OpenCLPlatform> OpenCLCore::getOpenCLPlatforms() const
     return platforms;
 }
 
-std::vector<OpenCLDevice> OpenCLCore::getOpenCLDevices(const OpenCLPlatform& platform) const
+std::vector<OpenCLDevice> OpenCLCore::getOpenCLDevices(const OpenCLPlatform& platform)
 {
     cl_uint deviceCount;
-    clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount);
+    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount));
 
     std::vector<cl_device_id> deviceIds(deviceCount);
-    clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, deviceCount, deviceIds.data(), nullptr);
+    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, deviceCount, deviceIds.data(), nullptr));
 
     std::vector<OpenCLDevice> devices;
     for (const auto deviceId : deviceIds)
@@ -48,14 +68,14 @@ std::vector<OpenCLDevice> OpenCLCore::getOpenCLDevices(const OpenCLPlatform& pla
     return devices;
 }
 
-void OpenCLCore::printOpenCLInfo(std::ostream& outputTarget) const
+void OpenCLCore::printOpenCLInfo(std::ostream& outputTarget)
 {
-    std::vector<ktt::OpenCLPlatform> platforms = getOpenCLPlatforms();
+    auto platforms = getOpenCLPlatforms();
 
     for (size_t i = 0; i < platforms.size(); i++)
     {
         outputTarget << "Platform " << i << ": " << platforms.at(i).getVendor() << " " << platforms.at(i).getName() << std::endl;
-        std::vector<ktt::OpenCLDevice> devices = getOpenCLDevices(platforms.at(i));
+        auto devices = getOpenCLDevices(platforms.at(i));
 
         outputTarget << "Devices for platform " << i << ":" << std::endl;
         for (size_t j = 0; j < devices.size(); j++)
@@ -66,22 +86,22 @@ void OpenCLCore::printOpenCLInfo(std::ostream& outputTarget) const
     }
 }
 
-std::string OpenCLCore::getPlatformInfo(const cl_platform_id id, const cl_platform_info info) const
+std::string OpenCLCore::getPlatformInfo(const cl_platform_id id, const cl_platform_info info)
 {
     size_t infoSize;
-    clGetPlatformInfo(id, info, 0, nullptr, &infoSize);
+    checkOpenCLError(clGetPlatformInfo(id, info, 0, nullptr, &infoSize));
     std::string infoString(infoSize, ' ');
-    clGetPlatformInfo(id, info, infoSize, &infoString[0], nullptr);
+    checkOpenCLError(clGetPlatformInfo(id, info, infoSize, &infoString[0], nullptr));
     
     return infoString;
 }
 
-std::string OpenCLCore::getDeviceInfo(const cl_device_id id, const cl_device_info info) const
+std::string OpenCLCore::getDeviceInfo(const cl_device_id id, const cl_device_info info)
 {
     size_t infoSize;
-    clGetDeviceInfo(id, info, 0, nullptr, &infoSize);
+    checkOpenCLError(clGetDeviceInfo(id, info, 0, nullptr, &infoSize));
     std::string infoString(infoSize, ' ');
-    clGetDeviceInfo(id, info, infoSize, &infoString[0], nullptr);
+    checkOpenCLError(clGetDeviceInfo(id, info, infoSize, &infoString[0], nullptr));
 
     return infoString;
 }
