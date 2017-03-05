@@ -26,11 +26,6 @@ public:
         checkOpenCLError(clReleaseContext(context));
     }
 
-    cl_context getContext()
-    {
-        return context;
-    }
-
     cl_platform_id getPlatform() const
     {
         return platform;
@@ -41,10 +36,15 @@ public:
         return devices;
     }
 
+    cl_context getContext() const
+    {
+        return context;
+    }
+
 private:
-    cl_context context;
     cl_platform_id platform;
     std::vector<cl_device_id> devices;
+    cl_context context;
 };
 
 } // namespace ktt

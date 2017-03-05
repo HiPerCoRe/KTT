@@ -2,13 +2,13 @@
 
 #include "../source/kernel/kernel_manager.h"
 
-TEST_CASE("kernel handling operations", "[kernelManager]")
+TEST_CASE("Kernel handling operations", "[kernelManager]")
 {
     ktt::KernelManager manager;
     size_t id = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024, 1, 1),
         ktt::DimensionVector(16, 16, 1));
 
-    SECTION("kernel id is assigned correctly")
+    SECTION("Kernel id is assigned correctly")
     {
         size_t secondId = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"),
             ktt::DimensionVector(1024, 1, 1), ktt::DimensionVector(16, 16, 1));
@@ -16,7 +16,7 @@ TEST_CASE("kernel handling operations", "[kernelManager]")
         REQUIRE(secondId == 1);
     }
 
-    SECTION("kernel source is loaded correctly")
+    SECTION("Kernel source is loaded correctly")
     {
         std::string source = manager.getKernel(id)->getSource();
         std::string expectedSource(std::string("")
@@ -30,14 +30,14 @@ TEST_CASE("kernel handling operations", "[kernelManager]")
         REQUIRE(source == expectedSource);
     }
 
-    SECTION("parameter with same name cannot be added twice")
+    SECTION("Parameter with same name cannot be added twice")
     {
         manager.addParameter(id, ktt::KernelParameter(std::string("param"), std::vector<size_t>{1, 2, 3}));
         REQUIRE_THROWS_AS(manager.addParameter(id, ktt::KernelParameter(std::string("param"), std::vector<size_t>{2, 3})), std::runtime_error);
     }
 }
 
-TEST_CASE("kernel configuration retrieval", "[kernelManager]")
+TEST_CASE("Kernel configuration retrieval", "[kernelManager]")
 {
     ktt::KernelManager manager;
     size_t id = manager.addKernelFromFile(std::string("test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024, 1, 1),
@@ -45,7 +45,7 @@ TEST_CASE("kernel configuration retrieval", "[kernelManager]")
     manager.addParameter(id, ktt::KernelParameter(std::string("param_one"), std::vector<size_t>{1, 2, 3}));
     manager.addParameter(id, ktt::KernelParameter(std::string("param_two"), std::vector<size_t>{5, 10}));
 
-    SECTION("kernel source with defines is returned correctly")
+    SECTION("Kernel source with defines is returned correctly")
     {
         std::vector<ktt::ParameterValue> values;
         values.push_back(ktt::ParameterValue("param_two", 5));
@@ -58,7 +58,7 @@ TEST_CASE("kernel configuration retrieval", "[kernelManager]")
         REQUIRE(source == expectedSource);
     }
 
-    SECTION("kernel configurations are computed correctly")
+    SECTION("Kernel configurations are computed correctly")
     {
         auto configurations = manager.getKernelConfigurations(id);
 

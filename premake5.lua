@@ -58,10 +58,10 @@ function initOpenCLLinux()
     
     filter "platforms:x86"
         libdirs { "/usr/lib" }
-        
-	filter "platforms:x86_64"
+    
+    filter "platforms:x86_64"
         libdirs { "/usr/lib64" }
-        
+    
     filter {}
 	links { "libOpenCL.so.1.2" }
     return true

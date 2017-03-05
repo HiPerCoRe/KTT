@@ -17,7 +17,7 @@ class Tuner
 {
 public:
     // Constructor and destructor
-    explicit Tuner(const size_t platformIndex, const std::vector<size_t>& deviceIndices);
+    explicit Tuner(const size_t platformIndex, const size_t deviceIndex);
     ~Tuner();
 
     // Kernel handling methods

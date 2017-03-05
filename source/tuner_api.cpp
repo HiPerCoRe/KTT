@@ -6,8 +6,8 @@
 namespace ktt
 {
 
-Tuner::Tuner(const size_t platformIndex, const std::vector<size_t>& deviceIndices):
-    tunerCore(std::make_unique<TunerCore>(platformIndex, deviceIndices))
+Tuner::Tuner(const size_t platformIndex, const size_t deviceIndex):
+    tunerCore(std::make_unique<TunerCore>(platformIndex, std::vector<size_t>{ deviceIndex }))
 {}
 
 Tuner::~Tuner() = default;

@@ -25,6 +25,10 @@ OpenCLCore::OpenCLCore(const size_t platformIndex, const std::vector<size_t>& de
     }
 
     context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), deviceIds);
+    for (const auto deviceIndex : context->getDevices())
+    {
+        commandQueues.push_back(std::make_unique<OpenCLCommandQueue>(context->getContext(), deviceIndex));
+    }
 }
 
 std::vector<OpenCLPlatform> OpenCLCore::getOpenCLPlatforms()

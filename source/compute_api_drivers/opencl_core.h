@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "opencl_command_queue.h"
 #include "opencl_context.h"
 #include "opencl_device.h"
 #include "opencl_platform.h"
@@ -26,6 +27,7 @@ public:
 private:
     // Attributes
     std::unique_ptr<OpenCLContext> context;
+    std::vector<std::unique_ptr<OpenCLCommandQueue>> commandQueues;
 
     // Helper methods
     static std::string getPlatformInfo(const cl_platform_id id, const cl_platform_info info);
