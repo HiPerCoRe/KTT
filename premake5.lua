@@ -1,6 +1,6 @@
--- Helper function to find OpenCL headers and libraries --
+-- Helper functions to find OpenCL headers and libraries --
 
-function initOpenCL()
+function initOpenCLWindows()
 	local path = os.getenv("INTELOCLSDKROOT")
 	if (path) then
 		defines { "CL_PLATFORM_INTEL" }
@@ -52,6 +52,21 @@ function initOpenCL()
 	return false
 end
 
+function initOpenCLLinux()
+    defines { "CL_PLATFORM_LINUX" }
+    includedirs { "/usr/include" }
+    
+    filter "platforms:x86"
+        libdirs { "/usr/lib" }
+        
+	filter "platforms:x86_64"
+        libdirs { "/usr/lib64" }
+        
+    filter {}
+	links { "libOpenCL.so.1.2" }
+    return true
+end
+
 -- Command line arguments definition --
 
 newoption
@@ -97,11 +112,20 @@ project "KernelTuningToolkit"
     
     if not _OPTIONS["cuda"] then
         defines { "USE_OPENCL" }
-        if not initOpenCL() then
-            printf("Warning: OpenCL libraries weren't found.")
+        local result = false
+        
+        if os.get() == "windows" then
+            result = initOpenCLWindows()
+        else
+            result = initOpenCLLinux()
+        end
+        
+        if not result then
+            printf("Warning: OpenCL libraries were not found.")
         end
     else
         defines { "USE_CUDA" }
+        printf("Warning: CUDA platform is not supported yet.")
     end
 
 -- Examples configuration --    
