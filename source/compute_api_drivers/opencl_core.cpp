@@ -90,6 +90,19 @@ void OpenCLCore::printOpenCLInfo(std::ostream& outputTarget)
     }
 }
 
+void OpenCLCore::addProgram(const std::string& source)
+{
+    programs.push_back(std::make_unique<OpenCLProgram>(source, context->getContext(), context->getDevices()));
+}
+
+void OpenCLCore::buildProgram(const OpenCLProgram& program, const std::string& compilerOptions)
+{
+    cl_int result = clBuildProgram(program.getProgram(), program.getDevices().size(), program.getDevices().data(), &compilerOptions[0], nullptr,
+        nullptr);
+    std::string buildInfo = getProgramBuildInfo(program.getProgram(), program.getDevices().at(0));
+    checkOpenCLError(result, buildInfo);
+}
+
 std::string OpenCLCore::getPlatformInfo(const cl_platform_id id, const cl_platform_info info)
 {
     size_t infoSize;
@@ -106,6 +119,16 @@ std::string OpenCLCore::getDeviceInfo(const cl_device_id id, const cl_device_inf
     checkOpenCLError(clGetDeviceInfo(id, info, 0, nullptr, &infoSize));
     std::string infoString(infoSize, ' ');
     checkOpenCLError(clGetDeviceInfo(id, info, infoSize, &infoString[0], nullptr));
+
+    return infoString;
+}
+
+std::string OpenCLCore::getProgramBuildInfo(const cl_program program, const cl_device_id id)
+{
+    size_t infoSize;
+    checkOpenCLError(clGetProgramBuildInfo(program, id, 0, 0, nullptr, &infoSize));
+    std::string infoString(infoSize, ' ');
+    checkOpenCLError(clGetProgramBuildInfo(program, id, CL_PROGRAM_BUILD_LOG, infoSize, &infoString[0], nullptr));
 
     return infoString;
 }

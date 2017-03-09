@@ -42,4 +42,12 @@ void checkOpenCLError(const cl_int value)
     }
 }
 
+void checkOpenCLError(const cl_int value, const std::string& message)
+{
+    if (value != CL_SUCCESS)
+    {
+        throw std::runtime_error("Internal OpenCL error: " + getOpenCLEnumName(value) + "\nAdditional info: " + message);
+    }
+}
+
 } // namespace ktt
