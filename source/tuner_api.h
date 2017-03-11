@@ -35,9 +35,9 @@ public:
     void addArgumentDouble(const size_t id, const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType);
     void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
-    // OpenCL methods
-    static void printOpenCLInfo(std::ostream& outputTarget);
-    void setOpenCLCompilerOptions(const std::string& options);
+    // Compute API methods
+    static void printComputeAPIInfo(std::ostream& outputTarget);
+    void setCompilerOptions(const std::string& options);
 
 private:
     // Attributes

@@ -28,7 +28,7 @@ void Tuner::addParameter(const size_t id, const std::string& name, const std::ve
 {
     try
     {
-        tunerCore->addParameter(id, name, values);
+        tunerCore->addParameter(id, name, values, ThreadModifierType::None, Dimension::X);
     }
     catch (const std::runtime_error& error)
     {
@@ -97,7 +97,7 @@ void Tuner::useSearchMethod(const size_t id, const SearchMethod& searchMethod, c
     }
 }
 
-void Tuner::printOpenCLInfo(std::ostream& outputTarget)
+void Tuner::printComputeAPIInfo(std::ostream& outputTarget)
 {
     try
     {
@@ -109,7 +109,7 @@ void Tuner::printOpenCLInfo(std::ostream& outputTarget)
     }
 }
 
-void Tuner::setOpenCLCompilerOptions(const std::string& options)
+void Tuner::setCompilerOptions(const std::string& options)
 {
     tunerCore->setOpenCLCompilerOptions(options);
 }

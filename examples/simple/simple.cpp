@@ -47,7 +47,7 @@ int main(int argc, char** argv)
     }
     
     // WIP
-    ktt::Tuner::printOpenCLInfo(std::cout);
+    ktt::Tuner::printComputeAPIInfo(std::cout);
     ktt::Tuner tuner(platformIndex, { deviceIndex });
 
     size_t kernelId = tuner.addKernelFromFile(kernelName, std::string("multirunKernel"), ndRangeDimensions, workGroupDimensions);

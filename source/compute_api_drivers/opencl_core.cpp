@@ -126,6 +126,16 @@ void OpenCLCore::getBufferData(const OpenCLBuffer& buffer, void* data, const siz
     checkOpenCLError(result);
 }
 
+void OpenCLCore::createKernel(const OpenCLProgram& program, const std::string& kernelName)
+{
+    kernels.push_back(OpenCLKernel(program.getProgram(), kernelName));
+}
+
+void OpenCLCore::setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buffer)
+{
+    kernel.setKernelArgument(buffer.getBuffer(), buffer.getSize());
+}
+
 std::string OpenCLCore::getPlatformInfo(const cl_platform_id id, const cl_platform_info info)
 {
     size_t infoSize;
@@ -146,7 +156,7 @@ std::string OpenCLCore::getDeviceInfo(const cl_device_id id, const cl_device_inf
     return infoString;
 }
 
-std::string OpenCLCore::getProgramBuildInfo(const cl_program program, const cl_device_id id)
+std::string OpenCLCore::getProgramBuildInfo(const cl_program program, const cl_device_id id) const
 {
     size_t infoSize;
     checkOpenCLError(clGetProgramBuildInfo(program, id, 0, 0, nullptr, &infoSize));

@@ -13,6 +13,8 @@ std::string getOpenCLEnumName(const cl_int value)
         return std::string("CL_DEVICE_NOT_FOUND");
     case CL_DEVICE_NOT_AVAILABLE:
         return std::string("CL_DEVICE_NOT_AVAILABLE");
+    case CL_MEM_OBJECT_ALLOCATION_FAILURE:
+        return std::string("CL_MEM_OBJECT_ALLOCATION_FAILURE");
     case CL_OUT_OF_RESOURCES:
         return std::string("CL_OUT_OF_RESOURCES");
     case CL_OUT_OF_HOST_MEMORY:
@@ -23,10 +25,16 @@ std::string getOpenCLEnumName(const cl_int value)
         return std::string("CL_INVALID_PLATFORM");
     case CL_INVALID_DEVICE:
         return std::string("CL_INVALID_DEVICE");
+    case CL_INVALID_BUILD_OPTIONS:
+        return std::string("CL_INVALID_BUILD_OPTIONS");
     case CL_INVALID_KERNEL_NAME:
         return std::string("CL_INVALID_KERNEL_NAME");
     case CL_INVALID_ARG_SIZE:
         return std::string("CL_INVALID_ARG_SIZE");
+    case CL_INVALID_WORK_GROUP_SIZE:
+        return std::string("CL_INVALID_WORK_GROUP_SIZE");
+    case CL_INVALID_WORK_ITEM_SIZE:
+        return std::string("CL_INVALID_WORK_ITEM_SIZE");
     case CL_INVALID_BUFFER_SIZE:
         return std::string("CL_INVALID_BUFFER_SIZE");
     default:
@@ -63,6 +71,18 @@ cl_mem_flags getOpenCLMemoryType(const KernelArgumentAccessType& kernelArgumentA
     default:
         return CL_MEM_READ_WRITE;
     }
+}
+
+cl_ulong getKernelExecutionDuration(const cl_event profilingEvent)
+{
+    checkOpenCLError(clWaitForEvents(1, &profilingEvent));
+
+    cl_ulong executionStart;
+    cl_ulong executionEnd;
+    checkOpenCLError(clGetEventProfilingInfo(profilingEvent, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &executionStart, nullptr));
+    checkOpenCLError(clGetEventProfilingInfo(profilingEvent, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &executionEnd, nullptr));
+
+    return executionEnd - executionStart;
 }
 
 } // namespace ktt
