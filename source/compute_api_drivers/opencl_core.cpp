@@ -5,7 +5,8 @@
 namespace ktt
 {
 
-OpenCLCore::OpenCLCore(const size_t platformIndex, const std::vector<size_t>& deviceIndices)
+OpenCLCore::OpenCLCore(const size_t platformIndex, const std::vector<size_t>& deviceIndices):
+    compilerOptions(std::string(""))
 {
     auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
@@ -90,17 +91,39 @@ void OpenCLCore::printOpenCLInfo(std::ostream& outputTarget)
     }
 }
 
-void OpenCLCore::addProgram(const std::string& source)
+void OpenCLCore::createProgram(const std::string& source)
 {
-    programs.push_back(std::make_unique<OpenCLProgram>(source, context->getContext(), context->getDevices()));
+    programs.push_back(OpenCLProgram(source, context->getContext(), context->getDevices()));
 }
 
-void OpenCLCore::buildProgram(const OpenCLProgram& program, const std::string& compilerOptions)
+void OpenCLCore::buildProgram(OpenCLProgram& program)
 {
     cl_int result = clBuildProgram(program.getProgram(), program.getDevices().size(), program.getDevices().data(), &compilerOptions[0], nullptr,
         nullptr);
     std::string buildInfo = getProgramBuildInfo(program.getProgram(), program.getDevices().at(0));
     checkOpenCLError(result, buildInfo);
+}
+
+void OpenCLCore::setOpenCLCompilerOptions(const std::string& options)
+{
+    compilerOptions = options;
+}
+
+void OpenCLCore::createBuffer(const KernelArgumentAccessType& kernelArgumentAccessType, const size_t size)
+{
+    buffers.push_back(OpenCLBuffer(context->getContext(), getOpenCLMemoryType(kernelArgumentAccessType), size));
+}
+
+void OpenCLCore::updateBuffer(OpenCLBuffer& buffer, const void* data, const size_t dataSize)
+{
+    cl_int result = clEnqueueWriteBuffer(commandQueues.at(0)->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, data, 0, nullptr, nullptr);
+    checkOpenCLError(result);
+}
+
+void OpenCLCore::getBufferData(const OpenCLBuffer& buffer, void* data, const size_t dataSize)
+{
+    cl_int result = clEnqueueReadBuffer(commandQueues.at(0)->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, data, 0, nullptr, nullptr);
+    checkOpenCLError(result);
 }
 
 std::string OpenCLCore::getPlatformInfo(const cl_platform_id id, const cl_platform_info info)

@@ -31,24 +31,25 @@ std::vector<KernelConfiguration> TunerCore::getKernelConfigurations(const size_t
     return kernelManager->getKernelConfigurations(id);
 }
 
-void TunerCore::addParameter(const size_t id, const KernelParameter& parameter)
+void TunerCore::addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values,
+    const ThreadModifierType& threadModifierType, const Dimension& modifierDimension)
 {
-    kernelManager->addParameter(id, parameter);
+    kernelManager->addParameter(id, name, values, threadModifierType, modifierDimension);
 }
 
-void TunerCore::addArgumentInt(const size_t id, const std::vector<int>& data)
+void TunerCore::addArgumentInt(const size_t id, const std::vector<int>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
-    kernelManager->addArgumentInt(id, data);
+    kernelManager->addArgumentInt(id, data, kernelArgumentAccessType);
 }
 
-void TunerCore::addArgumentFloat(const size_t id, const std::vector<float>& data)
+void TunerCore::addArgumentFloat(const size_t id, const std::vector<float>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
-    kernelManager->addArgumentFloat(id, data);
+    kernelManager->addArgumentFloat(id, data, kernelArgumentAccessType);
 }
 
-void TunerCore::addArgumentDouble(const size_t id, const std::vector<double>& data)
+void TunerCore::addArgumentDouble(const size_t id, const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
-    kernelManager->addArgumentDouble(id, data);
+    kernelManager->addArgumentDouble(id, data, kernelArgumentAccessType);
 }
 
 void TunerCore::useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
@@ -79,6 +80,11 @@ std::vector<OpenCLDevice> TunerCore::getOpenCLDevices(const OpenCLPlatform& plat
 void TunerCore::printOpenCLInfo(std::ostream& outputTarget)
 {
     OpenCLCore::printOpenCLInfo(outputTarget);
+}
+
+void TunerCore::setOpenCLCompilerOptions(const std::string& options)
+{
+    openCLCore->setOpenCLCompilerOptions(options);
 }
 
 } // namespace ktt

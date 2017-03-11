@@ -22,45 +22,45 @@ void Kernel::addParameter(const KernelParameter& parameter)
     parameters.push_back(parameter);
 }
 
-void Kernel::addArgumentInt(const std::vector<int>& data)
+void Kernel::addArgumentInt(const std::vector<int>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
     if (data.size() == 1)
     {
-        argumentsInt.push_back(KernelArgument<int>(data, KernelArgumentQuantity::Scalar));
+        argumentsInt.push_back(KernelArgument<int>(data, KernelArgumentQuantity::Scalar, kernelArgumentAccessType));
     }
     else
     {
-        argumentsInt.push_back(KernelArgument<int>(data, KernelArgumentQuantity::Vector));
+        argumentsInt.push_back(KernelArgument<int>(data, KernelArgumentQuantity::Vector, kernelArgumentAccessType));
     }
-    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Int, argumentsInt.size() - static_cast<size_t>(1)));
+    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Int, argumentsInt.size() - 1));
     argumentCount++;
 }
 
-void Kernel::addArgumentFloat(const std::vector<float>& data)
+void Kernel::addArgumentFloat(const std::vector<float>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
     if (data.size() == 1)
     {
-        argumentsFloat.push_back(KernelArgument<float>(data, KernelArgumentQuantity::Scalar));
+        argumentsFloat.push_back(KernelArgument<float>(data, KernelArgumentQuantity::Scalar, kernelArgumentAccessType));
     }
     else
     {
-        argumentsFloat.push_back(KernelArgument<float>(data, KernelArgumentQuantity::Vector));
+        argumentsFloat.push_back(KernelArgument<float>(data, KernelArgumentQuantity::Vector, kernelArgumentAccessType));
     }
-    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Float, argumentsFloat.size() - static_cast<size_t>(1)));
+    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Float, argumentsFloat.size() - 1));
     argumentCount++;
 }
 
-void Kernel::addArgumentDouble(const std::vector<double>& data)
+void Kernel::addArgumentDouble(const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
     if (data.size() == 1)
     {
-        argumentsDouble.push_back(KernelArgument<double>(data, KernelArgumentQuantity::Scalar));
+        argumentsDouble.push_back(KernelArgument<double>(data, KernelArgumentQuantity::Scalar, kernelArgumentAccessType));
     }
     else
     {
-        argumentsDouble.push_back(KernelArgument<double>(data, KernelArgumentQuantity::Vector));
+        argumentsDouble.push_back(KernelArgument<double>(data, KernelArgumentQuantity::Vector, kernelArgumentAccessType));
     }
-    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Double, argumentsDouble.size() - static_cast<size_t>(1)));
+    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Double, argumentsDouble.size() - 1));
     argumentCount++;
 }
 

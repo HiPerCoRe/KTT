@@ -23,10 +23,11 @@ public:
     std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const size_t id) const;
 
-    void addParameter(const size_t id, const KernelParameter& parameter);
-    void addArgumentInt(const size_t id, const std::vector<int>& data);
-    void addArgumentFloat(const size_t id, const std::vector<float>& data);
-    void addArgumentDouble(const size_t id, const std::vector<double>& data);
+    void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values,
+        const ThreadModifierType& threadModifierType = ThreadModifierType::None, const Dimension& modifierDimension = Dimension::X);
+    void addArgumentInt(const size_t id, const std::vector<int>& data, const KernelArgumentAccessType& kernelArgumentAccessType);
+    void addArgumentFloat(const size_t id, const std::vector<float>& data, const KernelArgumentAccessType& kernelArgumentAccessType);
+    void addArgumentDouble(const size_t id, const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType);
     void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     size_t getKernelCount() const;
@@ -36,6 +37,8 @@ public:
     std::vector<OpenCLPlatform> getOpenCLPlatforms() const;
     std::vector<OpenCLDevice> getOpenCLDevices(const OpenCLPlatform& platform) const;
     static void printOpenCLInfo(std::ostream& outputTarget);
+
+    void setOpenCLCompilerOptions(const std::string& options);
 
 private:
     // Attributes

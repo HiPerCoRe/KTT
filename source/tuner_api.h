@@ -2,11 +2,14 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
-// Headers relevant to usage of API methods
+// Type aliases and enums relevant to usage of API methods
 #include "ktt_type_aliases.h"
+#include "enums/dimension.h"
+#include "enums/kernel_argument_access_type.h"
 #include "enums/search_method.h"
-#include "kernel/kernel_parameter.h"
+#include "enums/thread_modifier_type.h"
 
 namespace ktt
 {
@@ -24,14 +27,17 @@ public:
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
-    void addParameter(const size_t id, const KernelParameter& parameter);
-    void addArgumentInt(const size_t id, const std::vector<int>& data);
-    void addArgumentFloat(const size_t id, const std::vector<float>& data);
-    void addArgumentDouble(const size_t id, const std::vector<double>& data);
+    void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values);
+    void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
+        const Dimension& modifierDimension);
+    void addArgumentInt(const size_t id, const std::vector<int>& data, const KernelArgumentAccessType& kernelArgumentAccessType);
+    void addArgumentFloat(const size_t id, const std::vector<float>& data, const KernelArgumentAccessType& kernelArgumentAccessType);
+    void addArgumentDouble(const size_t id, const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType);
     void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // OpenCL methods
     static void printOpenCLInfo(std::ostream& outputTarget);
+    void setOpenCLCompilerOptions(const std::string& options);
 
 private:
     // Attributes

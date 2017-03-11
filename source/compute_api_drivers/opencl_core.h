@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "../enums/kernel_argument_access_type.h"
+#include "opencl_buffer.h"
 #include "opencl_command_queue.h"
 #include "opencl_context.h"
 #include "opencl_device.h"
@@ -26,14 +28,22 @@ public:
     static void printOpenCLInfo(std::ostream& outputTarget);
 
     // Program handling methods
-    void addProgram(const std::string& source);
-    void buildProgram(const OpenCLProgram& program, const std::string& compilerOptions);
+    void createProgram(const std::string& source);
+    void buildProgram(OpenCLProgram& program);
+    void setOpenCLCompilerOptions(const std::string& options);
+
+    // Buffer handling methods
+    void createBuffer(const KernelArgumentAccessType& kernelArgumentAccessType, const size_t size);
+    void updateBuffer(OpenCLBuffer& buffer, const void* data, const size_t dataSize);
+    void getBufferData(const OpenCLBuffer& buffer, void* data, const size_t dataSize);
 
 private:
     // Attributes
     std::unique_ptr<OpenCLContext> context;
     std::vector<std::unique_ptr<OpenCLCommandQueue>> commandQueues;
-    std::vector<std::unique_ptr<OpenCLProgram>> programs;
+    std::vector<OpenCLProgram> programs;
+    std::vector<OpenCLBuffer> buffers;
+    std::string compilerOptions;
 
     // Helper methods
     static std::string getPlatformInfo(const cl_platform_id id, const cl_platform_info info);

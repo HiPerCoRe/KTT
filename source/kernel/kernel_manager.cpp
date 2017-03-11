@@ -53,40 +53,41 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
     return configurations;
 }
 
-void KernelManager::addParameter(const size_t id, const KernelParameter& parameter)
+void KernelManager::addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values,
+    const ThreadModifierType& threadModifierType, const Dimension& modifierDimension)
 {
     if (id >= kernelCount)
     {
         throw std::runtime_error("Invalid kernel id: " + id);
     }
-    kernels.at(id)->addParameter(parameter);
+    kernels.at(id)->addParameter(KernelParameter(name, values, threadModifierType, modifierDimension));
 }
 
-void KernelManager::addArgumentInt(const size_t id, const std::vector<int>& data)
+void KernelManager::addArgumentInt(const size_t id, const std::vector<int>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
     if (id >= kernelCount)
     {
         throw std::runtime_error("Invalid kernel id: " + id);
     }
-    kernels.at(id)->addArgumentInt(data);
+    kernels.at(id)->addArgumentInt(data, kernelArgumentAccessType);
 }
 
-void KernelManager::addArgumentFloat(const size_t id, const std::vector<float>& data)
+void KernelManager::addArgumentFloat(const size_t id, const std::vector<float>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
     if (id >= kernelCount)
     {
         throw std::runtime_error("Invalid kernel id: " + id);
     }
-    kernels.at(id)->addArgumentFloat(data);
+    kernels.at(id)->addArgumentFloat(data, kernelArgumentAccessType);
 }
 
-void KernelManager::addArgumentDouble(const size_t id, const std::vector<double>& data)
+void KernelManager::addArgumentDouble(const size_t id, const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
     if (id >= kernelCount)
     {
         throw std::runtime_error("Invalid kernel id: " + id);
     }
-    kernels.at(id)->addArgumentDouble(data);
+    kernels.at(id)->addArgumentDouble(data, kernelArgumentAccessType);
 }
 
 void KernelManager::useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)

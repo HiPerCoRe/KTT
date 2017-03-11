@@ -50,4 +50,19 @@ void checkOpenCLError(const cl_int value, const std::string& message)
     }
 }
 
+cl_mem_flags getOpenCLMemoryType(const KernelArgumentAccessType& kernelArgumentAccessType)
+{
+    switch (kernelArgumentAccessType)
+    {
+    case KernelArgumentAccessType::READ_ONLY:
+        return CL_MEM_READ_ONLY;
+    case KernelArgumentAccessType::WRITE_ONLY:
+        return CL_MEM_WRITE_ONLY;
+    case KernelArgumentAccessType::READ_WRITE:
+        return CL_MEM_READ_WRITE;
+    default:
+        return CL_MEM_READ_WRITE;
+    }
+}
+
 } // namespace ktt

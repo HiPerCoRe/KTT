@@ -24,11 +24,11 @@ size_t Tuner::addKernelFromFile(const std::string& filePath, const std::string& 
     return tunerCore->addKernelFromFile(filePath, kernelName, globalSize, localSize);
 }
 
-void Tuner::addParameter(const size_t id, const KernelParameter& parameter)
+void Tuner::addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values)
 {
     try
     {
-        tunerCore->addParameter(id, parameter);
+        tunerCore->addParameter(id, name, values);
     }
     catch (const std::runtime_error& error)
     {
@@ -36,11 +36,12 @@ void Tuner::addParameter(const size_t id, const KernelParameter& parameter)
     }
 }
 
-void Tuner::addArgumentInt(const size_t id, const std::vector<int>& data)
+void Tuner::addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
+    const Dimension& modifierDimension)
 {
     try
     {
-        tunerCore->addArgumentInt(id, data);
+        tunerCore->addParameter(id, name, values, threadModifierType, modifierDimension);
     }
     catch (const std::runtime_error& error)
     {
@@ -48,11 +49,11 @@ void Tuner::addArgumentInt(const size_t id, const std::vector<int>& data)
     }
 }
 
-void Tuner::addArgumentFloat(const size_t id, const std::vector<float>& data)
+void Tuner::addArgumentInt(const size_t id, const std::vector<int>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
     try
     {
-        tunerCore->addArgumentFloat(id, data);
+        tunerCore->addArgumentInt(id, data, kernelArgumentAccessType);
     }
     catch (const std::runtime_error& error)
     {
@@ -60,11 +61,23 @@ void Tuner::addArgumentFloat(const size_t id, const std::vector<float>& data)
     }
 }
 
-void Tuner::addArgumentDouble(const size_t id, const std::vector<double>& data)
+void Tuner::addArgumentFloat(const size_t id, const std::vector<float>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
 {
     try
     {
-        tunerCore->addArgumentDouble(id, data);
+        tunerCore->addArgumentFloat(id, data, kernelArgumentAccessType);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+    }
+}
+
+void Tuner::addArgumentDouble(const size_t id, const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
+{
+    try
+    {
+        tunerCore->addArgumentDouble(id, data, kernelArgumentAccessType);
     }
     catch (const std::runtime_error& error)
     {
@@ -94,6 +107,11 @@ void Tuner::printOpenCLInfo(std::ostream& outputTarget)
     {
         std::cerr << error.what() << std::endl;
     }
+}
+
+void Tuner::setOpenCLCompilerOptions(const std::string& options)
+{
+    tunerCore->setOpenCLCompilerOptions(options);
 }
 
 } // namespace ktt
