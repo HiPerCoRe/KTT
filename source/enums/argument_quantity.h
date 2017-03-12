@@ -3,7 +3,7 @@
 namespace ktt
 {
 
-enum class KernelArgumentQuantity
+enum class ArgumentQuantity
 {
     Scalar,
     Vector

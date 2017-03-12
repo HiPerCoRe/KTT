@@ -49,11 +49,11 @@ void Tuner::addParameter(const size_t id, const std::string& name, const std::ve
     }
 }
 
-void Tuner::addArgumentInt(const size_t id, const std::vector<int>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
+void Tuner::addArgumentInt(const size_t id, const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType)
 {
     try
     {
-        tunerCore->addArgumentInt(id, data, kernelArgumentAccessType);
+        tunerCore->addArgumentInt(id, data, argumentMemoryType);
     }
     catch (const std::runtime_error& error)
     {
@@ -61,11 +61,11 @@ void Tuner::addArgumentInt(const size_t id, const std::vector<int>& data, const 
     }
 }
 
-void Tuner::addArgumentFloat(const size_t id, const std::vector<float>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
+void Tuner::addArgumentFloat(const size_t id, const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType)
 {
     try
     {
-        tunerCore->addArgumentFloat(id, data, kernelArgumentAccessType);
+        tunerCore->addArgumentFloat(id, data, argumentMemoryType);
     }
     catch (const std::runtime_error& error)
     {
@@ -73,11 +73,11 @@ void Tuner::addArgumentFloat(const size_t id, const std::vector<float>& data, co
     }
 }
 
-void Tuner::addArgumentDouble(const size_t id, const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
+void Tuner::addArgumentDouble(const size_t id, const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType)
 {
     try
     {
-        tunerCore->addArgumentDouble(id, data, kernelArgumentAccessType);
+        tunerCore->addArgumentDouble(id, data, argumentMemoryType);
     }
     catch (const std::runtime_error& error)
     {

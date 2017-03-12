@@ -3,7 +3,7 @@
 namespace ktt
 {
 
-enum class KernelArgumentAccessType
+enum class ArgumentMemoryType
 {
     READ_ONLY,
     WRITE_ONLY,

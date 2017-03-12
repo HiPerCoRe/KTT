@@ -37,19 +37,19 @@ void TunerCore::addParameter(const size_t id, const std::string& name, const std
     kernelManager->addParameter(id, name, values, threadModifierType, modifierDimension);
 }
 
-void TunerCore::addArgumentInt(const size_t id, const std::vector<int>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
+void TunerCore::addArgumentInt(const size_t id, const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType)
 {
-    kernelManager->addArgumentInt(id, data, kernelArgumentAccessType);
+    kernelManager->addArgumentInt(id, data, argumentMemoryType);
 }
 
-void TunerCore::addArgumentFloat(const size_t id, const std::vector<float>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
+void TunerCore::addArgumentFloat(const size_t id, const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType)
 {
-    kernelManager->addArgumentFloat(id, data, kernelArgumentAccessType);
+    kernelManager->addArgumentFloat(id, data, argumentMemoryType);
 }
 
-void TunerCore::addArgumentDouble(const size_t id, const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
+void TunerCore::addArgumentDouble(const size_t id, const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType)
 {
-    kernelManager->addArgumentDouble(id, data, kernelArgumentAccessType);
+    kernelManager->addArgumentDouble(id, data, argumentMemoryType);
 }
 
 void TunerCore::useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)

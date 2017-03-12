@@ -3,7 +3,7 @@
 namespace ktt
 {
 
-enum class KernelArgumentType
+enum class ArgumentDataType
 {
     Int,
     Float,

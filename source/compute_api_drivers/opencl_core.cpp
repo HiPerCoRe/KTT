@@ -109,9 +109,9 @@ void OpenCLCore::setOpenCLCompilerOptions(const std::string& options)
     compilerOptions = options;
 }
 
-void OpenCLCore::createBuffer(const KernelArgumentAccessType& kernelArgumentAccessType, const size_t size)
+void OpenCLCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size)
 {
-    buffers.push_back(OpenCLBuffer(context->getContext(), getOpenCLMemoryType(kernelArgumentAccessType), size));
+    buffers.push_back(OpenCLBuffer(context->getContext(), getOpenCLMemoryType(argumentMemoryType), size));
 }
 
 void OpenCLCore::updateBuffer(OpenCLBuffer& buffer, const void* data, const size_t dataSize)

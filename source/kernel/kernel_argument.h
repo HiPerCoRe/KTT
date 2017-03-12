@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "../enums/kernel_argument_access_type.h"
-#include "../enums/kernel_argument_quantity.h"
+#include "../enums/argument_memory_type.h"
+#include "../enums/argument_quantity.h"
 
 namespace ktt
 {
@@ -11,32 +11,43 @@ namespace ktt
 template <typename T> class KernelArgument
 {
 public:
-    explicit KernelArgument(const std::vector<T>& data, const KernelArgumentQuantity& kernelArgumentQuantity,
-        const KernelArgumentAccessType& kernelArgumentAccessType):
+    explicit KernelArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType):
         data(data),
-        kernelArgumentQuantity(kernelArgumentQuantity),
-        kernelArgumentAccessType(kernelArgumentAccessType)
-    {}
+        argumentMemoryType(argumentMemoryType)
+    {
+        if (data.size() == 0)
+        {
+            throw std::runtime_error("Data provided for kernel argument is empty.");
+        }
+        else if (data.size() == 1)
+        {
+            argumentQuantity = ArgumentQuantity::Scalar;
+        }
+        else
+        {
+            argumentQuantity = ArgumentQuantity::Vector;
+        }
+    }
 
     std::vector<T> getData() const
     {
         return data;
     }
 
-    KernelArgumentQuantity getKernelArgumentQuantity() const
+    ArgumentMemoryType getArgumentMemoryType() const
     {
-        return kernelArgumentQuantity;
+        return argumentMemoryType;
     }
 
-    KernelArgumentAccessType getKernelArgumentAccessType() const
+    ArgumentQuantity getArgumentQuantity() const
     {
-        return kernelArgumentAccessType;
+        return argumentQuantity;
     }
 
 private:
     std::vector<T> data;
-    KernelArgumentQuantity kernelArgumentQuantity;
-    KernelArgumentAccessType kernelArgumentAccessType;
+    ArgumentMemoryType argumentMemoryType;
+    ArgumentQuantity argumentQuantity;
 };
 
 } // namespace ktt

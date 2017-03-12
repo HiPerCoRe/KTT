@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "../enums/kernel_argument_access_type.h"
+#include "../enums/argument_memory_type.h"
 #include "opencl_buffer.h"
 #include "opencl_command_queue.h"
 #include "opencl_context.h"
@@ -34,7 +34,7 @@ public:
     void setOpenCLCompilerOptions(const std::string& options);
 
     // Buffer handling methods
-    void createBuffer(const KernelArgumentAccessType& kernelArgumentAccessType, const size_t size);
+    void createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size);
     void updateBuffer(OpenCLBuffer& buffer, const void* data, const size_t dataSize);
     void getBufferData(const OpenCLBuffer& buffer, void* data, const size_t dataSize);
 

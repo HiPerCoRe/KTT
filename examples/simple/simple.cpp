@@ -51,9 +51,9 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, { deviceIndex });
 
     size_t kernelId = tuner.addKernelFromFile(kernelName, std::string("multirunKernel"), ndRangeDimensions, workGroupDimensions);
-    tuner.addArgumentFloat(kernelId, a, ktt::KernelArgumentAccessType::READ_ONLY);
-    tuner.addArgumentFloat(kernelId, b, ktt::KernelArgumentAccessType::READ_ONLY);
-    tuner.addArgumentFloat(kernelId, result, ktt::KernelArgumentAccessType::WRITE_ONLY);
+    tuner.addArgumentFloat(kernelId, a, ktt::ArgumentMemoryType::READ_ONLY);
+    tuner.addArgumentFloat(kernelId, b, ktt::ArgumentMemoryType::READ_ONLY);
+    tuner.addArgumentFloat(kernelId, result, ktt::ArgumentMemoryType::WRITE_ONLY);
 
     tuner.addParameter(kernelId, std::string("TEST_PARAM"), std::vector<size_t>{1, 2, 3});
     tuner.useSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.5 });

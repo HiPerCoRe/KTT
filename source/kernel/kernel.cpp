@@ -9,7 +9,7 @@ Kernel::Kernel(const std::string& source, const std::string& name, const Dimensi
     globalSize(globalSize),
     localSize(localSize),
     searchMethod(SearchMethod::FullSearch),
-    argumentCount(static_cast<size_t>(0))
+    argumentCount(0)
 {}
 
 void Kernel::addParameter(const KernelParameter& parameter)
@@ -22,45 +22,24 @@ void Kernel::addParameter(const KernelParameter& parameter)
     parameters.push_back(parameter);
 }
 
-void Kernel::addArgumentInt(const std::vector<int>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
+void Kernel::addArgumentInt(const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType)
 {
-    if (data.size() == 1)
-    {
-        argumentsInt.push_back(KernelArgument<int>(data, KernelArgumentQuantity::Scalar, kernelArgumentAccessType));
-    }
-    else
-    {
-        argumentsInt.push_back(KernelArgument<int>(data, KernelArgumentQuantity::Vector, kernelArgumentAccessType));
-    }
-    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Int, argumentsInt.size() - 1));
+    argumentsInt.push_back(KernelArgument<int>(data, argumentMemoryType));
+    argumentIndices.push_back(ArgumentIndex(argumentCount, ArgumentDataType::Int, argumentsInt.size() - 1));
     argumentCount++;
 }
 
-void Kernel::addArgumentFloat(const std::vector<float>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
+void Kernel::addArgumentFloat(const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType)
 {
-    if (data.size() == 1)
-    {
-        argumentsFloat.push_back(KernelArgument<float>(data, KernelArgumentQuantity::Scalar, kernelArgumentAccessType));
-    }
-    else
-    {
-        argumentsFloat.push_back(KernelArgument<float>(data, KernelArgumentQuantity::Vector, kernelArgumentAccessType));
-    }
-    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Float, argumentsFloat.size() - 1));
+    argumentsFloat.push_back(KernelArgument<float>(data, argumentMemoryType));
+    argumentIndices.push_back(ArgumentIndex(argumentCount, ArgumentDataType::Float, argumentsFloat.size() - 1));
     argumentCount++;
 }
 
-void Kernel::addArgumentDouble(const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType)
+void Kernel::addArgumentDouble(const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType)
 {
-    if (data.size() == 1)
-    {
-        argumentsDouble.push_back(KernelArgument<double>(data, KernelArgumentQuantity::Scalar, kernelArgumentAccessType));
-    }
-    else
-    {
-        argumentsDouble.push_back(KernelArgument<double>(data, KernelArgumentQuantity::Vector, kernelArgumentAccessType));
-    }
-    argumentIndices.push_back(ArgumentIndex(argumentCount, KernelArgumentType::Double, argumentsDouble.size() - 1));
+    argumentsDouble.push_back(KernelArgument<double>(data, argumentMemoryType));
+    argumentIndices.push_back(ArgumentIndex(argumentCount, ArgumentDataType::Double, argumentsDouble.size() - 1));
     argumentCount++;
 }
 

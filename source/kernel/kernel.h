@@ -4,7 +4,8 @@
 #include <vector>
 
 #include "../ktt_type_aliases.h"
-#include "../enums/kernel_argument_type.h"
+#include "../enums/argument_data_type.h"
+#include "../enums/argument_memory_type.h"
 #include "../enums/search_method.h"
 #include "kernel_argument.h"
 #include "kernel_parameter.h"
@@ -20,9 +21,9 @@ public:
 
     // Core methods
     void addParameter(const KernelParameter& parameter);
-    void addArgumentInt(const std::vector<int>& data, const KernelArgumentAccessType& kernelArgumentAccessType);
-    void addArgumentFloat(const std::vector<float>& data, const KernelArgumentAccessType& kernelArgumentAccessType);
-    void addArgumentDouble(const std::vector<double>& data, const KernelArgumentAccessType& kernelArgumentAccessType);
+    void addArgumentInt(const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType);
+    void addArgumentFloat(const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType);
+    void addArgumentDouble(const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType);
     void useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Getters
