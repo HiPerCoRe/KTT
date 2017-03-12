@@ -10,11 +10,9 @@ namespace ktt
 class OpenCLPlatform
 {
 public:
-    explicit OpenCLPlatform(const cl_platform_id id, const std::string& openCLVersion, const std::string& name, const std::string& vendor):
+    explicit OpenCLPlatform(const cl_platform_id id, const std::string& name):
         id(id),
-        openCLVersion(openCLVersion),
-        name(name),
-        vendor(vendor)
+        name(name)
     {}
 
     cl_platform_id getId() const
@@ -22,26 +20,14 @@ public:
         return id;
     }
 
-    std::string getOpenCLVersion() const
-    {
-        return openCLVersion;
-    }
-
     std::string getName() const
     {
         return name;
     }
 
-    std::string getVendor() const
-    {
-        return vendor;
-    }
-
 private:
     cl_platform_id id;
-    std::string openCLVersion;
     std::string name;
-    std::string vendor;
 };
 
 } // namespace ktt

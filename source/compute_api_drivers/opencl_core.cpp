@@ -44,10 +44,7 @@ std::vector<OpenCLPlatform> OpenCLCore::getOpenCLPlatforms()
     for (const auto platformId : platformIds)
     {
         std::string name = getPlatformInfo(platformId, CL_PLATFORM_NAME);
-        std::string version = getPlatformInfo(platformId, CL_PLATFORM_VERSION);
-        std::string vendor = getPlatformInfo(platformId, CL_PLATFORM_VENDOR);
-
-        platforms.push_back(OpenCLPlatform(platformId, version, name, vendor));
+        platforms.push_back(OpenCLPlatform(platformId, name));
     }
 
     return platforms;
@@ -65,9 +62,7 @@ std::vector<OpenCLDevice> OpenCLCore::getOpenCLDevices(const OpenCLPlatform& pla
     for (const auto deviceId : deviceIds)
     {
         std::string name = getDeviceInfo(deviceId, CL_DEVICE_NAME);
-        std::string vendor = getDeviceInfo(deviceId, CL_DEVICE_VENDOR);
-
-        devices.push_back(OpenCLDevice(deviceId, name, vendor));
+        devices.push_back(OpenCLDevice(deviceId, name));
     }
 
     return devices;
@@ -79,13 +74,13 @@ void OpenCLCore::printOpenCLInfo(std::ostream& outputTarget)
 
     for (size_t i = 0; i < platforms.size(); i++)
     {
-        outputTarget << "Platform " << i << ": " << platforms.at(i).getVendor() << " " << platforms.at(i).getName() << std::endl;
+        outputTarget << "Platform " << i << ": " << platforms.at(i).getName() << std::endl;
         auto devices = getOpenCLDevices(platforms.at(i));
 
         outputTarget << "Devices for platform " << i << ":" << std::endl;
         for (size_t j = 0; j < devices.size(); j++)
         {
-            outputTarget << "Device " << j << ": " << devices.at(j).getVendor() << " " << devices.at(j).getName() << std::endl;
+            outputTarget << "Device " << j << ": " << devices.at(j).getName() << std::endl;
         }
         outputTarget << std::endl;
     }

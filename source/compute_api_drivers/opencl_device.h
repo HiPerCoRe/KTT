@@ -10,10 +10,9 @@ namespace ktt
 class OpenCLDevice
 {
 public:
-    explicit OpenCLDevice(const cl_device_id id, const std::string& name, const std::string& vendor):
+    explicit OpenCLDevice(const cl_device_id id, const std::string& name):
         id(id),
-        name(name),
-        vendor(vendor)
+        name(name)
     {}
 
     cl_device_id getId() const
@@ -26,15 +25,9 @@ public:
         return name;
     }
 
-    std::string getVendor() const
-    {
-        return vendor;
-    }
-
 private:
     cl_device_id id;
     std::string name;
-    std::string vendor;
 };
 
 } // namespace ktt
