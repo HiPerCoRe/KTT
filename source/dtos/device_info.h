@@ -8,10 +8,10 @@
 namespace ktt
 {
 
-class Device
+class DeviceInfo
 {
 public:
-    explicit Device(const size_t id, const std::string& name):
+    explicit DeviceInfo(const size_t id, const std::string& name):
         id(id),
         name(name)
     {}

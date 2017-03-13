@@ -1,5 +1,8 @@
-Version 0.0.2
+Version 0.0.3 (13/3/2017)
+* OpenCL platform and device information retrieval methods are now available in API
+
+Version 0.0.2 (2/2/2017)
 * Kernel handling methods are now available in API
 
-Version 0.0.1
+Version 0.0.1 (18/1/2017)
 * Initial project release on Github

@@ -35,8 +35,10 @@ public:
 
     // Compute API methods
     static void printComputeAPIInfo(std::ostream& outputTarget);
-    static std::vector<Platform> getPlatformInfo();
-    static std::vector<Device> getDeviceInfo(const size_t platformIndex);
+    static PlatformInfo getPlatformInfo(const size_t platformIndex);
+    static std::vector<PlatformInfo> getPlatformInfoAll();
+    static DeviceInfo getDeviceInfo(const size_t platformIndex, const size_t deviceIndex);
+    static std::vector<DeviceInfo> getDeviceInfoAll(const size_t platformIndex);
     void setCompilerOptions(const std::string& options);
 
 private:

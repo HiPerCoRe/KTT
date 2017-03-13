@@ -109,13 +109,13 @@ void Tuner::printComputeAPIInfo(std::ostream& outputTarget)
     }
 }
 
-std::vector<Platform> Tuner::getPlatformInfo()
+PlatformInfo Tuner::getPlatformInfo(const size_t platformIndex)
 {
-    std::vector<Platform> platformInfo;
+    PlatformInfo platformInfo(0, std::string(""));
 
     try
     {
-        platformInfo = TunerCore::getPlatformInfo();
+        platformInfo = TunerCore::getPlatformInfo(platformIndex);
     }
     catch (const std::runtime_error& error)
     {
@@ -125,13 +125,45 @@ std::vector<Platform> Tuner::getPlatformInfo()
     return platformInfo;
 }
 
-std::vector<Device> Tuner::getDeviceInfo(const size_t platformIndex)
+std::vector<PlatformInfo> Tuner::getPlatformInfoAll()
 {
-    std::vector<Device> deviceInfo;
+    std::vector<PlatformInfo> platformInfo;
 
     try
     {
-        deviceInfo = TunerCore::getDeviceInfo(platformIndex);
+        platformInfo = TunerCore::getPlatformInfoAll();
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+    }
+
+    return platformInfo;
+}
+
+DeviceInfo Tuner::getDeviceInfo(const size_t platformIndex, const size_t deviceIndex)
+{
+    DeviceInfo deviceInfo(0, std::string(""));
+
+    try
+    {
+        deviceInfo = TunerCore::getDeviceInfo(platformIndex, deviceIndex);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+    }
+
+    return deviceInfo;
+}
+
+std::vector<DeviceInfo> Tuner::getDeviceInfoAll(const size_t platformIndex)
+{
+    std::vector<DeviceInfo> deviceInfo;
+
+    try
+    {
+        deviceInfo = TunerCore::getDeviceInfoAll(platformIndex);
     }
     catch (const std::runtime_error& error)
     {

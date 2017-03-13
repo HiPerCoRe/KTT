@@ -72,14 +72,24 @@ void TunerCore::printComputeAPIInfo(std::ostream& outputTarget)
     OpenCLCore::printOpenCLInfo(outputTarget);
 }
 
-std::vector<Platform> TunerCore::getPlatformInfo()
+PlatformInfo TunerCore::getPlatformInfo(const size_t platformIndex)
 {
-    return OpenCLCore::getOpenCLPlatformInfo();
+    return OpenCLCore::getOpenCLPlatformInfo(platformIndex);
 }
 
-std::vector<Device> TunerCore::getDeviceInfo(const size_t platformIndex)
+std::vector<PlatformInfo> TunerCore::getPlatformInfoAll()
 {
-    return OpenCLCore::getOpenCLDeviceInfo(platformIndex);
+    return OpenCLCore::getOpenCLPlatformInfoAll();
+}
+
+DeviceInfo TunerCore::getDeviceInfo(const size_t platformIndex, const size_t deviceIndex)
+{
+    return OpenCLCore::getOpenCLDeviceInfo(platformIndex, deviceIndex);
+}
+
+std::vector<DeviceInfo> TunerCore::getDeviceInfoAll(const size_t platformIndex)
+{
+    return OpenCLCore::getOpenCLDeviceInfoAll(platformIndex);
 }
 
 void TunerCore::setCompilerOptions(const std::string& options)

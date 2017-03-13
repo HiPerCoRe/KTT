@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "../dtos/device.h"
-#include "../dtos/platform.h"
+#include "../dtos/device_info.h"
+#include "../dtos/platform_info.h"
 #include "../enums/argument_memory_type.h"
 #include "opencl_buffer.h"
 #include "opencl_command_queue.h"
@@ -27,8 +27,10 @@ public:
 
     // Platform and device retrieval methods
     static void printOpenCLInfo(std::ostream& outputTarget);
-    static std::vector<Platform> getOpenCLPlatformInfo();
-    static std::vector<Device> getOpenCLDeviceInfo(const size_t platformIndex);
+    static PlatformInfo getOpenCLPlatformInfo(const size_t platformIndex);
+    static std::vector<PlatformInfo> getOpenCLPlatformInfoAll();
+    static DeviceInfo getOpenCLDeviceInfo(const size_t platformIndex, const size_t deviceIndex);
+    static std::vector<DeviceInfo> getOpenCLDeviceInfoAll(const size_t platformIndex);
 
     // Compiler setup methods
     void setOpenCLCompilerOptions(const std::string& options);

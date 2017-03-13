@@ -7,8 +7,6 @@ greater degree of customization and control over kernel tuning process. This inc
 write custom classes, which can launch custom C++ code before or after individual kernel executions
 in order to run some part of computation on a CPU.
 
-Files utilizing a portion of CLTune project's code are marked so at their beginning.
-
 Project is currently under development.
 
 Prerequisites  
@@ -24,15 +22,16 @@ The prerequisites to build KTT are:
     - NVIDIA CUDA SDK
     - AMD APP SDK
     - Intel OpenCL SDK
-* Linux or Windows operating system
 
 Building KTT
 ------------
 
-KTT can be built as a static library using premake.
+KTT can be built as a static library using premake. Currently supported operating systems
+are Linux and Windows.
 
 * Build under Linux (using gmake, inside KTT root folder):
     - run `premake5 gmake` to generate makefile
+    - run `cd build` to get inside build directory
     - afterwards run `make config=release`
     
 * Build under Windows (using Visual Studio 2015, inside KTT root folder):
@@ -45,5 +44,7 @@ Examples
 Examples showcasing KTT functionality are located inside examples folder. List of currently
 available examples:
 
-* simple - short example showcasing basic functionality (kernel addition, parameter addition,
-  search method specification...)
+* opencl_info - example showing how to retrieve detailed information about OpenCL platforms
+  and devices through KTT API
+* simple - example showcasing basic KTT functionality (eg. kernel addition, parameter addition,
+  search method specification)

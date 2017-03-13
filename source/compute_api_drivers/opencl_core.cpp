@@ -50,63 +50,78 @@ void OpenCLCore::printOpenCLInfo(std::ostream& outputTarget)
     }
 }
 
-std::vector<Platform> OpenCLCore::getOpenCLPlatformInfo()
+PlatformInfo OpenCLCore::getOpenCLPlatformInfo(const size_t platformIndex)
 {
     auto platforms = getOpenCLPlatforms();
+    PlatformInfo result(platformIndex, platforms.at(platformIndex).getName());
 
-    std::vector<Platform> result;
+    cl_platform_id id = platforms.at(platformIndex).getId();
+    result.setExtensions(getPlatformInfo(id, CL_PLATFORM_EXTENSIONS));
+    result.setVendor(getPlatformInfo(id, CL_PLATFORM_VENDOR));
+    result.setVersion(getPlatformInfo(id, CL_PLATFORM_VERSION));
+
+    return result;
+}
+
+std::vector<PlatformInfo> OpenCLCore::getOpenCLPlatformInfoAll()
+{
+    std::vector<PlatformInfo> result;
+    auto platforms = getOpenCLPlatforms();
+
     for (size_t i = 0; i < platforms.size(); i++)
     {
-        Platform current(i, platforms.at(i).getName());
-        cl_platform_id currentId = platforms.at(i).getId();
-        current.setExtensions(getPlatformInfo(currentId, CL_PLATFORM_EXTENSIONS));
-        current.setVendor(getPlatformInfo(currentId, CL_PLATFORM_VENDOR));
-        current.setVersion(getPlatformInfo(currentId, CL_PLATFORM_VERSION));
-
-        result.push_back(current);
+        result.push_back(getOpenCLPlatformInfo(i));
     }
 
     return result;
 }
 
-std::vector<Device> OpenCLCore::getOpenCLDeviceInfo(const size_t platformIndex)
+DeviceInfo OpenCLCore::getOpenCLDeviceInfo(const size_t platformIndex, const size_t deviceIndex)
 {
     auto platforms = getOpenCLPlatforms();
     auto devices = getOpenCLDevices(platforms.at(platformIndex));
+    DeviceInfo result(deviceIndex, devices.at(deviceIndex).getName());
 
-    std::vector<Device> result;
+    cl_device_id id = devices.at(deviceIndex).getId();
+    result.setExtensions(getDeviceInfo(id, CL_DEVICE_EXTENSIONS));
+    result.setVendor(getDeviceInfo(id, CL_DEVICE_VENDOR));
+        
+    uint64_t globalMemorySize;
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(uint64_t), &globalMemorySize, nullptr));
+    result.setGlobalMemorySize(globalMemorySize);
+
+    uint64_t localMemorySize;
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(uint64_t), &localMemorySize, nullptr));
+    result.setLocalMemorySize(localMemorySize);
+
+    uint64_t maxConstantBufferSize;
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(uint64_t), &maxConstantBufferSize, nullptr));
+    result.setMaxConstantBufferSize(maxConstantBufferSize);
+
+    uint32_t maxComputeUnits;
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(uint32_t), &maxComputeUnits, nullptr));
+    result.setMaxComputeUnits(maxComputeUnits);
+
+    size_t maxWorkGroupSize;
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroupSize, nullptr));
+    result.setMaxWorkGroupSize(maxWorkGroupSize);
+
+    cl_device_type deviceType;
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr));
+    result.setDeviceType(getDeviceType(deviceType));
+
+    return result;
+}
+
+std::vector<DeviceInfo> OpenCLCore::getOpenCLDeviceInfoAll(const size_t platformIndex)
+{
+    std::vector<DeviceInfo> result;
+    auto platforms = getOpenCLPlatforms();
+    auto devices = getOpenCLDevices(platforms.at(platformIndex));
+
     for (size_t i = 0; i < devices.size(); i++)
     {
-        Device current(i, devices.at(i).getName());
-        cl_device_id currentId = devices.at(i).getId();
-        current.setExtensions(getDeviceInfo(currentId, CL_DEVICE_EXTENSIONS));
-        current.setVendor(getDeviceInfo(currentId, CL_DEVICE_VENDOR));
-        
-        uint64_t globalMemorySize;
-        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(uint64_t), &globalMemorySize, nullptr));
-        current.setGlobalMemorySize(globalMemorySize);
-
-        uint64_t localMemorySize;
-        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(uint64_t), &localMemorySize, nullptr));
-        current.setLocalMemorySize(localMemorySize);
-
-        uint64_t maxConstantBufferSize;
-        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(uint64_t), &maxConstantBufferSize, nullptr));
-        current.setMaxConstantBufferSize(maxConstantBufferSize);
-
-        uint32_t maxComputeUnits;
-        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(uint32_t), &maxComputeUnits, nullptr));
-        current.setMaxComputeUnits(maxComputeUnits);
-
-        size_t maxWorkGroupSize;
-        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroupSize, nullptr));
-        current.setMaxWorkGroupSize(maxWorkGroupSize);
-
-        cl_device_type deviceType;
-        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr));
-        current.setDeviceType(getDeviceType(deviceType));
-
-        result.push_back(current);
+        result.push_back(getOpenCLDeviceInfo(platformIndex, i));
     }
 
     return result;

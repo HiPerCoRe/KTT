@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -47,8 +46,7 @@ int main(int argc, char** argv)
     }
     
     // WIP
-    ktt::Tuner::printComputeAPIInfo(std::cout);
-    ktt::Tuner tuner(platformIndex, { deviceIndex });
+    ktt::Tuner tuner(platformIndex, deviceIndex);
 
     size_t kernelId = tuner.addKernelFromFile(kernelName, std::string("multirunKernel"), ndRangeDimensions, workGroupDimensions);
     tuner.addArgumentFloat(kernelId, a, ktt::ArgumentMemoryType::READ_ONLY);

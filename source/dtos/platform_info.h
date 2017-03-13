@@ -5,10 +5,10 @@
 namespace ktt
 {
 
-class Platform
+class PlatformInfo
 {
 public:
-    explicit Platform(const size_t id, const std::string& name):
+    explicit PlatformInfo(const size_t id, const std::string& name):
         id(id),
         name(name)
     {}

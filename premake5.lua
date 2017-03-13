@@ -1,6 +1,6 @@
 -- Helper functions to find OpenCL headers and libraries --
 
-function initOpenCLWindows()
+function initOpenCL()
 	local path = os.getenv("INTELOCLSDKROOT")
 	if (path) then
 		defines { "CL_PLATFORM_INTEL" }
@@ -52,21 +52,6 @@ function initOpenCLWindows()
 	return false
 end
 
-function initOpenCLLinux()
-    defines { "CL_PLATFORM_LINUX" }
-    includedirs { "/usr/include" }
-    
-    filter "platforms:x86"
-        libdirs { "/usr/lib" }
-    
-    filter "platforms:x86_64"
-        libdirs { "/usr/lib64" }
-    
-    filter {}
-	links { "libOpenCL.so.1.2" }
-    return true
-end
-
 -- Command line arguments definition --
 
 newoption
@@ -82,6 +67,7 @@ workspace "KernelTuningToolkit"
     platforms { "x86", "x86_64" }
     location "build"
     language "C++"
+    flags { "C++14" }
     
     filter "platforms:x86"
         architecture "x86"
@@ -112,13 +98,7 @@ project "KernelTuningToolkit"
     
     if not _OPTIONS["cuda"] then
         defines { "USE_OPENCL" }
-        local result = false
-        
-        if os.get() == "windows" then
-            result = initOpenCLWindows()
-        else
-            result = initOpenCLLinux()
-        end
+        local result = initOpenCL()
         
         if not result then
             printf("Warning: OpenCL libraries were not found.")
@@ -151,6 +131,27 @@ project "ExampleSimple"
     targetdir("build/examples/simple/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/simple/obj/%{cfg.platform}_%{cfg.buildcfg}")
 
+project "ExampleOpenCLInfo"
+    kind "ConsoleApp"
+    
+    files { "examples/opencl_info/*.cpp" }
+    includedirs { "include/**" }
+    
+    links { "KernelTuningToolkit" }
+    
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        symbols "On"
+        
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        optimize "On"
+        
+    filter {}
+    
+    targetdir("build/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir("build/examples/opencl_info/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    
 -- Unit tests configuration --    
     
 project "Tests"
