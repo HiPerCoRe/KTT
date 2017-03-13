@@ -32,42 +32,6 @@ OpenCLCore::OpenCLCore(const size_t platformIndex, const std::vector<size_t>& de
     }
 }
 
-std::vector<OpenCLPlatform> OpenCLCore::getOpenCLPlatforms()
-{
-    cl_uint platformCount;
-    checkOpenCLError(clGetPlatformIDs(0, nullptr, &platformCount));
-
-    std::vector<cl_platform_id> platformIds(platformCount);
-    checkOpenCLError(clGetPlatformIDs(platformCount, platformIds.data(), nullptr));
-
-    std::vector<OpenCLPlatform> platforms;
-    for (const auto platformId : platformIds)
-    {
-        std::string name = getPlatformInfo(platformId, CL_PLATFORM_NAME);
-        platforms.push_back(OpenCLPlatform(platformId, name));
-    }
-
-    return platforms;
-}
-
-std::vector<OpenCLDevice> OpenCLCore::getOpenCLDevices(const OpenCLPlatform& platform)
-{
-    cl_uint deviceCount;
-    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount));
-
-    std::vector<cl_device_id> deviceIds(deviceCount);
-    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, deviceCount, deviceIds.data(), nullptr));
-
-    std::vector<OpenCLDevice> devices;
-    for (const auto deviceId : deviceIds)
-    {
-        std::string name = getDeviceInfo(deviceId, CL_DEVICE_NAME);
-        devices.push_back(OpenCLDevice(deviceId, name));
-    }
-
-    return devices;
-}
-
 void OpenCLCore::printOpenCLInfo(std::ostream& outputTarget)
 {
     auto platforms = getOpenCLPlatforms();
@@ -84,6 +48,68 @@ void OpenCLCore::printOpenCLInfo(std::ostream& outputTarget)
         }
         outputTarget << std::endl;
     }
+}
+
+std::vector<Platform> OpenCLCore::getOpenCLPlatformInfo()
+{
+    auto platforms = getOpenCLPlatforms();
+
+    std::vector<Platform> result;
+    for (size_t i = 0; i < platforms.size(); i++)
+    {
+        Platform current(i, platforms.at(i).getName());
+        cl_platform_id currentId = platforms.at(i).getId();
+        current.setExtensions(getPlatformInfo(currentId, CL_PLATFORM_EXTENSIONS));
+        current.setVendor(getPlatformInfo(currentId, CL_PLATFORM_VENDOR));
+        current.setVersion(getPlatformInfo(currentId, CL_PLATFORM_VERSION));
+
+        result.push_back(current);
+    }
+
+    return result;
+}
+
+std::vector<Device> OpenCLCore::getOpenCLDeviceInfo(const size_t platformIndex)
+{
+    auto platforms = getOpenCLPlatforms();
+    auto devices = getOpenCLDevices(platforms.at(platformIndex));
+
+    std::vector<Device> result;
+    for (size_t i = 0; i < devices.size(); i++)
+    {
+        Device current(i, devices.at(i).getName());
+        cl_device_id currentId = devices.at(i).getId();
+        current.setExtensions(getDeviceInfo(currentId, CL_DEVICE_EXTENSIONS));
+        current.setVendor(getDeviceInfo(currentId, CL_DEVICE_VENDOR));
+        
+        uint64_t globalMemorySize;
+        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(uint64_t), &globalMemorySize, nullptr));
+        current.setGlobalMemorySize(globalMemorySize);
+
+        uint64_t localMemorySize;
+        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(uint64_t), &localMemorySize, nullptr));
+        current.setLocalMemorySize(localMemorySize);
+
+        uint64_t maxConstantBufferSize;
+        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(uint64_t), &maxConstantBufferSize, nullptr));
+        current.setMaxConstantBufferSize(maxConstantBufferSize);
+
+        uint32_t maxComputeUnits;
+        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(uint32_t), &maxComputeUnits, nullptr));
+        current.setMaxComputeUnits(maxComputeUnits);
+
+        size_t maxWorkGroupSize;
+        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroupSize, nullptr));
+        current.setMaxWorkGroupSize(maxWorkGroupSize);
+
+        cl_device_type deviceType;
+        checkOpenCLError(clGetDeviceInfo(currentId, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr));
+        current.setDeviceType(getDeviceType(deviceType));
+
+        result.push_back(current);
+    }
+
+    return result;
 }
 
 void OpenCLCore::createProgram(const std::string& source)
@@ -131,6 +157,42 @@ void OpenCLCore::setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buf
     kernel.setKernelArgument(buffer.getBuffer(), buffer.getSize());
 }
 
+std::vector<OpenCLPlatform> OpenCLCore::getOpenCLPlatforms()
+{
+    cl_uint platformCount;
+    checkOpenCLError(clGetPlatformIDs(0, nullptr, &platformCount));
+
+    std::vector<cl_platform_id> platformIds(platformCount);
+    checkOpenCLError(clGetPlatformIDs(platformCount, platformIds.data(), nullptr));
+
+    std::vector<OpenCLPlatform> platforms;
+    for (const auto platformId : platformIds)
+    {
+        std::string name = getPlatformInfo(platformId, CL_PLATFORM_NAME);
+        platforms.push_back(OpenCLPlatform(platformId, name));
+    }
+
+    return platforms;
+}
+
+std::vector<OpenCLDevice> OpenCLCore::getOpenCLDevices(const OpenCLPlatform& platform)
+{
+    cl_uint deviceCount;
+    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount));
+
+    std::vector<cl_device_id> deviceIds(deviceCount);
+    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, deviceCount, deviceIds.data(), nullptr));
+
+    std::vector<OpenCLDevice> devices;
+    for (const auto deviceId : deviceIds)
+    {
+        std::string name = getDeviceInfo(deviceId, CL_DEVICE_NAME);
+        devices.push_back(OpenCLDevice(deviceId, name));
+    }
+
+    return devices;
+}
+
 std::string OpenCLCore::getPlatformInfo(const cl_platform_id id, const cl_platform_info info)
 {
     size_t infoSize;
@@ -159,6 +221,23 @@ std::string OpenCLCore::getProgramBuildInfo(const cl_program program, const cl_d
     checkOpenCLError(clGetProgramBuildInfo(program, id, CL_PROGRAM_BUILD_LOG, infoSize, &infoString[0], nullptr));
 
     return infoString;
+}
+
+DeviceType OpenCLCore::getDeviceType(const cl_device_type deviceType)
+{
+    switch (deviceType)
+    {
+    case CL_DEVICE_TYPE_CPU:
+        return DeviceType::CPU;
+    case CL_DEVICE_TYPE_GPU:
+        return DeviceType::GPU;
+    case CL_DEVICE_TYPE_ACCELERATOR:
+        return DeviceType::ACCELERATOR;
+    case CL_DEVICE_TYPE_DEFAULT:
+        return DeviceType::DEFAULT;
+    default:
+        return DeviceType::CUSTOM;
+    }
 }
 
 } // namespace ktt

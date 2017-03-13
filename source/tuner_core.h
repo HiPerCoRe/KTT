@@ -33,12 +33,11 @@ public:
     size_t getKernelCount() const;
     const std::shared_ptr<const Kernel> getKernel(const size_t id) const;
 
-    // OpenCL methods
-    std::vector<OpenCLPlatform> getOpenCLPlatforms() const;
-    std::vector<OpenCLDevice> getOpenCLDevices(const OpenCLPlatform& platform) const;
-    static void printOpenCLInfo(std::ostream& outputTarget);
-
-    void setOpenCLCompilerOptions(const std::string& options);
+    // Compute API methods
+    static void printComputeAPIInfo(std::ostream& outputTarget);
+    static std::vector<Platform> getPlatformInfo();
+    static std::vector<Device> getDeviceInfo(const size_t platformIndex);
+    void setCompilerOptions(const std::string& options);
 
 private:
     // Attributes

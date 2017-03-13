@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "../dtos/device.h"
+#include "../dtos/platform.h"
 #include "../enums/argument_memory_type.h"
 #include "opencl_buffer.h"
 #include "opencl_command_queue.h"
@@ -24,14 +26,16 @@ public:
     explicit OpenCLCore(const size_t platformIndex, const std::vector<size_t>& deviceIndices);
 
     // Platform and device retrieval methods
-    static std::vector<OpenCLPlatform> getOpenCLPlatforms();
-    static std::vector<OpenCLDevice> getOpenCLDevices(const OpenCLPlatform& platform);
     static void printOpenCLInfo(std::ostream& outputTarget);
+    static std::vector<Platform> getOpenCLPlatformInfo();
+    static std::vector<Device> getOpenCLDeviceInfo(const size_t platformIndex);
+
+    // Compiler setup methods
+    void setOpenCLCompilerOptions(const std::string& options);
 
     // Program handling methods
     void createProgram(const std::string& source);
     void buildProgram(OpenCLProgram& program);
-    void setOpenCLCompilerOptions(const std::string& options);
 
     // Buffer handling methods
     void createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size);
@@ -52,9 +56,12 @@ private:
     std::string compilerOptions;
 
     // Helper methods
+    static std::vector<OpenCLPlatform> getOpenCLPlatforms();
+    static std::vector<OpenCLDevice> getOpenCLDevices(const OpenCLPlatform& platform);
     static std::string getPlatformInfo(const cl_platform_id id, const cl_platform_info info);
     static std::string getDeviceInfo(const cl_device_id id, const cl_device_info info);
     std::string getProgramBuildInfo(const cl_program program, const cl_device_id id) const;
+    static DeviceType getDeviceType(const cl_device_type deviceType);
 };
 
 } // namespace ktt

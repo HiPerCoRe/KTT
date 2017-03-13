@@ -67,22 +67,22 @@ const std::shared_ptr<const Kernel> TunerCore::getKernel(const size_t id) const
     return kernelManager->getKernel(id);
 }
 
-std::vector<OpenCLPlatform> TunerCore::getOpenCLPlatforms() const
-{
-    return openCLCore->getOpenCLPlatforms();
-}
-
-std::vector<OpenCLDevice> TunerCore::getOpenCLDevices(const OpenCLPlatform& platform) const
-{
-    return openCLCore->getOpenCLDevices(platform);
-}
-
-void TunerCore::printOpenCLInfo(std::ostream& outputTarget)
+void TunerCore::printComputeAPIInfo(std::ostream& outputTarget)
 {
     OpenCLCore::printOpenCLInfo(outputTarget);
 }
 
-void TunerCore::setOpenCLCompilerOptions(const std::string& options)
+std::vector<Platform> TunerCore::getPlatformInfo()
+{
+    return OpenCLCore::getOpenCLPlatformInfo();
+}
+
+std::vector<Device> TunerCore::getDeviceInfo(const size_t platformIndex)
+{
+    return OpenCLCore::getOpenCLDeviceInfo(platformIndex);
+}
+
+void TunerCore::setCompilerOptions(const std::string& options)
 {
     openCLCore->setOpenCLCompilerOptions(options);
 }

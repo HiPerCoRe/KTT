@@ -101,7 +101,7 @@ void Tuner::printComputeAPIInfo(std::ostream& outputTarget)
 {
     try
     {
-        TunerCore::printOpenCLInfo(outputTarget);
+        TunerCore::printComputeAPIInfo(outputTarget);
     }
     catch (const std::runtime_error& error)
     {
@@ -109,9 +109,41 @@ void Tuner::printComputeAPIInfo(std::ostream& outputTarget)
     }
 }
 
+std::vector<Platform> Tuner::getPlatformInfo()
+{
+    std::vector<Platform> platformInfo;
+
+    try
+    {
+        platformInfo = TunerCore::getPlatformInfo();
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+    }
+
+    return platformInfo;
+}
+
+std::vector<Device> Tuner::getDeviceInfo(const size_t platformIndex)
+{
+    std::vector<Device> deviceInfo;
+
+    try
+    {
+        deviceInfo = TunerCore::getDeviceInfo(platformIndex);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+    }
+
+    return deviceInfo;
+}
+
 void Tuner::setCompilerOptions(const std::string& options)
 {
-    tunerCore->setOpenCLCompilerOptions(options);
+    tunerCore->setCompilerOptions(options);
 }
 
 } // namespace ktt

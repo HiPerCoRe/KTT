@@ -11,6 +11,10 @@
 #include "enums/search_method.h"
 #include "enums/thread_modifier_type.h"
 
+// Information about platforms and devices
+#include "dtos/device.h"
+#include "dtos/platform.h"
+
 namespace ktt
 {
 
@@ -37,6 +41,8 @@ public:
 
     // Compute API methods
     static void printComputeAPIInfo(std::ostream& outputTarget);
+    static std::vector<Platform> getPlatformInfo();
+    static std::vector<Device> getDeviceInfo(const size_t platformIndex);
     void setCompilerOptions(const std::string& options);
 
 private:
