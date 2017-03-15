@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "../ktt_type_aliases.h"
 #include "../dtos/device_info.h"
 #include "../dtos/platform_info.h"
 #include "../enums/argument_memory_type.h"
@@ -32,29 +33,25 @@ public:
     static DeviceInfo getOpenCLDeviceInfo(const size_t platformIndex, const size_t deviceIndex);
     static std::vector<DeviceInfo> getOpenCLDeviceInfoAll(const size_t platformIndex);
 
-    // Compiler setup methods
+    // Compiler options setup
     void setOpenCLCompilerOptions(const std::string& options);
 
-    // Program handling methods
-    void createProgram(const std::string& source);
-    void buildProgram(OpenCLProgram& program);
+    // High-level kernel execution methods
+    // to do
 
-    // Buffer handling methods
-    void createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size);
-    void updateBuffer(OpenCLBuffer& buffer, const void* data, const size_t dataSize);
-    void getBufferData(const OpenCLBuffer& buffer, void* data, const size_t dataSize);
-
-    // Kernel handling methods
-    void createKernel(const OpenCLProgram& program, const std::string& kernelName);
-    void setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buffer);
+    // Low-level kernel execution methods
+    OpenCLProgram createAndBuildProgram(const std::string& source) const;
+    OpenCLBuffer createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const;
+    void updateBuffer(OpenCLBuffer& buffer, const void* source, const size_t dataSize) const;
+    void getBufferData(const OpenCLBuffer& buffer, void* destination, const size_t dataSize) const;
+    OpenCLKernel createKernel(const OpenCLProgram& program, const std::string& kernelName) const;
+    void setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const;
+    cl_ulong runKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;
 
 private:
     // Attributes
     std::unique_ptr<OpenCLContext> context;
     std::unique_ptr<OpenCLCommandQueue> commandQueue;
-    std::vector<OpenCLProgram> programs;
-    std::vector<OpenCLBuffer> buffers;
-    std::vector<OpenCLKernel> kernels;
     std::string compilerOptions;
 
     // Helper methods
@@ -62,8 +59,9 @@ private:
     static std::vector<OpenCLDevice> getOpenCLDevices(const OpenCLPlatform& platform);
     static std::string getPlatformInfo(const cl_platform_id id, const cl_platform_info info);
     static std::string getDeviceInfo(const cl_device_id id, const cl_device_info info);
-    std::string getProgramBuildInfo(const cl_program program, const cl_device_id id) const;
     static DeviceType getDeviceType(const cl_device_type deviceType);
+    void OpenCLCore::buildProgram(OpenCLProgram& program) const;
+    std::string getProgramBuildInfo(const cl_program program, const cl_device_id id) const;
 };
 
 } // namespace ktt

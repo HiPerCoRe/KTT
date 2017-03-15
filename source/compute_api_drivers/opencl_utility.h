@@ -12,6 +12,6 @@ std::string getOpenCLEnumName(const cl_int value);
 void checkOpenCLError(const cl_int value);
 void checkOpenCLError(const cl_int value, const std::string& message);
 cl_mem_flags getOpenCLMemoryType(const ArgumentMemoryType& argumentMemoryType);
-cl_ulong getKernelExecutionDuration(const cl_event profilingEvent);
+cl_ulong getKernelRunDuration(const cl_event profilingEvent);
 
 } // namespace ktt

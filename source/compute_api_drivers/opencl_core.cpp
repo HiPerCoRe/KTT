@@ -120,49 +120,56 @@ std::vector<DeviceInfo> OpenCLCore::getOpenCLDeviceInfoAll(const size_t platform
     return result;
 }
 
-void OpenCLCore::createProgram(const std::string& source)
-{
-    programs.push_back(OpenCLProgram(source, context->getContext(), context->getDevices()));
-}
-
-void OpenCLCore::buildProgram(OpenCLProgram& program)
-{
-    cl_int result = clBuildProgram(program.getProgram(), program.getDevices().size(), program.getDevices().data(), &compilerOptions[0], nullptr,
-        nullptr);
-    std::string buildInfo = getProgramBuildInfo(program.getProgram(), program.getDevices().at(0));
-    checkOpenCLError(result, buildInfo);
-}
-
 void OpenCLCore::setOpenCLCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
 }
 
-void OpenCLCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size)
+OpenCLProgram OpenCLCore::createAndBuildProgram(const std::string& source) const
 {
-    buffers.push_back(OpenCLBuffer(context->getContext(), getOpenCLMemoryType(argumentMemoryType), size));
+    OpenCLProgram program(source, context->getContext(), context->getDevices());
+    buildProgram(program);
+    return program;
 }
 
-void OpenCLCore::updateBuffer(OpenCLBuffer& buffer, const void* data, const size_t dataSize)
+OpenCLBuffer OpenCLCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const
 {
-    cl_int result = clEnqueueWriteBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, data, 0, nullptr, nullptr);
+    OpenCLBuffer buffer(context->getContext(), getOpenCLMemoryType(argumentMemoryType), size);
+    return buffer;
+}
+
+void OpenCLCore::updateBuffer(OpenCLBuffer& buffer, const void* source, const size_t dataSize) const
+{
+    cl_int result = clEnqueueWriteBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
     checkOpenCLError(result);
 }
 
-void OpenCLCore::getBufferData(const OpenCLBuffer& buffer, void* data, const size_t dataSize)
+void OpenCLCore::getBufferData(const OpenCLBuffer& buffer, void* destination, const size_t dataSize) const
 {
-    cl_int result = clEnqueueReadBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, data, 0, nullptr, nullptr);
+    cl_int result = clEnqueueReadBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
     checkOpenCLError(result);
 }
 
-void OpenCLCore::createKernel(const OpenCLProgram& program, const std::string& kernelName)
+OpenCLKernel OpenCLCore::createKernel(const OpenCLProgram& program, const std::string& kernelName) const
 {
-    kernels.push_back(OpenCLKernel(program.getProgram(), kernelName));
+    OpenCLKernel kernel(program.getProgram(), kernelName);
+    return kernel;
 }
 
-void OpenCLCore::setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buffer)
+void OpenCLCore::setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const
 {
     kernel.setKernelArgument(buffer.getBuffer(), buffer.getSize());
+}
+
+cl_ulong OpenCLCore::runKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const
+{
+    cl_event profilingEvent;
+    cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), 3, nullptr, globalSize.data(), localSize.data(), 0, nullptr,
+        &profilingEvent);
+    checkOpenCLError(result);
+
+    clFinish(commandQueue->getQueue());
+    return getKernelRunDuration(profilingEvent);
 }
 
 std::vector<OpenCLPlatform> OpenCLCore::getOpenCLPlatforms()
@@ -221,16 +228,6 @@ std::string OpenCLCore::getDeviceInfo(const cl_device_id id, const cl_device_inf
     return infoString;
 }
 
-std::string OpenCLCore::getProgramBuildInfo(const cl_program program, const cl_device_id id) const
-{
-    size_t infoSize;
-    checkOpenCLError(clGetProgramBuildInfo(program, id, 0, 0, nullptr, &infoSize));
-    std::string infoString(infoSize, ' ');
-    checkOpenCLError(clGetProgramBuildInfo(program, id, CL_PROGRAM_BUILD_LOG, infoSize, &infoString[0], nullptr));
-
-    return infoString;
-}
-
 DeviceType OpenCLCore::getDeviceType(const cl_device_type deviceType)
 {
     switch (deviceType)
@@ -246,6 +243,24 @@ DeviceType OpenCLCore::getDeviceType(const cl_device_type deviceType)
     default:
         return DeviceType::CUSTOM;
     }
+}
+
+void OpenCLCore::buildProgram(OpenCLProgram& program) const
+{
+    cl_int result = clBuildProgram(program.getProgram(), program.getDevices().size(), program.getDevices().data(), &compilerOptions[0], nullptr,
+        nullptr);
+    std::string buildInfo = getProgramBuildInfo(program.getProgram(), program.getDevices().at(0));
+    checkOpenCLError(result, buildInfo);
+}
+
+std::string OpenCLCore::getProgramBuildInfo(const cl_program program, const cl_device_id id) const
+{
+    size_t infoSize;
+    checkOpenCLError(clGetProgramBuildInfo(program, id, 0, 0, nullptr, &infoSize));
+    std::string infoString(infoSize, ' ');
+    checkOpenCLError(clGetProgramBuildInfo(program, id, CL_PROGRAM_BUILD_LOG, infoSize, &infoString[0], nullptr));
+
+    return infoString;
 }
 
 } // namespace ktt
