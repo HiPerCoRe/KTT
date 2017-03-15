@@ -2,16 +2,20 @@
 
 #include <vector>
 
+#include "../../libraries/any.hpp"
 #include "../enums/argument_memory_type.h"
 #include "../enums/argument_quantity.h"
 
 namespace ktt
 {
 
-template <typename T> class KernelArgument
+using linb::any;
+using linb::any_cast;
+
+class KernelArgument
 {
 public:
-    explicit KernelArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType):
+    explicit KernelArgument(const std::vector<any>& data, const ArgumentMemoryType& argumentMemoryType):
         data(data),
         argumentMemoryType(argumentMemoryType)
     {
@@ -29,7 +33,7 @@ public:
         }
     }
 
-    std::vector<T> getData() const
+    std::vector<any> getData() const
     {
         return data;
     }
@@ -44,8 +48,29 @@ public:
         return argumentQuantity;
     }
 
+    template <typename T> bool isTypeOf() const
+    {
+        return data.at(0).type() == typeid(T);
+    }
+
+    template <typename T> std::vector<T> getDataTyped() const
+    {
+        if (!isTypeOf<T>())
+        {
+            throw std::runtime_error("Invalid argument data type");
+        }
+
+        std::vector<T> result;
+        for (const auto& element : data)
+        {
+            result.push_back(any_cast<T>(element));
+        }
+
+        return result;
+    }
+
 private:
-    std::vector<T> data;
+    std::vector<any> data;
     ArgumentMemoryType argumentMemoryType;
     ArgumentQuantity argumentQuantity;
 };

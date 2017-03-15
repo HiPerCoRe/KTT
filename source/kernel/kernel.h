@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "../../libraries/any.hpp"
+
 #include "../ktt_type_aliases.h"
 #include "../enums/argument_data_type.h"
 #include "../enums/argument_memory_type.h"
@@ -21,9 +23,16 @@ public:
 
     // Core methods
     void addParameter(const KernelParameter& parameter);
-    void addArgumentInt(const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType);
-    void addArgumentFloat(const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType);
-    void addArgumentDouble(const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType);
+    template <typename T> void addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
+    {
+        std::vector<linb::any> anyData;
+        for (const auto element : data)
+        {
+            anyData.push_back(element);
+        }
+
+        arguments.push_back(KernelArgument(anyData, argumentMemoryType));
+    }
     void useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Getters
@@ -33,10 +42,7 @@ public:
     DimensionVector getLocalSize() const;
     std::vector<KernelParameter> getParameters() const;
     size_t getArgumentCount() const;
-    std::vector<ArgumentIndex> getArgumentIndices() const;
-    std::vector<KernelArgument<int>> getArgumentsInt() const;
-    std::vector<KernelArgument<float>> getArgumentsFloat() const;
-    std::vector<KernelArgument<double>> getArgumentsDouble() const;
+    std::vector<KernelArgument> getArguments() const;
     SearchMethod getSearchMethod() const;
     std::vector<double> getSearchArguments() const;
 
@@ -47,11 +53,7 @@ private:
     DimensionVector globalSize;
     DimensionVector localSize;
     std::vector<KernelParameter> parameters;
-    size_t argumentCount;
-    std::vector<ArgumentIndex> argumentIndices;
-    std::vector<KernelArgument<int>> argumentsInt;
-    std::vector<KernelArgument<float>> argumentsFloat;
-    std::vector<KernelArgument<double>> argumentsDouble;
+    std::vector<KernelArgument> arguments;
     SearchMethod searchMethod;
     std::vector<double> searchArguments;
 

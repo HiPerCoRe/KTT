@@ -3,10 +3,10 @@
 namespace ktt
 {
 
-TunerCore::TunerCore(const size_t platformIndex, const std::vector<size_t>& deviceIndices):
+TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex):
     kernelManager(std::make_unique<KernelManager>()),
     tuningRunner(std::make_unique<TuningRunner>()),
-    openCLCore(std::make_unique<OpenCLCore>(platformIndex, deviceIndices))
+    openCLCore(std::make_unique<OpenCLCore>(platformIndex, deviceIndex))
 {}
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -35,21 +35,6 @@ void TunerCore::addParameter(const size_t id, const std::string& name, const std
     const ThreadModifierType& threadModifierType, const Dimension& modifierDimension)
 {
     kernelManager->addParameter(id, name, values, threadModifierType, modifierDimension);
-}
-
-void TunerCore::addArgumentInt(const size_t id, const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    kernelManager->addArgumentInt(id, data, argumentMemoryType);
-}
-
-void TunerCore::addArgumentFloat(const size_t id, const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    kernelManager->addArgumentFloat(id, data, argumentMemoryType);
-}
-
-void TunerCore::addArgumentDouble(const size_t id, const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    kernelManager->addArgumentDouble(id, data, argumentMemoryType);
 }
 
 void TunerCore::useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)

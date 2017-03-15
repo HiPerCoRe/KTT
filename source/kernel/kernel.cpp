@@ -8,8 +8,7 @@ Kernel::Kernel(const std::string& source, const std::string& name, const Dimensi
     name(name),
     globalSize(globalSize),
     localSize(localSize),
-    searchMethod(SearchMethod::FullSearch),
-    argumentCount(0)
+    searchMethod(SearchMethod::FullSearch)
 {}
 
 void Kernel::addParameter(const KernelParameter& parameter)
@@ -20,27 +19,6 @@ void Kernel::addParameter(const KernelParameter& parameter)
     }
 
     parameters.push_back(parameter);
-}
-
-void Kernel::addArgumentInt(const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    argumentsInt.push_back(KernelArgument<int>(data, argumentMemoryType));
-    argumentIndices.push_back(ArgumentIndex(argumentCount, ArgumentDataType::Int, argumentsInt.size() - 1));
-    argumentCount++;
-}
-
-void Kernel::addArgumentFloat(const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    argumentsFloat.push_back(KernelArgument<float>(data, argumentMemoryType));
-    argumentIndices.push_back(ArgumentIndex(argumentCount, ArgumentDataType::Float, argumentsFloat.size() - 1));
-    argumentCount++;
-}
-
-void Kernel::addArgumentDouble(const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    argumentsDouble.push_back(KernelArgument<double>(data, argumentMemoryType));
-    argumentIndices.push_back(ArgumentIndex(argumentCount, ArgumentDataType::Double, argumentsDouble.size() - 1));
-    argumentCount++;
 }
 
 void Kernel::useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
@@ -83,27 +61,12 @@ std::vector<KernelParameter> Kernel::getParameters() const
 
 size_t Kernel::getArgumentCount() const
 {
-    return argumentCount;
+    return arguments.size();
 }
 
-std::vector<ArgumentIndex> Kernel::getArgumentIndices() const
+std::vector<KernelArgument> Kernel::getArguments() const
 {
-    return argumentIndices;
-}
-
-std::vector<KernelArgument<int>> Kernel::getArgumentsInt() const
-{
-    return argumentsInt;
-}
-
-std::vector<KernelArgument<float>> Kernel::getArgumentsFloat() const
-{
-    return argumentsFloat;
-}
-
-std::vector<KernelArgument<double>> Kernel::getArgumentsDouble() const
-{
-    return argumentsDouble;
+    return arguments;
 }
 
 SearchMethod Kernel::getSearchMethod() const

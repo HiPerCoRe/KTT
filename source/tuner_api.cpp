@@ -7,7 +7,7 @@ namespace ktt
 {
 
 Tuner::Tuner(const size_t platformIndex, const size_t deviceIndex):
-    tunerCore(std::make_unique<TunerCore>(platformIndex, std::vector<size_t>{ deviceIndex }))
+    tunerCore(std::make_unique<TunerCore>(platformIndex, deviceIndex))
 {}
 
 Tuner::~Tuner() = default;
@@ -49,11 +49,11 @@ void Tuner::addParameter(const size_t id, const std::string& name, const std::ve
     }
 }
 
-void Tuner::addArgumentInt(const size_t id, const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType)
+template <typename T> void Tuner::addArgument(const size_t id, const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
 {
     try
     {
-        tunerCore->addArgumentInt(id, data, argumentMemoryType);
+        tunerCore->addArgument(id, data, argumentMemoryType);
     }
     catch (const std::runtime_error& error)
     {
@@ -61,29 +61,9 @@ void Tuner::addArgumentInt(const size_t id, const std::vector<int>& data, const 
     }
 }
 
-void Tuner::addArgumentFloat(const size_t id, const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    try
-    {
-        tunerCore->addArgumentFloat(id, data, argumentMemoryType);
-    }
-    catch (const std::runtime_error& error)
-    {
-        std::cerr << error.what() << std::endl;
-    }
-}
-
-void Tuner::addArgumentDouble(const size_t id, const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    try
-    {
-        tunerCore->addArgumentDouble(id, data, argumentMemoryType);
-    }
-    catch (const std::runtime_error& error)
-    {
-        std::cerr << error.what() << std::endl;
-    }
-}
+template void Tuner::addArgument<int>(const size_t id, const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType);
+template void Tuner::addArgument<float>(const size_t id, const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType);
+template void Tuner::addArgument<double>(const size_t id, const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType);
 
 void Tuner::useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {

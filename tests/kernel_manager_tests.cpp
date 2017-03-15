@@ -2,6 +2,11 @@
 
 #include "../source/kernel/kernel_manager.h"
 
+bool around(const float value, const float other, const float tolerance)
+{
+    return value - tolerance < other && value + tolerance > other;
+}
+
 TEST_CASE("Kernel handling operations", "[kernelManager]")
 {
     ktt::KernelManager manager;
@@ -35,6 +40,30 @@ TEST_CASE("Kernel handling operations", "[kernelManager]")
         manager.addParameter(id, std::string("param"), std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::Dimension::X);
         REQUIRE_THROWS_AS(manager.addParameter(id, std::string("param"), std::vector<size_t>{3}, ktt::ThreadModifierType::None, ktt::Dimension::X),
             std::runtime_error);
+    }
+}
+
+TEST_CASE("Argument addition and retrieval", "[kernelManager]")
+{
+    ktt::KernelManager manager;
+    size_t id = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024, 1, 1),
+        ktt::DimensionVector(16, 16, 1));
+
+    std::vector<float> data{ 1.0f, 2.0f, 3.0f, 4.0f };
+    manager.addArgument(id, data, ktt::ArgumentMemoryType::READ_ONLY);
+
+    auto arguments = manager.getKernel(id)->getArguments();
+    REQUIRE(arguments.size() == 1);
+    REQUIRE(arguments.at(0).getData().size() == 4);
+    REQUIRE(arguments.at(0).getArgumentQuantity() == ktt::ArgumentQuantity::Vector);
+    REQUIRE(arguments.at(0).isTypeOf<float>());
+
+    std::vector<float> floats = arguments.at(0).getDataTyped<float>();
+    REQUIRE(floats.size() == 4);
+
+    for (size_t i = 0; i < floats.size(); i++)
+    {
+        REQUIRE(around(floats.at(i), data.at(i), 0.001f));
     }
 }
 

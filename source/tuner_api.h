@@ -34,9 +34,7 @@ public:
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values);
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
         const Dimension& modifierDimension);
-    void addArgumentInt(const size_t id, const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType);
-    void addArgumentFloat(const size_t id, const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType);
-    void addArgumentDouble(const size_t id, const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType);
+    template <typename T> void addArgument(const size_t id, const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType);
     void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Compute API methods

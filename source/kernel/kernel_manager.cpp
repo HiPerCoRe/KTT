@@ -63,33 +63,6 @@ void KernelManager::addParameter(const size_t id, const std::string& name, const
     kernels.at(id)->addParameter(KernelParameter(name, values, threadModifierType, modifierDimension));
 }
 
-void KernelManager::addArgumentInt(const size_t id, const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    if (id >= kernelCount)
-    {
-        throw std::runtime_error("Invalid kernel id: " + id);
-    }
-    kernels.at(id)->addArgumentInt(data, argumentMemoryType);
-}
-
-void KernelManager::addArgumentFloat(const size_t id, const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    if (id >= kernelCount)
-    {
-        throw std::runtime_error("Invalid kernel id: " + id);
-    }
-    kernels.at(id)->addArgumentFloat(data, argumentMemoryType);
-}
-
-void KernelManager::addArgumentDouble(const size_t id, const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType)
-{
-    if (id >= kernelCount)
-    {
-        throw std::runtime_error("Invalid kernel id: " + id);
-    }
-    kernels.at(id)->addArgumentDouble(data, argumentMemoryType);
-}
-
 void KernelManager::useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
     if (id >= kernelCount)

@@ -14,7 +14,7 @@ class TunerCore
 {
 public:
     // Constructor
-    explicit TunerCore(const size_t platformIndex, const std::vector<size_t>& deviceIndices);
+    explicit TunerCore(const size_t platformIndex, const size_t deviceIndex);
 
     // Kernel manager methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
@@ -25,9 +25,10 @@ public:
 
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
         const Dimension& modifierDimension);
-    void addArgumentInt(const size_t id, const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType);
-    void addArgumentFloat(const size_t id, const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType);
-    void addArgumentDouble(const size_t id, const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType);
+    template <typename T> void addArgument(const size_t id, const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
+    {
+        kernelManager->addArgument(id, data, argumentMemoryType);
+    }
     void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     size_t getKernelCount() const;

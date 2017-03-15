@@ -23,7 +23,7 @@ class OpenCLCore
 {
 public:
     // Constructor
-    explicit OpenCLCore(const size_t platformIndex, const std::vector<size_t>& deviceIndices);
+    explicit OpenCLCore(const size_t platformIndex, const size_t deviceIndex);
 
     // Platform and device retrieval methods
     static void printOpenCLInfo(std::ostream& outputTarget);
@@ -51,7 +51,7 @@ public:
 private:
     // Attributes
     std::unique_ptr<OpenCLContext> context;
-    std::vector<std::unique_ptr<OpenCLCommandQueue>> commandQueues;
+    std::unique_ptr<OpenCLCommandQueue> commandQueue;
     std::vector<OpenCLProgram> programs;
     std::vector<OpenCLBuffer> buffers;
     std::vector<OpenCLKernel> kernels;

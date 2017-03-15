@@ -5,7 +5,7 @@
 namespace ktt
 {
 
-OpenCLCore::OpenCLCore(const size_t platformIndex, const std::vector<size_t>& deviceIndices):
+OpenCLCore::OpenCLCore(const size_t platformIndex, const size_t deviceIndex):
     compilerOptions(std::string(""))
 {
     auto platforms = getOpenCLPlatforms();
@@ -15,21 +15,14 @@ OpenCLCore::OpenCLCore(const size_t platformIndex, const std::vector<size_t>& de
     }
 
     auto devices = getOpenCLDevices(platforms.at(platformIndex));
-    std::vector<cl_device_id> deviceIds;
-    for (const auto deviceIndex : deviceIndices)
+    if (deviceIndex >= devices.size())
     {
-        if (deviceIndex >= devices.size())
-        {
-            throw std::runtime_error("Invalid device index: " + deviceIndex);
-        }
-        deviceIds.push_back(devices.at(deviceIndex).getId());
+        throw std::runtime_error("Invalid device index: " + deviceIndex);
     }
 
-    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), deviceIds);
-    for (const auto deviceIndex : context->getDevices())
-    {
-        commandQueues.push_back(std::make_unique<OpenCLCommandQueue>(context->getContext(), deviceIndex));
-    }
+    cl_device_id device = devices.at(deviceIndex).getId();
+    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id> { device });
+    commandQueue = std::make_unique<OpenCLCommandQueue>(context->getContext(), device);
 }
 
 void OpenCLCore::printOpenCLInfo(std::ostream& outputTarget)
@@ -152,13 +145,13 @@ void OpenCLCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, cons
 
 void OpenCLCore::updateBuffer(OpenCLBuffer& buffer, const void* data, const size_t dataSize)
 {
-    cl_int result = clEnqueueWriteBuffer(commandQueues.at(0)->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, data, 0, nullptr, nullptr);
+    cl_int result = clEnqueueWriteBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, data, 0, nullptr, nullptr);
     checkOpenCLError(result);
 }
 
 void OpenCLCore::getBufferData(const OpenCLBuffer& buffer, void* data, const size_t dataSize)
 {
-    cl_int result = clEnqueueReadBuffer(commandQueues.at(0)->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, data, 0, nullptr, nullptr);
+    cl_int result = clEnqueueReadBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, data, 0, nullptr, nullptr);
     checkOpenCLError(result);
 }
 
