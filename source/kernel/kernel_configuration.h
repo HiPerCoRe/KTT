@@ -7,6 +7,8 @@
 namespace ktt
 {
 
+class PSOSearcher;
+
 class KernelConfiguration
 {
 public:
@@ -31,6 +33,8 @@ public:
     {
         return parameterValues;
     }
+
+    friend class PSOSearcher;
 
 private:
     DimensionVector globalSize;

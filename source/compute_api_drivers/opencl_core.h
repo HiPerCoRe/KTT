@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "../ktt_type_aliases.h"
 #include "../dtos/device_info.h"
 #include "../dtos/platform_info.h"
 #include "../enums/argument_memory_type.h"
@@ -36,10 +35,7 @@ public:
     // Compiler options setup
     void setOpenCLCompilerOptions(const std::string& options);
 
-    // High-level kernel execution methods
-    // to do
-
-    // Low-level kernel execution methods
+    // Kernel setup and execution methods
     OpenCLProgram createAndBuildProgram(const std::string& source) const;
     OpenCLBuffer createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const;
     void updateBuffer(OpenCLBuffer& buffer, const void* source, const size_t dataSize) const;

@@ -5,8 +5,8 @@ namespace ktt
 
 TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex):
     kernelManager(std::make_unique<KernelManager>()),
-    tuningRunner(std::make_unique<TuningRunner>()),
-    openCLCore(std::make_unique<OpenCLCore>(platformIndex, deviceIndex))
+    openCLCore(std::make_unique<OpenCLCore>(platformIndex, deviceIndex)),
+    tuningRunner(std::make_unique<TuningRunner>())
 {}
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,

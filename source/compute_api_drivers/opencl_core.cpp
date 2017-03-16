@@ -164,8 +164,8 @@ void OpenCLCore::setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buf
 cl_ulong OpenCLCore::runKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const
 {
     cl_event profilingEvent;
-    cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), 3, nullptr, globalSize.data(), localSize.data(), 0, nullptr,
-        &profilingEvent);
+    cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), globalSize.size(), nullptr, globalSize.data(),
+        localSize.data(), 0, nullptr, &profilingEvent);
     checkOpenCLError(result);
 
     clFinish(commandQueue->getQueue());

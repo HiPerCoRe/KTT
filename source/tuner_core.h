@@ -45,8 +45,8 @@ public:
 private:
     // Attributes
     std::unique_ptr<KernelManager> kernelManager;
-    std::unique_ptr<TuningRunner> tuningRunner;
     std::unique_ptr<OpenCLCore> openCLCore;
+    std::unique_ptr<TuningRunner> tuningRunner;
 };
 
 } // namespace ktt
