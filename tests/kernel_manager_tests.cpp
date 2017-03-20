@@ -56,7 +56,7 @@ TEST_CASE("Argument addition and retrieval", "[kernelManager]")
     REQUIRE(arguments.size() == 1);
     REQUIRE(arguments.at(0).getData().size() == 4);
     REQUIRE(arguments.at(0).getArgumentQuantity() == ktt::ArgumentQuantity::Vector);
-    REQUIRE(arguments.at(0).isTypeOf<float>());
+    REQUIRE(arguments.at(0).getArgumentDataType() == ktt::ArgumentDataType::Float);
 
     std::vector<float> floats = arguments.at(0).getDataTyped<float>();
     REQUIRE(floats.size() == 4);

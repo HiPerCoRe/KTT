@@ -125,6 +125,33 @@ void OpenCLCore::setOpenCLCompilerOptions(const std::string& options)
     compilerOptions = options;
 }
 
+KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
+    const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
+{
+    std::vector<OpenCLBuffer> buffers;
+    for (const auto& argument : arguments)
+    {
+        OpenCLBuffer buffer = createBuffer(argument.getArgumentMemoryType(), argument.getRawDataSize());
+        updateBuffer(buffer, argument.getData().data(), argument.getRawDataSize());
+        buffers.push_back(buffer);
+    }
+
+    OpenCLProgram program = createAndBuildProgram(source);
+    OpenCLKernel kernel = createKernel(program, kernelName);
+
+    for (const auto& buffer : buffers)
+    {
+        setKernelArgument(kernel, buffer);
+    }
+
+    cl_ulong duration = enqueueKernel(kernel, globalSize, localSize);
+
+    std::vector<KernelArgument> resultArguments = getResultArguments(buffers, arguments);
+
+    KernelRunResult result(static_cast<uint64_t>(duration), resultArguments);
+    return result;
+}
+
 OpenCLProgram OpenCLCore::createAndBuildProgram(const std::string& source) const
 {
     OpenCLProgram program(source, context->getContext(), context->getDevices());
@@ -161,7 +188,7 @@ void OpenCLCore::setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buf
     kernel.setKernelArgument(buffer.getBuffer(), buffer.getSize());
 }
 
-cl_ulong OpenCLCore::runKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const
+cl_ulong OpenCLCore::enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const
 {
     cl_event profilingEvent;
     cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), globalSize.size(), nullptr, globalSize.data(),
@@ -261,6 +288,56 @@ std::string OpenCLCore::getProgramBuildInfo(const cl_program program, const cl_d
     checkOpenCLError(clGetProgramBuildInfo(program, id, CL_PROGRAM_BUILD_LOG, infoSize, &infoString[0], nullptr));
 
     return infoString;
+}
+
+std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<OpenCLBuffer>& outputBuffers,
+    const std::vector<KernelArgument>& inputArguments) const
+{
+    std::vector<KernelArgument> resultArguments;
+    for (size_t i = 0; i < outputBuffers.size(); i++)
+    {
+        if (outputBuffers.at(i).getType() == CL_MEM_READ_ONLY)
+        {
+            continue;
+        }
+
+        ArgumentDataType type = inputArguments.at(i).getArgumentDataType();
+        std::vector<linb::any> anyResult;
+        if (type == ArgumentDataType::Double)
+        {
+            std::vector<double> resultDouble(inputArguments.at(i).getRawDataSize());
+            getBufferData(outputBuffers.at(i), resultDouble.data(), inputArguments.at(i).getRawDataSize());
+
+            for (const auto element : resultDouble)
+            {
+                anyResult.push_back(element);
+            }
+        }
+        else if (type == ArgumentDataType::Float)
+        {
+            std::vector<float> resultFloat(inputArguments.at(i).getRawDataSize());
+            getBufferData(outputBuffers.at(i), resultFloat.data(), inputArguments.at(i).getRawDataSize());
+
+            for (const auto element : resultFloat)
+            {
+                anyResult.push_back(element);
+            }
+        }
+        else
+        {
+            std::vector<int> resultInt(inputArguments.at(i).getRawDataSize());
+            getBufferData(outputBuffers.at(i), resultInt.data(), inputArguments.at(i).getRawDataSize());
+
+            for (const auto element : resultInt)
+            {
+                anyResult.push_back(element);
+            }
+        }
+
+        resultArguments.push_back(KernelArgument(anyResult, inputArguments.at(i).getArgumentMemoryType()));
+    }
+
+    return resultArguments;
 }
 
 } // namespace ktt

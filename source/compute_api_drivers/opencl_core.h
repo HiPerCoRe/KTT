@@ -6,8 +6,10 @@
 #include <vector>
 
 #include "../dtos/device_info.h"
+#include "../dtos/kernel_run_result.h"
 #include "../dtos/platform_info.h"
 #include "../enums/argument_memory_type.h"
+#include "../kernel/kernel_argument.h"
 #include "opencl_buffer.h"
 #include "opencl_command_queue.h"
 #include "opencl_context.h"
@@ -35,14 +37,18 @@ public:
     // Compiler options setup
     void setOpenCLCompilerOptions(const std::string& options);
 
-    // Kernel setup and execution methods
+    // High-level kernel execution methods
+    KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
+        const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const;
+
+    // Low-level kernel execution methods
     OpenCLProgram createAndBuildProgram(const std::string& source) const;
     OpenCLBuffer createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const;
     void updateBuffer(OpenCLBuffer& buffer, const void* source, const size_t dataSize) const;
     void getBufferData(const OpenCLBuffer& buffer, void* destination, const size_t dataSize) const;
     OpenCLKernel createKernel(const OpenCLProgram& program, const std::string& kernelName) const;
     void setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const;
-    cl_ulong runKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;
+    cl_ulong enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;
 
 private:
     // Attributes
@@ -58,6 +64,8 @@ private:
     static DeviceType getDeviceType(const cl_device_type deviceType);
     void OpenCLCore::buildProgram(OpenCLProgram& program) const;
     std::string getProgramBuildInfo(const cl_program program, const cl_device_id id) const;
+    std::vector<KernelArgument> getResultArguments(const std::vector<OpenCLBuffer>& outputBuffers,
+        const std::vector<KernelArgument>& inputArguments) const;
 };
 
 } // namespace ktt

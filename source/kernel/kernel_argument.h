@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "../../libraries/any.hpp"
+#include "../enums/argument_data_type.h"
 #include "../enums/argument_memory_type.h"
 #include "../enums/argument_quantity.h"
 
@@ -31,11 +32,34 @@ public:
         {
             argumentQuantity = ArgumentQuantity::Vector;
         }
+
+        if (isTypeOf<double>())
+        {
+            argumentDataType = ArgumentDataType::Double;
+        }
+        else if (isTypeOf<float>())
+        {
+            argumentDataType = ArgumentDataType::Float;
+        }
+        else
+        {
+            argumentDataType = ArgumentDataType::Int;
+        }
     }
 
     std::vector<any> getData() const
     {
         return data;
+    }
+
+    size_t getRawDataSize() const
+    {
+        return data.size() * sizeof(data.at(0));
+    }
+
+    ArgumentDataType getArgumentDataType() const
+    {
+        return argumentDataType;
     }
 
     ArgumentMemoryType getArgumentMemoryType() const
@@ -46,11 +70,6 @@ public:
     ArgumentQuantity getArgumentQuantity() const
     {
         return argumentQuantity;
-    }
-
-    template <typename T> bool isTypeOf() const
-    {
-        return data.at(0).type() == typeid(T);
     }
 
     template <typename T> std::vector<T> getDataTyped() const
@@ -71,8 +90,14 @@ public:
 
 private:
     std::vector<any> data;
+    ArgumentDataType argumentDataType;
     ArgumentMemoryType argumentMemoryType;
     ArgumentQuantity argumentQuantity;
+
+    template <typename T> bool isTypeOf() const
+    {
+        return data.at(0).type() == typeid(T);
+    }
 };
 
 } // namespace ktt
