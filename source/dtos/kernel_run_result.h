@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "../kernel/kernel_argument.h"
+#include "../kernel_argument/kernel_argument.h"
 
 namespace ktt
 {

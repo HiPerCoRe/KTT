@@ -46,7 +46,7 @@ void checkOpenCLError(const cl_int value)
 {
     if (value != CL_SUCCESS)
     {
-        throw std::runtime_error("Internal OpenCL error: " + getOpenCLEnumName(value));
+        throw std::runtime_error(std::string("Internal OpenCL error: " + getOpenCLEnumName(value)));
     }
 }
 
@@ -54,7 +54,7 @@ void checkOpenCLError(const cl_int value, const std::string& message)
 {
     if (value != CL_SUCCESS)
     {
-        throw std::runtime_error("Internal OpenCL error: " + getOpenCLEnumName(value) + "\nAdditional info: " + message);
+        throw std::runtime_error(std::string("Internal OpenCL error: " + getOpenCLEnumName(value) + "\nAdditional info: " + message));
     }
 }
 

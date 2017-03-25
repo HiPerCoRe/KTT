@@ -4,6 +4,7 @@ namespace ktt
 {
 
 TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex):
+    argumentManager(std::make_unique<ArgumentManager>()),
     kernelManager(std::make_unique<KernelManager>()),
     openCLCore(std::make_unique<OpenCLCore>(platformIndex, deviceIndex)),
     tuningRunner(std::make_unique<TuningRunner>())
@@ -37,6 +38,19 @@ void TunerCore::addParameter(const size_t id, const std::string& name, const std
     kernelManager->addParameter(id, name, values, threadModifierType, modifierDimension);
 }
 
+void TunerCore::setKernelArguments(const size_t id, const std::vector<size_t>& argumentIndices)
+{
+    for (const auto index : argumentIndices)
+    {
+        if (index >= argumentManager->getArgumentCount())
+        {
+            throw std::runtime_error(std::string("Invalid kernel argument id: " + std::to_string(index)));
+        }
+    }
+
+    kernelManager->setArguments(id, argumentIndices);
+}
+
 void TunerCore::useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
     kernelManager->useSearchMethod(id, searchMethod, searchArguments);
@@ -47,7 +61,7 @@ size_t TunerCore::getKernelCount() const
     return kernelManager->getKernelCount();
 }
 
-const std::shared_ptr<const Kernel> TunerCore::getKernel(const size_t id) const
+const Kernel TunerCore::getKernel(const size_t id) const
 {
     return kernelManager->getKernel(id);
 }

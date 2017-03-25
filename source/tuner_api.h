@@ -31,11 +31,15 @@ public:
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
-    void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values);
-    void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
-        const Dimension& modifierDimension);
-    template <typename T> void addArgument(const size_t id, const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType);
-    void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+    void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values);
+    void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values,
+        const ThreadModifierType& threadModifierType, const Dimension& modifierDimension);
+    void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
+    void useSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+
+    // Argument handling methods
+    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType);
+    template <typename T> void updateArgument(const size_t argumentId, const std::vector<T>& data);
 
     // Compute API methods
     static void printComputeAPIInfo(std::ostream& outputTarget);

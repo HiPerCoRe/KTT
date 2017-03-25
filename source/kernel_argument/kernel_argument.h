@@ -20,31 +20,13 @@ public:
         data(data),
         argumentMemoryType(argumentMemoryType)
     {
-        if (data.size() == 0)
-        {
-            throw std::runtime_error("Data provided for kernel argument is empty.");
-        }
-        else if (data.size() == 1)
-        {
-            argumentQuantity = ArgumentQuantity::Scalar;
-        }
-        else
-        {
-            argumentQuantity = ArgumentQuantity::Vector;
-        }
+        initializeAttributes();
+    }
 
-        if (isTypeOf<double>())
-        {
-            argumentDataType = ArgumentDataType::Double;
-        }
-        else if (isTypeOf<float>())
-        {
-            argumentDataType = ArgumentDataType::Float;
-        }
-        else
-        {
-            argumentDataType = ArgumentDataType::Int;
-        }
+    void updateData(const std::vector<any>& data)
+    {
+        this->data = data;
+        initializeAttributes();
     }
 
     std::vector<any> getData() const
@@ -97,6 +79,35 @@ private:
     template <typename T> bool isTypeOf() const
     {
         return data.at(0).type() == typeid(T);
+    }
+
+    void initializeAttributes()
+    {
+        if (data.size() == 0)
+        {
+            throw std::runtime_error("Data provided for kernel argument is empty");
+        }
+        else if (data.size() == 1)
+        {
+            argumentQuantity = ArgumentQuantity::Scalar;
+        }
+        else
+        {
+            argumentQuantity = ArgumentQuantity::Vector;
+        }
+
+        if (isTypeOf<double>())
+        {
+            argumentDataType = ArgumentDataType::Double;
+        }
+        else if (isTypeOf<float>())
+        {
+            argumentDataType = ArgumentDataType::Float;
+        }
+        else
+        {
+            argumentDataType = ArgumentDataType::Int;
+        }
     }
 };
 

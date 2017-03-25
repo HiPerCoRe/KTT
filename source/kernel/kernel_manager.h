@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <vector>
 
 #include "../enums/dimension_vector_type.h"
@@ -26,24 +25,17 @@ public:
     // Kernel modification methods
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
         const Dimension& modifierDimension);
-    template <typename T> void addArgument(const size_t id, const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
-    {
-        if (id >= kernelCount)
-        {
-            throw std::runtime_error("Invalid kernel id: " + id);
-        }
-        kernels.at(id)->addArgument(data, argumentMemoryType);
-    }
+    void setArguments(const size_t id, const std::vector<size_t>& argumentIndices);
     void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Getters
     size_t getKernelCount() const;
-    const std::shared_ptr<const Kernel> getKernel(const size_t id) const;
+    const Kernel getKernel(const size_t id) const;
 
 private:
     // Attributes
     size_t kernelCount;
-    std::vector<std::shared_ptr<Kernel>> kernels;
+    std::vector<Kernel> kernels;
 
     // Helper methods
     std::string loadFileToString(const std::string& filePath) const;

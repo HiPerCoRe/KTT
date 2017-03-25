@@ -7,15 +7,13 @@ namespace ktt
 {
 
 KernelManager::KernelManager():
-    kernelCount(static_cast<size_t>(0))
+    kernelCount(0)
 {}
 
 size_t KernelManager::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    Kernel kernel(source, kernelName, globalSize, localSize);
-    kernels.push_back(std::make_shared<Kernel>(kernel));
-
+    kernels.emplace_back(Kernel(source, kernelName, globalSize, localSize));
     return kernelCount++;
 }
 
@@ -28,7 +26,7 @@ size_t KernelManager::addKernelFromFile(const std::string& filePath, const std::
 
 std::string KernelManager::getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const
 {
-    std::string source = getKernel(id)->getSource();
+    std::string source = getKernel(id).getSource();
 
     for (const auto& parameterValue : kernelConfiguration.getParameterValues())
     {
@@ -44,12 +42,12 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error("Invalid kernel id: " + id);
+        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
     }
 
     std::vector<KernelConfiguration> configurations;
-    computeConfigurations(0, kernels.at(id)->getParameters(), std::vector<ParameterValue>(0), kernels.at(id)->getGlobalSize(),
-        kernels.at(id)->getLocalSize(), configurations);
+    computeConfigurations(0, kernels.at(id).getParameters(), std::vector<ParameterValue>(0), kernels.at(id).getGlobalSize(),
+        kernels.at(id).getLocalSize(), configurations);
     return configurations;
 }
 
@@ -58,18 +56,27 @@ void KernelManager::addParameter(const size_t id, const std::string& name, const
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error("Invalid kernel id: " + id);
+        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
     }
-    kernels.at(id)->addParameter(KernelParameter(name, values, threadModifierType, modifierDimension));
+    kernels.at(id).addParameter(KernelParameter(name, values, threadModifierType, modifierDimension));
+}
+
+void KernelManager::setArguments(const size_t id, const std::vector<size_t>& argumentIndices)
+{
+    if (id >= kernelCount)
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+    }
+    kernels.at(id).setArguments(argumentIndices);
 }
 
 void KernelManager::useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error("Invalid kernel id: " + id);
+        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
     }
-    kernels.at(id)->useSearchMethod(searchMethod, searchArguments);
+    kernels.at(id).useSearchMethod(searchMethod, searchArguments);
 }
 
 size_t KernelManager::getKernelCount() const
@@ -77,11 +84,11 @@ size_t KernelManager::getKernelCount() const
     return kernelCount;
 }
 
-const std::shared_ptr<const Kernel> KernelManager::getKernel(const size_t id) const
+const Kernel KernelManager::getKernel(const size_t id) const
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error("Invalid kernel id: " + id);
+        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
     }
     return kernels.at(id);
 }

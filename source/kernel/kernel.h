@@ -3,13 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "../../libraries/any.hpp"
-
 #include "../ktt_type_aliases.h"
-#include "../enums/argument_data_type.h"
-#include "../enums/argument_memory_type.h"
 #include "../enums/search_method.h"
-#include "kernel_argument.h"
 #include "kernel_parameter.h"
 
 namespace ktt
@@ -23,16 +18,7 @@ public:
 
     // Core methods
     void addParameter(const KernelParameter& parameter);
-    template <typename T> void addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
-    {
-        std::vector<linb::any> anyData;
-        for (const auto element : data)
-        {
-            anyData.push_back(element);
-        }
-
-        arguments.push_back(KernelArgument(anyData, argumentMemoryType));
-    }
+    void setArguments(const std::vector<size_t>& argumentIndices);
     void useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Getters
@@ -42,7 +28,7 @@ public:
     DimensionVector getLocalSize() const;
     std::vector<KernelParameter> getParameters() const;
     size_t getArgumentCount() const;
-    std::vector<KernelArgument> getArguments() const;
+    std::vector<size_t> getArgumentIndices() const;
     SearchMethod getSearchMethod() const;
     std::vector<double> getSearchArguments() const;
 
@@ -53,7 +39,7 @@ private:
     DimensionVector globalSize;
     DimensionVector localSize;
     std::vector<KernelParameter> parameters;
-    std::vector<KernelArgument> arguments;
+    std::vector<size_t> argumentIndices;
     SearchMethod searchMethod;
     std::vector<double> searchArguments;
 

@@ -11,13 +11,13 @@ OpenCLCore::OpenCLCore(const size_t platformIndex, const size_t deviceIndex):
     auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
     {
-        throw std::runtime_error("Invalid platform index: " + platformIndex);
+        throw std::runtime_error(std::string("Invalid platform index: " + std::to_string(platformIndex)));
     }
 
     auto devices = getOpenCLDevices(platforms.at(platformIndex));
     if (deviceIndex >= devices.size())
     {
-        throw std::runtime_error("Invalid device index: " + deviceIndex);
+        throw std::runtime_error(std::string("Invalid device index: " + std::to_string(deviceIndex)));
     }
 
     cl_device_id device = devices.at(deviceIndex).getId();

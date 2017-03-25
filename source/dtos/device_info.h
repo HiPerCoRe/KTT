@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 #include <string>
 
 #include "../enums/device_type.h"
@@ -11,100 +12,29 @@ namespace ktt
 class DeviceInfo
 {
 public:
-    explicit DeviceInfo(const size_t id, const std::string& name):
-        id(id),
-        name(name)
-    {}
+    explicit DeviceInfo(const size_t id, const std::string& name);
 
-    size_t getId() const
-    {
-        return id;
-    }
+    size_t getId() const;
+    std::string getName() const;
+    std::string getVendor() const;
+    std::string getExtensions() const;
+    DeviceType getDeviceType() const;
+    uint64_t getGlobalMemorySize() const;
+    uint64_t getLocalMemorySize() const;
+    uint64_t getMaxConstantBufferSize() const;
+    uint32_t getMaxComputeUnits() const;
+    size_t getMaxWorkGroupSize() const;
 
-    std::string getName() const
-    {
-        return name;
-    }
+    void setVendor(const std::string& vendor);
+    void setExtensions(const std::string& extensions);
+    void setDeviceType(const DeviceType& deviceType);
+    void setGlobalMemorySize(const uint64_t globalMemorySize);
+    void setLocalMemorySize(const uint64_t localMemorySize);
+    void setMaxConstantBufferSize(const uint64_t maxConstantBufferSize);
+    void setMaxComputeUnits(const uint32_t maxComputeUnits);
+    void setMaxWorkGroupSize(const size_t maxWorkGroupSize);
 
-    std::string getVendor() const
-    {
-        return vendor;
-    }
-
-    std::string getExtensions() const
-    {
-        return extensions;
-    }
-
-    DeviceType getDeviceType() const
-    {
-        return deviceType;
-    }
-
-    uint64_t getGlobalMemorySize() const
-    {
-        return globalMemorySize;
-    }
-
-    uint64_t getLocalMemorySize() const
-    {
-        return localMemorySize;
-    }
-
-    uint64_t getMaxConstantBufferSize() const
-    {
-        return maxConstantBufferSize;
-    }
-
-    uint32_t getMaxComputeUnits() const
-    {
-        return maxComputeUnits;
-    }
-
-    size_t getMaxWorkGroupSize() const
-    {
-        return maxWorkGroupSize;
-    }
-
-    void setVendor(const std::string& vendor)
-    {
-        this->vendor = vendor;
-    }
-
-    void setExtensions(const std::string& extensions)
-    {
-        this->extensions = extensions;
-    }
-
-    void setDeviceType(const DeviceType& deviceType)
-    {
-        this->deviceType = deviceType;
-    }
-
-    void setGlobalMemorySize(const uint64_t globalMemorySize)
-    {
-        this->globalMemorySize = globalMemorySize;
-    }
-
-    void setLocalMemorySize(const uint64_t localMemorySize)
-    {
-        this->localMemorySize = localMemorySize;
-    }
-
-    void setMaxConstantBufferSize(const uint64_t maxConstantBufferSize)
-    {
-        this->maxConstantBufferSize = maxConstantBufferSize;
-    }
-
-    void setMaxComputeUnits(const uint32_t maxComputeUnits)
-    {
-        this->maxComputeUnits = maxComputeUnits;
-    }
-
-    void setMaxWorkGroupSize(const size_t maxWorkGroupSize)
-    {
-        this->maxWorkGroupSize = maxWorkGroupSize;
-    }
+    friend std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo);
 
 private:
     size_t id;
@@ -118,5 +48,8 @@ private:
     uint32_t maxComputeUnits;
     size_t maxWorkGroupSize;
 };
+
+std::string deviceTypeToString(const DeviceType& deviceType);
+std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo);
 
 } // namespace ktt

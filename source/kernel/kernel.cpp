@@ -21,6 +21,11 @@ void Kernel::addParameter(const KernelParameter& parameter)
     parameters.push_back(parameter);
 }
 
+void Kernel::setArguments(const std::vector<size_t>& argumentIndices)
+{
+    this->argumentIndices = argumentIndices;
+}
+
 void Kernel::useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
     if (searchMethod == SearchMethod::RandomSearch && searchArguments.size() < 1
@@ -61,12 +66,12 @@ std::vector<KernelParameter> Kernel::getParameters() const
 
 size_t Kernel::getArgumentCount() const
 {
-    return arguments.size();
+    return argumentIndices.size();
 }
 
-std::vector<KernelArgument> Kernel::getArguments() const
+std::vector<size_t> Kernel::getArgumentIndices() const
 {
-    return arguments;
+    return argumentIndices;
 }
 
 SearchMethod Kernel::getSearchMethod() const

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 
 namespace ktt
@@ -8,50 +9,19 @@ namespace ktt
 class PlatformInfo
 {
 public:
-    explicit PlatformInfo(const size_t id, const std::string& name):
-        id(id),
-        name(name)
-    {}
+    explicit PlatformInfo(const size_t id, const std::string& name);
 
-    size_t getId() const
-    {
-        return id;
-    }
+    size_t getId() const;
+    std::string getName() const;
+    std::string getVendor() const;
+    std::string getVersion() const;
+    std::string getExtensions() const;
 
-    std::string getName() const
-    {
-        return name;
-    }
+    void setVendor(const std::string& vendor);
+    void setVersion(const std::string& version);
+    void setExtensions(const std::string& extensions);
 
-    std::string getVendor() const
-    {
-        return vendor;
-    }
-
-    std::string getVersion() const
-    {
-        return version;
-    }
-
-    std::string getExtensions() const
-    {
-        return extensions;
-    }
-
-    void setVendor(const std::string& vendor)
-    {
-        this->vendor = vendor;
-    }
-
-    void setVersion(const std::string& version)
-    {
-        this->version = version;
-    }
-
-    void setExtensions(const std::string& extensions)
-    {
-        this->extensions = extensions;
-    }
+    friend std::ostream& operator<<(std::ostream& outputTarget, const PlatformInfo& platformInfo);
 
 private:
     size_t id;
@@ -60,5 +30,7 @@ private:
     std::string version;
     std::string extensions;
 };
+
+std::ostream& operator<<(std::ostream& outputTarget, const PlatformInfo& platformInfo);
 
 } // namespace ktt

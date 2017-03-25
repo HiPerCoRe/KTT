@@ -9,7 +9,7 @@
 #include "../dtos/kernel_run_result.h"
 #include "../dtos/platform_info.h"
 #include "../enums/argument_memory_type.h"
-#include "../kernel/kernel_argument.h"
+#include "../kernel_argument/kernel_argument.h"
 #include "opencl_buffer.h"
 #include "opencl_command_queue.h"
 #include "opencl_context.h"
