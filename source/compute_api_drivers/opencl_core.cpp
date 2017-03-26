@@ -131,8 +131,8 @@ KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::stri
     std::vector<OpenCLBuffer> buffers;
     for (const auto& argument : arguments)
     {
-        OpenCLBuffer buffer = createBuffer(argument.getArgumentMemoryType(), argument.getRawDataSize());
-        updateBuffer(buffer, argument.getData().data(), argument.getRawDataSize());
+        OpenCLBuffer buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSize());
+        updateBuffer(buffer, argument.getData(), argument.getDataSize());
         buffers.push_back(buffer);
     }
 
@@ -302,39 +302,24 @@ std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<Ope
         }
 
         ArgumentDataType type = inputArguments.at(i).getArgumentDataType();
-        std::vector<linb::any> anyResult;
         if (type == ArgumentDataType::Double)
         {
-            std::vector<double> resultDouble(inputArguments.at(i).getRawDataSize());
-            getBufferData(outputBuffers.at(i), resultDouble.data(), inputArguments.at(i).getRawDataSize());
-
-            for (const auto element : resultDouble)
-            {
-                anyResult.push_back(element);
-            }
+            std::vector<double> resultDouble(inputArguments.at(i).getDataSize());
+            getBufferData(outputBuffers.at(i), resultDouble.data(), inputArguments.at(i).getDataSize());
+            resultArguments.push_back(KernelArgument(resultDouble, inputArguments.at(i).getArgumentMemoryType()));
         }
         else if (type == ArgumentDataType::Float)
         {
-            std::vector<float> resultFloat(inputArguments.at(i).getRawDataSize());
-            getBufferData(outputBuffers.at(i), resultFloat.data(), inputArguments.at(i).getRawDataSize());
-
-            for (const auto element : resultFloat)
-            {
-                anyResult.push_back(element);
-            }
+            std::vector<float> resultFloat(inputArguments.at(i).getDataSize());
+            getBufferData(outputBuffers.at(i), resultFloat.data(), inputArguments.at(i).getDataSize());
+            resultArguments.push_back(KernelArgument(resultFloat, inputArguments.at(i).getArgumentMemoryType()));
         }
         else
         {
-            std::vector<int> resultInt(inputArguments.at(i).getRawDataSize());
-            getBufferData(outputBuffers.at(i), resultInt.data(), inputArguments.at(i).getRawDataSize());
-
-            for (const auto element : resultInt)
-            {
-                anyResult.push_back(element);
-            }
+            std::vector<int> resultInt(inputArguments.at(i).getDataSize());
+            getBufferData(outputBuffers.at(i), resultInt.data(), inputArguments.at(i).getDataSize());
+            resultArguments.push_back(KernelArgument(resultInt, inputArguments.at(i).getArgumentMemoryType()));
         }
-
-        resultArguments.push_back(KernelArgument(anyResult, inputArguments.at(i).getArgumentMemoryType()));
     }
 
     return resultArguments;

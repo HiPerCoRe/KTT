@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "../../libraries/any.hpp"
 #include "../enums/argument_data_type.h"
 #include "../enums/argument_memory_type.h"
 #include "../enums/argument_quantity.h"
@@ -10,33 +9,66 @@
 namespace ktt
 {
 
-using linb::any;
-using linb::any_cast;
-
 class KernelArgument
 {
 public:
-    explicit KernelArgument(const std::vector<any>& data, const ArgumentMemoryType& argumentMemoryType):
-        data(data),
+    template <typename T> explicit KernelArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType):
         argumentMemoryType(argumentMemoryType)
     {
-        initializeAttributes();
+        initializeData(data);
     }
 
-    void updateData(const std::vector<any>& data)
+    template <typename T> void updateData(const std::vector<T>& data)
     {
-        this->data = data;
-        initializeAttributes();
+        if (typeid(T) == typeid(double) && argumentDataType != ArgumentDataType::Double
+            || typeid(T) == typeid(float) && argumentDataType != ArgumentDataType::Float
+            || typeid(T) == typeid(int) && argumentDataType != ArgumentDataType::Int)
+        {
+            throw std::runtime_error("Updated data provided for kernel argument have different data type");
+        }
+
+        initializeData(data);
     }
 
-    std::vector<any> getData() const
+    const void* getData() const
     {
-        return data;
+        switch (argumentDataType)
+        {
+        case ArgumentDataType::Double:
+            return (void*)dataDouble.data();
+        case ArgumentDataType::Float:
+            return (void*)dataFloat.data();
+        default:
+            return (void*)dataInt.data();
+        }
     }
 
-    size_t getRawDataSize() const
+    std::vector<double> getDataDouble() const
     {
-        return data.size() * sizeof(data.at(0));
+        return dataDouble;
+    }
+
+    std::vector<float> getDataFloat() const
+    {
+        return dataFloat;
+    }
+
+    std::vector<int> getDataInt() const
+    {
+        return dataInt;
+    }
+
+    size_t getDataSize() const
+    {
+        switch (argumentDataType)
+        {
+        case ArgumentDataType::Double:
+            return dataDouble.size() * sizeof(dataDouble.at(0));
+        case ArgumentDataType::Float:
+            return dataFloat.size() * sizeof(dataFloat.at(0));
+        default:
+            return dataInt.size() * sizeof(dataInt.at(0));
+        }
     }
 
     ArgumentDataType getArgumentDataType() const
@@ -54,34 +86,15 @@ public:
         return argumentQuantity;
     }
 
-    template <typename T> std::vector<T> getDataTyped() const
-    {
-        if (!isTypeOf<T>())
-        {
-            throw std::runtime_error("Invalid argument data type");
-        }
-
-        std::vector<T> result;
-        for (const auto& element : data)
-        {
-            result.push_back(any_cast<T>(element));
-        }
-
-        return result;
-    }
-
 private:
-    std::vector<any> data;
+    std::vector<double> dataDouble;
+    std::vector<float> dataFloat;
+    std::vector<int> dataInt;
     ArgumentDataType argumentDataType;
     ArgumentMemoryType argumentMemoryType;
     ArgumentQuantity argumentQuantity;
 
-    template <typename T> bool isTypeOf() const
-    {
-        return data.at(0).type() == typeid(T);
-    }
-
-    void initializeAttributes()
+    template <typename T> void initializeData(const std::vector<T>& data)
     {
         if (data.size() == 0)
         {
@@ -96,17 +109,27 @@ private:
             argumentQuantity = ArgumentQuantity::Vector;
         }
 
-        if (isTypeOf<double>())
+        if (typeid(T) == typeid(double))
         {
+            dataDouble.resize(data.size());
+            std::memcpy(dataDouble.data(), data.data(), data.size() * sizeof(double));
             argumentDataType = ArgumentDataType::Double;
         }
-        else if (isTypeOf<float>())
+        else if (typeid(T) == typeid(float))
         {
+            dataFloat.resize(data.size());
+            std::memcpy(dataFloat.data(), data.data(), data.size() * sizeof(float));
             argumentDataType = ArgumentDataType::Float;
+        }
+        else if (typeid(T) == typeid(int))
+        {
+            dataInt.resize(data.size());
+            std::memcpy(dataInt.data(), data.data(), data.size() * sizeof(int));
+            argumentDataType = ArgumentDataType::Int;
         }
         else
         {
-            argumentDataType = ArgumentDataType::Int;
+            throw std::runtime_error(std::string("Unsupported argument data type was provided for kernel argument"));
         }
     }
 };

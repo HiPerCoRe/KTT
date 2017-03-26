@@ -25,6 +25,8 @@ std::string getOpenCLEnumName(const cl_int value)
         return std::string("CL_INVALID_PLATFORM");
     case CL_INVALID_DEVICE:
         return std::string("CL_INVALID_DEVICE");
+    case CL_INVALID_MEM_OBJECT:
+        return std::string("CL_INVALID_MEM_OBJECT");
     case CL_INVALID_BUILD_OPTIONS:
         return std::string("CL_INVALID_BUILD_OPTIONS");
     case CL_INVALID_KERNEL_NAME:
