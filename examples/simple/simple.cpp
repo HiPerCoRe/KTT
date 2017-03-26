@@ -1,5 +1,3 @@
-#include <cstdlib>
-#include <ctime>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -23,12 +21,12 @@ int main(int argc, char** argv)
 
     // Declare constants
     const float upperBoundary = 1000.0f; // used for generating random test data
-    const std::string kernelName = std::string("simple_kernel.cl");
-    const std::string referenceKernelName = std::string("simple_reference_kernel.cl");
+    const std::string kernelFile = std::string("simple_kernel.cl");
+    const std::string referenceKernelFile = std::string("simple_reference_kernel.cl");
 
     // Declare kernel parameters
-    const int numberOfElements = 4096 * 4096;
-    ktt::DimensionVector ndRangeDimensions(4096 * 4096, 1, 1);
+    const int numberOfElements = 512 * 512;
+    ktt::DimensionVector ndRangeDimensions(numberOfElements, 1, 1);
     ktt::DimensionVector workGroupDimensions(256, 1, 1);
 
     // Declare data variables
@@ -37,25 +35,21 @@ int main(int argc, char** argv)
     std::vector<float> result(numberOfElements, 0.0f);
 
     // Initialize data
-    srand((unsigned)time(0));
-
     for (int i = 0; i < numberOfElements; i++)
     {
-        a.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
-        b.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
+        a.at(i) = static_cast<float>(i);
+        b.at(i) = static_cast<float>(i + 1);
     }
-    
-    // WIP
+
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
-    size_t kernelId = tuner.addKernelFromFile(kernelName, std::string("multirunKernel"), ndRangeDimensions, workGroupDimensions);
-    size_t one = tuner.addArgument(a, ktt::ArgumentMemoryType::READ_ONLY);
-    size_t two = tuner.addArgument(b, ktt::ArgumentMemoryType::READ_ONLY);
-    size_t three = tuner.addArgument(result, ktt::ArgumentMemoryType::WRITE_ONLY);
+    size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("simpleKernel"), ndRangeDimensions, workGroupDimensions);
+    size_t aId = tuner.addArgument(a, ktt::ArgumentMemoryType::READ_ONLY);
+    size_t bId = tuner.addArgument(b, ktt::ArgumentMemoryType::READ_ONLY);
+    size_t resultId = tuner.addArgument(result, ktt::ArgumentMemoryType::WRITE_ONLY);
 
-    tuner.addParameter(kernelId, std::string("TEST_PARAM"), std::vector<size_t>{1, 2, 3});
-    tuner.useSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.5 });
-    tuner.setKernelArguments(kernelId, std::vector<size_t>{ one, two, three });
+    tuner.setKernelArguments(kernelId, std::vector<size_t>{ aId, bId, resultId });
+    tuner.tuneKernel(kernelId);
 
     return 0;
 }

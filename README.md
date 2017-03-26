@@ -15,13 +15,14 @@ Prerequisites
 The prerequisites to build KTT are:
 
 * [premake5](https://premake.github.io/download.html)
-* C++11 compiler, for example:
-    - GCC 4.7.0 or newer
-    - MSVC 14.0 (Visual Studio 2015) or newer
+* C++14 compiler, for example:
+    - Clang 3.4 or newer
+    - GCC 5.1 or newer
+    - MSVC 19.0 (Visual Studio 2015) or newer
 * OpenCL library, supported SDKs are:
-    - NVIDIA CUDA SDK
     - AMD APP SDK
-    - Intel OpenCL SDK
+    - Intel SDK for OpenCL
+    - NVIDIA CUDA Toolkit
 
 Building KTT
 ------------
@@ -44,7 +45,6 @@ Examples
 Examples showcasing KTT functionality are located inside examples folder. List of currently
 available examples:
 
-* opencl_info - example showing how to retrieve detailed information about OpenCL platforms
+* `opencl_info` - example showing how to retrieve detailed information about OpenCL platforms
   and devices through KTT API
-* simple - example showcasing basic KTT functionality (eg. kernel addition, parameter addition,
-  search method specification)
+* `simple` - example showcasing how to setup kernel run with KTT framework, no autotuning is done

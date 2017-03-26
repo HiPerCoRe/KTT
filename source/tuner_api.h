@@ -41,6 +41,9 @@ public:
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType);
     template <typename T> void updateArgument(const size_t argumentId, const std::vector<T>& data);
 
+    // Kernel tuning methods
+    void tuneKernel(const size_t kernelId);
+
     // Compute API methods
     static void printComputeAPIInfo(std::ostream& outputTarget);
     static PlatformInfo getPlatformInfo(const size_t platformIndex);

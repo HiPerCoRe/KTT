@@ -46,8 +46,17 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
     }
 
     std::vector<KernelConfiguration> configurations;
-    computeConfigurations(0, kernels.at(id).getParameters(), std::vector<ParameterValue>(0), kernels.at(id).getGlobalSize(),
-        kernels.at(id).getLocalSize(), configurations);
+
+    if (kernels.at(id).getParameters().size() == 0)
+    {
+        configurations.emplace_back(KernelConfiguration(kernels.at(id).getGlobalSize(), kernels.at(id).getLocalSize(),
+            std::vector<ParameterValue>{}));
+    }
+    else
+    {
+        computeConfigurations(0, kernels.at(id).getParameters(), std::vector<ParameterValue>(0), kernels.at(id).getGlobalSize(),
+            kernels.at(id).getLocalSize(), configurations);
+    }
     return configurations;
 }
 

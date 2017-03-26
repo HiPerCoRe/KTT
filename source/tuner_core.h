@@ -41,6 +41,9 @@ public:
         argumentManager->updateArgument(id, data);
     }
 
+    // Tuning runner methods
+    std::vector<TuningResult> tuneKernel(const size_t id);
+
     // Compute API methods
     static void printComputeAPIInfo(std::ostream& outputTarget);
     static PlatformInfo getPlatformInfo(const size_t platformIndex);

@@ -111,6 +111,19 @@ template void Tuner::updateArgument<int>(const size_t argumentId, const std::vec
 template void Tuner::updateArgument<float>(const size_t argumentId, const std::vector<float>& data);
 template void Tuner::updateArgument<double>(const size_t argumentId, const std::vector<double>& data);
 
+void Tuner::tuneKernel(const size_t kernelId)
+{
+    try
+    {
+        tunerCore->tuneKernel(kernelId);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+        throw;
+    }
+}
+
 void Tuner::printComputeAPIInfo(std::ostream& outputTarget)
 {
     try

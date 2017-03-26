@@ -7,7 +7,7 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex):
     argumentManager(std::make_unique<ArgumentManager>()),
     kernelManager(std::make_unique<KernelManager>()),
     openCLCore(std::make_unique<OpenCLCore>(platformIndex, deviceIndex)),
-    tuningRunner(std::make_unique<TuningRunner>())
+    tuningRunner(std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), openCLCore.get()))
 {}
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -64,6 +64,11 @@ size_t TunerCore::getKernelCount() const
 const Kernel TunerCore::getKernel(const size_t id) const
 {
     return kernelManager->getKernel(id);
+}
+
+std::vector<TuningResult> TunerCore::tuneKernel(const size_t id)
+{
+    return tuningRunner->tuneKernel(id);;
 }
 
 void TunerCore::printComputeAPIInfo(std::ostream& outputTarget)
