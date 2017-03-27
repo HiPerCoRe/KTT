@@ -22,19 +22,10 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     }
 
     std::vector<TuningResult> results;
+    const Kernel& kernel = kernelManager->getKernel(id);
 
-    if (kernelManager->getKernelConfigurations(id).size() == 1) // just single kernel run without any tuning
-    {
-        KernelRunResult result = openCLCore->runKernel(kernelManager->getKernel(id).getSource(), kernelManager->getKernel(id).getName(),
-            convertDimensionVector(kernelManager->getKernel(id).getGlobalSize()), convertDimensionVector(kernelManager->getKernel(id).getLocalSize()),
-            getKernelArguments(id));
-        results.emplace_back(TuningResult(result.getDuration(), KernelConfiguration(kernelManager->getKernel(id).getGlobalSize(),
-            kernelManager->getKernel(id).getLocalSize(), std::vector<ParameterValue>{})));
-        return results;
-    }
-
-    std::unique_ptr<Searcher> searcher = getSearcher(kernelManager->getKernel(id).getSearchMethod(),
-        kernelManager->getKernel(id).getSearchArguments(), kernelManager->getKernelConfigurations(id), kernelManager->getKernel(id).getParameters());
+    std::unique_ptr<Searcher> searcher = getSearcher(kernel.getSearchMethod(), kernel.getSearchArguments(),
+        kernelManager->getKernelConfigurations(id), kernel.getParameters());
 
     size_t configurationsCount = searcher->getConfigurationsCount();
     for (size_t i = 0; i < configurationsCount; i++)
@@ -42,9 +33,8 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         KernelConfiguration currentConfiguration = searcher->getNextConfiguration();
         std::string source = kernelManager->getKernelSourceWithDefines(id, currentConfiguration);
 
-        KernelRunResult result = openCLCore->runKernel(source, kernelManager->getKernel(id).getName(),
-            convertDimensionVector(currentConfiguration.getGlobalSize()), convertDimensionVector(currentConfiguration.getLocalSize()),
-            getKernelArguments(id));
+        KernelRunResult result = openCLCore->runKernel(source, kernel.getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
+            convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
         
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration()));
         results.emplace_back(TuningResult(result.getDuration(), currentConfiguration));
@@ -61,12 +51,15 @@ std::unique_ptr<Searcher> TuningRunner::getSearcher(const SearchMethod& searchMe
     switch (searchMethod)
     {
     case SearchMethod::FullSearch:
-        searcher = std::make_unique<FullSearcher>(configurations);
+        searcher.reset(new FullSearcher(configurations));
+        break;
     case SearchMethod::RandomSearch:
-        searcher = std::make_unique<RandomSearcher>(configurations, searchArguments.at(0));
+        searcher.reset(new RandomSearcher(configurations, searchArguments.at(0)));
+        break;
     case SearchMethod::PSO:
-        searcher = std::make_unique<PSOSearcher>(configurations, parameters, searchArguments.at(0), static_cast<size_t>(searchArguments.at(1)),
-            searchArguments.at(2), searchArguments.at(3), searchArguments.at(4));
+        searcher.reset(new PSOSearcher(configurations, parameters, searchArguments.at(0), static_cast<size_t>(searchArguments.at(1)),
+            searchArguments.at(2), searchArguments.at(3), searchArguments.at(4)));
+        break;
     default:
         throw std::runtime_error(std::string("Unsupported search method"));
     }

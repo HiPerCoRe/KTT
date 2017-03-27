@@ -128,40 +128,39 @@ void OpenCLCore::setOpenCLCompilerOptions(const std::string& options)
 KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
 {
-    std::vector<OpenCLBuffer> buffers;
+    std::vector<std::shared_ptr<OpenCLBuffer>> buffers;
     for (const auto& argument : arguments)
     {
-        OpenCLBuffer buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSize());
-        updateBuffer(buffer, argument.getData(), argument.getDataSize());
+        std::shared_ptr<OpenCLBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSize());
+        updateBuffer(*buffer, argument.getData(), argument.getDataSize());
         buffers.push_back(buffer);
     }
 
-    OpenCLProgram program = createAndBuildProgram(source);
-    OpenCLKernel kernel = createKernel(program, kernelName);
+    std::shared_ptr<OpenCLProgram> program = createAndBuildProgram(source);
+    std::shared_ptr<OpenCLKernel> kernel = createKernel(*program, kernelName);
 
     for (const auto& buffer : buffers)
     {
-        setKernelArgument(kernel, buffer);
+        setKernelArgument(*kernel, *buffer);
     }
 
-    cl_ulong duration = enqueueKernel(kernel, globalSize, localSize);
-
+    cl_ulong duration = enqueueKernel(*kernel, globalSize, localSize);
     std::vector<KernelArgument> resultArguments = getResultArguments(buffers, arguments);
-
-    KernelRunResult result(static_cast<uint64_t>(duration), resultArguments);
-    return result;
+    return KernelRunResult(static_cast<uint64_t>(duration), resultArguments);
 }
 
-OpenCLProgram OpenCLCore::createAndBuildProgram(const std::string& source) const
+std::shared_ptr<OpenCLProgram> OpenCLCore::createAndBuildProgram(const std::string& source) const
 {
-    OpenCLProgram program(source, context->getContext(), context->getDevices());
-    buildProgram(program);
+    std::shared_ptr<OpenCLProgram> program;
+    program.reset(new OpenCLProgram(source, context->getContext(), context->getDevices()));
+    buildProgram(*program);
     return program;
 }
 
-OpenCLBuffer OpenCLCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const
+std::shared_ptr<OpenCLBuffer> OpenCLCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const
 {
-    OpenCLBuffer buffer(context->getContext(), getOpenCLMemoryType(argumentMemoryType), size);
+    std::shared_ptr<OpenCLBuffer> buffer;
+    buffer.reset(new OpenCLBuffer(context->getContext(), getOpenCLMemoryType(argumentMemoryType), size));
     return buffer;
 }
 
@@ -177,9 +176,10 @@ void OpenCLCore::getBufferData(const OpenCLBuffer& buffer, void* destination, co
     checkOpenCLError(result);
 }
 
-OpenCLKernel OpenCLCore::createKernel(const OpenCLProgram& program, const std::string& kernelName) const
+std::shared_ptr<OpenCLKernel> OpenCLCore::createKernel(const OpenCLProgram& program, const std::string& kernelName) const
 {
-    OpenCLKernel kernel(program.getProgram(), kernelName);
+    std::shared_ptr<OpenCLKernel> kernel;
+    kernel.reset(new OpenCLKernel(program.getProgram(), kernelName));
     return kernel;
 }
 
@@ -274,7 +274,7 @@ DeviceType OpenCLCore::getDeviceType(const cl_device_type deviceType)
 
 void OpenCLCore::buildProgram(OpenCLProgram& program) const
 {
-    cl_int result = clBuildProgram(program.getProgram(), program.getDevices().size(), program.getDevices().data(), &compilerOptions[0], nullptr,
+    cl_int result = clBuildProgram(program.getProgram(), program.getDevices().size(), &program.getDevices().at(0), &compilerOptions[0], nullptr,
         nullptr);
     std::string buildInfo = getProgramBuildInfo(program.getProgram(), program.getDevices().at(0));
     checkOpenCLError(result, buildInfo);
@@ -283,20 +283,20 @@ void OpenCLCore::buildProgram(OpenCLProgram& program) const
 std::string OpenCLCore::getProgramBuildInfo(const cl_program program, const cl_device_id id) const
 {
     size_t infoSize;
-    checkOpenCLError(clGetProgramBuildInfo(program, id, 0, 0, nullptr, &infoSize));
+    checkOpenCLError(clGetProgramBuildInfo(program, id, CL_PROGRAM_BUILD_LOG, 0, nullptr, &infoSize));
     std::string infoString(infoSize, ' ');
     checkOpenCLError(clGetProgramBuildInfo(program, id, CL_PROGRAM_BUILD_LOG, infoSize, &infoString[0], nullptr));
 
     return infoString;
 }
 
-std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<OpenCLBuffer>& outputBuffers,
+std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<std::shared_ptr<OpenCLBuffer>>& outputBuffers,
     const std::vector<KernelArgument>& inputArguments) const
 {
     std::vector<KernelArgument> resultArguments;
     for (size_t i = 0; i < outputBuffers.size(); i++)
     {
-        if (outputBuffers.at(i).getType() == CL_MEM_READ_ONLY)
+        if (outputBuffers.at(i)->getType() == CL_MEM_READ_ONLY)
         {
             continue;
         }
@@ -305,19 +305,19 @@ std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<Ope
         if (type == ArgumentDataType::Double)
         {
             std::vector<double> resultDouble(inputArguments.at(i).getDataSize());
-            getBufferData(outputBuffers.at(i), resultDouble.data(), inputArguments.at(i).getDataSize());
+            getBufferData(*outputBuffers.at(i), resultDouble.data(), inputArguments.at(i).getDataSize());
             resultArguments.push_back(KernelArgument(resultDouble, inputArguments.at(i).getArgumentMemoryType()));
         }
         else if (type == ArgumentDataType::Float)
         {
             std::vector<float> resultFloat(inputArguments.at(i).getDataSize());
-            getBufferData(outputBuffers.at(i), resultFloat.data(), inputArguments.at(i).getDataSize());
+            getBufferData(*outputBuffers.at(i), resultFloat.data(), inputArguments.at(i).getDataSize());
             resultArguments.push_back(KernelArgument(resultFloat, inputArguments.at(i).getArgumentMemoryType()));
         }
         else
         {
             std::vector<int> resultInt(inputArguments.at(i).getDataSize());
-            getBufferData(outputBuffers.at(i), resultInt.data(), inputArguments.at(i).getDataSize());
+            getBufferData(*outputBuffers.at(i), resultInt.data(), inputArguments.at(i).getDataSize());
             resultArguments.push_back(KernelArgument(resultInt, inputArguments.at(i).getArgumentMemoryType()));
         }
     }

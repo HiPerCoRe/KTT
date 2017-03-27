@@ -26,7 +26,7 @@ public:
         checkOpenCLError(clReleaseKernel(kernel));
     }
 
-    void setKernelArgument(const void* data, size_t size)
+    void setKernelArgument(const void* data, const size_t size)
     {
         checkOpenCLError(clSetKernelArg(kernel, argumentsCount, size, data));
         argumentsCount++;

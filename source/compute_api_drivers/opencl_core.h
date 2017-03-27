@@ -42,11 +42,11 @@ public:
         const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const;
 
     // Low-level kernel execution methods
-    OpenCLProgram createAndBuildProgram(const std::string& source) const;
-    OpenCLBuffer createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const;
+    std::shared_ptr<OpenCLProgram> createAndBuildProgram(const std::string& source) const;
+    std::shared_ptr<OpenCLBuffer> createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const;
     void updateBuffer(OpenCLBuffer& buffer, const void* source, const size_t dataSize) const;
     void getBufferData(const OpenCLBuffer& buffer, void* destination, const size_t dataSize) const;
-    OpenCLKernel createKernel(const OpenCLProgram& program, const std::string& kernelName) const;
+    std::shared_ptr<OpenCLKernel> createKernel(const OpenCLProgram& program, const std::string& kernelName) const;
     void setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const;
     cl_ulong enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;
 
@@ -64,7 +64,7 @@ private:
     static DeviceType getDeviceType(const cl_device_type deviceType);
     void OpenCLCore::buildProgram(OpenCLProgram& program) const;
     std::string getProgramBuildInfo(const cl_program program, const cl_device_id id) const;
-    std::vector<KernelArgument> getResultArguments(const std::vector<OpenCLBuffer>& outputBuffers,
+    std::vector<KernelArgument> getResultArguments(const std::vector<std::shared_ptr<OpenCLBuffer>>& outputBuffers,
         const std::vector<KernelArgument>& inputArguments) const;
 };
 

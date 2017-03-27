@@ -19,7 +19,8 @@ public:
     {
         cl_int result;
         size_t sourceLength = source.size();
-        program = clCreateProgramWithSource(context, 1, (const char**)&source[0], &sourceLength, &result);
+        auto sourcePointer = &source[0];
+        program = clCreateProgramWithSource(context, 1, &sourcePointer, &sourceLength, &result);
         checkOpenCLError(result);
     }
 
