@@ -22,8 +22,8 @@ KernelConfiguration TuningResult::getConfiguration() const
 
 std::ostream& operator<<(std::ostream& outputTarget, const TuningResult& tuningResult)
 {
-    outputTarget << "Printing tuning result for configuration: " << tuningResult.configuration << std::endl;
-    outputTarget << "Kernel execution duration: " << tuningResult.duration << std::endl;
+    outputTarget << "Printing tuning result for configuration: " << tuningResult.configuration;
+    outputTarget << "Kernel execution duration: " << tuningResult.duration / 1000 << "us" << std::endl;
     return outputTarget;
 }
 

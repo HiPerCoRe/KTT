@@ -175,3 +175,9 @@ project "Tests"
     
     targetdir("build/tests/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/tests/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    
+    if not _OPTIONS["cuda"] then
+        initOpenCL()
+    else
+        -- CUDA not supported yet
+    end

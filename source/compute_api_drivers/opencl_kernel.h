@@ -26,9 +26,9 @@ public:
         checkOpenCLError(clReleaseKernel(kernel));
     }
 
-    void setKernelArgument(const void* data, const size_t size)
+    void setKernelArgument(const void* buffer)
     {
-        checkOpenCLError(clSetKernelArg(kernel, argumentsCount, size, data));
+        checkOpenCLError(clSetKernelArg(kernel, argumentsCount, sizeof(cl_mem), buffer));
         argumentsCount++;
     }
 

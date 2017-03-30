@@ -23,11 +23,10 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
 
     std::vector<TuningResult> results;
     const Kernel& kernel = kernelManager->getKernel(id);
-
     std::unique_ptr<Searcher> searcher = getSearcher(kernel.getSearchMethod(), kernel.getSearchArguments(),
         kernelManager->getKernelConfigurations(id), kernel.getParameters());
-
     size_t configurationsCount = searcher->getConfigurationsCount();
+
     for (size_t i = 0; i < configurationsCount; i++)
     {
         KernelConfiguration currentConfiguration = searcher->getNextConfiguration();
@@ -35,7 +34,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
 
         KernelRunResult result = openCLCore->runKernel(source, kernel.getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
             convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
-        
+
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration()));
         results.emplace_back(TuningResult(result.getDuration(), currentConfiguration));
     }

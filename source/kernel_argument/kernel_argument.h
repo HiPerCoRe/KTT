@@ -63,11 +63,11 @@ public:
         switch (argumentDataType)
         {
         case ArgumentDataType::Double:
-            return dataDouble.size() * sizeof(dataDouble.at(0));
+            return dataDouble.size() * sizeof(double);
         case ArgumentDataType::Float:
-            return dataFloat.size() * sizeof(dataFloat.at(0));
+            return dataFloat.size() * sizeof(float);
         default:
-            return dataInt.size() * sizeof(dataInt.at(0));
+            return dataInt.size() * sizeof(int);
         }
     }
 

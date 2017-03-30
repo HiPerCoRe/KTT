@@ -68,7 +68,7 @@ const Kernel TunerCore::getKernel(const size_t id) const
 
 std::vector<TuningResult> TunerCore::tuneKernel(const size_t id)
 {
-    return tuningRunner->tuneKernel(id);;
+    return tuningRunner->tuneKernel(id);
 }
 
 void TunerCore::printComputeAPIInfo(std::ostream& outputTarget)

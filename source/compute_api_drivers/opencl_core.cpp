@@ -141,7 +141,7 @@ KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::stri
 
     for (size_t i = 0; i < buffers.size(); i++)
     {
-        setKernelArgument(*kernel, *buffers.at(i));
+        setKernelArgument(*kernel, *buffers.at(i), arguments.at(i).getArgumentDataType(), arguments.at(i).getArgumentQuantity());
     }
 
     cl_ulong duration = enqueueKernel(*kernel, globalSize, localSize);
@@ -183,9 +183,11 @@ std::unique_ptr<OpenCLKernel> OpenCLCore::createKernel(const OpenCLProgram& prog
     return kernel;
 }
 
-void OpenCLCore::setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const
+void OpenCLCore::setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buffer, const ArgumentDataType& argumentDataType,
+    const ArgumentQuantity& argumentQuantity) const
 {
-    kernel.setKernelArgument(buffer.getBuffer(), buffer.getSize());
+    cl_mem clBuffer = buffer.getBuffer();
+    kernel.setKernelArgument((void*)&clBuffer);
 }
 
 cl_ulong OpenCLCore::enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const
@@ -304,19 +306,19 @@ std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<std
         ArgumentDataType type = inputArguments.at(i).getArgumentDataType();
         if (type == ArgumentDataType::Double)
         {
-            std::vector<double> resultDouble(inputArguments.at(i).getDataSize());
+            std::vector<double> resultDouble(inputArguments.at(i).getDataSize() / sizeof(double));
             getBufferData(*outputBuffers.at(i), resultDouble.data(), inputArguments.at(i).getDataSize());
             resultArguments.push_back(KernelArgument(resultDouble, inputArguments.at(i).getArgumentMemoryType()));
         }
         else if (type == ArgumentDataType::Float)
         {
-            std::vector<float> resultFloat(inputArguments.at(i).getDataSize());
+            std::vector<float> resultFloat(inputArguments.at(i).getDataSize() / sizeof(float));
             getBufferData(*outputBuffers.at(i), resultFloat.data(), inputArguments.at(i).getDataSize());
             resultArguments.push_back(KernelArgument(resultFloat, inputArguments.at(i).getArgumentMemoryType()));
         }
         else
         {
-            std::vector<int> resultInt(inputArguments.at(i).getDataSize());
+            std::vector<int> resultInt(inputArguments.at(i).getDataSize() / sizeof(int));
             getBufferData(*outputBuffers.at(i), resultInt.data(), inputArguments.at(i).getDataSize());
             resultArguments.push_back(KernelArgument(resultInt, inputArguments.at(i).getArgumentMemoryType()));
         }

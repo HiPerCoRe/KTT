@@ -19,12 +19,9 @@ int main(int argc, char** argv)
         }
     }
 
-    // Declare constants
-    const float upperBoundary = 1000.0f; // used for generating random test data
+    // Declare kernel parameters
     const std::string kernelFile = std::string("../examples/simple/simple_kernel.cl");
     const std::string referenceKernelFile = std::string("../examples/simple/simple_reference_kernel.cl");
-
-    // Declare kernel parameters
     const int numberOfElements = 512 * 512;
     ktt::DimensionVector ndRangeDimensions(numberOfElements, 1, 1);
     ktt::DimensionVector workGroupDimensions(256, 1, 1);
