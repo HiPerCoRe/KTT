@@ -128,20 +128,20 @@ void OpenCLCore::setOpenCLCompilerOptions(const std::string& options)
 KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
 {
-    std::vector<std::shared_ptr<OpenCLBuffer>> buffers;
+    std::vector<std::unique_ptr<OpenCLBuffer>> buffers;
     for (const auto& argument : arguments)
     {
-        std::shared_ptr<OpenCLBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSize());
+        std::unique_ptr<OpenCLBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSize());
         updateBuffer(*buffer, argument.getData(), argument.getDataSize());
-        buffers.push_back(buffer);
+        buffers.push_back(std::move(buffer));
     }
 
-    std::shared_ptr<OpenCLProgram> program = createAndBuildProgram(source);
-    std::shared_ptr<OpenCLKernel> kernel = createKernel(*program, kernelName);
+    std::unique_ptr<OpenCLProgram> program = createAndBuildProgram(source);
+    std::unique_ptr<OpenCLKernel> kernel = createKernel(*program, kernelName);
 
-    for (const auto& buffer : buffers)
+    for (size_t i = 0; i < buffers.size(); i++)
     {
-        setKernelArgument(*kernel, *buffer);
+        setKernelArgument(*kernel, *buffers.at(i));
     }
 
     cl_ulong duration = enqueueKernel(*kernel, globalSize, localSize);
@@ -149,17 +149,17 @@ KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::stri
     return KernelRunResult(static_cast<uint64_t>(duration), resultArguments);
 }
 
-std::shared_ptr<OpenCLProgram> OpenCLCore::createAndBuildProgram(const std::string& source) const
+std::unique_ptr<OpenCLProgram> OpenCLCore::createAndBuildProgram(const std::string& source) const
 {
-    std::shared_ptr<OpenCLProgram> program;
+    std::unique_ptr<OpenCLProgram> program;
     program.reset(new OpenCLProgram(source, context->getContext(), context->getDevices()));
     buildProgram(*program);
     return program;
 }
 
-std::shared_ptr<OpenCLBuffer> OpenCLCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const
+std::unique_ptr<OpenCLBuffer> OpenCLCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const
 {
-    std::shared_ptr<OpenCLBuffer> buffer;
+    std::unique_ptr<OpenCLBuffer> buffer;
     buffer.reset(new OpenCLBuffer(context->getContext(), getOpenCLMemoryType(argumentMemoryType), size));
     return buffer;
 }
@@ -176,9 +176,9 @@ void OpenCLCore::getBufferData(const OpenCLBuffer& buffer, void* destination, co
     checkOpenCLError(result);
 }
 
-std::shared_ptr<OpenCLKernel> OpenCLCore::createKernel(const OpenCLProgram& program, const std::string& kernelName) const
+std::unique_ptr<OpenCLKernel> OpenCLCore::createKernel(const OpenCLProgram& program, const std::string& kernelName) const
 {
-    std::shared_ptr<OpenCLKernel> kernel;
+    std::unique_ptr<OpenCLKernel> kernel;
     kernel.reset(new OpenCLKernel(program.getProgram(), kernelName));
     return kernel;
 }
@@ -290,7 +290,7 @@ std::string OpenCLCore::getProgramBuildInfo(const cl_program program, const cl_d
     return infoString;
 }
 
-std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<std::shared_ptr<OpenCLBuffer>>& outputBuffers,
+std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<std::unique_ptr<OpenCLBuffer>>& outputBuffers,
     const std::vector<KernelArgument>& inputArguments) const
 {
     std::vector<KernelArgument> resultArguments;
