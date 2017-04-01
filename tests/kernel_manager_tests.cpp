@@ -32,9 +32,10 @@ TEST_CASE("Kernel handling operations", "[kernelManager]")
 
     SECTION("Parameter with same name cannot be added twice")
     {
-        manager.addParameter(id, std::string("param"), std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::Dimension::X);
-        REQUIRE_THROWS_AS(manager.addParameter(id, std::string("param"), std::vector<size_t>{3}, ktt::ThreadModifierType::None, ktt::Dimension::X),
-            std::runtime_error);
+        manager.addParameter(id, std::string("param"), std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
+            ktt::Dimension::X);
+        REQUIRE_THROWS_AS(manager.addParameter(id, std::string("param"), std::vector<size_t>{3}, ktt::ThreadModifierType::None,
+            ktt::ThreadModifierAction::Add, ktt::Dimension::X), std::runtime_error);
     }
 }
 
@@ -43,8 +44,10 @@ TEST_CASE("Kernel configuration retrieval", "[kernelManager]")
     ktt::KernelManager manager;
     size_t id = manager.addKernelFromFile(std::string("test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024, 1, 1),
         ktt::DimensionVector(16, 16, 1));
-    manager.addParameter(id, std::string("param_one"), std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::Dimension::X);
-    manager.addParameter(id, std::string("param_two"), std::vector<size_t>{5, 10}, ktt::ThreadModifierType::None, ktt::Dimension::X);
+    manager.addParameter(id, std::string("param_one"), std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
+        ktt::Dimension::X);
+    manager.addParameter(id, std::string("param_two"), std::vector<size_t>{5, 10}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
+        ktt::Dimension::X);
 
     SECTION("Kernel source with defines is returned correctly")
     {

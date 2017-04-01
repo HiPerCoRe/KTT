@@ -9,6 +9,7 @@
 #include "enums/dimension.h"
 #include "enums/argument_memory_type.h"
 #include "enums/search_method.h"
+#include "enums/thread_modifier_action.h"
 #include "enums/thread_modifier_type.h"
 
 // Information about platforms and devices
@@ -33,7 +34,7 @@ public:
         const DimensionVector& localSize);
     void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values);
     void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values,
-        const ThreadModifierType& threadModifierType, const Dimension& modifierDimension);
+        const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
     void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
     void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 

@@ -61,13 +61,13 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
 }
 
 void KernelManager::addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values,
-    const ThreadModifierType& threadModifierType, const Dimension& modifierDimension)
+    const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
 {
     if (id >= kernelCount)
     {
         throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
     }
-    kernels.at(id).addParameter(KernelParameter(name, values, threadModifierType, modifierDimension));
+    kernels.at(id).addParameter(KernelParameter(name, values, threadModifierType, threadModifierAction, modifierDimension));
 }
 
 void KernelManager::setArguments(const size_t id, const std::vector<size_t>& argumentIndices)
@@ -138,30 +138,40 @@ DimensionVector KernelManager::modifyDimensionVector(const DimensionVector& vect
     const KernelParameter& parameter, const size_t parameterValue) const
 {
     if (parameter.getThreadModifierType() == ThreadModifierType::None
-        || dimensionVectorType == DimensionVectorType::Global && parameter.getThreadModifierType() == ThreadModifierType::DivideLocal
-        || dimensionVectorType == DimensionVectorType::Global && parameter.getThreadModifierType() == ThreadModifierType::MultiplyLocal
-        || dimensionVectorType == DimensionVectorType::Local && parameter.getThreadModifierType() == ThreadModifierType::DivideGlobal
-        || dimensionVectorType == DimensionVectorType::Local && parameter.getThreadModifierType() == ThreadModifierType::MultiplyGlobal)
+        || dimensionVectorType == DimensionVectorType::Global && parameter.getThreadModifierType() == ThreadModifierType::Local
+        || dimensionVectorType == DimensionVectorType::Local && parameter.getThreadModifierType() == ThreadModifierType::Global)
     {
-        return vector; // no modification required
+        return vector;
     }
 
-    if (parameter.getThreadModifierType() == ThreadModifierType::DivideLocal
-        || parameter.getThreadModifierType() == ThreadModifierType::DivideGlobal)
+    ThreadModifierAction action = parameter.getThreadModifierAction();
+    if (action == ThreadModifierAction::Add)
     {
-        size_t x = parameter.getModifierDimension() == Dimension::X ? std::get<0>(vector) / parameterValue : std::get<0>(vector);
-        size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) / parameterValue : std::get<1>(vector);
-        size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) / parameterValue : std::get<2>(vector);
-
-        return DimensionVector(x, y, z); // handle local / global in the same way, relevant checks were done in first if statement
+        size_t x = parameter.getModifierDimension() == Dimension::X ? std::get<0>(vector) + parameterValue : std::get<0>(vector);
+        size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) + parameterValue : std::get<1>(vector);
+        size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) + parameterValue : std::get<2>(vector);
+        return DimensionVector(x, y, z);
     }
-    else // multiply
+    else if (action == ThreadModifierAction::Subtract)
+    {
+        size_t x = parameter.getModifierDimension() == Dimension::X ? std::get<0>(vector) - parameterValue : std::get<0>(vector);
+        size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) - parameterValue : std::get<1>(vector);
+        size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) - parameterValue : std::get<2>(vector);
+        return DimensionVector(x, y, z);
+    }
+    else if (action == ThreadModifierAction::Multiply)
     {
         size_t x = parameter.getModifierDimension() == Dimension::X ? std::get<0>(vector) * parameterValue : std::get<0>(vector);
         size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) * parameterValue : std::get<1>(vector);
         size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) * parameterValue : std::get<2>(vector);
-
-        return DimensionVector(x, y, z); // handle local / global in the same way, relevant checks were done in first if statement
+        return DimensionVector(x, y, z);
+    }
+    else // divide
+    {
+        size_t x = parameter.getModifierDimension() == Dimension::X ? std::get<0>(vector) / parameterValue : std::get<0>(vector);
+        size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) / parameterValue : std::get<1>(vector);
+        size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) / parameterValue : std::get<2>(vector);
+        return DimensionVector(x, y, z);
     }
 }
 

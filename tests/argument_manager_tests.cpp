@@ -12,7 +12,7 @@ TEST_CASE("Argument addition and retrieval", "[argumentManager]")
     ktt::ArgumentManager manager;
 
     std::vector<float> data{ 1.0f, 2.0f, 3.0f, 4.0f };
-    size_t id = manager.addArgument(data, ktt::ArgumentMemoryType::READ_ONLY, ktt::ArgumentQuantity::Vector);
+    size_t id = manager.addArgument(data, ktt::ArgumentMemoryType::ReadOnly, ktt::ArgumentQuantity::Vector);
 
     REQUIRE(manager.getArgumentCount() == 1);
     auto argument = manager.getArgument(id);

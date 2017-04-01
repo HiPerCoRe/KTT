@@ -33,9 +33,9 @@ std::vector<KernelConfiguration> TunerCore::getKernelConfigurations(const size_t
 }
 
 void TunerCore::addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values,
-    const ThreadModifierType& threadModifierType, const Dimension& modifierDimension)
+    const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
 {
-    kernelManager->addParameter(id, name, values, threadModifierType, modifierDimension);
+    kernelManager->addParameter(id, name, values, threadModifierType, threadModifierAction, modifierDimension);
 }
 
 void TunerCore::setKernelArguments(const size_t id, const std::vector<size_t>& argumentIndices)

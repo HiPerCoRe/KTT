@@ -29,6 +29,23 @@ public:
         checkOpenCLError(clReleaseProgram(program));
     }
 
+    void build(const std::string& compilerOptions)
+    {
+        cl_int result = clBuildProgram(program, devices.size(), &devices.at(0), &compilerOptions[0], nullptr, nullptr);
+        std::string buildInfo = getBuildInfo();
+        checkOpenCLError(result, buildInfo);
+    }
+
+    std::string getBuildInfo() const
+    {
+        size_t infoSize;
+        checkOpenCLError(clGetProgramBuildInfo(program, devices.at(0), CL_PROGRAM_BUILD_LOG, 0, nullptr, &infoSize));
+        std::string infoString(infoSize, ' ');
+        checkOpenCLError(clGetProgramBuildInfo(program, devices.at(0), CL_PROGRAM_BUILD_LOG, infoSize, &infoString[0], nullptr));
+
+        return infoString;
+    }
+
     cl_context getContext() const
     {
         return context;

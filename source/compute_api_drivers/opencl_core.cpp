@@ -157,7 +157,7 @@ std::unique_ptr<OpenCLProgram> OpenCLCore::createAndBuildProgram(const std::stri
 {
     std::unique_ptr<OpenCLProgram> program;
     program.reset(new OpenCLProgram(source, context->getContext(), context->getDevices()));
-    buildProgram(*program);
+    program->build(compilerOptions);
     return program;
 }
 
@@ -291,24 +291,6 @@ DeviceType OpenCLCore::getDeviceType(const cl_device_type deviceType)
     default:
         return DeviceType::CUSTOM;
     }
-}
-
-void OpenCLCore::buildProgram(OpenCLProgram& program) const
-{
-    cl_int result = clBuildProgram(program.getProgram(), program.getDevices().size(), &program.getDevices().at(0), &compilerOptions[0], nullptr,
-        nullptr);
-    std::string buildInfo = getProgramBuildInfo(program.getProgram(), program.getDevices().at(0));
-    checkOpenCLError(result, buildInfo);
-}
-
-std::string OpenCLCore::getProgramBuildInfo(const cl_program program, const cl_device_id id) const
-{
-    size_t infoSize;
-    checkOpenCLError(clGetProgramBuildInfo(program, id, CL_PROGRAM_BUILD_LOG, 0, nullptr, &infoSize));
-    std::string infoString(infoSize, ' ');
-    checkOpenCLError(clGetProgramBuildInfo(program, id, CL_PROGRAM_BUILD_LOG, infoSize, &infoString[0], nullptr));
-
-    return infoString;
 }
 
 std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<std::unique_ptr<OpenCLBuffer>>& outputBuffers,

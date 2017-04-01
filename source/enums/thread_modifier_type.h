@@ -6,10 +6,8 @@ namespace ktt
 enum class ThreadModifierType
 {
     None,
-    MultiplyGlobal,
-    DivideGlobal,
-    MultiplyLocal,
-    DivideLocal
+    Global,
+    Local
 };
 
 } // namespace ktt

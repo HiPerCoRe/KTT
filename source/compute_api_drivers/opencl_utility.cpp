@@ -64,11 +64,11 @@ cl_mem_flags getOpenCLMemoryType(const ArgumentMemoryType& argumentMemoryType)
 {
     switch (argumentMemoryType)
     {
-    case ArgumentMemoryType::READ_ONLY:
+    case ArgumentMemoryType::ReadOnly:
         return CL_MEM_READ_ONLY;
-    case ArgumentMemoryType::WRITE_ONLY:
+    case ArgumentMemoryType::WriteOnly:
         return CL_MEM_WRITE_ONLY;
-    case ArgumentMemoryType::READ_WRITE:
+    case ArgumentMemoryType::ReadWrite:
         return CL_MEM_READ_WRITE;
     default:
         return CL_MEM_READ_WRITE;

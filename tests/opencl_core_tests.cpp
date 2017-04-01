@@ -11,7 +11,7 @@ TEST_CASE("Transfering data to / from buffer", "[openclCore]")
         data.push_back(static_cast<float>(i));
     }
 
-    std::unique_ptr<ktt::OpenCLBuffer> buffer = core.createBuffer(ktt::ArgumentMemoryType::READ_ONLY, data.size() * sizeof(float));
+    std::unique_ptr<ktt::OpenCLBuffer> buffer = core.createBuffer(ktt::ArgumentMemoryType::ReadOnly, data.size() * sizeof(float));
     REQUIRE(buffer->getType() == CL_MEM_READ_ONLY);
     REQUIRE(buffer->getBuffer() != nullptr);
     REQUIRE(buffer->getSize() == data.size() * sizeof(float));

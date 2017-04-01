@@ -63,8 +63,6 @@ private:
     static std::string getPlatformInfo(const cl_platform_id id, const cl_platform_info info);
     static std::string getDeviceInfo(const cl_device_id id, const cl_device_info info);
     static DeviceType getDeviceType(const cl_device_type deviceType);
-    void OpenCLCore::buildProgram(OpenCLProgram& program) const;
-    std::string getProgramBuildInfo(const cl_program program, const cl_device_id id) const;
     std::vector<KernelArgument> getResultArguments(const std::vector<std::unique_ptr<OpenCLBuffer>>& outputBuffers,
         const std::vector<KernelArgument>& inputArguments) const;
 };

@@ -28,7 +28,7 @@ void Tuner::addParameter(const size_t kernelId, const std::string& name, const s
 {
     try
     {
-        tunerCore->addParameter(kernelId, name, values, ThreadModifierType::None, Dimension::X);
+        tunerCore->addParameter(kernelId, name, values, ThreadModifierType::None, ThreadModifierAction::Multiply, Dimension::X);
     }
     catch (const std::runtime_error& error)
     {
@@ -38,11 +38,11 @@ void Tuner::addParameter(const size_t kernelId, const std::string& name, const s
 }
 
 void Tuner::addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values,
-    const ThreadModifierType& threadModifierType, const Dimension& modifierDimension)
+    const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
 {
     try
     {
-        tunerCore->addParameter(kernelId, name, values, threadModifierType, modifierDimension);
+        tunerCore->addParameter(kernelId, name, values, threadModifierType, threadModifierAction, modifierDimension);
     }
     catch (const std::runtime_error& error)
     {
@@ -98,7 +98,7 @@ template <typename T> size_t Tuner::addArgument(const T value)
 {
     try
     {
-        return tunerCore->addArgument(std::vector<T>{ value }, ArgumentMemoryType::READ_WRITE, ArgumentQuantity::Scalar);
+        return tunerCore->addArgument(std::vector<T>{ value }, ArgumentMemoryType::ReadWrite, ArgumentQuantity::Scalar);
     }
     catch (const std::runtime_error& error)
     {

@@ -41,9 +41,9 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
     size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("simpleKernel"), ndRangeDimensions, workGroupDimensions);
-    size_t aId = tuner.addArgument(a, ktt::ArgumentMemoryType::READ_ONLY);
-    size_t bId = tuner.addArgument(b, ktt::ArgumentMemoryType::READ_ONLY);
-    size_t resultId = tuner.addArgument(result, ktt::ArgumentMemoryType::WRITE_ONLY);
+    size_t aId = tuner.addArgument(a, ktt::ArgumentMemoryType::ReadOnly);
+    size_t bId = tuner.addArgument(b, ktt::ArgumentMemoryType::ReadOnly);
+    size_t resultId = tuner.addArgument(result, ktt::ArgumentMemoryType::WriteOnly);
 
     tuner.setKernelArguments(kernelId, std::vector<size_t>{ aId, bId, resultId });
     tuner.tuneKernel(kernelId);
