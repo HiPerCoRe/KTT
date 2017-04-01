@@ -26,9 +26,15 @@ public:
         checkOpenCLError(clReleaseKernel(kernel));
     }
 
-    void setKernelArgument(const void* buffer)
+    void setKernelArgumentVector(const void* buffer)
     {
         checkOpenCLError(clSetKernelArg(kernel, argumentsCount, sizeof(cl_mem), buffer));
+        argumentsCount++;
+    }
+
+    template <typename T> void setKernelArgumentScalar(const T value)
+    {
+        checkOpenCLError(clSetKernelArg(kernel, argumentsCount, sizeof(T), &value));
         argumentsCount++;
     }
 

@@ -64,11 +64,11 @@ void Tuner::setKernelArguments(const size_t kernelId, const std::vector<size_t>&
     }
 }
 
-void Tuner::useSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+void Tuner::setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
     try
     {
-        tunerCore->useSearchMethod(kernelId, searchMethod, searchArguments);
+        tunerCore->setSearchMethod(kernelId, searchMethod, searchArguments);
     }
     catch (const std::runtime_error& error)
     {
@@ -81,7 +81,7 @@ template <typename T> size_t Tuner::addArgument(const std::vector<T>& data, cons
 {
     try
     {
-        return tunerCore->addArgument(data, argumentMemoryType);
+        return tunerCore->addArgument(data, argumentMemoryType, ArgumentQuantity::Vector);
     }
     catch (const std::runtime_error& error)
     {
@@ -94,11 +94,28 @@ template size_t Tuner::addArgument<int>(const std::vector<int>& data, const Argu
 template size_t Tuner::addArgument<float>(const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType);
 template size_t Tuner::addArgument<double>(const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType);
 
+template <typename T> size_t Tuner::addArgument(const T value)
+{
+    try
+    {
+        return tunerCore->addArgument(std::vector<T>{ value }, ArgumentMemoryType::READ_WRITE, ArgumentQuantity::Scalar);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+        throw;
+    }
+}
+
+template size_t Tuner::addArgument<int>(const int value);
+template size_t Tuner::addArgument<float>(const float value);
+template size_t Tuner::addArgument<double>(const double value);
+
 template <typename T> void Tuner::updateArgument(const size_t argumentId, const std::vector<T>& data)
 {
     try
     {
-        tunerCore->updateArgument(argumentId, data);
+        tunerCore->updateArgument(argumentId, data, ArgumentQuantity::Vector);
     }
     catch (const std::runtime_error& error)
     {
@@ -110,6 +127,23 @@ template <typename T> void Tuner::updateArgument(const size_t argumentId, const 
 template void Tuner::updateArgument<int>(const size_t argumentId, const std::vector<int>& data);
 template void Tuner::updateArgument<float>(const size_t argumentId, const std::vector<float>& data);
 template void Tuner::updateArgument<double>(const size_t argumentId, const std::vector<double>& data);
+
+template <typename T> void Tuner::updateArgument(const size_t argumentId, const T value)
+{
+    try
+    {
+        tunerCore->updateArgument(argumentId, std::vector<T>{ value }, ArgumentQuantity::Scalar);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+        throw;
+    }
+}
+
+template void Tuner::updateArgument<int>(const size_t argumentId, const int value);
+template void Tuner::updateArgument<float>(const size_t argumentId, const float value);
+template void Tuner::updateArgument<double>(const size_t argumentId, const double value);
 
 void Tuner::tuneKernel(const size_t kernelId)
 {

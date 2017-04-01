@@ -26,19 +26,20 @@ public:
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
         const Dimension& modifierDimension);
     void setKernelArguments(const size_t id, const std::vector<size_t>& argumentIndices);
-    void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+    void setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
     size_t getKernelCount() const;
     const Kernel getKernel(const size_t id) const;
 
     // Argument manager methods
-    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
+    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
+        const ArgumentQuantity& argumentQuantity)
     {
-        return argumentManager->addArgument(data, argumentMemoryType);
+        return argumentManager->addArgument(data, argumentMemoryType, argumentQuantity);
     }
 
-    template <typename T> void updateArgument(const size_t id, const std::vector<T>& data)
+    template <typename T> void updateArgument(const size_t id, const std::vector<T>& data, const ArgumentQuantity& argumentQuantity)
     {
-        argumentManager->updateArgument(id, data);
+        argumentManager->updateArgument(id, data, argumentQuantity);
     }
 
     // Tuning runner methods

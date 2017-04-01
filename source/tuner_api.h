@@ -35,11 +35,13 @@ public:
     void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values,
         const ThreadModifierType& threadModifierType, const Dimension& modifierDimension);
     void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
-    void useSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+    void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Argument handling methods
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType);
+    template <typename T> size_t addArgument(const T value);
     template <typename T> void updateArgument(const size_t argumentId, const std::vector<T>& data);
+    template <typename T> void updateArgument(const size_t argumentId, const T value);
 
     // Kernel tuning methods
     void tuneKernel(const size_t kernelId);

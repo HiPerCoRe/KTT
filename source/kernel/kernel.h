@@ -19,7 +19,7 @@ public:
     // Core methods
     void addParameter(const KernelParameter& parameter);
     void setArguments(const std::vector<size_t>& argumentIndices);
-    void useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+    void setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Getters
     std::string getSource() const;

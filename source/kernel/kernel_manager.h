@@ -26,7 +26,7 @@ public:
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
         const Dimension& modifierDimension);
     void setArguments(const size_t id, const std::vector<size_t>& argumentIndices);
-    void useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+    void setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Getters
     size_t getKernelCount() const;

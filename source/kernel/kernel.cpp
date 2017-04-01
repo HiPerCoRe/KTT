@@ -26,7 +26,7 @@ void Kernel::setArguments(const std::vector<size_t>& argumentIndices)
     this->argumentIndices = argumentIndices;
 }
 
-void Kernel::useSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+void Kernel::setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
     if (searchMethod == SearchMethod::RandomSearch && searchArguments.size() < 1
         || searchMethod == SearchMethod::Annealing && searchArguments.size() < 2

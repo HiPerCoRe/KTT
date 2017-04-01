@@ -79,13 +79,13 @@ void KernelManager::setArguments(const size_t id, const std::vector<size_t>& arg
     kernels.at(id).setArguments(argumentIndices);
 }
 
-void KernelManager::useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+void KernelManager::setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
     if (id >= kernelCount)
     {
         throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
     }
-    kernels.at(id).useSearchMethod(searchMethod, searchArguments);
+    kernels.at(id).setSearchMethod(searchMethod, searchArguments);
 }
 
 size_t KernelManager::getKernelCount() const

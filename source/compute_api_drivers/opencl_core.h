@@ -47,8 +47,8 @@ public:
     void updateBuffer(OpenCLBuffer& buffer, const void* source, const size_t dataSize) const;
     void getBufferData(const OpenCLBuffer& buffer, void* destination, const size_t dataSize) const;
     std::unique_ptr<OpenCLKernel> createKernel(const OpenCLProgram& program, const std::string& kernelName) const;
-    void setKernelArgument(OpenCLKernel& kernel, const OpenCLBuffer& buffer, const ArgumentDataType& argumentDataType,
-        const ArgumentQuantity& argumentQuantity) const;
+    void setKernelArgumentScalar(OpenCLKernel& kernel, const KernelArgument& argument) const;
+    void setKernelArgumentVector(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const;
     cl_ulong enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;
 
 private:

@@ -12,13 +12,15 @@ namespace ktt
 class KernelArgument
 {
 public:
-    template <typename T> explicit KernelArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType):
-        argumentMemoryType(argumentMemoryType)
+    template <typename T> explicit KernelArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
+        const ArgumentQuantity& argumentQuantity):
+        argumentMemoryType(argumentMemoryType),
+        argumentQuantity(argumentQuantity)
     {
         initializeData(data);
     }
 
-    template <typename T> void updateData(const std::vector<T>& data)
+    template <typename T> void updateData(const std::vector<T>& data, const ArgumentQuantity& argumentQuantity)
     {
         if (typeid(T) == typeid(double) && argumentDataType != ArgumentDataType::Double
             || typeid(T) == typeid(float) && argumentDataType != ArgumentDataType::Float
@@ -27,6 +29,7 @@ public:
             throw std::runtime_error("Updated data provided for kernel argument have different data type");
         }
 
+        this->argumentQuantity = argumentQuantity;
         initializeData(data);
     }
 
@@ -99,14 +102,6 @@ private:
         if (data.size() == 0)
         {
             throw std::runtime_error("Data provided for kernel argument is empty");
-        }
-        else if (data.size() == 1)
-        {
-            argumentQuantity = ArgumentQuantity::Scalar;
-        }
-        else
-        {
-            argumentQuantity = ArgumentQuantity::Vector;
         }
 
         if (typeid(T) == typeid(double))

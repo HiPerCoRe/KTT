@@ -51,9 +51,9 @@ void TunerCore::setKernelArguments(const size_t id, const std::vector<size_t>& a
     kernelManager->setArguments(id, argumentIndices);
 }
 
-void TunerCore::useSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+void TunerCore::setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
-    kernelManager->useSearchMethod(id, searchMethod, searchArguments);
+    kernelManager->setSearchMethod(id, searchMethod, searchArguments);
 }
 
 size_t TunerCore::getKernelCount() const
