@@ -17,12 +17,12 @@ public:
     {
         cl_int result;
         queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &result);
-        checkOpenCLError(result);
+        checkOpenCLError(result, std::string("clCreateCommandQueue"));
     }
 
     ~OpenCLCommandQueue()
     {
-        checkOpenCLError(clReleaseCommandQueue(queue));
+        checkOpenCLError(clReleaseCommandQueue(queue), std::string("clReleaseCommandQueue"));
     }
 
     cl_context getContext() const

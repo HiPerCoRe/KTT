@@ -38,6 +38,12 @@ void TunerCore::addParameter(const size_t id, const std::string& name, const std
     kernelManager->addParameter(id, name, values, threadModifierType, threadModifierAction, modifierDimension);
 }
 
+void TunerCore::addConstraint(const size_t id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    const std::vector<std::string>& parameterNames)
+{
+    kernelManager->addConstraint(id, constraintFunction, parameterNames);
+}
+
 void TunerCore::setKernelArguments(const size_t id, const std::vector<size_t>& argumentIndices)
 {
     for (const auto index : argumentIndices)

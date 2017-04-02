@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,6 +36,8 @@ public:
     void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values);
     void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values,
         const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
+    void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+        const std::vector<std::string>& parameterNames);
     void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
     void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
@@ -48,12 +51,12 @@ public:
     void tuneKernel(const size_t kernelId);
 
     // Compute API methods
+    void setCompilerOptions(const std::string& options);
     static void printComputeAPIInfo(std::ostream& outputTarget);
     static PlatformInfo getPlatformInfo(const size_t platformIndex);
     static std::vector<PlatformInfo> getPlatformInfoAll();
     static DeviceInfo getDeviceInfo(const size_t platformIndex, const size_t deviceIndex);
     static std::vector<DeviceInfo> getDeviceInfoAll(const size_t platformIndex);
-    void setCompilerOptions(const std::string& options);
 
 private:
     // Attributes

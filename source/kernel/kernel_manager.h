@@ -25,6 +25,8 @@ public:
     // Kernel modification methods
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
         const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
+    void addConstraint(const size_t id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+        const std::vector<std::string>& parameterNames);
     void setArguments(const size_t id, const std::vector<size_t>& argumentIndices);
     void setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
@@ -40,10 +42,11 @@ private:
     // Helper methods
     std::string loadFileToString(const std::string& filePath) const;
     void computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
-        const std::vector<ParameterValue>& parameterValues, const DimensionVector& globalSize, const DimensionVector& localSize,
-        std::vector<KernelConfiguration>& finalResult) const;
+        const std::vector<KernelConstraint>& constraints, const std::vector<ParameterValue>& parameterValues, const DimensionVector& globalSize,
+        const DimensionVector& localSize, std::vector<KernelConfiguration>& finalResult) const;
     DimensionVector modifyDimensionVector(const DimensionVector& vector, const DimensionVectorType& dimensionVectorType,
         const KernelParameter& parameter, const size_t parameterValue) const;
+    bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints) const;
 };
 
 } // namespace ktt

@@ -12,6 +12,10 @@ namespace ktt
 class KernelRunResult
 {
 public:
+    KernelRunResult():
+        duration(0)
+    {}
+
     explicit KernelRunResult(const uint64_t duration, const std::vector<KernelArgument>& resultArguments):
         duration(duration),
         resultArguments(resultArguments)

@@ -1,3 +1,7 @@
+Version 0.1 (2/4/2017)
+* First beta release
+* Kernel tuning method is now available in API
+
 Version 0.0.3 (13/3/2017)
 * OpenCL platform and device information retrieval methods are now available in API
 

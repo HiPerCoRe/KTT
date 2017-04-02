@@ -18,23 +18,23 @@ public:
     {
         cl_int result;
         kernel = clCreateKernel(program, &kernelName[0], &result);
-        checkOpenCLError(result);
+        checkOpenCLError(result, std::string("clCreateKernel"));
     }
 
     ~OpenCLKernel()
     {
-        checkOpenCLError(clReleaseKernel(kernel));
+        checkOpenCLError(clReleaseKernel(kernel), std::string("clReleaseKernel"));
     }
 
     void setKernelArgumentVector(const void* buffer)
     {
-        checkOpenCLError(clSetKernelArg(kernel, argumentsCount, sizeof(cl_mem), buffer));
+        checkOpenCLError(clSetKernelArg(kernel, argumentsCount, sizeof(cl_mem), buffer), std::string("clSetKernelArg"));
         argumentsCount++;
     }
 
     template <typename T> void setKernelArgumentScalar(const T value)
     {
-        checkOpenCLError(clSetKernelArg(kernel, argumentsCount, sizeof(T), &value));
+        checkOpenCLError(clSetKernelArg(kernel, argumentsCount, sizeof(T), &value), std::string("clSetKernelArg"));
         argumentsCount++;
     }
 

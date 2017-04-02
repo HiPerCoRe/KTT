@@ -13,12 +13,25 @@ Kernel::Kernel(const std::string& source, const std::string& name, const Dimensi
 
 void Kernel::addParameter(const KernelParameter& parameter)
 {
-    if (parameterExists(parameter))
+    if (parameterExists(parameter.getName()))
     {
         throw std::runtime_error("Parameter with given name already exists: " + parameter.getName());
     }
-
     parameters.push_back(parameter);
+}
+
+void Kernel::addConstraint(const KernelConstraint& constraint)
+{
+    auto parameterNames = constraint.getParameterNames();
+
+    for (const auto& parameterName : parameterNames)
+    {
+        if (!parameterExists(parameterName))
+        {
+            throw std::runtime_error("Constraint parameter with given name does not exist: " + parameterName);
+        }
+    }
+    constraints.push_back(constraint);
 }
 
 void Kernel::setArguments(const std::vector<size_t>& argumentIndices)
@@ -64,6 +77,11 @@ std::vector<KernelParameter> Kernel::getParameters() const
     return parameters;
 }
 
+std::vector<KernelConstraint> Kernel::getConstraints() const
+{
+    return constraints;
+}
+
 size_t Kernel::getArgumentCount() const
 {
     return argumentIndices.size();
@@ -84,11 +102,11 @@ std::vector<double> Kernel::getSearchArguments() const
     return searchArguments;
 }
 
-bool Kernel::parameterExists(const KernelParameter& parameter) const
+bool Kernel::parameterExists(const std::string& parameterName) const
 {
     for (const auto& currentParameter : parameters)
     {
-        if (currentParameter.getName() == parameter.getName())
+        if (currentParameter.getName() == parameterName)
         {
             return true;
         }

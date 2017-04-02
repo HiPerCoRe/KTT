@@ -19,12 +19,12 @@ public:
     {
         cl_int result;
         buffer = clCreateBuffer(context, type, size, nullptr, &result);
-        checkOpenCLError(result);
+        checkOpenCLError(result, std::string("clCreateBuffer"));
     }
 
     ~OpenCLBuffer()
     {
-        checkOpenCLError(clReleaseMemObject(buffer));
+        checkOpenCLError(clReleaseMemObject(buffer), std::string("clReleaseMemObject"));
     }
 
     cl_context getContext() const

@@ -51,6 +51,20 @@ void Tuner::addParameter(const size_t kernelId, const std::string& name, const s
     }
 }
 
+void Tuner::addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    const std::vector<std::string>& parameterNames)
+{
+    try
+    {
+        tunerCore->addConstraint(kernelId, constraintFunction, parameterNames);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+        throw;
+    }
+}
+
 void Tuner::setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIndices)
 {
     try
@@ -158,6 +172,11 @@ void Tuner::tuneKernel(const size_t kernelId)
     }
 }
 
+void Tuner::setCompilerOptions(const std::string& options)
+{
+    tunerCore->setCompilerOptions(options);
+}
+
 void Tuner::printComputeAPIInfo(std::ostream& outputTarget)
 {
     try
@@ -237,11 +256,6 @@ std::vector<DeviceInfo> Tuner::getDeviceInfoAll(const size_t platformIndex)
     }
 
     return deviceInfo;
-}
-
-void Tuner::setCompilerOptions(const std::string& options)
-{
-    tunerCore->setCompilerOptions(options);
 }
 
 } // namespace ktt

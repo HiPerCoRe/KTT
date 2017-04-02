@@ -25,6 +25,8 @@ public:
     std::vector<KernelConfiguration> getKernelConfigurations(const size_t id) const;
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
         const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
+    void addConstraint(const size_t id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+        const std::vector<std::string>& parameterNames);
     void setKernelArguments(const size_t id, const std::vector<size_t>& argumentIndices);
     void setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
     size_t getKernelCount() const;

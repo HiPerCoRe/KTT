@@ -54,8 +54,8 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
     }
     else
     {
-        computeConfigurations(0, kernels.at(id).getParameters(), std::vector<ParameterValue>(0), kernels.at(id).getGlobalSize(),
-            kernels.at(id).getLocalSize(), configurations);
+        computeConfigurations(0, kernels.at(id).getParameters(), kernels.at(id).getConstraints(), std::vector<ParameterValue>(0),
+            kernels.at(id).getGlobalSize(), kernels.at(id).getLocalSize(), configurations);
     }
     return configurations;
 }
@@ -68,6 +68,16 @@ void KernelManager::addParameter(const size_t id, const std::string& name, const
         throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
     }
     kernels.at(id).addParameter(KernelParameter(name, values, threadModifierType, threadModifierAction, modifierDimension));
+}
+
+void KernelManager::addConstraint(const size_t id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    const std::vector<std::string>& parameterNames)
+{
+    if (id >= kernelCount)
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+    }
+    kernels.at(id).addConstraint(KernelConstraint(constraintFunction, parameterNames));
 }
 
 void KernelManager::setArguments(const size_t id, const std::vector<size_t>& argumentIndices)
@@ -111,13 +121,16 @@ std::string KernelManager::loadFileToString(const std::string& filePath) const
 }
 
 void KernelManager::computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
-    const std::vector<ParameterValue>& parameterValues, const DimensionVector& globalSize, const DimensionVector& localSize,
-    std::vector<KernelConfiguration>& finalResult) const
+    const std::vector<KernelConstraint>& constraints, const std::vector<ParameterValue>& parameterValues, const DimensionVector& globalSize,
+    const DimensionVector& localSize, std::vector<KernelConfiguration>& finalResult) const
 {
     if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
         KernelConfiguration configuration(globalSize, localSize, parameterValues);
-        finalResult.push_back(configuration);
+        if (configurationIsValid(configuration, constraints))
+        {
+            finalResult.push_back(configuration);
+        }
         return;
     }
 
@@ -130,7 +143,7 @@ void KernelManager::computeConfigurations(const size_t currentParameterIndex, co
         auto newGlobalSize = modifyDimensionVector(globalSize, DimensionVectorType::Global, parameter, value);
         auto newLocalSize = modifyDimensionVector(localSize, DimensionVectorType::Local, parameter, value);
 
-        computeConfigurations(currentParameterIndex + 1, parameters, newParameterValues, newGlobalSize, newLocalSize, finalResult);
+        computeConfigurations(currentParameterIndex + 1, parameters, constraints, newParameterValues, newGlobalSize, newLocalSize, finalResult);
     }
 }
 
@@ -173,6 +186,35 @@ DimensionVector KernelManager::modifyDimensionVector(const DimensionVector& vect
         size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) / parameterValue : std::get<2>(vector);
         return DimensionVector(x, y, z);
     }
+}
+
+bool KernelManager::configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints) const
+{
+    for (const auto& constraint : constraints)
+    {
+        std::vector<std::string> constraintNames = constraint.getParameterNames();
+        auto constraintValues = std::vector<size_t>(constraintNames.size());
+
+        for (size_t i = 0; i < constraintNames.size(); i++)
+        {
+            for (const auto& parameterValue : configuration.getParameterValues())
+            {
+                if (std::get<0>(parameterValue) == constraintNames.at(i))
+                {
+                    constraintValues.at(i) = std::get<1>(parameterValue);
+                    break;
+                }
+            }
+        }
+
+        auto constraintFunction = constraint.getConstraintFunction();
+        if (!constraintFunction(constraintValues))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 } // namespace ktt

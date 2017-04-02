@@ -21,17 +21,17 @@ public:
         size_t sourceLength = source.size();
         auto sourcePointer = &source[0];
         program = clCreateProgramWithSource(context, 1, &sourcePointer, &sourceLength, &result);
-        checkOpenCLError(result);
+        checkOpenCLError(result, std::string("clCreateProgramWithSource"));
     }
 
     ~OpenCLProgram()
     {
-        checkOpenCLError(clReleaseProgram(program));
+        checkOpenCLError(clReleaseProgram(program), std::string("clReleaseProgram"));
     }
 
     void build(const std::string& compilerOptions)
     {
-        cl_int result = clBuildProgram(program, devices.size(), &devices.at(0), &compilerOptions[0], nullptr, nullptr);
+        cl_int result = clBuildProgram(program, static_cast<cl_uint>(devices.size()), &devices.at(0), &compilerOptions[0], nullptr, nullptr);
         std::string buildInfo = getBuildInfo();
         checkOpenCLError(result, buildInfo);
     }

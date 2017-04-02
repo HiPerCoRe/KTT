@@ -3,8 +3,6 @@
 #include <string>
 #include <tuple>
 
-#include "enums/argument_data_type.h"
-
 namespace ktt
 {
 

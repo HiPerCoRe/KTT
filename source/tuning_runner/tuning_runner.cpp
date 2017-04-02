@@ -32,11 +32,23 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         KernelConfiguration currentConfiguration = searcher->getNextConfiguration();
         std::string source = kernelManager->getKernelSourceWithDefines(id, currentConfiguration);
 
-        KernelRunResult result = openCLCore->runKernel(source, kernel.getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
-            convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
+        KernelRunResult result;
+        try
+        {
+            result = openCLCore->runKernel(source, kernel.getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
+                convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
+        }
+        catch (const std::runtime_error& error)
+        {
+            std::cerr << "Kernel run execution failed for configuration: " << currentConfiguration << std::endl;
+            std::cerr << error.what() << std::endl;
+        }
 
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration()));
-        results.emplace_back(TuningResult(result.getDuration(), currentConfiguration));
+        if (result.getDuration() != 0)
+        {
+            results.emplace_back(TuningResult(result.getDuration(), currentConfiguration));
+        }
     }
 
     return results;
