@@ -3,10 +3,11 @@
 #include <memory>
 #include <vector>
 
-#include "compute_api_drivers/opencl_core.h"
+#include "compute_api_driver/opencl/opencl_core.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
 #include "tuning_runner/tuning_runner.h"
+#include "result_handler/result_printer.h"
 
 namespace ktt
 {
@@ -45,7 +46,7 @@ public:
     }
 
     // Tuning runner methods
-    std::vector<TuningResult> tuneKernel(const size_t id);
+    void tuneKernel(const size_t id);
 
     // Compute API methods
     static void printComputeAPIInfo(std::ostream& outputTarget);
@@ -61,6 +62,7 @@ private:
     std::unique_ptr<KernelManager> kernelManager;
     std::unique_ptr<OpenCLCore> openCLCore;
     std::unique_ptr<TuningRunner> tuningRunner;
+    std::unique_ptr<ResultPrinter> resultPrinter;
 };
 
 } // namespace ktt

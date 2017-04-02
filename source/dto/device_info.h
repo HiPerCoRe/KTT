@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include "../enums/device_type.h"
+#include "../enum/device_type.h"
 
 namespace ktt
 {

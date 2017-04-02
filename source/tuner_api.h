@@ -2,20 +2,21 @@
 
 #include <functional>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <vector>
 
 // Type aliases and enums relevant to usage of API methods
 #include "ktt_type_aliases.h"
-#include "enums/dimension.h"
-#include "enums/argument_memory_type.h"
-#include "enums/search_method.h"
-#include "enums/thread_modifier_action.h"
-#include "enums/thread_modifier_type.h"
+#include "enum/dimension.h"
+#include "enum/argument_memory_type.h"
+#include "enum/search_method.h"
+#include "enum/thread_modifier_action.h"
+#include "enum/thread_modifier_type.h"
 
 // Information about platforms and devices
-#include "dtos/device_info.h"
-#include "dtos/platform_info.h"
+#include "dto/device_info.h"
+#include "dto/platform_info.h"
 
 namespace ktt
 {
@@ -49,6 +50,9 @@ public:
 
     // Kernel tuning methods
     void tuneKernel(const size_t kernelId);
+
+    // Result printing methods
+    // void printResults(std::ostream& outputTarget);
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);

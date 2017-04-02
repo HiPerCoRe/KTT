@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "../enums/dimension_vector_type.h"
+#include "../enum/dimension_vector_type.h"
 #include "kernel.h"
 #include "kernel_configuration.h"
 

@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
-#include "../dtos/tuning_result.h"
-#include "../compute_api_drivers/opencl_core.h"
+#include "../dto/tuning_result.h"
+#include "../compute_api_driver/opencl/opencl_core.h"
 #include "../kernel/kernel_manager.h"
 #include "../kernel_argument/argument_manager.h"
 #include "searcher.h"

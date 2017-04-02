@@ -5,11 +5,11 @@
 #include <string>
 #include <vector>
 
-#include "../dtos/device_info.h"
-#include "../dtos/kernel_run_result.h"
-#include "../dtos/platform_info.h"
-#include "../enums/argument_memory_type.h"
-#include "../kernel_argument/kernel_argument.h"
+#include "../../dto/device_info.h"
+#include "../../dto/kernel_run_result.h"
+#include "../../dto/platform_info.h"
+#include "../../enum/argument_memory_type.h"
+#include "../../kernel_argument/kernel_argument.h"
 #include "opencl_buffer.h"
 #include "opencl_command_queue.h"
 #include "opencl_context.h"

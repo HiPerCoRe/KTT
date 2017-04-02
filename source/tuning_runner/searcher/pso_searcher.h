@@ -5,9 +5,8 @@
 #include <limits>
 #include <random>
 
-#include "../kernel/kernel_configuration.h"
-#include "../kernel/kernel_parameter.h"
 #include "searcher.h"
+#include "../../kernel/kernel_parameter.h"
 
 namespace ktt
 {

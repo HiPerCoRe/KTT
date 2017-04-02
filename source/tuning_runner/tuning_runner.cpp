@@ -47,7 +47,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration()));
         if (result.getDuration() != 0)
         {
-            results.emplace_back(TuningResult(result.getDuration(), currentConfiguration));
+            results.emplace_back(TuningResult(kernel.getName(), result.getDuration(), currentConfiguration));
         }
     }
 
@@ -72,7 +72,7 @@ std::unique_ptr<Searcher> TuningRunner::getSearcher(const SearchMethod& searchMe
             searchArguments.at(2), searchArguments.at(3), searchArguments.at(4)));
         break;
     default:
-        throw std::runtime_error(std::string("Unsupported search method"));
+        throw std::runtime_error(std::string("Annealing searcher is currently not supported"));
     }
 
     return searcher;

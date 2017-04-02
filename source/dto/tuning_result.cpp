@@ -5,10 +5,16 @@
 namespace ktt
 {
 
-TuningResult::TuningResult(const uint64_t duration, const KernelConfiguration& configuration):
+TuningResult::TuningResult(const std::string& kernelName, const uint64_t duration, const KernelConfiguration& configuration):
+    kernelName(kernelName),
     duration(duration),
     configuration(configuration)
 {}
+
+std::string TuningResult::getKernelName() const
+{
+    return kernelName;
+}
 
 uint64_t TuningResult::getDuration() const
 {
@@ -22,7 +28,7 @@ KernelConfiguration TuningResult::getConfiguration() const
 
 std::ostream& operator<<(std::ostream& outputTarget, const TuningResult& tuningResult)
 {
-    outputTarget << "Printing tuning result for configuration: " << tuningResult.configuration;
+    outputTarget << "Printing tuning result for kernel <" << tuningResult.kernelName << "> with configuration: " << tuningResult.configuration;
     outputTarget << "Kernel execution duration: " << tuningResult.duration / 1000 << "us" << std::endl;
     return outputTarget;
 }

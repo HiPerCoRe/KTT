@@ -1,22 +1,27 @@
 #pragma once
 
-#include "../kernel/kernel_configuration.h"
+#include <algorithm>
+#include <random>
+
 #include "searcher.h"
 
 namespace ktt
 {
 
-class FullSearcher : public Searcher
+class RandomSearcher : public Searcher
 {
 public:
-    FullSearcher(const std::vector<KernelConfiguration>& configurations):
+    RandomSearcher(const std::vector<KernelConfiguration>& configurations, const double fraction):
         configurations(configurations),
-        index(0)
+        index(0),
+        fraction(fraction)
     {
         if (configurations.size() == 0)
         {
             throw std::runtime_error("Configurations vector provided for searcher is empty");
         }
+        auto engine = std::default_random_engine();
+        std::shuffle(std::begin(this->configurations), std::end(this->configurations), engine);
     }
 
     virtual KernelConfiguration getNextConfiguration() override
@@ -26,7 +31,7 @@ public:
 
     virtual void calculateNextConfiguration(const double previousConfigurationDuration) override
     {
-        if (index < configurations.size() - 1)
+        if (index < getConfigurationsCount() - 1)
         {
             index++;
         }
@@ -34,12 +39,13 @@ public:
 
     virtual size_t getConfigurationsCount() override
     {
-        return configurations.size();
+        return std::max(static_cast<size_t>(1), static_cast<size_t>(configurations.size() * fraction));
     }
 
 private:
     std::vector<KernelConfiguration> configurations;
     size_t index;
+    double fraction;
 };
 
 } // namespace ktt

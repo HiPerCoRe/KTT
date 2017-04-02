@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "../enums/dimension.h"
-#include "../enums/thread_modifier_action.h"
-#include "../enums/thread_modifier_type.h"
+#include "../enum/dimension.h"
+#include "../enum/thread_modifier_action.h"
+#include "../enum/thread_modifier_type.h"
 
 namespace ktt
 {

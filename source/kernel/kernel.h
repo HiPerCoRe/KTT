@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "../ktt_type_aliases.h"
-#include "../enums/search_method.h"
+#include "../enum/search_method.h"
 #include "kernel_constraint.h"
 #include "kernel_parameter.h"
 

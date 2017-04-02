@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "../enums/argument_data_type.h"
-#include "../enums/argument_memory_type.h"
-#include "../enums/argument_quantity.h"
+#include "../enum/argument_data_type.h"
+#include "../enum/argument_memory_type.h"
+#include "../enum/argument_quantity.h"
 
 namespace ktt
 {

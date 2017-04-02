@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "../source/compute_api_drivers/opencl_core.h"
+#include "../source/compute_api_driver/opencl/opencl_core.h"
 
 TEST_CASE("Transfering data to / from buffer", "[openclCore]")
 {

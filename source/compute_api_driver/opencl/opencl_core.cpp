@@ -1,7 +1,5 @@
 #include "opencl_core.h"
 
-#include "CL/cl.h"
-
 namespace ktt
 {
 

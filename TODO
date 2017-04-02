@@ -3,9 +3,10 @@ Core functionality:
 * Tuning manipulator (custom code injection and time measurement)
 * Result validation (kernel / class)
 * Uploading kernel arguments into local memory
-* AnnealingSearcher
+* Annealing searcher
 
 Core extensions:
+* Automatic tuning of same kernel for different global sizes
 * Kernel argument printing (debugging purpose)
 * Refactoring certain major classes into interfaces
 
@@ -18,7 +19,6 @@ Testing:
 * Extended unit tests for major classes
 
 Future extensions:
-* Automatic tuning of same kernel for different global sizes
 * Usage of OpenCL 2.0 functionality for supported SDKs
 * Support for other compute APIs (CUDA, Vulkan compute shaders, etc.)
 * Support for tuning with usage of multiple devices
