@@ -7,7 +7,7 @@
 #include "../compute_api_driver/opencl/opencl_core.h"
 #include "../kernel/kernel_manager.h"
 #include "../kernel_argument/argument_manager.h"
-#include "searcher.h"
+#include "searcher/searcher.h"
 
 namespace ktt
 {

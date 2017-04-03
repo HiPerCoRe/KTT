@@ -1,5 +1,3 @@
-#pragma once
-
 #include "device_info.h"
 
 namespace ktt

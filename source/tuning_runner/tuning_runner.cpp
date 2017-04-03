@@ -1,9 +1,10 @@
 #include <string>
 
 #include "tuning_runner.h"
-#include "full_searcher.h"
-#include "random_searcher.h"
-#include "pso_searcher.h"
+#include "searcher/annealing_searcher.h"
+#include "searcher/full_searcher.h"
+#include "searcher/random_searcher.h"
+#include "searcher/pso_searcher.h"
 
 namespace ktt
 {
@@ -72,7 +73,7 @@ std::unique_ptr<Searcher> TuningRunner::getSearcher(const SearchMethod& searchMe
             searchArguments.at(2), searchArguments.at(3), searchArguments.at(4)));
         break;
     default:
-        throw std::runtime_error(std::string("Annealing searcher is currently not supported"));
+        searcher.reset(new AnnealingSearcher(configurations, searchArguments.at(0), searchArguments.at(1)));
     }
 
     return searcher;

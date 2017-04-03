@@ -1,5 +1,3 @@
-#pragma once
-
 #include "tuning_result.h"
 
 namespace ktt

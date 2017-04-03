@@ -21,7 +21,15 @@ size_t Tuner::addKernel(const std::string& source, const std::string& kernelName
 size_t Tuner::addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    return tunerCore->addKernelFromFile(filePath, kernelName, globalSize, localSize);
+    try
+    {
+        return tunerCore->addKernelFromFile(filePath, kernelName, globalSize, localSize);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+        throw;
+    }
 }
 
 void Tuner::addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values)
@@ -181,7 +189,6 @@ void Tuner::printResult(const size_t kernelId, std::ostream& outputTarget, const
     catch (const std::runtime_error& error)
     {
         std::cerr << error.what() << std::endl;
-        // no need to terminate program because of error in result printing
     }
 }
 
@@ -194,7 +201,6 @@ void Tuner::printResult(const size_t kernelId, const std::string& filePath, cons
     catch (const std::runtime_error& error)
     {
         std::cerr << error.what() << std::endl;
-        // no need to terminate program because of error in result printing
     }
 }
 
@@ -218,70 +224,54 @@ void Tuner::printComputeAPIInfo(std::ostream& outputTarget)
 
 PlatformInfo Tuner::getPlatformInfo(const size_t platformIndex)
 {
-    PlatformInfo platformInfo(0, std::string(""));
-
     try
     {
-        platformInfo = TunerCore::getPlatformInfo(platformIndex);
+        return TunerCore::getPlatformInfo(platformIndex);
     }
     catch (const std::runtime_error& error)
     {
         std::cerr << error.what() << std::endl;
         throw;
     }
-
-    return platformInfo;
 }
 
 std::vector<PlatformInfo> Tuner::getPlatformInfoAll()
 {
-    std::vector<PlatformInfo> platformInfo;
-
     try
     {
-        platformInfo = TunerCore::getPlatformInfoAll();
+        return TunerCore::getPlatformInfoAll();
     }
     catch (const std::runtime_error& error)
     {
         std::cerr << error.what() << std::endl;
         throw;
     }
-
-    return platformInfo;
 }
 
 DeviceInfo Tuner::getDeviceInfo(const size_t platformIndex, const size_t deviceIndex)
 {
-    DeviceInfo deviceInfo(0, std::string(""));
-
     try
     {
-        deviceInfo = TunerCore::getDeviceInfo(platformIndex, deviceIndex);
+        return TunerCore::getDeviceInfo(platformIndex, deviceIndex);
     }
     catch (const std::runtime_error& error)
     {
         std::cerr << error.what() << std::endl;
         throw;
     }
-
-    return deviceInfo;
 }
 
 std::vector<DeviceInfo> Tuner::getDeviceInfoAll(const size_t platformIndex)
 {
-    std::vector<DeviceInfo> deviceInfo;
-
     try
     {
-        deviceInfo = TunerCore::getDeviceInfoAll(platformIndex);
+        return TunerCore::getDeviceInfoAll(platformIndex);
     }
     catch (const std::runtime_error& error)
     {
         std::cerr << error.what() << std::endl;
         throw;
     }
-
-    return deviceInfo;
 }
 
 } // namespace ktt

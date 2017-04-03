@@ -1,5 +1,3 @@
-#pragma once
-
 #include "kernel_configuration.h"
 
 namespace ktt

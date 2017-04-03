@@ -1,11 +1,10 @@
 Core functionality:
 * Tuning manipulator (custom code injection and time measurement)
 * Result validation (kernel / class)
-* Uploading kernel arguments into local memory
-* Annealing searcher
 
 Core extensions:
 * Automatic tuning of same kernel for different global sizes
+* Uploading kernel arguments into local memory
 * Kernel argument printing (debugging purpose)
 * Refactoring certain major classes into interfaces
 

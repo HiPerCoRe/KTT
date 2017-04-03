@@ -31,10 +31,7 @@ public:
 
     virtual void calculateNextConfiguration(const double previousConfigurationDuration) override
     {
-        if (index < getConfigurationsCount() - 1)
-        {
-            index++;
-        }
+        index++;
     }
 
     virtual size_t getConfigurationsCount() override
