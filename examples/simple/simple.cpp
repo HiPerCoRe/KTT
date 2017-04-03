@@ -47,6 +47,7 @@ int main(int argc, char** argv)
 
     tuner.setKernelArguments(kernelId, std::vector<size_t>{ aId, bId, resultId });
     tuner.tuneKernel(kernelId);
+    tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
 
     return 0;
 }

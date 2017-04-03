@@ -172,6 +172,19 @@ void Tuner::tuneKernel(const size_t kernelId)
     }
 }
 
+void Tuner::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const
+{
+    try
+    {
+        tunerCore->printResult(kernelId, outputTarget, printFormat);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+        // no need to terminate program because of error in result printing
+    }
+}
+
 void Tuner::setCompilerOptions(const std::string& options)
 {
     tunerCore->setCompilerOptions(options);

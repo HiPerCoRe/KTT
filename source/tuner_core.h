@@ -48,13 +48,16 @@ public:
     // Tuning runner methods
     void tuneKernel(const size_t id);
 
+    // Result printer methods
+    void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
+
     // Compute API methods
+    void setCompilerOptions(const std::string& options);
     static void printComputeAPIInfo(std::ostream& outputTarget);
     static PlatformInfo getPlatformInfo(const size_t platformIndex);
     static std::vector<PlatformInfo> getPlatformInfoAll();
     static DeviceInfo getDeviceInfo(const size_t platformIndex, const size_t deviceIndex);
     static std::vector<DeviceInfo> getDeviceInfoAll(const size_t platformIndex);
-    void setCompilerOptions(const std::string& options);
 
 private:
     // Attributes

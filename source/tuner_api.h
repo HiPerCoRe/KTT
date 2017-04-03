@@ -10,6 +10,7 @@
 #include "ktt_type_aliases.h"
 #include "enum/dimension.h"
 #include "enum/argument_memory_type.h"
+#include "enum/print_format.h"
 #include "enum/search_method.h"
 #include "enum/thread_modifier_action.h"
 #include "enum/thread_modifier_type.h"
@@ -52,7 +53,7 @@ public:
     void tuneKernel(const size_t kernelId);
 
     // Result printing methods
-    // void printResults(std::ostream& outputTarget);
+    void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);

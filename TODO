@@ -1,5 +1,4 @@
 Core functionality:
-* Result printing (various forms of output)
 * Tuning manipulator (custom code injection and time measurement)
 * Result validation (kernel / class)
 * Uploading kernel arguments into local memory
@@ -10,6 +9,11 @@ Core extensions:
 * Kernel argument printing (debugging purpose)
 * Refactoring certain major classes into interfaces
 
+Future extensions:
+* Usage of OpenCL 2.0 functionality for supported SDKs
+* Support for other compute APIs (CUDA, Vulkan compute shaders, etc.)
+* Support for tuning with usage of multiple devices
+
 Documentation:
 * Documentation for API and other significant headers
 * Updated class diagram
@@ -18,7 +22,5 @@ Testing:
 * Linux compatibility test
 * Extended unit tests for major classes
 
-Future extensions:
-* Usage of OpenCL 2.0 functionality for supported SDKs
-* Support for other compute APIs (CUDA, Vulkan compute shaders, etc.)
-* Support for tuning with usage of multiple devices
+Samples:
+* More samples showcasing different parts of the API

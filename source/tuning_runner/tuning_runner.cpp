@@ -40,7 +40,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         }
         catch (const std::runtime_error& error)
         {
-            std::cerr << "Kernel run execution failed for configuration: " << currentConfiguration << std::endl;
+            std::cerr << "Kernel run execution failed for configuration: " << std::endl << currentConfiguration << std::endl;
             std::cerr << error.what() << std::endl;
         }
 

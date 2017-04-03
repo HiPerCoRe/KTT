@@ -29,12 +29,16 @@ std::vector<ParameterValue> KernelConfiguration::getParameterValues() const
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& kernelConfiguration)
 {
-    outputTarget << "global: " << std::get<0>(kernelConfiguration.globalSize) << " " << std::get<1>(kernelConfiguration.globalSize) << " "
+    outputTarget << "global size: " << std::get<0>(kernelConfiguration.globalSize) << ", " << std::get<1>(kernelConfiguration.globalSize) << ", "
         << std::get<2>(kernelConfiguration.globalSize) << "; ";
-    outputTarget << "local: " << std::get<0>(kernelConfiguration.localSize) << " " << std::get<1>(kernelConfiguration.localSize) << " "
+    outputTarget << "local size: " << std::get<0>(kernelConfiguration.localSize) << ", " << std::get<1>(kernelConfiguration.localSize) << ", "
         << std::get<2>(kernelConfiguration.localSize) << "; ";
     outputTarget << "parameters: ";
 
+    if (kernelConfiguration.parameterValues.size() == 0)
+    {
+        outputTarget << "none";
+    }
     for (const auto& value : kernelConfiguration.parameterValues)
     {
         outputTarget << std::get<0>(value) << ": " << std::get<1>(value) << " ";

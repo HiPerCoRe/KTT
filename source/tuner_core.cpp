@@ -75,8 +75,18 @@ const Kernel TunerCore::getKernel(const size_t id) const
 
 void TunerCore::tuneKernel(const size_t id)
 {
-    auto results = tuningRunner->tuneKernel(id);
-    resultPrinter->setResults(results);
+    auto result = tuningRunner->tuneKernel(id);
+    resultPrinter->setResult(id, result);
+}
+
+void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const
+{
+    resultPrinter->printResult(kernelId, outputTarget, printFormat);
+}
+
+void TunerCore::setCompilerOptions(const std::string& options)
+{
+    openCLCore->setOpenCLCompilerOptions(options);
 }
 
 void TunerCore::printComputeAPIInfo(std::ostream& outputTarget)
@@ -102,11 +112,6 @@ DeviceInfo TunerCore::getDeviceInfo(const size_t platformIndex, const size_t dev
 std::vector<DeviceInfo> TunerCore::getDeviceInfoAll(const size_t platformIndex)
 {
     return OpenCLCore::getOpenCLDeviceInfoAll(platformIndex);
-}
-
-void TunerCore::setCompilerOptions(const std::string& options)
-{
-    openCLCore->setOpenCLCompilerOptions(options);
 }
 
 } // namespace ktt
