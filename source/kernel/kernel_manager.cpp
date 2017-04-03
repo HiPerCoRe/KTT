@@ -115,6 +115,12 @@ const Kernel KernelManager::getKernel(const size_t id) const
 std::string KernelManager::loadFileToString(const std::string& filePath) const
 {
     std::ifstream file(filePath);
+
+    if (!file.is_open())
+    {
+        throw std::runtime_error(std::string("Unable to open file: " + filePath));
+    }
+
     std::stringstream stream;
     stream << file.rdbuf();
     return stream.str();

@@ -84,6 +84,18 @@ void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, c
     resultPrinter->printResult(kernelId, outputTarget, printFormat);
 }
 
+void TunerCore::printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const
+{
+    std::ofstream outputFile(filePath);
+
+    if (!outputFile.is_open())
+    {
+        throw std::runtime_error(std::string("Unable to open file: " + filePath));
+    }
+
+    resultPrinter->printResult(kernelId, outputFile, printFormat);
+}
+
 void TunerCore::setCompilerOptions(const std::string& options)
 {
     openCLCore->setOpenCLCompilerOptions(options);

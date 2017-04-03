@@ -54,6 +54,7 @@ public:
 
     // Result printing methods
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
+    void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);
