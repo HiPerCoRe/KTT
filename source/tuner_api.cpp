@@ -204,6 +204,22 @@ void Tuner::printResult(const size_t kernelId, const std::string& filePath, cons
     }
 }
 
+void Tuner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
+{
+    // to do
+}
+
+void Tuner::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
+    const std::vector<ParameterValue>& referenceKernelConfiguration)
+{
+    // to do
+}
+
+void Tuner::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass)
+{
+    // to do
+}
+
 void Tuner::setCompilerOptions(const std::string& options)
 {
     tunerCore->setCompilerOptions(options);

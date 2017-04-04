@@ -14,10 +14,14 @@
 #include "enum/search_method.h"
 #include "enum/thread_modifier_action.h"
 #include "enum/thread_modifier_type.h"
+#include "enum/validation_method.h"
 
 // Information about platforms and devices
 #include "dto/device_info.h"
 #include "dto/platform_info.h"
+
+// Reference class interface
+#include "reference_class.h"
 
 namespace ktt
 {
@@ -55,6 +59,11 @@ public:
     // Result printing methods
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
+
+    // (WIP) Result validation methods
+    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration);
+    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass);
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);

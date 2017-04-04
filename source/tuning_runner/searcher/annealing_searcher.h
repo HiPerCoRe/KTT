@@ -77,7 +77,7 @@ public:
         index = neighbourState;
     }
 
-    virtual size_t getConfigurationsCount() override
+    virtual size_t getConfigurationsCount() const override
     {
         return std::max(static_cast<size_t>(1), static_cast<size_t>(configurations.size() * fraction));
     }
