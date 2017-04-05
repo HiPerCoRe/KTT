@@ -307,21 +307,21 @@ std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<std
         {
             std::vector<double> resultDouble(inputArguments.at(i).getDataSize() / sizeof(double));
             getBufferData(*outputBuffers.at(i), resultDouble.data(), inputArguments.at(i).getDataSize());
-            resultArguments.push_back(KernelArgument(resultDouble, inputArguments.at(i).getArgumentMemoryType(),
+            resultArguments.push_back(KernelArgument(inputArguments.at(i).getId(), resultDouble, inputArguments.at(i).getArgumentMemoryType(),
                 inputArguments.at(i).getArgumentQuantity()));
         }
         else if (type == ArgumentDataType::Float)
         {
             std::vector<float> resultFloat(inputArguments.at(i).getDataSize() / sizeof(float));
             getBufferData(*outputBuffers.at(i), resultFloat.data(), inputArguments.at(i).getDataSize());
-            resultArguments.push_back(KernelArgument(resultFloat, inputArguments.at(i).getArgumentMemoryType(),
+            resultArguments.push_back(KernelArgument(inputArguments.at(i).getId(), resultFloat, inputArguments.at(i).getArgumentMemoryType(),
                 inputArguments.at(i).getArgumentQuantity()));
         }
         else
         {
             std::vector<int> resultInt(inputArguments.at(i).getDataSize() / sizeof(int));
             getBufferData(*outputBuffers.at(i), resultInt.data(), inputArguments.at(i).getDataSize());
-            resultArguments.push_back(KernelArgument(resultInt, inputArguments.at(i).getArgumentMemoryType(),
+            resultArguments.push_back(KernelArgument(inputArguments.at(i).getId(), resultInt, inputArguments.at(i).getArgumentMemoryType(),
                 inputArguments.at(i).getArgumentQuantity()));
         }
     }

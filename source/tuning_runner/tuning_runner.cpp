@@ -23,9 +23,9 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     }
 
     std::vector<TuningResult> results;
-    const Kernel& kernel = kernelManager->getKernel(id);
-    std::unique_ptr<Searcher> searcher = getSearcher(kernel.getSearchMethod(), kernel.getSearchArguments(),
-        kernelManager->getKernelConfigurations(id), kernel.getParameters());
+    const Kernel* kernel = kernelManager->getKernel(id);
+    std::unique_ptr<Searcher> searcher = getSearcher(kernel->getSearchMethod(), kernel->getSearchArguments(),
+        kernelManager->getKernelConfigurations(id), kernel->getParameters());
     size_t configurationsCount = searcher->getConfigurationsCount();
 
     for (size_t i = 0; i < configurationsCount; i++)
@@ -36,7 +36,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         KernelRunResult result;
         try
         {
-            result = openCLCore->runKernel(source, kernel.getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
+            result = openCLCore->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
                 convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
         }
         catch (const std::runtime_error& error)
@@ -48,11 +48,17 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration()));
         if (result.getDuration() != 0)
         {
-            results.emplace_back(TuningResult(kernel.getName(), result.getDuration(), currentConfiguration));
+            results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), currentConfiguration));
         }
     }
 
     return results;
+}
+
+void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
+{
+    resultValidator.setValidationMethod(validationMethod);
+    resultValidator.setToleranceThreshold(toleranceThreshold);
 }
 
 std::unique_ptr<Searcher> TuningRunner::getSearcher(const SearchMethod& searchMethod, const std::vector<double>& searchArguments,
@@ -94,7 +100,7 @@ std::vector<KernelArgument> TuningRunner::getKernelArguments(const size_t kernel
 {
     std::vector<KernelArgument> result;
 
-    std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId).getArgumentIndices();
+    std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId)->getArgumentIndices();
     
     for (const auto index : argumentIndices)
     {

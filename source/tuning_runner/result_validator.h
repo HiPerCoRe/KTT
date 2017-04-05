@@ -12,6 +12,12 @@ class ResultValidator
 public:
     ResultValidator();
 
+    void setToleranceThreshold(const double toleranceThreshold);
+    void setValidationMethod(const ValidationMethod& validationMethod);
+
+    double getToleranceThreshold() const;
+    ValidationMethod getValidationMethod() const;
+
     template <typename T> bool validateResult(const std::vector<T>& result, const std::vector<T>& referenceResult) const;
 
 private:

@@ -21,6 +21,7 @@ public:
 
     // Core methods
     std::vector<TuningResult> tuneKernel(const size_t id);
+    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
 
 private:
     // Attributes

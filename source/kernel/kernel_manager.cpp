@@ -13,7 +13,7 @@ KernelManager::KernelManager():
 size_t KernelManager::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    kernels.emplace_back(Kernel(source, kernelName, globalSize, localSize));
+    kernels.emplace_back(Kernel(kernelCount, source, kernelName, globalSize, localSize));
     return kernelCount++;
 }
 
@@ -26,7 +26,7 @@ size_t KernelManager::addKernelFromFile(const std::string& filePath, const std::
 
 std::string KernelManager::getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const
 {
-    std::string source = getKernel(id).getSource();
+    std::string source = kernels.at(id).getSource();
 
     for (const auto& parameterValue : kernelConfiguration.getParameterValues())
     {
@@ -98,18 +98,41 @@ void KernelManager::setSearchMethod(const size_t id, const SearchMethod& searchM
     kernels.at(id).setSearchMethod(searchMethod, searchArguments);
 }
 
+void KernelManager::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
+    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
+{
+    if (kernelId >= kernelCount)
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(kernelId)));
+    }
+    if (referenceKernelId >= kernelCount)
+    {
+        throw std::runtime_error(std::string("Invalid reference kernel id: " + std::to_string(referenceKernelId)));
+    }
+    kernels.at(kernelId).setReferenceKernel(referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
+}
+
+void KernelManager::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId)
+{
+    if (kernelId >= kernelCount)
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(kernelId)));
+    }
+    kernels.at(kernelId).setReferenceClass(std::move(referenceClass), resultArgumentId);
+}
+
 size_t KernelManager::getKernelCount() const
 {
     return kernelCount;
 }
 
-const Kernel KernelManager::getKernel(const size_t id) const
+const Kernel* KernelManager::getKernel(const size_t id) const
 {
     if (id >= kernelCount)
     {
         throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
     }
-    return kernels.at(id);
+    return &kernels.at(id);
 }
 
 std::string KernelManager::loadFileToString(const std::string& filePath) const
