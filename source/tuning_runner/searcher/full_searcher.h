@@ -28,7 +28,7 @@ public:
         index++;
     }
 
-    virtual size_t getConfigurationsCount() override
+    virtual size_t getConfigurationsCount() const override
     {
         return configurations.size();
     }

@@ -7,6 +7,7 @@
 #include "../compute_api_driver/opencl/opencl_core.h"
 #include "../kernel/kernel_manager.h"
 #include "../kernel_argument/argument_manager.h"
+#include "result_validator.h"
 #include "searcher/searcher.h"
 
 namespace ktt
@@ -26,6 +27,7 @@ private:
     ArgumentManager* argumentManager;
     KernelManager* kernelManager;
     OpenCLCore* openCLCore;
+    ResultValidator resultValidator;
 
     // Helper methods
     std::unique_ptr<Searcher> getSearcher(const SearchMethod& searchMethod, const std::vector<double>& searchArguments,
