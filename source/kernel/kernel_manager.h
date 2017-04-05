@@ -29,10 +29,13 @@ public:
         const std::vector<std::string>& parameterNames);
     void setArguments(const size_t id, const std::vector<size_t>& argumentIndices);
     void setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
+        const std::vector<size_t>& resultArgumentIds);
+    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId);
 
     // Getters
     size_t getKernelCount() const;
-    const Kernel getKernel(const size_t id) const;
+    const Kernel* getKernel(const size_t id) const;
 
 private:
     // Attributes

@@ -13,8 +13,9 @@ namespace ktt
 class KernelArgument
 {
 public:
-    template <typename T> explicit KernelArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
+    template <typename T> explicit KernelArgument(const size_t id, const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
         const ArgumentQuantity& argumentQuantity):
+        id(id),
         argumentMemoryType(argumentMemoryType),
         argumentQuantity(argumentQuantity)
     {
@@ -32,6 +33,11 @@ public:
 
         this->argumentQuantity = argumentQuantity;
         initializeData(data);
+    }
+
+    size_t getId() const
+    {
+        return id;
     }
 
     const void* getData() const
@@ -91,6 +97,7 @@ public:
     }
 
 private:
+    size_t id;
     std::vector<double> dataDouble;
     std::vector<float> dataFloat;
     std::vector<int> dataInt;

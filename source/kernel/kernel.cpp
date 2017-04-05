@@ -3,12 +3,16 @@
 namespace ktt
 {
 
-Kernel::Kernel(const std::string& source, const std::string& name, const DimensionVector& globalSize, const DimensionVector& localSize):
+Kernel::Kernel(const size_t id, const std::string& source, const std::string& name, const DimensionVector& globalSize,
+    const DimensionVector& localSize):
+    id(id),
     source(source),
     name(name),
     globalSize(globalSize),
     localSize(localSize),
-    searchMethod(SearchMethod::FullSearch)
+    searchMethod(SearchMethod::FullSearch),
+    referenceKernelValid(false),
+    referenceClassValid(false)
 {}
 
 void Kernel::addParameter(const KernelParameter& parameter)
@@ -51,6 +55,38 @@ void Kernel::setSearchMethod(const SearchMethod& searchMethod, const std::vector
     
     this->searchArguments = searchArguments;
     this->searchMethod = searchMethod;
+}
+
+void Kernel::setReferenceKernel(const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
+    const std::vector<size_t>& resultArgumentIds)
+{
+    for (const auto argumentId : resultArgumentIds)
+    {
+        if (!argumentIndexExists(argumentId))
+        {
+            throw std::runtime_error(std::string("Following argument id is not associated with this kernel: " + std::to_string(argumentId)));
+        }
+    }
+    this->referenceKernelId = referenceKernelId;
+    this->referenceKernelConfiguration = referenceKernelConfiguration;
+    this->resultArgumentIds = resultArgumentIds;
+    referenceKernelValid = true;
+}
+
+void Kernel::setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId)
+{
+    if (!argumentIndexExists(resultArgumentId))
+    {
+        throw std::runtime_error(std::string("Following argument id is not associated with this kernel: " + std::to_string(resultArgumentId)));
+    }
+    this->referenceClass = std::move(referenceClass);
+    this->resultArgumentId = resultArgumentId;
+    referenceClassValid = true;
+}
+
+size_t Kernel::getId() const
+{
+    return id;
 }
 
 std::string Kernel::getSource() const
@@ -101,6 +137,53 @@ SearchMethod Kernel::getSearchMethod() const
 std::vector<double> Kernel::getSearchArguments() const
 {
     return searchArguments;
+}
+
+bool Kernel::hasReferenceKernel() const
+{
+    return referenceKernelValid;
+}
+
+size_t Kernel::getReferenceKernelId() const
+{
+    return referenceKernelId;
+}
+
+std::vector<ParameterValue> Kernel::getReferenceKernelConfiguration() const
+{
+    return referenceKernelConfiguration;
+}
+
+std::vector<size_t> Kernel::getResultArgumentIds() const
+{
+    return resultArgumentIds;
+}
+
+bool Kernel::hasReferenceClass() const
+{
+    return referenceClassValid;
+}
+
+const ReferenceClass* Kernel::getReferenceClass() const
+{
+    return referenceClass.get();
+}
+
+size_t Kernel::getResultArgumentIdForClass() const
+{
+    return resultArgumentId;
+}
+
+bool Kernel::argumentIndexExists(const size_t argumentIndex) const
+{
+    for (const auto index : argumentIndices)
+    {
+        if (index == argumentIndex)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool Kernel::parameterExists(const std::string& parameterName) const

@@ -63,12 +63,23 @@ void TunerCore::setSearchMethod(const size_t id, const SearchMethod& searchMetho
     kernelManager->setSearchMethod(id, searchMethod, searchArguments);
 }
 
+void TunerCore::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
+    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
+{
+    kernelManager->setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
+}
+
+void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId)
+{
+    kernelManager->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentId);
+}
+
 size_t TunerCore::getKernelCount() const
 {
     return kernelManager->getKernelCount();
 }
 
-const Kernel TunerCore::getKernel(const size_t id) const
+const Kernel* TunerCore::getKernel(const size_t id) const
 {
     return kernelManager->getKernel(id);
 }
@@ -77,6 +88,11 @@ void TunerCore::tuneKernel(const size_t id)
 {
     auto result = tuningRunner->tuneKernel(id);
     resultPrinter->setResult(id, result);
+}
+
+void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
+{
+    tuningRunner->setValidationMethod(validationMethod, toleranceThreshold);
 }
 
 void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const

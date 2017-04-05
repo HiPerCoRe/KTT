@@ -60,10 +60,11 @@ public:
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
 
-    // (WIP) Result validation methods
+    // Result validation methods
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
-    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration);
-    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass);
+    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
+        const std::vector<size_t>& resultArgumentIds);
+    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId);
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);

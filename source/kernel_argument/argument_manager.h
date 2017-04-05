@@ -20,7 +20,7 @@ public:
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
         const ArgumentQuantity& argumentQuantity)
     {
-        arguments.emplace_back(KernelArgument(data, argumentMemoryType, argumentQuantity));
+        arguments.emplace_back(KernelArgument(argumentCount, data, argumentMemoryType, argumentQuantity));
         return argumentCount++;
     }
 
