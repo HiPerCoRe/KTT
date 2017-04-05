@@ -1,4 +1,5 @@
 #include "kernel_configuration.h"
+#include <ostream>
 
 namespace ktt
 {

@@ -23,10 +23,10 @@ function initOpenCL()
         includedirs { "$(CUDA_PATH)/include" }
 		
         filter "platforms:x86"
-			libdirs { "$(CUDA_PATH)/lib/Win32" }
+			libdirs { "$(CUDA_PATH)/lib" }
             
 		filter "platforms:x86_64"
-			libdirs { "$(CUDA_PATH)/lib/x64" }
+			libdirs { "$(CUDA_PATH)/lib64" }
             
         filter {}
 		links { "OpenCL" }
@@ -131,6 +131,12 @@ project "ExampleSimple"
     targetdir("build/examples/simple/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/simple/obj/%{cfg.platform}_%{cfg.buildcfg}")
 
+    if not _OPTIONS["cuda"] then
+        initOpenCL()
+    else
+        -- CUDA not supported yet
+    end
+
 project "ExampleOpenCLInfo"
     kind "ConsoleApp"
     
@@ -151,7 +157,13 @@ project "ExampleOpenCLInfo"
     
     targetdir("build/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/opencl_info/obj/%{cfg.platform}_%{cfg.buildcfg}")
-    
+   
+    if not _OPTIONS["cuda"] then
+        initOpenCL()
+    else
+        -- CUDA not supported yet
+    end
+ 
 -- Unit tests configuration --    
     
 project "Tests"
