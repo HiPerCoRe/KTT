@@ -1,36 +1,44 @@
 -- Helper functions to find OpenCL headers and libraries --
 
 function initOpenCL()
-	local path = os.getenv("INTELOCLSDKROOT")
-	if (path) then
-		defines { "CL_PLATFORM_INTEL" }
-		includedirs { "$(INTELOCLSDKROOT)/include" }
-		
+    local path = os.getenv("INTELOCLSDKROOT")
+    if (path) then
+        defines { "CL_PLATFORM_INTEL" }
+        includedirs { "$(INTELOCLSDKROOT)/include" }
+        
         filter "platforms:x86"
-			libdirs { "$(INTELOCLSDKROOT)/lib/x86" }
+            libdirs { "$(INTELOCLSDKROOT)/lib/x86" }
         
-		filter "platforms:x86_64"
-			libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
+        filter "platforms:x86_64"
+            libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
         
-		filter {}
-		links {"OpenCL"}
-		return true
-	end
+        filter {}
+        links {"OpenCL"}
+        return true
+    end
     
     path = os.getenv("CUDA_PATH")
     if (path) then
         defines { "CL_PLATFORM_NVIDIA" }
         includedirs { "$(CUDA_PATH)/include" }
-		
+        
         filter "platforms:x86"
-			libdirs { "$(CUDA_PATH)/lib" }
-            
-		filter "platforms:x86_64"
-			libdirs { "$(CUDA_PATH)/lib64" }
-            
+            if os.get() == "linux" then
+                libdirs { "$(CUDA_PATH)/lib" }
+            else
+                libdirs { "$(CUDA_PATH)/lib/Win32" }
+            end
+        
+        filter "platforms:x86_64"
+            if os.get() == "linux" then
+                libdirs { "$(CUDA_PATH)/lib64" }
+            else
+                libdirs { "$(CUDA_PATH)/lib/x64" }
+            end
+        
         filter {}
-		links { "OpenCL" }
-		return true
+        links { "OpenCL" }
+        return true
 	end
     
     path = os.getenv("AMDAPPSDKROOT")
@@ -38,18 +46,18 @@ function initOpenCL()
         defines { "CL_PLATFORM_AMD" }
         includedirs { "$(AMDAPPSDKROOT)/include" }
         
-		filter "platforms:x86"
-			libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
+        filter "platforms:x86"
+            libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
         
-		filter "platforms:x86_64"
-			libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
+        filter "platforms:x86_64"
+            libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
         
-		filter {}
-		links { "OpenCL" }
+        filter {}
+        links { "OpenCL" }
         return true
     end
     
-	return false
+    return false
 end
 
 -- Command line arguments definition --
@@ -57,7 +65,7 @@ end
 newoption
 {
    trigger     = "cuda",
-   description = "Enables usage of CUDA API instead of OpenCL"
+   description = "Enables usage of CUDA API"
 }
 
 -- Project configuration --

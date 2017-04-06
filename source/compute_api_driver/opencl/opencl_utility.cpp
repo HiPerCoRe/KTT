@@ -1,5 +1,6 @@
-#include "opencl_utility.h"
 #include <stdexcept>
+
+#include "opencl_utility.h"
 
 namespace ktt
 {

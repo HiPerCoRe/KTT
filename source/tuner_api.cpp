@@ -255,7 +255,6 @@ void Tuner::printComputeAPIInfo(std::ostream& outputTarget)
     catch (const std::runtime_error& error)
     {
         std::cerr << error.what() << std::endl;
-        throw;
     }
 }
 
