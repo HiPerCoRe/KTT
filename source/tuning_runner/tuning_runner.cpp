@@ -21,6 +21,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     {
         throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
     }
+    resultValidator.clearReferenceArguments(id);
 
     std::vector<TuningResult> results;
     const Kernel* kernel = kernelManager->getKernel(id);
@@ -36,6 +37,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         KernelRunResult result;
         try
         {
+            std::cout << "Launching kernel <" << kernel->getName() << "> with configuration: " << currentConfiguration << std::endl;
             result = openCLCore->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
                 convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
         }
@@ -48,7 +50,15 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration()));
         if (result.getDuration() != 0)
         {
-            results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), currentConfiguration));
+            bool storeResult = true;
+            if (kernel->hasReferenceClass() || kernel->hasReferenceKernel())
+            {
+                storeResult = validateResult(kernel, result);
+            }
+            if (storeResult)
+            {
+                results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), currentConfiguration));
+            }
         }
     }
 
@@ -108,6 +118,79 @@ std::vector<KernelArgument> TuningRunner::getKernelArguments(const size_t kernel
     }
 
     return result;
+}
+
+bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& result) const
+{
+    bool validationResult = true;
+
+    if (kernel->hasReferenceClass())
+    {
+        validationResult &= validateResultWithClass(kernel, result);
+    }
+
+    if (kernel->hasReferenceKernel())
+    {
+        validationResult &= validateResultWithKernel(kernel, result);
+    }
+
+    return validationResult;
+}
+
+bool TuningRunner::validateResultWithClass(const Kernel* kernel, const KernelRunResult& result) const
+{
+    if (!argumentIndexExists(kernel->getResultArgumentIdForClass(), kernel->getArgumentIndices()))
+    {
+        throw std::runtime_error(std::string("Following reference class argument id is not associated with given kernel: " +
+            std::to_string(kernel->getResultArgumentIdForClass())));
+    }
+    if (!resultValidator.hasReferenceClassArgument(kernel->getId()))
+    {
+        auto referenceClass = kernel->getReferenceClass();
+        // to do
+    }
+
+    size_t argumentId = kernel->getResultArgumentIdForClass();
+    size_t resultArgumentIndex;
+    const auto& resultArguments = result.getResultArguments();
+    for (size_t i = 0; i < resultArguments.size(); i++)
+    {
+        if (resultArguments.at(i).getId() == argumentId)
+        {
+            resultArgumentIndex = i;
+            break;
+        }
+    }
+    bool validationResult = resultValidator.validateResultWithClass(kernel->getId(), resultArguments.at(resultArgumentIndex));
+    return validationResult;
+}
+
+bool TuningRunner::validateResultWithKernel(const Kernel* kernel, const KernelRunResult& result) const
+{
+    auto indices = kernel->getArgumentIndices();
+    auto referenceIndices = kernel->getResultArgumentIds();
+    for (const auto argumentId : referenceIndices)
+    {
+        if (!argumentIndexExists(argumentId, indices))
+        {
+            throw std::runtime_error(std::string("Following reference argument id is not associated with given kernel: " +
+                std::to_string(argumentId)));
+        }
+    }
+    // to do
+    return true;
+}
+
+bool TuningRunner::argumentIndexExists(const size_t argumentIndex, const std::vector<size_t>& argumentIndices) const
+{
+    for (const auto index : argumentIndices)
+    {
+        if (index == argumentIndex)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace ktt

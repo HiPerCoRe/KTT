@@ -70,7 +70,6 @@ private:
     size_t resultArgumentId;
 
     // Helper methods
-    bool argumentIndexExists(const size_t argumentIndex) const;
     bool parameterExists(const std::string& parameterName) const;
     std::string getSearchMethodName(const SearchMethod& searchMethod) const;
 };

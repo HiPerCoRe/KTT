@@ -35,6 +35,10 @@ private:
         const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters) const;
     std::vector<size_t> convertDimensionVector(const DimensionVector& vector) const;
     std::vector<KernelArgument> getKernelArguments(const size_t kernelId) const;
+    bool validateResult(const Kernel* kernel, const KernelRunResult& result) const;
+    bool validateResultWithClass(const Kernel* kernel, const KernelRunResult& result) const;
+    bool validateResultWithKernel(const Kernel* kernel, const KernelRunResult& result) const;
+    bool argumentIndexExists(const size_t argumentIndex, const std::vector<size_t>& argumentIndices) const;
 };
 
 } // namespace ktt

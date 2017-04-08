@@ -60,13 +60,6 @@ void Kernel::setSearchMethod(const SearchMethod& searchMethod, const std::vector
 void Kernel::setReferenceKernel(const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
     const std::vector<size_t>& resultArgumentIds)
 {
-    for (const auto argumentId : resultArgumentIds)
-    {
-        if (!argumentIndexExists(argumentId))
-        {
-            throw std::runtime_error(std::string("Following argument id is not associated with this kernel: " + std::to_string(argumentId)));
-        }
-    }
     this->referenceKernelId = referenceKernelId;
     this->referenceKernelConfiguration = referenceKernelConfiguration;
     this->resultArgumentIds = resultArgumentIds;
@@ -75,10 +68,6 @@ void Kernel::setReferenceKernel(const size_t referenceKernelId, const std::vecto
 
 void Kernel::setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId)
 {
-    if (!argumentIndexExists(resultArgumentId))
-    {
-        throw std::runtime_error(std::string("Following argument id is not associated with this kernel: " + std::to_string(resultArgumentId)));
-    }
     this->referenceClass = std::move(referenceClass);
     this->resultArgumentId = resultArgumentId;
     referenceClassValid = true;
@@ -172,18 +161,6 @@ const ReferenceClass* Kernel::getReferenceClass() const
 size_t Kernel::getResultArgumentIdForClass() const
 {
     return resultArgumentId;
-}
-
-bool Kernel::argumentIndexExists(const size_t argumentIndex) const
-{
-    for (const auto index : argumentIndices)
-    {
-        if (index == argumentIndex)
-        {
-            return true;
-        }
-    }
-    return false;
 }
 
 bool Kernel::parameterExists(const std::string& parameterName) const
