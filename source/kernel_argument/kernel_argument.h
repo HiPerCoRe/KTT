@@ -35,66 +35,15 @@ public:
         initializeData(data);
     }
 
-    size_t getId() const
-    {
-        return id;
-    }
-
-    const void* getData() const
-    {
-        switch (argumentDataType)
-        {
-        case ArgumentDataType::Double:
-            return (void*)dataDouble.data();
-        case ArgumentDataType::Float:
-            return (void*)dataFloat.data();
-        default:
-            return (void*)dataInt.data();
-        }
-    }
-
-    std::vector<double> getDataDouble() const
-    {
-        return dataDouble;
-    }
-
-    std::vector<float> getDataFloat() const
-    {
-        return dataFloat;
-    }
-
-    std::vector<int> getDataInt() const
-    {
-        return dataInt;
-    }
-
-    size_t getDataSize() const
-    {
-        switch (argumentDataType)
-        {
-        case ArgumentDataType::Double:
-            return dataDouble.size() * sizeof(double);
-        case ArgumentDataType::Float:
-            return dataFloat.size() * sizeof(float);
-        default:
-            return dataInt.size() * sizeof(int);
-        }
-    }
-
-    ArgumentDataType getArgumentDataType() const
-    {
-        return argumentDataType;
-    }
-
-    ArgumentMemoryType getArgumentMemoryType() const
-    {
-        return argumentMemoryType;
-    }
-
-    ArgumentQuantity getArgumentQuantity() const
-    {
-        return argumentQuantity;
-    }
+    size_t getId() const;
+    const void* getData() const;
+    std::vector<double> getDataDouble() const;
+    std::vector<float> getDataFloat() const;
+    std::vector<int> getDataInt() const;
+    size_t getDataSize() const;
+    ArgumentDataType getArgumentDataType() const;
+    ArgumentMemoryType getArgumentMemoryType() const;
+    ArgumentQuantity getArgumentQuantity() const;
 
 private:
     size_t id;

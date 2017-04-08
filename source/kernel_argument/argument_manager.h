@@ -12,9 +12,7 @@ class ArgumentManager
 {
 public:
     // Constructor
-    ArgumentManager():
-        argumentCount(0)
-    {}
+    ArgumentManager();
 
     // Core methods
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
@@ -30,19 +28,8 @@ public:
     }
 
     // Getters
-    size_t getArgumentCount() const
-    {
-        return argumentCount;
-    }
-
-    const KernelArgument getArgument(const size_t id) const
-    {
-        if (id >= argumentCount)
-        {
-            throw std::runtime_error(std::string("Invalid argument id: " + std::to_string(id)));
-        }
-        return arguments.at(id);
-    }
+    size_t getArgumentCount() const;
+    const KernelArgument getArgument(const size_t id) const;
 
 private:
     // Attributes

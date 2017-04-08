@@ -13,38 +13,13 @@ class KernelParameter
 {
 public:
     explicit KernelParameter(const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
-        const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension):
-        name(name),
-        values(values),
-        threadModifierType(threadModifierType),
-        threadModifierAction(threadModifierAction),
-        modifierDimension(modifierDimension)
-    {}
+        const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
     
-    std::string getName() const
-    {
-        return name;
-    }
-
-    std::vector<size_t> getValues() const
-    {
-        return values;
-    }
-
-    ThreadModifierType getThreadModifierType() const
-    {
-        return threadModifierType;
-    }
-
-    ThreadModifierAction getThreadModifierAction() const
-    {
-        return threadModifierAction;
-    }
-
-    Dimension getModifierDimension() const
-    {
-        return modifierDimension;
-    }
+    std::string getName() const;
+    std::vector<size_t> getValues() const;
+    ThreadModifierType getThreadModifierType() const;
+    ThreadModifierAction getThreadModifierAction() const;
+    Dimension getModifierDimension() const;
 
 private:
     std::string name;
