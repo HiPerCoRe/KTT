@@ -11,7 +11,7 @@ namespace ktt
 class OpenCLCommandQueue
 {
 public:
-    explicit OpenCLCommandQueue(const cl_context context, const cl_device_id device):
+    explicit OpenCLCommandQueue(const cl_context context, const cl_device_id device) :
         context(context),
         device(device)
     {

@@ -5,7 +5,7 @@
 namespace ktt
 {
 
-ArgumentManager::ArgumentManager():
+ArgumentManager::ArgumentManager() :
     argumentCount(0)
 {}
 

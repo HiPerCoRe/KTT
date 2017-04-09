@@ -3,7 +3,7 @@
 namespace ktt
 {
 
-DeviceInfo::DeviceInfo(const size_t id, const std::string& name):
+DeviceInfo::DeviceInfo(const size_t id, const std::string& name) :
     id(id),
     name(name)
 {}

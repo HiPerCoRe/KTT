@@ -3,7 +3,7 @@
 namespace ktt
 {
 
-PlatformInfo::PlatformInfo(const size_t id, const std::string& name):
+PlatformInfo::PlatformInfo(const size_t id, const std::string& name) :
     id(id),
     name(name)
 {}

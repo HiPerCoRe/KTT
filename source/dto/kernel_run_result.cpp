@@ -3,11 +3,11 @@
 namespace ktt
 {
 
-KernelRunResult::KernelRunResult():
+KernelRunResult::KernelRunResult() :
     duration(0)
 {}
 
-KernelRunResult::KernelRunResult(const uint64_t duration, const std::vector<KernelArgument>& resultArguments):
+KernelRunResult::KernelRunResult(const uint64_t duration, const std::vector<KernelArgument>& resultArguments) :
     duration(duration),
     resultArguments(resultArguments)
 {}

@@ -3,7 +3,7 @@
 namespace ktt
 {
 
-OpenCLCore::OpenCLCore(const size_t platformIndex, const size_t deviceIndex):
+OpenCLCore::OpenCLCore(const size_t platformIndex, const size_t deviceIndex) :
     compilerOptions(std::string(""))
 {
     auto platforms = getOpenCLPlatforms();

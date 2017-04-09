@@ -11,7 +11,7 @@ namespace ktt
 class OpenCLContext
 {
 public:
-    explicit OpenCLContext(const cl_platform_id platform, const std::vector<cl_device_id>& devices):
+    explicit OpenCLContext(const cl_platform_id platform, const std::vector<cl_device_id>& devices) :
         platform(platform),
         devices(devices)
     {

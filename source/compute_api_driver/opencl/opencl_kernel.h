@@ -11,7 +11,7 @@ namespace ktt
 class OpenCLKernel
 {
 public:
-    explicit OpenCLKernel(const cl_program program, const std::string& kernelName):
+    explicit OpenCLKernel(const cl_program program, const std::string& kernelName) :
         program(program),
         kernelName(kernelName),
         argumentsCount(0)

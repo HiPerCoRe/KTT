@@ -15,7 +15,7 @@ class PSOSearcher : public Searcher
 {
 public:
     PSOSearcher(const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters, const double fraction,
-        const size_t swarmSize, const double influenceGlobal, const double influenceLocal, const double influenceRandom):
+        const size_t swarmSize, const double influenceGlobal, const double influenceLocal, const double influenceRandom) :
         configurations(configurations),
         parameters(parameters),
         fraction(fraction),

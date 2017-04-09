@@ -3,7 +3,7 @@
 namespace ktt
 {
 
-TuningResult::TuningResult(const std::string& kernelName, const uint64_t duration, const KernelConfiguration& configuration):
+TuningResult::TuningResult(const std::string& kernelName, const uint64_t duration, const KernelConfiguration& configuration) :
     kernelName(kernelName),
     duration(duration),
     configuration(configuration)

@@ -23,8 +23,6 @@ public:
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
-    std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const;
-    std::vector<KernelConfiguration> getKernelConfigurations(const size_t id) const;
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
         const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
     void addConstraint(const size_t id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
@@ -34,8 +32,6 @@ public:
     void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
         const std::vector<size_t>& resultArgumentIds);
     void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId);
-    size_t getKernelCount() const;
-    const Kernel* getKernel(const size_t id) const;
 
     // Argument manager methods
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,

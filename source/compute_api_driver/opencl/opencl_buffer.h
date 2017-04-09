@@ -12,7 +12,7 @@ namespace ktt
 class OpenCLBuffer
 {
 public:
-    explicit OpenCLBuffer(const cl_context context, const cl_mem_flags type, const size_t size):
+    explicit OpenCLBuffer(const cl_context context, const cl_mem_flags type, const size_t size) :
         context(context),
         type(type),
         size(size)

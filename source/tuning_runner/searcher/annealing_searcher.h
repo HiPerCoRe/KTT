@@ -16,7 +16,7 @@ public:
     static const size_t maximumAlreadyVisitedStates = 10;
     static const size_t maximumDifferences = 3;
 
-    AnnealingSearcher(const std::vector<KernelConfiguration>& configurations, const double fraction, const double maximumTemperature):
+    AnnealingSearcher(const std::vector<KernelConfiguration>& configurations, const double fraction, const double maximumTemperature) :
         configurations(configurations),
         fraction(fraction),
         maximumTemperature(maximumTemperature),

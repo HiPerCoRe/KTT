@@ -20,6 +20,7 @@ public:
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
     std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const;
+    KernelConfiguration getKernelConfiguration(const size_t id, const std::vector<ParameterValue>& parameterValues) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const size_t id) const;
 
     // Kernel modification methods

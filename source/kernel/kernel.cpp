@@ -4,7 +4,7 @@ namespace ktt
 {
 
 Kernel::Kernel(const size_t id, const std::string& source, const std::string& name, const DimensionVector& globalSize,
-    const DimensionVector& localSize):
+    const DimensionVector& localSize) :
     id(id),
     source(source),
     name(name),
@@ -71,6 +71,7 @@ void Kernel::setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, c
     this->referenceClass = std::move(referenceClass);
     this->resultArgumentId = resultArgumentId;
     referenceClassValid = true;
+    this->referenceClass->computeResult();
 }
 
 size_t Kernel::getId() const

@@ -14,7 +14,7 @@ class KernelArgument
 {
 public:
     template <typename T> explicit KernelArgument(const size_t id, const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
-        const ArgumentQuantity& argumentQuantity):
+        const ArgumentQuantity& argumentQuantity) :
         id(id),
         argumentMemoryType(argumentMemoryType),
         argumentQuantity(argumentQuantity)

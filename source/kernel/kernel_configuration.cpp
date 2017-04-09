@@ -4,7 +4,7 @@ namespace ktt
 {
 
 KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
-    const std::vector<ParameterValue>& parameterValues):
+    const std::vector<ParameterValue>& parameterValues) :
     globalSize(globalSize),
     localSize(localSize),
     parameterValues(parameterValues)

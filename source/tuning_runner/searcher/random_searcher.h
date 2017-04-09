@@ -11,7 +11,7 @@ namespace ktt
 class RandomSearcher : public Searcher
 {
 public:
-    RandomSearcher(const std::vector<KernelConfiguration>& configurations, const double fraction):
+    RandomSearcher(const std::vector<KernelConfiguration>& configurations, const double fraction) :
         configurations(configurations),
         index(0),
         fraction(fraction)

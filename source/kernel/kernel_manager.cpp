@@ -6,7 +6,7 @@
 namespace ktt
 {
 
-KernelManager::KernelManager():
+KernelManager::KernelManager() :
     kernelCount(0)
 {}
 
@@ -36,6 +36,41 @@ std::string KernelManager::getKernelSourceWithDefines(const size_t id, const Ker
     }
 
     return source;
+}
+
+KernelConfiguration KernelManager::getKernelConfiguration(const size_t id, const std::vector<ParameterValue>& parameterValues) const
+{
+    if (id >= kernelCount)
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+    }
+
+    DimensionVector global = kernels.at(id).getGlobalSize();
+    DimensionVector local = kernels.at(id).getLocalSize();
+    
+    for (const auto& value : parameterValues)
+    {
+        const KernelParameter* targetParameter = nullptr;
+        for (const auto& parameter : kernels.at(id).getParameters())
+        {
+            if (parameter.getName() == std::get<0>(value))
+            {
+                targetParameter = &parameter;
+                break;
+            }
+        }
+
+        if (targetParameter == nullptr)
+        {
+            throw std::runtime_error(std::string("Parameter with name <" + std::get<0>(value) + "> is not associated with kernel with id: " +
+                std::to_string(id)));
+        }
+
+        global = modifyDimensionVector(global, DimensionVectorType::Global, *targetParameter, std::get<1>(value));
+        local = modifyDimensionVector(local, DimensionVectorType::Local, *targetParameter, std::get<1>(value));
+    }
+
+    return KernelConfiguration(global, local, parameterValues);
 }
 
 std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const size_t id) const

@@ -8,7 +8,7 @@ namespace ktt
 class FullSearcher : public Searcher
 {
 public:
-    FullSearcher(const std::vector<KernelConfiguration>& configurations):
+    FullSearcher(const std::vector<KernelConfiguration>& configurations) :
         configurations(configurations),
         index(0)
     {

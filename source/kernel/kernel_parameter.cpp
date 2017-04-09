@@ -4,7 +4,7 @@ namespace ktt
 {
 
 KernelParameter::KernelParameter(const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
-    const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension):
+    const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension) :
     name(name),
     values(values),
     threadModifierType(threadModifierType),

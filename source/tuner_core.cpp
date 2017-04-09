@@ -3,7 +3,7 @@
 namespace ktt
 {
 
-TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex):
+TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex) :
     argumentManager(std::make_unique<ArgumentManager>()),
     kernelManager(std::make_unique<KernelManager>()),
     openCLCore(std::make_unique<OpenCLCore>(platformIndex, deviceIndex)),
@@ -21,16 +21,6 @@ size_t TunerCore::addKernelFromFile(const std::string& filePath, const std::stri
     const DimensionVector& localSize)
 {
     return kernelManager->addKernelFromFile(filePath, kernelName, globalSize, localSize);
-}
-
-std::string TunerCore::getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const
-{
-    return kernelManager->getKernelSourceWithDefines(id, kernelConfiguration);
-}
-
-std::vector<KernelConfiguration> TunerCore::getKernelConfigurations(const size_t id) const
-{
-    return kernelManager->getKernelConfigurations(id);
 }
 
 void TunerCore::addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values,
@@ -72,16 +62,6 @@ void TunerCore::setReferenceKernel(const size_t kernelId, const size_t reference
 void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId)
 {
     kernelManager->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentId);
-}
-
-size_t TunerCore::getKernelCount() const
-{
-    return kernelManager->getKernelCount();
-}
-
-const Kernel* TunerCore::getKernel(const size_t id) const
-{
-    return kernelManager->getKernel(id);
 }
 
 void TunerCore::tuneKernel(const size_t id)
