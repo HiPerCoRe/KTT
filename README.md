@@ -4,10 +4,10 @@ KTT - Kernel Tuning Toolkit
 KTT is a C++ kernel tuning library based on [CLTune project](https://github.com/CNugteren/CLTune).
 It aims to provide API similar to that of CLTune, however, unlike CLTune, it also aims to provide
 greater degree of customization and control over kernel tuning process. This includes ability to
-write custom classes, which can launch custom C++ code before or after individual kernel executions
-in order to run some part of computation on a CPU.
+write classes, which can be used to launch custom C++ code before or after individual kernel
+executions in order to run some part of a computation on CPU.
 
-Project is currently under development.
+Project is currently in beta stage with majority of the baseline functionality available.
 
 Prerequisites  
 -------------
@@ -27,17 +27,22 @@ The prerequisites to build KTT are:
 Building KTT
 ------------
 
-KTT can be built as a static library using premake. Currently supported operating systems
-are Linux and Windows.
+KTT can be built as a static library using command line build tool premake5 (running from
+inside KTT root folder). Currently supported operating systems are Linux and Windows.
 
-* Build under Linux (using gmake, inside KTT root folder):
+* Build under Linux:
     - run `premake5 gmake` to generate makefile
     - run `cd build` to get inside build directory
-    - afterwards run `make config=release`
+    - afterwards run `make config=release` to build the project
     
-* Build under Windows (using Visual Studio 2015, inside KTT root folder):
-    - run `premake5.exe vs2015` to generate Visual Studio project file
-    - open generated file and build project inside Visual Studio
+* Build under Windows:
+    - run `premake5.exe vs2015` to generate Visual Studio project files
+    - open generated .sln file and build the project inside Visual Studio
+
+Documentation
+-------------
+
+Documentation for KTT API can be found inside documentation folder.
 
 Examples
 --------
@@ -45,6 +50,15 @@ Examples
 Examples showcasing KTT functionality are located inside examples folder. List of currently
 available examples:
 
-* `opencl_info` - example showing how to retrieve detailed information about OpenCL platforms
-  and devices through KTT API
-* `simple` - example showcasing how to setup kernel run with KTT framework, no autotuning is done
+* `opencl_info` - basic example showing how to retrieve detailed information about OpenCL
+  platforms and devices through KTT API
+* `simple` - basic example showcasing how to setup kernel run with KTT framework, no actual
+  autotuning is done
+* `coulomb_sum` - advanced example which uses several parameters, thread modifiers
+  and constraints
+
+Tests
+-----
+
+Basic unit tests are located inside tests folder and are built together with the library.
+You can run these to ensure that library methods work correctly on your current platform.

@@ -4,6 +4,44 @@
 
 #include "../../include/ktt.h"
 
+class SimpleReferenceClass : public ktt::ReferenceClass
+{
+public:
+    SimpleReferenceClass(const std::vector<float>& a, const std::vector<float>& b, const std::vector<float>& result) :
+        a(a),
+        b(b),
+        result(result)
+    {}
+
+    virtual void computeResult() override
+    {
+        for (size_t i = 0; i < result.size(); i++)
+        {
+            result.at(i) = a.at(i) + b.at(i);
+        }
+    }
+
+    virtual void* getData() const override
+    {
+        return (void*)result.data();
+    }
+
+    virtual ktt::ArgumentDataType getDataType() const override
+    {
+        return ktt::ArgumentDataType::Float;
+    }
+
+    virtual size_t getDataSizeInBytes() const override
+    {
+        return result.size() * sizeof(float);
+    }
+
+private:
+    std::vector<float> a;
+    std::vector<float> b;
+    std::vector<float> result;
+};
+
 int main(int argc, char** argv)
 {
     // Initialize platform and device index
@@ -21,7 +59,6 @@ int main(int argc, char** argv)
 
     // Declare kernel parameters
     const std::string kernelFile = std::string("../examples/simple/simple_kernel.cl");
-    const std::string referenceKernelFile = std::string("../examples/simple/simple_reference_kernel.cl");
     const int numberOfElements = 512 * 512;
     ktt::DimensionVector ndRangeDimensions(numberOfElements, 1, 1);
     ktt::DimensionVector workGroupDimensions(256, 1, 1);
@@ -38,17 +75,29 @@ int main(int argc, char** argv)
         b.at(i) = static_cast<float>(i + 1);
     }
 
+    // Create tuner object for chosen platform and device
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
+    // Add new kernel to tuner, specify kernel name, NDRange dimensions and work-group dimensions
     size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("simpleKernel"), ndRangeDimensions, workGroupDimensions);
+
+    // Add new arguments to tuner, argument data is copied from std::vector containers
     size_t aId = tuner.addArgument(a, ktt::ArgumentMemoryType::ReadOnly);
     size_t bId = tuner.addArgument(b, ktt::ArgumentMemoryType::ReadOnly);
     size_t resultId = tuner.addArgument(result, ktt::ArgumentMemoryType::WriteOnly);
 
+    // Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
     tuner.setKernelArguments(kernelId, std::vector<size_t>{ aId, bId, resultId });
+
+    // Set reference class, which implements C++ version of kernel computation in order to validate results provided by kernel,
+    // provide id for validated argument
+    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(a, b, result), resultId);
+
+    // Launch kernel tuning
     tuner.tuneKernel(kernelId);
+
+    // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, std::string("output.csv"), ktt::PrintFormat::CSV);
-
     return 0;
 }

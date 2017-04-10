@@ -1,6 +1,5 @@
 Core functionality:
 * Tuning manipulator (custom code injection and time measurement)
-* Result validation (kernel / class)
 
 Core extensions:
 * Automatic tuning of same kernel for different global sizes

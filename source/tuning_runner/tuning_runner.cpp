@@ -37,14 +37,13 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         KernelRunResult result;
         try
         {
-            std::cout << "Launching kernel <" << kernel->getName() << "> with configuration: " << currentConfiguration << std::endl;
+            std::cout << "Launching kernel <" << kernel->getName() << "> with configuration: " << currentConfiguration;
             result = openCLCore->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
                 convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
         }
         catch (const std::runtime_error& error)
         {
-            std::cerr << "Kernel run execution failed for configuration: " << std::endl << currentConfiguration << std::endl;
-            std::cerr << error.what() << std::endl;
+            std::cerr << "Kernel run failed, reason: " << error.what() << std::endl << std::endl;
         }
 
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration()));
@@ -57,7 +56,12 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
             }
             if (storeResult)
             {
+                std::cout << "Kernel run completed successfully" << std::endl << std::endl;
                 results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), currentConfiguration));
+            }
+            else
+            {
+                std::cout << "Kernel run completed successfully, but results differ" << std::endl << std::endl;
             }
         }
     }
