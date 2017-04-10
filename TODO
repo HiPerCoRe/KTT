@@ -6,6 +6,7 @@ Core extensions:
 * Uploading kernel arguments into local memory
 * Kernel argument printing (debugging purpose)
 * Refactoring certain major classes into interfaces
+* Multiple output arguments validation with reference class
 
 Future extensions:
 * Usage of OpenCL 2.0 functionality for supported SDKs

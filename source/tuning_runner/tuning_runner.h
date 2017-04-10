@@ -40,7 +40,7 @@ private:
     bool validateResultWithKernel(const Kernel* kernel, const KernelRunResult& result);
     bool argumentIndexExists(const size_t argumentIndex, const std::vector<size_t>& argumentIndices) const;
     KernelArgument getReferenceResultFromClass(const ReferenceClass* referenceClass, const size_t referenceArgumentId) const;
-    std::vector<KernelArgument> getReferenceResultFromKernel(const size_t referenceKernelId,
+    std::vector<KernelArgument> getReferenceResultFromKernel(const size_t referenceKernelId, const std::vector<size_t>& referenceArgumentIndices,
         const std::vector<ParameterValue>& referenceKernelConfiguration) const;
 };
 

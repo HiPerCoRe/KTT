@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId });
 
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
-    //tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ energyGridId });
+    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ energyGridId });
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);

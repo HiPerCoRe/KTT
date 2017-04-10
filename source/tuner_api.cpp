@@ -120,7 +120,7 @@ template <typename T> size_t Tuner::addArgument(const T value)
 {
     try
     {
-        return tunerCore->addArgument(std::vector<T>{ value }, ArgumentMemoryType::ReadWrite, ArgumentQuantity::Scalar);
+        return tunerCore->addArgument(std::vector<T>{ value }, ArgumentMemoryType::ReadOnly, ArgumentQuantity::Scalar);
     }
     catch (const std::runtime_error& error)
     {

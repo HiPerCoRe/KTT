@@ -48,13 +48,8 @@ bool ResultValidator::validateArgumentWithKernel(const size_t kernelId, const st
     }
 
     std::vector<KernelArgument> referenceArguments = referenceKernelResultMap.find(kernelId)->second;
-
-    if (referenceArguments.size() != resultArguments.size())
-    {
-        throw std::runtime_error(std::string("Reference kernel argument count mismatch for kernel with id:" + std::to_string(kernelId)));
-    }
-
     bool validationResult = true;
+
     for (const auto& referenceArgument : referenceArguments)
     {
         ArgumentDataType referenceDataType = referenceArgument.getArgumentDataType();
