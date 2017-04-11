@@ -171,6 +171,34 @@ project "ExampleOpenCLInfo"
     else
         -- CUDA not supported yet
     end
+
+project "ExampleCoulomb"
+    kind "ConsoleApp"
+
+    files { "examples/coulomb/*.cpp", "examples/coulomb/*.cl" }
+    includedirs { "include/**" }
+
+    links { "KernelTuningToolkit" }
+
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        symbols "On"
+
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        optimize "On"
+
+    filter {}
+
+    targetdir("build/examples/coulomb/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir("build/examples/coulomb/obj/%{cfg.platform}_%{cfg.buildcfg}")
+
+    if not _OPTIONS["cuda"] then
+        initOpenCL()
+    else
+        -- CUDA not supported yet
+    end
+
  
 -- Unit tests configuration --    
     

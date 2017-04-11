@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #include "../enum/dimension.h"
 #include "../enum/thread_modifier_action.h"
