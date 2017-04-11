@@ -50,7 +50,7 @@ void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::
 void ResultPrinter::printCSV(const std::vector<TuningResult>& results, std::ostream& outputTarget) const
 {
     // Header
-    outputTarget << "Kernel name;Time (us);Threads;Global size;Local size;";
+    outputTarget << "Kernel name;Time (us);Global size;Local size;Threads;";
     auto parameters = results.at(0).getConfiguration().getParameterValues();
     for (const auto& parameter : parameters)
     {
@@ -61,13 +61,14 @@ void ResultPrinter::printCSV(const std::vector<TuningResult>& results, std::ostr
     // Values
     for (const auto& result : results)
     {
-        outputTarget << result.getKernelName() << ";" << result.getDuration() / 1000 << ";";
         auto configuration = result.getConfiguration();
         auto global = configuration.getGlobalSize();
-        outputTarget << std::get<0>(global) * std::get<1>(global) * std::get<2>(global) << ";";
-        outputTarget << std::get<0>(global) << " " << std::get<1>(global) << " " << std::get<2>(global) << ";";
         auto local = configuration.getLocalSize();
+
+        outputTarget << result.getKernelName() << ";" << result.getDuration() / 1000 << ";";
+        outputTarget << std::get<0>(global) << " " << std::get<1>(global) << " " << std::get<2>(global) << ";";
         outputTarget << std::get<0>(local) << " " << std::get<1>(local) << " " << std::get<2>(local) << ";";
+        outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local) << ";";
 
         auto parameterValues = configuration.getParameterValues();
         for (const auto& value : parameterValues)

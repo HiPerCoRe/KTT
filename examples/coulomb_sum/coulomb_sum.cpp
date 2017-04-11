@@ -104,6 +104,9 @@ int main(int argc, char** argv)
         std::vector<size_t>{ atomInfoId, atomInfoXId, atomInfoYId, atomInfoZId, atomInfoWId, numberOfAtomsId, gridSpacingId, energyGridId });
     tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId });
 
+    // Set search method to random search, only 10% of all configurations will be explored.
+    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double> { 0.1 });
+
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ energyGridId });
 
