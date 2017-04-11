@@ -172,7 +172,6 @@ project "ExampleOpenCLInfo"
         -- CUDA not supported yet
     end
 
-
 project "ExampleCoulombSum3D"
     kind "ConsoleApp"
 
@@ -195,7 +194,7 @@ project "ExampleCoulombSum3D"
     objdir("build/examples/coulomb_sum_3d/obj/%{cfg.platform}_%{cfg.buildcfg}")
 
     if not _OPTIONS["cuda"] then
-        initOpenCL()^M
+        initOpenCL()
     else
         -- CUDA not supported yet
     end

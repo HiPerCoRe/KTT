@@ -72,8 +72,8 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "VECTOR_SIZE", { 1, 2 , 4, 8, 16 });
     tuner.addParameter(kernelId, "ONE", { 1 }); //XXX helper, must be always 
 
-    tuner.mulLocalSize(kernelId, { "WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y", "WORK_GROUP_SIZE_Z" });
-    tuner.divGlobalSize(kernelId, { "ONE", "ONE", "Z_ITERATIONS" } );
+    /*tuner.mulLocalSize(kernelId, { "WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y", "WORK_GROUP_SIZE_Z" });
+    tuner.divGlobalSize(kernelId, { "ONE", "ONE", "Z_ITERATIONS" } );*/
 
     auto lt = [](std::vector<size_t> vector) { return vector.at(0) < vector.at(1); };
     tuner.addConstraint(kernelId, lt, { "INNER_UNROLL_FACTOR", "Z_ITERATIONS" } );
