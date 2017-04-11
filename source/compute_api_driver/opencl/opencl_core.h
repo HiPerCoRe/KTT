@@ -64,7 +64,7 @@ private:
     static std::string getDeviceInfo(const cl_device_id id, const cl_device_info info);
     static DeviceType getDeviceType(const cl_device_type deviceType);
     std::vector<KernelArgument> getResultArguments(const std::vector<std::unique_ptr<OpenCLBuffer>>& outputBuffers,
-        const std::vector<KernelArgument>& inputArguments) const;
+        const std::vector<const KernelArgument*>& inputArgumentPointers) const;
 };
 
 } // namespace ktt

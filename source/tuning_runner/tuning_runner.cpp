@@ -37,14 +37,13 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         KernelRunResult result;
         try
         {
-            std::cout << "Launching kernel <" << kernel->getName() << "> with configuration: " << currentConfiguration << std::endl;
+            std::cout << "Launching kernel <" << kernel->getName() << "> with configuration: " << currentConfiguration;
             result = openCLCore->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
                 convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
         }
         catch (const std::runtime_error& error)
         {
-            std::cerr << "Kernel run execution failed for configuration: " << std::endl << currentConfiguration << std::endl;
-            std::cerr << error.what() << std::endl;
+            std::cerr << "Kernel run failed, reason: " << error.what() << std::endl << std::endl;
         }
 
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration()));
@@ -57,7 +56,12 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
             }
             if (storeResult)
             {
+                std::cout << "Kernel run completed successfully" << std::endl << std::endl;
                 results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), currentConfiguration));
+            }
+            else
+            {
+                std::cout << "Kernel run completed successfully, but results differ" << std::endl << std::endl;
             }
         }
     }
@@ -196,8 +200,14 @@ bool TuningRunner::validateResultWithKernel(const Kernel* kernel, const KernelRu
 
     if (!resultValidator.hasReferenceKernelResult(kernel->getId()))
     {
-        resultValidator.setReferenceKernelResult(kernel->getId(), getReferenceResultFromKernel(referenceKernelId,
-            kernel->getReferenceKernelConfiguration()));
+        std::vector<KernelArgument> referenceKernelResult = getReferenceResultFromKernel(referenceKernelId, referenceIndices,
+            kernel->getReferenceKernelConfiguration());
+        if (referenceKernelResult.size() != referenceIndices.size())
+        {
+            throw std::runtime_error(std::string("Reference kernel argument count does not match tuned kernel argument count for kernel with id: " +
+                std::to_string(kernel->getId())));
+        }
+        resultValidator.setReferenceKernelResult(kernel->getId(), referenceKernelResult);
     }
 
     std::vector<size_t> argumentIndicesInResult;
@@ -283,7 +293,7 @@ KernelArgument TuningRunner::getReferenceResultFromClass(const ReferenceClass* r
 }
 
 std::vector<KernelArgument> TuningRunner::getReferenceResultFromKernel(const size_t referenceKernelId,
-    const std::vector<ParameterValue>& referenceKernelConfiguration) const
+    const std::vector<size_t>& referenceArgumentIndices, const std::vector<ParameterValue>& referenceKernelConfiguration) const
 {
     const Kernel* referenceKernel = kernelManager->getKernel(referenceKernelId);
     KernelConfiguration configuration = kernelManager->getKernelConfiguration(referenceKernelId, referenceKernelConfiguration);
@@ -291,7 +301,17 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromKernel(const siz
 
     auto result = openCLCore->runKernel(source, referenceKernel->getName(), convertDimensionVector(configuration.getGlobalSize()),
         convertDimensionVector(configuration.getLocalSize()), getKernelArguments(referenceKernelId));
-    return result.getResultArguments();
+    std::vector<KernelArgument> resultArguments;
+
+    for (const auto& argument : result.getResultArguments())
+    {
+        if (argumentIndexExists(argument.getId(), referenceArgumentIndices))
+        {
+            resultArguments.push_back(argument);
+        }
+    }
+
+    return resultArguments;
 }
 
 } // namespace ktt

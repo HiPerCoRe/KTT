@@ -21,6 +21,8 @@ std::string getOpenCLEnumName(const cl_int value)
         return std::string("CL_OUT_OF_RESOURCES");
     case CL_OUT_OF_HOST_MEMORY:
         return std::string("CL_OUT_OF_HOST_MEMORY");
+    case CL_BUILD_PROGRAM_FAILURE:
+        return std::string("CL_BUILD_PROGRAM_FAILURE");
     case CL_INVALID_VALUE:
         return std::string("CL_INVALID_VALUE");
     case CL_INVALID_PLATFORM:
@@ -33,6 +35,10 @@ std::string getOpenCLEnumName(const cl_int value)
         return std::string("CL_INVALID_BUILD_OPTIONS");
     case CL_INVALID_KERNEL_NAME:
         return std::string("CL_INVALID_KERNEL_NAME");
+    case CL_INVALID_ARG_INDEX:
+        return std::string("CL_INVALID_ARG_INDEX");
+    case CL_INVALID_ARG_VALUE:
+        return std::string("CL_INVALID_ARG_VALUE");
     case CL_INVALID_ARG_SIZE:
         return std::string("CL_INVALID_ARG_SIZE");
     case CL_INVALID_WORK_GROUP_SIZE:
@@ -42,7 +48,7 @@ std::string getOpenCLEnumName(const cl_int value)
     case CL_INVALID_BUFFER_SIZE:
         return std::string("CL_INVALID_BUFFER_SIZE");
     default:
-        return std::string("Unknown OpenCL enum");
+        return std::to_string(static_cast<int>(value));
     }
 }
 

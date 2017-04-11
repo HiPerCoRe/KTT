@@ -4,6 +4,7 @@
 #include <chrono>
 #include <limits>
 #include <random>
+#include <stdexcept>
 
 #include "searcher.h"
 
@@ -117,11 +118,16 @@ private:
                 settingId++;
             }
 
-            if (differences == maximumDifferences)
+            if (differences <= maximumDifferences)
             {
                 neighbours.push_back(otherId);
             }
             otherId++;
+        }
+
+        if (neighbours.size() == 0)
+        {
+            throw std::runtime_error(std::string("Annealing searcher could not find any neighbours"));
         }
         return neighbours;
     }

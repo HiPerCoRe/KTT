@@ -172,10 +172,11 @@ project "ExampleOpenCLInfo"
         -- CUDA not supported yet
     end
 
-project "ExampleCoulomb"
+
+project "ExampleCoulombSum3D"
     kind "ConsoleApp"
 
-    files { "examples/coulomb/*.cpp", "examples/coulomb/*.cl" }
+    files { "examples/coulomb_sum_3d/*.cpp", "examples/coulomb_sum_3d/*.cl" }
     includedirs { "include/**" }
 
     links { "KernelTuningToolkit" }
@@ -190,16 +191,43 @@ project "ExampleCoulomb"
 
     filter {}
 
-    targetdir("build/examples/coulomb/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/examples/coulomb/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    targetdir("build/examples/coulomb_sum_3d/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir("build/examples/coulomb_sum_3d/obj/%{cfg.platform}_%{cfg.buildcfg}")
 
+    if not _OPTIONS["cuda"] then
+        initOpenCL()^M
+    else
+        -- CUDA not supported yet
+    end
+
+
+project "ExampleCoulombSum"
+    kind "ConsoleApp"
+    
+    files { "examples/coulomb_sum/*.cpp", "examples/coulomb_sum/*.cl" }
+    includedirs { "include/**" }
+    
+    links { "KernelTuningToolkit" }
+    
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        symbols "On"
+        
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        optimize "On"
+        
+    filter {}
+    
+    targetdir("build/examples/coulomb_sum/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir("build/examples/coulomb_sum/obj/%{cfg.platform}_%{cfg.buildcfg}")
+   
     if not _OPTIONS["cuda"] then
         initOpenCL()
     else
         -- CUDA not supported yet
     end
 
- 
 -- Unit tests configuration --    
     
 project "Tests"
