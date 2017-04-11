@@ -19,9 +19,9 @@ public:
     ResultValidator();
 
     // Core methods
-    bool validateArgumentWithClass(const size_t kernelId, const KernelArgument& kernelArgument) const;
+    bool validateArgumentWithClass(const size_t kernelId, const std::vector<KernelArgument>& resultArguments) const;
     bool validateArgumentWithKernel(const size_t kernelId, const std::vector<KernelArgument>& resultArguments) const;
-    void setReferenceClassResult(const size_t kernelId, const KernelArgument& classResult);
+    void setReferenceClassResult(const size_t kernelId, const std::vector<KernelArgument>& classResult);
     void setReferenceKernelResult(const size_t kernelId, const std::vector<KernelArgument>& kernelResult);
     bool hasReferenceClassResult(const size_t kernelId) const;
     bool hasReferenceKernelResult(const size_t kernelId) const;
@@ -39,10 +39,11 @@ private:
     // Attributes
     double toleranceThreshold;
     ValidationMethod validationMethod;
-    std::map<size_t, KernelArgument> referenceClassResultMap;
+    std::map<size_t, std::vector<KernelArgument>> referenceClassResultMap;
     std::map<size_t, std::vector<KernelArgument>> referenceKernelResultMap;
 
     // Helper methods
+    bool validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments) const;
     KernelArgument findArgument(const size_t argumentId, const std::vector<KernelArgument>& arguments) const;
 
     template <typename T> bool validateResult(const std::vector<T>& result, const std::vector<T>& referenceResult) const
@@ -68,7 +69,7 @@ private:
             }
             if (difference > toleranceThreshold)
             {
-                std::cerr << "Results differ, absolute difference value: <" << difference << ">" << std::endl;
+                std::cerr << "Results differ, absolute difference is: <" << difference << ">" << std::endl;
                 return false;
             }
             return true;
@@ -79,7 +80,7 @@ private:
             {
                 if (std::fabs(result.at(i) - referenceResult.at(i)) > toleranceThreshold)
                 {
-                    std::cerr << "Results differ at index <" << i << ">; reference value: <" << referenceResult.at(i) << ">; result value: <"
+                    std::cerr << "Results differ at index " << i << "; reference value: <" << referenceResult.at(i) << ">; result value: <"
                         << result.at(i) << ">" << std::endl;
                     return false;
                 }
@@ -95,7 +96,7 @@ private:
         {
             if (result.at(i) != referenceResult.at(i))
             {
-                std::cerr << "Results differ at index <" << i << ">; reference value: <" << referenceResult.at(i) << ">; result value: <"
+                std::cerr << "Results differ at index " << i << "; reference value: <" << referenceResult.at(i) << ">; result value: <"
                     << result.at(i) << ">" << std::endl;
                 return false;
             }

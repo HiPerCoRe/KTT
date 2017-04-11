@@ -34,7 +34,7 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA
     int xIndex = get_global_id(0) * OUTER_UNROLL_FACTOR;
     int yIndex = get_global_id(1);
     
-	int outIndex = get_global_size(0) * yIndex * OUTER_UNROLL_FACTOR + xIndex;
+    int outIndex = get_global_size(0) * yIndex * OUTER_UNROLL_FACTOR + xIndex;
 
     float coordX = gridSpacing * xIndex;
     #if OUTER_UNROLL_FACTOR > 1
@@ -53,7 +53,7 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA
 
     float coordY = gridSpacing * yIndex;
 
-	#if USE_SOA < 2
+    #if USE_SOA < 2
     float energyValue = 0.0f;
     #if OUTER_UNROLL_FACTOR > 1
     float energyValue2 = 0.0f;
@@ -109,7 +109,7 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA
     #endif // VECTOR_TYPE
     #endif // USE_SOA
 
-	#if USE_SOA < 2
+    #if USE_SOA < 2
     #if VECTOR_TYPE == 1
     #pragma unroll INNER_UNROLL_FACTOR
     for (int i = 0; i < numberOfAtoms; i++)
@@ -925,7 +925,7 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA
         energyValueVect8 += atomInfoW[i] * partialResult8;
         #endif // OUTER_UNROLL_FACTOR > 4
     }
-	#endif // USE_SOA
+    #endif // USE_SOA
 
     #if USE_SOA < 2
     energyGrid[outIndex] += energyValue;

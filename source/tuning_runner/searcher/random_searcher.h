@@ -36,7 +36,7 @@ public:
 
     virtual size_t getConfigurationsCount() const override
     {
-        return std::max(static_cast<size_t>(1), static_cast<size_t>(configurations.size() * fraction));
+        return std::max(static_cast<size_t>(1), std::min(configurations.size(), static_cast<size_t>(configurations.size() * fraction)));
     }
 
 private:

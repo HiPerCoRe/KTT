@@ -3,7 +3,7 @@ __kernel void directCoulombSumReference(__global float4* atomInfo, int numberOfA
     int xIndex = get_global_id(0);
     int yIndex = get_global_id(1);
         
-	int outIndex = get_global_size(0) * yIndex + xIndex;
+    int outIndex = get_global_size(0) * yIndex + xIndex;
 
     float currentEnergy = energyGrid[outIndex];
 

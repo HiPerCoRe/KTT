@@ -4,13 +4,20 @@ namespace ktt
 {
 
 KernelRunResult::KernelRunResult() :
-    duration(0)
+    valid(false),
+    duration(UINT64_MAX)
 {}
 
 KernelRunResult::KernelRunResult(const uint64_t duration, const std::vector<KernelArgument>& resultArguments) :
+    valid(true),
     duration(duration),
     resultArguments(resultArguments)
 {}
+
+bool KernelRunResult::isValid() const
+{
+    return valid;
+}
 
 uint64_t KernelRunResult::getDuration() const
 {

@@ -59,9 +59,10 @@ void TunerCore::setReferenceKernel(const size_t kernelId, const size_t reference
     kernelManager->setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
 }
 
-void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId)
+void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
+    const std::vector<size_t>& resultArgumentIds)
 {
-    kernelManager->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentId);
+    kernelManager->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentIds);
 }
 
 void TunerCore::tuneKernel(const size_t id)
