@@ -204,18 +204,6 @@ void Tuner::printResult(const size_t kernelId, const std::string& filePath, cons
     }
 }
 
-void Tuner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
-{
-    try
-    {
-        tunerCore->setValidationMethod(validationMethod, toleranceThreshold);
-    }
-    catch (const std::runtime_error& error)
-    {
-        std::cerr << error.what() << std::endl;
-    }
-}
-
 void Tuner::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
     const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
 {
@@ -229,11 +217,23 @@ void Tuner::setReferenceKernel(const size_t kernelId, const size_t referenceKern
     }
 }
 
-void Tuner::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId)
+void Tuner::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds)
 {
     try
     {
-        tunerCore->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentId);
+        tunerCore->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentIds);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << error.what() << std::endl;
+    }
+}
+
+void Tuner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
+{
+    try
+    {
+        tunerCore->setValidationMethod(validationMethod, toleranceThreshold);
     }
     catch (const std::runtime_error& error)
     {

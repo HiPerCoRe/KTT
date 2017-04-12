@@ -62,14 +62,14 @@ void Kernel::setReferenceKernel(const size_t referenceKernelId, const std::vecto
 {
     this->referenceKernelId = referenceKernelId;
     this->referenceKernelConfiguration = referenceKernelConfiguration;
-    this->resultArgumentIds = resultArgumentIds;
+    this->referenceKernelArgumentIds = resultArgumentIds;
     referenceKernelValid = true;
 }
 
-void Kernel::setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId)
+void Kernel::setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds)
 {
     this->referenceClass = std::move(referenceClass);
-    this->resultArgumentId = resultArgumentId;
+    this->referenceClassArgumentIds = resultArgumentIds;
     referenceClassValid = true;
     this->referenceClass->computeResult();
 }
@@ -144,9 +144,9 @@ std::vector<ParameterValue> Kernel::getReferenceKernelConfiguration() const
     return referenceKernelConfiguration;
 }
 
-std::vector<size_t> Kernel::getResultArgumentIds() const
+std::vector<size_t> Kernel::getReferenceKernelArgumentIds() const
 {
-    return resultArgumentIds;
+    return referenceKernelArgumentIds;
 }
 
 bool Kernel::hasReferenceClass() const
@@ -159,9 +159,9 @@ const ReferenceClass* Kernel::getReferenceClass() const
     return referenceClass.get();
 }
 
-size_t Kernel::getResultArgumentIdForClass() const
+std::vector<size_t> Kernel::getReferenceClassArgumentIds() const
 {
-    return resultArgumentId;
+    return referenceClassArgumentIds;
 }
 
 bool Kernel::parameterExists(const std::string& parameterName) const

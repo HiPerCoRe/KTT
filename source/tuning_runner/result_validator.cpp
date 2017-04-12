@@ -10,34 +10,15 @@ ResultValidator::ResultValidator() :
     validationMethod(ValidationMethod::SideBySideComparison)
 {}
 
-bool ResultValidator::validateArgumentWithClass(const size_t kernelId, const KernelArgument& kernelArgument) const
+bool ResultValidator::validateArgumentWithClass(const size_t kernelId, const std::vector<KernelArgument>& resultArguments) const
 {
     if (referenceClassResultMap.find(kernelId) == referenceClassResultMap.end())
     {
         throw std::runtime_error(std::string("No reference class results found for kernel with id: " + std::to_string(kernelId)));
     }
 
-    KernelArgument referenceArgument = referenceClassResultMap.find(kernelId)->second;
-
-    ArgumentDataType referenceDataType = referenceArgument.getArgumentDataType();
-    if (referenceDataType != kernelArgument.getArgumentDataType())
-    {
-        throw std::runtime_error(std::string("Reference class argument data type mismatch for argument id: " +
-            std::to_string(kernelArgument.getId())));
-    }
-
-    if (referenceDataType == ArgumentDataType::Double)
-    {
-        return validateResult(kernelArgument.getDataDouble(), referenceArgument.getDataDouble());
-    }
-    else if (referenceDataType == ArgumentDataType::Float)
-    {
-        return validateResult(kernelArgument.getDataFloat(), referenceArgument.getDataFloat());
-    }
-    else
-    {
-        return validateResult(kernelArgument.getDataInt(), referenceArgument.getDataInt());
-    }
+    std::vector<KernelArgument> referenceArguments = referenceClassResultMap.find(kernelId)->second;
+    return validateArguments(resultArguments, referenceArguments);
 }
 
 bool ResultValidator::validateArgumentWithKernel(const size_t kernelId, const std::vector<KernelArgument>& resultArguments) const
@@ -48,37 +29,10 @@ bool ResultValidator::validateArgumentWithKernel(const size_t kernelId, const st
     }
 
     std::vector<KernelArgument> referenceArguments = referenceKernelResultMap.find(kernelId)->second;
-    bool validationResult = true;
-
-    for (const auto& referenceArgument : referenceArguments)
-    {
-        ArgumentDataType referenceDataType = referenceArgument.getArgumentDataType();
-        KernelArgument kernelArgument = findArgument(referenceArgument.getId(), resultArguments);
-
-        if (referenceDataType != kernelArgument.getArgumentDataType())
-        {
-            throw std::runtime_error(std::string("Reference class argument data type mismatch for argument id: " +
-                std::to_string(kernelArgument.getId())));
-        }
-
-        if (referenceDataType == ArgumentDataType::Double)
-        {
-            validationResult &= validateResult(kernelArgument.getDataDouble(), referenceArgument.getDataDouble());
-        }
-        else if (referenceDataType == ArgumentDataType::Float)
-        {
-            validationResult &= validateResult(kernelArgument.getDataFloat(), referenceArgument.getDataFloat());
-        }
-        else
-        {
-            validationResult &= validateResult(kernelArgument.getDataInt(), referenceArgument.getDataInt());
-        }
-    }
-
-    return validationResult;
+    return validateArguments(resultArguments, referenceArguments);
 }
 
-void ResultValidator::setReferenceClassResult(const size_t kernelId, const KernelArgument& classResult)
+void ResultValidator::setReferenceClassResult(const size_t kernelId, const std::vector<KernelArgument>& classResult)
 {
     if (referenceClassResultMap.find(kernelId) != referenceClassResultMap.end())
     {
@@ -134,6 +88,39 @@ double ResultValidator::getToleranceThreshold() const
 ValidationMethod ResultValidator::getValidationMethod() const
 {
     return validationMethod;
+}
+
+bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resultArguments,
+    const std::vector<KernelArgument>& referenceArguments) const
+{
+    bool validationResult = true;
+
+    for (const auto& referenceArgument : referenceArguments)
+    {
+        ArgumentDataType referenceDataType = referenceArgument.getArgumentDataType();
+        KernelArgument kernelArgument = findArgument(referenceArgument.getId(), resultArguments);
+
+        if (referenceDataType != kernelArgument.getArgumentDataType())
+        {
+            throw std::runtime_error(std::string("Reference class argument data type mismatch for argument id: " +
+                std::to_string(kernelArgument.getId())));
+        }
+
+        if (referenceDataType == ArgumentDataType::Double)
+        {
+            validationResult &= validateResult(kernelArgument.getDataDouble(), referenceArgument.getDataDouble());
+        }
+        else if (referenceDataType == ArgumentDataType::Float)
+        {
+            validationResult &= validateResult(kernelArgument.getDataFloat(), referenceArgument.getDataFloat());
+        }
+        else
+        {
+            validationResult &= validateResult(kernelArgument.getDataInt(), referenceArgument.getDataInt());
+        }
+    }
+
+    return validationResult;
 }
 
 KernelArgument ResultValidator::findArgument(const size_t argumentId, const std::vector<KernelArgument>& arguments) const

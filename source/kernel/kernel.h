@@ -27,7 +27,7 @@ public:
     void setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
     void setReferenceKernel(const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
         const std::vector<size_t>& resultArgumentIds);
-    void setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId);
+    void setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
 
     // Getters
     size_t getId() const;
@@ -44,10 +44,10 @@ public:
     bool hasReferenceKernel() const;
     size_t getReferenceKernelId() const;
     std::vector<ParameterValue> getReferenceKernelConfiguration() const;
-    std::vector<size_t> getResultArgumentIds() const;
+    std::vector<size_t> getReferenceKernelArgumentIds() const;
     bool hasReferenceClass() const;
     const ReferenceClass* getReferenceClass() const;
-    size_t getResultArgumentIdForClass() const;
+    std::vector<size_t> getReferenceClassArgumentIds() const;
 
 private:
     // Attributes
@@ -64,10 +64,10 @@ private:
     bool referenceKernelValid;
     size_t referenceKernelId;
     std::vector<ParameterValue> referenceKernelConfiguration;
-    std::vector<size_t> resultArgumentIds;
+    std::vector<size_t> referenceKernelArgumentIds;
     bool referenceClassValid;
     std::unique_ptr<ReferenceClass> referenceClass;
-    size_t resultArgumentId;
+    std::vector<size_t> referenceClassArgumentIds;
 
     // Helper methods
     bool parameterExists(const std::string& parameterName) const;

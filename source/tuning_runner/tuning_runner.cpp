@@ -37,7 +37,8 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         KernelRunResult result;
         try
         {
-            std::cout << "Launching kernel <" << kernel->getName() << "> with configuration: " << currentConfiguration;
+            std::cout << "Launching kernel <" << kernel->getName() << "> with configuration (" << i + 1  << " / " << configurationsCount << "): "
+                << std::endl << currentConfiguration;
             result = openCLCore->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
                 convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
         }
@@ -47,7 +48,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         }
 
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration()));
-        if (result.getDuration() != 0)
+        if (result.isValid())
         {
             bool storeResult = true;
             if (kernel->hasReferenceClass() || kernel->hasReferenceKernel())
@@ -56,7 +57,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
             }
             if (storeResult)
             {
-                std::cout << "Kernel run completed successfully" << std::endl << std::endl;
+                std::cout << "Kernel run completed successfully in " << result.getDuration() / 1'000'000 << "ms" << std::endl << std::endl;
                 results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), currentConfiguration));
             }
             else
@@ -130,78 +131,59 @@ bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& r
 
     if (kernel->hasReferenceClass())
     {
-        validationResult &= validateResultWithClass(kernel, result);
+        validationResult &= validateResult(kernel, result, true);
     }
 
     if (kernel->hasReferenceKernel())
     {
-        validationResult &= validateResultWithKernel(kernel, result);
+        validationResult &= validateResult(kernel, result, false);
     }
 
     return validationResult;
 }
 
-bool TuningRunner::validateResultWithClass(const Kernel* kernel, const KernelRunResult& result)
+bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& result, bool useReferenceClass)
 {
-    size_t classArgumentId = kernel->getResultArgumentIdForClass();
-
-    if (!argumentIndexExists(classArgumentId, kernel->getArgumentIndices()))
+    std::vector<size_t> indices = kernel->getArgumentIndices();
+    std::vector<size_t> referenceIndices;
+    if (useReferenceClass)
     {
-        throw std::runtime_error(std::string("Reference class argument with following id is not associated with given kernel: " +
-            std::to_string(classArgumentId)));
+        referenceIndices = kernel->getReferenceClassArgumentIds();
     }
-    if (argumentManager->getArgument(classArgumentId).getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
+    else
     {
-        throw std::runtime_error(std::string("Reference class argument with following id is marked as read only: " +
-            std::to_string(classArgumentId)));
+        referenceIndices = kernel->getReferenceKernelArgumentIds();
     }
-
-    if (!resultValidator.hasReferenceClassResult(kernel->getId()))
-    {
-        resultValidator.setReferenceClassResult(kernel->getId(), getReferenceResultFromClass(kernel->getReferenceClass(), classArgumentId));
-    }
-
-    size_t argumentIndexInResult;
-    const auto& resultArguments = result.getResultArguments();
-
-    for (size_t i = 0; i < resultArguments.size(); i++)
-    {
-        if (resultArguments.at(i).getId() == classArgumentId)
-        {
-            argumentIndexInResult = i;
-            break;
-        }
-    }
-
-    bool validationResult = resultValidator.validateArgumentWithClass(kernel->getId(), resultArguments.at(argumentIndexInResult));
-    return validationResult;
-}
-
-bool TuningRunner::validateResultWithKernel(const Kernel* kernel, const KernelRunResult& result)
-{
-    auto indices = kernel->getArgumentIndices();
-    auto referenceIndices = kernel->getResultArgumentIds();
-    size_t referenceKernelId = kernel->getReferenceKernelId();
 
     for (const auto argumentId : referenceIndices)
     {
         if (!argumentIndexExists(argumentId, indices))
         {
-            throw std::runtime_error(std::string("Reference kernel argument with following id is not associated with given kernel: " +
+            throw std::runtime_error(std::string("Reference argument with following id is not associated with given kernel: " +
                 std::to_string(argumentId)));
         }
 
         if (argumentManager->getArgument(argumentId).getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
         {
-            throw std::runtime_error(std::string("Reference kernel argument with following id is marked as read only: " +
-                std::to_string(argumentId)));
+            throw std::runtime_error(std::string("Reference argument with following id is marked as read only: " + std::to_string(argumentId)));
         }
     }
 
-    if (!resultValidator.hasReferenceKernelResult(kernel->getId()))
+    if (useReferenceClass && !resultValidator.hasReferenceClassResult(kernel->getId()))
     {
-        std::vector<KernelArgument> referenceKernelResult = getReferenceResultFromKernel(referenceKernelId, referenceIndices,
-            kernel->getReferenceKernelConfiguration());
+        std::vector<KernelArgument> referenceClassResult = getReferenceResultFromClass(kernel->getReferenceClass(), referenceIndices);
+        if (referenceClassResult.size() != referenceIndices.size())
+        {
+            throw std::runtime_error(std::string("Reference class argument count does not match tuned kernel argument count for kernel with id: " +
+                std::to_string(kernel->getId())));
+        }
+        resultValidator.setReferenceClassResult(kernel->getId(), referenceClassResult);
+    }
+    else if (!useReferenceClass && !resultValidator.hasReferenceKernelResult(kernel->getId()))
+    {
+        size_t referenceKernelId = kernel->getReferenceKernelId();
+        std::vector<KernelArgument> referenceKernelResult = getReferenceResultFromKernel(referenceKernelId,
+            kernel->getReferenceKernelConfiguration(), referenceIndices);
         if (referenceKernelResult.size() != referenceIndices.size())
         {
             throw std::runtime_error(std::string("Reference kernel argument count does not match tuned kernel argument count for kernel with id: " +
@@ -227,8 +209,11 @@ bool TuningRunner::validateResultWithKernel(const Kernel* kernel, const KernelRu
         argumentsToValidate.push_back(resultArguments.at(index));
     }
 
-    bool validationResult = resultValidator.validateArgumentWithKernel(kernel->getId(), argumentsToValidate);
-    return validationResult;
+    if (useReferenceClass)
+    {
+        return resultValidator.validateArgumentWithClass(kernel->getId(), argumentsToValidate);
+    }
+    return resultValidator.validateArgumentWithKernel(kernel->getId(), argumentsToValidate);
 }
 
 bool TuningRunner::argumentIndexExists(const size_t argumentIndex, const std::vector<size_t>& argumentIndices) const
@@ -243,57 +228,65 @@ bool TuningRunner::argumentIndexExists(const size_t argumentIndex, const std::ve
     return false;
 }
 
-KernelArgument TuningRunner::getReferenceResultFromClass(const ReferenceClass* referenceClass, const size_t referenceArgumentId) const
+std::vector<KernelArgument> TuningRunner::getReferenceResultFromClass(const ReferenceClass* referenceClass,
+    const std::vector<size_t>& referenceArgumentIndices) const
 {
-    size_t dataSize = referenceClass->getDataSizeInBytes();
-    ArgumentDataType dataType = referenceClass->getDataType();
+    std::vector<KernelArgument> resultArguments;
 
-    if (dataType == ArgumentDataType::Double)
+    for (const auto referenceArgumentId : referenceArgumentIndices)
     {
-        double* buffer = static_cast<double*>(referenceClass->getData());
-        std::vector<double> vectorDouble(buffer, buffer + dataSize / sizeof(double));
-        
-        if (vectorDouble.size() == 0)
+        size_t dataSize = referenceClass->getDataSizeInBytes(referenceArgumentId);
+        ArgumentDataType dataType = referenceClass->getDataType(referenceArgumentId);
+
+        if (dataType == ArgumentDataType::Double)
         {
-            throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: " +
-                std::to_string(referenceArgumentId)));
+            double* buffer = static_cast<double*>(referenceClass->getData(referenceArgumentId));
+            std::vector<double> vectorDouble(buffer, buffer + dataSize / sizeof(double));
+
+            if (vectorDouble.size() == 0)
+            {
+                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: " +
+                    std::to_string(referenceArgumentId)));
+            }
+
+            ArgumentQuantity quantity = vectorDouble.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
+            resultArguments.emplace_back(KernelArgument(referenceArgumentId, vectorDouble, ArgumentMemoryType::ReadWrite, quantity));
         }
-
-        ArgumentQuantity quantity = vectorDouble.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
-        return KernelArgument(referenceArgumentId, vectorDouble, ArgumentMemoryType::ReadWrite, quantity);
-    }
-    else if (dataType == ArgumentDataType::Float)
-    {
-        float* buffer = static_cast<float*>(referenceClass->getData());
-        std::vector<float> vectorFloat(buffer, buffer + dataSize / sizeof(float));
-
-        if (vectorFloat.size() == 0)
+        else if (dataType == ArgumentDataType::Float)
         {
-            throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: " +
-                std::to_string(referenceArgumentId)));
+            float* buffer = static_cast<float*>(referenceClass->getData(referenceArgumentId));
+            std::vector<float> vectorFloat(buffer, buffer + dataSize / sizeof(float));
+
+            if (vectorFloat.size() == 0)
+            {
+                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: " +
+                    std::to_string(referenceArgumentId)));
+            }
+
+            ArgumentQuantity quantity = vectorFloat.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
+            resultArguments.emplace_back(KernelArgument(referenceArgumentId, vectorFloat, ArgumentMemoryType::ReadWrite, quantity));
         }
-
-        ArgumentQuantity quantity = vectorFloat.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
-        return KernelArgument(referenceArgumentId, vectorFloat, ArgumentMemoryType::ReadWrite, quantity);
-    }
-    else
-    {
-        int* buffer = static_cast<int*>(referenceClass->getData());
-        std::vector<int> vectorInt(buffer, buffer + dataSize / sizeof(int));
-
-        if (vectorInt.size() == 0)
+        else
         {
-            throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: " +
-                std::to_string(referenceArgumentId)));
-        }
+            int* buffer = static_cast<int*>(referenceClass->getData(referenceArgumentId));
+            std::vector<int> vectorInt(buffer, buffer + dataSize / sizeof(int));
 
-        ArgumentQuantity quantity = vectorInt.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
-        return KernelArgument(referenceArgumentId, vectorInt, ArgumentMemoryType::ReadWrite, quantity);
+            if (vectorInt.size() == 0)
+            {
+                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: " +
+                    std::to_string(referenceArgumentId)));
+            }
+
+            ArgumentQuantity quantity = vectorInt.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
+            resultArguments.emplace_back(KernelArgument(referenceArgumentId, vectorInt, ArgumentMemoryType::ReadWrite, quantity));
+        }
     }
+    
+    return resultArguments;
 }
 
 std::vector<KernelArgument> TuningRunner::getReferenceResultFromKernel(const size_t referenceKernelId,
-    const std::vector<size_t>& referenceArgumentIndices, const std::vector<ParameterValue>& referenceKernelConfiguration) const
+    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& referenceArgumentIndices) const
 {
     const Kernel* referenceKernel = kernelManager->getKernel(referenceKernelId);
     KernelConfiguration configuration = kernelManager->getKernelConfiguration(referenceKernelId, referenceKernelConfiguration);

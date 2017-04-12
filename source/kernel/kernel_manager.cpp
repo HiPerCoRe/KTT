@@ -147,13 +147,14 @@ void KernelManager::setReferenceKernel(const size_t kernelId, const size_t refer
     kernels.at(kernelId).setReferenceKernel(referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
 }
 
-void KernelManager::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const size_t resultArgumentId)
+void KernelManager::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
+    const std::vector<size_t>& resultArgumentIds)
 {
     if (kernelId >= kernelCount)
     {
         throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(kernelId)));
     }
-    kernels.at(kernelId).setReferenceClass(std::move(referenceClass), resultArgumentId);
+    kernels.at(kernelId).setReferenceClass(std::move(referenceClass), resultArgumentIds);
 }
 
 size_t KernelManager::getKernelCount() const

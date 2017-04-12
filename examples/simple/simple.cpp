@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -7,10 +8,11 @@
 class SimpleReferenceClass : public ktt::ReferenceClass
 {
 public:
-    SimpleReferenceClass(const std::vector<float>& a, const std::vector<float>& b, const std::vector<float>& result) :
+    SimpleReferenceClass(const std::vector<float>& a, const std::vector<float>& b, const std::vector<float>& result, const size_t resultArgumentId) :
         a(a),
         b(b),
-        result(result)
+        result(result),
+        resultArgumentId(resultArgumentId)
     {}
 
     virtual void computeResult() override
@@ -21,17 +23,21 @@ public:
         }
     }
 
-    virtual void* getData() const override
+    virtual void* getData(const size_t argumentId) const override
     {
-        return (void*)result.data();
+        if (argumentId == resultArgumentId)
+        {
+            return (void*)result.data();
+        }
+        throw std::runtime_error("No result available for specified argument id");
     }
 
-    virtual ktt::ArgumentDataType getDataType() const override
+    virtual ktt::ArgumentDataType getDataType(const size_t argumentId) const override
     {
         return ktt::ArgumentDataType::Float;
     }
 
-    virtual size_t getDataSizeInBytes() const override
+    virtual size_t getDataSizeInBytes(const size_t argumentId) const override
     {
         return result.size() * sizeof(float);
     }
@@ -40,6 +46,7 @@ private:
     std::vector<float> a;
     std::vector<float> b;
     std::vector<float> result;
+    size_t resultArgumentId;
 };
 
 int main(int argc, char** argv)
@@ -90,8 +97,8 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(kernelId, std::vector<size_t>{ aId, bId, resultId });
 
     // Set reference class, which implements C++ version of kernel computation in order to validate results provided by kernel,
-    // provide id for validated argument
-    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(a, b, result), resultId);
+    // provide list of arguments which will be validated
+    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(a, b, result, resultId), std::vector<size_t> { resultId });
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);

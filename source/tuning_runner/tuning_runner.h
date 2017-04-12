@@ -36,12 +36,12 @@ private:
     std::vector<size_t> convertDimensionVector(const DimensionVector& vector) const;
     std::vector<KernelArgument> getKernelArguments(const size_t kernelId) const;
     bool validateResult(const Kernel* kernel, const KernelRunResult& result);
-    bool validateResultWithClass(const Kernel* kernel, const KernelRunResult& result);
-    bool validateResultWithKernel(const Kernel* kernel, const KernelRunResult& result);
+    bool validateResult(const Kernel* kernel, const KernelRunResult& result, bool useReferenceClass);
     bool argumentIndexExists(const size_t argumentIndex, const std::vector<size_t>& argumentIndices) const;
-    KernelArgument getReferenceResultFromClass(const ReferenceClass* referenceClass, const size_t referenceArgumentId) const;
-    std::vector<KernelArgument> getReferenceResultFromKernel(const size_t referenceKernelId, const std::vector<size_t>& referenceArgumentIndices,
-        const std::vector<ParameterValue>& referenceKernelConfiguration) const;
+    std::vector<KernelArgument> getReferenceResultFromClass(const ReferenceClass* referenceClass,
+        const std::vector<size_t>& referenceArgumentIndices) const;
+    std::vector<KernelArgument> getReferenceResultFromKernel(const size_t referenceKernelId,
+        const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& referenceArgumentIndices) const;
 };
 
 } // namespace ktt
