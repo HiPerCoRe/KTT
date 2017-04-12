@@ -20,13 +20,14 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
-    const std::string kernelFile = std::string("../examples/coulomb/coulomb_kernel_3d.cl");
-    const std::string referenceKernelFile = std::string("../examples/simple/coulomb_reference_kernel_3d.cl");
-    const int gridSize = 512;
+    const std::string kernelFile = std::string("../examples/coulomb_sum_3d/coulomb_kernel_3d.cl");
+    const std::string referenceKernelFile = std::string("../examples/coulomb_sum_3d/coulomb_kernel_3d_reference.cl");
+    const int gridSize = 128;
     const int atoms = 4000;
 
     ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
-    ktt::DimensionVector workGroupDimensions(16, 16, 1);
+    ktt::DimensionVector workGroupDimensions(1, 1, 1);
+    ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
 
     // Declare data variables
     float gridSpacing;
@@ -54,18 +55,30 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
     size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("directCoulombSum"), ndRangeDimensions, workGroupDimensions);
+    size_t referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("directCoulombSumReference"), ndRangeDimensions, referenceWorkGroupDimensions);
 
     size_t aiId = tuner.addArgument(atomInfo, ktt::ArgumentMemoryType::ReadOnly);
     size_t aixId = tuner.addArgument(atomInfoX, ktt::ArgumentMemoryType::ReadOnly);
     size_t aiyId = tuner.addArgument(atomInfoY, ktt::ArgumentMemoryType::ReadOnly);
     size_t aizId = tuner.addArgument(atomInfoZ, ktt::ArgumentMemoryType::ReadOnly);
     size_t aiwId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryType::ReadOnly);
+    size_t aId = tuner.addArgument(atoms);
+    size_t gsId = tuner.addArgument(gridSpacing);
     size_t gridId = tuner.addArgument(energyGrid, ktt::ArgumentMemoryType::WriteOnly);
 
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 16, 32 });
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", { 1, 2, 4, 8 });
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 16, 32 }, 
+        ktt::ThreadModifierType::Local, 
+        ktt::ThreadModifierAction::Multiply, 
+        ktt::Dimension::X);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", { 1, 2, 4, 8 }, 
+        ktt::ThreadModifierType::Local, 
+        ktt::ThreadModifierAction::Multiply, 
+        ktt::Dimension::Y);
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Z", { 1 });
-    tuner.addParameter(kernelId, "Z_ITERATIONS", { 1, 2, 4, 8, 16, 32 });
+    tuner.addParameter(kernelId, "Z_ITERATIONS", { 1, 2, 4, 8, 16, 32 },
+        ktt::ThreadModifierType::Global,
+        ktt::ThreadModifierAction::Divide,
+        ktt::Dimension::X);
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", { 0, 1, 2, 4, 8, 16, 32 });
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", { 0, 1 });
     tuner.addParameter(kernelId, "USE_SOA", { 0, 1 });
@@ -80,7 +93,11 @@ int main(int argc, char** argv)
     auto vec = [](std::vector<size_t> vector) { return vector.at(0) || vector.at(1) == 1; };
     tuner.addConstraint(kernelId, vec, { "USE_SOA", "VECTOR_SIZE" } );
 
-    tuner.setKernelArguments(kernelId, std::vector<size_t>{ aiId, aixId, aiyId, aizId, aiwId, gridId });
+    tuner.setKernelArguments(kernelId, std::vector<size_t>{ aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId });
+    tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId });
+
+    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ gridId });
+
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, std::string("output.csv"), ktt::PrintFormat::CSV);
