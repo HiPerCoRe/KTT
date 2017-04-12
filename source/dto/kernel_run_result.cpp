@@ -8,9 +8,10 @@ KernelRunResult::KernelRunResult() :
     duration(UINT64_MAX)
 {}
 
-KernelRunResult::KernelRunResult(const uint64_t duration, const std::vector<KernelArgument>& resultArguments) :
+KernelRunResult::KernelRunResult(const uint64_t duration, const uint64_t overhead, const std::vector<KernelArgument>& resultArguments) :
     valid(true),
     duration(duration),
+    overhead(overhead),
     resultArguments(resultArguments)
 {}
 
@@ -22,6 +23,11 @@ bool KernelRunResult::isValid() const
 uint64_t KernelRunResult::getDuration() const
 {
     return duration;
+}
+
+uint64_t KernelRunResult::getOverhead() const
+{
+    return overhead;
 }
 
 std::vector<KernelArgument> KernelRunResult::getResultArguments() const

@@ -1,5 +1,7 @@
 #include "opencl_core.h"
 
+#include "../../timer.h"
+
 namespace ktt
 {
 
@@ -126,6 +128,9 @@ void OpenCLCore::setOpenCLCompilerOptions(const std::string& options)
 KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
 {
+    Timer timer;
+    timer.start();
+
     std::unique_ptr<OpenCLProgram> program = createAndBuildProgram(source);
     std::unique_ptr<OpenCLKernel> kernel = createKernel(*program, kernelName);
     std::vector<std::unique_ptr<OpenCLBuffer>> buffers;
@@ -150,7 +155,10 @@ KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::stri
 
     cl_ulong duration = enqueueKernel(*kernel, globalSize, localSize);
     std::vector<KernelArgument> resultArguments = getResultArguments(buffers, vectorArgumentPointers);
-    return KernelRunResult(static_cast<uint64_t>(duration), resultArguments);
+
+    timer.stop();
+    uint64_t overhead = timer.getElapsedTime();
+    return KernelRunResult(static_cast<uint64_t>(duration), overhead, resultArguments);
 }
 
 std::unique_ptr<OpenCLProgram> OpenCLCore::createAndBuildProgram(const std::string& source) const

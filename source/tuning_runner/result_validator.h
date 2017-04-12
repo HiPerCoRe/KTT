@@ -25,7 +25,7 @@ public:
     void setReferenceKernelResult(const size_t kernelId, const std::vector<KernelArgument>& kernelResult);
     bool hasReferenceClassResult(const size_t kernelId) const;
     bool hasReferenceKernelResult(const size_t kernelId) const;
-    void clearReferenceResults(const size_t kernelId);
+    void clearReferenceResults();
 
     // Setters
     void setToleranceThreshold(const double toleranceThreshold);

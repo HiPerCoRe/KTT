@@ -40,11 +40,6 @@ public:
         return argumentManager->addArgument(data, argumentMemoryType, argumentQuantity);
     }
 
-    template <typename T> void updateArgument(const size_t id, const std::vector<T>& data, const ArgumentQuantity& argumentQuantity)
-    {
-        argumentManager->updateArgument(id, data, argumentQuantity);
-    }
-
     // Tuning runner methods
     void tuneKernel(const size_t id);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);

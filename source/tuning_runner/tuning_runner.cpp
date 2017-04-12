@@ -21,7 +21,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     {
         throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
     }
-    resultValidator.clearReferenceResults(id);
+    resultValidator.clearReferenceResults();
 
     std::vector<TuningResult> results;
     const Kernel* kernel = kernelManager->getKernel(id);

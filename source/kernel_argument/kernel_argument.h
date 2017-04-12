@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cstring>
-#include <vector>
-#include <typeinfo>
 #include <stdexcept>
+#include <typeinfo>
+#include <vector>
 
 #include "../enum/argument_data_type.h"
 #include "../enum/argument_memory_type.h"

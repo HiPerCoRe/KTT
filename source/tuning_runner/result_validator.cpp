@@ -60,7 +60,7 @@ bool ResultValidator::hasReferenceKernelResult(const size_t kernelId) const
     return referenceKernelResultMap.find(kernelId) != referenceKernelResultMap.end();
 }
 
-void ResultValidator::clearReferenceResults(const size_t kernelId)
+void ResultValidator::clearReferenceResults()
 {
     referenceClassResultMap.clear();
     referenceKernelResultMap.clear();

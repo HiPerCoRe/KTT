@@ -133,40 +133,6 @@ template size_t Tuner::addArgument<int>(const int value);
 template size_t Tuner::addArgument<float>(const float value);
 template size_t Tuner::addArgument<double>(const double value);
 
-template <typename T> void Tuner::updateArgument(const size_t argumentId, const std::vector<T>& data)
-{
-    try
-    {
-        tunerCore->updateArgument(argumentId, data, ArgumentQuantity::Vector);
-    }
-    catch (const std::runtime_error& error)
-    {
-        std::cerr << error.what() << std::endl;
-        throw;
-    }
-}
-
-template void Tuner::updateArgument<int>(const size_t argumentId, const std::vector<int>& data);
-template void Tuner::updateArgument<float>(const size_t argumentId, const std::vector<float>& data);
-template void Tuner::updateArgument<double>(const size_t argumentId, const std::vector<double>& data);
-
-template <typename T> void Tuner::updateArgument(const size_t argumentId, const T value)
-{
-    try
-    {
-        tunerCore->updateArgument(argumentId, std::vector<T>{ value }, ArgumentQuantity::Scalar);
-    }
-    catch (const std::runtime_error& error)
-    {
-        std::cerr << error.what() << std::endl;
-        throw;
-    }
-}
-
-template void Tuner::updateArgument<int>(const size_t argumentId, const int value);
-template void Tuner::updateArgument<float>(const size_t argumentId, const float value);
-template void Tuner::updateArgument<double>(const size_t argumentId, const double value);
-
 void Tuner::tuneKernel(const size_t kernelId)
 {
     try

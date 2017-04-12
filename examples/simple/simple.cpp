@@ -5,6 +5,7 @@
 
 #include "../../include/ktt.h"
 
+// Implementation of reference class interface for result validation
 class SimpleReferenceClass : public ktt::ReferenceClass
 {
 public:

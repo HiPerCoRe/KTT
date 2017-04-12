@@ -8,9 +8,10 @@ Core extensions:
 * Refactoring certain major classes into interfaces
 
 Future extensions:
-* Usage of OpenCL 2.0 functionality for supported SDKs
-* Support for other compute APIs (CUDA, Vulkan compute shaders, etc.)
+* Support for OpenCL 2.0 functionality
 * Support for tuning with usage of multiple devices
+* Support for other compute APIs (CUDA, Vulkan compute shaders, etc.)
+* Front-end module
 
 Documentation:
 * Documentation for API and other significant headers
@@ -19,6 +20,3 @@ Documentation:
 Testing:
 * Linux compatibility test (AMD / Intel platforms)
 * Extended unit tests for major classes
-
-Samples:
-* More samples showcasing different parts of the API

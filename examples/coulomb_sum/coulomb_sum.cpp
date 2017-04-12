@@ -44,15 +44,15 @@ int main(int argc, char** argv)
     std::vector<float> energyGrid(numberOfGridPoints, 0.0f);
 
     // Initialize data
-    srand((unsigned)time(0));
-    gridSpacing = (float)rand() / RAND_MAX;
+    srand(static_cast<unsigned int>(time(0)));
+    gridSpacing = static_cast<float>(rand()) / RAND_MAX;
 
     for (int i = 0; i < numberOfAtoms; i++)
     {
-        atomInfoX.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
-        atomInfoY.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
-        atomInfoZ.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
-        atomInfoW.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
+        atomInfoX.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        atomInfoY.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        atomInfoZ.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        atomInfoW.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
 
         atomInfo.at((4 * i)) = atomInfoX.at(i);
         atomInfo.at((4 * i) + 1) = atomInfoY.at(i);
