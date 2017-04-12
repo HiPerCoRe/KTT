@@ -7,8 +7,8 @@ enum class ThreadModifierAction
 {
     Add,
     Subtract,
-    Divide,
-    Multiply
+    Multiply,
+    Divide
 };
 
 } // namespace ktt

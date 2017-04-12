@@ -7,13 +7,13 @@ void ResultPrinter::printResult(const size_t kernelId, std::ostream& outputTarge
 {
     if (resultMap.find(kernelId) == resultMap.end())
     {
-        throw std::runtime_error(std::string("No tuning results found for kernel with id: " + std::to_string(kernelId)));
+        throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(kernelId));
     }
 
     auto results = resultMap.find(kernelId)->second;
     if (results.size() == 0)
     {
-        throw std::runtime_error(std::string("No tuning results found for kernel with id: " + std::to_string(kernelId)));
+        throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(kernelId));
     }
 
     switch (printFormat)

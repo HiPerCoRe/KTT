@@ -19,7 +19,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
 {
     if (id >= kernelManager->getKernelCount())
     {
-        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
     resultValidator.clearReferenceResults();
 
@@ -159,13 +159,13 @@ bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& r
     {
         if (!argumentIndexExists(argumentId, indices))
         {
-            throw std::runtime_error(std::string("Reference argument with following id is not associated with given kernel: " +
-                std::to_string(argumentId)));
+            throw std::runtime_error(std::string("Reference argument with following id is not associated with given kernel: ")
+                + std::to_string(argumentId));
         }
 
         if (argumentManager->getArgument(argumentId).getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
         {
-            throw std::runtime_error(std::string("Reference argument with following id is marked as read only: " + std::to_string(argumentId)));
+            throw std::runtime_error(std::string("Reference argument with following id is marked as read only: ") + std::to_string(argumentId));
         }
     }
 
@@ -174,8 +174,8 @@ bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& r
         std::vector<KernelArgument> referenceClassResult = getReferenceResultFromClass(kernel->getReferenceClass(), referenceIndices);
         if (referenceClassResult.size() != referenceIndices.size())
         {
-            throw std::runtime_error(std::string("Reference class argument count does not match tuned kernel argument count for kernel with id: " +
-                std::to_string(kernel->getId())));
+            throw std::runtime_error(std::string("Reference class argument count does not match tuned kernel argument count for kernel with id: ")
+                + std::to_string(kernel->getId()));
         }
         resultValidator.setReferenceClassResult(kernel->getId(), referenceClassResult);
     }
@@ -186,8 +186,8 @@ bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& r
             kernel->getReferenceKernelConfiguration(), referenceIndices);
         if (referenceKernelResult.size() != referenceIndices.size())
         {
-            throw std::runtime_error(std::string("Reference kernel argument count does not match tuned kernel argument count for kernel with id: " +
-                std::to_string(kernel->getId())));
+            throw std::runtime_error(std::string("Reference kernel argument count does not match tuned kernel argument count for kernel with id: ")
+                + std::to_string(kernel->getId()));
         }
         resultValidator.setReferenceKernelResult(kernel->getId(), referenceKernelResult);
     }
@@ -245,8 +245,8 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromClass(const Refe
 
             if (vectorDouble.size() == 0)
             {
-                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: " +
-                    std::to_string(referenceArgumentId)));
+                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: ")
+                    + std::to_string(referenceArgumentId));
             }
 
             ArgumentQuantity quantity = vectorDouble.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
@@ -259,8 +259,8 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromClass(const Refe
 
             if (vectorFloat.size() == 0)
             {
-                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: " +
-                    std::to_string(referenceArgumentId)));
+                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: ")
+                    + std::to_string(referenceArgumentId));
             }
 
             ArgumentQuantity quantity = vectorFloat.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
@@ -273,8 +273,8 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromClass(const Refe
 
             if (vectorInt.size() == 0)
             {
-                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: " +
-                    std::to_string(referenceArgumentId)));
+                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: ")
+                    + std::to_string(referenceArgumentId));
             }
 
             ArgumentQuantity quantity = vectorInt.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;

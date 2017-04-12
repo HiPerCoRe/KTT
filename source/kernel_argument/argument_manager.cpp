@@ -18,7 +18,7 @@ const KernelArgument ArgumentManager::getArgument(const size_t id) const
 {
     if (id >= argumentCount)
     {
-        throw std::runtime_error(std::string("Invalid argument id: " + std::to_string(id)));
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
     }
     return arguments.at(id);
 }

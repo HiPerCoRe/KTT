@@ -1,6 +1,6 @@
 #include "opencl_core.h"
 
-#include "../../timer.h"
+#include "../../utility/timer.h"
 
 namespace ktt
 {
@@ -11,13 +11,13 @@ OpenCLCore::OpenCLCore(const size_t platformIndex, const size_t deviceIndex) :
     auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
     {
-        throw std::runtime_error(std::string("Invalid platform index: " + std::to_string(platformIndex)));
+        throw std::runtime_error(std::string("Invalid platform index: ") + std::to_string(platformIndex));
     }
 
     auto devices = getOpenCLDevices(platforms.at(platformIndex));
     if (deviceIndex >= devices.size())
     {
-        throw std::runtime_error(std::string("Invalid device index: " + std::to_string(deviceIndex)));
+        throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
     }
 
     cl_device_id device = devices.at(deviceIndex).getId();
@@ -293,11 +293,11 @@ DeviceType OpenCLCore::getDeviceType(const cl_device_type deviceType)
     case CL_DEVICE_TYPE_GPU:
         return DeviceType::GPU;
     case CL_DEVICE_TYPE_ACCELERATOR:
-        return DeviceType::ACCELERATOR;
+        return DeviceType::Accelerator;
     case CL_DEVICE_TYPE_DEFAULT:
-        return DeviceType::DEFAULT;
+        return DeviceType::Default;
     default:
-        return DeviceType::CUSTOM;
+        return DeviceType::Custom;
     }
 }
 

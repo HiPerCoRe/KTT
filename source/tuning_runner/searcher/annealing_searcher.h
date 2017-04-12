@@ -127,7 +127,7 @@ private:
 
         if (neighbours.size() == 0)
         {
-            throw std::runtime_error(std::string("Annealing searcher could not find any neighbours"));
+            throw std::runtime_error("Annealing searcher could not find any neighbours");
         }
         return neighbours;
     }

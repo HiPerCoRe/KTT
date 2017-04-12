@@ -6,9 +6,9 @@
 
 #include "../ktt_type_aliases.h"
 #include "../enum/search_method.h"
+#include "../tuning_runner/reference_class.h"
 #include "kernel_constraint.h"
 #include "kernel_parameter.h"
-#include "../reference_class.h"
 
 namespace ktt
 {

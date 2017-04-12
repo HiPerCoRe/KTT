@@ -19,7 +19,7 @@ void Kernel::addParameter(const KernelParameter& parameter)
 {
     if (parameterExists(parameter.getName()))
     {
-        throw std::runtime_error(std::string("Parameter with given name already exists: " + parameter.getName()));
+        throw std::runtime_error(std::string("Parameter with given name already exists: ") + parameter.getName());
     }
     parameters.push_back(parameter);
 }
@@ -32,7 +32,7 @@ void Kernel::addConstraint(const KernelConstraint& constraint)
     {
         if (!parameterExists(parameterName))
         {
-            throw std::runtime_error(std::string("Constraint parameter with given name does not exist: " + parameterName));
+            throw std::runtime_error(std::string("Constraint parameter with given name does not exist: ") + parameterName);
         }
     }
     constraints.push_back(constraint);
@@ -49,8 +49,8 @@ void Kernel::setSearchMethod(const SearchMethod& searchMethod, const std::vector
         || searchMethod == SearchMethod::Annealing && searchArguments.size() < 2
         || searchMethod == SearchMethod::PSO && searchArguments.size() < 5)
     {
-        throw std::runtime_error(std::string("Insufficient number of arguments given for specified search method: "
-            + getSearchMethodName(searchMethod)));
+        throw std::runtime_error(std::string("Insufficient number of arguments given for specified search method: ")
+            + getSearchMethodName(searchMethod));
     }
     
     this->searchArguments = searchArguments;

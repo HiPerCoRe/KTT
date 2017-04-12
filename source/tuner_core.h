@@ -8,7 +8,7 @@
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
 #include "tuning_runner/tuning_runner.h"
-#include "result_printer.h"
+#include "utility/result_printer.h"
 
 namespace ktt
 {

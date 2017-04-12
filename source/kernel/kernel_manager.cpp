@@ -42,7 +42,7 @@ KernelConfiguration KernelManager::getKernelConfiguration(const size_t id, const
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
 
     DimensionVector global = kernels.at(id).getGlobalSize();
@@ -62,8 +62,8 @@ KernelConfiguration KernelManager::getKernelConfiguration(const size_t id, const
 
         if (targetParameter == nullptr)
         {
-            throw std::runtime_error(std::string("Parameter with name <" + std::get<0>(value) + "> is not associated with kernel with id: " +
-                std::to_string(id)));
+            throw std::runtime_error(std::string("Parameter with name <") + std::get<0>(value) + "> is not associated with kernel with id: "
+                + std::to_string(id));
         }
 
         global = modifyDimensionVector(global, DimensionVectorType::Global, *targetParameter, std::get<1>(value));
@@ -77,7 +77,7 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
 
     std::vector<KernelConfiguration> configurations;
@@ -100,7 +100,7 @@ void KernelManager::addParameter(const size_t id, const std::string& name, const
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
     kernels.at(id).addParameter(KernelParameter(name, values, threadModifierType, threadModifierAction, modifierDimension));
 }
@@ -110,7 +110,7 @@ void KernelManager::addConstraint(const size_t id, const std::function<bool(std:
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
     kernels.at(id).addConstraint(KernelConstraint(constraintFunction, parameterNames));
 }
@@ -119,7 +119,7 @@ void KernelManager::setArguments(const size_t id, const std::vector<size_t>& arg
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
     kernels.at(id).setArguments(argumentIndices);
 }
@@ -128,7 +128,7 @@ void KernelManager::setSearchMethod(const size_t id, const SearchMethod& searchM
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
     kernels.at(id).setSearchMethod(searchMethod, searchArguments);
 }
@@ -138,11 +138,11 @@ void KernelManager::setReferenceKernel(const size_t kernelId, const size_t refer
 {
     if (kernelId >= kernelCount)
     {
-        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(kernelId)));
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
     }
     if (referenceKernelId >= kernelCount)
     {
-        throw std::runtime_error(std::string("Invalid reference kernel id: " + std::to_string(referenceKernelId)));
+        throw std::runtime_error(std::string("Invalid reference kernel id: ") + std::to_string(referenceKernelId));
     }
     kernels.at(kernelId).setReferenceKernel(referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
 }
@@ -152,7 +152,7 @@ void KernelManager::setReferenceClass(const size_t kernelId, std::unique_ptr<Ref
 {
     if (kernelId >= kernelCount)
     {
-        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(kernelId)));
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
     }
     kernels.at(kernelId).setReferenceClass(std::move(referenceClass), resultArgumentIds);
 }
@@ -166,7 +166,7 @@ const Kernel* KernelManager::getKernel(const size_t id) const
 {
     if (id >= kernelCount)
     {
-        throw std::runtime_error(std::string("Invalid kernel id: " + std::to_string(id)));
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
     return &kernels.at(id);
 }
@@ -177,7 +177,7 @@ std::string KernelManager::loadFileToString(const std::string& filePath) const
 
     if (!file.is_open())
     {
-        throw std::runtime_error(std::string("Unable to open file: " + filePath));
+        throw std::runtime_error(std::string("Unable to open file: ") + filePath);
     }
 
     std::stringstream stream;

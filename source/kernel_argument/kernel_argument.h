@@ -83,7 +83,7 @@ private:
         }
         else
         {
-            throw std::runtime_error(std::string("Unsupported argument data type was provided for kernel argument"));
+            throw std::runtime_error("Unsupported argument data type was provided for kernel argument");
         }
     }
 };

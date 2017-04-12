@@ -41,7 +41,7 @@ void TunerCore::setKernelArguments(const size_t id, const std::vector<size_t>& a
     {
         if (index >= argumentManager->getArgumentCount())
         {
-            throw std::runtime_error(std::string("Invalid kernel argument id: " + std::to_string(index)));
+            throw std::runtime_error(std::string("Invalid kernel argument id: ") + std::to_string(index));
         }
     }
 
@@ -87,7 +87,7 @@ void TunerCore::printResult(const size_t kernelId, const std::string& filePath, 
 
     if (!outputFile.is_open())
     {
-        throw std::runtime_error(std::string("Unable to open file: " + filePath));
+        throw std::runtime_error(std::string("Unable to open file: ") + filePath);
     }
 
     resultPrinter->printResult(kernelId, outputFile, printFormat);
