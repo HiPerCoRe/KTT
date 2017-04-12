@@ -78,7 +78,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "Z_ITERATIONS", { 1, 2, 4, 8, 16, 32 },
         ktt::ThreadModifierType::Global,
         ktt::ThreadModifierAction::Divide,
-        ktt::Dimension::X);
+        ktt::Dimension::Z);
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", { 0, 1, 2, 4, 8, 16, 32 });
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", { 0, 1 });
     tuner.addParameter(kernelId, "USE_SOA", { 0, 1 });
@@ -97,6 +97,7 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId });
 
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ gridId });
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.1);
 
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
