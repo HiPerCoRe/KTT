@@ -21,7 +21,7 @@
 #include "dto/platform_info.h"
 
 // Reference class interface
-#include "tuning_runner/reference_class.h"
+#include "interface/reference_class.h"
 
 namespace ktt
 {

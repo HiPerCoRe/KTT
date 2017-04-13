@@ -1,13 +1,12 @@
-Core functionality:
+Short-term goals:
 * Tuning manipulator (custom code injection and time measurement)
-
-Core extensions:
 * Automatic tuning of same kernel for different global sizes
+* Support for more argument data types
 * Uploading kernel arguments into local memory
 * Kernel argument printing (debugging purpose)
 * Refactoring certain major classes into interfaces
 
-Future extensions:
+Long-term goals:
 * Support for OpenCL 2.0 functionality
 * Support for tuning with usage of multiple devices
 * Support for other compute APIs (CUDA, Vulkan compute shaders, etc.)

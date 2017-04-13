@@ -6,7 +6,7 @@
 
 #include "../ktt_type_aliases.h"
 #include "../enum/search_method.h"
-#include "../tuning_runner/reference_class.h"
+#include "../interface/reference_class.h"
 #include "kernel_constraint.h"
 #include "kernel_parameter.h"
 

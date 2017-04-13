@@ -17,7 +17,7 @@ class TuningRunner
 {
 public:
     // Constructor
-    TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, OpenCLCore* openCLCore);
+    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, OpenCLCore* openCLCore);
 
     // Core methods
     std::vector<TuningResult> tuneKernel(const size_t id);
