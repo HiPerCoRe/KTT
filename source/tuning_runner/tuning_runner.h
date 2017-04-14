@@ -1,12 +1,14 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "../dto/tuning_result.h"
 #include "../compute_api_driver/opencl/opencl_core.h"
 #include "../kernel/kernel_manager.h"
 #include "../kernel_argument/argument_manager.h"
+#include "manipulator_interface_implementation.h"
 #include "result_validator.h"
 #include "searcher/searcher.h"
 
@@ -29,6 +31,7 @@ private:
     KernelManager* kernelManager;
     OpenCLCore* openCLCore;
     ResultValidator resultValidator;
+    std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
 
     // Helper methods
     std::unique_ptr<Searcher> getSearcher(const SearchMethod& searchMethod, const std::vector<double>& searchArguments,
@@ -42,6 +45,8 @@ private:
         const std::vector<size_t>& referenceArgumentIndices) const;
     std::vector<KernelArgument> getReferenceResultFromKernel(const size_t referenceKernelId,
         const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& referenceArgumentIndices) const;
+    std::pair<KernelRunResult, uint64_t> runKernelWithManipulator(TuningManipulator* manipulator, const size_t kernelId, const std::string& source,
+        const std::string& kernelName, const KernelConfiguration& currentConfiguration, const std::vector<KernelArgument>& arguments);
 };
 
 } // namespace ktt

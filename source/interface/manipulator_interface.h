@@ -20,8 +20,9 @@ public:
     virtual std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize) = 0;
 
     // Argument update methods
-    virtual void updateArgumentScalar(const size_t argumentId, const void* argumentData) = 0;
-    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes) = 0;
+    virtual void updateArgumentScalar(const size_t argumentId, const void* argumentData, const ArgumentDataType& argumentDataType) = 0;
+    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentDataType& argumentDataType,
+        const size_t dataSizeInBytes) = 0;
 };
 
 } // namespace ktt

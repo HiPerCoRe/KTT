@@ -23,6 +23,9 @@
 // Reference class interface
 #include "interface/reference_class.h"
 
+// Tuning manipulator interface
+#include "interface/tuning_manipulator.h"
+
 namespace ktt
 {
 
@@ -35,17 +38,20 @@ public:
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex);
     ~Tuner();
 
-    // Kernel handling methods
+    // Basic kernel handling methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
+    void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
     void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values);
+
+    // Advanced kernel handling methods
     void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values,
         const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
     void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
-    void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
     void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Argument handling methods
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType);

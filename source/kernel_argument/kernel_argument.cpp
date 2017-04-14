@@ -36,7 +36,7 @@ std::vector<int> KernelArgument::getDataInt() const
     return dataInt;
 }
 
-size_t KernelArgument::getDataSize() const
+size_t KernelArgument::getDataSizeInBytes() const
 {
     switch (argumentDataType)
     {

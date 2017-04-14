@@ -42,7 +42,7 @@ public:
     std::vector<double> getDataDouble() const;
     std::vector<float> getDataFloat() const;
     std::vector<int> getDataInt() const;
-    size_t getDataSize() const;
+    size_t getDataSizeInBytes() const;
     ArgumentDataType getArgumentDataType() const;
     ArgumentMemoryType getArgumentMemoryType() const;
     ArgumentQuantity getArgumentQuantity() const;

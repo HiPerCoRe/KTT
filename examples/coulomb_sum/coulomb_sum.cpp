@@ -107,6 +107,9 @@ int main(int argc, char** argv)
     // Set search method to random search, only 10% of all configurations will be explored.
     tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double> { 0.1 });
 
+    // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
+
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ energyGridId });
 

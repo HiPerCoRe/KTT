@@ -1,6 +1,7 @@
 #include <string>
 
 #include "tuning_runner.h"
+#include "../utility/timer.h"
 #include "searcher/annealing_searcher.h"
 #include "searcher/full_searcher.h"
 #include "searcher/random_searcher.h"
@@ -12,7 +13,8 @@ namespace ktt
 TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, OpenCLCore* openCLCore) :
     argumentManager(argumentManager),
     kernelManager(kernelManager),
-    openCLCore(openCLCore)
+    openCLCore(openCLCore),
+    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(argumentManager, openCLCore))
 {}
 
 std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
@@ -21,10 +23,9 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
-    resultValidator.clearReferenceResults();
 
     std::vector<TuningResult> results;
-    const Kernel* kernel = kernelManager->getKernel(id);
+    Kernel* kernel = kernelManager->getKernel(id);
     std::unique_ptr<Searcher> searcher = getSearcher(kernel->getSearchMethod(), kernel->getSearchArguments(),
         kernelManager->getKernelConfigurations(id), kernel->getParameters());
     size_t configurationsCount = searcher->getConfigurationsCount();
@@ -35,19 +36,33 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         std::string source = kernelManager->getKernelSourceWithDefines(id, currentConfiguration);
 
         KernelRunResult result;
+        uint64_t manipulatorDuration = 0;
         try
         {
-            std::cout << "Launching kernel <" << kernel->getName() << "> with configuration (" << i + 1  << " / " << configurationsCount << "): "
-                << std::endl << currentConfiguration;
-            result = openCLCore->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
-                convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
+            if (kernel->hasTuningManipulator())
+            {
+                std::cout << "Launching kernel <" << kernel->getName() << "> (custom manipulator detected) with configuration (" << i + 1  << " / "
+                    << configurationsCount << "): " << std::endl << currentConfiguration;
+                std::pair<KernelRunResult, uint64_t> resultPair = runKernelWithManipulator(kernel->getTuningManipulator(), id, source,
+                    kernel->getName(), currentConfiguration, getKernelArguments(id));
+
+                result = resultPair.first;
+                manipulatorDuration = resultPair.second;
+            }
+            else
+            {
+                std::cout << "Launching kernel <" << kernel->getName() << "> with configuration (" << i + 1  << " / " << configurationsCount << "): "
+                    << std::endl << currentConfiguration;
+                result = openCLCore->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
+                    convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(id));
+            }
         }
         catch (const std::runtime_error& error)
         {
             std::cerr << "Kernel run failed, reason: " << error.what() << std::endl << std::endl;
         }
 
-        searcher->calculateNextConfiguration(static_cast<double>(result.getDuration()));
+        searcher->calculateNextConfiguration(static_cast<double>(result.getDuration() + manipulatorDuration));
         if (result.isValid())
         {
             bool storeResult = true;
@@ -57,8 +72,9 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
             }
             if (storeResult)
             {
-                std::cout << "Kernel run completed successfully in " << result.getDuration() / 1'000'000 << "ms" << std::endl << std::endl;
-                results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), currentConfiguration));
+                std::cout << "Kernel run completed successfully in " << (result.getDuration() + manipulatorDuration) / 1'000'000 << "ms" << std::endl
+                    << std::endl;
+                results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), manipulatorDuration, currentConfiguration));
             }
             else
             {
@@ -67,6 +83,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         }
     }
 
+    resultValidator.clearReferenceResults();
     return results;
 }
 
@@ -305,6 +322,29 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromKernel(const siz
     }
 
     return resultArguments;
+}
+
+std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(TuningManipulator* manipulator, const size_t kernelId,
+    const std::string& source, const std::string& kernelName, const KernelConfiguration& currentConfiguration,
+    const std::vector<KernelArgument>& arguments)
+{
+    manipulator->setManipulatorInterface(manipulatorInterfaceImplementation.get());
+    manipulatorInterfaceImplementation->setupKernel(source, kernelName, currentConfiguration.getGlobalSize(), currentConfiguration.getLocalSize(),
+        getKernelArguments(kernelId));
+
+    Timer timer;
+    timer.start();
+    manipulator->launchComputation(kernelId, currentConfiguration.getGlobalSize(), currentConfiguration.getLocalSize(),
+        currentConfiguration.getParameterValues());
+    timer.stop();
+
+    KernelRunResult result = manipulatorInterfaceImplementation->getCurrentResult();
+    size_t manipulatorDuration = timer.getElapsedTime();
+    manipulatorDuration -= result.getOverhead();
+
+    manipulatorInterfaceImplementation->resetCurrentResult();
+    manipulator->setManipulatorInterface(nullptr);
+    return std::make_pair(result, manipulatorDuration);
 }
 
 } // namespace ktt

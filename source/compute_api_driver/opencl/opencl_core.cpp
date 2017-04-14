@@ -140,8 +140,8 @@ KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::stri
     {
         if (argument.getArgumentQuantity() == ArgumentQuantity::Vector)
         {
-            std::unique_ptr<OpenCLBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSize());
-            updateBuffer(*buffer, argument.getData(), argument.getDataSize());
+            std::unique_ptr<OpenCLBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSizeInBytes());
+            updateBuffer(*buffer, argument.getData(), argument.getDataSizeInBytes());
             setKernelArgumentVector(*kernel, *buffer);
 
             vectorArgumentPointers.push_back(&argument);
@@ -316,22 +316,22 @@ std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<std
         ArgumentDataType type = currentArgument->getArgumentDataType();
         if (type == ArgumentDataType::Double)
         {
-            std::vector<double> resultDouble(currentArgument->getDataSize() / sizeof(double));
-            getBufferData(*outputBuffers.at(i), resultDouble.data(), currentArgument->getDataSize());
+            std::vector<double> resultDouble(currentArgument->getDataSizeInBytes() / sizeof(double));
+            getBufferData(*outputBuffers.at(i), resultDouble.data(), currentArgument->getDataSizeInBytes());
             resultArguments.push_back(KernelArgument(currentArgument->getId(), resultDouble, currentArgument->getArgumentMemoryType(),
                 currentArgument->getArgumentQuantity()));
         }
         else if (type == ArgumentDataType::Float)
         {
-            std::vector<float> resultFloat(currentArgument->getDataSize() / sizeof(float));
-            getBufferData(*outputBuffers.at(i), resultFloat.data(), currentArgument->getDataSize());
+            std::vector<float> resultFloat(currentArgument->getDataSizeInBytes() / sizeof(float));
+            getBufferData(*outputBuffers.at(i), resultFloat.data(), currentArgument->getDataSizeInBytes());
             resultArguments.push_back(KernelArgument(currentArgument->getId(), resultFloat, currentArgument->getArgumentMemoryType(),
                 currentArgument->getArgumentQuantity()));
         }
         else
         {
-            std::vector<int> resultInt(currentArgument->getDataSize() / sizeof(int));
-            getBufferData(*outputBuffers.at(i), resultInt.data(), currentArgument->getDataSize());
+            std::vector<int> resultInt(currentArgument->getDataSizeInBytes() / sizeof(int));
+            getBufferData(*outputBuffers.at(i), resultInt.data(), currentArgument->getDataSizeInBytes());
             resultArguments.push_back(KernelArgument(currentArgument->getId(), resultInt, currentArgument->getArgumentMemoryType(),
                 currentArgument->getArgumentQuantity()));
         }

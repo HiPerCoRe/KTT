@@ -65,6 +65,11 @@ void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<Referen
     kernelManager->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentIds);
 }
 
+void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
+{
+    kernelManager->setTuningManipulator(kernelId, std::move(tuningManipulator));
+}
+
 void TunerCore::tuneKernel(const size_t id)
 {
     auto result = tuningRunner->tuneKernel(id);

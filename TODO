@@ -1,9 +1,9 @@
 Short-term goals:
-* Tuning manipulator (custom code injection and time measurement)
 * Automatic tuning of same kernel for different global sizes
 * Support for more argument data types
 * Uploading kernel arguments into local memory
 * Kernel argument printing (debugging purpose)
+* More precise timing measurement by averaging running time from multiple kernel launches with same configuration
 * Refactoring certain major classes into interfaces
 
 Long-term goals:
@@ -13,7 +13,7 @@ Long-term goals:
 * Front-end module
 
 Documentation:
-* Documentation for API and other significant headers
+* Documentation for enums and interface classes
 * Updated class diagram
 
 Testing:
