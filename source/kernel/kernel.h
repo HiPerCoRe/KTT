@@ -6,8 +6,8 @@
 
 #include "../ktt_type_aliases.h"
 #include "../enum/search_method.h"
-#include "../interface/reference_class.h"
-#include "../interface/tuning_manipulator.h"
+#include "../customization/reference_class.h"
+#include "../customization/tuning_manipulator.h"
 #include "kernel_constraint.h"
 #include "kernel_parameter.h"
 

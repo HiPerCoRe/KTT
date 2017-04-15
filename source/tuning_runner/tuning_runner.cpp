@@ -14,7 +14,7 @@ TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kern
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     openCLCore(openCLCore),
-    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(argumentManager, openCLCore))
+    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(openCLCore))
 {}
 
 std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
@@ -34,9 +34,9 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     {
         KernelConfiguration currentConfiguration = searcher->getNextConfiguration();
         std::string source = kernelManager->getKernelSourceWithDefines(id, currentConfiguration);
-
         KernelRunResult result;
         uint64_t manipulatorDuration = 0;
+
         try
         {
             if (kernel->hasTuningManipulator())

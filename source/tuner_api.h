@@ -21,10 +21,10 @@
 #include "dto/platform_info.h"
 
 // Reference class interface
-#include "interface/reference_class.h"
+#include "customization/reference_class.h"
 
 // Tuning manipulator interface
-#include "interface/tuning_manipulator.h"
+#include "customization/tuning_manipulator.h"
 
 namespace ktt
 {
