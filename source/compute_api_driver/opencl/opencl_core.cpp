@@ -21,7 +21,7 @@ OpenCLCore::OpenCLCore(const size_t platformIndex, const size_t deviceIndex) :
     }
 
     cl_device_id device = devices.at(deviceIndex).getId();
-    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id> { device });
+    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id>{ device });
     commandQueue = std::make_unique<OpenCLCommandQueue>(context->getContext(), device);
 }
 
@@ -179,13 +179,13 @@ std::unique_ptr<OpenCLBuffer> OpenCLCore::createBuffer(const ArgumentMemoryType&
 void OpenCLCore::updateBuffer(OpenCLBuffer& buffer, const void* source, const size_t dataSize) const
 {
     cl_int result = clEnqueueWriteBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
-    checkOpenCLError(result);
+    checkOpenCLError(result, std::string("clEnqueueWriteBuffer"));
 }
 
 void OpenCLCore::getBufferData(const OpenCLBuffer& buffer, void* destination, const size_t dataSize) const
 {
     cl_int result = clEnqueueReadBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
-    checkOpenCLError(result);
+    checkOpenCLError(result, std::string("clEnqueueReadBuffer"));
 }
 
 std::unique_ptr<OpenCLKernel> OpenCLCore::createKernel(const OpenCLProgram& program, const std::string& kernelName) const
@@ -222,7 +222,7 @@ cl_ulong OpenCLCore::enqueueKernel(OpenCLKernel& kernel, const std::vector<size_
     cl_event profilingEvent;
     cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), static_cast<cl_uint>(globalSize.size()), nullptr,
         globalSize.data(), localSize.data(), 0, nullptr, &profilingEvent);
-    checkOpenCLError(result);
+    checkOpenCLError(result, std::string("clEnqueueNDRangeKernel"));
 
     clFinish(commandQueue->getQueue());
     return getKernelRunDuration(profilingEvent);

@@ -8,7 +8,7 @@ Constructor
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex)`:
 Creates new tuner object for specified platform and device.
-Indices for all available platforms and devices can be retrieved by calling `printComputeAPIInfo()` method
+Indices for all available platforms and devices can be retrieved by calling `printComputeAPIInfo()` method.
 
 Compute API methods
 -------------------
@@ -20,47 +20,54 @@ Sets compute API compiler options to specified options.
 Prints basic information about available platforms and devices, including indices assigned by KTT framework, to specified output stream.
 
 * `std::vector<PlatformInfo> getPlatformInfo()`:
-Retrieves list of objects containing detailed information about all available platforms.
+Retrieves list of objects containing detailed information about all available platforms (such as platform name, vendor, list of extensions, etc.).
+PlatformInfo object supports output operator.
 
 * `std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex)`:
-Retrieves list of objects containing detailed information about all available devices on specified platform.
+Retrieves list of objects containing detailed information about all available devices (such as device name, memory sizes, list of extensions, etc.) on specified platform.
+DeviceInfo object supports output operator.
 
 Basic kernel handling methods
 -----------------------------
 
 * `size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize)`:
-Adds new kernel to tuner from string. Requires specification of kernel name (matching the one inside kernel source), global and local thread sizes.
+Adds new kernel to tuner from source inside string. Requires specification of kernel name (matching the one inside kernel source) and default global / local thread sizes.
 Returns id assigned to kernel by tuner.
 
 * `size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize)`:
-Adds new kernel to tuner from file. Requires specification of kernel name (matching the one inside kernel source), global and local thread sizes.
+Adds new kernel to tuner from source inside file. Requires specification of kernel name (matching the one inside kernel source) and default global / local thread sizes.
 Returns id assigned to kernel by tuner.
 
 * `void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:
-Sets kernel arguments for specified kernel by providing corresponding argument ids.
+Sets kernel arguments for specified kernel by providing corresponding argument ids (returned by argument addition methods).
 Different kernels can have same arguments assigned (copies of arguments for each kernel will be made during the tuning process).
-Argument ids must be specified in order of their declaration in kernel source.
+Argument ids must be specified in order of their declaration inside kernel source.
 
 * `void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values)`:
-Adds new parameter for specified kernel, parameter needs to have unique name and list of values.
+Adds new parameter for specified kernel, parameter needs to have a unique name and list of valid values.
 During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
 
 Advanced kernel handling methods
 --------------------------------
 
 * `void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)`:
-Adds new parameter for specified kernel, parameter needs to have unique name and list of values.
+Adds new parameter for specified kernel, parameter needs to have a unique name and list of valid values.
 During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
 Additionally, parameter value modifies number of threads in either global or local space in specified dimension.
-Form of modification depends on thread modifier action argument. If there are multiple thread modifiers for same space and dimension,
-modification is applied in the order of parameters' addition.
+Form of modification depends on thread modifier action argument. If there are multiple thread modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
 
 * `void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
 Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
 
 * `void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)`:
-Specifies search method for given kernel. List of search arguments needs to contain 0, 1, 2 or 5 elements, based on specified search method.
-Default search method is full search. 
+Specifies search method for given kernel. Number of required search arguments depends on specified search method.
+Default search method is full search, which requires no search arguments.
+Other methods require following search arguments:
+    - Random search - (0) fraction
+    - PSO - (0) fraction, (1) swarm size, (2) global influence, (3) local influence, (4) random influence
+    - Annealing - (0) fraction, (1) maximum temperature
+Fraction argument specifies how many configurations out of all configurations will be explored during the tuning process (eg. setting fraction to 0.5 will cause tuner to explore half of the configurations).
+Swarm size argument will be converted to size_t.
 
 * `void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)`:
 Sets tuning manipulator for specified kernel.
@@ -75,14 +82,14 @@ Adds new vector argument to kernel. Argument memory type specifies whether argum
 Currently supported data types are double, float and int. Returns id assigned to argument by tuner.
 
 * `size_t addArgument(const T value)`:
-Adds new scalar argument to kernel. Currently supported data types are double, float and int.
-Returns id assigned to argument by tuner.
+Adds new scalar argument to kernel. All scalar arguments are read-only.
+Currently supported data types are double, float and int. Returns id assigned to argument by tuner.
     
 Kernel tuning methods
 ---------------------
 
 * `void tuneKernel(const size_t kernelId)`:
-Starts the autotuning process for specified kernel.
+Starts the tuning process for specified kernel.
 
 Result printing methods
 -----------------------

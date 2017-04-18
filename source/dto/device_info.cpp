@@ -103,13 +103,13 @@ std::string deviceTypeToString(const DeviceType& deviceType)
     switch (deviceType)
     {
     case ktt::DeviceType::Accelerator:
-        return std::string("ACCELERATOR");
+        return std::string("Accelerator");
     case ktt::DeviceType::CPU:
         return std::string("CPU");
     case ktt::DeviceType::Custom:
-        return std::string("CUSTOM");
+        return std::string("Custom");
     case ktt::DeviceType::Default:
-        return std::string("DEFAULT");
+        return std::string("Default");
     default:
         return std::string("GPU");
     }

@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 
     // Set reference class, which implements C++ version of kernel computation in order to validate results provided by kernel,
     // provide list of arguments which will be validated
-    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(a, b, result, resultId), std::vector<size_t> { resultId });
+    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(a, b, result, resultId), std::vector<size_t>{ resultId });
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);
