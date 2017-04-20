@@ -79,11 +79,11 @@ Argument handling methods
 
 * `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)`:
 Adds new vector argument to kernel. Argument memory type specifies whether argument is used for input or output (or both).
-Currently supported data types are double, float and int. Returns id assigned to argument by tuner.
+Currently supported data types are double, float, int and short. Returns id assigned to argument by tuner.
 
 * `size_t addArgument(const T value)`:
 Adds new scalar argument to kernel. All scalar arguments are read-only.
-Currently supported data types are double, float and int. Returns id assigned to argument by tuner.
+Currently supported data types are double, float, int and short. Returns id assigned to argument by tuner.
     
 Kernel tuning methods
 ---------------------

@@ -1,7 +1,6 @@
 Short-term goals:
 * Launching any kernel inside tuning manipulator
 * Automatic tuning of same kernel for different global sizes
-* Support for more argument data types
 * Uploading kernel arguments into local memory
 * Kernel argument printing (debugging purpose)
 * More precise timing measurement by averaging running time from multiple kernel launches with same configuration

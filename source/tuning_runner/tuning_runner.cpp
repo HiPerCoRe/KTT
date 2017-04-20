@@ -283,7 +283,7 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromClass(const Refe
             ArgumentQuantity quantity = vectorFloat.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
             resultArguments.emplace_back(KernelArgument(referenceArgumentId, vectorFloat, ArgumentMemoryType::ReadWrite, quantity));
         }
-        else
+        else if (dataType == ArgumentDataType::Int)
         {
             int* buffer = static_cast<int*>(referenceClass->getData(referenceArgumentId));
             std::vector<int> vectorInt(buffer, buffer + dataSize / sizeof(int));
@@ -296,6 +296,24 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromClass(const Refe
 
             ArgumentQuantity quantity = vectorInt.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
             resultArguments.emplace_back(KernelArgument(referenceArgumentId, vectorInt, ArgumentMemoryType::ReadWrite, quantity));
+        }
+        else if (dataType == ArgumentDataType::Short)
+        {
+            short* buffer = static_cast<short*>(referenceClass->getData(referenceArgumentId));
+            std::vector<short> vectorShort(buffer, buffer + dataSize / sizeof(short));
+
+            if (vectorShort.size() == 0)
+            {
+                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: ")
+                    + std::to_string(referenceArgumentId));
+            }
+
+            ArgumentQuantity quantity = vectorShort.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
+            resultArguments.emplace_back(KernelArgument(referenceArgumentId, vectorShort, ArgumentMemoryType::ReadWrite, quantity));
+        }
+        else
+        {
+            throw std::runtime_error("Unsupported argument data type");
         }
     }
     

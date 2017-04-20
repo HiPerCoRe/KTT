@@ -1,4 +1,5 @@
 #include <cstring>
+#include <stdexcept>
 
 #include "manipulator_interface_implementation.h"
 
@@ -60,6 +61,17 @@ void ManipulatorInterfaceImplementation::updateArgumentScalar(const size_t argum
                 std::memcpy(data.data(), argumentData, sizeof(int));
                 argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Scalar);
             }
+            else if (argument.getArgumentDataType() == ArgumentDataType::Short)
+            {
+                std::vector<short> data;
+                data.resize(1);
+                std::memcpy(data.data(), argumentData, sizeof(short));
+                argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Scalar);
+            }
+            else
+            {
+                throw std::runtime_error("Unsupported argument data type");
+            }
             return;
         }
     }
@@ -91,6 +103,17 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argum
                 data.resize(dataSizeInBytes / sizeof(int));
                 std::memcpy(data.data(), argumentData, dataSizeInBytes);
                 argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Vector);
+            }
+            else if (argument.getArgumentDataType() == ArgumentDataType::Short)
+            {
+                std::vector<short> data;
+                data.resize(dataSizeInBytes / sizeof(short));
+                std::memcpy(data.data(), argumentData, dataSizeInBytes);
+                argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Vector);
+            }
+            else
+            {
+                throw std::runtime_error("Unsupported argument data type");
             }
             return;
         }

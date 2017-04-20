@@ -16,8 +16,12 @@ const void* KernelArgument::getData() const
         return (void*)dataDouble.data();
     case ArgumentDataType::Float:
         return (void*)dataFloat.data();
-    default:
+    case ArgumentDataType::Int:
         return (void*)dataInt.data();
+    case ArgumentDataType::Short:
+        return (void*)dataShort.data();
+    default:
+        throw std::runtime_error("Unsupported argument data type");
     }
 }
 
@@ -36,6 +40,11 @@ std::vector<int> KernelArgument::getDataInt() const
     return dataInt;
 }
 
+std::vector<short> KernelArgument::getDataShort() const
+{
+    return dataShort;
+}
+
 size_t KernelArgument::getDataSizeInBytes() const
 {
     switch (argumentDataType)
@@ -44,8 +53,12 @@ size_t KernelArgument::getDataSizeInBytes() const
         return dataDouble.size() * sizeof(double);
     case ArgumentDataType::Float:
         return dataFloat.size() * sizeof(float);
-    default:
+    case ArgumentDataType::Int:
         return dataInt.size() * sizeof(int);
+    case ArgumentDataType::Short:
+        return dataShort.size() * sizeof(short);
+    default:
+        throw std::runtime_error("Unsupported argument data type");
     }
 }
 

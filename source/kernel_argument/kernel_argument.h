@@ -28,7 +28,8 @@ public:
     {
         if (typeid(T) == typeid(double) && argumentDataType != ArgumentDataType::Double
             || typeid(T) == typeid(float) && argumentDataType != ArgumentDataType::Float
-            || typeid(T) == typeid(int) && argumentDataType != ArgumentDataType::Int)
+            || typeid(T) == typeid(int) && argumentDataType != ArgumentDataType::Int
+            || typeid(T) == typeid(short) && argumentDataType != ArgumentDataType::Short)
         {
             throw std::runtime_error("Updated data provided for kernel argument have different data type");
         }
@@ -42,6 +43,7 @@ public:
     std::vector<double> getDataDouble() const;
     std::vector<float> getDataFloat() const;
     std::vector<int> getDataInt() const;
+    std::vector<short> getDataShort() const;
     size_t getDataSizeInBytes() const;
     ArgumentDataType getArgumentDataType() const;
     ArgumentMemoryType getArgumentMemoryType() const;
@@ -52,6 +54,7 @@ private:
     std::vector<double> dataDouble;
     std::vector<float> dataFloat;
     std::vector<int> dataInt;
+    std::vector<short> dataShort;
     ArgumentDataType argumentDataType;
     ArgumentMemoryType argumentMemoryType;
     ArgumentQuantity argumentQuantity;
@@ -80,6 +83,12 @@ private:
             dataInt.resize(data.size());
             std::memcpy(dataInt.data(), data.data(), data.size() * sizeof(int));
             argumentDataType = ArgumentDataType::Int;
+        }
+        else if (typeid(T) == typeid(short))
+        {
+            dataShort.resize(data.size());
+            std::memcpy(dataShort.data(), data.data(), data.size() * sizeof(short));
+            argumentDataType = ArgumentDataType::Short;
         }
         else
         {

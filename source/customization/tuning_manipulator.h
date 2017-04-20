@@ -14,6 +14,7 @@ public:
     virtual ~TuningManipulator();
     virtual void launchComputation(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize,
         const std::vector<ParameterValue>& parameterValues) = 0;
+    virtual std::vector<size_t> getUtilizedKernelIds() const;
 
     std::vector<ResultArgument> runKernel(const size_t kernelId);
     std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize);

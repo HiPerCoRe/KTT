@@ -114,9 +114,17 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
         {
             validationResult &= validateResult(kernelArgument.getDataFloat(), referenceArgument.getDataFloat());
         }
-        else
+        else if (referenceDataType == ArgumentDataType::Int)
         {
             validationResult &= validateResult(kernelArgument.getDataInt(), referenceArgument.getDataInt());
+        }
+        else if (referenceDataType == ArgumentDataType::Short)
+        {
+            validationResult &= validateResult(kernelArgument.getDataShort(), referenceArgument.getDataShort());
+        }
+        else
+        {
+            throw std::runtime_error("Unsupported argument data type");
         }
     }
 

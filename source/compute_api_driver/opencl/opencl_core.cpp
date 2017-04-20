@@ -206,8 +206,14 @@ void OpenCLCore::setKernelArgumentScalar(OpenCLKernel& kernel, const KernelArgum
     case ArgumentDataType::Float:
         kernel.setKernelArgumentScalar(argument.getDataFloat().at(0));
         break;
-    default:
+    case ArgumentDataType::Int:
         kernel.setKernelArgumentScalar(argument.getDataInt().at(0));
+        break;
+    case ArgumentDataType::Short:
+        kernel.setKernelArgumentScalar(argument.getDataShort().at(0));
+        break;
+    default:
+        throw std::runtime_error("Unsupported argument data type");
     }
 }
 
@@ -328,12 +334,23 @@ std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<std
             resultArguments.push_back(KernelArgument(currentArgument->getId(), resultFloat, currentArgument->getArgumentMemoryType(),
                 currentArgument->getArgumentQuantity()));
         }
-        else
+        else if (type == ArgumentDataType::Int)
         {
             std::vector<int> resultInt(currentArgument->getDataSizeInBytes() / sizeof(int));
             getBufferData(*outputBuffers.at(i), resultInt.data(), currentArgument->getDataSizeInBytes());
             resultArguments.push_back(KernelArgument(currentArgument->getId(), resultInt, currentArgument->getArgumentMemoryType(),
                 currentArgument->getArgumentQuantity()));
+        }
+        else if (type == ArgumentDataType::Short)
+        {
+            std::vector<short> resultShort(currentArgument->getDataSizeInBytes() / sizeof(short));
+            getBufferData(*outputBuffers.at(i), resultShort.data(), currentArgument->getDataSizeInBytes());
+            resultArguments.push_back(KernelArgument(currentArgument->getId(), resultShort, currentArgument->getArgumentMemoryType(),
+                currentArgument->getArgumentQuantity()));
+        }
+        else
+        {
+            throw std::runtime_error("Unsupported argument data type");
         }
     }
 
