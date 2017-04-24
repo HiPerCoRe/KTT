@@ -67,8 +67,8 @@ Other methods require following search arguments:
     - PSO - (0) fraction, (1) swarm size, (2) global influence, (3) local influence, (4) random influence
     - Annealing - (0) fraction, (1) maximum temperature
 
-Fraction argument specifies how many configurations out of all configurations will be explored during the tuning process (eg. setting fraction to 0.5 will cause tuner to explore half of the configurations).
-Swarm size argument will be converted to size_t.
+    Fraction argument specifies how many configurations out of all configurations will be explored during the tuning process (eg. setting fraction to 0.5 will cause tuner to explore half of the configurations).
+    Swarm size argument will be converted to size_t.
 
 * `void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)`:
 Sets tuning manipulator for specified kernel.
@@ -159,7 +159,8 @@ Tuning manipulator example
 --------------------------
 
 Following example shows how default tuning manipulator implementation looks like (no difference in functionality compared to tuning of kernel without using a manipulator):
-`class SimpleTuningManipulator : public ktt::TuningManipulator
+```c++
+class SimpleTuningManipulator : public ktt::TuningManipulator
 {
 public:
     virtual void launchComputation(const size_t kernelId, const ktt::DimensionVector& globalSize, const ktt::DimensionVector& localSize,
@@ -167,4 +168,5 @@ public:
     {
         runKernel(kernelId);
     }
-};`
+};
+```
