@@ -1,4 +1,4 @@
-KTT API Documentation
+KTT API documentation
 =====================
 
 This file describes the API of KTT framework. All classes and methods are located in the `ktt` namespace.
@@ -66,6 +66,7 @@ Other methods require following search arguments:
     - Random search - (0) fraction
     - PSO - (0) fraction, (1) swarm size, (2) global influence, (3) local influence, (4) random influence
     - Annealing - (0) fraction, (1) maximum temperature
+
 Fraction argument specifies how many configurations out of all configurations will be explored during the tuning process (eg. setting fraction to 0.5 will cause tuner to explore half of the configurations).
 Swarm size argument will be converted to size_t.
 
@@ -118,3 +119,52 @@ Only specified output arguments will be validated.
 * `void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)`:
 Sets validation method and tolerance threshold for floating point arguments.
 Default validation method is side by side comparison. Default tolerance threshold is 1e-4.
+
+
+Tuning Manipulator usage
+========================
+
+In order to use tuning manipulator, new class, which publicly inherits from TuningManipulator class needs to be created.
+TuningManipulator class contains following public methods:
+
+* `~TuningManipulator()`:
+Inheriting class can override destructor with custom implementation if needed.
+Default implementation is provided by API.
+
+* `void launchComputation(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterValue>& parameterValues)`:
+Inheriting class must provide implementation for this method. Provided arguments include id, thread sizes and parameter values for current configuration of currently tuned kernel.
+Usage of these argument is completely optional. This method must, at very least, call `runKernel()` method with currently tuned kernel id as its first argument.
+This method can also call any other methods available in base TuningManipulator class.
+
+* `std::vector<size_t> getUtilizedKernelIds() const`:
+This method currently provides no functionality. It will be available in future.
+
+* `std::vector<ResultArgument> runKernel(const size_t kernelId)`:
+Launches kernel with specified id, using thread sizes based only on the current configuration.
+Returns vector of result arguments (arguments assigned to kernel with kernelId, which were tagged as input-output or output-only arguments).
+
+* `std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize)`:
+Launches kernel with specified id, using specified thread sizes.
+Returns vector of result arguments (arguments assigned to kernel with kernelId, which were tagged as input-output or output-only arguments).
+
+* `void updateArgumentScalar(const size_t argumentId, const void* argumentData)`:
+Updates scalar argument, which is utilized by currently tuned kernel.
+This method is useful for iterative kernel launches.
+
+* `void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes)`:
+Updates vector argument, which is utilized by currently tuned kernel.
+This method is useful for iterative kernel launches.
+
+Tuning manipulator example
+--------------------------
+
+Following example shows how default tuning manipulator implementation looks like (no difference in functionality compared to tuning of kernel without using a manipulator):
+`class SimpleTuningManipulator : public ktt::TuningManipulator
+{
+public:
+    virtual void launchComputation(const size_t kernelId, const ktt::DimensionVector& globalSize, const ktt::DimensionVector& localSize,
+        const std::vector<ktt::ParameterValue>& parameterValues) override
+    {
+        runKernel(kernelId);
+    }
+};`

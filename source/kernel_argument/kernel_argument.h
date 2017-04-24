@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 #include <typeinfo>
 #include <vector>
@@ -49,6 +50,8 @@ public:
     ArgumentMemoryType getArgumentMemoryType() const;
     ArgumentQuantity getArgumentQuantity() const;
 
+    friend std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument);
+
 private:
     size_t id;
     std::vector<double> dataDouble;
@@ -96,5 +99,15 @@ private:
         }
     }
 };
+
+std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument);
+
+template <typename T> void printVector(std::ostream& outputTarget, const std::vector<T>& data)
+{
+    for (size_t i = 0; i < data.size(); i++)
+    {
+        outputTarget << i << ": " << data.at(i) << std::endl;
+    }
+}
 
 } // namespace ktt

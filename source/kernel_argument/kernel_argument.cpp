@@ -77,4 +77,30 @@ ArgumentQuantity KernelArgument::getArgumentQuantity() const
     return argumentQuantity;
 }
 
+std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument)
+{
+    if (kernelArgument.argumentDataType == ArgumentDataType::Double)
+    {
+        printVector(outputTarget, kernelArgument.dataDouble);
+    }
+    else if (kernelArgument.argumentDataType == ArgumentDataType::Float)
+    {
+        printVector(outputTarget, kernelArgument.dataFloat);
+    }
+    else if (kernelArgument.argumentDataType == ArgumentDataType::Int)
+    {
+        printVector(outputTarget, kernelArgument.dataInt);
+    }
+    else if (kernelArgument.argumentDataType == ArgumentDataType::Short)
+    {
+        printVector(outputTarget, kernelArgument.dataShort);
+    }
+    else
+    {
+        throw std::runtime_error("Unsupported argument data type was provided for kernel argument");
+    }
+
+    return outputTarget;
+}
+
 } // namespace ktt
