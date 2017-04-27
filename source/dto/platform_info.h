@@ -21,7 +21,7 @@ public:
     void setVersion(const std::string& version);
     void setExtensions(const std::string& extensions);
 
-    friend std::ostream& operator<<(std::ostream& outputTarget, const PlatformInfo& platformInfo);
+    friend std::ostream& operator<<(std::ostream&, const PlatformInfo&);
 
 private:
     size_t id;

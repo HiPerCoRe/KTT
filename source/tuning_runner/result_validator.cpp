@@ -5,9 +5,10 @@
 namespace ktt
 {
 
-ResultValidator::ResultValidator() :
+ResultValidator::ResultValidator(Logger* logger) :
     toleranceThreshold(1e-4),
-    validationMethod(ValidationMethod::SideBySideComparison)
+    validationMethod(ValidationMethod::SideBySideComparison),
+    logger(logger)
 {}
 
 bool ResultValidator::validateArgumentWithClass(const size_t kernelId, const std::vector<KernelArgument>& resultArguments) const

@@ -8,6 +8,7 @@
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
 #include "tuning_runner/tuning_runner.h"
+#include "utility/logger.h"
 #include "utility/result_printer.h"
 
 namespace ktt
@@ -55,13 +56,18 @@ public:
     static std::vector<PlatformInfo> getPlatformInfo();
     static std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex);
 
+    // Logger methods
+    void setLoggingTarget(const LoggingTarget& loggingTarget, const std::string& filePath);
+    void log(const std::string& message) const;
+
 private:
     // Attributes
     std::unique_ptr<ArgumentManager> argumentManager;
     std::unique_ptr<KernelManager> kernelManager;
     std::unique_ptr<OpenCLCore> openCLCore;
     std::unique_ptr<TuningRunner> tuningRunner;
-    std::unique_ptr<ResultPrinter> resultPrinter;
+    Logger logger;
+    ResultPrinter resultPrinter;
 };
 
 } // namespace ktt

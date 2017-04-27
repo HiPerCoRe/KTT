@@ -34,7 +34,7 @@ public:
     void setMaxComputeUnits(const uint32_t maxComputeUnits);
     void setMaxWorkGroupSize(const size_t maxWorkGroupSize);
 
-    friend std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo);
+    friend std::ostream& operator<<(std::ostream&, const DeviceInfo&);
 
 private:
     size_t id;

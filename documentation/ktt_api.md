@@ -120,6 +120,13 @@ Only specified output arguments will be validated.
 Sets validation method and tolerance threshold for floating point arguments.
 Default validation method is side by side comparison. Default tolerance threshold is 1e-4.
 
+Utility methods
+-------------------------
+
+* `void setLoggingTarget(const LoggingTarget& loggingTarget, const std::string& filePath = std::string(""))`:
+Sets target for info messages logging to specified logging target.
+If logging target is a file, path to this file needs to be specified as well.
+
 
 Tuning Manipulator usage
 ========================

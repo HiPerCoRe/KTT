@@ -8,8 +8,9 @@
 
 // Type aliases and enums relevant to usage of API methods
 #include "ktt_type_aliases.h"
-#include "enum/dimension.h"
 #include "enum/argument_memory_type.h"
+#include "enum/dimension.h"
+#include "enum/logging_target.h"
 #include "enum/print_format.h"
 #include "enum/search_method.h"
 #include "enum/thread_modifier_action.h"
@@ -75,6 +76,9 @@ public:
     static void printComputeAPIInfo(std::ostream& outputTarget);
     static std::vector<PlatformInfo> getPlatformInfo();
     static std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex);
+
+    // Utility methods
+    void setLoggingTarget(const LoggingTarget& loggingTarget, const std::string& filePath = std::string(""));
 
 private:
     // Attributes

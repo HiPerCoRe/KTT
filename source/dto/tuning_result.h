@@ -23,7 +23,7 @@ public:
     uint64_t getTotalDuration() const;
     KernelConfiguration getConfiguration() const;
 
-    friend std::ostream& operator<<(std::ostream& outputTarget, const TuningResult& tuningResult);
+    friend std::ostream& operator<<(std::ostream&, const TuningResult&);
 
 private:
     std::string kernelName;

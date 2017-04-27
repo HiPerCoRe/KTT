@@ -50,7 +50,7 @@ public:
     ArgumentMemoryType getArgumentMemoryType() const;
     ArgumentQuantity getArgumentQuantity() const;
 
-    friend std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument);
+    friend std::ostream& operator<<(std::ostream&, const KernelArgument&);
 
 private:
     size_t id;

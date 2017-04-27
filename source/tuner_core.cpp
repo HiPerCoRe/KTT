@@ -7,8 +7,7 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex) :
     argumentManager(std::make_unique<ArgumentManager>()),
     kernelManager(std::make_unique<KernelManager>()),
     openCLCore(std::make_unique<OpenCLCore>(platformIndex, deviceIndex)),
-    tuningRunner(std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), openCLCore.get())),
-    resultPrinter(std::make_unique<ResultPrinter>())
+    tuningRunner(std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, openCLCore.get()))
 {}
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -73,7 +72,7 @@ void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<Tuni
 void TunerCore::tuneKernel(const size_t id)
 {
     auto result = tuningRunner->tuneKernel(id);
-    resultPrinter->setResult(id, result);
+    resultPrinter.setResult(id, result);
 }
 
 void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
@@ -83,7 +82,7 @@ void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, co
 
 void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const
 {
-    resultPrinter->printResult(kernelId, outputTarget, printFormat);
+    resultPrinter.printResult(kernelId, outputTarget, printFormat);
 }
 
 void TunerCore::printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const
@@ -95,7 +94,7 @@ void TunerCore::printResult(const size_t kernelId, const std::string& filePath, 
         throw std::runtime_error(std::string("Unable to open file: ") + filePath);
     }
 
-    resultPrinter->printResult(kernelId, outputFile, printFormat);
+    resultPrinter.printResult(kernelId, outputFile, printFormat);
 }
 
 void TunerCore::setCompilerOptions(const std::string& options)
@@ -116,6 +115,20 @@ std::vector<PlatformInfo> TunerCore::getPlatformInfo()
 std::vector<DeviceInfo> TunerCore::getDeviceInfo(const size_t platformIndex)
 {
     return OpenCLCore::getOpenCLDeviceInfoAll(platformIndex);
+}
+
+void TunerCore::setLoggingTarget(const LoggingTarget& loggingTarget, const std::string& filePath)
+{
+    logger.setLoggingTarget(loggingTarget);
+    if (loggingTarget == LoggingTarget::File)
+    {
+        logger.setFilePath(filePath);
+    }
+}
+
+void TunerCore::log(const std::string& message) const
+{
+    logger.log(message);
 }
 
 } // namespace ktt

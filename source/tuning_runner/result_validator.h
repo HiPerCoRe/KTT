@@ -3,11 +3,13 @@
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <type_traits>
 #include <vector>
 
 #include "../enum/validation_method.h"
 #include "../kernel_argument/kernel_argument.h"
+#include "../utility/logger.h"
 
 namespace ktt
 {
@@ -16,7 +18,7 @@ class ResultValidator
 {
 public:
     // Constructor
-    ResultValidator();
+    ResultValidator(Logger* logger);
 
     // Core methods
     bool validateArgumentWithClass(const size_t kernelId, const std::vector<KernelArgument>& resultArguments) const;
@@ -41,6 +43,7 @@ private:
     ValidationMethod validationMethod;
     std::map<size_t, std::vector<KernelArgument>> referenceClassResultMap;
     std::map<size_t, std::vector<KernelArgument>> referenceKernelResultMap;
+    Logger* logger;
 
     // Helper methods
     bool validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments) const;
@@ -50,8 +53,9 @@ private:
     {
         if (result.size() != referenceResult.size())
         {
-            std::cerr << "Number of elements in results differs, reference size: <" << referenceResult.size() << ">; result size: <" << result.size()
-                << ">" << std::endl;
+            std::stringstream stream;
+            stream << "Number of elements in results differs, reference size: " << referenceResult.size() << "; result size: " << result.size();
+            logger->log(stream.str());
             return false;
         }
         return validateResultInner(result, referenceResult, std::is_floating_point<T>());
@@ -69,7 +73,9 @@ private:
             }
             if (difference > toleranceThreshold)
             {
-                std::cerr << "Results differ, absolute difference is: <" << difference << ">" << std::endl;
+                std::stringstream stream;
+                stream << "Results differ, absolute difference is: " << difference;
+                logger->log(stream.str());
                 return false;
             }
             return true;
@@ -80,8 +86,10 @@ private:
             {
                 if (std::fabs(result.at(i) - referenceResult.at(i)) > toleranceThreshold)
                 {
-                    std::cerr << "Results differ at index " << i << "; reference value: <" << referenceResult.at(i) << ">; result value: <"
-                        << result.at(i) << ">" << std::endl;
+                    std::stringstream stream;
+                    stream << "Results differ at index " << i << "; reference value: " << referenceResult.at(i) << "; result value: "
+                        << result.at(i);
+                    logger->log(stream.str());
                     return false;
                 }
             }
@@ -96,8 +104,9 @@ private:
         {
             if (result.at(i) != referenceResult.at(i))
             {
-                std::cerr << "Results differ at index " << i << "; reference value: <" << referenceResult.at(i) << ">; result value: <"
-                    << result.at(i) << ">" << std::endl;
+                std::stringstream stream;
+                stream << "Results differ at index " << i << "; reference value: " << referenceResult.at(i) << "; result value: " << result.at(i);
+                logger->log(stream.str());
                 return false;
             }
         }
