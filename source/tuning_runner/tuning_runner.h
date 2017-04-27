@@ -52,6 +52,7 @@ private:
         const std::vector<size_t>& referenceArgumentIndices) const;
     std::vector<KernelArgument> getReferenceResultFromKernel(const size_t referenceKernelId,
         const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& referenceArgumentIndices) const;
+    void printArgument(const KernelArgument& kernelArgument, const std::string& kernelName) const;
 };
 
 } // namespace ktt

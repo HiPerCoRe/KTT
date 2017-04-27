@@ -9,6 +9,7 @@
 // Type aliases and enums relevant to usage of API methods
 #include "ktt_type_aliases.h"
 #include "enum/argument_memory_type.h"
+#include "enum/argument_print_condition.h"
 #include "enum/dimension.h"
 #include "enum/logging_target.h"
 #include "enum/print_format.h"
@@ -57,6 +58,8 @@ public:
     // Argument handling methods
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType);
     template <typename T> size_t addArgument(const T value);
+    void enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
+        const ArgumentPrintCondition& argumentPrintCondition);
 
     // Kernel tuning methods
     void tuneKernel(const size_t kernelId);

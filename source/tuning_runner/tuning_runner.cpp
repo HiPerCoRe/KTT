@@ -1,3 +1,4 @@
+#include <fstream>
 #include <sstream>
 #include <string>
 
@@ -174,25 +175,40 @@ bool TuningRunner::processResult(const Kernel* kernel, const KernelRunResult& re
         return false;
     }
 
-    bool resultsMatch = true;
+    bool resultIsCorrect = true;
     if (kernel->hasReferenceClass() || kernel->hasReferenceKernel())
     {
-        resultsMatch = validateResult(kernel, result);
+        resultIsCorrect = validateResult(kernel, result);
     }
 
     std::stringstream stream;
-    if (resultsMatch)
+    if (resultIsCorrect)
     {
+        for (const auto& argument : result.getResultArguments())
+        {
+            const KernelArgument* managerArgument = &argumentManager->getArgument(argument.getId());
+            if (managerArgument->isPrintingEnabled() && managerArgument->getArgumentPrintCondition() != ArgumentPrintCondition::InvalidOnly)
+            {
+                printArgument(argument, kernel->getName());
+            }
+        }
         stream << "Kernel run completed successfully in " << (result.getDuration() + manipulatorDuration) / 1'000'000 << "ms" << std::endl;
-        
     }
     else
     {
+        for (const auto& argument : result.getResultArguments())
+        {
+            const KernelArgument* managerArgument = &argumentManager->getArgument(argument.getId());
+            if (managerArgument->isPrintingEnabled() && managerArgument->getArgumentPrintCondition() != ArgumentPrintCondition::ValidOnly)
+            {
+                printArgument(argument, kernel->getName());
+            }
+        }
         stream << "Kernel run completed successfully, but results differ" << std::endl;
     }
     logger->log(stream.str());
 
-    return resultsMatch;
+    return resultIsCorrect;
 }
 
 bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& result)
@@ -393,6 +409,24 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromKernel(const siz
     }
 
     return resultArguments;
+}
+
+void TuningRunner::printArgument(const KernelArgument& kernelArgument, const std::string& kernelName) const
+{
+    std::string filePath = argumentManager->getArgument(kernelArgument.getId()).getPrintFilePath();
+    std::ofstream outputFile(filePath, std::ios::app | std::ios_base::out);
+
+    if (!outputFile.is_open())
+    {
+        std::stringstream stream;
+        stream << "Unable to open file: " << filePath << std::endl;
+        logger->log(stream.str());
+        return;
+    }
+
+    outputFile << "Contents of argument with id " << kernelArgument.getId() << " for kernel with name <" << kernelName
+        << ">; format is <index: value>" << std::endl;
+    outputFile << kernelArgument << std::endl;
 }
 
 } // namespace ktt

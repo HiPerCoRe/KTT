@@ -41,6 +41,8 @@ public:
     {
         return argumentManager->addArgument(data, argumentMemoryType, argumentQuantity);
     }
+    void enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
+        const ArgumentPrintCondition& argumentPrintCondition);
 
     // Tuning runner methods
     void tuneKernel(const size_t id);

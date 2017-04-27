@@ -8,6 +8,7 @@
 
 #include "../enum/argument_data_type.h"
 #include "../enum/argument_memory_type.h"
+#include "../enum/argument_print_condition.h"
 #include "../enum/argument_quantity.h"
 
 namespace ktt
@@ -20,7 +21,8 @@ public:
         const ArgumentQuantity& argumentQuantity) :
         id(id),
         argumentMemoryType(argumentMemoryType),
-        argumentQuantity(argumentQuantity)
+        argumentQuantity(argumentQuantity),
+        printingEnabled(false)
     {
         initializeData(data);
     }
@@ -39,6 +41,8 @@ public:
         initializeData(data);
     }
 
+    void enablePrinting(const std::string& printFilePath, const ArgumentPrintCondition& argumentPrintCondition);
+
     size_t getId() const;
     const void* getData() const;
     std::vector<double> getDataDouble() const;
@@ -49,6 +53,9 @@ public:
     ArgumentDataType getArgumentDataType() const;
     ArgumentMemoryType getArgumentMemoryType() const;
     ArgumentQuantity getArgumentQuantity() const;
+    bool isPrintingEnabled() const;
+    ArgumentPrintCondition getArgumentPrintCondition() const;
+    std::string getPrintFilePath() const;
 
     friend std::ostream& operator<<(std::ostream&, const KernelArgument&);
 
@@ -61,6 +68,9 @@ private:
     ArgumentDataType argumentDataType;
     ArgumentMemoryType argumentMemoryType;
     ArgumentQuantity argumentQuantity;
+    bool printingEnabled;
+    ArgumentPrintCondition argumentPrintCondition;
+    std::string printFilePath;
 
     template <typename T> void initializeData(const std::vector<T>& data)
     {

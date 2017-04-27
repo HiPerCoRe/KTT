@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 
     // Declare kernel parameters
     const std::string kernelFile = std::string("../examples/simple/simple_kernel.cl");
-    const int numberOfElements = 512 * 512;
+    const size_t numberOfElements = 1024 * 1024;
     ktt::DimensionVector ndRangeDimensions(numberOfElements, 1, 1);
     ktt::DimensionVector workGroupDimensions(256, 1, 1);
 
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
     std::vector<float> result(numberOfElements, 0.0f);
 
     // Initialize data
-    for (int i = 0; i < numberOfElements; i++)
+    for (size_t i = 0; i < numberOfElements; i++)
     {
         a.at(i) = static_cast<float>(i);
         b.at(i) = static_cast<float>(i + 1);

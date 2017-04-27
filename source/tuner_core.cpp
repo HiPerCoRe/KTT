@@ -69,6 +69,12 @@ void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<Tuni
     kernelManager->setTuningManipulator(kernelId, std::move(tuningManipulator));
 }
 
+void TunerCore::enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
+    const ArgumentPrintCondition& argumentPrintCondition)
+{
+    argumentManager->enableArgumentPrinting(argumentIds, filePath, argumentPrintCondition);
+}
+
 void TunerCore::tuneKernel(const size_t id)
 {
     auto result = tuningRunner->tuneKernel(id);

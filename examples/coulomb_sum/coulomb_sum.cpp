@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     const float upperBoundary = 20.0f; 
     // If higher than 4k, computations with constant memory enabled will be invalid on many devices due to constant memory capacity limit
     const int numberOfAtoms = 4096;
-    const int numberOfGridPoints = 512 * 512;
+    const size_t numberOfGridPoints = 512 * 512;
 
     // Declare data variables
     float gridSpacing;
