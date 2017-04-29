@@ -279,9 +279,14 @@ std::vector<DeviceInfo> Tuner::getDeviceInfo(const size_t platformIndex)
     }
 }
 
-void Tuner::setLoggingTarget(const LoggingTarget& loggingTarget, const std::string& filePath)
+void Tuner::setLoggingTarget(std::ostream& outputTarget)
 {
-    tunerCore->setLoggingTarget(loggingTarget, filePath);
+    tunerCore->setLoggingTarget(outputTarget);
+}
+
+void Tuner::setLoggingTarget(const std::string& filePath)
+{
+    tunerCore->setLoggingTarget(filePath);
 }
 
 } // namespace ktt

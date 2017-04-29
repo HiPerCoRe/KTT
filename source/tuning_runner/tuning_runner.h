@@ -39,10 +39,9 @@ private:
     std::pair<KernelRunResult, uint64_t> runKernel(Kernel* kernel, const KernelConfiguration& currentConfiguration,
         const size_t currentConfigurationIndex, const size_t configurationsCount);
     std::pair<KernelRunResult, uint64_t> runKernelWithManipulator(TuningManipulator* manipulator, const size_t kernelId, const std::string& source,
-        const std::string& kernelName, const KernelConfiguration& currentConfiguration, const std::vector<KernelArgument>& arguments);
+        const std::string& kernelName, const KernelConfiguration& currentConfiguration, const std::vector<size_t>& argumentIndices);
     std::unique_ptr<Searcher> getSearcher(const SearchMethod& searchMethod, const std::vector<double>& searchArguments,
         const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters) const;
-    std::vector<size_t> convertDimensionVector(const DimensionVector& vector) const;
     std::vector<KernelArgument> getKernelArguments(const size_t kernelId) const;
     bool processResult(const Kernel* kernel, const KernelRunResult& result, const uint64_t manipulatorDuration);
     bool validateResult(const Kernel* kernel, const KernelRunResult& result);

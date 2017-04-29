@@ -3,7 +3,6 @@
 #include <cmath>
 #include <iostream>
 #include <map>
-#include <sstream>
 #include <type_traits>
 #include <vector>
 
@@ -53,9 +52,8 @@ private:
     {
         if (result.size() != referenceResult.size())
         {
-            std::stringstream stream;
-            stream << "Number of elements in results differs, reference size: " << referenceResult.size() << "; result size: " << result.size();
-            logger->log(stream.str());
+            logger->log(std::string("Number of elements in results differs, reference size: ") + std::to_string(referenceResult.size())
+                + "; result size: " + std::to_string(result.size()));
             return false;
         }
         return validateResultInner(result, referenceResult, std::is_floating_point<T>());
@@ -73,9 +71,7 @@ private:
             }
             if (difference > toleranceThreshold)
             {
-                std::stringstream stream;
-                stream << "Results differ, absolute difference is: " << difference;
-                logger->log(stream.str());
+                logger->log(std::string("Results differ, absolute difference is: ") + std::to_string(difference));
                 return false;
             }
             return true;
@@ -86,10 +82,8 @@ private:
             {
                 if (std::fabs(result.at(i) - referenceResult.at(i)) > toleranceThreshold)
                 {
-                    std::stringstream stream;
-                    stream << "Results differ at index " << i << "; reference value: " << referenceResult.at(i) << "; result value: "
-                        << result.at(i);
-                    logger->log(stream.str());
+                    logger->log(std::string("Results differ at index ") + std::to_string(i) + "; reference value: "
+                        + std::to_string(referenceResult.at(i)) + "; result value: " + std::to_string(result.at(i)));
                     return false;
                 }
             }
@@ -104,9 +98,8 @@ private:
         {
             if (result.at(i) != referenceResult.at(i))
             {
-                std::stringstream stream;
-                stream << "Results differ at index " << i << "; reference value: " << referenceResult.at(i) << "; result value: " << result.at(i);
-                logger->log(stream.str());
+                logger->log(std::string("Results differ at index ") + std::to_string(i) + "; reference value: "
+                    + std::to_string(referenceResult.at(i)) + "; result value: " + std::to_string(result.at(i)));
                 return false;
             }
         }

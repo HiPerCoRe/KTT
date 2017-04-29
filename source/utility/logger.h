@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <string>
 
 #include "../enum/logging_target.h"
@@ -12,13 +13,14 @@ class Logger
 public:
     Logger();
 
-    void setLoggingTarget(const LoggingTarget& loggingTarget);
-    void setFilePath(const std::string& filePath);
+    void setLoggingTarget(std::ostream& outputTarget);
+    void setLoggingTarget(const std::string& filePath);
 
     void log(const std::string& message) const;
 
 private:
-    LoggingTarget loggingTarget;
+    std::ostream* outputTarget;
+    bool filePathValid;
     std::string filePath;
 };
 

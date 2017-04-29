@@ -123,13 +123,14 @@ std::vector<DeviceInfo> TunerCore::getDeviceInfo(const size_t platformIndex)
     return OpenCLCore::getOpenCLDeviceInfoAll(platformIndex);
 }
 
-void TunerCore::setLoggingTarget(const LoggingTarget& loggingTarget, const std::string& filePath)
+void TunerCore::setLoggingTarget(std::ostream& outputTarget)
 {
-    logger.setLoggingTarget(loggingTarget);
-    if (loggingTarget == LoggingTarget::File)
-    {
-        logger.setFilePath(filePath);
-    }
+    logger.setLoggingTarget(outputTarget);
+}
+
+void TunerCore::setLoggingTarget(const std::string& filePath)
+{
+    logger.setLoggingTarget(filePath);
 }
 
 void TunerCore::log(const std::string& message) const

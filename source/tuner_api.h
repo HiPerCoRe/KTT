@@ -81,7 +81,8 @@ public:
     static std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex);
 
     // Utility methods
-    void setLoggingTarget(const LoggingTarget& loggingTarget, const std::string& filePath = std::string(""));
+    void setLoggingTarget(std::ostream& outputTarget);
+    void setLoggingTarget(const std::string& filePath);
 
 private:
     // Attributes

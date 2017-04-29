@@ -128,10 +128,11 @@ Default validation method is side by side comparison. Default tolerance threshol
 Utility methods
 -------------------------
 
-* `void setLoggingTarget(const LoggingTarget& loggingTarget, const std::string& filePath = std::string(""))`:
-Sets target for info messages logging to specified logging target.
-If logging target is a file, path to this file needs to be specified as well.
+* `void setLoggingTarget(std::ostream& outputTarget)`:
+Sets target for info messages logging to specified output stream.
 
+* `void setLoggingTarget(const std::string& filePath)`:
+Sets target for info messages logging to specified file.
 
 Tuning Manipulator usage
 ========================

@@ -1,7 +1,9 @@
 #include <cstring>
 #include <stdexcept>
+#include <utility>
 
 #include "manipulator_interface_implementation.h"
+#include "../utility/ktt_utility.h"
 
 namespace ktt
 {
@@ -13,14 +15,28 @@ ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(OpenCLCor
 
 std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const size_t kernelId)
 {
-    return runKernel(kernelId, globalSize, localSize);
+    auto dataPointer = kernelDataMap.find(kernelId);
+    if (dataPointer == kernelDataMap.end())
+    {
+        throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId) +
+            " was called from inside tuning manipulator which did not advertise utilization of this kernel");
+    }
+    return runKernel(kernelId, dataPointer->second.getGlobalSize(), dataPointer->second.getLocalSize());
 }
 
 std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const size_t kernelId, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    KernelRunResult result = openCLCore->runKernel(kernelSource, kernelName, convertDimensionVector(globalSize), convertDimensionVector(localSize),
-        kernelArguments);
+    auto dataPointer = kernelDataMap.find(kernelId);
+    if (dataPointer == kernelDataMap.end())
+    {
+        throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId) +
+            " was called from inside tuning manipulator which did not advertise utilization of this kernel");
+    }
+    KernelRuntimeData kernelData = dataPointer->second;
+
+    KernelRunResult result = openCLCore->runKernel(kernelData.getSource(), kernelData.getName(), convertDimensionVector(globalSize),
+        convertDimensionVector(localSize), getArguments(kernelData.getArgumentIndices()));
     currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead() + result.getOverhead(),
         result.getResultArguments());
 
@@ -120,18 +136,20 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argum
     }
 }
 
-void ManipulatorInterfaceImplementation::setupKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
-    const DimensionVector& localSize, const std::vector<KernelArgument>& arguments)
+void ManipulatorInterfaceImplementation::addKernel(const size_t id, const std::string& name, const std::string& source,
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<size_t>& argumentIndices)
 {
-    this->kernelSource = source;
-    this->kernelName = kernelName;
-    this->globalSize = globalSize;
-    this->localSize = localSize;
-    this->kernelArguments = arguments;
+    kernelDataMap.insert(std::make_pair(id, KernelRuntimeData(name, source, globalSize, localSize, argumentIndices)));
 }
 
-void ManipulatorInterfaceImplementation::resetCurrentResult()
+void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<KernelArgument>& kernelArguments)
 {
+    this->kernelArguments = kernelArguments;
+}
+
+void ManipulatorInterfaceImplementation::clearData()
+{
+    kernelDataMap.clear();
     currentResult = KernelRunResult(0, 0, std::vector<KernelArgument> {});
 }
 
@@ -140,13 +158,20 @@ KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const
     return currentResult;
 }
 
-std::vector<size_t> ManipulatorInterfaceImplementation::convertDimensionVector(const DimensionVector& vector) const
+std::vector<KernelArgument> ManipulatorInterfaceImplementation::getArguments(const std::vector<size_t>& argumentIndices)
 {
-    std::vector<size_t> result;
+    std::vector<KernelArgument> result;
 
-    result.push_back(std::get<0>(vector));
-    result.push_back(std::get<1>(vector));
-    result.push_back(std::get<2>(vector));
+    for (const auto index : argumentIndices)
+    {
+        for (const auto& argument : kernelArguments)
+        {
+            if (index == argument.getId())
+            {
+                result.push_back(argument);
+            }
+        }
+    }
 
     return result;
 }
