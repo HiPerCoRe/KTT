@@ -1,21 +1,15 @@
-Short-term goals:
-* Launching any kernel inside tuning manipulator
-* Automatic tuning of same kernel for different global sizes
-* Uploading kernel arguments into local memory
+Minor features:
 * More precise timing measurement by averaging running time from multiple kernel launches with same configuration
 * Choice of unit for printing of timing measurements
+* Optimization of read-only argument handling in OpenCL backend
+* Documentation for reference class interface and updated class diagram
+* Linux compatibility test (AMD / Intel platforms)
 
-Long-term goals:
-* Refactoring certain major classes into interfaces
+Major features:
+* Support for uploading kernel arguments into local memory, including ability to control local memory size with parameters
+* Automatic tuning of same kernel for different global sizes
+* Extended unit tests for major classes
 * Support for OpenCL 2.0 functionality
 * Support for tuning with usage of multiple devices
-* Support for other compute APIs (CUDA, Vulkan compute shaders, etc.)
+* Support for additional compute APIs (CUDA, Vulkan compute shaders)
 * Front-end module
-
-Documentation:
-* Documentation for enums and interface classes
-* Updated class diagram
-
-Testing:
-* Linux compatibility test (AMD / Intel platforms)
-* Extended unit tests for major classes

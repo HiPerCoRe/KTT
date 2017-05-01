@@ -19,7 +19,7 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
     if (dataPointer == kernelDataMap.end())
     {
         throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId) +
-            " was called from inside tuning manipulator which did not advertise utilization of this kernel");
+            " was called inside tuning manipulator which did not advertise utilization of this kernel");
     }
     return runKernel(kernelId, dataPointer->second.getGlobalSize(), dataPointer->second.getLocalSize());
 }
@@ -31,7 +31,7 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
     if (dataPointer == kernelDataMap.end())
     {
         throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId) +
-            " was called from inside tuning manipulator which did not advertise utilization of this kernel");
+            " was called inside tuning manipulator which did not advertise utilization of this kernel");
     }
     KernelRuntimeData kernelData = dataPointer->second;
 
@@ -136,10 +136,9 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argum
     }
 }
 
-void ManipulatorInterfaceImplementation::addKernel(const size_t id, const std::string& name, const std::string& source,
-    const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<size_t>& argumentIndices)
+void ManipulatorInterfaceImplementation::addKernel(const size_t id, const KernelRuntimeData& kernelRuntimeData)
 {
-    kernelDataMap.insert(std::make_pair(id, KernelRuntimeData(name, source, globalSize, localSize, argumentIndices)));
+    kernelDataMap.insert(std::make_pair(id, kernelRuntimeData));
 }
 
 void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<KernelArgument>& kernelArguments)
@@ -150,7 +149,7 @@ void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<Ke
 void ManipulatorInterfaceImplementation::clearData()
 {
     kernelDataMap.clear();
-    currentResult = KernelRunResult(0, 0, std::vector<KernelArgument> {});
+    currentResult = KernelRunResult(0, 0, std::vector<KernelArgument>{});
 }
 
 KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const

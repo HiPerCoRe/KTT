@@ -146,11 +146,14 @@ Default implementation is provided by API.
 
 * `void launchComputation(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterValue>& parameterValues)`:
 Inheriting class must provide implementation for this method. Provided arguments include id, thread sizes and parameter values for current configuration of currently tuned kernel.
-Usage of these argument is completely optional. This method must, at very least, call `runKernel()` method with currently tuned kernel id as its first argument.
+Usage of these arguments is completely optional. This method must, at very least, call `runKernel()` method with currently tuned kernel id as its first argument.
 This method can also call any other methods available in base TuningManipulator class.
 
 * `std::vector<size_t> getUtilizedKernelIds() const`:
-This method currently provides no functionality. It will be available in future.
+Inheriting class must override this method in case it utilizes multiple kernels inside the `launchComputation()` method.
+This method needs to return ids of all additional kernels. Id of the main kernel (specified by calling `setTuningManipulator()` method) does not need to be returned.
+All additional kernels will be launched under the same configuration as main kernel, which means that they need to accept exactly the same parameters.
+However, the additional kernels will be launched with base global and local thread sizes by default (ie. thread modifier parameters have no effect on additional kernel thread sizes).
 
 * `std::vector<ResultArgument> runKernel(const size_t kernelId)`:
 Launches kernel with specified id, using thread sizes based only on the current configuration.

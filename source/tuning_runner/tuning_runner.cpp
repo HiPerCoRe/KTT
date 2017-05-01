@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iterator>
 #include <sstream>
 #include <string>
 
@@ -83,8 +84,10 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, con
         stream << "Launching kernel <" << kernelName << "> (custom manipulator detected) with configuration (" << currentConfigurationIndex + 1
             << " / " << configurationsCount << "): " << currentConfiguration;
         logger->log(stream.str());
-        return runKernelWithManipulator(kernel->getTuningManipulator(), kernelId, source, kernelName, currentConfiguration,
-            kernel->getArgumentIndices());
+        auto kernelDataVector = getKernelDataVector(kernelId, KernelRuntimeData(kernelName, source, currentConfiguration.getGlobalSize(),
+            currentConfiguration.getLocalSize(), kernel->getArgumentIndices()), kernel->getTuningManipulator()->getUtilizedKernelIds(),
+            currentConfiguration);
+        return runKernelWithManipulator(kernel->getTuningManipulator(), kernelDataVector, currentConfiguration);
     }
 
     stream << "Launching kernel <" << kernelName << "> with configuration (" << currentConfigurationIndex + 1  << " / " << configurationsCount
@@ -95,18 +98,22 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, con
     return std::make_pair(result, 0);
 }
 
-std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(TuningManipulator* manipulator, const size_t kernelId,
-    const std::string& source, const std::string& kernelName, const KernelConfiguration& currentConfiguration,
-    const std::vector<size_t>& argumentIndices)
+std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(TuningManipulator* manipulator,
+    const std::vector<std::pair<size_t, KernelRuntimeData>>& kernelDataVector, const KernelConfiguration& currentConfiguration)
 {
     manipulator->setManipulatorInterface(manipulatorInterfaceImplementation.get());
-    manipulatorInterfaceImplementation->addKernel(kernelId, kernelName, source, currentConfiguration.getGlobalSize(),
-        currentConfiguration.getLocalSize(), argumentIndices);
-    manipulatorInterfaceImplementation->setKernelArguments(getKernelArguments(kernelId));
+    std::vector<KernelArgument> kernelArguments;
+    for (const auto& kernelData : kernelDataVector)
+    {
+        manipulatorInterfaceImplementation->addKernel(kernelData.first, kernelData.second);
+        auto currentArguments = getKernelArguments(kernelData.first);
+        kernelArguments.insert(std::end(kernelArguments), std::begin(currentArguments), std::end(currentArguments));
+    }
+    manipulatorInterfaceImplementation->setKernelArguments(kernelArguments);
 
     Timer timer;
     timer.start();
-    manipulator->launchComputation(kernelId, currentConfiguration.getGlobalSize(), currentConfiguration.getLocalSize(),
+    manipulator->launchComputation(kernelDataVector.at(0).first, currentConfiguration.getGlobalSize(), currentConfiguration.getLocalSize(),
         currentConfiguration.getParameterValues());
     timer.stop();
 
@@ -152,6 +159,28 @@ std::vector<KernelArgument> TuningRunner::getKernelArguments(const size_t kernel
     for (const auto index : argumentIndices)
     {
         result.emplace_back(argumentManager->getArgument(index));
+    }
+
+    return result;
+}
+
+std::vector<std::pair<size_t, KernelRuntimeData>> TuningRunner::getKernelDataVector(const size_t tunedKernelId,
+    const KernelRuntimeData& tunedKernelData, const std::vector<size_t>& additionalKernelIds, const KernelConfiguration& currentConfiguration) const
+{
+    std::vector<std::pair<size_t, KernelRuntimeData>> result;
+    result.push_back(std::make_pair(tunedKernelId, tunedKernelData));
+
+    for (const auto kernelId : additionalKernelIds)
+    {
+        if (kernelId == tunedKernelId)
+        {
+            continue;
+        }
+
+        Kernel* kernel = kernelManager->getKernel(kernelId);
+        std::string source = kernelManager->getKernelSourceWithDefines(kernelId, currentConfiguration);
+        result.push_back(std::make_pair(kernelId, KernelRuntimeData(kernel->getName(), source, kernel->getGlobalSize(), kernel->getLocalSize(),
+            kernel->getArgumentIndices())));
     }
 
     return result;

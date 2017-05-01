@@ -11,6 +11,8 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
+    auto kernelFile = std::string("../examples/coulomb_sum/coulomb_sum_kernel.cl");
+    auto referenceKernelFile = std::string("../examples/coulomb_sum/coulomb_sum_reference_kernel.cl");
 
     if (argc >= 2)
     {
@@ -18,12 +20,18 @@ int main(int argc, char** argv)
         if (argc >= 3)
         {
             deviceIndex = std::stoul(std::string{ argv[2] });
+            if (argc >= 4)
+            {
+                kernelFile = std::string{ argv[3] };
+                if (argc >= 5)
+                {
+                    referenceKernelFile = std::string{ argv[4] };
+                }
+            }
         }
     }
 
     // Declare kernel parameters
-    const std::string kernelFile = std::string("../examples/coulomb_sum/coulomb_sum_kernel.cl");
-    const std::string referenceKernelFile = std::string("../examples/coulomb_sum/coulomb_sum_reference_kernel.cl");
     // Total NDRange size matches number of grid points
     ktt::DimensionVector ndRangeDimensions(512, 512, 1);
     ktt::DimensionVector workGroupDimensions(1, 1, 1);

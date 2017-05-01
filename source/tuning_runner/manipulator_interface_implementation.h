@@ -24,8 +24,7 @@ public:
     virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes) override;
 
     // Core methods
-    void addKernel(const size_t id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
-        const DimensionVector& localSize, const std::vector<size_t>& argumentIndices);
+    void addKernel(const size_t id, const KernelRuntimeData& kernelRuntimeData);
     void setKernelArguments(const std::vector<KernelArgument>& kernelArguments);
     KernelRunResult getCurrentResult() const;
     void clearData();

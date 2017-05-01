@@ -55,6 +55,7 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
+    auto kernelFile = std::string("../examples/simple/simple_kernel.cl");
 
     if (argc >= 2)
     {
@@ -62,11 +63,14 @@ int main(int argc, char** argv)
         if (argc >= 3)
         {
             deviceIndex = std::stoul(std::string{ argv[2] });
+            if (argc >= 4)
+            {
+                kernelFile = std::string{ argv[3] };
+            }
         }
     }
 
     // Declare kernel parameters
-    const std::string kernelFile = std::string("../examples/simple/simple_kernel.cl");
     const size_t numberOfElements = 1024 * 1024;
     ktt::DimensionVector ndRangeDimensions(numberOfElements, 1, 1);
     ktt::DimensionVector workGroupDimensions(256, 1, 1);

@@ -11,7 +11,6 @@
 #include "enum/argument_memory_type.h"
 #include "enum/argument_print_condition.h"
 #include "enum/dimension.h"
-#include "enum/logging_target.h"
 #include "enum/print_format.h"
 #include "enum/search_method.h"
 #include "enum/thread_modifier_action.h"

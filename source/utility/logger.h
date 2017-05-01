@@ -3,8 +3,6 @@
 #include <ostream>
 #include <string>
 
-#include "../enum/logging_target.h"
-
 namespace ktt
 {
 
