@@ -48,6 +48,7 @@ private:
     bool processResult(const Kernel* kernel, const KernelRunResult& result, const uint64_t manipulatorDuration);
     bool validateResult(const Kernel* kernel, const KernelRunResult& result);
     bool validateResult(const Kernel* kernel, const KernelRunResult& result, bool useReferenceClass);
+    bool argumentExists(const KernelArgument& argument, const std::vector<KernelArgument>& arguments) const;
     bool argumentIndexExists(const size_t argumentIndex, const std::vector<size_t>& argumentIndices) const;
     std::vector<KernelArgument> getReferenceResultFromClass(const ReferenceClass* referenceClass,
         const std::vector<size_t>& referenceArgumentIndices) const;

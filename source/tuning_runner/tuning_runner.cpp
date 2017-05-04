@@ -107,7 +107,13 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(Tuni
     {
         manipulatorInterfaceImplementation->addKernel(kernelData.first, kernelData.second);
         auto currentArguments = getKernelArguments(kernelData.first);
-        kernelArguments.insert(std::end(kernelArguments), std::begin(currentArguments), std::end(currentArguments));
+        for (const auto& argument : currentArguments)
+        {
+            if (!argumentExists(argument, kernelArguments))
+            {
+                kernelArguments.push_back(argument);
+            }
+        }
     }
     manipulatorInterfaceImplementation->setKernelArguments(kernelArguments);
 
@@ -158,7 +164,7 @@ std::vector<KernelArgument> TuningRunner::getKernelArguments(const size_t kernel
     
     for (const auto index : argumentIndices)
     {
-        result.emplace_back(argumentManager->getArgument(index));
+        result.push_back(argumentManager->getArgument(index));
     }
 
     return result;
@@ -317,6 +323,18 @@ bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& r
         return resultValidator.validateArgumentWithClass(kernel->getId(), argumentsToValidate);
     }
     return resultValidator.validateArgumentWithKernel(kernel->getId(), argumentsToValidate);
+}
+
+bool TuningRunner::argumentExists(const KernelArgument& argument, const std::vector<KernelArgument>& arguments) const
+{
+    for (const auto& currentArgument : arguments)
+    {
+        if (currentArgument.getId() == argument.getId())
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool TuningRunner::argumentIndexExists(const size_t argumentIndex, const std::vector<size_t>& argumentIndices) const
