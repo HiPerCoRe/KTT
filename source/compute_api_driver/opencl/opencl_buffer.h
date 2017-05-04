@@ -9,22 +9,22 @@
 namespace ktt
 {
 
-class OpenCLBuffer
+class OpenclBuffer
 {
 public:
-    explicit OpenCLBuffer(const cl_context context, const cl_mem_flags type, const size_t size) :
+    explicit OpenclBuffer(const cl_context context, const cl_mem_flags type, const size_t size) :
         context(context),
         type(type),
         size(size)
     {
         cl_int result;
         buffer = clCreateBuffer(context, type, size, nullptr, &result);
-        checkOpenCLError(result, std::string("clCreateBuffer"));
+        checkOpenclError(result, std::string("clCreateBuffer"));
     }
 
-    ~OpenCLBuffer()
+    ~OpenclBuffer()
     {
-        checkOpenCLError(clReleaseMemObject(buffer), std::string("clReleaseMemObject"));
+        checkOpenclError(clReleaseMemObject(buffer), std::string("clReleaseMemObject"));
     }
 
     cl_context getContext() const

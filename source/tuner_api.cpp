@@ -241,11 +241,11 @@ void Tuner::setCompilerOptions(const std::string& options)
     tunerCore->setCompilerOptions(options);
 }
 
-void Tuner::printComputeAPIInfo(std::ostream& outputTarget)
+void Tuner::printComputeApiInfo(std::ostream& outputTarget) const
 {
     try
     {
-        TunerCore::printComputeAPIInfo(outputTarget);
+        tunerCore->printComputeApiInfo(outputTarget);
     }
     catch (const std::runtime_error& error)
     {
@@ -253,11 +253,11 @@ void Tuner::printComputeAPIInfo(std::ostream& outputTarget)
     }
 }
 
-std::vector<PlatformInfo> Tuner::getPlatformInfo()
+std::vector<PlatformInfo> Tuner::getPlatformInfo() const
 {
     try
     {
-        return TunerCore::getPlatformInfo();
+        return tunerCore->getPlatformInfo();
     }
     catch (const std::runtime_error& error)
     {
@@ -266,11 +266,11 @@ std::vector<PlatformInfo> Tuner::getPlatformInfo()
     }
 }
 
-std::vector<DeviceInfo> Tuner::getDeviceInfo(const size_t platformIndex)
+std::vector<DeviceInfo> Tuner::getDeviceInfo(const size_t platformIndex) const
 {
     try
     {
-        return TunerCore::getDeviceInfo(platformIndex);
+        return tunerCore->getDeviceInfo(platformIndex);
     }
     catch (const std::runtime_error& error)
     {

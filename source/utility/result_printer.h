@@ -3,8 +3,8 @@
 #include <map>
 #include <vector>
 
-#include "../enum/print_format.h"
 #include "../dto/tuning_result.h"
+#include "../enum/print_format.h"
 
 namespace ktt
 {

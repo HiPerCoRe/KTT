@@ -4,14 +4,14 @@
 
 TEST_CASE("Transfering data to / from buffer", "[openclCore]")
 {
-    ktt::OpenCLCore core(0, 0);
+    ktt::OpenclCore core(0, 0);
     std::vector<float> data;
     for (size_t i = 0; i < 64; i++)
     {
         data.push_back(static_cast<float>(i));
     }
 
-    std::unique_ptr<ktt::OpenCLBuffer> buffer = core.createBuffer(ktt::ArgumentMemoryType::ReadOnly, data.size() * sizeof(float));
+    std::unique_ptr<ktt::OpenclBuffer> buffer = core.createBuffer(ktt::ArgumentMemoryType::ReadOnly, data.size() * sizeof(float));
     REQUIRE(buffer->getType() == CL_MEM_READ_ONLY);
     REQUIRE(buffer->getBuffer() != nullptr);
     REQUIRE(buffer->getSize() == data.size() * sizeof(float));

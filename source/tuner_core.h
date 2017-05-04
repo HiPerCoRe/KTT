@@ -1,10 +1,10 @@
 #pragma once
 
-#include <memory>
 #include <fstream>
+#include <memory>
 #include <vector>
 
-#include "compute_api_driver/opencl/opencl_core.h"
+#include "compute_api_driver/compute_api_driver.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
 #include "tuning_runner/tuning_runner.h"
@@ -54,9 +54,9 @@ public:
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);
-    static void printComputeAPIInfo(std::ostream& outputTarget);
-    static std::vector<PlatformInfo> getPlatformInfo();
-    static std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex);
+    void printComputeApiInfo(std::ostream& outputTarget) const;
+    std::vector<PlatformInfo> getPlatformInfo() const;
+    std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const;
 
     // Logger methods
     void setLoggingTarget(std::ostream& outputTarget);
@@ -67,7 +67,7 @@ private:
     // Attributes
     std::unique_ptr<ArgumentManager> argumentManager;
     std::unique_ptr<KernelManager> kernelManager;
-    std::unique_ptr<OpenCLCore> openCLCore;
+    std::unique_ptr<ComputeApiDriver> computeApiDriver;
     std::unique_ptr<TuningRunner> tuningRunner;
     Logger logger;
     ResultPrinter resultPrinter;

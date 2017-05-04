@@ -3,9 +3,9 @@
 #include <map>
 
 #include "manipulator_interface.h"
+#include "../compute_api_driver/compute_api_driver.h"
 #include "../dto/kernel_runtime_data.h"
 #include "../kernel_argument/argument_manager.h"
-#include "../compute_api_driver/opencl/opencl_core.h"
 
 namespace ktt
 {
@@ -14,7 +14,7 @@ class ManipulatorInterfaceImplementation : public ManipulatorInterface
 {
 public:
     // Constructor
-    explicit ManipulatorInterfaceImplementation(OpenCLCore* openCLCore);
+    explicit ManipulatorInterfaceImplementation(ComputeApiDriver* computeApiDriver);
 
     // Inherited methods
     virtual std::vector<ResultArgument> runKernel(const size_t kernelId) override;
@@ -31,7 +31,7 @@ public:
 
 private:
     // Attributes
-    OpenCLCore* openCLCore;
+    ComputeApiDriver* computeApiDriver;
     KernelRunResult currentResult;
     std::map<size_t, KernelRuntimeData> kernelDataMap;
     std::vector<KernelArgument> kernelArguments;

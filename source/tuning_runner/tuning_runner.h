@@ -4,14 +4,14 @@
 #include <utility>
 #include <vector>
 
-#include "../dto/tuning_result.h"
-#include "../compute_api_driver/opencl/opencl_core.h"
-#include "../kernel/kernel_manager.h"
-#include "../kernel_argument/argument_manager.h"
-#include "../utility/logger.h"
 #include "manipulator_interface_implementation.h"
 #include "result_validator.h"
 #include "searcher/searcher.h"
+#include "../compute_api_driver/compute_api_driver.h"
+#include "../dto/tuning_result.h"
+#include "../kernel/kernel_manager.h"
+#include "../kernel_argument/argument_manager.h"
+#include "../utility/logger.h"
 
 namespace ktt
 {
@@ -20,7 +20,7 @@ class TuningRunner
 {
 public:
     // Constructor
-    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, OpenCLCore* openCLCore);
+    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeApiDriver* computeApiDriver);
 
     // Core methods
     std::vector<TuningResult> tuneKernel(const size_t id);
@@ -31,7 +31,7 @@ private:
     ArgumentManager* argumentManager;
     KernelManager* kernelManager;
     Logger* logger;
-    OpenCLCore* openCLCore;
+    ComputeApiDriver* computeApiDriver;
     ResultValidator resultValidator;
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
 
@@ -48,6 +48,7 @@ private:
     bool processResult(const Kernel* kernel, const KernelRunResult& result, const uint64_t manipulatorDuration);
     bool validateResult(const Kernel* kernel, const KernelRunResult& result);
     bool validateResult(const Kernel* kernel, const KernelRunResult& result, bool useReferenceClass);
+    bool argumentExists(const KernelArgument& argument, const std::vector<KernelArgument>& arguments) const;
     bool argumentIndexExists(const size_t argumentIndex, const std::vector<size_t>& argumentIndices) const;
     std::vector<KernelArgument> getReferenceResultFromClass(const ReferenceClass* referenceClass,
         const std::vector<size_t>& referenceArgumentIndices) const;

@@ -8,27 +8,27 @@
 namespace ktt
 {
 
-class OpenCLCommandQueue
+class OpenclCommandQueue
 {
 public:
-    explicit OpenCLCommandQueue(const cl_context context, const cl_device_id device) :
+    explicit OpenclCommandQueue(const cl_context context, const cl_device_id device) :
         context(context),
         device(device)
     {
         cl_int result;
-        #ifdef CL_PLATFORM_AMD
+        #ifdef CL_VERSION_2_0
             cl_queue_properties properties[] = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
             queue = clCreateCommandQueueWithProperties(context, device, properties, &result);
-            checkOpenCLError(result, std::string("clCreateCommandQueueWithProperties"));
+            checkOpenclError(result, std::string("clCreateCommandQueueWithProperties"));
         #else
             queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &result);
-            checkOpenCLError(result, std::string("clCreateCommandQueue"));
+            checkOpenclError(result, std::string("clCreateCommandQueue"));
         #endif
     }
 
-    ~OpenCLCommandQueue()
+    ~OpenclCommandQueue()
     {
-        checkOpenCLError(clReleaseCommandQueue(queue), std::string("clReleaseCommandQueue"));
+        checkOpenclError(clReleaseCommandQueue(queue), std::string("clReleaseCommandQueue"));
     }
 
     cl_context getContext() const
