@@ -1,4 +1,5 @@
 #include "tuner_core.h"
+#include "compute_api_driver/opencl/opencl_core.h"
 
 namespace ktt
 {
@@ -6,8 +7,8 @@ namespace ktt
 TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex) :
     argumentManager(std::make_unique<ArgumentManager>()),
     kernelManager(std::make_unique<KernelManager>()),
-    openCLCore(std::make_unique<OpenCLCore>(platformIndex, deviceIndex)),
-    tuningRunner(std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, openCLCore.get()))
+    computeApiDriver(std::make_unique<OpenclCore>(platformIndex, deviceIndex)),
+    tuningRunner(std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeApiDriver.get()))
 {}
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -105,22 +106,22 @@ void TunerCore::printResult(const size_t kernelId, const std::string& filePath, 
 
 void TunerCore::setCompilerOptions(const std::string& options)
 {
-    openCLCore->setOpenCLCompilerOptions(options);
+    computeApiDriver->setCompilerOptions(options);
 }
 
-void TunerCore::printComputeAPIInfo(std::ostream& outputTarget)
+void TunerCore::printComputeApiInfo(std::ostream& outputTarget) const
 {
-    OpenCLCore::printOpenCLInfo(outputTarget);
+    computeApiDriver->printComputeApiInfo(outputTarget);
 }
 
-std::vector<PlatformInfo> TunerCore::getPlatformInfo()
+std::vector<PlatformInfo> TunerCore::getPlatformInfo() const
 {
-    return OpenCLCore::getOpenCLPlatformInfoAll();
+    return computeApiDriver->getPlatformInfo();
 }
 
-std::vector<DeviceInfo> TunerCore::getDeviceInfo(const size_t platformIndex)
+std::vector<DeviceInfo> TunerCore::getDeviceInfo(const size_t platformIndex) const
 {
-    return OpenCLCore::getOpenCLDeviceInfoAll(platformIndex);
+    return computeApiDriver->getDeviceInfo(platformIndex);
 }
 
 void TunerCore::setLoggingTarget(std::ostream& outputTarget)

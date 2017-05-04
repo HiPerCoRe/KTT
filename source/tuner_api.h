@@ -75,9 +75,9 @@ public:
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);
-    static void printComputeAPIInfo(std::ostream& outputTarget);
-    static std::vector<PlatformInfo> getPlatformInfo();
-    static std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex);
+    void printComputeApiInfo(std::ostream& outputTarget) const;
+    std::vector<PlatformInfo> getPlatformInfo() const;
+    std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const;
 
     // Utility methods
     void setLoggingTarget(std::ostream& outputTarget);

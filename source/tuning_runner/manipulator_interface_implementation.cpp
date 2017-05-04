@@ -8,8 +8,8 @@
 namespace ktt
 {
 
-ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(OpenCLCore* openCLCore) :
-    openCLCore(openCLCore),
+ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeApiDriver* computeApiDriver) :
+    computeApiDriver(computeApiDriver),
     currentResult(KernelRunResult(0, 0, std::vector<KernelArgument> {}))
 {}
 
@@ -35,7 +35,7 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
     }
     KernelRuntimeData kernelData = dataPointer->second;
 
-    KernelRunResult result = openCLCore->runKernel(kernelData.getSource(), kernelData.getName(), convertDimensionVector(globalSize),
+    KernelRunResult result = computeApiDriver->runKernel(kernelData.getSource(), kernelData.getName(), convertDimensionVector(globalSize),
         convertDimensionVector(localSize), getArguments(kernelData.getArgumentIndices()));
     currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead() + result.getOverhead(),
         result.getResultArguments());

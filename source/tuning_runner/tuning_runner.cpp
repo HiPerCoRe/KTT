@@ -4,23 +4,23 @@
 #include <string>
 
 #include "tuning_runner.h"
-#include "../utility/ktt_utility.h"
-#include "../utility/timer.h"
 #include "searcher/annealing_searcher.h"
 #include "searcher/full_searcher.h"
-#include "searcher/random_searcher.h"
 #include "searcher/pso_searcher.h"
+#include "searcher/random_searcher.h"
+#include "../utility/ktt_utility.h"
+#include "../utility/timer.h"
 
 namespace ktt
 {
 
-TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, OpenCLCore* openCLCore) :
+TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeApiDriver* computeApiDriver) :
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     logger(logger),
-    openCLCore(openCLCore),
+    computeApiDriver(computeApiDriver),
     resultValidator(logger),
-    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(openCLCore))
+    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeApiDriver))
 {}
 
 std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
@@ -93,7 +93,7 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, con
     stream << "Launching kernel <" << kernelName << "> with configuration (" << currentConfigurationIndex + 1  << " / " << configurationsCount
         << "): " << currentConfiguration;
     logger->log(stream.str());
-    result = openCLCore->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
+    result = computeApiDriver->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
         convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(kernelId));
     return std::make_pair(result, 0);
 }
@@ -413,7 +413,7 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromKernel(const siz
     KernelConfiguration configuration = kernelManager->getKernelConfiguration(referenceKernelId, referenceKernelConfiguration);
     std::string source = kernelManager->getKernelSourceWithDefines(referenceKernelId, configuration);
 
-    auto result = openCLCore->runKernel(source, referenceKernel->getName(), convertDimensionVector(configuration.getGlobalSize()),
+    auto result = computeApiDriver->runKernel(source, referenceKernel->getName(), convertDimensionVector(configuration.getGlobalSize()),
         convertDimensionVector(configuration.getLocalSize()), getKernelArguments(referenceKernelId));
     std::vector<KernelArgument> resultArguments;
 
