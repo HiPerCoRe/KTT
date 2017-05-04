@@ -85,9 +85,6 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "VECTOR_SIZE", { 1, 2 , 4, 8, 16 });
     tuner.addParameter(kernelId, "ONE", { 1 }); //XXX helper, must be always 
 
-    /*tuner.mulLocalSize(kernelId, { "WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y", "WORK_GROUP_SIZE_Z" });
-    tuner.divGlobalSize(kernelId, { "ONE", "ONE", "Z_ITERATIONS" } );*/
-
     auto lt = [](std::vector<size_t> vector) { return vector.at(0) < vector.at(1); };
     tuner.addConstraint(kernelId, lt, { "INNER_UNROLL_FACTOR", "Z_ITERATIONS" } );
     auto vec = [](std::vector<size_t> vector) { return vector.at(0) || vector.at(1) == 1; };
@@ -98,6 +95,8 @@ int main(int argc, char** argv)
 
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ gridId });
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.1);
+
+    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double> { 0.1 });
 
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
