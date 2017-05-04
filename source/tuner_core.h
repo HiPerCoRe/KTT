@@ -8,7 +8,8 @@
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
 #include "tuning_runner/tuning_runner.h"
-#include "result_printer.h"
+#include "utility/logger.h"
+#include "utility/result_printer.h"
 
 namespace ktt
 {
@@ -32,6 +33,7 @@ public:
     void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
         const std::vector<size_t>& resultArgumentIds);
     void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
+    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Argument manager methods
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
@@ -39,11 +41,8 @@ public:
     {
         return argumentManager->addArgument(data, argumentMemoryType, argumentQuantity);
     }
-
-    template <typename T> void updateArgument(const size_t id, const std::vector<T>& data, const ArgumentQuantity& argumentQuantity)
-    {
-        argumentManager->updateArgument(id, data, argumentQuantity);
-    }
+    void enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
+        const ArgumentPrintCondition& argumentPrintCondition);
 
     // Tuning runner methods
     void tuneKernel(const size_t id);
@@ -59,13 +58,19 @@ public:
     static std::vector<PlatformInfo> getPlatformInfo();
     static std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex);
 
+    // Logger methods
+    void setLoggingTarget(std::ostream& outputTarget);
+    void setLoggingTarget(const std::string& filePath);
+    void log(const std::string& message) const;
+
 private:
     // Attributes
     std::unique_ptr<ArgumentManager> argumentManager;
     std::unique_ptr<KernelManager> kernelManager;
     std::unique_ptr<OpenCLCore> openCLCore;
     std::unique_ptr<TuningRunner> tuningRunner;
-    std::unique_ptr<ResultPrinter> resultPrinter;
+    Logger logger;
+    ResultPrinter resultPrinter;
 };
 
 } // namespace ktt

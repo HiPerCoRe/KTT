@@ -21,7 +21,7 @@ public:
     std::vector<ParameterValue> getParameterValues() const;
 
     friend class PSOSearcher;
-    friend std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& kernelConfiguration);
+    friend std::ostream& operator<<(std::ostream&, const KernelConfiguration&);
 
 private:
     DimensionVector globalSize;

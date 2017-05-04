@@ -7,13 +7,13 @@ void ResultPrinter::printResult(const size_t kernelId, std::ostream& outputTarge
 {
     if (resultMap.find(kernelId) == resultMap.end())
     {
-        throw std::runtime_error(std::string("No tuning results found for kernel with id: " + std::to_string(kernelId)));
+        throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(kernelId));
     }
 
     auto results = resultMap.find(kernelId)->second;
     if (results.size() == 0)
     {
-        throw std::runtime_error(std::string("No tuning results found for kernel with id: " + std::to_string(kernelId)));
+        throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(kernelId));
     }
 
     switch (printFormat)
@@ -50,7 +50,7 @@ void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::
 void ResultPrinter::printCSV(const std::vector<TuningResult>& results, std::ostream& outputTarget) const
 {
     // Header
-    outputTarget << "Kernel name;Time (us);Global size;Local size;Threads;";
+    outputTarget << "Kernel name;Total duration (us);Kernel duration (us);Global size;Local size;Threads;";
     auto parameters = results.at(0).getConfiguration().getParameterValues();
     for (const auto& parameter : parameters)
     {
@@ -65,7 +65,7 @@ void ResultPrinter::printCSV(const std::vector<TuningResult>& results, std::ostr
         auto global = configuration.getGlobalSize();
         auto local = configuration.getLocalSize();
 
-        outputTarget << result.getKernelName() << ";" << result.getDuration() / 1000 << ";";
+        outputTarget << result.getKernelName() << ";" << result.getTotalDuration() / 1000 << ";" << result.getKernelDuration() / 1000 << ";";
         outputTarget << std::get<0>(global) << " " << std::get<1>(global) << " " << std::get<2>(global) << ";";
         outputTarget << std::get<0>(local) << " " << std::get<1>(local) << " " << std::get<2>(local) << ";";
         outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local) << ";";
@@ -85,7 +85,7 @@ TuningResult ResultPrinter::getBestResult(const std::vector<TuningResult>& resul
 
     for (const auto& result : results)
     {
-        if (result.getDuration() < bestResult.getDuration())
+        if (result.getTotalDuration() < bestResult.getTotalDuration())
         {
             bestResult = result;
         }

@@ -5,6 +5,7 @@
 
 #include "../../include/ktt.h"
 
+// Implementation of reference class interface for result validation
 class SimpleReferenceClass : public ktt::ReferenceClass
 {
 public:
@@ -54,6 +55,7 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
+    auto kernelFile = std::string("../examples/simple/simple_kernel.cl");
 
     if (argc >= 2)
     {
@@ -61,12 +63,15 @@ int main(int argc, char** argv)
         if (argc >= 3)
         {
             deviceIndex = std::stoul(std::string{ argv[2] });
+            if (argc >= 4)
+            {
+                kernelFile = std::string{ argv[3] };
+            }
         }
     }
 
     // Declare kernel parameters
-    const std::string kernelFile = std::string("../examples/simple/simple_kernel.cl");
-    const int numberOfElements = 512 * 512;
+    const size_t numberOfElements = 1024 * 1024;
     ktt::DimensionVector ndRangeDimensions(numberOfElements, 1, 1);
     ktt::DimensionVector workGroupDimensions(256, 1, 1);
 
@@ -76,7 +81,7 @@ int main(int argc, char** argv)
     std::vector<float> result(numberOfElements, 0.0f);
 
     // Initialize data
-    for (int i = 0; i < numberOfElements; i++)
+    for (size_t i = 0; i < numberOfElements; i++)
     {
         a.at(i) = static_cast<float>(i);
         b.at(i) = static_cast<float>(i + 1);
@@ -98,7 +103,7 @@ int main(int argc, char** argv)
 
     // Set reference class, which implements C++ version of kernel computation in order to validate results provided by kernel,
     // provide list of arguments which will be validated
-    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(a, b, result, resultId), std::vector<size_t> { resultId });
+    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(a, b, result, resultId), std::vector<size_t>{ resultId });
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);

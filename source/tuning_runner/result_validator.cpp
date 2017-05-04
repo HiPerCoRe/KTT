@@ -5,16 +5,17 @@
 namespace ktt
 {
 
-ResultValidator::ResultValidator() :
+ResultValidator::ResultValidator(Logger* logger) :
     toleranceThreshold(1e-4),
-    validationMethod(ValidationMethod::SideBySideComparison)
+    validationMethod(ValidationMethod::SideBySideComparison),
+    logger(logger)
 {}
 
 bool ResultValidator::validateArgumentWithClass(const size_t kernelId, const std::vector<KernelArgument>& resultArguments) const
 {
     if (referenceClassResultMap.find(kernelId) == referenceClassResultMap.end())
     {
-        throw std::runtime_error(std::string("No reference class results found for kernel with id: " + std::to_string(kernelId)));
+        throw std::runtime_error(std::string("No reference class results found for kernel with id: ") + std::to_string(kernelId));
     }
 
     std::vector<KernelArgument> referenceArguments = referenceClassResultMap.find(kernelId)->second;
@@ -25,7 +26,7 @@ bool ResultValidator::validateArgumentWithKernel(const size_t kernelId, const st
 {
     if (referenceKernelResultMap.find(kernelId) == referenceKernelResultMap.end())
     {
-        throw std::runtime_error(std::string("No reference kernel results found for kernel with id: " + std::to_string(kernelId)));
+        throw std::runtime_error(std::string("No reference kernel results found for kernel with id: ") + std::to_string(kernelId));
     }
 
     std::vector<KernelArgument> referenceArguments = referenceKernelResultMap.find(kernelId)->second;
@@ -60,7 +61,7 @@ bool ResultValidator::hasReferenceKernelResult(const size_t kernelId) const
     return referenceKernelResultMap.find(kernelId) != referenceKernelResultMap.end();
 }
 
-void ResultValidator::clearReferenceResults(const size_t kernelId)
+void ResultValidator::clearReferenceResults()
 {
     referenceClassResultMap.clear();
     referenceKernelResultMap.clear();
@@ -102,8 +103,8 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
 
         if (referenceDataType != kernelArgument.getArgumentDataType())
         {
-            throw std::runtime_error(std::string("Reference class argument data type mismatch for argument id: " +
-                std::to_string(kernelArgument.getId())));
+            throw std::runtime_error(std::string("Reference class argument data type mismatch for argument id: ")
+                + std::to_string(kernelArgument.getId()));
         }
 
         if (referenceDataType == ArgumentDataType::Double)
@@ -114,9 +115,17 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
         {
             validationResult &= validateResult(kernelArgument.getDataFloat(), referenceArgument.getDataFloat());
         }
-        else
+        else if (referenceDataType == ArgumentDataType::Int)
         {
             validationResult &= validateResult(kernelArgument.getDataInt(), referenceArgument.getDataInt());
+        }
+        else if (referenceDataType == ArgumentDataType::Short)
+        {
+            validationResult &= validateResult(kernelArgument.getDataShort(), referenceArgument.getDataShort());
+        }
+        else
+        {
+            throw std::runtime_error("Unsupported argument data type");
         }
     }
 
@@ -133,8 +142,8 @@ KernelArgument ResultValidator::findArgument(const size_t argumentId, const std:
         }
     }
 
-    throw std::runtime_error(std::string("Reference kernel argument with following id is not associated with given kernel: " +
-        std::to_string(argumentId)));
+    throw std::runtime_error(std::string("Reference kernel argument with following id is not associated with given kernel: ")
+        + std::to_string(argumentId));
 }
 
 } // namespace ktt

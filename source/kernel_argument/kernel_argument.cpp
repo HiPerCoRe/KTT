@@ -3,6 +3,13 @@
 namespace ktt
 {
 
+void KernelArgument::enablePrinting(const std::string& printFilePath, const ArgumentPrintCondition& argumentPrintCondition)
+{
+    this->printFilePath = printFilePath;
+    this->argumentPrintCondition = argumentPrintCondition;
+    printingEnabled = true;
+}
+
 size_t KernelArgument::getId() const
 {
     return id;
@@ -16,8 +23,12 @@ const void* KernelArgument::getData() const
         return (void*)dataDouble.data();
     case ArgumentDataType::Float:
         return (void*)dataFloat.data();
-    default:
+    case ArgumentDataType::Int:
         return (void*)dataInt.data();
+    case ArgumentDataType::Short:
+        return (void*)dataShort.data();
+    default:
+        throw std::runtime_error("Unsupported argument data type");
     }
 }
 
@@ -36,7 +47,12 @@ std::vector<int> KernelArgument::getDataInt() const
     return dataInt;
 }
 
-size_t KernelArgument::getDataSize() const
+std::vector<short> KernelArgument::getDataShort() const
+{
+    return dataShort;
+}
+
+size_t KernelArgument::getDataSizeInBytes() const
 {
     switch (argumentDataType)
     {
@@ -44,8 +60,12 @@ size_t KernelArgument::getDataSize() const
         return dataDouble.size() * sizeof(double);
     case ArgumentDataType::Float:
         return dataFloat.size() * sizeof(float);
-    default:
+    case ArgumentDataType::Int:
         return dataInt.size() * sizeof(int);
+    case ArgumentDataType::Short:
+        return dataShort.size() * sizeof(short);
+    default:
+        throw std::runtime_error("Unsupported argument data type");
     }
 }
 
@@ -62,6 +82,47 @@ ArgumentMemoryType KernelArgument::getArgumentMemoryType() const
 ArgumentQuantity KernelArgument::getArgumentQuantity() const
 {
     return argumentQuantity;
+}
+
+bool KernelArgument::isPrintingEnabled() const
+{
+    return printingEnabled;
+}
+
+ArgumentPrintCondition KernelArgument::getArgumentPrintCondition() const
+{
+    return argumentPrintCondition;
+}
+
+std::string KernelArgument::getPrintFilePath() const
+{
+    return printFilePath;
+}
+
+std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument)
+{
+    if (kernelArgument.argumentDataType == ArgumentDataType::Double)
+    {
+        printVector(outputTarget, kernelArgument.dataDouble);
+    }
+    else if (kernelArgument.argumentDataType == ArgumentDataType::Float)
+    {
+        printVector(outputTarget, kernelArgument.dataFloat);
+    }
+    else if (kernelArgument.argumentDataType == ArgumentDataType::Int)
+    {
+        printVector(outputTarget, kernelArgument.dataInt);
+    }
+    else if (kernelArgument.argumentDataType == ArgumentDataType::Short)
+    {
+        printVector(outputTarget, kernelArgument.dataShort);
+    }
+    else
+    {
+        throw std::runtime_error("Unsupported argument data type was provided for kernel argument");
+    }
+
+    return outputTarget;
 }
 
 } // namespace ktt

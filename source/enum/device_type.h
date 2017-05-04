@@ -7,9 +7,9 @@ enum class DeviceType
 {
     CPU,
     GPU,
-    ACCELERATOR,
-    DEFAULT,
-    CUSTOM
+    Accelerator,
+    Default,
+    Custom
 };
 
 } // namespace ktt

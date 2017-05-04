@@ -36,13 +36,13 @@ inside KTT root folder). Currently supported operating systems are Linux and Win
     - afterwards run `make config=release` to build the project
     
 * Build under Windows:
-    - run `premake5.exe vs2015` to generate Visual Studio project files
+    - run `premake5.exe vs2015` (or `vs2017`) to generate Visual Studio project files
     - open generated .sln file and build the project inside Visual Studio
 
 Documentation
 -------------
 
-Documentation for KTT API can be found inside documentation folder.
+Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/documentation/ktt_api.md).
 
 Examples
 --------

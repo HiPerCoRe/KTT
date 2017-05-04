@@ -6,9 +6,10 @@
 
 #include "../ktt_type_aliases.h"
 #include "../enum/search_method.h"
+#include "../customization/reference_class.h"
+#include "../customization/tuning_manipulator.h"
 #include "kernel_constraint.h"
 #include "kernel_parameter.h"
-#include "../reference_class.h"
 
 namespace ktt
 {
@@ -28,6 +29,7 @@ public:
     void setReferenceKernel(const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
         const std::vector<size_t>& resultArgumentIds);
     void setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
+    void setTuningManipulator(std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Getters
     size_t getId() const;
@@ -48,6 +50,9 @@ public:
     bool hasReferenceClass() const;
     const ReferenceClass* getReferenceClass() const;
     std::vector<size_t> getReferenceClassArgumentIds() const;
+    bool hasTuningManipulator() const;
+    const TuningManipulator* getTuningManipulator() const;
+    TuningManipulator* getTuningManipulator();
 
 private:
     // Attributes
@@ -68,6 +73,8 @@ private:
     bool referenceClassValid;
     std::unique_ptr<ReferenceClass> referenceClass;
     std::vector<size_t> referenceClassArgumentIds;
+    bool tuningManipulatorValid;
+    std::unique_ptr<TuningManipulator> tuningManipulator;
 
     // Helper methods
     bool parameterExists(const std::string& parameterName) const;

@@ -1,12 +1,14 @@
 #pragma once
 
 #include <cstring>
-#include <vector>
-#include <typeinfo>
+#include <iostream>
 #include <stdexcept>
+#include <typeinfo>
+#include <vector>
 
 #include "../enum/argument_data_type.h"
 #include "../enum/argument_memory_type.h"
+#include "../enum/argument_print_condition.h"
 #include "../enum/argument_quantity.h"
 
 namespace ktt
@@ -19,7 +21,8 @@ public:
         const ArgumentQuantity& argumentQuantity) :
         id(id),
         argumentMemoryType(argumentMemoryType),
-        argumentQuantity(argumentQuantity)
+        argumentQuantity(argumentQuantity),
+        printingEnabled(false)
     {
         initializeData(data);
     }
@@ -28,7 +31,8 @@ public:
     {
         if (typeid(T) == typeid(double) && argumentDataType != ArgumentDataType::Double
             || typeid(T) == typeid(float) && argumentDataType != ArgumentDataType::Float
-            || typeid(T) == typeid(int) && argumentDataType != ArgumentDataType::Int)
+            || typeid(T) == typeid(int) && argumentDataType != ArgumentDataType::Int
+            || typeid(T) == typeid(short) && argumentDataType != ArgumentDataType::Short)
         {
             throw std::runtime_error("Updated data provided for kernel argument have different data type");
         }
@@ -37,24 +41,36 @@ public:
         initializeData(data);
     }
 
+    void enablePrinting(const std::string& printFilePath, const ArgumentPrintCondition& argumentPrintCondition);
+
     size_t getId() const;
     const void* getData() const;
     std::vector<double> getDataDouble() const;
     std::vector<float> getDataFloat() const;
     std::vector<int> getDataInt() const;
-    size_t getDataSize() const;
+    std::vector<short> getDataShort() const;
+    size_t getDataSizeInBytes() const;
     ArgumentDataType getArgumentDataType() const;
     ArgumentMemoryType getArgumentMemoryType() const;
     ArgumentQuantity getArgumentQuantity() const;
+    bool isPrintingEnabled() const;
+    ArgumentPrintCondition getArgumentPrintCondition() const;
+    std::string getPrintFilePath() const;
+
+    friend std::ostream& operator<<(std::ostream&, const KernelArgument&);
 
 private:
     size_t id;
     std::vector<double> dataDouble;
     std::vector<float> dataFloat;
     std::vector<int> dataInt;
+    std::vector<short> dataShort;
     ArgumentDataType argumentDataType;
     ArgumentMemoryType argumentMemoryType;
     ArgumentQuantity argumentQuantity;
+    bool printingEnabled;
+    ArgumentPrintCondition argumentPrintCondition;
+    std::string printFilePath;
 
     template <typename T> void initializeData(const std::vector<T>& data)
     {
@@ -81,11 +97,27 @@ private:
             std::memcpy(dataInt.data(), data.data(), data.size() * sizeof(int));
             argumentDataType = ArgumentDataType::Int;
         }
+        else if (typeid(T) == typeid(short))
+        {
+            dataShort.resize(data.size());
+            std::memcpy(dataShort.data(), data.data(), data.size() * sizeof(short));
+            argumentDataType = ArgumentDataType::Short;
+        }
         else
         {
-            throw std::runtime_error(std::string("Unsupported argument data type was provided for kernel argument"));
+            throw std::runtime_error("Unsupported argument data type was provided for kernel argument");
         }
     }
 };
+
+std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument);
+
+template <typename T> void printVector(std::ostream& outputTarget, const std::vector<T>& data)
+{
+    for (size_t i = 0; i < data.size(); i++)
+    {
+        outputTarget << i << ": " << data.at(i) << std::endl;
+    }
+}
 
 } // namespace ktt

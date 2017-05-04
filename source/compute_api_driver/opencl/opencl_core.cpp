@@ -1,5 +1,7 @@
 #include "opencl_core.h"
 
+#include "../../utility/timer.h"
+
 namespace ktt
 {
 
@@ -9,17 +11,17 @@ OpenCLCore::OpenCLCore(const size_t platformIndex, const size_t deviceIndex) :
     auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
     {
-        throw std::runtime_error(std::string("Invalid platform index: " + std::to_string(platformIndex)));
+        throw std::runtime_error(std::string("Invalid platform index: ") + std::to_string(platformIndex));
     }
 
     auto devices = getOpenCLDevices(platforms.at(platformIndex));
     if (deviceIndex >= devices.size())
     {
-        throw std::runtime_error(std::string("Invalid device index: " + std::to_string(deviceIndex)));
+        throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
     }
 
     cl_device_id device = devices.at(deviceIndex).getId();
-    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id> { device });
+    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id>{ device });
     commandQueue = std::make_unique<OpenCLCommandQueue>(context->getContext(), device);
 }
 
@@ -126,6 +128,9 @@ void OpenCLCore::setOpenCLCompilerOptions(const std::string& options)
 KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
 {
+    Timer timer;
+    timer.start();
+
     std::unique_ptr<OpenCLProgram> program = createAndBuildProgram(source);
     std::unique_ptr<OpenCLKernel> kernel = createKernel(*program, kernelName);
     std::vector<std::unique_ptr<OpenCLBuffer>> buffers;
@@ -135,8 +140,8 @@ KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::stri
     {
         if (argument.getArgumentQuantity() == ArgumentQuantity::Vector)
         {
-            std::unique_ptr<OpenCLBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSize());
-            updateBuffer(*buffer, argument.getData(), argument.getDataSize());
+            std::unique_ptr<OpenCLBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSizeInBytes());
+            updateBuffer(*buffer, argument.getData(), argument.getDataSizeInBytes());
             setKernelArgumentVector(*kernel, *buffer);
 
             vectorArgumentPointers.push_back(&argument);
@@ -150,7 +155,10 @@ KernelRunResult OpenCLCore::runKernel(const std::string& source, const std::stri
 
     cl_ulong duration = enqueueKernel(*kernel, globalSize, localSize);
     std::vector<KernelArgument> resultArguments = getResultArguments(buffers, vectorArgumentPointers);
-    return KernelRunResult(static_cast<uint64_t>(duration), resultArguments);
+
+    timer.stop();
+    uint64_t overhead = timer.getElapsedTime();
+    return KernelRunResult(static_cast<uint64_t>(duration), overhead, resultArguments);
 }
 
 std::unique_ptr<OpenCLProgram> OpenCLCore::createAndBuildProgram(const std::string& source) const
@@ -171,13 +179,13 @@ std::unique_ptr<OpenCLBuffer> OpenCLCore::createBuffer(const ArgumentMemoryType&
 void OpenCLCore::updateBuffer(OpenCLBuffer& buffer, const void* source, const size_t dataSize) const
 {
     cl_int result = clEnqueueWriteBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
-    checkOpenCLError(result);
+    checkOpenCLError(result, std::string("clEnqueueWriteBuffer"));
 }
 
 void OpenCLCore::getBufferData(const OpenCLBuffer& buffer, void* destination, const size_t dataSize) const
 {
     cl_int result = clEnqueueReadBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
-    checkOpenCLError(result);
+    checkOpenCLError(result, std::string("clEnqueueReadBuffer"));
 }
 
 std::unique_ptr<OpenCLKernel> OpenCLCore::createKernel(const OpenCLProgram& program, const std::string& kernelName) const
@@ -198,8 +206,14 @@ void OpenCLCore::setKernelArgumentScalar(OpenCLKernel& kernel, const KernelArgum
     case ArgumentDataType::Float:
         kernel.setKernelArgumentScalar(argument.getDataFloat().at(0));
         break;
-    default:
+    case ArgumentDataType::Int:
         kernel.setKernelArgumentScalar(argument.getDataInt().at(0));
+        break;
+    case ArgumentDataType::Short:
+        kernel.setKernelArgumentScalar(argument.getDataShort().at(0));
+        break;
+    default:
+        throw std::runtime_error("Unsupported argument data type");
     }
 }
 
@@ -214,7 +228,7 @@ cl_ulong OpenCLCore::enqueueKernel(OpenCLKernel& kernel, const std::vector<size_
     cl_event profilingEvent;
     cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), static_cast<cl_uint>(globalSize.size()), nullptr,
         globalSize.data(), localSize.data(), 0, nullptr, &profilingEvent);
-    checkOpenCLError(result);
+    checkOpenCLError(result, std::string("clEnqueueNDRangeKernel"));
 
     clFinish(commandQueue->getQueue());
     return getKernelRunDuration(profilingEvent);
@@ -285,11 +299,11 @@ DeviceType OpenCLCore::getDeviceType(const cl_device_type deviceType)
     case CL_DEVICE_TYPE_GPU:
         return DeviceType::GPU;
     case CL_DEVICE_TYPE_ACCELERATOR:
-        return DeviceType::ACCELERATOR;
+        return DeviceType::Accelerator;
     case CL_DEVICE_TYPE_DEFAULT:
-        return DeviceType::DEFAULT;
+        return DeviceType::Default;
     default:
-        return DeviceType::CUSTOM;
+        return DeviceType::Custom;
     }
 }
 
@@ -308,24 +322,35 @@ std::vector<KernelArgument> OpenCLCore::getResultArguments(const std::vector<std
         ArgumentDataType type = currentArgument->getArgumentDataType();
         if (type == ArgumentDataType::Double)
         {
-            std::vector<double> resultDouble(currentArgument->getDataSize() / sizeof(double));
-            getBufferData(*outputBuffers.at(i), resultDouble.data(), currentArgument->getDataSize());
+            std::vector<double> resultDouble(currentArgument->getDataSizeInBytes() / sizeof(double));
+            getBufferData(*outputBuffers.at(i), resultDouble.data(), currentArgument->getDataSizeInBytes());
             resultArguments.push_back(KernelArgument(currentArgument->getId(), resultDouble, currentArgument->getArgumentMemoryType(),
                 currentArgument->getArgumentQuantity()));
         }
         else if (type == ArgumentDataType::Float)
         {
-            std::vector<float> resultFloat(currentArgument->getDataSize() / sizeof(float));
-            getBufferData(*outputBuffers.at(i), resultFloat.data(), currentArgument->getDataSize());
+            std::vector<float> resultFloat(currentArgument->getDataSizeInBytes() / sizeof(float));
+            getBufferData(*outputBuffers.at(i), resultFloat.data(), currentArgument->getDataSizeInBytes());
             resultArguments.push_back(KernelArgument(currentArgument->getId(), resultFloat, currentArgument->getArgumentMemoryType(),
+                currentArgument->getArgumentQuantity()));
+        }
+        else if (type == ArgumentDataType::Int)
+        {
+            std::vector<int> resultInt(currentArgument->getDataSizeInBytes() / sizeof(int));
+            getBufferData(*outputBuffers.at(i), resultInt.data(), currentArgument->getDataSizeInBytes());
+            resultArguments.push_back(KernelArgument(currentArgument->getId(), resultInt, currentArgument->getArgumentMemoryType(),
+                currentArgument->getArgumentQuantity()));
+        }
+        else if (type == ArgumentDataType::Short)
+        {
+            std::vector<short> resultShort(currentArgument->getDataSizeInBytes() / sizeof(short));
+            getBufferData(*outputBuffers.at(i), resultShort.data(), currentArgument->getDataSizeInBytes());
+            resultArguments.push_back(KernelArgument(currentArgument->getId(), resultShort, currentArgument->getArgumentMemoryType(),
                 currentArgument->getArgumentQuantity()));
         }
         else
         {
-            std::vector<int> resultInt(currentArgument->getDataSize() / sizeof(int));
-            getBufferData(*outputBuffers.at(i), resultInt.data(), currentArgument->getDataSize());
-            resultArguments.push_back(KernelArgument(currentArgument->getId(), resultInt, currentArgument->getArgumentMemoryType(),
-                currentArgument->getArgumentQuantity()));
+            throw std::runtime_error("Unsupported argument data type");
         }
     }
 

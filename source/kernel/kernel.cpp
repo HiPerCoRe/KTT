@@ -12,14 +12,15 @@ Kernel::Kernel(const size_t id, const std::string& source, const std::string& na
     localSize(localSize),
     searchMethod(SearchMethod::FullSearch),
     referenceKernelValid(false),
-    referenceClassValid(false)
+    referenceClassValid(false),
+    tuningManipulatorValid(false)
 {}
 
 void Kernel::addParameter(const KernelParameter& parameter)
 {
     if (parameterExists(parameter.getName()))
     {
-        throw std::runtime_error(std::string("Parameter with given name already exists: " + parameter.getName()));
+        throw std::runtime_error(std::string("Parameter with given name already exists: ") + parameter.getName());
     }
     parameters.push_back(parameter);
 }
@@ -32,7 +33,7 @@ void Kernel::addConstraint(const KernelConstraint& constraint)
     {
         if (!parameterExists(parameterName))
         {
-            throw std::runtime_error(std::string("Constraint parameter with given name does not exist: " + parameterName));
+            throw std::runtime_error(std::string("Constraint parameter with given name does not exist: ") + parameterName);
         }
     }
     constraints.push_back(constraint);
@@ -49,8 +50,8 @@ void Kernel::setSearchMethod(const SearchMethod& searchMethod, const std::vector
         || searchMethod == SearchMethod::Annealing && searchArguments.size() < 2
         || searchMethod == SearchMethod::PSO && searchArguments.size() < 5)
     {
-        throw std::runtime_error(std::string("Insufficient number of arguments given for specified search method: "
-            + getSearchMethodName(searchMethod)));
+        throw std::runtime_error(std::string("Insufficient number of arguments given for specified search method: ")
+            + getSearchMethodName(searchMethod));
     }
     
     this->searchArguments = searchArguments;
@@ -72,6 +73,12 @@ void Kernel::setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, c
     this->referenceClassArgumentIds = resultArgumentIds;
     referenceClassValid = true;
     this->referenceClass->computeResult();
+}
+
+void Kernel::setTuningManipulator(std::unique_ptr<TuningManipulator> tuningManipulator)
+{
+    this->tuningManipulator = std::move(tuningManipulator);
+    tuningManipulatorValid = true;
 }
 
 size_t Kernel::getId() const
@@ -162,6 +169,21 @@ const ReferenceClass* Kernel::getReferenceClass() const
 std::vector<size_t> Kernel::getReferenceClassArgumentIds() const
 {
     return referenceClassArgumentIds;
+}
+
+bool Kernel::hasTuningManipulator() const
+{
+    return tuningManipulatorValid;
+}
+
+const TuningManipulator* Kernel::getTuningManipulator() const
+{
+    return tuningManipulator.get();
+}
+
+TuningManipulator* Kernel::getTuningManipulator()
+{
+    return tuningManipulator.get();
 }
 
 bool Kernel::parameterExists(const std::string& parameterName) const

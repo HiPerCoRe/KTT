@@ -11,6 +11,8 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
+    auto kernelFile = std::string("../examples/coulomb_sum/coulomb_sum_kernel.cl");
+    auto referenceKernelFile = std::string("../examples/coulomb_sum/coulomb_sum_reference_kernel.cl");
 
     if (argc >= 2)
     {
@@ -18,12 +20,18 @@ int main(int argc, char** argv)
         if (argc >= 3)
         {
             deviceIndex = std::stoul(std::string{ argv[2] });
+            if (argc >= 4)
+            {
+                kernelFile = std::string{ argv[3] };
+                if (argc >= 5)
+                {
+                    referenceKernelFile = std::string{ argv[4] };
+                }
+            }
         }
     }
 
     // Declare kernel parameters
-    const std::string kernelFile = std::string("../examples/coulomb_sum/coulomb_sum_kernel.cl");
-    const std::string referenceKernelFile = std::string("../examples/coulomb_sum/coulomb_sum_reference_kernel.cl");
     // Total NDRange size matches number of grid points
     ktt::DimensionVector ndRangeDimensions(512, 512, 1);
     ktt::DimensionVector workGroupDimensions(1, 1, 1);
@@ -32,7 +40,7 @@ int main(int argc, char** argv)
     const float upperBoundary = 20.0f; 
     // If higher than 4k, computations with constant memory enabled will be invalid on many devices due to constant memory capacity limit
     const int numberOfAtoms = 4096;
-    const int numberOfGridPoints = 512 * 512;
+    const size_t numberOfGridPoints = 512 * 512;
 
     // Declare data variables
     float gridSpacing;
@@ -44,15 +52,15 @@ int main(int argc, char** argv)
     std::vector<float> energyGrid(numberOfGridPoints, 0.0f);
 
     // Initialize data
-    srand((unsigned)time(0));
-    gridSpacing = (float)rand() / RAND_MAX;
+    srand(static_cast<unsigned int>(time(0)));
+    gridSpacing = static_cast<float>(rand()) / RAND_MAX;
 
     for (int i = 0; i < numberOfAtoms; i++)
     {
-        atomInfoX.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
-        atomInfoY.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
-        atomInfoZ.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
-        atomInfoW.at(i) = (float)rand() / (RAND_MAX / upperBoundary);
+        atomInfoX.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        atomInfoY.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        atomInfoZ.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        atomInfoW.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
 
         atomInfo.at((4 * i)) = atomInfoX.at(i);
         atomInfo.at((4 * i) + 1) = atomInfoY.at(i);
@@ -105,7 +113,10 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId });
 
     // Set search method to random search, only 10% of all configurations will be explored.
-    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double> { 0.1 });
+    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.1 });
+
+    // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
 
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ energyGridId });
