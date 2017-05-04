@@ -33,7 +33,7 @@ size_t ArgumentManager::getArgumentCount() const
     return argumentCount;
 }
 
-const KernelArgument ArgumentManager::getArgument(const size_t id) const
+const KernelArgument& ArgumentManager::getArgument(const size_t id) const
 {
     if (id >= argumentCount)
     {
