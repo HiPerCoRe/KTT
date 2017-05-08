@@ -4,6 +4,7 @@
 
 #include "manipulator_interface_implementation.h"
 #include "../utility/ktt_utility.h"
+#include "../utility/timer.h"
 
 namespace ktt
 {
@@ -27,6 +28,9 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
 std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const size_t kernelId, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
+    Timer timer;
+    timer.start();
+
     auto dataPointer = kernelDataMap.find(kernelId);
     if (dataPointer == kernelDataMap.end())
     {
@@ -37,8 +41,7 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
 
     KernelRunResult result = computeApiDriver->runKernel(kernelData.getSource(), kernelData.getName(), convertDimensionVector(globalSize),
         convertDimensionVector(localSize), getArguments(kernelData.getArgumentIndices()));
-    currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead() + result.getOverhead(),
-        result.getResultArguments());
+    currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead(), result.getResultArguments());
 
     std::vector<ResultArgument> resultArguments;
     for (const auto& resultArgument : currentResult.getResultArguments())
@@ -47,6 +50,8 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
             resultArgument.getArgumentDataType()));
     }
 
+    timer.stop();
+    currentResult.increaseOverhead(timer.getElapsedTime());
     return resultArguments;
 }
 

@@ -44,7 +44,7 @@ private:
         const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters) const;
     std::vector<KernelArgument> getKernelArguments(const size_t kernelId) const;
     std::vector<std::pair<size_t, KernelRuntimeData>> getKernelDataVector(const size_t tunedKernelId, const KernelRuntimeData& tunedKernelData,
-        const std::vector<size_t>& additionalKernelIds, const KernelConfiguration& currentConfiguration) const;
+        const std::vector<std::pair<size_t, ThreadSizeUsage>>& additionalKernelData, const KernelConfiguration& currentConfiguration) const;
     bool processResult(const Kernel* kernel, const KernelRunResult& result, const uint64_t manipulatorDuration);
     bool validateResult(const Kernel* kernel, const KernelRunResult& result);
     bool validateResult(const Kernel* kernel, const KernelRunResult& result, bool useReferenceClass);

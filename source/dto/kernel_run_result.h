@@ -14,6 +14,7 @@ public:
     KernelRunResult();
     explicit KernelRunResult(const uint64_t duration, const uint64_t overhead, const std::vector<KernelArgument>& resultArguments);
 
+    void increaseOverhead(const uint64_t overhead);
     bool isValid() const;
 
     uint64_t getDuration() const;

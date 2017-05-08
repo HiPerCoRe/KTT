@@ -15,6 +15,11 @@ KernelRunResult::KernelRunResult(const uint64_t duration, const uint64_t overhea
     resultArguments(resultArguments)
 {}
 
+void KernelRunResult::increaseOverhead(const uint64_t overhead)
+{
+    this->overhead += overhead;
+}
+
 bool KernelRunResult::isValid() const
 {
     return valid;

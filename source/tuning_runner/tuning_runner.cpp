@@ -101,7 +101,7 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, con
 std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(TuningManipulator* manipulator,
     const std::vector<std::pair<size_t, KernelRuntimeData>>& kernelDataVector, const KernelConfiguration& currentConfiguration)
 {
-    manipulator->setManipulatorInterface(manipulatorInterfaceImplementation.get());
+    manipulator->manipulatorInterface = manipulatorInterfaceImplementation.get();
     std::vector<KernelArgument> kernelArguments;
     for (const auto& kernelData : kernelDataVector)
     {
@@ -128,7 +128,7 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(Tuni
     manipulatorDuration -= result.getOverhead();
 
     manipulatorInterfaceImplementation->clearData();
-    manipulator->setManipulatorInterface(nullptr);
+    manipulator->manipulatorInterface = nullptr;
     return std::make_pair(result, manipulatorDuration);
 }
 
@@ -171,22 +171,34 @@ std::vector<KernelArgument> TuningRunner::getKernelArguments(const size_t kernel
 }
 
 std::vector<std::pair<size_t, KernelRuntimeData>> TuningRunner::getKernelDataVector(const size_t tunedKernelId,
-    const KernelRuntimeData& tunedKernelData, const std::vector<size_t>& additionalKernelIds, const KernelConfiguration& currentConfiguration) const
+    const KernelRuntimeData& tunedKernelData, const std::vector<std::pair<size_t, ThreadSizeUsage>>& additionalKernelData,
+    const KernelConfiguration& currentConfiguration) const
 {
     std::vector<std::pair<size_t, KernelRuntimeData>> result;
     result.push_back(std::make_pair(tunedKernelId, tunedKernelData));
 
-    for (const auto kernelId : additionalKernelIds)
+    for (const auto& kernelDataPair : additionalKernelData)
     {
-        if (kernelId == tunedKernelId)
+        if (kernelDataPair.first == tunedKernelId)
         {
             continue;
         }
 
-        Kernel* kernel = kernelManager->getKernel(kernelId);
-        std::string source = kernelManager->getKernelSourceWithDefines(kernelId, currentConfiguration);
-        result.push_back(std::make_pair(kernelId, KernelRuntimeData(kernel->getName(), source, kernel->getGlobalSize(), kernel->getLocalSize(),
-            kernel->getArgumentIndices())));
+        Kernel* kernel = kernelManager->getKernel(kernelDataPair.first);
+        std::string source = kernelManager->getKernelSourceWithDefines(kernelDataPair.first, currentConfiguration);
+
+        if (kernelDataPair.second == ThreadSizeUsage::Basic)
+        {
+            result.push_back(std::make_pair(kernelDataPair.first, KernelRuntimeData(kernel->getName(), source, kernel->getGlobalSize(),
+                kernel->getLocalSize(), kernel->getArgumentIndices())));
+        }
+        else
+        {
+            KernelConfiguration configuration = kernelManager->getKernelConfiguration(kernelDataPair.first,
+                currentConfiguration.getParameterValues());
+            result.push_back(std::make_pair(kernelDataPair.first, KernelRuntimeData(kernel->getName(), source, configuration.getGlobalSize(),
+                configuration.getLocalSize(), kernel->getArgumentIndices())));
+        }
     }
 
     return result;

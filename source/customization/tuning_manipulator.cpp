@@ -5,9 +5,9 @@ namespace ktt
 
 TuningManipulator::~TuningManipulator() = default;
 
-std::vector<size_t> TuningManipulator::getUtilizedKernelIds() const
+std::vector<std::pair<size_t, ThreadSizeUsage>> TuningManipulator::getUtilizedKernelIds() const
 {
-    return std::vector<size_t>{};
+    return std::vector<std::pair<size_t, ThreadSizeUsage>>{};
 }
 
 std::vector<ResultArgument> TuningManipulator::runKernel(const size_t kernelId)
@@ -28,11 +28,6 @@ void TuningManipulator::updateArgumentScalar(const size_t argumentId, const void
 void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes)
 {
     manipulatorInterface->updateArgumentVector(argumentId, argumentData, dataSizeInBytes);
-}
-
-void TuningManipulator::setManipulatorInterface(ManipulatorInterface* manipulatorInterface)
-{
-    this->manipulatorInterface = manipulatorInterface;
 }
 
 } // namespace ktt

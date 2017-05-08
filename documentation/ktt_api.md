@@ -126,7 +126,7 @@ Sets validation method and tolerance threshold for floating point arguments.
 Default validation method is side by side comparison. Default tolerance threshold is 1e-4.
 
 Utility methods
--------------------------
+---------------
 
 * `void setLoggingTarget(std::ostream& outputTarget)`:
 Sets target for info messages logging to specified output stream.
@@ -134,10 +134,39 @@ Sets target for info messages logging to specified output stream.
 * `void setLoggingTarget(const std::string& filePath)`:
 Sets target for info messages logging to specified file.
 
-Tuning Manipulator usage
+Reference class usage
+=====================
+
+In order to use reference class for result validation, new class, which publicly inherits from ReferenceClass must be created.
+ReferenceClass contains following public methods:
+
+* `~ReferenceClass()`:
+Inheriting class can override destructor with custom implementation if needed.
+Default implementation is provided by API.
+
+* `void computeResult()`:
+Inheriting class must provide implementation for this method.
+Reference results for all validated arguments must be computed inside this method and stored for later retrieval by tuner.
+
+* `void* getData(const size_t argumentId) const`:
+Inheriting class must provide implementation for this method.
+Returns pointer to buffer containing reference result for specified validated argument.
+This method will only be called after running `computeResult()`.
+
+* `ArgumentDataType getDataType(const size_t argumentId) const`:
+Inheriting class must provide implementation for this method.
+Returns data type of specified validated argument.
+This method will only be called after running `computeResult()`.
+
+* `size_t getDataSizeInBytes(const size_t argumentId) const`:
+Inheriting class must provide implementation for this method.
+Returns size of buffer (in bytes) returned by `getData()` method for corresponding validated argument.
+This method will only be called after running `computeResult()`.
+
+Tuning manipulator usage
 ========================
 
-In order to use tuning manipulator, new class, which publicly inherits from TuningManipulator class needs to be created.
+In order to use tuning manipulator, new class, which publicly inherits from TuningManipulator class must be created.
 TuningManipulator class contains following public methods:
 
 * `~TuningManipulator()`:
@@ -149,11 +178,11 @@ Inheriting class must provide implementation for this method. Provided arguments
 Usage of these arguments is completely optional. This method must, at very least, call `runKernel()` method with currently tuned kernel id as its first argument.
 This method can also call any other methods available in base TuningManipulator class.
 
-* `std::vector<size_t> getUtilizedKernelIds() const`:
+* `std::vector<std::pair<size_t, ThreadSizeUsage>> getUtilizedKernelIds() const`:
 Inheriting class must override this method in case it utilizes multiple kernels inside the `launchComputation()` method.
 This method needs to return ids of all additional kernels. Id of the main kernel (specified by calling `setTuningManipulator()` method) does not need to be returned.
 All additional kernels will be launched under the same configuration as main kernel, which means that they need to accept exactly the same parameters.
-However, the additional kernels will be launched with base global and local thread sizes by default (ie. thread modifier parameters have no effect on additional kernel thread sizes).
+It is possible to specify, whether the additional kernels' thread sizes will be affected by the parameters. Main kernel's thread sizes will always be affected.
 
 * `std::vector<ResultArgument> runKernel(const size_t kernelId)`:
 Launches kernel with specified id, using thread sizes based only on the current configuration.
