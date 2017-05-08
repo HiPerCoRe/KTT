@@ -1,3 +1,14 @@
+Version 0.3 (8/5/2017)
+* Added tuning manipulator interface
+* Added support for validating multiple arguments with reference class
+* Added support for short argument data type
+* Added method for printing content of kernel arguments to file
+* Added method for specifying location for info messages printing
+* Additions and improvements to documentation
+* Improvements to samples
+* Fixed bug in CSV printing method
+* Other minor bug fixes and improvements
+
 Version 0.2 (10/4/2017)
 * Added methods for result printing
 * Added methods for kernel output validation
