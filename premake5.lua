@@ -133,6 +133,23 @@ project "ExampleSimple"
         -- CUDA not supported yet
     end
 
+project "ExampleNBody"
+    kind "ConsoleApp"
+    
+    files { "examples/nbody/*.cpp", "examples/nbody/*.cl" }
+    includedirs { "include/**" }
+    
+    links { "KernelTuningToolkit" }
+    
+    targetdir("build/examples/nbody/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir("build/examples/nbody/obj/%{cfg.platform}_%{cfg.buildcfg}")
+
+    if not _OPTIONS["cuda"] then
+        initOpenCL()
+    else
+        -- CUDA not supported yet
+    end
+
 project "ExampleOpenCLInfo"
     kind "ConsoleApp"
     
