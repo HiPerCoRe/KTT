@@ -1,12 +1,11 @@
 /* nbody_kern.cl */
 
-#define SOFTENING_SQR 0.1f*0.1f 
-
 __kernel void nbody_kern(float dt1,
 	__global float4* pos_old, 
 	__global float4* pos_new,
 	__global float4* vel,
-	float damping)
+	float damping, 
+	float softeningSqr)
 {
 	
 	const float4 dt = (float4)(dt1,dt1,dt1,0.0f);
@@ -26,7 +25,7 @@ __kernel void nbody_kern(float dt1,
 		for(int j=0; j<nt; j++) { /* For ALL cached particle positions ... */
 			float4 p2 = pblock[j]; /* Read a cached particle position */
 			float4 d = p2 - p;
-			float invr = rsqrt(d.x*d.x + d.y*d.y + d.z*d.z + SOFTENING_SQR);
+			float invr = rsqrt(d.x*d.x + d.y*d.y + d.z*d.z + softeningSqr);
 			float f = p2.w*invr*invr*invr;
 			a += f*d; /* Accumulate acceleration */
 		}

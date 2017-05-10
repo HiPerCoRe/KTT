@@ -1,23 +1,8 @@
-
-#define SOFTENING_SQR 0.1f*0.1f 
-
-__kernel void nBodyKernel(__global float* a, __global float* b, __global float* result)
-{
-    int index = get_global_id(0);
-
-    result[index] = a[index] + b[index];
-}
-
-float getSofteningSquared()
-{
-	return SOFTENING_SQR;
-}
-
-
 // altered source from bodysystemcuda.cu
 float3 bodyBodyInteraction(float3 ai,
                     float4 bi,
-                    float4 bj)
+                    float4 bj,
+					float softeningSqr)
 {
     float3 r;
 
@@ -28,7 +13,7 @@ float3 bodyBodyInteraction(float3 ai,
 
     // distSqr = dot(r_ij, r_ij) + EPS^2  [6 FLOPS]
     float distSqr = r.x * r.x + r.y * r.y + r.z * r.z;
-    distSqr += getSofteningSquared();
+    distSqr += softeningSqr;
 
     // invDistCube =1/distSqr^(3/2)  [4 FLOPS (2 mul, 1 sqrt, 1 inv)]
     float invDist = rsqrt(distSqr);
@@ -65,7 +50,8 @@ struct SharedMemory
 
 float3 computeBodyAccel(float4 bodyPos,
                  __global float4 *__restrict__ positions,
-                 int numTiles)
+                 int numTiles, 
+				 float softeningSqr)
 {
     float4 sharedPos[WORK_GROUP_SIZE_X]; //= SharedMemory<typename vec4<T>::Type>();
 
@@ -82,7 +68,7 @@ float3 computeBodyAccel(float4 bodyPos,
 
         for (unsigned int counter = 0; counter < get_local_size(0); counter++)
         {
-            acc = bodyBodyInteraction(acc, bodyPos, sharedPos[counter]);
+            acc = bodyBodyInteraction(acc, bodyPos, sharedPos[counter], softeningSqr);
         }
 
         work_group_barrier(CLK_LOCAL_MEM_FENCE);
@@ -95,7 +81,7 @@ __kernel void integrateBodies(float dt1,
 	__global float4* pos_old, 
 	__global float4* pos_new,
 	__global float4* vel,
-	float damping)
+	float damping, float softeningSqr)
 {
 	
 	int n = get_global_size(0); // number of bodies
@@ -108,7 +94,7 @@ __kernel void integrateBodies(float dt1,
 
     float3 accel = computeBodyAccel(position,
 								   pos_old,
-								   nb);
+								   nb, softeningSqr);
 
     // acceleration = force / mass;
     // new velocity = old velocity + acceleration * dt1
