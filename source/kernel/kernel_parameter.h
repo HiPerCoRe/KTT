@@ -22,6 +22,9 @@ public:
     ThreadModifierAction getThreadModifierAction() const;
     Dimension getModifierDimension() const;
 
+    bool operator==(const KernelParameter& other) const;
+    bool operator!=(const KernelParameter& other) const;
+
 private:
     std::string name;
     std::vector<size_t> values;

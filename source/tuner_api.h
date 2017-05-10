@@ -57,8 +57,7 @@ public:
     // Argument handling methods
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType);
     template <typename T> size_t addArgument(const T value);
-    void enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
-        const ArgumentPrintCondition& argumentPrintCondition);
+    void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Kernel tuning methods
     void tuneKernel(const size_t kernelId);

@@ -70,12 +70,6 @@ void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<Tuni
     kernelManager->setTuningManipulator(kernelId, std::move(tuningManipulator));
 }
 
-void TunerCore::enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
-    const ArgumentPrintCondition& argumentPrintCondition)
-{
-    argumentManager->enableArgumentPrinting(argumentIds, filePath, argumentPrintCondition);
-}
-
 void TunerCore::tuneKernel(const size_t id)
 {
     auto result = tuningRunner->tuneKernel(id);
@@ -85,6 +79,15 @@ void TunerCore::tuneKernel(const size_t id)
 void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
 {
     tuningRunner->setValidationMethod(validationMethod, toleranceThreshold);
+}
+
+void TunerCore::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
+{
+    if (argumentId >= argumentManager->getArgumentCount())
+    {
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+    }
+    tuningRunner->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
 }
 
 void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const

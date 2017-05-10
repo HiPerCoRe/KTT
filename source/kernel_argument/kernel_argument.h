@@ -21,8 +21,7 @@ public:
         const ArgumentQuantity& argumentQuantity) :
         id(id),
         argumentMemoryType(argumentMemoryType),
-        argumentQuantity(argumentQuantity),
-        printingEnabled(false)
+        argumentQuantity(argumentQuantity)
     {
         initializeData(data);
     }
@@ -41,8 +40,6 @@ public:
         initializeData(data);
     }
 
-    void enablePrinting(const std::string& printFilePath, const ArgumentPrintCondition& argumentPrintCondition);
-
     size_t getId() const;
     const void* getData() const;
     std::vector<double> getDataDouble() const;
@@ -53,10 +50,9 @@ public:
     ArgumentDataType getArgumentDataType() const;
     ArgumentMemoryType getArgumentMemoryType() const;
     ArgumentQuantity getArgumentQuantity() const;
-    bool isPrintingEnabled() const;
-    ArgumentPrintCondition getArgumentPrintCondition() const;
-    std::string getPrintFilePath() const;
 
+    bool operator==(const KernelArgument& other) const;
+    bool operator!=(const KernelArgument& other) const;
     friend std::ostream& operator<<(std::ostream&, const KernelArgument&);
 
 private:
@@ -68,9 +64,6 @@ private:
     ArgumentDataType argumentDataType;
     ArgumentMemoryType argumentMemoryType;
     ArgumentQuantity argumentQuantity;
-    bool printingEnabled;
-    ArgumentPrintCondition argumentPrintCondition;
-    std::string printFilePath;
 
     template <typename T> void initializeData(const std::vector<T>& data)
     {

@@ -1,4 +1,5 @@
 #include "kernel.h"
+#include "../utility/ktt_utility.h"
 
 namespace ktt
 {
@@ -18,7 +19,7 @@ Kernel::Kernel(const size_t id, const std::string& source, const std::string& na
 
 void Kernel::addParameter(const KernelParameter& parameter)
 {
-    if (parameterExists(parameter.getName()))
+    if (elementExists(parameter, parameters))
     {
         throw std::runtime_error(std::string("Parameter with given name already exists: ") + parameter.getName());
     }

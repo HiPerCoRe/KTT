@@ -27,9 +27,6 @@ public:
         arguments.at(id).updateData(data, argumentQuantity);
     }
 
-    void enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
-        const ArgumentPrintCondition& argumentPrintCondition);
-
     // Getters
     size_t getArgumentCount() const;
     const KernelArgument& getArgument(const size_t id) const;

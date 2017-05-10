@@ -148,12 +148,11 @@ template size_t Tuner::addArgument<int>(const int value);
 template size_t Tuner::addArgument<float>(const float value);
 template size_t Tuner::addArgument<double>(const double value);
 
-void Tuner::enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
-    const ArgumentPrintCondition& argumentPrintCondition)
+void Tuner::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
 {
     try
     {
-        tunerCore->enableArgumentPrinting(argumentIds, filePath, argumentPrintCondition);
+        tunerCore->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
     }
     catch (const std::runtime_error& error)
     {

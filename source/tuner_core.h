@@ -41,12 +41,11 @@ public:
     {
         return argumentManager->addArgument(data, argumentMemoryType, argumentQuantity);
     }
-    void enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
-        const ArgumentPrintCondition& argumentPrintCondition);
 
     // Tuning runner methods
     void tuneKernel(const size_t id);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Result printer methods
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;

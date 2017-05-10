@@ -86,10 +86,10 @@ Currently supported data types are double, float, int and short. Returns id assi
 Adds new scalar argument to kernel. All scalar arguments are read-only.
 Currently supported data types are double, float, int and short. Returns id assigned to argument by tuner.
 
-* `void enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)`:
-Enables printing of specified output arguments to specified file.
+* `void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)`:
+Enables printing of specified output argument to specified file.
 It is possible to specify to only print result arguments for kernel configurations that did not successfully pass the validation.
-It is not recommended to use this method for very large arguments.
+It is not recommended to enable argument printing for very large arguments.
 
 Kernel tuning methods
 ---------------------

@@ -3,13 +3,6 @@
 namespace ktt
 {
 
-void KernelArgument::enablePrinting(const std::string& printFilePath, const ArgumentPrintCondition& argumentPrintCondition)
-{
-    this->printFilePath = printFilePath;
-    this->argumentPrintCondition = argumentPrintCondition;
-    printingEnabled = true;
-}
-
 size_t KernelArgument::getId() const
 {
     return id;
@@ -84,19 +77,14 @@ ArgumentQuantity KernelArgument::getArgumentQuantity() const
     return argumentQuantity;
 }
 
-bool KernelArgument::isPrintingEnabled() const
+bool KernelArgument::operator==(const KernelArgument& other) const
 {
-    return printingEnabled;
+    return id == other.id;
 }
 
-ArgumentPrintCondition KernelArgument::getArgumentPrintCondition() const
+bool KernelArgument::operator!=(const KernelArgument& other) const
 {
-    return argumentPrintCondition;
-}
-
-std::string KernelArgument::getPrintFilePath() const
-{
-    return printFilePath;
+    return !(*this == other);
 }
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument)
