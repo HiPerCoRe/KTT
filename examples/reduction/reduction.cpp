@@ -85,7 +85,7 @@ public:
         tuner->addConstraint(kernelId, persistentAtomic, { "UNBOUNDED_WG", "USE_ATOMICS" } );
 
         tuner->setReferenceClass(kernelId, std::make_unique<referenceReduction>(*src, dstId), std::vector<size_t>{ dstId });
-        tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001f, 1);
+        tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n/100000.0f, 1);
 
         // set itself as a tuning manipulator
         tuner->setTuningManipulator(kernelId, std::unique_ptr<TuningManipulator>(this));

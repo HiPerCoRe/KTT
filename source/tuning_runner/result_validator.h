@@ -73,7 +73,7 @@ private:
         if (validationMethod == ValidationMethod::AbsoluteDifference)
         {
             double difference = 0.0;
-            for (size_t i = 0; i < result.size(); i++)
+            for (size_t i = 0; i < iters; i++)
             {
                 difference += std::fabs(result.at(i) - referenceResult.at(i));
             }
@@ -86,7 +86,7 @@ private:
         }
         else
         {
-            for (size_t i = 0; i < result.size(); i++)
+            for (size_t i = 0; i < iters; i++)
             {
                 if (std::fabs(result.at(i) - referenceResult.at(i)) > toleranceThreshold)
                 {
@@ -99,10 +99,15 @@ private:
         }
     }
 
-    template <typename T> bool validateResultInner(const std::vector<T>& result, const std::vector<T>& referenceResult,
-        std::false_type) const
+    template <typename T> bool validateResultInner(const std::vector<T>& result, const std::vector<T>& referenceResult, std::false_type) const
     {
-        for (size_t i = 0; i < result.size(); i++)
+        size_t iters;
+        if (validationRange == 0)
+            iters =  result.size();
+        else
+            iters = validationRange;
+
+        for (size_t i = 0; i < iters; i++)
         {
             if (result.at(i) != referenceResult.at(i))
             {
