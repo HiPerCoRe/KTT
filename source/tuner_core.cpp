@@ -82,9 +82,9 @@ void TunerCore::tuneKernel(const size_t id)
     resultPrinter.setResult(id, result);
 }
 
-void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
+void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold, const size_t validationRange)
 {
-    tuningRunner->setValidationMethod(validationMethod, toleranceThreshold);
+    tuningRunner->setValidationMethod(validationMethod, toleranceThreshold, validationRange);
 }
 
 void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const

@@ -64,10 +64,11 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     return results;
 }
 
-void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
+void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold, const size_t validationRange)
 {
     resultValidator.setValidationMethod(validationMethod);
     resultValidator.setToleranceThreshold(toleranceThreshold);
+    resultValidator.setValidationRange(validationRange);
 }
 
 std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, const KernelConfiguration& currentConfiguration,

@@ -71,7 +71,7 @@ public:
     void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
         const std::vector<size_t>& resultArgumentIds);
     void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
-    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold, const size_t validationRange = 0);
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);

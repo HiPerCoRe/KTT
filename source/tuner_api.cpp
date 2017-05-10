@@ -224,11 +224,11 @@ void Tuner::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceCl
     }
 }
 
-void Tuner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
+void Tuner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold, const size_t validationRange)
 {
     try
     {
-        tunerCore->setValidationMethod(validationMethod, toleranceThreshold);
+        tunerCore->setValidationMethod(validationMethod, toleranceThreshold, validationRange);
     }
     catch (const std::runtime_error& error)
     {

@@ -31,6 +31,7 @@ public:
     // Setters
     void setToleranceThreshold(const double toleranceThreshold);
     void setValidationMethod(const ValidationMethod& validationMethod);
+    void setValidationRange(const size_t validationRange);
 
     // Getters
     double getToleranceThreshold() const;
@@ -40,6 +41,7 @@ private:
     // Attributes
     double toleranceThreshold;
     ValidationMethod validationMethod;
+    size_t validationRange;
     std::map<size_t, std::vector<KernelArgument>> referenceClassResultMap;
     std::map<size_t, std::vector<KernelArgument>> referenceKernelResultMap;
     Logger* logger;
@@ -50,7 +52,7 @@ private:
 
     template <typename T> bool validateResult(const std::vector<T>& result, const std::vector<T>& referenceResult) const
     {
-        if (result.size() != referenceResult.size())
+        if (validationRange == 0 && (result.size() != referenceResult.size()))
         {
             logger->log(std::string("Number of elements in results differs, reference size: ") + std::to_string(referenceResult.size())
                 + "; result size: " + std::to_string(result.size()));
@@ -59,9 +61,15 @@ private:
         return validateResultInner(result, referenceResult, std::is_floating_point<T>());
     }
 
-    template <typename T> bool validateResultInner(const std::vector<T>& result, const std::vector<T>& referenceResult,
-        std::true_type) const
+    template <typename T> bool validateResultInner(const std::vector<T>& result,
+        const std::vector<T>& referenceResult, std::true_type) const
     {
+        size_t iters;
+        if (validationRange == 0)
+            iters =  result.size();
+        else
+            iters = validationRange;
+
         if (validationMethod == ValidationMethod::AbsoluteDifference)
         {
             double difference = 0.0;

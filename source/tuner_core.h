@@ -46,7 +46,7 @@ public:
 
     // Tuning runner methods
     void tuneKernel(const size_t id);
-    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold, const size_t validationRange);
 
     // Result printer methods
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;

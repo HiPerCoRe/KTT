@@ -8,6 +8,7 @@ namespace ktt
 ResultValidator::ResultValidator(Logger* logger) :
     toleranceThreshold(1e-4),
     validationMethod(ValidationMethod::SideBySideComparison),
+    validationRange(0),
     logger(logger)
 {}
 
@@ -79,6 +80,11 @@ void ResultValidator::setToleranceThreshold(const double toleranceThreshold)
 void ResultValidator::setValidationMethod(const ValidationMethod& validationMethod)
 {
     this->validationMethod = validationMethod;
+}
+
+void ResultValidator::setValidationRange(const size_t validationRange)
+{
+    this->validationRange = validationRange;
 }
 
 double ResultValidator::getToleranceThreshold() const
