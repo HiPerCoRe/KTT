@@ -15,23 +15,35 @@ public:
         src(src),
         resultArgumentId(resultArgumentId)
     {}
+
+    // High precision of reduction
     virtual void computeResult() override {
-        double resD = 0.0;
-        for (int i = 0; i < src.size(); i++)
-            resD += (double)src[i];
+        std::vector<double> resD(src.size());
+        size_t resSize = src.size();
+        for (int i = 0; i < resSize; i++)
+            resD[i] = src[i];
+
+        while (resSize > 1) {
+            for (int i = 0; i < resSize/2; i++)
+                resD[i] = resD[i*2] + resD[i*2+1];
+            if (resSize%2) resD[resSize/2-1] += resD[resSize-1];
+            resSize = resSize/2;
+        }
         res.clear();
-        std::cout << "XXX resD " << resD << "\n";
-        res.push_back((float)resD);
+        res.push_back((float)resD[0]);
     }
+
     virtual void* getData(const size_t argumentId) const override {
         if (argumentId == resultArgumentId) {
             return (void*)res.data();
         }
         throw std::runtime_error("No result available for specified argument id");
     }
+
     virtual ktt::ArgumentDataType getDataType(const size_t argumentId) const override {
         return ktt::ArgumentDataType::Float;
     }
+
     virtual size_t getDataSizeInBytes(const size_t argumentId) const override {
         return sizeof(float);
     }
@@ -122,7 +134,7 @@ int main(int argc, char** argv)
     std::vector<float> dst(n);
     for (int i = 0; i < n; i++)
     {
-        src[i] = (float) rand() / (float) RAND_MAX + 1.0f;
+        src[i] = 1.0f;//(float) rand() / (float) RAND_MAX + 1.0f;
         dst[i] = 0.0f;
     }
 
