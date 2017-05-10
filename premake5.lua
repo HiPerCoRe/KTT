@@ -183,7 +183,24 @@ project "ExampleCoulombSum3D"
     else
         -- CUDA not supported yet
     end
-    
+
+project "Reduction"
+    kind "ConsoleApp"
+
+    files { "examples/reduction/*.cpp", "examples/reduction/*.cl" }
+    includedirs { "include/**" }
+
+    links { "KernelTuningToolkit" }
+
+    targetdir("build/examples/reduction/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir("build/examples/reduction/obj/%{cfg.platform}_%{cfg.buildcfg}")
+
+    if not _OPTIONS["cuda"] then
+        initOpenCL()
+    else
+        -- CUDA not supported yet
+    end
+ 
 -- Unit tests configuration --    
     
 project "Tests"
