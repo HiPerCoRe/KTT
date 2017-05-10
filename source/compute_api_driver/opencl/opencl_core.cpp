@@ -74,6 +74,11 @@ void OpenclCore::setCompilerOptions(const std::string& options)
     compilerOptions = options;
 }
 
+void OpenclCore::clearCache()
+{
+    bufferCache.clear();
+}
+
 KernelRunResult OpenclCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
 {
@@ -89,12 +94,24 @@ KernelRunResult OpenclCore::runKernel(const std::string& source, const std::stri
     {
         if (argument.getArgumentQuantity() == ArgumentQuantity::Vector)
         {
-            std::unique_ptr<OpenclBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSizeInBytes());
+            if (argument.getArgumentMemoryType() == ArgumentMemoryType::ReadOnly && loadBufferFromCache(argument.getId(), *kernel))
+            {
+                continue; // buffer was successfully loaded from cache
+            }
+
+            std::unique_ptr<OpenclBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSizeInBytes(), argument.getId());
             updateBuffer(*buffer, argument.getData(), argument.getDataSizeInBytes());
             setKernelArgumentVector(*kernel, *buffer);
 
-            vectorArgumentPointers.push_back(&argument);
-            buffers.push_back(std::move(buffer)); // buffer data will be stolen
+            if (argument.getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
+            {
+                bufferCache.push_back(std::move(buffer));
+            }
+            else
+            {
+                vectorArgumentPointers.push_back(&argument);
+                buffers.push_back(std::move(buffer)); // buffer data will be stolen
+            }
         }
         else
         {
@@ -118,10 +135,11 @@ std::unique_ptr<OpenclProgram> OpenclCore::createAndBuildProgram(const std::stri
     return program;
 }
 
-std::unique_ptr<OpenclBuffer> OpenclCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const
+std::unique_ptr<OpenclBuffer> OpenclCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size,
+    const size_t kernelArgumentId) const
 {
     std::unique_ptr<OpenclBuffer> buffer;
-    buffer.reset(new OpenclBuffer(context->getContext(), getOpenclMemoryType(argumentMemoryType), size));
+    buffer.reset(new OpenclBuffer(context->getContext(), getOpenclMemoryType(argumentMemoryType), size, kernelArgumentId));
     return buffer;
 }
 
@@ -334,6 +352,19 @@ std::vector<KernelArgument> OpenclCore::getResultArguments(const std::vector<std
     }
 
     return resultArguments;
+}
+
+bool OpenclCore::loadBufferFromCache(const size_t argumentId, OpenclKernel& kernel) const
+{
+    for (const auto& buffer : bufferCache)
+    {
+        if (buffer->getKernelArgumentId() == argumentId)
+        {
+            setKernelArgumentVector(kernel, *buffer);
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace ktt

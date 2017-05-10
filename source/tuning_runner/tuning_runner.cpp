@@ -61,6 +61,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         }
     }
 
+    computeApiDriver->clearCache();
     resultValidator.clearReferenceResults();
     return results;
 }

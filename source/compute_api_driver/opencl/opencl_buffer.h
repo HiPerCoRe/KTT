@@ -12,10 +12,11 @@ namespace ktt
 class OpenclBuffer
 {
 public:
-    explicit OpenclBuffer(const cl_context context, const cl_mem_flags type, const size_t size) :
+    explicit OpenclBuffer(const cl_context context, const cl_mem_flags type, const size_t size, const size_t kernelArgumentId) :
         context(context),
         type(type),
-        size(size)
+        size(size),
+        kernelArgumentId(kernelArgumentId)
     {
         cl_int result;
         buffer = clCreateBuffer(context, type, size, nullptr, &result);
@@ -47,11 +48,17 @@ public:
         return buffer;
     }
 
+    size_t getKernelArgumentId() const
+    {
+        return kernelArgumentId;
+    }
+
 private:
     cl_context context;
     cl_mem_flags type;
     size_t size;
     cl_mem buffer;
+    size_t kernelArgumentId;
 };
 
 } // namespace ktt
