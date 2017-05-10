@@ -58,6 +58,12 @@ private:
                 + "; result size: " + std::to_string(result.size()));
             return false;
         }
+        if ((result.size() < validationRange && referenceResult.size() < validationRange))
+        {
+            logger->log(std::string("Insufficient Number of elements (less than required by validation range, reference size: ") + std::to_string(referenceResult.size())
+                + "; result size: " + std::to_string(result.size()));
+            return false;
+        }
         return validateResultInner(result, referenceResult, std::is_floating_point<T>());
     }
 
