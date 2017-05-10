@@ -1,6 +1,5 @@
 Minor features:
 * More precise timing measurement by averaging running time from multiple kernel launches with same configuration
-* Choice of unit for printing of timing measurements
 * Optimization of read-only argument handling in OpenCL backend
 * Updated class diagram
 * Linux compatibility test (AMD / Intel platforms)

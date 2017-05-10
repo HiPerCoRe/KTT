@@ -48,6 +48,7 @@ public:
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Result printer methods
+    void setPrintingTimeUnit(const TimeUnit& timeUnit);
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
 

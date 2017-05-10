@@ -43,13 +43,4 @@ KernelConfiguration TuningResult::getConfiguration() const
     return configuration;
 }
 
-std::ostream& operator<<(std::ostream& outputTarget, const TuningResult& tuningResult)
-{
-    outputTarget << "Result for kernel <" << tuningResult.kernelName << ">, configuration: " << std::endl;
-    outputTarget << tuningResult.configuration;
-    outputTarget << "Kernel duration: " << tuningResult.kernelDuration / 1000 << "us" << std::endl;
-    outputTarget << "Total duration: " << tuningResult.getTotalDuration() / 1000 << "us" << std::endl;
-    return outputTarget;
-}
-
 } // namespace ktt

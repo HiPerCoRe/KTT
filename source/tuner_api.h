@@ -12,6 +12,7 @@
 #include "enum/argument_print_condition.h"
 #include "enum/dimension.h"
 #include "enum/print_format.h"
+#include "enum/time_unit.h"
 #include "enum/search_method.h"
 #include "enum/thread_modifier_action.h"
 #include "enum/thread_modifier_type.h"
@@ -63,6 +64,7 @@ public:
     void tuneKernel(const size_t kernelId);
 
     // Result printing methods
+    void setPrintingTimeUnit(const TimeUnit& timeUnit);
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
 

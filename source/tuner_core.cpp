@@ -90,6 +90,11 @@ void TunerCore::enableArgumentPrinting(const size_t argumentId, const std::strin
     tuningRunner->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
 }
 
+void TunerCore::setPrintingTimeUnit(const TimeUnit& timeUnit)
+{
+    resultPrinter.setTimeUnit(timeUnit);
+}
+
 void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const
 {
     resultPrinter.printResult(kernelId, outputTarget, printFormat);

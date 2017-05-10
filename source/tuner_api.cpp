@@ -174,6 +174,11 @@ void Tuner::tuneKernel(const size_t kernelId)
     }
 }
 
+void Tuner::setPrintingTimeUnit(const TimeUnit& timeUnit)
+{
+    tunerCore->setPrintingTimeUnit(timeUnit);
+}
+
 void Tuner::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const
 {
     try

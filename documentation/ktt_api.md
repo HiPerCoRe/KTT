@@ -100,6 +100,10 @@ Starts the tuning process for specified kernel.
 Result printing methods
 -----------------------
 
+* `void setPrintingTimeUnit(const TimeUnit& timeUnit)`:
+Sets time unit used during printing of results to specified unit.
+This only affects `printResult` methods. Default time unit is microseconds. 
+
 * `void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const`:
 Prints tuning results for specified kernel to given output stream.
 Valid results will be printed only if method `tuneKernel()` was already called for corresponding kernel.
