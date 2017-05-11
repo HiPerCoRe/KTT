@@ -8,7 +8,7 @@ Constructor
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex)`:
 Creates new tuner object for specified platform and device.
-Indices for all available platforms and devices can be retrieved by calling `printComputeAPIInfo()` method.
+Indices for all available platforms and devices can be retrieved by calling `printComputeApiInfo()` method.
 
 Compute API methods
 -------------------
