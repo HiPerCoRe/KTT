@@ -29,7 +29,7 @@ float3 getAcceleration(float pI[3], float pJX, float pJY, float pJZ, float pJMas
 
 	
 // method to process initial block, i.e. part of the array where the threads has to do the most specific work, arrays get innitialized etc.
-void processStartBlock(float bodyAcc[3], float* bodyMass, float oldPosX[WORK_GROUP_SIZE_X],float oldPosY[WORK_GROUP_SIZE_X],float oldPosZ[WORK_GROUP_SIZE_X],float oldVelX[WORK_GROUP_SIZE_X],float oldVelY[WORK_GROUP_SIZE_X],float oldVelZ[WORK_GROUP_SIZE_X],float mass[WORK_GROUP_SIZE_X],
+void processStartBlock(float bodyAcc[3], float* bodyMass, float oldPosX[WORK_GROUP_SIZE_X],float oldPosY[WORK_GROUP_SIZE_X],float oldPosZ[WORK_GROUP_SIZE_X],float mass[WORK_GROUP_SIZE_X],
 	__global float4* pos_old, 
 	__global float4* vel,
 	float softeningSqr, float bodyPos[3], float bodyVel[3], int start, int end) {
@@ -43,17 +43,14 @@ void processStartBlock(float bodyAcc[3], float* bodyMass, float oldPosX[WORK_GRO
         oldPosX[tid] = pos_old[start + tid].x;
         oldPosY[tid] = pos_old[start + tid].y;
         oldPosZ[tid] = pos_old[start + tid].z;
-        oldVelX[tid] = vel[start + tid].x;
-        oldVelY[tid] = vel[start + tid].y;
-        oldVelZ[tid] = vel[start + tid].z;
 		mass[tid] = pos_old[start + tid].w;
         // save 'your' body info in register
         bodyPos[0] = oldPosX[tid];
         bodyPos[1] = oldPosY[tid];
         bodyPos[2] = oldPosZ[tid];
-        bodyVel[0] = oldVelX[tid];
-        bodyVel[1] = oldVelY[tid];
-        bodyVel[2] = oldVelZ[tid];
+        bodyVel[0] = vel[start + tid].x;
+        bodyVel[1] = vel[start + tid].y;
+        bodyVel[2] = vel[start + tid].z;
 		bodyAcc[0] = bodyAcc[1] = bodyAcc[1] = 0.f;
 		*bodyMass = mass[tid];
     }
@@ -72,9 +69,8 @@ void processStartBlock(float bodyAcc[3], float* bodyMass, float oldPosX[WORK_GRO
 }
 
 // method to process complete block, i.e. part of the bodies array where each body's acceleration is added to result
-void processCompleteBlock(float bodyAcc[3],float oldPosX[WORK_GROUP_SIZE_X],float oldPosY[WORK_GROUP_SIZE_X],float oldPosZ[WORK_GROUP_SIZE_X],float oldVelX[WORK_GROUP_SIZE_X],float oldVelY[WORK_GROUP_SIZE_X],float oldVelZ[WORK_GROUP_SIZE_X],float mass[WORK_GROUP_SIZE_X],
+void processCompleteBlock(float bodyAcc[3],float oldPosX[WORK_GROUP_SIZE_X],float oldPosY[WORK_GROUP_SIZE_X],float oldPosZ[WORK_GROUP_SIZE_X],float mass[WORK_GROUP_SIZE_X],
 	__global float4* pos_old, 
-	__global float4* vel,
 	float softeningSqr, float bodyPos[3], int start) {
     int tid = get_local_id(0);
 
@@ -82,9 +78,6 @@ void processCompleteBlock(float bodyAcc[3],float oldPosX[WORK_GROUP_SIZE_X],floa
 	oldPosX[tid] = pos_old[start + tid].x;
 	oldPosY[tid] = pos_old[start + tid].y;
 	oldPosZ[tid] = pos_old[start + tid].z;
-	oldVelX[tid] = vel[start + tid].x;
-	oldVelY[tid] = vel[start + tid].y;
-	oldVelZ[tid] = vel[start + tid].z;
 	mass[tid] = pos_old[start + tid].w;
     barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -101,9 +94,8 @@ void processCompleteBlock(float bodyAcc[3],float oldPosX[WORK_GROUP_SIZE_X],floa
 }
 
 // method to process final block, i.e. part of the molecule array where the algorithm terminates
-void processFinalBlock(float bodyAcc[3],float oldPosX[WORK_GROUP_SIZE_X],float oldPosY[WORK_GROUP_SIZE_X],float oldPosZ[WORK_GROUP_SIZE_X],float oldVelX[WORK_GROUP_SIZE_X],float oldVelY[WORK_GROUP_SIZE_X],float oldVelZ[WORK_GROUP_SIZE_X],float mass[WORK_GROUP_SIZE_X],
+void processFinalBlock(float bodyAcc[3],float oldPosX[WORK_GROUP_SIZE_X],float oldPosY[WORK_GROUP_SIZE_X],float oldPosZ[WORK_GROUP_SIZE_X],float mass[WORK_GROUP_SIZE_X],
 	__global float4* pos_old, 
-	__global float4* vel,
 	float softeningSqr, float bodyPos[3], int start, int end) {
     int tid = get_local_id(0);
     int length = end - start + 1;
@@ -116,9 +108,6 @@ void processFinalBlock(float bodyAcc[3],float oldPosX[WORK_GROUP_SIZE_X],float o
 		oldPosX[tid] = pos_old[start + tid].x;
 		oldPosY[tid] = pos_old[start + tid].y;
 		oldPosZ[tid] = pos_old[start + tid].z;
-		oldVelX[tid] = vel[start + tid].x;
-		oldVelY[tid] = vel[start + tid].y;
-		oldVelZ[tid] = vel[start + tid].z;
 		mass[tid] = pos_old[start + tid].w;
     }
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -160,10 +149,6 @@ __kernel void nbody_kernel(float timeDelta,
 	__local float oldPosX[WORK_GROUP_SIZE_X];
 	__local float oldPosY[WORK_GROUP_SIZE_X];
 	__local float oldPosZ[WORK_GROUP_SIZE_X];
-	// old velocity
-	__local float oldVelX[WORK_GROUP_SIZE_X];
-	__local float oldVelY[WORK_GROUP_SIZE_X];
-	__local float oldVelZ[WORK_GROUP_SIZE_X];
 	// mass
 	__local float mass[WORK_GROUP_SIZE_X];
 	
@@ -176,7 +161,7 @@ __kernel void nbody_kernel(float timeDelta,
 
     // process the first block, initialize local variables and prepare arrays
     // start point is the first position in the block, end point is either the last item of the array or last item of the block
-    processStartBlock(bodyAcc, &bodyMass, oldPosX, oldPosY, oldPosZ, oldVelX, oldVelY, oldVelZ, mass,
+    processStartBlock(bodyAcc, &bodyMass, oldPosX, oldPosY, oldPosZ, mass,
 		pos_old, 
 		vel,
 		softeningSqr
@@ -186,13 +171,12 @@ __kernel void nbody_kernel(float timeDelta,
     int i = get_group_id(0) + 1;
     for (; i < (n-1)/WORK_GROUP_SIZE_X; i++) {
         // start is the first body in the block being processed
-        processCompleteBlock(bodyAcc, oldPosX, oldPosY, oldPosZ, oldVelX, oldVelY, oldVelZ, mass,
-		pos_old, vel, softeningSqr, bodyPos, i * WORK_GROUP_SIZE_X);
+        processCompleteBlock(bodyAcc, oldPosX, oldPosY, oldPosZ, mass,
+		pos_old, softeningSqr, bodyPos, i * WORK_GROUP_SIZE_X);
     }
     // at the end, do the final block
-    processFinalBlock(bodyAcc, oldPosX, oldPosY, oldPosZ, oldVelX, oldVelY, oldVelZ, mass,
+    processFinalBlock(bodyAcc, oldPosX, oldPosY, oldPosZ, mass,
 		pos_old, 
-		vel,
 		softeningSqr, bodyPos,i * WORK_GROUP_SIZE_X, n-1);
 
 	int gtid = get_global_id(0);
