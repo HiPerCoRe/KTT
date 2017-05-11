@@ -206,5 +206,5 @@ __kernel void nbody_kernel(float timeDelta,
 	float resVelX = bodyVel[0] + timeDelta * bodyAcc[0];
 	float resVelY = bodyVel[1] + timeDelta * bodyAcc[1];
 	float resVelZ = bodyVel[2] + timeDelta * bodyAcc[2];
-	vel[gtid] = (float4)(resVelX, resVelY, resPosZ, 0.f);
+	vel[gtid] = (float4)(resVelX, resVelY, resVelZ, 0.f);
 }

@@ -32,11 +32,11 @@ int main(int argc, char** argv)
 
     // Used for generating random test data
     const float upperBoundary = 20.0f;
-    const int numberOfBodies = 32000;
+    const int numberOfBodies = 128;
 	
 	 // Declare kernel parameters
     // Total NDRange size matches number of grid points
-    ktt::DimensionVector ndRangeDimensions(32768, 1, 1);
+    ktt::DimensionVector ndRangeDimensions(numberOfBodies, 1, 1);
     ktt::DimensionVector workGroupDimensions(1, 1, 1);
     ktt::DimensionVector referenceWorkGroupDimensions(1, 1, 1);
 
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
 
 	 // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
-    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ newBodyInfoId });
+    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ bodyVelId });
   
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);
