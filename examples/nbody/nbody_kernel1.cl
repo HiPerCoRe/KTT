@@ -202,48 +202,9 @@ __kernel void nbody_kernel(float timeDelta,
 	float resPosY = bodyPos[1] + timeDelta * bodyVel[1] + damping * timeDelta * timeDelta * bodyAcc[1];
 	float resPosZ = bodyPos[2] + timeDelta * bodyVel[2] + damping * timeDelta * timeDelta * bodyAcc[2];
 	pos_new[gtid] = (float4)(resPosX, resPosY, resPosZ, bodyMass);
-		
+	// calculate resulting velocity	
 	float resVelX = bodyVel[0] + timeDelta * bodyAcc[0];
 	float resVelY = bodyVel[1] + timeDelta * bodyAcc[1];
 	float resVelZ = bodyVel[2] + timeDelta * bodyAcc[2];
 	vel[gtid] = (float4)(resVelX, resVelY, resPosZ, 0.f);
-		/*
-    // once all is done, we need to reduce the array with temporal results and add it to metric
-    if (get_local_id(0) < 64) {out[get_local_id(0)] += out[get_local_id(0) + 64]; barrier(CLK_LOCAL_MEM_FENCE);}
-    if (get_local_id(0) < 32) {out[get_local_id(0)] += out[get_local_id(0) + 32]; barrier(CLK_LOCAL_MEM_FENCE);}
-    if(get_local_id(0) == 0) {
-        float temp = 0.0f;
-        for (int j = 0; j < 32; j++) {
-            temp += out[j];
-        }
-        atomicAdd(&result, temp);
-    }
-	*/
 }
-
-
-
-/*
-// method to calculate distance from point to another point
-__device__ float getDistance(float point[3], float Bx, float By, float Bz) {
-        float a = ((point[0]-Bx) * (point[0]-Bx));
-        float b = ((point[1]-By) * (point[1]-By)) + a;
-        float c = ((point[2]-Bz) * (point[2]-Bz)) + b;
-        return sqrt(c);
-}
-*/
-/*
-// method being called from the main function.
-float solveGPU(sMolecule A, sMolecule B, int n) {
-    // before each run make sure to clear results
-    float zero = 0.0f;
-    cudaMemcpyToSymbol(result, &zero, sizeof(result), 0, cudaMemcpyHostToDevice);
-    // run the kernel. We need n-1 threads, each representing an atom. These threads are grouped into blocks
-    kernel<<<(n-1)/WORK_GROUP_SIZE_X + 1, WORK_GROUP_SIZE_X>>>(A, B, n);
-    // read out the result of the computation
-    typeof(result) res;
-    cudaMemcpyFromSymbol(&res, result, sizeof(res), 0, cudaMemcpyDeviceToHost);
-    // return the calculatef value
-    return sqrt(1/((float)n*((float)n-1))* res);
-}
-*/

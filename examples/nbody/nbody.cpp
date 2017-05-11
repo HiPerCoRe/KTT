@@ -32,11 +32,11 @@ int main(int argc, char** argv)
 
     // Used for generating random test data
     const float upperBoundary = 20.0f;
-    const int numberOfBodies = 1024;
+    const int numberOfBodies = 32000;
 	
 	 // Declare kernel parameters
     // Total NDRange size matches number of grid points
-    ktt::DimensionVector ndRangeDimensions(numberOfBodies, 1, 1);
+    ktt::DimensionVector ndRangeDimensions(32768, 1, 1);
     ktt::DimensionVector workGroupDimensions(1, 1, 1);
     ktt::DimensionVector referenceWorkGroupDimensions(1, 1, 1);
 
@@ -91,9 +91,9 @@ int main(int argc, char** argv)
         referenceWorkGroupDimensions);
 
 	 // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    tuner.addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{ 32/*, 64, 128, 256 */}, ktt::ThreadModifierType::Local,
+    tuner.addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{ 32, 64, 128, 256, 512}, ktt::ThreadModifierType::Local,
         ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
-	tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", { 0, 1, 2, 4, 8, 16, 32 });
+	tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", { 0, 1, 2, 4, 8, 16, 32, 64, 128, 256 });
 		
 		
 	 // Add all arguments utilized by kernels
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.5 });
 
 	  // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
-    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.00001);
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
 
 	 // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ newBodyInfoId });
