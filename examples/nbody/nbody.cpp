@@ -29,15 +29,16 @@ int main(int argc, char** argv)
             }
         }
     }
+
+    // Used for generating random test data
+    const float upperBoundary = 20.0f;
+    const int numberOfBodies = 1024;
 	
 	 // Declare kernel parameters
     // Total NDRange size matches number of grid points
-    ktt::DimensionVector ndRangeDimensions(512, 512, 1);
+    ktt::DimensionVector ndRangeDimensions(numberOfBodies, 1, 1);
     ktt::DimensionVector workGroupDimensions(1, 1, 1);
     ktt::DimensionVector referenceWorkGroupDimensions(1, 1, 1);
-	// Used for generating random test data
-    const float upperBoundary = 20.0f; 
-    const int numberOfBodies = 512;
 
 	 // Declare data variables
 	float timeDelta = 0.001f;
