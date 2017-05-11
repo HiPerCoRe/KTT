@@ -77,7 +77,7 @@ float3 computeBodyAccel(float4 bodyPos,
     return acc;
 }
 
-__kernel void integrateBodies(float dt1,
+__kernel void nbody_kernel(float dt1,
 	__global float4* pos_old, 
 	__global float4* pos_new,
 	__global float4* vel,

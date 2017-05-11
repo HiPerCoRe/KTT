@@ -10,7 +10,7 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
-    auto kernelFile = std::string("../examples/nbody/nbody_kernel.cl");
+    auto kernelFile = std::string("../examples/nbody/nbody_kernel1.cl");
     auto referenceKernelFile = std::string("../examples/nbody/nbody_reference_kernel.cl");
 
     if (argc >= 2)
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     ktt::DimensionVector referenceWorkGroupDimensions(1, 1, 1);
 	// Used for generating random test data
     const float upperBoundary = 20.0f; 
-    const int numberOfBodies = 4096;
+    const int numberOfBodies = 512;
 
 	 // Declare data variables
 	float timeDelta = 0.001f;
@@ -85,14 +85,16 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
 	// Add two kernels to tuner, one of the kernels acts as reference kernel
-    size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("integrateBodies"), ndRangeDimensions, workGroupDimensions);
-    size_t referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("nbody_kern"), ndRangeDimensions,
+    size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("nbody_kernel"), ndRangeDimensions, workGroupDimensions);
+    size_t referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("nbody_kernel"), ndRangeDimensions,
         referenceWorkGroupDimensions);
 
 	 // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    tuner.addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{ 32, 64, 128, 256 }, ktt::ThreadModifierType::Local,
+    tuner.addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{ 32/*, 64, 128, 256 */}, ktt::ThreadModifierType::Local,
         ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
-
+	tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", { 0, 1, 2, 4, 8, 16, 32 });
+		
+		
 	 // Add all arguments utilized by kernels
     size_t deltaTimeId = tuner.addArgument(timeDelta);
     size_t oldBodyInfoId = tuner.addArgument(oldBodyInfo, ktt::ArgumentMemoryType::ReadOnly);
@@ -108,10 +110,10 @@ int main(int argc, char** argv)
 		std::vector<size_t>{ deltaTimeId, oldBodyInfoId, newBodyInfoId, bodyVelId, dampingId, softeningSqrId });
 
 	  // Set search method to random search, only 10% of all configurations will be explored.
-    // tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.2 });
+    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.5 });
 
 	  // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
-    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.00001);
 
 	 // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ newBodyInfoId });
