@@ -15,17 +15,9 @@ public:
     ArgumentManager();
 
     // Core methods
-    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
-        const ArgumentQuantity& argumentQuantity)
-    {
-        arguments.emplace_back(KernelArgument(argumentCount, data, argumentMemoryType, argumentQuantity));
-        return argumentCount++;
-    }
-
-    template <typename T> void updateArgument(const size_t id, const std::vector<T>& data, const ArgumentQuantity& argumentQuantity)
-    {
-        arguments.at(id).updateData(data, argumentQuantity);
-    }
+    size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+        const ArgumentMemoryType& argumentMemoryType, const ArgumentQuantity& argumentQuantity);
+    void updateArgument(const size_t id, const void* data, const size_t numberOfElements);
 
     // Getters
     size_t getArgumentCount() const;

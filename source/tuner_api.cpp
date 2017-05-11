@@ -112,11 +112,12 @@ void Tuner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningMa
     }
 }
 
-template <typename T> size_t Tuner::addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
+size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+    const ArgumentMemoryType& argumentMemoryType)
 {
     try
     {
-        return tunerCore->addArgument(data, argumentMemoryType, ArgumentQuantity::Vector);
+        return tunerCore->addArgument(vectorData, numberOfElements, argumentDataType, argumentMemoryType, ArgumentQuantity::Vector);
     }
     catch (const std::runtime_error& error)
     {
@@ -125,16 +126,11 @@ template <typename T> size_t Tuner::addArgument(const std::vector<T>& data, cons
     }
 }
 
-template size_t Tuner::addArgument<short>(const std::vector<short>& data, const ArgumentMemoryType& argumentMemoryType);
-template size_t Tuner::addArgument<int>(const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType);
-template size_t Tuner::addArgument<float>(const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType);
-template size_t Tuner::addArgument<double>(const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType);
-
-template <typename T> size_t Tuner::addArgument(const T value)
+size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)
 {
     try
     {
-        return tunerCore->addArgument(std::vector<T>{ value }, ArgumentMemoryType::ReadOnly, ArgumentQuantity::Scalar);
+        return tunerCore->addArgument(scalarData, 1, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentQuantity::Scalar);
     }
     catch (const std::runtime_error& error)
     {
@@ -142,11 +138,6 @@ template <typename T> size_t Tuner::addArgument(const T value)
         throw;
     }
 }
-
-template size_t Tuner::addArgument<short>(const short value);
-template size_t Tuner::addArgument<int>(const int value);
-template size_t Tuner::addArgument<float>(const float value);
-template size_t Tuner::addArgument<double>(const double value);
 
 void Tuner::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
 {

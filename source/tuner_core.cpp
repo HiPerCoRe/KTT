@@ -70,6 +70,12 @@ void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<Tuni
     kernelManager->setTuningManipulator(kernelId, std::move(tuningManipulator));
 }
 
+size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+    const ArgumentMemoryType& argumentMemoryType, const ArgumentQuantity& argumentQuantity)
+{
+    return argumentManager->addArgument(data, numberOfElements, argumentDataType, argumentMemoryType, argumentQuantity);
+}
+
 void TunerCore::tuneKernel(const size_t id)
 {
     auto result = tuningRunner->tuneKernel(id);

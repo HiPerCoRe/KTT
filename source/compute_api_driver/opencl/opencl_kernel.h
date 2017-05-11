@@ -32,9 +32,9 @@ public:
         argumentsCount++;
     }
 
-    template <typename T> void setKernelArgumentScalar(const T value)
+    void setKernelArgumentScalar(const void* scalarValue, const size_t valueSize)
     {
-        checkOpenclError(clSetKernelArg(kernel, argumentsCount, sizeof(T), &value), std::string("clSetKernelArg"));
+        checkOpenclError(clSetKernelArg(kernel, argumentsCount, valueSize, scalarValue), std::string("clSetKernelArg"));
         argumentsCount++;
     }
 

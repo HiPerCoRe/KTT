@@ -36,11 +36,8 @@ public:
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Argument manager methods
-    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
-        const ArgumentQuantity& argumentQuantity)
-    {
-        return argumentManager->addArgument(data, argumentMemoryType, argumentQuantity);
-    }
+    size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+        const ArgumentMemoryType& argumentMemoryType, const ArgumentQuantity& argumentQuantity);
 
     // Tuning runner methods
     void tuneKernel(const size_t id);

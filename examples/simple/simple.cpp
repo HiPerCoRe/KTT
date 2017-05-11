@@ -24,7 +24,7 @@ public:
         }
     }
 
-    virtual void* getData(const size_t argumentId) const override
+    virtual const void* getData(const size_t argumentId) const override
     {
         if (argumentId == resultArgumentId)
         {
@@ -38,9 +38,14 @@ public:
         return ktt::ArgumentDataType::Float;
     }
 
-    virtual size_t getDataSizeInBytes(const size_t argumentId) const override
+    virtual size_t getNumberOfElements(const size_t argumentId) const override
     {
-        return result.size() * sizeof(float);
+        return result.size();
+    }
+
+    virtual size_t getElementSizeInBytes(const size_t argumentId) const override
+    {
+        return sizeof(float);
     }
 
 private:
@@ -94,9 +99,9 @@ int main(int argc, char** argv)
     size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("simpleKernel"), ndRangeDimensions, workGroupDimensions);
 
     // Add new arguments to tuner, argument data is copied from std::vector containers
-    size_t aId = tuner.addArgument(a, ktt::ArgumentMemoryType::ReadOnly);
-    size_t bId = tuner.addArgument(b, ktt::ArgumentMemoryType::ReadOnly);
-    size_t resultId = tuner.addArgument(result, ktt::ArgumentMemoryType::WriteOnly);
+    size_t aId = tuner.addArgument(a.data(), a.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
+    size_t bId = tuner.addArgument(b.data(), b.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
+    size_t resultId = tuner.addArgument(result.data(), result.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::WriteOnly);
 
     // Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
     tuner.setKernelArguments(kernelId, std::vector<size_t>{ aId, bId, resultId });

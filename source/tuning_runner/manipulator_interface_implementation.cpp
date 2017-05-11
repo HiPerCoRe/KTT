@@ -1,4 +1,3 @@
-#include <cstring>
 #include <stdexcept>
 #include <utility>
 
@@ -57,88 +56,17 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
 
 void ManipulatorInterfaceImplementation::updateArgumentScalar(const size_t argumentId, const void* argumentData)
 {
-    for (auto& argument : kernelArguments)
-    {
-        if (argument.getId() == argumentId)
-        {
-            if (argument.getArgumentDataType() == ArgumentDataType::Double)
-            {
-                std::vector<double> data;
-                data.resize(1);
-                std::memcpy(data.data(), argumentData, sizeof(double));
-                argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Scalar);
-            }
-            else if (argument.getArgumentDataType() == ArgumentDataType::Float)
-            {
-                std::vector<float> data;
-                data.resize(1);
-                std::memcpy(data.data(), argumentData, sizeof(float));
-                argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Scalar);
-            }
-            else if (argument.getArgumentDataType() == ArgumentDataType::Int)
-            {
-                std::vector<int> data;
-                data.resize(1);
-                std::memcpy(data.data(), argumentData, sizeof(int));
-                argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Scalar);
-            }
-            else if (argument.getArgumentDataType() == ArgumentDataType::Short)
-            {
-                std::vector<short> data;
-                data.resize(1);
-                std::memcpy(data.data(), argumentData, sizeof(short));
-                argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Scalar);
-            }
-            else
-            {
-                throw std::runtime_error("Unsupported argument data type");
-            }
-            return;
-        }
-    }
+    updateArgument(argumentId, argumentData, 1, ArgumentQuantity::Scalar, false);
 }
 
-void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes)
+void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData)
 {
-    for (auto& argument : kernelArguments)
-    {
-        if (argument.getId() == argumentId)
-        {
-            if (argument.getArgumentDataType() == ArgumentDataType::Double)
-            {
-                std::vector<double> data;
-                data.resize(dataSizeInBytes / sizeof(double));
-                std::memcpy(data.data(), argumentData, dataSizeInBytes);
-                argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Vector);
-            }
-            else if (argument.getArgumentDataType() == ArgumentDataType::Float)
-            {
-                std::vector<float> data;
-                data.resize(dataSizeInBytes / sizeof(float));
-                std::memcpy(data.data(), argumentData, dataSizeInBytes);
-                argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Vector);
-            }
-            else if (argument.getArgumentDataType() == ArgumentDataType::Int)
-            {
-                std::vector<int> data;
-                data.resize(dataSizeInBytes / sizeof(int));
-                std::memcpy(data.data(), argumentData, dataSizeInBytes);
-                argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Vector);
-            }
-            else if (argument.getArgumentDataType() == ArgumentDataType::Short)
-            {
-                std::vector<short> data;
-                data.resize(dataSizeInBytes / sizeof(short));
-                std::memcpy(data.data(), argumentData, dataSizeInBytes);
-                argument = KernelArgument(argumentId, data, argument.getArgumentMemoryType(), ArgumentQuantity::Vector);
-            }
-            else
-            {
-                throw std::runtime_error("Unsupported argument data type");
-            }
-            return;
-        }
-    }
+    updateArgument(argumentId, argumentData, 0, ArgumentQuantity::Vector, false);
+}
+
+void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)
+{
+    updateArgument(argumentId, argumentData, numberOfElements, ArgumentQuantity::Vector, true);
 }
 
 void ManipulatorInterfaceImplementation::addKernel(const size_t id, const KernelRuntimeData& kernelRuntimeData)
@@ -160,6 +88,28 @@ void ManipulatorInterfaceImplementation::clearData()
 KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const
 {
     return currentResult;
+}
+
+void ManipulatorInterfaceImplementation::updateArgument(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
+    const ArgumentQuantity& argumentQuantity, const bool overrideNumberOfElements)
+{
+    for (auto& argument : kernelArguments)
+    {
+        if (argument.getId() == argumentId)
+        {
+            if (overrideNumberOfElements)
+            {
+                argument = KernelArgument(argumentId, argumentData, numberOfElements, argument.getArgumentDataType(),
+                    argument.getArgumentMemoryType(), argumentQuantity);
+            }
+            else
+            {
+                argument = KernelArgument(argumentId, argumentData, argument.getNumberOfElements(), argument.getArgumentDataType(),
+                    argument.getArgumentMemoryType(), argumentQuantity);
+            }
+            return;
+        }
+    }
 }
 
 std::vector<KernelArgument> ManipulatorInterfaceImplementation::getArguments(const std::vector<size_t>& argumentIndices)

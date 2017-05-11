@@ -22,7 +22,11 @@ public:
     std::vector<ResultArgument> runKernel(const size_t kernelId);
     std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize);
     void updateArgumentScalar(const size_t argumentId, const void* argumentData);
-    void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes);
+    void updateArgumentVector(const size_t argumentId, const void* argumentData);
+    void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements);
+
+    static std::vector<size_t> convertFromDimensionVector(const DimensionVector& vector);
+    static DimensionVector convertToDimensionVector(const std::vector<size_t>& vector);
 
     friend class TuningRunner;
 

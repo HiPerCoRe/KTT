@@ -5,8 +5,14 @@ namespace ktt
 
 enum class ArgumentDataType
 {
-    Int,
+    Char,
+    UnsignedChar,
     Short,
+    UnsignedShort,
+    Int,
+    UnsignedInt,
+    Long,
+    UnsignedLong,
     Float,
     Double
 };

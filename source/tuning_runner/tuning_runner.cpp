@@ -344,69 +344,22 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromClass(const Refe
 
     for (const auto referenceArgumentId : referenceArgumentIndices)
     {
-        size_t dataSize = referenceClass->getDataSizeInBytes(referenceArgumentId);
+        size_t numberOfElements = referenceClass->getNumberOfElements(referenceArgumentId);
+        if (numberOfElements == 0)
+        {
+            throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: ")
+                + std::to_string(referenceArgumentId));
+        }
+        size_t elementSize = referenceClass->getElementSizeInBytes(referenceArgumentId);
+        if (elementSize == 0)
+        {
+            throw std::runtime_error(std::string("Invalid element size provided by reference class for argument with following id: ")
+                + std::to_string(referenceArgumentId));
+        }
         ArgumentDataType dataType = referenceClass->getDataType(referenceArgumentId);
 
-        if (dataType == ArgumentDataType::Double)
-        {
-            double* buffer = static_cast<double*>(referenceClass->getData(referenceArgumentId));
-            std::vector<double> vectorDouble(buffer, buffer + dataSize / sizeof(double));
-
-            if (vectorDouble.size() == 0)
-            {
-                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: ")
-                    + std::to_string(referenceArgumentId));
-            }
-
-            ArgumentQuantity quantity = vectorDouble.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
-            resultArguments.emplace_back(KernelArgument(referenceArgumentId, vectorDouble, ArgumentMemoryType::ReadWrite, quantity));
-        }
-        else if (dataType == ArgumentDataType::Float)
-        {
-            float* buffer = static_cast<float*>(referenceClass->getData(referenceArgumentId));
-            std::vector<float> vectorFloat(buffer, buffer + dataSize / sizeof(float));
-
-            if (vectorFloat.size() == 0)
-            {
-                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: ")
-                    + std::to_string(referenceArgumentId));
-            }
-
-            ArgumentQuantity quantity = vectorFloat.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
-            resultArguments.emplace_back(KernelArgument(referenceArgumentId, vectorFloat, ArgumentMemoryType::ReadWrite, quantity));
-        }
-        else if (dataType == ArgumentDataType::Int)
-        {
-            int* buffer = static_cast<int*>(referenceClass->getData(referenceArgumentId));
-            std::vector<int> vectorInt(buffer, buffer + dataSize / sizeof(int));
-
-            if (vectorInt.size() == 0)
-            {
-                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: ")
-                    + std::to_string(referenceArgumentId));
-            }
-
-            ArgumentQuantity quantity = vectorInt.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
-            resultArguments.emplace_back(KernelArgument(referenceArgumentId, vectorInt, ArgumentMemoryType::ReadWrite, quantity));
-        }
-        else if (dataType == ArgumentDataType::Short)
-        {
-            short* buffer = static_cast<short*>(referenceClass->getData(referenceArgumentId));
-            std::vector<short> vectorShort(buffer, buffer + dataSize / sizeof(short));
-
-            if (vectorShort.size() == 0)
-            {
-                throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: ")
-                    + std::to_string(referenceArgumentId));
-            }
-
-            ArgumentQuantity quantity = vectorShort.size() == 1 ? ArgumentQuantity::Scalar : ArgumentQuantity::Vector;
-            resultArguments.emplace_back(KernelArgument(referenceArgumentId, vectorShort, ArgumentMemoryType::ReadWrite, quantity));
-        }
-        else
-        {
-            throw std::runtime_error("Unsupported argument data type");
-        }
+        resultArguments.emplace_back(KernelArgument(referenceArgumentId, referenceClass->getData(referenceArgumentId), numberOfElements, dataType,
+            ArgumentMemoryType::ReadWrite, ArgumentQuantity::Vector));
     }
     
     return resultArguments;
