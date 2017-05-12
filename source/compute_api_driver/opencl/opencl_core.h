@@ -36,7 +36,7 @@ public:
     virtual void setCompilerOptions(const std::string& options) override;
 
     // Cache handling
-    virtual void clearCache() override;
+    virtual void clearCache() const override;
 
     // High-level kernel execution methods
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,

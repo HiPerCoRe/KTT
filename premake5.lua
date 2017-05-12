@@ -1,6 +1,6 @@
--- Helper functions to find OpenCL headers and libraries --
+-- Helper functions to find compute API headers and libraries
 
-function initOpenCL()
+function initOpencl()
     local path = os.getenv("INTELOCLSDKROOT")
     if (path) then
         defines { "CL_PLATFORM_INTEL" }
@@ -60,7 +60,35 @@ function initOpenCL()
     return false
 end
 
--- Command line arguments definition --
+function initCuda()
+    path = os.getenv("CUDA_PATH")
+    if (path) then
+        defines { "USE_CUDA" }
+        includedirs { "$(CUDA_PATH)/include" }
+        
+        filter "platforms:x86"
+            if os.get() == "linux" then
+                libdirs { "$(CUDA_PATH)/lib" }
+            else
+                libdirs { "$(CUDA_PATH)/lib/Win32" }
+            end
+        
+        filter "platforms:x86_64"
+            if os.get() == "linux" then
+                libdirs { "$(CUDA_PATH)/lib64" }
+            else
+                libdirs { "$(CUDA_PATH)/lib/x64" }
+            end
+        
+        filter {}
+        links { "OpenCL" }
+        return true
+	end
+    
+    return false
+end
+
+-- Command line arguments definition
 
 newoption
 {
@@ -68,7 +96,7 @@ newoption
    description = "Enables usage of CUDA API"
 }
 
--- Project configuration --
+-- Project configuration
 
 workspace "KernelTuningToolkit"
     configurations { "Debug", "Release" }
@@ -102,19 +130,17 @@ project "KernelTuningToolkit"
     targetdir("build/ktt/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/ktt/obj/%{cfg.platform}_%{cfg.buildcfg}")
     
-    if not _OPTIONS["cuda"] then
-        defines { "USE_OPENCL" }
-        local result = initOpenCL()
-        
-        if not result then
-            printf("Warning: OpenCL libraries were not found.")
-        end
-    else
-        defines { "USE_CUDA" }
-        printf("Warning: CUDA platform is not supported yet.")
+    local opencl = initOpencl()
+    if not opencl then
+        printf("Warning: OpenCL libraries were not found.")
+    
+    if _OPTIONS["cuda"] then
+        local cuda = initCuda()
+        if not cuda then
+            printf("Warning: CUDA libraries were not found.")
     end
 
--- Examples configuration --    
+-- Examples configuration 
 
 project "ExampleSimple"
     kind "ConsoleApp"
@@ -126,11 +152,10 @@ project "ExampleSimple"
     
     targetdir("build/examples/simple/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/simple/obj/%{cfg.platform}_%{cfg.buildcfg}")
-
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
+    
+    initOpencl()
+    if _OPTIONS["cuda"] then
+        initCuda()
     end
 
 project "ExampleOpenCLInfo"
@@ -144,10 +169,9 @@ project "ExampleOpenCLInfo"
     targetdir("build/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/opencl_info/obj/%{cfg.platform}_%{cfg.buildcfg}")
    
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
+    initOpencl()
+    if _OPTIONS["cuda"] then
+        initCuda()
     end
 
 project "ExampleCoulombSum"
@@ -161,10 +185,9 @@ project "ExampleCoulombSum"
     targetdir("build/examples/coulomb_sum/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/coulomb_sum/obj/%{cfg.platform}_%{cfg.buildcfg}")
    
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
+    initOpencl()
+    if _OPTIONS["cuda"] then
+        initCuda()
     end
 
 project "ExampleCoulombSum3D"
@@ -178,13 +201,12 @@ project "ExampleCoulombSum3D"
     targetdir("build/examples/coulomb_sum_3d/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/coulomb_sum_3d/obj/%{cfg.platform}_%{cfg.buildcfg}")
 
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
+    initOpencl()
+    if _OPTIONS["cuda"] then
+        initCuda()
     end
     
--- Unit tests configuration --    
+-- Unit tests configuration   
     
 project "Tests"
     kind "ConsoleApp"
@@ -198,8 +220,7 @@ project "Tests"
     targetdir("build/tests/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/tests/obj/%{cfg.platform}_%{cfg.buildcfg}")
     
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
+    initOpencl()
+    if _OPTIONS["cuda"] then
+        initCuda()
     end

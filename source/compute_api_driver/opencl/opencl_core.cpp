@@ -74,7 +74,7 @@ void OpenclCore::setCompilerOptions(const std::string& options)
     compilerOptions = options;
 }
 
-void OpenclCore::clearCache()
+void OpenclCore::clearCache() const
 {
     bufferCache.clear();
 }

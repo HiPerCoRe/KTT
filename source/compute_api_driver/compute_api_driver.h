@@ -26,7 +26,7 @@ public:
     virtual void setCompilerOptions(const std::string& options) = 0;
 
     // Cache handling
-    virtual void clearCache() = 0;
+    virtual void clearCache() const = 0;
 
     // Info retrieval methods
     virtual void printComputeApiInfo(std::ostream& outputTarget) const = 0;
