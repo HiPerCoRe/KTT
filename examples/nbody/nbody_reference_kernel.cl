@@ -1,7 +1,8 @@
 __kernel void nbody_kernel(float dt1,
 	__global float4* pos_old, 
 	__global float4* pos_new,
-	__global float4* vel,
+	__global float4* oldVel,
+	__global float4* newVel,
 	float damping, 
 	float softeningSqr)
 {
@@ -14,7 +15,7 @@ __kernel void nbody_kernel(float dt1,
 	int nb = n/nt;
 	__local float4 pblock[1024]; // FIXME
 	float4 p = pos_old[gti];
-	float4 v = vel[gti];
+	float4 v = oldVel[gti];
 	float4 a = (float4)(0.0f,0.0f,0.0f,0.0f);
 	
 	for(int jb=0; jb < nb; jb++) { /* Foreach block ... */
@@ -33,5 +34,5 @@ __kernel void nbody_kernel(float dt1,
 	v += dt*a;
 
 	pos_new[gti] = p;
-	vel[gti] = v;
+	newVel[gti] = v;
 }
