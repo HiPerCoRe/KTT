@@ -1,3 +1,28 @@
+#if USE_CONSTANT_MEMORY == 0
+    #define MEMORY_TYPE_AOS __global  const
+    #define MEMORY_TYPE_SOA __global  const
+#elif USE_CONSTANT_MEMORY == 1
+    #if USE_SOA == 0
+        #define MEMORY_TYPE_AOS __constant
+        #define MEMORY_TYPE_SOA __global  const
+    #elif USE_SOA > 0
+        #define MEMORY_TYPE_AOS __global  const
+        #define MEMORY_TYPE_SOA __constant
+    #endif // USE_SOA
+#endif // USE_CONSTANT_MEMORY
+
+#if VECTOR_TYPE == 1
+    // typedef float vector; // unsupported yet
+#elif VECTOR_TYPE == 2
+    // typedef float2 vector; // unsupported yet
+#elif VECTOR_TYPE == 4
+    typedef float4 vector;
+#elif VECTOR_TYPE == 8
+    // typedef float8 vector; // unsupported yet
+#elif VECTOR_TYPE == 16
+    // typedef float16 vector; // unsupported yet
+#endif // VECTOR_TYPE
+
 // method to calculate acceleration caused by body J
 float3 computeAcc(float posI[3], // position of body I
 	float posJX, float posJY, float posJZ, float bJMass, // position and mass of body J
@@ -22,7 +47,7 @@ float3 computeAcc(float posI[3], // position of body I
 
 // method to load thread specific data from global memory
 void loadThreadData(
-	__global float4* oldBodyInfo, __global float4* oldVel, // global data
+	MEMORY_TYPE_AOS vector* oldBodyInfo, MEMORY_TYPE_AOS vector* oldVel, // global data
 	float bodyPos[3], float bodyVel[3], float bodyAcc[3], float* bodyMass, // thread data
 	int start, int end) // indices
 {
@@ -48,7 +73,7 @@ void loadThreadData(
 // method to process complete block, i.e. part of the bodies array where
 // each body's acceleration is added to result
 void processCompleteBlock(
-	__global float4* oldBodyInfo, // global data
+	MEMORY_TYPE_AOS vector* oldBodyInfo, // global data
 	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
 	float bufferPosY[WORK_GROUP_SIZE_X],
 	float bufferPosZ[WORK_GROUP_SIZE_X],
@@ -83,7 +108,7 @@ void processCompleteBlock(
 
 // method to process final block, i.e. part of the molecule array where the algorithm terminates
 void processFinalBlock(
-	__global float4* oldBodyInfo, // global data
+	MEMORY_TYPE_AOS vector* oldBodyInfo, // global data
 	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
 	float bufferPosY[WORK_GROUP_SIZE_X],
 	float bufferPosZ[WORK_GROUP_SIZE_X],
@@ -133,10 +158,10 @@ void processFinalBlock(
 	
 // kernel calculating new position and velocity for n-bodies
 __kernel void nbody_kernel(float timeDelta,
-	__global float4* oldBodyInfo, // pos XYZ, mass
-	__global float4* newBodyInfo,
-	__global float4* oldVel, // XYZ, W unused, will be set to 0.f
-	__global float4* newVel, // XYZ, W set to 0.f
+	MEMORY_TYPE_AOS vector* oldBodyInfo, // pos XYZ, mass
+	__global vector* newBodyInfo,
+	MEMORY_TYPE_AOS vector* oldVel, // XYZ, W unused, will be set to 0.f
+	__global vector* newVel, // XYZ, W set to 0.f
 	float damping, 
 	float softeningSqr)
 {
@@ -185,11 +210,11 @@ __kernel void nbody_kernel(float timeDelta,
 		float resPosX = bodyPos[0] + timeDelta * bodyVel[0] + damping * timeDelta * timeDelta * bodyAcc[0];
 		float resPosY = bodyPos[1] + timeDelta * bodyVel[1] + damping * timeDelta * timeDelta * bodyAcc[1];
 		float resPosZ = bodyPos[2] + timeDelta * bodyVel[2] + damping * timeDelta * timeDelta * bodyAcc[2];
-		newBodyInfo[gtid] = (float4)(resPosX, resPosY, resPosZ, bodyMass);
+		newBodyInfo[gtid] = (vector)(resPosX, resPosY, resPosZ, bodyMass);
 		// calculate resulting velocity	
 		float resVelX = bodyVel[0] + timeDelta * bodyAcc[0];
 		float resVelY = bodyVel[1] + timeDelta * bodyAcc[1];
 		float resVelZ = bodyVel[2] + timeDelta * bodyAcc[2];
-		newVel[gtid] = (float4)(resVelX, resVelY, resVelZ, 0.f);
+		newVel[gtid] = (vector)(resVelX, resVelY, resVelZ, 0.f);
 	}
 }
