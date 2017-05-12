@@ -114,7 +114,7 @@ int main(int argc, char** argv)
 
 	// Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
     tuner.setKernelArguments(kernelId,
-        std::vector<size_t>{ deltaTimeId,  newBodyVelId, oldBodyInfoId, newBodyInfoId, oldBodyVelId, dampingId, softeningSqrId });
+        std::vector<size_t>{ deltaTimeId, oldBodyInfoId, newBodyInfoId, oldBodyVelId, newBodyVelId, dampingId, softeningSqrId });
     tuner.setKernelArguments(referenceKernelId, 
 		std::vector<size_t>{ deltaTimeId, oldBodyInfoId, newBodyInfoId, oldBodyVelId, newBodyVelId, dampingId, softeningSqrId });
 
