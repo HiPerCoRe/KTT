@@ -92,7 +92,7 @@ KernelRunResult OpenclCore::runKernel(const std::string& source, const std::stri
 
     for (const auto& argument : arguments)
     {
-        if (argument.getArgumentQuantity() == ArgumentQuantity::Vector)
+        if (argument.getArgumentUploadType() == ArgumentUploadType::Vector)
         {
             if (argument.getArgumentMemoryType() == ArgumentMemoryType::ReadOnly && loadBufferFromCache(argument.getId(), *kernel))
             {
@@ -300,7 +300,7 @@ std::vector<KernelArgument> OpenclCore::getResultArguments(const std::vector<std
 
         const KernelArgument* currentArgument = inputArgumentPointers.at(i);
         KernelArgument argument(currentArgument->getId(), currentArgument->getNumberOfElements(), currentArgument->getArgumentDataType(),
-            currentArgument->getArgumentMemoryType(), currentArgument->getArgumentQuantity());
+            currentArgument->getArgumentMemoryType(), currentArgument->getArgumentUploadType());
         getBufferData(*outputBuffers.at(i), argument.getData(), argument.getDataSizeInBytes());
         resultArguments.push_back(argument);
     }

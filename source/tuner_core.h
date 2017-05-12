@@ -37,7 +37,7 @@ public:
 
     // Argument manager methods
     size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType, const ArgumentQuantity& argumentQuantity);
+        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
 
     // Tuning runner methods
     void tuneKernel(const size_t id);

@@ -45,8 +45,8 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
     std::vector<ResultArgument> resultArguments;
     for (const auto& resultArgument : currentResult.getResultArguments())
     {
-        resultArguments.emplace_back(ResultArgument(kernelId, resultArgument.getData(), resultArgument.getDataSizeInBytes(),
-            resultArgument.getArgumentDataType()));
+        resultArguments.emplace_back(ResultArgument(resultArgument.getId(), resultArgument.getData(), resultArgument.getNumberOfElements(),
+            resultArgument.getElementSizeInBytes(), resultArgument.getArgumentDataType()));
     }
 
     timer.stop();
@@ -56,17 +56,17 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
 
 void ManipulatorInterfaceImplementation::updateArgumentScalar(const size_t argumentId, const void* argumentData)
 {
-    updateArgument(argumentId, argumentData, 1, ArgumentQuantity::Scalar, false);
+    updateArgument(argumentId, argumentData, 1, ArgumentUploadType::Scalar, false);
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData)
 {
-    updateArgument(argumentId, argumentData, 0, ArgumentQuantity::Vector, false);
+    updateArgument(argumentId, argumentData, 0, ArgumentUploadType::Vector, false);
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)
 {
-    updateArgument(argumentId, argumentData, numberOfElements, ArgumentQuantity::Vector, true);
+    updateArgument(argumentId, argumentData, numberOfElements, ArgumentUploadType::Vector, true);
 }
 
 void ManipulatorInterfaceImplementation::addKernel(const size_t id, const KernelRuntimeData& kernelRuntimeData)
@@ -91,7 +91,7 @@ KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const
 }
 
 void ManipulatorInterfaceImplementation::updateArgument(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
-    const ArgumentQuantity& argumentQuantity, const bool overrideNumberOfElements)
+    const ArgumentUploadType& argumentUploadType, const bool overrideNumberOfElements)
 {
     for (auto& argument : kernelArguments)
     {
@@ -100,12 +100,12 @@ void ManipulatorInterfaceImplementation::updateArgument(const size_t argumentId,
             if (overrideNumberOfElements)
             {
                 argument = KernelArgument(argumentId, argumentData, numberOfElements, argument.getArgumentDataType(),
-                    argument.getArgumentMemoryType(), argumentQuantity);
+                    argument.getArgumentMemoryType(), argumentUploadType);
             }
             else
             {
                 argument = KernelArgument(argumentId, argumentData, argument.getNumberOfElements(), argument.getArgumentDataType(),
-                    argument.getArgumentMemoryType(), argumentQuantity);
+                    argument.getArgumentMemoryType(), argumentUploadType);
             }
             return;
         }

@@ -3,7 +3,7 @@
 namespace ktt
 {
 
-enum class ArgumentQuantity
+enum class ArgumentUploadType
 {
     Scalar,
     Vector

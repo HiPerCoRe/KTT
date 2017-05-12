@@ -1,5 +1,7 @@
 Minor features:
 * More precise timing measurement by averaging running time from multiple kernel launches with same configuration
+* Ability to set timeout for kernel runs that take too long
+* Detection of invalid configurations during configuration computation (eg. configurations with work-group size larger than the current device allows)
 * Updated class diagram
 * Linux compatibility test (AMD / Intel platforms)
 

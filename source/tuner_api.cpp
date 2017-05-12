@@ -117,7 +117,7 @@ size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements,
 {
     try
     {
-        return tunerCore->addArgument(vectorData, numberOfElements, argumentDataType, argumentMemoryType, ArgumentQuantity::Vector);
+        return tunerCore->addArgument(vectorData, numberOfElements, argumentDataType, argumentMemoryType, ArgumentUploadType::Vector);
     }
     catch (const std::runtime_error& error)
     {
@@ -130,7 +130,7 @@ size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& argume
 {
     try
     {
-        return tunerCore->addArgument(scalarData, 1, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentQuantity::Scalar);
+        return tunerCore->addArgument(scalarData, 1, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentUploadType::Scalar);
     }
     catch (const std::runtime_error& error)
     {

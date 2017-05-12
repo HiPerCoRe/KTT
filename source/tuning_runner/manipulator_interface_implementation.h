@@ -5,7 +5,7 @@
 #include "manipulator_interface.h"
 #include "../compute_api_driver/compute_api_driver.h"
 #include "../dto/kernel_runtime_data.h"
-#include "../kernel_argument/argument_manager.h"
+#include "../kernel_argument/kernel_argument.h"
 
 namespace ktt
 {
@@ -38,8 +38,8 @@ private:
     std::vector<KernelArgument> kernelArguments;
 
     // Helper methods
-    void updateArgument(const size_t argumentId, const void* argumentData, const size_t numberOfElements, const ArgumentQuantity& argumentQuantity,
-        const bool overrideNumberOfElements);
+    void updateArgument(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
+        const ArgumentUploadType& argumentUploadType, const bool overrideNumberOfElements);
     std::vector<KernelArgument> getArguments(const std::vector<size_t>& argumentIndices);
 };
 

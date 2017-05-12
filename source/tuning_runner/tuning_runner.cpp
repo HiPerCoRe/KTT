@@ -359,7 +359,7 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromClass(const Refe
         ArgumentDataType dataType = referenceClass->getDataType(referenceArgumentId);
 
         resultArguments.emplace_back(KernelArgument(referenceArgumentId, referenceClass->getData(referenceArgumentId), numberOfElements, dataType,
-            ArgumentMemoryType::ReadWrite, ArgumentQuantity::Vector));
+            ArgumentMemoryType::ReadWrite, ArgumentUploadType::Vector));
     }
     
     return resultArguments;

@@ -16,7 +16,7 @@ public:
 
     // Core methods
     size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType, const ArgumentQuantity& argumentQuantity);
+        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
     void updateArgument(const size_t id, const void* data, const size_t numberOfElements);
 
     // Getters

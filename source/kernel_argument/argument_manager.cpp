@@ -10,9 +10,9 @@ ArgumentManager::ArgumentManager() :
 {}
 
 size_t ArgumentManager::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType, const ArgumentQuantity& argumentQuantity)
+    const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType)
 {
-    arguments.emplace_back(KernelArgument(argumentCount, data, numberOfElements, argumentDataType, argumentMemoryType, argumentQuantity));
+    arguments.emplace_back(KernelArgument(argumentCount, data, numberOfElements, argumentDataType, argumentMemoryType, argumentUploadType));
     return argumentCount++;
 }
 

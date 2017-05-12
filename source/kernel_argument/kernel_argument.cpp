@@ -7,12 +7,12 @@ namespace ktt
 {
 
 KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType, const ArgumentQuantity& argumentQuantity) :
+    const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType) :
     id(id),
     numberOfElements(numberOfElements),
     argumentDataType(argumentDataType),
     argumentMemoryType(argumentMemoryType),
-    argumentQuantity(argumentQuantity)
+    argumentUploadType(argumentUploadType)
 {
     if (numberOfElements == 0)
     {
@@ -22,12 +22,12 @@ KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, c
 }
 
 KernelArgument::KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType, const ArgumentQuantity& argumentQuantity) :
+    const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType) :
     id(id),
     numberOfElements(numberOfElements),
     argumentDataType(argumentDataType),
     argumentMemoryType(argumentMemoryType),
-    argumentQuantity(argumentQuantity)
+    argumentUploadType(argumentUploadType)
 {
     if (numberOfElements == 0)
     {
@@ -66,9 +66,9 @@ ArgumentMemoryType KernelArgument::getArgumentMemoryType() const
     return argumentMemoryType;
 }
 
-ArgumentQuantity KernelArgument::getArgumentQuantity() const
+ArgumentUploadType KernelArgument::getArgumentUploadType() const
 {
-    return argumentQuantity;
+    return argumentUploadType;
 }
 
 size_t KernelArgument::getElementSizeInBytes() const

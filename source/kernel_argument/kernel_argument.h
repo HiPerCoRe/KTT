@@ -6,7 +6,7 @@
 
 #include "../enum/argument_data_type.h"
 #include "../enum/argument_memory_type.h"
-#include "../enum/argument_quantity.h"
+#include "../enum/argument_upload_type.h"
 #include "../enum/argument_print_condition.h"
 
 namespace ktt
@@ -17,9 +17,9 @@ class KernelArgument
 public:
     // Constructors
     explicit KernelArgument(const size_t id, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType, const ArgumentQuantity& argumentQuantity);
+        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
     explicit KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType, const ArgumentQuantity& argumentQuantity);
+        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
 
     // Core methods
     void updateData(const void* data, const size_t numberOfElements);
@@ -29,7 +29,7 @@ public:
     size_t getNumberOfElements() const;
     ArgumentDataType getArgumentDataType() const;
     ArgumentMemoryType getArgumentMemoryType() const;
-    ArgumentQuantity getArgumentQuantity() const;
+    ArgumentUploadType getArgumentUploadType() const;
     size_t getElementSizeInBytes() const;
     size_t getDataSizeInBytes() const;
     const void* getData() const;
@@ -56,7 +56,7 @@ private:
     size_t numberOfElements;
     ArgumentDataType argumentDataType;
     ArgumentMemoryType argumentMemoryType;
-    ArgumentQuantity argumentQuantity;
+    ArgumentUploadType argumentUploadType;
     std::vector<int8_t> dataChar;
     std::vector<uint8_t> dataUnsignedChar;
     std::vector<int16_t> dataShort;
