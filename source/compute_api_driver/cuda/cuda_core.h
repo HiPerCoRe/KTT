@@ -5,13 +5,13 @@
 #include <string>
 #include <vector>
 
-#ifdef USE_CUDA
+#ifdef PLATFORM_CUDA
 #include "cuda.h"
 #include "nvrtc.h"
 
 #include "cuda_device.h"
 #include "cuda_utility.h"
-#endif // USE_CUDA
+#endif // PLATFORM_CUDA
 
 #include "../compute_api_driver.h"
 #include "../../dto/device_info.h"
@@ -22,7 +22,7 @@
 namespace ktt
 {
 
-#ifdef USE_CUDA
+#ifdef PLATFORM_CUDA
 
 class CudaCore : public ComputeApiDriver
 {
@@ -76,6 +76,6 @@ public:
         const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const override;
 };
 
-#endif // USE_CUDA
+#endif // PLATFORM_CUDA
 
 } // namespace ktt

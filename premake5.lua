@@ -1,6 +1,6 @@
 -- Helper functions to find compute API headers and libraries
 
-function initOpencl()
+function findLibraries()
     local path = os.getenv("INTELOCLSDKROOT")
     if (path) then
         defines { "PLATFORM_INTEL" }
@@ -24,30 +24,6 @@ function initOpencl()
         links {"OpenCL"}
         return true
     end
-    
-    path = os.getenv("CUDA_PATH")
-    if (path) then
-        defines { "PLATFORM_NVIDIA" }
-        includedirs { "$(CUDA_PATH)/include" }
-        
-        filter "platforms:x86"
-            if os.get() == "linux" then
-                libdirs { "$(CUDA_PATH)/lib" }
-            else
-                libdirs { "$(CUDA_PATH)/lib/Win32" }
-            end
-        
-        filter "platforms:x86_64"
-            if os.get() == "linux" then
-                libdirs { "$(CUDA_PATH)/lib64" }
-            else
-                libdirs { "$(CUDA_PATH)/lib/x64" }
-            end
-        
-        filter {}
-        links { "OpenCL" }
-        return true
-	end
     
     path = os.getenv("AMDAPPSDKROOT")
     if (path) then
@@ -73,13 +49,9 @@ function initOpencl()
         return true
     end
     
-    return false
-end
-
-function initCuda()
-    local path = os.getenv("CUDA_PATH")
+    path = os.getenv("CUDA_PATH")
     if (path) then
-        defines { "USE_CUDA" }
+        defines { "PLATFORM_NVIDIA" }
         includedirs { "$(CUDA_PATH)/include" }
         
         filter "platforms:x86"
@@ -97,7 +69,13 @@ function initCuda()
             end
         
         filter {}
-        links { "cuda" }
+        links { "OpenCL" }
+        
+        if _OPTIONS["cuda"] then
+            defines { "PLATFORM_CUDA" }
+            links { "cuda" }
+        end
+        
         return true
 	end
     
@@ -146,16 +124,9 @@ project "KernelTuningToolkit"
     targetdir("build/ktt/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/ktt/obj/%{cfg.platform}_%{cfg.buildcfg}")
     
-    local opencl = initOpencl()
-    if not opencl then
-        printf("Warning: OpenCL libraries were not found.")
-    end
-    
-    if _OPTIONS["cuda"] then
-        local cuda = initCuda()
-        if not cuda then
-            printf("Warning: CUDA libraries were not found.")
-        end
+    local libraries = findLibraries()
+    if not libraries then
+        printf("Warning: Compute API libraries were not found.")
     end
 
 -- Examples configuration 
@@ -171,10 +142,7 @@ project "ExampleSimple"
     targetdir("build/examples/simple/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/simple/obj/%{cfg.platform}_%{cfg.buildcfg}")
     
-    initOpencl()
-    if _OPTIONS["cuda"] then
-        initCuda()
-    end
+    findLibraries()
 
 project "ExampleOpenCLInfo"
     kind "ConsoleApp"
@@ -187,10 +155,7 @@ project "ExampleOpenCLInfo"
     targetdir("build/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/opencl_info/obj/%{cfg.platform}_%{cfg.buildcfg}")
    
-    initOpencl()
-    if _OPTIONS["cuda"] then
-        initCuda()
-    end
+    findLibraries()
 
 project "ExampleCoulombSum"
     kind "ConsoleApp"
@@ -203,10 +168,7 @@ project "ExampleCoulombSum"
     targetdir("build/examples/coulomb_sum/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/coulomb_sum/obj/%{cfg.platform}_%{cfg.buildcfg}")
    
-    initOpencl()
-    if _OPTIONS["cuda"] then
-        initCuda()
-    end
+    findLibraries()
 
 project "ExampleCoulombSum3D"
     kind "ConsoleApp"
@@ -219,10 +181,7 @@ project "ExampleCoulombSum3D"
     targetdir("build/examples/coulomb_sum_3d/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/coulomb_sum_3d/obj/%{cfg.platform}_%{cfg.buildcfg}")
 
-    initOpencl()
-    if _OPTIONS["cuda"] then
-        initCuda()
-    end
+    findLibraries()
     
 -- Unit tests configuration   
     
@@ -238,7 +197,4 @@ project "Tests"
     targetdir("build/tests/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/tests/obj/%{cfg.platform}_%{cfg.buildcfg}")
     
-    initOpencl()
-    if _OPTIONS["cuda"] then
-        initCuda()
-    end
+    findLibraries()

@@ -3,7 +3,7 @@
 namespace ktt
 {
 
-#ifdef USE_CUDA
+#ifdef PLATFORM_CUDA
 
 CudaCore::CudaCore(const size_t deviceIndex) :
     deviceIndex(deviceIndex),
@@ -109,6 +109,6 @@ KernelRunResult CudaCore::runKernel(const std::string& source, const std::string
     throw std::runtime_error("CUDA build option was not specified during project file generation");
 }
 
-#endif // USE_CUDA
+#endif // PLATFORM_CUDA
 
 } // namespace ktt
