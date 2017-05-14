@@ -11,6 +11,7 @@
 #include "enum/argument_data_type.h"
 #include "enum/argument_memory_type.h"
 #include "enum/argument_print_condition.h"
+#include "enum/compute_api.h"
 #include "enum/dimension.h"
 #include "enum/print_format.h"
 #include "enum/time_unit.h"
@@ -39,6 +40,7 @@ class Tuner
 public:
     // Constructor and destructor
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex);
+    explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
     ~Tuner();
 
     // Basic kernel handling methods

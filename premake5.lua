@@ -3,14 +3,22 @@
 function initOpencl()
     local path = os.getenv("INTELOCLSDKROOT")
     if (path) then
-        defines { "CL_PLATFORM_INTEL" }
+        defines { "PLATFORM_INTEL" }
         includedirs { "$(INTELOCLSDKROOT)/include" }
         
         filter "platforms:x86"
-            libdirs { "$(INTELOCLSDKROOT)/lib/x86" }
+            if os.get() == "linux" then
+                libdirs { "$(INTELOCLSDKROOT)/lib" }
+            else
+                libdirs { "$(INTELOCLSDKROOT)/lib/x86" }
+            end
         
         filter "platforms:x86_64"
-            libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
+            if os.get() == "linux" then
+                libdirs { "$(INTELOCLSDKROOT)/lib64" }
+            else
+                libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
+            end
         
         filter {}
         links {"OpenCL"}
@@ -19,7 +27,7 @@ function initOpencl()
     
     path = os.getenv("CUDA_PATH")
     if (path) then
-        defines { "CL_PLATFORM_NVIDIA" }
+        defines { "PLATFORM_NVIDIA" }
         includedirs { "$(CUDA_PATH)/include" }
         
         filter "platforms:x86"
@@ -43,14 +51,22 @@ function initOpencl()
     
     path = os.getenv("AMDAPPSDKROOT")
     if (path) then
-        defines { "CL_PLATFORM_AMD" }
+        defines { "PLATFORM_AMD" }
         includedirs { "$(AMDAPPSDKROOT)/include" }
         
         filter "platforms:x86"
-            libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
+            if os.get() == "linux" then
+                libdirs { "$(AMDAPPSDKROOT)/lib" }
+            else
+                libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
+            end
         
         filter "platforms:x86_64"
-            libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
+            if os.get() == "linux" then
+                libdirs { "$(AMDAPPSDKROOT)/lib64" }
+            else
+                libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
+            end
         
         filter {}
         links { "OpenCL" }
@@ -61,7 +77,7 @@ function initOpencl()
 end
 
 function initCuda()
-    path = os.getenv("CUDA_PATH")
+    local path = os.getenv("CUDA_PATH")
     if (path) then
         defines { "USE_CUDA" }
         includedirs { "$(CUDA_PATH)/include" }
@@ -81,7 +97,7 @@ function initCuda()
             end
         
         filter {}
-        links { "OpenCL" }
+        links { "cuda" }
         return true
 	end
     
@@ -93,7 +109,7 @@ end
 newoption
 {
    trigger     = "cuda",
-   description = "Enables usage of CUDA API"
+   description = "Enables usage of CUDA API in addition to OpenCL (Nvidia platform only)"
 }
 
 -- Project configuration
@@ -133,11 +149,13 @@ project "KernelTuningToolkit"
     local opencl = initOpencl()
     if not opencl then
         printf("Warning: OpenCL libraries were not found.")
+    end
     
     if _OPTIONS["cuda"] then
         local cuda = initCuda()
         if not cuda then
             printf("Warning: CUDA libraries were not found.")
+        end
     end
 
 -- Examples configuration 

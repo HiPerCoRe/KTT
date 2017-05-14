@@ -7,7 +7,11 @@ namespace ktt
 {
 
 Tuner::Tuner(const size_t platformIndex, const size_t deviceIndex) :
-    tunerCore(std::make_unique<TunerCore>(platformIndex, deviceIndex))
+    tunerCore(std::make_unique<TunerCore>(platformIndex, deviceIndex, ComputeApi::Opencl))
+{}
+
+Tuner::Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi) :
+    tunerCore(std::make_unique<TunerCore>(platformIndex, deviceIndex, computeApi))
 {}
 
 Tuner::~Tuner() = default;

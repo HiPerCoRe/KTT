@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "compute_api_driver/compute_api_driver.h"
+#include "enum/compute_api.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
 #include "tuning_runner/tuning_runner.h"
@@ -18,7 +19,7 @@ class TunerCore
 {
 public:
     // Constructor
-    explicit TunerCore(const size_t platformIndex, const size_t deviceIndex);
+    explicit TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
 
     // Kernel manager methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);

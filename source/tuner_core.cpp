@@ -1,15 +1,28 @@
 #include "tuner_core.h"
+#include "compute_api_driver/cuda/cuda_core.h"
 #include "compute_api_driver/opencl/opencl_core.h"
 
 namespace ktt
 {
 
-TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex) :
+TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi) :
     argumentManager(std::make_unique<ArgumentManager>()),
-    kernelManager(std::make_unique<KernelManager>()),
-    computeApiDriver(std::make_unique<OpenclCore>(platformIndex, deviceIndex)),
-    tuningRunner(std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeApiDriver.get()))
-{}
+    kernelManager(std::make_unique<KernelManager>())
+{
+    if (computeApi == ComputeApi::Opencl)
+    {
+        computeApiDriver = std::make_unique<OpenclCore>(platformIndex, deviceIndex);
+    }
+    else if (computeApi == ComputeApi::Cuda)
+    {
+        computeApiDriver = std::make_unique<CudaCore>(deviceIndex);
+    }
+    else
+    {
+        throw std::runtime_error("Specified compute API is not supported yet");
+    }
+    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeApiDriver.get());
+}
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
