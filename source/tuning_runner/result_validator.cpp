@@ -139,6 +139,10 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
         {
             validationResult &= validateResult(kernelArgument.getDataUnsignedLong(), referenceArgument.getDataUnsignedLong());
         }
+        else if (referenceDataType == ArgumentDataType::Half)
+        {
+            validationResult &= validateResult(kernelArgument.getDataHalf(), referenceArgument.getDataHalf());
+        }
         else if (referenceDataType == ArgumentDataType::Float)
         {
             validationResult &= validateResult(kernelArgument.getDataFloat(), referenceArgument.getDataFloat());

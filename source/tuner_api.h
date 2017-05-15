@@ -33,6 +33,10 @@
 // Tuning manipulator interface
 #include "customization/tuning_manipulator.h"
 
+// Support for 16-bit floating point data type
+#include "half.hpp"
+using half_float::half;
+
 namespace ktt
 {
 
@@ -123,6 +127,10 @@ private:
         else if (sizeof(T) == 1)
         {
             return ArgumentDataType::Char;
+        }
+        else if (typeid(T) == typeid(half))
+        {
+            return ArgumentDataType::Half;
         }
         else if (sizeof(T) == 2 && std::is_unsigned<T>())
         {

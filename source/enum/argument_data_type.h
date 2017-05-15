@@ -13,6 +13,7 @@ enum class ArgumentDataType
     UnsignedInt,
     Long,
     UnsignedLong,
+    Half,
     Float,
     Double
 };
