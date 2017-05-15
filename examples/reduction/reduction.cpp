@@ -33,7 +33,7 @@ public:
         res.push_back((float)resD[0]);
     }
 
-    virtual void* getData(const size_t argumentId) const override {
+    virtual const void* getData(const size_t argumentId) const override {
         if (argumentId == resultArgumentId) {
             return (void*)res.data();
         }
@@ -44,7 +44,11 @@ public:
         return ktt::ArgumentDataType::Float;
     }
 
-    virtual size_t getDataSizeInBytes(const size_t argumentId) const override {
+    virtual size_t getNumberOfElements(const size_t argumentId) const override {
+        return 1;
+}
+
+    virtual size_t getElementSizeInBytes(const size_t argumentId) const override {
         return sizeof(float);
     }
 };
@@ -73,9 +77,9 @@ public:
         kernelId = tuner->addKernelFromFile("../examples/reduction/reduction_kernel.cl", std::string("reduce"), ndRangeDimensions, workGroupDimensions);
 
         // create input/output
-        srcId = tuner->addArgument(*src, ktt::ArgumentMemoryType::ReadOnly);
-        dstId = tuner->addArgument(*dst, ktt::ArgumentMemoryType::WriteOnly);
-        nId = tuner->addArgument(n);
+        srcId = tuner->addArgument((void*)src->data(), n, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
+        dstId = tuner->addArgument((void*)dst->data(), n, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::WriteOnly);
+        nId = tuner->addArgument((void*)(&n), ktt::ArgumentDataType::Int);
         tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId } );
 
         // get number of compute units

@@ -11,6 +11,7 @@
 #include "../dto/tuning_result.h"
 #include "../kernel/kernel_manager.h"
 #include "../kernel_argument/argument_manager.h"
+#include "../utility/argument_printer.h"
 #include "../utility/logger.h"
 
 namespace ktt
@@ -25,6 +26,7 @@ public:
     // Core methods
     std::vector<TuningResult> tuneKernel(const size_t id);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold, const size_t validationRange = 0);
+    void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
 private:
     // Attributes
@@ -33,6 +35,7 @@ private:
     Logger* logger;
     ComputeApiDriver* computeApiDriver;
     ResultValidator resultValidator;
+    ArgumentPrinter argumentPrinter;
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
 
     // Helper methods
@@ -45,16 +48,14 @@ private:
     std::vector<KernelArgument> getKernelArguments(const size_t kernelId) const;
     std::vector<std::pair<size_t, KernelRuntimeData>> getKernelDataVector(const size_t tunedKernelId, const KernelRuntimeData& tunedKernelData,
         const std::vector<std::pair<size_t, ThreadSizeUsage>>& additionalKernelData, const KernelConfiguration& currentConfiguration) const;
-    bool processResult(const Kernel* kernel, const KernelRunResult& result, const uint64_t manipulatorDuration);
+    bool processResult(const Kernel* kernel, const KernelRunResult& result, const uint64_t manipulatorDuration,
+        const KernelConfiguration& kernelConfiguration);
     bool validateResult(const Kernel* kernel, const KernelRunResult& result);
     bool validateResult(const Kernel* kernel, const KernelRunResult& result, bool useReferenceClass);
-    bool argumentExists(const KernelArgument& argument, const std::vector<KernelArgument>& arguments) const;
-    bool argumentIndexExists(const size_t argumentIndex, const std::vector<size_t>& argumentIndices) const;
     std::vector<KernelArgument> getReferenceResultFromClass(const ReferenceClass* referenceClass,
         const std::vector<size_t>& referenceArgumentIndices) const;
     std::vector<KernelArgument> getReferenceResultFromKernel(const size_t referenceKernelId,
         const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& referenceArgumentIndices) const;
-    void printArgument(const KernelArgument& kernelArgument, const std::string& kernelName) const;
 };
 
 } // namespace ktt

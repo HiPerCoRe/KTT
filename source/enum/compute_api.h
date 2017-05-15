@@ -3,10 +3,10 @@
 namespace ktt
 {
 
-enum class ArgumentQuantity
+enum class ComputeApi
 {
-    Scalar,
-    Vector
+    Opencl,
+    Cuda
 };
 
 } // namespace ktt

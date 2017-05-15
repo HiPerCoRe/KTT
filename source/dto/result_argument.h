@@ -11,22 +11,22 @@ namespace ktt
 class ResultArgument
 {
 public:
-    explicit ResultArgument(const size_t id, const void* data, const size_t dataSizeInBytes, const ArgumentDataType& argumentDataType) :
-        id(id),
-        data(data),
-        argumentDataType(argumentDataType)
-    {}
+    explicit ResultArgument(const size_t id, const void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
+        const ArgumentDataType& argumentDataType);
 
     size_t getId() const;
-    const void* getData() const;
+    size_t getNumberOfElements() const;
+    size_t getElementSizeInBytes() const;
     size_t getDataSizeInBytes() const;
     ArgumentDataType getArgumentDataType() const;
+    const void* getData() const;
 
 private:
     size_t id;
-    const void* data;
-    size_t dataSizeInBytes;
+    size_t numberOfElements;
+    size_t elementSizeInBytes;
     ArgumentDataType argumentDataType;
+    const void* data;
 };
 
 } // namespace ktt

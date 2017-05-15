@@ -16,7 +16,7 @@ The prerequisites to build KTT are:
 * [premake5](https://premake.github.io/download.html)
 * C++14 compiler, for example:
     - Clang 3.4 or newer
-    - GCC 5.1 or newer
+    - GCC 5.0 or newer
     - MSVC 19.0 (Visual Studio 2015) or newer
 * OpenCL library, supported SDKs are:
     - AMD APP SDK

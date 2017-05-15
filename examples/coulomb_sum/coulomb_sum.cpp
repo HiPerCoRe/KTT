@@ -98,14 +98,14 @@ int main(int argc, char** argv)
         ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
 
     // Add all arguments utilized by kernels
-    size_t atomInfoId = tuner.addArgument(atomInfo, ktt::ArgumentMemoryType::ReadOnly);
-    size_t atomInfoXId = tuner.addArgument(atomInfoX, ktt::ArgumentMemoryType::ReadOnly);
-    size_t atomInfoYId = tuner.addArgument(atomInfoY, ktt::ArgumentMemoryType::ReadOnly);
-    size_t atomInfoZId = tuner.addArgument(atomInfoZ, ktt::ArgumentMemoryType::ReadOnly);
-    size_t atomInfoWId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryType::ReadOnly);
-    size_t numberOfAtomsId = tuner.addArgument(numberOfAtoms);
-    size_t gridSpacingId = tuner.addArgument(gridSpacing);
-    size_t energyGridId = tuner.addArgument(energyGrid, ktt::ArgumentMemoryType::ReadWrite);
+    size_t atomInfoId = tuner.addArgument(atomInfo.data(), atomInfo.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
+    size_t atomInfoXId = tuner.addArgument(atomInfoX.data(), atomInfoX.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
+    size_t atomInfoYId = tuner.addArgument(atomInfoY.data(), atomInfoY.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
+    size_t atomInfoZId = tuner.addArgument(atomInfoZ.data(), atomInfoZ.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
+    size_t atomInfoWId = tuner.addArgument(atomInfoW.data(), atomInfoW.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
+    size_t numberOfAtomsId = tuner.addArgument(&numberOfAtoms, ktt::ArgumentDataType::Int);
+    size_t gridSpacingId = tuner.addArgument(&gridSpacing, ktt::ArgumentDataType::Float);
+    size_t energyGridId = tuner.addArgument(energyGrid.data(), energyGrid.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadWrite);
 
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
     tuner.setKernelArguments(kernelId,

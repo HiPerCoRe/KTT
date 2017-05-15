@@ -8,10 +8,13 @@
 
 // Type aliases and enums relevant to usage of API methods
 #include "ktt_type_aliases.h"
+#include "enum/argument_data_type.h"
 #include "enum/argument_memory_type.h"
 #include "enum/argument_print_condition.h"
+#include "enum/compute_api.h"
 #include "enum/dimension.h"
 #include "enum/print_format.h"
+#include "enum/time_unit.h"
 #include "enum/search_method.h"
 #include "enum/thread_modifier_action.h"
 #include "enum/thread_modifier_type.h"
@@ -37,6 +40,7 @@ class Tuner
 public:
     // Constructor and destructor
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex);
+    explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
     ~Tuner();
 
     // Basic kernel handling methods
@@ -55,15 +59,16 @@ public:
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Argument handling methods
-    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType);
-    template <typename T> size_t addArgument(const T value);
-    void enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
-        const ArgumentPrintCondition& argumentPrintCondition);
+    size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+        const ArgumentMemoryType& argumentMemoryType);
+    size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType);
+    void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Kernel tuning methods
     void tuneKernel(const size_t kernelId);
 
     // Result printing methods
+    void setPrintingTimeUnit(const TimeUnit& timeUnit);
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
 

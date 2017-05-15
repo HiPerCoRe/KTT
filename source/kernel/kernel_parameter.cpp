@@ -37,4 +37,14 @@ Dimension KernelParameter::getModifierDimension() const
     return modifierDimension;
 }
 
+bool KernelParameter::operator==(const KernelParameter& other) const
+{
+    return name == other.name;
+}
+
+bool KernelParameter::operator!=(const KernelParameter& other) const
+{
+    return !(*this == other);
+}
+
 } // namespace ktt

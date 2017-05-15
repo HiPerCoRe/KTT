@@ -7,7 +7,11 @@ namespace ktt
 {
 
 Tuner::Tuner(const size_t platformIndex, const size_t deviceIndex) :
-    tunerCore(std::make_unique<TunerCore>(platformIndex, deviceIndex))
+    tunerCore(std::make_unique<TunerCore>(platformIndex, deviceIndex, ComputeApi::Opencl))
+{}
+
+Tuner::Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi) :
+    tunerCore(std::make_unique<TunerCore>(platformIndex, deviceIndex, computeApi))
 {}
 
 Tuner::~Tuner() = default;
@@ -112,11 +116,12 @@ void Tuner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningMa
     }
 }
 
-template <typename T> size_t Tuner::addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
+size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+    const ArgumentMemoryType& argumentMemoryType)
 {
     try
     {
-        return tunerCore->addArgument(data, argumentMemoryType, ArgumentQuantity::Vector);
+        return tunerCore->addArgument(vectorData, numberOfElements, argumentDataType, argumentMemoryType, ArgumentUploadType::Vector);
     }
     catch (const std::runtime_error& error)
     {
@@ -125,16 +130,11 @@ template <typename T> size_t Tuner::addArgument(const std::vector<T>& data, cons
     }
 }
 
-template size_t Tuner::addArgument<short>(const std::vector<short>& data, const ArgumentMemoryType& argumentMemoryType);
-template size_t Tuner::addArgument<int>(const std::vector<int>& data, const ArgumentMemoryType& argumentMemoryType);
-template size_t Tuner::addArgument<float>(const std::vector<float>& data, const ArgumentMemoryType& argumentMemoryType);
-template size_t Tuner::addArgument<double>(const std::vector<double>& data, const ArgumentMemoryType& argumentMemoryType);
-
-template <typename T> size_t Tuner::addArgument(const T value)
+size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)
 {
     try
     {
-        return tunerCore->addArgument(std::vector<T>{ value }, ArgumentMemoryType::ReadOnly, ArgumentQuantity::Scalar);
+        return tunerCore->addArgument(scalarData, 1, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentUploadType::Scalar);
     }
     catch (const std::runtime_error& error)
     {
@@ -143,17 +143,11 @@ template <typename T> size_t Tuner::addArgument(const T value)
     }
 }
 
-template size_t Tuner::addArgument<short>(const short value);
-template size_t Tuner::addArgument<int>(const int value);
-template size_t Tuner::addArgument<float>(const float value);
-template size_t Tuner::addArgument<double>(const double value);
-
-void Tuner::enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
-    const ArgumentPrintCondition& argumentPrintCondition)
+void Tuner::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
 {
     try
     {
-        tunerCore->enableArgumentPrinting(argumentIds, filePath, argumentPrintCondition);
+        tunerCore->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
     }
     catch (const std::runtime_error& error)
     {
@@ -173,6 +167,11 @@ void Tuner::tuneKernel(const size_t kernelId)
         tunerCore->log(error.what());
         throw;
     }
+}
+
+void Tuner::setPrintingTimeUnit(const TimeUnit& timeUnit)
+{
+    tunerCore->setPrintingTimeUnit(timeUnit);
 }
 
 void Tuner::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const

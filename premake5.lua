@@ -1,25 +1,57 @@
--- Helper functions to find OpenCL headers and libraries --
+-- Helper functions to find compute API headers and libraries
 
-function initOpenCL()
+function findLibraries()
     local path = os.getenv("INTELOCLSDKROOT")
     if (path) then
-        defines { "CL_PLATFORM_INTEL" }
+        defines { "PLATFORM_INTEL" }
         includedirs { "$(INTELOCLSDKROOT)/include" }
         
         filter "platforms:x86"
-            libdirs { "$(INTELOCLSDKROOT)/lib/x86" }
+            if os.get() == "linux" then
+                libdirs { "$(INTELOCLSDKROOT)/lib" }
+            else
+                libdirs { "$(INTELOCLSDKROOT)/lib/x86" }
+            end
         
         filter "platforms:x86_64"
-            libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
+            if os.get() == "linux" then
+                libdirs { "$(INTELOCLSDKROOT)/lib64" }
+            else
+                libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
+            end
         
         filter {}
         links {"OpenCL"}
         return true
     end
     
+    path = os.getenv("AMDAPPSDKROOT")
+    if (path) then
+        defines { "PLATFORM_AMD" }
+        includedirs { "$(AMDAPPSDKROOT)/include" }
+        
+        filter "platforms:x86"
+            if os.get() == "linux" then
+                libdirs { "$(AMDAPPSDKROOT)/lib" }
+            else
+                libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
+            end
+        
+        filter "platforms:x86_64"
+            if os.get() == "linux" then
+                libdirs { "$(AMDAPPSDKROOT)/lib64" }
+            else
+                libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
+            end
+        
+        filter {}
+        links { "OpenCL" }
+        return true
+    end
+    
     path = os.getenv("CUDA_PATH")
     if (path) then
-        defines { "CL_PLATFORM_NVIDIA" }
+        defines { "PLATFORM_NVIDIA" }
         includedirs { "$(CUDA_PATH)/include" }
         
         filter "platforms:x86"
@@ -38,37 +70,27 @@ function initOpenCL()
         
         filter {}
         links { "OpenCL" }
+        
+        if _OPTIONS["cuda"] then
+            defines { "PLATFORM_CUDA" }
+            links { "cuda" }
+        end
+        
         return true
 	end
-    
-    path = os.getenv("AMDAPPSDKROOT")
-    if (path) then
-        defines { "CL_PLATFORM_AMD" }
-        includedirs { "$(AMDAPPSDKROOT)/include" }
-        
-        filter "platforms:x86"
-            libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
-        
-        filter "platforms:x86_64"
-            libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
-        
-        filter {}
-        links { "OpenCL" }
-        return true
-    end
     
     return false
 end
 
--- Command line arguments definition --
+-- Command line arguments definition
 
 newoption
 {
    trigger     = "cuda",
-   description = "Enables usage of CUDA API"
+   description = "Enables usage of CUDA API in addition to OpenCL (Nvidia platform only)"
 }
 
--- Project configuration --
+-- Project configuration
 
 workspace "KernelTuningToolkit"
     configurations { "Debug", "Release" }
@@ -102,19 +124,12 @@ project "KernelTuningToolkit"
     targetdir("build/ktt/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/ktt/obj/%{cfg.platform}_%{cfg.buildcfg}")
     
-    if not _OPTIONS["cuda"] then
-        defines { "USE_OPENCL" }
-        local result = initOpenCL()
-        
-        if not result then
-            printf("Warning: OpenCL libraries were not found.")
-        end
-    else
-        defines { "USE_CUDA" }
-        printf("Warning: CUDA platform is not supported yet.")
+    local libraries = findLibraries()
+    if not libraries then
+        printf("Warning: Compute API libraries were not found.")
     end
 
--- Examples configuration --    
+-- Examples configuration 
 
 project "ExampleSimple"
     kind "ConsoleApp"
@@ -126,12 +141,8 @@ project "ExampleSimple"
     
     targetdir("build/examples/simple/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/simple/obj/%{cfg.platform}_%{cfg.buildcfg}")
-
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
-    end
+    
+    findLibraries()
 
 project "ExampleOpenCLInfo"
     kind "ConsoleApp"
@@ -144,11 +155,7 @@ project "ExampleOpenCLInfo"
     targetdir("build/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/opencl_info/obj/%{cfg.platform}_%{cfg.buildcfg}")
    
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
-    end
+    findLibraries()
 
 project "ExampleCoulombSum"
     kind "ConsoleApp"
@@ -161,11 +168,7 @@ project "ExampleCoulombSum"
     targetdir("build/examples/coulomb_sum/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/coulomb_sum/obj/%{cfg.platform}_%{cfg.buildcfg}")
    
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
-    end
+    findLibraries()
 
 project "ExampleCoulombSum3D"
     kind "ConsoleApp"
@@ -178,11 +181,7 @@ project "ExampleCoulombSum3D"
     targetdir("build/examples/coulomb_sum_3d/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/coulomb_sum_3d/obj/%{cfg.platform}_%{cfg.buildcfg}")
 
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
-    end
+    findLibraries()
 
 project "Reduction"
     kind "ConsoleApp"
@@ -195,14 +194,10 @@ project "Reduction"
     targetdir("build/examples/reduction/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/examples/reduction/obj/%{cfg.platform}_%{cfg.buildcfg}")
 
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
-    end
- 
--- Unit tests configuration --    
+    findLibraries()
     
+-- Unit tests configuration   
+
 project "Tests"
     kind "ConsoleApp"
     
@@ -215,8 +210,4 @@ project "Tests"
     targetdir("build/tests/%{cfg.platform}_%{cfg.buildcfg}")
     objdir("build/tests/obj/%{cfg.platform}_%{cfg.buildcfg}")
     
-    if not _OPTIONS["cuda"] then
-        initOpenCL()
-    else
-        -- CUDA not supported yet
-    end
+    findLibraries()
