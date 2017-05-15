@@ -47,7 +47,15 @@ float3 computeAcc(float posI[3], // position of body I
 
 // method to load thread specific data from global memory
 void loadThreadData(
-	MEMORY_TYPE_AOS vector* oldBodyInfo, MEMORY_TYPE_AOS vector* oldVel, // global data
+	MEMORY_TYPE_AOS vector* oldBodyInfo, // global data
+	MEMORY_TYPE_SOA float* oldPosX,
+	MEMORY_TYPE_SOA float* oldPosY,
+	MEMORY_TYPE_SOA float* oldPosZ,
+	MEMORY_TYPE_SOA float* mass,
+	MEMORY_TYPE_AOS vector* oldVel, // velocity info
+	MEMORY_TYPE_SOA float* oldVelX,
+	MEMORY_TYPE_SOA float* oldVelY,
+	MEMORY_TYPE_SOA float* oldVelZ,
 	float bodyPos[3], float bodyVel[3], float bodyAcc[3], float* bodyMass, // thread data
 	int start, int end) // indices
 {
@@ -55,25 +63,77 @@ void loadThreadData(
     int length = end - start + 1;
 	
 	if (tid < length) {
-        // store 'thread specific' body info to registers
-        bodyPos[0] = oldBodyInfo[start + tid].x;
-        bodyPos[1] = oldBodyInfo[start + tid].y;
-        bodyPos[2] = oldBodyInfo[start + tid].z;
-		
-        bodyVel[0] = oldVel[start + tid].x;
-        bodyVel[1] = oldVel[start + tid].y;
-        bodyVel[2] = oldVel[start + tid].z;
-		
-		*bodyMass = oldBodyInfo[start + tid].w;
 		// erase acceleration buffer
 		bodyAcc[0] = bodyAcc[1] = bodyAcc[2] = 0.f;
+		#if USE_SOA == 0
+		{
+			// store 'thread specific' body info to registers
+			bodyPos[0] = oldBodyInfo[start + tid].x;
+			bodyPos[1] = oldBodyInfo[start + tid].y;
+			bodyPos[2] = oldBodyInfo[start + tid].z;
+			
+			bodyVel[0] = oldVel[start + tid].x;
+			bodyVel[1] = oldVel[start + tid].y;
+			bodyVel[2] = oldVel[start + tid].z;
+			
+			*bodyMass = oldBodyInfo[start + tid].w;
+		}
+		#else // USE_SOA != 0
+		{
+			// store 'thread specific' body info to registers
+			bodyPos[0] = oldPosX[start + tid];
+			bodyPos[1] = oldPosY[start + tid];
+			bodyPos[2] = oldPosZ[start + tid];
+			
+			bodyVel[0] = oldVelX[start + tid];
+			bodyVel[1] = oldVelY[start + tid];
+			bodyVel[2] = oldVelZ[start + tid];
+			
+			*bodyMass = mass[start + tid];
+		}
+		#endif // USE_SOA == 0
     }
+}
+
+// method will copy one item (X, Y, Z, mass) from input data to buffers
+void fillBuffers(
+	MEMORY_TYPE_AOS vector* oldBodyInfo, // global (input) data
+	MEMORY_TYPE_SOA float* oldPosX,
+	MEMORY_TYPE_SOA float* oldPosY,
+	MEMORY_TYPE_SOA float* oldPosZ,
+	MEMORY_TYPE_SOA float* mass,
+	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
+	float bufferPosY[WORK_GROUP_SIZE_X],
+	float bufferPosZ[WORK_GROUP_SIZE_X],
+	float bufferMass[WORK_GROUP_SIZE_X],
+	int offset)
+{
+	 int tid = get_local_id(0);
+	#if USE_SOA == 0
+	{
+		bufferPosX[tid] = oldBodyInfo[offset + tid].x;
+		bufferPosY[tid] = oldBodyInfo[offset + tid].y;
+		bufferPosZ[tid] = oldBodyInfo[offset + tid].z;
+		bufferMass[tid] = oldBodyInfo[offset + tid].w;
+	}
+	#else // USE_SOA != 0
+	{
+		bufferPosX[tid] = oldPosX[offset + tid];
+		bufferPosY[tid] = oldPosY[offset + tid];
+		bufferPosZ[tid] = oldPosZ[offset + tid];
+		bufferMass[tid] = mass[offset + tid];
+	}
+	#endif // USE_SOA == 0
 }
 
 // method to process complete block, i.e. part of the bodies array where
 // each body's acceleration is added to result
 void processCompleteBlock(
 	MEMORY_TYPE_AOS vector* oldBodyInfo, // global data
+	MEMORY_TYPE_SOA float* oldPosX,
+	MEMORY_TYPE_SOA float* oldPosY,
+	MEMORY_TYPE_SOA float* oldPosZ,
+	MEMORY_TYPE_SOA float* mass,
 	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
 	float bufferPosY[WORK_GROUP_SIZE_X],
 	float bufferPosZ[WORK_GROUP_SIZE_X],
@@ -86,10 +146,7 @@ void processCompleteBlock(
     int tid = get_local_id(0);
     // load new values to buffer.
 	// We know that all threads can be used now, so no condition is necessary
-	bufferPosX[tid] = oldBodyInfo[start + tid].x;
-	bufferPosY[tid] = oldBodyInfo[start + tid].y;
-	bufferPosZ[tid] = oldBodyInfo[start + tid].z;
-	bufferMass[tid] = oldBodyInfo[start + tid].w;
+	fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX, bufferPosY, bufferPosZ, bufferMass, start);
     barrier(CLK_LOCAL_MEM_FENCE);
 
     // calculate the acceleration between the thread body and each other body loaded to buffer
@@ -109,6 +166,10 @@ void processCompleteBlock(
 // method to process final block, i.e. part of the molecule array where the algorithm terminates
 void processFinalBlock(
 	MEMORY_TYPE_AOS vector* oldBodyInfo, // global data
+	MEMORY_TYPE_SOA float* oldPosX,
+	MEMORY_TYPE_SOA float* oldPosY,
+	MEMORY_TYPE_SOA float* oldPosZ,
+	MEMORY_TYPE_SOA float* mass,
 	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
 	float bufferPosY[WORK_GROUP_SIZE_X],
 	float bufferPosZ[WORK_GROUP_SIZE_X],
@@ -127,10 +188,7 @@ void processFinalBlock(
 	
     // load new values to buffer
     if (tid < topIndex) {
-		bufferPosX[tid] = oldBodyInfo[start + tid].x;
-		bufferPosY[tid] = oldBodyInfo[start + tid].y;
-		bufferPosZ[tid] = oldBodyInfo[start + tid].z;
-		bufferMass[tid] = oldBodyInfo[start + tid].w;
+		fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX, bufferPosY, bufferPosZ, bufferMass, start);
     }
     barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -159,9 +217,16 @@ void processFinalBlock(
 // kernel calculating new position and velocity for n-bodies
 __kernel void nbody_kernel(float timeDelta,
 	MEMORY_TYPE_AOS vector* oldBodyInfo, // pos XYZ, mass
-	__global vector* newBodyInfo,
+	MEMORY_TYPE_SOA float* oldPosX,
+	MEMORY_TYPE_SOA float* oldPosY,
+	MEMORY_TYPE_SOA float* oldPosZ,
+	MEMORY_TYPE_SOA float* mass,
+	__global float4* newBodyInfo,
 	MEMORY_TYPE_AOS vector* oldVel, // XYZ, W unused, will be set to 0.f
-	__global vector* newVel, // XYZ, W set to 0.f
+	MEMORY_TYPE_SOA float* oldVelX,
+	MEMORY_TYPE_SOA float* oldVelY,
+	MEMORY_TYPE_SOA float* oldVelZ,
+	__global float4* newVel, // XYZ, W set to 0.f
 	float damping, 
 	float softeningSqr)
 {
@@ -183,14 +248,16 @@ __kernel void nbody_kernel(float timeDelta,
 	float bodyMass;
 
 	// load data
-	loadThreadData(oldBodyInfo, oldVel, bodyPos, bodyVel, bodyAcc, &bodyMass,
+	loadThreadData(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
+		oldVel, oldVelX, oldVelY, oldVelZ, // velocity
+		bodyPos, bodyVel, bodyAcc, &bodyMass, // values to be filled
 		get_group_id(0) * WORK_GROUP_SIZE_X, // start index
 		min(WORK_GROUP_SIZE_X * ((int)get_group_id(0) + 1) - 1, n - 1)); // end index
 
 	// start the calculation, process whole blocks
     for (int i = 0; i < blocks; i++) {
         processCompleteBlock(
-			oldBodyInfo,
+			oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
 			bufferPosX, bufferPosY, bufferPosZ, bufferMass,
 			bodyAcc, bodyPos, 
 			softeningSqr, 
@@ -198,7 +265,7 @@ __kernel void nbody_kernel(float timeDelta,
     }
     // at the end, do the final block
     processFinalBlock(
-		oldBodyInfo,
+		oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
 		bufferPosX, bufferPosY, bufferPosZ, bufferMass,
 		bodyAcc, bodyPos, 
 		softeningSqr,
@@ -210,11 +277,11 @@ __kernel void nbody_kernel(float timeDelta,
 		float resPosX = bodyPos[0] + timeDelta * bodyVel[0] + damping * timeDelta * timeDelta * bodyAcc[0];
 		float resPosY = bodyPos[1] + timeDelta * bodyVel[1] + damping * timeDelta * timeDelta * bodyAcc[1];
 		float resPosZ = bodyPos[2] + timeDelta * bodyVel[2] + damping * timeDelta * timeDelta * bodyAcc[2];
-		newBodyInfo[gtid] = (vector)(resPosX, resPosY, resPosZ, bodyMass);
+		newBodyInfo[gtid] = (float4)(resPosX, resPosY, resPosZ, bodyMass);
 		// calculate resulting velocity	
 		float resVelX = bodyVel[0] + timeDelta * bodyAcc[0];
 		float resVelY = bodyVel[1] + timeDelta * bodyAcc[1];
 		float resVelZ = bodyVel[2] + timeDelta * bodyAcc[2];
-		newVel[gtid] = (vector)(resVelX, resVelY, resVelZ, 0.f);
+		newVel[gtid] = (float4)(resVelX, resVelY, resVelZ, 0.f);
 	}
 }

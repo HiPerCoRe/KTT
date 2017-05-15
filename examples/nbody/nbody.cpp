@@ -46,41 +46,41 @@ int main(int argc, char** argv)
 	float damping = 0.5f;
 	float softeningSqr = 0.1f * 0.1f;
     std::vector<float> oldBodyInfo(4 * numberOfBodies);
-	std::vector<float> bodyPosX(numberOfBodies);
-    std::vector<float> bodyPosY(numberOfBodies);
-    std::vector<float> bodyPosZ(numberOfBodies);
+	std::vector<float> oldPosX(numberOfBodies);
+    std::vector<float> oldPosY(numberOfBodies);
+    std::vector<float> oldPosZ(numberOfBodies);
     std::vector<float> bodyMass(numberOfBodies);
 	
 	std::vector<float> newBodyInfo(4 * numberOfBodies, 0.f);
 	
 	std::vector<float> oldBodyVel(4 * numberOfBodies);
 	std::vector<float> newBodyVel(4 * numberOfBodies);
-	std::vector<float> oldBodyVelX(numberOfBodies);
-    std::vector<float> oldBodyVelY(numberOfBodies);
-    std::vector<float> oldBodyVelZ(numberOfBodies);
+	std::vector<float> oldVelX(numberOfBodies);
+    std::vector<float> oldVelY(numberOfBodies);
+    std::vector<float> oldVelZ(numberOfBodies);
 	
 	// Initialize data
     srand(static_cast<unsigned int>(time(0)));
 
     for (int i = 0; i < numberOfBodies; i++)
     {
-        bodyPosX.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
-        bodyPosY.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
-        bodyPosZ.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        oldPosX.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        oldPosY.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        oldPosZ.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
         bodyMass.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
 		
-		oldBodyVelX.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
-        oldBodyVelY.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
-        oldBodyVelZ.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+		oldVelX.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        oldVelY.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        oldVelZ.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
 
-        oldBodyInfo.at((4 * i)) = bodyPosX.at(i);
-        oldBodyInfo.at((4 * i) + 1) = bodyPosY.at(i);
-        oldBodyInfo.at((4 * i) + 2) = bodyPosZ.at(i);
+        oldBodyInfo.at((4 * i)) = oldPosX.at(i);
+        oldBodyInfo.at((4 * i) + 1) = oldPosY.at(i);
+        oldBodyInfo.at((4 * i) + 2) = oldPosZ.at(i);
         oldBodyInfo.at((4 * i) + 3) = bodyMass.at(i);
 		
-		oldBodyVel.at((4 * i)) = oldBodyVelX.at(i);
-        oldBodyVel.at((4 * i) + 1) = oldBodyVelY.at(i);
-        oldBodyVel.at((4 * i) + 2) = oldBodyVelZ.at(i);
+		oldBodyVel.at((4 * i)) = oldVelX.at(i);
+        oldBodyVel.at((4 * i) + 1) = oldVelY.at(i);
+        oldBodyVel.at((4 * i) + 2) = oldVelZ.at(i);
         oldBodyVel.at((4 * i) + 3) = 0.f;
     }
 	
@@ -98,31 +98,49 @@ int main(int argc, char** argv)
 	tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", { 0, 1, 2, 4, 8, 16, 32, 64, 128, 256 });
 	tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", { 1, 2, 4, 8, 16, 32, 64, 128, 256 });
 	tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", { 0, 1 });
-	tuner.addParameter(kernelId, "USE_SOA", { 1 });
+	tuner.addParameter(kernelId, "USE_SOA", { 0, 1 });
 	tuner.addParameter(kernelId, std::string("VECTOR_TYPE"), std::vector<size_t>{ 4 });
 		
 		
 	 // Add all arguments utilized by kernels
-    size_t deltaTimeId = tuner.addArgument(timeDelta);
     size_t oldBodyInfoId = tuner.addArgument(oldBodyInfo, ktt::ArgumentMemoryType::ReadOnly);
+	size_t oldPosXId = tuner.addArgument(oldPosX, ktt::ArgumentMemoryType::ReadOnly);
+	size_t oldPosYId = tuner.addArgument(oldPosY, ktt::ArgumentMemoryType::ReadOnly);
+	size_t oldPosZId = tuner.addArgument(oldPosZ, ktt::ArgumentMemoryType::ReadOnly);
+	size_t massId = tuner.addArgument(bodyMass, ktt::ArgumentMemoryType::ReadOnly);
     size_t newBodyInfoId = tuner.addArgument(newBodyInfo, ktt::ArgumentMemoryType::WriteOnly);
-    size_t oldBodyVelId = tuner.addArgument(oldBodyVel, ktt::ArgumentMemoryType::ReadOnly);
+	
+    size_t oldVelId = tuner.addArgument(oldBodyVel, ktt::ArgumentMemoryType::ReadOnly);
+	size_t oldVelXId = tuner.addArgument(oldVelX, ktt::ArgumentMemoryType::ReadOnly);
+	size_t oldVelYId = tuner.addArgument(oldVelY, ktt::ArgumentMemoryType::ReadOnly);
+	size_t oldVelZId = tuner.addArgument(oldVelZ, ktt::ArgumentMemoryType::ReadOnly);
 	size_t newBodyVelId = tuner.addArgument(newBodyVel, ktt::ArgumentMemoryType::WriteOnly);
+	
+    size_t deltaTimeId = tuner.addArgument(timeDelta);
     size_t dampingId = tuner.addArgument(damping);
 	size_t softeningSqrId = tuner.addArgument(softeningSqr);
 	
 	// Add conditions
 	auto lteq = [](std::vector<size_t> vector) { return vector.at(0) <= vector.at(1); };
     tuner.addConstraint(kernelId, lteq, { "INNER_UNROLL_FACTOR2", "WORK_GROUP_SIZE_X" } );
+	// Using SoA only makes sense when vectors are longer than 1
+    // auto SoA = [](std::vector<size_t> vector) { return 
+		// (vector.at(0) == 1 && vector.at(1) != 0) // use float -> SoA
+		// || (vector.at(0) > 1 && vector.at(1) == 0);}; // use vectors -> AoS;
+    // tuner.addConstraint(kernelId, SoA, std::vector<std::string>{ "VECTOR_TYPE", "USE_SOA" });
+
 
 	// Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
     tuner.setKernelArguments(kernelId,
-        std::vector<size_t>{ deltaTimeId, oldBodyInfoId, newBodyInfoId, oldBodyVelId, newBodyVelId, dampingId, softeningSqrId });
+        std::vector<size_t>{ deltaTimeId, 
+		oldBodyInfoId, oldPosXId, oldPosYId, oldPosZId, massId, newBodyInfoId, // position
+		oldVelId, oldVelXId, oldVelYId, oldVelZId, newBodyVelId, // velocity
+		dampingId, softeningSqrId });
     tuner.setKernelArguments(referenceKernelId, 
-		std::vector<size_t>{ deltaTimeId, oldBodyInfoId, newBodyInfoId, oldBodyVelId, newBodyVelId, dampingId, softeningSqrId });
+		std::vector<size_t>{ deltaTimeId, oldBodyInfoId, newBodyInfoId, oldVelId, newBodyVelId, dampingId, softeningSqrId });
 
 	  // Set search method to random search, only 10% of all configurations will be explored.
-    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.05 });
+    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.01 });
 
 	  // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001f);
