@@ -6,8 +6,7 @@ namespace ktt
 enum class ComputeApi
 {
     Opencl,
-    Cuda,
-    Vulkan
+    Cuda
 };
 
 } // namespace ktt

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef PLATFORM_CUDA
+
 #include <string>
 
 #include "cuda.h"
@@ -11,3 +13,5 @@ void checkCudaError(const CUresult value);
 void checkCudaError(const CUresult value, const std::string& message);
 
 } // namespace ktt
+
+#endif // PLATFORM_CUDA

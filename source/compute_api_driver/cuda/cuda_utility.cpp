@@ -1,3 +1,5 @@
+#ifdef PLATFORM_CUDA
+
 #include <stdexcept>
 
 #include "cuda_utility.h"
@@ -22,3 +24,5 @@ void checkCudaError(const CUresult value, const std::string& message)
 }
 
 } // namespace ktt
+
+#endif // PLATFORM_CUDA
