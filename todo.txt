@@ -3,6 +3,7 @@ Minor features:
 * Ability to set timeout for kernel runs that take too long
 * Detection of invalid configurations during configuration computation (eg. configurations with work-group size larger than the current device allows)
 * Updated class diagram
+* Tuning manipulator for multiple kernels
 * Linux compatibility test (AMD / Intel platforms)
 
 Major features:

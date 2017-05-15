@@ -57,14 +57,14 @@ int main(int argc, char** argv)
     size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("directCoulombSum"), ndRangeDimensions, workGroupDimensions);
     size_t referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("directCoulombSumReference"), ndRangeDimensions, referenceWorkGroupDimensions);
 
-    size_t aiId = tuner.addArgument(atomInfo.data(), atomInfo.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aixId = tuner.addArgument(atomInfoX.data(), atomInfoX.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aiyId = tuner.addArgument(atomInfoY.data(), atomInfoY.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aizId = tuner.addArgument(atomInfoZ.data(), atomInfoZ.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aiwId = tuner.addArgument(atomInfoW.data(), atomInfoW.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aId = tuner.addArgument(&atoms, ktt::ArgumentDataType::Int);
-    size_t gsId = tuner.addArgument(&gridSpacing, ktt::ArgumentDataType::Float);
-    size_t gridId = tuner.addArgument(atomInfoW.data(), atomInfoW.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::WriteOnly);
+    size_t aiId = tuner.addArgument(atomInfo, ktt::ArgumentMemoryType::ReadOnly);
+    size_t aixId = tuner.addArgument(atomInfoX, ktt::ArgumentMemoryType::ReadOnly);
+    size_t aiyId = tuner.addArgument(atomInfoY, ktt::ArgumentMemoryType::ReadOnly);
+    size_t aizId = tuner.addArgument(atomInfoZ, ktt::ArgumentMemoryType::ReadOnly);
+    size_t aiwId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryType::ReadOnly);
+    size_t aId = tuner.addArgument(atoms);
+    size_t gsId = tuner.addArgument(gridSpacing);
+    size_t gridId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryType::WriteOnly);
 
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 16, 32 }, 
         ktt::ThreadModifierType::Local, 
