@@ -12,7 +12,7 @@
 #endif // USE_CONSTANT_MEMORY
 
 #if VECTOR_TYPE == 1
-    // typedef float vector; // unsupported yet
+    typedef float vector;
 #elif VECTOR_TYPE == 2
     // typedef float2 vector; // unsupported yet
 #elif VECTOR_TYPE == 4
@@ -47,15 +47,15 @@ float3 computeAcc(float posI[3], // position of body I
 
 // method to load thread specific data from global memory
 void loadThreadData(
-	MEMORY_TYPE_AOS vector* oldBodyInfo, // global data
-	MEMORY_TYPE_SOA float* oldPosX,
-	MEMORY_TYPE_SOA float* oldPosY,
-	MEMORY_TYPE_SOA float* oldPosZ,
-	MEMORY_TYPE_SOA float* mass,
-	MEMORY_TYPE_AOS vector* oldVel, // velocity info
-	MEMORY_TYPE_SOA float* oldVelX,
-	MEMORY_TYPE_SOA float* oldVelY,
-	MEMORY_TYPE_SOA float* oldVelZ,
+	MEMORY_TYPE_AOS float4* oldBodyInfo, // global data
+	MEMORY_TYPE_SOA vector* oldPosX,
+	MEMORY_TYPE_SOA vector* oldPosY,
+	MEMORY_TYPE_SOA vector* oldPosZ,
+	MEMORY_TYPE_SOA vector* mass,
+	MEMORY_TYPE_AOS float4* oldVel, // velocity info
+	MEMORY_TYPE_SOA vector* oldVelX,
+	MEMORY_TYPE_SOA vector* oldVelY,
+	MEMORY_TYPE_SOA vector* oldVelZ,
 	float bodyPos[3], float bodyVel[3], float bodyAcc[3], float* bodyMass, // thread data
 	int start, int end) // indices
 {
@@ -97,11 +97,11 @@ void loadThreadData(
 
 // method will copy one item (X, Y, Z, mass) from input data to buffers
 void fillBuffers(
-	MEMORY_TYPE_AOS vector* oldBodyInfo, // global (input) data
-	MEMORY_TYPE_SOA float* oldPosX,
-	MEMORY_TYPE_SOA float* oldPosY,
-	MEMORY_TYPE_SOA float* oldPosZ,
-	MEMORY_TYPE_SOA float* mass,
+	MEMORY_TYPE_AOS float4* oldBodyInfo, // global (input) data
+	MEMORY_TYPE_SOA vector* oldPosX,
+	MEMORY_TYPE_SOA vector* oldPosY,
+	MEMORY_TYPE_SOA vector* oldPosZ,
+	MEMORY_TYPE_SOA vector* mass,
 	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
 	float bufferPosY[WORK_GROUP_SIZE_X],
 	float bufferPosZ[WORK_GROUP_SIZE_X],
@@ -129,11 +129,11 @@ void fillBuffers(
 // method to process complete block, i.e. part of the bodies array where
 // each body's acceleration is added to result
 void processCompleteBlock(
-	MEMORY_TYPE_AOS vector* oldBodyInfo, // global data
-	MEMORY_TYPE_SOA float* oldPosX,
-	MEMORY_TYPE_SOA float* oldPosY,
-	MEMORY_TYPE_SOA float* oldPosZ,
-	MEMORY_TYPE_SOA float* mass,
+	MEMORY_TYPE_AOS float4* oldBodyInfo, // global data
+	MEMORY_TYPE_SOA vector* oldPosX,
+	MEMORY_TYPE_SOA vector* oldPosY,
+	MEMORY_TYPE_SOA vector* oldPosZ,
+	MEMORY_TYPE_SOA vector* mass,
 	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
 	float bufferPosY[WORK_GROUP_SIZE_X],
 	float bufferPosZ[WORK_GROUP_SIZE_X],
@@ -165,11 +165,11 @@ void processCompleteBlock(
 
 // method to process final block, i.e. part of the molecule array where the algorithm terminates
 void processFinalBlock(
-	MEMORY_TYPE_AOS vector* oldBodyInfo, // global data
-	MEMORY_TYPE_SOA float* oldPosX,
-	MEMORY_TYPE_SOA float* oldPosY,
-	MEMORY_TYPE_SOA float* oldPosZ,
-	MEMORY_TYPE_SOA float* mass,
+	MEMORY_TYPE_AOS float4* oldBodyInfo, // global data
+	MEMORY_TYPE_SOA vector* oldPosX,
+	MEMORY_TYPE_SOA vector* oldPosY,
+	MEMORY_TYPE_SOA vector* oldPosZ,
+	MEMORY_TYPE_SOA vector* mass,
 	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
 	float bufferPosY[WORK_GROUP_SIZE_X],
 	float bufferPosZ[WORK_GROUP_SIZE_X],
@@ -216,16 +216,16 @@ void processFinalBlock(
 	
 // kernel calculating new position and velocity for n-bodies
 __kernel void nbody_kernel(float timeDelta,
-	MEMORY_TYPE_AOS vector* oldBodyInfo, // pos XYZ, mass
-	MEMORY_TYPE_SOA float* oldPosX,
-	MEMORY_TYPE_SOA float* oldPosY,
-	MEMORY_TYPE_SOA float* oldPosZ,
-	MEMORY_TYPE_SOA float* mass,
+	MEMORY_TYPE_AOS float4* oldBodyInfo, // pos XYZ, mass
+	MEMORY_TYPE_SOA vector* oldPosX,
+	MEMORY_TYPE_SOA vector* oldPosY,
+	MEMORY_TYPE_SOA vector* oldPosZ,
+	MEMORY_TYPE_SOA vector* mass,
 	__global float4* newBodyInfo,
-	MEMORY_TYPE_AOS vector* oldVel, // XYZ, W unused, will be set to 0.f
-	MEMORY_TYPE_SOA float* oldVelX,
-	MEMORY_TYPE_SOA float* oldVelY,
-	MEMORY_TYPE_SOA float* oldVelZ,
+	MEMORY_TYPE_AOS float4* oldVel, // XYZ, W unused, will be set to 0.f
+	MEMORY_TYPE_SOA vector* oldVelX,
+	MEMORY_TYPE_SOA vector* oldVelY,
+	MEMORY_TYPE_SOA vector* oldVelZ,
 	__global float4* newVel, // XYZ, W set to 0.f
 	float damping, 
 	float softeningSqr)
