@@ -5,12 +5,12 @@ namespace ktt
 
 void Timer::start()
 {
-    initialTime = std::chrono::high_resolution_clock::now();
+    initialTime = std::chrono::steady_clock::now();
 }
 
 void Timer::stop()
 {
-    endTime = std::chrono::high_resolution_clock::now();
+    endTime = std::chrono::steady_clock::now();
 }
 
 uint64_t Timer::getElapsedTime() const

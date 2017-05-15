@@ -8,7 +8,7 @@ Constructor
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex)`:
 Creates new tuner object for specified platform and device.
-Indices for all available platforms and devices can be retrieved by calling `printComputeAPIInfo()` method.
+Indices for all available platforms and devices can be retrieved by calling `printComputeApiInfo()` method.
 
 Compute API methods
 -------------------
@@ -47,6 +47,10 @@ Argument ids must be specified in order of their declaration inside kernel sourc
 Adds new parameter for specified kernel, parameter needs to have a unique name and list of valid values.
 During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
 
+* `void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values)`:
+Adds new parameter for all specified kernels, parameter needs to have a unique name and list of valid values.
+During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
+
 Advanced kernel handling methods
 --------------------------------
 
@@ -56,8 +60,17 @@ During the tuning process, parameter definitions will be added to kernel source 
 Additionally, parameter value modifies number of threads in either global or local space in specified dimension.
 Form of modification depends on thread modifier action argument. If there are multiple thread modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
 
+* `void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)`:
+Adds new parameter for all specified kernels, parameter needs to have a unique name and list of valid values.
+During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
+Additionally, parameter value modifies number of threads in either global or local space in specified dimension.
+Form of modification depends on thread modifier action argument. If there are multiple thread modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
+
 * `void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
 Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
+
+* `void addConstraint(const std::vector<size_t>& kernelIds, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
+Adds new constraint for all specified kernels. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
 
 * `void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)`:
 Specifies search method for given kernel. Number of required search arguments depends on specified search method.
@@ -78,18 +91,30 @@ Specialized method can, for example, run part of the computation directly in C++
 Argument handling methods
 -------------------------
 
+* `size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType, const ArgumentMemoryType& argumentMemoryType)`:
+Adds new vector argument with specified number of elements and data type to kernel. Argument memory type specifies whether argument is used for input or output (or both).
+Supported data type sizes are 8, 16, 32 and 64 bits.
+Returns id assigned to argument by tuner.
+
 * `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)`:
 Adds new vector argument to kernel. Argument memory type specifies whether argument is used for input or output (or both).
-Currently supported data types are double, float, int and short. Returns id assigned to argument by tuner.
+Supported data type sizes are 8, 16, 32 and 64 bits.
+Returns id assigned to argument by tuner.
 
-* `size_t addArgument(const T value)`:
+* `size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)`:
+Adds new scalar argument with specified data type to kernel. All scalar arguments are read-only.
+Supported data type sizes are 8, 16, 32 and 64 bits.
+Returns id assigned to argument by tuner.
+
+* `size_t addArgument(const T& value)`:
 Adds new scalar argument to kernel. All scalar arguments are read-only.
-Currently supported data types are double, float, int and short. Returns id assigned to argument by tuner.
+Supported data type sizes are 8, 16, 32 and 64 bits.
+Returns id assigned to argument by tuner.
 
-* `void enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)`:
-Enables printing of specified output arguments to specified file.
+* `void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)`:
+Enables printing of specified output argument to specified file.
 It is possible to specify to only print result arguments for kernel configurations that did not successfully pass the validation.
-It is not recommended to use this method for very large arguments.
+It is not recommended to enable argument printing for very large arguments.
 
 Kernel tuning methods
 ---------------------
@@ -99,6 +124,10 @@ Starts the tuning process for specified kernel.
 
 Result printing methods
 -----------------------
+
+* `void setPrintingTimeUnit(const TimeUnit& timeUnit)`:
+Sets time unit used during printing of results to specified unit.
+This only affects `printResult` methods. Default time unit is microseconds. 
 
 * `void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const`:
 Prints tuning results for specified kernel to given output stream.
@@ -158,9 +187,14 @@ Inheriting class must provide implementation for this method.
 Returns data type of specified validated argument.
 This method will only be called after running `computeResult()`.
 
-* `size_t getDataSizeInBytes(const size_t argumentId) const`:
+* `size_t getNumberOfElements(const size_t argumentId) const`:
 Inheriting class must provide implementation for this method.
-Returns size of buffer (in bytes) returned by `getData()` method for corresponding validated argument.
+Returns number of elements returned by `getData()` method for specified validated argument.
+This method will only be called after running `computeResult()`.
+
+* `size_t getElementSizeInBytes(const size_t argumentId) const`:
+Inheriting class must provide implementation for this method.
+Returns size of a single element (in bytes) returned by `getData()` method for specified validated argument.
 This method will only be called after running `computeResult()`.
 
 Tuning manipulator usage
@@ -196,9 +230,20 @@ Returns vector of result arguments (arguments assigned to kernel with kernelId, 
 Updates scalar argument, which is utilized by currently tuned kernel.
 This method is useful for iterative kernel launches.
 
-* `void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes)`:
-Updates vector argument, which is utilized by currently tuned kernel.
+* `void updateArgumentVector(const size_t argumentId, const void* argumentData)`:
+Updates vector argument, which is utilized by currently tuned kernel. Preserves number of elements inside the argument.
 This method is useful for iterative kernel launches.
+
+* `void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)`:
+Updates vector argument, which is utilized by currently tuned kernel. Possibly also modifies number of elements inside the argument.
+This method is useful for iterative kernel launches.
+
+* `std::vector<size_t> convertFromDimensionVector(const DimensionVector& vector)`:
+Converts provided dimension vector to standard vector.
+
+* `DimensionVector convertToDimensionVector(const std::vector<size_t>& vector)`
+Converts provided standard vector to dimension vector.
+If provided vector size is less than 3, fills remaining dimension vector positions with 1s.
 
 Tuning manipulator example
 --------------------------

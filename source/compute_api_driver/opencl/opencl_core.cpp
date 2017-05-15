@@ -74,6 +74,11 @@ void OpenclCore::setCompilerOptions(const std::string& options)
     compilerOptions = options;
 }
 
+void OpenclCore::clearCache() const
+{
+    bufferCache.clear();
+}
+
 KernelRunResult OpenclCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
 {
@@ -87,14 +92,26 @@ KernelRunResult OpenclCore::runKernel(const std::string& source, const std::stri
 
     for (const auto& argument : arguments)
     {
-        if (argument.getArgumentQuantity() == ArgumentQuantity::Vector)
+        if (argument.getArgumentUploadType() == ArgumentUploadType::Vector)
         {
-            std::unique_ptr<OpenclBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSizeInBytes());
+            if (argument.getArgumentMemoryType() == ArgumentMemoryType::ReadOnly && loadBufferFromCache(argument.getId(), *kernel))
+            {
+                continue; // buffer was successfully loaded from cache
+            }
+
+            std::unique_ptr<OpenclBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSizeInBytes(), argument.getId());
             updateBuffer(*buffer, argument.getData(), argument.getDataSizeInBytes());
             setKernelArgumentVector(*kernel, *buffer);
 
-            vectorArgumentPointers.push_back(&argument);
-            buffers.push_back(std::move(buffer)); // buffer data will be stolen
+            if (argument.getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
+            {
+                bufferCache.push_back(std::move(buffer));
+            }
+            else
+            {
+                vectorArgumentPointers.push_back(&argument);
+                buffers.push_back(std::move(buffer)); // buffer data will be stolen
+            }
         }
         else
         {
@@ -118,10 +135,11 @@ std::unique_ptr<OpenclProgram> OpenclCore::createAndBuildProgram(const std::stri
     return program;
 }
 
-std::unique_ptr<OpenclBuffer> OpenclCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size) const
+std::unique_ptr<OpenclBuffer> OpenclCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size,
+    const size_t kernelArgumentId) const
 {
     std::unique_ptr<OpenclBuffer> buffer;
-    buffer.reset(new OpenclBuffer(context->getContext(), getOpenclMemoryType(argumentMemoryType), size));
+    buffer.reset(new OpenclBuffer(context->getContext(), getOpenclMemoryType(argumentMemoryType), size, kernelArgumentId));
     return buffer;
 }
 
@@ -146,24 +164,7 @@ std::unique_ptr<OpenclKernel> OpenclCore::createKernel(const OpenclProgram& prog
 
 void OpenclCore::setKernelArgumentScalar(OpenclKernel& kernel, const KernelArgument& argument) const
 {
-    ArgumentDataType type = argument.getArgumentDataType();
-    switch (type)
-    {
-    case ArgumentDataType::Double:
-        kernel.setKernelArgumentScalar(argument.getDataDouble().at(0));
-        break;
-    case ArgumentDataType::Float:
-        kernel.setKernelArgumentScalar(argument.getDataFloat().at(0));
-        break;
-    case ArgumentDataType::Int:
-        kernel.setKernelArgumentScalar(argument.getDataInt().at(0));
-        break;
-    case ArgumentDataType::Short:
-        kernel.setKernelArgumentScalar(argument.getDataShort().at(0));
-        break;
-    default:
-        throw std::runtime_error("Unsupported argument data type");
-    }
+    kernel.setKernelArgumentScalar(argument.getData(), argument.getElementSizeInBytes());
 }
 
 void OpenclCore::setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffer& buffer) const
@@ -298,42 +299,26 @@ std::vector<KernelArgument> OpenclCore::getResultArguments(const std::vector<std
         }
 
         const KernelArgument* currentArgument = inputArgumentPointers.at(i);
-        ArgumentDataType type = currentArgument->getArgumentDataType();
-        if (type == ArgumentDataType::Double)
-        {
-            std::vector<double> resultDouble(currentArgument->getDataSizeInBytes() / sizeof(double));
-            getBufferData(*outputBuffers.at(i), resultDouble.data(), currentArgument->getDataSizeInBytes());
-            resultArguments.push_back(KernelArgument(currentArgument->getId(), resultDouble, currentArgument->getArgumentMemoryType(),
-                currentArgument->getArgumentQuantity()));
-        }
-        else if (type == ArgumentDataType::Float)
-        {
-            std::vector<float> resultFloat(currentArgument->getDataSizeInBytes() / sizeof(float));
-            getBufferData(*outputBuffers.at(i), resultFloat.data(), currentArgument->getDataSizeInBytes());
-            resultArguments.push_back(KernelArgument(currentArgument->getId(), resultFloat, currentArgument->getArgumentMemoryType(),
-                currentArgument->getArgumentQuantity()));
-        }
-        else if (type == ArgumentDataType::Int)
-        {
-            std::vector<int> resultInt(currentArgument->getDataSizeInBytes() / sizeof(int));
-            getBufferData(*outputBuffers.at(i), resultInt.data(), currentArgument->getDataSizeInBytes());
-            resultArguments.push_back(KernelArgument(currentArgument->getId(), resultInt, currentArgument->getArgumentMemoryType(),
-                currentArgument->getArgumentQuantity()));
-        }
-        else if (type == ArgumentDataType::Short)
-        {
-            std::vector<short> resultShort(currentArgument->getDataSizeInBytes() / sizeof(short));
-            getBufferData(*outputBuffers.at(i), resultShort.data(), currentArgument->getDataSizeInBytes());
-            resultArguments.push_back(KernelArgument(currentArgument->getId(), resultShort, currentArgument->getArgumentMemoryType(),
-                currentArgument->getArgumentQuantity()));
-        }
-        else
-        {
-            throw std::runtime_error("Unsupported argument data type");
-        }
+        KernelArgument argument(currentArgument->getId(), currentArgument->getNumberOfElements(), currentArgument->getArgumentDataType(),
+            currentArgument->getArgumentMemoryType(), currentArgument->getArgumentUploadType());
+        getBufferData(*outputBuffers.at(i), argument.getData(), argument.getDataSizeInBytes());
+        resultArguments.push_back(argument);
     }
 
     return resultArguments;
+}
+
+bool OpenclCore::loadBufferFromCache(const size_t argumentId, OpenclKernel& kernel) const
+{
+    for (const auto& buffer : bufferCache)
+    {
+        if (buffer->getKernelArgumentId() == argumentId)
+        {
+            setKernelArgumentVector(kernel, *buffer);
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace ktt

@@ -21,7 +21,8 @@ public:
 
     // Argument update methods
     virtual void updateArgumentScalar(const size_t argumentId, const void* argumentData) = 0;
-    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes) = 0;
+    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData) = 0;
+    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements) = 0;
 };
 
 } // namespace ktt

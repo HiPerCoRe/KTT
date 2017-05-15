@@ -1,15 +1,28 @@
 #include "tuner_core.h"
+#include "compute_api_driver/cuda/cuda_core.h"
 #include "compute_api_driver/opencl/opencl_core.h"
 
 namespace ktt
 {
 
-TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex) :
+TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi) :
     argumentManager(std::make_unique<ArgumentManager>()),
-    kernelManager(std::make_unique<KernelManager>()),
-    computeApiDriver(std::make_unique<OpenclCore>(platformIndex, deviceIndex)),
-    tuningRunner(std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeApiDriver.get()))
-{}
+    kernelManager(std::make_unique<KernelManager>())
+{
+    if (computeApi == ComputeApi::Opencl)
+    {
+        computeApiDriver = std::make_unique<OpenclCore>(platformIndex, deviceIndex);
+    }
+    else if (computeApi == ComputeApi::Cuda)
+    {
+        computeApiDriver = std::make_unique<CudaCore>(deviceIndex);
+    }
+    else
+    {
+        throw std::runtime_error("Specified compute API is not supported yet");
+    }
+    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeApiDriver.get());
+}
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
@@ -70,10 +83,10 @@ void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<Tuni
     kernelManager->setTuningManipulator(kernelId, std::move(tuningManipulator));
 }
 
-void TunerCore::enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
-    const ArgumentPrintCondition& argumentPrintCondition)
+size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+    const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType)
 {
-    argumentManager->enableArgumentPrinting(argumentIds, filePath, argumentPrintCondition);
+    return argumentManager->addArgument(data, numberOfElements, argumentDataType, argumentMemoryType, argumentUploadType);
 }
 
 void TunerCore::tuneKernel(const size_t id)
@@ -85,6 +98,20 @@ void TunerCore::tuneKernel(const size_t id)
 void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
 {
     tuningRunner->setValidationMethod(validationMethod, toleranceThreshold);
+}
+
+void TunerCore::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
+{
+    if (argumentId >= argumentManager->getArgumentCount())
+    {
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+    }
+    tuningRunner->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
+}
+
+void TunerCore::setPrintingTimeUnit(const TimeUnit& timeUnit)
+{
+    resultPrinter.setTimeUnit(timeUnit);
 }
 
 void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const

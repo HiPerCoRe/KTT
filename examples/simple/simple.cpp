@@ -24,7 +24,7 @@ public:
         }
     }
 
-    virtual void* getData(const size_t argumentId) const override
+    virtual const void* getData(const size_t argumentId) const override
     {
         if (argumentId == resultArgumentId)
         {
@@ -38,9 +38,14 @@ public:
         return ktt::ArgumentDataType::Float;
     }
 
-    virtual size_t getDataSizeInBytes(const size_t argumentId) const override
+    virtual size_t getNumberOfElements(const size_t argumentId) const override
     {
-        return result.size() * sizeof(float);
+        return result.size();
+    }
+
+    virtual size_t getElementSizeInBytes(const size_t argumentId) const override
+    {
+        return sizeof(float);
     }
 
 private:

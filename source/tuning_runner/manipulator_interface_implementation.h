@@ -5,7 +5,7 @@
 #include "manipulator_interface.h"
 #include "../compute_api_driver/compute_api_driver.h"
 #include "../dto/kernel_runtime_data.h"
-#include "../kernel_argument/argument_manager.h"
+#include "../kernel_argument/kernel_argument.h"
 
 namespace ktt
 {
@@ -21,7 +21,8 @@ public:
     virtual std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize,
         const DimensionVector& localSize) override;
     virtual void updateArgumentScalar(const size_t argumentId, const void* argumentData) override;
-    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes) override;
+    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData) override;
+    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements) override;
 
     // Core methods
     void addKernel(const size_t id, const KernelRuntimeData& kernelRuntimeData);
@@ -37,6 +38,8 @@ private:
     std::vector<KernelArgument> kernelArguments;
 
     // Helper methods
+    void updateArgument(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
+        const ArgumentUploadType& argumentUploadType, const bool overrideNumberOfElements);
     std::vector<KernelArgument> getArguments(const std::vector<size_t>& argumentIndices);
 };
 

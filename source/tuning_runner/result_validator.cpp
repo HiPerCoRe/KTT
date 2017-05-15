@@ -107,21 +107,49 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
                 + std::to_string(kernelArgument.getId()));
         }
 
-        if (referenceDataType == ArgumentDataType::Double)
+        if (referenceDataType == ArgumentDataType::Char)
         {
-            validationResult &= validateResult(kernelArgument.getDataDouble(), referenceArgument.getDataDouble());
+            validationResult &= validateResult(kernelArgument.getDataChar(), referenceArgument.getDataChar());
         }
-        else if (referenceDataType == ArgumentDataType::Float)
+        else if (referenceDataType == ArgumentDataType::UnsignedChar)
         {
-            validationResult &= validateResult(kernelArgument.getDataFloat(), referenceArgument.getDataFloat());
+            validationResult &= validateResult(kernelArgument.getDataUnsignedChar(), referenceArgument.getDataUnsignedChar());
+        }
+        else if (referenceDataType == ArgumentDataType::Short)
+        {
+            validationResult &= validateResult(kernelArgument.getDataShort(), referenceArgument.getDataShort());
+        }
+        else if (referenceDataType == ArgumentDataType::UnsignedShort)
+        {
+            validationResult &= validateResult(kernelArgument.getDataUnsignedShort(), referenceArgument.getDataUnsignedShort());
         }
         else if (referenceDataType == ArgumentDataType::Int)
         {
             validationResult &= validateResult(kernelArgument.getDataInt(), referenceArgument.getDataInt());
         }
-        else if (referenceDataType == ArgumentDataType::Short)
+        else if (referenceDataType == ArgumentDataType::UnsignedInt)
         {
-            validationResult &= validateResult(kernelArgument.getDataShort(), referenceArgument.getDataShort());
+            validationResult &= validateResult(kernelArgument.getDataUnsignedInt(), referenceArgument.getDataUnsignedInt());
+        }
+        else if (referenceDataType == ArgumentDataType::Long)
+        {
+            validationResult &= validateResult(kernelArgument.getDataLong(), referenceArgument.getDataLong());
+        }
+        else if (referenceDataType == ArgumentDataType::UnsignedLong)
+        {
+            validationResult &= validateResult(kernelArgument.getDataUnsignedLong(), referenceArgument.getDataUnsignedLong());
+        }
+        else if (referenceDataType == ArgumentDataType::Half)
+        {
+            validationResult &= validateResult(kernelArgument.getDataHalf(), referenceArgument.getDataHalf());
+        }
+        else if (referenceDataType == ArgumentDataType::Float)
+        {
+            validationResult &= validateResult(kernelArgument.getDataFloat(), referenceArgument.getDataFloat());
+        }
+        else if (referenceDataType == ArgumentDataType::Double)
+        {
+            validationResult &= validateResult(kernelArgument.getDataDouble(), referenceArgument.getDataDouble());
         }
         else
         {

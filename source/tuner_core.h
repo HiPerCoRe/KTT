@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "compute_api_driver/compute_api_driver.h"
+#include "enum/compute_api.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
 #include "tuning_runner/tuning_runner.h"
@@ -18,7 +19,7 @@ class TunerCore
 {
 public:
     // Constructor
-    explicit TunerCore(const size_t platformIndex, const size_t deviceIndex);
+    explicit TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
 
     // Kernel manager methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
@@ -36,19 +37,16 @@ public:
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Argument manager methods
-    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
-        const ArgumentQuantity& argumentQuantity)
-    {
-        return argumentManager->addArgument(data, argumentMemoryType, argumentQuantity);
-    }
-    void enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
-        const ArgumentPrintCondition& argumentPrintCondition);
+    size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
 
     // Tuning runner methods
     void tuneKernel(const size_t id);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Result printer methods
+    void setPrintingTimeUnit(const TimeUnit& timeUnit);
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
 

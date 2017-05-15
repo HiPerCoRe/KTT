@@ -9,23 +9,20 @@ ArgumentManager::ArgumentManager() :
     argumentCount(0)
 {}
 
-void ArgumentManager::enableArgumentPrinting(const std::vector<size_t> argumentIds, const std::string& filePath,
-    const ArgumentPrintCondition& argumentPrintCondition)
+size_t ArgumentManager::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+    const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType)
 {
-    for (const auto id : argumentIds)
+    arguments.emplace_back(KernelArgument(argumentCount, data, numberOfElements, argumentDataType, argumentMemoryType, argumentUploadType));
+    return argumentCount++;
+}
+
+void ArgumentManager::updateArgument(const size_t id, const void* data, const size_t numberOfElements)
+{
+    if (id >= argumentCount)
     {
-        if (id >= argumentCount)
-        {
-            throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
-        }
-
-        if (arguments.at(id).getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
-        {
-            throw std::runtime_error(std::string("Argument with id: ") + std::to_string(id) + " is read-only");
-        }
-
-        arguments.at(id).enablePrinting(filePath, argumentPrintCondition);
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
     }
+    arguments.at(id).updateData(data, numberOfElements);
 }
 
 size_t ArgumentManager::getArgumentCount() const

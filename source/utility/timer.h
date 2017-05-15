@@ -14,8 +14,8 @@ public:
     uint64_t getElapsedTime() const;
 
 private:
-    std::chrono::high_resolution_clock::time_point initialTime;
-    std::chrono::high_resolution_clock::time_point endTime;
+    std::chrono::steady_clock::time_point initialTime;
+    std::chrono::steady_clock::time_point endTime;
 };
 
 } // namespace ktt

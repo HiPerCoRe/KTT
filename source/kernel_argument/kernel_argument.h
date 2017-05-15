@@ -1,15 +1,16 @@
 #pragma once
 
-#include <cstring>
+#include <cstdint>
 #include <iostream>
-#include <stdexcept>
-#include <typeinfo>
 #include <vector>
+
+#include "../half.hpp"
+using half_float::half;
 
 #include "../enum/argument_data_type.h"
 #include "../enum/argument_memory_type.h"
+#include "../enum/argument_upload_type.h"
 #include "../enum/argument_print_condition.h"
-#include "../enum/argument_quantity.h"
 
 namespace ktt
 {
@@ -17,97 +18,64 @@ namespace ktt
 class KernelArgument
 {
 public:
-    template <typename T> explicit KernelArgument(const size_t id, const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType,
-        const ArgumentQuantity& argumentQuantity) :
-        id(id),
-        argumentMemoryType(argumentMemoryType),
-        argumentQuantity(argumentQuantity),
-        printingEnabled(false)
-    {
-        initializeData(data);
-    }
+    // Constructors
+    explicit KernelArgument(const size_t id, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
+    explicit KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
 
-    template <typename T> void updateData(const std::vector<T>& data, const ArgumentQuantity& argumentQuantity)
-    {
-        if (typeid(T) == typeid(double) && argumentDataType != ArgumentDataType::Double
-            || typeid(T) == typeid(float) && argumentDataType != ArgumentDataType::Float
-            || typeid(T) == typeid(int) && argumentDataType != ArgumentDataType::Int
-            || typeid(T) == typeid(short) && argumentDataType != ArgumentDataType::Short)
-        {
-            throw std::runtime_error("Updated data provided for kernel argument have different data type");
-        }
+    // Core methods
+    void updateData(const void* data, const size_t numberOfElements);
 
-        this->argumentQuantity = argumentQuantity;
-        initializeData(data);
-    }
-
-    void enablePrinting(const std::string& printFilePath, const ArgumentPrintCondition& argumentPrintCondition);
-
+    // Getters
     size_t getId() const;
-    const void* getData() const;
-    std::vector<double> getDataDouble() const;
-    std::vector<float> getDataFloat() const;
-    std::vector<int> getDataInt() const;
-    std::vector<short> getDataShort() const;
-    size_t getDataSizeInBytes() const;
+    size_t getNumberOfElements() const;
     ArgumentDataType getArgumentDataType() const;
     ArgumentMemoryType getArgumentMemoryType() const;
-    ArgumentQuantity getArgumentQuantity() const;
-    bool isPrintingEnabled() const;
-    ArgumentPrintCondition getArgumentPrintCondition() const;
-    std::string getPrintFilePath() const;
+    ArgumentUploadType getArgumentUploadType() const;
+    size_t getElementSizeInBytes() const;
+    size_t getDataSizeInBytes() const;
+    const void* getData() const;
+    void* getData();
+    std::vector<int8_t> getDataChar() const;
+    std::vector<uint8_t> getDataUnsignedChar() const;
+    std::vector<int16_t> getDataShort() const;
+    std::vector<uint16_t> getDataUnsignedShort() const;
+    std::vector<int32_t> getDataInt() const;
+    std::vector<uint32_t> getDataUnsignedInt() const;
+    std::vector<int64_t> getDataLong() const;
+    std::vector<uint64_t> getDataUnsignedLong() const;
+    std::vector<half> getDataHalf() const;
+    std::vector<float> getDataFloat() const;
+    std::vector<double> getDataDouble() const;
 
+    // Operators
+    bool operator==(const KernelArgument& other) const;
+    bool operator!=(const KernelArgument& other) const;
     friend std::ostream& operator<<(std::ostream&, const KernelArgument&);
 
 private:
+    // Attributes
     size_t id;
-    std::vector<double> dataDouble;
-    std::vector<float> dataFloat;
-    std::vector<int> dataInt;
-    std::vector<short> dataShort;
+    size_t numberOfElements;
     ArgumentDataType argumentDataType;
     ArgumentMemoryType argumentMemoryType;
-    ArgumentQuantity argumentQuantity;
-    bool printingEnabled;
-    ArgumentPrintCondition argumentPrintCondition;
-    std::string printFilePath;
+    ArgumentUploadType argumentUploadType;
+    std::vector<int8_t> dataChar;
+    std::vector<uint8_t> dataUnsignedChar;
+    std::vector<int16_t> dataShort;
+    std::vector<uint16_t> dataUnsignedShort;
+    std::vector<int32_t> dataInt;
+    std::vector<uint32_t> dataUnsignedInt;
+    std::vector<int64_t> dataLong;
+    std::vector<uint64_t> dataUnsignedLong;
+    std::vector<half> dataHalf;
+    std::vector<float> dataFloat;
+    std::vector<double> dataDouble;
 
-    template <typename T> void initializeData(const std::vector<T>& data)
-    {
-        if (data.size() == 0)
-        {
-            throw std::runtime_error("Data provided for kernel argument is empty");
-        }
-
-        if (typeid(T) == typeid(double))
-        {
-            dataDouble.resize(data.size());
-            std::memcpy(dataDouble.data(), data.data(), data.size() * sizeof(double));
-            argumentDataType = ArgumentDataType::Double;
-        }
-        else if (typeid(T) == typeid(float))
-        {
-            dataFloat.resize(data.size());
-            std::memcpy(dataFloat.data(), data.data(), data.size() * sizeof(float));
-            argumentDataType = ArgumentDataType::Float;
-        }
-        else if (typeid(T) == typeid(int))
-        {
-            dataInt.resize(data.size());
-            std::memcpy(dataInt.data(), data.data(), data.size() * sizeof(int));
-            argumentDataType = ArgumentDataType::Int;
-        }
-        else if (typeid(T) == typeid(short))
-        {
-            dataShort.resize(data.size());
-            std::memcpy(dataShort.data(), data.data(), data.size() * sizeof(short));
-            argumentDataType = ArgumentDataType::Short;
-        }
-        else
-        {
-            throw std::runtime_error("Unsupported argument data type was provided for kernel argument");
-        }
-    }
+    // Helper methods
+    void initializeData(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType);
+    void prepareData(const size_t numberOfElements, const ArgumentDataType& argumentDataType);
 };
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument);
