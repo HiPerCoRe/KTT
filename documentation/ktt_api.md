@@ -47,6 +47,10 @@ Argument ids must be specified in order of their declaration inside kernel sourc
 Adds new parameter for specified kernel, parameter needs to have a unique name and list of valid values.
 During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
 
+* `void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values)`:
+Adds new parameter for all specified kernels, parameter needs to have a unique name and list of valid values.
+During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
+
 Advanced kernel handling methods
 --------------------------------
 
@@ -56,8 +60,17 @@ During the tuning process, parameter definitions will be added to kernel source 
 Additionally, parameter value modifies number of threads in either global or local space in specified dimension.
 Form of modification depends on thread modifier action argument. If there are multiple thread modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
 
+* `void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)`:
+Adds new parameter for all specified kernels, parameter needs to have a unique name and list of valid values.
+During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
+Additionally, parameter value modifies number of threads in either global or local space in specified dimension.
+Form of modification depends on thread modifier action argument. If there are multiple thread modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
+
 * `void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
 Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
+
+* `void addConstraint(const std::vector<size_t>& kernelIds, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
+Adds new constraint for all specified kernels. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
 
 * `void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)`:
 Specifies search method for given kernel. Number of required search arguments depends on specified search method.
@@ -80,10 +93,22 @@ Argument handling methods
 
 * `size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType, const ArgumentMemoryType& argumentMemoryType)`:
 Adds new vector argument with specified number of elements and data type to kernel. Argument memory type specifies whether argument is used for input or output (or both).
+Supported data type sizes are 8, 16, 32 and 64 bits.
+Returns id assigned to argument by tuner.
+
+* `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)`:
+Adds new vector argument to kernel. Argument memory type specifies whether argument is used for input or output (or both).
+Supported data type sizes are 8, 16, 32 and 64 bits.
 Returns id assigned to argument by tuner.
 
 * `size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)`:
 Adds new scalar argument with specified data type to kernel. All scalar arguments are read-only.
+Supported data type sizes are 8, 16, 32 and 64 bits.
+Returns id assigned to argument by tuner.
+
+* `size_t addArgument(const T& value)`:
+Adds new scalar argument to kernel. All scalar arguments are read-only.
+Supported data type sizes are 8, 16, 32 and 64 bits.
 Returns id assigned to argument by tuner.
 
 * `void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)`:
