@@ -87,9 +87,12 @@ public:
             ktt::ThreadModifierType::Local, 
             ktt::ThreadModifierAction::Multiply, 
             ktt::Dimension::X);
-        tuner->addParameter(kernelId, "UNBOUNDED_WG", { /*0,*/ 1 });
+        tuner->addParameter(kernelId, "UNBOUNDED_WG", { 0, 1 });
         tuner->addParameter(kernelId, "WG_NUM", { 0, cus, cus * 2, cus * 4, cus * 8, cus * 16 });
-        tuner->addParameter(kernelId, "VECTOR_SIZE", { 1/*, 2, 4, 8*/, 16 });
+        tuner->addParameter(kernelId, "VECTOR_SIZE", { 1/*, 2, 4, 8*/, 16 },
+            ktt::ThreadModifierType::Global,
+            ktt::ThreadModifierAction::Divide,
+            ktt::Dimension::X);
         tuner->addParameter(kernelId, "USE_ATOMICS", { /*0, */ 1 });
         auto persistConstraint = [](std::vector<size_t> v) { return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0); };
         tuner->addConstraint(kernelId, persistConstraint, { "UNBOUNDED_WG", "WG_NUM" });
@@ -103,8 +106,24 @@ public:
         tuner->setTuningManipulator(kernelId, std::unique_ptr<TuningManipulator>(this));
     }
 
+    size_t getParameterValue(const std::vector<ktt::ParameterValue>& parameterValue, const std::string& name){
+        for (auto parIt : parameterValue)
+            if (std::get<0>(parIt) == name)
+                return std::get<1>(parIt);
+
+        return 0;
+    }
+
     virtual void launchComputation(const size_t kernelId, const ktt::DimensionVector& globalSize, const ktt::DimensionVector& localSize, const std::vector<ktt::ParameterValue>& parameterValues) override {
-        runKernel(kernelId);
+        ktt::DimensionVector myGlobalSize = globalSize;
+        if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 0) {
+            // we use constant number of threads
+            myGlobalSize = std::make_tuple(
+                getParameterValue(parameterValues, std::string("WG_NUM")) 
+                * std::get<0>(localSize), 1, 1);
+            printf("Global size altered to %i\n", std::get<0>(globalSize));
+        }
+        runKernel(kernelId, myGlobalSize, localSize);
     }
 
     void tune() {
@@ -144,53 +163,5 @@ int main(int argc, char** argv)
 
     reduction.tune();
 
-/*    size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("directCoulombSum"), ndRangeDimensions, workGroupDimensions);
-    size_t referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("directCoulombSumReference"), ndRangeDimensions, referenceWorkGroupDimensions);
-
-    size_t aiId = tuner.addArgument(atomInfo, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aixId = tuner.addArgument(atomInfoX, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aiyId = tuner.addArgument(atomInfoY, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aizId = tuner.addArgument(atomInfoZ, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aiwId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aId = tuner.addArgument(atoms);
-    size_t gsId = tuner.addArgument(gridSpacing);
-    size_t gridId = tuner.addArgument(energyGrid, ktt::ArgumentMemoryType::WriteOnly);
-
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 16, 32 }, 
-        ktt::ThreadModifierType::Local, 
-        ktt::ThreadModifierAction::Multiply, 
-        ktt::Dimension::X);
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", { 1, 2, 4, 8 }, 
-        ktt::ThreadModifierType::Local, 
-        ktt::ThreadModifierAction::Multiply, 
-        ktt::Dimension::Y);
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Z", { 1 });
-    tuner.addParameter(kernelId, "Z_ITERATIONS", { 1, 2, 4, 8, 16, 32 },
-        ktt::ThreadModifierType::Global,
-        ktt::ThreadModifierAction::Divide,
-        ktt::Dimension::Z);
-    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", { 0, 1, 2, 4, 8, 16, 32 });
-    tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", { 0, 1 });
-    tuner.addParameter(kernelId, "USE_SOA", { 0, 1 });
-    tuner.addParameter(kernelId, "VECTOR_SIZE", { 1, 2 , 4, 8, 16 });
-    tuner.addParameter(kernelId, "ONE", { 1 }); //XXX helper, must be always 
-
-    auto lt = [](std::vector<size_t> vector) { return vector.at(0) < vector.at(1); };
-    tuner.addConstraint(kernelId, lt, { "INNER_UNROLL_FACTOR", "Z_ITERATIONS" } );
-    auto vec = [](std::vector<size_t> vector) { return vector.at(0) || vector.at(1) == 1; };
-    tuner.addConstraint(kernelId, vec, { "USE_SOA", "VECTOR_SIZE" } );
-
-    tuner.setKernelArguments(kernelId, std::vector<size_t>{ aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId });
-    tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId });
-
-    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ gridId });
-    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.1);
-
-    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double> { 0.1 });
-
-    tuner.tuneKernel(kernelId);
-    tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-    tuner.printResult(kernelId, std::string("output.csv"), ktt::PrintFormat::CSV);
-*/
     return 0;
 }
