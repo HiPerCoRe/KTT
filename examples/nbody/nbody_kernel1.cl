@@ -14,13 +14,13 @@
 #if VECTOR_TYPE == 1
     typedef float vector;
 #elif VECTOR_TYPE == 2
-    // typedef float2 vector; // unsupported yet
+    typedef float2 vector;
 #elif VECTOR_TYPE == 4
     typedef float4 vector;
 #elif VECTOR_TYPE == 8
-    // typedef float8 vector; // unsupported yet
+    typedef float8 vector;
 #elif VECTOR_TYPE == 16
-    // typedef float16 vector; // unsupported yet
+    typedef float16 vector;
 #endif // VECTOR_TYPE
 
 // method to calculate acceleration caused by body J
@@ -48,14 +48,14 @@ float3 computeAcc(float posI[3], // position of body I
 // method to load thread specific data from global memory
 void loadThreadData(
 	MEMORY_TYPE_AOS float4* oldBodyInfo, // global data
-	MEMORY_TYPE_SOA vector* oldPosX,
-	MEMORY_TYPE_SOA vector* oldPosY,
-	MEMORY_TYPE_SOA vector* oldPosZ,
-	MEMORY_TYPE_SOA vector* mass,
+	MEMORY_TYPE_SOA float* oldPosX,
+	MEMORY_TYPE_SOA float* oldPosY,
+	MEMORY_TYPE_SOA float* oldPosZ,
+	MEMORY_TYPE_SOA float* mass,
 	MEMORY_TYPE_AOS float4* oldVel, // velocity info
-	MEMORY_TYPE_SOA vector* oldVelX,
-	MEMORY_TYPE_SOA vector* oldVelY,
-	MEMORY_TYPE_SOA vector* oldVelZ,
+	MEMORY_TYPE_SOA float* oldVelX,
+	MEMORY_TYPE_SOA float* oldVelY,
+	MEMORY_TYPE_SOA float* oldVelZ,
 	float bodyPos[3], float bodyVel[3], float bodyAcc[3], float* bodyMass, // thread data
 	int start, int end) // indices
 {
@@ -98,10 +98,10 @@ void loadThreadData(
 // method will copy one item (X, Y, Z, mass) from input data to buffers
 void fillBuffers(
 	MEMORY_TYPE_AOS float4* oldBodyInfo, // global (input) data
-	MEMORY_TYPE_SOA vector* oldPosX,
-	MEMORY_TYPE_SOA vector* oldPosY,
-	MEMORY_TYPE_SOA vector* oldPosZ,
-	MEMORY_TYPE_SOA vector* mass,
+	MEMORY_TYPE_SOA float* oldPosX,
+	MEMORY_TYPE_SOA float* oldPosY,
+	MEMORY_TYPE_SOA float* oldPosZ,
+	MEMORY_TYPE_SOA float* mass,
 	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
 	float bufferPosY[WORK_GROUP_SIZE_X],
 	float bufferPosZ[WORK_GROUP_SIZE_X],
@@ -130,10 +130,10 @@ void fillBuffers(
 // each body's acceleration is added to result
 void processCompleteBlock(
 	MEMORY_TYPE_AOS float4* oldBodyInfo, // global data
-	MEMORY_TYPE_SOA vector* oldPosX,
-	MEMORY_TYPE_SOA vector* oldPosY,
-	MEMORY_TYPE_SOA vector* oldPosZ,
-	MEMORY_TYPE_SOA vector* mass,
+	MEMORY_TYPE_SOA float* oldPosX,
+	MEMORY_TYPE_SOA float* oldPosY,
+	MEMORY_TYPE_SOA float* oldPosZ,
+	MEMORY_TYPE_SOA float* mass,
 	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
 	float bufferPosY[WORK_GROUP_SIZE_X],
 	float bufferPosZ[WORK_GROUP_SIZE_X],
@@ -166,10 +166,10 @@ void processCompleteBlock(
 // method to process final block, i.e. part of the molecule array where the algorithm terminates
 void processFinalBlock(
 	MEMORY_TYPE_AOS float4* oldBodyInfo, // global data
-	MEMORY_TYPE_SOA vector* oldPosX,
-	MEMORY_TYPE_SOA vector* oldPosY,
-	MEMORY_TYPE_SOA vector* oldPosZ,
-	MEMORY_TYPE_SOA vector* mass,
+	MEMORY_TYPE_SOA float* oldPosX,
+	MEMORY_TYPE_SOA float* oldPosY,
+	MEMORY_TYPE_SOA float* oldPosZ,
+	MEMORY_TYPE_SOA float* mass,
 	float bufferPosX[WORK_GROUP_SIZE_X], // buffers
 	float bufferPosY[WORK_GROUP_SIZE_X],
 	float bufferPosZ[WORK_GROUP_SIZE_X],
@@ -233,7 +233,6 @@ __kernel void nbody_kernel(float timeDelta,
 	// indices
 	int n = get_global_size(0);
 	int gtid = get_global_id(0);
-	int blocks = n / WORK_GROUP_SIZE_X;
 		
 	// buffers for bodies info processed by the work group
 	__local float bufferPosX[WORK_GROUP_SIZE_X];
@@ -253,24 +252,50 @@ __kernel void nbody_kernel(float timeDelta,
 		bodyPos, bodyVel, bodyAcc, &bodyMass, // values to be filled
 		get_group_id(0) * WORK_GROUP_SIZE_X, // start index
 		min(WORK_GROUP_SIZE_X * ((int)get_group_id(0) + 1) - 1, n - 1)); // end index
-
-	// start the calculation, process whole blocks
-    for (int i = 0; i < blocks; i++) {
-        processCompleteBlock(
+	#if SOA < 2
+	{
+		int blocks = n / WORK_GROUP_SIZE_X;
+		// start the calculation, process whole blocks
+		for (int i = 0; i < blocks; i++) {
+			processCompleteBlock(
+				oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
+				bufferPosX, bufferPosY, bufferPosZ, bufferMass,
+				bodyAcc, bodyPos, 
+				softeningSqr, 
+				i * WORK_GROUP_SIZE_X); // start index is the first body in the block being processed
+		}
+		// at the end, do the final block
+		processFinalBlock(
 			oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
 			bufferPosX, bufferPosY, bufferPosZ, bufferMass,
 			bodyAcc, bodyPos, 
-			softeningSqr, 
-			i * WORK_GROUP_SIZE_X); // start index is the first body in the block being processed
-    }
-    // at the end, do the final block
-    processFinalBlock(
-		oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
-		bufferPosX, bufferPosY, bufferPosZ, bufferMass,
-		bodyAcc, bodyPos, 
-		softeningSqr,
-		blocks * WORK_GROUP_SIZE_X, n-1);
-
+			softeningSqr,
+			blocks * WORK_GROUP_SIZE_X, n-1);
+	}
+	#else
+	{
+		vector accX, accY, accZ = (vector)0.f;
+		#pragma unroll INNER_UNROLL_FACTOR
+		for (int i = 0; i < n / VECTOR_TYPE; i++) 
+		{
+			vector distanceX = oldPosX[i] - bodyPos[0];
+			vector distanceY = oldPosY[i] - bodyPos[1];
+			vector distanceZ = oldPosZ[i] - bodyPos[2];
+			
+			vector invDist = rsqrt(distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ + softeningSqr);
+			vector f = mass[i] * invDist * invDist * invDist;
+			
+			accX += distanceX * f;
+			accY += distanceY * f;
+			accZ += distanceZ * f;
+		}
+		bodyAcc[0] = dot(accX, (vector)1.f; // sum all components
+		bodyAcc[1] = dot(accY, (vector)1.f;
+		bodyAcc[2] = dot(accZ, (vector)1.f;
+	}
+	#endif // SOA < 2
+		
+		
 	// 'export' result
 	if (gtid < n) {
 		// calculate resulting position 	
