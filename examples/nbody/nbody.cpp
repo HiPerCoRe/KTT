@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 	tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", { 0, 1, 2, 4, 8, 16, 32, 64, 128, 256 });
 	tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", { 1, 2, 4, 8, 16, 32, 64, 128, 256 });
 	tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", { 0, 1 });
-	tuner.addParameter(kernelId, "USE_SOA", { 0, 1, 2 });
+	tuner.addParameter(kernelId, "USE_SOA", { 0, 1 });
 	tuner.addParameter(kernelId, std::string("VECTOR_TYPE"), std::vector<size_t>{ 1, 2, 4, 8, 16 });
 		
 		
@@ -124,7 +124,7 @@ int main(int argc, char** argv)
 	auto lteq = [](std::vector<size_t> vector) { return vector.at(0) <= vector.at(1); };
     tuner.addConstraint(kernelId, lteq, { "INNER_UNROLL_FACTOR2", "WORK_GROUP_SIZE_X" } );
 	// Using vectorized SoA only makes sense when vectors are longer than 1
-    auto vectorizedSoA = [](std::vector<size_t> vector) { return vector.at(0) > 1 || vector.at(1) != 2; }; 
+    auto vectorizedSoA = [](std::vector<size_t> vector) { return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1); };
     tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{ "VECTOR_TYPE", "USE_SOA" });
 
 
