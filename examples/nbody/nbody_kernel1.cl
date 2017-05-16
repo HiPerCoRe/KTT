@@ -138,40 +138,6 @@ void fillBuffers(
 	#endif // USE_SOA == 0
 }
 
-// method to process complete block, i.e. part of the bodies array where
-// each body's acceleration is added to result
-void processCompleteBlock(
-	MEMORY_TYPE_AOS float4* oldBodyInfo, // global data; [X,Y,Z,mass]
-	MEMORY_TYPE_SOA vector* oldPosX,
-	MEMORY_TYPE_SOA vector* oldPosY,
-	MEMORY_TYPE_SOA vector* oldPosZ,
-	MEMORY_TYPE_SOA vector* mass,
-	vector bufferPosX[WORK_GROUP_SIZE_X], // buffers
-	vector bufferPosY[WORK_GROUP_SIZE_X],
-	vector bufferPosZ[WORK_GROUP_SIZE_X],
-	vector bufferMass[WORK_GROUP_SIZE_X],
-	vector bodyAcc[3], // thread specific data
-	float bodyPos[3], 
-	float softeningSqr, // used by acceleration
-	int start) // initial index, included
-{
-    int tid = get_local_id(0);
-    // load new values to buffer.
-	// We know that all threads can be used now, so no condition is necessary
-	fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX, bufferPosY, bufferPosZ, bufferMass, start);
-    barrier(CLK_LOCAL_MEM_FENCE);
-
-    // calculate the acceleration between the thread body and each other body loaded to buffer
-    # pragma unroll INNER_UNROLL_FACTOR1
-    for(int i =  0; i < WORK_GROUP_SIZE_X; i++) {
-        int index = i;
-		updateAcc(bodyAcc, bodyPos,
-			bufferPosX[index], bufferPosY[index], bufferPosZ[index], bufferMass[index],
-			softeningSqr);
-    }
-    barrier(CLK_LOCAL_MEM_FENCE); // sync threads
-}
-
 // method to process final block, i.e. last section of the body array, which is shorter than WORK_GROUP_SIZE_X
 void processFinalBlock(
 	MEMORY_TYPE_AOS float4* oldBodyInfo, // global data; [X,Y,Z,mass]
@@ -239,6 +205,7 @@ __kernel void nbody_kernel(float timeDelta,
 {
 	// indices
 	int n = get_global_size(0);
+	int tid = get_local_id(0);
 	int gtid = get_global_id(0);
 		
 	// buffers for bodies info processed by the work group
@@ -266,12 +233,19 @@ __kernel void nbody_kernel(float timeDelta,
 	int blocks = n / (WORK_GROUP_SIZE_X * VECTOR_TYPE); // each calculates effect of WORK_GROUP_SIZE_X atoms to currect, i.e. thread's, one
 	// start the calculation, process whole blocks
 	for (int i = 0; i < blocks; i++) {
-		processCompleteBlock(
-			oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
-			bufferPosX, bufferPosY, bufferPosZ, bufferMass,
-			bodyAcc, bodyPos, 
-			softeningSqr, 
-			i * WORK_GROUP_SIZE_X); // start index is the first body in the block being processed
+		// load new values to buffer.
+		// We know that all threads can be used now, so no condition is necessary
+		fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX, bufferPosY, bufferPosZ, bufferMass, i * WORK_GROUP_SIZE_X);
+		barrier(CLK_LOCAL_MEM_FENCE);
+
+		// calculate the acceleration between the thread body and each other body loaded to buffer
+		# pragma unroll INNER_UNROLL_FACTOR1
+		for(int index =  0; index < WORK_GROUP_SIZE_X; index++) {
+			updateAcc(bodyAcc, bodyPos,
+				bufferPosX[index], bufferPosY[index], bufferPosZ[index], bufferMass[index],
+				softeningSqr);
+		}
+		barrier(CLK_LOCAL_MEM_FENCE); // sync threads
 	}
 	
 	// at the end, do the final block which is shorter than WORK_GROUP_SIZE_X
