@@ -31,7 +31,7 @@ void atomic_add_global(volatile global float *source, const float operand) {
 #endif
 
 
-__kernel void reduce(__global const VEC* in, __global float* out, unsigned int n) {
+__kernel void reduce(__global const VEC* in, __global float* out, unsigned int n, unsigned int inOffset, unsigned int outOffset) {
     unsigned int tid = get_local_id(0);
     unsigned int i = get_global_id(0);
 
@@ -146,7 +146,7 @@ __kernel void reduce(__global const VEC* in, __global float* out, unsigned int n
 #if USE_ATOMICS == 1
         atomic_add_global(out, buf[0]);
 #else
-        out[get_global_id(0)] = buf[0];
+        out[get_group_id(0) + outOffset] = buf[0];
 #endif
     }
 }

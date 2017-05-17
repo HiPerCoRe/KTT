@@ -61,6 +61,7 @@ class tunableReduction : public ktt::TuningManipulator {
     size_t srcId;
     size_t dstId;
     size_t nId;
+    size_t offsetId;
     size_t kernelId;
 public:
     tunableReduction(ktt::Tuner *tuner, std::vector<float> *src, std::vector<float> *dst, int n) : TuningManipulator() {
@@ -80,7 +81,9 @@ public:
         srcId = tuner->addArgument((void*)src->data(), n, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
         dstId = tuner->addArgument((void*)dst->data(), n, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::WriteOnly);
         nId = tuner->addArgument((void*)(&n), ktt::ArgumentDataType::Int);
-        tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId } );
+        int offset = 0;
+        offsetId = tuner->addArgument((void*)(&offset), ktt::ArgumentDataType::Int);
+        tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId, offsetId } );
 
         // get number of compute units
         //TODO refactor to use KTT functions
@@ -93,11 +96,11 @@ public:
             ktt::Dimension::X);
         tuner->addParameter(kernelId, "UNBOUNDED_WG", { 0, 1 });
         tuner->addParameter(kernelId, "WG_NUM", { 0, cus, cus * 2, cus * 4, cus * 8, cus * 16 });
-        tuner->addParameter(kernelId, "VECTOR_SIZE", { 1/*, 2, 4, 8*/, 16 },
+        tuner->addParameter(kernelId, "VECTOR_SIZE", { 1/*, 2, 4, 8, 16*/ },
             ktt::ThreadModifierType::Global,
             ktt::ThreadModifierAction::Divide,
             ktt::Dimension::X);
-        tuner->addParameter(kernelId, "USE_ATOMICS", { /*0, */ 1 });
+        tuner->addParameter(kernelId, "USE_ATOMICS", { 0/*, 1*/ });
         auto persistConstraint = [](std::vector<size_t> v) { return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0); };
         tuner->addConstraint(kernelId, persistConstraint, { "UNBOUNDED_WG", "WG_NUM" });
         auto persistentAtomic = [](std::vector<size_t> v) { return (v[0] == 1) || (v[0] == 0 && v[1] == 1); };
@@ -125,9 +128,22 @@ public:
             myGlobalSize = std::make_tuple(
                 getParameterValue(parameterValues, std::string("WG_NUM")) 
                 * std::get<0>(localSize), 1, 1);
-            printf("Global size altered to %i\n", std::get<0>(globalSize));
         }
         runKernel(kernelId, myGlobalSize, localSize);
+        if (getParameterValue(parameterValues, std::string("USE_ATOMICS")) == 0) {
+            int n = std::max(std::get<0>(globalSize) / std::get<0>(localSize),
+                std::get<0>(localSize));
+            int offset = n;
+
+            while (n > 1) {
+                if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 1)
+                    std::get<0>(myGlobalSize) = n;
+                updateArgumentScalar(nId, &n);
+                updateArgumentScalar(offsetId, &offset);
+                runKernel(kernelId, myGlobalSize, localSize);
+                n = (n+std::get<0>(localSize)-1)/std::get<0>(localSize);
+            }
+        }
     }
 
     void tune() {
@@ -152,7 +168,7 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
-    const int n = 1024*1024*32;
+    const int n = 1024/**1024*32*/;
     std::vector<float> src(n);
     std::vector<float> dst(n);
     for (int i = 0; i < n; i++)
