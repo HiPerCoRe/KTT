@@ -146,10 +146,10 @@ void fillBuffers(
 	MEMORY_TYPE_SOA vector* oldPosY,
 	MEMORY_TYPE_SOA vector* oldPosZ,
 	MEMORY_TYPE_SOA vector* mass,
-	vector bufferPosX[WORK_GROUP_SIZE_X], // buffers
-	vector bufferPosY[WORK_GROUP_SIZE_X],
-	vector bufferPosZ[WORK_GROUP_SIZE_X],
-	vector bufferMass[WORK_GROUP_SIZE_X],
+	__local vector bufferPosX[WORK_GROUP_SIZE_X], // buffers
+	__local vector bufferPosY[WORK_GROUP_SIZE_X],
+	__local vector bufferPosZ[WORK_GROUP_SIZE_X],
+	__local vector bufferMass[WORK_GROUP_SIZE_X],
 	int offset)
 {
 	 int tid = get_local_id(0);
@@ -177,10 +177,10 @@ void processFinalBlock(
 	MEMORY_TYPE_SOA vector* oldPosY,
 	MEMORY_TYPE_SOA vector* oldPosZ,
 	MEMORY_TYPE_SOA vector* mass,
-	vector bufferPosX[WORK_GROUP_SIZE_X], // buffers
-	vector bufferPosY[WORK_GROUP_SIZE_X],
-	vector bufferPosZ[WORK_GROUP_SIZE_X],
-	vector bufferMass[WORK_GROUP_SIZE_X],
+	__local vector bufferPosX[WORK_GROUP_SIZE_X], // buffers
+	__local  vector bufferPosY[WORK_GROUP_SIZE_X],
+	__local vector bufferPosZ[WORK_GROUP_SIZE_X],
+	__local vector bufferMass[WORK_GROUP_SIZE_X],
 	vector bodyAcc[3], // thread specific data
 	float bodyPos[3], 
 	float softeningSqr, // used by acceleration
@@ -289,7 +289,9 @@ __kernel void nbody_kernel(float timeDelta,
 		#endif // LOCAL_MEM == 1 
 		
 		// calculate the acceleration between the thread body and each other body loaded to buffer
+        #if INNER_UNROLL_FACTOR1 > 0
 		# pragma unroll INNER_UNROLL_FACTOR1
+        #endif
 		for(int index =  0; index < WORK_GROUP_SIZE_X; index++) {
 			#if LOCAL_MEM == 1
 				updateAcc(bodyAcc, bodyPos,
@@ -302,7 +304,9 @@ __kernel void nbody_kernel(float timeDelta,
 					softeningSqr);
 			#endif // LOCAL_MEM == 1
 		}
+        #if  LOCAL_MEM == 1
 		barrier(CLK_LOCAL_MEM_FENCE); // sync threads
+        #endif
 	}
 	
 	// at the end, do the final block which is shorter than WORK_GROUP_SIZE_X
