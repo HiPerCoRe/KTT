@@ -71,9 +71,16 @@ public:
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Argument handling methods
-    size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType);
-    size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType);
+    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
+    {
+        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
+        return addArgument(data.data(), data.size(), dataType, argumentMemoryType);
+    }
+    template <typename T> size_t addArgument(const T& value)
+    {
+        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
+        return addArgument(&value, dataType);
+    }
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Kernel tuning methods
@@ -100,26 +107,23 @@ public:
     void setLoggingTarget(std::ostream& outputTarget);
     void setLoggingTarget(const std::string& filePath);
 
-    // Convenience argument addition methods
-    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
-    {
-        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(data.data(), data.size(), dataType, argumentMemoryType);
-    }
-
-    template <typename T> size_t addArgument(const T& value)
-    {
-        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(&value, dataType);
-    }
-
 private:
     // Attributes
     std::unique_ptr<TunerCore> tunerCore;
 
     // Helper methods
+    size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+        const ArgumentMemoryType& argumentMemoryType);
+    size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType);
+
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {
+        if (!std::is_trivially_copyable<T>())
+        {
+            std::cerr << "Unsupported argument data type" << std::endl;
+            throw std::runtime_error("Unsupported argument data type");
+        }
+
         if (sizeof(T) == 1 && std::is_unsigned<T>())
         {
             return ArgumentDataType::UnsignedChar;

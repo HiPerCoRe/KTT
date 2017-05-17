@@ -91,18 +91,8 @@ Specialized method can, for example, run part of the computation directly in C++
 Argument handling methods
 -------------------------
 
-* `size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType, const ArgumentMemoryType& argumentMemoryType)`:
-Adds new vector argument with specified number of elements and data type to kernel. Argument memory type specifies whether argument is used for input or output (or both).
-Supported data type sizes are 8, 16, 32 and 64 bits.
-Returns id assigned to argument by tuner.
-
 * `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)`:
 Adds new vector argument to kernel. Argument memory type specifies whether argument is used for input or output (or both).
-Supported data type sizes are 8, 16, 32 and 64 bits.
-Returns id assigned to argument by tuner.
-
-* `size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)`:
-Adds new scalar argument with specified data type to kernel. All scalar arguments are read-only.
 Supported data type sizes are 8, 16, 32 and 64 bits.
 Returns id assigned to argument by tuner.
 
