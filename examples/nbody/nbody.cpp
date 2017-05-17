@@ -99,6 +99,7 @@ int main(int argc, char** argv)
 	tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", { 1, 2, 4, 8, 16, 32, 64, 128, 256 });
 	tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", { 0, 1 });
 	tuner.addParameter(kernelId, "USE_SOA", { 0, 1 });
+	tuner.addParameter(kernelId, "LOCAL_MEM", { 0, 1 });
 	tuner.addParameter(kernelId, std::string("VECTOR_TYPE"), std::vector<size_t>{ 1, 2, 4, 8, 16 });
 		
 		

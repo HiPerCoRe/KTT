@@ -59,6 +59,38 @@ void updateAcc(vector bodyAcc[3], float bodyPos[3], // position of body I
 	#endif // USE_SOA == 0
 }
 
+// method to calculate acceleration caused by body J
+void updateAccGM(vector bodyAcc[3],
+	float bodyPos[3], // position of body I
+ 	MEMORY_TYPE_AOS float4* oldBodyInfo, // global data; [X,Y,Z,mass]
+	MEMORY_TYPE_SOA vector* oldPosX,
+	MEMORY_TYPE_SOA vector* oldPosY,
+	MEMORY_TYPE_SOA vector* oldPosZ,
+	MEMORY_TYPE_SOA vector* mass, 
+	int index,
+	float softeningSqr) // to avoid infinities and zero division
+{
+	#if USE_SOA == 0
+	{
+		updateAcc(bodyAcc, bodyPos, 
+			oldBodyInfo[index].x,
+			oldBodyInfo[index].y,
+			oldBodyInfo[index].z,
+			oldBodyInfo[index].w,
+			softeningSqr);
+	}
+	#else // USE_SOA != 0
+	{
+		updateAcc(bodyAcc, bodyPos,
+			oldPosX[index],
+			oldPosY[index],
+			oldPosZ[index],
+			mass[index],
+			softeningSqr);
+	}
+	#endif // USE_SOA == 0
+}
+
 // method to load thread specific data from global memory
 void loadThreadData(
 	MEMORY_TYPE_AOS float4* oldBodyInfo, // global data; [X,Y,Z,mass]
@@ -161,11 +193,13 @@ void processFinalBlock(
         return; 
     } // continue just with threads that won't access wrong memory
 	
-    // load new values to buffer
-    if (tid < topIndex) {
-		fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX, bufferPosY, bufferPosZ, bufferMass, start);
-    }
-    barrier(CLK_LOCAL_MEM_FENCE);
+	#if LOCAL_MEM == 1
+		// load new values to buffer
+		if (tid < topIndex) {
+			fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX, bufferPosY, bufferPosZ, bufferMass, start);
+		}
+		barrier(CLK_LOCAL_MEM_FENCE);
+	#endif // LOCAL_MEM == 1
 
     // calculate the acceleration between the thread body and each other body loaded to buffer
     int count = length / INNER_UNROLL_FACTOR2;
@@ -173,16 +207,30 @@ void processFinalBlock(
     # pragma unroll INNER_UNROLL_FACTOR2
     for(int i =  0; i < tmp; i++) {
         int index = i;
-		updateAcc(bodyAcc, bodyPos,
-			bufferPosX[index], bufferPosY[index], bufferPosZ[index], bufferMass[index],
-			softeningSqr);
+		#if LOCAL_MEM == 1
+			updateAcc(bodyAcc, bodyPos,
+				bufferPosX[index], bufferPosY[index], bufferPosZ[index], bufferMass[index],
+				softeningSqr);
+		#else // LOCAL_MEM != 1
+			updateAccGM(bodyAcc, bodyPos,
+				oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
+				i * WORK_GROUP_SIZE_X + index,
+				softeningSqr);
+		#endif // LOCAL_MEM == 1
     }
 	// finish those not processed in the block above, if any
     for(int i =  tmp; i < length; i++) {
         int index = i;
-		updateAcc(bodyAcc, bodyPos,
-			bufferPosX[index], bufferPosY[index], bufferPosZ[index], bufferMass[index],
-			softeningSqr);
+		#if LOCAL_MEM == 1
+			updateAcc(bodyAcc, bodyPos,
+				bufferPosX[index], bufferPosY[index], bufferPosZ[index], bufferMass[index],
+				softeningSqr);
+		#else // LOCAL_MEM != 1
+			updateAccGM(bodyAcc, bodyPos,
+				oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
+				i * WORK_GROUP_SIZE_X + index,
+				softeningSqr);
+		#endif // LOCAL_MEM == 1
     }
     barrier(CLK_LOCAL_MEM_FENCE);
 }
@@ -233,17 +281,26 @@ __kernel void nbody_kernel(float timeDelta,
 	int blocks = n / (WORK_GROUP_SIZE_X * VECTOR_TYPE); // each calculates effect of WORK_GROUP_SIZE_X atoms to currect, i.e. thread's, one
 	// start the calculation, process whole blocks
 	for (int i = 0; i < blocks; i++) {
-		// load new values to buffer.
-		// We know that all threads can be used now, so no condition is necessary
-		fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX, bufferPosY, bufferPosZ, bufferMass, i * WORK_GROUP_SIZE_X);
-		barrier(CLK_LOCAL_MEM_FENCE);
-
+		#if LOCAL_MEM == 1 
+			// load new values to buffer.
+			// We know that all threads can be used now, so no condition is necessary
+			fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX, bufferPosY, bufferPosZ, bufferMass, i * WORK_GROUP_SIZE_X);
+			barrier(CLK_LOCAL_MEM_FENCE);
+		#endif // LOCAL_MEM == 1 
+		
 		// calculate the acceleration between the thread body and each other body loaded to buffer
 		# pragma unroll INNER_UNROLL_FACTOR1
 		for(int index =  0; index < WORK_GROUP_SIZE_X; index++) {
-			updateAcc(bodyAcc, bodyPos,
-				bufferPosX[index], bufferPosY[index], bufferPosZ[index], bufferMass[index],
-				softeningSqr);
+			#if LOCAL_MEM == 1
+				updateAcc(bodyAcc, bodyPos,
+					bufferPosX[index], bufferPosY[index], bufferPosZ[index], bufferMass[index],
+					softeningSqr);
+			#else // LOCAL_MEM != 1
+				updateAccGM(bodyAcc, bodyPos,
+					oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass,
+					i * WORK_GROUP_SIZE_X + index,
+					softeningSqr);
+			#endif // LOCAL_MEM == 1
 		}
 		barrier(CLK_LOCAL_MEM_FENCE); // sync threads
 	}
