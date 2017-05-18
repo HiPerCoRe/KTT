@@ -138,8 +138,8 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(referenceKernelId, 
 		std::vector<size_t>{ deltaTimeId, oldBodyInfoId, newBodyInfoId, oldVelId, newBodyVelId, dampingId, softeningSqrId });
 
-	  // Set search method to random search, only 10% of all configurations will be explored.
-    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.01 });
+	// Set search method to random search, only 1% of all configurations will be explored.
+    //tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.01 });
 
 	  // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001f);

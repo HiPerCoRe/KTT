@@ -236,6 +236,9 @@ void processFinalBlock(
 }
 	
 // kernel calculating new position and velocity for n-bodies
+#if VECTOR_SIZE > 1
+__kernel __attribute__((vec_type_hint(vector)))
+#endif
 __kernel void nbody_kernel(float timeDelta,
 	MEMORY_TYPE_AOS float4* oldBodyInfo, // pos XYZ, mass
 	MEMORY_TYPE_SOA vector* oldPosX,
