@@ -74,7 +74,8 @@ public:
         this->dst = dst;
 
         // create kernel
-        ktt::DimensionVector ndRangeDimensions(n, 1, 1);
+        int nUp = ((n+512-1)/512)*512; // maximal WG size used in tuning parameters
+        ktt::DimensionVector ndRangeDimensions(nUp, 1, 1);
         ktt::DimensionVector workGroupDimensions(1, 1, 1);
         kernelId = tuner->addKernelFromFile("../examples/reduction/reduction_kernel.cl", std::string("reduce"), ndRangeDimensions, workGroupDimensions);
 
@@ -102,7 +103,7 @@ public:
             ktt::ThreadModifierType::Global,
             ktt::ThreadModifierAction::Divide,
             ktt::Dimension::X);
-        tuner->addParameter(kernelId, "USE_ATOMICS", { 0/*, 1*/ });
+        tuner->addParameter(kernelId, "USE_ATOMICS", { /*0, */1 });
         auto persistConstraint = [](std::vector<size_t> v) { return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0); };
         tuner->addConstraint(kernelId, persistConstraint, { "UNBOUNDED_WG", "WG_NUM" });
         auto persistentAtomic = [](std::vector<size_t> v) { return (v[0] == 1) || (v[0] == 0 && v[1] == 1); };
@@ -193,7 +194,7 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
-    const int n = 1024/**1024*32*/;
+    const int n = 1025/**1024*32*/;
     std::vector<float> src(n);
     std::vector<float> dst(n);
     for (int i = 0; i < n; i++)
