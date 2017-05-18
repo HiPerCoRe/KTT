@@ -99,7 +99,7 @@ public:
             ktt::Dimension::X);
         tuner->addParameter(kernelId, "UNBOUNDED_WG", { /*0,*/ 1 });
         tuner->addParameter(kernelId, "WG_NUM", { 0, cus, cus * 2, cus * 4, cus * 8, cus * 16 });
-        tuner->addParameter(kernelId, "VECTOR_SIZE", { 1/*, 2, 4, 8, 16*/ },
+        tuner->addParameter(kernelId, "VECTOR_SIZE", { 8/*, 2, 4, 8, 16*/ },
             ktt::ThreadModifierType::Global,
             ktt::ThreadModifierAction::Divide,
             ktt::Dimension::X);
@@ -194,18 +194,26 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
-    const int n = 1025/**1024*32*/;
-    std::vector<float> src(n);
-    std::vector<float> dst(n);
+    const int n = 1022/**1024*32*/;
+    const int nAlloc = ((n+16-1)/16)*16; // padd to longest vector size
+    printf("XXX %i %i\n", n, nAlloc);
+    std::vector<float> src(nAlloc);
+    std::vector<float> dst(nAlloc);
     for (int i = 0; i < n; i++)
     {
         src[i] = 1.0f;//(float) rand() / (float) RAND_MAX + 1.0f;
         dst[i] = 0.0f;
     }
+    for (int i = n; i < nAlloc; i++)
+    {
+        printf("x");fflush(stdout);
+        src[i] = 0.0f;
+        dst[i] = 0.0f;
+    }
 
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
-    tunableReduction reduction(&tuner, &src, &dst, n);
+    tunableReduction reduction(&tuner, &src, &dst, nAlloc);
 
     reduction.tune();
 

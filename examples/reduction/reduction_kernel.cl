@@ -33,26 +33,27 @@ void atomic_add_global(volatile global float *source, const float operand) {
 
 __kernel void reduce(__global const VEC* in, __global float* out, unsigned int n, unsigned int inOffset, unsigned int outOffset) {
     unsigned int tid = get_local_id(0);
-    unsigned int i = get_global_id(0) + inOffset;
+    unsigned int i = get_global_id(0);
+    unsigned int addr = i+inOffset;
 
     __local float buf[WORK_GROUP_SIZE_X];
 
 #if UNBOUNDED_WG == 1
-    if (i < n/VECTOR_SIZE) {
+    if (i < (n+VECTOR_SIZE-1)/VECTOR_SIZE) {
 #if VECTOR_SIZE == 1
-        buf[tid] = in[i];
+        buf[tid] = in[addr];
 #endif
 #if VECTOR_SIZE == 2
-        buf[tid] = in[i].s0+in[i].s1;
+        buf[tid] = in[addr].s0+in[addr].s1;
 #endif
 #if VECTOR_SIZE == 4
-        buf[tid] = in[i].s0+in[i].s1+in[i].s2+in[i].s3;
+        buf[tid] = in[addr].s0+in[addr].s1+in[addr].s2+in[addr].s3;
 #endif
 #if VECTOR_SIZE == 8
-        buf[tid] = in[i].s0+in[i].s1+in[i].s2+in[i].s3+in[i].s4+in[i].s5+in[i].s6+in[i].s7;
+        buf[tid] = in[addr].s0+in[addr].s1+in[addr].s2+in[addr].s3+in[addr].s4+in[addr].s5+in[addr].s6+in[addr].s7;
 #endif
 #if VECTOR_SIZE == 16
-        buf[tid] = in[i].s0+in[i].s1+in[i].s2+in[i].s3+in[i].s4+in[i].s5+in[i].s6+in[i].s7+in[i].s8+in[i].s9+in[i].sa+in[i].sb+in[i].sc+in[i].sd+in[i].se+in[i].sf;
+        buf[tid] = in[addr].s0+in[addr].s1+in[addr].s2+in[addr].s3+in[addr].s4+in[addr].s5+in[addr].s6+in[addr].s7+in[addr].s8+in[addr].s9+in[addr].sa+in[addr].sb+in[addr].sc+in[addr].sd+in[addr].se+in[addr].sf;
 #endif
     } else {
         buf[tid] = 0.0f;
@@ -142,12 +143,19 @@ __kernel void reduce(__global const VEC* in, __global float* out, unsigned int n
         buf[0] += buf[1];
     }
 #endif
-    if (tid < 1) {
 #if USE_ATOMICS == 1
+    if (tid < 1)
         atomic_add_global(out, buf[0]);
 #else
-        out[get_group_id(0) + outOffset] = buf[0];
-#endif
+    if (get_group_id(0) == get_group_size(0)-1) {
+        // store zeroes up to VECTOR_SIZE for next kernel iteration
+        if (tid < VECTOR_SIZE) {
+            if (tid == 0)
+                out[get_group_id(0) + outOffset] = buf[0];
+            else
+                out[get_group_id(0) + outOffset + tid] = 0.0f;
+        }
     }
+#endif
 }
 
