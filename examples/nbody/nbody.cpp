@@ -95,7 +95,10 @@ int main(int argc, char** argv)
 	 // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
     tuner.addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{ 32, 64, 128, 256, 512}, ktt::ThreadModifierType::Local,
         ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
+	tuner.addParameter(kernelId, std::string("OUTER_UNROLL_FACTOR"), std::vector<size_t>{ 1, 2, 4, 8, 16, 32 }, ktt::ThreadModifierType::Global,
+        ktt::ThreadModifierAction::Divide, ktt::Dimension::X);
 	tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", { 1, 2, 4, 8, 16, 32, 64, 128, 256 });
+	tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", { 1, 2, 4, 8, 16, 32 });
 	tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", { 0, 1 });
 	tuner.addParameter(kernelId, "USE_SOA", { 0, 1 });
 	tuner.addParameter(kernelId, "LOCAL_MEM", { 0, 1 });
@@ -122,6 +125,10 @@ int main(int argc, char** argv)
 	size_t numberOfBodiesId = tuner.addArgument(numberOfBodies);
 	
 	// Add conditions
+	auto lteq = [](std::vector<size_t> vector) { return vector.at(0) <= vector.at(1); };
+	tuner.addConstraint(kernelId, lteq, { "INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR" } );
+	auto lteq256 = [](std::vector<size_t> vector) { return vector.at(0) * vector.at(1) <= 256; };
+	tuner.addConstraint(kernelId, lteq, { "INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2" } );
 	// Using vectorized SoA only makes sense when vectors are longer than 1
     auto vectorizedSoA = [](std::vector<size_t> vector) { return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1); };
     tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{ "VECTOR_TYPE", "USE_SOA" });
