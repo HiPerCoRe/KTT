@@ -61,7 +61,8 @@ class tunableReduction : public ktt::TuningManipulator {
     size_t srcId;
     size_t dstId;
     size_t nId;
-    size_t offsetId;
+    size_t inOffsetId;
+    size_t outOffsetId;
     size_t kernelId;
 public:
     tunableReduction(ktt::Tuner *tuner, std::vector<float> *src, std::vector<float> *dst, int n) : TuningManipulator() {
@@ -79,22 +80,23 @@ public:
 
         // create input/output
         srcId = tuner->addArgument((void*)src->data(), n, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
-        dstId = tuner->addArgument((void*)dst->data(), n, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::WriteOnly);
+        dstId = tuner->addArgument((void*)dst->data(), n, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadWrite);
         nId = tuner->addArgument((void*)(&n), ktt::ArgumentDataType::Int);
         int offset = 0;
-        offsetId = tuner->addArgument((void*)(&offset), ktt::ArgumentDataType::Int);
-        tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId, offsetId } );
+        inOffsetId = tuner->addArgument((void*)(&offset), ktt::ArgumentDataType::Int);
+        outOffsetId = tuner->addArgument((void*)(&offset), ktt::ArgumentDataType::Int);
+        tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId, inOffsetId, outOffsetId } );
 
         // get number of compute units
         //TODO refactor to use KTT functions
         size_t cus = 30;
 
         // create parameter space
-        tuner->addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8, 16, 32, 64, */128, 256, 512 },
+        tuner->addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8, 16, 32, 64, */128/*, 256, 512 */},
             ktt::ThreadModifierType::Local, 
             ktt::ThreadModifierAction::Multiply, 
             ktt::Dimension::X);
-        tuner->addParameter(kernelId, "UNBOUNDED_WG", { 0, 1 });
+        tuner->addParameter(kernelId, "UNBOUNDED_WG", { /*0,*/ 1 });
         tuner->addParameter(kernelId, "WG_NUM", { 0, cus, cus * 2, cus * 4, cus * 8, cus * 16 });
         tuner->addParameter(kernelId, "VECTOR_SIZE", { 1/*, 2, 4, 8, 16*/ },
             ktt::ThreadModifierType::Global,
@@ -123,26 +125,49 @@ public:
 
     virtual void launchComputation(const size_t kernelId, const ktt::DimensionVector& globalSize, const ktt::DimensionVector& localSize, const std::vector<ktt::ParameterValue>& parameterValues) override {
         ktt::DimensionVector myGlobalSize = globalSize;
+        // change global size for constant numners of work-groups
+        //XXX this may be done also by thread modifier operators in constructor
         if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 0) {
-            // we use constant number of threads
             myGlobalSize = std::make_tuple(
                 getParameterValue(parameterValues, std::string("WG_NUM")) 
                 * std::get<0>(localSize), 1, 1);
         }
+
+        // execute reduction kernel
         runKernel(kernelId, myGlobalSize, localSize);
+
+        // execute kernel log n times, when atomics are not used 
         if (getParameterValue(parameterValues, std::string("USE_ATOMICS")) == 0) {
             int n = std::max(std::get<0>(globalSize) / std::get<0>(localSize),
                 std::get<0>(localSize));
-            int offset = n;
+            int inOffset = 0;
+            int outOffset = n;
+            int vectorSize = getParameterValue(parameterValues, std::string("VECTOR_SIZE"));
+            
+            // output array contains input now
+            tuner->setKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId } );
 
-            while (n > 1) {
+            /*while (n > 1) {
+                if (std::get<0>(globalSize) == std::get<0>(localSize))
+                    outOffset = 0; // only one WG will be executed
                 if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 1)
-                    std::get<0>(myGlobalSize) = n;
+                    std::get<0>(myGlobalSize) = (n+vectorSize-1) / vectorSize;
                 updateArgumentScalar(nId, &n);
-                updateArgumentScalar(offsetId, &offset);
+                updateArgumentScalar(outOffsetId, &outOffset);
+                updateArgumentScalar(inOffsetId, &inOffset);
+                std::cout << "XXX " << n << " " << inOffset << " " 
+                    << outOffset << "\n";
+                std::cout << "YYY " << std::get<0>(myGlobalSize) << " "
+                    << std::get<0>(localSize) << "\n";
                 runKernel(kernelId, myGlobalSize, localSize);
                 n = (n+std::get<0>(localSize)-1)/std::get<0>(localSize);
-            }
+                inOffset = outOffset;
+                outOffset += n;
+            }*/
+            runKernel(kernelId, myGlobalSize, localSize);
+
+            // reset kernel arguments
+            tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId, inOffsetId, outOffsetId } );
         }
     }
 

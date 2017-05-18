@@ -33,7 +33,7 @@ void atomic_add_global(volatile global float *source, const float operand) {
 
 __kernel void reduce(__global const VEC* in, __global float* out, unsigned int n, unsigned int inOffset, unsigned int outOffset) {
     unsigned int tid = get_local_id(0);
-    unsigned int i = get_global_id(0);
+    unsigned int i = get_global_id(0) + inOffset;
 
     __local float buf[WORK_GROUP_SIZE_X];
 
