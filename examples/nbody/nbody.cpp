@@ -147,7 +147,7 @@ int main(int argc, char** argv)
     //tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.01 });
 
 	  // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
-    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001f);
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
 
 	 // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ newBodyVelId, newBodyInfoId });
