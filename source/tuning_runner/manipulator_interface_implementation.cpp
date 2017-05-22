@@ -56,15 +56,9 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
 
     if (automaticArgumentUpdate)
     {
-        for (const auto& resultArgument : currentResult.getResultArguments())
+        for (const auto& resultArgument : resultArguments)
         {
-            for (auto& kernelArgument : kernelArguments)
-            {
-                if (kernelArgument.getId() == resultArgument.getId())
-                {
-                    kernelArgument = resultArgument;
-                }
-            }
+            updateArgumentVector(resultArgument.getId(), resultArgument.getData());
         }
     }
 
