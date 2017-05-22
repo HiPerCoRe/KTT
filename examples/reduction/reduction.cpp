@@ -80,12 +80,12 @@ public:
         kernelId = tuner->addKernelFromFile("../examples/reduction/reduction_kernel.cl", std::string("reduce"), ndRangeDimensions, workGroupDimensions);
 
         // create input/output
-        srcId = tuner->addArgument((void*)src->data(), n, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly);
-        dstId = tuner->addArgument((void*)dst->data(), n, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadWrite);
-        nId = tuner->addArgument((void*)(&n), ktt::ArgumentDataType::Int);
+        srcId = tuner->addArgument(*src, ktt::ArgumentMemoryType::ReadOnly);
+        dstId = tuner->addArgument(*dst, ktt::ArgumentMemoryType::ReadWrite);
+        nId = tuner->addArgument(n);
         int offset = 0;
-        inOffsetId = tuner->addArgument((void*)(&offset), ktt::ArgumentDataType::Int);
-        outOffsetId = tuner->addArgument((void*)(&offset), ktt::ArgumentDataType::Int);
+        inOffsetId = tuner->addArgument(offset);
+        outOffsetId = tuner->addArgument(offset);
         tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId, inOffsetId, outOffsetId } );
 
         // get number of compute units
@@ -114,6 +114,8 @@ public:
 
         // set itself as a tuning manipulator
         tuner->setTuningManipulator(kernelId, std::unique_ptr<TuningManipulator>(this));
+
+        setAutomaticArgumentUpdate(true);
     }
 
     size_t getParameterValue(const std::vector<ktt::ParameterValue>& parameterValue, const std::string& name){
@@ -124,8 +126,12 @@ public:
         return 0;
     }
 
-    virtual void launchComputation(const size_t kernelId, const ktt::DimensionVector& globalSize, const ktt::DimensionVector& localSize, const std::vector<ktt::ParameterValue>& parameterValues) override {
+    virtual void launchComputation(const size_t kernelId) override {
+        ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);
+        ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
+        std::vector<ktt::ParameterValue> parameterValues = getCurrentConfiguration();
         ktt::DimensionVector myGlobalSize = globalSize;
+
         // change global size for constant numners of work-groups
         //XXX this may be done also by thread modifier operators in constructor
         if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 0) {
@@ -146,7 +152,8 @@ public:
             int vectorSize = getParameterValue(parameterValues, std::string("VECTOR_SIZE"));
             
             // output array contains input now
-            tuner->setKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId } );
+            //tuner->setKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId } );
+            updateKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId });
 
             /*while (n > 1) {
                 if (std::get<0>(globalSize) == std::get<0>(localSize))
