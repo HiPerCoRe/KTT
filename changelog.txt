@@ -1,3 +1,12 @@
+Version 0.3.1 (15/5/2017)
+* Added support for new argument data types (8, 16, 32 and 64 bits long)
+* Added support for time unit specification for result printing
+* Added new utility methods to tuning manipulator API
+* Improvements to tuning manipulator
+* Fixed bugs in tuning manipulator API
+* Read-only arguments are now cached in OpenCL backend
+* Improved documentation
+
 Version 0.3 (8/5/2017)
 * Added tuning manipulator interface
 * Added support for validating multiple arguments with reference class

@@ -4,6 +4,9 @@
 #include <iostream>
 #include <vector>
 
+#include "../half.hpp"
+using half_float::half;
+
 #include "../enum/argument_data_type.h"
 #include "../enum/argument_memory_type.h"
 #include "../enum/argument_upload_type.h"
@@ -42,6 +45,7 @@ public:
     std::vector<uint32_t> getDataUnsignedInt() const;
     std::vector<int64_t> getDataLong() const;
     std::vector<uint64_t> getDataUnsignedLong() const;
+    std::vector<half> getDataHalf() const;
     std::vector<float> getDataFloat() const;
     std::vector<double> getDataDouble() const;
 
@@ -65,6 +69,7 @@ private:
     std::vector<uint32_t> dataUnsignedInt;
     std::vector<int64_t> dataLong;
     std::vector<uint64_t> dataUnsignedLong;
+    std::vector<half> dataHalf;
     std::vector<float> dataFloat;
     std::vector<double> dataDouble;
 

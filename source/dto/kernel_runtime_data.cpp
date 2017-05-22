@@ -12,6 +12,11 @@ KernelRuntimeData::KernelRuntimeData(const std::string& name, const std::string&
     argumentIndices(argumentIndices)
 {}
 
+void KernelRuntimeData::setArgumentIndices(const std::vector<size_t>& argumentIndices)
+{
+    this->argumentIndices = argumentIndices;
+}
+
 std::string KernelRuntimeData::getName() const
 {
     return name;

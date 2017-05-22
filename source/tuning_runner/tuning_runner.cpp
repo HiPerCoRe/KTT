@@ -123,12 +123,12 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(Tuni
             }
         }
     }
+    manipulatorInterfaceImplementation->setConfiguration(currentConfiguration);
     manipulatorInterfaceImplementation->setKernelArguments(kernelArguments);
 
     Timer timer;
     timer.start();
-    manipulator->launchComputation(kernelDataVector.at(0).first, currentConfiguration.getGlobalSize(), currentConfiguration.getLocalSize(),
-        currentConfiguration.getParameterValues());
+    manipulator->launchComputation(kernelDataVector.at(0).first);
     timer.stop();
 
     KernelRunResult result = manipulatorInterfaceImplementation->getCurrentResult();

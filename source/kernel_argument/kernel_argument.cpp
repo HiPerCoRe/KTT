@@ -91,6 +91,8 @@ size_t KernelArgument::getElementSizeInBytes() const
         return sizeof(int64_t);
     case ArgumentDataType::UnsignedLong:
         return sizeof(uint64_t);
+    case ArgumentDataType::Half:
+        return sizeof(half);
     case ArgumentDataType::Float:
         return sizeof(float);
     case ArgumentDataType::Double:
@@ -125,6 +127,8 @@ const void* KernelArgument::getData() const
         return (void*)dataLong.data();
     case ArgumentDataType::UnsignedLong:
         return (void*)dataUnsignedLong.data();
+    case ArgumentDataType::Half:
+        return (void*)dataHalf.data();
     case ArgumentDataType::Float:
         return (void*)dataFloat.data();
     case ArgumentDataType::Double:
@@ -177,6 +181,11 @@ std::vector<int64_t> KernelArgument::getDataLong() const
 std::vector<uint64_t> KernelArgument::getDataUnsignedLong() const
 {
     return dataUnsignedLong;
+}
+
+std::vector<half> KernelArgument::getDataHalf() const
+{
+    return dataHalf;
 }
 
 std::vector<float> KernelArgument::getDataFloat() const
@@ -239,6 +248,10 @@ void KernelArgument::prepareData(const size_t numberOfElements, const ArgumentDa
     {
         dataUnsignedLong.resize(numberOfElements);
     }
+    else if (argumentDataType == ArgumentDataType::Half)
+    {
+        dataHalf.resize(numberOfElements);
+    }
     else if (argumentDataType == ArgumentDataType::Float)
     {
         dataFloat.resize(numberOfElements);
@@ -286,6 +299,10 @@ std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kerne
     else if (kernelArgument.argumentDataType == ArgumentDataType::UnsignedLong)
     {
         printVector(outputTarget, kernelArgument.dataUnsignedLong);
+    }
+    else if (kernelArgument.argumentDataType == ArgumentDataType::Half)
+    {
+        printVector(outputTarget, kernelArgument.dataHalf);
     }
     else if (kernelArgument.argumentDataType == ArgumentDataType::Float)
     {

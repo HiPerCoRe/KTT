@@ -62,6 +62,14 @@ void Tuner::addParameter(const size_t kernelId, const std::string& name, const s
     }
 }
 
+void Tuner::addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values)
+{
+    for (const auto kernelId : kernelIds)
+    {
+        addParameter(kernelId, name, values);
+    }
+}
+
 void Tuner::addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values,
     const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
 {
@@ -76,6 +84,15 @@ void Tuner::addParameter(const size_t kernelId, const std::string& name, const s
     }
 }
 
+void Tuner::addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values,
+    const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
+{
+    for (const auto kernelId : kernelIds)
+    {
+        addParameter(kernelId, name, values, threadModifierType, threadModifierAction, modifierDimension);
+    }
+}
+
 void Tuner::addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {
@@ -87,6 +104,15 @@ void Tuner::addConstraint(const size_t kernelId, const std::function<bool(std::v
     {
         tunerCore->log(error.what());
         throw;
+    }
+}
+
+void Tuner::addConstraint(const std::vector<size_t>& kernelIds, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    const std::vector<std::string>& parameterNames)
+{
+    for (const auto kernelId : kernelIds)
+    {
+        addConstraint(kernelId, constraintFunction, parameterNames);
     }
 }
 
@@ -108,33 +134,6 @@ void Tuner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningMa
     try
     {
         tunerCore->setTuningManipulator(kernelId, std::move(tuningManipulator));
-    }
-    catch (const std::runtime_error& error)
-    {
-        tunerCore->log(error.what());
-        throw;
-    }
-}
-
-size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType)
-{
-    try
-    {
-        return tunerCore->addArgument(vectorData, numberOfElements, argumentDataType, argumentMemoryType, ArgumentUploadType::Vector);
-    }
-    catch (const std::runtime_error& error)
-    {
-        tunerCore->log(error.what());
-        throw;
-    }
-}
-
-size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)
-{
-    try
-    {
-        return tunerCore->addArgument(scalarData, 1, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentUploadType::Scalar);
     }
     catch (const std::runtime_error& error)
     {
@@ -286,6 +285,33 @@ void Tuner::setLoggingTarget(std::ostream& outputTarget)
 void Tuner::setLoggingTarget(const std::string& filePath)
 {
     tunerCore->setLoggingTarget(filePath);
+}
+
+size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+    const ArgumentMemoryType& argumentMemoryType)
+{
+    try
+    {
+        return tunerCore->addArgument(vectorData, numberOfElements, argumentDataType, argumentMemoryType, ArgumentUploadType::Vector);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)
+{
+    try
+    {
+        return tunerCore->addArgument(scalarData, 1, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentUploadType::Scalar);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
 }
 
 } // namespace ktt

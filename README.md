@@ -57,4 +57,4 @@ Tests
 -----
 
 Basic unit tests are located inside tests folder and are built together with the library.
-You can run these to ensure that library methods work correctly on your current platform.
+These can be run to ensure that library methods work correctly on the current platform.
