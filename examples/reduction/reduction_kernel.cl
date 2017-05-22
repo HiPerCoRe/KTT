@@ -147,14 +147,17 @@ __kernel void reduce(__global const VEC* in, __global float* out, unsigned int n
     if (tid < 1)
         atomic_add_global(out, buf[0]);
 #else
-    if (get_group_id(0) == get_group_size(0)-1) {
-        // store zeroes up to VECTOR_SIZE for next kernel iteration
-        if (tid < VECTOR_SIZE) {
-            if (tid == 0)
-                out[get_group_id(0) + outOffset] = buf[0];
-            else
-                out[get_group_id(0) + outOffset + tid] = 0.0f;
-        }
+    // the last group
+    if (get_group_id(0) == get_num_groups(0)-1) {
+        if (tid == 0)
+            out[get_group_id(0) + outOffset] = buf[0];
+        else if (tid < VECTOR_SIZE)
+            out[get_group_id(0) + outOffset + tid] = 0.0f;
+    }
+    // other groups
+    else {
+        if (tid == 0)
+            out[get_group_id(0) + outOffset] = buf[0];
     }
 #endif
 }

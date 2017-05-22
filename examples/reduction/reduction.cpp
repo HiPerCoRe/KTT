@@ -99,11 +99,11 @@ public:
             ktt::Dimension::X);
         tuner->addParameter(kernelId, "UNBOUNDED_WG", { /*0,*/ 1 });
         tuner->addParameter(kernelId, "WG_NUM", { 0, cus, cus * 2, cus * 4, cus * 8, cus * 16 });
-        tuner->addParameter(kernelId, "VECTOR_SIZE", { 8/*, 2, 4, 8, 16*/ },
+        tuner->addParameter(kernelId, "VECTOR_SIZE", { 1/*, 2, 4, 8, 16*/ },
             ktt::ThreadModifierType::Global,
             ktt::ThreadModifierAction::Divide,
             ktt::Dimension::X);
-        tuner->addParameter(kernelId, "USE_ATOMICS", { /*0, */1 });
+        tuner->addParameter(kernelId, "USE_ATOMICS", { 0/*, 1*/ });
         auto persistConstraint = [](std::vector<size_t> v) { return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0); };
         tuner->addConstraint(kernelId, persistConstraint, { "UNBOUNDED_WG", "WG_NUM" });
         auto persistentAtomic = [](std::vector<size_t> v) { return (v[0] == 1) || (v[0] == 0 && v[1] == 1); };
@@ -114,8 +114,6 @@ public:
 
         // set itself as a tuning manipulator
         tuner->setTuningManipulator(kernelId, std::unique_ptr<TuningManipulator>(this));
-
-        setAutomaticArgumentUpdate(true);
     }
 
     size_t getParameterValue(const std::vector<ktt::ParameterValue>& parameterValue, const std::string& name){
@@ -131,6 +129,7 @@ public:
         ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
         std::vector<ktt::ParameterValue> parameterValues = getCurrentConfiguration();
         ktt::DimensionVector myGlobalSize = globalSize;
+        setAutomaticArgumentUpdate(true);
 
         // change global size for constant numners of work-groups
         //XXX this may be done also by thread modifier operators in constructor
@@ -213,7 +212,6 @@ int main(int argc, char** argv)
     }
     for (int i = n; i < nAlloc; i++)
     {
-        printf("x");fflush(stdout);
         src[i] = 0.0f;
         dst[i] = 0.0f;
     }
