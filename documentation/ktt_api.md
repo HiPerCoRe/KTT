@@ -117,7 +117,7 @@ Result printing methods
 
 * `void setPrintingTimeUnit(const TimeUnit& timeUnit)`:
 Sets time unit used during printing of results to specified unit.
-This only affects `printResult` methods. Default time unit is microseconds. 
+This only affects `printResult()` methods. Default time unit is microseconds. 
 
 * `void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const`:
 Prints tuning results for specified kernel to given output stream.
@@ -197,9 +197,9 @@ TuningManipulator class contains following public methods:
 Inheriting class can override destructor with custom implementation if needed.
 Default implementation is provided by API.
 
-* `void launchComputation(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterValue>& parameterValues)`:
-Inheriting class must provide implementation for this method. Provided arguments include id, thread sizes and parameter values for current configuration of currently tuned kernel.
-Usage of these arguments is completely optional. This method must, at very least, call `runKernel()` method with currently tuned kernel id as its first argument.
+* `void launchComputation(const size_t kernelId)`:
+Inheriting class must provide implementation for this method. Provided argument is an id of currently tuned kernel.
+This method must, at very least, call `runKernel()` method with provided kernel id as its first argument.
 This method can also call any other methods available in base TuningManipulator class.
 
 * `std::vector<std::pair<size_t, ThreadSizeUsage>> getUtilizedKernelIds() const`:
@@ -210,23 +210,52 @@ It is possible to specify, whether the additional kernels' thread sizes will be 
 
 * `std::vector<ResultArgument> runKernel(const size_t kernelId)`:
 Launches kernel with specified id, using thread sizes based only on the current configuration.
+Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
 Returns vector of result arguments (arguments assigned to kernel with kernelId, which were tagged as input-output or output-only arguments).
 
 * `std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize)`:
 Launches kernel with specified id, using specified thread sizes.
+Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
 Returns vector of result arguments (arguments assigned to kernel with kernelId, which were tagged as input-output or output-only arguments).
+
+* `DimensionVector getCurrentGlobalSize(const size_t kernelId) const`:
+Returns global thread size of specified kernel based on the current configuration.
+Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
+
+* `DimensionVector getCurrentLocalSize(const size_t kernelId) const`:
+Returns local thread size of specified kernel based on the current configuration.
+Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
+
+* `std::vector<ParameterValue> getCurrentConfiguration() const`:
+Returns configuration used inside current run of `launchComputation()` method.
 
 * `void updateArgumentScalar(const size_t argumentId, const void* argumentData)`:
 Updates scalar argument, which is utilized by currently tuned kernel.
+This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
 * `void updateArgumentVector(const size_t argumentId, const void* argumentData)`:
 Updates vector argument, which is utilized by currently tuned kernel. Preserves number of elements inside the argument.
+This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
 * `void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)`:
 Updates vector argument, which is utilized by currently tuned kernel. Possibly also modifies number of elements inside the argument.
+This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
+
+* `void setAutomaticArgumentUpdate(const bool flag)`:
+Enables or disables automatic argument updates for iterative kernel launches.
+When this option is disabled, kernel arguments must be updated manually, if desired (by using result arguments returned by `runKernel()` methods inside `updateArgument*()` methods).
+This method only affects run of `launchComputation()` method under current configuration.
+
+* `void updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:
+Sets kernel arguments for specified kernel by providing corresponding argument ids.
+This method only affects run of `launchComputation()` method under current configuration.
+
+* `void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond)`:
+Swaps positions of specified kernel arguments for specified kernel.
+This method only affects run of `launchComputation()` method under current configuration.
 
 * `std::vector<size_t> convertFromDimensionVector(const DimensionVector& vector)`:
 Converts provided dimension vector to standard vector.
@@ -243,8 +272,7 @@ Following example shows how default tuning manipulator implementation looks like
 class SimpleTuningManipulator : public ktt::TuningManipulator
 {
 public:
-    virtual void launchComputation(const size_t kernelId, const ktt::DimensionVector& globalSize, const ktt::DimensionVector& localSize,
-        const std::vector<ktt::ParameterValue>& parameterValues) override
+    virtual void launchComputation(const size_t kernelId) override
     {
         runKernel(kernelId);
     }

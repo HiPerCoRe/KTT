@@ -33,17 +33,17 @@ public:
         throw std::runtime_error("No result available for specified argument id");
     }
 
-    virtual ktt::ArgumentDataType getDataType(const size_t argumentId) const override
+    virtual ktt::ArgumentDataType getDataType(const size_t) const override
     {
         return ktt::ArgumentDataType::Float;
     }
 
-    virtual size_t getNumberOfElements(const size_t argumentId) const override
+    virtual size_t getNumberOfElements(const size_t) const override
     {
         return result.size();
     }
 
-    virtual size_t getElementSizeInBytes(const size_t argumentId) const override
+    virtual size_t getElementSizeInBytes(const size_t) const override
     {
         return sizeof(float);
     }
