@@ -92,7 +92,7 @@ size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, c
 void TunerCore::tuneKernel(const size_t id)
 {
     auto result = tuningRunner->tuneKernel(id);
-    resultPrinter.setResult(id, result);
+    resultPrinter.setResult(id, result.first, result.second);
 }
 
 void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
@@ -112,6 +112,11 @@ void TunerCore::enableArgumentPrinting(const size_t argumentId, const std::strin
 void TunerCore::setPrintingTimeUnit(const TimeUnit& timeUnit)
 {
     resultPrinter.setTimeUnit(timeUnit);
+}
+
+void TunerCore::setInvalidResultPrinting(const bool flag)
+{
+    resultPrinter.setInvalidResultPrinting(flag);
 }
 
 void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const

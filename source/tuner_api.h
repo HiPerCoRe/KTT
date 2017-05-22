@@ -88,6 +88,7 @@ public:
 
     // Result printing methods
     void setPrintingTimeUnit(const TimeUnit& timeUnit);
+    void setInvalidResultPrinting(const bool flag);
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
 

@@ -93,12 +93,12 @@ Argument handling methods
 
 * `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)`:
 Adds new vector argument to kernel. Argument memory type specifies whether argument is used for input or output (or both).
-Supported data type sizes are 8, 16, 32 and 64 bits.
+Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 
 * `size_t addArgument(const T& value)`:
 Adds new scalar argument to kernel. All scalar arguments are read-only.
-Supported data type sizes are 8, 16, 32 and 64 bits.
+Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 
 * `void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)`:
@@ -118,6 +118,10 @@ Result printing methods
 * `void setPrintingTimeUnit(const TimeUnit& timeUnit)`:
 Sets time unit used during printing of results to specified unit.
 This only affects `printResult()` methods. Default time unit is microseconds. 
+
+* `void setInvalidResultPrinting(const bool flag)`:
+Enables or disables printing of results from failed kernel runs based on provided flag.
+Invalid results will be separated from valid results during printing.
 
 * `void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const`:
 Prints tuning results for specified kernel to given output stream.
@@ -245,7 +249,7 @@ This method only affects run of `launchComputation()` method under current confi
 This method is useful for iterative kernel launches.
 
 * `void setAutomaticArgumentUpdate(const bool flag)`:
-Enables or disables automatic argument updates for iterative kernel launches.
+Enables or disables automatic argument updates for iterative kernel launches based on provided flag.
 When this option is disabled, kernel arguments must be updated manually, if desired (by using result arguments returned by `runKernel()` methods inside `updateArgument*()` methods).
 This method only affects run of `launchComputation()` method under current configuration.
 

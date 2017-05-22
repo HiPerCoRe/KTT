@@ -173,6 +173,11 @@ void Tuner::setPrintingTimeUnit(const TimeUnit& timeUnit)
     tunerCore->setPrintingTimeUnit(timeUnit);
 }
 
+void Tuner::setInvalidResultPrinting(const bool flag)
+{
+    tunerCore->setInvalidResultPrinting(flag);
+}
+
 void Tuner::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const
 {
     try

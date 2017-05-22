@@ -24,7 +24,7 @@ TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kern
     manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeApiDriver))
 {}
 
-std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
+std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tuneKernel(const size_t id)
 {
     if (id >= kernelManager->getKernelCount())
     {
@@ -32,6 +32,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     }
 
     std::vector<TuningResult> results;
+    std::vector<TuningResult> invalidResults;
     Kernel* kernel = kernelManager->getKernel(id);
     std::unique_ptr<Searcher> searcher = getSearcher(kernel->getSearchMethod(), kernel->getSearchArguments(),
         kernelManager->getKernelConfigurations(id), kernel->getParameters());
@@ -52,6 +53,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         catch (const std::runtime_error& error)
         {
             logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
+            invalidResults.push_back(TuningResult(kernel->getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what()));
         }
 
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration() + manipulatorDuration));
@@ -59,11 +61,15 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         {
             results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), manipulatorDuration, currentConfiguration));
         }
+        else
+        {
+            invalidResults.push_back(TuningResult(kernel->getName(), currentConfiguration, "Results differ"));
+        }
     }
 
     computeApiDriver->clearCache();
     resultValidator.clearReferenceResults();
-    return results;
+    return std::make_pair(results, invalidResults);
 }
 
 void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
