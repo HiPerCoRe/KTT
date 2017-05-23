@@ -80,7 +80,7 @@ public:
         kernelId = tuner->addKernelFromFile("../examples/reduction/reduction_kernel.cl", std::string("reduce"), ndRangeDimensions, workGroupDimensions);
 
         // create input/output
-        srcId = tuner->addArgument(*src, ktt::ArgumentMemoryType::ReadOnly);
+        srcId = tuner->addArgument(*src, ktt::ArgumentMemoryType::ReadWrite);
         dstId = tuner->addArgument(*dst, ktt::ArgumentMemoryType::ReadWrite);
         nId = tuner->addArgument(n);
         int offset = 0;
@@ -155,9 +155,10 @@ public:
             int wgSize = std::get<0>(localSize);
             
             // output array contains input now
-            updateKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId });
+            //updateKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId });
 
             while (n > 1) {
+                swapKernelArguments(kernelId, srcId, dstId);
                 std::get<0>(myGlobalSize) = (n+vectorSize-1) / vectorSize;
                 std::get<0>(myGlobalSize) = ((std::get<0>(myGlobalSize)-1)/wgSize + 1) * wgSize;  
                 if (myGlobalSize == localSize)
@@ -170,7 +171,6 @@ public:
                 std::cout << "glob loc " << std::get<0>(myGlobalSize) << " "
                     << std::get<0>(localSize) << "\n";
                 runKernel(kernelId, myGlobalSize, localSize);
-                runKernel(kernelId, myGlobalSize, localSize); //XXX bug: kernel needs to be executed 2x to take an effect (it seems it cannot see updated arguments otherwise)
                 n = (n+wgSize*vectorSize-1)/(wgSize*vectorSize);
                 inOffset = outOffset/vectorSize; //XXX input is vectorized, output is scalar
                 outOffset += n;
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
     tunableReduction* reduction = new tunableReduction(&tuner, &src, &dst, nAlloc);
-    tuner.setTuningManipulator(reduction->getKernelId(), std::unique_ptr<ktt::TuningManipulator>(reduction));
+    tuner.setTuningManipulator(reduction->getKernelId(), std::unique_ptr<tunableReduction>(reduction));
     reduction->tune();
 
     return 0;
