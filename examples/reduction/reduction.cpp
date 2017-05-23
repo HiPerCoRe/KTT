@@ -93,17 +93,17 @@ public:
         size_t cus = 30;
 
         // create parameter space
-        tuner->addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8,*/ 16, 32, 64, 128/*, 256, 512 */},
+        tuner->addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8,*/ 16, 32, 64, 128, 256, 512 },
             ktt::ThreadModifierType::Local, 
             ktt::ThreadModifierAction::Multiply, 
             ktt::Dimension::X);
-        tuner->addParameter(kernelId, "UNBOUNDED_WG", { /*0,*/ 1 });
+        tuner->addParameter(kernelId, "UNBOUNDED_WG", { 0, 1 });
         tuner->addParameter(kernelId, "WG_NUM", { 0, cus, cus * 2, cus * 4, cus * 8, cus * 16 });
-        tuner->addParameter(kernelId, "VECTOR_SIZE", { 4/*, 2, 4, 8, 16*/ },
+        tuner->addParameter(kernelId, "VECTOR_SIZE", { 1, 2, 4, 8, 16 },
             ktt::ThreadModifierType::Global,
             ktt::ThreadModifierAction::Divide,
             ktt::Dimension::X);
-        tuner->addParameter(kernelId, "USE_ATOMICS", { 0/*, 1*/ });
+        tuner->addParameter(kernelId, "USE_ATOMICS", { 0, 1 });
         auto persistConstraint = [](std::vector<size_t> v) { return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0); };
         tuner->addConstraint(kernelId, persistConstraint, { "UNBOUNDED_WG", "WG_NUM" });
         auto persistentAtomic = [](std::vector<size_t> v) { return (v[0] == 1) || (v[0] == 0 && v[1] == 1); };
@@ -158,10 +158,8 @@ public:
             updateKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId });
 
             while (n > 1) {
-                if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 1) {
-                    std::get<0>(myGlobalSize) = (n+vectorSize-1) / vectorSize;
-                    std::get<0>(myGlobalSize) = ((std::get<0>(myGlobalSize)-1)/wgSize + 1) * wgSize;  
-                }
+                std::get<0>(myGlobalSize) = (n+vectorSize-1) / vectorSize;
+                std::get<0>(myGlobalSize) = ((std::get<0>(myGlobalSize)-1)/wgSize + 1) * wgSize;  
                 if (myGlobalSize == localSize)
                     outOffset = 0; // only one WG will be executed
                 updateArgumentScalar(nId, &n);
@@ -172,7 +170,7 @@ public:
                 std::cout << "glob loc " << std::get<0>(myGlobalSize) << " "
                     << std::get<0>(localSize) << "\n";
                 runKernel(kernelId, myGlobalSize, localSize);
-                runKernel(kernelId, myGlobalSize, localSize); //XXX bug: kernel needs to be executed 2x to take an effect
+                runKernel(kernelId, myGlobalSize, localSize); //XXX bug: kernel needs to be executed 2x to take an effect (it seems it cannot see updated arguments otherwise)
                 n = (n+wgSize*vectorSize-1)/(wgSize*vectorSize);
                 inOffset = outOffset/vectorSize; //XXX input is vectorized, output is scalar
                 outOffset += n;
@@ -186,6 +184,7 @@ public:
     void tune() {
         tuner->tuneKernel(kernelId);
         tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
+        tuner->printResult(kernelId, std::string("output.csv"), ktt::PrintFormat::CSV);
     }
 };
 
@@ -205,7 +204,7 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
-    const int n = 128*1024;
+    const int n = 32*1024*1024;
     const int nAlloc = ((n+16-1)/16)*16; // padd to longest vector size
     std::vector<float> src(nAlloc);
     std::vector<float> dst(nAlloc);

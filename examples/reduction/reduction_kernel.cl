@@ -76,7 +76,7 @@ __kernel void reduce(__global const VEC* in, __global float* out, unsigned int n
     partial = (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 #endif
     while (i < n/VECTOR_SIZE) {
-        partial += in[addr];
+        partial += in[i+inOffset];
         i += WORK_GROUP_SIZE_X*WG_NUM;
     }
 #if VECTOR_SIZE == 1
@@ -145,7 +145,7 @@ __kernel void reduce(__global const VEC* in, __global float* out, unsigned int n
 #endif
 #if USE_ATOMICS == 1
     if (tid < 1)
-        atomic_add_global(out, buf[0]);
+        atomic_add_global(out+outOffset, buf[0]);
 #else
     // the last group
     if (get_group_id(0) == get_num_groups(0)-1) {
