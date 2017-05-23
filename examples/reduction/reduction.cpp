@@ -93,13 +93,13 @@ public:
         size_t cus = 30;
 
         // create parameter space
-        tuner->addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8, 16, 32, 64, */128/*, 256, 512 */},
+        tuner->addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8,*/ 16, 32, 64, 128/*, 256, 512 */},
             ktt::ThreadModifierType::Local, 
             ktt::ThreadModifierAction::Multiply, 
             ktt::Dimension::X);
         tuner->addParameter(kernelId, "UNBOUNDED_WG", { /*0,*/ 1 });
         tuner->addParameter(kernelId, "WG_NUM", { 0, cus, cus * 2, cus * 4, cus * 8, cus * 16 });
-        tuner->addParameter(kernelId, "VECTOR_SIZE", { 1/*, 2, 4, 8, 16*/ },
+        tuner->addParameter(kernelId, "VECTOR_SIZE", { 4/*, 2, 4, 8, 16*/ },
             ktt::ThreadModifierType::Global,
             ktt::ThreadModifierAction::Divide,
             ktt::Dimension::X);
@@ -148,35 +148,33 @@ public:
 
         // execute kernel log n times, when atomics are not used 
         if (getParameterValue(parameterValues, std::string("USE_ATOMICS")) == 0) {
-            int n = std::max(std::get<0>(globalSize) / std::get<0>(localSize),
-                std::get<0>(localSize));
+            int n = std::get<0>(globalSize) / std::get<0>(localSize);
             int inOffset = 0;
             int outOffset = n;
             int vectorSize = getParameterValue(parameterValues, std::string("VECTOR_SIZE"));
             int wgSize = std::get<0>(localSize);
             
             // output array contains input now
-            //tuner->setKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId } );
             updateKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId });
 
             while (n > 1) {
                 if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 1) {
                     std::get<0>(myGlobalSize) = (n+vectorSize-1) / vectorSize;
-                    std::get<0>(myGlobalSize) = (std::get<0>(myGlobalSize)/wgSize + 1) * wgSize;  
+                    std::get<0>(myGlobalSize) = ((std::get<0>(myGlobalSize)-1)/wgSize + 1) * wgSize;  
                 }
                 if (myGlobalSize == localSize)
                     outOffset = 0; // only one WG will be executed
                 updateArgumentScalar(nId, &n);
                 updateArgumentScalar(outOffsetId, &outOffset);
                 updateArgumentScalar(inOffsetId, &inOffset);
-                std::cout << "XXX " << n << " " << inOffset << " " 
+                std::cout << "n inOfs, outOfs " << n << " " << inOffset << " " 
                     << outOffset << "\n";
-                std::cout << "YYY " << std::get<0>(myGlobalSize) << " "
+                std::cout << "glob loc " << std::get<0>(myGlobalSize) << " "
                     << std::get<0>(localSize) << "\n";
                 runKernel(kernelId, myGlobalSize, localSize);
-                runKernel(kernelId, myGlobalSize, localSize);
-                n = (n+std::get<0>(localSize)-1)/std::get<0>(localSize);
-                inOffset = outOffset;
+                runKernel(kernelId, myGlobalSize, localSize); //XXX bug: kernel needs to be executed 2x to take an effect
+                n = (n+wgSize*vectorSize-1)/(wgSize*vectorSize);
+                inOffset = outOffset/vectorSize; //XXX input is vectorized, output is scalar
                 outOffset += n;
             }
 
@@ -207,7 +205,7 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
-    const int n = 1024*32;
+    const int n = 128*1024;
     const int nAlloc = ((n+16-1)/16)*16; // padd to longest vector size
     std::vector<float> src(nAlloc);
     std::vector<float> dst(nAlloc);
