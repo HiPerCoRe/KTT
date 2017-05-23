@@ -76,7 +76,7 @@ __kernel void reduce(__global const VEC* in, __global float* out, unsigned int n
     partial = (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
 #endif
     while (i < n/VECTOR_SIZE) {
-        partial += in[i];
+        partial += in[addr];
         i += WORK_GROUP_SIZE_X*WG_NUM;
     }
 #if VECTOR_SIZE == 1

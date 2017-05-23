@@ -113,7 +113,7 @@ public:
         tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n/100000.0f, 1);
 
         // set itself as a tuning manipulator
-        tuner->setTuningManipulator(kernelId, std::unique_ptr<TuningManipulator>(this));
+        //tuner->setTuningManipulator(kernelId, std::unique_ptr<TuningManipulator>(this));
     }
 
     size_t getParameterValue(const std::vector<ktt::ParameterValue>& parameterValue, const std::string& name){
@@ -122,6 +122,10 @@ public:
                 return std::get<1>(parIt);
 
         return 0;
+    }
+
+    size_t getKernelId() const {
+        return kernelId;
     }
 
     virtual void launchComputation(const size_t kernelId) override {
@@ -149,16 +153,19 @@ public:
             int inOffset = 0;
             int outOffset = n;
             int vectorSize = getParameterValue(parameterValues, std::string("VECTOR_SIZE"));
+            int wgSize = std::get<0>(localSize);
             
             // output array contains input now
             //tuner->setKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId } );
             updateKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId });
 
-            /*while (n > 1) {
-                if (std::get<0>(globalSize) == std::get<0>(localSize))
-                    outOffset = 0; // only one WG will be executed
-                if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 1)
+            while (n > 1) {
+                if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 1) {
                     std::get<0>(myGlobalSize) = (n+vectorSize-1) / vectorSize;
+                    std::get<0>(myGlobalSize) = (std::get<0>(myGlobalSize)/wgSize + 1) * wgSize;  
+                }
+                if (myGlobalSize == localSize)
+                    outOffset = 0; // only one WG will be executed
                 updateArgumentScalar(nId, &n);
                 updateArgumentScalar(outOffsetId, &outOffset);
                 updateArgumentScalar(inOffsetId, &inOffset);
@@ -167,14 +174,14 @@ public:
                 std::cout << "YYY " << std::get<0>(myGlobalSize) << " "
                     << std::get<0>(localSize) << "\n";
                 runKernel(kernelId, myGlobalSize, localSize);
+                runKernel(kernelId, myGlobalSize, localSize);
                 n = (n+std::get<0>(localSize)-1)/std::get<0>(localSize);
                 inOffset = outOffset;
                 outOffset += n;
-            }*/
-            runKernel(kernelId, myGlobalSize, localSize);
+            }
 
             // reset kernel arguments
-            tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId, inOffsetId, outOffsetId } );
+            //tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId, inOffsetId, outOffsetId } );
         }
     }
 
@@ -200,9 +207,8 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
-    const int n = 1022/**1024*32*/;
+    const int n = 1024*32;
     const int nAlloc = ((n+16-1)/16)*16; // padd to longest vector size
-    printf("XXX %i %i\n", n, nAlloc);
     std::vector<float> src(nAlloc);
     std::vector<float> dst(nAlloc);
     for (int i = 0; i < n; i++)
@@ -218,9 +224,9 @@ int main(int argc, char** argv)
 
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
-    tunableReduction reduction(&tuner, &src, &dst, nAlloc);
-
-    reduction.tune();
+    tunableReduction* reduction = new tunableReduction(&tuner, &src, &dst, nAlloc);
+    tuner.setTuningManipulator(reduction->getKernelId(), std::unique_ptr<ktt::TuningManipulator>(reduction));
+    reduction->tune();
 
     return 0;
 }
