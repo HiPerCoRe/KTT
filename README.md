@@ -13,7 +13,6 @@ Prerequisites
 
 The prerequisites to build KTT are:
 
-* [premake5](https://premake.github.io/download.html)
 * C++14 compiler, for example:
     - Clang 3.4 or newer
     - GCC 5.0 or newer
@@ -22,6 +21,7 @@ The prerequisites to build KTT are:
     - AMD APP SDK
     - Intel SDK for OpenCL
     - NVIDIA CUDA Toolkit
+* [Premake 5](https://premake.github.io/download.html) (alpha 11 or newer)
 
 Building KTT
 ------------

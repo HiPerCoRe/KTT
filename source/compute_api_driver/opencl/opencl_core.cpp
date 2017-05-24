@@ -80,7 +80,7 @@ void OpenclCore::clearCache() const
 }
 
 KernelRunResult OpenclCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
+    const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const
 {
     Timer timer;
     timer.start();
@@ -90,32 +90,33 @@ KernelRunResult OpenclCore::runKernel(const std::string& source, const std::stri
     std::vector<std::unique_ptr<OpenclBuffer>> buffers;
     std::vector<const KernelArgument*> vectorArgumentPointers;
 
-    for (const auto& argument : arguments)
+    for (const auto& argument : argumentPointers)
     {
-        if (argument.getArgumentUploadType() == ArgumentUploadType::Vector)
+        if (argument->getArgumentUploadType() == ArgumentUploadType::Vector)
         {
-            if (argument.getArgumentMemoryType() == ArgumentMemoryType::ReadOnly && loadBufferFromCache(argument.getId(), *kernel))
+            if (argument->getArgumentMemoryType() == ArgumentMemoryType::ReadOnly && loadBufferFromCache(argument->getId(), *kernel))
             {
                 continue; // buffer was successfully loaded from cache
             }
 
-            std::unique_ptr<OpenclBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSizeInBytes(), argument.getId());
-            updateBuffer(*buffer, argument.getData(), argument.getDataSizeInBytes());
+            std::unique_ptr<OpenclBuffer> buffer = createBuffer(argument->getArgumentMemoryType(), argument->getDataSizeInBytes(),
+                argument->getId());
+            updateBuffer(*buffer, argument->getData(), argument->getDataSizeInBytes());
             setKernelArgumentVector(*kernel, *buffer);
 
-            if (argument.getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
+            if (argument->getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
             {
                 bufferCache.push_back(std::move(buffer));
             }
             else
             {
-                vectorArgumentPointers.push_back(&argument);
+                vectorArgumentPointers.push_back(argument);
                 buffers.push_back(std::move(buffer)); // buffer data will be stolen
             }
         }
         else
         {
-            setKernelArgumentScalar(*kernel, argument);
+            setKernelArgumentScalar(*kernel, *argument);
         }
     }
 

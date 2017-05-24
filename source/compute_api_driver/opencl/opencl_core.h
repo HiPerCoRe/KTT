@@ -40,7 +40,7 @@ public:
 
     // High-level kernel execution methods
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const override;
+        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const override;
 
     // Low-level kernel execution methods
     std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;

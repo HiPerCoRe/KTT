@@ -107,7 +107,7 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, con
         << "): " << currentConfiguration;
     logger->log(stream.str());
     result = computeApiDriver->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
-        convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArguments(kernelId));
+        convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArgumentPointers(kernelId));
     return std::make_pair(result, 0);
 }
 
@@ -178,6 +178,20 @@ std::vector<KernelArgument> TuningRunner::getKernelArguments(const size_t kernel
     for (const auto index : argumentIndices)
     {
         result.push_back(argumentManager->getArgument(index));
+    }
+
+    return result;
+}
+
+std::vector<const KernelArgument*> TuningRunner::getKernelArgumentPointers(const size_t kernelId) const
+{
+    std::vector<const KernelArgument*> result;
+
+    std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId)->getArgumentIndices();
+    
+    for (const auto index : argumentIndices)
+    {
+        result.push_back(&argumentManager->getArgument(index));
     }
 
     return result;
@@ -379,7 +393,7 @@ std::vector<KernelArgument> TuningRunner::getReferenceResultFromKernel(const siz
     std::string source = kernelManager->getKernelSourceWithDefines(referenceKernelId, configuration);
 
     auto result = computeApiDriver->runKernel(source, referenceKernel->getName(), convertDimensionVector(configuration.getGlobalSize()),
-        convertDimensionVector(configuration.getLocalSize()), getKernelArguments(referenceKernelId));
+        convertDimensionVector(configuration.getLocalSize()), getKernelArgumentPointers(referenceKernelId));
     std::vector<KernelArgument> resultArguments;
 
     for (const auto& argument : result.getResultArguments())

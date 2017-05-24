@@ -41,7 +41,7 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
     KernelRuntimeData kernelData = dataPointer->second;
 
     KernelRunResult result = computeApiDriver->runKernel(kernelData.getSource(), kernelData.getName(), convertDimensionVector(globalSize),
-        convertDimensionVector(localSize), getArguments(kernelData.getArgumentIndices()));
+        convertDimensionVector(localSize), getArgumentPointers(kernelData.getArgumentIndices()));
     currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead(), result.getResultArguments());
 
     std::vector<ResultArgument> resultArguments;
@@ -208,9 +208,9 @@ void ManipulatorInterfaceImplementation::updateArgument(const size_t argumentId,
     }
 }
 
-std::vector<KernelArgument> ManipulatorInterfaceImplementation::getArguments(const std::vector<size_t>& argumentIndices)
+std::vector<const KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<size_t>& argumentIndices)
 {
-    std::vector<KernelArgument> result;
+    std::vector<const KernelArgument*> result;
 
     for (const auto index : argumentIndices)
     {
@@ -218,7 +218,7 @@ std::vector<KernelArgument> ManipulatorInterfaceImplementation::getArguments(con
         {
             if (index == argument.getId())
             {
-                result.push_back(argument);
+                result.push_back(&argument);
             }
         }
     }

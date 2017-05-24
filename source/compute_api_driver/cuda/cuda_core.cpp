@@ -44,7 +44,7 @@ void CudaCore::clearCache() const
 }
 
 KernelRunResult CudaCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
+    const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const
 {
     throw std::runtime_error("runKernel() method is not supported yet for CUDA platform");
 }
@@ -73,40 +73,40 @@ std::vector<CudaDevice> CudaCore::getCudaDevices() const
 
 #else
 
-CudaCore::CudaCore(const size_t deviceIndex)
+CudaCore::CudaCore(const size_t)
 {
-    throw std::runtime_error("CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
-void CudaCore::printComputeApiInfo(std::ostream& outputTarget) const
+void CudaCore::printComputeApiInfo(std::ostream&) const
 {
-    throw std::runtime_error("CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
 std::vector<PlatformInfo> CudaCore::getPlatformInfo() const
 {
-    throw std::runtime_error("CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
-std::vector<DeviceInfo> CudaCore::getDeviceInfo(const size_t platformIndex) const
+std::vector<DeviceInfo> CudaCore::getDeviceInfo(const size_t) const
 {
-    throw std::runtime_error("CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
-void CudaCore::setCompilerOptions(const std::string& options)
+void CudaCore::setCompilerOptions(const std::string&)
 {
-    throw std::runtime_error("CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
 void CudaCore::clearCache() const
 {
-    throw std::runtime_error("CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
-KernelRunResult CudaCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
+KernelRunResult CudaCore::runKernel(const std::string&, const std::string&, const std::vector<size_t>&, const std::vector<size_t>&,
+    const std::vector<const KernelArgument*>&) const
 {
-    throw std::runtime_error("CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
 #endif // PLATFORM_CUDA

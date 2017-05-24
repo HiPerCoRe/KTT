@@ -43,7 +43,7 @@ public:
 
     // High-level kernel execution methods
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const override;
+        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const override;
 
 private:
     size_t deviceIndex;
@@ -73,7 +73,7 @@ public:
 
     // High-level kernel execution methods
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const override;
+        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const override;
 };
 
 #endif // PLATFORM_CUDA

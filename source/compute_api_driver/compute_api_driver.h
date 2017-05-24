@@ -20,7 +20,7 @@ public:
 
     // Kernel execution method
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const = 0;
+        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const = 0;
 
     // Compute API compiler options setup
     virtual void setCompilerOptions(const std::string& options) = 0;

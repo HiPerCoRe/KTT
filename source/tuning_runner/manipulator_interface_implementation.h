@@ -50,7 +50,7 @@ private:
     // Helper methods
     void updateArgument(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
         const ArgumentUploadType& argumentUploadType, const bool overrideNumberOfElements);
-    std::vector<KernelArgument> getArguments(const std::vector<size_t>& argumentIndices);
+    std::vector<const KernelArgument*> getArgumentPointers(const std::vector<size_t>& argumentIndices);
 };
 
 } // namespace ktt
