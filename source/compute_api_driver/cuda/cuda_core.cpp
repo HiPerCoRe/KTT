@@ -38,13 +38,18 @@ void CudaCore::setCompilerOptions(const std::string& options)
     compilerOptions = options;
 }
 
-void CudaCore::clearCache() const
+void CudaCore::setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType)
+{
+    throw std::runtime_error("setCacheUsage() method is not supported yet for CUDA platform");
+}
+
+void CudaCore::clearCache()
 {
     throw std::runtime_error("clearCache() method is not supported yet for CUDA platform");
 }
 
 KernelRunResult CudaCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const
+    const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers)
 {
     throw std::runtime_error("runKernel() method is not supported yet for CUDA platform");
 }
@@ -98,13 +103,18 @@ void CudaCore::setCompilerOptions(const std::string&)
     throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
-void CudaCore::clearCache() const
+void CudaCore::setCacheUsage(const bool, const ArgumentMemoryType&)
+{
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+}
+
+void CudaCore::clearCache()
 {
     throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
 KernelRunResult CudaCore::runKernel(const std::string&, const std::string&, const std::vector<size_t>&, const std::vector<size_t>&,
-    const std::vector<const KernelArgument*>&) const
+    const std::vector<const KernelArgument*>&)
 {
     throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }

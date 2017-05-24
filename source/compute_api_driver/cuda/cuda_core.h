@@ -38,12 +38,13 @@ public:
     // Compiler options setup
     virtual void setCompilerOptions(const std::string& options) override;
 
-    // Cache handling
-    virtual void clearCache() const override;
+    // Argument cache handling
+    virtual void setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
+    virtual void clearCache() override;
 
     // High-level kernel execution methods
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const override;
+        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) override;
 
 private:
     size_t deviceIndex;
@@ -68,12 +69,13 @@ public:
     // Compiler options setup
     virtual void setCompilerOptions(const std::string& options) override;
 
-    // Cache handling
-    virtual void clearCache() const override;
+    // Argument cache handling
+    virtual void setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
+    virtual void clearCache() override;
 
     // High-level kernel execution methods
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const override;
+        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) override;
 };
 
 #endif // PLATFORM_CUDA

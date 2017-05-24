@@ -5,7 +5,10 @@ namespace ktt
 {
 
 OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex) :
-    compilerOptions(std::string(""))
+    compilerOptions(std::string("")),
+    useReadBufferCache(true),
+    useWriteBufferCache(false),
+    useReadWriteBufferCache(false)
 {
     auto platforms = getOpenclPlatforms();
     if (platformIndex >= platforms.size())
@@ -74,54 +77,46 @@ void OpenclCore::setCompilerOptions(const std::string& options)
     compilerOptions = options;
 }
 
-void OpenclCore::clearCache() const
+void OpenclCore::setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType)
 {
-    bufferCache.clear();
+    switch (argumentMemoryType)
+    {
+    case ArgumentMemoryType::ReadOnly:
+        useReadBufferCache = flag;
+        break;
+    case ArgumentMemoryType::WriteOnly:
+        useWriteBufferCache = flag;
+        break;
+    case ArgumentMemoryType::ReadWrite:
+        useReadWriteBufferCache = flag;
+        break;
+    default:
+        throw std::runtime_error("Unknown argument memory type");
+    }
+}
+
+void OpenclCore::clearCache()
+{
+    buffers.clear();
 }
 
 KernelRunResult OpenclCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const
+    const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers)
 {
     Timer timer;
     timer.start();
 
     std::unique_ptr<OpenclProgram> program = createAndBuildProgram(source);
     std::unique_ptr<OpenclKernel> kernel = createKernel(*program, kernelName);
-    std::vector<std::unique_ptr<OpenclBuffer>> buffers;
-    std::vector<const KernelArgument*> vectorArgumentPointers;
 
-    for (const auto& argument : argumentPointers)
+    for (const auto argument : argumentPointers)
     {
-        if (argument->getArgumentUploadType() == ArgumentUploadType::Vector)
-        {
-            if (argument->getArgumentMemoryType() == ArgumentMemoryType::ReadOnly && loadBufferFromCache(argument->getId(), *kernel))
-            {
-                continue; // buffer was successfully loaded from cache
-            }
-
-            std::unique_ptr<OpenclBuffer> buffer = createBuffer(argument->getArgumentMemoryType(), argument->getDataSizeInBytes(),
-                argument->getId());
-            updateBuffer(*buffer, argument->getData(), argument->getDataSizeInBytes());
-            setKernelArgumentVector(*kernel, *buffer);
-
-            if (argument->getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
-            {
-                bufferCache.push_back(std::move(buffer));
-            }
-            else
-            {
-                vectorArgumentPointers.push_back(argument);
-                buffers.push_back(std::move(buffer)); // buffer data will be stolen
-            }
-        }
-        else
-        {
-            setKernelArgumentScalar(*kernel, *argument);
-        }
+        setKernelArgument(*kernel, *argument);
     }
 
     cl_ulong duration = enqueueKernel(*kernel, globalSize, localSize);
-    std::vector<KernelArgument> resultArguments = getResultArguments(buffers, vectorArgumentPointers);
+    std::vector<KernelArgument> resultArguments = getResultArguments(argumentPointers);
+    clearTargetBuffers();
 
     timer.stop();
     uint64_t overhead = timer.getElapsedTime();
@@ -130,8 +125,7 @@ KernelRunResult OpenclCore::runKernel(const std::string& source, const std::stri
 
 std::unique_ptr<OpenclProgram> OpenclCore::createAndBuildProgram(const std::string& source) const
 {
-    std::unique_ptr<OpenclProgram> program;
-    program.reset(new OpenclProgram(source, context->getContext(), context->getDevices()));
+    auto program = std::make_unique<OpenclProgram>(source, context->getContext(), context->getDevices());
     program->build(compilerOptions);
     return program;
 }
@@ -139,8 +133,7 @@ std::unique_ptr<OpenclProgram> OpenclCore::createAndBuildProgram(const std::stri
 std::unique_ptr<OpenclBuffer> OpenclCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size,
     const size_t kernelArgumentId) const
 {
-    std::unique_ptr<OpenclBuffer> buffer;
-    buffer.reset(new OpenclBuffer(context->getContext(), getOpenclMemoryType(argumentMemoryType), size, kernelArgumentId));
+    auto buffer = std::make_unique<OpenclBuffer>(context->getContext(), getOpenclMemoryType(argumentMemoryType), size, kernelArgumentId);
     return buffer;
 }
 
@@ -156,22 +149,36 @@ void OpenclCore::getBufferData(const OpenclBuffer& buffer, void* destination, co
     checkOpenclError(result, std::string("clEnqueueReadBuffer"));
 }
 
+void OpenclCore::setKernelArgument(OpenclKernel& kernel, const KernelArgument& argument)
+{
+    if (argument.getArgumentUploadType() == ArgumentUploadType::Vector)
+    {
+        if (argument.getArgumentMemoryType() == ArgumentMemoryType::ReadOnly && useReadBufferCache
+            || argument.getArgumentMemoryType() == ArgumentMemoryType::WriteOnly && useWriteBufferCache
+            || argument.getArgumentMemoryType() == ArgumentMemoryType::ReadWrite && useReadWriteBufferCache)
+        {
+            if (loadBufferFromCache(argument.getId(), kernel))
+            {
+                return; // buffer was successfully loaded from cache
+            }
+        }
+
+        std::unique_ptr<OpenclBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSizeInBytes(), argument.getId());
+        updateBuffer(*buffer, argument.getData(), argument.getDataSizeInBytes());
+        setKernelArgumentVector(kernel, *buffer);
+
+        buffers.insert(std::move(buffer)); // buffer data will be stolen
+    }
+    else
+    {
+        kernel.setKernelArgumentScalar(argument.getData(), argument.getElementSizeInBytes());
+    }
+}
+
 std::unique_ptr<OpenclKernel> OpenclCore::createKernel(const OpenclProgram& program, const std::string& kernelName) const
 {
-    std::unique_ptr<OpenclKernel> kernel;
-    kernel.reset(new OpenclKernel(program.getProgram(), kernelName));
+    auto kernel = std::make_unique<OpenclKernel>(program.getProgram(), kernelName);
     return kernel;
-}
-
-void OpenclCore::setKernelArgumentScalar(OpenclKernel& kernel, const KernelArgument& argument) const
-{
-    kernel.setKernelArgumentScalar(argument.getData(), argument.getElementSizeInBytes());
-}
-
-void OpenclCore::setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffer& buffer) const
-{
-    cl_mem clBuffer = buffer.getBuffer();
-    kernel.setKernelArgumentVector((void*)&clBuffer);
 }
 
 cl_ulong OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const
@@ -288,30 +295,42 @@ DeviceType OpenclCore::getDeviceType(const cl_device_type deviceType)
     }
 }
 
-std::vector<KernelArgument> OpenclCore::getResultArguments(const std::vector<std::unique_ptr<OpenclBuffer>>& outputBuffers,
-    const std::vector<const KernelArgument*>& inputArgumentPointers) const
+std::vector<KernelArgument> OpenclCore::getResultArguments(const std::vector<const KernelArgument*>& argumentPointers) const
 {
     std::vector<KernelArgument> resultArguments;
-    for (size_t i = 0; i < outputBuffers.size(); i++)
+    for (const auto currentArgument : argumentPointers)
     {
-        if (outputBuffers.at(i)->getType() == CL_MEM_READ_ONLY)
+        if (currentArgument->getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
         {
             continue;
         }
 
-        const KernelArgument* currentArgument = inputArgumentPointers.at(i);
-        KernelArgument argument(currentArgument->getId(), currentArgument->getNumberOfElements(), currentArgument->getArgumentDataType(),
-            currentArgument->getArgumentMemoryType(), currentArgument->getArgumentUploadType());
-        getBufferData(*outputBuffers.at(i), argument.getData(), argument.getDataSizeInBytes());
-        resultArguments.push_back(argument);
+        for (const auto& buffer : buffers)
+        {
+            if (buffer->getKernelArgumentId() != currentArgument->getId())
+            {
+                continue;
+            }
+
+            KernelArgument argument(currentArgument->getId(), currentArgument->getNumberOfElements(), currentArgument->getArgumentDataType(),
+                currentArgument->getArgumentMemoryType(), currentArgument->getArgumentUploadType());
+            getBufferData(*buffer, argument.getData(), argument.getDataSizeInBytes());
+            resultArguments.push_back(argument);
+        }
     }
 
     return resultArguments;
 }
 
+void OpenclCore::setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffer& buffer) const
+{
+    cl_mem clBuffer = buffer.getBuffer();
+    kernel.setKernelArgumentVector((void*)&clBuffer);
+}
+
 bool OpenclCore::loadBufferFromCache(const size_t argumentId, OpenclKernel& kernel) const
 {
-    for (const auto& buffer : bufferCache)
+    for (const auto& buffer : buffers)
     {
         if (buffer->getKernelArgumentId() == argumentId)
         {
@@ -320,6 +339,25 @@ bool OpenclCore::loadBufferFromCache(const size_t argumentId, OpenclKernel& kern
         }
     }
     return false;
+}
+
+void OpenclCore::clearTargetBuffers()
+{
+    auto iterator = buffers.cbegin();
+
+    while (iterator != buffers.cend())
+    {
+        if (iterator->get()->getType() == CL_MEM_READ_ONLY && !useReadBufferCache
+            || iterator->get()->getType() == CL_MEM_WRITE_ONLY && !useWriteBufferCache
+            || iterator->get()->getType() == CL_MEM_READ_WRITE && !useReadWriteBufferCache)
+        {
+            iterator = buffers.erase(iterator);
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
 }
 
 } // namespace ktt

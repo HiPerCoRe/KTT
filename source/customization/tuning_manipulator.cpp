@@ -55,6 +55,11 @@ void  TuningManipulator::setAutomaticArgumentUpdate(const bool flag)
     manipulatorInterface->setAutomaticArgumentUpdate(flag);
 }
 
+void TuningManipulator::setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType)
+{
+    manipulatorInterface->setArgumentSynchronization(flag, argumentMemoryType);
+}
+
 void TuningManipulator::updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
 {
     manipulatorInterface->updateKernelArguments(kernelId, argumentIds);

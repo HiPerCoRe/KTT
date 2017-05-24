@@ -249,8 +249,14 @@ This method only affects run of `launchComputation()` method under current confi
 This method is useful for iterative kernel launches.
 
 * `void setAutomaticArgumentUpdate(const bool flag)`:
-Enables or disables automatic argument updates for iterative kernel launches based on provided flag.
-When this option is disabled, kernel arguments must be updated manually, if desired (by using result arguments returned by `runKernel()` methods inside `updateArgument*()` methods).
+Enables or disables automatic vector argument updates for iterative kernel launches based on provided flag.
+When this option is disabled, kernel arguments must be updated manually, if desired (by using result arguments returned by `runKernel()` methods inside `updateArgument...()` methods).
+This method only affects run of `launchComputation()` method under current configuration.
+
+* `void setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType)`:
+Enables or disables automatic vector argument synchronization between CPU buffers and compute API device buffers for specified type of kernel arguments.
+Disabling synchronization will improve performance and accuracy of timer in case the buffers are iteratively updated inside kernel only. Otherwise, synchronization should be enabled.
+Be default, synchronization is enabled for read-write and write-only arguments and disabled for read-only arguments.
 This method only affects run of `launchComputation()` method under current configuration.
 
 * `void updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:

@@ -28,6 +28,7 @@ public:
     virtual void updateArgumentVector(const size_t argumentId, const void* argumentData) override;
     virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements) override;
     virtual void setAutomaticArgumentUpdate(const bool flag) override;
+    virtual void setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
     virtual void updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds) override;
     virtual void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond) override;
 
@@ -46,6 +47,8 @@ private:
     std::map<size_t, KernelRuntimeData> kernelDataMap;
     std::vector<KernelArgument> kernelArguments;
     bool automaticArgumentUpdate;
+    bool synchronizeWriteArguments;
+    bool synchronizeReadWriteArguments;
 
     // Helper methods
     void updateArgument(const size_t argumentId, const void* argumentData, const size_t numberOfElements,

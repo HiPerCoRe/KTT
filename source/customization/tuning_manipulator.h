@@ -33,6 +33,7 @@ public:
     void updateArgumentVector(const size_t argumentId, const void* argumentData);
     void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements);
     void setAutomaticArgumentUpdate(const bool flag);
+    void setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType);
     void updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
     void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond);
 

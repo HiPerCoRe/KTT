@@ -20,13 +20,14 @@ public:
 
     // Kernel execution method
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) const = 0;
+        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) = 0;
 
     // Compute API compiler options setup
     virtual void setCompilerOptions(const std::string& options) = 0;
 
-    // Cache handling
-    virtual void clearCache() const = 0;
+    // Argument cache handling
+    virtual void setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType) = 0;
+    virtual void clearCache() = 0;
 
     // Info retrieval methods
     virtual void printComputeApiInfo(std::ostream& outputTarget) const = 0;

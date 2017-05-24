@@ -12,7 +12,9 @@ ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeAp
     computeApiDriver(computeApiDriver),
     currentResult(KernelRunResult(0, 0, std::vector<KernelArgument> {})),
     currentConfiguration(KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>{})),
-    automaticArgumentUpdate(false)
+    automaticArgumentUpdate(false),
+    synchronizeWriteArguments(true),
+    synchronizeReadWriteArguments(true)
 {}
 
 std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const size_t kernelId)
@@ -48,7 +50,7 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
     for (const auto& resultArgument : currentResult.getResultArguments())
     {
         resultArguments.emplace_back(ResultArgument(resultArgument.getId(), resultArgument.getData(), resultArgument.getNumberOfElements(),
-            resultArgument.getElementSizeInBytes(), resultArgument.getArgumentDataType()));
+            resultArgument.getElementSizeInBytes(), resultArgument.getArgumentDataType(), resultArgument.getArgumentMemoryType()));
     }
 
     timer.stop();
@@ -58,7 +60,11 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
     {
         for (const auto& resultArgument : resultArguments)
         {
-            updateArgumentVector(resultArgument.getId(), resultArgument.getData());
+            if (resultArgument.getArgumentMemoryType() == ArgumentMemoryType::WriteOnly && synchronizeWriteArguments
+                || resultArgument.getArgumentMemoryType() == ArgumentMemoryType::ReadWrite && synchronizeReadWriteArguments)
+            {
+                updateArgumentVector(resultArgument.getId(), resultArgument.getData());
+            }
         }
     }
 
@@ -110,6 +116,19 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argum
 void ManipulatorInterfaceImplementation::setAutomaticArgumentUpdate(const bool flag)
 {
     automaticArgumentUpdate = flag;
+}
+
+void ManipulatorInterfaceImplementation::setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType)
+{
+    if (argumentMemoryType == ArgumentMemoryType::WriteOnly)
+    {
+        synchronizeWriteArguments = flag;
+    }
+    if (argumentMemoryType == ArgumentMemoryType::ReadWrite)
+    {
+        synchronizeReadWriteArguments = flag;
+    }
+    computeApiDriver->setCacheUsage(!flag, argumentMemoryType);
 }
 
 void ManipulatorInterfaceImplementation::updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
@@ -179,6 +198,12 @@ void ManipulatorInterfaceImplementation::clearData()
     currentResult = KernelRunResult(0, 0, std::vector<KernelArgument>{});
     currentConfiguration = KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>{});
     automaticArgumentUpdate = false;
+    synchronizeWriteArguments = true;
+    synchronizeReadWriteArguments = true;
+    computeApiDriver->setCacheUsage(true, ArgumentMemoryType::ReadOnly);
+    computeApiDriver->setCacheUsage(false, ArgumentMemoryType::WriteOnly);
+    computeApiDriver->setCacheUsage(false, ArgumentMemoryType::ReadWrite);
+    computeApiDriver->clearCache();
 }
 
 KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const
