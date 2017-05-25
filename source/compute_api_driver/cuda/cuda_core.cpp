@@ -33,6 +33,11 @@ std::vector<DeviceInfo> CudaCore::getDeviceInfo(const size_t platformIndex) cons
     throw std::runtime_error("getDeviceInfo() method is not supported yet for CUDA platform");
 }
 
+DeviceInfo CudaCore::getCurrentDeviceInfo() const
+{
+    throw std::runtime_error("getCurrentDeviceInfo() method is not supported yet for CUDA platform");
+}
+
 void CudaCore::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
@@ -99,6 +104,11 @@ std::vector<PlatformInfo> CudaCore::getPlatformInfo() const
 }
 
 std::vector<DeviceInfo> CudaCore::getDeviceInfo(const size_t) const
+{
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+}
+
+DeviceInfo CudaCore::getCurrentDeviceInfo() const
 {
     throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }

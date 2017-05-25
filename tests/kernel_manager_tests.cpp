@@ -1,5 +1,6 @@
 #include "catch.hpp"
 
+#include "../source/dto/device_info.h"
 #include "../source/kernel/kernel_manager.h"
 
 TEST_CASE("Kernel handling operations", "[kernelManager]")
@@ -64,7 +65,9 @@ TEST_CASE("Kernel configuration retrieval", "[kernelManager]")
 
     SECTION("Kernel configurations are computed correctly")
     {
-        auto configurations = manager.getKernelConfigurations(id);
+        ktt::DeviceInfo deviceInfo(0, std::string("Device"));
+        deviceInfo.setMaxWorkGroupSize(1024);
+        auto configurations = manager.getKernelConfigurations(id, deviceInfo);
 
         REQUIRE(configurations.size() == 6);
     }

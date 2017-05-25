@@ -34,6 +34,7 @@ public:
     virtual void printComputeApiInfo(std::ostream& outputTarget) const override;
     virtual std::vector<PlatformInfo> getPlatformInfo() const override;
     virtual std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const override;
+    virtual DeviceInfo getCurrentDeviceInfo() const override;
 
     // Compiler options setup
     virtual void setCompilerOptions(const std::string& options) override;
@@ -66,6 +67,7 @@ public:
     virtual void printComputeApiInfo(std::ostream& outputTarget) const override;
     virtual std::vector<PlatformInfo> getPlatformInfo() const override;
     virtual std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const override;
+    virtual DeviceInfo getCurrentDeviceInfo() const override;
 
     // Compiler options setup
     virtual void setCompilerOptions(const std::string& options) override;

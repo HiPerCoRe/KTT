@@ -34,6 +34,7 @@ public:
     virtual void printComputeApiInfo(std::ostream& outputTarget) const = 0;
     virtual std::vector<PlatformInfo> getPlatformInfo() const = 0;
     virtual std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const = 0;
+    virtual DeviceInfo getCurrentDeviceInfo() const = 0;
 };
 
 } // namespace ktt

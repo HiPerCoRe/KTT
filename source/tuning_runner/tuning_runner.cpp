@@ -35,7 +35,7 @@ std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tu
     std::vector<TuningResult> invalidResults;
     Kernel* kernel = kernelManager->getKernel(id);
     std::unique_ptr<Searcher> searcher = getSearcher(kernel->getSearchMethod(), kernel->getSearchArguments(),
-        kernelManager->getKernelConfigurations(id), kernel->getParameters());
+        kernelManager->getKernelConfigurations(id, computeApiDriver->getCurrentDeviceInfo()), kernel->getParameters());
     size_t configurationsCount = searcher->getConfigurationsCount();
 
     for (size_t i = 0; i < configurationsCount; i++)

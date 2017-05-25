@@ -5,6 +5,8 @@ namespace ktt
 {
 
 OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex) :
+    platformIndex(platformIndex),
+    deviceIndex(deviceIndex),
     compilerOptions(std::string("")),
     useReadBufferCache(true),
     useWriteBufferCache(false),
@@ -70,6 +72,11 @@ std::vector<DeviceInfo> OpenclCore::getDeviceInfo(const size_t platformIndex) co
     }
 
     return result;
+}
+
+DeviceInfo OpenclCore::getCurrentDeviceInfo() const
+{
+    return getOpenclDeviceInfo(platformIndex, deviceIndex);
 }
 
 void OpenclCore::setCompilerOptions(const std::string& options)
