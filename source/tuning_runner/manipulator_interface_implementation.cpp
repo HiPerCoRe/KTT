@@ -128,6 +128,12 @@ void ManipulatorInterfaceImplementation::setArgumentSynchronization(const bool f
     {
         synchronizeReadWriteArguments = flag;
     }
+
+    if (flag)
+    {
+        computeApiDriver->clearCache(argumentMemoryType);
+    }
+
     computeApiDriver->setCacheUsage(!flag, argumentMemoryType);
 }
 

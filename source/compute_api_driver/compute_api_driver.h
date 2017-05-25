@@ -28,6 +28,7 @@ public:
     // Argument cache handling
     virtual void setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType) = 0;
     virtual void clearCache() = 0;
+    virtual void clearCache(const ArgumentMemoryType& argumentMemoryType) = 0;
 
     // Info retrieval methods
     virtual void printComputeApiInfo(std::ostream& outputTarget) const = 0;

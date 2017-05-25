@@ -151,7 +151,6 @@ void Tuner::enableArgumentPrinting(const size_t argumentId, const std::string& f
     catch (const std::runtime_error& error)
     {
         tunerCore->log(error.what());
-        throw;
     }
 }
 
@@ -252,7 +251,7 @@ void Tuner::printComputeApiInfo(std::ostream& outputTarget) const
     }
     catch (const std::runtime_error& error)
     {
-        std::cerr << error.what() << std::endl;
+        tunerCore->log(error.what());
     }
 }
 
@@ -264,7 +263,7 @@ std::vector<PlatformInfo> Tuner::getPlatformInfo() const
     }
     catch (const std::runtime_error& error)
     {
-        std::cerr << error.what() << std::endl;
+        tunerCore->log(error.what());
         throw;
     }
 }
@@ -277,7 +276,7 @@ std::vector<DeviceInfo> Tuner::getDeviceInfo(const size_t platformIndex) const
     }
     catch (const std::runtime_error& error)
     {
-        std::cerr << error.what() << std::endl;
+        tunerCore->log(error.what());
         throw;
     }
 }

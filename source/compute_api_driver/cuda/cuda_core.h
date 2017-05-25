@@ -41,6 +41,7 @@ public:
     // Argument cache handling
     virtual void setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
     virtual void clearCache() override;
+    virtual void clearCache(const ArgumentMemoryType& argumentMemoryType) override;
 
     // High-level kernel execution methods
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
@@ -72,6 +73,7 @@ public:
     // Argument cache handling
     virtual void setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
     virtual void clearCache() override;
+    virtual void clearCache(const ArgumentMemoryType& argumentMemoryType) override;
 
     // High-level kernel execution methods
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,

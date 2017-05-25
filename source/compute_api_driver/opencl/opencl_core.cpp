@@ -100,6 +100,23 @@ void OpenclCore::clearCache()
     buffers.clear();
 }
 
+void OpenclCore::clearCache(const ArgumentMemoryType& argumentMemoryType)
+{
+    auto iterator = buffers.cbegin();
+
+    while (iterator != buffers.cend())
+    {
+        if (iterator->get()->getType() == getOpenclMemoryType(argumentMemoryType))
+        {
+            iterator = buffers.erase(iterator);
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
+}
+
 KernelRunResult OpenclCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers)
 {
@@ -343,20 +360,19 @@ bool OpenclCore::loadBufferFromCache(const size_t argumentId, OpenclKernel& kern
 
 void OpenclCore::clearTargetBuffers()
 {
-    auto iterator = buffers.cbegin();
-
-    while (iterator != buffers.cend())
+    if (!useReadBufferCache)
     {
-        if (iterator->get()->getType() == CL_MEM_READ_ONLY && !useReadBufferCache
-            || iterator->get()->getType() == CL_MEM_WRITE_ONLY && !useWriteBufferCache
-            || iterator->get()->getType() == CL_MEM_READ_WRITE && !useReadWriteBufferCache)
-        {
-            iterator = buffers.erase(iterator);
-        }
-        else
-        {
-            ++iterator;
-        }
+        clearCache(ArgumentMemoryType::ReadOnly);
+    }
+
+    if (!useWriteBufferCache)
+    {
+        clearCache(ArgumentMemoryType::WriteOnly);
+    }
+
+    if (!useReadWriteBufferCache)
+    {
+        clearCache(ArgumentMemoryType::ReadWrite);
     }
 }
 

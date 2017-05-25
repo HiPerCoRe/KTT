@@ -122,6 +122,7 @@ This only affects `printResult()` methods. Default time unit is microseconds.
 * `void setInvalidResultPrinting(const bool flag)`:
 Enables or disables printing of results from failed kernel runs based on provided flag.
 Invalid results will be separated from valid results during printing.
+Printing of invalid results is disabled by default.
 
 * `void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const`:
 Prints tuning results for specified kernel to given output stream.
