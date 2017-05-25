@@ -8,7 +8,7 @@
 
 int main(int argc, char** argv)
 {
-    // Initialize platform and device index
+    // Initialize platform index, device index and paths to kernels
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
     auto kernelFile = std::string("../examples/coulomb_sum/coulomb_sum_kernel.cl");
@@ -32,15 +32,15 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
+    const ktt::DimensionVector ndRangeDimensions(512, 512, 1);
+    const ktt::DimensionVector workGroupDimensions(1, 1, 1);
+    const ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
     // Total NDRange size matches number of grid points
-    ktt::DimensionVector ndRangeDimensions(512, 512, 1);
-    ktt::DimensionVector workGroupDimensions(1, 1, 1);
-    ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
+    const size_t numberOfGridPoints = std::get<0>(ndRangeDimensions) * std::get<1>(ndRangeDimensions);
     // Used for generating random test data
     const float upperBoundary = 20.0f; 
     // If higher than 4k, computations with constant memory enabled will be invalid on many devices due to constant memory capacity limit
     const int numberOfAtoms = 4096;
-    const size_t numberOfGridPoints = 512 * 512;
 
     // Declare data variables
     float gridSpacing;
@@ -79,7 +79,6 @@ int main(int argc, char** argv)
     // Add several parameters to tuned kernel, some of them utilize constraint function and thread modifiers
     tuner.addParameter(kernelId, std::string("INNER_UNROLL_FACTOR"), std::vector<size_t>{ 1, 2, 4, 8 });
     tuner.addParameter(kernelId, std::string("USE_CONSTANT_MEMORY"), std::vector<size_t>{ 0, 1 });
-
     tuner.addParameter(kernelId, std::string("VECTOR_TYPE"), std::vector<size_t>{ 1, 2, 4, 8 });
     tuner.addParameter(kernelId, std::string("USE_SOA"), std::vector<size_t>{ 0, 1, 2 });
 

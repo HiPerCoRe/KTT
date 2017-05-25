@@ -3,11 +3,18 @@
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <memory>
+#include <string>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
+#include "../compute_api_driver/compute_api_driver.h"
+#include "../customization/reference_class.h"
 #include "../enum/validation_method.h"
-#include "../kernel_argument/kernel_argument.h"
+#include "../kernel/kernel_manager.h"
+#include "../kernel_argument/argument_manager.h"
+#include "../utility/argument_printer.h"
 #include "../utility/logger.h"
 
 namespace ktt
@@ -17,20 +24,21 @@ class ResultValidator
 {
 public:
     // Constructor
-    ResultValidator(Logger* logger);
+    explicit ResultValidator(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeApiDriver* computeApiDriver);
 
     // Core methods
-    bool validateArgumentWithClass(const size_t kernelId, const std::vector<KernelArgument>& resultArguments) const;
-    bool validateArgumentWithKernel(const size_t kernelId, const std::vector<KernelArgument>& resultArguments) const;
-    void setReferenceClassResult(const size_t kernelId, const std::vector<KernelArgument>& classResult);
-    void setReferenceKernelResult(const size_t kernelId, const std::vector<KernelArgument>& kernelResult);
-    bool hasReferenceClassResult(const size_t kernelId) const;
-    bool hasReferenceKernelResult(const size_t kernelId) const;
-    void clearReferenceResults();
-
-    // Setters
+    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
+        const std::vector<size_t>& resultArgumentIds);
+    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
     void setToleranceThreshold(const double toleranceThreshold);
     void setValidationMethod(const ValidationMethod& validationMethod);
+    void setValidationRange(const size_t argumentId, const size_t validationRange);
+    void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
+    bool validateArgumentWithClass(const Kernel* kernel, const std::vector<KernelArgument>& resultArguments,
+        const KernelConfiguration& kernelConfiguration);
+    bool validateArgumentWithKernel(const Kernel* kernel, const std::vector<KernelArgument>& resultArguments,
+        const KernelConfiguration& kernelConfiguration);
+    void clearReferenceResults();
 
     // Getters
     double getToleranceThreshold() const;
@@ -38,52 +46,67 @@ public:
 
 private:
     // Attributes
+    ArgumentManager* argumentManager;
+    KernelManager* kernelManager;
+    Logger* logger;
+    ComputeApiDriver* computeApiDriver;
+    ArgumentPrinter argumentPrinter;
     double toleranceThreshold;
     ValidationMethod validationMethod;
+    std::map<size_t, size_t> argumentValidationRangeMap;
+    std::map<size_t, std::tuple<std::unique_ptr<ReferenceClass>, std::vector<size_t>>> referenceClassMap;
+    std::map<size_t, std::tuple<size_t, std::vector<ParameterValue>, std::vector<size_t>>> referenceKernelMap;
     std::map<size_t, std::vector<KernelArgument>> referenceClassResultMap;
     std::map<size_t, std::vector<KernelArgument>> referenceKernelResultMap;
-    Logger* logger;
 
     // Helper methods
-    bool validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments) const;
-    KernelArgument findArgument(const size_t argumentId, const std::vector<KernelArgument>& arguments) const;
+    bool validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments,
+        const std::string kernelName, const KernelConfiguration& kernelConfiguration) const;
+    std::vector<const KernelArgument*> getKernelArgumentPointers(const size_t kernelId) const;
 
-    template <typename T> bool validateResult(const std::vector<T>& result, const std::vector<T>& referenceResult) const
+    template <typename T> bool validateResult(const std::vector<T>& result, const std::vector<T>& referenceResult, const size_t argumentId) const
     {
-        if (result.size() != referenceResult.size())
+        auto argumentRangePointer = argumentValidationRangeMap.find(argumentId);
+        if (argumentRangePointer == argumentValidationRangeMap.end() && result.size() != referenceResult.size())
         {
-            logger->log(std::string("Number of elements in results differs, reference size: ") + std::to_string(referenceResult.size())
-                + "; result size: " + std::to_string(result.size()));
+            logger->log(std::string("Number of elements in results differs for argument with id: ") + std::to_string(argumentId)
+                + ", reference size: " + std::to_string(referenceResult.size()) + ", result size: " + std::to_string(result.size()));
             return false;
         }
-        return validateResultInner(result, referenceResult, std::is_floating_point<T>());
+
+        if (argumentRangePointer != argumentValidationRangeMap.end())
+        {
+            return validateResultInner(result, referenceResult, argumentRangePointer->second, argumentId, std::is_floating_point<T>());
+        }
+        return validateResultInner(result, referenceResult, referenceResult.size(), argumentId, std::is_floating_point<T>());
     }
 
-    template <typename T> bool validateResultInner(const std::vector<T>& result, const std::vector<T>& referenceResult,
-        std::true_type) const
+    template <typename T> bool validateResultInner(const std::vector<T>& result, const std::vector<T>& referenceResult, const size_t range,
+        const size_t argumentId, std::true_type) const
     {
         if (validationMethod == ValidationMethod::AbsoluteDifference)
         {
             double difference = 0.0;
-            for (size_t i = 0; i < result.size(); i++)
+            for (size_t i = 0; i < range; i++)
             {
                 difference += std::fabs(result.at(i) - referenceResult.at(i));
             }
             if (difference > toleranceThreshold)
             {
-                logger->log(std::string("Results differ, absolute difference is: ") + std::to_string(difference));
+                logger->log(std::string("Results differ for argument with id: ") + std::to_string(argumentId) + ", absolute difference is: "
+                    + std::to_string(difference));
                 return false;
             }
             return true;
         }
         else
         {
-            for (size_t i = 0; i < result.size(); i++)
+            for (size_t i = 0; i < range; i++)
             {
                 if (std::fabs(result.at(i) - referenceResult.at(i)) > toleranceThreshold)
                 {
-                    logger->log(std::string("Results differ at index ") + std::to_string(i) + "; reference value: "
-                        + std::to_string(referenceResult.at(i)) + "; result value: " + std::to_string(result.at(i)));
+                    logger->log(std::string("Results differ for argument with id: ") + std::to_string(argumentId) + ", index: " + std::to_string(i)
+                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i)));
                     return false;
                 }
             }
@@ -91,15 +114,15 @@ private:
         }
     }
 
-    template <typename T> bool validateResultInner(const std::vector<T>& result, const std::vector<T>& referenceResult,
-        std::false_type) const
+    template <typename T> bool validateResultInner(const std::vector<T>& result, const std::vector<T>& referenceResult, const size_t range,
+        const size_t argumentId, std::false_type) const
     {
-        for (size_t i = 0; i < result.size(); i++)
+        for (size_t i = 0; i < range; i++)
         {
             if (result.at(i) != referenceResult.at(i))
             {
-                logger->log(std::string("Results differ at index ") + std::to_string(i) + "; reference value: "
-                    + std::to_string(referenceResult.at(i)) + "; result value: " + std::to_string(result.at(i)));
+                logger->log(std::string("Results differ for argument with id: ") + std::to_string(argumentId) + ", index: " + std::to_string(i)
+                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i)));
                 return false;
             }
         }

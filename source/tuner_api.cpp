@@ -238,6 +238,18 @@ void Tuner::setValidationMethod(const ValidationMethod& validationMethod, const 
     }
 }
 
+void Tuner::setValidationRange(const size_t argumentId, const size_t validationRange)
+{
+    try
+    {
+        tunerCore->setValidationRange(argumentId, validationRange);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+    }
+}
+
 void Tuner::setCompilerOptions(const std::string& options)
 {
     tunerCore->setCompilerOptions(options);

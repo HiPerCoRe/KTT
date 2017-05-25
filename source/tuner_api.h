@@ -97,6 +97,7 @@ public:
         const std::vector<size_t>& resultArgumentIds);
     void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void setValidationRange(const size_t argumentId, const size_t validationRange);
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);

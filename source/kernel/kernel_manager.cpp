@@ -133,30 +133,6 @@ void KernelManager::setSearchMethod(const size_t id, const SearchMethod& searchM
     kernels.at(id).setSearchMethod(searchMethod, searchArguments);
 }
 
-void KernelManager::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
-    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
-{
-    if (kernelId >= kernelCount)
-    {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
-    }
-    if (referenceKernelId >= kernelCount)
-    {
-        throw std::runtime_error(std::string("Invalid reference kernel id: ") + std::to_string(referenceKernelId));
-    }
-    kernels.at(kernelId).setReferenceKernel(referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
-}
-
-void KernelManager::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
-    const std::vector<size_t>& resultArgumentIds)
-{
-    if (kernelId >= kernelCount)
-    {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
-    }
-    kernels.at(kernelId).setReferenceClass(std::move(referenceClass), resultArgumentIds);
-}
-
 size_t KernelManager::getKernelCount() const
 {
     return kernelCount;

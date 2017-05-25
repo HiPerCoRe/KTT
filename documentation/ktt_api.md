@@ -103,7 +103,7 @@ Returns id assigned to argument by tuner.
 
 * `void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)`:
 Enables printing of specified output argument to specified file.
-It is possible to specify to only print result arguments for kernel configurations that did not successfully pass the validation.
+It is possible to specify whether to print only valid, invalid or all arguments.
 It is not recommended to enable argument printing for very large arguments.
 
 Kernel tuning methods
@@ -149,6 +149,11 @@ Only specified output arguments will be validated.
 Sets validation method and tolerance threshold for floating point arguments.
 Default validation method is side by side comparison. Default tolerance threshold is 1e-4.
 
+* `void setValidationRange(const size_t argumentId, const size_t validationRange)`:
+Sets validation range for specified argument to given validation range.
+Only elements within validation range, starting with first element, will be validated.
+By default, all elements of an argument are validated.
+
 Utility methods
 ---------------
 
@@ -177,19 +182,9 @@ Inheriting class must provide implementation for this method.
 Returns pointer to buffer containing reference result for specified validated argument.
 This method will only be called after running `computeResult()`.
 
-* `ArgumentDataType getDataType(const size_t argumentId) const`:
-Inheriting class must provide implementation for this method.
-Returns data type of specified validated argument.
-This method will only be called after running `computeResult()`.
-
 * `size_t getNumberOfElements(const size_t argumentId) const`:
 Inheriting class must provide implementation for this method.
 Returns number of elements returned by `getData()` method for specified validated argument.
-This method will only be called after running `computeResult()`.
-
-* `size_t getElementSizeInBytes(const size_t argumentId) const`:
-Inheriting class must provide implementation for this method.
-Returns size of a single element (in bytes) returned by `getData()` method for specified validated argument.
 This method will only be called after running `computeResult()`.
 
 Tuning manipulator usage

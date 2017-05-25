@@ -19,8 +19,7 @@ TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kern
     kernelManager(kernelManager),
     logger(logger),
     computeApiDriver(computeApiDriver),
-    resultValidator(logger),
-    argumentPrinter(logger),
+    resultValidator(argumentManager, kernelManager, logger, computeApiDriver),
     manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeApiDriver))
 {}
 
@@ -57,7 +56,7 @@ std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tu
         }
 
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration() + manipulatorDuration));
-        if (processResult(kernel, result, manipulatorDuration, currentConfiguration))
+        if (validateResult(kernel, result, manipulatorDuration, currentConfiguration))
         {
             results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), manipulatorDuration, currentConfiguration));
         }
@@ -78,6 +77,23 @@ void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod,
     resultValidator.setToleranceThreshold(toleranceThreshold);
 }
 
+void TuningRunner::setValidationRange(const size_t argumentId, const size_t validationRange)
+{
+    resultValidator.setValidationRange(argumentId, validationRange);
+}
+
+void TuningRunner::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
+    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
+{
+    resultValidator.setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
+}
+
+void TuningRunner::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
+    const std::vector<size_t>& resultArgumentIds)
+{
+    resultValidator.setReferenceClass(kernelId, std::move(referenceClass), resultArgumentIds);
+}
+
 void TuningRunner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
 {
     if (manipulatorMap.find(kernelId) != manipulatorMap.end())
@@ -89,7 +105,7 @@ void TuningRunner::setTuningManipulator(const size_t kernelId, std::unique_ptr<T
 
 void TuningRunner::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
 {
-    argumentPrinter.setArgumentPrintData(argumentId, filePath, argumentPrintCondition);
+    resultValidator.enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
 }
 
 std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, const KernelConfiguration& currentConfiguration,
@@ -101,15 +117,16 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, con
     std::string source = kernelManager->getKernelSourceWithDefines(kernelId, currentConfiguration);
     std::stringstream stream;
 
-    if (manipulatorMap.find(kernelId) != manipulatorMap.end())
+    auto manipulatorPointer = manipulatorMap.find(kernelId);
+    if (manipulatorPointer != manipulatorMap.end())
     {
         stream << "Launching kernel <" << kernelName << "> (manipulator detected) with configuration (" << currentConfigurationIndex + 1 << " / "
             << configurationsCount << "): " << currentConfiguration;
         logger->log(stream.str());
         auto kernelDataVector = getKernelDataVector(kernelId, KernelRuntimeData(kernelName, source, currentConfiguration.getGlobalSize(),
-            currentConfiguration.getLocalSize(), kernel->getArgumentIndices()), manipulatorMap.find(kernelId)->second->getUtilizedKernelIds(),
+            currentConfiguration.getLocalSize(), kernel->getArgumentIndices()), manipulatorPointer->second->getUtilizedKernelIds(),
             currentConfiguration);
-        return runKernelWithManipulator(manipulatorMap.find(kernelId)->second.get(), kernelDataVector, currentConfiguration);
+        return runKernelWithManipulator(manipulatorPointer->second.get(), kernelDataVector, currentConfiguration);
     }
 
     stream << "Launching kernel <" << kernelName << "> with configuration (" << currentConfigurationIndex + 1  << " / " << configurationsCount
@@ -240,7 +257,7 @@ std::vector<std::pair<size_t, KernelRuntimeData>> TuningRunner::getKernelDataVec
     return result;
 }
 
-bool TuningRunner::processResult(const Kernel* kernel, const KernelRunResult& result, const uint64_t manipulatorDuration,
+bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& result, const uint64_t manipulatorDuration,
     const KernelConfiguration& kernelConfiguration)
 {
     if (!result.isValid())
@@ -248,11 +265,8 @@ bool TuningRunner::processResult(const Kernel* kernel, const KernelRunResult& re
         return false;
     }
 
-    bool resultIsCorrect = true;
-    if (kernel->hasReferenceClass() || kernel->hasReferenceKernel())
-    {
-        resultIsCorrect = validateResult(kernel, result);
-    }
+    bool resultIsCorrect = resultValidator.validateArgumentWithClass(kernel, result.getResultArguments(), kernelConfiguration);
+    resultIsCorrect &= resultValidator.validateArgumentWithKernel(kernel, result.getResultArguments(), kernelConfiguration);
 
     if (resultIsCorrect)
     {
@@ -264,156 +278,7 @@ bool TuningRunner::processResult(const Kernel* kernel, const KernelRunResult& re
         logger->log("Kernel run completed successfully, but results differ\n");
     }
 
-    for (const auto& argument : result.getResultArguments())
-    {
-        if (argumentPrinter.argumentPrintDataExists(argument.getId()))
-        {
-            argumentPrinter.printArgument(argument, kernel->getName(), kernelConfiguration, resultIsCorrect);
-        }
-    }
-
     return resultIsCorrect;
-}
-
-bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& result)
-{
-    bool validationResult = true;
-
-    if (kernel->hasReferenceClass())
-    {
-        validationResult &= validateResult(kernel, result, true);
-    }
-
-    if (kernel->hasReferenceKernel())
-    {
-        validationResult &= validateResult(kernel, result, false);
-    }
-
-    return validationResult;
-}
-
-bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& result, bool useReferenceClass)
-{
-    std::vector<size_t> indices = kernel->getArgumentIndices();
-    std::vector<size_t> referenceIndices;
-    if (useReferenceClass)
-    {
-        referenceIndices = kernel->getReferenceClassArgumentIds();
-    }
-    else
-    {
-        referenceIndices = kernel->getReferenceKernelArgumentIds();
-    }
-
-    for (const auto argumentId : referenceIndices)
-    {
-        if (!elementExists(argumentId, indices))
-        {
-            throw std::runtime_error(std::string("Reference argument with following id is not associated with given kernel: ")
-                + std::to_string(argumentId));
-        }
-
-        if (argumentManager->getArgument(argumentId).getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
-        {
-            throw std::runtime_error(std::string("Reference argument with following id is marked as read only: ") + std::to_string(argumentId));
-        }
-    }
-
-    if (useReferenceClass && !resultValidator.hasReferenceClassResult(kernel->getId()))
-    {
-        std::vector<KernelArgument> referenceClassResult = getReferenceResultFromClass(kernel->getReferenceClass(), referenceIndices);
-        if (referenceClassResult.size() != referenceIndices.size())
-        {
-            throw std::runtime_error(std::string("Reference class argument count does not match tuned kernel argument count for kernel with id: ")
-                + std::to_string(kernel->getId()));
-        }
-        resultValidator.setReferenceClassResult(kernel->getId(), referenceClassResult);
-    }
-    else if (!useReferenceClass && !resultValidator.hasReferenceKernelResult(kernel->getId()))
-    {
-        size_t referenceKernelId = kernel->getReferenceKernelId();
-        std::vector<KernelArgument> referenceKernelResult = getReferenceResultFromKernel(referenceKernelId,
-            kernel->getReferenceKernelConfiguration(), referenceIndices);
-        if (referenceKernelResult.size() != referenceIndices.size())
-        {
-            throw std::runtime_error(std::string("Reference kernel argument count does not match tuned kernel argument count for kernel with id: ")
-                + std::to_string(kernel->getId()));
-        }
-        resultValidator.setReferenceKernelResult(kernel->getId(), referenceKernelResult);
-    }
-
-    std::vector<size_t> argumentIndicesInResult;
-    const auto& resultArguments = result.getResultArguments();
-
-    for (size_t i = 0; i < resultArguments.size(); i++)
-    {
-        if (elementExists(resultArguments.at(i).getId(), referenceIndices))
-        {
-            argumentIndicesInResult.push_back(i);
-        }
-    }
-
-    std::vector<KernelArgument> argumentsToValidate;
-    for (const auto index : argumentIndicesInResult)
-    {
-        argumentsToValidate.push_back(resultArguments.at(index));
-    }
-
-    if (useReferenceClass)
-    {
-        return resultValidator.validateArgumentWithClass(kernel->getId(), argumentsToValidate);
-    }
-    return resultValidator.validateArgumentWithKernel(kernel->getId(), argumentsToValidate);
-}
-
-std::vector<KernelArgument> TuningRunner::getReferenceResultFromClass(const ReferenceClass* referenceClass,
-    const std::vector<size_t>& referenceArgumentIndices) const
-{
-    std::vector<KernelArgument> resultArguments;
-
-    for (const auto referenceArgumentId : referenceArgumentIndices)
-    {
-        size_t numberOfElements = referenceClass->getNumberOfElements(referenceArgumentId);
-        if (numberOfElements == 0)
-        {
-            throw std::runtime_error(std::string("Data provided by reference class for argument with following id is empty: ")
-                + std::to_string(referenceArgumentId));
-        }
-        size_t elementSize = referenceClass->getElementSizeInBytes(referenceArgumentId);
-        if (elementSize == 0)
-        {
-            throw std::runtime_error(std::string("Invalid element size provided by reference class for argument with following id: ")
-                + std::to_string(referenceArgumentId));
-        }
-        ArgumentDataType dataType = referenceClass->getDataType(referenceArgumentId);
-
-        resultArguments.emplace_back(KernelArgument(referenceArgumentId, referenceClass->getData(referenceArgumentId), numberOfElements, dataType,
-            ArgumentMemoryType::ReadWrite, ArgumentUploadType::Vector));
-    }
-    
-    return resultArguments;
-}
-
-std::vector<KernelArgument> TuningRunner::getReferenceResultFromKernel(const size_t referenceKernelId,
-    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& referenceArgumentIndices) const
-{
-    const Kernel* referenceKernel = kernelManager->getKernel(referenceKernelId);
-    KernelConfiguration configuration = kernelManager->getKernelConfiguration(referenceKernelId, referenceKernelConfiguration);
-    std::string source = kernelManager->getKernelSourceWithDefines(referenceKernelId, configuration);
-
-    auto result = computeApiDriver->runKernel(source, referenceKernel->getName(), convertDimensionVector(configuration.getGlobalSize()),
-        convertDimensionVector(configuration.getLocalSize()), getKernelArgumentPointers(referenceKernelId));
-    std::vector<KernelArgument> resultArguments;
-
-    for (const auto& argument : result.getResultArguments())
-    {
-        if (elementExists(argument.getId(), referenceArgumentIndices))
-        {
-            resultArguments.push_back(argument);
-        }
-    }
-
-    return resultArguments;
 }
 
 } // namespace ktt

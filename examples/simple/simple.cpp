@@ -33,19 +33,9 @@ public:
         throw std::runtime_error("No result available for specified argument id");
     }
 
-    virtual ktt::ArgumentDataType getDataType(const size_t) const override
-    {
-        return ktt::ArgumentDataType::Float;
-    }
-
-    virtual size_t getNumberOfElements(const size_t) const override
+    virtual size_t getNumberOfElements(const size_t argumentId) const override
     {
         return result.size();
-    }
-
-    virtual size_t getElementSizeInBytes(const size_t) const override
-    {
-        return sizeof(float);
     }
 
 private:
@@ -57,7 +47,7 @@ private:
 
 int main(int argc, char** argv)
 {
-    // Initialize platform and device index
+    // Initialize platform index, device index and path to kernel
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
     auto kernelFile = std::string("../examples/simple/simple_kernel.cl");
@@ -77,8 +67,8 @@ int main(int argc, char** argv)
 
     // Declare kernel parameters
     const size_t numberOfElements = 1024 * 1024;
-    ktt::DimensionVector ndRangeDimensions(numberOfElements, 1, 1);
-    ktt::DimensionVector workGroupDimensions(256, 1, 1);
+    const ktt::DimensionVector ndRangeDimensions(numberOfElements, 1, 1);
+    const ktt::DimensionVector workGroupDimensions(256, 1, 1);
 
     // Declare data variables
     std::vector<float> a(numberOfElements);

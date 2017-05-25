@@ -6,9 +6,11 @@
 
 int main(int argc, char** argv)
 {
-    // Initialize platform and device index
+    // Initialize platform index, device index and paths to kernels
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
+    auto kernelFile = std::string("../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl");
+    auto referenceKernelFile = std::string("../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl");
 
     if (argc >= 2)
     {
@@ -16,18 +18,23 @@ int main(int argc, char** argv)
         if (argc >= 3)
         {
             deviceIndex = std::stoul(std::string{ argv[2] });
+            if (argc >= 4)
+            {
+                kernelFile = std::string{ argv[3] };
+                if (argc >= 5)
+                {
+                    referenceKernelFile = std::string{ argv[4] };
+                }
+            }
         }
     }
 
     // Declare kernel parameters
-    const std::string kernelFile = std::string("../examples/coulomb_sum_3d/coulomb_kernel_3d.cl");
-    const std::string referenceKernelFile = std::string("../examples/coulomb_sum_3d/coulomb_kernel_3d_reference.cl");
     const int gridSize = 128;
     const int atoms = 4000;
-
-    ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
-    ktt::DimensionVector workGroupDimensions(1, 1, 1);
-    ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
+    const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
+    const ktt::DimensionVector workGroupDimensions(1, 1, 1);
+    const ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
 
     // Declare data variables
     float gridSpacing;
@@ -55,7 +62,8 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
     size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("directCoulombSum"), ndRangeDimensions, workGroupDimensions);
-    size_t referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("directCoulombSumReference"), ndRangeDimensions, referenceWorkGroupDimensions);
+    size_t referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("directCoulombSumReference"), ndRangeDimensions,
+        referenceWorkGroupDimensions);
 
     size_t aiId = tuner.addArgument(atomInfo, ktt::ArgumentMemoryType::ReadOnly);
     size_t aixId = tuner.addArgument(atomInfoX, ktt::ArgumentMemoryType::ReadOnly);
@@ -91,7 +99,7 @@ int main(int argc, char** argv)
     tuner.addConstraint(kernelId, vec, { "USE_SOA", "VECTOR_SIZE" } );
 
     tuner.setKernelArguments(kernelId, std::vector<size_t>{ aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId });
-    tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId });
+    tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ aiId, aId, gsId, gridId });
 
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ gridId });
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.1);

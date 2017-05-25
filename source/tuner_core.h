@@ -31,10 +31,6 @@ public:
         const std::vector<std::string>& parameterNames);
     void setKernelArguments(const size_t id, const std::vector<size_t>& argumentIndices);
     void setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
-    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
-        const std::vector<size_t>& resultArgumentIds);
-    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
-    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Argument manager methods
     size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
@@ -43,6 +39,11 @@ public:
     // Tuning runner methods
     void tuneKernel(const size_t id);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void setValidationRange(const size_t argumentId, const size_t validationRange);
+    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
+        const std::vector<size_t>& resultArgumentIds);
+    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
+    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Result printer methods
