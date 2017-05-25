@@ -183,7 +183,7 @@ Returns pointer to buffer containing reference result for specified validated ar
 This method will only be called after running `computeResult()`.
 
 * `size_t getNumberOfElements(const size_t argumentId) const`:
-Inheriting class must provide implementation for this method.
+Inheriting class can override this method, which is useful in conjuction with `setValidationRange()` method.
 Returns number of elements returned by `getData()` method for specified validated argument.
 This method will only be called after running `computeResult()`.
 

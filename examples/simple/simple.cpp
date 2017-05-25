@@ -33,11 +33,6 @@ public:
         throw std::runtime_error("No result available for specified argument id");
     }
 
-    virtual size_t getNumberOfElements(const size_t argumentId) const override
-    {
-        return result.size();
-    }
-
 private:
     std::vector<float> a;
     std::vector<float> b;

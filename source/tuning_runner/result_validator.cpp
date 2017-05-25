@@ -100,10 +100,16 @@ bool ResultValidator::validateArgumentWithClass(const Kernel* kernel, const std:
 
         for (const auto referenceArgumentId : referenceArgumentIndices)
         {
+            size_t numberOfElements = referenceClass->getNumberOfElements(referenceArgumentId);
             const auto& argument = argumentManager->getArgument(referenceArgumentId);
+
+            if (numberOfElements == 0)
+            {
+                numberOfElements = argument.getNumberOfElements();
+            }
+
             referenceResult.emplace_back(KernelArgument(referenceArgumentId, referenceClass->getData(referenceArgumentId),
-                referenceClass->getNumberOfElements(referenceArgumentId), argument.getArgumentDataType(), argument.getArgumentMemoryType(),
-                argument.getArgumentUploadType()));
+                numberOfElements, argument.getArgumentDataType(), argument.getArgumentMemoryType(), argument.getArgumentUploadType()));
         }
         referenceClassResultMap.insert(std::make_pair(kernelId, referenceResult));
     }
