@@ -157,15 +157,6 @@ void KernelManager::setReferenceClass(const size_t kernelId, std::unique_ptr<Ref
     kernels.at(kernelId).setReferenceClass(std::move(referenceClass), resultArgumentIds);
 }
 
-void KernelManager::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
-{
-    if (kernelId >= kernelCount)
-    {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
-    }
-    kernels.at(kernelId).setTuningManipulator(std::move(tuningManipulator));
-}
-
 size_t KernelManager::getKernelCount() const
 {
     return kernelCount;

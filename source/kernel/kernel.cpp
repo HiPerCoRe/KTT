@@ -13,8 +13,7 @@ Kernel::Kernel(const size_t id, const std::string& source, const std::string& na
     localSize(localSize),
     searchMethod(SearchMethod::FullSearch),
     referenceKernelValid(false),
-    referenceClassValid(false),
-    tuningManipulatorValid(false)
+    referenceClassValid(false)
 {}
 
 void Kernel::addParameter(const KernelParameter& parameter)
@@ -74,12 +73,6 @@ void Kernel::setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, c
     this->referenceClassArgumentIds = resultArgumentIds;
     referenceClassValid = true;
     this->referenceClass->computeResult();
-}
-
-void Kernel::setTuningManipulator(std::unique_ptr<TuningManipulator> tuningManipulator)
-{
-    this->tuningManipulator = std::move(tuningManipulator);
-    tuningManipulatorValid = true;
 }
 
 size_t Kernel::getId() const
@@ -170,21 +163,6 @@ const ReferenceClass* Kernel::getReferenceClass() const
 std::vector<size_t> Kernel::getReferenceClassArgumentIds() const
 {
     return referenceClassArgumentIds;
-}
-
-bool Kernel::hasTuningManipulator() const
-{
-    return tuningManipulatorValid;
-}
-
-const TuningManipulator* Kernel::getTuningManipulator() const
-{
-    return tuningManipulator.get();
-}
-
-TuningManipulator* Kernel::getTuningManipulator()
-{
-    return tuningManipulator.get();
 }
 
 bool Kernel::parameterExists(const std::string& parameterName) const

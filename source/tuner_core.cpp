@@ -80,7 +80,11 @@ void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<Referen
 
 void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
 {
-    kernelManager->setTuningManipulator(kernelId, std::move(tuningManipulator));
+    if (kernelId > kernelManager->getKernelCount())
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
+    }
+    tuningRunner->setTuningManipulator(kernelId, std::move(tuningManipulator));
 }
 
 size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -8,6 +9,7 @@
 #include "result_validator.h"
 #include "searcher/searcher.h"
 #include "../compute_api_driver/compute_api_driver.h"
+#include "../customization/tuning_manipulator.h"
 #include "../dto/tuning_result.h"
 #include "../kernel/kernel_manager.h"
 #include "../kernel_argument/argument_manager.h"
@@ -26,6 +28,7 @@ public:
     // Core methods
     std::pair<std::vector<TuningResult>, std::vector<TuningResult>> tuneKernel(const size_t id);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
 private:
@@ -36,6 +39,7 @@ private:
     ComputeApiDriver* computeApiDriver;
     ResultValidator resultValidator;
     ArgumentPrinter argumentPrinter;
+    std::map<size_t, std::unique_ptr<TuningManipulator>> manipulatorMap;
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
 
     // Helper methods

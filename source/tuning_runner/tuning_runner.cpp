@@ -78,6 +78,15 @@ void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod,
     resultValidator.setToleranceThreshold(toleranceThreshold);
 }
 
+void TuningRunner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
+{
+    if (manipulatorMap.find(kernelId) != manipulatorMap.end())
+    {
+        manipulatorMap.erase(kernelId);
+    }
+    manipulatorMap.insert(std::make_pair(kernelId, std::move(tuningManipulator)));
+}
+
 void TuningRunner::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
 {
     argumentPrinter.setArgumentPrintData(argumentId, filePath, argumentPrintCondition);
@@ -92,15 +101,15 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, con
     std::string source = kernelManager->getKernelSourceWithDefines(kernelId, currentConfiguration);
     std::stringstream stream;
 
-    if (kernel->hasTuningManipulator())
+    if (manipulatorMap.find(kernelId) != manipulatorMap.end())
     {
-        stream << "Launching kernel <" << kernelName << "> (custom manipulator detected) with configuration (" << currentConfigurationIndex + 1
-            << " / " << configurationsCount << "): " << currentConfiguration;
+        stream << "Launching kernel <" << kernelName << "> (manipulator detected) with configuration (" << currentConfigurationIndex + 1 << " / "
+            << configurationsCount << "): " << currentConfiguration;
         logger->log(stream.str());
         auto kernelDataVector = getKernelDataVector(kernelId, KernelRuntimeData(kernelName, source, currentConfiguration.getGlobalSize(),
-            currentConfiguration.getLocalSize(), kernel->getArgumentIndices()), kernel->getTuningManipulator()->getUtilizedKernelIds(),
+            currentConfiguration.getLocalSize(), kernel->getArgumentIndices()), manipulatorMap.find(kernelId)->second->getUtilizedKernelIds(),
             currentConfiguration);
-        return runKernelWithManipulator(kernel->getTuningManipulator(), kernelDataVector, currentConfiguration);
+        return runKernelWithManipulator(manipulatorMap.find(kernelId)->second.get(), kernelDataVector, currentConfiguration);
     }
 
     stream << "Launching kernel <" << kernelName << "> with configuration (" << currentConfigurationIndex + 1  << " / " << configurationsCount
