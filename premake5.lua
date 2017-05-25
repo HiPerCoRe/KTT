@@ -86,16 +86,28 @@ end
 
 newoption
 {
-   trigger     = "cuda",
+   trigger = "outdir",
+   value = "path",
+   description = "Specifies output directory for generated files"
+}
+
+newoption
+{
+   trigger = "cuda",
    description = "Enables usage of CUDA API in addition to OpenCL (Nvidia platform only)"
 }
 
 -- Project configuration
 
 workspace "KernelTuningToolkit"
+    local buildPath = "build"
+    if _OPTIONS["outdir"] then
+        buildPath = _OPTIONS["outdir"]
+    end
+    
     configurations { "Debug", "Release" }
     platforms { "x86", "x86_64" }
-    location "build"
+    location (buildPath)
     language "C++"
     flags { "C++14" }
     
@@ -121,8 +133,8 @@ project "KernelTuningToolkit"
     files { "source/**.h", "source/**.cpp" }
     includedirs { "source/**" }
     
-    targetdir("build/ktt/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/ktt/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    targetdir(buildPath .. "/ktt/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir(buildPath .. "/ktt/%{cfg.platform}_%{cfg.buildcfg}/obj")
     
     local libraries = findLibraries()
     if not libraries then
@@ -139,10 +151,8 @@ project "ExampleSimple"
     
     links { "KernelTuningToolkit" }
     
-    targetdir("build/examples/simple/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/examples/simple/obj/%{cfg.platform}_%{cfg.buildcfg}")
-    
-    findLibraries()
+    targetdir(buildPath .. "/examples/simple/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir(buildPath .. "/examples/simple/%{cfg.platform}_%{cfg.buildcfg}/obj")
 
 project "ExampleOpenCLInfo"
     kind "ConsoleApp"
@@ -152,10 +162,8 @@ project "ExampleOpenCLInfo"
     
     links { "KernelTuningToolkit" }
     
-    targetdir("build/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/examples/opencl_info/obj/%{cfg.platform}_%{cfg.buildcfg}")
-   
-    findLibraries()
+    targetdir(buildPath .. "/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir(buildPath .. "/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}/obj")
 
 project "ExampleCoulombSum"
     kind "ConsoleApp"
@@ -165,10 +173,8 @@ project "ExampleCoulombSum"
     
     links { "KernelTuningToolkit" }
     
-    targetdir("build/examples/coulomb_sum/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/examples/coulomb_sum/obj/%{cfg.platform}_%{cfg.buildcfg}")
-   
-    findLibraries()
+    targetdir(buildPath .. "/examples/coulomb_sum/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir(buildPath .. "/examples/coulomb_sum/%{cfg.platform}_%{cfg.buildcfg}/obj")
 
 project "ExampleCoulombSum3D"
     kind "ConsoleApp"
@@ -178,10 +184,8 @@ project "ExampleCoulombSum3D"
 
     links { "KernelTuningToolkit" }
 
-    targetdir("build/examples/coulomb_sum_3d/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/examples/coulomb_sum_3d/obj/%{cfg.platform}_%{cfg.buildcfg}")
-
-    findLibraries()
+    targetdir(buildPath .. "/examples/coulomb_sum_3d/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir(buildPath .. "/examples/coulomb_sum_3d/%{cfg.platform}_%{cfg.buildcfg}/obj")
     
 -- Unit tests configuration   
     
@@ -194,7 +198,7 @@ project "Tests"
     links { "KernelTuningToolkit" }
     defines { "CATCH_CPP11_OR_GREATER" }
     
-    targetdir("build/tests/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/tests/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    targetdir(buildPath .. "/tests/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir(buildPath .. "/tests/%{cfg.platform}_%{cfg.buildcfg}/obj")
     
     findLibraries()
