@@ -14,9 +14,7 @@
 #include "opencl_platform.h"
 #include "opencl_program.h"
 #include "../compute_api_driver.h"
-#include "../../dto/device_info.h"
 #include "../../dto/kernel_run_result.h"
-#include "../../dto/platform_info.h"
 #include "../../kernel_argument/kernel_argument.h"
 
 namespace ktt

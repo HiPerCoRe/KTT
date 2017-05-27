@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "../source/dto/device_info.h"
+#include "../source/api/device_info.h"
 #include "../source/kernel/kernel_manager.h"
 
 TEST_CASE("Kernel handling operations", "[kernelManager]")

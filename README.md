@@ -26,7 +26,7 @@ The prerequisites to build KTT are:
 Building KTT
 ------------
 
-KTT can be built as a static library using command line build tool Premake.
+KTT can be built as a dynamic (shared) library using command line build tool Premake.
 Currently supported operating systems are Linux and Windows.
 
 * Build under Linux (inside KTT root folder):
@@ -61,3 +61,4 @@ Tests
 
 Basic unit tests are located inside tests folder and are built together with the library.
 These can be run to ensure that library methods work correctly on the current platform.
+In order to enable unit tests compilation, use corresponding Premake argument, eg. `premake5 --tests gmake`.

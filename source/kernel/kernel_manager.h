@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "../dto/device_info.h"
+#include "../api/device_info.h"
 #include "../enum/dimension_vector_type.h"
 #include "kernel.h"
 #include "kernel_configuration.h"

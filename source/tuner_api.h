@@ -1,5 +1,16 @@
 #pragma once
 
+#if defined(_WIN32) && !defined(KTT_TESTS)
+    #pragma warning(disable : 4251)
+    #if defined(KTT_LIBRARY)
+        #define KTT_API __declspec(dllexport)
+    #else
+        #define KTT_API __declspec(dllimport)
+    #endif // KTT_LIBRARY
+#else
+    #define KTT_API
+#endif // _WIN32
+
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -24,14 +35,14 @@
 #include "enum/validation_method.h"
 
 // Information about platforms and devices
-#include "dto/device_info.h"
-#include "dto/platform_info.h"
+#include "api/device_info.h"
+#include "api/platform_info.h"
 
 // Reference class interface
-#include "customization/reference_class.h"
+#include "api/reference_class.h"
 
 // Tuning manipulator interface
-#include "customization/tuning_manipulator.h"
+#include "api/tuning_manipulator.h"
 
 // Support for 16-bit floating point data type
 #include "half.hpp"
@@ -42,7 +53,7 @@ namespace ktt
 
 class TunerCore; // Forward declaration of TunerCore class
 
-class Tuner
+class KTT_API Tuner
 {
 public:
     // Constructor and destructor

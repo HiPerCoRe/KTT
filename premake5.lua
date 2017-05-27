@@ -1,4 +1,4 @@
--- Helper functions to find compute API headers and libraries
+-- Helper function to find compute API headers and libraries
 
 function findLibraries()
     local path = os.getenv("INTELOCLSDKROOT")
@@ -97,6 +97,18 @@ newoption
    description = "Enables usage of CUDA API in addition to OpenCL (Nvidia platform only)"
 }
 
+newoption
+{
+   trigger = "tests",
+   description = "Enables compilation of supplied unit tests"
+}
+
+newoption
+{
+   trigger = "disable-examples",
+   description = "Disables compilation of supplied examples"
+}
+
 -- Project configuration
 
 workspace "KernelTuningToolkit"
@@ -127,14 +139,15 @@ workspace "KernelTuningToolkit"
     
     filter {}
     
+    targetdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}/obj")
+    
 project "KernelTuningToolkit"
-    kind "StaticLib"
+    kind "SharedLib"
     
-    files { "source/**.h", "source/**.cpp" }
+    files { "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "source/**" }
-    
-    targetdir(buildPath .. "/ktt/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir(buildPath .. "/ktt/%{cfg.platform}_%{cfg.buildcfg}/obj")
+    defines { "KTT_LIBRARY" }
     
     local libraries = findLibraries()
     if not libraries then
@@ -144,61 +157,60 @@ project "KernelTuningToolkit"
 -- Examples configuration 
 
 project "ExampleSimple"
-    kind "ConsoleApp"
+    if not _OPTIONS["disable-examples"] then
+        kind "ConsoleApp"
+    else
+        kind "None"
+    end
     
     files { "examples/simple/*.cpp", "examples/simple/*.cl" }
     includedirs { "include/**" }
-    
     links { "KernelTuningToolkit" }
-    
-    targetdir(buildPath .. "/examples/simple/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir(buildPath .. "/examples/simple/%{cfg.platform}_%{cfg.buildcfg}/obj")
 
 project "ExampleOpenCLInfo"
-    kind "ConsoleApp"
+    if not _OPTIONS["disable-examples"] then
+        kind "ConsoleApp"
+    else
+        kind "None"
+    end
     
     files { "examples/opencl_info/*.cpp" }
     includedirs { "include/**" }
-    
     links { "KernelTuningToolkit" }
-    
-    targetdir(buildPath .. "/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir(buildPath .. "/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}/obj")
 
 project "ExampleCoulombSum"
-    kind "ConsoleApp"
+    if not _OPTIONS["disable-examples"] then
+        kind "ConsoleApp"
+    else
+        kind "None"
+    end
     
     files { "examples/coulomb_sum/*.cpp", "examples/coulomb_sum/*.cl" }
     includedirs { "include/**" }
-    
     links { "KernelTuningToolkit" }
-    
-    targetdir(buildPath .. "/examples/coulomb_sum/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir(buildPath .. "/examples/coulomb_sum/%{cfg.platform}_%{cfg.buildcfg}/obj")
 
 project "ExampleCoulombSum3D"
-    kind "ConsoleApp"
+    if not _OPTIONS["disable-examples"] then
+        kind "ConsoleApp"
+    else
+        kind "None"
+    end
 
     files { "examples/coulomb_sum_3d/*.cpp", "examples/coulomb_sum_3d/*.cl" }
     includedirs { "include/**" }
-
     links { "KernelTuningToolkit" }
-
-    targetdir(buildPath .. "/examples/coulomb_sum_3d/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir(buildPath .. "/examples/coulomb_sum_3d/%{cfg.platform}_%{cfg.buildcfg}/obj")
     
 -- Unit tests configuration   
     
 project "Tests"
-    kind "ConsoleApp"
+    if _OPTIONS["tests"] then
+        kind "ConsoleApp"
+    else
+        kind "None"
+    end
     
-    files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl" }
-    includedirs { "include/**", "tests/**" }
-    
-    links { "KernelTuningToolkit" }
-    defines { "CATCH_CPP11_OR_GREATER" }
-    
-    targetdir(buildPath .. "/tests/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir(buildPath .. "/tests/%{cfg.platform}_%{cfg.buildcfg}/obj")
+    files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl", "source/**.h", "source/**.hpp", "source/**.cpp" }
+    includedirs { "tests/**", "source/**" }
+    defines { "KTT_TESTS", "CATCH_CPP11_OR_GREATER" }
     
     findLibraries()

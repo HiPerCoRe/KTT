@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "../dto/device_info.h"
+#include "../api/device_info.h"
+#include "../api/platform_info.h"
 #include "../dto/kernel_run_result.h"
-#include "../dto/platform_info.h"
 #include "../kernel_argument/kernel_argument.h"
 
 namespace ktt
