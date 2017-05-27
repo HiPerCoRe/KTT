@@ -27,21 +27,21 @@ public:
     explicit OpenclCore(const size_t platformIndex, const size_t deviceIndex);
 
     // Platform and device retrieval methods
-    virtual void printComputeApiInfo(std::ostream& outputTarget) const override;
-    virtual std::vector<PlatformInfo> getPlatformInfo() const override;
-    virtual std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const override;
-    virtual DeviceInfo getCurrentDeviceInfo() const override;
+    void printComputeApiInfo(std::ostream& outputTarget) const override;
+    std::vector<PlatformInfo> getPlatformInfo() const override;
+    std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const override;
+    DeviceInfo getCurrentDeviceInfo() const override;
 
     // Compiler options setup
-    virtual void setCompilerOptions(const std::string& options) override;
+    void setCompilerOptions(const std::string& options) override;
 
     // Argument cache handling
-    virtual void setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
-    virtual void clearCache() override;
-    virtual void clearCache(const ArgumentMemoryType& argumentMemoryType) override;
+    void setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
+    void clearCache() override;
+    void clearCache(const ArgumentMemoryType& argumentMemoryType) override;
 
     // High-level kernel execution methods
-    virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
+    KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
         const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) override;
 
     // Low-level kernel execution methods

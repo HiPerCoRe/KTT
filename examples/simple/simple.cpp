@@ -16,7 +16,7 @@ public:
         resultArgumentId(resultArgumentId)
     {}
 
-    virtual void computeResult() override
+    void computeResult() override
     {
         for (size_t i = 0; i < result.size(); i++)
         {
@@ -24,7 +24,7 @@ public:
         }
     }
 
-    virtual const void* getData(const size_t argumentId) const override
+    const void* getData(const size_t argumentId) const override
     {
         if (argumentId == resultArgumentId)
         {

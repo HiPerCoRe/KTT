@@ -18,19 +18,18 @@ public:
     explicit ManipulatorInterfaceImplementation(ComputeApiDriver* computeApiDriver);
 
     // Inherited methods
-    virtual std::vector<ResultArgument> runKernel(const size_t kernelId) override;
-    virtual std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize,
-        const DimensionVector& localSize) override;
-    virtual DimensionVector getCurrentGlobalSize(const size_t kernelId) const override;
-    virtual DimensionVector getCurrentLocalSize(const size_t kernelId) const override;
-    virtual std::vector<ParameterValue> getCurrentConfiguration() const override;
-    virtual void updateArgumentScalar(const size_t argumentId, const void* argumentData) override;
-    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData) override;
-    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements) override;
-    virtual void setAutomaticArgumentUpdate(const bool flag) override;
-    virtual void setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
-    virtual void updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds) override;
-    virtual void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond) override;
+    std::vector<ResultArgument> runKernel(const size_t kernelId) override;
+    std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize) override;
+    DimensionVector getCurrentGlobalSize(const size_t kernelId) const override;
+    DimensionVector getCurrentLocalSize(const size_t kernelId) const override;
+    std::vector<ParameterValue> getCurrentConfiguration() const override;
+    void updateArgumentScalar(const size_t argumentId, const void* argumentData) override;
+    void updateArgumentVector(const size_t argumentId, const void* argumentData) override;
+    void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements) override;
+    void setAutomaticArgumentUpdate(const bool flag) override;
+    void setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
+    void updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds) override;
+    void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond) override;
 
     // Core methods
     void addKernel(const size_t id, const KernelRuntimeData& kernelRuntimeData);

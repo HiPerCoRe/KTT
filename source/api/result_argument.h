@@ -1,5 +1,16 @@
 #pragma once
 
+#if defined(_WIN32) && !defined(KTT_TESTS)
+    #pragma warning(disable : 4251)
+    #if defined(KTT_LIBRARY)
+        #define KTT_API __declspec(dllexport)
+    #else
+        #define KTT_API __declspec(dllimport)
+    #endif // KTT_LIBRARY
+#else
+    #define KTT_API
+#endif // _WIN32
+
 #include <cstddef>
 #include <vector>
 
@@ -9,7 +20,7 @@
 namespace ktt
 {
 
-class ResultArgument
+class KTT_API ResultArgument
 {
 public:
     explicit ResultArgument(const size_t id, const void* data, const size_t numberOfElements, const size_t elementSizeInBytes,

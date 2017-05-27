@@ -38,13 +38,13 @@ public:
         index = initialState;
     }
 
-    virtual KernelConfiguration getNextConfiguration() override
+    KernelConfiguration getNextConfiguration() override
     {
         visitedStatesCount++;
         return configurations.at(index);
     }
 
-    virtual void calculateNextConfiguration(const double previousConfigurationDuration) override
+    void calculateNextConfiguration(const double previousConfigurationDuration) override
     {
         if (previousConfigurationDuration > 0.0) // workaround for recursive calls
         {
@@ -78,7 +78,7 @@ public:
         index = neighbourState;
     }
 
-    virtual size_t getConfigurationsCount() const override
+    size_t getConfigurationsCount() const override
     {
         return std::max(static_cast<size_t>(1), std::min(configurations.size(), static_cast<size_t>(configurations.size() * fraction)));
     }

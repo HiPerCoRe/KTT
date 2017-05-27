@@ -3,9 +3,9 @@
 #include <vector>
 
 #include "../ktt_type_aliases.h"
+#include "../api/result_argument.h"
 #include "../enum/argument_data_type.h"
 #include "../enum/argument_memory_type.h"
-#include "../dto/result_argument.h"
 
 namespace ktt
 {

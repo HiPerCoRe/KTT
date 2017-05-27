@@ -278,7 +278,7 @@ Following example shows how default tuning manipulator implementation looks like
 class SimpleTuningManipulator : public ktt::TuningManipulator
 {
 public:
-    virtual void launchComputation(const size_t kernelId) override
+    void launchComputation(const size_t kernelId) override
     {
         runKernel(kernelId);
     }
