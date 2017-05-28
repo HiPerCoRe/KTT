@@ -141,7 +141,9 @@ workspace "KernelTuningToolkit"
     
     targetdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}")
     objdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}/obj")
-    
+
+-- Library configuration
+   
 project "KernelTuningToolkit"
     kind "SharedLib"
     

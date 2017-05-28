@@ -9,6 +9,8 @@
 #include "cuda.h"
 #include "nvrtc.h"
 
+#include "cuda_buffer.h"
+#include "cuda_context.h"
 #include "cuda_device.h"
 #include "cuda_utility.h"
 #endif // PLATFORM_CUDA
@@ -48,8 +50,13 @@ public:
 
 private:
     size_t deviceIndex;
+    std::unique_ptr<CudaContext> context;
     std::string compilerOptions;
+    bool useReadBufferCache;
+    bool useWriteBufferCache;
+    bool useReadWriteBufferCache;
 
+    DeviceInfo getCudaDeviceInfo(const size_t deviceIndex) const;
     std::vector<CudaDevice> getCudaDevices() const;
 };
 
