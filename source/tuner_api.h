@@ -92,6 +92,11 @@ public:
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(&value, dataType);
     }
+    template <typename T> size_t addArgument(const size_t elementsCount)
+    {
+        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
+        return addArgument(elementsCount, dataType);
+    }
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Kernel tuning methods
@@ -128,6 +133,7 @@ private:
     size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
         const ArgumentMemoryType& argumentMemoryType);
     size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType);
+    size_t addArgument(const size_t elementsCount, const ArgumentDataType& argumentDataType);
 
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {

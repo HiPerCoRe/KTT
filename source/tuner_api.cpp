@@ -330,4 +330,17 @@ size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& argume
     }
 }
 
+size_t Tuner::addArgument(const size_t elementsCount, const ArgumentDataType& argumentDataType)
+{
+    try
+    {
+        return tunerCore->addArgument(nullptr, elementsCount, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentUploadType::Local);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 } // namespace ktt

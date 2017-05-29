@@ -92,12 +92,18 @@ Argument handling methods
 -------------------------
 
 * `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)`:
-Adds new vector argument to kernel. Argument memory type specifies whether argument is used for input or output (or both).
+Adds new vector argument to tuner. Argument memory type specifies whether argument is used for input or output (or both).
 Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 
 * `size_t addArgument(const T& value)`:
-Adds new scalar argument to kernel. All scalar arguments are read-only.
+Adds new scalar argument to tuner. All scalar arguments are read-only.
+Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
+Returns id assigned to argument by tuner.
+
+* `size_t addArgument(const size_t elementsCount)`:
+Adds new local memory argument to tuner. All local memory arguments are read-only.
+Elements count specifies, how many elements of provided data type can the argument contain.
 Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 

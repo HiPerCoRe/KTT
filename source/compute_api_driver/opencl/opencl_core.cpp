@@ -193,9 +193,13 @@ void OpenclCore::setKernelArgument(OpenclKernel& kernel, const KernelArgument& a
 
         buffers.insert(std::move(buffer)); // buffer data will be stolen
     }
-    else
+    else if(argument.getArgumentUploadType() == ArgumentUploadType::Scalar)
     {
         kernel.setKernelArgumentScalar(argument.getData(), argument.getElementSizeInBytes());
+    }
+    else
+    {
+        kernel.setKernelArgumentLocal(argument.getElementSizeInBytes() * argument.getNumberOfElements());
     }
 }
 
