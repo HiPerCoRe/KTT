@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(_WIN32) && !defined(KTT_TESTS)
+#if defined(_MSC_VER) && !defined(KTT_TESTS)
     #pragma warning(disable : 4251)
     #if defined(KTT_LIBRARY)
         #define KTT_API __declspec(dllexport)
@@ -9,7 +9,7 @@
     #endif // KTT_LIBRARY
 #else
     #define KTT_API
-#endif // _WIN32
+#endif // _MSC_VER
 
 #include <utility>
 
