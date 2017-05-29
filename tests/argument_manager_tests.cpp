@@ -1,10 +1,12 @@
 #include "catch.hpp"
 
+#include <cmath>
+
 #include "../source/kernel_argument/argument_manager.h"
 
-bool around(const float value, const float other, const float tolerance)
+template <typename T> bool around(const T value, const T other, const T tolerance)
 {
-    return value - tolerance < other && value + tolerance > other;
+    return std::fabs(value - other) < tolerance;
 }
 
 TEST_CASE("Argument addition and retrieval", "[argumentManager]")
