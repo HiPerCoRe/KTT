@@ -158,61 +158,50 @@ project "KernelTuningToolkit"
 
 -- Examples configuration 
 
+if not _OPTIONS["disable-examples"] then
+
 project "ExampleSimple"
-    if not _OPTIONS["disable-examples"] then
-        kind "ConsoleApp"
-    else
-        kind "None"
-    end
+    kind "ConsoleApp"
     
     files { "examples/simple/*.cpp", "examples/simple/*.cl" }
     includedirs { "include/**" }
     links { "KernelTuningToolkit" }
 
 project "ExampleOpenCLInfo"
-    if not _OPTIONS["disable-examples"] then
-        kind "ConsoleApp"
-    else
-        kind "None"
-    end
+    kind "ConsoleApp"
     
     files { "examples/opencl_info/*.cpp" }
     includedirs { "include/**" }
     links { "KernelTuningToolkit" }
 
 project "ExampleCoulombSum"
-    if not _OPTIONS["disable-examples"] then
-        kind "ConsoleApp"
-    else
-        kind "None"
-    end
+    kind "ConsoleApp"
     
     files { "examples/coulomb_sum/*.cpp", "examples/coulomb_sum/*.cl" }
     includedirs { "include/**" }
     links { "KernelTuningToolkit" }
 
 project "ExampleCoulombSum3D"
-    if not _OPTIONS["disable-examples"] then
-        kind "ConsoleApp"
-    else
-        kind "None"
-    end
+    kind "ConsoleApp"
 
     files { "examples/coulomb_sum_3d/*.cpp", "examples/coulomb_sum_3d/*.cl" }
     includedirs { "include/**" }
     links { "KernelTuningToolkit" }
     
--- Unit tests configuration   
+end -- _OPTIONS["disable-examples"]
     
+-- Unit tests configuration   
+
+if _OPTIONS["tests"] then
+
 project "Tests"
-    if _OPTIONS["tests"] then
-        kind "ConsoleApp"
-    else
-        kind "None"
-    end
+    kind "ConsoleApp"
+    
     
     files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl", "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "tests/**", "source/**" }
     defines { "KTT_TESTS", "DO_NOT_USE_WMAIN" }
     
     findLibraries()
+    
+end -- _OPTIONS["tests"]
