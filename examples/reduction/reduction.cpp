@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <CL/opencl.h>
 
 #include "../../include/ktt.h"
 

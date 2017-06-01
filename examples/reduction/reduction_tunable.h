@@ -78,8 +78,9 @@ public:
         ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
         std::vector<ktt::ParameterValue> parameterValues = getCurrentConfiguration();
         ktt::DimensionVector myGlobalSize = globalSize;
-        //setAutomaticArgumentUpdate(true);
-
+        setAutomaticArgumentUpdate(true);
+        setArgumentSynchronization(false, ktt::ArgumentMemoryType::ReadWrite);
+        
         // change global size for constant numners of work-groups
         //XXX this may be done also by thread modifier operators in constructor
         if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 0) {
@@ -98,10 +99,7 @@ public:
             int outOffset = n;
             int vectorSize = getParameterValue(parameterValues, std::string("VECTOR_SIZE"));
             int wgSize = std::get<0>(localSize);
-
-            // output array contains input now
-            //updateKernelArguments(kernelId, std::vector<size_t>{ dstId, dstId, nId, inOffsetId, outOffsetId });
-
+            
             while (n > 1) {
                 swapKernelArguments(kernelId, srcId, dstId);
                 std::get<0>(myGlobalSize) = (n+vectorSize-1) / vectorSize;
@@ -120,9 +118,6 @@ public:
                 inOffset = outOffset/vectorSize; //XXX input is vectorized, output is scalar
                 outOffset += n;
             }
-
-            // reset kernel arguments
-            //tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId, inOffsetId, outOffsetId } );
         }
     }
 
