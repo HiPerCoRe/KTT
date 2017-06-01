@@ -293,6 +293,19 @@ std::vector<DeviceInfo> Tuner::getDeviceInfo(const size_t platformIndex) const
     }
 }
 
+DeviceInfo Tuner::getCurrentDeviceInfo() const
+{
+    try
+    {
+        return tunerCore->getCurrentDeviceInfo();
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 void Tuner::setLoggingTarget(std::ostream& outputTarget)
 {
     tunerCore->setLoggingTarget(outputTarget);

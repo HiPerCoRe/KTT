@@ -73,7 +73,6 @@ private:
                 + ", reference size: " + std::to_string(referenceResult.size()) + ", result size: " + std::to_string(result.size()));
             return false;
         }
-
         if (argumentRangePointer != argumentValidationRangeMap.end())
         {
             return validateResultInner(result, referenceResult, argumentRangePointer->second, argumentId, std::is_floating_point<T>());

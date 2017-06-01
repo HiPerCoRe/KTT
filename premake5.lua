@@ -187,6 +187,13 @@ project "ExampleCoulombSum3D"
     files { "examples/coulomb_sum_3d/*.cpp", "examples/coulomb_sum_3d/*.cl" }
     includedirs { "include/**" }
     links { "KernelTuningToolkit" }
+
+project "ExampleReduction"
+    kind "ConsoleApp"
+
+    files { "examples/reduction/*.cpp", "examples/reduction/*.cl" }
+    includedirs { "include/**" }
+    links { "KernelTuningToolkit" }
     
 end -- _OPTIONS["disable-examples"]
     
