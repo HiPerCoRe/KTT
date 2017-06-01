@@ -53,7 +53,7 @@ std::ostream& operator<<(std::ostream& outputTarget, const PlatformInfo& platfor
     outputTarget << "Printing detailed info for platform with id: " << platformInfo.id << std::endl;
     outputTarget << "Name: " << platformInfo.name << std::endl;
     outputTarget << "Vendor: " << platformInfo.vendor << std::endl;
-    outputTarget << "OpenCL version: " << platformInfo.version << std::endl;
+    outputTarget << "Compute API version: " << platformInfo.version << std::endl;
     outputTarget << "Extensions: " << platformInfo.extensions << std::endl;
     return outputTarget;
 }

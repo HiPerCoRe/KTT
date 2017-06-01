@@ -24,17 +24,17 @@ public:
         std::shuffle(std::begin(this->configurations), std::end(this->configurations), engine);
     }
 
-    virtual KernelConfiguration getNextConfiguration() override
+    KernelConfiguration getNextConfiguration() override
     {
         return configurations.at(index);
     }
 
-    virtual void calculateNextConfiguration(const double previousConfigurationDuration) override
+    void calculateNextConfiguration(const double previousConfigurationDuration) override
     {
         index++;
     }
 
-    virtual size_t getConfigurationsCount() const override
+    size_t getConfigurationsCount() const override
     {
         return std::max(static_cast<size_t>(1), std::min(configurations.size(), static_cast<size_t>(configurations.size() * fraction)));
     }

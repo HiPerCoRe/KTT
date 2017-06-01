@@ -29,7 +29,8 @@
     typedef float16 vector;
 #endif // VECTOR_TYPE
 
-__kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA vector* atomInfoX, MEMORY_TYPE_SOA vector* atomInfoY, MEMORY_TYPE_SOA vector* atomInfoZ, MEMORY_TYPE_SOA vector* atomInfoW, int numberOfAtoms, float gridSpacing, __global float* energyGrid)
+__kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA vector* atomInfoX, MEMORY_TYPE_SOA vector* atomInfoY,
+    MEMORY_TYPE_SOA vector* atomInfoZ, MEMORY_TYPE_SOA vector* atomInfoW, int numberOfAtoms, float gridSpacing, __global float* energyGrid)
 {
     int xIndex = get_global_id(0) * OUTER_UNROLL_FACTOR;
     int yIndex = get_global_id(1);

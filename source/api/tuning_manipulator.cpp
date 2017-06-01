@@ -1,4 +1,5 @@
 #include "tuning_manipulator.h"
+#include "../tuning_runner/manipulator_interface.h"
 
 namespace ktt
 {
@@ -20,6 +21,21 @@ std::vector<ResultArgument> TuningManipulator::runKernel(const size_t kernelId, 
     return manipulatorInterface->runKernel(kernelId, globalSize, localSize);
 }
 
+DimensionVector TuningManipulator::getCurrentGlobalSize(const size_t kernelId) const
+{
+    return manipulatorInterface->getCurrentGlobalSize(kernelId);
+}
+
+DimensionVector TuningManipulator::getCurrentLocalSize(const size_t kernelId) const
+{
+    return manipulatorInterface->getCurrentLocalSize(kernelId);
+}
+
+std::vector<ParameterValue> TuningManipulator::getCurrentConfiguration() const
+{
+    return manipulatorInterface->getCurrentConfiguration();
+}
+
 void TuningManipulator::updateArgumentScalar(const size_t argumentId, const void* argumentData)
 {
     manipulatorInterface->updateArgumentScalar(argumentId, argumentData);
@@ -33,6 +49,26 @@ void TuningManipulator::updateArgumentVector(const size_t argumentId, const void
 void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)
 {
     manipulatorInterface->updateArgumentVector(argumentId, argumentData, numberOfElements);
+}
+
+void  TuningManipulator::setAutomaticArgumentUpdate(const bool flag)
+{
+    manipulatorInterface->setAutomaticArgumentUpdate(flag);
+}
+
+void TuningManipulator::setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType)
+{
+    manipulatorInterface->setArgumentSynchronization(flag, argumentMemoryType);
+}
+
+void TuningManipulator::updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
+{
+    manipulatorInterface->updateKernelArguments(kernelId, argumentIds);
+}
+
+void TuningManipulator::swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond)
+{
+    manipulatorInterface->swapKernelArguments(kernelId, argumentIdFirst, argumentIdSecond);
 }
 
 std::vector<size_t> TuningManipulator::convertFromDimensionVector(const DimensionVector& vector)

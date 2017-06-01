@@ -1,4 +1,4 @@
--- Helper functions to find compute API headers and libraries
+-- Helper function to find compute API headers and libraries
 
 function findLibraries()
     local path = os.getenv("INTELOCLSDKROOT")
@@ -86,16 +86,40 @@ end
 
 newoption
 {
-   trigger     = "cuda",
+   trigger = "outdir",
+   value = "path",
+   description = "Specifies output directory for generated files"
+}
+
+newoption
+{
+   trigger = "cuda",
    description = "Enables usage of CUDA API in addition to OpenCL (Nvidia platform only)"
+}
+
+newoption
+{
+   trigger = "tests",
+   description = "Enables compilation of supplied unit tests"
+}
+
+newoption
+{
+   trigger = "disable-examples",
+   description = "Disables compilation of supplied examples"
 }
 
 -- Project configuration
 
 workspace "KernelTuningToolkit"
+    local buildPath = "build"
+    if _OPTIONS["outdir"] then
+        buildPath = _OPTIONS["outdir"]
+    end
+    
     configurations { "Debug", "Release" }
     platforms { "x86", "x86_64" }
-    location "build"
+    location (buildPath)
     language "C++"
     flags { "C++14" }
     
@@ -115,14 +139,17 @@ workspace "KernelTuningToolkit"
     
     filter {}
     
+    targetdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}")
+    objdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}/obj")
+
+-- Library configuration
+   
 project "KernelTuningToolkit"
-    kind "StaticLib"
+    kind "SharedLib"
     
-    files { "source/**.h", "source/**.cpp" }
+    files { "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "source/**" }
-    
-    targetdir("build/ktt/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/ktt/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    defines { "KTT_LIBRARY" }
     
     local libraries = findLibraries()
     if not libraries then
@@ -131,70 +158,57 @@ project "KernelTuningToolkit"
 
 -- Examples configuration 
 
+if not _OPTIONS["disable-examples"] then
+
 project "ExampleSimple"
     kind "ConsoleApp"
     
     files { "examples/simple/*.cpp", "examples/simple/*.cl" }
     includedirs { "include/**" }
-    
     links { "KernelTuningToolkit" }
-    
-    targetdir("build/examples/simple/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/examples/simple/obj/%{cfg.platform}_%{cfg.buildcfg}")
-    
-    findLibraries()
 
 project "ExampleOpenCLInfo"
     kind "ConsoleApp"
     
     files { "examples/opencl_info/*.cpp" }
     includedirs { "include/**" }
-    
     links { "KernelTuningToolkit" }
-    
-    targetdir("build/examples/opencl_info/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/examples/opencl_info/obj/%{cfg.platform}_%{cfg.buildcfg}")
-   
-    findLibraries()
 
 project "ExampleCoulombSum"
     kind "ConsoleApp"
     
     files { "examples/coulomb_sum/*.cpp", "examples/coulomb_sum/*.cl" }
     includedirs { "include/**" }
-    
     links { "KernelTuningToolkit" }
-    
-    targetdir("build/examples/coulomb_sum/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/examples/coulomb_sum/obj/%{cfg.platform}_%{cfg.buildcfg}")
-   
-    findLibraries()
 
 project "ExampleCoulombSum3D"
     kind "ConsoleApp"
 
     files { "examples/coulomb_sum_3d/*.cpp", "examples/coulomb_sum_3d/*.cl" }
     includedirs { "include/**" }
-
     links { "KernelTuningToolkit" }
 
-    targetdir("build/examples/coulomb_sum_3d/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/examples/coulomb_sum_3d/obj/%{cfg.platform}_%{cfg.buildcfg}")
+project "ExampleReduction"
+    kind "ConsoleApp"
 
-    findLibraries()
+    files { "examples/reduction/*.cpp", "examples/reduction/*.cl" }
+    includedirs { "include/**" }
+    links { "KernelTuningToolkit" }
+    
+end -- _OPTIONS["disable-examples"]
     
 -- Unit tests configuration   
-    
+
+if _OPTIONS["tests"] then
+
 project "Tests"
     kind "ConsoleApp"
     
-    files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl" }
-    includedirs { "include/**", "tests/**" }
     
-    links { "KernelTuningToolkit" }
-    defines { "CATCH_CPP11_OR_GREATER" }
-    
-    targetdir("build/tests/%{cfg.platform}_%{cfg.buildcfg}")
-    objdir("build/tests/obj/%{cfg.platform}_%{cfg.buildcfg}")
+    files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl", "source/**.h", "source/**.hpp", "source/**.cpp" }
+    includedirs { "tests/**", "source/**" }
+    defines { "KTT_TESTS", "DO_NOT_USE_WMAIN" }
     
     findLibraries()
+    
+end -- _OPTIONS["tests"]

@@ -38,6 +38,12 @@ public:
         argumentsCount++;
     }
 
+    void setKernelArgumentLocal(const size_t localSizeInBytes)
+    {
+        checkOpenclError(clSetKernelArg(kernel, argumentsCount, localSizeInBytes, nullptr), std::string("clSetKernelArg"));
+        argumentsCount++;
+    }
+
     cl_program getProgram() const
     {
         return program;
