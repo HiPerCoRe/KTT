@@ -1,5 +1,16 @@
 #pragma once
 
+#if defined(_MSC_VER) && !defined(KTT_TESTS)
+    #pragma warning(disable : 4251)
+    #if defined(KTT_LIBRARY)
+        #define KTT_API __declspec(dllexport)
+    #else
+        #define KTT_API __declspec(dllimport)
+    #endif // KTT_LIBRARY
+#else
+    #define KTT_API
+#endif // _MSC_VER
+
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -24,14 +35,14 @@
 #include "enum/validation_method.h"
 
 // Information about platforms and devices
-#include "dto/device_info.h"
-#include "dto/platform_info.h"
+#include "api/device_info.h"
+#include "api/platform_info.h"
 
 // Reference class interface
-#include "customization/reference_class.h"
+#include "api/reference_class.h"
 
 // Tuning manipulator interface
-#include "customization/tuning_manipulator.h"
+#include "api/tuning_manipulator.h"
 
 // Support for 16-bit floating point data type
 #include "half.hpp"
@@ -42,7 +53,7 @@ namespace ktt
 
 class TunerCore; // Forward declaration of TunerCore class
 
-class Tuner
+class KTT_API Tuner
 {
 public:
     // Constructor and destructor
@@ -81,6 +92,11 @@ public:
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(&value, dataType);
     }
+    template <typename T> size_t addArgument(const size_t elementsCount)
+    {
+        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
+        return addArgument(elementsCount, dataType);
+    }
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Kernel tuning methods
@@ -88,6 +104,7 @@ public:
 
     // Result printing methods
     void setPrintingTimeUnit(const TimeUnit& timeUnit);
+    void setInvalidResultPrinting(const bool flag);
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
 
@@ -95,7 +112,8 @@ public:
     void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
         const std::vector<size_t>& resultArgumentIds);
     void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
-    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold, const size_t validationRange = 0);
+    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void setValidationRange(const size_t argumentId, const size_t validationRange);
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);
@@ -115,6 +133,7 @@ private:
     size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
         const ArgumentMemoryType& argumentMemoryType);
     size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType);
+    size_t addArgument(const size_t elementsCount, const ArgumentDataType& argumentDataType);
 
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {

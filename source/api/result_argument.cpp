@@ -4,12 +4,13 @@ namespace ktt
 {
 
 ResultArgument::ResultArgument(const size_t id, const void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
-    const ArgumentDataType& argumentDataType) :
+    const ArgumentDataType& argumentDataType, const ArgumentMemoryType& argumentMemoryType) :
     id(id),
     data(data),
     numberOfElements(numberOfElements),
     elementSizeInBytes(elementSizeInBytes),
-    argumentDataType(argumentDataType)
+    argumentDataType(argumentDataType),
+    argumentMemoryType(argumentMemoryType)
 {}
 
 size_t ResultArgument::getId() const
@@ -35,6 +36,11 @@ size_t ResultArgument::getDataSizeInBytes() const
 ArgumentDataType ResultArgument::getArgumentDataType() const
 {
     return argumentDataType;
+}
+
+ArgumentMemoryType ResultArgument::getArgumentMemoryType() const
+{
+    return argumentMemoryType;
 }
 
 const void* ResultArgument::getData() const

@@ -33,7 +33,11 @@ KernelArgument::KernelArgument(const size_t id, const void* data, const size_t n
     {
         throw std::runtime_error("Data provided for kernel argument is empty");
     }
-    initializeData(data, numberOfElements, argumentDataType);
+
+    if (data != nullptr)
+    {
+        initializeData(data, numberOfElements, argumentDataType);
+    }
 }
 
 void KernelArgument::updateData(const void* data, const size_t numberOfElements)

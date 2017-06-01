@@ -66,23 +66,6 @@ void TunerCore::setSearchMethod(const size_t id, const SearchMethod& searchMetho
     kernelManager->setSearchMethod(id, searchMethod, searchArguments);
 }
 
-void TunerCore::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
-    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
-{
-    kernelManager->setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
-}
-
-void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
-    const std::vector<size_t>& resultArgumentIds)
-{
-    kernelManager->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentIds);
-}
-
-void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
-{
-    kernelManager->setTuningManipulator(kernelId, std::move(tuningManipulator));
-}
-
 size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
     const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType)
 {
@@ -92,12 +75,54 @@ size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, c
 void TunerCore::tuneKernel(const size_t id)
 {
     auto result = tuningRunner->tuneKernel(id);
-    resultPrinter.setResult(id, result);
+    resultPrinter.setResult(id, result.first, result.second);
 }
 
-void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold, const size_t validationRange)
+void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
 {
-    tuningRunner->setValidationMethod(validationMethod, toleranceThreshold, validationRange);
+    tuningRunner->setValidationMethod(validationMethod, toleranceThreshold);
+}
+
+void TunerCore::setValidationRange(const size_t argumentId, const size_t validationRange)
+{
+    if (argumentId > argumentManager->getArgumentCount())
+    {
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+    }
+    if (validationRange > argumentManager->getArgument(argumentId).getNumberOfElements())
+    {
+        throw std::runtime_error(std::string("Invalid validation range for argument with id: ") + std::to_string(argumentId));
+    }
+    tuningRunner->setValidationRange(argumentId, validationRange);
+}
+
+void TunerCore::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
+    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
+{
+    if (kernelId > kernelManager->getKernelCount() || referenceKernelId > kernelManager->getKernelCount())
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
+    }
+    tuningRunner->setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
+}
+
+void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
+    const std::vector<size_t>& resultArgumentIds)
+{
+    if (kernelId > kernelManager->getKernelCount())
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
+    }
+    tuningRunner->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentIds);
+}
+
+void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
+{
+    if (kernelId > kernelManager->getKernelCount())
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
+    }
+    tuningRunner->setTuningManipulator(kernelId, std::move(tuningManipulator));
 }
 
 void TunerCore::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
@@ -112,6 +137,11 @@ void TunerCore::enableArgumentPrinting(const size_t argumentId, const std::strin
 void TunerCore::setPrintingTimeUnit(const TimeUnit& timeUnit)
 {
     resultPrinter.setTimeUnit(timeUnit);
+}
+
+void TunerCore::setInvalidResultPrinting(const bool flag)
+{
+    resultPrinter.setInvalidResultPrinting(flag);
 }
 
 void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const

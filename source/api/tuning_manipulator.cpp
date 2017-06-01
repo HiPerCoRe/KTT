@@ -1,4 +1,5 @@
 #include "tuning_manipulator.h"
+#include "../tuning_runner/manipulator_interface.h"
 
 namespace ktt
 {
@@ -53,6 +54,11 @@ void TuningManipulator::updateArgumentVector(const size_t argumentId, const void
 void  TuningManipulator::setAutomaticArgumentUpdate(const bool flag)
 {
     manipulatorInterface->setAutomaticArgumentUpdate(flag);
+}
+
+void TuningManipulator::setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType)
+{
+    manipulatorInterface->setArgumentSynchronization(flag, argumentMemoryType);
 }
 
 void TuningManipulator::updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)

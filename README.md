@@ -1,7 +1,7 @@
 KTT - Kernel Tuning Toolkit
 ===========================
 
-KTT is a C++ kernel tuning library based on [CLTune project](https://github.com/CNugteren/CLTune).
+KTT is a C++ tuning library for OpenCL (and soon CUDA) kernels. It is based on [CLTune project](https://github.com/CNugteren/CLTune).
 It has API similar to that of CLTune, however, unlike CLTune, it also provides greater degree of customization and control over kernel tuning process.
 This includes ability to write tuning manipulators, which are classes that can be utilized to launch custom C++ code before or after individual kernel executions.
 This can be used, for example, to run some part of a computation on CPU or launch kernels iteratively.
@@ -13,7 +13,6 @@ Prerequisites
 
 The prerequisites to build KTT are:
 
-* [premake5](https://premake.github.io/download.html)
 * C++14 compiler, for example:
     - Clang 3.4 or newer
     - GCC 5.0 or newer
@@ -22,22 +21,26 @@ The prerequisites to build KTT are:
     - AMD APP SDK
     - Intel SDK for OpenCL
     - NVIDIA CUDA Toolkit
+* [Premake 5](https://premake.github.io/download.html) (alpha 11 or newer)
 
 Building KTT
 ------------
 
-KTT can be built as a static library using command line build tool premake5 (running from
-inside KTT root folder). Currently supported operating systems are Linux and Windows.
+KTT can be built as a dynamic (shared) library using command line build tool Premake.
+Currently supported operating systems are Linux and Windows.
 
-* Build under Linux:
+* Build under Linux (inside KTT root folder):
     - run `premake5 gmake` to generate makefile
     - run `cd build` to get inside build directory
     - afterwards run `make config=release` to build the project
     
-* Build under Windows:
+* Build under Windows (inside KTT root folder):
     - run `premake5.exe vs2015` (or `vs2017`) to generate Visual Studio project files
     - open generated .sln file and build the project inside Visual Studio
 
+It is possible to specify custom build directory, eg. `premake5 --outdir=custom gmake`.
+Default build directory is `build`.
+    
 Documentation
 -------------
 
@@ -58,3 +61,4 @@ Tests
 
 Basic unit tests are located inside tests folder and are built together with the library.
 These can be run to ensure that library methods work correctly on the current platform.
+In order to enable unit tests compilation, use corresponding Premake argument, eg. `premake5 --tests gmake`.

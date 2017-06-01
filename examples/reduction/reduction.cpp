@@ -40,17 +40,17 @@ public:
         throw std::runtime_error("No result available for specified argument id");
     }
 
-    virtual ktt::ArgumentDataType getDataType(const size_t argumentId) const override {
+/*    virtual ktt::ArgumentDataType getDataType(const size_t argumentId) const override {
         return ktt::ArgumentDataType::Float;
-    }
+    }*/
 
     virtual size_t getNumberOfElements(const size_t argumentId) const override {
         return 1;
 }
 
-    virtual size_t getElementSizeInBytes(const size_t argumentId) const override {
+/*    virtual size_t getElementSizeInBytes(const size_t argumentId) const override {
         return sizeof(float);
-    }
+    }*/
 };
 
 class tunableReduction : public ktt::TuningManipulator {
@@ -110,7 +110,8 @@ public:
         tuner->addConstraint(kernelId, persistentAtomic, { "UNBOUNDED_WG", "USE_ATOMICS" } );
 
         tuner->setReferenceClass(kernelId, std::make_unique<referenceReduction>(*src, dstId), std::vector<size_t>{ dstId });
-        tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n/100000.0f, 1);
+        tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n/100000.0f);
+        tuner->setValidationRange(dstId, 1);
 
         // set itself as a tuning manipulator
         //tuner->setTuningManipulator(kernelId, std::unique_ptr<TuningManipulator>(this));
