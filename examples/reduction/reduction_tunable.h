@@ -16,6 +16,9 @@ class tunableReduction : public ktt::TuningManipulator {
     size_t outOffsetId;
     size_t kernelId;
 public:
+
+/* 
+    Constructor creates internal structures and setups tuning environment */
     tunableReduction(ktt::Tuner *tuner, std::vector<float> *src, std::vector<float> *dst, int n) : TuningManipulator() {
         this->tuner = tuner;
 
@@ -68,18 +71,8 @@ public:
         //tuner->setTuningManipulator(kernelId, std::unique_ptr<TuningManipulator>(this));
     }
 
-    size_t getParameterValue(const std::vector<ktt::ParameterValue>& parameterValue, const std::string& name){
-        for (auto parIt : parameterValue)
-            if (std::get<0>(parIt) == name)
-                return std::get<1>(parIt);
-
-        return 0;
-    }
-
-    size_t getKernelId() const {
-        return kernelId;
-    }
-
+/*
+    launchComputation is responsible for actual execution of tuned kernel */
     virtual void launchComputation(const size_t kernelId) override {
         ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);
         ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
@@ -138,5 +131,18 @@ public:
         tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
         tuner->printResult(kernelId, std::string("output.csv"), ktt::PrintFormat::CSV);
     }
-};
 
+/*
+    simple utility functions */
+    size_t getParameterValue(const std::vector<ktt::ParameterValue>& parameterValue, const std::string& name){
+        for (auto parIt : parameterValue)
+            if (std::get<0>(parIt) == name)
+                return std::get<1>(parIt);
+
+        return 0;
+    }
+
+    size_t getKernelId() const {
+        return kernelId;
+    }
+};
