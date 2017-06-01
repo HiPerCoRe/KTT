@@ -1,7 +1,8 @@
 #pragma once
 
+#ifndef KTT_API
 #if defined(_MSC_VER) && !defined(KTT_TESTS)
-    #pragma warning(disable : 4251)
+    #pragma warning(disable : 4251) // MSVC irrelevant warning (as long as there are no public attributes)
     #if defined(KTT_LIBRARY)
         #define KTT_API __declspec(dllexport)
     #else
@@ -10,6 +11,7 @@
 #else
     #define KTT_API
 #endif // _MSC_VER
+#endif // KTT_API
 
 #include <utility>
 

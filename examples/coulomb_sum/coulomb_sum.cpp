@@ -36,8 +36,6 @@ int main(int argc, char** argv)
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
     // Total NDRange size matches number of grid points
     const size_t numberOfGridPoints = std::get<0>(ndRangeDimensions) * std::get<1>(ndRangeDimensions);
-    // Used for generating random test data
-    const float upperBoundary = 20.0f; 
     // If higher than 4k, computations with constant memory enabled will be invalid on many devices due to constant memory capacity limit
     const int numberOfAtoms = 4096;
 

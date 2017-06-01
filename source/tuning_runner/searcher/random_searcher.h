@@ -20,7 +20,9 @@ public:
         {
             throw std::runtime_error("Configurations vector provided for searcher is empty");
         }
-        auto engine = std::default_random_engine();
+
+        std::random_device device;
+        std::default_random_engine engine(device());
         std::shuffle(std::begin(this->configurations), std::end(this->configurations), engine);
     }
 
