@@ -78,7 +78,6 @@ public:
         ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
         std::vector<ktt::ParameterValue> parameterValues = getCurrentConfiguration();
         ktt::DimensionVector myGlobalSize = globalSize;
-        setAutomaticArgumentUpdate(true);
         setArgumentSynchronization(false, ktt::ArgumentMemoryType::ReadWrite);
         
         // change global size for constant numners of work-groups
@@ -94,13 +93,14 @@ public:
 
         // execute kernel log n times, when atomics are not used 
         if (getParameterValue(parameterValues, std::string("USE_ATOMICS")) == 0) {
-            int n = std::get<0>(globalSize) / std::get<0>(localSize);
-            int inOffset = 0;
-            int outOffset = n;
-            int vectorSize = getParameterValue(parameterValues, std::string("VECTOR_SIZE"));
-            int wgSize = std::get<0>(localSize);
+            size_t n = std::get<0>(globalSize) / std::get<0>(localSize);
+            size_t inOffset = 0;
+            size_t outOffset = n;
+            size_t vectorSize = getParameterValue(parameterValues, std::string("VECTOR_SIZE"));
+            size_t wgSize = std::get<0>(localSize);
             
-            while (n > 1) {
+            size_t iterations = 0; // make sure the end result is in the correct buffer
+            while (n > 1 || iterations % 2 == 1) {
                 swapKernelArguments(kernelId, srcId, dstId);
                 std::get<0>(myGlobalSize) = (n+vectorSize-1) / vectorSize;
                 std::get<0>(myGlobalSize) = ((std::get<0>(myGlobalSize)-1)/wgSize + 1) * wgSize;
@@ -117,6 +117,7 @@ public:
                 n = (n+wgSize*vectorSize-1)/(wgSize*vectorSize);
                 inOffset = outOffset/vectorSize; //XXX input is vectorized, output is scalar
                 outOffset += n;
+                iterations++;
             }
         }
     }
