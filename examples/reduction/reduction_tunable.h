@@ -43,8 +43,9 @@ public:
         tuner->setKernelArguments(kernelId, std::vector<size_t>{ srcId, dstId, nId, inOffsetId, outOffsetId } );
 
         // get number of compute units
-        //TODO refactor to use KTT functions
-        size_t cus = 30;
+        const ktt::DeviceInfo di = tuner->getCurrentDeviceInfo();
+        std::cout << "Number of compute units: " << di.getMaxComputeUnits() << std::endl;
+        size_t cus = di.getMaxComputeUnits();
 
         // create parameter space
         tuner->addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8,*/ 16, 32, 64, 128, 256, 512 },
@@ -66,9 +67,6 @@ public:
         tuner->setReferenceClass(kernelId, std::make_unique<referenceReduction>(*src, dstId), std::vector<size_t>{ dstId });
         tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n/100000.0f);
         tuner->setValidationRange(dstId, 1);
-
-        // set itself as a tuning manipulator
-        //tuner->setTuningManipulator(kernelId, std::unique_ptr<TuningManipulator>(this));
     }
 
 /*
@@ -109,10 +107,10 @@ public:
                 updateArgumentScalar(nId, &n);
                 updateArgumentScalar(outOffsetId, &outOffset);
                 updateArgumentScalar(inOffsetId, &inOffset);
-                std::cout << "n inOfs, outOfs " << n << " " << inOffset << " "
-                    << outOffset << "\n";
-                std::cout << "glob loc " << std::get<0>(myGlobalSize) << " "
-                    << std::get<0>(localSize) << "\n";
+                //std::cout << "n inOfs, outOfs " << n << " " << inOffset << " "
+                //    << outOffset << "\n";
+                //std::cout << "glob loc " << std::get<0>(myGlobalSize) << " "
+                //    << std::get<0>(localSize) << "\n";
                 runKernel(kernelId, myGlobalSize, localSize);
                 n = (n+wgSize*vectorSize-1)/(wgSize*vectorSize);
                 inOffset = outOffset/vectorSize; //XXX input is vectorized, output is scalar

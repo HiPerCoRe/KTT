@@ -181,6 +181,11 @@ std::vector<DeviceInfo> TunerCore::getDeviceInfo(const size_t platformIndex) con
     return computeApiDriver->getDeviceInfo(platformIndex);
 }
 
+DeviceInfo TunerCore::getCurrentDeviceInfo() const
+{
+    return computeApiDriver->getCurrentDeviceInfo();
+}
+
 void TunerCore::setLoggingTarget(std::ostream& outputTarget)
 {
     logger.setLoggingTarget(outputTarget);

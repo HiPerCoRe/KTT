@@ -57,6 +57,7 @@ public:
     void printComputeApiInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const;
+    DeviceInfo getCurrentDeviceInfo() const;
 
     // Logger methods
     void setLoggingTarget(std::ostream& outputTarget);
