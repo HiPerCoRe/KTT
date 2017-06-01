@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     size_t aiwId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryType::ReadOnly);
     size_t aId = tuner.addArgument(atoms);
     size_t gsId = tuner.addArgument(gridSpacing);
-    size_t gridId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryType::WriteOnly);
+    size_t gridId = tuner.addArgument(energyGrid, ktt::ArgumentMemoryType::WriteOnly);
 
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 16, 32 }, 
         ktt::ThreadModifierType::Local, 
