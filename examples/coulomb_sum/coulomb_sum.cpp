@@ -1,6 +1,5 @@
-#include <ctime>
-#include <cstdlib>
 #include <iostream>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -52,15 +51,17 @@ int main(int argc, char** argv)
     std::vector<float> energyGrid(numberOfGridPoints, 0.0f);
 
     // Initialize data
-    srand(static_cast<unsigned int>(time(0)));
-    gridSpacing = static_cast<float>(rand()) / RAND_MAX;
+    std::random_device device;
+    std::default_random_engine engine(device());
+    std::uniform_real_distribution<float> distribution(0.0f, 40.0f);
+    gridSpacing = distribution(engine);
 
     for (int i = 0; i < numberOfAtoms; i++)
     {
-        atomInfoX.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
-        atomInfoY.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
-        atomInfoZ.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
-        atomInfoW.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        atomInfoX.at(i) = distribution(engine);
+        atomInfoY.at(i) = distribution(engine);
+        atomInfoZ.at(i) = distribution(engine);
+        atomInfoW.at(i) = distribution(engine);
 
         atomInfo.at((4 * i)) = atomInfoX.at(i);
         atomInfo.at((4 * i) + 1) = atomInfoY.at(i);

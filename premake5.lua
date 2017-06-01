@@ -197,7 +197,6 @@ if _OPTIONS["tests"] then
 project "Tests"
     kind "ConsoleApp"
     
-    
     files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl", "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "tests/**", "source/**" }
     defines { "KTT_TESTS", "DO_NOT_USE_WMAIN" }

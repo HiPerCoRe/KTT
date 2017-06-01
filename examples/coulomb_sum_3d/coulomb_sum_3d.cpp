@@ -1,4 +1,5 @@
 #include <iostream>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -46,13 +47,17 @@ int main(int argc, char** argv)
     std::vector<float> energyGrid(gridSize*gridSize*gridSize, 0.0f);
 
     // Initialize data
-    gridSpacing = 0.5; // in Angstroms
+    std::random_device device;
+    std::default_random_engine engine(device());
+    std::uniform_real_distribution<float> distribution(0.0f, 20.0f);
+    gridSpacing = 0.5f; // in Angstroms
+
     for (int i = 0; i < atoms; i++)
     {
-        atomInfoX.at(i) = static_cast<float>((float)rand() / (RAND_MAX/20));
-        atomInfoY.at(i) = static_cast<float>((float)rand() / (RAND_MAX/20));
-        atomInfoZ.at(i) = static_cast<float>((float)rand() / (RAND_MAX/20));
-        atomInfoW.at(i) = static_cast<float>((float)rand() / (RAND_MAX/20));
+        atomInfoX.at(i) = distribution(engine);
+        atomInfoY.at(i) = distribution(engine);
+        atomInfoZ.at(i) = distribution(engine);
+        atomInfoW.at(i) = distribution(engine);
         atomInfo.at(i*4) = atomInfoX.at(i);
         atomInfo.at(i*4+1) = atomInfoY.at(i);
         atomInfo.at(i*4+2) = atomInfoZ.at(i);
