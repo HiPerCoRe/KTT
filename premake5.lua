@@ -105,7 +105,7 @@ newoption
 
 newoption
 {
-   trigger = "disable-examples",
+   trigger = "no-examples",
    description = "Disables compilation of supplied examples"
 }
 
@@ -158,7 +158,7 @@ project "KernelTuningToolkit"
 
 -- Examples configuration 
 
-if not _OPTIONS["disable-examples"] then
+if not _OPTIONS["no-examples"] then
 
 project "ExampleSimple"
     kind "ConsoleApp"
@@ -191,11 +191,11 @@ project "ExampleCoulombSum3D"
 project "ExampleReduction"
     kind "ConsoleApp"
 
-    files { "examples/reduction/*.cpp", "examples/reduction/*.cl" }
+    files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }
     includedirs { "include/**" }
     links { "KernelTuningToolkit" }
     
-end -- _OPTIONS["disable-examples"]
+end -- _OPTIONS["no-examples"]
     
 -- Unit tests configuration   
 

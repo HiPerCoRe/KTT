@@ -17,7 +17,7 @@ ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeAp
     synchronizeReadWriteArguments(true)
 {}
 
-std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const size_t kernelId)
+void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId)
 {
     auto dataPointer = kernelDataMap.find(kernelId);
     if (dataPointer == kernelDataMap.end())
@@ -25,10 +25,10 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
         throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
             + " was called inside tuning manipulator which did not advertise utilization of this kernel");
     }
-    return runKernel(kernelId, dataPointer->second.getGlobalSize(), dataPointer->second.getLocalSize());
+    runKernel(kernelId, dataPointer->second.getGlobalSize(), dataPointer->second.getLocalSize());
 }
 
-std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const size_t kernelId, const DimensionVector& globalSize,
+void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
     Timer timer;
@@ -46,19 +46,12 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
         convertDimensionVector(localSize), getArgumentPointers(kernelData.getArgumentIndices()));
     currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead(), result.getResultArguments());
 
-    std::vector<ResultArgument> resultArguments;
-    for (const auto& resultArgument : currentResult.getResultArguments())
-    {
-        resultArguments.emplace_back(ResultArgument(resultArgument.getId(), resultArgument.getData(), resultArgument.getNumberOfElements(),
-            resultArgument.getElementSizeInBytes(), resultArgument.getArgumentDataType(), resultArgument.getArgumentMemoryType()));
-    }
-
     timer.stop();
     currentResult.increaseOverhead(timer.getElapsedTime());
 
     if (automaticArgumentUpdate)
     {
-        for (const auto& resultArgument : resultArguments)
+        for (const auto& resultArgument : currentResult.getResultArguments())
         {
             if (resultArgument.getArgumentMemoryType() == ArgumentMemoryType::WriteOnly && synchronizeWriteArguments
                 || resultArgument.getArgumentMemoryType() == ArgumentMemoryType::ReadWrite && synchronizeReadWriteArguments)
@@ -67,8 +60,6 @@ std::vector<ResultArgument> ManipulatorInterfaceImplementation::runKernel(const 
             }
         }
     }
-
-    return resultArguments;
 }
 
 DimensionVector ManipulatorInterfaceImplementation::getCurrentGlobalSize(const size_t kernelId) const

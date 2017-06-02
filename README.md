@@ -3,7 +3,7 @@ KTT - Kernel Tuning Toolkit
 
 KTT is a C++ tuning library for OpenCL (and soon CUDA) kernels. It is based on [CLTune project](https://github.com/CNugteren/CLTune).
 It has API similar to that of CLTune, however, unlike CLTune, it also provides greater degree of customization and control over kernel tuning process.
-This includes ability to write tuning manipulators, which are classes that can be utilized to launch custom C++ code before or after individual kernel executions.
+This includes ability to write tuning manipulators, which are classes that can be utilized to launch custom C++ code before or after individual kernel runs.
 This can be used, for example, to run some part of a computation on CPU or launch kernels iteratively.
 
 Project is currently in beta stage with all of the baseline functionality available.
@@ -35,7 +35,7 @@ Currently supported operating systems are Linux and Windows.
     - afterwards run `make config=release` to build the project
     
 * Build under Windows (inside KTT root folder):
-    - run `premake5.exe vs2015` (or `vs2017`) to generate Visual Studio project files
+    - run `premake5.exe vs2015` (or `premake5.exe vs2017`) to generate Visual Studio project files
     - open generated .sln file and build the project inside Visual Studio
 
 It is possible to specify custom build directory, eg. `premake5 --outdir=custom gmake`.
@@ -53,12 +53,14 @@ Examples showcasing KTT functionality are located inside examples folder.
 List of currently available examples:
 
 * `opencl_info`: basic example showing how to retrieve detailed information about OpenCL platforms and devices through KTT API
-* `simple`: basic example showcasing how to setup kernel run with KTT framework, no actual autotuning is done
-* `coulomb_sum`: advanced example which uses several parameters, thread modifiers and constraints
+* `simple`: basic example showcasing how to run simple kernel with KTT framework, utilizes reference class, no actual autotuning is done
+* `coulomb_sum`: advanced example which utilizes large number of tuning parameters, thread modifiers and constraints
+* `coulomb_sum_3d`: 3D version of previous example
+* `reduction`: advanced example which utilizes reference class, tuning manipulator and several tuning parameters
 
 Tests
 -----
 
 Basic unit tests are located inside tests folder and are built together with the library.
 These can be run to ensure that library methods work correctly on the current platform.
-In order to enable unit tests compilation, use corresponding Premake argument, eg. `premake5 --tests gmake`.
+In order to enable unit tests compilation, corresponding Premake argument needs to be used, eg. `premake5 --tests gmake`.

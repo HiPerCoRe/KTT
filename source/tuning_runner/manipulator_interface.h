@@ -1,9 +1,9 @@
 #pragma once
 
+#include <cstddef>
 #include <vector>
 
 #include "../ktt_type_aliases.h"
-#include "../api/result_argument.h"
 #include "../enum/argument_data_type.h"
 #include "../enum/argument_memory_type.h"
 
@@ -17,8 +17,8 @@ public:
     virtual ~ManipulatorInterface() = default;
 
     // Kernel run methods
-    virtual std::vector<ResultArgument> runKernel(const size_t kernelId) = 0;
-    virtual std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize) = 0;
+    virtual void runKernel(const size_t kernelId) = 0;
+    virtual void runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize) = 0;
 
     // Configuration retrieval methods
     virtual DimensionVector getCurrentGlobalSize(const size_t kernelId) const = 0;

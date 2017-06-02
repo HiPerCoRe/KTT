@@ -4,9 +4,6 @@
 
 class referenceReduction : public ktt::ReferenceClass
 {
-    std::vector<float> res;
-    std::vector<float> src;
-    size_t resultArgumentId;
 public:
     referenceReduction(const std::vector<float>& src, const size_t resultArgumentId) :
         src(src),
@@ -41,5 +38,8 @@ public:
         return 1;
     }
 
+private:
+    std::vector<float> res;
+    std::vector<float> src;
+    size_t resultArgumentId;
 };
-

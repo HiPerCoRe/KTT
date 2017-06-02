@@ -101,5 +101,6 @@ int main(int argc, char** argv)
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, std::string("output.csv"), ktt::PrintFormat::CSV);
+
     return 0;
 }

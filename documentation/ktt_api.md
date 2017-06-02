@@ -27,6 +27,9 @@ PlatformInfo object supports output operator.
 Retrieves list of objects containing detailed information about all available devices (such as device name, memory sizes, list of extensions, etc.) on specified platform.
 DeviceInfo object supports output operator.
 
+* `DeviceInfo getCurrentDeviceInfo()`:
+Retrieves object containing detailed information about currently used device (such as device name, memory sizes, list of extensions, etc.).
+
 Basic kernel handling methods
 -----------------------------
 
@@ -214,15 +217,13 @@ This method needs to return ids of all additional kernels. Id of the main kernel
 All additional kernels will be launched under the same configuration as main kernel, which means that they need to accept exactly the same parameters.
 It is possible to specify, whether the additional kernels' thread sizes will be affected by the parameters. Main kernel's thread sizes will always be affected.
 
-* `std::vector<ResultArgument> runKernel(const size_t kernelId)`:
+* `void runKernel(const size_t kernelId)`:
 Launches kernel with specified id, using thread sizes based only on the current configuration.
 Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
-Returns vector of result arguments (arguments assigned to kernel with kernelId, which were tagged as input-output or output-only arguments).
 
-* `std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize)`:
+* `void runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize)`:
 Launches kernel with specified id, using specified thread sizes.
 Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
-Returns vector of result arguments (arguments assigned to kernel with kernelId, which were tagged as input-output or output-only arguments).
 
 * `DimensionVector getCurrentGlobalSize(const size_t kernelId) const`:
 Returns global thread size of specified kernel based on the current configuration.
@@ -252,12 +253,13 @@ This method is useful for iterative kernel launches.
 
 * `void setAutomaticArgumentUpdate(const bool flag)`:
 Enables or disables automatic vector argument updates for iterative kernel launches based on provided flag.
-When this option is disabled, kernel arguments must be updated manually, if desired (by using result arguments returned by `runKernel()` methods inside `updateArgument...()` methods).
+When this functionality is enabled, write-only and read-write arguments will be automatically updated each time `runKernel()` method finishes, using results computed by kernel.
+Automatic argument updates are disabled by default. Automatic argument updates work only if argument synchronization for corresponding argument type is enabled.
 This method only affects run of `launchComputation()` method under current configuration.
 
 * `void setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType)`:
 Enables or disables automatic vector argument synchronization between CPU buffers and compute API device buffers for specified type of kernel arguments.
-Disabling synchronization will improve performance and accuracy of timer in case the buffers are iteratively updated inside kernel only. Otherwise, synchronization should be enabled.
+Disabling synchronization will improve performance in case the buffers are iteratively updated inside kernel only. Otherwise, synchronization should be enabled.
 Be default, synchronization is enabled for read-write and write-only arguments and disabled for read-only arguments.
 This method only affects run of `launchComputation()` method under current configuration.
 
@@ -272,7 +274,7 @@ This method only affects run of `launchComputation()` method under current confi
 * `std::vector<size_t> convertFromDimensionVector(const DimensionVector& vector)`:
 Converts provided dimension vector to standard vector.
 
-* `DimensionVector convertToDimensionVector(const std::vector<size_t>& vector)`
+* `DimensionVector convertToDimensionVector(const std::vector<size_t>& vector)`:
 Converts provided standard vector to dimension vector.
 If provided vector size is less than 3, fills remaining dimension vector positions with 1s.
 

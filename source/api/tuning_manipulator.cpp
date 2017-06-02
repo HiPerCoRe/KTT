@@ -11,14 +11,14 @@ std::vector<std::pair<size_t, ThreadSizeUsage>> TuningManipulator::getUtilizedKe
     return std::vector<std::pair<size_t, ThreadSizeUsage>>{};
 }
 
-std::vector<ResultArgument> TuningManipulator::runKernel(const size_t kernelId)
+void TuningManipulator::runKernel(const size_t kernelId)
 {
-    return manipulatorInterface->runKernel(kernelId);
+    manipulatorInterface->runKernel(kernelId);
 }
 
-std::vector<ResultArgument> TuningManipulator::runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize)
+void TuningManipulator::runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize)
 {
-    return manipulatorInterface->runKernel(kernelId, globalSize, localSize);
+    manipulatorInterface->runKernel(kernelId, globalSize, localSize);
 }
 
 DimensionVector TuningManipulator::getCurrentGlobalSize(const size_t kernelId) const

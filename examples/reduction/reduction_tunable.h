@@ -5,16 +5,6 @@
 #include "reduction_reference.h"
 
 class tunableReduction : public ktt::TuningManipulator {
-    ktt::Tuner *tuner;
-    int n;
-    std::vector<float> *src;
-    std::vector<float> *dst;
-    size_t srcId;
-    size_t dstId;
-    size_t nId;
-    size_t inOffsetId;
-    size_t outOffsetId;
-    size_t kernelId;
 public:
 
 /* 
@@ -139,4 +129,16 @@ public:
     size_t getKernelId() const {
         return kernelId;
     }
+
+private:
+    ktt::Tuner *tuner;
+    int n;
+    std::vector<float> *src;
+    std::vector<float> *dst;
+    size_t srcId;
+    size_t dstId;
+    size_t nId;
+    size_t inOffsetId;
+    size_t outOffsetId;
+    size_t kernelId;
 };

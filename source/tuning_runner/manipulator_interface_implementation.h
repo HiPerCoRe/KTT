@@ -18,8 +18,8 @@ public:
     explicit ManipulatorInterfaceImplementation(ComputeApiDriver* computeApiDriver);
 
     // Inherited methods
-    std::vector<ResultArgument> runKernel(const size_t kernelId) override;
-    std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize) override;
+    void runKernel(const size_t kernelId) override;
+    void runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize) override;
     DimensionVector getCurrentGlobalSize(const size_t kernelId) const override;
     DimensionVector getCurrentLocalSize(const size_t kernelId) const override;
     std::vector<ParameterValue> getCurrentConfiguration() const override;

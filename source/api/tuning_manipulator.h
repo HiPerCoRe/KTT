@@ -13,9 +13,10 @@
 #endif // _MSC_VER
 #endif // KTT_API
 
+#include <cstddef>
 #include <utility>
+#include <vector>
 
-#include "result_argument.h"
 #include "../ktt_type_aliases.h"
 #include "../enum/argument_data_type.h"
 #include "../enum/argument_memory_type.h"
@@ -36,8 +37,8 @@ public:
     virtual std::vector<std::pair<size_t, ThreadSizeUsage>> getUtilizedKernelIds() const;
 
     // Kernel run methods
-    std::vector<ResultArgument> runKernel(const size_t kernelId);
-    std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize);
+    void runKernel(const size_t kernelId);
+    void runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize);
 
     // Configuration retrieval methods
     DimensionVector getCurrentGlobalSize(const size_t kernelId) const;
