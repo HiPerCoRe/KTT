@@ -15,6 +15,7 @@ Compute API methods
 
 * `void setCompilerOptions(const std::string& options)`:
 Sets compute API compiler options to specified options.
+Individual options have to be separated by a single space character.
 
 * `void printComputeApiInfo(std::ostream& outputTarget)`:
 Prints basic information about available platforms and devices, including indices assigned by KTT framework, to specified output stream.

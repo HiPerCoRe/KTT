@@ -73,7 +73,7 @@ function findLibraries()
         
         if _OPTIONS["cuda"] then
             defines { "PLATFORM_CUDA" }
-            links { "cuda" }
+            links { "cuda", "nvrtc" }
         end
         
         return true

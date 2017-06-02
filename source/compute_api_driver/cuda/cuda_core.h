@@ -12,6 +12,9 @@
 #include "cuda_buffer.h"
 #include "cuda_context.h"
 #include "cuda_device.h"
+#include "cuda_event.h"
+#include "cuda_kernel.h"
+#include "cuda_program.h"
 #include "cuda_utility.h"
 #endif // PLATFORM_CUDA
 

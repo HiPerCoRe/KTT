@@ -52,6 +52,14 @@ void checkCudaError(const CUresult value, const std::string& message)
     }
 }
 
+void checkCudaError(const nvrtcResult value, const std::string& message)
+{
+    if (value != NVRTC_SUCCESS)
+    {
+        throw std::runtime_error(std::string("Internal CUDA NVRTC error: ") + std::to_string(value) + "\nAdditional info: " + message);
+    }
+}
+
 float getKernelRunDuration(const CUevent start, const CUevent end)
 {
     // to do
