@@ -161,13 +161,13 @@ std::unique_ptr<OpenclBuffer> OpenclCore::createBuffer(const ArgumentMemoryType&
     return buffer;
 }
 
-void OpenclCore::updateBuffer(OpenclBuffer& buffer, const void* source, const size_t dataSize) const
+void OpenclCore::uploadBufferData(OpenclBuffer& buffer, const void* source, const size_t dataSize) const
 {
     cl_int result = clEnqueueWriteBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
     checkOpenclError(result, std::string("clEnqueueWriteBuffer"));
 }
 
-void OpenclCore::getBufferData(const OpenclBuffer& buffer, void* destination, const size_t dataSize) const
+void OpenclCore::downloadBufferData(const OpenclBuffer& buffer, void* destination, const size_t dataSize) const
 {
     cl_int result = clEnqueueReadBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
     checkOpenclError(result, std::string("clEnqueueReadBuffer"));
@@ -188,7 +188,7 @@ void OpenclCore::setKernelArgument(OpenclKernel& kernel, const KernelArgument& a
         }
 
         std::unique_ptr<OpenclBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSizeInBytes(), argument.getId());
-        updateBuffer(*buffer, argument.getData(), argument.getDataSizeInBytes());
+        uploadBufferData(*buffer, argument.getData(), argument.getDataSizeInBytes());
         setKernelArgumentVector(kernel, *buffer);
 
         buffers.insert(std::move(buffer)); // buffer data will be stolen
@@ -342,7 +342,7 @@ std::vector<KernelArgument> OpenclCore::getResultArguments(const std::vector<con
 
             KernelArgument argument(currentArgument->getId(), currentArgument->getNumberOfElements(), currentArgument->getArgumentDataType(),
                 currentArgument->getArgumentMemoryType(), currentArgument->getArgumentUploadType());
-            getBufferData(*buffer, argument.getData(), argument.getDataSizeInBytes());
+            downloadBufferData(*buffer, argument.getData(), argument.getDataSizeInBytes());
             resultArguments.push_back(argument);
         }
     }

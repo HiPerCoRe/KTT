@@ -26,6 +26,16 @@ public:
         checkCudaError(cuMemFree(buffer), std::string("cuMemFree"));
     }
 
+    void uploadData(const void* source, const size_t dataSize)
+    {
+        checkCudaError(cuMemcpyHtoD(buffer, source, dataSize), std::string("cuMemcpyHtoD"));
+    }
+
+    void downloadData(void* destination, const size_t dataSize) const
+    {
+        checkCudaError(cuMemcpyDtoH(destination, buffer, dataSize), std::string("cuMemcpyDtoH"));
+    }
+
     ArgumentMemoryType getType() const
     {
         return type;

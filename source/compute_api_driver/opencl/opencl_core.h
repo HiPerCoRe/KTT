@@ -47,8 +47,8 @@ public:
     // Low-level kernel execution methods
     std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;
     std::unique_ptr<OpenclBuffer> createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size, const size_t kernelArgumentId) const;
-    void updateBuffer(OpenclBuffer& buffer, const void* source, const size_t dataSize) const;
-    void getBufferData(const OpenclBuffer& buffer, void* destination, const size_t dataSize) const;
+    void uploadBufferData(OpenclBuffer& buffer, const void* source, const size_t dataSize) const;
+    void downloadBufferData(const OpenclBuffer& buffer, void* destination, const size_t dataSize) const;
     void setKernelArgument(OpenclKernel& kernel, const KernelArgument& argument);
     std::unique_ptr<OpenclKernel> createKernel(const OpenclProgram& program, const std::string& kernelName) const;
     cl_ulong enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;

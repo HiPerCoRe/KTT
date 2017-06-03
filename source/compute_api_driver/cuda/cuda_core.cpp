@@ -19,7 +19,9 @@ CudaCore::CudaCore(const size_t deviceIndex) :
     {
         throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
     }
+
     context = std::make_unique<CudaContext>(devices.at(deviceIndex).getDevice());
+    stream = std::make_unique<CudaStream>(context->getContext(), devices.at(deviceIndex).getDevice());
 }
 
 void CudaCore::printComputeApiInfo(std::ostream& outputTarget) const
@@ -89,18 +91,71 @@ void CudaCore::setCacheUsage(const bool flag, const ArgumentMemoryType& argument
 
 void CudaCore::clearCache()
 {
-    throw std::runtime_error("clearCache() method is not supported yet for CUDA platform");
+    buffers.clear();
 }
 
 void CudaCore::clearCache(const ArgumentMemoryType& argumentMemoryType)
 {
-    throw std::runtime_error("clearCache() method is not supported yet for CUDA platform");
+    auto iterator = buffers.cbegin();
+
+    while (iterator != buffers.cend())
+    {
+        if (iterator->get()->getType() == argumentMemoryType)
+        {
+            iterator = buffers.erase(iterator);
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
 }
 
 KernelRunResult CudaCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers)
 {
     throw std::runtime_error("runKernel() method is not supported yet for CUDA platform");
+}
+
+std::unique_ptr<CudaProgram> CudaCore::createAndBuildProgram(const std::string& source) const
+{
+    auto program = std::make_unique<CudaProgram>(source);
+    program->build(compilerOptions);
+    return program;
+}
+
+std::unique_ptr<CudaBuffer> CudaCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size,
+    const size_t kernelArgumentId) const
+{
+    auto buffer = std::make_unique<CudaBuffer>(argumentMemoryType, size, kernelArgumentId);
+    return buffer;
+}
+
+std::unique_ptr<CudaEvent> CudaCore::createEvent() const
+{
+    auto event = std::make_unique<CudaEvent>();
+    return event;
+}
+
+std::unique_ptr<CudaKernel> CudaCore::createKernel(const CudaProgram& program, const std::string& kernelName) const
+{
+    auto kernel = std::make_unique<CudaKernel>(program.getPtxSource(), kernelName);
+    return kernel;
+}
+
+float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const
+{
+    auto start = createEvent();
+    auto end = createEvent();
+
+    checkCudaError(cuEventRecord(start->getEvent(), stream->getStream()), std::string("cuEventRecord"));
+    // to do: fix 8th and 10th argument
+    checkCudaError(cuLaunchKernel(kernel.getKernel(), static_cast<unsigned int>(globalSize.at(0)), static_cast<unsigned int>(globalSize.at(1)),
+        static_cast<unsigned int>(globalSize.at(2)), static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)),
+        static_cast<unsigned int>(localSize.at(2)), 0, stream->getStream(), nullptr, nullptr), std::string("cuLaunchKernel"));
+    checkCudaError(cuEventRecord(end->getEvent(), stream->getStream()), std::string("cuEventRecord"));
+
+    return getKernelRunDuration(start->getEvent(), end->getEvent());
 }
 
 std::vector<CudaDevice> CudaCore::getCudaDevices() const
@@ -156,6 +211,51 @@ DeviceInfo CudaCore::getCudaDeviceInfo(const size_t deviceIndex) const
     result.setDeviceType(DeviceType::GPU);
 
     return result;
+}
+
+std::vector<KernelArgument> CudaCore::getResultArguments(const std::vector<const KernelArgument*>& argumentPointers) const
+{
+    std::vector<KernelArgument> resultArguments;
+    for (const auto currentArgument : argumentPointers)
+    {
+        if (currentArgument->getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
+        {
+            continue;
+        }
+
+        for (const auto& buffer : buffers)
+        {
+            if (buffer->getKernelArgumentId() != currentArgument->getId())
+            {
+                continue;
+            }
+
+            KernelArgument argument(currentArgument->getId(), currentArgument->getNumberOfElements(), currentArgument->getArgumentDataType(),
+                currentArgument->getArgumentMemoryType(), currentArgument->getArgumentUploadType());
+            buffer->downloadData(argument.getData(), argument.getDataSizeInBytes());
+            resultArguments.push_back(argument);
+        }
+    }
+
+    return resultArguments;
+}
+
+void CudaCore::clearTargetBuffers()
+{
+    if (!useReadBufferCache)
+    {
+        clearCache(ArgumentMemoryType::ReadOnly);
+    }
+
+    if (!useWriteBufferCache)
+    {
+        clearCache(ArgumentMemoryType::WriteOnly);
+    }
+
+    if (!useReadWriteBufferCache)
+    {
+        clearCache(ArgumentMemoryType::ReadWrite);
+    }
 }
 
 #else

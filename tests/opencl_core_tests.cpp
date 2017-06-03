@@ -46,8 +46,9 @@ TEST_CASE("Transfering data to / from buffer", "[openclCore]")
     REQUIRE(buffer->getSize() == data.size() * sizeof(float));
 
     std::vector<float> result(data.size());
-    core.updateBuffer(*buffer, data.data(), data.size() * sizeof(float));
-    core.getBufferData(*buffer, result.data(), data.size() * sizeof(float));
+
+    core.uploadBufferData(*buffer, data.data(), data.size() * sizeof(float));
+    core.downloadBufferData(*buffer, result.data(), data.size() * sizeof(float));
 
     for (size_t i = 0; i < data.size(); i++)
     {

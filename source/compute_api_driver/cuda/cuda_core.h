@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <ostream>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -15,6 +16,7 @@
 #include "cuda_event.h"
 #include "cuda_kernel.h"
 #include "cuda_program.h"
+#include "cuda_stream.h"
 #include "cuda_utility.h"
 #endif // PLATFORM_CUDA
 
@@ -51,16 +53,27 @@ public:
     KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
         const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) override;
 
+    // Low-level kernel execution methods
+    std::unique_ptr<CudaProgram> createAndBuildProgram(const std::string& source) const;
+    std::unique_ptr<CudaBuffer> createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size, const size_t kernelArgumentId) const;
+    std::unique_ptr<CudaEvent> createEvent() const;
+    std::unique_ptr<CudaKernel> createKernel(const CudaProgram& program, const std::string& kernelName) const;
+    float enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;
+
 private:
     size_t deviceIndex;
     std::unique_ptr<CudaContext> context;
+    std::unique_ptr<CudaStream> stream;
     std::string compilerOptions;
+    std::set<std::unique_ptr<CudaBuffer>> buffers;
     bool useReadBufferCache;
     bool useWriteBufferCache;
     bool useReadWriteBufferCache;
 
     DeviceInfo getCudaDeviceInfo(const size_t deviceIndex) const;
     std::vector<CudaDevice> getCudaDevices() const;
+    std::vector<KernelArgument> getResultArguments(const std::vector<const KernelArgument*>& argumentPointers) const;
+    void clearTargetBuffers();
 };
 
 #else

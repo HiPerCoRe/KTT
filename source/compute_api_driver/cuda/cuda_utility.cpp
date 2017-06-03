@@ -36,6 +36,31 @@ std::string getCudaEnumName(const CUresult value)
     }
 }
 
+std::string getNvrtcEnumName(const nvrtcResult value)
+{
+    switch (value)
+    {
+    case NVRTC_SUCCESS:
+        return std::string("NVRTC_SUCCESS");
+    case NVRTC_ERROR_OUT_OF_MEMORY:
+        return std::string("NVRTC_ERROR_OUT_OF_MEMORY");
+    case NVRTC_ERROR_PROGRAM_CREATION_FAILURE:
+        return std::string("NVRTC_ERROR_PROGRAM_CREATION_FAILURE");
+    case NVRTC_ERROR_INVALID_INPUT:
+        return std::string("NVRTC_ERROR_INVALID_INPUT");
+    case NVRTC_ERROR_INVALID_PROGRAM:
+        return std::string("NVRTC_ERROR_INVALID_PROGRAM");
+    case NVRTC_ERROR_INVALID_OPTION:
+        return std::string("NVRTC_ERROR_INVALID_OPTION");
+    case NVRTC_ERROR_COMPILATION:
+        return std::string("NVRTC_ERROR_COMPILATION");
+    case NVRTC_ERROR_NAME_EXPRESSION_NOT_VALID:
+        return std::string("NVRTC_ERROR_NAME_EXPRESSION_NOT_VALID");
+    default:
+        return std::to_string(static_cast<int>(value));
+    }
+}
+
 void checkCudaError(const CUresult value)
 {
     if (value != CUDA_SUCCESS)
@@ -56,14 +81,16 @@ void checkCudaError(const nvrtcResult value, const std::string& message)
 {
     if (value != NVRTC_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal CUDA NVRTC error: ") + std::to_string(value) + "\nAdditional info: " + message);
+        throw std::runtime_error(std::string("Internal CUDA NVRTC error: ") + getNvrtcEnumName(value) + "\nAdditional info: " + message);
     }
 }
 
 float getKernelRunDuration(const CUevent start, const CUevent end)
 {
-    // to do
-    return 0.0f;
+    float result = 0.0f;
+    checkCudaError(cuEventElapsedTime(&result, start, end), std::string("cuEventElapsedTime"));
+
+    return result;
 }
 
 } // namespace ktt
