@@ -58,7 +58,8 @@ public:
     std::unique_ptr<CudaBuffer> createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size, const size_t kernelArgumentId) const;
     std::unique_ptr<CudaEvent> createEvent() const;
     std::unique_ptr<CudaKernel> createKernel(const CudaProgram& program, const std::string& kernelName) const;
-    float enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;
+    float enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+        const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize) const;
 
 private:
     size_t deviceIndex;
@@ -66,13 +67,17 @@ private:
     std::unique_ptr<CudaStream> stream;
     std::string compilerOptions;
     std::set<std::unique_ptr<CudaBuffer>> buffers;
+    std::set<std::unique_ptr<CudaBuffer>> scalarBuffers;
     bool useReadBufferCache;
     bool useWriteBufferCache;
     bool useReadWriteBufferCache;
 
     DeviceInfo getCudaDeviceInfo(const size_t deviceIndex) const;
     std::vector<CudaDevice> getCudaDevices() const;
+    std::vector<CUdeviceptr*> getKernelArguments(const std::vector<const KernelArgument*>& argumentPointers);
+    size_t getSharedMemorySizeInBytes(const std::vector<const KernelArgument*>& argumentPointers) const;
     std::vector<KernelArgument> getResultArguments(const std::vector<const KernelArgument*>& argumentPointers) const;
+    CUdeviceptr* loadBufferFromCache(const size_t argumentId) const;
     void clearTargetBuffers();
 };
 

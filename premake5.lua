@@ -194,7 +194,18 @@ project "ExampleReduction"
     files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }
     includedirs { "include/**" }
     links { "KernelTuningToolkit" }
+
+if _OPTIONS["cuda"] then
+
+project "ExampleSimpleCuda"
+    kind "ConsoleApp"
     
+    files { "examples/simple_cuda/*.cpp", "examples/simple_cuda/*.cu" }
+    includedirs { "include/**" }
+    links { "KernelTuningToolkit" }
+    
+end -- _OPTIONS["cuda"]
+
 end -- _OPTIONS["no-examples"]
     
 -- Unit tests configuration   

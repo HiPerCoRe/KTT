@@ -28,15 +28,19 @@ public:
 
     void build(const std::string& compilerOptions)
     {
-        std::vector<std::string> individualOptions;
-        std::regex separator(" ");
-        std::sregex_token_iterator iterator(compilerOptions.begin(), compilerOptions.end(), separator, -1);
-        std::copy(iterator, std::sregex_token_iterator(), std::back_inserter(individualOptions));
-
         std::vector<const char*> individualOptionsChar;
-        for (const auto& option : individualOptions)
+
+        if (compilerOptions != std::string(""))
         {
-            individualOptionsChar.push_back(&option[0]);
+            std::vector<std::string> individualOptions;
+            std::regex separator(" ");
+            std::sregex_token_iterator iterator(compilerOptions.begin(), compilerOptions.end(), separator, -1);
+            std::copy(iterator, std::sregex_token_iterator(), std::back_inserter(individualOptions));
+
+            for (const auto& option : individualOptions)
+            {
+                individualOptionsChar.push_back(&option[0]);
+            }
         }
 
         nvrtcResult result = nvrtcCompileProgram(program, static_cast<int>(individualOptionsChar.size()), individualOptionsChar.data());

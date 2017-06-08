@@ -31,7 +31,7 @@ public:
         return configurations.at(index);
     }
 
-    void calculateNextConfiguration(const double previousConfigurationDuration) override
+    void calculateNextConfiguration(const double) override
     {
         index++;
     }

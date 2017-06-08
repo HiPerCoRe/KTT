@@ -46,9 +46,14 @@ public:
         return size;
     }
 
-    CUdeviceptr getBuffer() const
+    const CUdeviceptr* getBuffer() const
     {
-        return buffer;
+        return &buffer;
+    }
+
+    CUdeviceptr* getBuffer()
+    {
+        return &buffer;
     }
 
     size_t getKernelArgumentId() const

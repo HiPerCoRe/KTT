@@ -12,8 +12,7 @@ class CudaKernel
 {
 public:
     explicit CudaKernel(const std::string& ptxSource, const std::string& kernelName) :
-        kernelName(kernelName),
-        argumentsCount(0)
+        kernelName(kernelName)
     {
         checkCudaError(cuModuleLoadDataEx(&module, &ptxSource[0], 0, nullptr, nullptr), std::string("cuModuleLoadDataEx"));
         checkCudaError(cuModuleGetFunction(&kernel, module, &kernelName[0]), std::string("cuModuleGetFunction"));
@@ -34,16 +33,10 @@ public:
         return kernel;
     }
 
-    size_t getArgumentsCount() const
-    {
-        return argumentsCount;
-    }
-
 private:
     CUmodule module;
     std::string kernelName;
     CUfunction kernel;
-    size_t argumentsCount;
 };
 
 } // namespace ktt

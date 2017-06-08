@@ -261,7 +261,7 @@ This method only affects run of `launchComputation()` method under current confi
 * `void setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType)`:
 Enables or disables automatic vector argument synchronization between CPU buffers and compute API device buffers for specified type of kernel arguments.
 Disabling synchronization will improve performance in case the buffers are iteratively updated inside kernel only. Otherwise, synchronization should be enabled.
-Be default, synchronization is enabled for read-write and write-only arguments and disabled for read-only arguments.
+By default, synchronization is enabled for read-write and write-only arguments and disabled for read-only arguments.
 This method only affects run of `launchComputation()` method under current configuration.
 
 * `void updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:

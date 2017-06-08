@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, std::string("OUTER_UNROLL_FACTOR"), std::vector<size_t>{ 1, 2, 4, 8 }, ktt::ThreadModifierType::Global,
         ktt::ThreadModifierAction::Divide, ktt::Dimension::X);
 
-    // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
+    // Multiply work-group size in dimensions x and y by two parameters that follow (effectively setting work-group size to parameters' values)
     tuner.addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{ 4, 8, 16, 32 }, ktt::ThreadModifierType::Local,
         ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
     tuner.addParameter(kernelId, std::string("WORK_GROUP_SIZE_Y"), std::vector<size_t>{ 1, 2, 4, 8, 16, 32 }, ktt::ThreadModifierType::Local,
@@ -106,8 +106,8 @@ int main(int argc, char** argv)
     size_t energyGridId = tuner.addArgument(energyGrid, ktt::ArgumentMemoryType::ReadWrite);
 
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
-    tuner.setKernelArguments(kernelId,
-        std::vector<size_t>{ atomInfoId, atomInfoXId, atomInfoYId, atomInfoZId, atomInfoWId, numberOfAtomsId, gridSpacingId, energyGridId });
+    tuner.setKernelArguments(kernelId, std::vector<size_t>{ atomInfoId, atomInfoXId, atomInfoYId, atomInfoZId, atomInfoWId, numberOfAtomsId,
+        gridSpacingId, energyGridId });
     tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId });
 
     // Set search method to random search, only 10% of all configurations will be explored.

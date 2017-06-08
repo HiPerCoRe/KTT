@@ -105,7 +105,7 @@ private:
                 if (std::fabs(result.at(i) - referenceResult.at(i)) > toleranceThreshold)
                 {
                     logger->log(std::string("Results differ for argument with id: ") + std::to_string(argumentId) + ", index: " + std::to_string(i)
-                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i)) 
+                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
                         + ", difference: " + std::to_string(result.at(i) - referenceResult.at(i)));
                     return false;
                 }
@@ -122,7 +122,7 @@ private:
             if (result.at(i) != referenceResult.at(i))
             {
                 logger->log(std::string("Results differ for argument with id: ") + std::to_string(argumentId) + ", index: " + std::to_string(i)
-                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i)));
+                    + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i)));
                 return false;
             }
         }
