@@ -38,7 +38,7 @@ public:
         size_t cus = di.getMaxComputeUnits();
 
         // create parameter space
-        tuner->addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8,*/ 16, 32, 64, 128, 256, 512 },
+        tuner->addParameter(kernelId, "WORK_GROUP_SIZE_X", { /*1, 2, 4, 8, 16, */32, 64, 128, 256, 512 },
             ktt::ThreadModifierType::Local,
             ktt::ThreadModifierAction::Multiply,
             ktt::Dimension::X);
@@ -53,9 +53,11 @@ public:
         tuner->addConstraint(kernelId, persistConstraint, { "UNBOUNDED_WG", "WG_NUM" });
         auto persistentAtomic = [](std::vector<size_t> v) { return (v[0] == 1) || (v[0] == 0 && v[1] == 1); };
         tuner->addConstraint(kernelId, persistentAtomic, { "UNBOUNDED_WG", "USE_ATOMICS" } );
+        auto unboundedWG = [](std::vector<size_t> v) { return (!v[0] || v[1] >= 32); };
+        tuner->addConstraint(kernelId, unboundedWG, { "UNBOUNDED_WG", "WORK_GROUP_SIZE_X" } );
 
         tuner->setReferenceClass(kernelId, std::make_unique<referenceReduction>(*src, dstId), std::vector<size_t>{ dstId });
-        tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n/100000.0f);
+        tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n*500.0f/10000000.0f);
         tuner->setValidationRange(dstId, 1);
     }
 

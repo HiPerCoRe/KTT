@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iomanip>
+
 #include "../../include/ktt.h"
 
 class referenceReduction : public ktt::ReferenceClass
@@ -25,6 +27,7 @@ public:
         }
         res.clear();
         res.push_back((float)resD[0]);
+        std::cout << "Reference in double: " << std::setprecision(10) << resD[0] << std::endl;
     }
 
     virtual const void* getData(const size_t argumentId) const override {

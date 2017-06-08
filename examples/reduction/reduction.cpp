@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     std::vector<float> dst(nAlloc);
     for (int i = 0; i < n; i++)
     {
-        src[i] = 1.0f;//(float) rand() / (float) RAND_MAX + 1.0f;
+        src[i] = 1000.0f*((float)rand()) / ((float) RAND_MAX);
         dst[i] = 0.0f;
     }
     for (int i = n; i < nAlloc; i++)
