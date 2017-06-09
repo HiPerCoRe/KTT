@@ -42,21 +42,16 @@ private:
 
 int main(int argc, char** argv)
 {
-    // Initialize platform index, device index and path to kernel
-    size_t platformIndex = 0;
+    // Initialize device index and path to kernel
     size_t deviceIndex = 0;
     auto kernelFile = std::string("../examples/simple_cuda/simple_cuda_kernel.cu");
 
     if (argc >= 2)
     {
-        platformIndex = std::stoul(std::string{ argv[1] });
+        deviceIndex = std::stoul(std::string{ argv[1] });
         if (argc >= 3)
         {
-            deviceIndex = std::stoul(std::string{ argv[2] });
-            if (argc >= 4)
-            {
-                kernelFile = std::string{ argv[3] };
-            }
+            kernelFile = std::string{ argv[2] };
         }
     }
 
@@ -77,10 +72,10 @@ int main(int argc, char** argv)
         b.at(i) = static_cast<float>(i + 1);
     }
 
-    // Create tuner object for chosen platform and device
-    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeApi::Cuda);
+    // Create tuner object for specified device, platform index is ignored in case of CUDA API usage
+    ktt::Tuner tuner(0, deviceIndex, ktt::ComputeApi::Cuda);
 
-    // Add new kernel to tuner, specify kernel name, NDRange dimensions and work-group dimensions
+    // Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
     size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("simpleKernel"), gridDimensions, blockDimensions);
 
     // Add new arguments to tuner, argument data is copied from std::vector containers

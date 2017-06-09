@@ -1,7 +1,7 @@
 KTT - Kernel Tuning Toolkit
 ===========================
 
-KTT is a C++ tuning library for OpenCL (and soon CUDA) kernels. It is based on [CLTune project](https://github.com/CNugteren/CLTune).
+KTT is a C++ tuning library for OpenCL and CUDA kernels. It is based on [CLTune project](https://github.com/CNugteren/CLTune).
 It has API similar to that of CLTune, however, unlike CLTune, it also provides greater degree of customization and control over kernel tuning process.
 This includes ability to write tuning manipulators, which are classes that can be utilized to launch custom C++ code before or after individual kernel runs.
 This can be used, for example, to run some part of a computation on CPU or launch kernels iteratively.
@@ -40,6 +40,9 @@ Currently supported operating systems are Linux and Windows.
 
 It is possible to specify custom build directory, eg. `premake5 --outdir=custom gmake`.
 Default build directory is `build`.
+
+If current platform is Nvidia, support for CUDA functionality will be automatically included as well.
+It is possible to disable this behaviour by using corresponding Premake argument, eg. `premake5 --no-cuda gmake`.
     
 Documentation
 -------------
@@ -57,6 +60,7 @@ List of currently available examples:
 * `coulomb_sum`: advanced example which utilizes large number of tuning parameters, thread modifiers and constraints
 * `coulomb_sum_3d`: 3D version of previous example
 * `reduction`: advanced example which utilizes reference class, tuning manipulator and several tuning parameters
+* `simple_cuda`: version of simple example which utilizes CUDA compute API
 
 Tests
 -----

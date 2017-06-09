@@ -22,6 +22,9 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
         throw std::runtime_error("Specified compute API is not supported yet");
     }
     tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeApiDriver.get());
+
+    DeviceInfo info = computeApiDriver->getCurrentDeviceInfo();
+    logger.log(std::string("Initializing tuner for device: ") + info.getName());
 }
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,

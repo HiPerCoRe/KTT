@@ -67,7 +67,6 @@ private:
     std::unique_ptr<CudaStream> stream;
     std::string compilerOptions;
     std::set<std::unique_ptr<CudaBuffer>> buffers;
-    std::set<std::unique_ptr<CudaBuffer>> scalarBuffers;
     bool useReadBufferCache;
     bool useWriteBufferCache;
     bool useReadWriteBufferCache;

@@ -7,7 +7,12 @@ Constructor
 -----------
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex)`:
-Creates new tuner object for specified platform and device.
+Creates new tuner object for specified platform and device using OpenCL as compute API.
+Indices for all available platforms and devices can be retrieved by calling `printComputeApiInfo()` method.
+
+* `Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi)`:
+Creates new tuner object for specified platform, device and compute API.
+If selected compute API is Nvidia CUDA, platform index is ignored.
 Indices for all available platforms and devices can be retrieved by calling `printComputeApiInfo()` method.
 
 Compute API methods
@@ -107,7 +112,7 @@ Returns id assigned to argument by tuner.
 
 * `size_t addArgument(const size_t elementsCount)`:
 Adds new local memory argument to tuner. All local memory arguments are read-only.
-Elements count specifies, how many elements of provided data type can the argument contain.
+Elements count specifies, how many elements of provided data type will the argument contain.
 Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 

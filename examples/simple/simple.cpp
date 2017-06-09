@@ -77,7 +77,7 @@ int main(int argc, char** argv)
         b.at(i) = static_cast<float>(i + 1);
     }
 
-    // Create tuner object for chosen platform and device
+    // Create tuner object for specified platform and device
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
     // Add new kernel to tuner, specify kernel name, NDRange dimensions and work-group dimensions

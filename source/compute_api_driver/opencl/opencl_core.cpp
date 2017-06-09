@@ -216,7 +216,9 @@ cl_ulong OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_
         globalSize.data(), localSize.data(), 0, nullptr, &profilingEvent);
     checkOpenclError(result, std::string("clEnqueueNDRangeKernel"));
 
-    clFinish(commandQueue->getQueue());
+    // Wait for computation to finish
+    checkOpenclError(clWaitForEvents(1, &profilingEvent), std::string("clWaitForEvents"));
+
     return getKernelRunDuration(profilingEvent);
 }
 

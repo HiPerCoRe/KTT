@@ -1,5 +1,7 @@
 -- Helper function to find compute API headers and libraries
 
+cuda_examples = false
+
 function findLibraries()
     local path = os.getenv("INTELOCLSDKROOT")
     if (path) then
@@ -71,7 +73,8 @@ function findLibraries()
         filter {}
         links { "OpenCL" }
         
-        if _OPTIONS["cuda"] then
+        if not _OPTIONS["no-cuda"] then
+            cuda_examples = true
             defines { "PLATFORM_CUDA" }
             links { "cuda", "nvrtc" }
         end
@@ -93,8 +96,8 @@ newoption
 
 newoption
 {
-   trigger = "cuda",
-   description = "Enables usage of CUDA API in addition to OpenCL (Nvidia platform only)"
+   trigger = "no-cuda",
+   description = "Disables compilation of CUDA back-end (Nvidia platform only)"
 }
 
 newoption
@@ -195,7 +198,7 @@ project "ExampleReduction"
     includedirs { "include/**" }
     links { "KernelTuningToolkit" }
 
-if _OPTIONS["cuda"] then
+if cuda_examples then
 
 project "ExampleSimpleCuda"
     kind "ConsoleApp"
@@ -204,7 +207,7 @@ project "ExampleSimpleCuda"
     includedirs { "include/**" }
     links { "KernelTuningToolkit" }
     
-end -- _OPTIONS["cuda"]
+end -- cuda_examples
 
 end -- _OPTIONS["no-examples"]
     

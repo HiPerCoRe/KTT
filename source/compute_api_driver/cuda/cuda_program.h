@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <cstring>
 #include <regex>
 #include <string>
 #include <vector>
@@ -37,13 +39,23 @@ public:
             std::sregex_token_iterator iterator(compilerOptions.begin(), compilerOptions.end(), separator, -1);
             std::copy(iterator, std::sregex_token_iterator(), std::back_inserter(individualOptions));
 
-            for (const auto& option : individualOptions)
-            {
-                individualOptionsChar.push_back(&option[0]);
-            }
+            std::transform(individualOptions.begin(), individualOptions.end(), std::back_inserter(individualOptionsChar),
+                [](const std::string& sourceString)
+                {
+                    // making a copy is necessary, because nvrtc expects the options to be in continuous memory block
+                    char* result = new char[sourceString.size() + 1];
+                    std::memcpy(result, sourceString.c_str(), sourceString.size() + 1);
+                    return result; 
+                });
         }
 
         nvrtcResult result = nvrtcCompileProgram(program, static_cast<int>(individualOptionsChar.size()), individualOptionsChar.data());
+
+        for (size_t i = 0; i < individualOptionsChar.size(); i++)
+        {
+            delete[] individualOptionsChar.at(i);
+        }
+
         std::string buildInfo = getBuildInfo();
         checkCudaError(result, buildInfo);
     }

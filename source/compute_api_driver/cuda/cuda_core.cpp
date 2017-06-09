@@ -164,15 +164,13 @@ float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& glo
     auto end = createEvent();
 
     checkCudaError(cuEventRecord(start->getEvent(), stream->getStream()), std::string("cuEventRecord"));
-    checkCudaError(cuEventSynchronize(start->getEvent()), std::string("cuEventSynchronize"));
-
     checkCudaError(cuLaunchKernel(kernel.getKernel(), static_cast<unsigned int>(globalSize.at(0)), static_cast<unsigned int>(globalSize.at(1)),
         static_cast<unsigned int>(globalSize.at(2)), static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)),
         static_cast<unsigned int>(localSize.at(2)), static_cast<unsigned int>(localMemorySize), stream->getStream(), (void**)kernelArguments.data(),
         nullptr), std::string("cuLaunchKernel"));
-    checkCudaError(cuStreamSynchronize(stream->getStream()), std::string("cuStreamSynchronize"));
-
     checkCudaError(cuEventRecord(end->getEvent(), stream->getStream()), std::string("cuEventRecord"));
+
+    // Wait for computation to finish
     checkCudaError(cuEventSynchronize(end->getEvent()), std::string("cuEventSynchronize"));
 
     return getKernelRunDuration(start->getEvent(), end->getEvent());
@@ -192,8 +190,8 @@ std::vector<CudaDevice> CudaCore::getCudaDevices() const
     std::vector<CudaDevice> devices;
     for (const auto deviceId : deviceIds)
     {
-        std::string name(50, ' ');
-        checkCudaError(cuDeviceGetName(&name[0], 50, deviceId), "cuDeviceGetName");
+        std::string name(40, ' ');
+        checkCudaError(cuDeviceGetName(&name[0], 40, deviceId), "cuDeviceGetName");
         devices.push_back(CudaDevice(deviceId, name));
     }
 
@@ -243,8 +241,7 @@ std::vector<CUdeviceptr*> CudaCore::getKernelArguments(const std::vector<const K
         {
             continue;
         }
-
-        if (argument->getArgumentUploadType() == ArgumentUploadType::Vector)
+        else if (argument->getArgumentUploadType() == ArgumentUploadType::Vector)
         {
             if (argument->getArgumentMemoryType() == ArgumentMemoryType::ReadOnly && useReadBufferCache
                 || argument->getArgumentMemoryType() == ArgumentMemoryType::WriteOnly && useWriteBufferCache
@@ -257,19 +254,15 @@ std::vector<CUdeviceptr*> CudaCore::getKernelArguments(const std::vector<const K
                     continue; // buffer was successfully loaded from cache
                 }
             }
-        }
 
-        std::unique_ptr<CudaBuffer> buffer = createBuffer(argument->getArgumentMemoryType(), argument->getDataSizeInBytes(), argument->getId());
-        buffer->uploadData(argument->getData(), argument->getDataSizeInBytes());
-        result.push_back(buffer->getBuffer());
-
-        if (argument->getArgumentUploadType() == ArgumentUploadType::Vector)
-        {
+            std::unique_ptr<CudaBuffer> buffer = createBuffer(argument->getArgumentMemoryType(), argument->getDataSizeInBytes(), argument->getId());
+            buffer->uploadData(argument->getData(), argument->getDataSizeInBytes());
+            result.push_back(buffer->getBuffer());
             buffers.insert(std::move(buffer)); // buffer data will be stolen
         }
         else if (argument->getArgumentUploadType() == ArgumentUploadType::Scalar)
         {
-            scalarBuffers.insert(std::move(buffer)); // buffer data will be stolen
+            result.push_back((CUdeviceptr*)argument->getData());
         }
     }
 
@@ -332,8 +325,6 @@ CUdeviceptr* CudaCore::loadBufferFromCache(const size_t argumentId) const
 
 void CudaCore::clearTargetBuffers()
 {
-    scalarBuffers.clear();
-
     if (!useReadBufferCache)
     {
         clearCache(ArgumentMemoryType::ReadOnly);

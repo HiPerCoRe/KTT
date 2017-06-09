@@ -85,8 +85,6 @@ cl_mem_flags getOpenclMemoryType(const ArgumentMemoryType& argumentMemoryType)
 
 cl_ulong getKernelRunDuration(const cl_event profilingEvent)
 {
-    checkOpenclError(clWaitForEvents(1, &profilingEvent));
-
     cl_ulong executionStart;
     cl_ulong executionEnd;
     checkOpenclError(clGetEventProfilingInfo(profilingEvent, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &executionStart, nullptr));
