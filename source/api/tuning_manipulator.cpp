@@ -99,4 +99,16 @@ DimensionVector TuningManipulator::convertToDimensionVector(const std::vector<si
     return DimensionVector(1, 1, 1);
 }
 
+size_t TuningManipulator::getParameterValue(const std::string& parameterName, const std::vector<ParameterValue>& parameterValues)
+{
+    for (const auto& parameterValue : parameterValues)
+    {
+        if (std::get<0>(parameterValue) == parameterName)
+        {
+            return std::get<1>(parameterValue);
+        }
+    }
+    throw std::runtime_error(std::string("No parameter with following name found: ") + parameterName);
+}
+
 } // namespace ktt

@@ -284,6 +284,9 @@ Converts provided dimension vector to standard vector.
 Converts provided standard vector to dimension vector.
 If provided vector size is less than 3, fills remaining dimension vector positions with 1s.
 
+* `size_t getParameterValue(const std::string& parameterName, const std::vector<ParameterValue>& parameterValues)`:
+Returns value of specified parameter from provided list of parameters.
+
 Tuning manipulator example
 --------------------------
 

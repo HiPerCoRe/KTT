@@ -57,6 +57,7 @@ public:
     // Utility methods
     static std::vector<size_t> convertFromDimensionVector(const DimensionVector& vector);
     static DimensionVector convertToDimensionVector(const std::vector<size_t>& vector);
+    static size_t getParameterValue(const std::string& parameterName, const std::vector<ParameterValue>& parameterValues);
 
     friend class TuningRunner;
 
