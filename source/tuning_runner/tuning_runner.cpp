@@ -8,8 +8,8 @@
 #include "searcher/full_searcher.h"
 #include "searcher/pso_searcher.h"
 #include "searcher/random_searcher.h"
-#include "../utility/ktt_utility.h"
-#include "../utility/timer.h"
+#include "utility/ktt_utility.h"
+#include "utility/timer.h"
 
 namespace ktt
 {

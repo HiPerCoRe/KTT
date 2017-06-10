@@ -6,7 +6,7 @@
 
 #include "cuda.h"
 #include "nvrtc.h"
-#include "../../enum/argument_memory_type.h"
+#include "enum/argument_memory_type.h"
 
 namespace ktt
 {

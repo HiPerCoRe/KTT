@@ -4,13 +4,13 @@
 #include <iostream>
 #include <vector>
 
-#include "../half.hpp"
+#include "half.hpp"
 using half_float::half;
 
-#include "../enum/argument_data_type.h"
-#include "../enum/argument_memory_type.h"
-#include "../enum/argument_upload_type.h"
-#include "../enum/argument_print_condition.h"
+#include "enum/argument_data_type.h"
+#include "enum/argument_memory_type.h"
+#include "enum/argument_upload_type.h"
+#include "enum/argument_print_condition.h"
 
 namespace ktt
 {

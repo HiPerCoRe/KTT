@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../include/ktt.h"
+#include "tuner_api.h"
 
 class tunableCoulomb : public ktt::TuningManipulator {
     ktt::Tuner *tuner;

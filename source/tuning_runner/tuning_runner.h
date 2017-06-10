@@ -8,12 +8,12 @@
 #include "manipulator_interface_implementation.h"
 #include "result_validator.h"
 #include "searcher/searcher.h"
-#include "../api/tuning_manipulator.h"
-#include "../compute_api_driver/compute_api_driver.h"
-#include "../dto/tuning_result.h"
-#include "../kernel/kernel_manager.h"
-#include "../kernel_argument/argument_manager.h"
-#include "../utility/logger.h"
+#include "api/tuning_manipulator.h"
+#include "compute_api_driver/compute_api_driver.h"
+#include "dto/tuning_result.h"
+#include "kernel/kernel_manager.h"
+#include "kernel_argument/argument_manager.h"
+#include "utility/logger.h"
 
 namespace ktt
 {

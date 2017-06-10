@@ -51,6 +51,7 @@ Returns id assigned to kernel by tuner.
 Sets kernel arguments for specified kernel by providing corresponding argument ids (returned by argument addition methods).
 Different kernels can have same arguments assigned (copies of arguments for each kernel will be made during the tuning process).
 Argument ids must be specified in order of their declaration inside kernel source.
+Argument ids must be unique.
 
 * `void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values)`:
 Adds new parameter for specified kernel, parameter needs to have a unique name and list of valid values.
@@ -271,6 +272,7 @@ This method only affects run of `launchComputation()` method under current confi
 
 * `void updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:
 Sets kernel arguments for specified kernel by providing corresponding argument ids.
+Argument ids must be unique.
 This method only affects run of `launchComputation()` method under current configuration.
 
 * `void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond)`:

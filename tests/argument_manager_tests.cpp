@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "../source/kernel_argument/argument_manager.h"
+#include "kernel_argument/argument_manager.h"
 
 template <typename T> bool around(const T value, const T other, const T tolerance)
 {

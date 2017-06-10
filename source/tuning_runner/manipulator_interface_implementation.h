@@ -3,10 +3,10 @@
 #include <map>
 
 #include "manipulator_interface.h"
-#include "../compute_api_driver/compute_api_driver.h"
-#include "../dto/kernel_runtime_data.h"
-#include "../kernel/kernel_configuration.h"
-#include "../kernel_argument/kernel_argument.h"
+#include "compute_api_driver/compute_api_driver.h"
+#include "dto/kernel_runtime_data.h"
+#include "kernel/kernel_configuration.h"
+#include "kernel_argument/kernel_argument.h"
 
 namespace ktt
 {

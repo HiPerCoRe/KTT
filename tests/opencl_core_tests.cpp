@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "../source/compute_api_driver/opencl/opencl_core.h"
+#include "compute_api_driver/opencl/opencl_core.h"
 
 std::string programSource(std::string("")
     + "__kernel void testKernel(float number, __global float* a, __global float* b, __global float* result)\n"

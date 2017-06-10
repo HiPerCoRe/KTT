@@ -1,8 +1,9 @@
 #pragma once
 
+#include <set>
 #include <vector>
 
-#include "../ktt_type_aliases.h"
+#include "ktt_type_aliases.h"
 
 namespace ktt
 {
@@ -19,6 +20,12 @@ template <typename T> bool elementExists(const T& element, const std::vector<T>&
         }
     }
     return false;
+}
+
+template <typename T> bool containsUnique(const std::vector<T>& vector)
+{
+    std::set<T> set(vector.begin(), vector.end());
+    return set.size() == vector.size();
 }
 
 } // namespace ktt

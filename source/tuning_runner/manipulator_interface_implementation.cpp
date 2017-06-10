@@ -2,8 +2,8 @@
 #include <utility>
 
 #include "manipulator_interface_implementation.h"
-#include "../utility/ktt_utility.h"
-#include "../utility/timer.h"
+#include "utility/ktt_utility.h"
+#include "utility/timer.h"
 
 namespace ktt
 {
@@ -136,6 +136,12 @@ void ManipulatorInterfaceImplementation::updateKernelArguments(const size_t kern
         throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
             + " was called inside tuning manipulator which did not advertise utilization of this kernel");
     }
+
+    if (!containsUnique(argumentIds))
+    {
+        throw std::runtime_error("Kernel argument ids assigned to single kernel must be unique");
+    }
+
     dataPointer->second.setArgumentIndices(argumentIds);
 }
 

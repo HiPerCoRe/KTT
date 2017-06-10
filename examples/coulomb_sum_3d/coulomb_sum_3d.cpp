@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "../../include/ktt.h"
+#include "tuner_api.h"
 
 int main(int argc, char** argv)
 {

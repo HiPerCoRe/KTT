@@ -68,13 +68,13 @@ public:
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
     void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
-    void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values);
-    void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values);
+    void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues);
+    void addParameter(const std::vector<size_t>& kernelIds, const std::string& parameterName, const std::vector<size_t>& parameterValues);
 
     // Advanced kernel handling methods
-    void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values,
+    void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
         const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
-    void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values,
+    void addParameter(const std::vector<size_t>& kernelIds, const std::string& parameterName, const std::vector<size_t>& parameterValues,
         const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
     void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
@@ -89,15 +89,15 @@ public:
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(data.data(), data.size(), dataType, argumentMemoryType);
     }
-    template <typename T> size_t addArgument(const T& value)
+    template <typename T> size_t addArgument(const T& scalarValue)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(&value, dataType);
+        return addArgument(&scalarValue, dataType);
     }
-    template <typename T> size_t addArgument(const size_t elementsCount)
+    template <typename T> size_t addArgument(const size_t localMemoryElementsCount)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(elementsCount, dataType);
+        return addArgument(localMemoryElementsCount, dataType);
     }
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
@@ -136,7 +136,7 @@ private:
     size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
         const ArgumentMemoryType& argumentMemoryType);
     size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType);
-    size_t addArgument(const size_t elementsCount, const ArgumentDataType& argumentDataType);
+    size_t addArgument(const size_t localMemoryElementsCount, const ArgumentDataType& argumentDataType);
 
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {

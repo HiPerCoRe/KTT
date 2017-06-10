@@ -188,7 +188,7 @@ project "KernelTuningToolkit"
     kind "SharedLib"
     
     files { "source/**.h", "source/**.hpp", "source/**.cpp" }
-    includedirs { "source/*" }
+    includedirs { "source" }
     defines { "KTT_LIBRARY" }
     
     local libraries = false
@@ -216,35 +216,35 @@ project "ExampleSimple"
     kind "ConsoleApp"
     
     files { "examples/simple/*.cpp", "examples/simple/*.cl" }
-    includedirs { "include/**" }
+    includedirs { "source" }
     links { "KernelTuningToolkit" }
 
 project "ExampleOpenCLInfo"
     kind "ConsoleApp"
     
     files { "examples/opencl_info/*.cpp" }
-    includedirs { "include/**" }
+    includedirs { "source" }
     links { "KernelTuningToolkit" }
 
 project "ExampleCoulombSum"
     kind "ConsoleApp"
     
     files { "examples/coulomb_sum/*.h", "examples/coulomb_sum/*.cpp", "examples/coulomb_sum/*.cl" }
-    includedirs { "include/**" }
+    includedirs { "source" }
     links { "KernelTuningToolkit" }
 
 project "ExampleCoulombSum3D"
     kind "ConsoleApp"
 
     files { "examples/coulomb_sum_3d/*.cpp", "examples/coulomb_sum_3d/*.cl" }
-    includedirs { "include/**" }
+    includedirs { "source" }
     links { "KernelTuningToolkit" }
 
 project "ExampleReduction"
     kind "ConsoleApp"
 
     files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }
-    includedirs { "include/**" }
+    includedirs { "source" }
     links { "KernelTuningToolkit" }
 
 if cuda_examples then
@@ -253,7 +253,7 @@ project "ExampleSimpleCuda"
     kind "ConsoleApp"
     
     files { "examples/simple_cuda/*.cpp", "examples/simple_cuda/*.cu" }
-    includedirs { "include/**" }
+    includedirs { "source" }
     links { "KernelTuningToolkit" }
     
 end -- cuda_examples
@@ -267,7 +267,7 @@ project "Tests"
     kind "ConsoleApp"
     
     files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl", "source/**.h", "source/**.hpp", "source/**.cpp" }
-    includedirs { "tests/**", "source/**" }
+    includedirs { "tests", "source" }
     defines { "KTT_TESTS", "DO_NOT_USE_WMAIN" }
     
     if _OPTIONS["platform"] then

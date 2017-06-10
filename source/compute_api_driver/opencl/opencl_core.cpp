@@ -1,5 +1,5 @@
 #include "opencl_core.h"
-#include "../../utility/timer.h"
+#include "utility/timer.h"
 
 namespace ktt
 {

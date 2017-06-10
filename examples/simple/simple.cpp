@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "../../include/ktt.h"
+#include "tuner_api.h"
 
 // Implementation of reference class interface for result validation
 class SimpleReferenceClass : public ktt::ReferenceClass

@@ -1,8 +1,8 @@
 #include <string>
 #include <utility>
 
-#include "../utility/ktt_utility.h"
 #include "result_validator.h"
+#include "utility/ktt_utility.h"
 
 namespace ktt
 {

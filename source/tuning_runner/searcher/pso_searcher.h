@@ -6,7 +6,7 @@
 #include <random>
 
 #include "searcher.h"
-#include "../../kernel/kernel_parameter.h"
+#include "kernel/kernel_parameter.h"
 
 namespace ktt
 {

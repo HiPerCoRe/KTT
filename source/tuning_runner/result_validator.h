@@ -9,13 +9,13 @@
 #include <type_traits>
 #include <vector>
 
-#include "../api/reference_class.h"
-#include "../compute_api_driver/compute_api_driver.h"
-#include "../enum/validation_method.h"
-#include "../kernel/kernel_manager.h"
-#include "../kernel_argument/argument_manager.h"
-#include "../utility/argument_printer.h"
-#include "../utility/logger.h"
+#include "api/reference_class.h"
+#include "compute_api_driver/compute_api_driver.h"
+#include "enum/validation_method.h"
+#include "kernel/kernel_manager.h"
+#include "kernel_argument/argument_manager.h"
+#include "utility/argument_printer.h"
+#include "utility/logger.h"
 
 namespace ktt
 {
