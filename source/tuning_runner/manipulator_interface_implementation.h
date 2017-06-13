@@ -24,11 +24,11 @@ public:
     DimensionVector getCurrentLocalSize(const size_t kernelId) const override;
     std::vector<ParameterValue> getCurrentConfiguration() const override;
     void updateArgumentScalar(const size_t argumentId, const void* argumentData) override;
-    void updateArgumentVector(const size_t argumentId, const void* argumentData) override;
-    void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements) override;
-    void setAutomaticArgumentUpdate(const bool flag) override;
-    void setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
-    void updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds) override;
+    void updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation) override;
+    void updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation,
+        const size_t numberOfElements) override;
+    void synchronizeArgumentVector(const size_t argumentId, const bool downloadToHost) override;
+    void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds) override;
     void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond) override;
 
     // Core methods
@@ -44,15 +44,13 @@ private:
     KernelRunResult currentResult;
     KernelConfiguration currentConfiguration;
     std::map<size_t, KernelRuntimeData> kernelDataMap;
-    std::vector<KernelArgument> kernelArguments;
-    bool automaticArgumentUpdate;
-    bool synchronizeWriteArguments;
-    bool synchronizeReadWriteArguments;
+    std::map<size_t, KernelArgument> kernelArgumentMap;
 
     // Helper methods
-    void updateArgument(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
-        const ArgumentUploadType& argumentUploadType, const bool overrideNumberOfElements);
     std::vector<const KernelArgument*> getArgumentPointers(const std::vector<size_t>& argumentIndices);
+    void updateArgumentHost(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
+        const ArgumentUploadType& argumentUploadType);
+    void updateArgumentDevice(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes);
 };
 
 } // namespace ktt

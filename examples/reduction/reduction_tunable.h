@@ -68,7 +68,8 @@ public:
         ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
         std::vector<ktt::ParameterValue> parameterValues = getCurrentConfiguration();
         ktt::DimensionVector myGlobalSize = globalSize;
-        setArgumentSynchronization(false, ktt::ArgumentMemoryType::ReadWrite);
+        // setArgumentSynchronization(false, ktt::ArgumentMemoryType::ReadWrite);
+        // to do: update this example for new manipulator methods
         
         // change global size for constant numners of work-groups
         //XXX this may be done also by thread modifier operators in constructor

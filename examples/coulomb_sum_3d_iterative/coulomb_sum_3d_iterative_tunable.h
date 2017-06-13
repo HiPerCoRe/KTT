@@ -75,8 +75,8 @@ public:
         const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
         const ktt::DimensionVector workGroupDimensions(1, 1, 1);
         const ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
-        kernelId = tuner->addKernelFromFile("../examples/coulomb_sum/coulomb_sum_kernel.cl", "directCoulombSum", ndRangeDimensions, workGroupDimensions);
-        referenceKernelId = tuner->addKernelFromFile("../examples/coulomb_sum/coulomb_sum_reference_kernel.cl", "directCoulombSumReference", ndRangeDimensions, referenceWorkGroupDimensions);
+        kernelId = tuner->addKernelFromFile("../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_kernel.cl", "directCoulombSum", ndRangeDimensions, workGroupDimensions);
+        referenceKernelId = tuner->addKernelFromFile("../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_reference_kernel.cl", "directCoulombSumReference", ndRangeDimensions, referenceWorkGroupDimensions);
 
         // create input/output in tuner
         atomInfoId = tuner->addArgument(atomInfo, ktt::ArgumentMemoryType::ReadOnly);
@@ -120,7 +120,8 @@ public:
     launchComputation is responsible for actual execution of tuned kernel */
     virtual void launchComputation(const size_t kernelId) override {
         // switch off synchronization of grid map
-        setArgumentSynchronization(false, ktt::ArgumentMemoryType::ReadWrite);
+        //setArgumentSynchronization(false, ktt::ArgumentMemoryType::ReadWrite);
+        // to do: update this example for new manipulator methods
 
         // get kernel data
         ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);
@@ -137,12 +138,14 @@ public:
             if (getParameterValue(parameterValues, "USE_SOA") == 0) {
                 for (int j = 0; j < atoms; j++)
                     atomInfoPrecomp[j*4+2] = (z-atomInfoZ[j])*(z-atomInfoZ[j]);
-                updateArgumentVector(atomInfoPrecompId, atomInfoPrecomp.data());
+                //updateArgumentVector(atomInfoPrecompId, atomInfoPrecomp.data());
+                // to do: update this example for new manipulator methods
             }
             else {
                 for (int j = 0; j < atoms; j++)
                     atomInfoZ2[j] = (z-atomInfoZ[j])*(z-atomInfoZ[j]);
-                updateArgumentVector(atomInfoZ2Id, atomInfoZ2.data());
+                //updateArgumentVector(atomInfoZ2Id, atomInfoZ2.data());
+                // to do: update this example for new manipulator methods
             }
             updateArgumentScalar(zIndexId, &i);
         

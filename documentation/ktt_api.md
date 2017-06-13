@@ -3,8 +3,8 @@ KTT API documentation
 
 This file describes the API of KTT framework. All classes and methods are located in the `ktt` namespace.
 
-Constructor
------------
+Constructors
+------------
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex)`:
 Creates new tuner object for specified platform and device using OpenCL as compute API.
@@ -58,8 +58,7 @@ Adds new parameter for specified kernel, parameter needs to have a unique name a
 During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
 
 * `void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values)`:
-Adds new parameter for all specified kernels, parameter needs to have a unique name and list of valid values.
-During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
+Calls corresponding `addParameter()` method for all specified kernel ids.
 
 Advanced kernel handling methods
 --------------------------------
@@ -71,16 +70,13 @@ Additionally, parameter value modifies number of threads in either global or loc
 Form of modification depends on thread modifier action argument. If there are multiple thread modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
 
 * `void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)`:
-Adds new parameter for all specified kernels, parameter needs to have a unique name and list of valid values.
-During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
-Additionally, parameter value modifies number of threads in either global or local space in specified dimension.
-Form of modification depends on thread modifier action argument. If there are multiple thread modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
+Calls corresponding `addParameter()` method for all specified kernel ids.
 
 * `void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
 Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
 
 * `void addConstraint(const std::vector<size_t>& kernelIds, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
-Adds new constraint for all specified kernels. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
+Calls corresponding `addConstraint()` method for all specified kernel ids.
 
 * `void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)`:
 Specifies search method for given kernel. Number of required search arguments depends on specified search method.
@@ -248,29 +244,24 @@ Updates scalar argument, which is utilized by currently tuned kernel.
 This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
-* `void updateArgumentVector(const size_t argumentId, const void* argumentData)`:
-Updates vector argument, which is utilized by currently tuned kernel. Preserves number of elements inside the argument.
+* `void updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation)`:
+Updates vector argument, which is utilized by currently tuned kernel.
+Argument location specifies, whether the argument should be updated on host side, device side or both.
 This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
-* `void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)`:
-Updates vector argument, which is utilized by currently tuned kernel. Possibly also modifies number of elements inside the argument.
+* `void updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation, const size_t numberOfElements)`:
+Updates vector argument, which is utilized by currently tuned kernel.
+Possibly also modifies number of elements inside the argument.
+Argument location specifies, whether the argument should be updated on host side, device side or both.
 This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
-* `void setAutomaticArgumentUpdate(const bool flag)`:
-Enables or disables automatic vector argument updates for iterative kernel launches based on provided flag.
-When this functionality is enabled, write-only and read-write arguments will be automatically updated each time `runKernel()` method finishes, using results computed by kernel.
-Automatic argument updates are disabled by default. Automatic argument updates work only if argument synchronization for corresponding argument type is enabled.
-This method only affects run of `launchComputation()` method under current configuration.
+* `void synchronizeArgumentVector(const size_t argumentId, const bool downloadToHost)`:
+Synchronizes vector argument between device and host.
+If downloadToHost flag is set to true, argument will be transferred from device to host, otherwise argument will be transferred from host to device.
 
-* `void setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType)`:
-Enables or disables automatic vector argument synchronization between CPU buffers and compute API device buffers for specified type of kernel arguments.
-Disabling synchronization will improve performance in case the buffers are iteratively updated inside kernel only. Otherwise, synchronization should be enabled.
-By default, synchronization is enabled for read-write and write-only arguments and disabled for read-only arguments.
-This method only affects run of `launchComputation()` method under current configuration.
-
-* `void updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:
+* `void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:
 Sets kernel arguments for specified kernel by providing corresponding argument ids.
 Argument ids must be unique.
 This method only affects run of `launchComputation()` method under current configuration.

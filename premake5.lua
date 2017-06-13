@@ -226,10 +226,10 @@ project "ExampleOpenCLInfo"
     includedirs { "source" }
     links { "KernelTuningToolkit" }
 
-project "ExampleCoulombSum"
+project "ExampleCoulombSum2D"
     kind "ConsoleApp"
     
-    files { "examples/coulomb_sum/*.h", "examples/coulomb_sum/*.cpp", "examples/coulomb_sum/*.cl" }
+    files { "examples/coulomb_sum_2d/*.cpp", "examples/coulomb_sum_2d/*.cl" }
     includedirs { "source" }
     links { "KernelTuningToolkit" }
 
@@ -240,6 +240,13 @@ project "ExampleCoulombSum3D"
     includedirs { "source" }
     links { "KernelTuningToolkit" }
 
+project "ExampleCoulombSum3DIterative"
+    kind "ConsoleApp"
+
+    files { "examples/coulomb_sum_3d_iterative/*.h", "examples/coulomb_sum_3d_iterative/*.cpp", "examples/coulomb_sum_3d_iterative/*.cl" }
+    includedirs { "source" }
+    links { "KernelTuningToolkit" }
+    
 project "ExampleReduction"
     kind "ConsoleApp"
 

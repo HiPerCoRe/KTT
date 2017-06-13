@@ -41,29 +41,25 @@ void TuningManipulator::updateArgumentScalar(const size_t argumentId, const void
     manipulatorInterface->updateArgumentScalar(argumentId, argumentData);
 }
 
-void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData)
+void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation)
 {
-    manipulatorInterface->updateArgumentVector(argumentId, argumentData);
+    manipulatorInterface->updateArgumentVector(argumentId, argumentData, argumentLocation);
 }
 
-void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)
+void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation,
+    const size_t numberOfElements)
 {
-    manipulatorInterface->updateArgumentVector(argumentId, argumentData, numberOfElements);
+    manipulatorInterface->updateArgumentVector(argumentId, argumentData, argumentLocation, numberOfElements);
 }
 
-void  TuningManipulator::setAutomaticArgumentUpdate(const bool flag)
+void TuningManipulator::synchronizeArgumentVector(const size_t argumentId, const bool downloadToHost)
 {
-    manipulatorInterface->setAutomaticArgumentUpdate(flag);
+    manipulatorInterface->synchronizeArgumentVector(argumentId, downloadToHost);
 }
 
-void TuningManipulator::setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType)
+void TuningManipulator::setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
 {
-    manipulatorInterface->setArgumentSynchronization(flag, argumentMemoryType);
-}
-
-void TuningManipulator::updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
-{
-    manipulatorInterface->updateKernelArguments(kernelId, argumentIds);
+    manipulatorInterface->setKernelArguments(kernelId, argumentIds);
 }
 
 void TuningManipulator::swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond)

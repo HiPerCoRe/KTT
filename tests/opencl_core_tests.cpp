@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include "compute_api_driver/opencl/opencl_core.h"
+#include "kernel_argument/kernel_argument.h"
 
 std::string programSource(std::string("")
     + "__kernel void testKernel(float number, __global float* a, __global float* b, __global float* result)\n"
@@ -31,7 +32,7 @@ TEST_CASE("Working with program and kernel", "[openclCore]")
     }
 }
 
-TEST_CASE("Transfering data to / from buffer", "[openclCore]")
+TEST_CASE("Working with OpenCL buffer", "[openclCore]")
 {
     ktt::OpenclCore core(0, 0);
     std::vector<float> data;
@@ -40,18 +41,32 @@ TEST_CASE("Transfering data to / from buffer", "[openclCore]")
         data.push_back(static_cast<float>(i));
     }
 
-    std::unique_ptr<ktt::OpenclBuffer> buffer = core.createBuffer(ktt::ArgumentMemoryType::ReadOnly, data.size() * sizeof(float), 0);
-    REQUIRE(buffer->getType() == CL_MEM_READ_ONLY);
-    REQUIRE(buffer->getBuffer() != nullptr);
-    REQUIRE(buffer->getSize() == data.size() * sizeof(float));
+    auto argument = ktt::KernelArgument(0, data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly,
+        ktt::ArgumentUploadType::Vector);
 
-    std::vector<float> result(data.size());
-
-    core.uploadBufferData(*buffer, data.data(), data.size() * sizeof(float));
-    core.downloadBufferData(*buffer, result.data(), data.size() * sizeof(float));
-
-    for (size_t i = 0; i < data.size(); i++)
+    SECTION("Creating OpenCL buffer")
     {
-        REQUIRE(result.at(i) == data.at(i));
+        std::unique_ptr<ktt::OpenclBuffer> buffer = core.createBuffer(argument);
+        REQUIRE(buffer->getOpenclMemoryFlag() == CL_MEM_READ_ONLY);
+        REQUIRE(buffer->getBuffer() != nullptr);
+        REQUIRE(buffer->getBufferSize() == data.size() * sizeof(float));
+        REQUIRE(buffer->getElementSize() == sizeof(float));
+        REQUIRE(buffer->getKernelArgumentId() == argument.getId());
+    }
+
+    SECTION("Transfering argument to / from device")
+    {
+        core.uploadArgument(argument);
+        ktt::KernelArgument resultArgument = core.downloadArgument(argument.getId());
+
+        REQUIRE(resultArgument.getArgumentDataType() == argument.getArgumentDataType());
+        REQUIRE(resultArgument.getArgumentMemoryType() == argument.getArgumentMemoryType());
+        REQUIRE(resultArgument.getArgumentUploadType() == argument.getArgumentUploadType());
+        REQUIRE(resultArgument.getDataSizeInBytes() == argument.getDataSizeInBytes());
+        std::vector<float> result = resultArgument.getDataFloat();
+        for (size_t i = 0; i < data.size(); i++)
+        {
+            REQUIRE(result.at(i) == data.at(i));
+        }
     }
 }

@@ -60,7 +60,7 @@ List of currently available examples:
 
 * `opencl_info`: basic example showing how to retrieve detailed information about OpenCL platforms and devices through KTT API
 * `simple`: basic example showcasing how to run simple kernel with KTT framework, utilizes reference class, no actual autotuning is done
-* `coulomb_sum`: advanced example which utilizes large number of tuning parameters, thread modifiers and constraints
+* `coulomb_sum_2d`: advanced example which utilizes large number of tuning parameters, thread modifiers and constraints
 * `coulomb_sum_3d`: 3D version of previous example
 * `reduction`: advanced example which utilizes reference class, tuning manipulator and several tuning parameters
 * `simple_cuda`: version of simple example which utilizes CUDA compute API

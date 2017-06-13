@@ -48,17 +48,18 @@
 
 // Support for 16-bit floating point data type
 #include "half.hpp"
-using half_float::half;
 
 namespace ktt
 {
+
+using half_float::half; // Utilize half data type without namespace specifier
 
 class TunerCore; // Forward declaration of TunerCore class
 
 class KTT_API Tuner
 {
 public:
-    // Constructor and destructor
+    // Constructors and destructor
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex);
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
     ~Tuner();
@@ -101,7 +102,7 @@ public:
     }
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
-    // Kernel tuning methods
+    // Kernel tuning method
     void tuneKernel(const size_t kernelId);
 
     // Result printing methods
@@ -129,7 +130,7 @@ public:
     void setLoggingTarget(const std::string& filePath);
 
 private:
-    // Attributes
+    // Pointer to implementation class
     std::unique_ptr<TunerCore> tunerCore;
 
     // Helper methods

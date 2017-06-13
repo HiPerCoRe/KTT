@@ -35,10 +35,13 @@ public:
     // Compiler options setup
     void setCompilerOptions(const std::string& options) override;
 
-    // Argument cache handling
-    void setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType) override;
-    void clearCache() override;
-    void clearCache(const ArgumentMemoryType& argumentMemoryType) override;
+    // Argument handling methods
+    void uploadArgument(const KernelArgument& kernelArgument) override;
+    void updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes) override;
+    KernelArgument downloadArgument(const size_t argumentId) const override;
+    void clearBuffer(const size_t argumentId) override;
+    void clearBuffers() override;
+    void clearBuffers(const ArgumentMemoryType& argumentMemoryType) override;
 
     // High-level kernel execution methods
     KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
@@ -46,9 +49,7 @@ public:
 
     // Low-level kernel execution methods
     std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;
-    std::unique_ptr<OpenclBuffer> createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size, const size_t kernelArgumentId) const;
-    void uploadBufferData(OpenclBuffer& buffer, const void* source, const size_t dataSize) const;
-    void downloadBufferData(const OpenclBuffer& buffer, void* destination, const size_t dataSize) const;
+    std::unique_ptr<OpenclBuffer> createBuffer(const KernelArgument& argument) const;
     void setKernelArgument(OpenclKernel& kernel, const KernelArgument& argument);
     std::unique_ptr<OpenclKernel> createKernel(const OpenclProgram& program, const std::string& kernelName) const;
     cl_ulong enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;
@@ -61,9 +62,6 @@ private:
     std::unique_ptr<OpenclCommandQueue> commandQueue;
     std::string compilerOptions;
     std::set<std::unique_ptr<OpenclBuffer>> buffers;
-    bool useReadBufferCache;
-    bool useWriteBufferCache;
-    bool useReadWriteBufferCache;
 
     // Helper methods
     static PlatformInfo getOpenclPlatformInfo(const size_t platformIndex);
@@ -72,9 +70,7 @@ private:
     static std::vector<OpenclDevice> getOpenclDevices(const OpenclPlatform& platform);
     static DeviceType getDeviceType(const cl_device_type deviceType);
     void setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffer& buffer) const;
-    std::vector<KernelArgument> getResultArguments(const std::vector<const KernelArgument*>& argumentPointers) const;
     bool loadBufferFromCache(const size_t argumentId, OpenclKernel& openclKernel) const;
-    void clearTargetBuffers();
 };
 
 } // namespace ktt

@@ -25,12 +25,15 @@ public:
     // Compute API compiler options setup
     virtual void setCompilerOptions(const std::string& options) = 0;
 
-    // Argument cache handling
-    virtual void setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType) = 0;
-    virtual void clearCache() = 0;
-    virtual void clearCache(const ArgumentMemoryType& argumentMemoryType) = 0;
+    // Argument handling methods
+    virtual void uploadArgument(const KernelArgument& kernelArgument) = 0;
+    virtual void updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes) = 0;
+    virtual KernelArgument downloadArgument(const size_t argumentId) const = 0;
+    virtual void clearBuffer(const size_t argumentId) = 0;
+    virtual void clearBuffers() = 0;
+    virtual void clearBuffers(const ArgumentMemoryType& argumentMemoryType) = 0;
 
-    // Info retrieval methods
+    // Information retrieval methods
     virtual void printComputeApiInfo(std::ostream& outputTarget) const = 0;
     virtual std::vector<PlatformInfo> getPlatformInfo() const = 0;
     virtual std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const = 0;
