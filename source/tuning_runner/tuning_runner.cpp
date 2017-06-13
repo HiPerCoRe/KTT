@@ -168,6 +168,7 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(Tuni
     }
     manipulatorInterfaceImplementation->setConfiguration(currentConfiguration);
     manipulatorInterfaceImplementation->setKernelArguments(kernelArguments);
+    manipulatorInterfaceImplementation->uploadBuffers();
 
     Timer timer;
     timer.start();

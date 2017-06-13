@@ -28,13 +28,14 @@ public:
     void updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation,
         const size_t numberOfElements) override;
     void synchronizeArgumentVector(const size_t argumentId, const bool downloadToHost) override;
-    void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds) override;
+    void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds) override;
     void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond) override;
 
     // Core methods
     void addKernel(const size_t id, const KernelRuntimeData& kernelRuntimeData);
     void setConfiguration(const KernelConfiguration& kernelConfiguration);
     void setKernelArguments(const std::vector<KernelArgument>& kernelArguments);
+    void uploadBuffers();
     KernelRunResult getCurrentResult() const;
     void clearData();
 

@@ -259,9 +259,11 @@ This method is useful for iterative kernel launches.
 
 * `void synchronizeArgumentVector(const size_t argumentId, const bool downloadToHost)`:
 Synchronizes vector argument between device and host.
-If downloadToHost flag is set to true, argument will be transferred from device to host, otherwise argument will be transferred from host to device.
+If `downloadToHost` flag is set to true, argument will be transferred from device to host, otherwise argument will be transferred from host to device.
+This method only affects run of `launchComputation()` method under current configuration.
+This method is useful for iterative kernel launches.
 
-* `void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:
+* `void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:
 Sets kernel arguments for specified kernel by providing corresponding argument ids.
 Argument ids must be unique.
 This method only affects run of `launchComputation()` method under current configuration.

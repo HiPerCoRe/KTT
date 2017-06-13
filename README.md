@@ -62,6 +62,7 @@ List of currently available examples:
 * `simple`: basic example showcasing how to run simple kernel with KTT framework, utilizes reference class, no actual autotuning is done
 * `coulomb_sum_2d`: advanced example which utilizes large number of tuning parameters, thread modifiers and constraints
 * `coulomb_sum_3d`: 3D version of previous example
+* `coulomb_sum_3d_iterative`: 3D version of previous example, which utilizes tuning manipulator to iteratively launch 2D kernel
 * `reduction`: advanced example which utilizes reference class, tuning manipulator and several tuning parameters
 * `simple_cuda`: version of simple example which utilizes CUDA compute API
 

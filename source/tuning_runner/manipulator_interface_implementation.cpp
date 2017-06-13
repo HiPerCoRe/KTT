@@ -130,7 +130,7 @@ void ManipulatorInterfaceImplementation::synchronizeArgumentVector(const size_t 
     }
 }
 
-void ManipulatorInterfaceImplementation::setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
+void ManipulatorInterfaceImplementation::changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
 {
     auto dataPointer = kernelDataMap.find(kernelId);
     if (dataPointer == kernelDataMap.end())
@@ -197,6 +197,14 @@ void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<Ke
     for (const auto& kernelArgument : kernelArguments)
     {
         kernelArgumentMap.insert(std::make_pair(kernelArgument.getId(), kernelArgument));
+    }
+}
+
+void ManipulatorInterfaceImplementation::uploadBuffers()
+{
+    for (const auto& argument : kernelArgumentMap)
+    {
+        computeApiDriver->uploadArgument(argument.second);
     }
 }
 

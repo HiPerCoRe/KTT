@@ -54,7 +54,7 @@ public:
     void synchronizeArgumentVector(const size_t argumentId, const bool downloadToHost);
 
     // Kernel argument handling methods
-    void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
+    void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
     void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond);
 
     // Utility methods

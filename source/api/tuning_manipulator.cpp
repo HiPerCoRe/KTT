@@ -57,9 +57,9 @@ void TuningManipulator::synchronizeArgumentVector(const size_t argumentId, const
     manipulatorInterface->synchronizeArgumentVector(argumentId, downloadToHost);
 }
 
-void TuningManipulator::setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
+void TuningManipulator::changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
 {
-    manipulatorInterface->setKernelArguments(kernelId, argumentIds);
+    manipulatorInterface->changeKernelArguments(kernelId, argumentIds);
 }
 
 void TuningManipulator::swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond)
