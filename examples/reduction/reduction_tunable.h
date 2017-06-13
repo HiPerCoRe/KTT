@@ -68,14 +68,12 @@ public:
         ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
         std::vector<ktt::ParameterValue> parameterValues = getCurrentConfiguration();
         ktt::DimensionVector myGlobalSize = globalSize;
-        // setArgumentSynchronization(false, ktt::ArgumentMemoryType::ReadWrite);
-        // to do: update this example for new manipulator methods
         
         // change global size for constant numners of work-groups
         //XXX this may be done also by thread modifier operators in constructor
-        if (getParameterValue(parameterValues, std::string("UNBOUNDED_WG")) == 0) {
+        if (getParameterValue("UNBOUNDED_WG", parameterValues) == 0) {
             myGlobalSize = std::make_tuple(
-                getParameterValue(parameterValues, std::string("WG_NUM"))
+                getParameterValue("WG_NUM", parameterValues)
                 * std::get<0>(localSize), 1, 1);
         }
 
@@ -83,11 +81,11 @@ public:
         runKernel(kernelId, myGlobalSize, localSize);
 
         // execute kernel log n times, when atomics are not used 
-        if (getParameterValue(parameterValues, std::string("USE_ATOMICS")) == 0) {
+        if (getParameterValue("USE_ATOMICS", parameterValues) == 0) {
             size_t n = std::get<0>(globalSize) / std::get<0>(localSize);
             size_t inOffset = 0;
             size_t outOffset = n;
-            size_t vectorSize = getParameterValue(parameterValues, std::string("VECTOR_SIZE"));
+            size_t vectorSize = getParameterValue("VECTOR_SIZE", parameterValues);
             size_t wgSize = std::get<0>(localSize);
             
             size_t iterations = 0; // make sure the end result is in the correct buffer
@@ -121,14 +119,6 @@ public:
 
 /*
     simple utility functions */
-    size_t getParameterValue(const std::vector<ktt::ParameterValue>& parameterValue, const std::string& name){
-        for (auto parIt : parameterValue)
-            if (std::get<0>(parIt) == name)
-                return std::get<1>(parIt);
-
-        return 0;
-    }
-
     size_t getKernelId() const {
         return kernelId;
     }

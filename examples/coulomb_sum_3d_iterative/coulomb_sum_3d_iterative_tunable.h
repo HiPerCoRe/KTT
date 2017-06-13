@@ -119,10 +119,6 @@ public:
 /*
     launchComputation is responsible for actual execution of tuned kernel */
     virtual void launchComputation(const size_t kernelId) override {
-        // switch off synchronization of grid map
-        //setArgumentSynchronization(false, ktt::ArgumentMemoryType::ReadWrite);
-        // to do: update this example for new manipulator methods
-
         // get kernel data
         ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);
         ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
@@ -135,7 +131,7 @@ public:
             // perform precomputation for 2D kernel
             //XXX this code work correctly when z is fixed to constant here and in coulomb_sum_reference_kernel.cl, e.g. float z = gridSpacing * 1;
             float z = gridSpacing * float(i);
-            if (getParameterValue(parameterValues, "USE_SOA") == 0) {
+            if (getParameterValue("USE_SOA", parameterValues) == 0) {
                 for (int j = 0; j < atoms; j++)
                     atomInfoPrecomp[j*4+2] = (z-atomInfoZ[j])*(z-atomInfoZ[j]);
                 //updateArgumentVector(atomInfoPrecompId, atomInfoPrecomp.data());
@@ -163,14 +159,6 @@ public:
 
 /*
     simple utility methods */
-    size_t getParameterValue(const std::vector<ktt::ParameterValue>& parameterValue, const std::string& name){
-        for (auto parIt : parameterValue)
-            if (std::get<0>(parIt) == name)
-                return std::get<1>(parIt);
-
-        return 0;
-    }
-
     size_t getKernelId() const {
         return kernelId;
     }
