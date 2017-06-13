@@ -97,7 +97,7 @@ public:
         // create parameter space
 
         // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-        tuner->addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{ 4, 8, 16, 32 }, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
+        tuner->addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{ /*4, 8, 16,*/ 32 }, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
         tuner->addParameter(kernelId, std::string("WORK_GROUP_SIZE_Y"), std::vector<size_t>{ 1, 2, 4, 8, 16, 32 }, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
         tuner->addParameter(kernelId, std::string("INNER_UNROLL_FACTOR"), std::vector<size_t>{ 1, 2, 4, 8 });
         tuner->addParameter(kernelId, std::string("USE_CONSTANT_MEMORY"), std::vector<size_t>{ 0, 1 });
@@ -121,6 +121,7 @@ public:
     virtual void launchComputation(const size_t kernelId) override {
         // switch off synchronization of grid map
         setArgumentSynchronization(false, ktt::ArgumentMemoryType::ReadWrite);
+        setArgumentSynchronization(true, ktt::ArgumentMemoryType::ReadOnly);
 
         // get kernel data
         ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);

@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
-    const int gridSize = 128;
+    const int gridSize = 256;
     const int atoms = 4000;
     const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
     const ktt::DimensionVector workGroupDimensions(1, 1, 1);

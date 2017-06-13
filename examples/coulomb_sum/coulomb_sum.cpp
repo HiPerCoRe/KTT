@@ -23,8 +23,8 @@ int main(int argc, char** argv)
     }
 
     // Set the problem size
-    const int atoms = 32;
-    const int gridSize = 128;
+    const int atoms = 4000;
+    const int gridSize = 256;
 
     // Create tuner
     ktt::Tuner tuner(platformIndex, deviceIndex);
