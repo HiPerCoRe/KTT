@@ -1,12 +1,12 @@
 #if USE_CONSTANT_MEMORY == 0
-    #define MEMORY_TYPE_AOS __global  const
-    #define MEMORY_TYPE_SOA __global  const
+    #define MEMORY_TYPE_AOS __global const
+    #define MEMORY_TYPE_SOA __global const
 #elif USE_CONSTANT_MEMORY == 1
     #if USE_SOA == 0
         #define MEMORY_TYPE_AOS __constant
-        #define MEMORY_TYPE_SOA __global  const
+        #define MEMORY_TYPE_SOA __global const
     #elif USE_SOA > 0
-        #define MEMORY_TYPE_AOS __global  const
+        #define MEMORY_TYPE_AOS __global const
         #define MEMORY_TYPE_SOA __constant
     #endif // USE_SOA
 #endif // USE_CONSTANT_MEMORY

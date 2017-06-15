@@ -59,12 +59,12 @@ Examples showcasing KTT functionality are located inside examples folder.
 List of currently available examples:
 
 * `opencl_info`: basic example showing how to retrieve detailed information about OpenCL platforms and devices through KTT API
-* `simple`: basic example showcasing how to run simple kernel with KTT framework, utilizes reference class, no actual autotuning is done
+* `simple`: basic example showing how to run simple kernel with KTT framework, utilizes reference class, no actual autotuning is done
 * `coulomb_sum_2d`: advanced example which utilizes large number of tuning parameters, thread modifiers and constraints
-* `coulomb_sum_3d`: 3D version of previous example
-* `coulomb_sum_3d_iterative`: 3D version of previous example, which utilizes tuning manipulator to iteratively launch 2D kernel
+* `coulomb_sum_3d_iterative`: 3D version of previous example, utilizes tuning manipulator to iteratively launch 2D kernel
+* `coulomb_sum_3d`: alternative to iterative version, utilizes several tuning parameters and reference kernel
+* `nbody`: advanced example which utilizes tuning parameters, multiple constraints and validation of multiple arguments with reference kernel
 * `reduction`: advanced example which utilizes reference class, tuning manipulator and several tuning parameters
-* `simple_cuda`: version of simple example which utilizes CUDA compute API
 
 It is possible to disable compilation of examples, eg. `premake5 --no-examples gmake`.
 
