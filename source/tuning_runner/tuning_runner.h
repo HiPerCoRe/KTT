@@ -45,7 +45,7 @@ private:
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
 
     // Helper methods
-    std::pair<KernelRunResult, uint64_t> runKernel(Kernel* kernel, const KernelConfiguration& currentConfiguration,
+    std::pair<KernelRunResult, uint64_t> runKernel(const Kernel* kernel, const KernelConfiguration& currentConfiguration,
         const size_t currentConfigurationIndex, const size_t configurationsCount);
     std::pair<KernelRunResult, uint64_t> runKernelWithManipulator(TuningManipulator* manipulator,
         const std::vector<std::pair<size_t, KernelRuntimeData>>& kernelDataVector, const KernelConfiguration& currentConfiguration);

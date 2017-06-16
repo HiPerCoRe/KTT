@@ -33,7 +33,7 @@ std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tu
     std::vector<TuningResult> results;
     std::vector<TuningResult> invalidResults;
 
-    Kernel* kernel = kernelManager->getKernel(id);
+    const Kernel* kernel = kernelManager->getKernel(id);
     resultValidator.computeReferenceResult(kernel);
 
     std::unique_ptr<Searcher> searcher = getSearcher(kernel->getSearchMethod(), kernel->getSearchArguments(),
@@ -120,7 +120,7 @@ void TuningRunner::enableArgumentPrinting(const size_t argumentId, const std::st
     resultValidator.enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
 }
 
-std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, const KernelConfiguration& currentConfiguration,
+std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(const Kernel* kernel, const KernelConfiguration& currentConfiguration,
     const size_t currentConfigurationIndex, const size_t configurationsCount)
 {
     KernelRunResult result;
