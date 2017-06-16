@@ -39,7 +39,7 @@ class tunableCoulomb : public ktt::TuningManipulator {
         atomInfoW.resize(atoms);
         atomInfo.resize(atoms*4);
         atomInfoPrecomp.resize(atoms*4);
-        gridSpacing = 1.0f;
+        gridSpacing = 0.5f;
         std::random_device device;
         std::default_random_engine engine(device());
         std::uniform_real_distribution<float> distribution(0.0f, 40.0f);
@@ -129,7 +129,6 @@ public:
         // iterate over slices
         for (int i = 0; i < gridSize; i++) {
             // perform precomputation for 2D kernel
-            //XXX this code work correctly when z is fixed to constant here and in coulomb_sum_reference_kernel.cl, e.g. float z = gridSpacing * 1;
             float z = gridSpacing * float(i);
             if (getParameterValue("USE_SOA", parameterValues) == 0) {
                 for (int j = 0; j < atoms; j++)

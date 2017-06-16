@@ -31,16 +31,16 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
-    const ktt::DimensionVector ndRangeDimensions(512, 512, 1);
+    const ktt::DimensionVector ndRangeDimensions(256, 256, 1);
     const ktt::DimensionVector workGroupDimensions(1, 1, 1);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
     // Total NDRange size matches number of grid points
     const size_t numberOfGridPoints = std::get<0>(ndRangeDimensions) * std::get<1>(ndRangeDimensions);
     // If higher than 4k, computations with constant memory enabled will be invalid on many devices due to constant memory capacity limit
-    const int numberOfAtoms = 4096;
+    const int numberOfAtoms = 4000;
 
     // Declare data variables
-    float gridSpacing;
+    float gridSpacing = 0.5f;
     std::vector<float> atomInfo(4 * numberOfAtoms);
     std::vector<float> atomInfoX(numberOfAtoms);
     std::vector<float> atomInfoY(numberOfAtoms);
@@ -52,14 +52,13 @@ int main(int argc, char** argv)
     std::random_device device;
     std::default_random_engine engine(device());
     std::uniform_real_distribution<float> distribution(0.0f, 40.0f);
-    gridSpacing = distribution(engine);
 
     for (int i = 0; i < numberOfAtoms; i++)
     {
         atomInfoX.at(i) = distribution(engine);
         atomInfoY.at(i) = distribution(engine);
         atomInfoZ.at(i) = distribution(engine);
-        atomInfoW.at(i) = distribution(engine);
+        atomInfoW.at(i) = distribution(engine)/40.0f;
 
         atomInfo.at((4 * i)) = atomInfoX.at(i);
         atomInfo.at((4 * i) + 1) = atomInfoY.at(i);
