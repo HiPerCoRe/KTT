@@ -4,10 +4,10 @@
 #include <string>
 #include <vector>
 
-#include "../ktt_type_aliases.h"
-#include "../enum/search_method.h"
 #include "kernel_constraint.h"
 #include "kernel_parameter.h"
+#include "ktt_type_aliases.h"
+#include "enum/search_method.h"
 
 namespace ktt
 {

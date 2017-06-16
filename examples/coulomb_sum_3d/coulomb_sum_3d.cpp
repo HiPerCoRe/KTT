@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "../../include/ktt.h"
+#include "tuner_api.h"
 
 int main(int argc, char** argv)
 {
@@ -96,7 +96,6 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", { 0, 1 });
     tuner.addParameter(kernelId, "USE_SOA", { 0, 1 });
     tuner.addParameter(kernelId, "VECTOR_SIZE", { 1, 2 , 4, 8, 16 });
-    tuner.addParameter(kernelId, "ONE", { 1 }); //XXX helper, must be always 
 
     auto lt = [](std::vector<size_t> vector) { return vector.at(0) < vector.at(1); };
     tuner.addConstraint(kernelId, lt, { "INNER_UNROLL_FACTOR", "Z_ITERATIONS" } );

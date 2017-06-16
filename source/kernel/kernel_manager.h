@@ -2,10 +2,10 @@
 
 #include <vector>
 
-#include "../api/device_info.h"
-#include "../enum/dimension_vector_type.h"
 #include "kernel.h"
 #include "kernel_configuration.h"
+#include "api/device_info.h"
+#include "enum/dimension_vector_type.h"
 
 namespace ktt
 {

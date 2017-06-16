@@ -9,13 +9,13 @@
 #include <type_traits>
 #include <vector>
 
-#include "../api/reference_class.h"
-#include "../compute_api_driver/compute_api_driver.h"
-#include "../enum/validation_method.h"
-#include "../kernel/kernel_manager.h"
-#include "../kernel_argument/argument_manager.h"
-#include "../utility/argument_printer.h"
-#include "../utility/logger.h"
+#include "api/reference_class.h"
+#include "compute_api_driver/compute_api_driver.h"
+#include "enum/validation_method.h"
+#include "kernel/kernel_manager.h"
+#include "kernel_argument/argument_manager.h"
+#include "utility/argument_printer.h"
+#include "utility/logger.h"
 
 namespace ktt
 {
@@ -33,12 +33,11 @@ public:
     void setToleranceThreshold(const double toleranceThreshold);
     void setValidationMethod(const ValidationMethod& validationMethod);
     void setValidationRange(const size_t argumentId, const size_t validationRange);
-    void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
-    bool validateArgumentWithClass(const Kernel* kernel, const std::vector<KernelArgument>& resultArguments,
-        const KernelConfiguration& kernelConfiguration);
-    bool validateArgumentWithKernel(const Kernel* kernel, const std::vector<KernelArgument>& resultArguments,
-        const KernelConfiguration& kernelConfiguration);
+    void computeReferenceResult(const Kernel* kernel);
     void clearReferenceResults();
+    bool validateArgumentsWithClass(const Kernel* kernel, const KernelConfiguration& kernelConfiguration);
+    bool validateArgumentsWithKernel(const Kernel* kernel, const KernelConfiguration& kernelConfiguration);
+    void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Getters
     double getToleranceThreshold() const;
@@ -60,6 +59,8 @@ private:
     std::map<size_t, std::vector<KernelArgument>> referenceKernelResultMap;
 
     // Helper methods
+    void computeReferenceResultWithClass(const Kernel* kernel);
+    void computeReferenceResultWithKernel(const Kernel* kernel);
     bool validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments,
         const std::string kernelName, const KernelConfiguration& kernelConfiguration) const;
     std::vector<const KernelArgument*> getKernelArgumentPointers(const size_t kernelId) const;
@@ -105,8 +106,8 @@ private:
                 if (std::fabs(result.at(i) - referenceResult.at(i)) > toleranceThreshold)
                 {
                     logger->log(std::string("Results differ for argument with id: ") + std::to_string(argumentId) + ", index: " + std::to_string(i)
-                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i)) 
-                        + ", difference: " + std::to_string(result.at(i) - referenceResult.at(i)));
+                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
+                        + ", difference: " + std::to_string(std::fabs(result.at(i) - referenceResult.at(i))));
                     return false;
                 }
             }
@@ -122,7 +123,8 @@ private:
             if (result.at(i) != referenceResult.at(i))
             {
                 logger->log(std::string("Results differ for argument with id: ") + std::to_string(argumentId) + ", index: " + std::to_string(i)
-                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i)));
+                    + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
+                    + ", difference: " + std::to_string(std::fabs(result.at(i) - referenceResult.at(i))));
                 return false;
             }
         }

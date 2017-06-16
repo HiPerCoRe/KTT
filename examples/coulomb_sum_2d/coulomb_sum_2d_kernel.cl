@@ -1,12 +1,12 @@
 #if USE_CONSTANT_MEMORY == 0
-    #define MEMORY_TYPE_AOS __global  const
-    #define MEMORY_TYPE_SOA __global  const
+    #define MEMORY_TYPE_AOS __global const
+    #define MEMORY_TYPE_SOA __global const
 #elif USE_CONSTANT_MEMORY == 1
     #if USE_SOA == 0
         #define MEMORY_TYPE_AOS __constant
-        #define MEMORY_TYPE_SOA __global  const
+        #define MEMORY_TYPE_SOA __global const
     #elif USE_SOA > 0
-        #define MEMORY_TYPE_AOS __global  const
+        #define MEMORY_TYPE_AOS __global const
         #define MEMORY_TYPE_SOA __constant
     #endif // USE_SOA
 #endif // USE_CONSTANT_MEMORY
@@ -30,12 +30,12 @@
 #endif // VECTOR_TYPE
 
 __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA vector* atomInfoX, MEMORY_TYPE_SOA vector* atomInfoY,
-    MEMORY_TYPE_SOA vector* atomInfoZ, MEMORY_TYPE_SOA vector* atomInfoW, int numberOfAtoms, float gridSpacing, int zIndex, __global float* energyGrid)
+    MEMORY_TYPE_SOA vector* atomInfoZ, MEMORY_TYPE_SOA vector* atomInfoW, int numberOfAtoms, float gridSpacing, __global float* energyGrid)
 {
     int xIndex = get_global_id(0) * OUTER_UNROLL_FACTOR;
     int yIndex = get_global_id(1);
     
-    int outIndex = get_global_size(1) * get_global_size(0) * OUTER_UNROLL_FACTOR * zIndex + get_global_size(0) * yIndex * OUTER_UNROLL_FACTOR + xIndex;
+    int outIndex = get_global_size(0) * yIndex * OUTER_UNROLL_FACTOR + xIndex;
 
     float coordX = gridSpacing * xIndex;
     #if OUTER_UNROLL_FACTOR > 1

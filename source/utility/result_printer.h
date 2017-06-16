@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "../dto/tuning_result.h"
-#include "../enum/print_format.h"
-#include "../enum/time_unit.h"
+#include "dto/tuning_result.h"
+#include "enum/print_format.h"
+#include "enum/time_unit.h"
 
 namespace ktt
 {

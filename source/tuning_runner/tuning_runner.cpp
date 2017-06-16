@@ -8,8 +8,8 @@
 #include "searcher/full_searcher.h"
 #include "searcher/pso_searcher.h"
 #include "searcher/random_searcher.h"
-#include "../utility/ktt_utility.h"
-#include "../utility/timer.h"
+#include "utility/ktt_utility.h"
+#include "utility/timer.h"
 
 namespace ktt
 {
@@ -32,7 +32,10 @@ std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tu
 
     std::vector<TuningResult> results;
     std::vector<TuningResult> invalidResults;
-    Kernel* kernel = kernelManager->getKernel(id);
+
+    const Kernel* kernel = kernelManager->getKernel(id);
+    resultValidator.computeReferenceResult(kernel);
+
     std::unique_ptr<Searcher> searcher = getSearcher(kernel->getSearchMethod(), kernel->getSearchArguments(),
         kernelManager->getKernelConfigurations(id, computeApiDriver->getCurrentDeviceInfo()), kernel->getParameters());
     size_t configurationsCount = searcher->getConfigurationsCount();
@@ -64,9 +67,18 @@ std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tu
         {
             invalidResults.push_back(TuningResult(kernel->getName(), currentConfiguration, "Results differ"));
         }
+
+        computeApiDriver->clearBuffers(ArgumentMemoryType::ReadWrite);
+        computeApiDriver->clearBuffers(ArgumentMemoryType::WriteOnly);
+
+        auto manipulatorPointer = manipulatorMap.find(kernel->getId());
+        if (manipulatorPointer != manipulatorMap.end())
+        {
+            computeApiDriver->clearBuffers(ArgumentMemoryType::ReadOnly);
+        }
     }
 
-    computeApiDriver->clearCache();
+    computeApiDriver->clearBuffers();
     resultValidator.clearReferenceResults();
     return std::make_pair(results, invalidResults);
 }
@@ -108,7 +120,7 @@ void TuningRunner::enableArgumentPrinting(const size_t argumentId, const std::st
     resultValidator.enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
 }
 
-std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(Kernel* kernel, const KernelConfiguration& currentConfiguration,
+std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(const Kernel* kernel, const KernelConfiguration& currentConfiguration,
     const size_t currentConfigurationIndex, const size_t configurationsCount)
 {
     KernelRunResult result;
@@ -156,6 +168,7 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(Tuni
     }
     manipulatorInterfaceImplementation->setConfiguration(currentConfiguration);
     manipulatorInterfaceImplementation->setKernelArguments(kernelArguments);
+    manipulatorInterfaceImplementation->uploadBuffers();
 
     Timer timer;
     timer.start();
@@ -265,8 +278,8 @@ bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& r
         return false;
     }
 
-    bool resultIsCorrect = resultValidator.validateArgumentWithClass(kernel, result.getResultArguments(), kernelConfiguration);
-    resultIsCorrect &= resultValidator.validateArgumentWithKernel(kernel, result.getResultArguments(), kernelConfiguration);
+    bool resultIsCorrect = resultValidator.validateArgumentsWithClass(kernel, kernelConfiguration);
+    resultIsCorrect &= resultValidator.validateArgumentsWithKernel(kernel, kernelConfiguration);
 
     if (resultIsCorrect)
     {

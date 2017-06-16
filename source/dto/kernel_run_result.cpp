@@ -5,14 +5,14 @@ namespace ktt
 
 KernelRunResult::KernelRunResult() :
     valid(false),
-    duration(UINT64_MAX)
+    duration(UINT64_MAX),
+    overhead(0)
 {}
 
-KernelRunResult::KernelRunResult(const uint64_t duration, const uint64_t overhead, const std::vector<KernelArgument>& resultArguments) :
+KernelRunResult::KernelRunResult(const uint64_t duration, const uint64_t overhead) :
     valid(true),
     duration(duration),
-    overhead(overhead),
-    resultArguments(resultArguments)
+    overhead(overhead)
 {}
 
 void KernelRunResult::increaseOverhead(const uint64_t overhead)
@@ -33,11 +33,6 @@ uint64_t KernelRunResult::getDuration() const
 uint64_t KernelRunResult::getOverhead() const
 {
     return overhead;
-}
-
-std::vector<KernelArgument> KernelRunResult::getResultArguments() const
-{
-    return resultArguments;
 }
 
 } // namespace ktt

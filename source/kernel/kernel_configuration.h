@@ -3,7 +3,7 @@
 #include <ostream>
 #include <vector>
 
-#include "../ktt_type_aliases.h"
+#include "ktt_type_aliases.h"
 
 namespace ktt
 {

@@ -17,7 +17,7 @@
 #include <iostream>
 #include <string>
 
-#include "../enum/device_type.h"
+#include "enum/device_type.h"
 
 namespace ktt
 {
@@ -60,9 +60,10 @@ private:
     uint64_t maxConstantBufferSize;
     uint32_t maxComputeUnits;
     size_t maxWorkGroupSize;
+
+    static std::string deviceTypeToString(const DeviceType& deviceType);
 };
 
-std::string deviceTypeToString(const DeviceType& deviceType);
 KTT_API std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo);
 
 } // namespace ktt

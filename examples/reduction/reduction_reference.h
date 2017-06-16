@@ -2,7 +2,7 @@
 
 #include <iomanip>
 
-#include "../../include/ktt.h"
+#include "tuner_api.h"
 
 class referenceReduction : public ktt::ReferenceClass
 {

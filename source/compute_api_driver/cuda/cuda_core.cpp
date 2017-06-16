@@ -1,4 +1,5 @@
 #include "cuda_core.h"
+#include "utility/timer.h"
 
 namespace ktt
 {
@@ -7,10 +8,7 @@ namespace ktt
 
 CudaCore::CudaCore(const size_t deviceIndex) :
     deviceIndex(deviceIndex),
-    compilerOptions(std::string("")),
-    useReadBufferCache(true),
-    useWriteBufferCache(false),
-    useReadWriteBufferCache(false)
+    compilerOptions(std::string(""))
 {
     checkCudaError(cuInit(0), "cuInit");
 
@@ -71,36 +69,81 @@ void CudaCore::setCompilerOptions(const std::string& options)
     compilerOptions = options;
 }
 
-void CudaCore::setCacheUsage(const bool flag, const ArgumentMemoryType& argumentMemoryType)
+void CudaCore::uploadArgument(const KernelArgument& kernelArgument)
 {
-    switch (argumentMemoryType)
+    if (kernelArgument.getArgumentUploadType() != ArgumentUploadType::Vector)
     {
-    case ArgumentMemoryType::ReadOnly:
-        useReadBufferCache = flag;
-        break;
-    case ArgumentMemoryType::WriteOnly:
-        useWriteBufferCache = flag;
-        break;
-    case ArgumentMemoryType::ReadWrite:
-        useReadWriteBufferCache = flag;
-        break;
-    default:
-        throw std::runtime_error("Unknown argument memory type");
+        return;
     }
+    
+    clearBuffer(kernelArgument.getId());
+
+    std::unique_ptr<CudaBuffer> buffer = createBuffer(kernelArgument);
+    buffer->uploadData(kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
+    buffers.insert(std::move(buffer)); // buffer data will be stolen
 }
 
-void CudaCore::clearCache()
+void CudaCore::updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes)
 {
-    buffers.clear();
+    for (const auto& buffer : buffers)
+    {
+        if (buffer->getKernelArgumentId() == argumentId)
+        {
+            buffer->uploadData(data, dataSizeInBytes);
+            return;
+        }
+    }
+    throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
 }
 
-void CudaCore::clearCache(const ArgumentMemoryType& argumentMemoryType)
+KernelArgument CudaCore::downloadArgument(const size_t argumentId) const
+{
+    for (const auto& buffer : buffers)
+    {
+        if (buffer->getKernelArgumentId() != argumentId)
+        {
+            continue;
+        }
+
+        KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
+            buffer->getMemoryType(), ArgumentUploadType::Vector);
+        buffer->downloadData(argument.getData(), argument.getDataSizeInBytes());
+        return argument;
+    }
+
+    throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+}
+
+void CudaCore::clearBuffer(const size_t argumentId)
 {
     auto iterator = buffers.cbegin();
 
     while (iterator != buffers.cend())
     {
-        if (iterator->get()->getType() == argumentMemoryType)
+        if (iterator->get()->getKernelArgumentId() == argumentId)
+        {
+            buffers.erase(iterator);
+            return;
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
+}
+
+void CudaCore::clearBuffers()
+{
+    buffers.clear();
+}
+
+void CudaCore::clearBuffers(const ArgumentMemoryType& argumentMemoryType)
+{
+    auto iterator = buffers.cbegin();
+
+    while (iterator != buffers.cend())
+    {
+        if (iterator->get()->getMemoryType() == argumentMemoryType)
         {
             iterator = buffers.erase(iterator);
         }
@@ -114,7 +157,18 @@ void CudaCore::clearCache(const ArgumentMemoryType& argumentMemoryType)
 KernelRunResult CudaCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers)
 {
-    throw std::runtime_error("runKernel() method is not supported yet for CUDA platform");
+    Timer timer;
+    timer.start();
+
+    std::unique_ptr<CudaProgram> program = createAndBuildProgram(source);
+    std::unique_ptr<CudaKernel> kernel = createKernel(*program, kernelName);
+
+    float duration = enqueueKernel(*kernel, globalSize, localSize, getKernelArguments(argumentPointers),
+        getSharedMemorySizeInBytes(argumentPointers));
+
+    timer.stop();
+    uint64_t overhead = timer.getElapsedTime();
+    return KernelRunResult(static_cast<uint64_t>(duration), overhead);
 }
 
 std::unique_ptr<CudaProgram> CudaCore::createAndBuildProgram(const std::string& source) const
@@ -124,10 +178,10 @@ std::unique_ptr<CudaProgram> CudaCore::createAndBuildProgram(const std::string& 
     return program;
 }
 
-std::unique_ptr<CudaBuffer> CudaCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size,
-    const size_t kernelArgumentId) const
+std::unique_ptr<CudaBuffer> CudaCore::createBuffer(const KernelArgument& argument) const
 {
-    auto buffer = std::make_unique<CudaBuffer>(argumentMemoryType, size, kernelArgumentId);
+    auto buffer = std::make_unique<CudaBuffer>(argument.getId(), argument.getDataSizeInBytes(), argument.getElementSizeInBytes(),
+        argument.getArgumentDataType(), argument.getArgumentMemoryType());
     return buffer;
 }
 
@@ -143,17 +197,21 @@ std::unique_ptr<CudaKernel> CudaCore::createKernel(const CudaProgram& program, c
     return kernel;
 }
 
-float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const
+float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+    const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize) const
 {
     auto start = createEvent();
     auto end = createEvent();
 
     checkCudaError(cuEventRecord(start->getEvent(), stream->getStream()), std::string("cuEventRecord"));
-    // to do: fix 8th and 10th argument
     checkCudaError(cuLaunchKernel(kernel.getKernel(), static_cast<unsigned int>(globalSize.at(0)), static_cast<unsigned int>(globalSize.at(1)),
         static_cast<unsigned int>(globalSize.at(2)), static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)),
-        static_cast<unsigned int>(localSize.at(2)), 0, stream->getStream(), nullptr, nullptr), std::string("cuLaunchKernel"));
+        static_cast<unsigned int>(localSize.at(2)), static_cast<unsigned int>(localMemorySize), stream->getStream(), (void**)kernelArguments.data(),
+        nullptr), std::string("cuLaunchKernel"));
     checkCudaError(cuEventRecord(end->getEvent(), stream->getStream()), std::string("cuEventRecord"));
+
+    // Wait for computation to finish
+    checkCudaError(cuEventSynchronize(end->getEvent()), std::string("cuEventSynchronize"));
 
     return getKernelRunDuration(start->getEvent(), end->getEvent());
 }
@@ -172,8 +230,8 @@ std::vector<CudaDevice> CudaCore::getCudaDevices() const
     std::vector<CudaDevice> devices;
     for (const auto deviceId : deviceIds)
     {
-        std::string name(50, ' ');
-        checkCudaError(cuDeviceGetName(&name[0], 50, deviceId), "cuDeviceGetName");
+        std::string name(40, ' ');
+        checkCudaError(cuDeviceGetName(&name[0], 40, deviceId), "cuDeviceGetName");
         devices.push_back(CudaDevice(deviceId, name));
     }
 
@@ -213,49 +271,61 @@ DeviceInfo CudaCore::getCudaDeviceInfo(const size_t deviceIndex) const
     return result;
 }
 
-std::vector<KernelArgument> CudaCore::getResultArguments(const std::vector<const KernelArgument*>& argumentPointers) const
+std::vector<CUdeviceptr*> CudaCore::getKernelArguments(const std::vector<const KernelArgument*>& argumentPointers)
 {
-    std::vector<KernelArgument> resultArguments;
-    for (const auto currentArgument : argumentPointers)
+    std::vector<CUdeviceptr*> result;
+
+    for (const auto argument : argumentPointers)
     {
-        if (currentArgument->getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
+        if (argument->getArgumentUploadType() == ArgumentUploadType::Local)
         {
             continue;
         }
-
-        for (const auto& buffer : buffers)
+        else if (argument->getArgumentUploadType() == ArgumentUploadType::Vector)
         {
-            if (buffer->getKernelArgumentId() != currentArgument->getId())
+            CUdeviceptr* cachedBuffer = loadBufferFromCache(argument->getId());
+            if (cachedBuffer == nullptr)
             {
-                continue;
+                uploadArgument(*argument);
+                cachedBuffer = loadBufferFromCache(argument->getId());
             }
 
-            KernelArgument argument(currentArgument->getId(), currentArgument->getNumberOfElements(), currentArgument->getArgumentDataType(),
-                currentArgument->getArgumentMemoryType(), currentArgument->getArgumentUploadType());
-            buffer->downloadData(argument.getData(), argument.getDataSizeInBytes());
-            resultArguments.push_back(argument);
+            result.push_back(cachedBuffer);
+        }
+        else if (argument->getArgumentUploadType() == ArgumentUploadType::Scalar)
+        {
+            result.push_back((CUdeviceptr*)argument->getData());
         }
     }
 
-    return resultArguments;
+    return result;
 }
 
-void CudaCore::clearTargetBuffers()
+size_t CudaCore::getSharedMemorySizeInBytes(const std::vector<const KernelArgument*>& argumentPointers) const
 {
-    if (!useReadBufferCache)
+    size_t result = 0;
+
+    for (const auto argument : argumentPointers)
     {
-        clearCache(ArgumentMemoryType::ReadOnly);
+        if (argument->getArgumentUploadType() == ArgumentUploadType::Local)
+        {
+            result += argument->getDataSizeInBytes();
+        }
     }
 
-    if (!useWriteBufferCache)
-    {
-        clearCache(ArgumentMemoryType::WriteOnly);
-    }
+    return result;
+}
 
-    if (!useReadWriteBufferCache)
+CUdeviceptr* CudaCore::loadBufferFromCache(const size_t argumentId) const
+{
+    for (const auto& buffer : buffers)
     {
-        clearCache(ArgumentMemoryType::ReadWrite);
+        if (buffer->getKernelArgumentId() == argumentId)
+        {
+            return buffer->getBuffer();
+        }
     }
+    return nullptr;
 }
 
 #else
@@ -290,17 +360,32 @@ void CudaCore::setCompilerOptions(const std::string&)
     throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
-void CudaCore::setCacheUsage(const bool, const ArgumentMemoryType&)
+void CudaCore::uploadArgument(const KernelArgument&)
 {
     throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
-void CudaCore::clearCache()
+void CudaCore::updateArgument(const size_t, const void*, const size_t)
 {
     throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }
 
-void CudaCore::clearCache(const ArgumentMemoryType&)
+KernelArgument CudaCore::downloadArgument(const size_t) const
+{
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+}
+
+void CudaCore::clearBuffer(const size_t)
+{
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+}
+
+void CudaCore::clearBuffers()
+{
+    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+}
+
+void CudaCore::clearBuffers(const ArgumentMemoryType&)
 {
     throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
 }

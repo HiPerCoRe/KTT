@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
-#include "../../include/ktt.h"
+#include "tuner_api.h"
 
-#include "coulomb_sum_tunable.h"
+#include "coulomb_sum_3d_iterative_tunable.h"
 
 int main(int argc, char** argv)
 {

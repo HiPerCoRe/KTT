@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../include/ktt.h"
+#include "tuner_api.h"
 
 class tunableCoulomb : public ktt::TuningManipulator {
     ktt::Tuner *tuner;
@@ -75,8 +75,8 @@ public:
         const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
         const ktt::DimensionVector workGroupDimensions(1, 1, 1);
         const ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
-        kernelId = tuner->addKernelFromFile("../examples/coulomb_sum/coulomb_sum_kernel.cl", "directCoulombSum", ndRangeDimensions, workGroupDimensions);
-        referenceKernelId = tuner->addKernelFromFile("../examples/coulomb_sum/coulomb_sum_reference_kernel.cl", "directCoulombSumReference", ndRangeDimensions, referenceWorkGroupDimensions);
+        kernelId = tuner->addKernelFromFile("../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_kernel.cl", "directCoulombSum", ndRangeDimensions, workGroupDimensions);
+        referenceKernelId = tuner->addKernelFromFile("../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_reference_kernel.cl", "directCoulombSumReference", ndRangeDimensions, referenceWorkGroupDimensions);
 
         // create input/output in tuner
         atomInfoId = tuner->addArgument(atomInfo, ktt::ArgumentMemoryType::ReadOnly);
@@ -119,10 +119,6 @@ public:
 /*
     launchComputation is responsible for actual execution of tuned kernel */
     virtual void launchComputation(const size_t kernelId) override {
-        // switch off synchronization of grid map
-        setArgumentSynchronization(false, ktt::ArgumentMemoryType::ReadWrite);
-        setArgumentSynchronization(true, ktt::ArgumentMemoryType::ReadOnly);
-
         // get kernel data
         ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);
         ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
@@ -135,15 +131,15 @@ public:
             // perform precomputation for 2D kernel
             //XXX this code work correctly when z is fixed to constant here and in coulomb_sum_reference_kernel.cl, e.g. float z = gridSpacing * 1;
             float z = gridSpacing * float(i);
-            if (getParameterValue(parameterValues, "USE_SOA") == 0) {
+            if (getParameterValue("USE_SOA", parameterValues) == 0) {
                 for (int j = 0; j < atoms; j++)
                     atomInfoPrecomp[j*4+2] = (z-atomInfoZ[j])*(z-atomInfoZ[j]);
-                updateArgumentVector(atomInfoPrecompId, atomInfoPrecomp.data());
+                updateArgumentVector(atomInfoPrecompId, atomInfoPrecomp.data(), ktt::ArgumentLocation::Device);
             }
             else {
                 for (int j = 0; j < atoms; j++)
                     atomInfoZ2[j] = (z-atomInfoZ[j])*(z-atomInfoZ[j]);
-                updateArgumentVector(atomInfoZ2Id, atomInfoZ2.data());
+                updateArgumentVector(atomInfoZ2Id, atomInfoZ2.data(), ktt::ArgumentLocation::Device);
             }
             updateArgumentScalar(zIndexId, &i);
         
@@ -161,14 +157,6 @@ public:
 
 /*
     simple utility methods */
-    size_t getParameterValue(const std::vector<ktt::ParameterValue>& parameterValue, const std::string& name){
-        for (auto parIt : parameterValue)
-            if (std::get<0>(parIt) == name)
-                return std::get<1>(parIt);
-
-        return 0;
-    }
-
     size_t getKernelId() const {
         return kernelId;
     }

@@ -2,19 +2,16 @@
 #include <utility>
 
 #include "manipulator_interface_implementation.h"
-#include "../utility/ktt_utility.h"
-#include "../utility/timer.h"
+#include "utility/ktt_utility.h"
+#include "utility/timer.h"
 
 namespace ktt
 {
 
 ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeApiDriver* computeApiDriver) :
     computeApiDriver(computeApiDriver),
-    currentResult(KernelRunResult(0, 0, std::vector<KernelArgument> {})),
-    currentConfiguration(KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>{})),
-    automaticArgumentUpdate(false),
-    synchronizeWriteArguments(true),
-    synchronizeReadWriteArguments(true)
+    currentResult(KernelRunResult(0, 0)),
+    currentConfiguration(KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>{}))
 {}
 
 void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId)
@@ -44,22 +41,10 @@ void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId, const 
 
     KernelRunResult result = computeApiDriver->runKernel(kernelData.getSource(), kernelData.getName(), convertDimensionVector(globalSize),
         convertDimensionVector(localSize), getArgumentPointers(kernelData.getArgumentIndices()));
-    currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead(), result.getResultArguments());
+    currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead());
 
     timer.stop();
     currentResult.increaseOverhead(timer.getElapsedTime());
-
-    if (automaticArgumentUpdate)
-    {
-        for (const auto& resultArgument : currentResult.getResultArguments())
-        {
-            if (resultArgument.getArgumentMemoryType() == ArgumentMemoryType::WriteOnly && synchronizeWriteArguments
-                || resultArgument.getArgumentMemoryType() == ArgumentMemoryType::ReadWrite && synchronizeReadWriteArguments)
-            {
-                updateArgumentVector(resultArgument.getId(), resultArgument.getData());
-            }
-        }
-    }
 }
 
 DimensionVector ManipulatorInterfaceImplementation::getCurrentGlobalSize(const size_t kernelId) const
@@ -91,44 +76,61 @@ std::vector<ParameterValue> ManipulatorInterfaceImplementation::getCurrentConfig
 
 void ManipulatorInterfaceImplementation::updateArgumentScalar(const size_t argumentId, const void* argumentData)
 {
-    updateArgument(argumentId, argumentData, 1, ArgumentUploadType::Scalar, false);
+    updateArgumentHost(argumentId, argumentData, 1, ArgumentUploadType::Scalar);
 }
 
-void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData)
+void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData,
+    const ArgumentLocation& argumentLocation)
 {
-    updateArgument(argumentId, argumentData, 0, ArgumentUploadType::Vector, false);
-}
-
-void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)
-{
-    updateArgument(argumentId, argumentData, numberOfElements, ArgumentUploadType::Vector, true);
-}
-
-void ManipulatorInterfaceImplementation::setAutomaticArgumentUpdate(const bool flag)
-{
-    automaticArgumentUpdate = flag;
-}
-
-void ManipulatorInterfaceImplementation::setArgumentSynchronization(const bool flag, const ArgumentMemoryType& argumentMemoryType)
-{
-    if (argumentMemoryType == ArgumentMemoryType::WriteOnly)
+    auto argumentPointer = kernelArgumentMap.find(argumentId);
+    if (argumentPointer == kernelArgumentMap.end())
     {
-        synchronizeWriteArguments = flag;
-    }
-    if (argumentMemoryType == ArgumentMemoryType::ReadWrite)
-    {
-        synchronizeReadWriteArguments = flag;
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
     }
 
-    if (flag)
-    {
-        computeApiDriver->clearCache(argumentMemoryType);
-    }
-
-    computeApiDriver->setCacheUsage(!flag, argumentMemoryType);
+    updateArgumentVector(argumentId, argumentData, argumentLocation, argumentPointer->second.getNumberOfElements());
 }
 
-void ManipulatorInterfaceImplementation::updateKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
+void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData,
+    const ArgumentLocation& argumentLocation, const size_t numberOfElements)
+{
+    if (argumentLocation == ArgumentLocation::Host || argumentLocation == ArgumentLocation::HostAndDevice)
+    {
+        updateArgumentHost(argumentId, argumentData, numberOfElements, ArgumentUploadType::Vector);
+    }
+
+    if (argumentLocation == ArgumentLocation::Device || argumentLocation == ArgumentLocation::HostAndDevice)
+    {
+        auto argumentPointer = kernelArgumentMap.find(argumentId);
+        if (argumentPointer == kernelArgumentMap.end())
+        {
+            throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
+        }
+
+        updateArgumentDevice(argumentId, argumentData, argumentPointer->second.getElementSizeInBytes() * numberOfElements);
+    }
+}
+
+void ManipulatorInterfaceImplementation::synchronizeArgumentVector(const size_t argumentId, const bool downloadToHost)
+{
+    if (downloadToHost)
+    {
+        KernelArgument deviceArgument = computeApiDriver->downloadArgument(argumentId);
+        updateArgumentVector(argumentId, deviceArgument.getData(), ArgumentLocation::Host);
+    }
+    else
+    {
+        auto argumentPointer = kernelArgumentMap.find(argumentId);
+        if (argumentPointer == kernelArgumentMap.end())
+        {
+            throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
+        }
+
+        updateArgumentDevice(argumentId, argumentPointer->second.getData(), argumentPointer->second.getDataSizeInBytes());
+    }
+}
+
+void ManipulatorInterfaceImplementation::changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
 {
     auto dataPointer = kernelDataMap.find(kernelId);
     if (dataPointer == kernelDataMap.end())
@@ -136,6 +138,12 @@ void ManipulatorInterfaceImplementation::updateKernelArguments(const size_t kern
         throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
             + " was called inside tuning manipulator which did not advertise utilization of this kernel");
     }
+
+    if (!containsUnique(argumentIds))
+    {
+        throw std::runtime_error("Kernel argument ids assigned to single kernel must be unique");
+    }
+
     dataPointer->second.setArgumentIndices(argumentIds);
 }
 
@@ -186,48 +194,31 @@ void ManipulatorInterfaceImplementation::setConfiguration(const KernelConfigurat
 
 void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<KernelArgument>& kernelArguments)
 {
-    this->kernelArguments = kernelArguments;
+    for (const auto& kernelArgument : kernelArguments)
+    {
+        kernelArgumentMap.insert(std::make_pair(kernelArgument.getId(), kernelArgument));
+    }
+}
+
+void ManipulatorInterfaceImplementation::uploadBuffers()
+{
+    for (const auto& argument : kernelArgumentMap)
+    {
+        computeApiDriver->uploadArgument(argument.second);
+    }
 }
 
 void ManipulatorInterfaceImplementation::clearData()
 {
     kernelDataMap.clear();
-    currentResult = KernelRunResult(0, 0, std::vector<KernelArgument>{});
+    currentResult = KernelRunResult(0, 0);
     currentConfiguration = KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>{});
-    automaticArgumentUpdate = false;
-    synchronizeWriteArguments = true;
-    synchronizeReadWriteArguments = true;
-    computeApiDriver->setCacheUsage(true, ArgumentMemoryType::ReadOnly);
-    computeApiDriver->setCacheUsage(false, ArgumentMemoryType::WriteOnly);
-    computeApiDriver->setCacheUsage(false, ArgumentMemoryType::ReadWrite);
-    computeApiDriver->clearCache();
+    kernelArgumentMap.clear();
 }
 
 KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const
 {
     return currentResult;
-}
-
-void ManipulatorInterfaceImplementation::updateArgument(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
-    const ArgumentUploadType& argumentUploadType, const bool overrideNumberOfElements)
-{
-    for (auto& argument : kernelArguments)
-    {
-        if (argument.getId() == argumentId)
-        {
-            if (overrideNumberOfElements)
-            {
-                argument = KernelArgument(argumentId, argumentData, numberOfElements, argument.getArgumentDataType(),
-                    argument.getArgumentMemoryType(), argumentUploadType);
-            }
-            else
-            {
-                argument = KernelArgument(argumentId, argumentData, argument.getNumberOfElements(), argument.getArgumentDataType(),
-                    argument.getArgumentMemoryType(), argumentUploadType);
-            }
-            return;
-        }
-    }
 }
 
 std::vector<const KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<size_t>& argumentIndices)
@@ -236,16 +227,42 @@ std::vector<const KernelArgument*> ManipulatorInterfaceImplementation::getArgume
 
     for (const auto index : argumentIndices)
     {
-        for (const auto& argument : kernelArguments)
+        for (const auto& argument : kernelArgumentMap)
         {
-            if (index == argument.getId())
+            if (index == argument.second.getId())
             {
-                result.push_back(&argument);
+                result.push_back(&argument.second);
             }
         }
     }
 
     return result;
+}
+
+void ManipulatorInterfaceImplementation::updateArgumentHost(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
+    const ArgumentUploadType& argumentUploadType)
+{
+    auto argumentPointer = kernelArgumentMap.find(argumentId);
+    if (argumentPointer == kernelArgumentMap.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
+    }
+
+    if (argumentPointer->second.getArgumentUploadType() != argumentUploadType)
+    {
+        throw std::runtime_error("Cannot convert between scalar and vector arguments");
+    }
+
+    auto updatedArgument = KernelArgument(argumentId, argumentData, numberOfElements, argumentPointer->second.getArgumentDataType(),
+        argumentPointer->second.getArgumentMemoryType(), argumentUploadType);
+
+    kernelArgumentMap.erase(argumentId);
+    kernelArgumentMap.insert(std::make_pair(argumentId, updatedArgument));
+}
+
+void ManipulatorInterfaceImplementation::updateArgumentDevice(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes)
+{
+    computeApiDriver->updateArgument(argumentId, argumentData, dataSizeInBytes);
 }
 
 } // namespace ktt

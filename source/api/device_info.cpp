@@ -98,7 +98,7 @@ void DeviceInfo::setMaxWorkGroupSize(const size_t maxWorkGroupSize)
     this->maxWorkGroupSize = maxWorkGroupSize;
 }
 
-std::string deviceTypeToString(const DeviceType& deviceType)
+std::string DeviceInfo::deviceTypeToString(const DeviceType& deviceType)
 {
     switch (deviceType)
     {
@@ -120,7 +120,7 @@ std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInf
     outputTarget << "Printing detailed info for device with id: " << deviceInfo.id << std::endl;
     outputTarget << "Name: " << deviceInfo.name << std::endl;
     outputTarget << "Vendor: " << deviceInfo.vendor << std::endl;
-    outputTarget << "Device type: " << deviceTypeToString(deviceInfo.deviceType) << std::endl;
+    outputTarget << "Device type: " << deviceInfo.deviceTypeToString(deviceInfo.deviceType) << std::endl;
     outputTarget << "Global memory size: " << deviceInfo.globalMemorySize << std::endl;
     outputTarget << "Local memory size: " << deviceInfo.localMemorySize << std::endl;
     outputTarget << "Maximum constant buffer size: " << deviceInfo.maxConstantBufferSize << std::endl;
