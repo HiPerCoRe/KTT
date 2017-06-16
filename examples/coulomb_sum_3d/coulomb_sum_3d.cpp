@@ -106,7 +106,7 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ aiId, aId, gsId, gridId });
 
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ gridId });
-    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.1);
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
 
     tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double> { 0.1 });
 
