@@ -171,9 +171,18 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(Tuni
     manipulatorInterfaceImplementation->uploadBuffers();
 
     Timer timer;
-    timer.start();
-    manipulator->launchComputation(kernelDataVector.at(0).first);
-    timer.stop();
+    try
+    {
+        timer.start();
+        manipulator->launchComputation(kernelDataVector.at(0).first);
+        timer.stop();
+    }
+    catch (const std::runtime_error&)
+    {
+        manipulatorInterfaceImplementation->clearData();
+        manipulator->manipulatorInterface = nullptr;
+        throw;
+    }
 
     KernelRunResult result = manipulatorInterfaceImplementation->getCurrentResult();
     size_t manipulatorDuration = timer.getElapsedTime();
