@@ -169,9 +169,6 @@ void OpenclCore::clearBuffers(const ArgumentMemoryType& argumentMemoryType)
 KernelRunResult OpenclCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers)
 {
-    Timer timer;
-    timer.start();
-
     std::unique_ptr<OpenclProgram> program = createAndBuildProgram(source);
     std::unique_ptr<OpenclKernel> kernel = createKernel(*program, kernelName);
 
@@ -180,6 +177,8 @@ KernelRunResult OpenclCore::runKernel(const std::string& source, const std::stri
         setKernelArgument(*kernel, *argument);
     }
 
+    Timer timer;
+    timer.start();
     cl_ulong duration = enqueueKernel(*kernel, globalSize, localSize);
 
     timer.stop();
