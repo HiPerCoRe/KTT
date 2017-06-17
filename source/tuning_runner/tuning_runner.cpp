@@ -153,21 +153,21 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(Tuni
     const std::vector<std::pair<size_t, KernelRuntimeData>>& kernelDataVector, const KernelConfiguration& currentConfiguration)
 {
     manipulator->manipulatorInterface = manipulatorInterfaceImplementation.get();
-    std::vector<KernelArgument> kernelArguments;
+    std::vector<const KernelArgument*> argumentPointers;
     for (const auto& kernelData : kernelDataVector)
     {
         manipulatorInterfaceImplementation->addKernel(kernelData.first, kernelData.second);
-        auto currentArguments = getKernelArguments(kernelData.first);
-        for (const auto& argument : currentArguments)
+        auto currentKernelArguments = getKernelArgumentPointers(kernelData.first);
+        for (const auto& argument : currentKernelArguments)
         {
-            if (!elementExists(argument, kernelArguments))
+            if (!elementExists(argument, argumentPointers))
             {
-                kernelArguments.push_back(argument);
+                argumentPointers.push_back(argument);
             }
         }
     }
     manipulatorInterfaceImplementation->setConfiguration(currentConfiguration);
-    manipulatorInterfaceImplementation->setKernelArguments(kernelArguments);
+    manipulatorInterfaceImplementation->setKernelArguments(argumentPointers);
     manipulatorInterfaceImplementation->uploadBuffers();
 
     Timer timer;

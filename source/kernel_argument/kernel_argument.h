@@ -5,8 +5,6 @@
 #include <vector>
 
 #include "half.hpp"
-using half_float::half;
-
 #include "enum/argument_data_type.h"
 #include "enum/argument_memory_type.h"
 #include "enum/argument_upload_type.h"
@@ -14,6 +12,8 @@ using half_float::half;
 
 namespace ktt
 {
+
+using half_float::half;
 
 class KernelArgument
 {

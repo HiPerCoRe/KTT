@@ -240,27 +240,28 @@ Provided kernel id must be either id of main kernel or one of ids returned by `g
 Returns configuration used inside current run of `launchComputation()` method.
 
 * `void updateArgumentScalar(const size_t argumentId, const void* argumentData)`:
-Updates scalar argument, which is utilized by currently tuned kernel.
+Updates specified scalar argument.
 This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
-* `void updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation)`:
-Updates vector argument, which is utilized by currently tuned kernel.
-Argument location specifies, whether the argument should be updated on host side, device side or both.
+* `void updateArgumentLocal(const size_t argumentId, const size_t numberOfElements)`:
+Updates specified local memory argument.
 This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
-* `void updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation, const size_t numberOfElements)`:
-Updates vector argument, which is utilized by currently tuned kernel.
+* `void updateArgumentVector(const size_t argumentId, const void* argumentData)`:
+Updates specified vector argument.
+This method only affects run of `launchComputation()` method under current configuration.
+This method is useful for iterative kernel launches.
+
+* `void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)`:
+Updates specified vector argument.
 Possibly also modifies number of elements inside the argument.
-Argument location specifies, whether the argument should be updated on host side, device side or both.
 This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
-* `void synchronizeArgumentVector(const size_t argumentId, const bool downloadToHost)`:
-Synchronizes vector argument between device and host.
-If `downloadToHost` flag is set to true, argument will be transferred from device to host, otherwise argument will be transferred from host to device.
-This method only affects run of `launchComputation()` method under current configuration.
+* `ResultArgument getArgumentVector(const size_t argumentId)`:
+Retrieves specified vector argument from device buffer.
 This method is useful for iterative kernel launches.
 
 * `void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:

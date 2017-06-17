@@ -41,20 +41,24 @@ void TuningManipulator::updateArgumentScalar(const size_t argumentId, const void
     manipulatorInterface->updateArgumentScalar(argumentId, argumentData);
 }
 
-void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation)
+void TuningManipulator::updateArgumentLocal(const size_t argumentId, const size_t numberOfElements)
 {
-    manipulatorInterface->updateArgumentVector(argumentId, argumentData, argumentLocation);
+    manipulatorInterface->updateArgumentLocal(argumentId, numberOfElements);
 }
 
-void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation,
-    const size_t numberOfElements)
+void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData)
 {
-    manipulatorInterface->updateArgumentVector(argumentId, argumentData, argumentLocation, numberOfElements);
+    manipulatorInterface->updateArgumentVector(argumentId, argumentData);
 }
 
-void TuningManipulator::synchronizeArgumentVector(const size_t argumentId, const bool downloadToHost)
+void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)
 {
-    manipulatorInterface->synchronizeArgumentVector(argumentId, downloadToHost);
+    manipulatorInterface->updateArgumentVector(argumentId, argumentData, numberOfElements);
+}
+
+ResultArgument TuningManipulator::getArgumentVector(const size_t argumentId)
+{
+    return manipulatorInterface->getArgumentVector(argumentId);
 }
 
 void TuningManipulator::changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)

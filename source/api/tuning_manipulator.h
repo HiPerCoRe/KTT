@@ -18,8 +18,8 @@
 #include <vector>
 
 #include "ktt_type_aliases.h"
+#include "api/result_argument.h"
 #include "enum/argument_data_type.h"
-#include "enum/argument_location.h"
 #include "enum/argument_memory_type.h"
 #include "enum/thread_size_usage.h"
 
@@ -46,12 +46,12 @@ public:
     DimensionVector getCurrentLocalSize(const size_t kernelId) const;
     std::vector<ParameterValue> getCurrentConfiguration() const;
 
-    // Argument update and synchronization methods
+    // Argument update and retrieval methods
     void updateArgumentScalar(const size_t argumentId, const void* argumentData);
-    void updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation);
-    void updateArgumentVector(const size_t argumentId, const void* argumentData, const ArgumentLocation& argumentLocation,
-        const size_t numberOfElements);
-    void synchronizeArgumentVector(const size_t argumentId, const bool downloadToHost);
+    void updateArgumentLocal(const size_t argumentId, const size_t numberOfElements);
+    void updateArgumentVector(const size_t argumentId, const void* argumentData);
+    void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements);
+    ResultArgument getArgumentVector(const size_t argumentId);
 
     // Kernel argument handling methods
     void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);

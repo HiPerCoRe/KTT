@@ -58,7 +58,7 @@ int main(int argc, char** argv)
         atomInfoX.at(i) = distribution(engine);
         atomInfoY.at(i) = distribution(engine);
         atomInfoZ.at(i) = distribution(engine);
-        atomInfoW.at(i) = distribution(engine)/40.0f;
+        atomInfoW.at(i) = distribution(engine) / 40.0f;
 
         atomInfo.at((4 * i)) = atomInfoX.at(i);
         atomInfo.at((4 * i) + 1) = atomInfoY.at(i);

@@ -133,12 +133,12 @@ public:
             if (getParameterValue("USE_SOA", parameterValues) == 0) {
                 for (int j = 0; j < atoms; j++)
                     atomInfoPrecomp[j*4+2] = (z-atomInfoZ[j])*(z-atomInfoZ[j]);
-                updateArgumentVector(atomInfoPrecompId, atomInfoPrecomp.data(), ktt::ArgumentLocation::Device);
+                updateArgumentVector(atomInfoPrecompId, atomInfoPrecomp.data());
             }
             else {
                 for (int j = 0; j < atoms; j++)
                     atomInfoZ2[j] = (z-atomInfoZ[j])*(z-atomInfoZ[j]);
-                updateArgumentVector(atomInfoZ2Id, atomInfoZ2.data(), ktt::ArgumentLocation::Device);
+                updateArgumentVector(atomInfoZ2Id, atomInfoZ2.data());
             }
             updateArgumentScalar(zIndexId, &i);
         
