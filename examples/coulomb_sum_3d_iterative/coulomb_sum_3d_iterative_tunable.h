@@ -151,7 +151,7 @@ public:
     void tune() {
         tuner->tuneKernel(kernelId);
         tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-        tuner->printResult(kernelId, std::string("output.csv"), ktt::PrintFormat::CSV);
+        tuner->printResult(kernelId, std::string("coulomb_sum_3d_iterative_output.csv"), ktt::PrintFormat::CSV);
     }
 
 /*

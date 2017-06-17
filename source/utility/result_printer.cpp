@@ -107,17 +107,26 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std
     std::ostream& outputTarget) const
 {
     // Header
-    outputTarget << "Kernel name;";
+    outputTarget << "Kernel name,";
     if (results.at(0).getManipulatorDuration() != 0)
     {
-        outputTarget << "Total duration (" << getTimeUnitTag(timeUnit) << ");";
+        outputTarget << "Total duration (" << getTimeUnitTag(timeUnit) << "),";
     }
-    outputTarget << "Kernel duration (" << getTimeUnitTag(timeUnit) << ");Global size;Local size;Threads;";
+    outputTarget << "Kernel duration (" << getTimeUnitTag(timeUnit) << "),Global size,Local size";
 
     auto parameters = results.at(0).getConfiguration().getParameterValues();
-    for (const auto& parameter : parameters)
+    if (parameters.size() > 0)
     {
-        outputTarget << std::get<0>(parameter) << ";";
+        outputTarget << ",";
+    }
+
+    for (size_t i = 0; i < parameters.size(); i++)
+    {
+        outputTarget << std::get<0>(parameters.at(i));
+        if (i + 1 != parameters.size())
+        {
+            outputTarget << ",";
+        }
     }
     outputTarget << std::endl;
 
@@ -128,20 +137,28 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std
         auto global = configuration.getGlobalSize();
         auto local = configuration.getLocalSize();
 
-        outputTarget << result.getKernelName() << ";";
+        outputTarget << result.getKernelName() << ",";
         if (results.at(0).getManipulatorDuration() != 0)
         {
-            outputTarget << convertTime(result.getTotalDuration(), timeUnit) << ";";
+            outputTarget << convertTime(result.getTotalDuration(), timeUnit) << ",";
         }
-        outputTarget << convertTime(result.getKernelDuration(), timeUnit) << ";";
-        outputTarget << std::get<0>(global) << " " << std::get<1>(global) << " " << std::get<2>(global) << ";";
-        outputTarget << std::get<0>(local) << " " << std::get<1>(local) << " " << std::get<2>(local) << ";";
-        outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local) << ";";
+        outputTarget << convertTime(result.getKernelDuration(), timeUnit) << ",";
+        outputTarget << std::get<0>(global) * std::get<1>(global) * std::get<2>(global) << ",";
+        outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local);
 
         auto parameterValues = configuration.getParameterValues();
-        for (const auto& value : parameterValues)
+        if (parameterValues.size() > 0)
         {
-            outputTarget << std::get<1>(value) << ";";
+            outputTarget << ",";
+        }
+
+        for (size_t i = 0; i < parameterValues.size(); i++)
+        {
+            outputTarget << std::get<1>(parameterValues.at(i));
+            if (i + 1 != parameterValues.size())
+            {
+                outputTarget << ",";
+            }
         }
         outputTarget << std::endl;
     }
@@ -151,12 +168,21 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std
         outputTarget << std::endl;
 
         // Header
-        outputTarget << "Kernel name;Status;Global size;Local size;Threads;";
+        outputTarget << "Kernel name,Status,Global size,Local size";
 
         auto parameters = results.at(0).getConfiguration().getParameterValues();
-        for (const auto& parameter : parameters)
+        if (parameters.size() > 0)
         {
-            outputTarget << std::get<0>(parameter) << ";";
+            outputTarget << ",";
+        }
+
+        for (size_t i = 0; i < parameters.size(); i++)
+        {
+            outputTarget << std::get<0>(parameters.at(i));
+            if (i + 1 != parameters.size())
+            {
+                outputTarget << ",";
+            }
         }
         outputTarget << std::endl;
 
@@ -167,24 +193,32 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std
             auto global = configuration.getGlobalSize();
             auto local = configuration.getLocalSize();
 
-            outputTarget << result.getKernelName() << ";";
+            outputTarget << result.getKernelName() << ",";
             std::string statusMessage = result.getStatusMessage();
             for (size_t i = 0; i < statusMessage.length(); i++)
             {
-                if (statusMessage[i] == '\n')
+                if (statusMessage[i] == '\n' || statusMessage[i] == ',')
                 {
                     statusMessage[i] = ' ';
                 }
             }
-            outputTarget << statusMessage << ";";
-            outputTarget << std::get<0>(global) << " " << std::get<1>(global) << " " << std::get<2>(global) << ";";
-            outputTarget << std::get<0>(local) << " " << std::get<1>(local) << " " << std::get<2>(local) << ";";
-            outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local) << ";";
+            outputTarget << statusMessage << ",";
+            outputTarget << std::get<0>(global) * std::get<1>(global) * std::get<2>(global) << ",";
+            outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local);
 
             auto parameterValues = configuration.getParameterValues();
-            for (const auto& value : parameterValues)
+            if (parameterValues.size() > 0)
             {
-                outputTarget << std::get<1>(value) << ";";
+                outputTarget << ",";
+            }
+
+            for (size_t i = 0; i < parameterValues.size(); i++)
+            {
+                outputTarget << std::get<1>(parameterValues.at(i));
+                if (i + 1 != parameterValues.size())
+                {
+                    outputTarget << ",";
+                }
             }
             outputTarget << std::endl;
         }

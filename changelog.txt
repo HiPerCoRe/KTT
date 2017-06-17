@@ -9,6 +9,7 @@ Version 0.4 (x/6/2017)
 * Improved tuner info messages
 * Fixed several bugs in tuning manipulator API
 * Fixed crash in annealing searcher
+* Improved CSV printing method
 * KTT is now compiled as dynamic (shared) library
 * Added build customization options to premake script
 * Additions and improvements to examples

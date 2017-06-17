@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-    tuner.printResult(kernelId, std::string("output.csv"), ktt::PrintFormat::CSV);
+    tuner.printResult(kernelId, std::string("coulomb_sum_3d_output.csv"), ktt::PrintFormat::CSV);
 
     return 0;
 }
