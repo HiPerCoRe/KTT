@@ -163,8 +163,7 @@ KernelRunResult CudaCore::runKernel(const std::string& source, const std::string
 
     Timer timer;
     timer.start();
-    float duration = enqueueKernel(*kernel, globalSize, localSize, kernelArguments,
-        getSharedMemorySizeInBytes(argumentPointers));
+    float duration = enqueueKernel(*kernel, globalSize, localSize, kernelArguments, getSharedMemorySizeInBytes(argumentPointers));
 
     timer.stop();
     uint64_t overhead = timer.getElapsedTime();
