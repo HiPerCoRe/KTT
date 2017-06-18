@@ -10,6 +10,7 @@
 #include "opencl_command_queue.h"
 #include "opencl_context.h"
 #include "opencl_device.h"
+#include "opencl_event.h"
 #include "opencl_kernel.h"
 #include "opencl_platform.h"
 #include "opencl_program.h"
@@ -50,6 +51,7 @@ public:
     // Low-level kernel execution methods
     std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;
     std::unique_ptr<OpenclBuffer> createBuffer(const KernelArgument& argument) const;
+    std::unique_ptr<OpenclEvent> createEvent() const;
     void setKernelArgument(OpenclKernel& kernel, const KernelArgument& argument);
     std::unique_ptr<OpenclKernel> createKernel(const OpenclProgram& program, const std::string& kernelName) const;
     cl_ulong enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;

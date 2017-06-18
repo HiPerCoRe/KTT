@@ -157,13 +157,13 @@ void CudaCore::clearBuffers(const ArgumentMemoryType& argumentMemoryType)
 KernelRunResult CudaCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
     const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers)
 {
-    Timer timer;
-    timer.start();
-
     std::unique_ptr<CudaProgram> program = createAndBuildProgram(source);
     std::unique_ptr<CudaKernel> kernel = createKernel(*program, kernelName);
+    std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
-    float duration = enqueueKernel(*kernel, globalSize, localSize, getKernelArguments(argumentPointers),
+    Timer timer;
+    timer.start();
+    float duration = enqueueKernel(*kernel, globalSize, localSize, kernelArguments,
         getSharedMemorySizeInBytes(argumentPointers));
 
     timer.stop();

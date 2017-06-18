@@ -183,6 +183,8 @@ KernelRunResult OpenclCore::runKernel(const std::string& source, const std::stri
 
     timer.stop();
     uint64_t overhead = timer.getElapsedTime();
+
+    clFinish(commandQueue->getQueue());
     return KernelRunResult(static_cast<uint64_t>(duration), overhead);
 }
 
@@ -198,6 +200,12 @@ std::unique_ptr<OpenclBuffer> OpenclCore::createBuffer(const KernelArgument& arg
     auto buffer = std::make_unique<OpenclBuffer>(context->getContext(), argument.getId(), argument.getDataSizeInBytes(),
         argument.getElementSizeInBytes(), argument.getArgumentDataType(), argument.getArgumentMemoryType());
     return buffer;
+}
+
+std::unique_ptr<OpenclEvent> OpenclCore::createEvent() const
+{
+    auto event = std::make_unique<OpenclEvent>(context->getContext());
+    return event;
 }
 
 void OpenclCore::setKernelArgument(OpenclKernel& kernel, const KernelArgument& argument)
@@ -228,7 +236,9 @@ std::unique_ptr<OpenclKernel> OpenclCore::createKernel(const OpenclProgram& prog
 
 cl_ulong OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const
 {
-    cl_event profilingEvent;
+    auto eventHolder = createEvent();
+    cl_event profilingEvent = eventHolder->getEvent();
+
     cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), static_cast<cl_uint>(globalSize.size()), nullptr,
         globalSize.data(), localSize.data(), 0, nullptr, &profilingEvent);
     checkOpenclError(result, std::string("clEnqueueNDRangeKernel"));
