@@ -236,11 +236,11 @@ cl_ulong OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_
     checkOpenclError(result, std::string("clEnqueueNDRangeKernel"));
 
     // Wait for computation to finish
-    clFinish(commandQueue->getQueue());
+    checkOpenclError(clFinish(commandQueue->getQueue()), "clFinish");
     checkOpenclError(clWaitForEvents(1, &profilingEvent), std::string("clWaitForEvents"));
 
     cl_ulong duration = getKernelRunDuration(profilingEvent);
-    clReleaseEvent(profilingEvent);
+    checkOpenclError(clReleaseEvent(profilingEvent), "clReleaseEvent");
 
     return duration;
 }
