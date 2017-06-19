@@ -111,7 +111,9 @@ public:
         
          // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
         tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
-    
+   
+        //tuner->setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double> { 0.01 });
+ 
         // set reference kernel
         tuner->setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ energyGridId });
     }
