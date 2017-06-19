@@ -9,7 +9,7 @@ Main features
 * Ability to define kernel tuning parameters like thread sizes, vector data types and loop unroll factors in order to fit computation
 for particular device
 * High-level API which is easier to use than low-level APIs like OpenCL or CUDA driver API
-* Shared C++ code betweem multiple compute APIs, switching between CUDA and OpenCL involves only minor changes to C++ code
+* Shared C++ code between multiple compute APIs, switching between CUDA and OpenCL involves only minor changes in C++ code
 (eg. changing path to kernel file)
 * Ability to optionally gain greater control over computation by using tuning manipulator, which allows, for example to utilize iterative
 kernel launches or run some part of a computation directly in C++ code
@@ -19,21 +19,12 @@ argument validation, ability to specify output target for printing results (C++ 
 available devices, etc.
 * No direct usage of vendor specific SDKs is needed, only corresponding device drivers have to be installed
 
-Original project
-----------------
-
-KTT is based on [CLTune project](https://github.com/CNugteren/CLTune). Basic KTT API functionality is similar to that of CLTune,
-however internal structure was almost completely rewritten from scratch. Parts of code for following features were ported from CLTune:
-* Searchers (mainly PSO and annealing searcher)
-* Generating of kernel configurations
-* Tuning parameter constraints
-
 Getting started
 ---------------
 
+* Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/documentation/ktt_api.md).
 * Newest version of KTT library can be found [here](https://github.com/Fillo7/KTT/releases).
 * Prebuilt binaries are currently available only for some platforms. Other platforms require manual build.
-* Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/documentation/ktt_api.md).
 
 Examples
 --------
@@ -48,8 +39,6 @@ List of currently available examples:
 * `coulomb_sum_3d`: alternative to iterative version, utilizes several tuning parameters and reference kernel
 * `nbody`: advanced example which utilizes tuning parameters, multiple constraints and validation of multiple arguments with reference kernel
 * `reduction`: advanced example which utilizes reference class, tuning manipulator and several tuning parameters
-
-It is possible to disable compilation of examples, eg. `premake5 --no-examples gmake`.
 
 Building KTT
 ------------
@@ -71,13 +60,18 @@ Currently supported operating systems are Linux and Windows.
     - run `premake5.exe vs2015` (or `premake5.exe vs2017`) to generate Visual Studio project files
     - open generated .sln file and build the project inside Visual Studio
 
-* It is possible to specify custom build directory, eg. `premake5 --outdir=my_dir gmake`. Default build directory is `build`.
+* Following build options are available:
+    - `--outdir=path` specifies custom build directory, default build directory is `build`
+    - `--platform=vendor` specifies SDK used for building KTT, useful when multiple SDKs are installed
+    - `--no-examples` disables compilation of examples
+    - `--tests` enables compilation of unit tests
+    - `--no-cuda` disables inclusion of CUDA API during compilation, only affects Nvidia platform
+    
+Original project
+----------------
 
-* When multiple SDKs are installed on a system, it is possible to specify which SDK should be used for building the KTT library,
-eg. `premake5 --platform=amd gmake`.
-
-* If current platform is Nvidia, support for CUDA functionality will be automatically included as well.
-It is possible to disable CUDA compilation, eg. `premake5 --no-cuda gmake`.
-
-* Basic unit tests can be built together with the library. These can be run to ensure that library works correctly on current platform.
-In order to enable unit tests compilation, corresponding Premake argument needs to be used, eg. `premake5 --tests gmake`.
+KTT is based on [CLTune project](https://github.com/CNugteren/CLTune). Basic KTT API functionality is similar to that of CLTune,
+however internal structure was almost completely rewritten from scratch. Portions of code for following features were ported from CLTune:
+* Searchers (mainly PSO and annealing searcher)
+* Generating of kernel configurations
+* Tuning parameter constraints
