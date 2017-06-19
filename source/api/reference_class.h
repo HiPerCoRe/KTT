@@ -1,7 +1,5 @@
 #pragma once
 
-#include "enum/argument_data_type.h"
-
 namespace ktt
 {
 
