@@ -6,7 +6,8 @@ namespace ktt
 enum class ArgumentUploadType
 {
     Scalar,
-    Vector
+    Vector,
+    Local
 };
 
 } // namespace ktt

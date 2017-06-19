@@ -25,6 +25,7 @@ public:
         currentState(0),
         neighbourState(0),
         alreadyVisistedStatesCount(0),
+        executionTimes(configurations.size(), std::numeric_limits<double>::max()),
         generator(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count())),
         intDistribution(0, static_cast<int>(configurations.size())),
         probabilityDistribution(0.0, 1.0)
@@ -38,13 +39,13 @@ public:
         index = initialState;
     }
 
-    virtual KernelConfiguration getNextConfiguration() override
+    KernelConfiguration getNextConfiguration() override
     {
         visitedStatesCount++;
         return configurations.at(index);
     }
 
-    virtual void calculateNextConfiguration(const double previousConfigurationDuration) override
+    void calculateNextConfiguration(const double previousConfigurationDuration) override
     {
         if (previousConfigurationDuration > 0.0) // workaround for recursive calls
         {
@@ -78,7 +79,7 @@ public:
         index = neighbourState;
     }
 
-    virtual size_t getConfigurationsCount() const override
+    size_t getConfigurationsCount() const override
     {
         return std::max(static_cast<size_t>(1), std::min(configurations.size(), static_cast<size_t>(configurations.size() * fraction)));
     }

@@ -7,7 +7,9 @@ TuningResult::TuningResult(const std::string& kernelName, const uint64_t kernelD
     kernelName(kernelName),
     kernelDuration(kernelDuration),
     manipulatorDuration(0),
-    configuration(configuration)
+    configuration(configuration),
+    valid(true),
+    statusMessage("Ok")
 {}
 
 TuningResult::TuningResult(const std::string& kernelName, const uint64_t kernelDuration, const uint64_t manipulatorDuration,
@@ -15,7 +17,18 @@ TuningResult::TuningResult(const std::string& kernelName, const uint64_t kernelD
     kernelName(kernelName),
     kernelDuration(kernelDuration),
     manipulatorDuration(manipulatorDuration),
-    configuration(configuration)
+    configuration(configuration),
+    valid(true),
+    statusMessage("Ok")
+{}
+
+TuningResult::TuningResult(const std::string& kernelName, const KernelConfiguration& configuration, const std::string& statusMessage) :
+    kernelName(kernelName),
+    kernelDuration(UINT64_MAX),
+    manipulatorDuration(0),
+    configuration(configuration),
+    valid(false),
+    statusMessage(statusMessage)
 {}
 
 std::string TuningResult::getKernelName() const
@@ -41,6 +54,16 @@ uint64_t TuningResult::getTotalDuration() const
 KernelConfiguration TuningResult::getConfiguration() const
 {
     return configuration;
+}
+
+bool TuningResult::isValid() const
+{
+    return valid;
+}
+
+std::string TuningResult::getStatusMessage() const
+{
+    return statusMessage;
 }
 
 } // namespace ktt

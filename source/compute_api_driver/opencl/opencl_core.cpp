@@ -1,10 +1,12 @@
 #include "opencl_core.h"
-#include "../../utility/timer.h"
+#include "utility/timer.h"
 
 namespace ktt
 {
 
 OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex) :
+    platformIndex(platformIndex),
+    deviceIndex(deviceIndex),
     compilerOptions(std::string(""))
 {
     auto platforms = getOpenclPlatforms();
@@ -69,119 +71,178 @@ std::vector<DeviceInfo> OpenclCore::getDeviceInfo(const size_t platformIndex) co
     return result;
 }
 
+DeviceInfo OpenclCore::getCurrentDeviceInfo() const
+{
+    return getOpenclDeviceInfo(platformIndex, deviceIndex);
+}
+
 void OpenclCore::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
 }
 
-void OpenclCore::clearCache() const
+void OpenclCore::uploadArgument(const KernelArgument& kernelArgument)
 {
-    bufferCache.clear();
+    if (kernelArgument.getArgumentUploadType() != ArgumentUploadType::Vector)
+    {
+        return;
+    }
+    
+    clearBuffer(kernelArgument.getId());
+
+    std::unique_ptr<OpenclBuffer> buffer = createBuffer(kernelArgument);
+    buffer->uploadData(*commandQueue, kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
+    buffers.insert(std::move(buffer)); // buffer data will be stolen
 }
 
-KernelRunResult OpenclCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localSize, const std::vector<KernelArgument>& arguments) const
+void OpenclCore::updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes)
 {
-    Timer timer;
-    timer.start();
-
-    std::unique_ptr<OpenclProgram> program = createAndBuildProgram(source);
-    std::unique_ptr<OpenclKernel> kernel = createKernel(*program, kernelName);
-    std::vector<std::unique_ptr<OpenclBuffer>> buffers;
-    std::vector<const KernelArgument*> vectorArgumentPointers;
-
-    for (const auto& argument : arguments)
+    for (const auto& buffer : buffers)
     {
-        if (argument.getArgumentUploadType() == ArgumentUploadType::Vector)
+        if (buffer->getKernelArgumentId() == argumentId)
         {
-            if (argument.getArgumentMemoryType() == ArgumentMemoryType::ReadOnly && loadBufferFromCache(argument.getId(), *kernel))
-            {
-                continue; // buffer was successfully loaded from cache
-            }
+            buffer->uploadData(*commandQueue, data, dataSizeInBytes);
+            return;
+        }
+    }
+    throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
+}
 
-            std::unique_ptr<OpenclBuffer> buffer = createBuffer(argument.getArgumentMemoryType(), argument.getDataSizeInBytes(), argument.getId());
-            updateBuffer(*buffer, argument.getData(), argument.getDataSizeInBytes());
-            setKernelArgumentVector(*kernel, *buffer);
+KernelArgument OpenclCore::downloadArgument(const size_t argumentId) const
+{
+    for (const auto& buffer : buffers)
+    {
+        if (buffer->getKernelArgumentId() != argumentId)
+        {
+            continue;
+        }
 
-            if (argument.getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
-            {
-                bufferCache.push_back(std::move(buffer));
-            }
-            else
-            {
-                vectorArgumentPointers.push_back(&argument);
-                buffers.push_back(std::move(buffer)); // buffer data will be stolen
-            }
+        KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
+            buffer->getMemoryType(), ArgumentUploadType::Vector);
+        buffer->downloadData(*commandQueue, argument.getData(), argument.getDataSizeInBytes());
+        return argument;
+    }
+
+    throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+}
+
+void OpenclCore::clearBuffer(const size_t argumentId)
+{
+    auto iterator = buffers.cbegin();
+
+    while (iterator != buffers.cend())
+    {
+        if (iterator->get()->getKernelArgumentId() == argumentId)
+        {
+            buffers.erase(iterator);
+            return;
         }
         else
         {
-            setKernelArgumentScalar(*kernel, argument);
+            ++iterator;
         }
     }
+}
 
+void OpenclCore::clearBuffers()
+{
+    buffers.clear();
+}
+
+void OpenclCore::clearBuffers(const ArgumentMemoryType& argumentMemoryType)
+{
+    auto iterator = buffers.cbegin();
+
+    while (iterator != buffers.cend())
+    {
+        if (iterator->get()->getOpenclMemoryFlag() == getOpenclMemoryType(argumentMemoryType))
+        {
+            iterator = buffers.erase(iterator);
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
+}
+
+KernelRunResult OpenclCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
+    const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers)
+{
+    std::unique_ptr<OpenclProgram> program = createAndBuildProgram(source);
+    std::unique_ptr<OpenclKernel> kernel = createKernel(*program, kernelName);
+
+    for (const auto argument : argumentPointers)
+    {
+        setKernelArgument(*kernel, *argument);
+    }
+
+    Timer timer;
+    timer.start();
     cl_ulong duration = enqueueKernel(*kernel, globalSize, localSize);
-    std::vector<KernelArgument> resultArguments = getResultArguments(buffers, vectorArgumentPointers);
 
     timer.stop();
     uint64_t overhead = timer.getElapsedTime();
-    return KernelRunResult(static_cast<uint64_t>(duration), overhead, resultArguments);
+
+    return KernelRunResult(static_cast<uint64_t>(duration), overhead);
 }
 
 std::unique_ptr<OpenclProgram> OpenclCore::createAndBuildProgram(const std::string& source) const
 {
-    std::unique_ptr<OpenclProgram> program;
-    program.reset(new OpenclProgram(source, context->getContext(), context->getDevices()));
+    auto program = std::make_unique<OpenclProgram>(source, context->getContext(), context->getDevices());
     program->build(compilerOptions);
     return program;
 }
 
-std::unique_ptr<OpenclBuffer> OpenclCore::createBuffer(const ArgumentMemoryType& argumentMemoryType, const size_t size,
-    const size_t kernelArgumentId) const
+std::unique_ptr<OpenclBuffer> OpenclCore::createBuffer(const KernelArgument& argument) const
 {
-    std::unique_ptr<OpenclBuffer> buffer;
-    buffer.reset(new OpenclBuffer(context->getContext(), getOpenclMemoryType(argumentMemoryType), size, kernelArgumentId));
+    auto buffer = std::make_unique<OpenclBuffer>(context->getContext(), argument.getId(), argument.getDataSizeInBytes(),
+        argument.getElementSizeInBytes(), argument.getArgumentDataType(), argument.getArgumentMemoryType());
     return buffer;
 }
 
-void OpenclCore::updateBuffer(OpenclBuffer& buffer, const void* source, const size_t dataSize) const
+void OpenclCore::setKernelArgument(OpenclKernel& kernel, const KernelArgument& argument)
 {
-    cl_int result = clEnqueueWriteBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
-    checkOpenclError(result, std::string("clEnqueueWriteBuffer"));
-}
-
-void OpenclCore::getBufferData(const OpenclBuffer& buffer, void* destination, const size_t dataSize) const
-{
-    cl_int result = clEnqueueReadBuffer(commandQueue->getQueue(), buffer.getBuffer(), CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
-    checkOpenclError(result, std::string("clEnqueueReadBuffer"));
+    if (argument.getArgumentUploadType() == ArgumentUploadType::Vector)
+    {
+        if (!loadBufferFromCache(argument.getId(), kernel))
+        {
+            uploadArgument(argument);
+            loadBufferFromCache(argument.getId(), kernel);
+        }
+    }
+    else if(argument.getArgumentUploadType() == ArgumentUploadType::Scalar)
+    {
+        kernel.setKernelArgumentScalar(argument.getData(), argument.getElementSizeInBytes());
+    }
+    else
+    {
+        kernel.setKernelArgumentLocal(argument.getElementSizeInBytes() * argument.getNumberOfElements());
+    }
 }
 
 std::unique_ptr<OpenclKernel> OpenclCore::createKernel(const OpenclProgram& program, const std::string& kernelName) const
 {
-    std::unique_ptr<OpenclKernel> kernel;
-    kernel.reset(new OpenclKernel(program.getProgram(), kernelName));
+    auto kernel = std::make_unique<OpenclKernel>(program.getProgram(), kernelName);
     return kernel;
-}
-
-void OpenclCore::setKernelArgumentScalar(OpenclKernel& kernel, const KernelArgument& argument) const
-{
-    kernel.setKernelArgumentScalar(argument.getData(), argument.getElementSizeInBytes());
-}
-
-void OpenclCore::setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffer& buffer) const
-{
-    cl_mem clBuffer = buffer.getBuffer();
-    kernel.setKernelArgumentVector((void*)&clBuffer);
 }
 
 cl_ulong OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const
 {
     cl_event profilingEvent;
+
     cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), static_cast<cl_uint>(globalSize.size()), nullptr,
         globalSize.data(), localSize.data(), 0, nullptr, &profilingEvent);
     checkOpenclError(result, std::string("clEnqueueNDRangeKernel"));
 
-    clFinish(commandQueue->getQueue());
-    return getKernelRunDuration(profilingEvent);
+    // Wait for computation to finish
+    checkOpenclError(clFinish(commandQueue->getQueue()), "clFinish");
+    checkOpenclError(clWaitForEvents(1, &profilingEvent), std::string("clWaitForEvents"));
+
+    cl_ulong duration = getKernelRunDuration(profilingEvent);
+    checkOpenclError(clReleaseEvent(profilingEvent), "clReleaseEvent");
+
+    return duration;
 }
 
 PlatformInfo OpenclCore::getOpenclPlatformInfo(const size_t platformIndex)
@@ -287,30 +348,15 @@ DeviceType OpenclCore::getDeviceType(const cl_device_type deviceType)
     }
 }
 
-std::vector<KernelArgument> OpenclCore::getResultArguments(const std::vector<std::unique_ptr<OpenclBuffer>>& outputBuffers,
-    const std::vector<const KernelArgument*>& inputArgumentPointers) const
+void OpenclCore::setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffer& buffer) const
 {
-    std::vector<KernelArgument> resultArguments;
-    for (size_t i = 0; i < outputBuffers.size(); i++)
-    {
-        if (outputBuffers.at(i)->getType() == CL_MEM_READ_ONLY)
-        {
-            continue;
-        }
-
-        const KernelArgument* currentArgument = inputArgumentPointers.at(i);
-        KernelArgument argument(currentArgument->getId(), currentArgument->getNumberOfElements(), currentArgument->getArgumentDataType(),
-            currentArgument->getArgumentMemoryType(), currentArgument->getArgumentUploadType());
-        getBufferData(*outputBuffers.at(i), argument.getData(), argument.getDataSizeInBytes());
-        resultArguments.push_back(argument);
-    }
-
-    return resultArguments;
+    cl_mem clBuffer = buffer.getBuffer();
+    kernel.setKernelArgumentVector((void*)&clBuffer);
 }
 
 bool OpenclCore::loadBufferFromCache(const size_t argumentId, OpenclKernel& kernel) const
 {
-    for (const auto& buffer : bufferCache)
+    for (const auto& buffer : buffers)
     {
         if (buffer->getKernelArgumentId() == argumentId)
         {

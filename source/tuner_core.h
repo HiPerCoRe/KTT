@@ -25,28 +25,30 @@ public:
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
-    void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
-        const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
-    void addConstraint(const size_t id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
+        const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
+    void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
-    void setKernelArguments(const size_t id, const std::vector<size_t>& argumentIndices);
-    void setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
-    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
-        const std::vector<size_t>& resultArgumentIds);
-    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
-    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
+    void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIndices);
+    void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Argument manager methods
     size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
         const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
 
     // Tuning runner methods
-    void tuneKernel(const size_t id);
+    void tuneKernel(const size_t kernelId);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void setValidationRange(const size_t argumentId, const size_t validationRange);
+    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
+        const std::vector<size_t>& resultArgumentIds);
+    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
+    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Result printer methods
     void setPrintingTimeUnit(const TimeUnit& timeUnit);
+    void setInvalidResultPrinting(const bool flag);
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
 
@@ -55,6 +57,7 @@ public:
     void printComputeApiInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const;
+    DeviceInfo getCurrentDeviceInfo() const;
 
     // Logger methods
     void setLoggingTarget(std::ostream& outputTarget);

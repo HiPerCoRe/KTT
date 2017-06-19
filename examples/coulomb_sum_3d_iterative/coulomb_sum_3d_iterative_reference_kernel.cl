@@ -1,14 +1,14 @@
-__kernel void directCoulombSumReference(__global float4* atomInfo, __global float* atomInfoX, __global float* atomInfoY, __global float* atomInfoZ, __global float* atomInfoW, int numberOfAtoms, float gridSpacing, __global float* energyGrid)
+__kernel void directCoulombSumReference(__global float4* atomInfo, int numberOfAtoms, float gridSpacing, __global float* energyGrid)
 {
     int xIndex = get_global_id(0);
     int yIndex = get_global_id(1);
     int zIndex = get_global_id(2);
-        
-	int outIndex = get_global_size(1) * get_global_size(0) * zIndex
-        + get_global_size(0) * yIndex + xIndex;
+   
+	int outIndex = get_global_size(1) * get_global_size(0) * zIndex + get_global_size(0) * yIndex + xIndex;
 
     float coordX = gridSpacing * xIndex;
     float coordY = gridSpacing * yIndex;
+    //XXX this code work correctly when zIndex is fixed to constant here and in coulomb_sum_tunable.h, e.g. float coordZ = gridSpacing * 1;
     float coordZ = gridSpacing * zIndex;
 
     float energyValue = 0.0f;
@@ -21,6 +21,6 @@ __kernel void directCoulombSumReference(__global float4* atomInfo, __global floa
         float partialResult = native_rsqrt(dX * dX + dY * dY + dZ*dZ);
         energyValue += atomInfo[i].w * partialResult;
     }
-
+    
     energyGrid[outIndex] += energyValue;
 }

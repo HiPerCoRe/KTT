@@ -1,10 +1,13 @@
+#include <algorithm>
+
 #include "result_printer.h"
 
 namespace ktt
 {
 
 ResultPrinter::ResultPrinter() :
-    timeUnit(TimeUnit::Microseconds)
+    timeUnit(TimeUnit::Microseconds),
+    printInvalidResult(false)
 {}
 
 void ResultPrinter::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const
@@ -20,23 +23,38 @@ void ResultPrinter::printResult(const size_t kernelId, std::ostream& outputTarge
         throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(kernelId));
     }
 
+    std::vector<TuningResult> invalidResults;
+    if (invalidResultMap.find(kernelId) != invalidResultMap.end())
+    {
+        invalidResults = invalidResultMap.find(kernelId)->second;
+    }
+
     switch (printFormat)
     {
     case PrintFormat::CSV:
-        printCSV(results, outputTarget);
+        printCsv(results, invalidResults, outputTarget);
+        break;
+    case PrintFormat::Verbose:
+        printVerbose(results, invalidResults, outputTarget);
         break;
     default:
-        printVerbose(results, outputTarget);
+        throw std::runtime_error("Unknown print format");
     }
 }
 
-void ResultPrinter::setResult(const size_t kernelId, const std::vector<TuningResult>& result)
+void ResultPrinter::setResult(const size_t kernelId, const std::vector<TuningResult>& result, const std::vector<TuningResult>& invalidResult)
 {
     if (resultMap.find(kernelId) != resultMap.end())
     {
         resultMap.erase(kernelId);
     }
     resultMap.insert(std::make_pair(kernelId, result));
+
+    if (invalidResultMap.find(kernelId) != invalidResultMap.end())
+    {
+        invalidResultMap.erase(kernelId);
+    }
+    invalidResultMap.insert(std::make_pair(kernelId, invalidResult));
 }
 
 void ResultPrinter::setTimeUnit(const TimeUnit& timeUnit)
@@ -44,7 +62,13 @@ void ResultPrinter::setTimeUnit(const TimeUnit& timeUnit)
     this->timeUnit = timeUnit;
 }
 
-void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::ostream& outputTarget) const
+void ResultPrinter::setInvalidResultPrinting(const bool flag)
+{
+    printInvalidResult = flag;
+}
+
+void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, const std::vector<TuningResult>& invalidResults,
+    std::ostream& outputTarget) const
 {
     for (const auto& result : results)
     {
@@ -66,22 +90,43 @@ void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::
         outputTarget << "Total duration: " << convertTime(bestResult.getTotalDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
     }
     outputTarget << std::endl;
+
+    if (printInvalidResult)
+    {
+        for (const auto& result : invalidResults)
+        {
+            outputTarget << "Invalid result for kernel <" << result.getKernelName() << ">, configuration: " << std::endl
+                << result.getConfiguration();
+            outputTarget << "Result status: " << result.getStatusMessage();
+            outputTarget << std::endl << std::endl;
+        }
+    }
 }
 
-void ResultPrinter::printCSV(const std::vector<TuningResult>& results, std::ostream& outputTarget) const
+void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std::vector<TuningResult>& invalidResults,
+    std::ostream& outputTarget) const
 {
     // Header
-    outputTarget << "Kernel name;";
+    outputTarget << "Kernel name,";
     if (results.at(0).getManipulatorDuration() != 0)
     {
-        outputTarget << "Total duration (" << getTimeUnitTag(timeUnit) << ");";
+        outputTarget << "Total duration (" << getTimeUnitTag(timeUnit) << "),";
     }
-    outputTarget << "Kernel duration (" << getTimeUnitTag(timeUnit) << ");Global size;Local size;Threads;";
+    outputTarget << "Kernel duration (" << getTimeUnitTag(timeUnit) << "),Global size,Local size";
 
     auto parameters = results.at(0).getConfiguration().getParameterValues();
-    for (const auto& parameter : parameters)
+    if (parameters.size() > 0)
     {
-        outputTarget << std::get<0>(parameter) << ";";
+        outputTarget << ",";
+    }
+
+    for (size_t i = 0; i < parameters.size(); i++)
+    {
+        outputTarget << std::get<0>(parameters.at(i));
+        if (i + 1 != parameters.size())
+        {
+            outputTarget << ",";
+        }
     }
     outputTarget << std::endl;
 
@@ -92,22 +137,91 @@ void ResultPrinter::printCSV(const std::vector<TuningResult>& results, std::ostr
         auto global = configuration.getGlobalSize();
         auto local = configuration.getLocalSize();
 
-        outputTarget << result.getKernelName() << ";";
+        outputTarget << result.getKernelName() << ",";
         if (results.at(0).getManipulatorDuration() != 0)
         {
-            outputTarget << convertTime(result.getTotalDuration(), timeUnit) << ";";
+            outputTarget << convertTime(result.getTotalDuration(), timeUnit) << ",";
         }
-        outputTarget << convertTime(result.getKernelDuration(), timeUnit) << ";";
-        outputTarget << std::get<0>(global) << " " << std::get<1>(global) << " " << std::get<2>(global) << ";";
-        outputTarget << std::get<0>(local) << " " << std::get<1>(local) << " " << std::get<2>(local) << ";";
-        outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local) << ";";
+        outputTarget << convertTime(result.getKernelDuration(), timeUnit) << ",";
+        outputTarget << std::get<0>(global) * std::get<1>(global) * std::get<2>(global) << ",";
+        outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local);
 
         auto parameterValues = configuration.getParameterValues();
-        for (const auto& value : parameterValues)
+        if (parameterValues.size() > 0)
         {
-            outputTarget << std::get<1>(value) << ";";
+            outputTarget << ",";
+        }
+
+        for (size_t i = 0; i < parameterValues.size(); i++)
+        {
+            outputTarget << std::get<1>(parameterValues.at(i));
+            if (i + 1 != parameterValues.size())
+            {
+                outputTarget << ",";
+            }
         }
         outputTarget << std::endl;
+    }
+
+    if (printInvalidResult && invalidResults.size() > 0)
+    {
+        outputTarget << std::endl;
+
+        // Header
+        outputTarget << "Kernel name,Status,Global size,Local size";
+
+        auto parameters = results.at(0).getConfiguration().getParameterValues();
+        if (parameters.size() > 0)
+        {
+            outputTarget << ",";
+        }
+
+        for (size_t i = 0; i < parameters.size(); i++)
+        {
+            outputTarget << std::get<0>(parameters.at(i));
+            if (i + 1 != parameters.size())
+            {
+                outputTarget << ",";
+            }
+        }
+        outputTarget << std::endl;
+
+        // Values
+        for (const auto& result : invalidResults)
+        {
+            auto configuration = result.getConfiguration();
+            auto global = configuration.getGlobalSize();
+            auto local = configuration.getLocalSize();
+
+            outputTarget << result.getKernelName() << ",";
+            std::string statusMessage = result.getStatusMessage();
+            for (size_t i = 0; i < statusMessage.length(); i++)
+            {
+                if (statusMessage[i] == '\n' || statusMessage[i] == ',')
+                {
+                    statusMessage[i] = ' ';
+                }
+            }
+            outputTarget << statusMessage << ",";
+            outputTarget << std::get<0>(global) * std::get<1>(global) * std::get<2>(global) << ",";
+            outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local);
+
+            auto parameterValues = configuration.getParameterValues();
+            if (parameterValues.size() > 0)
+            {
+                outputTarget << ",";
+            }
+
+            for (size_t i = 0; i < parameterValues.size(); i++)
+            {
+                outputTarget << std::get<1>(parameterValues.at(i));
+                if (i + 1 != parameterValues.size())
+                {
+                    outputTarget << ",";
+                }
+            }
+            outputTarget << std::endl;
+        }
     }
 }
 

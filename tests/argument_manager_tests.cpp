@@ -1,10 +1,12 @@
 #include "catch.hpp"
 
-#include "../source/kernel_argument/argument_manager.h"
+#include <cmath>
 
-bool around(const float value, const float other, const float tolerance)
+#include "kernel_argument/argument_manager.h"
+
+template <typename T> bool around(const T value, const T other, const T tolerance)
 {
-    return value - tolerance < other && value + tolerance > other;
+    return std::fabs(value - other) < tolerance;
 }
 
 TEST_CASE("Argument addition and retrieval", "[argumentManager]")
@@ -19,7 +21,9 @@ TEST_CASE("Argument addition and retrieval", "[argumentManager]")
     auto argument = manager.getArgument(id);
     REQUIRE(argument.getArgumentUploadType() == ktt::ArgumentUploadType::Vector);
     REQUIRE(argument.getArgumentDataType() == ktt::ArgumentDataType::Float);
+    REQUIRE(argument.getArgumentMemoryType() == ktt::ArgumentMemoryType::ReadOnly);
     REQUIRE(argument.getDataSizeInBytes() == 4 * sizeof(float));
+    REQUIRE(argument.getElementSizeInBytes() == sizeof(float));
 
     std::vector<float> floats = argument.getDataFloat();
     REQUIRE(floats.size() == 4);
@@ -27,5 +31,11 @@ TEST_CASE("Argument addition and retrieval", "[argumentManager]")
     for (size_t i = 0; i < floats.size(); i++)
     {
         REQUIRE(around(floats.at(i), data.at(i), 0.001f));
+    }
+
+    SECTION("Adding empty argument is not allowed")
+    {
+        REQUIRE_THROWS(manager.addArgument(data.data(), 0, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly,
+            ktt::ArgumentUploadType::Vector));
     }
 }

@@ -1,5 +1,5 @@
 #include "kernel.h"
-#include "../utility/ktt_utility.h"
+#include "utility/ktt_utility.h"
 
 namespace ktt
 {
@@ -11,10 +11,7 @@ Kernel::Kernel(const size_t id, const std::string& source, const std::string& na
     name(name),
     globalSize(globalSize),
     localSize(localSize),
-    searchMethod(SearchMethod::FullSearch),
-    referenceKernelValid(false),
-    referenceClassValid(false),
-    tuningManipulatorValid(false)
+    searchMethod(SearchMethod::FullSearch)
 {}
 
 void Kernel::addParameter(const KernelParameter& parameter)
@@ -57,29 +54,6 @@ void Kernel::setSearchMethod(const SearchMethod& searchMethod, const std::vector
     
     this->searchArguments = searchArguments;
     this->searchMethod = searchMethod;
-}
-
-void Kernel::setReferenceKernel(const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
-    const std::vector<size_t>& resultArgumentIds)
-{
-    this->referenceKernelId = referenceKernelId;
-    this->referenceKernelConfiguration = referenceKernelConfiguration;
-    this->referenceKernelArgumentIds = resultArgumentIds;
-    referenceKernelValid = true;
-}
-
-void Kernel::setReferenceClass(std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds)
-{
-    this->referenceClass = std::move(referenceClass);
-    this->referenceClassArgumentIds = resultArgumentIds;
-    referenceClassValid = true;
-    this->referenceClass->computeResult();
-}
-
-void Kernel::setTuningManipulator(std::unique_ptr<TuningManipulator> tuningManipulator)
-{
-    this->tuningManipulator = std::move(tuningManipulator);
-    tuningManipulatorValid = true;
 }
 
 size_t Kernel::getId() const
@@ -135,56 +109,6 @@ SearchMethod Kernel::getSearchMethod() const
 std::vector<double> Kernel::getSearchArguments() const
 {
     return searchArguments;
-}
-
-bool Kernel::hasReferenceKernel() const
-{
-    return referenceKernelValid;
-}
-
-size_t Kernel::getReferenceKernelId() const
-{
-    return referenceKernelId;
-}
-
-std::vector<ParameterValue> Kernel::getReferenceKernelConfiguration() const
-{
-    return referenceKernelConfiguration;
-}
-
-std::vector<size_t> Kernel::getReferenceKernelArgumentIds() const
-{
-    return referenceKernelArgumentIds;
-}
-
-bool Kernel::hasReferenceClass() const
-{
-    return referenceClassValid;
-}
-
-const ReferenceClass* Kernel::getReferenceClass() const
-{
-    return referenceClass.get();
-}
-
-std::vector<size_t> Kernel::getReferenceClassArgumentIds() const
-{
-    return referenceClassArgumentIds;
-}
-
-bool Kernel::hasTuningManipulator() const
-{
-    return tuningManipulatorValid;
-}
-
-const TuningManipulator* Kernel::getTuningManipulator() const
-{
-    return tuningManipulator.get();
-}
-
-TuningManipulator* Kernel::getTuningManipulator()
-{
-    return tuningManipulator.get();
 }
 
 bool Kernel::parameterExists(const std::string& parameterName) const

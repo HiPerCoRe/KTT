@@ -1,18 +1,17 @@
-#include <ctime>
-#include <cstdlib>
 #include <iostream>
+#include <random>
 #include <string>
 #include <vector>
 
-#include "../../include/ktt.h"
+#include "tuner_api.h"
 
 int main(int argc, char** argv)
 {
-    // Initialize platform and device index
+    // Initialize platform index, device index and paths to kernels
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
-    auto kernelFile = std::string("../examples/coulomb_sum/coulomb_sum_kernel.cl");
-    auto referenceKernelFile = std::string("../examples/coulomb_sum/coulomb_sum_reference_kernel.cl");
+    auto kernelFile = std::string("../examples/coulomb_sum_2d/coulomb_sum_2d_kernel.cl");
+    auto referenceKernelFile = std::string("../examples/coulomb_sum_2d/coulomb_sum_2d_reference_kernel.cl");
 
     if (argc >= 2)
     {
@@ -32,18 +31,16 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
+    const ktt::DimensionVector ndRangeDimensions(256, 256, 1);
+    const ktt::DimensionVector workGroupDimensions(1, 1, 1);
+    const ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
     // Total NDRange size matches number of grid points
-    ktt::DimensionVector ndRangeDimensions(512, 512, 1);
-    ktt::DimensionVector workGroupDimensions(1, 1, 1);
-    ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
-    // Used for generating random test data
-    const float upperBoundary = 20.0f; 
+    const size_t numberOfGridPoints = std::get<0>(ndRangeDimensions) * std::get<1>(ndRangeDimensions);
     // If higher than 4k, computations with constant memory enabled will be invalid on many devices due to constant memory capacity limit
-    const int numberOfAtoms = 4096;
-    const size_t numberOfGridPoints = 512 * 512;
+    const int numberOfAtoms = 4000;
 
     // Declare data variables
-    float gridSpacing;
+    float gridSpacing = 0.5f;
     std::vector<float> atomInfo(4 * numberOfAtoms);
     std::vector<float> atomInfoX(numberOfAtoms);
     std::vector<float> atomInfoY(numberOfAtoms);
@@ -52,15 +49,16 @@ int main(int argc, char** argv)
     std::vector<float> energyGrid(numberOfGridPoints, 0.0f);
 
     // Initialize data
-    srand(static_cast<unsigned int>(time(0)));
-    gridSpacing = static_cast<float>(rand()) / RAND_MAX;
+    std::random_device device;
+    std::default_random_engine engine(device());
+    std::uniform_real_distribution<float> distribution(0.0f, 40.0f);
 
     for (int i = 0; i < numberOfAtoms; i++)
     {
-        atomInfoX.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
-        atomInfoY.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
-        atomInfoZ.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
-        atomInfoW.at(i) = static_cast<float>(rand()) / (RAND_MAX / upperBoundary);
+        atomInfoX.at(i) = distribution(engine);
+        atomInfoY.at(i) = distribution(engine);
+        atomInfoZ.at(i) = distribution(engine);
+        atomInfoW.at(i) = distribution(engine) / 40.0f;
 
         atomInfo.at((4 * i)) = atomInfoX.at(i);
         atomInfo.at((4 * i) + 1) = atomInfoY.at(i);
@@ -79,7 +77,6 @@ int main(int argc, char** argv)
     // Add several parameters to tuned kernel, some of them utilize constraint function and thread modifiers
     tuner.addParameter(kernelId, std::string("INNER_UNROLL_FACTOR"), std::vector<size_t>{ 1, 2, 4, 8 });
     tuner.addParameter(kernelId, std::string("USE_CONSTANT_MEMORY"), std::vector<size_t>{ 0, 1 });
-
     tuner.addParameter(kernelId, std::string("VECTOR_TYPE"), std::vector<size_t>{ 1, 2, 4, 8 });
     tuner.addParameter(kernelId, std::string("USE_SOA"), std::vector<size_t>{ 0, 1, 2 });
 
@@ -126,7 +123,7 @@ int main(int argc, char** argv)
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-    tuner.printResult(kernelId, std::string("output.csv"), ktt::PrintFormat::CSV);
+    tuner.printResult(kernelId, std::string("coulomb_sum_2d_output.csv"), ktt::PrintFormat::CSV);
 
     return 0;
 }

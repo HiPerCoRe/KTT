@@ -1,5 +1,18 @@
 #pragma once
 
+#ifndef KTT_API
+#if defined(_MSC_VER) && !defined(KTT_TESTS)
+    #pragma warning(disable : 4251) // MSVC irrelevant warning (as long as there are no public attributes)
+    #if defined(KTT_LIBRARY)
+        #define KTT_API __declspec(dllexport)
+    #else
+        #define KTT_API __declspec(dllimport)
+    #endif // KTT_LIBRARY
+#else
+    #define KTT_API
+#endif // _MSC_VER
+#endif // KTT_API
+
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -24,28 +37,29 @@
 #include "enum/validation_method.h"
 
 // Information about platforms and devices
-#include "dto/device_info.h"
-#include "dto/platform_info.h"
+#include "api/device_info.h"
+#include "api/platform_info.h"
 
 // Reference class interface
-#include "customization/reference_class.h"
+#include "api/reference_class.h"
 
 // Tuning manipulator interface
-#include "customization/tuning_manipulator.h"
+#include "api/tuning_manipulator.h"
 
 // Support for 16-bit floating point data type
 #include "half.hpp"
-using half_float::half;
 
 namespace ktt
 {
 
+using half_float::half; // Utilize half data type without namespace specifier
+
 class TunerCore; // Forward declaration of TunerCore class
 
-class Tuner
+class KTT_API Tuner
 {
 public:
-    // Constructor and destructor
+    // Constructors and destructor
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex);
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
     ~Tuner();
@@ -55,13 +69,13 @@ public:
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
     void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
-    void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values);
-    void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values);
+    void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues);
+    void addParameter(const std::vector<size_t>& kernelIds, const std::string& parameterName, const std::vector<size_t>& parameterValues);
 
     // Advanced kernel handling methods
-    void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values,
+    void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
         const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
-    void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values,
+    void addParameter(const std::vector<size_t>& kernelIds, const std::string& parameterName, const std::vector<size_t>& parameterValues,
         const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
     void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
@@ -71,16 +85,29 @@ public:
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Argument handling methods
-    size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType);
-    size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType);
+    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
+    {
+        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
+        return addArgument(data.data(), data.size(), dataType, argumentMemoryType);
+    }
+    template <typename T> size_t addArgument(const T& scalarValue)
+    {
+        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
+        return addArgument(&scalarValue, dataType);
+    }
+    template <typename T> size_t addArgument(const size_t localMemoryElementsCount)
+    {
+        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
+        return addArgument(localMemoryElementsCount, dataType);
+    }
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
-    // Kernel tuning methods
+    // Kernel tuning method
     void tuneKernel(const size_t kernelId);
 
     // Result printing methods
     void setPrintingTimeUnit(const TimeUnit& timeUnit);
+    void setInvalidResultPrinting(const bool flag);
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
 
@@ -89,37 +116,37 @@ public:
         const std::vector<size_t>& resultArgumentIds);
     void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
+    void setValidationRange(const size_t argumentId, const size_t validationRange);
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);
     void printComputeApiInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const;
+    DeviceInfo getCurrentDeviceInfo() const;
 
     // Utility methods
     void setLoggingTarget(std::ostream& outputTarget);
     void setLoggingTarget(const std::string& filePath);
 
-    // Convenience argument addition methods
-    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)
-    {
-        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(data.data(), data.size(), dataType, argumentMemoryType);
-    }
-
-    template <typename T> size_t addArgument(const T& value)
-    {
-        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(&value, dataType);
-    }
-
 private:
-    // Attributes
+    // Pointer to implementation class
     std::unique_ptr<TunerCore> tunerCore;
 
     // Helper methods
+    size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+        const ArgumentMemoryType& argumentMemoryType);
+    size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType);
+    size_t addArgument(const size_t localMemoryElementsCount, const ArgumentDataType& argumentDataType);
+
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {
+        if (!std::is_trivially_copyable<T>())
+        {
+            std::cerr << "Unsupported argument data type" << std::endl;
+            throw std::runtime_error("Unsupported argument data type");
+        }
+
         if (sizeof(T) == 1 && std::is_unsigned<T>())
         {
             return ArgumentDataType::UnsignedChar;

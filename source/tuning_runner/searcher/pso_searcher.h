@@ -6,7 +6,7 @@
 #include <random>
 
 #include "searcher.h"
-#include "../../kernel/kernel_parameter.h"
+#include "kernel/kernel_parameter.h"
 
 namespace ktt
 {
@@ -45,12 +45,12 @@ public:
         index = particlePositions.at(particleIndex);
     }
 
-    virtual KernelConfiguration getNextConfiguration() override
+    KernelConfiguration getNextConfiguration() override
     {
         return configurations.at(index);
     }
 
-    virtual void calculateNextConfiguration(const double previousConfigurationDuration) override
+    void calculateNextConfiguration(const double previousConfigurationDuration) override
     {
         exploredIndices.push_back(index);
         executionTimes.at(index) = previousConfigurationDuration;
@@ -98,7 +98,7 @@ public:
         index = particlePositions[particleIndex];
     }
 
-    virtual size_t getConfigurationsCount() const override
+    size_t getConfigurationsCount() const override
     {
         return std::max(static_cast<size_t>(1), std::min(configurations.size(), static_cast<size_t>(configurations.size() * fraction)));
     }

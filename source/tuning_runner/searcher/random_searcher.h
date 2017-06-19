@@ -20,21 +20,23 @@ public:
         {
             throw std::runtime_error("Configurations vector provided for searcher is empty");
         }
-        auto engine = std::default_random_engine();
+
+        std::random_device device;
+        std::default_random_engine engine(device());
         std::shuffle(std::begin(this->configurations), std::end(this->configurations), engine);
     }
 
-    virtual KernelConfiguration getNextConfiguration() override
+    KernelConfiguration getNextConfiguration() override
     {
         return configurations.at(index);
     }
 
-    virtual void calculateNextConfiguration(const double previousConfigurationDuration) override
+    void calculateNextConfiguration(const double) override
     {
         index++;
     }
 
-    virtual size_t getConfigurationsCount() const override
+    size_t getConfigurationsCount() const override
     {
         return std::max(static_cast<size_t>(1), std::min(configurations.size(), static_cast<size_t>(configurations.size() * fraction)));
     }

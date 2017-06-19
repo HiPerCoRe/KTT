@@ -6,9 +6,9 @@
 #include <vector>
 
 #include "logger.h"
-#include "../enum/argument_print_condition.h"
-#include "../kernel/kernel_configuration.h"
-#include "../kernel_argument/kernel_argument.h"
+#include "enum/argument_print_condition.h"
+#include "kernel/kernel_configuration.h"
+#include "kernel_argument/kernel_argument.h"
 
 namespace ktt
 {

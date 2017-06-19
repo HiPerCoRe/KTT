@@ -2,9 +2,10 @@
 
 #include <vector>
 
-#include "../enum/dimension_vector_type.h"
 #include "kernel.h"
 #include "kernel_configuration.h"
+#include "api/device_info.h"
+#include "enum/dimension_vector_type.h"
 
 namespace ktt
 {
@@ -21,7 +22,7 @@ public:
         const DimensionVector& localSize);
     std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const;
     KernelConfiguration getKernelConfiguration(const size_t id, const std::vector<ParameterValue>& parameterValues) const;
-    std::vector<KernelConfiguration> getKernelConfigurations(const size_t id) const;
+    std::vector<KernelConfiguration> getKernelConfigurations(const size_t id, const DeviceInfo& deviceInfo) const;
 
     // Kernel modification methods
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
@@ -30,10 +31,6 @@ public:
         const std::vector<std::string>& parameterNames);
     void setArguments(const size_t id, const std::vector<size_t>& argumentIndices);
     void setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
-    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
-        const std::vector<size_t>& resultArgumentIds);
-    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
-    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Getters
     size_t getKernelCount() const;
@@ -47,12 +44,13 @@ private:
 
     // Helper methods
     std::string loadFileToString(const std::string& filePath) const;
-    void computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
+    void computeConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo, const std::vector<KernelParameter>& parameters,
         const std::vector<KernelConstraint>& constraints, const std::vector<ParameterValue>& parameterValues, const DimensionVector& globalSize,
         const DimensionVector& localSize, std::vector<KernelConfiguration>& finalResult) const;
     DimensionVector modifyDimensionVector(const DimensionVector& vector, const DimensionVectorType& dimensionVectorType,
         const KernelParameter& parameter, const size_t parameterValue) const;
-    bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints) const;
+    bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints,
+        const DeviceInfo& deviceInfo) const;
 };
 
 } // namespace ktt

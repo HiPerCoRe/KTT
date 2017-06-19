@@ -1,12 +1,12 @@
 #if USE_CONSTANT_MEMORY == 0
-    #define MEMORY_TYPE_AOS __global  const
-    #define MEMORY_TYPE_SOA __global  const
+    #define MEMORY_TYPE_AOS __global const
+    #define MEMORY_TYPE_SOA __global const
 #elif USE_CONSTANT_MEMORY == 1
     #if USE_SOA == 0
         #define MEMORY_TYPE_AOS __constant
-        #define MEMORY_TYPE_SOA __global  const
+        #define MEMORY_TYPE_SOA __global const
     #else
-        #define MEMORY_TYPE_AOS __global  const
+        #define MEMORY_TYPE_AOS __global const
         #define MEMORY_TYPE_SOA __constant
     #endif // USE_SOA
 #endif // USE_CONSTANT_MEMORY
@@ -26,7 +26,8 @@
 #if VECTOR_SIZE > 1
 __kernel __attribute__((vec_type_hint(vector))) 
 #endif
-__kernel void directCoulombSum(MEMORY_TYPE_AOS float4* atomInfo, MEMORY_TYPE_SOA vector* atomInfoX, MEMORY_TYPE_SOA vector* atomInfoY, MEMORY_TYPE_SOA vector* atomInfoZ, MEMORY_TYPE_SOA vector* atomInfoW, int numberOfAtoms, float gridSpacing, __global float* energyGrid)
+__kernel void directCoulombSum(MEMORY_TYPE_AOS float4* atomInfo, MEMORY_TYPE_SOA vector* atomInfoX, MEMORY_TYPE_SOA vector* atomInfoY,
+    MEMORY_TYPE_SOA vector* atomInfoZ, MEMORY_TYPE_SOA vector* atomInfoW, int numberOfAtoms, float gridSpacing, __global float* energyGrid)
 {
     int xIndex = get_global_id(0);
     int yIndex = get_global_id(1);

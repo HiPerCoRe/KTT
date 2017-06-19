@@ -3,7 +3,7 @@
 #include <string>
 
 #include "CL/cl.h"
-#include "../../enum/argument_memory_type.h"
+#include "enum/argument_memory_type.h"
 
 namespace ktt
 {

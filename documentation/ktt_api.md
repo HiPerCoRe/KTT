@@ -3,11 +3,16 @@ KTT API documentation
 
 This file describes the API of KTT framework. All classes and methods are located in the `ktt` namespace.
 
-Constructor
------------
+Constructors
+------------
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex)`:
-Creates new tuner object for specified platform and device.
+Creates new tuner object for specified platform and device using OpenCL as compute API.
+Indices for all available platforms and devices can be retrieved by calling `printComputeApiInfo()` method.
+
+* `Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi)`:
+Creates new tuner object for specified platform, device and compute API.
+If selected compute API is Nvidia CUDA, platform index is ignored.
 Indices for all available platforms and devices can be retrieved by calling `printComputeApiInfo()` method.
 
 Compute API methods
@@ -15,6 +20,7 @@ Compute API methods
 
 * `void setCompilerOptions(const std::string& options)`:
 Sets compute API compiler options to specified options.
+Individual options have to be separated by a single space character.
 
 * `void printComputeApiInfo(std::ostream& outputTarget)`:
 Prints basic information about available platforms and devices, including indices assigned by KTT framework, to specified output stream.
@@ -26,6 +32,9 @@ PlatformInfo object supports output operator.
 * `std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex)`:
 Retrieves list of objects containing detailed information about all available devices (such as device name, memory sizes, list of extensions, etc.) on specified platform.
 DeviceInfo object supports output operator.
+
+* `DeviceInfo getCurrentDeviceInfo()`:
+Retrieves object containing detailed information about currently used device (such as device name, memory sizes, list of extensions, etc.).
 
 Basic kernel handling methods
 -----------------------------
@@ -42,14 +51,14 @@ Returns id assigned to kernel by tuner.
 Sets kernel arguments for specified kernel by providing corresponding argument ids (returned by argument addition methods).
 Different kernels can have same arguments assigned (copies of arguments for each kernel will be made during the tuning process).
 Argument ids must be specified in order of their declaration inside kernel source.
+Argument ids must be unique.
 
 * `void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values)`:
 Adds new parameter for specified kernel, parameter needs to have a unique name and list of valid values.
 During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
 
 * `void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values)`:
-Adds new parameter for all specified kernels, parameter needs to have a unique name and list of valid values.
-During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
+Calls corresponding `addParameter()` method for all specified kernel ids.
 
 Advanced kernel handling methods
 --------------------------------
@@ -61,16 +70,13 @@ Additionally, parameter value modifies number of threads in either global or loc
 Form of modification depends on thread modifier action argument. If there are multiple thread modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
 
 * `void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)`:
-Adds new parameter for all specified kernels, parameter needs to have a unique name and list of valid values.
-During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
-Additionally, parameter value modifies number of threads in either global or local space in specified dimension.
-Form of modification depends on thread modifier action argument. If there are multiple thread modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
+Calls corresponding `addParameter()` method for all specified kernel ids.
 
 * `void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
 Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
 
 * `void addConstraint(const std::vector<size_t>& kernelIds, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
-Adds new constraint for all specified kernels. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
+Calls corresponding `addConstraint()` method for all specified kernel ids.
 
 * `void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)`:
 Specifies search method for given kernel. Number of required search arguments depends on specified search method.
@@ -91,29 +97,25 @@ Specialized method can, for example, run part of the computation directly in C++
 Argument handling methods
 -------------------------
 
-* `size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType, const ArgumentMemoryType& argumentMemoryType)`:
-Adds new vector argument with specified number of elements and data type to kernel. Argument memory type specifies whether argument is used for input or output (or both).
-Supported data type sizes are 8, 16, 32 and 64 bits.
-Returns id assigned to argument by tuner.
-
 * `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)`:
-Adds new vector argument to kernel. Argument memory type specifies whether argument is used for input or output (or both).
-Supported data type sizes are 8, 16, 32 and 64 bits.
-Returns id assigned to argument by tuner.
-
-* `size_t addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)`:
-Adds new scalar argument with specified data type to kernel. All scalar arguments are read-only.
-Supported data type sizes are 8, 16, 32 and 64 bits.
+Adds new vector argument to tuner. Argument memory type specifies whether argument is used for input or output (or both).
+Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 
 * `size_t addArgument(const T& value)`:
-Adds new scalar argument to kernel. All scalar arguments are read-only.
-Supported data type sizes are 8, 16, 32 and 64 bits.
+Adds new scalar argument to tuner. All scalar arguments are read-only.
+Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
+Returns id assigned to argument by tuner.
+
+* `size_t addArgument(const size_t elementsCount)`:
+Adds new local memory argument to tuner. All local memory arguments are read-only.
+Elements count specifies, how many elements of provided data type will the argument contain.
+Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 
 * `void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)`:
 Enables printing of specified output argument to specified file.
-It is possible to specify to only print result arguments for kernel configurations that did not successfully pass the validation.
+It is possible to specify whether to print only valid, invalid or all arguments.
 It is not recommended to enable argument printing for very large arguments.
 
 Kernel tuning methods
@@ -127,7 +129,12 @@ Result printing methods
 
 * `void setPrintingTimeUnit(const TimeUnit& timeUnit)`:
 Sets time unit used during printing of results to specified unit.
-This only affects `printResult` methods. Default time unit is microseconds. 
+This only affects `printResult()` methods. Default time unit is microseconds. 
+
+* `void setInvalidResultPrinting(const bool flag)`:
+Enables or disables printing of results from failed kernel runs based on provided flag.
+Invalid results will be separated from valid results during printing.
+Printing of invalid results is disabled by default.
 
 * `void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const`:
 Prints tuning results for specified kernel to given output stream.
@@ -153,6 +160,11 @@ Only specified output arguments will be validated.
 * `void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)`:
 Sets validation method and tolerance threshold for floating point arguments.
 Default validation method is side by side comparison. Default tolerance threshold is 1e-4.
+
+* `void setValidationRange(const size_t argumentId, const size_t validationRange)`:
+Sets validation range for specified argument to given validation range.
+Only elements within validation range, starting with first element, will be validated.
+By default, all elements of an argument are validated.
 
 Utility methods
 ---------------
@@ -182,19 +194,9 @@ Inheriting class must provide implementation for this method.
 Returns pointer to buffer containing reference result for specified validated argument.
 This method will only be called after running `computeResult()`.
 
-* `ArgumentDataType getDataType(const size_t argumentId) const`:
-Inheriting class must provide implementation for this method.
-Returns data type of specified validated argument.
-This method will only be called after running `computeResult()`.
-
 * `size_t getNumberOfElements(const size_t argumentId) const`:
-Inheriting class must provide implementation for this method.
+Inheriting class can override this method, which is useful in conjuction with `setValidationRange()` method.
 Returns number of elements returned by `getData()` method for specified validated argument.
-This method will only be called after running `computeResult()`.
-
-* `size_t getElementSizeInBytes(const size_t argumentId) const`:
-Inheriting class must provide implementation for this method.
-Returns size of a single element (in bytes) returned by `getData()` method for specified validated argument.
 This method will only be called after running `computeResult()`.
 
 Tuning manipulator usage
@@ -207,9 +209,9 @@ TuningManipulator class contains following public methods:
 Inheriting class can override destructor with custom implementation if needed.
 Default implementation is provided by API.
 
-* `void launchComputation(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterValue>& parameterValues)`:
-Inheriting class must provide implementation for this method. Provided arguments include id, thread sizes and parameter values for current configuration of currently tuned kernel.
-Usage of these arguments is completely optional. This method must, at very least, call `runKernel()` method with currently tuned kernel id as its first argument.
+* `void launchComputation(const size_t kernelId)`:
+Inheriting class must provide implementation for this method. Provided argument is an id of currently tuned kernel.
+This method must, at very least, call `runKernel()` method with provided kernel id as its first argument.
 This method can also call any other methods available in base TuningManipulator class.
 
 * `std::vector<std::pair<size_t, ThreadSizeUsage>> getUtilizedKernelIds() const`:
@@ -218,32 +220,68 @@ This method needs to return ids of all additional kernels. Id of the main kernel
 All additional kernels will be launched under the same configuration as main kernel, which means that they need to accept exactly the same parameters.
 It is possible to specify, whether the additional kernels' thread sizes will be affected by the parameters. Main kernel's thread sizes will always be affected.
 
-* `std::vector<ResultArgument> runKernel(const size_t kernelId)`:
+* `void runKernel(const size_t kernelId)`:
 Launches kernel with specified id, using thread sizes based only on the current configuration.
-Returns vector of result arguments (arguments assigned to kernel with kernelId, which were tagged as input-output or output-only arguments).
+Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
 
-* `std::vector<ResultArgument> runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize)`:
+* `void runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize)`:
 Launches kernel with specified id, using specified thread sizes.
-Returns vector of result arguments (arguments assigned to kernel with kernelId, which were tagged as input-output or output-only arguments).
+Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
+
+* `DimensionVector getCurrentGlobalSize(const size_t kernelId) const`:
+Returns global thread size of specified kernel based on the current configuration.
+Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
+
+* `DimensionVector getCurrentLocalSize(const size_t kernelId) const`:
+Returns local thread size of specified kernel based on the current configuration.
+Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
+
+* `std::vector<ParameterValue> getCurrentConfiguration() const`:
+Returns configuration used inside current run of `launchComputation()` method.
 
 * `void updateArgumentScalar(const size_t argumentId, const void* argumentData)`:
-Updates scalar argument, which is utilized by currently tuned kernel.
+Updates specified scalar argument.
+This method only affects run of `launchComputation()` method under current configuration.
+This method is useful for iterative kernel launches.
+
+* `void updateArgumentLocal(const size_t argumentId, const size_t numberOfElements)`:
+Updates specified local memory argument.
+This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
 * `void updateArgumentVector(const size_t argumentId, const void* argumentData)`:
-Updates vector argument, which is utilized by currently tuned kernel. Preserves number of elements inside the argument.
+Updates specified vector argument.
+This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
 * `void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)`:
-Updates vector argument, which is utilized by currently tuned kernel. Possibly also modifies number of elements inside the argument.
+Updates specified vector argument.
+Possibly also modifies number of elements inside the argument.
+This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
+
+* `ResultArgument getArgumentVector(const size_t argumentId)`:
+Retrieves specified vector argument from device buffer.
+This method is useful for iterative kernel launches.
+
+* `void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:
+Sets kernel arguments for specified kernel by providing corresponding argument ids.
+Argument ids must be unique.
+This method only affects run of `launchComputation()` method under current configuration.
+
+* `void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond)`:
+Swaps positions of specified kernel arguments for specified kernel.
+This method only affects run of `launchComputation()` method under current configuration.
 
 * `std::vector<size_t> convertFromDimensionVector(const DimensionVector& vector)`:
 Converts provided dimension vector to standard vector.
 
-* `DimensionVector convertToDimensionVector(const std::vector<size_t>& vector)`
+* `DimensionVector convertToDimensionVector(const std::vector<size_t>& vector)`:
 Converts provided standard vector to dimension vector.
 If provided vector size is less than 3, fills remaining dimension vector positions with 1s.
+
+* `size_t getParameterValue(const std::string& parameterName, const std::vector<ParameterValue>& parameterValues)`:
+Returns value of specified parameter from provided list of parameters.
 
 Tuning manipulator example
 --------------------------
@@ -253,8 +291,7 @@ Following example shows how default tuning manipulator implementation looks like
 class SimpleTuningManipulator : public ktt::TuningManipulator
 {
 public:
-    virtual void launchComputation(const size_t kernelId, const ktt::DimensionVector& globalSize, const ktt::DimensionVector& localSize,
-        const std::vector<ktt::ParameterValue>& parameterValues) override
+    void launchComputation(const size_t kernelId) override
     {
         runKernel(kernelId);
     }

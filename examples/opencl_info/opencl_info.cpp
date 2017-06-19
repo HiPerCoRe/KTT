@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "../../include/ktt.h"
+#include "tuner_api.h"
 
 int main()
 {
@@ -19,9 +19,9 @@ int main()
         std::cout << platformInfo.at(i) << std::endl;
 
         std::vector<ktt::DeviceInfo> deviceInfo = tuner.getDeviceInfo(i);
-        for (size_t j = 0; j < deviceInfo.size(); j++)
+        for (const auto& currentDevice : deviceInfo)
         {
-            std::cout << deviceInfo.at(j) << std::endl;
+            std::cout << currentDevice << std::endl;
         }
     }
 

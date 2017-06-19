@@ -1,6 +1,7 @@
 #include "tuner_core.h"
 #include "compute_api_driver/cuda/cuda_core.h"
 #include "compute_api_driver/opencl/opencl_core.h"
+#include "utility/ktt_utility.h"
 
 namespace ktt
 {
@@ -22,6 +23,9 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
         throw std::runtime_error("Specified compute API is not supported yet");
     }
     tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeApiDriver.get());
+
+    DeviceInfo info = computeApiDriver->getCurrentDeviceInfo();
+    logger.log(std::string("Initializing tuner for device: ") + info.getName());
 }
 
 size_t TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -36,19 +40,19 @@ size_t TunerCore::addKernelFromFile(const std::string& filePath, const std::stri
     return kernelManager->addKernelFromFile(filePath, kernelName, globalSize, localSize);
 }
 
-void TunerCore::addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values,
+void TunerCore::addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
     const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
 {
-    kernelManager->addParameter(id, name, values, threadModifierType, threadModifierAction, modifierDimension);
+    kernelManager->addParameter(kernelId, parameterName, parameterValues, threadModifierType, threadModifierAction, modifierDimension);
 }
 
-void TunerCore::addConstraint(const size_t id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+void TunerCore::addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {
-    kernelManager->addConstraint(id, constraintFunction, parameterNames);
+    kernelManager->addConstraint(kernelId, constraintFunction, parameterNames);
 }
 
-void TunerCore::setKernelArguments(const size_t id, const std::vector<size_t>& argumentIndices)
+void TunerCore::setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIndices)
 {
     for (const auto index : argumentIndices)
     {
@@ -58,29 +62,17 @@ void TunerCore::setKernelArguments(const size_t id, const std::vector<size_t>& a
         }
     }
 
-    kernelManager->setArguments(id, argumentIndices);
+    if (!containsUnique(argumentIndices))
+    {
+        throw std::runtime_error("Kernel argument ids assigned to single kernel must be unique");
+    }
+
+    kernelManager->setArguments(kernelId, argumentIndices);
 }
 
-void TunerCore::setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+void TunerCore::setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
-    kernelManager->setSearchMethod(id, searchMethod, searchArguments);
-}
-
-void TunerCore::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
-    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
-{
-    kernelManager->setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
-}
-
-void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
-    const std::vector<size_t>& resultArgumentIds)
-{
-    kernelManager->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentIds);
-}
-
-void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
-{
-    kernelManager->setTuningManipulator(kernelId, std::move(tuningManipulator));
+    kernelManager->setSearchMethod(kernelId, searchMethod, searchArguments);
 }
 
 size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
@@ -89,15 +81,57 @@ size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, c
     return argumentManager->addArgument(data, numberOfElements, argumentDataType, argumentMemoryType, argumentUploadType);
 }
 
-void TunerCore::tuneKernel(const size_t id)
+void TunerCore::tuneKernel(const size_t kernelId)
 {
-    auto result = tuningRunner->tuneKernel(id);
-    resultPrinter.setResult(id, result);
+    auto result = tuningRunner->tuneKernel(kernelId);
+    resultPrinter.setResult(kernelId, result.first, result.second);
 }
 
 void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
 {
     tuningRunner->setValidationMethod(validationMethod, toleranceThreshold);
+}
+
+void TunerCore::setValidationRange(const size_t argumentId, const size_t validationRange)
+{
+    if (argumentId > argumentManager->getArgumentCount())
+    {
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+    }
+    if (validationRange > argumentManager->getArgument(argumentId).getNumberOfElements())
+    {
+        throw std::runtime_error(std::string("Invalid validation range for argument with id: ") + std::to_string(argumentId));
+    }
+    tuningRunner->setValidationRange(argumentId, validationRange);
+}
+
+void TunerCore::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
+    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
+{
+    if (kernelId > kernelManager->getKernelCount() || referenceKernelId > kernelManager->getKernelCount())
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
+    }
+    tuningRunner->setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
+}
+
+void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
+    const std::vector<size_t>& resultArgumentIds)
+{
+    if (kernelId > kernelManager->getKernelCount())
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
+    }
+    tuningRunner->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentIds);
+}
+
+void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
+{
+    if (kernelId > kernelManager->getKernelCount())
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
+    }
+    tuningRunner->setTuningManipulator(kernelId, std::move(tuningManipulator));
 }
 
 void TunerCore::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
@@ -112,6 +146,11 @@ void TunerCore::enableArgumentPrinting(const size_t argumentId, const std::strin
 void TunerCore::setPrintingTimeUnit(const TimeUnit& timeUnit)
 {
     resultPrinter.setTimeUnit(timeUnit);
+}
+
+void TunerCore::setInvalidResultPrinting(const bool flag)
+{
+    resultPrinter.setInvalidResultPrinting(flag);
 }
 
 void TunerCore::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const
@@ -149,6 +188,11 @@ std::vector<PlatformInfo> TunerCore::getPlatformInfo() const
 std::vector<DeviceInfo> TunerCore::getDeviceInfo(const size_t platformIndex) const
 {
     return computeApiDriver->getDeviceInfo(platformIndex);
+}
+
+DeviceInfo TunerCore::getCurrentDeviceInfo() const
+{
+    return computeApiDriver->getCurrentDeviceInfo();
 }
 
 void TunerCore::setLoggingTarget(std::ostream& outputTarget)

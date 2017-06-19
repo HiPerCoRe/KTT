@@ -49,11 +49,11 @@ void Tuner::setKernelArguments(const size_t kernelId, const std::vector<size_t>&
     }
 }
 
-void Tuner::addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values)
+void Tuner::addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues)
 {
     try
     {
-        tunerCore->addParameter(kernelId, name, values, ThreadModifierType::None, ThreadModifierAction::Multiply, Dimension::X);
+        tunerCore->addParameter(kernelId, parameterName, parameterValues, ThreadModifierType::None, ThreadModifierAction::Multiply, Dimension::X);
     }
     catch (const std::runtime_error& error)
     {
@@ -62,20 +62,20 @@ void Tuner::addParameter(const size_t kernelId, const std::string& name, const s
     }
 }
 
-void Tuner::addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values)
+void Tuner::addParameter(const std::vector<size_t>& kernelIds, const std::string& parameterName, const std::vector<size_t>& parameterValues)
 {
     for (const auto kernelId : kernelIds)
     {
-        addParameter(kernelId, name, values);
+        addParameter(kernelId, parameterName, parameterValues);
     }
 }
 
-void Tuner::addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values,
+void Tuner::addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
     const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
 {
     try
     {
-        tunerCore->addParameter(kernelId, name, values, threadModifierType, threadModifierAction, modifierDimension);
+        tunerCore->addParameter(kernelId, parameterName, parameterValues, threadModifierType, threadModifierAction, modifierDimension);
     }
     catch (const std::runtime_error& error)
     {
@@ -84,12 +84,12 @@ void Tuner::addParameter(const size_t kernelId, const std::string& name, const s
     }
 }
 
-void Tuner::addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values,
+void Tuner::addParameter(const std::vector<size_t>& kernelIds, const std::string& parameterName, const std::vector<size_t>& parameterValues,
     const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
 {
     for (const auto kernelId : kernelIds)
     {
-        addParameter(kernelId, name, values, threadModifierType, threadModifierAction, modifierDimension);
+        addParameter(kernelId, parameterName, parameterValues, threadModifierType, threadModifierAction, modifierDimension);
     }
 }
 
@@ -142,33 +142,6 @@ void Tuner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningMa
     }
 }
 
-size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType)
-{
-    try
-    {
-        return tunerCore->addArgument(vectorData, numberOfElements, argumentDataType, argumentMemoryType, ArgumentUploadType::Vector);
-    }
-    catch (const std::runtime_error& error)
-    {
-        tunerCore->log(error.what());
-        throw;
-    }
-}
-
-size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)
-{
-    try
-    {
-        return tunerCore->addArgument(scalarData, 1, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentUploadType::Scalar);
-    }
-    catch (const std::runtime_error& error)
-    {
-        tunerCore->log(error.what());
-        throw;
-    }
-}
-
 void Tuner::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
 {
     try
@@ -178,7 +151,6 @@ void Tuner::enableArgumentPrinting(const size_t argumentId, const std::string& f
     catch (const std::runtime_error& error)
     {
         tunerCore->log(error.what());
-        throw;
     }
 }
 
@@ -198,6 +170,11 @@ void Tuner::tuneKernel(const size_t kernelId)
 void Tuner::setPrintingTimeUnit(const TimeUnit& timeUnit)
 {
     tunerCore->setPrintingTimeUnit(timeUnit);
+}
+
+void Tuner::setInvalidResultPrinting(const bool flag)
+{
+    tunerCore->setInvalidResultPrinting(flag);
 }
 
 void Tuner::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const
@@ -261,6 +238,18 @@ void Tuner::setValidationMethod(const ValidationMethod& validationMethod, const 
     }
 }
 
+void Tuner::setValidationRange(const size_t argumentId, const size_t validationRange)
+{
+    try
+    {
+        tunerCore->setValidationRange(argumentId, validationRange);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+    }
+}
+
 void Tuner::setCompilerOptions(const std::string& options)
 {
     tunerCore->setCompilerOptions(options);
@@ -274,7 +263,7 @@ void Tuner::printComputeApiInfo(std::ostream& outputTarget) const
     }
     catch (const std::runtime_error& error)
     {
-        std::cerr << error.what() << std::endl;
+        tunerCore->log(error.what());
     }
 }
 
@@ -286,7 +275,7 @@ std::vector<PlatformInfo> Tuner::getPlatformInfo() const
     }
     catch (const std::runtime_error& error)
     {
-        std::cerr << error.what() << std::endl;
+        tunerCore->log(error.what());
         throw;
     }
 }
@@ -299,7 +288,20 @@ std::vector<DeviceInfo> Tuner::getDeviceInfo(const size_t platformIndex) const
     }
     catch (const std::runtime_error& error)
     {
-        std::cerr << error.what() << std::endl;
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+DeviceInfo Tuner::getCurrentDeviceInfo() const
+{
+    try
+    {
+        return tunerCore->getCurrentDeviceInfo();
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
         throw;
     }
 }
@@ -312,6 +314,46 @@ void Tuner::setLoggingTarget(std::ostream& outputTarget)
 void Tuner::setLoggingTarget(const std::string& filePath)
 {
     tunerCore->setLoggingTarget(filePath);
+}
+
+size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
+    const ArgumentMemoryType& argumentMemoryType)
+{
+    try
+    {
+        return tunerCore->addArgument(vectorData, numberOfElements, argumentDataType, argumentMemoryType, ArgumentUploadType::Vector);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)
+{
+    try
+    {
+        return tunerCore->addArgument(scalarData, 1, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentUploadType::Scalar);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+size_t Tuner::addArgument(const size_t localMemoryElementsCount, const ArgumentDataType& argumentDataType)
+{
+    try
+    {
+        return tunerCore->addArgument(nullptr, localMemoryElementsCount, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentUploadType::Local);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
 }
 
 } // namespace ktt
