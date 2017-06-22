@@ -75,7 +75,7 @@ int main(int argc, char** argv)
         referenceWorkGroupDimensions);
 
     // Add several parameters to tuned kernel, some of them utilize constraint function and thread modifiers
-    tuner.addParameter(kernelId, std::string("INNER_UNROLL_FACTOR"), std::vector<size_t>{ 1, 2, 4, 8 });
+    tuner.addParameter(kernelId, std::string("INNER_UNROLL_FACTOR"), std::vector<size_t>{ 0, 1, 2, 4, 8, 16, 32 });
     tuner.addParameter(kernelId, std::string("USE_CONSTANT_MEMORY"), std::vector<size_t>{ 0, 1 });
     tuner.addParameter(kernelId, std::string("VECTOR_TYPE"), std::vector<size_t>{ 1, 2, 4, 8 });
     tuner.addParameter(kernelId, std::string("USE_SOA"), std::vector<size_t>{ 0, 1, 2 });
