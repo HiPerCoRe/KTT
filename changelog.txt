@@ -1,14 +1,15 @@
-Version 0.4 (x/6/2017)
+Version 0.4 (19/6/2017)
 * Added support for CUDA API
 * Significantly improved tuning manipulator API
 * Simplified baseline tuning manipulator and reference class usage
 * Improved overall tuner performance
 * Added support for uploading arguments into local (shared) memory
-* Added an option to print results from failed kernel runs
 * Configurations with local size larger than maximum of the current device are now automatically excluded from computation
-* Improved tuner info messages
+* Fixed memory leak in OpenCl back-end
 * Fixed several bugs in tuning manipulator API
 * Fixed crash in annealing searcher
+* Added an option to print results from failed kernel runs
+* Improved tuner info messages
 * Improved CSV printing method
 * KTT is now compiled as dynamic (shared) library
 * Added build customization options to premake script
