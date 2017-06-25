@@ -5,7 +5,7 @@ Version 0.4 (19/6/2017)
 * Improved overall tuner performance
 * Added support for uploading arguments into local (shared) memory
 * Configurations with local size larger than maximum of the current device are now automatically excluded from computation
-* Fixed memory leak in OpenCl back-end
+* Fixed memory leak in OpenCL back-end
 * Fixed several bugs in tuning manipulator API
 * Fixed crash in annealing searcher
 * Added an option to print results from failed kernel runs
@@ -22,7 +22,7 @@ Version 0.3.1 (15/5/2017)
 * Added new utility methods to tuning manipulator API
 * Improvements to tuning manipulator
 * Fixed bugs in tuning manipulator API
-* Read-only arguments are now cached in OpenCL backend
+* Read-only arguments are now cached in OpenCL back-end
 * Improved documentation
 
 Version 0.3 (8/5/2017)

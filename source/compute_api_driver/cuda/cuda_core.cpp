@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "cuda_core.h"
 #include "utility/timer.h"
 
@@ -331,68 +333,68 @@ CUdeviceptr* CudaCore::loadBufferFromCache(const size_t argumentId) const
 
 CudaCore::CudaCore(const size_t)
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 void CudaCore::printComputeApiInfo(std::ostream&) const
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 std::vector<PlatformInfo> CudaCore::getPlatformInfo() const
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 std::vector<DeviceInfo> CudaCore::getDeviceInfo(const size_t) const
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 DeviceInfo CudaCore::getCurrentDeviceInfo() const
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 void CudaCore::setCompilerOptions(const std::string&)
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 void CudaCore::uploadArgument(const KernelArgument&)
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 void CudaCore::updateArgument(const size_t, const void*, const size_t)
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 KernelArgument CudaCore::downloadArgument(const size_t) const
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 void CudaCore::clearBuffer(const size_t)
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 void CudaCore::clearBuffers()
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 void CudaCore::clearBuffers(const ArgumentMemoryType&)
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 KernelRunResult CudaCore::runKernel(const std::string&, const std::string&, const std::vector<size_t>&, const std::vector<size_t>&,
     const std::vector<const KernelArgument*>&)
 {
-    throw std::runtime_error("Current platform does not support CUDA or CUDA build option was not specified during project file generation");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 #endif // PLATFORM_CUDA

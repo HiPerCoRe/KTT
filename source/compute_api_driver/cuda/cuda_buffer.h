@@ -85,8 +85,6 @@ public:
         return &buffer;
     }
 
-
-
 private:
     size_t kernelArgumentId;
     size_t bufferSize;

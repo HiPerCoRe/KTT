@@ -105,8 +105,8 @@ int main(int argc, char** argv)
     size_t energyGridId = tuner.addArgument(energyGrid, ktt::ArgumentMemoryType::ReadWrite);
 
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
-    tuner.setKernelArguments(kernelId,
-        std::vector<size_t>{ atomInfoId, atomInfoXId, atomInfoYId, atomInfoZId, atomInfoWId, numberOfAtomsId, gridSpacingId, energyGridId });
+    tuner.setKernelArguments(kernelId, std::vector<size_t>{ atomInfoId, atomInfoXId, atomInfoYId, atomInfoZId, atomInfoWId, numberOfAtomsId,
+        gridSpacingId, energyGridId });
     tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId });
 
     // Set search method to random search, only 10% of all configurations will be explored.

@@ -136,8 +136,8 @@ int main(int argc, char** argv)
         oldBodyInfoId, oldPosXId, oldPosYId, oldPosZId, massId, newBodyInfoId, // position
         oldVelId, oldVelXId, oldVelYId, oldVelZId, newBodyVelId, // velocity
         dampingId, softeningSqrId, numberOfBodiesId });
-    tuner.setKernelArguments(referenceKernelId, 
-        std::vector<size_t>{ deltaTimeId, oldBodyInfoId, newBodyInfoId, oldVelId, newBodyVelId, dampingId, softeningSqrId });
+    tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ deltaTimeId, oldBodyInfoId, newBodyInfoId, oldVelId, newBodyVelId, dampingId,
+        softeningSqrId });
 
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);

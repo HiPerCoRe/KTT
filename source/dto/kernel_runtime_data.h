@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "../ktt_type_aliases.h"
-#include "../kernel_argument/kernel_argument.h"
+#include "ktt_type_aliases.h"
+#include "kernel_argument/kernel_argument.h"
 
 namespace ktt
 {

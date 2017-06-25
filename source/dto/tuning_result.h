@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "../kernel/kernel_configuration.h"
+#include "kernel/kernel_configuration.h"
 
 namespace ktt
 {

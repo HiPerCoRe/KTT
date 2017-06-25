@@ -96,6 +96,25 @@ function findLibrariesNvidia()
     return true
 end
 
+function findVulkan()
+    local path = os.getenv("VULKAN_SDK")
+    
+    if not path then
+        return false
+    end
+    
+    defines { "PLATFORM_VULKAN" }
+    includedirs { "$(VULKAN_SDK)/Include" }
+	
+    filter "platforms:x86_64"
+		libdirs { "$(VULKAN_SDK)/Lib" }
+        
+    filter {}
+    links { "vulkan-1" }
+	
+    return true
+end
+
 function findLibraries()
     if findLibrariesAmd() then
         return true
@@ -131,6 +150,12 @@ newoption
    trigger = "outdir",
    value = "path",
    description = "Specifies output directory for generated files"
+}
+
+newoption
+{
+   trigger = "vulkan",
+   description = "Enables compilation of Vulkan back-end"
 }
 
 newoption
@@ -205,6 +230,14 @@ project "KernelTuningToolkit"
         libraries = findLibraries()
     end
     
+	if _OPTIONS["vulkan"] then
+		vulkan = findVulkan()
+		
+		if not vulkan then
+			error("Vulkan SDK was not found")
+		end
+	end
+	
     if not libraries then
         error("Compute API libraries were not found")
     end
@@ -295,5 +328,9 @@ project "Tests"
     else
         findLibraries()
     end
+	
+	if _OPTIONS["vulkan"] then
+		findVulkan()
+	end
     
 end -- _OPTIONS["tests"]
