@@ -105,13 +105,13 @@ function findVulkan()
     
     defines { "PLATFORM_VULKAN" }
     includedirs { "$(VULKAN_SDK)/Include" }
-	
+    
     filter "platforms:x86_64"
-		libdirs { "$(VULKAN_SDK)/Lib" }
-        
+        libdirs { "$(VULKAN_SDK)/Lib" }
+    
     filter {}
     links { "vulkan-1" }
-	
+    
     return true
 end
 
@@ -134,46 +134,46 @@ end
 -- Command line arguments definition
 newoption
 {
-   trigger = "platform",
-   value = "vendor",
-   description = "Specifies platform for KTT library compilation",
-   allowed =
-   {
-       { "amd", "AMD" },
-       { "intel", "Intel" },
-       { "nvidia", "Nvidia" }
-   }
+    trigger = "platform",
+    value = "vendor",
+    description = "Specifies platform for KTT library compilation",
+    allowed =
+    {
+        { "amd", "AMD" },
+        { "intel", "Intel" },
+        { "nvidia", "Nvidia" }
+    }
 }
 
 newoption
 {
-   trigger = "outdir",
-   value = "path",
-   description = "Specifies output directory for generated files"
+    trigger = "outdir",
+    value = "path",
+    description = "Specifies output directory for generated files"
 }
 
 newoption
 {
-   trigger = "vulkan",
-   description = "Enables compilation of Vulkan back-end"
+    trigger = "vulkan",
+    description = "Enables compilation of Vulkan back-end"
 }
 
 newoption
 {
-   trigger = "no-cuda",
-   description = "Disables compilation of CUDA back-end (Nvidia platform only)"
+    trigger = "no-cuda",
+    description = "Disables compilation of CUDA back-end (Nvidia platform only)"
 }
 
 newoption
 {
-   trigger = "tests",
-   description = "Enables compilation of supplied unit tests"
+    trigger = "tests",
+    description = "Enables compilation of supplied unit tests"
 }
 
 newoption
 {
-   trigger = "no-examples",
-   description = "Disables compilation of supplied examples"
+    trigger = "no-examples",
+    description = "Disables compilation of supplied examples"
 }
 
 -- Project configuration
@@ -230,14 +230,14 @@ project "KernelTuningToolkit"
         libraries = findLibraries()
     end
     
-	if _OPTIONS["vulkan"] then
-		vulkan = findVulkan()
-		
-		if not vulkan then
-			error("Vulkan SDK was not found")
-		end
-	end
-	
+    if _OPTIONS["vulkan"] then
+        vulkan = findVulkan()
+        
+        if not vulkan then
+            error("Vulkan SDK was not found")
+        end
+    end
+    
     if not libraries then
         error("Compute API libraries were not found")
     end
@@ -328,9 +328,9 @@ project "Tests"
     else
         findLibraries()
     end
-	
-	if _OPTIONS["vulkan"] then
-		findVulkan()
-	end
+    
+    if _OPTIONS["vulkan"] then
+        findVulkan()
+    end
     
 end -- _OPTIONS["tests"]
