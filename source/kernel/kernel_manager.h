@@ -6,6 +6,7 @@
 #include "kernel_configuration.h"
 #include "api/device_info.h"
 #include "enum/dimension_vector_type.h"
+#include "enum/global_size_type.h"
 
 namespace ktt
 {
@@ -14,7 +15,7 @@ class KernelManager
 {
 public:
     // Constructor
-    KernelManager();
+    KernelManager(const GlobalSizeType& globalSizeType);
 
     // Core methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
@@ -23,6 +24,7 @@ public:
     std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const;
     KernelConfiguration getKernelConfiguration(const size_t id, const std::vector<ParameterValue>& parameterValues) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const size_t id, const DeviceInfo& deviceInfo) const;
+    void setGlobalSizeType(const GlobalSizeType& globalSizeType);
 
     // Kernel modification methods
     void addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
@@ -41,6 +43,7 @@ private:
     // Attributes
     size_t kernelCount;
     std::vector<Kernel> kernels;
+    GlobalSizeType globalSizeType;
 
     // Helper methods
     std::string loadFileToString(const std::string& filePath) const;

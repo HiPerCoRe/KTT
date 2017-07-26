@@ -29,6 +29,7 @@
 #include "enum/argument_print_condition.h"
 #include "enum/compute_api.h"
 #include "enum/dimension.h"
+#include "enum/global_size_type.h"
 #include "enum/print_format.h"
 #include "enum/time_unit.h"
 #include "enum/search_method.h"
@@ -126,6 +127,7 @@ public:
     DeviceInfo getCurrentDeviceInfo() const;
 
     // Utility methods
+    void setGlobalSizeType(const GlobalSizeType& globalSizeType);
     void setLoggingTarget(std::ostream& outputTarget);
     void setLoggingTarget(const std::string& filePath);
 

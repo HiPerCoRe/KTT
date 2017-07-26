@@ -31,6 +31,7 @@ public:
         const std::vector<std::string>& parameterNames);
     void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIndices);
     void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+    void setGlobalSizeType(const GlobalSizeType& globalSizeType);
 
     // Argument manager methods
     size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,

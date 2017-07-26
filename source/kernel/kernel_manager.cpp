@@ -6,14 +6,23 @@
 namespace ktt
 {
 
-KernelManager::KernelManager() :
-    kernelCount(0)
+KernelManager::KernelManager(const GlobalSizeType& globalSizeType) :
+    kernelCount(0),
+    globalSizeType(globalSizeType)
 {}
 
 size_t KernelManager::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    kernels.emplace_back(Kernel(kernelCount, source, kernelName, globalSize, localSize));
+    DimensionVector convertedGlobalSize = globalSize;
+
+    if (globalSizeType == GlobalSizeType::Cuda)
+    {
+        convertedGlobalSize = DimensionVector(std::get<0>(globalSize) * std::get<0>(localSize), std::get<1>(globalSize) * std::get<1>(localSize),
+            std::get<2>(globalSize) * std::get<2>(localSize));
+    }
+
+    kernels.emplace_back(Kernel(kernelCount, source, kernelName, convertedGlobalSize, localSize));
     return kernelCount++;
 }
 
@@ -93,6 +102,11 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
             kernels.at(id).getGlobalSize(), kernels.at(id).getLocalSize(), configurations);
     }
     return configurations;
+}
+
+void KernelManager::setGlobalSizeType(const GlobalSizeType& globalSizeType)
+{
+    this->globalSizeType = globalSizeType;
 }
 
 void KernelManager::addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values,

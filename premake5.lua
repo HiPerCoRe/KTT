@@ -248,7 +248,14 @@ if not _OPTIONS["no-examples"] then
 project "ExampleSimple"
     kind "ConsoleApp"
     
-    files { "examples/simple/*.cpp", "examples/simple/*.cl" }
+    files { "examples/simple/simple_opencl.cpp", "examples/simple/simple_opencl_kernel.cl" }
+    includedirs { "source" }
+    links { "KernelTuningToolkit" }
+
+project "ExampleOpenCLInfo"
+    kind "ConsoleApp"
+    
+    files { "examples/compute_api_info/compute_api_info_opencl.cpp" }
     includedirs { "source" }
     links { "KernelTuningToolkit" }
 
@@ -256,13 +263,6 @@ project "ExampleNBody"
     kind "ConsoleApp"
     
     files { "examples/nbody/*.cpp", "examples/nbody/*.cl" }
-    includedirs { "source" }
-    links { "KernelTuningToolkit" }
-
-project "ExampleOpenCLInfo"
-    kind "ConsoleApp"
-    
-    files { "examples/opencl_info/*.cpp" }
     includedirs { "source" }
     links { "KernelTuningToolkit" }
 
@@ -299,10 +299,17 @@ if cuda_examples then
 project "ExampleSimpleCuda"
     kind "ConsoleApp"
     
-    files { "examples/simple_cuda/*.cpp", "examples/simple_cuda/*.cu" }
+    files { "examples/simple/simple_cuda.cpp", "examples/simple/simple_cuda_kernel.cu" }
     includedirs { "source" }
     links { "KernelTuningToolkit" }
     
+project "ExampleCudaInfo"
+    kind "ConsoleApp"
+    
+    files { "examples/compute_api_info/compute_api_info_cuda.cpp" }
+    includedirs { "source" }
+    links { "KernelTuningToolkit" }
+
 end -- cuda_examples
 
 end -- _OPTIONS["no-examples"]

@@ -169,6 +169,12 @@ By default, all elements of an argument are validated.
 Utility methods
 ---------------
 
+* `void setGlobalSizeType(const GlobalSizeType& globalSizeType)`:
+Sets global size specification type to specified compute API style.
+In OpenCL, NDrange size is specified as number of work-items in work-group * number of work-groups.
+In CUDA, grid size is specified as number of threads in block / number of blocks.
+This method makes it possible to use OpenCL style in CUDA and vice versa.
+
 * `void setLoggingTarget(std::ostream& outputTarget)`:
 Sets target for info messages logging to specified output stream.
 

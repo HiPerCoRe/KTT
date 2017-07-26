@@ -42,28 +42,23 @@ private:
 
 int main(int argc, char** argv)
 {
-    // Initialize platform index, device index and path to kernel
-    size_t platformIndex = 0;
+    // Initialize device index and path to kernel
     size_t deviceIndex = 0;
-    auto kernelFile = std::string("../examples/simple/simple_kernel.cl");
+    auto kernelFile = std::string("../examples/simple/simple_cuda_kernel.cu");
 
     if (argc >= 2)
     {
-        platformIndex = std::stoul(std::string{ argv[1] });
+        deviceIndex = std::stoul(std::string{ argv[1] });
         if (argc >= 3)
         {
-            deviceIndex = std::stoul(std::string{ argv[2] });
-            if (argc >= 4)
-            {
-                kernelFile = std::string{ argv[3] };
-            }
+            kernelFile = std::string{ argv[2] };
         }
     }
 
     // Declare kernel parameters
     const size_t numberOfElements = 1024 * 1024;
-    const ktt::DimensionVector ndRangeDimensions(numberOfElements, 1, 1);
-    const ktt::DimensionVector workGroupDimensions(256, 1, 1);
+    const ktt::DimensionVector blockDimensions(256, 1, 1);
+    const ktt::DimensionVector gridDimensions(numberOfElements / std::get<0>(blockDimensions), 1, 1);
 
     // Declare data variables
     std::vector<float> a(numberOfElements);
@@ -77,11 +72,11 @@ int main(int argc, char** argv)
         b.at(i) = static_cast<float>(i + 1);
     }
 
-    // Create tuner object for specified platform and device
-    ktt::Tuner tuner(platformIndex, deviceIndex);
+    // Create tuner object for specified device, platform index is ignored in case of CUDA API usage
+    ktt::Tuner tuner(0, deviceIndex, ktt::ComputeApi::Cuda);
 
-    // Add new kernel to tuner, specify kernel name, NDRange dimensions and work-group dimensions
-    size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("simpleKernel"), ndRangeDimensions, workGroupDimensions);
+    // Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
+    size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("simpleKernel"), gridDimensions, blockDimensions);
 
     // Add new arguments to tuner, argument data is copied from std::vector containers
     size_t aId = tuner.addArgument(a, ktt::ArgumentMemoryType::ReadOnly);
@@ -100,7 +95,7 @@ int main(int argc, char** argv)
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-    tuner.printResult(kernelId, std::string("simple_output.csv"), ktt::PrintFormat::CSV);
+    tuner.printResult(kernelId, std::string("simple_cuda_output.csv"), ktt::PrintFormat::CSV);
 
     return 0;
 }

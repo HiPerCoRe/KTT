@@ -204,11 +204,14 @@ float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& glo
     auto start = createEvent();
     auto end = createEvent();
 
+    // Tuner internally uses OpenCL version of global size specification
+    std::vector<unsigned int> convertedGlobalSize{ static_cast<unsigned int>(globalSize.at(0) / localSize.at(0)),
+        static_cast<unsigned int>(globalSize.at(1) / localSize.at(1)), static_cast<unsigned int>(globalSize.at(2) / localSize.at(2)) };
+
     checkCudaError(cuEventRecord(start->getEvent(), stream->getStream()), std::string("cuEventRecord"));
-    checkCudaError(cuLaunchKernel(kernel.getKernel(), static_cast<unsigned int>(globalSize.at(0)), static_cast<unsigned int>(globalSize.at(1)),
-        static_cast<unsigned int>(globalSize.at(2)), static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)),
-        static_cast<unsigned int>(localSize.at(2)), static_cast<unsigned int>(localMemorySize), stream->getStream(), (void**)kernelArguments.data(),
-        nullptr), std::string("cuLaunchKernel"));
+    checkCudaError(cuLaunchKernel(kernel.getKernel(), convertedGlobalSize.at(0), convertedGlobalSize.at(1), convertedGlobalSize.at(2),
+        static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)), static_cast<unsigned int>(localSize.at(2)),
+        static_cast<unsigned int>(localMemorySize), stream->getStream(), (void**)kernelArguments.data(), nullptr), std::string("cuLaunchKernel"));
     checkCudaError(cuEventRecord(end->getEvent(), stream->getStream()), std::string("cuEventRecord"));
 
     // Wait for computation to finish

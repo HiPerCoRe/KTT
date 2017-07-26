@@ -7,16 +7,17 @@ namespace ktt
 {
 
 TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi) :
-    argumentManager(std::make_unique<ArgumentManager>()),
-    kernelManager(std::make_unique<KernelManager>())
+    argumentManager(std::make_unique<ArgumentManager>())
 {
     if (computeApi == ComputeApi::Opencl)
     {
         computeApiDriver = std::make_unique<OpenclCore>(platformIndex, deviceIndex);
+        kernelManager = std::make_unique<KernelManager>(GlobalSizeType::Opencl);
     }
     else if (computeApi == ComputeApi::Cuda)
     {
         computeApiDriver = std::make_unique<CudaCore>(deviceIndex);
+        kernelManager = std::make_unique<KernelManager>(GlobalSizeType::Cuda);
     }
     else
     {
@@ -73,6 +74,11 @@ void TunerCore::setKernelArguments(const size_t kernelId, const std::vector<size
 void TunerCore::setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
 {
     kernelManager->setSearchMethod(kernelId, searchMethod, searchArguments);
+}
+
+void TunerCore::setGlobalSizeType(const GlobalSizeType& globalSizeType)
+{
+    kernelManager->setGlobalSizeType(globalSizeType);
 }
 
 size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,

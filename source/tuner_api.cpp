@@ -306,6 +306,11 @@ DeviceInfo Tuner::getCurrentDeviceInfo() const
     }
 }
 
+void Tuner::setGlobalSizeType(const GlobalSizeType& globalSizeType)
+{
+    tunerCore->setGlobalSizeType(globalSizeType);
+}
+
 void Tuner::setLoggingTarget(std::ostream& outputTarget)
 {
     tunerCore->setLoggingTarget(outputTarget);
