@@ -1,5 +1,6 @@
 -- Configuration variables
 cuda_examples = false
+vulkan_examples = false
 
 -- Helper functions to find compute API headers and libraries
 function findLibrariesAmd()
@@ -103,13 +104,14 @@ function findVulkan()
         return false
     end
     
-    defines { "PLATFORM_VULKAN" }
     includedirs { "$(VULKAN_SDK)/Include" }
     
     filter "platforms:x86_64"
         libdirs { "$(VULKAN_SDK)/Lib" }
     
     filter {}
+    vulkan_examples = true
+    defines { "PLATFORM_VULKAN" }
     links { "vulkan-1" }
     
     return true
@@ -177,7 +179,7 @@ newoption
 }
 
 -- Project configuration
-workspace "KernelTuningToolkit"
+workspace "ktt"
     local buildPath = "build"
     if _OPTIONS["outdir"] then
         buildPath = _OPTIONS["outdir"]
@@ -209,9 +211,8 @@ workspace "KernelTuningToolkit"
     objdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}/obj")
 
 -- Library configuration
-project "KernelTuningToolkit"
+project "ktt"
     kind "SharedLib"
-    
     files { "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "source" }
     defines { "KTT_LIBRARY" }
@@ -245,81 +246,81 @@ project "KernelTuningToolkit"
 -- Examples configuration 
 if not _OPTIONS["no-examples"] then
 
-project "ExampleSimple"
+project "simple_opencl"
     kind "ConsoleApp"
-    
     files { "examples/simple/simple_opencl.cpp", "examples/simple/simple_opencl_kernel.cl" }
     includedirs { "source" }
-    links { "KernelTuningToolkit" }
+    links { "ktt" }
 
-project "ExampleOpenCLInfo"
+project "info_opencl"
     kind "ConsoleApp"
-    
     files { "examples/compute_api_info/compute_api_info_opencl.cpp" }
     includedirs { "source" }
-    links { "KernelTuningToolkit" }
+    links { "ktt" }
 
-project "ExampleNBody"
+project "nbody_opencl"
     kind "ConsoleApp"
-    
     files { "examples/nbody/*.cpp", "examples/nbody/*.cl" }
     includedirs { "source" }
-    links { "KernelTuningToolkit" }
+    links { "ktt" }
 
-project "ExampleCoulombSum2D"
+project "coulomb_sum_2d_opencl"
     kind "ConsoleApp"
-    
     files { "examples/coulomb_sum_2d/*.cpp", "examples/coulomb_sum_2d/*.cl" }
     includedirs { "source" }
-    links { "KernelTuningToolkit" }
+    links { "ktt" }
 
-project "ExampleCoulombSum3D"
+project "coulomb_sum_3d_opencl"
     kind "ConsoleApp"
-
     files { "examples/coulomb_sum_3d/*.cpp", "examples/coulomb_sum_3d/*.cl" }
     includedirs { "source" }
-    links { "KernelTuningToolkit" }
+    links { "ktt" }
 
-project "ExampleCoulombSum3DIterative"
+project "coulomb_sum_3d_iterative_opencl"
     kind "ConsoleApp"
-
     files { "examples/coulomb_sum_3d_iterative/*.h", "examples/coulomb_sum_3d_iterative/*.cpp", "examples/coulomb_sum_3d_iterative/*.cl" }
     includedirs { "source" }
-    links { "KernelTuningToolkit" }
+    links { "ktt" }
     
-project "ExampleReduction"
+project "reduction_opencl"
     kind "ConsoleApp"
-
     files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }
     includedirs { "source" }
-    links { "KernelTuningToolkit" }
+    links { "ktt" }
 
 if cuda_examples then
 
-project "ExampleSimpleCuda"
+project "simple_cuda"
     kind "ConsoleApp"
-    
     files { "examples/simple/simple_cuda.cpp", "examples/simple/simple_cuda_kernel.cu" }
     includedirs { "source" }
-    links { "KernelTuningToolkit" }
+    links { "ktt" }
     
-project "ExampleCudaInfo"
+project "info_cuda"
     kind "ConsoleApp"
-    
     files { "examples/compute_api_info/compute_api_info_cuda.cpp" }
     includedirs { "source" }
-    links { "KernelTuningToolkit" }
+    links { "ktt" }
 
 end -- cuda_examples
+
+if vulkan_examples then
+
+project "info_vulkan"
+    kind "ConsoleApp"
+    files { "examples/compute_api_info/compute_api_info_vulkan.cpp" }
+    includedirs { "source" }
+    links { "ktt" }
+
+end -- vulkan_examples
 
 end -- _OPTIONS["no-examples"]
     
 -- Unit tests configuration   
 if _OPTIONS["tests"] then
 
-project "Tests"
+project "tests"
     kind "ConsoleApp"
-    
     files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl", "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "tests", "source" }
     defines { "KTT_TESTS", "DO_NOT_USE_WMAIN" }

@@ -5,10 +5,14 @@
 namespace ktt
 {
 
+#ifdef PLATFORM_VULKAN
+
 VulkanCore::VulkanCore(const size_t deviceIndex) :
     deviceIndex(deviceIndex),
     compilerOptions(std::string(""))
-{}
+{
+    vulkanInstance.initialize();
+}
 
 void VulkanCore::printComputeApiInfo(std::ostream& outputTarget) const
 {
@@ -70,5 +74,75 @@ KernelRunResult VulkanCore::runKernel(const std::string& source, const std::stri
 {
     throw std::runtime_error("runKernel() method is not supported for Vulkan yet");
 }
+
+#else
+
+VulkanCore::VulkanCore(const size_t)
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+void VulkanCore::printComputeApiInfo(std::ostream&) const
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+std::vector<PlatformInfo> VulkanCore::getPlatformInfo() const
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+std::vector<DeviceInfo> VulkanCore::getDeviceInfo(const size_t) const
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+DeviceInfo VulkanCore::getCurrentDeviceInfo() const
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+void VulkanCore::setCompilerOptions(const std::string&)
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+void VulkanCore::uploadArgument(const KernelArgument&)
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+void VulkanCore::updateArgument(const size_t, const void*, const size_t)
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+KernelArgument VulkanCore::downloadArgument(const size_t) const
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+void VulkanCore::clearBuffer(const size_t)
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+void VulkanCore::clearBuffers()
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+void VulkanCore::clearBuffers(const ArgumentMemoryType&)
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+KernelRunResult VulkanCore::runKernel(const std::string&, const std::string&, const std::vector<size_t>&, const std::vector<size_t>&,
+    const std::vector<const KernelArgument*>&)
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+#endif // PLATFORM_VULKAN
 
 } // namespace ktt
