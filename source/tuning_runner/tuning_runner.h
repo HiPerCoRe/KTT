@@ -25,7 +25,7 @@ public:
     explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeApiDriver* computeApiDriver);
 
     // Core methods
-    std::pair<std::vector<TuningResult>, std::vector<TuningResult>> tuneKernel(const size_t id);
+    std::vector<TuningResult> tuneKernel(const size_t id);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
     void setValidationRange(const size_t argumentId, const size_t validationRange);
     void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,

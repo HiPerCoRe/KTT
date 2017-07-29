@@ -6,9 +6,9 @@
 namespace ktt
 {
 
-KernelManager::KernelManager(const GlobalSizeType& globalSizeType) :
+KernelManager::KernelManager() :
     kernelCount(0),
-    globalSizeType(globalSizeType)
+    globalSizeType(GlobalSizeType::Opencl)
 {}
 
 size_t KernelManager::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,

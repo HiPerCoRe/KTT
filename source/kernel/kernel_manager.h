@@ -15,7 +15,7 @@ class KernelManager
 {
 public:
     // Constructor
-    KernelManager(const GlobalSizeType& globalSizeType);
+    KernelManager();
 
     // Core methods
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);

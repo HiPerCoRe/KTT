@@ -23,7 +23,7 @@ TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kern
     manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeApiDriver))
 {}
 
-std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tuneKernel(const size_t id)
+std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
 {
     if (id >= kernelManager->getKernelCount())
     {
@@ -31,7 +31,6 @@ std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tu
     }
 
     std::vector<TuningResult> results;
-    std::vector<TuningResult> invalidResults;
 
     const Kernel* kernel = kernelManager->getKernel(id);
     resultValidator.computeReferenceResult(kernel);
@@ -55,7 +54,7 @@ std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tu
         catch (const std::runtime_error& error)
         {
             logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
-            invalidResults.push_back(TuningResult(kernel->getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what()));
+            results.push_back(TuningResult(kernel->getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what()));
         }
 
         searcher->calculateNextConfiguration(static_cast<double>(result.getDuration() + manipulatorDuration));
@@ -65,7 +64,7 @@ std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tu
         }
         else
         {
-            invalidResults.push_back(TuningResult(kernel->getName(), currentConfiguration, "Results differ"));
+            results.push_back(TuningResult(kernel->getName(), currentConfiguration, "Results differ"));
         }
 
         computeApiDriver->clearBuffers(ArgumentMemoryType::ReadWrite);
@@ -80,7 +79,7 @@ std::pair<std::vector<TuningResult>, std::vector<TuningResult>> TuningRunner::tu
 
     computeApiDriver->clearBuffers();
     resultValidator.clearReferenceResults();
-    return std::make_pair(results, invalidResults);
+    return results;
 }
 
 void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)

@@ -1,23 +1,31 @@
 #include "tuner_core.h"
 #include "compute_api_driver/cuda/cuda_core.h"
 #include "compute_api_driver/opencl/opencl_core.h"
+#include "compute_api_driver/vulkan/vulkan_core.h"
 #include "utility/ktt_utility.h"
 
 namespace ktt
 {
 
 TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi) :
-    argumentManager(std::make_unique<ArgumentManager>())
+    argumentManager(std::make_unique<ArgumentManager>()),
+    kernelManager(std::make_unique<KernelManager>())
 {
     if (computeApi == ComputeApi::Opencl)
     {
         computeApiDriver = std::make_unique<OpenclCore>(platformIndex, deviceIndex);
-        kernelManager = std::make_unique<KernelManager>(GlobalSizeType::Opencl);
     }
     else if (computeApi == ComputeApi::Cuda)
     {
         computeApiDriver = std::make_unique<CudaCore>(deviceIndex);
-        kernelManager = std::make_unique<KernelManager>(GlobalSizeType::Cuda);
+        kernelManager->setGlobalSizeType(GlobalSizeType::Cuda);
+        resultPrinter.setGlobalSizeType(GlobalSizeType::Cuda);
+    }
+    else if (computeApi == ComputeApi::Vulkan)
+    {
+        computeApiDriver = std::make_unique<VulkanCore>(deviceIndex);
+        kernelManager->setGlobalSizeType(GlobalSizeType::Vulkan);
+        resultPrinter.setGlobalSizeType(GlobalSizeType::Vulkan);
     }
     else
     {
@@ -79,6 +87,7 @@ void TunerCore::setSearchMethod(const size_t kernelId, const SearchMethod& searc
 void TunerCore::setGlobalSizeType(const GlobalSizeType& globalSizeType)
 {
     kernelManager->setGlobalSizeType(globalSizeType);
+    resultPrinter.setGlobalSizeType(globalSizeType);
 }
 
 size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
@@ -89,8 +98,8 @@ size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, c
 
 void TunerCore::tuneKernel(const size_t kernelId)
 {
-    auto result = tuningRunner->tuneKernel(kernelId);
-    resultPrinter.setResult(kernelId, result.first, result.second);
+    std::vector<TuningResult> results = tuningRunner->tuneKernel(kernelId);
+    resultPrinter.setResult(kernelId, results);
 }
 
 void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
