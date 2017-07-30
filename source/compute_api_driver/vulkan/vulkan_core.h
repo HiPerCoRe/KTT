@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -7,6 +8,8 @@
 #include "vulkan/vulkan.h"
 
 #include "vulkan_instance.h"
+#include "vulkan_device.h"
+#include "vulkan_physical_device.h"
 #include "vulkan_utility.h"
 #endif // PLATFORM_VULKAN
 
@@ -51,6 +54,12 @@ private:
     size_t deviceIndex;
     std::string compilerOptions;
     VulkanInstance vulkanInstance;
+    std::unique_ptr<VulkanDevice> device;
+
+    // Helper Methods
+    DeviceInfo getVulkanDeviceInfo(const size_t deviceIndex) const;
+    std::vector<VulkanPhysicalDevice> getVulkanDevices() const;
+    static DeviceType getDeviceType(const VkPhysicalDeviceType deviceType);
 };
 
 #else

@@ -11,7 +11,7 @@ namespace ktt
 class VulkanInstance
 {
 public:
-    void initialize()
+    VulkanInstance()
     {
         const VkApplicationInfo applicationInfo =
         {
@@ -36,7 +36,12 @@ public:
             nullptr
         };
 
-        checkVulkanError(vkCreateInstance(&instanceCreateInfo, nullptr, &instance));
+        checkVulkanError(vkCreateInstance(&instanceCreateInfo, nullptr, &instance), "vkCreateInstance");
+    }
+
+    ~VulkanInstance()
+    {
+        vkDestroyInstance(instance, nullptr);
     }
 
     VkInstance getInstance() const
