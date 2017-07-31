@@ -12,23 +12,24 @@ namespace ktt
 class VulkanBuffer
 {
 public:
-    explicit VulkanBuffer(const VkDevice device, uint64_t bufferSize) :
+    explicit VulkanBuffer(const VkDevice device, const uint32_t queueIndex, const uint64_t bufferSize) :
         device(device),
+        queueIndex(queueIndex),
         bufferSize(bufferSize)
     {
-        /*const VkBufferCreateInfo bufferCreateInfo =
+        const VkBufferCreateInfo bufferCreateInfo =
         {
             VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
             nullptr,
             0,
             bufferSize,
-            VkBufferUsageFlags usage,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             VK_SHARING_MODE_EXCLUSIVE,
-            uint32_t queueFamilyIndexCount,
-            const uint32_t* pQueueFamilyIndices
+            1,
+            &queueIndex
         };
 
-        checkVulkanError(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &buffer), "vkCreateBuffer");*/
+        checkVulkanError(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &buffer), "vkCreateBuffer");
     }
 
     ~VulkanBuffer()
@@ -39,6 +40,11 @@ public:
     VkDevice getDevice() const
     {
         return device;
+    }
+
+    uint32_t getQueueIndex() const
+    {
+        return queueIndex;
     }
 
     VkBuffer getBuffer() const
@@ -53,6 +59,7 @@ public:
 
 private:
     VkDevice device;
+    uint32_t queueIndex;
     VkBuffer buffer;
     uint64_t bufferSize;
 };
