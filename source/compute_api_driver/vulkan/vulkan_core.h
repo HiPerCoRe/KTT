@@ -7,9 +7,13 @@
 #ifdef PLATFORM_VULKAN
 #include "vulkan/vulkan.h"
 
+#include "vulkan_buffer.h"
+#include "vulkan_command_buffer.h"
+#include "vulkan_command_pool.h"
 #include "vulkan_instance.h"
 #include "vulkan_device.h"
 #include "vulkan_physical_device.h"
+#include "vulkan_queue.h"
 #include "vulkan_utility.h"
 #endif // PLATFORM_VULKAN
 
@@ -55,6 +59,9 @@ private:
     std::string compilerOptions;
     VulkanInstance vulkanInstance;
     std::unique_ptr<VulkanDevice> device;
+    std::unique_ptr<VulkanQueue> queue;
+    std::unique_ptr<VulkanCommandPool> commandPool;
+    std::unique_ptr<VulkanCommandBuffer> commandBuffer;
 
     // Helper Methods
     DeviceInfo getVulkanDeviceInfo(const size_t deviceIndex) const;

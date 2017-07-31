@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+#include <stdexcept>
+#include <vector>
+
 #include "vulkan/vulkan.h"
 #include "vulkan_utility.h"
 
@@ -28,7 +32,13 @@ public:
             if (VK_QUEUE_COMPUTE_BIT & queueFamilyProperties.at(i).queueFlags)
             {
                 computeQueueFamilyCount++;
+                computeQueueIndices.push_back(i);
             }
+        }
+
+        if (computeQueueFamilyCount == 0)
+        {
+            throw std::runtime_error("Current device does not have any compute queues available");
         }
 
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos(computeQueueFamilyCount);
@@ -74,6 +84,7 @@ public:
 
     ~VulkanDevice()
     {
+        checkVulkanError(vkDeviceWaitIdle(device), "vkDeviceWaitIdle");
         vkDestroyDevice(device, nullptr);
     }
 
@@ -87,9 +98,15 @@ public:
         return device;
     }
 
+    std::vector<uint32_t> getComputeQueueIndices() const
+    {
+        return computeQueueIndices;
+    }
+
 private:
     VkPhysicalDevice physicalDevice;
     VkDevice device;
+    std::vector<uint32_t> computeQueueIndices;
 };
 
 } // namespace ktt

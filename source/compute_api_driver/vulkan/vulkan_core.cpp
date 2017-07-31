@@ -19,6 +19,9 @@ VulkanCore::VulkanCore(const size_t deviceIndex) :
     }
 
     device = std::make_unique<VulkanDevice>(devices.at(deviceIndex).getPhysicalDevice());
+    queue = std::make_unique<VulkanQueue>(device->getDevice(), device->getComputeQueueIndices().at(0));
+    commandPool = std::make_unique<VulkanCommandPool>(device->getDevice(), queue->getQueueIndex());
+    commandBuffer = std::make_unique<VulkanCommandBuffer>(device->getDevice(), commandPool->getCommandPool());
 }
 
 void VulkanCore::printComputeApiInfo(std::ostream& outputTarget) const
