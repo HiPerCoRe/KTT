@@ -88,6 +88,13 @@ public:
         vkDestroyDevice(device, nullptr);
     }
 
+    VkPhysicalDeviceMemoryProperties getPhysicalDeviceMemoryProperties() const
+    {
+        VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &deviceMemoryProperties);
+        return deviceMemoryProperties;
+    }
+
     VkPhysicalDevice getPhysicalDevice() const
     {
         return physicalDevice;

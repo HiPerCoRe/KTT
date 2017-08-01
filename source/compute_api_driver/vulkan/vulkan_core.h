@@ -10,6 +10,7 @@
 #include "vulkan_buffer.h"
 #include "vulkan_command_buffer.h"
 #include "vulkan_command_pool.h"
+#include "vulkan_fence.h"
 #include "vulkan_instance.h"
 #include "vulkan_device.h"
 #include "vulkan_physical_device.h"
