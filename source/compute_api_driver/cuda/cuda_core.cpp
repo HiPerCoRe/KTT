@@ -44,7 +44,7 @@ std::vector<PlatformInfo> CudaCore::getPlatformInfo() const
     PlatformInfo cuda(0, "NVIDIA CUDA");
     cuda.setVendor("NVIDIA Corporation");
     cuda.setVersion(std::to_string(driverVersion));
-    cuda.setExtensions("");
+    cuda.setExtensions("N/A");
     return std::vector<PlatformInfo>{ cuda };
 }
 
@@ -248,7 +248,7 @@ DeviceInfo CudaCore::getCudaDeviceInfo(const size_t deviceIndex) const
     DeviceInfo result(deviceIndex, devices.at(deviceIndex).getName());
 
     CUdevice id = devices.at(deviceIndex).getDevice();
-    result.setExtensions("");
+    result.setExtensions("N/A");
     result.setVendor("NVIDIA Corporation");
     
     size_t globalMemory;

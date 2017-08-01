@@ -39,9 +39,9 @@ void VulkanCore::printComputeApiInfo(std::ostream& outputTarget) const
 std::vector<PlatformInfo> VulkanCore::getPlatformInfo() const
 {
     PlatformInfo vulkan(0, "Vulkan");
-    vulkan.setVendor("");
+    vulkan.setVendor("N/A");
     vulkan.setVersion("1.0.51");
-    vulkan.setExtensions("");
+    vulkan.setExtensions("N/A");
     return std::vector<PlatformInfo>{ vulkan };
 }
 
@@ -111,16 +111,19 @@ DeviceInfo VulkanCore::getVulkanDeviceInfo(const size_t deviceIndex) const
 
     VkPhysicalDeviceProperties deviceProperties;
     vkGetPhysicalDeviceProperties(devices.at(deviceIndex).getPhysicalDevice(), &deviceProperties);
+    VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
+    vkGetPhysicalDeviceMemoryProperties(devices.at(deviceIndex).getPhysicalDevice(), &deviceMemoryProperties);
 
-    result.setExtensions("");
+    result.setExtensions("N/A");
     result.setVendor(std::to_string(deviceProperties.vendorID));
     result.setDeviceType(getDeviceType(deviceProperties.deviceType));
 
-    result.setGlobalMemorySize(0);
+    result.setGlobalMemorySize(deviceMemoryProperties.memoryHeaps[0].size);
     result.setLocalMemorySize(deviceProperties.limits.maxComputeSharedMemorySize);
-    result.setMaxWorkGroupSize(0);
-    result.setMaxConstantBufferSize(0);
-    result.setMaxComputeUnits(0);
+    result.setMaxWorkGroupSize(deviceProperties.limits.maxComputeWorkGroupSize[0] * deviceProperties.limits.maxComputeWorkGroupSize[1]
+        * deviceProperties.limits.maxComputeWorkGroupSize[2]);
+    result.setMaxConstantBufferSize(0); // to do: find this information for Vulkan API
+    result.setMaxComputeUnits(1); // to do: find this information for Vulkan API
 
     return result;
 }

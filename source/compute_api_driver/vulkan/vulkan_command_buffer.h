@@ -33,6 +33,24 @@ public:
         vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
     }
 
+    void begin()
+    {
+        const VkCommandBufferBeginInfo commandBufferBeginInfo =
+        {
+            VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+            nullptr,
+            VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+            nullptr
+        };
+
+        checkVulkanError(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo), "vkBeginCommandBuffer");
+    }
+
+    void end()
+    {
+        checkVulkanError(vkEndCommandBuffer(commandBuffer), "vkEndCommandBuffer");
+    }
+
     VkDevice getDevice() const
     {
         return device;
