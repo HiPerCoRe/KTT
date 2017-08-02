@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 #include "vulkan/vulkan.h"
@@ -16,13 +17,16 @@ public:
         const VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties) :
         device(device),
         queueIndex(queueIndex),
-        bufferSize(bufferSize)
+        bufferSize(bufferSize),
+        bufferPrepared(false)
     {
         uint32_t memoryTypeIndex = VK_MAX_MEMORY_TYPES;
 
         for (uint32_t i = 0; i < physicalDeviceMemoryProperties.memoryTypeCount; i++)
         {
-            if (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT & physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags
+            if (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT & physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags
+                && VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT & physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags
+                && VK_MEMORY_PROPERTY_HOST_COHERENT_BIT & physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags
                 && bufferSize <= physicalDeviceMemoryProperties.memoryHeaps[physicalDeviceMemoryProperties.memoryTypes[i].heapIndex].size)
             {
                 memoryTypeIndex = i;
@@ -38,26 +42,14 @@ public:
         };
 
         checkVulkanError(vkAllocateMemory(device, &memoryAllocateInfo, nullptr, &deviceMemory), "vkAllocateMemory");
-
-        const VkBufferCreateInfo bufferCreateInfo =
-        {
-            VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-            nullptr,
-            0,
-            bufferSize,
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            VK_SHARING_MODE_EXCLUSIVE,
-            1,
-            &queueIndex
-        };
-
-        checkVulkanError(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &buffer), "vkCreateBuffer");
-        checkVulkanError(vkBindBufferMemory(device, buffer, deviceMemory, 0), "vkBindBufferMemory");
     }
 
     ~VulkanBuffer()
     {
-        vkDestroyBuffer(device, buffer, nullptr);
+        if (bufferPrepared)
+        {
+            vkDestroyBuffer(device, buffer, nullptr);
+        }
         vkFreeMemory(device, deviceMemory, nullptr);
     }
 
@@ -66,9 +58,51 @@ public:
         if (bufferSize != dataSize)
         {
             // to do: implement buffer resize
-            throw std::runtime_error("Buffer size is different than source data size");
+            throw std::runtime_error("Size of data to upload is higher than size of buffer");
         }
-        vkCmdUpdateBuffer(commandBuffer, buffer, 0, dataSize, source);
+
+        void* mappedObject;
+        checkVulkanError(vkMapMemory(device, deviceMemory, 0, dataSize, 0, &mappedObject), "vkMapMemory");
+        std::memcpy(mappedObject, source, dataSize);
+        vkUnmapMemory(device, deviceMemory);
+    }
+
+    void downloadData(void* destination, const size_t dataSize) const
+    {
+        if (bufferSize < dataSize)
+        {
+            // to do: implement buffer resize
+            throw std::runtime_error("Size of data to download is higher than size of buffer");
+        }
+
+        void* mappedObject;
+        checkVulkanError(vkMapMemory(device, deviceMemory, 0, dataSize, 0, &mappedObject), "vkMapMemory");
+        std::memcpy(destination, mappedObject, dataSize);
+        vkUnmapMemory(device, deviceMemory);
+    }
+
+    void prepareBuffer()
+    {
+        if (bufferPrepared)
+        {
+            return;
+        }
+
+        const VkBufferCreateInfo bufferCreateInfo =
+        {
+            VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            nullptr,
+            0,
+            bufferSize,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            VK_SHARING_MODE_EXCLUSIVE,
+            1,
+            &queueIndex
+        };
+        
+        checkVulkanError(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &buffer), "vkCreateBuffer");
+        checkVulkanError(vkBindBufferMemory(device, buffer, deviceMemory, 0), "vkBindBufferMemory");
+        bufferPrepared = true;
     }
 
     VkDevice getDevice() const
@@ -102,6 +136,7 @@ private:
     VkBuffer buffer;
     VkDeviceSize bufferSize;
     VkDeviceMemory deviceMemory;
+    bool bufferPrepared;
 };
 
 } // namespace ktt

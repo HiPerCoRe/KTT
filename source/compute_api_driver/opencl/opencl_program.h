@@ -12,7 +12,7 @@ namespace ktt
 class OpenclProgram
 {
 public:
-    explicit OpenclProgram(const std::string source, const cl_context context, const std::vector<cl_device_id>& devices) :
+    explicit OpenclProgram(const std::string& source, const cl_context context, const std::vector<cl_device_id>& devices) :
         source(source),
         context(context),
         devices(devices)
