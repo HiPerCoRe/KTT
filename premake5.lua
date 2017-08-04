@@ -106,6 +106,9 @@ function findVulkan()
     
     includedirs { "$(VULKAN_SDK)/Include" }
     
+    filter "platforms:x86"
+        libdirs { "$(VULKAN_SDK)/Lib32" }
+
     filter "platforms:x86_64"
         libdirs { "$(VULKAN_SDK)/Lib" }
     

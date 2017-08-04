@@ -25,7 +25,6 @@ public:
         for (uint32_t i = 0; i < physicalDeviceMemoryProperties.memoryTypeCount; i++)
         {
             if (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT & physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags
-                && VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT & physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags
                 && VK_MEMORY_PROPERTY_HOST_COHERENT_BIT & physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags
                 && bufferSize <= physicalDeviceMemoryProperties.memoryHeaps[physicalDeviceMemoryProperties.memoryTypes[i].heapIndex].size)
             {
