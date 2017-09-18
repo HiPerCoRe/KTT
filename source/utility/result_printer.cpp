@@ -57,6 +57,19 @@ void ResultPrinter::setInvalidResultPrinting(const bool flag)
     printInvalidResult = flag;
 }
 
+std::vector<ParameterValue> ResultPrinter::getBestConfiguration(const size_t kernelId) const
+{
+    if (resultMap.find(kernelId) == resultMap.end())
+    {
+        throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(kernelId));
+    }
+
+    auto results = resultMap.find(kernelId)->second;
+    TuningResult bestResult = getBestResult(results);
+
+    return bestResult.getConfiguration().getParameterValues();
+}
+
 void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::ostream& outputTarget) const
 {
     for (const auto& result : results)

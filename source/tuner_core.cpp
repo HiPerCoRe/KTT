@@ -185,6 +185,11 @@ void TunerCore::printResult(const size_t kernelId, const std::string& filePath, 
     resultPrinter.printResult(kernelId, outputFile, printFormat);
 }
 
+std::vector<ParameterValue> TunerCore::getBestConfiguration(const size_t kernelId) const
+{
+    return resultPrinter.getBestConfiguration(kernelId);
+}
+
 void TunerCore::setCompilerOptions(const std::string& options)
 {
     computeApiDriver->setCompilerOptions(options);

@@ -106,11 +106,12 @@ public:
     // Kernel tuning method
     void tuneKernel(const size_t kernelId);
 
-    // Result printing methods
+    // Result retrieval methods
     void setPrintingTimeUnit(const TimeUnit& timeUnit);
     void setInvalidResultPrinting(const bool flag);
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
+    std::vector<ParameterValue> getBestConfiguration(const size_t kernelId) const;
 
     // Result validation methods
     void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,

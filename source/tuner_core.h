@@ -52,6 +52,7 @@ public:
     void setInvalidResultPrinting(const bool flag);
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
+    std::vector<ParameterValue> getBestConfiguration(const size_t kernelId) const;
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);

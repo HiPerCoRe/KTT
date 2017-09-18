@@ -201,6 +201,19 @@ void Tuner::printResult(const size_t kernelId, const std::string& filePath, cons
     }
 }
 
+std::vector<ParameterValue> Tuner::getBestConfiguration(const size_t kernelId) const
+{
+    try
+    {
+        return tunerCore->getBestConfiguration(kernelId);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 void Tuner::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
     const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
 {

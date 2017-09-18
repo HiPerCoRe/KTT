@@ -124,8 +124,8 @@ Kernel tuning methods
 * `void tuneKernel(const size_t kernelId)`:
 Starts the tuning process for specified kernel.
 
-Result printing methods
------------------------
+Result retrieval methods
+------------------------
 
 * `void setPrintingTimeUnit(const TimeUnit& timeUnit)`:
 Sets time unit used during printing of results to specified unit.
@@ -143,6 +143,10 @@ Valid results will be printed only if method `tuneKernel()` was already called f
 * `void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const`:
 Prints tuning results for specified kernel to given file.
 Valid results will be printed only if method `tuneKernel()` was already called for corresponding kernel.
+
+* `std::vector<ParameterValue> getBestConfiguration(const size_t kernelId) const`:
+Returns best configuration for specified kernel.
+Valid configuration will be returned only if method `tuneKernel()` was already called for corresponding kernel.
 
 Result validation methods
 -------------------------

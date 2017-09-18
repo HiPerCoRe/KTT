@@ -22,6 +22,7 @@ public:
     void setTimeUnit(const TimeUnit& timeUnit);
     void setGlobalSizeType(const GlobalSizeType& globalSizeType);
     void setInvalidResultPrinting(const bool flag);
+    std::vector<ParameterValue> getBestConfiguration(const size_t kernelId) const;
 
 private:
     std::map<size_t, std::vector<TuningResult>> resultMap;
