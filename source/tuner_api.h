@@ -103,8 +103,9 @@ public:
     }
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
-    // Kernel tuning method
+    // Kernel launch and tuning methods
     void tuneKernel(const size_t kernelId);
+    void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration);
 
     // Result retrieval methods
     void setPrintingTimeUnit(const TimeUnit& timeUnit);

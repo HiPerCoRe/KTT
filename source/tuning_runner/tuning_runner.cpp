@@ -82,6 +82,28 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     return results;
 }
 
+void TuningRunner::runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration)
+{
+    if (kernelId >= kernelManager->getKernelCount())
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
+    }
+
+    const Kernel* kernel = kernelManager->getKernel(kernelId);
+    const KernelConfiguration launchConfiguration = kernelManager->getKernelConfiguration(kernelId, kernelConfiguration);
+
+    try
+    {
+        runKernel(kernel, launchConfiguration, 0, 1);
+    }
+    catch (const std::runtime_error& error)
+    {
+        logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
+    }
+
+    computeApiDriver->clearBuffers();
+}
+
 void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
 {
     resultValidator.setValidationMethod(validationMethod);

@@ -118,11 +118,16 @@ Enables printing of specified output argument to specified file.
 It is possible to specify whether to print only valid, invalid or all arguments.
 It is not recommended to enable argument printing for very large arguments.
 
-Kernel tuning methods
----------------------
+Kernel launch and tuning methods
+--------------------------------
 
 * `void tuneKernel(const size_t kernelId)`:
 Starts the tuning process for specified kernel.
+
+* `void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration)`:
+Runs specified kernel using provided configuration.
+Kernel output can be retrieved by using tuning manipulator.
+No result validation is performed.
 
 Result retrieval methods
 ------------------------

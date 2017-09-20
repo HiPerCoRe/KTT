@@ -167,6 +167,19 @@ void Tuner::tuneKernel(const size_t kernelId)
     }
 }
 
+void Tuner::runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration)
+{
+    try
+    {
+        tunerCore->runKernel(kernelId, kernelConfiguration);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 void Tuner::setPrintingTimeUnit(const TimeUnit& timeUnit)
 {
     tunerCore->setPrintingTimeUnit(timeUnit);
