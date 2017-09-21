@@ -19,7 +19,7 @@
 #include "vulkan_utility.h"
 #endif // PLATFORM_VULKAN
 
-#include "compute_api_driver/compute_api_driver.h"
+#include "compute_engine/compute_engine.h"
 #include "dto/kernel_run_result.h"
 #include "kernel_argument/kernel_argument.h"
 
@@ -28,7 +28,7 @@ namespace ktt
 
 #ifdef PLATFORM_VULKAN
 
-class VulkanCore : public ComputeApiDriver
+class VulkanCore : public ComputeEngine
 {
 public:
     // Constructor
@@ -73,7 +73,7 @@ private:
 
 #else
 
-class VulkanCore : public ComputeApiDriver
+class VulkanCore : public ComputeEngine
 {
 public:
     // Constructor

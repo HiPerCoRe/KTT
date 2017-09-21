@@ -1,7 +1,7 @@
 #include "tuner_core.h"
-#include "compute_api_driver/cuda/cuda_core.h"
-#include "compute_api_driver/opencl/opencl_core.h"
-#include "compute_api_driver/vulkan/vulkan_core.h"
+#include "compute_engine/cuda/cuda_core.h"
+#include "compute_engine/opencl/opencl_core.h"
+#include "compute_engine/vulkan/vulkan_core.h"
 #include "utility/ktt_utility.h"
 
 namespace ktt
@@ -13,17 +13,17 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
 {
     if (computeApi == ComputeApi::Opencl)
     {
-        computeApiDriver = std::make_unique<OpenclCore>(platformIndex, deviceIndex);
+        computeEngine = std::make_unique<OpenclCore>(platformIndex, deviceIndex);
     }
     else if (computeApi == ComputeApi::Cuda)
     {
-        computeApiDriver = std::make_unique<CudaCore>(deviceIndex);
+        computeEngine = std::make_unique<CudaCore>(deviceIndex);
         kernelManager->setGlobalSizeType(GlobalSizeType::Cuda);
         resultPrinter.setGlobalSizeType(GlobalSizeType::Cuda);
     }
     else if (computeApi == ComputeApi::Vulkan)
     {
-        computeApiDriver = std::make_unique<VulkanCore>(deviceIndex);
+        computeEngine = std::make_unique<VulkanCore>(deviceIndex);
         kernelManager->setGlobalSizeType(GlobalSizeType::Vulkan);
         resultPrinter.setGlobalSizeType(GlobalSizeType::Vulkan);
     }
@@ -31,9 +31,9 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
     {
         throw std::runtime_error("Specified compute API is not supported yet");
     }
-    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeApiDriver.get());
+    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeEngine.get());
 
-    DeviceInfo info = computeApiDriver->getCurrentDeviceInfo();
+    DeviceInfo info = computeEngine->getCurrentDeviceInfo();
     logger.log(std::string("Initializing tuner for device: ") + info.getName());
 }
 
@@ -197,27 +197,27 @@ std::vector<ParameterValue> TunerCore::getBestConfiguration(const size_t kernelI
 
 void TunerCore::setCompilerOptions(const std::string& options)
 {
-    computeApiDriver->setCompilerOptions(options);
+    computeEngine->setCompilerOptions(options);
 }
 
 void TunerCore::printComputeApiInfo(std::ostream& outputTarget) const
 {
-    computeApiDriver->printComputeApiInfo(outputTarget);
+    computeEngine->printComputeApiInfo(outputTarget);
 }
 
 std::vector<PlatformInfo> TunerCore::getPlatformInfo() const
 {
-    return computeApiDriver->getPlatformInfo();
+    return computeEngine->getPlatformInfo();
 }
 
 std::vector<DeviceInfo> TunerCore::getDeviceInfo(const size_t platformIndex) const
 {
-    return computeApiDriver->getDeviceInfo(platformIndex);
+    return computeEngine->getDeviceInfo(platformIndex);
 }
 
 DeviceInfo TunerCore::getCurrentDeviceInfo() const
 {
-    return computeApiDriver->getCurrentDeviceInfo();
+    return computeEngine->getCurrentDeviceInfo();
 }
 
 void TunerCore::setLoggingTarget(std::ostream& outputTarget)

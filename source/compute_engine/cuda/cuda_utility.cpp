@@ -88,7 +88,7 @@ void checkCudaError(const nvrtcResult value, const std::string& message)
 float getKernelRunDuration(const CUevent start, const CUevent end)
 {
     float result;
-    checkCudaError(cuEventElapsedTime(&result, start, end), std::string("cuEventElapsedTime"));
+    checkCudaError(cuEventElapsedTime(&result, start, end), "cuEventElapsedTime");
 
     return result * 1'000'000.0f; // return duration in nanoseconds
 }

@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "compute_api_driver/opencl/opencl_core.h"
+#include "compute_engine/opencl/opencl_core.h"
 #include "kernel_argument/kernel_argument.h"
 
 std::string programSource(std::string("")

@@ -3,7 +3,7 @@
 #include <map>
 
 #include "manipulator_interface.h"
-#include "compute_api_driver/compute_api_driver.h"
+#include "compute_engine/compute_engine.h"
 #include "dto/kernel_runtime_data.h"
 #include "kernel/kernel_configuration.h"
 #include "kernel_argument/kernel_argument.h"
@@ -15,7 +15,7 @@ class ManipulatorInterfaceImplementation : public ManipulatorInterface
 {
 public:
     // Constructor
-    explicit ManipulatorInterfaceImplementation(ComputeApiDriver* computeApiDriver);
+    explicit ManipulatorInterfaceImplementation(ComputeEngine* computeEngine);
 
     // Inherited methods
     void runKernel(const size_t kernelId) override;
@@ -41,7 +41,7 @@ public:
 
 private:
     // Attributes
-    ComputeApiDriver* computeApiDriver;
+    ComputeEngine* computeEngine;
     KernelRunResult currentResult;
     KernelConfiguration currentConfiguration;
     std::map<size_t, KernelRuntimeData> kernelDataMap;

@@ -14,8 +14,8 @@ public:
     explicit CudaKernel(const std::string& ptxSource, const std::string& kernelName) :
         kernelName(kernelName)
     {
-        checkCudaError(cuModuleLoadDataEx(&module, &ptxSource[0], 0, nullptr, nullptr), std::string("cuModuleLoadDataEx"));
-        checkCudaError(cuModuleGetFunction(&kernel, module, &kernelName[0]), std::string("cuModuleGetFunction"));
+        checkCudaError(cuModuleLoadDataEx(&module, &ptxSource[0], 0, nullptr, nullptr), "cuModuleLoadDataEx");
+        checkCudaError(cuModuleGetFunction(&kernel, module, &kernelName[0]), "cuModuleGetFunction");
     }
 
     CUmodule getModule() const

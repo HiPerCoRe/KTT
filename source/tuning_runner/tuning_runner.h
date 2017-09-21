@@ -9,7 +9,7 @@
 #include "result_validator.h"
 #include "searcher/searcher.h"
 #include "api/tuning_manipulator.h"
-#include "compute_api_driver/compute_api_driver.h"
+#include "compute_engine/compute_engine.h"
 #include "dto/tuning_result.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
@@ -22,7 +22,7 @@ class TuningRunner
 {
 public:
     // Constructor
-    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeApiDriver* computeApiDriver);
+    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine);
 
     // Core methods
     std::vector<TuningResult> tuneKernel(const size_t id);
@@ -40,7 +40,7 @@ private:
     ArgumentManager* argumentManager;
     KernelManager* kernelManager;
     Logger* logger;
-    ComputeApiDriver* computeApiDriver;
+    ComputeEngine* computeEngine;
     ResultValidator resultValidator;
     std::map<size_t, std::unique_ptr<TuningManipulator>> manipulatorMap;
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;

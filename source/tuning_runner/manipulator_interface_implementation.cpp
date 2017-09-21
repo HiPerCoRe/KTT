@@ -8,8 +8,8 @@
 namespace ktt
 {
 
-ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeApiDriver* computeApiDriver) :
-    computeApiDriver(computeApiDriver),
+ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeEngine* computeEngine) :
+    computeEngine(computeEngine),
     currentResult(KernelRunResult(0, 0)),
     currentConfiguration(KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>{}))
 {}
@@ -39,7 +39,7 @@ void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId, const 
     }
     KernelRuntimeData kernelData = dataPointer->second;
 
-    KernelRunResult result = computeApiDriver->runKernel(kernelData.getSource(), kernelData.getName(), convertDimensionVector(globalSize),
+    KernelRunResult result = computeEngine->runKernel(kernelData.getSource(), kernelData.getName(), convertDimensionVector(globalSize),
         convertDimensionVector(localSize), getArgumentPointers(kernelData.getArgumentIndices()));
     currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead());
 
@@ -108,7 +108,7 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argum
 
 ResultArgument ManipulatorInterfaceImplementation::getArgumentVector(const size_t argumentId)
 {
-    KernelArgument result = computeApiDriver->downloadArgument(argumentId);
+    KernelArgument result = computeEngine->downloadArgument(argumentId);
 
     Timer timer;
     timer.start();
@@ -200,7 +200,7 @@ void ManipulatorInterfaceImplementation::uploadBuffers()
 {
     for (const auto& argument : vectorArgumentMap)
     {
-        computeApiDriver->uploadArgument(*argument.second);
+        computeEngine->uploadArgument(*argument.second);
     }
 }
 
@@ -277,7 +277,7 @@ void ManipulatorInterfaceImplementation::updateArgumentHost(const size_t argumen
 
 void ManipulatorInterfaceImplementation::updateArgumentDevice(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes)
 {
-    computeApiDriver->updateArgument(argumentId, argumentData, dataSizeInBytes);
+    computeEngine->updateArgument(argumentId, argumentData, dataSizeInBytes);
 }
 
 } // namespace ktt

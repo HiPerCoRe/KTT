@@ -12,11 +12,11 @@
 namespace ktt
 {
 
-class ComputeApiDriver
+class ComputeEngine
 {
 public:
     // Destructor
-    virtual ~ComputeApiDriver() = default;
+    virtual ~ComputeEngine() = default;
 
     // Kernel execution method
     virtual KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,

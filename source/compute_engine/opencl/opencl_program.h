@@ -21,12 +21,12 @@ public:
         size_t sourceLength = source.size();
         auto sourcePointer = &source[0];
         program = clCreateProgramWithSource(context, 1, &sourcePointer, &sourceLength, &result);
-        checkOpenclError(result, std::string("clCreateProgramWithSource"));
+        checkOpenclError(result, "clCreateProgramWithSource");
     }
 
     ~OpenclProgram()
     {
-        checkOpenclError(clReleaseProgram(program), std::string("clReleaseProgram"));
+        checkOpenclError(clReleaseProgram(program), "clReleaseProgram");
     }
 
     void build(const std::string& compilerOptions)

@@ -16,16 +16,16 @@ namespace ktt
 class CudaProgram
 {
 public:
-    explicit CudaProgram(const std::string source) :
+    explicit CudaProgram(const std::string& source) :
         source(source)
     {
         auto sourcePointer = &source[0];
-        checkCudaError(nvrtcCreateProgram(&program, sourcePointer, nullptr, 0, nullptr, nullptr), std::string("nvrtcCreateProgram"));
+        checkCudaError(nvrtcCreateProgram(&program, sourcePointer, nullptr, 0, nullptr, nullptr), "nvrtcCreateProgram");
     }
 
     ~CudaProgram()
     {
-        checkCudaError(nvrtcDestroyProgram(&program), std::string("nvrtcDestroyProgram"));
+        checkCudaError(nvrtcDestroyProgram(&program), "nvrtcDestroyProgram");
     }
 
     void build(const std::string& compilerOptions)
@@ -63,19 +63,19 @@ public:
     std::string getPtxSource() const
     {
         size_t size;
-        checkCudaError(nvrtcGetPTXSize(program, &size), std::string("nvrtcGetPTXSize"));
+        checkCudaError(nvrtcGetPTXSize(program, &size), "nvrtcGetPTXSize");
         
         std::string result(size, ' ');
-        checkCudaError(nvrtcGetPTX(program, &result[0]), std::string("nvrtcGetPTX"));
+        checkCudaError(nvrtcGetPTX(program, &result[0]), "nvrtcGetPTX");
         return result;
     }
 
     std::string getBuildInfo() const
     {
         size_t infoSize;
-        checkCudaError(nvrtcGetProgramLogSize(program, &infoSize), std::string("nvrtcGetProgramLogSize"));
+        checkCudaError(nvrtcGetProgramLogSize(program, &infoSize), "nvrtcGetProgramLogSize");
         std::string infoString(infoSize, ' ');
-        checkCudaError(nvrtcGetProgramLog(program, &infoString[0]), std::string("nvrtcGetProgramLog"));
+        checkCudaError(nvrtcGetProgramLog(program, &infoString[0]), "nvrtcGetProgramLog");
 
         return infoString;
     }

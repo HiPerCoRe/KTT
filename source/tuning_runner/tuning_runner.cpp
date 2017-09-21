@@ -14,13 +14,13 @@
 namespace ktt
 {
 
-TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeApiDriver* computeApiDriver) :
+TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine) :
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     logger(logger),
-    computeApiDriver(computeApiDriver),
-    resultValidator(argumentManager, kernelManager, logger, computeApiDriver),
-    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeApiDriver))
+    computeEngine(computeEngine),
+    resultValidator(argumentManager, kernelManager, logger, computeEngine),
+    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine))
 {}
 
 std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
@@ -36,7 +36,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     resultValidator.computeReferenceResult(kernel);
 
     std::unique_ptr<Searcher> searcher = getSearcher(kernel->getSearchMethod(), kernel->getSearchArguments(),
-        kernelManager->getKernelConfigurations(id, computeApiDriver->getCurrentDeviceInfo()), kernel->getParameters());
+        kernelManager->getKernelConfigurations(id, computeEngine->getCurrentDeviceInfo()), kernel->getParameters());
     size_t configurationsCount = searcher->getConfigurationsCount();
 
     for (size_t i = 0; i < configurationsCount; i++)
@@ -67,17 +67,17 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
             results.push_back(TuningResult(kernel->getName(), currentConfiguration, "Results differ"));
         }
 
-        computeApiDriver->clearBuffers(ArgumentMemoryType::ReadWrite);
-        computeApiDriver->clearBuffers(ArgumentMemoryType::WriteOnly);
+        computeEngine->clearBuffers(ArgumentMemoryType::ReadWrite);
+        computeEngine->clearBuffers(ArgumentMemoryType::WriteOnly);
 
         auto manipulatorPointer = manipulatorMap.find(kernel->getId());
         if (manipulatorPointer != manipulatorMap.end())
         {
-            computeApiDriver->clearBuffers(ArgumentMemoryType::ReadOnly);
+            computeEngine->clearBuffers(ArgumentMemoryType::ReadOnly);
         }
     }
 
-    computeApiDriver->clearBuffers();
+    computeEngine->clearBuffers();
     resultValidator.clearReferenceResults();
     return results;
 }
@@ -101,7 +101,7 @@ void TuningRunner::runKernel(const size_t kernelId, const std::vector<ParameterV
         logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
     }
 
-    computeApiDriver->clearBuffers();
+    computeEngine->clearBuffers();
 }
 
 void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
@@ -165,7 +165,7 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(const Kernel* kerne
     stream << "Launching kernel <" << kernelName << "> with configuration (" << currentConfigurationIndex + 1  << " / " << configurationsCount
         << "): " << currentConfiguration;
     logger->log(stream.str());
-    result = computeApiDriver->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
+    result = computeEngine->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
         convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArgumentPointers(kernelId));
     return std::make_pair(result, 0);
 }

@@ -15,12 +15,12 @@ public:
         context(context),
         device(device)
     {
-        checkCudaError(cuStreamCreate(&stream, CU_STREAM_DEFAULT), std::string("cuStreamCreate"));
+        checkCudaError(cuStreamCreate(&stream, CU_STREAM_DEFAULT), "cuStreamCreate");
     }
 
     ~CudaStream()
     {
-        checkCudaError(cuStreamDestroy(stream), std::string("cuStreamDestroy"));
+        checkCudaError(cuStreamDestroy(stream), "cuStreamDestroy");
     }
 
     CUcontext getcontext() const

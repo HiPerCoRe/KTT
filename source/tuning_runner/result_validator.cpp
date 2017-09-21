@@ -8,11 +8,11 @@ namespace ktt
 {
 
 ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger,
-    ComputeApiDriver* computeApiDriver) :
+    ComputeEngine* computeEngine) :
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     logger(logger),
-    computeApiDriver(computeApiDriver),
+    computeEngine(computeEngine),
     argumentPrinter(logger),
     toleranceThreshold(1e-4),
     validationMethod(ValidationMethod::SideBySideComparison)
@@ -88,7 +88,7 @@ bool ResultValidator::validateArgumentsWithClass(const Kernel* kernel, const Ker
 
     for (const auto argumentId : argumentIds)
     {
-        KernelArgument resultArgument = computeApiDriver->downloadArgument(argumentId);
+        KernelArgument resultArgument = computeEngine->downloadArgument(argumentId);
         resultArguments.push_back(resultArgument);
     }
 
@@ -110,7 +110,7 @@ bool ResultValidator::validateArgumentsWithKernel(const Kernel* kernel, const Ke
 
     for (const auto argumentId : argumentIds)
     {
-        KernelArgument resultArgument = computeApiDriver->downloadArgument(argumentId);
+        KernelArgument resultArgument = computeEngine->downloadArgument(argumentId);
         resultArguments.push_back(resultArgument);
     }
 
@@ -211,16 +211,16 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel* kernel)
     std::string source = kernelManager->getKernelSourceWithDefines(referenceKernelId, configuration);
 
     logger->log(std::string("Computing reference kernel result for kernel: ") + kernel->getName());
-    auto result = computeApiDriver->runKernel(source, referenceKernel->getName(), convertDimensionVector(configuration.getGlobalSize()),
+    auto result = computeEngine->runKernel(source, referenceKernel->getName(), convertDimensionVector(configuration.getGlobalSize()),
         convertDimensionVector(configuration.getLocalSize()), getKernelArgumentPointers(referenceKernelId));
     std::vector<KernelArgument> referenceResult;
 
     for (const auto argumentId : referenceArgumentIndices)
     {
-        referenceResult.push_back(computeApiDriver->downloadArgument(argumentId));
+        referenceResult.push_back(computeEngine->downloadArgument(argumentId));
     }
 
-    computeApiDriver->clearBuffers();
+    computeEngine->clearBuffers();
     referenceKernelResultMap.insert(std::make_pair(kernelId, referenceResult));
 }
 

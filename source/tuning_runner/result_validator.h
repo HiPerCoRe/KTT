@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "api/reference_class.h"
-#include "compute_api_driver/compute_api_driver.h"
+#include "compute_engine/compute_engine.h"
 #include "enum/validation_method.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
@@ -24,7 +24,7 @@ class ResultValidator
 {
 public:
     // Constructor
-    explicit ResultValidator(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeApiDriver* computeApiDriver);
+    explicit ResultValidator(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine);
 
     // Core methods
     void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
@@ -48,7 +48,7 @@ private:
     ArgumentManager* argumentManager;
     KernelManager* kernelManager;
     Logger* logger;
-    ComputeApiDriver* computeApiDriver;
+    ComputeEngine* computeEngine;
     ArgumentPrinter argumentPrinter;
     double toleranceThreshold;
     ValidationMethod validationMethod;

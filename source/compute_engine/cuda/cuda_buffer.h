@@ -22,23 +22,23 @@ public:
         dataType(dataType),
         memoryType(memoryType)
     {
-        checkCudaError(cuMemAlloc(&buffer, bufferSize), std::string("cuMemAlloc"));
+        checkCudaError(cuMemAlloc(&buffer, bufferSize), "cuMemAlloc");
     }
 
     ~CudaBuffer()
     {
-        checkCudaError(cuMemFree(buffer), std::string("cuMemFree"));
+        checkCudaError(cuMemFree(buffer), "cuMemFree");
     }
 
     void uploadData(const void* source, const size_t dataSize)
     {
         if (bufferSize != dataSize)
         {
-            checkCudaError(cuMemFree(buffer), std::string("cuMemFree"));
-            checkCudaError(cuMemAlloc(&buffer, dataSize), std::string("cuMemAlloc"));
+            checkCudaError(cuMemFree(buffer), "cuMemFree");
+            checkCudaError(cuMemAlloc(&buffer, dataSize), "cuMemAlloc");
             bufferSize = dataSize;
         }
-        checkCudaError(cuMemcpyHtoD(buffer, source, dataSize), std::string("cuMemcpyHtoD"));
+        checkCudaError(cuMemcpyHtoD(buffer, source, dataSize), "cuMemcpyHtoD");
     }
 
     void downloadData(void* destination, const size_t dataSize) const
@@ -47,7 +47,7 @@ public:
         {
             throw std::runtime_error("Size of data to download is higher than size of buffer");
         }
-        checkCudaError(cuMemcpyDtoH(destination, buffer, dataSize), std::string("cuMemcpyDtoH"));
+        checkCudaError(cuMemcpyDtoH(destination, buffer, dataSize), "cuMemcpyDtoH");
     }
 
     size_t getKernelArgumentId() const

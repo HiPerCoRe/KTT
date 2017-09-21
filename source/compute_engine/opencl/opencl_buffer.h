@@ -27,29 +27,29 @@ public:
     {
         cl_int result;
         buffer = clCreateBuffer(context, openclMemoryFlag, bufferSize, nullptr, &result);
-        checkOpenclError(result, std::string("clCreateBuffer"));
+        checkOpenclError(result, "clCreateBuffer");
     }
 
     ~OpenclBuffer()
     {
-        checkOpenclError(clReleaseMemObject(buffer), std::string("clReleaseMemObject"));
+        checkOpenclError(clReleaseMemObject(buffer), "clReleaseMemObject");
     }
 
     void uploadData(OpenclCommandQueue& queue, const void* source, const size_t dataSize)
     {
         if (bufferSize != dataSize)
         {
-            checkOpenclError(clReleaseMemObject(buffer), std::string("clReleaseMemObject"));
+            checkOpenclError(clReleaseMemObject(buffer), "clReleaseMemObject");
 
             cl_int result;
             buffer = clCreateBuffer(context, openclMemoryFlag, dataSize, nullptr, &result);
-            checkOpenclError(result, std::string("clCreateBuffer"));
+            checkOpenclError(result, "clCreateBuffer");
 
             bufferSize = dataSize;
         }
 
         cl_int result = clEnqueueWriteBuffer(queue.getQueue(), buffer, CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
-        checkOpenclError(result, std::string("clEnqueueWriteBuffer"));
+        checkOpenclError(result, "clEnqueueWriteBuffer");
     }
 
     void downloadData(OpenclCommandQueue& queue, void* destination, const size_t dataSize) const
@@ -60,7 +60,7 @@ public:
         }
 
         cl_int result = clEnqueueReadBuffer(queue.getQueue(), buffer, CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
-        checkOpenclError(result, std::string("clEnqueueReadBuffer"));
+        checkOpenclError(result, "clEnqueueReadBuffer");
     }
 
     cl_context getContext() const

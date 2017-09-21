@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "compute_api_driver/compute_api_driver.h"
+#include "compute_engine/compute_engine.h"
 #include "enum/compute_api.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
@@ -71,7 +71,7 @@ private:
     // Attributes
     std::unique_ptr<ArgumentManager> argumentManager;
     std::unique_ptr<KernelManager> kernelManager;
-    std::unique_ptr<ComputeApiDriver> computeApiDriver;
+    std::unique_ptr<ComputeEngine> computeEngine;
     std::unique_ptr<TuningRunner> tuningRunner;
     Logger logger;
     ResultPrinter resultPrinter;
