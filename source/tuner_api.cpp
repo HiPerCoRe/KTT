@@ -347,12 +347,12 @@ void Tuner::setLoggingTarget(const std::string& filePath)
     tunerCore->setLoggingTarget(filePath);
 }
 
-size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType)
+size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& dataType,
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType)
 {
     try
     {
-        return tunerCore->addArgument(vectorData, numberOfElements, argumentDataType, argumentMemoryType, ArgumentUploadType::Vector);
+        return tunerCore->addArgument(vectorData, numberOfElements, dataType, memoryLocation, accessType, ArgumentUploadType::Vector);
     }
     catch (const std::runtime_error& error)
     {
@@ -361,11 +361,12 @@ size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements,
     }
 }
 
-size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& argumentDataType)
+size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& dataType)
 {
     try
     {
-        return tunerCore->addArgument(scalarData, 1, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentUploadType::Scalar);
+        return tunerCore->addArgument(scalarData, 1, dataType, ArgumentMemoryLocation::Device, ArgumentAccessType::ReadOnly,
+            ArgumentUploadType::Scalar);
     }
     catch (const std::runtime_error& error)
     {
@@ -374,11 +375,12 @@ size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& argume
     }
 }
 
-size_t Tuner::addArgument(const size_t localMemoryElementsCount, const ArgumentDataType& argumentDataType)
+size_t Tuner::addArgument(const size_t localMemoryElementsCount, const ArgumentDataType& dataType)
 {
     try
     {
-        return tunerCore->addArgument(nullptr, localMemoryElementsCount, argumentDataType, ArgumentMemoryType::ReadOnly, ArgumentUploadType::Local);
+        return tunerCore->addArgument(nullptr, localMemoryElementsCount, dataType, ArgumentMemoryLocation::Device, ArgumentAccessType::ReadOnly,
+            ArgumentUploadType::Local);
     }
     catch (const std::runtime_error& error)
     {

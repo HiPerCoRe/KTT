@@ -5,7 +5,6 @@
 #include <string>
 
 #include "vulkan/vulkan.h"
-#include "enum/argument_memory_type.h"
 
 namespace ktt
 {

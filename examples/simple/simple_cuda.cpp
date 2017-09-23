@@ -79,9 +79,9 @@ int main(int argc, char** argv)
     size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("simpleKernel"), gridDimensions, blockDimensions);
 
     // Add new arguments to tuner, argument data is copied from std::vector containers
-    size_t aId = tuner.addArgument(a, ktt::ArgumentMemoryType::ReadOnly);
-    size_t bId = tuner.addArgument(b, ktt::ArgumentMemoryType::ReadOnly);
-    size_t resultId = tuner.addArgument(result, ktt::ArgumentMemoryType::WriteOnly);
+    size_t aId = tuner.addArgument(a, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+    size_t bId = tuner.addArgument(b, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+    size_t resultId = tuner.addArgument(result, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::WriteOnly);
 
     // Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
     tuner.setKernelArguments(kernelId, std::vector<size_t>{ aId, bId, resultId });

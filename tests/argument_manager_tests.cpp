@@ -14,14 +14,15 @@ TEST_CASE("Argument addition and retrieval", "[argumentManager]")
     ktt::ArgumentManager manager;
 
     std::vector<float> data{ 1.0f, 2.0f, 3.0f, 4.0f };
-    size_t id = manager.addArgument(data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly,
-        ktt::ArgumentUploadType::Vector);
+    size_t id = manager.addArgument(data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
+        ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector);
 
     REQUIRE(manager.getArgumentCount() == 1);
     auto argument = manager.getArgument(id);
     REQUIRE(argument.getArgumentUploadType() == ktt::ArgumentUploadType::Vector);
     REQUIRE(argument.getArgumentDataType() == ktt::ArgumentDataType::Float);
-    REQUIRE(argument.getArgumentMemoryType() == ktt::ArgumentMemoryType::ReadOnly);
+    REQUIRE(argument.getArgumentMemoryLocation() == ktt::ArgumentMemoryLocation::Device);
+    REQUIRE(argument.getArgumentAccessType() == ktt::ArgumentAccessType::ReadOnly);
     REQUIRE(argument.getDataSizeInBytes() == 4 * sizeof(float));
     REQUIRE(argument.getElementSizeInBytes() == sizeof(float));
 
@@ -35,7 +36,7 @@ TEST_CASE("Argument addition and retrieval", "[argumentManager]")
 
     SECTION("Adding empty argument is not allowed")
     {
-        REQUIRE_THROWS(manager.addArgument(data.data(), 0, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly,
-            ktt::ArgumentUploadType::Vector));
+        REQUIRE_THROWS(manager.addArgument(data.data(), 0, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
+            ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector));
     }
 }

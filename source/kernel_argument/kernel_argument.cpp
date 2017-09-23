@@ -6,13 +6,14 @@
 namespace ktt
 {
 
-KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType) :
+KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, const ArgumentDataType& dataType,
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType) :
     id(id),
     numberOfElements(numberOfElements),
-    argumentDataType(argumentDataType),
-    argumentMemoryType(argumentMemoryType),
-    argumentUploadType(argumentUploadType)
+    argumentDataType(dataType),
+    argumentMemoryLocation(memoryLocation),
+    argumentAccessType(accessType),
+    argumentUploadType(uploadType)
 {
     if (numberOfElements == 0)
     {
@@ -21,13 +22,14 @@ KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, c
     prepareData(numberOfElements, argumentDataType);
 }
 
-KernelArgument::KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType) :
+KernelArgument::KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType) :
     id(id),
     numberOfElements(numberOfElements),
-    argumentDataType(argumentDataType),
-    argumentMemoryType(argumentMemoryType),
-    argumentUploadType(argumentUploadType)
+    argumentDataType(dataType),
+    argumentMemoryLocation(memoryLocation),
+    argumentAccessType(accessType),
+    argumentUploadType(uploadType)
 {
     if (numberOfElements == 0)
     {
@@ -65,9 +67,14 @@ ArgumentDataType KernelArgument::getArgumentDataType() const
     return argumentDataType;
 }
 
-ArgumentMemoryType KernelArgument::getArgumentMemoryType() const
+ArgumentMemoryLocation KernelArgument::getArgumentMemoryLocation() const
 {
-    return argumentMemoryType;
+    return argumentMemoryLocation;
+}
+
+ArgumentAccessType KernelArgument::getArgumentAccessType() const
+{
+    return argumentAccessType;
 }
 
 ArgumentUploadType KernelArgument::getArgumentUploadType() const

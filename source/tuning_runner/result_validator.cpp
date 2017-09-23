@@ -153,7 +153,7 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel* kernel)
             throw std::runtime_error(std::string("Reference argument with id: ") + std::to_string(argumentId)
                 + " is not assciated with kernel with id: " + std::to_string(kernel->getId()));
         }
-        if (argumentManager->getArgument(argumentId).getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
+        if (argumentManager->getArgument(argumentId).getArgumentAccessType() == ArgumentAccessType::ReadOnly)
         {
             throw std::runtime_error(std::string("Reference argument with following id is marked as read only: ") + std::to_string(argumentId));
         }
@@ -174,7 +174,8 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel* kernel)
         }
 
         referenceResult.emplace_back(KernelArgument(referenceArgumentId, referenceClass->getData(referenceArgumentId),
-            numberOfElements, argument.getArgumentDataType(), argument.getArgumentMemoryType(), argument.getArgumentUploadType()));
+            numberOfElements, argument.getArgumentDataType(), argument.getArgumentMemoryLocation(), argument.getArgumentAccessType(),
+            argument.getArgumentUploadType()));
     }
     referenceClassResultMap.insert(std::make_pair(kernelId, referenceResult));
 }
@@ -200,7 +201,7 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel* kernel)
             throw std::runtime_error(std::string("Reference argument with id: ") + std::to_string(argumentId)
                 + " is not assciated with kernel with id: " + std::to_string(kernel->getId()));
         }
-        if (argumentManager->getArgument(argumentId).getArgumentMemoryType() == ArgumentMemoryType::ReadOnly)
+        if (argumentManager->getArgument(argumentId).getArgumentAccessType() == ArgumentAccessType::ReadOnly)
         {
             throw std::runtime_error(std::string("Reference argument with following id is marked as read only: ") + std::to_string(argumentId));
         }

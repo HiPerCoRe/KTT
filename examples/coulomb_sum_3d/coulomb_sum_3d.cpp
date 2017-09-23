@@ -70,14 +70,14 @@ int main(int argc, char** argv)
     size_t referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("directCoulombSumReference"), ndRangeDimensions,
         referenceWorkGroupDimensions);
 
-    size_t aiId = tuner.addArgument(atomInfo, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aixId = tuner.addArgument(atomInfoX, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aiyId = tuner.addArgument(atomInfoY, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aizId = tuner.addArgument(atomInfoZ, ktt::ArgumentMemoryType::ReadOnly);
-    size_t aiwId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryType::ReadOnly);
+    size_t aiId = tuner.addArgument(atomInfo, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+    size_t aixId = tuner.addArgument(atomInfoX, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+    size_t aiyId = tuner.addArgument(atomInfoY, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+    size_t aizId = tuner.addArgument(atomInfoZ, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+    size_t aiwId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
     size_t aId = tuner.addArgument(atoms);
     size_t gsId = tuner.addArgument(gridSpacing);
-    size_t gridId = tuner.addArgument(energyGrid, ktt::ArgumentMemoryType::WriteOnly);
+    size_t gridId = tuner.addArgument(energyGrid, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::WriteOnly);
 
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 16, 32 }, 
         ktt::ThreadModifierType::Local, 

@@ -68,15 +68,15 @@ void checkOpenclError(const cl_int value, const std::string& message)
     }
 }
 
-cl_mem_flags getOpenclMemoryType(const ArgumentMemoryType& argumentMemoryType)
+cl_mem_flags getOpenclMemoryType(const ArgumentAccessType& accessType)
 {
-    switch (argumentMemoryType)
+    switch (accessType)
     {
-    case ArgumentMemoryType::ReadOnly:
+    case ArgumentAccessType::ReadOnly:
         return CL_MEM_READ_ONLY;
-    case ArgumentMemoryType::WriteOnly:
+    case ArgumentAccessType::WriteOnly:
         return CL_MEM_WRITE_ONLY;
-    case ArgumentMemoryType::ReadWrite:
+    case ArgumentAccessType::ReadWrite:
         return CL_MEM_READ_WRITE;
     default:
         return CL_MEM_READ_WRITE;

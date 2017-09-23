@@ -6,8 +6,9 @@
 #include "CL/cl.h"
 #include "opencl_command_queue.h"
 #include "opencl_utility.h"
+#include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
-#include "enum/argument_memory_type.h"
+#include "enum/argument_memory_location.h"
 
 namespace ktt
 {
@@ -16,14 +17,15 @@ class OpenclBuffer
 {
 public:
     explicit OpenclBuffer(const cl_context context, const size_t kernelArgumentId, const size_t bufferSize, const size_t elementSize,
-        const ArgumentDataType& dataType, const ArgumentMemoryType& memoryType) :
+        const ArgumentDataType& dataType, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType) :
         context(context),
         kernelArgumentId(kernelArgumentId),
         bufferSize(bufferSize),
         elementSize(elementSize),
         dataType(dataType),
-        memoryType(memoryType),
-        openclMemoryFlag(getOpenclMemoryType(memoryType))
+        memoryLocation(memoryLocation),
+        accessType(accessType),
+        openclMemoryFlag(getOpenclMemoryType(accessType))
     {
         cl_int result;
         buffer = clCreateBuffer(context, openclMemoryFlag, bufferSize, nullptr, &result);
@@ -35,31 +37,40 @@ public:
         checkOpenclError(clReleaseMemObject(buffer), "clReleaseMemObject");
     }
 
-    void uploadData(OpenclCommandQueue& queue, const void* source, const size_t dataSize)
+    void resize(const size_t newBufferSize)
     {
-        if (bufferSize != dataSize)
+        if (bufferSize == newBufferSize)
         {
-            checkOpenclError(clReleaseMemObject(buffer), "clReleaseMemObject");
-
-            cl_int result;
-            buffer = clCreateBuffer(context, openclMemoryFlag, dataSize, nullptr, &result);
-            checkOpenclError(result, "clCreateBuffer");
-
-            bufferSize = dataSize;
+            return;
         }
 
-        cl_int result = clEnqueueWriteBuffer(queue.getQueue(), buffer, CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
-        checkOpenclError(result, "clEnqueueWriteBuffer");
+        checkOpenclError(clReleaseMemObject(buffer), "clReleaseMemObject");
+
+        cl_int result;
+        buffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, nullptr, &result);
+        checkOpenclError(result, "clCreateBuffer");
+        bufferSize = newBufferSize;
     }
 
-    void downloadData(OpenclCommandQueue& queue, void* destination, const size_t dataSize) const
+    void uploadData(cl_command_queue queue, const void* source, const size_t dataSize)
     {
         if (bufferSize < dataSize)
         {
-            throw std::runtime_error("Size of data to download is higher than size of buffer");
+            resize(dataSize);
         }
 
-        cl_int result = clEnqueueReadBuffer(queue.getQueue(), buffer, CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
+        cl_int result = clEnqueueWriteBuffer(queue, buffer, CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
+        checkOpenclError(result, "clEnqueueWriteBuffer");
+    }
+
+    void downloadData(cl_command_queue queue, void* destination, const size_t dataSize) const
+    {
+        if (bufferSize < dataSize)
+        {
+            throw std::runtime_error("Size of data to download is larger than size of buffer");
+        }
+
+        cl_int result = clEnqueueReadBuffer(queue, buffer, CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
         checkOpenclError(result, "clEnqueueReadBuffer");
     }
 
@@ -88,19 +99,24 @@ public:
         return dataType;
     }
 
-    ArgumentMemoryType getMemoryType() const
+    ArgumentMemoryLocation getMemoryLocation() const
     {
-        return memoryType;
+        return memoryLocation;
     }
 
-    cl_mem getBuffer() const
+    ArgumentAccessType getAccessType() const
     {
-        return buffer;
+        return accessType;
     }
 
     cl_mem_flags getOpenclMemoryFlag() const
     {
         return openclMemoryFlag;
+    }
+    
+    cl_mem getBuffer() const
+    {
+        return buffer;
     }
 
 private:
@@ -109,9 +125,10 @@ private:
     size_t bufferSize;
     size_t elementSize;
     ArgumentDataType dataType;
-    ArgumentMemoryType memoryType;
-    cl_mem buffer;
+    ArgumentMemoryLocation memoryLocation;
+    ArgumentAccessType accessType;
     cl_mem_flags openclMemoryFlag;
+    cl_mem buffer;
 };
 
 } // namespace ktt

@@ -93,7 +93,7 @@ void VulkanCore::clearBuffers()
     throw std::runtime_error("clearBuffers() method is not supported for Vulkan yet");
 }
 
-void VulkanCore::clearBuffers(const ArgumentMemoryType& argumentMemoryType)
+void VulkanCore::clearBuffers(const ArgumentAccessType& accessType)
 {
     throw std::runtime_error("clearBuffers() method is not supported for Vulkan yet");
 }
@@ -223,7 +223,7 @@ void VulkanCore::clearBuffers()
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }
 
-void VulkanCore::clearBuffers(const ArgumentMemoryType&)
+void VulkanCore::clearBuffers(const ArgumentAccessType&)
 {
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }

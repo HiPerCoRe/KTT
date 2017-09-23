@@ -108,7 +108,7 @@ KernelArgument CudaCore::downloadArgument(const size_t argumentId) const
         }
 
         KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
-            buffer->getMemoryType(), ArgumentUploadType::Vector);
+            buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
         buffer->downloadData(argument.getData(), argument.getDataSizeInBytes());
         return argument;
     }
@@ -139,13 +139,13 @@ void CudaCore::clearBuffers()
     buffers.clear();
 }
 
-void CudaCore::clearBuffers(const ArgumentMemoryType& argumentMemoryType)
+void CudaCore::clearBuffers(const ArgumentAccessType& accessType)
 {
     auto iterator = buffers.cbegin();
 
     while (iterator != buffers.cend())
     {
-        if (iterator->get()->getMemoryType() == argumentMemoryType)
+        if (iterator->get()->getAccessType() == accessType)
         {
             iterator = buffers.erase(iterator);
         }
@@ -182,7 +182,7 @@ std::unique_ptr<CudaProgram> CudaCore::createAndBuildProgram(const std::string& 
 std::unique_ptr<CudaBuffer> CudaCore::createBuffer(const KernelArgument& argument) const
 {
     auto buffer = std::make_unique<CudaBuffer>(argument.getId(), argument.getDataSizeInBytes(), argument.getElementSizeInBytes(),
-        argument.getArgumentDataType(), argument.getArgumentMemoryType());
+        argument.getArgumentDataType(), argument.getArgumentMemoryLocation(), argument.getArgumentAccessType());
     return buffer;
 }
 
@@ -389,7 +389,7 @@ void CudaCore::clearBuffers()
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
-void CudaCore::clearBuffers(const ArgumentMemoryType&)
+void CudaCore::clearBuffers(const ArgumentAccessType&)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }

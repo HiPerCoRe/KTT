@@ -15,8 +15,8 @@ public:
     ArgumentManager();
 
     // Core methods
-    size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
+    size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
     void updateArgument(const size_t id, const void* data, const size_t numberOfElements);
 
     // Getters

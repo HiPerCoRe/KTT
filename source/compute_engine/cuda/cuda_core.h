@@ -50,7 +50,7 @@ public:
     KernelArgument downloadArgument(const size_t argumentId) const override;
     void clearBuffer(const size_t argumentId) override;
     void clearBuffers() override;
-    void clearBuffers(const ArgumentMemoryType& argumentMemoryType) override;
+    void clearBuffers(const ArgumentAccessType& accessType) override;
 
     // High-level kernel execution methods
     KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
@@ -101,7 +101,7 @@ public:
     KernelArgument downloadArgument(const size_t argumentId) const override;
     void clearBuffer(const size_t argumentId) override;
     void clearBuffers() override;
-    void clearBuffers(const ArgumentMemoryType& argumentMemoryType) override;
+    void clearBuffers(const ArgumentAccessType& accessType) override;
 
     // High-level kernel execution methods
     KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,

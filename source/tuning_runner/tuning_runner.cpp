@@ -68,13 +68,13 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
             results.emplace_back(kernel->getName(), currentConfiguration, "Results differ");
         }
 
-        computeEngine->clearBuffers(ArgumentMemoryType::ReadWrite);
-        computeEngine->clearBuffers(ArgumentMemoryType::WriteOnly);
+        computeEngine->clearBuffers(ArgumentAccessType::ReadWrite);
+        computeEngine->clearBuffers(ArgumentAccessType::WriteOnly);
 
         auto manipulatorPointer = manipulatorMap.find(kernel->getId());
         if (manipulatorPointer != manipulatorMap.end())
         {
-            computeEngine->clearBuffers(ArgumentMemoryType::ReadOnly);
+            computeEngine->clearBuffers(ArgumentAccessType::ReadOnly);
         }
     }
 

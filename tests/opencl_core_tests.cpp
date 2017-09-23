@@ -41,8 +41,8 @@ TEST_CASE("Working with OpenCL buffer", "[openclCore]")
         data.push_back(static_cast<float>(i));
     }
 
-    auto argument = ktt::KernelArgument(0, data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly,
-        ktt::ArgumentUploadType::Vector);
+    auto argument = ktt::KernelArgument(0, data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
+        ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector);
 
     SECTION("Creating OpenCL buffer")
     {
@@ -60,7 +60,8 @@ TEST_CASE("Working with OpenCL buffer", "[openclCore]")
         ktt::KernelArgument resultArgument = core.downloadArgument(argument.getId());
 
         REQUIRE(resultArgument.getArgumentDataType() == argument.getArgumentDataType());
-        REQUIRE(resultArgument.getArgumentMemoryType() == argument.getArgumentMemoryType());
+        REQUIRE(resultArgument.getArgumentMemoryLocation() == argument.getArgumentMemoryLocation());
+        REQUIRE(resultArgument.getArgumentAccessType() == argument.getArgumentAccessType());
         REQUIRE(resultArgument.getArgumentUploadType() == argument.getArgumentUploadType());
         REQUIRE(resultArgument.getDataSizeInBytes() == argument.getDataSizeInBytes());
         std::vector<float> result = resultArgument.getDataFloat();

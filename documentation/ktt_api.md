@@ -97,8 +97,10 @@ Specialized method can, for example, run part of the computation directly in C++
 Argument handling methods
 -------------------------
 
-* `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryType& argumentMemoryType)`:
-Adds new vector argument to tuner. Argument memory type specifies whether argument is used for input or output (or both).
+* `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType)`:
+Adds new vector argument to tuner.
+Argument memory location specifies whether argument is stored in device or host memory.
+Argument access type specifies whether argument is used for input or output (or both).
 Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 

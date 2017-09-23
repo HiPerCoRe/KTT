@@ -5,8 +5,9 @@
 #include <vector>
 
 #include "half.hpp"
+#include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
-#include "enum/argument_memory_type.h"
+#include "enum/argument_memory_location.h"
 #include "enum/argument_upload_type.h"
 #include "enum/argument_print_condition.h"
 
@@ -19,10 +20,10 @@ class KernelArgument
 {
 public:
     // Constructors
-    explicit KernelArgument(const size_t id, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
-    explicit KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
+    explicit KernelArgument(const size_t id, const size_t numberOfElements, const ArgumentDataType& dataType,
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
+    explicit KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
 
     // Core methods
     void updateData(const void* data, const size_t numberOfElements);
@@ -31,7 +32,8 @@ public:
     size_t getId() const;
     size_t getNumberOfElements() const;
     ArgumentDataType getArgumentDataType() const;
-    ArgumentMemoryType getArgumentMemoryType() const;
+    ArgumentMemoryLocation getArgumentMemoryLocation() const;
+    ArgumentAccessType getArgumentAccessType() const;
     ArgumentUploadType getArgumentUploadType() const;
     size_t getElementSizeInBytes() const;
     size_t getDataSizeInBytes() const;
@@ -59,7 +61,8 @@ private:
     size_t id;
     size_t numberOfElements;
     ArgumentDataType argumentDataType;
-    ArgumentMemoryType argumentMemoryType;
+    ArgumentMemoryLocation argumentMemoryLocation;
+    ArgumentAccessType argumentAccessType;
     ArgumentUploadType argumentUploadType;
     std::vector<int8_t> dataChar;
     std::vector<uint8_t> dataUnsignedChar;

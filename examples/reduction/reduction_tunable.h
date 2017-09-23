@@ -24,8 +24,8 @@ public:
         kernelId = tuner->addKernelFromFile("../examples/reduction/reduction_kernel.cl", std::string("reduce"), ndRangeDimensions, workGroupDimensions);
 
         // create input/output
-        srcId = tuner->addArgument(*src, ktt::ArgumentMemoryType::ReadWrite);
-        dstId = tuner->addArgument(*dst, ktt::ArgumentMemoryType::ReadWrite);
+        srcId = tuner->addArgument(*src, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadWrite);
+        dstId = tuner->addArgument(*dst, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadWrite);
         nId = tuner->addArgument(n);
         int offset = 0;
         inOffsetId = tuner->addArgument(offset);

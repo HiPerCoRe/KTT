@@ -31,7 +31,7 @@ public:
     virtual KernelArgument downloadArgument(const size_t argumentId) const = 0;
     virtual void clearBuffer(const size_t argumentId) = 0;
     virtual void clearBuffers() = 0;
-    virtual void clearBuffers(const ArgumentMemoryType& argumentMemoryType) = 0;
+    virtual void clearBuffers(const ArgumentAccessType& accessType) = 0;
 
     // Information retrieval methods
     virtual void printComputeApiInfo(std::ostream& outputTarget) const = 0;

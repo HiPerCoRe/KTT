@@ -91,7 +91,7 @@ void OpenclCore::uploadArgument(const KernelArgument& kernelArgument)
     clearBuffer(kernelArgument.getId());
 
     std::unique_ptr<OpenclBuffer> buffer = createBuffer(kernelArgument);
-    buffer->uploadData(*commandQueue, kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
+    buffer->uploadData(commandQueue->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
     buffers.insert(std::move(buffer)); // buffer data will be stolen
 }
 
@@ -101,7 +101,7 @@ void OpenclCore::updateArgument(const size_t argumentId, const void* data, const
     {
         if (buffer->getKernelArgumentId() == argumentId)
         {
-            buffer->uploadData(*commandQueue, data, dataSizeInBytes);
+            buffer->uploadData(commandQueue->getQueue(), data, dataSizeInBytes);
             return;
         }
     }
@@ -118,8 +118,8 @@ KernelArgument OpenclCore::downloadArgument(const size_t argumentId) const
         }
 
         KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
-            buffer->getMemoryType(), ArgumentUploadType::Vector);
-        buffer->downloadData(*commandQueue, argument.getData(), argument.getDataSizeInBytes());
+            buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
+        buffer->downloadData(commandQueue->getQueue(), argument.getData(), argument.getDataSizeInBytes());
         return argument;
     }
 
@@ -149,13 +149,13 @@ void OpenclCore::clearBuffers()
     buffers.clear();
 }
 
-void OpenclCore::clearBuffers(const ArgumentMemoryType& argumentMemoryType)
+void OpenclCore::clearBuffers(const ArgumentAccessType& accessType)
 {
     auto iterator = buffers.cbegin();
 
     while (iterator != buffers.cend())
     {
-        if (iterator->get()->getOpenclMemoryFlag() == getOpenclMemoryType(argumentMemoryType))
+        if (iterator->get()->getOpenclMemoryFlag() == getOpenclMemoryType(accessType))
         {
             iterator = buffers.erase(iterator);
         }
@@ -196,7 +196,7 @@ std::unique_ptr<OpenclProgram> OpenclCore::createAndBuildProgram(const std::stri
 std::unique_ptr<OpenclBuffer> OpenclCore::createBuffer(const KernelArgument& argument) const
 {
     auto buffer = std::make_unique<OpenclBuffer>(context->getContext(), argument.getId(), argument.getDataSizeInBytes(),
-        argument.getElementSizeInBytes(), argument.getArgumentDataType(), argument.getArgumentMemoryType());
+        argument.getElementSizeInBytes(), argument.getArgumentDataType(), argument.getArgumentMemoryLocation(), argument.getArgumentAccessType());
     return buffer;
 }
 

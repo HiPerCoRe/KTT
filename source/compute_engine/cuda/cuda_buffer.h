@@ -5,8 +5,9 @@
 
 #include "cuda.h"
 #include "cuda_utility.h"
+#include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
-#include "enum/argument_memory_type.h"
+#include "enum/argument_memory_location.h"
 
 namespace ktt
 {
@@ -15,12 +16,13 @@ class CudaBuffer
 {
 public:
     explicit CudaBuffer(const size_t kernelArgumentId, const size_t bufferSize, const size_t elementSize, const ArgumentDataType& dataType,
-        const ArgumentMemoryType& memoryType) :
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType) :
         kernelArgumentId(kernelArgumentId),
         bufferSize(bufferSize),
         elementSize(elementSize),
         dataType(dataType),
-        memoryType(memoryType)
+        memoryLocation(memoryLocation),
+        accessType(accessType)
     {
         checkCudaError(cuMemAlloc(&buffer, bufferSize), "cuMemAlloc");
     }
@@ -30,13 +32,23 @@ public:
         checkCudaError(cuMemFree(buffer), "cuMemFree");
     }
 
+    void resize(const size_t newBufferSize)
+    {
+        if (bufferSize == newBufferSize)
+        {
+            return;
+        }
+
+        checkCudaError(cuMemFree(buffer), "cuMemFree");
+        checkCudaError(cuMemAlloc(&buffer, newBufferSize), "cuMemAlloc");
+        bufferSize = newBufferSize;
+    }
+
     void uploadData(const void* source, const size_t dataSize)
     {
-        if (bufferSize != dataSize)
+        if (bufferSize < dataSize)
         {
-            checkCudaError(cuMemFree(buffer), "cuMemFree");
-            checkCudaError(cuMemAlloc(&buffer, dataSize), "cuMemAlloc");
-            bufferSize = dataSize;
+            resize(dataSize);
         }
         checkCudaError(cuMemcpyHtoD(buffer, source, dataSize), "cuMemcpyHtoD");
     }
@@ -70,9 +82,14 @@ public:
         return dataType;
     }
 
-    ArgumentMemoryType getMemoryType() const
+    ArgumentMemoryLocation getMemoryLocation() const
     {
-        return memoryType;
+        return memoryLocation;
+    }
+
+    ArgumentAccessType getAccessType() const
+    {
+        return accessType;
     }
 
     const CUdeviceptr* getBuffer() const
@@ -90,7 +107,8 @@ private:
     size_t bufferSize;
     size_t elementSize;
     ArgumentDataType dataType;
-    ArgumentMemoryType memoryType;
+    ArgumentMemoryLocation memoryLocation;
+    ArgumentAccessType accessType;
     CUdeviceptr buffer;
 };
 

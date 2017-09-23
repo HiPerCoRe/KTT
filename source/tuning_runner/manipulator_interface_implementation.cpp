@@ -269,7 +269,7 @@ void ManipulatorInterfaceImplementation::updateArgumentHost(const size_t argumen
     }
 
     auto updatedArgument = KernelArgument(argumentId, argumentData, numberOfElements, argumentPointer->second.getArgumentDataType(),
-        argumentPointer->second.getArgumentMemoryType(), argumentUploadType);
+        argumentPointer->second.getArgumentMemoryLocation(), argumentPointer->second.getArgumentAccessType(), argumentUploadType);
 
     nonVectorArgumentMap.erase(argumentId);
     nonVectorArgumentMap.insert(std::make_pair(argumentId, updatedArgument));

@@ -34,8 +34,8 @@ public:
     void setGlobalSizeType(const GlobalSizeType& globalSizeType);
 
     // Argument manager methods
-    size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
+    size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
 
     // Tuning runner methods
     void tuneKernel(const size_t kernelId);

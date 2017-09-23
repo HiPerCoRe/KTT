@@ -95,14 +95,14 @@ int main(int argc, char** argv)
         ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
 
     // Add all arguments utilized by kernels
-    size_t atomInfoId = tuner.addArgument(atomInfo, ktt::ArgumentMemoryType::ReadOnly);
-    size_t atomInfoXId = tuner.addArgument(atomInfoX, ktt::ArgumentMemoryType::ReadOnly);
-    size_t atomInfoYId = tuner.addArgument(atomInfoY, ktt::ArgumentMemoryType::ReadOnly);
-    size_t atomInfoZId = tuner.addArgument(atomInfoZ, ktt::ArgumentMemoryType::ReadOnly);
-    size_t atomInfoWId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryType::ReadOnly);
+    size_t atomInfoId = tuner.addArgument(atomInfo, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+    size_t atomInfoXId = tuner.addArgument(atomInfoX, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+    size_t atomInfoYId = tuner.addArgument(atomInfoY, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+    size_t atomInfoZId = tuner.addArgument(atomInfoZ, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+    size_t atomInfoWId = tuner.addArgument(atomInfoW, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
     size_t numberOfAtomsId = tuner.addArgument(numberOfAtoms);
     size_t gridSpacingId = tuner.addArgument(gridSpacing);
-    size_t energyGridId = tuner.addArgument(energyGrid, ktt::ArgumentMemoryType::ReadWrite);
+    size_t energyGridId = tuner.addArgument(energyGrid, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadWrite);
 
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
     tuner.setKernelArguments(kernelId, std::vector<size_t>{ atomInfoId, atomInfoXId, atomInfoYId, atomInfoZId, atomInfoWId, numberOfAtomsId,
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{ atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId });
 
     // Set search method to random search, only 10% of all configurations will be explored.
-    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.05 });
+    tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double>{ 0.1 });
 
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);

@@ -90,10 +90,10 @@ void TunerCore::setGlobalSizeType(const GlobalSizeType& globalSizeType)
     resultPrinter.setGlobalSizeType(globalSizeType);
 }
 
-size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType)
+size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType)
 {
-    return argumentManager->addArgument(data, numberOfElements, argumentDataType, argumentMemoryType, argumentUploadType);
+    return argumentManager->addArgument(data, numberOfElements, dataType, memoryLocation, accessType, uploadType);
 }
 
 void TunerCore::tuneKernel(const size_t kernelId)
