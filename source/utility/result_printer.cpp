@@ -89,10 +89,10 @@ void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::
         outputTarget << std::endl;
     }
 
-    auto bestResult = getBestResult(results);
+    TuningResult bestResult = getBestResult(results);
     if (bestResult.isValid())
     {
-        outputTarget << "Best result: " << std::endl;
+        outputTarget << "Best result for kernel <" << bestResult.getKernelName() << ">: " << std::endl;
         outputTarget << "Configuration: ";
         printConfigurationVerbose(outputTarget, bestResult.getConfiguration());
         outputTarget << "Kernel duration: " << convertTime(bestResult.getKernelDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;

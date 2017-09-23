@@ -139,7 +139,7 @@ private:
         {
             return 1.0;
         }
-        return exp(-(neighbourEnergy - currentEnergy) / temperature);
+        return std::exp(-(neighbourEnergy - currentEnergy) / temperature);
     }
 };
 

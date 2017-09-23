@@ -1,7 +1,7 @@
 KTT - Kernel Tuning Toolkit
 ===========================
 
-KTT is a C++ tuning library for OpenCL and CUDA kernels and Vulkan compute shaders.
+KTT is a C++ tuning library for OpenCL and CUDA kernels. Support for Vulkan compute shaders is work in progress.
 Project is currently in late beta stage with all of the baseline functionality available.
 
 Main features
@@ -63,7 +63,7 @@ Currently supported operating systems are Linux and Windows.
 * Following build options are available:
     - `--outdir=path` specifies custom build directory, default build directory is `build`
     - `--platform=vendor` specifies SDK used for building KTT, useful when multiple SDKs are installed
-    - `--vulkan` enables inclusion of Vulkan API during compilation
+    - `--vulkan` enables inclusion of Vulkan API during compilation (experimental)
     - `--no-examples` disables compilation of examples
     - `--tests` enables compilation of unit tests
     - `--no-cuda` disables inclusion of CUDA API during compilation, only affects Nvidia platform

@@ -31,7 +31,6 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     }
 
     std::vector<TuningResult> results;
-
     const Kernel* kernel = kernelManager->getKernel(id);
     resultValidator.computeReferenceResult(kernel);
 
@@ -42,29 +41,31 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     for (size_t i = 0; i < configurationsCount; i++)
     {
         KernelConfiguration currentConfiguration = searcher->getNextConfiguration();
-        KernelRunResult result;
-        uint64_t manipulatorDuration = 0;
+        TuningResult result(kernel->getName(), currentConfiguration);
 
         try
         {
-            auto resultPair = runKernel(kernel, currentConfiguration, i, configurationsCount);
-            result = resultPair.first;
-            manipulatorDuration = resultPair.second;
+            std::stringstream stream;
+            stream << "Launching kernel <" << kernel->getName() << "> with configuration (" << i + 1 << " / " << configurationsCount << "): "
+                << currentConfiguration;
+            logger->log(stream.str());
+
+            result = runKernel(kernel, currentConfiguration);
         }
         catch (const std::runtime_error& error)
         {
             logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
-            results.push_back(TuningResult(kernel->getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what()));
+            results.emplace_back(kernel->getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what());
         }
 
-        searcher->calculateNextConfiguration(static_cast<double>(result.getDuration() + manipulatorDuration));
-        if (validateResult(kernel, result, manipulatorDuration, currentConfiguration))
+        searcher->calculateNextConfiguration(static_cast<double>(result.getTotalDuration()));
+        if (validateResult(kernel, result))
         {
-            results.emplace_back(TuningResult(kernel->getName(), result.getDuration(), manipulatorDuration, currentConfiguration));
+            results.push_back(result);
         }
         else
         {
-            results.push_back(TuningResult(kernel->getName(), currentConfiguration, "Results differ"));
+            results.emplace_back(kernel->getName(), currentConfiguration, "Results differ");
         }
 
         computeEngine->clearBuffers(ArgumentMemoryType::ReadWrite);
@@ -94,7 +95,7 @@ void TuningRunner::runKernel(const size_t kernelId, const std::vector<ParameterV
 
     try
     {
-        runKernel(kernel, launchConfiguration, 0, 1);
+        runKernel(kernel, launchConfiguration);
     }
     catch (const std::runtime_error& error)
     {
@@ -141,36 +142,28 @@ void TuningRunner::enableArgumentPrinting(const size_t argumentId, const std::st
     resultValidator.enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
 }
 
-std::pair<KernelRunResult, uint64_t> TuningRunner::runKernel(const Kernel* kernel, const KernelConfiguration& currentConfiguration,
-    const size_t currentConfigurationIndex, const size_t configurationsCount)
+TuningResult TuningRunner::runKernel(const Kernel* kernel, const KernelConfiguration& currentConfiguration)
 {
-    KernelRunResult result;
     size_t kernelId = kernel->getId();
     std::string kernelName = kernel->getName();
     std::string source = kernelManager->getKernelSourceWithDefines(kernelId, currentConfiguration);
-    std::stringstream stream;
 
     auto manipulatorPointer = manipulatorMap.find(kernelId);
     if (manipulatorPointer != manipulatorMap.end())
     {
-        stream << "Launching kernel <" << kernelName << "> (manipulator detected) with configuration (" << currentConfigurationIndex + 1 << " / "
-            << configurationsCount << "): " << currentConfiguration;
-        logger->log(stream.str());
         auto kernelDataVector = getKernelDataVector(kernelId, KernelRuntimeData(kernelName, source, currentConfiguration.getGlobalSize(),
             currentConfiguration.getLocalSize(), kernel->getArgumentIndices()), manipulatorPointer->second->getUtilizedKernelIds(),
             currentConfiguration);
+        logger->log("Launching tuning manipulator...");
         return runKernelWithManipulator(manipulatorPointer->second.get(), kernelDataVector, currentConfiguration);
     }
 
-    stream << "Launching kernel <" << kernelName << "> with configuration (" << currentConfigurationIndex + 1  << " / " << configurationsCount
-        << "): " << currentConfiguration;
-    logger->log(stream.str());
-    result = computeEngine->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
+    KernelRunResult result = computeEngine->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
         convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArgumentPointers(kernelId));
-    return std::make_pair(result, 0);
+    return TuningResult(kernelName, currentConfiguration, result);
 }
 
-std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(TuningManipulator* manipulator,
+TuningResult TuningRunner::runKernelWithManipulator(TuningManipulator* manipulator,
     const std::vector<std::pair<size_t, KernelRuntimeData>>& kernelDataVector, const KernelConfiguration& currentConfiguration)
 {
     manipulator->manipulatorInterface = manipulatorInterfaceImplementation.get();
@@ -211,7 +204,10 @@ std::pair<KernelRunResult, uint64_t> TuningRunner::runKernelWithManipulator(Tuni
 
     manipulatorInterfaceImplementation->clearData();
     manipulator->manipulatorInterface = nullptr;
-    return std::make_pair(result, manipulatorDuration);
+
+    TuningResult tuningResult(kernelDataVector.at(0).second.getName(), currentConfiguration, result);
+    tuningResult.setManipulatorDuration(manipulatorDuration);
+    return tuningResult;
 }
 
 std::unique_ptr<Searcher> TuningRunner::getSearcher(const SearchMethod& searchMethod, const std::vector<double>& searchArguments,
@@ -222,17 +218,20 @@ std::unique_ptr<Searcher> TuningRunner::getSearcher(const SearchMethod& searchMe
     switch (searchMethod)
     {
     case SearchMethod::FullSearch:
-        searcher.reset(new FullSearcher(configurations));
+        searcher = std::make_unique<FullSearcher>(configurations);
         break;
     case SearchMethod::RandomSearch:
-        searcher.reset(new RandomSearcher(configurations, searchArguments.at(0)));
+        searcher = std::make_unique<RandomSearcher>(configurations, searchArguments.at(0));
         break;
     case SearchMethod::PSO:
-        searcher.reset(new PSOSearcher(configurations, parameters, searchArguments.at(0), static_cast<size_t>(searchArguments.at(1)),
-            searchArguments.at(2), searchArguments.at(3), searchArguments.at(4)));
+        searcher = std::make_unique<PSOSearcher>(configurations, parameters, searchArguments.at(0), static_cast<size_t>(searchArguments.at(1)),
+            searchArguments.at(2), searchArguments.at(3), searchArguments.at(4));
+        break;
+    case SearchMethod::Annealing:
+        searcher = std::make_unique<AnnealingSearcher>(configurations, searchArguments.at(0), searchArguments.at(1));
         break;
     default:
-        searcher.reset(new AnnealingSearcher(configurations, searchArguments.at(0), searchArguments.at(1)));
+        throw std::runtime_error("Specified searcher is not supported");
     }
 
     return searcher;
@@ -241,7 +240,6 @@ std::unique_ptr<Searcher> TuningRunner::getSearcher(const SearchMethod& searchMe
 std::vector<KernelArgument> TuningRunner::getKernelArguments(const size_t kernelId) const
 {
     std::vector<KernelArgument> result;
-
     std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId)->getArgumentIndices();
     
     for (const auto index : argumentIndices)
@@ -300,20 +298,19 @@ std::vector<std::pair<size_t, KernelRuntimeData>> TuningRunner::getKernelDataVec
     return result;
 }
 
-bool TuningRunner::validateResult(const Kernel* kernel, const KernelRunResult& result, const uint64_t manipulatorDuration,
-    const KernelConfiguration& kernelConfiguration)
+bool TuningRunner::validateResult(const Kernel* kernel, const TuningResult& tuningResult)
 {
-    if (!result.isValid())
+    if (!tuningResult.isValid())
     {
         return false;
     }
 
-    bool resultIsCorrect = resultValidator.validateArgumentsWithClass(kernel, kernelConfiguration);
-    resultIsCorrect &= resultValidator.validateArgumentsWithKernel(kernel, kernelConfiguration);
+    bool resultIsCorrect = resultValidator.validateArgumentsWithClass(kernel, tuningResult.getConfiguration());
+    resultIsCorrect &= resultValidator.validateArgumentsWithKernel(kernel, tuningResult.getConfiguration());
 
     if (resultIsCorrect)
     {
-        logger->log(std::string("Kernel run completed successfully in ") + std::to_string((result.getDuration() + manipulatorDuration) / 1'000'000)
+        logger->log(std::string("Kernel run completed successfully in ") + std::to_string((tuningResult.getTotalDuration()) / 1'000'000)
             + "ms\n");
     }
     else

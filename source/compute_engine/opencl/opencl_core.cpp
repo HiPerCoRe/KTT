@@ -180,7 +180,6 @@ KernelRunResult OpenclCore::runKernel(const std::string& source, const std::stri
     Timer timer;
     timer.start();
     cl_ulong duration = enqueueKernel(*kernel, globalSize, localSize);
-
     timer.stop();
     uint64_t overhead = timer.getElapsedTime();
 
