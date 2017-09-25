@@ -28,8 +28,15 @@ public:
         accessType(accessType),
         openclMemoryFlag(getOpenclMemoryType(accessType))
     {
+        cl_mem_flags bufferCreationFlags = openclMemoryFlag;
+
+        if (memoryLocation == ArgumentMemoryLocation::Host)
+        {
+            bufferCreationFlags = bufferCreationFlags | CL_MEM_ALLOC_HOST_PTR;
+        }
+
         cl_int result;
-        buffer = clCreateBuffer(context, openclMemoryFlag, bufferSize, nullptr, &result);
+        buffer = clCreateBuffer(context, bufferCreationFlags, bufferSize, nullptr, &result);
         checkOpenclError(result, "clCreateBuffer");
     }
 
