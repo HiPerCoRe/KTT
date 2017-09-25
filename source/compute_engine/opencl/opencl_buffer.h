@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -59,8 +60,20 @@ public:
             resize(dataSize);
         }
 
-        cl_int result = clEnqueueWriteBuffer(queue, buffer, CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
-        checkOpenclError(result, "clEnqueueWriteBuffer");
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            cl_int result = clEnqueueWriteBuffer(queue, buffer, CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
+            checkOpenclError(result, "clEnqueueWriteBuffer");
+        }
+        else
+        {
+            cl_int result;
+            void* destination = clEnqueueMapBuffer(queue, buffer, CL_TRUE, CL_MAP_WRITE, 0, dataSize, 0, nullptr, nullptr, &result);
+            checkOpenclError(result, "clEnqueueMapBuffer");
+
+            std::memcpy(destination, source, dataSize);
+            checkOpenclError(clEnqueueUnmapMemObject(queue, buffer, destination, 0, nullptr, nullptr), "clEnqueueUnmapMemObject");
+        }
     }
 
     void downloadData(cl_command_queue queue, void* destination, const size_t dataSize) const
@@ -70,8 +83,20 @@ public:
             throw std::runtime_error("Size of data to download is larger than size of buffer");
         }
 
-        cl_int result = clEnqueueReadBuffer(queue, buffer, CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
-        checkOpenclError(result, "clEnqueueReadBuffer");
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            cl_int result = clEnqueueReadBuffer(queue, buffer, CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
+            checkOpenclError(result, "clEnqueueReadBuffer");
+        }
+        else
+        {
+            cl_int result;
+            void* source = clEnqueueMapBuffer(queue, buffer, CL_TRUE, CL_MAP_READ, 0, dataSize, 0, nullptr, nullptr, &result);
+            checkOpenclError(result, "clEnqueueMapBuffer");
+
+            std::memcpy(destination, source, dataSize);
+            checkOpenclError(clEnqueueUnmapMemObject(queue, buffer, source, 0, nullptr, nullptr), "clEnqueueUnmapMemObject");
+        }
     }
 
     cl_context getContext() const
