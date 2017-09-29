@@ -25,18 +25,16 @@ public:
         elementSize(elementSize),
         dataType(dataType),
         memoryLocation(memoryLocation),
-        accessType(accessType),
-        openclMemoryFlag(getOpenclMemoryType(accessType))
+        accessType(accessType)
     {
-        cl_mem_flags bufferCreationFlags = openclMemoryFlag;
-
+        openclMemoryFlag = getOpenclMemoryType(accessType);
         if (memoryLocation == ArgumentMemoryLocation::Host)
         {
-            bufferCreationFlags = bufferCreationFlags | CL_MEM_ALLOC_HOST_PTR;
+            openclMemoryFlag = openclMemoryFlag | CL_MEM_ALLOC_HOST_PTR;
         }
 
         cl_int result;
-        buffer = clCreateBuffer(context, bufferCreationFlags, bufferSize, nullptr, &result);
+        buffer = clCreateBuffer(context, openclMemoryFlag, bufferSize, nullptr, &result);
         checkOpenclError(result, "clCreateBuffer");
     }
 
