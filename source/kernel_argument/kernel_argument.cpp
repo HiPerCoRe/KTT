@@ -13,7 +13,8 @@ KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, c
     argumentDataType(dataType),
     argumentMemoryLocation(memoryLocation),
     argumentAccessType(accessType),
-    argumentUploadType(uploadType)
+    argumentUploadType(uploadType),
+    dataOwned(true)
 {
     if (numberOfElements == 0)
     {
@@ -24,21 +25,31 @@ KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, c
 
 KernelArgument::KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType) :
+    KernelArgument(id, data, numberOfElements, dataType, memoryLocation, accessType, uploadType, true)
+{}
+
+KernelArgument::KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool dataOwned) :
     id(id),
     numberOfElements(numberOfElements),
     argumentDataType(dataType),
     argumentMemoryLocation(memoryLocation),
     argumentAccessType(accessType),
-    argumentUploadType(uploadType)
+    argumentUploadType(uploadType),
+    dataOwned(dataOwned)
 {
     if (numberOfElements == 0)
     {
         throw std::runtime_error("Data provided for kernel argument is empty");
     }
 
-    if (data != nullptr)
+    if (dataOwned && data != nullptr)
     {
         initializeData(data, numberOfElements, argumentDataType);
+    }
+    if (!dataOwned)
+    {
+        referencedData = data;
     }
 }
 
@@ -48,8 +59,16 @@ void KernelArgument::updateData(const void* data, const size_t numberOfElements)
     {
         throw std::runtime_error("Data provided for kernel argument is empty");
     }
+
     this->numberOfElements = numberOfElements;
-    initializeData(data, numberOfElements, argumentDataType);
+    if (dataOwned)
+    {
+        initializeData(data, numberOfElements, argumentDataType);
+    }
+    else
+    {
+        referencedData = data;
+    }
 }
 
 size_t KernelArgument::getId() const
@@ -120,6 +139,11 @@ size_t KernelArgument::getDataSizeInBytes() const
 
 const void* KernelArgument::getData() const
 {
+    if (!dataOwned)
+    {
+        return referencedData;
+    }
+
     switch (argumentDataType)
     {
     case ArgumentDataType::Char:

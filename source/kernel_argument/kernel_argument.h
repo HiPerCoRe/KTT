@@ -24,6 +24,9 @@ public:
         const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
     explicit KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
         const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
+    explicit KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType,
+        const bool dataOwned);
 
     // Core methods
     void updateData(const void* data, const size_t numberOfElements);
@@ -75,6 +78,8 @@ private:
     std::vector<half> dataHalf;
     std::vector<float> dataFloat;
     std::vector<double> dataDouble;
+    bool dataOwned;
+    const void* referencedData;
 
     // Helper methods
     void initializeData(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType);

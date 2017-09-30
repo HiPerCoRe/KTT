@@ -32,6 +32,7 @@
 #include "enum/dimension.h"
 #include "enum/global_size_type.h"
 #include "enum/print_format.h"
+#include "enum/run_mode.h"
 #include "enum/time_unit.h"
 #include "enum/search_method.h"
 #include "enum/thread_modifier_action.h"
@@ -64,6 +65,7 @@ public:
     // Constructors and destructor
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex);
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
+    explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const RunMode& runMode);
     ~Tuner();
 
     // Basic kernel handling methods
