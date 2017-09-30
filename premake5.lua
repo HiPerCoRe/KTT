@@ -14,14 +14,14 @@ function findLibrariesAmd()
     includedirs { "$(AMDAPPSDKROOT)/include" }
         
     filter "platforms:x86"
-        if os.get() == "linux" then
+        if os.target() == "linux" then
             libdirs { "$(AMDAPPSDKROOT)/lib" }
         else
             libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
         end
         
     filter "platforms:x86_64"
-        if os.get() == "linux" then
+        if os.target() == "linux" then
             libdirs { "$(AMDAPPSDKROOT)/lib64" }
         else
             libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
@@ -43,14 +43,14 @@ function findLibrariesIntel()
     includedirs { "$(INTELOCLSDKROOT)/include" }
         
     filter "platforms:x86"
-        if os.get() == "linux" then
+        if os.target() == "linux" then
             libdirs { "$(INTELOCLSDKROOT)/lib" }
         else
             libdirs { "$(INTELOCLSDKROOT)/lib/x86" }
         end
         
     filter "platforms:x86_64"
-        if os.get() == "linux" then
+        if os.target() == "linux" then
             libdirs { "$(INTELOCLSDKROOT)/lib64" }
         else
             libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
@@ -72,14 +72,14 @@ function findLibrariesNvidia()
     includedirs { "$(CUDA_PATH)/include" }
         
     filter "platforms:x86"
-        if os.get() == "linux" then
+        if os.target() == "linux" then
             libdirs { "$(CUDA_PATH)/lib" }
         else
             libdirs { "$(CUDA_PATH)/lib/Win32" }
         end
         
     filter "platforms:x86_64"
-        if os.get() == "linux" then
+        if os.target() == "linux" then
             libdirs { "$(CUDA_PATH)/lib64" }
         else
             libdirs { "$(CUDA_PATH)/lib/x64" }
@@ -192,7 +192,7 @@ workspace "ktt"
     platforms { "x86", "x86_64" }
     location (buildPath)
     language "C++"
-    flags { "C++14" }
+    cppdialect "C++14"
     
     filter "platforms:x86"
         architecture "x86"

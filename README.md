@@ -49,7 +49,7 @@ Currently supported operating systems are Linux and Windows.
 * The prerequisites to build KTT are:
     - C++14 compiler, for example Clang 3.4, GCC 5.0, MSVC 19.0 (Visual Studio 2015) or newer
     - OpenCL or CUDA library, supported SDKs are AMD APP SDK, Intel SDK for OpenCL and NVIDIA CUDA Toolkit
-    - [Premake 5](https://premake.github.io/download.html) (alpha 11 or newer)
+    - [Premake 5](https://premake.github.io/download.html) (alpha 12 or newer)
 
 * Build under Linux (inside KTT root folder):
     - run `premake5 gmake` to generate makefile
