@@ -24,12 +24,27 @@ public:
         memoryLocation(memoryLocation),
         accessType(accessType)
     {
-        checkCudaError(cuMemAlloc(&buffer, bufferSize), "cuMemAlloc");
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCudaError(cuMemAlloc(&deviceBuffer, bufferSize), "cuMemAlloc");
+        }
+        else
+        {
+            checkCudaError(cuMemAllocHost(&hostBufferRaw, bufferSize), "cuMemAllocHost");
+            checkCudaError(cuMemHostGetDevicePointer(&hostBuffer, hostBufferRaw, 0), "cuMemHostGetDevicePointer");
+        }
     }
 
     ~CudaBuffer()
     {
-        checkCudaError(cuMemFree(buffer), "cuMemFree");
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCudaError(cuMemFree(deviceBuffer), "cuMemFree");
+        }
+        else
+        {
+            checkCudaError(cuMemFreeHost(hostBufferRaw), "cuMemFreeHost");
+        }
     }
 
     void resize(const size_t newBufferSize)
@@ -39,8 +54,17 @@ public:
             return;
         }
 
-        checkCudaError(cuMemFree(buffer), "cuMemFree");
-        checkCudaError(cuMemAlloc(&buffer, newBufferSize), "cuMemAlloc");
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCudaError(cuMemFree(deviceBuffer), "cuMemFree");
+            checkCudaError(cuMemAlloc(&deviceBuffer, newBufferSize), "cuMemAlloc");
+        }
+        else
+        {
+            checkCudaError(cuMemFreeHost(hostBufferRaw), "cuMemFreeHost");
+            checkCudaError(cuMemAllocHost(&hostBufferRaw, newBufferSize), "cuMemAllocHost");
+            checkCudaError(cuMemHostGetDevicePointer(&hostBuffer, hostBufferRaw, 0), "cuMemHostGetDevicePointer");
+        }
         bufferSize = newBufferSize;
     }
 
@@ -50,7 +74,15 @@ public:
         {
             resize(dataSize);
         }
-        checkCudaError(cuMemcpyHtoD(buffer, source, dataSize), "cuMemcpyHtoD");
+
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCudaError(cuMemcpyHtoD(deviceBuffer, source, dataSize), "cuMemcpyHtoD");
+        }
+        else
+        {
+            checkCudaError(cuMemcpyHtoD(hostBuffer, source, dataSize), "cuMemcpyHtoD");
+        }
     }
 
     void downloadData(void* destination, const size_t dataSize) const
@@ -59,7 +91,15 @@ public:
         {
             throw std::runtime_error("Size of data to download is higher than size of buffer");
         }
-        checkCudaError(cuMemcpyDtoH(destination, buffer, dataSize), "cuMemcpyDtoH");
+
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCudaError(cuMemcpyDtoH(destination, deviceBuffer, dataSize), "cuMemcpyDtoH");
+        }
+        else
+        {
+            checkCudaError(cuMemcpyDtoH(destination, hostBuffer, dataSize), "cuMemcpyDtoH");
+        }
     }
 
     size_t getKernelArgumentId() const
@@ -94,12 +134,26 @@ public:
 
     const CUdeviceptr* getBuffer() const
     {
-        return &buffer;
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            return &deviceBuffer;
+        }
+        else
+        {
+            return &hostBuffer;
+        }
     }
 
     CUdeviceptr* getBuffer()
     {
-        return &buffer;
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            return &deviceBuffer;
+        }
+        else
+        {
+            return &hostBuffer;
+        }
     }
 
 private:
@@ -109,7 +163,9 @@ private:
     ArgumentDataType dataType;
     ArgumentMemoryLocation memoryLocation;
     ArgumentAccessType accessType;
-    CUdeviceptr buffer;
+    CUdeviceptr deviceBuffer;
+    CUdeviceptr hostBuffer;
+    void* hostBufferRaw;
 };
 
 } // namespace ktt
