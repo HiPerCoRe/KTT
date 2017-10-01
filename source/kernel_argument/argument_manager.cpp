@@ -5,14 +5,22 @@
 namespace ktt
 {
 
-ArgumentManager::ArgumentManager() :
-    argumentCount(0)
+ArgumentManager::ArgumentManager(const RunMode& runMode) :
+    argumentCount(0),
+    runMode(runMode)
 {}
 
 size_t ArgumentManager::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType)
 {
-    arguments.emplace_back(argumentCount, data, numberOfElements, dataType, memoryLocation, accessType, uploadType);
+    if (runMode == RunMode::Tuning)
+    {
+        arguments.emplace_back(argumentCount, data, numberOfElements, dataType, memoryLocation, accessType, uploadType);
+    }
+    else
+    {
+        arguments.emplace_back(argumentCount, data, numberOfElements, dataType, memoryLocation, accessType, uploadType, false);
+    }
     return argumentCount++;
 }
 

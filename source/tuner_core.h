@@ -70,7 +70,6 @@ public:
 
 private:
     // Attributes
-    RunMode runMode;
     std::unique_ptr<ArgumentManager> argumentManager;
     std::unique_ptr<KernelManager> kernelManager;
     std::unique_ptr<ComputeEngine> computeEngine;

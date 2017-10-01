@@ -11,7 +11,7 @@ template <typename T> bool around(const T value, const T other, const T toleranc
 
 TEST_CASE("Argument addition and retrieval", "[argumentManager]")
 {
-    ktt::ArgumentManager manager;
+    ktt::ArgumentManager manager(ktt::RunMode::Tuning);
 
     std::vector<float> data{ 1.0f, 2.0f, 3.0f, 4.0f };
     size_t id = manager.addArgument(data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,

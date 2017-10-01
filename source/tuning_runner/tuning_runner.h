@@ -22,7 +22,8 @@ class TuningRunner
 {
 public:
     // Constructor
-    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine);
+    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine,
+        const RunMode& runMode);
 
     // Core methods
     std::vector<TuningResult> tuneKernel(const size_t id);
@@ -41,9 +42,10 @@ private:
     KernelManager* kernelManager;
     Logger* logger;
     ComputeEngine* computeEngine;
-    ResultValidator resultValidator;
+    std::unique_ptr<ResultValidator> resultValidator;
     std::map<size_t, std::unique_ptr<TuningManipulator>> manipulatorMap;
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
+    RunMode runMode;
 
     // Helper methods
     TuningResult runKernel(const Kernel* kernel, const KernelConfiguration& currentConfiguration);

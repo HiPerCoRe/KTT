@@ -116,6 +116,21 @@ KernelArgument CudaCore::downloadArgument(const size_t argumentId) const
     throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
 }
 
+void CudaCore::downloadArgument(const size_t argumentId, void* destination) const
+{
+    for (const auto& buffer : buffers)
+    {
+        if (buffer->getKernelArgumentId() != argumentId)
+        {
+            continue;
+        }
+
+        buffer->downloadData(destination, buffer->getBufferSize());
+    }
+
+    throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+}
+
 void CudaCore::clearBuffer(const size_t argumentId)
 {
     auto iterator = buffers.cbegin();
@@ -375,6 +390,11 @@ void CudaCore::updateArgument(const size_t, const void*, const size_t)
 }
 
 KernelArgument CudaCore::downloadArgument(const size_t) const
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+}
+
+void CudaCore::downloadArgument(const size_t, void*) const
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }

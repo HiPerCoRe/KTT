@@ -83,6 +83,11 @@ KernelArgument VulkanCore::downloadArgument(const size_t argumentId) const
     throw std::runtime_error("downloadArgument() method is not supported for Vulkan yet");
 }
 
+void VulkanCore::downloadArgument(const size_t argumentId, void* destination) const
+{
+    throw std::runtime_error("downloadArgument() method is not supported for Vulkan yet");
+}
+
 void VulkanCore::clearBuffer(const size_t argumentId)
 {
     throw std::runtime_error("clearBuffer() method is not supported for Vulkan yet");
@@ -209,6 +214,11 @@ void VulkanCore::updateArgument(const size_t, const void*, const size_t)
 }
 
 KernelArgument VulkanCore::downloadArgument(const size_t) const
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+void VulkanCore::downloadArgument(const size_t, void*) const
 {
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }

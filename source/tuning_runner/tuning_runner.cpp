@@ -14,17 +14,29 @@
 namespace ktt
 {
 
-TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine) :
+TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine,
+    const RunMode& runMode) :
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     logger(logger),
     computeEngine(computeEngine),
-    resultValidator(argumentManager, kernelManager, logger, computeEngine),
-    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine))
-{}
+    resultValidator(nullptr),
+    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine)),
+    runMode(runMode)
+{
+    if (runMode == RunMode::Tuning)
+    {
+        resultValidator = std::make_unique<ResultValidator>(argumentManager, kernelManager, logger, computeEngine);
+    }
+}
 
 std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
 {
+    if (runMode == RunMode::Computation)
+    {
+        throw std::runtime_error("Kernel tuning cannot be performed in computation mode");
+    }
+
     if (id >= kernelManager->getKernelCount())
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
@@ -32,7 +44,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
 
     std::vector<TuningResult> results;
     const Kernel* kernel = kernelManager->getKernel(id);
-    resultValidator.computeReferenceResult(kernel);
+    resultValidator->computeReferenceResult(kernel);
 
     std::unique_ptr<Searcher> searcher = getSearcher(kernel->getSearchMethod(), kernel->getSearchArguments(),
         kernelManager->getKernelConfigurations(id, computeEngine->getCurrentDeviceInfo()), kernel->getParameters());
@@ -79,7 +91,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     }
 
     computeEngine->clearBuffers();
-    resultValidator.clearReferenceResults();
+    resultValidator->clearReferenceResults();
     return results;
 }
 
@@ -92,6 +104,10 @@ void TuningRunner::runKernelPublic(const size_t kernelId, const std::vector<Para
 
     const Kernel* kernel = kernelManager->getKernel(kernelId);
     const KernelConfiguration launchConfiguration = kernelManager->getKernelConfiguration(kernelId, kernelConfiguration);
+
+    std::stringstream stream;
+    stream << "Running kernel <" << kernel->getName() << "> with configuration: " << launchConfiguration;
+    logger->log(stream.str());
 
     try
     {
@@ -107,25 +123,41 @@ void TuningRunner::runKernelPublic(const size_t kernelId, const std::vector<Para
 
 void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
 {
-    resultValidator.setValidationMethod(validationMethod);
-    resultValidator.setToleranceThreshold(toleranceThreshold);
+    if (runMode == RunMode::Computation)
+    {
+        throw std::runtime_error("Validation cannot be performed in computation mode");
+    }
+    resultValidator->setValidationMethod(validationMethod);
+    resultValidator->setToleranceThreshold(toleranceThreshold);
 }
 
 void TuningRunner::setValidationRange(const size_t argumentId, const size_t validationRange)
 {
-    resultValidator.setValidationRange(argumentId, validationRange);
+    if (runMode == RunMode::Computation)
+    {
+        throw std::runtime_error("Validation cannot be performed in computation mode");
+    }
+    resultValidator->setValidationRange(argumentId, validationRange);
 }
 
 void TuningRunner::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
     const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
 {
-    resultValidator.setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
+    if (runMode == RunMode::Computation)
+    {
+        throw std::runtime_error("Validation cannot be performed in computation mode");
+    }
+    resultValidator->setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
 }
 
 void TuningRunner::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
     const std::vector<size_t>& resultArgumentIds)
 {
-    resultValidator.setReferenceClass(kernelId, std::move(referenceClass), resultArgumentIds);
+    if (runMode == RunMode::Computation)
+    {
+        throw std::runtime_error("Validation cannot be performed in computation mode");
+    }
+    resultValidator->setReferenceClass(kernelId, std::move(referenceClass), resultArgumentIds);
 }
 
 void TuningRunner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
@@ -139,7 +171,11 @@ void TuningRunner::setTuningManipulator(const size_t kernelId, std::unique_ptr<T
 
 void TuningRunner::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
 {
-    resultValidator.enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
+    if (runMode == RunMode::Computation)
+    {
+        throw std::runtime_error("Argument printing cannot be performed in computation mode");
+    }
+    resultValidator->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
 }
 
 TuningResult TuningRunner::runKernel(const Kernel* kernel, const KernelConfiguration& currentConfiguration)
@@ -154,7 +190,6 @@ TuningResult TuningRunner::runKernel(const Kernel* kernel, const KernelConfigura
         auto kernelDataVector = getKernelDataVector(kernelId, KernelRuntimeData(kernelName, source, currentConfiguration.getGlobalSize(),
             currentConfiguration.getLocalSize(), kernel->getArgumentIndices()), manipulatorPointer->second->getUtilizedKernelIds(),
             currentConfiguration);
-        logger->log("Launching tuning manipulator...");
         return runKernelWithManipulator(manipulatorPointer->second.get(), kernelDataVector, currentConfiguration);
     }
 
@@ -300,13 +335,18 @@ std::vector<std::pair<size_t, KernelRuntimeData>> TuningRunner::getKernelDataVec
 
 bool TuningRunner::validateResult(const Kernel* kernel, const TuningResult& tuningResult)
 {
+    if (runMode == RunMode::Computation)
+    {
+        throw std::runtime_error("Validation cannot be performed in computation mode");
+    }
+
     if (!tuningResult.isValid())
     {
         return false;
     }
 
-    bool resultIsCorrect = resultValidator.validateArgumentsWithClass(kernel, tuningResult.getConfiguration());
-    resultIsCorrect &= resultValidator.validateArgumentsWithKernel(kernel, tuningResult.getConfiguration());
+    bool resultIsCorrect = resultValidator->validateArgumentsWithClass(kernel, tuningResult.getConfiguration());
+    resultIsCorrect &= resultValidator->validateArgumentsWithKernel(kernel, tuningResult.getConfiguration());
 
     if (resultIsCorrect)
     {

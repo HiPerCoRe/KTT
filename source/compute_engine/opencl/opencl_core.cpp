@@ -126,6 +126,21 @@ KernelArgument OpenclCore::downloadArgument(const size_t argumentId) const
     throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
 }
 
+void OpenclCore::downloadArgument(const size_t argumentId, void* destination) const
+{
+    for (const auto& buffer : buffers)
+    {
+        if (buffer->getKernelArgumentId() != argumentId)
+        {
+            continue;
+        }
+
+        buffer->downloadData(commandQueue->getQueue(), destination, buffer->getBufferSize());
+    }
+
+    throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+}
+
 void OpenclCore::clearBuffer(const size_t argumentId)
 {
     auto iterator = buffers.cbegin();

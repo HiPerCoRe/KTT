@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "kernel_argument.h"
+#include "enum/run_mode.h"
 
 namespace ktt
 {
@@ -12,7 +13,7 @@ class ArgumentManager
 {
 public:
     // Constructor
-    ArgumentManager();
+    ArgumentManager(const RunMode& runMode);
 
     // Core methods
     size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
@@ -27,6 +28,7 @@ private:
     // Attributes
     size_t argumentCount;
     std::vector<KernelArgument> arguments;
+    RunMode runMode;
 };
 
 } // namespace ktt
