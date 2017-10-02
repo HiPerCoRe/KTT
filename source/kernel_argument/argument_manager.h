@@ -23,6 +23,7 @@ public:
     // Getters
     size_t getArgumentCount() const;
     const KernelArgument& getArgument(const size_t id) const;
+    KernelArgument& getArgument(const size_t id);
 
 private:
     // Attributes

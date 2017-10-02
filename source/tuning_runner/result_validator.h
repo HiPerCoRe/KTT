@@ -63,7 +63,7 @@ private:
     void computeReferenceResultWithKernel(const Kernel* kernel);
     bool validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments,
         const std::string kernelName, const KernelConfiguration& kernelConfiguration) const;
-    std::vector<const KernelArgument*> getKernelArgumentPointers(const size_t kernelId) const;
+    std::vector<KernelArgument*> getKernelArgumentPointers(const size_t kernelId) const;
 
     template <typename T> bool validateResult(const std::vector<T>& result, const std::vector<T>& referenceResult, const size_t argumentId) const
     {

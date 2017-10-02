@@ -19,15 +19,19 @@ public:
 
     std::string getName() const;
     std::string getSource() const;
-    DimensionVector getGlobalSize() const;
-    DimensionVector getLocalSize() const;
+    std::vector<size_t> getGlobalSize() const;
+    std::vector<size_t> getLocalSize() const;
+    DimensionVector getGlobalSizeDimensionVector() const;
+    DimensionVector getLocalSizeDimensionVector() const;
     std::vector<size_t> getArgumentIndices() const;
 
 private:
     std::string name;
     std::string source;
-    DimensionVector globalSize;
-    DimensionVector localSize;
+    std::vector<size_t> globalSize;
+    std::vector<size_t> localSize;
+    DimensionVector globalSizeDimensionVector;
+    DimensionVector localSizeDimensionVector;
     std::vector<size_t> argumentIndices;
 };
 

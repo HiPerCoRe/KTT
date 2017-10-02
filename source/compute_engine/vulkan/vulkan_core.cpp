@@ -68,7 +68,7 @@ void VulkanCore::setCompilerOptions(const std::string& options)
     compilerOptions = options;
 }
 
-void VulkanCore::uploadArgument(const KernelArgument& kernelArgument)
+void VulkanCore::uploadArgument(KernelArgument& kernelArgument)
 {
     throw std::runtime_error("uploadArgument() method is not supported for Vulkan yet");
 }
@@ -83,7 +83,7 @@ KernelArgument VulkanCore::downloadArgument(const size_t argumentId) const
     throw std::runtime_error("downloadArgument() method is not supported for Vulkan yet");
 }
 
-void VulkanCore::downloadArgument(const size_t argumentId, void* destination) const
+void VulkanCore::downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const
 {
     throw std::runtime_error("downloadArgument() method is not supported for Vulkan yet");
 }
@@ -103,8 +103,8 @@ void VulkanCore::clearBuffers(const ArgumentAccessType& accessType)
     throw std::runtime_error("clearBuffers() method is not supported for Vulkan yet");
 }
 
-KernelRunResult VulkanCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers)
+KernelRunResult VulkanCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
     throw std::runtime_error("runKernel() method is not supported for Vulkan yet");
 }
@@ -203,7 +203,7 @@ void VulkanCore::setCompilerOptions(const std::string&)
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }
 
-void VulkanCore::uploadArgument(const KernelArgument&)
+void VulkanCore::uploadArgument(KernelArgument&)
 {
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }
@@ -218,7 +218,7 @@ KernelArgument VulkanCore::downloadArgument(const size_t) const
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }
 
-void VulkanCore::downloadArgument(const size_t, void*) const
+void VulkanCore::downloadArgument(const size_t, void*, const size_t) const
 {
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }
@@ -238,8 +238,7 @@ void VulkanCore::clearBuffers(const ArgumentAccessType&)
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }
 
-KernelRunResult VulkanCore::runKernel(const std::string&, const std::string&, const std::vector<size_t>&, const std::vector<size_t>&,
-    const std::vector<const KernelArgument*>&)
+KernelRunResult VulkanCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<ArgumentOutputDescriptor>&)
 {
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }

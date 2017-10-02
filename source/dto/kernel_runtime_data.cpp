@@ -1,4 +1,5 @@
 #include "kernel_runtime_data.h"
+#include "utility/ktt_utility.h"
 
 namespace ktt
 {
@@ -7,8 +8,10 @@ KernelRuntimeData::KernelRuntimeData(const std::string& name, const std::string&
     const DimensionVector& localSize, const std::vector<size_t>& argumentIndices) :
     name(name),
     source(source),
-    globalSize(globalSize),
-    localSize(localSize),
+    globalSize(convertDimensionVector(globalSize)),
+    localSize(convertDimensionVector(localSize)),
+    globalSizeDimensionVector(globalSize),
+    localSizeDimensionVector(localSize),
     argumentIndices(argumentIndices)
 {}
 
@@ -27,14 +30,25 @@ std::string KernelRuntimeData::getSource() const
     return source;
 }
 
-DimensionVector KernelRuntimeData::getGlobalSize() const
+std::vector<size_t> KernelRuntimeData::getGlobalSize() const
 {
     return globalSize;
 }
 
-DimensionVector KernelRuntimeData::getLocalSize() const
+std::vector<size_t> KernelRuntimeData::getLocalSize() const
 {
     return localSize;
+}
+
+
+DimensionVector KernelRuntimeData::getGlobalSizeDimensionVector() const
+{
+    return globalSizeDimensionVector;
+}
+
+DimensionVector KernelRuntimeData::getLocalSizeDimensionVector() const
+{
+    return localSizeDimensionVector;
 }
 
 std::vector<size_t> KernelRuntimeData::getArgumentIndices() const

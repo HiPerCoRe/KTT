@@ -193,8 +193,8 @@ TuningResult TuningRunner::runKernel(const Kernel* kernel, const KernelConfigura
         return runKernelWithManipulator(manipulatorPointer->second.get(), kernelDataVector, currentConfiguration);
     }
 
-    KernelRunResult result = computeEngine->runKernel(source, kernel->getName(), convertDimensionVector(currentConfiguration.getGlobalSize()),
-        convertDimensionVector(currentConfiguration.getLocalSize()), getKernelArgumentPointers(kernelId));
+    KernelRunResult result = computeEngine->runKernel(KernelRuntimeData(kernelName, source, currentConfiguration.getGlobalSize(),
+        currentConfiguration.getLocalSize(), kernel->getArgumentIndices()), getKernelArgumentPointers(kernelId), {});
     return TuningResult(kernelName, currentConfiguration, result);
 }
 
@@ -202,7 +202,7 @@ TuningResult TuningRunner::runKernelWithManipulator(TuningManipulator* manipulat
     const std::vector<std::pair<size_t, KernelRuntimeData>>& kernelDataVector, const KernelConfiguration& currentConfiguration)
 {
     manipulator->manipulatorInterface = manipulatorInterfaceImplementation.get();
-    std::vector<const KernelArgument*> argumentPointers;
+    std::vector<KernelArgument*> argumentPointers;
     for (const auto& kernelData : kernelDataVector)
     {
         manipulatorInterfaceImplementation->addKernel(kernelData.first, kernelData.second);
@@ -285,9 +285,9 @@ std::vector<KernelArgument> TuningRunner::getKernelArguments(const size_t kernel
     return result;
 }
 
-std::vector<const KernelArgument*> TuningRunner::getKernelArgumentPointers(const size_t kernelId) const
+std::vector<KernelArgument*> TuningRunner::getKernelArgumentPointers(const size_t kernelId) const
 {
-    std::vector<const KernelArgument*> result;
+    std::vector<KernelArgument*> result;
 
     std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId)->getArgumentIndices();
     

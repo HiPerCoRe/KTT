@@ -13,7 +13,7 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
 {
     if (computeApi == ComputeApi::Opencl)
     {
-        computeEngine = std::make_unique<OpenclCore>(platformIndex, deviceIndex);
+        computeEngine = std::make_unique<OpenclCore>(platformIndex, deviceIndex, runMode);
     }
     else if (computeApi == ComputeApi::Cuda)
     {

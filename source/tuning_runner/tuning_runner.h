@@ -54,7 +54,7 @@ private:
     std::unique_ptr<Searcher> getSearcher(const SearchMethod& searchMethod, const std::vector<double>& searchArguments,
         const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters) const;
     std::vector<KernelArgument> getKernelArguments(const size_t kernelId) const;
-    std::vector<const KernelArgument*> getKernelArgumentPointers(const size_t kernelId) const;
+    std::vector<KernelArgument*> getKernelArgumentPointers(const size_t kernelId) const;
     std::vector<std::pair<size_t, KernelRuntimeData>> getKernelDataVector(const size_t tunedKernelId, const KernelRuntimeData& tunedKernelData,
         const std::vector<std::pair<size_t, ThreadSizeUsage>>& additionalKernelData, const KernelConfiguration& currentConfiguration) const;
     bool validateResult(const Kernel* kernel, const TuningResult& tuningResult);

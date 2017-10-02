@@ -13,7 +13,7 @@ std::string programSource(std::string("")
 
 TEST_CASE("Working with program and kernel", "[openclCore]")
 {
-    ktt::OpenclCore core(0, 0);
+    ktt::OpenclCore core(0, 0, ktt::RunMode::Tuning);
 
     auto program = core.createAndBuildProgram(programSource);
     REQUIRE(program->getSource() == programSource);
@@ -34,7 +34,7 @@ TEST_CASE("Working with program and kernel", "[openclCore]")
 
 TEST_CASE("Working with OpenCL buffer", "[openclCore]")
 {
-    ktt::OpenclCore core(0, 0);
+    ktt::OpenclCore core(0, 0, ktt::RunMode::Tuning);
     std::vector<float> data;
     for (size_t i = 0; i < 64; i++)
     {
@@ -43,16 +43,6 @@ TEST_CASE("Working with OpenCL buffer", "[openclCore]")
 
     auto argument = ktt::KernelArgument(0, data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
         ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector);
-
-    SECTION("Creating OpenCL buffer")
-    {
-        std::unique_ptr<ktt::OpenclBuffer> buffer = core.createBuffer(argument);
-        REQUIRE(buffer->getOpenclMemoryFlag() == CL_MEM_READ_ONLY);
-        REQUIRE(buffer->getBuffer() != nullptr);
-        REQUIRE(buffer->getBufferSize() == data.size() * sizeof(float));
-        REQUIRE(buffer->getElementSize() == sizeof(float));
-        REQUIRE(buffer->getKernelArgumentId() == argument.getId());
-    }
 
     SECTION("Transfering argument to / from device")
     {

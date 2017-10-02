@@ -15,6 +15,7 @@
 #include "opencl_program.h"
 #include "compute_engine/compute_engine.h"
 #include "dto/kernel_run_result.h"
+#include "enum/run_mode.h"
 #include "kernel_argument/kernel_argument.h"
 
 namespace ktt
@@ -24,7 +25,7 @@ class OpenclCore : public ComputeEngine
 {
 public:
     // Constructor
-    explicit OpenclCore(const size_t platformIndex, const size_t deviceIndex);
+    explicit OpenclCore(const size_t platformIndex, const size_t deviceIndex, const RunMode& runMode);
 
     // Platform and device retrieval methods
     void printComputeApiInfo(std::ostream& outputTarget) const override;
@@ -36,22 +37,21 @@ public:
     void setCompilerOptions(const std::string& options) override;
 
     // Argument handling methods
-    void uploadArgument(const KernelArgument& kernelArgument) override;
+    void uploadArgument(KernelArgument& kernelArgument) override;
     void updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes) override;
     KernelArgument downloadArgument(const size_t argumentId) const override;
-    void downloadArgument(const size_t argumentId, void* destination) const override;
+    void downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const override;
     void clearBuffer(const size_t argumentId) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType& accessType) override;
 
     // High-level kernel execution methods
-    KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) override;
+    KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+        const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
     // Low-level kernel execution methods
     std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;
-    std::unique_ptr<OpenclBuffer> createBuffer(const KernelArgument& argument) const;
-    void setKernelArgument(OpenclKernel& kernel, const KernelArgument& argument);
+    void setKernelArgument(OpenclKernel& kernel, KernelArgument& argument);
     std::unique_ptr<OpenclKernel> createKernel(const OpenclProgram& program, const std::string& kernelName) const;
     cl_ulong enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;
 
@@ -63,6 +63,7 @@ private:
     std::unique_ptr<OpenclCommandQueue> commandQueue;
     std::string compilerOptions;
     std::set<std::unique_ptr<OpenclBuffer>> buffers;
+    RunMode runMode;
 
     // Helper methods
     static PlatformInfo getOpenclPlatformInfo(const size_t platformIndex);

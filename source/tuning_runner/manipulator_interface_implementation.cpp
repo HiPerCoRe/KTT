@@ -22,7 +22,7 @@ void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId)
         throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
             + " was called inside tuning manipulator which did not advertise utilization of this kernel");
     }
-    runKernel(kernelId, dataPointer->second.getGlobalSize(), dataPointer->second.getLocalSize());
+    runKernel(kernelId, dataPointer->second.getGlobalSizeDimensionVector(), dataPointer->second.getLocalSizeDimensionVector());
 }
 
 void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId, const DimensionVector& globalSize,
@@ -39,8 +39,7 @@ void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId, const 
     }
     KernelRuntimeData kernelData = dataPointer->second;
 
-    KernelRunResult result = computeEngine->runKernel(kernelData.getSource(), kernelData.getName(), convertDimensionVector(globalSize),
-        convertDimensionVector(localSize), getArgumentPointers(kernelData.getArgumentIndices()));
+    KernelRunResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIndices()), {});
     currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead());
 
     timer.stop();
@@ -55,7 +54,7 @@ DimensionVector ManipulatorInterfaceImplementation::getCurrentGlobalSize(const s
         throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
             + " was called inside tuning manipulator which did not advertise utilization of this kernel");
     }
-    return dataPointer->second.getGlobalSize();
+    return dataPointer->second.getGlobalSizeDimensionVector();
 }
 
 DimensionVector ManipulatorInterfaceImplementation::getCurrentLocalSize(const size_t kernelId) const
@@ -66,7 +65,7 @@ DimensionVector ManipulatorInterfaceImplementation::getCurrentLocalSize(const si
         throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
             + " was called inside tuning manipulator which did not advertise utilization of this kernel");
     }
-    return dataPointer->second.getLocalSize();
+    return dataPointer->second.getLocalSizeDimensionVector();
 }
 
 std::vector<ParameterValue> ManipulatorInterfaceImplementation::getCurrentConfiguration() const
@@ -181,7 +180,7 @@ void ManipulatorInterfaceImplementation::setConfiguration(const KernelConfigurat
     currentConfiguration = kernelConfiguration;
 }
 
-void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<const KernelArgument*>& kernelArguments)
+void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<KernelArgument*>& kernelArguments)
 {
     for (const auto& kernelArgument : kernelArguments)
     {
@@ -198,7 +197,7 @@ void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<co
 
 void ManipulatorInterfaceImplementation::uploadBuffers()
 {
-    for (const auto& argument : vectorArgumentMap)
+    for (auto& argument : vectorArgumentMap)
     {
         computeEngine->uploadArgument(*argument.second);
     }
@@ -218,9 +217,9 @@ KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const
     return currentResult;
 }
 
-std::vector<const KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<size_t>& argumentIndices)
+std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<size_t>& argumentIndices)
 {
-    std::vector<const KernelArgument*> result;
+    std::vector<KernelArgument*> result;
 
     for (const auto index : argumentIndices)
     {
@@ -241,7 +240,7 @@ std::vector<const KernelArgument*> ManipulatorInterfaceImplementation::getArgume
             continue;
         }
 
-        for (const auto& argument : nonVectorArgumentMap)
+        for (auto& argument : nonVectorArgumentMap)
         {
             if (index == argument.second.getId())
             {

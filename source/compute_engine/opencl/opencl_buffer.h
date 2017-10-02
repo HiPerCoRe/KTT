@@ -7,6 +7,7 @@
 #include "CL/cl.h"
 #include "opencl_command_queue.h"
 #include "opencl_utility.h"
+#include "kernel_argument/kernel_argument.h"
 #include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
 #include "enum/argument_memory_location.h"
@@ -17,24 +18,32 @@ namespace ktt
 class OpenclBuffer
 {
 public:
-    explicit OpenclBuffer(const cl_context context, const size_t kernelArgumentId, const size_t bufferSize, const size_t elementSize,
-        const ArgumentDataType& dataType, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType) :
+    explicit OpenclBuffer(const cl_context context, KernelArgument& kernelArgument, const bool copyArgumentData) :
         context(context),
-        kernelArgumentId(kernelArgumentId),
-        bufferSize(bufferSize),
-        elementSize(elementSize),
-        dataType(dataType),
-        memoryLocation(memoryLocation),
-        accessType(accessType)
+        kernelArgumentId(kernelArgument.getId()),
+        bufferSize(kernelArgument.getDataSizeInBytes()),
+        elementSize(kernelArgument.getElementSizeInBytes()),
+        dataType(kernelArgument.getArgumentDataType()),
+        memoryLocation(kernelArgument.getArgumentMemoryLocation()),
+        accessType(kernelArgument.getArgumentAccessType()),
+        openclMemoryFlag(getOpenclMemoryType(accessType)),
+        hostPointer(nullptr)
     {
-        openclMemoryFlag = getOpenclMemoryType(accessType);
         if (memoryLocation == ArgumentMemoryLocation::Host)
         {
-            openclMemoryFlag = openclMemoryFlag | CL_MEM_ALLOC_HOST_PTR;
+            if (copyArgumentData)
+            {
+                openclMemoryFlag = openclMemoryFlag | CL_MEM_ALLOC_HOST_PTR;
+            }
+            else
+            {
+                openclMemoryFlag = openclMemoryFlag | CL_MEM_USE_HOST_PTR;
+                hostPointer = kernelArgument.getData();
+            }
         }
 
         cl_int result;
-        buffer = clCreateBuffer(context, openclMemoryFlag, bufferSize, nullptr, &result);
+        buffer = clCreateBuffer(context, openclMemoryFlag, bufferSize, hostPointer, &result);
         checkOpenclError(result, "clCreateBuffer");
     }
 
@@ -53,7 +62,7 @@ public:
         checkOpenclError(clReleaseMemObject(buffer), "clReleaseMemObject");
 
         cl_int result;
-        buffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, nullptr, &result);
+        buffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, hostPointer, &result);
         checkOpenclError(result, "clCreateBuffer");
         bufferSize = newBufferSize;
     }
@@ -159,6 +168,7 @@ private:
     ArgumentAccessType accessType;
     cl_mem_flags openclMemoryFlag;
     cl_mem buffer;
+    void* hostPointer;
 };
 
 } // namespace ktt

@@ -212,8 +212,8 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel* kernel)
     std::string source = kernelManager->getKernelSourceWithDefines(referenceKernelId, configuration);
 
     logger->log(std::string("Computing reference kernel result for kernel: ") + kernel->getName());
-    auto result = computeEngine->runKernel(source, referenceKernel->getName(), convertDimensionVector(configuration.getGlobalSize()),
-        convertDimensionVector(configuration.getLocalSize()), getKernelArgumentPointers(referenceKernelId));
+    auto result = computeEngine->runKernel(KernelRuntimeData(referenceKernel->getName(), source, configuration.getGlobalSize(),
+        configuration.getLocalSize(), {}), getKernelArgumentPointers(referenceKernelId), {});
     std::vector<KernelArgument> referenceResult;
 
     for (const auto argumentId : referenceArgumentIndices)
@@ -321,9 +321,9 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
     return validationResult;
 }
 
-std::vector<const KernelArgument*> ResultValidator::getKernelArgumentPointers(const size_t kernelId) const
+std::vector<KernelArgument*> ResultValidator::getKernelArgumentPointers(const size_t kernelId) const
 {
-    std::vector<const KernelArgument*> result;
+    std::vector<KernelArgument*> result;
 
     std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId)->getArgumentIndices();
     

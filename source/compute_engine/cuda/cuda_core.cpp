@@ -71,7 +71,7 @@ void CudaCore::setCompilerOptions(const std::string& options)
     compilerOptions = options;
 }
 
-void CudaCore::uploadArgument(const KernelArgument& kernelArgument)
+void CudaCore::uploadArgument(KernelArgument& kernelArgument)
 {
     if (kernelArgument.getArgumentUploadType() != ArgumentUploadType::Vector)
     {
@@ -116,7 +116,7 @@ KernelArgument CudaCore::downloadArgument(const size_t argumentId) const
     throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
 }
 
-void CudaCore::downloadArgument(const size_t argumentId, void* destination) const
+void CudaCore::downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const
 {
     for (const auto& buffer : buffers)
     {
@@ -125,7 +125,8 @@ void CudaCore::downloadArgument(const size_t argumentId, void* destination) cons
             continue;
         }
 
-        buffer->downloadData(destination, buffer->getBufferSize());
+        buffer->downloadData(destination, dataSizeInBytes);
+        return;
     }
 
     throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
@@ -171,16 +172,17 @@ void CudaCore::clearBuffers(const ArgumentAccessType& accessType)
     }
 }
 
-KernelRunResult CudaCore::runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers)
+KernelRunResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-    std::unique_ptr<CudaProgram> program = createAndBuildProgram(source);
-    std::unique_ptr<CudaKernel> kernel = createKernel(*program, kernelName);
+    std::unique_ptr<CudaProgram> program = createAndBuildProgram(kernelData.getSource());
+    std::unique_ptr<CudaKernel> kernel = createKernel(*program, kernelData.getName());
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
     Timer timer;
     timer.start();
-    float duration = enqueueKernel(*kernel, globalSize, localSize, kernelArguments, getSharedMemorySizeInBytes(argumentPointers));
+    float duration = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
+        getSharedMemorySizeInBytes(argumentPointers));
 
     timer.stop();
     uint64_t overhead = timer.getElapsedTime();
@@ -290,7 +292,7 @@ DeviceInfo CudaCore::getCudaDeviceInfo(const size_t deviceIndex) const
     return result;
 }
 
-std::vector<CUdeviceptr*> CudaCore::getKernelArguments(const std::vector<const KernelArgument*>& argumentPointers)
+std::vector<CUdeviceptr*> CudaCore::getKernelArguments(const std::vector<KernelArgument*>& argumentPointers)
 {
     std::vector<CUdeviceptr*> result;
 
@@ -320,7 +322,7 @@ std::vector<CUdeviceptr*> CudaCore::getKernelArguments(const std::vector<const K
     return result;
 }
 
-size_t CudaCore::getSharedMemorySizeInBytes(const std::vector<const KernelArgument*>& argumentPointers) const
+size_t CudaCore::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& argumentPointers) const
 {
     size_t result = 0;
 
@@ -379,7 +381,7 @@ void CudaCore::setCompilerOptions(const std::string&)
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
-void CudaCore::uploadArgument(const KernelArgument&)
+void CudaCore::uploadArgument(KernelArgument&)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
@@ -394,7 +396,7 @@ KernelArgument CudaCore::downloadArgument(const size_t) const
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
-void CudaCore::downloadArgument(const size_t, void*) const
+void CudaCore::downloadArgument(const size_t, void*, const size_t) const
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
@@ -414,8 +416,7 @@ void CudaCore::clearBuffers(const ArgumentAccessType&)
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
-KernelRunResult CudaCore::runKernel(const std::string&, const std::string&, const std::vector<size_t>&, const std::vector<size_t>&,
-    const std::vector<const KernelArgument*>&)
+KernelRunResult CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<ArgumentOutputDescriptor>&)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }

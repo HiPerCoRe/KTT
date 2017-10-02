@@ -47,4 +47,9 @@ const KernelArgument& ArgumentManager::getArgument(const size_t id) const
     return arguments.at(id);
 }
 
+KernelArgument& ArgumentManager::getArgument(const size_t id)
+{
+    return const_cast<KernelArgument&>(static_cast<const ArgumentManager*>(this)->getArgument(id));
+}
+
 } // namespace ktt

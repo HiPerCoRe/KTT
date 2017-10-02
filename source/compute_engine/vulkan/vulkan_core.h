@@ -44,17 +44,17 @@ public:
     void setCompilerOptions(const std::string& options) override;
 
     // Argument handling methods
-    void uploadArgument(const KernelArgument& kernelArgument) override;
+    void uploadArgument(KernelArgument& kernelArgument) override;
     void updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes) override;
     KernelArgument downloadArgument(const size_t argumentId) const override;
-    void downloadArgument(const size_t argumentId, void* destination) const override;
+    void downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const override;
     void clearBuffer(const size_t argumentId) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType& accessType) override;
 
     // High-level kernel execution methods
-    KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) override;
+    KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+        const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
 private:
     // Attributes
@@ -90,17 +90,17 @@ public:
     void setCompilerOptions(const std::string& options) override;
 
     // Argument handling methods
-    void uploadArgument(const KernelArgument& kernelArgument) override;
+    void uploadArgument(KernelArgument& kernelArgument) override;
     void updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes) override;
     KernelArgument downloadArgument(const size_t argumentId) const override;
-    void downloadArgument(const size_t argumentId, void* destination) const override;
+    void downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const override;
     void clearBuffer(const size_t argumentId) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType& accessType) override;
 
     // High-level kernel execution methods
-    KernelRunResult runKernel(const std::string& source, const std::string& kernelName, const std::vector<size_t>& globalSize,
-        const std::vector<size_t>& localSize, const std::vector<const KernelArgument*>& argumentPointers) override;
+    KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+        const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 };
 
 #endif // PLATFORM_VULKAN

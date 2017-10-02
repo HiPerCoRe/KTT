@@ -34,7 +34,7 @@ public:
     // Core methods
     void addKernel(const size_t id, const KernelRuntimeData& kernelRuntimeData);
     void setConfiguration(const KernelConfiguration& kernelConfiguration);
-    void setKernelArguments(const std::vector<const KernelArgument*>& kernelArguments);
+    void setKernelArguments(const std::vector<KernelArgument*>& kernelArguments);
     void uploadBuffers();
     KernelRunResult getCurrentResult() const;
     void clearData();
@@ -45,11 +45,11 @@ private:
     KernelRunResult currentResult;
     KernelConfiguration currentConfiguration;
     std::map<size_t, KernelRuntimeData> kernelDataMap;
-    std::map<size_t, const KernelArgument*> vectorArgumentMap;
+    std::map<size_t, KernelArgument*> vectorArgumentMap;
     std::map<size_t, KernelArgument> nonVectorArgumentMap;
 
     // Helper methods
-    std::vector<const KernelArgument*> getArgumentPointers(const std::vector<size_t>& argumentIndices);
+    std::vector<KernelArgument*> getArgumentPointers(const std::vector<size_t>& argumentIndices);
     void updateArgumentHost(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
         const ArgumentUploadType& argumentUploadType);
     void updateArgumentDevice(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes);
