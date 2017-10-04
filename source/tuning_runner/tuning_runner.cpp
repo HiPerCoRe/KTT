@@ -95,7 +95,8 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     return results;
 }
 
-void TuningRunner::runKernelPublic(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration)
+void TuningRunner::runKernelPublic(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
+    const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
     if (kernelId >= kernelManager->getKernelCount())
     {

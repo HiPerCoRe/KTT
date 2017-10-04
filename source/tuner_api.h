@@ -112,7 +112,8 @@ public:
 
     // Kernel launch and tuning methods
     void tuneKernel(const size_t kernelId);
-    void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration);
+    void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
+        const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
 
     // Result retrieval methods
     void setPrintingTimeUnit(const TimeUnit& timeUnit);

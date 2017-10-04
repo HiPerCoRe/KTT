@@ -40,7 +40,8 @@ public:
 
     // Tuning runner methods
     void tuneKernel(const size_t kernelId);
-    void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration);
+    void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
+        const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
     void setValidationRange(const size_t argumentId, const size_t validationRange);
     void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,

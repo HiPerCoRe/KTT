@@ -50,15 +50,17 @@ Currently supported operating systems are Linux and Windows.
     - C++14 compiler, for example Clang 3.4, GCC 5.0, MSVC 19.0 (Visual Studio 2015) or newer
     - OpenCL or CUDA library, supported SDKs are AMD APP SDK, Intel SDK for OpenCL and NVIDIA CUDA Toolkit
     - [Premake 5](https://premake.github.io/download.html) (alpha 12 or newer)
-
+    
 * Build under Linux (inside KTT root folder):
+    - ensure that path to vendor SDK is correctly set in the environment variables
     - run `premake5 gmake` to generate makefile
     - run `cd build` to get inside build directory
-    - afterwards run `make config=release` to build the project
+    - afterwards run `make config={configuration}_{architecture}` to build the project (eg. `make config=release_x64`)
     
 * Build under Windows (inside KTT root folder):
+    - ensure that path to vendor SDK is correctly set in the environment variables, this should be done automatically during SDK installation
     - run `premake5.exe vs2015` (or `premake5.exe vs2017`) to generate Visual Studio project files
-    - open generated .sln file and build the project inside Visual Studio
+    - open generated solution file and build the project inside Visual Studio
 
 * Following build options are available:
     - `--outdir=path` specifies custom build directory, default build directory is `build`

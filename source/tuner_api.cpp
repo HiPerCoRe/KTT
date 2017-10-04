@@ -171,11 +171,12 @@ void Tuner::tuneKernel(const size_t kernelId)
     }
 }
 
-void Tuner::runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration)
+void Tuner::runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
+    const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
     try
     {
-        tunerCore->runKernel(kernelId, kernelConfiguration);
+        tunerCore->runKernel(kernelId, kernelConfiguration, outputDescriptors);
     }
     catch (const std::runtime_error& error)
     {

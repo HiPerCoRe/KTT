@@ -102,9 +102,10 @@ void TunerCore::tuneKernel(const size_t kernelId)
     resultPrinter.setResult(kernelId, results);
 }
 
-void TunerCore::runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration)
+void TunerCore::runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
+    const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-    tuningRunner->runKernelPublic(kernelId, kernelConfiguration);
+    tuningRunner->runKernelPublic(kernelId, kernelConfiguration, outputDescriptors);
 }
 
 void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
