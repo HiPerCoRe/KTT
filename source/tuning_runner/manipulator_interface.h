@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "ktt_type_aliases.h"
-#include "api/result_argument.h"
 
 namespace ktt
 {
@@ -29,7 +28,8 @@ public:
     virtual void updateArgumentLocal(const size_t argumentId, const size_t numberOfElements) = 0;
     virtual void updateArgumentVector(const size_t argumentId, const void* argumentData) = 0;
     virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements) = 0;
-    virtual ResultArgument getArgumentVector(const size_t argumentId) = 0;
+    virtual void getArgumentVector(const size_t argumentId, void* destination) const = 0;
+    virtual void getArgumentVector(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const = 0;
 
     // Kernel argument handling methods
     virtual void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds) = 0;

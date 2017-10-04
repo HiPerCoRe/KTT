@@ -43,6 +43,9 @@
 #include "api/device_info.h"
 #include "api/platform_info.h"
 
+// Description of kernel output
+#include "api/argument_output_descriptor.h"
+
 // Reference class interface
 #include "api/reference_class.h"
 

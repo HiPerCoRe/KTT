@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "ktt_type_aliases.h"
-#include "api/result_argument.h"
 #include "enum/thread_size_usage.h"
 
 namespace ktt
@@ -49,7 +48,8 @@ public:
     void updateArgumentLocal(const size_t argumentId, const size_t numberOfElements);
     void updateArgumentVector(const size_t argumentId, const void* argumentData);
     void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements);
-    ResultArgument getArgumentVector(const size_t argumentId);
+    void getArgumentVector(const size_t argumentId, void* destination) const;
+    void getArgumentVector(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const;
 
     // Kernel argument handling methods
     void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);

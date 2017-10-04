@@ -27,7 +27,8 @@ public:
     void updateArgumentLocal(const size_t argumentId, const size_t numberOfElements) override;
     void updateArgumentVector(const size_t argumentId, const void* argumentData) override;
     void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements) override;
-    ResultArgument getArgumentVector(const size_t argumentId) override;
+    void getArgumentVector(const size_t argumentId, void* destination) const override;
+    void getArgumentVector(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const override;
     void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds) override;
     void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond) override;
 

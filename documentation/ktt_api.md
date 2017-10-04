@@ -277,8 +277,14 @@ Possibly also modifies number of elements inside the argument.
 This method only affects run of `launchComputation()` method under current configuration.
 This method is useful for iterative kernel launches.
 
-* `ResultArgument getArgumentVector(const size_t argumentId)`:
-Retrieves specified vector argument from device buffer.
+* `void getArgumentVector(const size_t argumentId, void* destination) const`:
+Retrieves specified vector argument.
+Destination buffer size needs to be equal or greater than argument size.
+This method is useful for iterative kernel launches.
+
+* `void getArgumentVector(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const`:
+Retrieves part of specified vector argument.
+Destination buffer size needs to be equal or greater than specified data size.
 This method is useful for iterative kernel launches.
 
 * `void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:

@@ -105,17 +105,20 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argum
     updateArgumentDevice(argumentId, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
 }
 
-ResultArgument ManipulatorInterfaceImplementation::getArgumentVector(const size_t argumentId)
+void ManipulatorInterfaceImplementation::getArgumentVector(const size_t argumentId, void* destination) const
 {
-    KernelArgument result = computeEngine->downloadArgument(argumentId);
+    auto argumentPointer = vectorArgumentMap.find(argumentId);
+    if (argumentPointer == vectorArgumentMap.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
+    }
 
-    Timer timer;
-    timer.start();
-    ResultArgument resultArgument(result.getId(), result.getData(), result.getNumberOfElements(), result.getArgumentDataType());
-    timer.stop();
-    currentResult.increaseOverhead(timer.getElapsedTime());
+    getArgumentVector(argumentId, destination, argumentPointer->second->getDataSizeInBytes());
+}
 
-    return resultArgument;
+void ManipulatorInterfaceImplementation::getArgumentVector(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const
+{
+    computeEngine->downloadArgument(argumentId, destination, dataSizeInBytes);
 }
 
 void ManipulatorInterfaceImplementation::changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
