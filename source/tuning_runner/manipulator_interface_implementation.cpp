@@ -91,7 +91,7 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argum
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
     }
 
-    updateArgumentVector(argumentId, argumentData, argumentPointer->second->getNumberOfElements());
+    computeEngine->updateArgument(argumentId, argumentData, argumentPointer->second->getDataSizeInBytes());
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)
@@ -102,18 +102,12 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argum
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
     }
 
-    updateArgumentDevice(argumentId, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+    computeEngine->updateArgument(argumentId, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const size_t argumentId, void* destination) const
 {
-    auto argumentPointer = vectorArgumentMap.find(argumentId);
-    if (argumentPointer == vectorArgumentMap.end())
-    {
-        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
-    }
-
-    getArgumentVector(argumentId, destination, argumentPointer->second->getDataSizeInBytes());
+    computeEngine->downloadArgument(argumentId, destination);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const
@@ -206,6 +200,21 @@ void ManipulatorInterfaceImplementation::uploadBuffers()
     }
 }
 
+void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const
+{
+    for (const auto& descriptor : outputDescriptors)
+    {
+        if (descriptor.getOutputSizeInBytes() == 0)
+        {
+            computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
+        }
+        else
+        {
+            computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+        }
+    }
+}
+
 void ManipulatorInterfaceImplementation::clearData()
 {
     kernelDataMap.clear();
@@ -275,11 +284,6 @@ void ManipulatorInterfaceImplementation::updateArgumentHost(const size_t argumen
 
     nonVectorArgumentMap.erase(argumentId);
     nonVectorArgumentMap.insert(std::make_pair(argumentId, updatedArgument));
-}
-
-void ManipulatorInterfaceImplementation::updateArgumentDevice(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes)
-{
-    computeEngine->updateArgument(argumentId, argumentData, dataSizeInBytes);
 }
 
 } // namespace ktt

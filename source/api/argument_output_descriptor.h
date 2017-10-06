@@ -19,6 +19,7 @@ namespace ktt
 class KTT_API ArgumentOutputDescriptor
 {
 public:
+    explicit ArgumentOutputDescriptor(const size_t argumentId, void* outputDestination);
     explicit ArgumentOutputDescriptor(const size_t argumentId, void* outputDestination, const size_t outputSizeInBytes);
 
     size_t getArgumentId() const;

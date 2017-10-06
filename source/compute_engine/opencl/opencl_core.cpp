@@ -106,49 +106,53 @@ void OpenclCore::uploadArgument(KernelArgument& kernelArgument)
 
 void OpenclCore::updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes)
 {
-    for (const auto& buffer : buffers)
+    OpenclBuffer* buffer = findBuffer(argumentId);
+
+    if (buffer == nullptr)
     {
-        if (buffer->getKernelArgumentId() == argumentId)
-        {
-            buffer->uploadData(commandQueue->getQueue(), data, dataSizeInBytes);
-            return;
-        }
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
     }
-    throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
+
+    buffer->uploadData(commandQueue->getQueue(), data, dataSizeInBytes);
 }
 
 KernelArgument OpenclCore::downloadArgument(const size_t argumentId) const
 {
-    for (const auto& buffer : buffers)
-    {
-        if (buffer->getKernelArgumentId() != argumentId)
-        {
-            continue;
-        }
+    OpenclBuffer* buffer = findBuffer(argumentId);
 
-        KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
-            buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
-        buffer->downloadData(commandQueue->getQueue(), argument.getData(), argument.getDataSizeInBytes());
-        return argument;
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
     }
 
-    throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+    KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
+        buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
+    buffer->downloadData(commandQueue->getQueue(), argument.getData(), argument.getDataSizeInBytes());
+    return argument;
+}
+
+void OpenclCore::downloadArgument(const size_t argumentId, void* destination) const
+{
+    OpenclBuffer* buffer = findBuffer(argumentId);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
+    }
+
+    buffer->downloadData(commandQueue->getQueue(), destination, buffer->getBufferSize());
 }
 
 void OpenclCore::downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const
 {
-    for (const auto& buffer : buffers)
-    {
-        if (buffer->getKernelArgumentId() != argumentId)
-        {
-            continue;
-        }
+    OpenclBuffer* buffer = findBuffer(argumentId);
 
-        buffer->downloadData(commandQueue->getQueue(), destination, dataSizeInBytes);
-        return;
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
     }
 
-    throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+    buffer->downloadData(commandQueue->getQueue(), destination, dataSizeInBytes);
 }
 
 void OpenclCore::clearBuffer(const size_t argumentId)
@@ -210,7 +214,14 @@ KernelRunResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const
 
     for (const auto& descriptor : outputDescriptors)
     {
-        downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+        if (descriptor.getOutputSizeInBytes() == 0)
+        {
+            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
+        }
+        else
+        {
+            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+        }
     }
 
     return KernelRunResult(static_cast<uint64_t>(duration), overhead);
@@ -233,7 +244,7 @@ void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argumen
             loadBufferFromCache(argument.getId(), kernel);
         }
     }
-    else if(argument.getArgumentUploadType() == ArgumentUploadType::Scalar)
+    else if (argument.getArgumentUploadType() == ArgumentUploadType::Scalar)
     {
         kernel.setKernelArgumentScalar(argument.getData(), argument.getElementSizeInBytes());
     }
@@ -370,6 +381,19 @@ DeviceType OpenclCore::getDeviceType(const cl_device_type deviceType)
     }
 }
 
+OpenclBuffer* OpenclCore::findBuffer(const size_t argumentId) const
+{
+    for (const auto& buffer : buffers)
+    {
+        if (buffer->getKernelArgumentId() == argumentId)
+        {
+            return buffer.get();
+        }
+    }
+
+    return nullptr;
+}
+
 void OpenclCore::setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffer& buffer) const
 {
     cl_mem clBuffer = buffer.getBuffer();
@@ -378,14 +402,14 @@ void OpenclCore::setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffe
 
 bool OpenclCore::loadBufferFromCache(const size_t argumentId, OpenclKernel& kernel) const
 {
-    for (const auto& buffer : buffers)
+    OpenclBuffer* buffer = findBuffer(argumentId);
+
+    if (buffer != nullptr)
     {
-        if (buffer->getKernelArgumentId() == argumentId)
-        {
-            setKernelArgumentVector(kernel, *buffer);
-            return true;
-        }
+        setKernelArgumentVector(kernel, *buffer);
+        return true;
     }
+
     return false;
 }
 

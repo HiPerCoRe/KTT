@@ -31,6 +31,7 @@ public:
     virtual void uploadArgument(KernelArgument& kernelArgument) = 0;
     virtual void updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes) = 0;
     virtual KernelArgument downloadArgument(const size_t argumentId) const = 0;
+    virtual void downloadArgument(const size_t argumentId, void* destination) const = 0;
     virtual void downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const = 0;
     virtual void clearBuffer(const size_t argumentId) = 0;
     virtual void clearBuffers() = 0;

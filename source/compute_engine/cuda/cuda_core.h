@@ -48,6 +48,7 @@ public:
     void uploadArgument(KernelArgument& kernelArgument) override;
     void updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes) override;
     KernelArgument downloadArgument(const size_t argumentId) const override;
+    void downloadArgument(const size_t argumentId, void* destination) const override;
     void downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const override;
     void clearBuffer(const size_t argumentId) override;
     void clearBuffers() override;
@@ -100,6 +101,7 @@ public:
     void uploadArgument(KernelArgument& kernelArgument) override;
     void updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes) override;
     KernelArgument downloadArgument(const size_t argumentId) const override;
+    void downloadArgument(const size_t argumentId, void* destination) const override;
     void downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const override;
     void clearBuffer(const size_t argumentId) override;
     void clearBuffers() override;

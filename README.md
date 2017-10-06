@@ -55,7 +55,7 @@ Currently supported operating systems are Linux and Windows.
     - ensure that path to vendor SDK is correctly set in the environment variables
     - run `premake5 gmake` to generate makefile
     - run `cd build` to get inside build directory
-    - afterwards run `make config={configuration}_{architecture}` to build the project (eg. `make config=release_x64`)
+    - afterwards run `make config={configuration}_{architecture}` to build the project (eg. `make config=release_x86_64`)
     
 * Build under Windows (inside KTT root folder):
     - ensure that path to vendor SDK is correctly set in the environment variables, this should be done automatically during SDK installation

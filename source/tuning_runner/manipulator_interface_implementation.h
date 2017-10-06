@@ -37,6 +37,7 @@ public:
     void setConfiguration(const KernelConfiguration& kernelConfiguration);
     void setKernelArguments(const std::vector<KernelArgument*>& kernelArguments);
     void uploadBuffers();
+    void downloadBuffers(const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const;
     KernelRunResult getCurrentResult() const;
     void clearData();
 
@@ -53,7 +54,6 @@ private:
     std::vector<KernelArgument*> getArgumentPointers(const std::vector<size_t>& argumentIndices);
     void updateArgumentHost(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
         const ArgumentUploadType& argumentUploadType);
-    void updateArgumentDevice(const size_t argumentId, const void* argumentData, const size_t dataSizeInBytes);
 };
 
 } // namespace ktt

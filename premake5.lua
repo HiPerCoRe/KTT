@@ -193,7 +193,13 @@ workspace "ktt"
     location (buildPath)
     language "C++"
     cppdialect "C++14"
-    
+
+    if os.is64bit() then
+        defaultplatform "x86_64"
+    else
+        defaultplatform "x86"
+    end
+
     filter "platforms:x86"
         architecture "x86"
     
