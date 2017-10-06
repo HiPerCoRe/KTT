@@ -17,7 +17,7 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
     }
     else if (computeApi == ComputeApi::Cuda)
     {
-        computeEngine = std::make_unique<CudaCore>(deviceIndex);
+        computeEngine = std::make_unique<CudaCore>(deviceIndex, runMode);
         kernelManager->setGlobalSizeType(GlobalSizeType::Cuda);
         resultPrinter.setGlobalSizeType(GlobalSizeType::Cuda);
     }

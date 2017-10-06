@@ -128,6 +128,7 @@ KernelArgument OpenclCore::downloadArgument(const size_t argumentId) const
     KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
         buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
     buffer->downloadData(commandQueue->getQueue(), argument.getData(), argument.getDataSizeInBytes());
+    
     return argument;
 }
 

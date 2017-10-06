@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -8,6 +9,7 @@
 #include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
 #include "enum/argument_memory_location.h"
+#include "kernel_argument/kernel_argument.h"
 
 namespace ktt
 {
@@ -15,14 +17,15 @@ namespace ktt
 class CudaBuffer
 {
 public:
-    explicit CudaBuffer(const size_t kernelArgumentId, const size_t bufferSize, const size_t elementSize, const ArgumentDataType& dataType,
-        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType) :
-        kernelArgumentId(kernelArgumentId),
-        bufferSize(bufferSize),
-        elementSize(elementSize),
-        dataType(dataType),
-        memoryLocation(memoryLocation),
-        accessType(accessType)
+    explicit CudaBuffer(KernelArgument& kernelArgument, const bool zeroCopy) :
+        kernelArgumentId(kernelArgument.getId()),
+        bufferSize(kernelArgument.getDataSizeInBytes()),
+        elementSize(kernelArgument.getElementSizeInBytes()),
+        dataType(kernelArgument.getArgumentDataType()),
+        memoryLocation(kernelArgument.getArgumentMemoryLocation()),
+        accessType(kernelArgument.getArgumentAccessType()),
+        hostBufferRaw(nullptr),
+        zeroCopy(zeroCopy)
     {
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
@@ -30,7 +33,15 @@ public:
         }
         else
         {
-            checkCudaError(cuMemAllocHost(&hostBufferRaw, bufferSize), "cuMemAllocHost");
+            if (zeroCopy)
+            {
+                hostBufferRaw = kernelArgument.getData();
+                checkCudaError(cuMemHostRegister(hostBufferRaw, bufferSize, CU_MEMHOSTREGISTER_DEVICEMAP), "cuMemHostRegister");
+            }
+            else
+            {
+                checkCudaError(cuMemAllocHost(&hostBufferRaw, bufferSize), "cuMemAllocHost");
+            }
             checkCudaError(cuMemHostGetDevicePointer(&hostBuffer, hostBufferRaw, 0), "cuMemHostGetDevicePointer");
         }
     }
@@ -43,12 +54,24 @@ public:
         }
         else
         {
-            checkCudaError(cuMemFreeHost(hostBufferRaw), "cuMemFreeHost");
+            if (zeroCopy)
+            {
+                checkCudaError(cuMemHostUnregister(hostBufferRaw), "cuMemHostUnregister");
+            }
+            else
+            {
+                checkCudaError(cuMemFreeHost(hostBufferRaw), "cuMemFreeHost");
+            }
         }
     }
 
     void resize(const size_t newBufferSize)
     {
+        if (zeroCopy)
+        {
+            throw std::runtime_error("Cannot resize registered host buffer");
+        }
+
         if (bufferSize == newBufferSize)
         {
             return;
@@ -166,6 +189,7 @@ private:
     CUdeviceptr deviceBuffer;
     CUdeviceptr hostBuffer;
     void* hostBufferRaw;
+    bool zeroCopy;
 };
 
 } // namespace ktt

@@ -8,9 +8,10 @@ namespace ktt
 
 #ifdef PLATFORM_CUDA
 
-CudaCore::CudaCore(const size_t deviceIndex) :
+CudaCore::CudaCore(const size_t deviceIndex, const RunMode& runMode) :
     deviceIndex(deviceIndex),
-    compilerOptions(std::string(""))
+    compilerOptions(std::string("")),
+    runMode(runMode)
 {
     checkCudaError(cuInit(0), "cuInit");
 
@@ -80,72 +81,70 @@ void CudaCore::uploadArgument(KernelArgument& kernelArgument)
     
     clearBuffer(kernelArgument.getId());
 
-    std::unique_ptr<CudaBuffer> buffer = createBuffer(kernelArgument);
-    buffer->uploadData(kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
+    bool zeroCopy = false;
+    if (runMode == RunMode::Computation && kernelArgument.getArgumentMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+    {
+        zeroCopy = true;
+    }
+
+    std::unique_ptr<CudaBuffer> buffer = std::make_unique<CudaBuffer>(kernelArgument, zeroCopy);
+    if (!zeroCopy)
+    {
+        buffer->uploadData(kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
+    }
     buffers.insert(std::move(buffer)); // buffer data will be stolen
 }
 
 void CudaCore::updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes)
 {
-    for (const auto& buffer : buffers)
+    CudaBuffer* buffer = findBuffer(argumentId);
+
+    if (buffer == nullptr)
     {
-        if (buffer->getKernelArgumentId() == argumentId)
-        {
-            buffer->uploadData(data, dataSizeInBytes);
-            return;
-        }
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
     }
-    throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
+
+    buffer->uploadData(data, dataSizeInBytes);
 }
 
 KernelArgument CudaCore::downloadArgument(const size_t argumentId) const
 {
-    for (const auto& buffer : buffers)
-    {
-        if (buffer->getKernelArgumentId() != argumentId)
-        {
-            continue;
-        }
+    CudaBuffer* buffer = findBuffer(argumentId);
 
-        KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
-            buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
-        buffer->downloadData(argument.getData(), argument.getDataSizeInBytes());
-        return argument;
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
     }
 
-    throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+    KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
+        buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
+    buffer->downloadData(argument.getData(), argument.getDataSizeInBytes());
+    
+    return argument;
 }
 
 void CudaCore::downloadArgument(const size_t argumentId, void* destination) const
 {
-    for (const auto& buffer : buffers)
-    {
-        if (buffer->getKernelArgumentId() != argumentId)
-        {
-            continue;
-        }
+    CudaBuffer* buffer = findBuffer(argumentId);
 
-        buffer->downloadData(destination, buffer->getBufferSize());
-        return;
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
     }
 
-    throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+    buffer->downloadData(destination, buffer->getBufferSize());
 }
 
 void CudaCore::downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const
 {
-    for (const auto& buffer : buffers)
-    {
-        if (buffer->getKernelArgumentId() != argumentId)
-        {
-            continue;
-        }
+    CudaBuffer* buffer = findBuffer(argumentId);
 
-        buffer->downloadData(destination, dataSizeInBytes);
-        return;
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
     }
 
-    throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
+    buffer->downloadData(destination, dataSizeInBytes);
 }
 
 void CudaCore::clearBuffer(const size_t argumentId)
@@ -202,6 +201,19 @@ KernelRunResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const s
 
     timer.stop();
     uint64_t overhead = timer.getElapsedTime();
+
+    for (const auto& descriptor : outputDescriptors)
+    {
+        if (descriptor.getOutputSizeInBytes() == 0)
+        {
+            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
+        }
+        else
+        {
+            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+        }
+    }
+
     return KernelRunResult(static_cast<uint64_t>(duration), overhead);
 }
 
@@ -210,13 +222,6 @@ std::unique_ptr<CudaProgram> CudaCore::createAndBuildProgram(const std::string& 
     auto program = std::make_unique<CudaProgram>(source);
     program->build(compilerOptions);
     return program;
-}
-
-std::unique_ptr<CudaBuffer> CudaCore::createBuffer(const KernelArgument& argument) const
-{
-    auto buffer = std::make_unique<CudaBuffer>(argument.getId(), argument.getDataSizeInBytes(), argument.getElementSizeInBytes(),
-        argument.getArgumentDataType(), argument.getArgumentMemoryLocation(), argument.getArgumentAccessType());
-    return buffer;
 }
 
 std::unique_ptr<CudaEvent> CudaCore::createEvent() const
@@ -353,21 +358,34 @@ size_t CudaCore::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& 
     return result;
 }
 
-CUdeviceptr* CudaCore::loadBufferFromCache(const size_t argumentId) const
+CudaBuffer* CudaCore::findBuffer(const size_t argumentId) const
 {
     for (const auto& buffer : buffers)
     {
         if (buffer->getKernelArgumentId() == argumentId)
         {
-            return buffer->getBuffer();
+            return buffer.get();
         }
     }
+
+    return nullptr;
+}
+
+CUdeviceptr* CudaCore::loadBufferFromCache(const size_t argumentId) const
+{
+    CudaBuffer* buffer = findBuffer(argumentId);
+
+    if (buffer != nullptr)
+    {
+        return buffer->getBuffer();
+    }
+
     return nullptr;
 }
 
 #else
 
-CudaCore::CudaCore(const size_t)
+CudaCore::CudaCore(const size_t, const RunMode&)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }

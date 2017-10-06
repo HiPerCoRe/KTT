@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -27,7 +28,8 @@ public:
         memoryLocation(kernelArgument.getArgumentMemoryLocation()),
         accessType(kernelArgument.getArgumentAccessType()),
         openclMemoryFlag(getOpenclMemoryType(accessType)),
-        hostPointer(nullptr)
+        hostPointer(nullptr),
+        zeroCopy(zeroCopy)
     {
         if (memoryLocation == ArgumentMemoryLocation::Host)
         {
@@ -54,6 +56,11 @@ public:
 
     void resize(const size_t newBufferSize)
     {
+        if (zeroCopy)
+        {
+            throw std::runtime_error("Cannot resize buffer with CL_MEM_USE_HOST_PTR flag");
+        }
+
         if (bufferSize == newBufferSize)
         {
             return;
@@ -169,6 +176,7 @@ private:
     cl_mem_flags openclMemoryFlag;
     cl_mem buffer;
     void* hostPointer;
+    bool zeroCopy;
 };
 
 } // namespace ktt

@@ -22,6 +22,7 @@
 
 #include "compute_engine/compute_engine.h"
 #include "dto/kernel_run_result.h"
+#include "enum/run_mode.h"
 #include "kernel_argument/kernel_argument.h"
 
 namespace ktt
@@ -33,7 +34,7 @@ class CudaCore : public ComputeEngine
 {
 public:
     // Constructor
-    explicit CudaCore(const size_t deviceIndex);
+    explicit CudaCore(const size_t deviceIndex, const RunMode& runMode);
 
     // Platform and device retrieval methods
     void printComputeApiInfo(std::ostream& outputTarget) const override;
@@ -60,7 +61,6 @@ public:
 
     // Low-level kernel execution methods
     std::unique_ptr<CudaProgram> createAndBuildProgram(const std::string& source) const;
-    std::unique_ptr<CudaBuffer> createBuffer(const KernelArgument& argument) const;
     std::unique_ptr<CudaEvent> createEvent() const;
     std::unique_ptr<CudaKernel> createKernel(const CudaProgram& program, const std::string& kernelName) const;
     float enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
@@ -72,11 +72,13 @@ private:
     std::unique_ptr<CudaStream> stream;
     std::string compilerOptions;
     std::set<std::unique_ptr<CudaBuffer>> buffers;
+    RunMode runMode;
 
     DeviceInfo getCudaDeviceInfo(const size_t deviceIndex) const;
     std::vector<CudaDevice> getCudaDevices() const;
     std::vector<CUdeviceptr*> getKernelArguments(const std::vector<KernelArgument*>& argumentPointers);
     size_t getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& argumentPointers) const;
+    CudaBuffer* findBuffer(const size_t argumentId) const;
     CUdeviceptr* loadBufferFromCache(const size_t argumentId) const;
 };
 
@@ -86,7 +88,7 @@ class CudaCore : public ComputeEngine
 {
 public:
     // Constructor
-    explicit CudaCore(const size_t deviceIndex);
+    explicit CudaCore(const size_t deviceIndex, const RunMode& runMode);
 
     // Platform and device retrieval methods
     void printComputeApiInfo(std::ostream& outputTarget) const override;
