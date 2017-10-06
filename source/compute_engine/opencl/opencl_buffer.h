@@ -18,7 +18,7 @@ namespace ktt
 class OpenclBuffer
 {
 public:
-    explicit OpenclBuffer(const cl_context context, KernelArgument& kernelArgument, const bool copyArgumentData) :
+    explicit OpenclBuffer(const cl_context context, KernelArgument& kernelArgument, const bool zeroCopy) :
         context(context),
         kernelArgumentId(kernelArgument.getId()),
         bufferSize(kernelArgument.getDataSizeInBytes()),
@@ -31,7 +31,7 @@ public:
     {
         if (memoryLocation == ArgumentMemoryLocation::Host)
         {
-            if (copyArgumentData)
+            if (!zeroCopy)
             {
                 openclMemoryFlag = openclMemoryFlag | CL_MEM_ALLOC_HOST_PTR;
             }

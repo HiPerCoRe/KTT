@@ -7,13 +7,26 @@ Constructors
 ------------
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex)`:
-Creates new tuner object for specified platform and device using OpenCL as compute API.
+Creates new tuner object for specified platform and device.
+Tuner uses OpenCL as compute API and operates in tuning mode.
 Indices for all available platforms and devices can be retrieved by calling `printComputeApiInfo()` method.
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi)`:
-Creates new tuner object for specified platform, device and compute API.
+Similar to previous constructor, but also allows choice of compute API.
 If selected compute API is Nvidia CUDA, platform index is ignored.
-Indices for all available platforms and devices can be retrieved by calling `printComputeApiInfo()` method.
+
+* `Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const RunMode& runMode)`:
+Similar to previous constructor, but also allows choice of run mode.
+Two different run modes are supported.
+
+In tuning mode, all kernel arguments are copied inside tuner when argument addition methods are called.
+Additionally, extra argument copies are created for each kernel launch under different configuration.
+It is possible to perform output validation.
+
+In computation mode, tuner directly uses buffers provided by client application.
+It is furthermore possible to perform argument zero-copy by using appropriate argument flags, which results in output
+data being written directly to client buffers.
+Output validation is disabled and calling any method related to validation will result in an exception.
 
 Compute API methods
 -------------------
@@ -23,7 +36,7 @@ Sets compute API compiler options to specified options.
 Individual options have to be separated by a single space character.
 
 * `void printComputeApiInfo(std::ostream& outputTarget)`:
-Prints basic information about available platforms and devices, including indices assigned by KTT framework, to specified output stream.
+Prints basic information about available platforms and devices, including indices assigned by tuner, to specified output stream.
 
 * `std::vector<PlatformInfo> getPlatformInfo()`:
 Retrieves list of objects containing detailed information about all available platforms (such as platform name, vendor, list of extensions, etc.).
@@ -44,12 +57,11 @@ Adds new kernel to tuner from source inside string. Requires specification of ke
 Returns id assigned to kernel by tuner.
 
 * `size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize)`:
-Adds new kernel to tuner from source inside file. Requires specification of kernel name (matching the one inside kernel source) and default global / local thread sizes.
-Returns id assigned to kernel by tuner.
+Similar to previous method, but loads kernel source from a file.
 
 * `void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)`:
-Sets kernel arguments for specified kernel by providing corresponding argument ids (returned by argument addition methods).
-Different kernels can have same arguments assigned (copies of arguments for each kernel will be made during the tuning process).
+Sets kernel arguments for specified kernel by providing corresponding argument ids returned by argument addition methods.
+Different kernels can have same arguments assigned. Copies of arguments for each kernel will be made during the tuning process.
 Argument ids must be specified in order of their declaration inside kernel source.
 Argument ids must be unique.
 
@@ -97,12 +109,19 @@ Specialized method can, for example, run part of the computation directly in C++
 Argument handling methods
 -------------------------
 
-* `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType)`:
+* `size_t addArgument(const std::vector<T>& data, const ArgumentAccessType& accessType)`:
 Adds new vector argument to tuner.
-Argument memory location specifies whether argument is stored in device or host memory.
+During usage, argument will be copied to device memory.
 Argument access type specifies whether argument is used for input or output (or both).
 Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
+
+* `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType)`:
+Similar to previous method, but also allows choice of argument memory location.
+Argument memory location specifies whether argument will be copied to device or host memory during its usage.
+If `ArgumentMemoryLocation::HostZeroCopy` is selected and tuner is in computation mode, client buffer will be used
+directly for input and output. In certain scenarios, this will prevent any argument copies from being made.
+In tuning mode, this flag acts in the same way as `ArgumentMemoryLocation::Host`.
 
 * `size_t addArgument(const T& value)`:
 Adds new scalar argument to tuner. All scalar arguments are read-only.
@@ -126,9 +145,12 @@ Kernel launch and tuning methods
 * `void tuneKernel(const size_t kernelId)`:
 Starts the tuning process for specified kernel.
 
-* `void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration)`:
+* `void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration, const std::vector<ArgumentOutputDescriptor>& outputDescriptors)`:
 Runs specified kernel using provided configuration.
-Kernel output can be retrieved by using tuning manipulator.
+Output arguments can be retrieved by providing output descriptors.
+Each output descriptor contains id of an argument to be retrieved, memory location where data will be written and optionally
+size of the data if only part of an argument needs to be retrieved.
+Target memory location's size has to be equal or greater than size of retrieved data.
 No result validation is performed.
 
 Result retrieval methods

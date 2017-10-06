@@ -6,7 +6,8 @@ namespace ktt
 enum class ArgumentMemoryLocation
 {
     Device,
-    Host
+    Host,
+    HostZeroCopy
 };
 
 } // namespace ktt

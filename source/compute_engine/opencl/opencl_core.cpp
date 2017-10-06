@@ -90,14 +90,14 @@ void OpenclCore::uploadArgument(KernelArgument& kernelArgument)
     }
     clearBuffer(kernelArgument.getId());
 
-    bool copyArgumentData = true;
-    if (runMode == RunMode::Computation)
+    bool zeroCopy = false;
+    if (runMode == RunMode::Computation && kernelArgument.getArgumentMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
     {
-        copyArgumentData = false;
+        zeroCopy = true;
     }
 
-    std::unique_ptr<OpenclBuffer> buffer = std::make_unique<OpenclBuffer>(context->getContext(), kernelArgument, copyArgumentData);
-    if (copyArgumentData)
+    std::unique_ptr<OpenclBuffer> buffer = std::make_unique<OpenclBuffer>(context->getContext(), kernelArgument, zeroCopy);
+    if (!zeroCopy)
     {
         buffer->uploadData(commandQueue->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
     }
