@@ -15,6 +15,18 @@ KernelRuntimeData::KernelRuntimeData(const std::string& name, const std::string&
     argumentIndices(argumentIndices)
 {}
 
+void KernelRuntimeData::setGlobalSize(const DimensionVector& globalSize)
+{
+    this->globalSizeDimensionVector = globalSize;
+    this->globalSize = convertDimensionVector(globalSize);
+}
+
+void KernelRuntimeData::setLocalSize(const DimensionVector& localSize)
+{
+    this->localSizeDimensionVector = localSize;
+    this->localSize = convertDimensionVector(localSize);
+}
+
 void KernelRuntimeData::setArgumentIndices(const std::vector<size_t>& argumentIndices)
 {
     this->argumentIndices = argumentIndices;

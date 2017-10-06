@@ -15,6 +15,8 @@ public:
     KernelRuntimeData(const std::string& name, const std::string& source, const DimensionVector& globalSize, const DimensionVector& localSize,
         const std::vector<size_t>& argumentIndices);
 
+    void setGlobalSize(const DimensionVector& globalSize);
+    void setLocalSize(const DimensionVector& localSize);
     void setArgumentIndices(const std::vector<size_t>& argumentIndices);
 
     std::string getName() const;

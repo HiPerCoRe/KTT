@@ -37,7 +37,10 @@ void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId, const 
         throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
             + " was called inside tuning manipulator which did not advertise utilization of this kernel");
     }
+
     KernelRuntimeData kernelData = dataPointer->second;
+    kernelData.setGlobalSize(globalSize);
+    kernelData.setLocalSize(localSize);
 
     KernelRunResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIndices()), {});
     currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead());
