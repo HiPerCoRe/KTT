@@ -92,6 +92,11 @@ public:
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Argument handling methods
+    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentAccessType& accessType)
+    {
+        ArgumentDataType dataType = getMatchingArgumentDataType<T>();
+        return addArgument(data.data(), data.size(), dataType, ArgumentMemoryLocation::Device, accessType);
+    }
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryLocation& memoryLocation,
         const ArgumentAccessType& accessType)
     {

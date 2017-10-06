@@ -79,18 +79,18 @@ public:
         referenceKernelId = tuner->addKernelFromFile("../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_reference_kernel.cl", "directCoulombSumReference", ndRangeDimensions, referenceWorkGroupDimensions);
 
         // create input/output in tuner
-        atomInfoId = tuner->addArgument(atomInfo, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoPrecompId = tuner->addArgument(atomInfoPrecomp, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoXId = tuner->addArgument(atomInfoX, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoYId = tuner->addArgument(atomInfoY, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoZId = tuner->addArgument(atomInfoZ, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoZ2Id = tuner->addArgument(atomInfoZ2, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoWId = tuner->addArgument(atomInfoW, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoId = tuner->addArgument(atomInfo, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoPrecompId = tuner->addArgument(atomInfoPrecomp, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoXId = tuner->addArgument(atomInfoX, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoYId = tuner->addArgument(atomInfoY, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoZId = tuner->addArgument(atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoZ2Id = tuner->addArgument(atomInfoZ2, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoWId = tuner->addArgument(atomInfoW, ktt::ArgumentAccessType::ReadOnly);
         numberOfAtomsId = tuner->addArgument(atoms);
         gridSpacingId = tuner->addArgument(gridSpacing);
         int zIndex = 0;
         zIndexId = tuner->addArgument(zIndex);
-        energyGridId = tuner->addArgument(energyGrid, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadWrite);
+        energyGridId = tuner->addArgument(energyGrid, ktt::ArgumentAccessType::ReadWrite);
         tuner->setKernelArguments(kernelId, std::vector<size_t>{ atomInfoPrecompId, atomInfoXId, atomInfoYId, atomInfoZ2Id, atomInfoWId, numberOfAtomsId, gridSpacingId, zIndexId, energyGridId });
         tuner->setKernelArguments(referenceKernelId, std::vector<size_t>{ atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId });
 

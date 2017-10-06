@@ -104,18 +104,18 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, std::string("VECTOR_TYPE"), std::vector<size_t>{ 1, 2, 4, 8, 16 });
 
      // Add all arguments utilized by kernels
-    size_t oldBodyInfoId = tuner.addArgument(oldBodyInfo, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-    size_t oldPosXId = tuner.addArgument(oldPosX, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-    size_t oldPosYId = tuner.addArgument(oldPosY, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-    size_t oldPosZId = tuner.addArgument(oldPosZ, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-    size_t massId = tuner.addArgument(bodyMass, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-    size_t newBodyInfoId = tuner.addArgument(newBodyInfo, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::WriteOnly);
+    size_t oldBodyInfoId = tuner.addArgument(oldBodyInfo, ktt::ArgumentAccessType::ReadOnly);
+    size_t oldPosXId = tuner.addArgument(oldPosX, ktt::ArgumentAccessType::ReadOnly);
+    size_t oldPosYId = tuner.addArgument(oldPosY, ktt::ArgumentAccessType::ReadOnly);
+    size_t oldPosZId = tuner.addArgument(oldPosZ, ktt::ArgumentAccessType::ReadOnly);
+    size_t massId = tuner.addArgument(bodyMass, ktt::ArgumentAccessType::ReadOnly);
+    size_t newBodyInfoId = tuner.addArgument(newBodyInfo, ktt::ArgumentAccessType::WriteOnly);
 
-    size_t oldVelId = tuner.addArgument(oldBodyVel, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-    size_t oldVelXId = tuner.addArgument(oldVelX, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-    size_t oldVelYId = tuner.addArgument(oldVelY, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-    size_t oldVelZId = tuner.addArgument(oldVelZ, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly);
-    size_t newBodyVelId = tuner.addArgument(newBodyVel, ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::WriteOnly);
+    size_t oldVelId = tuner.addArgument(oldBodyVel, ktt::ArgumentAccessType::ReadOnly);
+    size_t oldVelXId = tuner.addArgument(oldVelX, ktt::ArgumentAccessType::ReadOnly);
+    size_t oldVelYId = tuner.addArgument(oldVelY, ktt::ArgumentAccessType::ReadOnly);
+    size_t oldVelZId = tuner.addArgument(oldVelZ, ktt::ArgumentAccessType::ReadOnly);
+    size_t newBodyVelId = tuner.addArgument(newBodyVel, ktt::ArgumentAccessType::WriteOnly);
 
     size_t deltaTimeId = tuner.addArgument(timeDelta);
     size_t dampingId = tuner.addArgument(damping);
