@@ -77,16 +77,11 @@ public:
         const DimensionVector& localSize);
     void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
     void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues);
-    void addParameter(const std::vector<size_t>& kernelIds, const std::string& parameterName, const std::vector<size_t>& parameterValues);
 
     // Advanced kernel handling methods
     void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
         const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
-    void addParameter(const std::vector<size_t>& kernelIds, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-        const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
     void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
-        const std::vector<std::string>& parameterNames);
-    void addConstraint(const std::vector<size_t>& kernelIds, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);

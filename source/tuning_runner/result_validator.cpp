@@ -212,7 +212,7 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel* kernel)
     std::string source = kernelManager->getKernelSourceWithDefines(referenceKernelId, configuration);
 
     logger->log(std::string("Computing reference kernel result for kernel: ") + kernel->getName());
-    auto result = computeEngine->runKernel(KernelRuntimeData(referenceKernel->getName(), source, configuration.getGlobalSize(),
+    auto result = computeEngine->runKernel(KernelRuntimeData(referenceKernelId, referenceKernel->getName(), source, configuration.getGlobalSize(),
         configuration.getLocalSize(), {}), getKernelArgumentPointers(referenceKernelId), {});
     std::vector<KernelArgument> referenceResult;
 

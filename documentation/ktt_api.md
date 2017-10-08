@@ -71,26 +71,16 @@ Argument ids must be unique.
 Adds new parameter for specified kernel, parameter needs to have a unique name and list of valid values.
 During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
 
-* `void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values)`:
-Calls corresponding `addParameter()` method for all specified kernel ids.
-
 Advanced kernel handling methods
 --------------------------------
 
 * `void addParameter(const size_t kernelId, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)`:
-Adds new parameter for specified kernel, parameter needs to have a unique name and list of valid values.
-During the tuning process, parameter definitions will be added to kernel source as `#define PARAMETER_NAME PARAMETER_VALUE`.
-Additionally, parameter value modifies number of threads in either global or local space in specified dimension.
+Similar to previous method, but also allows the parameter to act as thread size modifier.
+Parameter value modifies number of threads in either global or local space in specified dimension.
 Form of modification depends on thread modifier action argument. If there are multiple thread modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
-
-* `void addParameter(const std::vector<size_t>& kernelIds, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)`:
-Calls corresponding `addParameter()` method for all specified kernel ids.
 
 * `void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
 Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
-
-* `void addConstraint(const std::vector<size_t>& kernelIds, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
-Calls corresponding `addConstraint()` method for all specified kernel ids.
 
 * `void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)`:
 Specifies search method for given kernel. Number of required search arguments depends on specified search method.
@@ -255,12 +245,6 @@ Inheriting class must provide implementation for this method. Provided argument 
 This method must, at very least, call `runKernel()` method with provided kernel id as its first argument.
 This method can also call any other methods available in base TuningManipulator class.
 
-* `std::vector<std::pair<size_t, ThreadSizeUsage>> getUtilizedKernelIds() const`:
-Inheriting class must override this method in case it utilizes multiple kernels inside the `launchComputation()` method.
-This method needs to return ids of all additional kernels. Id of the main kernel (specified by calling `setTuningManipulator()` method) does not need to be returned.
-All additional kernels will be launched under the same configuration as main kernel, which means that they need to accept exactly the same parameters.
-It is possible to specify, whether the additional kernels' thread sizes will be affected by the parameters. Main kernel's thread sizes will always be affected.
-
 * `void runKernel(const size_t kernelId)`:
 Launches kernel with specified id, using thread sizes based only on the current configuration.
 Provided kernel id must be either id of main kernel or one of ids returned by `getUtilizedKernelIds()` method.
@@ -330,8 +314,8 @@ If provided vector size is less than 3, fills remaining dimension vector positio
 * `size_t getParameterValue(const std::string& parameterName, const std::vector<ParameterValue>& parameterValues)`:
 Returns value of specified parameter from provided list of parameters.
 
-Tuning manipulator example
---------------------------
+Default tuning manipulator implementation
+-----------------------------------------
 
 Following example shows how default tuning manipulator implementation looks like (no difference in functionality compared to tuning of kernel without using a manipulator):
 ```c++

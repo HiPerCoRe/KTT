@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "ktt_type_aliases.h"
-#include "enum/thread_size_usage.h"
 
 namespace ktt
 {
@@ -32,7 +31,6 @@ public:
     // Virtual methods
     virtual ~TuningManipulator();
     virtual void launchComputation(const size_t kernelId) = 0;
-    virtual std::vector<std::pair<size_t, ThreadSizeUsage>> getUtilizedKernelIds() const;
 
     // Kernel run methods
     void runKernel(const size_t kernelId);

@@ -6,11 +6,6 @@ namespace ktt
 
 TuningManipulator::~TuningManipulator() = default;
 
-std::vector<std::pair<size_t, ThreadSizeUsage>> TuningManipulator::getUtilizedKernelIds() const
-{
-    return std::vector<std::pair<size_t, ThreadSizeUsage>>{};
-}
-
 void TuningManipulator::runKernel(const size_t kernelId)
 {
     manipulatorInterface->runKernel(kernelId);

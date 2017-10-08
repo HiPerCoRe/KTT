@@ -66,14 +66,6 @@ void Tuner::addParameter(const size_t kernelId, const std::string& parameterName
     }
 }
 
-void Tuner::addParameter(const std::vector<size_t>& kernelIds, const std::string& parameterName, const std::vector<size_t>& parameterValues)
-{
-    for (const auto kernelId : kernelIds)
-    {
-        addParameter(kernelId, parameterName, parameterValues);
-    }
-}
-
 void Tuner::addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
     const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
 {
@@ -88,15 +80,6 @@ void Tuner::addParameter(const size_t kernelId, const std::string& parameterName
     }
 }
 
-void Tuner::addParameter(const std::vector<size_t>& kernelIds, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-    const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
-{
-    for (const auto kernelId : kernelIds)
-    {
-        addParameter(kernelId, parameterName, parameterValues, threadModifierType, threadModifierAction, modifierDimension);
-    }
-}
-
 void Tuner::addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {
@@ -108,15 +91,6 @@ void Tuner::addConstraint(const size_t kernelId, const std::function<bool(std::v
     {
         tunerCore->log(error.what());
         throw;
-    }
-}
-
-void Tuner::addConstraint(const std::vector<size_t>& kernelIds, const std::function<bool(std::vector<size_t>)>& constraintFunction,
-    const std::vector<std::string>& parameterNames)
-{
-    for (const auto kernelId : kernelIds)
-    {
-        addConstraint(kernelId, constraintFunction, parameterNames);
     }
 }
 

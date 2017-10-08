@@ -4,8 +4,9 @@
 namespace ktt
 {
 
-KernelRuntimeData::KernelRuntimeData(const std::string& name, const std::string& source, const DimensionVector& globalSize,
+KernelRuntimeData::KernelRuntimeData(const size_t id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
     const DimensionVector& localSize, const std::vector<size_t>& argumentIndices) :
+    id(id),
     name(name),
     source(source),
     globalSize(convertDimensionVector(globalSize)),
@@ -32,6 +33,11 @@ void KernelRuntimeData::setArgumentIndices(const std::vector<size_t>& argumentIn
     this->argumentIndices = argumentIndices;
 }
 
+size_t KernelRuntimeData::getId() const
+{
+    return id;
+}
+
 std::string KernelRuntimeData::getName() const
 {
     return name;
@@ -51,7 +57,6 @@ std::vector<size_t> KernelRuntimeData::getLocalSize() const
 {
     return localSize;
 }
-
 
 DimensionVector KernelRuntimeData::getGlobalSizeDimensionVector() const
 {
