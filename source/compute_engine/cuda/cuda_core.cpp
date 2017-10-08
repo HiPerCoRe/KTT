@@ -10,7 +10,7 @@ namespace ktt
 
 CudaCore::CudaCore(const size_t deviceIndex, const RunMode& runMode) :
     deviceIndex(deviceIndex),
-    compilerOptions(std::string("")),
+    compilerOptions(std::string("--gpu-architecture=compute_30")),
     runMode(runMode)
 {
     checkCudaError(cuInit(0), "cuInit");
@@ -242,6 +242,12 @@ float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& glo
     auto start = createEvent();
     auto end = createEvent();
 
+    std::vector<void*> kernelArgumentsVoid;
+    for (size_t i = 0; i < kernelArguments.size(); i++)
+    {
+        kernelArgumentsVoid.push_back((void*)kernelArguments.at(i));
+    }
+
     // Tuner internally uses OpenCL version of global size specification
     std::vector<unsigned int> convertedGlobalSize{ static_cast<unsigned int>(globalSize.at(0) / localSize.at(0)),
         static_cast<unsigned int>(globalSize.at(1) / localSize.at(1)), static_cast<unsigned int>(globalSize.at(2) / localSize.at(2)) };
@@ -249,7 +255,7 @@ float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& glo
     checkCudaError(cuEventRecord(start->getEvent(), stream->getStream()), "cuEventRecord");
     checkCudaError(cuLaunchKernel(kernel.getKernel(), convertedGlobalSize.at(0), convertedGlobalSize.at(1), convertedGlobalSize.at(2),
         static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)), static_cast<unsigned int>(localSize.at(2)),
-        static_cast<unsigned int>(localMemorySize), stream->getStream(), (void**)kernelArguments.data(), nullptr), "cuLaunchKernel");
+        static_cast<unsigned int>(localMemorySize), stream->getStream(), kernelArgumentsVoid.data(), nullptr), "cuLaunchKernel");
     checkCudaError(cuEventRecord(end->getEvent(), stream->getStream()), "cuEventRecord");
 
     // Wait for computation to finish

@@ -34,6 +34,8 @@ Compute API methods
 * `void setCompilerOptions(const std::string& options)`:
 Sets compute API compiler options to specified options.
 Individual options have to be separated by a single space character.
+Default options string for OpenCL back-end is empty.
+Default options string for CUDA back-end is "--gpu-architecture=compute_30".
 
 * `void printComputeApiInfo(std::ostream& outputTarget)`:
 Prints basic information about available platforms and devices, including indices assigned by tuner, to specified output stream.
@@ -116,7 +118,7 @@ Argument access type specifies whether argument is used for input or output (or 
 Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 
-* `size_t addArgument(const std::vector<T>& data, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType)`:
+* `size_t addArgument(const std::vector<T>& data, const ArgumentAccessType& accessType, const ArgumentMemoryLocation& memoryLocation)`:
 Similar to previous method, but also allows choice of argument memory location.
 Argument memory location specifies whether argument will be copied to device or host memory during its usage.
 If `ArgumentMemoryLocation::HostZeroCopy` is selected and tuner is in computation mode, client buffer will be used

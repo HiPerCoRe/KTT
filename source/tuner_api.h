@@ -97,8 +97,8 @@ public:
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(data.data(), data.size(), dataType, ArgumentMemoryLocation::Device, accessType);
     }
-    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentMemoryLocation& memoryLocation,
-        const ArgumentAccessType& accessType)
+    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentAccessType& accessType,
+        const ArgumentMemoryLocation& memoryLocation)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(data.data(), data.size(), dataType, memoryLocation, accessType);
