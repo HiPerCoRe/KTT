@@ -82,21 +82,13 @@ Form of modification depends on thread modifier action argument. If there are mu
 * `void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction, const std::vector<std::string>& parameterNames)`:
 Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter values).
 
-* `void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)`:
-Specifies search method for given kernel. Number of required search arguments depends on specified search method.
-Default search method is full search, which requires no search arguments.
-Other methods require following search arguments:
-    - Random search - (0) fraction
-    - PSO - (0) fraction, (1) swarm size, (2) global influence, (3) local influence, (4) random influence
-    - Annealing - (0) fraction, (1) maximum temperature
-
-    Fraction argument specifies how many configurations out of all configurations will be explored during the tuning process (eg. setting fraction to 0.5 will cause tuner to explore half of the configurations).
-    Swarm size argument will be converted to size_t.
-
 * `void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)`:
 Sets tuning manipulator for specified kernel.
 Tuning manipulator enables customization of kernel execution by providing specialized method for computation.
 Specialized method can, for example, run part of the computation directly in C++ code, utilize iterative kernel launches, etc.
+
+* `size_t addKernelComposition(const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)`:
+WIP
 
 Argument handling methods
 -------------------------
@@ -144,6 +136,17 @@ Each output descriptor contains id of an argument to be retrieved, memory locati
 size of the data if only part of an argument needs to be retrieved.
 Target memory location's size has to be equal or greater than size of retrieved data.
 No result validation is performed.
+
+* `void setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)`:
+Specifies search method used during kernel tuning. Number of required search arguments depends on the search method.
+Default search method is full search, which requires no search arguments.
+Other methods require following search arguments:
+    - Random search - (0) fraction
+    - PSO - (0) fraction, (1) swarm size, (2) global influence, (3) local influence, (4) random influence
+    - Annealing - (0) fraction, (1) maximum temperature
+
+    Fraction argument specifies how many configurations out of all configurations will be explored during the tuning process (eg. setting fraction to 0.5 will cause tuner to explore half of the configurations).
+    Swarm size argument will be converted to size_t.
 
 Result retrieval methods
 ------------------------

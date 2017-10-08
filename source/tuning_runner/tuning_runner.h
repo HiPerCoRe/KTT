@@ -11,6 +11,7 @@
 #include "api/tuning_manipulator.h"
 #include "compute_engine/compute_engine.h"
 #include "dto/tuning_result.h"
+#include "enum/search_method.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
 #include "utility/logger.h"
@@ -29,6 +30,7 @@ public:
     std::vector<TuningResult> tuneKernel(const size_t id);
     void runKernelPublic(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
+    void setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
     void setValidationRange(const size_t argumentId, const size_t validationRange);
     void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
@@ -46,6 +48,8 @@ private:
     std::unique_ptr<ResultValidator> resultValidator;
     std::map<size_t, std::unique_ptr<TuningManipulator>> manipulatorMap;
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
+    SearchMethod searchMethod;
+    std::vector<double> searchArguments;
     RunMode runMode;
 
     // Helper methods
@@ -58,6 +62,7 @@ private:
     std::vector<KernelArgument> getKernelArguments(const size_t kernelId) const;
     std::vector<KernelArgument*> getKernelArgumentPointers(const size_t kernelId) const;
     bool validateResult(const Kernel* kernel, const TuningResult& tuningResult);
+    std::string getSearchMethodName(const SearchMethod& searchMethod) const;
 };
 
 } // namespace ktt

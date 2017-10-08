@@ -49,6 +49,13 @@ size_t TunerCore::addKernelFromFile(const std::string& filePath, const std::stri
     return kernelManager->addKernelFromFile(filePath, kernelName, globalSize, localSize);
 }
 
+size_t TunerCore::addKernelComposition(const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)
+{
+    size_t compositionId = kernelManager->addKernelComposition(kernelIds);
+    tuningRunner->setTuningManipulator(compositionId, std::move(tuningManipulator));
+    return compositionId;
+}
+
 void TunerCore::addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
     const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
 {
@@ -79,11 +86,6 @@ void TunerCore::setKernelArguments(const size_t kernelId, const std::vector<size
     kernelManager->setArguments(kernelId, argumentIndices);
 }
 
-void TunerCore::setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
-{
-    kernelManager->setSearchMethod(kernelId, searchMethod, searchArguments);
-}
-
 void TunerCore::setGlobalSizeType(const GlobalSizeType& globalSizeType)
 {
     kernelManager->setGlobalSizeType(globalSizeType);
@@ -106,6 +108,11 @@ void TunerCore::runKernel(const size_t kernelId, const std::vector<ParameterValu
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
     tuningRunner->runKernelPublic(kernelId, kernelConfiguration, outputDescriptors);
+}
+
+void TunerCore::setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+{
+    tuningRunner->setSearchMethod(searchMethod, searchArguments);
 }
 
 void TunerCore::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)

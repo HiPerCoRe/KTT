@@ -83,8 +83,8 @@ public:
         const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
     void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
-    void setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
+    size_t addKernelComposition(const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Argument handling methods
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentAccessType& accessType)
@@ -114,6 +114,7 @@ public:
     void tuneKernel(const size_t kernelId);
     void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
+    void setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
 
     // Result retrieval methods
     void setPrintingTimeUnit(const TimeUnit& timeUnit);

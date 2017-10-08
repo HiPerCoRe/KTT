@@ -94,11 +94,11 @@ void Tuner::addConstraint(const size_t kernelId, const std::function<bool(std::v
     }
 }
 
-void Tuner::setSearchMethod(const size_t kernelId, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+void Tuner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
 {
     try
     {
-        tunerCore->setSearchMethod(kernelId, searchMethod, searchArguments);
+        tunerCore->setTuningManipulator(kernelId, std::move(tuningManipulator));
     }
     catch (const std::runtime_error& error)
     {
@@ -107,11 +107,11 @@ void Tuner::setSearchMethod(const size_t kernelId, const SearchMethod& searchMet
     }
 }
 
-void Tuner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
+size_t Tuner::addKernelComposition(const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)
 {
     try
     {
-        tunerCore->setTuningManipulator(kernelId, std::move(tuningManipulator));
+        return tunerCore->addKernelComposition(kernelIds, std::move(tuningManipulator));
     }
     catch (const std::runtime_error& error)
     {
@@ -151,6 +151,19 @@ void Tuner::runKernel(const size_t kernelId, const std::vector<ParameterValue>& 
     try
     {
         tunerCore->runKernel(kernelId, kernelConfiguration, outputDescriptors);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+void Tuner::setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+{
+    try
+    {
+        tunerCore->setSearchMethod(searchMethod, searchArguments);
     }
     catch (const std::runtime_error& error)
     {

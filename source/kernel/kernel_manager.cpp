@@ -33,6 +33,12 @@ size_t KernelManager::addKernelFromFile(const std::string& filePath, const std::
     return addKernel(source, kernelName, globalSize, localSize);
 }
 
+size_t KernelManager::addKernelComposition(const std::vector<size_t> kernelIds)
+{
+    // to do
+    return UINT64_MAX;
+}
+
 std::string KernelManager::getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const
 {
     std::string source = kernels.at(id).getSource();
@@ -136,15 +142,6 @@ void KernelManager::setArguments(const size_t id, const std::vector<size_t>& arg
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
     kernels.at(id).setArguments(argumentIndices);
-}
-
-void KernelManager::setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
-{
-    if (id >= kernelCount)
-    {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
-    }
-    kernels.at(id).setSearchMethod(searchMethod, searchArguments);
 }
 
 size_t KernelManager::getKernelCount() const

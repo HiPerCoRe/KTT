@@ -22,6 +22,7 @@ TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kern
     computeEngine(computeEngine),
     resultValidator(nullptr),
     manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine)),
+    searchMethod(SearchMethod::FullSearch),
     runMode(runMode)
 {
     if (runMode == RunMode::Tuning)
@@ -46,8 +47,8 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     const Kernel* kernel = kernelManager->getKernel(id);
     resultValidator->computeReferenceResult(kernel);
 
-    std::unique_ptr<Searcher> searcher = getSearcher(kernel->getSearchMethod(), kernel->getSearchArguments(),
-        kernelManager->getKernelConfigurations(id, computeEngine->getCurrentDeviceInfo()), kernel->getParameters());
+    std::unique_ptr<Searcher> searcher = getSearcher(searchMethod, searchArguments, kernelManager->getKernelConfigurations(id,
+        computeEngine->getCurrentDeviceInfo()), kernel->getParameters());
     size_t configurationsCount = searcher->getConfigurationsCount();
 
     for (size_t i = 0; i < configurationsCount; i++)
@@ -120,6 +121,25 @@ void TuningRunner::runKernelPublic(const size_t kernelId, const std::vector<Para
     }
 
     computeEngine->clearBuffers();
+}
+
+void TuningRunner::setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+{
+    if (runMode == RunMode::Computation)
+    {
+        throw std::runtime_error("Kernel tuning cannot be performed in computation mode");
+    }
+
+    if (searchMethod == SearchMethod::RandomSearch && searchArguments.size() < 1
+        || searchMethod == SearchMethod::Annealing && searchArguments.size() < 2
+        || searchMethod == SearchMethod::PSO && searchArguments.size() < 5)
+    {
+        throw std::runtime_error(std::string("Insufficient number of arguments given for specified search method: ")
+            + getSearchMethodName(searchMethod));
+    }
+    
+    this->searchArguments = searchArguments;
+    this->searchMethod = searchMethod;
 }
 
 void TuningRunner::setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold)
@@ -326,6 +346,23 @@ bool TuningRunner::validateResult(const Kernel* kernel, const TuningResult& tuni
     }
 
     return resultIsCorrect;
+}
+
+std::string TuningRunner::getSearchMethodName(const SearchMethod& searchMethod) const
+{
+    switch (searchMethod)
+    {
+    case SearchMethod::FullSearch:
+        return std::string("FullSearch");
+    case SearchMethod::RandomSearch:
+        return std::string("RandomSearch");
+    case SearchMethod::PSO:
+        return std::string("PSO");
+    case SearchMethod::Annealing:
+        return std::string("Annealing");
+    default:
+        return std::string("Unknown search method");
+    }
 }
 
 } // namespace ktt

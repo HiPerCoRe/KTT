@@ -10,8 +10,7 @@ Kernel::Kernel(const size_t id, const std::string& source, const std::string& na
     source(source),
     name(name),
     globalSize(globalSize),
-    localSize(localSize),
-    searchMethod(SearchMethod::FullSearch)
+    localSize(localSize)
 {}
 
 void Kernel::addParameter(const KernelParameter& parameter)
@@ -40,20 +39,6 @@ void Kernel::addConstraint(const KernelConstraint& constraint)
 void Kernel::setArguments(const std::vector<size_t>& argumentIndices)
 {
     this->argumentIndices = argumentIndices;
-}
-
-void Kernel::setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
-{
-    if (searchMethod == SearchMethod::RandomSearch && searchArguments.size() < 1
-        || searchMethod == SearchMethod::Annealing && searchArguments.size() < 2
-        || searchMethod == SearchMethod::PSO && searchArguments.size() < 5)
-    {
-        throw std::runtime_error(std::string("Insufficient number of arguments given for specified search method: ")
-            + getSearchMethodName(searchMethod));
-    }
-    
-    this->searchArguments = searchArguments;
-    this->searchMethod = searchMethod;
 }
 
 size_t Kernel::getId() const
@@ -101,16 +86,6 @@ std::vector<size_t> Kernel::getArgumentIndices() const
     return argumentIndices;
 }
 
-SearchMethod Kernel::getSearchMethod() const
-{
-    return searchMethod;
-}
-
-std::vector<double> Kernel::getSearchArguments() const
-{
-    return searchArguments;
-}
-
 bool Kernel::parameterExists(const std::string& parameterName) const
 {
     for (const auto& currentParameter : parameters)
@@ -121,23 +96,6 @@ bool Kernel::parameterExists(const std::string& parameterName) const
         }
     }
     return false;
-}
-
-std::string Kernel::getSearchMethodName(const SearchMethod& searchMethod) const
-{
-    switch (searchMethod)
-    {
-    case SearchMethod::FullSearch:
-        return std::string("FullSearch");
-    case SearchMethod::RandomSearch:
-        return std::string("RandomSearch");
-    case SearchMethod::PSO:
-        return std::string("PSO");
-    case SearchMethod::Annealing:
-        return std::string("Annealing");
-    default:
-        return std::string("Unknown search method");
-    }
 }
 
 } // namespace ktt
