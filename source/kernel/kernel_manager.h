@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "kernel.h"
+#include "kernel_composition.h"
 #include "kernel_configuration.h"
 #include "api/device_info.h"
 #include "enum/dimension_vector_type.h"
@@ -25,6 +26,8 @@ public:
     std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const;
     KernelConfiguration getKernelConfiguration(const size_t id, const std::vector<ParameterValue>& parameterValues) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const size_t id, const DeviceInfo& deviceInfo) const;
+    std::vector<KernelConfiguration> getKernelConfigurationsWithComposition(const size_t kernelId, const size_t compositionId,
+        const DeviceInfo& deviceInfo) const;
     void setGlobalSizeType(const GlobalSizeType& globalSizeType);
 
     // Kernel modification methods
@@ -38,11 +41,17 @@ public:
     size_t getKernelCount() const;
     const Kernel& getKernel(const size_t id) const;
     Kernel& getKernel(const size_t id);
+    size_t getCompositionCount() const;
+    const KernelComposition& getKernelComposition(const size_t id) const;
+    KernelComposition& getKernelComposition(const size_t id);
+    bool isKernel(const size_t id) const;
+    bool isKernelComposition(const size_t id) const;
 
 private:
     // Attributes
-    size_t kernelCount;
+    size_t nextId;
     std::vector<Kernel> kernels;
+    std::vector<KernelComposition> kernelCompositions;
     GlobalSizeType globalSizeType;
 
     // Helper methods

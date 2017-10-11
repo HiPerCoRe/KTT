@@ -12,28 +12,8 @@ Kernel::Kernel(const size_t id, const std::string& source, const std::string& na
     source(source),
     name(name),
     globalSize(globalSize),
-    localSize(localSize),
-    compositeKernel(false),
-    compositeArguments(false)
+    localSize(localSize)
 {}
-
-Kernel::Kernel(const size_t id, const std::vector<const Kernel*>& compositionKernels) :
-    id(id),
-    source("Composite kernel"),
-    name("Composite kernel"),
-    globalSize(DimensionVector(0, 0, 0)),
-    localSize(DimensionVector(0, 0, 0)),
-    compositeKernel(true),
-    compositionKernels(compositionKernels)
-{
-    for (const auto& kernel : compositionKernels)
-    {
-        if (kernel->isComposite())
-        {
-            throw std::runtime_error("Nested composite kernels are not supported");
-        }
-    }
-}
 
 void Kernel::addParameter(const KernelParameter& parameter)
 {
@@ -50,18 +30,7 @@ void Kernel::addConstraint(const KernelConstraint& constraint)
 
     for (const auto& parameterName : parameterNames)
     {
-        bool parameterFound = false;
-        parameterFound |= hasParameter(parameterName);
-
-        if (compositeKernel)
-        {
-            for (const auto& kernel : compositionKernels)
-            {
-                parameterFound |= kernel->hasParameter(parameterName);
-            }
-        }
-
-        if (!parameterFound)
+        if (!hasParameter(parameterName))
         {
             throw std::runtime_error(std::string("Constraint parameter with given name does not exist: ") + parameterName);
         }
@@ -72,10 +41,6 @@ void Kernel::addConstraint(const KernelConstraint& constraint)
 void Kernel::setArguments(const std::vector<size_t>& argumentIndices)
 {
     this->argumentIndices = argumentIndices;
-    if (compositeKernel)
-    {
-        compositeArguments = true;
-    }
 }
 
 size_t Kernel::getId() const
@@ -133,21 +98,6 @@ bool Kernel::hasParameter(const std::string& parameterName) const
         }
     }
     return false;
-}
-
-bool Kernel::isComposite() const
-{
-    return compositeKernel;
-}
-
-std::vector<const Kernel*> Kernel::getCompositionKernels() const
-{
-    return compositionKernels;
-}
-
-bool Kernel::hasCompositeArguments() const
-{
-    return compositeArguments;
 }
 
 } // namespace ktt
