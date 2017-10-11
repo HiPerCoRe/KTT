@@ -33,10 +33,10 @@ public:
     void setToleranceThreshold(const double toleranceThreshold);
     void setValidationMethod(const ValidationMethod& validationMethod);
     void setValidationRange(const size_t argumentId, const size_t validationRange);
-    void computeReferenceResult(const Kernel* kernel);
+    void computeReferenceResult(const Kernel& kernel);
     void clearReferenceResults();
-    bool validateArgumentsWithClass(const Kernel* kernel, const KernelConfiguration& kernelConfiguration);
-    bool validateArgumentsWithKernel(const Kernel* kernel, const KernelConfiguration& kernelConfiguration);
+    bool validateArgumentsWithClass(const Kernel& kernel, const KernelConfiguration& kernelConfiguration);
+    bool validateArgumentsWithKernel(const Kernel& kernel, const KernelConfiguration& kernelConfiguration);
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Getters
@@ -59,8 +59,8 @@ private:
     std::map<size_t, std::vector<KernelArgument>> referenceKernelResultMap;
 
     // Helper methods
-    void computeReferenceResultWithClass(const Kernel* kernel);
-    void computeReferenceResultWithKernel(const Kernel* kernel);
+    void computeReferenceResultWithClass(const Kernel& kernel);
+    void computeReferenceResultWithKernel(const Kernel& kernel);
     bool validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments,
         const std::string kernelName, const KernelConfiguration& kernelConfiguration) const;
     std::vector<KernelArgument*> getKernelArgumentPointers(const size_t kernelId) const;

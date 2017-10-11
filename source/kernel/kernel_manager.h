@@ -36,8 +36,8 @@ public:
 
     // Getters
     size_t getKernelCount() const;
-    const Kernel* getKernel(const size_t id) const;
-    Kernel* getKernel(const size_t id);
+    const Kernel& getKernel(const size_t id) const;
+    Kernel& getKernel(const size_t id);
 
 private:
     // Attributes

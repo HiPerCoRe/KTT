@@ -22,7 +22,7 @@ size_t KernelManager::addKernel(const std::string& source, const std::string& ke
             std::get<2>(globalSize) * std::get<2>(localSize));
     }
 
-    kernels.emplace_back(Kernel(kernelCount, source, kernelName, convertedGlobalSize, localSize));
+    kernels.emplace_back(kernelCount, source, kernelName, convertedGlobalSize, localSize);
     return kernelCount++;
 }
 
@@ -35,8 +35,18 @@ size_t KernelManager::addKernelFromFile(const std::string& filePath, const std::
 
 size_t KernelManager::addKernelComposition(const std::vector<size_t> kernelIds)
 {
-    // to do
-    return UINT64_MAX;
+    std::vector<const Kernel*> compositionKernels;
+    for (const auto& id : kernelIds)
+    {
+        if (id >= kernelCount)
+        {
+            throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+        }
+        compositionKernels.push_back(&kernels.at(id));
+    }
+
+    kernels.emplace_back(kernelCount, compositionKernels);
+    return kernelCount++;
 }
 
 std::string KernelManager::getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const
@@ -149,22 +159,18 @@ size_t KernelManager::getKernelCount() const
     return kernelCount;
 }
 
-const Kernel* KernelManager::getKernel(const size_t id) const
+const Kernel& KernelManager::getKernel(const size_t id) const
 {
     if (id >= kernelCount)
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
-    return &kernels.at(id);
+    return kernels.at(id);
 }
 
-Kernel* KernelManager::getKernel(const size_t id)
+Kernel& KernelManager::getKernel(const size_t id)
 {
-    if (id >= kernelCount)
-    {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
-    }
-    return &kernels.at(id);
+    return const_cast<Kernel&>(static_cast<const KernelManager*>(this)->getKernel(id));
 }
 
 std::string KernelManager::loadFileToString(const std::string& filePath) const

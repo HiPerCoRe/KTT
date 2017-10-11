@@ -17,6 +17,7 @@ public:
     // Constructor
     explicit Kernel(const size_t id, const std::string& source, const std::string& name, const DimensionVector& globalSize,
         const DimensionVector& localSize);
+    explicit Kernel(const size_t id, const std::vector<const Kernel*>& compositionKernels);
 
     // Core methods
     void addParameter(const KernelParameter& parameter);
@@ -33,6 +34,10 @@ public:
     std::vector<KernelConstraint> getConstraints() const;
     size_t getArgumentCount() const;
     std::vector<size_t> getArgumentIndices() const;
+    bool hasParameter(const std::string& parameterName) const;
+    bool isComposite() const;
+    std::vector<const Kernel*> getCompositionKernels() const;
+    bool hasCompositeArguments() const;
 
 private:
     // Attributes
@@ -44,9 +49,9 @@ private:
     std::vector<KernelParameter> parameters;
     std::vector<KernelConstraint> constraints;
     std::vector<size_t> argumentIndices;
-
-    // Helper methods
-    bool parameterExists(const std::string& parameterName) const;
+    bool compositeKernel;
+    std::vector<const Kernel*> compositionKernels;
+    bool compositeArguments;
 };
 
 } // namespace ktt

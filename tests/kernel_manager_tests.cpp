@@ -19,7 +19,7 @@ TEST_CASE("Kernel handling operations", "[kernelManager]")
 
     SECTION("Kernel source is loaded correctly")
     {
-        std::string source = manager.getKernel(id)->getSource();
+        std::string source = manager.getKernel(id).getSource();
         std::string expectedSource(std::string("")
             + "__kernel void testKernel(float number, __global float* a, __global float* b, __global float* result)\n"
             + "{\n"
@@ -56,9 +56,9 @@ TEST_CASE("Kernel configuration retrieval", "[kernelManager]")
         values.push_back(ktt::ParameterValue("param_two", 5));
         values.push_back(ktt::ParameterValue("param_one", 2));
 
-        ktt::KernelConfiguration config(manager.getKernel(id)->getGlobalSize(), manager.getKernel(id)->getLocalSize(), values);
+        ktt::KernelConfiguration config(manager.getKernel(id).getGlobalSize(), manager.getKernel(id).getLocalSize(), values);
         auto source = manager.getKernelSourceWithDefines(id, config);
-        std::string expectedSource("#define param_one 2\n#define param_two 5\n" + manager.getKernel(id)->getSource());
+        std::string expectedSource("#define param_one 2\n#define param_two 5\n" + manager.getKernel(id).getSource());
 
         REQUIRE(source == expectedSource);
     }

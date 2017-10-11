@@ -53,7 +53,7 @@ private:
     RunMode runMode;
 
     // Helper methods
-    TuningResult runKernel(const Kernel* kernel, const KernelConfiguration& currentConfiguration,
+    TuningResult runKernel(const Kernel& kernel, const KernelConfiguration& currentConfiguration,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
     TuningResult runKernelWithManipulator(TuningManipulator* manipulator, const KernelRuntimeData& kernelData,
         const KernelConfiguration& currentConfiguration, const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
@@ -61,7 +61,7 @@ private:
         const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters) const;
     std::vector<KernelArgument> getKernelArguments(const size_t kernelId) const;
     std::vector<KernelArgument*> getKernelArgumentPointers(const size_t kernelId) const;
-    bool validateResult(const Kernel* kernel, const TuningResult& tuningResult);
+    bool validateResult(const Kernel& kernel, const TuningResult& tuningResult);
     std::string getSearchMethodName(const SearchMethod& searchMethod) const;
 };
 

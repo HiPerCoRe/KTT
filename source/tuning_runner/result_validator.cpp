@@ -61,7 +61,7 @@ void ResultValidator::setValidationRange(const size_t argumentId, const size_t v
     argumentValidationRangeMap.insert(std::make_pair(argumentId, validationRange));
 }
 
-void ResultValidator::computeReferenceResult(const Kernel* kernel)
+void ResultValidator::computeReferenceResult(const Kernel& kernel)
 {
     computeReferenceResultWithClass(kernel);
     computeReferenceResultWithKernel(kernel);
@@ -73,9 +73,9 @@ void ResultValidator::clearReferenceResults()
     referenceKernelResultMap.clear();
 }
 
-bool ResultValidator::validateArgumentsWithClass(const Kernel* kernel, const KernelConfiguration& kernelConfiguration)
+bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const KernelConfiguration& kernelConfiguration)
 {
-    size_t kernelId = kernel->getId();
+    size_t kernelId = kernel.getId();
 
     auto referenceClassPointer = referenceClassMap.find(kernelId);
     if (referenceClassPointer == referenceClassMap.end())
@@ -92,12 +92,12 @@ bool ResultValidator::validateArgumentsWithClass(const Kernel* kernel, const Ker
         resultArguments.push_back(resultArgument);
     }
 
-    return validateArguments(resultArguments, referenceClassResultMap.find(kernelId)->second, kernel->getName(), kernelConfiguration);
+    return validateArguments(resultArguments, referenceClassResultMap.find(kernelId)->second, kernel.getName(), kernelConfiguration);
 }
 
-bool ResultValidator::validateArgumentsWithKernel(const Kernel* kernel, const KernelConfiguration& kernelConfiguration)
+bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const KernelConfiguration& kernelConfiguration)
 {
-    size_t kernelId = kernel->getId();
+    size_t kernelId = kernel.getId();
 
     auto referenceKernelPointer = referenceKernelMap.find(kernelId);
     if (referenceKernelPointer == referenceKernelMap.end())
@@ -114,7 +114,7 @@ bool ResultValidator::validateArgumentsWithKernel(const Kernel* kernel, const Ke
         resultArguments.push_back(resultArgument);
     }
 
-    return validateArguments(resultArguments, referenceKernelResultMap.find(kernelId)->second, kernel->getName(), kernelConfiguration);
+    return validateArguments(resultArguments, referenceKernelResultMap.find(kernelId)->second, kernel.getName(), kernelConfiguration);
 }
 
 void ResultValidator::enableArgumentPrinting(const size_t argumentId, const std::string& filePath,
@@ -133,9 +133,9 @@ ValidationMethod ResultValidator::getValidationMethod() const
     return validationMethod;
 }
 
-void ResultValidator::computeReferenceResultWithClass(const Kernel* kernel)
+void ResultValidator::computeReferenceResultWithClass(const Kernel& kernel)
 {
-    size_t kernelId = kernel->getId();
+    size_t kernelId = kernel.getId();
 
     auto referenceClassPointer = referenceClassMap.find(kernelId);
     if (referenceClassPointer == referenceClassMap.end())
@@ -148,10 +148,10 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel* kernel)
 
     for (const auto argumentId : referenceArgumentIndices)
     {
-        if (!elementExists(argumentId, kernel->getArgumentIndices()))
+        if (!elementExists(argumentId, kernel.getArgumentIndices()))
         {
             throw std::runtime_error(std::string("Reference argument with id: ") + std::to_string(argumentId)
-                + " is not assciated with kernel with id: " + std::to_string(kernel->getId()));
+                + " is not assciated with kernel with id: " + std::to_string(kernel.getId()));
         }
         if (argumentManager->getArgument(argumentId).getArgumentAccessType() == ArgumentAccessType::ReadOnly)
         {
@@ -159,7 +159,7 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel* kernel)
         }
     }
 
-    logger->log(std::string("Computing reference class result for kernel: ") + kernel->getName());
+    logger->log(std::string("Computing reference class result for kernel: ") + kernel.getName());
     referenceClass->computeResult();
     std::vector<KernelArgument> referenceResult;
 
@@ -180,9 +180,9 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel* kernel)
     referenceClassResultMap.insert(std::make_pair(kernelId, referenceResult));
 }
 
-void ResultValidator::computeReferenceResultWithKernel(const Kernel* kernel)
+void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
 {
-    size_t kernelId = kernel->getId();
+    size_t kernelId = kernel.getId();
 
     auto referenceKernelPointer = referenceKernelMap.find(kernelId);
     if (referenceKernelPointer == referenceKernelMap.end())
@@ -196,10 +196,10 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel* kernel)
 
     for (const auto argumentId : referenceArgumentIndices)
     {
-        if (!elementExists(argumentId, kernel->getArgumentIndices()))
+        if (!elementExists(argumentId, kernel.getArgumentIndices()))
         {
             throw std::runtime_error(std::string("Reference argument with id: ") + std::to_string(argumentId)
-                + " is not assciated with kernel with id: " + std::to_string(kernel->getId()));
+                + " is not assciated with kernel with id: " + std::to_string(kernel.getId()));
         }
         if (argumentManager->getArgument(argumentId).getArgumentAccessType() == ArgumentAccessType::ReadOnly)
         {
@@ -207,12 +207,12 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel* kernel)
         }
     }
 
-    const Kernel* referenceKernel = kernelManager->getKernel(referenceKernelId);
+    const Kernel& referenceKernel = kernelManager->getKernel(referenceKernelId);
     KernelConfiguration configuration = kernelManager->getKernelConfiguration(referenceKernelId, referenceParameters);
     std::string source = kernelManager->getKernelSourceWithDefines(referenceKernelId, configuration);
 
-    logger->log(std::string("Computing reference kernel result for kernel: ") + kernel->getName());
-    auto result = computeEngine->runKernel(KernelRuntimeData(referenceKernelId, referenceKernel->getName(), source, configuration.getGlobalSize(),
+    logger->log(std::string("Computing reference kernel result for kernel: ") + kernel.getName());
+    auto result = computeEngine->runKernel(KernelRuntimeData(referenceKernelId, referenceKernel.getName(), source, configuration.getGlobalSize(),
         configuration.getLocalSize(), {}), getKernelArgumentPointers(referenceKernelId), {});
     std::vector<KernelArgument> referenceResult;
 
@@ -325,7 +325,7 @@ std::vector<KernelArgument*> ResultValidator::getKernelArgumentPointers(const si
 {
     std::vector<KernelArgument*> result;
 
-    std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId)->getArgumentIndices();
+    std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId).getArgumentIndices();
     
     for (const auto index : argumentIndices)
     {

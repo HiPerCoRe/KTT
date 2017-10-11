@@ -44,22 +44,22 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
     }
 
     std::vector<TuningResult> results;
-    const Kernel* kernel = kernelManager->getKernel(id);
+    const Kernel& kernel = kernelManager->getKernel(id);
     resultValidator->computeReferenceResult(kernel);
 
     std::unique_ptr<Searcher> searcher = getSearcher(searchMethod, searchArguments, kernelManager->getKernelConfigurations(id,
-        computeEngine->getCurrentDeviceInfo()), kernel->getParameters());
+        computeEngine->getCurrentDeviceInfo()), kernel.getParameters());
     size_t configurationsCount = searcher->getConfigurationsCount();
 
     for (size_t i = 0; i < configurationsCount; i++)
     {
         KernelConfiguration currentConfiguration = searcher->getNextConfiguration();
-        TuningResult result(kernel->getName(), currentConfiguration);
+        TuningResult result(kernel.getName(), currentConfiguration);
 
         try
         {
             std::stringstream stream;
-            stream << "Launching kernel <" << kernel->getName() << "> with configuration (" << i + 1 << " / " << configurationsCount << "): "
+            stream << "Launching kernel <" << kernel.getName() << "> with configuration (" << i + 1 << " / " << configurationsCount << "): "
                 << currentConfiguration;
             logger->log(stream.str());
 
@@ -68,7 +68,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         catch (const std::runtime_error& error)
         {
             logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
-            results.emplace_back(kernel->getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what());
+            results.emplace_back(kernel.getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what());
         }
 
         searcher->calculateNextConfiguration(static_cast<double>(result.getTotalDuration()));
@@ -78,13 +78,13 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         }
         else
         {
-            results.emplace_back(kernel->getName(), currentConfiguration, "Results differ");
+            results.emplace_back(kernel.getName(), currentConfiguration, "Results differ");
         }
 
         computeEngine->clearBuffers(ArgumentAccessType::ReadWrite);
         computeEngine->clearBuffers(ArgumentAccessType::WriteOnly);
 
-        auto manipulatorPointer = manipulatorMap.find(kernel->getId());
+        auto manipulatorPointer = manipulatorMap.find(kernel.getId());
         if (manipulatorPointer != manipulatorMap.end())
         {
             computeEngine->clearBuffers(ArgumentAccessType::ReadOnly);
@@ -104,11 +104,11 @@ void TuningRunner::runKernelPublic(const size_t kernelId, const std::vector<Para
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
     }
 
-    const Kernel* kernel = kernelManager->getKernel(kernelId);
+    const Kernel& kernel = kernelManager->getKernel(kernelId);
     const KernelConfiguration launchConfiguration = kernelManager->getKernelConfiguration(kernelId, kernelConfiguration);
 
     std::stringstream stream;
-    stream << "Running kernel <" << kernel->getName() << "> with configuration: " << launchConfiguration;
+    stream << "Running kernel <" << kernel.getName() << "> with configuration: " << launchConfiguration;
     logger->log(stream.str());
 
     try
@@ -199,23 +199,23 @@ void TuningRunner::enableArgumentPrinting(const size_t argumentId, const std::st
     resultValidator->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
 }
 
-TuningResult TuningRunner::runKernel(const Kernel* kernel, const KernelConfiguration& currentConfiguration,
+TuningResult TuningRunner::runKernel(const Kernel& kernel, const KernelConfiguration& currentConfiguration,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-    size_t kernelId = kernel->getId();
-    std::string kernelName = kernel->getName();
+    size_t kernelId = kernel.getId();
+    std::string kernelName = kernel.getName();
     std::string source = kernelManager->getKernelSourceWithDefines(kernelId, currentConfiguration);
 
     auto manipulatorPointer = manipulatorMap.find(kernelId);
     if (manipulatorPointer != manipulatorMap.end())
     {
         auto kernelData = KernelRuntimeData(kernelId, kernelName, source, currentConfiguration.getGlobalSize(),
-            currentConfiguration.getLocalSize(), kernel->getArgumentIndices());
+            currentConfiguration.getLocalSize(), kernel.getArgumentIndices());
         return runKernelWithManipulator(manipulatorPointer->second.get(), kernelData, currentConfiguration, outputDescriptors);
     }
 
     KernelRunResult result = computeEngine->runKernel(KernelRuntimeData(kernelId, kernelName, source, currentConfiguration.getGlobalSize(),
-        currentConfiguration.getLocalSize(), kernel->getArgumentIndices()), getKernelArgumentPointers(kernelId), outputDescriptors);
+        currentConfiguration.getLocalSize(), kernel.getArgumentIndices()), getKernelArgumentPointers(kernelId), outputDescriptors);
     return TuningResult(kernelName, currentConfiguration, result);
 }
 
@@ -296,7 +296,7 @@ std::unique_ptr<Searcher> TuningRunner::getSearcher(const SearchMethod& searchMe
 std::vector<KernelArgument> TuningRunner::getKernelArguments(const size_t kernelId) const
 {
     std::vector<KernelArgument> result;
-    std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId)->getArgumentIndices();
+    std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId).getArgumentIndices();
     
     for (const auto index : argumentIndices)
     {
@@ -310,7 +310,7 @@ std::vector<KernelArgument*> TuningRunner::getKernelArgumentPointers(const size_
 {
     std::vector<KernelArgument*> result;
 
-    std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId)->getArgumentIndices();
+    std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId).getArgumentIndices();
     
     for (const auto index : argumentIndices)
     {
@@ -320,7 +320,7 @@ std::vector<KernelArgument*> TuningRunner::getKernelArgumentPointers(const size_
     return result;
 }
 
-bool TuningRunner::validateResult(const Kernel* kernel, const TuningResult& tuningResult)
+bool TuningRunner::validateResult(const Kernel& kernel, const TuningResult& tuningResult)
 {
     if (runMode == RunMode::Computation)
     {
