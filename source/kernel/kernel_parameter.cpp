@@ -12,6 +12,11 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<size
     modifierDimension(modifierDimension)
 {}
 
+void KernelParameter::addCompositionKernel(const size_t id)
+{
+    compositionKernels.push_back(id);
+}
+
 std::string KernelParameter::getName() const
 {
     return name;
@@ -35,6 +40,11 @@ ThreadModifierAction KernelParameter::getThreadModifierAction() const
 Dimension KernelParameter::getModifierDimension() const
 {
     return modifierDimension;
+}
+
+std::vector<size_t> KernelParameter::getCompositionKernels() const
+{
+    return compositionKernels;
 }
 
 bool KernelParameter::operator==(const KernelParameter& other) const

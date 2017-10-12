@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "kernel_manager.h"
+#include "utility/ktt_utility.h"
 
 namespace ktt
 {
@@ -35,7 +36,12 @@ size_t KernelManager::addKernelFromFile(const std::string& filePath, const std::
 
 size_t KernelManager::addKernelComposition(const std::vector<size_t> kernelIds)
 {
-    std::vector<const Kernel*> compositionKernels;
+    if (!containsUnique(kernelIds))
+    {
+        throw std::runtime_error("Kernels added to kernel composition must be unique");
+    }
+
+    std::vector<Kernel*> compositionKernels;
     for (const auto& id : kernelIds)
     {
         if (!isKernel(id))
@@ -121,41 +127,38 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
     return configurations;
 }
 
-std::vector<KernelConfiguration> KernelManager::getKernelConfigurationsWithComposition(const size_t kernelId, const size_t compositionId,
-    const DeviceInfo& deviceInfo) const
+std::vector<KernelConfiguration> KernelManager::getCompositionKernelConfigurations(const size_t compositionId, const DeviceInfo& deviceInfo) const
 {
-    if (!isKernel(kernelId))
-    {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
-    }
-
     if (!isKernelComposition(compositionId))
     {
         throw std::runtime_error(std::string("Invalid composition id: ") + std::to_string(compositionId));
     }
 
-    std::vector<KernelConfiguration> configurations;
-    const Kernel& kernel = getKernel(kernelId);
     const KernelComposition& composition = getKernelComposition(compositionId);
+    std::vector<KernelParameter> allParameters;
+    std::vector<std::pair<size_t, DimensionVector>> globalSizes;
+    std::vector<std::pair<size_t, DimensionVector>> localSizes;
 
-    std::vector<KernelParameter> allParameters = kernel.getParameters();
-    std::vector<KernelParameter> compositionParameters = composition.getParameters();
-    allParameters.insert(std::end(allParameters), std::begin(compositionParameters), std::end(compositionParameters));
+    for (const auto& kernel : composition.getKernels())
+    {
+        mergeUniqueParameters(allParameters, kernel->getParameters(), kernel->getId());
+        globalSizes.push_back(std::make_pair(kernel->getId(), kernel->getGlobalSize()));
+        localSizes.push_back(std::make_pair(kernel->getId(), kernel->getLocalSize()));
+    }
 
+    std::vector<KernelConfiguration> kernelConfigurations;
     if (allParameters.size() == 0)
     {
-        configurations.emplace_back(kernel.getGlobalSize(), kernel.getLocalSize(), std::vector<ParameterValue>{});
+        kernelConfigurations.emplace_back(globalSizes, localSizes, std::vector<ParameterValue>{});
     }
     else
     {
-        std::vector<KernelConstraint> allConstraints = kernel.getConstraints();
-        std::vector<KernelConstraint> compositionConstraints = composition.getConstraintsForKernel(kernelId);
-        allConstraints.insert(std::end(allConstraints), std::begin(compositionConstraints), std::end(compositionConstraints));
-
-        computeConfigurations(0, deviceInfo, allParameters, allConstraints, std::vector<ParameterValue>(0), kernel.getGlobalSize(),
-            kernel.getLocalSize(), configurations);
+        // to do
+        /*computeConfigurations(0, deviceInfo, allParameters, kernel.getConstraints(), std::vector<ParameterValue>(0), globalSizes, localSizes,
+            kernelConfigurations);*/
     }
-    return configurations;
+
+    return kernelConfigurations;
 }
 
 void KernelManager::setGlobalSizeType(const GlobalSizeType& globalSizeType)
@@ -403,6 +406,49 @@ bool KernelManager::configurationIsValid(const KernelConfiguration& configuratio
     }
 
     return true;
+}
+
+void KernelManager::mergeUniqueParameters(std::vector<KernelParameter>& existingParameters, const std::vector<KernelParameter> newParameters,
+    const size_t newKernelId) const
+{
+    for (const auto& newParameter : newParameters)
+    {
+        bool addParameter = true;
+
+        for (auto& existingParameter : existingParameters)
+        {
+            if (existingParameter == newParameter)
+            {
+                if (existingParameter.getThreadModifierAction() != newParameter.getThreadModifierAction()
+                    || existingParameter.getThreadModifierType() != newParameter.getThreadModifierType()
+                    || existingParameter.getModifierDimension() != newParameter.getModifierDimension()
+                    || existingParameter.getValues().size() != newParameter.getValues().size())
+                {
+                    throw std::runtime_error(std::string("Kernel parameters with same name assigned to multiple kernels in composition")
+                        + "must have same values and thread modifier properties");
+                }
+
+                for (size_t i = 0; i < existingParameter.getValues().size(); i++)
+                {
+                    if (existingParameter.getValues().at(i) != newParameter.getValues().at(i))
+                    {
+                        throw std::runtime_error(std::string("Kernel parameters with same name assigned to multiple kernels in composition")
+                            + "must have same values and thread modifier properties");
+                    }
+                }
+
+                addParameter = false;
+                existingParameter.addCompositionKernel(newKernelId);
+            }
+        }
+
+        if (addParameter)
+        {
+            KernelParameter addedParameter = newParameter;
+            addedParameter.addCompositionKernel(newKernelId);
+            existingParameters.push_back(addedParameter);
+        }
+    }
 }
 
 } // namespace ktt

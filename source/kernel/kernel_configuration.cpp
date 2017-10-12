@@ -10,6 +10,15 @@ KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, cons
     parameterValues(parameterValues)
 {}
     
+KernelConfiguration::KernelConfiguration(const std::vector<std::pair<size_t, DimensionVector>>& globalSizes,
+    const std::vector<std::pair<size_t, DimensionVector>>& localSizes, const std::vector<ParameterValue>& parameterValues) :
+    globalSize(DimensionVector(0, 0, 0)),
+    localSize(DimensionVector(0, 0, 0)),
+    globalSizes(globalSizes),
+    localSizes(localSizes),
+    parameterValues(parameterValues)
+{}
+
 DimensionVector KernelConfiguration::getGlobalSize() const
 {
     return globalSize;
@@ -18,6 +27,32 @@ DimensionVector KernelConfiguration::getGlobalSize() const
 DimensionVector KernelConfiguration::getLocalSize() const
 {
     return localSize;
+}
+
+DimensionVector KernelConfiguration::getGlobalSize(const size_t kernelId) const
+{
+    for (const auto& element : globalSizes)
+    {
+        if (element.first == kernelId)
+        {
+            return element.second;
+        }
+    }
+
+    throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
+}
+
+DimensionVector KernelConfiguration::getLocalSize(const size_t kernelId) const
+{
+    for (const auto& element : localSizes)
+    {
+        if (element.first == kernelId)
+        {
+            return element.second;
+        }
+    }
+
+    throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
 }
 
 std::vector<ParameterValue> KernelConfiguration::getParameterValues() const

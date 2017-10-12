@@ -26,8 +26,7 @@ public:
     std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const;
     KernelConfiguration getKernelConfiguration(const size_t id, const std::vector<ParameterValue>& parameterValues) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const size_t id, const DeviceInfo& deviceInfo) const;
-    std::vector<KernelConfiguration> getKernelConfigurationsWithComposition(const size_t kernelId, const size_t compositionId,
-        const DeviceInfo& deviceInfo) const;
+    std::vector<KernelConfiguration> getCompositionKernelConfigurations(const size_t compositionId, const DeviceInfo& deviceInfo) const;
     void setGlobalSizeType(const GlobalSizeType& globalSizeType);
 
     // Kernel modification methods
@@ -63,6 +62,8 @@ private:
         const KernelParameter& parameter, const size_t parameterValue) const;
     bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints,
         const DeviceInfo& deviceInfo) const;
+    void mergeUniqueParameters(std::vector<KernelParameter>& existingParameters, const std::vector<KernelParameter> newParameters,
+        const size_t newKernelId) const;
 };
 
 } // namespace ktt

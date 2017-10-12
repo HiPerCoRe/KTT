@@ -15,12 +15,15 @@ class KernelParameter
 public:
     explicit KernelParameter(const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
         const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
-    
+
+    void addCompositionKernel(const size_t id);
+
     std::string getName() const;
     std::vector<size_t> getValues() const;
     ThreadModifierType getThreadModifierType() const;
     ThreadModifierAction getThreadModifierAction() const;
     Dimension getModifierDimension() const;
+    std::vector<size_t> getCompositionKernels() const;
 
     bool operator==(const KernelParameter& other) const;
     bool operator!=(const KernelParameter& other) const;
@@ -31,6 +34,7 @@ private:
     ThreadModifierType threadModifierType;
     ThreadModifierAction threadModifierAction;
     Dimension modifierDimension;
+    std::vector<size_t> compositionKernels;
 };
 
 } // namespace ktt
