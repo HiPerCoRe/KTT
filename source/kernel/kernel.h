@@ -34,6 +34,7 @@ public:
     size_t getArgumentCount() const;
     std::vector<size_t> getArgumentIndices() const;
     bool hasParameter(const std::string& parameterName) const;
+    bool hasTuningManipulator() const;
 
 private:
     // Attributes
@@ -45,6 +46,7 @@ private:
     std::vector<KernelParameter> parameters;
     std::vector<KernelConstraint> constraints;
     std::vector<size_t> argumentIndices;
+    bool tuningManipulatorFlag;
 };
 
 } // namespace ktt

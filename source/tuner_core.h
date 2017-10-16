@@ -26,12 +26,16 @@ public:
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
-    size_t addKernelComposition(const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator);
+    size_t addKernelComposition(const std::vector<size_t>& kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator);
     void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
         const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
     void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIndices);
+    void addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName,
+        const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction,
+        const Dimension& modifierDimension);
+    void setCompositionKernelArguments(const size_t compositionId, const size_t kernelId, const std::vector<size_t>& argumentIds);
     void setGlobalSizeType(const GlobalSizeType& globalSizeType);
 
     // Argument manager methods

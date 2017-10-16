@@ -22,7 +22,7 @@ public:
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
-    size_t addKernelComposition(const std::vector<size_t> kernelIds);
+    size_t addKernelComposition(const std::vector<size_t>& kernelIds);
     std::string getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const;
     KernelConfiguration getKernelConfiguration(const size_t id, const std::vector<ParameterValue>& parameterValues) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const size_t id, const DeviceInfo& deviceInfo) const;
@@ -35,6 +35,10 @@ public:
     void addConstraint(const size_t id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setArguments(const size_t id, const std::vector<size_t>& argumentIndices);
+    void addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName,
+        const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction,
+        const Dimension& modifierDimension);
+    void setCompositionKernelArguments(const size_t compositionId, const size_t kernelId, const std::vector<size_t>& argumentIds);
 
     // Getters
     size_t getKernelCount() const;
@@ -58,12 +62,14 @@ private:
     void computeConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo, const std::vector<KernelParameter>& parameters,
         const std::vector<KernelConstraint>& constraints, const std::vector<ParameterValue>& parameterValues, const DimensionVector& globalSize,
         const DimensionVector& localSize, std::vector<KernelConfiguration>& finalResult) const;
+    void computeCompositionConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo,
+        const std::vector<KernelParameter>& parameters, const std::vector<KernelConstraint>& constraints,
+        const std::vector<ParameterValue>& parameterValues, std::vector<std::pair<size_t, DimensionVector>>& globalSizes,
+        std::vector<std::pair<size_t, DimensionVector>>& localSizes, std::vector<KernelConfiguration>& finalResult) const;
     DimensionVector modifyDimensionVector(const DimensionVector& vector, const DimensionVectorType& dimensionVectorType,
         const KernelParameter& parameter, const size_t parameterValue) const;
     bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints,
         const DeviceInfo& deviceInfo) const;
-    void mergeUniqueParameters(std::vector<KernelParameter>& existingParameters, const std::vector<KernelParameter> newParameters,
-        const size_t newKernelId) const;
 };
 
 } // namespace ktt

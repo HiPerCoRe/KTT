@@ -107,11 +107,40 @@ void Tuner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningMa
     }
 }
 
-size_t Tuner::addKernelComposition(const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)
+size_t Tuner::addKernelComposition(const std::vector<size_t>& kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)
 {
     try
     {
         return tunerCore->addKernelComposition(kernelIds, std::move(tuningManipulator));
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+void Tuner::addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName,
+    const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction,
+    const Dimension& modifierDimension)
+{
+    try
+    {
+        tunerCore->addCompositionKernelParameter(compositionId, kernelId, parameterName, parameterValues, threadModifierType, threadModifierAction,
+            modifierDimension);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+void Tuner::setCompositionKernelArguments(const size_t compositionId, const size_t kernelId, const std::vector<size_t>& argumentIds)
+{
+    try
+    {
+        tunerCore->setCompositionKernelArguments(compositionId, kernelId, argumentIds);
     }
     catch (const std::runtime_error& error)
     {

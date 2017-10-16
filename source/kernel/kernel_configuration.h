@@ -23,6 +23,8 @@ public:
     DimensionVector getLocalSize() const;
     DimensionVector getGlobalSize(const size_t kernelId) const;
     DimensionVector getLocalSize(const size_t kernelId) const;
+    std::vector<DimensionVector> getGlobalSizes() const;
+    std::vector<DimensionVector> getLocalSizes() const;
     std::vector<ParameterValue> getParameterValues() const;
 
     friend class PSOSearcher;

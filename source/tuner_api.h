@@ -84,7 +84,13 @@ public:
     void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
-    size_t addKernelComposition(const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator);
+
+    // Composition handling methods
+    size_t addKernelComposition(const std::vector<size_t>& kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator);
+    void addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName,
+        const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction,
+        const Dimension& modifierDimension);
+    void setCompositionKernelArguments(const size_t compositionId, const size_t kernelId, const std::vector<size_t>& argumentIds);
 
     // Argument handling methods
     template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentAccessType& accessType)

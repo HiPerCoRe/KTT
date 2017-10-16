@@ -49,7 +49,7 @@ size_t TunerCore::addKernelFromFile(const std::string& filePath, const std::stri
     return kernelManager->addKernelFromFile(filePath, kernelName, globalSize, localSize);
 }
 
-size_t TunerCore::addKernelComposition(const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)
+size_t TunerCore::addKernelComposition(const std::vector<size_t>& kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)
 {
     size_t compositionId = kernelManager->addKernelComposition(kernelIds);
     tuningRunner->setTuningManipulator(compositionId, std::move(tuningManipulator));
@@ -84,6 +84,32 @@ void TunerCore::setKernelArguments(const size_t kernelId, const std::vector<size
     }
 
     kernelManager->setArguments(kernelId, argumentIndices);
+}
+
+void TunerCore::addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName,
+    const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction,
+    const Dimension& modifierDimension)
+{
+    kernelManager->addCompositionKernelParameter(compositionId, kernelId, parameterName, parameterValues, threadModifierType, threadModifierAction,
+        modifierDimension);
+}
+
+void TunerCore::setCompositionKernelArguments(const size_t compositionId, const size_t kernelId, const std::vector<size_t>& argumentIds)
+{
+    for (const auto index : argumentIds)
+    {
+        if (index >= argumentManager->getArgumentCount())
+        {
+            throw std::runtime_error(std::string("Invalid kernel argument id: ") + std::to_string(index));
+        }
+    }
+
+    if (!containsUnique(argumentIds))
+    {
+        throw std::runtime_error("Kernel argument ids assigned to single kernel must be unique");
+    }
+
+    kernelManager->setCompositionKernelArguments(compositionId, kernelId, argumentIds);
 }
 
 void TunerCore::setGlobalSizeType(const GlobalSizeType& globalSizeType)

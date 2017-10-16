@@ -12,7 +12,8 @@ Kernel::Kernel(const size_t id, const std::string& source, const std::string& na
     source(source),
     name(name),
     globalSize(globalSize),
-    localSize(localSize)
+    localSize(localSize),
+    tuningManipulatorFlag(false)
 {}
 
 void Kernel::addParameter(const KernelParameter& parameter)
@@ -98,6 +99,11 @@ bool Kernel::hasParameter(const std::string& parameterName) const
         }
     }
     return false;
+}
+
+bool Kernel::hasTuningManipulator() const
+{
+    return tuningManipulatorFlag;
 }
 
 } // namespace ktt

@@ -55,6 +55,40 @@ DimensionVector KernelConfiguration::getLocalSize(const size_t kernelId) const
     throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
 }
 
+std::vector<DimensionVector> KernelConfiguration::getGlobalSizes() const
+{
+    if (globalSizes.size() > 0)
+    {
+        std::vector<DimensionVector> globalSizesResult;
+
+        for (const auto& globalSizePair : globalSizes)
+        {
+            globalSizesResult.push_back(globalSizePair.second);
+        }
+
+        return globalSizesResult;
+    }
+
+    return std::vector<DimensionVector>{globalSize};
+}
+
+std::vector<DimensionVector> KernelConfiguration::getLocalSizes() const
+{
+    if (localSizes.size() > 0)
+    {
+        std::vector<DimensionVector> localSizesResult;
+
+        for (const auto& localSizePair : localSizes)
+        {
+            localSizesResult.push_back(localSizePair.second);
+        }
+
+        return localSizesResult;
+    }
+
+    return std::vector<DimensionVector>{localSize};
+}
+
 std::vector<ParameterValue> KernelConfiguration::getParameterValues() const
 {
     return parameterValues;
