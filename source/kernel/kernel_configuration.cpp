@@ -12,8 +12,8 @@ KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, cons
     
 KernelConfiguration::KernelConfiguration(const std::vector<std::pair<size_t, DimensionVector>>& globalSizes,
     const std::vector<std::pair<size_t, DimensionVector>>& localSizes, const std::vector<ParameterValue>& parameterValues) :
-    globalSize(DimensionVector(0, 0, 0)),
-    localSize(DimensionVector(0, 0, 0)),
+    globalSize(DimensionVector(1, 1, 1)),
+    localSize(DimensionVector(1, 1, 1)),
     globalSizes(globalSizes),
     localSizes(localSizes),
     parameterValues(parameterValues)

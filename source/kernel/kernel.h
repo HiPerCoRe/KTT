@@ -22,6 +22,7 @@ public:
     void addParameter(const KernelParameter& parameter);
     void addConstraint(const KernelConstraint& constraint);
     void setArguments(const std::vector<size_t>& argumentIndices);
+    void setTuningManipulatorFlag(const bool tuningManipulatorFlag);
 
     // Getters
     size_t getId() const;

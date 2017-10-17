@@ -44,6 +44,11 @@ void Kernel::setArguments(const std::vector<size_t>& argumentIndices)
     this->argumentIndices = argumentIndices;
 }
 
+void Kernel::setTuningManipulatorFlag(const bool tuningManipulatorFlag)
+{
+    this->tuningManipulatorFlag = tuningManipulatorFlag;
+}
+
 size_t Kernel::getId() const
 {
     return id;

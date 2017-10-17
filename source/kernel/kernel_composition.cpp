@@ -17,7 +17,16 @@ void KernelComposition::addParameter(const KernelParameter& parameter)
         throw std::runtime_error(std::string("Parameter with given name already exists: ") + parameter.getName());
     }
 
-    parameters.push_back(parameter);
+    KernelParameter parameterCopy = parameter;
+    if (parameter.getThreadModifierType() != ThreadModifierType::None)
+    {
+        for (const auto kernel : kernels)
+        {
+            parameterCopy.addCompositionKernel(kernel->getId());
+        }
+    }
+
+    parameters.push_back(parameterCopy);
 }
 
 void KernelComposition::addConstraint(const KernelConstraint& constraint)

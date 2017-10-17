@@ -87,8 +87,20 @@ Sets tuning manipulator for specified kernel.
 Tuning manipulator enables customization of kernel execution by providing specialized method for computation.
 Specialized method can, for example, run part of the computation directly in C++ code, utilize iterative kernel launches, etc.
 
+Composition handling methods
+----------------------------
 * `size_t addKernelComposition(const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)`:
-WIP
+Creates a kernel composition from specifie kernels.
+Tuning manipulator is required in order to launch kernel composition with tuner.
+Following regular kernel methods can also be applied on kernel composition and will call corresponding method for all kernels inside the composition: `setKernelArguments()`, `addParameter()` (both versions), `addConstraint()`.
+Kernel compositions do not inherit any parameters or constraints from the original kernels.
+Adding parameters or constraints to kernels inside given composition will not affect the original kernels or other compositions.
+
+* `void addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)`:
+Calls thread modifier version of `addParameter()` method for single kernel inside kernel composition.
+
+* `void setCompositionKernelArguments(const size_t compositionId, const size_t kernelId, const std::vector<size_t>& argumentIds)`:
+Calls `setKernelArguments()` method for single kernel inside kernel composition.
 
 Argument handling methods
 -------------------------

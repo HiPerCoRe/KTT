@@ -213,6 +213,15 @@ void KernelManager::setArguments(const size_t id, const std::vector<size_t>& arg
     }
 }
 
+void KernelManager::setTuningManipulatorFlag(const size_t id, const bool tuningManipulatorFlag)
+{
+    if (!isKernel(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+    getKernel(id).setTuningManipulatorFlag(tuningManipulatorFlag);
+}
+
 void KernelManager::addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName,
     const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction,
     const Dimension& modifierDimension)
@@ -234,11 +243,6 @@ void KernelManager::setCompositionKernelArguments(const size_t compositionId, co
     }
 
     getKernelComposition(compositionId).setKernelArguments(kernelId, argumentIds);
-}
-
-size_t KernelManager::getKernelCount() const
-{
-    return kernels.size();
 }
 
 const Kernel& KernelManager::getKernel(const size_t id) const

@@ -23,7 +23,8 @@ TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kern
     resultValidator(nullptr),
     manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine)),
     searchMethod(SearchMethod::FullSearch),
-    runMode(runMode)
+    runMode(runMode),
+    globalSizeType(GlobalSizeType::Opencl)
 {
     if (runMode == RunMode::Tuning)
     {
@@ -38,7 +39,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         throw std::runtime_error("Kernel tuning cannot be performed in computation mode");
     }
 
-    if (id >= kernelManager->getKernelCount())
+    if (!kernelManager->isKernel(id) && !kernelManager->isKernelComposition(id))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
@@ -59,8 +60,8 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         try
         {
             std::stringstream stream;
-            stream << "Launching kernel <" << kernel.getName() << "> with configuration (" << i + 1 << " / " << configurationsCount << "): "
-                << currentConfiguration;
+            stream << "Launching kernel <" << kernel.getName() << "> with configuration (" << i + 1 << " / " << configurationsCount << "): ";
+            printConfiguration(stream, currentConfiguration);
             logger->log(stream.str());
 
             result = runKernel(kernel, currentConfiguration, {});
@@ -84,8 +85,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         computeEngine->clearBuffers(ArgumentAccessType::ReadWrite);
         computeEngine->clearBuffers(ArgumentAccessType::WriteOnly);
 
-        auto manipulatorPointer = manipulatorMap.find(kernel.getId());
-        if (manipulatorPointer != manipulatorMap.end())
+        if (kernel.hasTuningManipulator())
         {
             computeEngine->clearBuffers(ArgumentAccessType::ReadOnly);
         }
@@ -99,7 +99,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
 void TuningRunner::runKernelPublic(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-    if (kernelId >= kernelManager->getKernelCount())
+    if (!kernelManager->isKernel(kernelId) && !kernelManager->isKernelComposition(kernelId))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
     }
@@ -108,7 +108,8 @@ void TuningRunner::runKernelPublic(const size_t kernelId, const std::vector<Para
     const KernelConfiguration launchConfiguration = kernelManager->getKernelConfiguration(kernelId, kernelConfiguration);
 
     std::stringstream stream;
-    stream << "Running kernel <" << kernel.getName() << "> with configuration: " << launchConfiguration;
+    stream << "Running kernel <" << kernel.getName() << "> with configuration: ";
+    printConfiguration(stream, launchConfiguration);
     logger->log(stream.str());
 
     try
@@ -197,6 +198,11 @@ void TuningRunner::enableArgumentPrinting(const size_t argumentId, const std::st
         throw std::runtime_error("Argument printing cannot be performed in computation mode");
     }
     resultValidator->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
+}
+
+void TuningRunner::setGlobalSizeType(const GlobalSizeType& globalSizeType)
+{
+    this->globalSizeType = globalSizeType;
 }
 
 TuningResult TuningRunner::runKernel(const Kernel& kernel, const KernelConfiguration& currentConfiguration,
@@ -363,6 +369,34 @@ std::string TuningRunner::getSearchMethodName(const SearchMethod& searchMethod) 
     default:
         return std::string("Unknown search method");
     }
+}
+
+void TuningRunner::printConfiguration(std::ostream& outputTarget, const KernelConfiguration& configuration) const
+{
+    if (globalSizeType == GlobalSizeType::Cuda)
+    {
+        outputTarget << "global size: " << std::get<0>(configuration.getGlobalSize()) / std::get<0>(configuration.getLocalSize()) << ", "
+            << std::get<1>(configuration.getGlobalSize()) / std::get<1>(configuration.getLocalSize()) << ", "
+            << std::get<2>(configuration.getGlobalSize()) / std::get<2>(configuration.getLocalSize()) << "; ";
+    }
+    else
+    {
+        outputTarget << "global size: " << std::get<0>(configuration.getGlobalSize()) << ", " << std::get<1>(configuration.getGlobalSize()) << ", "
+            << std::get<2>(configuration.getGlobalSize()) << "; ";
+    }
+    outputTarget << "local size: " << std::get<0>(configuration.getLocalSize()) << ", " << std::get<1>(configuration.getLocalSize()) << ", "
+        << std::get<2>(configuration.getLocalSize()) << "; ";
+    outputTarget << "parameters: ";
+
+    if (configuration.getParameterValues().size() == 0)
+    {
+        outputTarget << "none";
+    }
+    for (const auto& value : configuration.getParameterValues())
+    {
+        outputTarget << std::get<0>(value) << ": " << std::get<1>(value) << " ";
+    }
+    outputTarget << std::endl;
 }
 
 } // namespace ktt

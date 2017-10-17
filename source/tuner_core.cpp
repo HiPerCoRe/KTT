@@ -31,7 +31,17 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
     {
         throw std::runtime_error("Specified compute API is not supported");
     }
+
     tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeEngine.get(), runMode);
+
+    if (computeApi == ComputeApi::Cuda)
+    {
+        tuningRunner->setGlobalSizeType(GlobalSizeType::Cuda);
+    }
+    else if (computeApi == ComputeApi::Vulkan)
+    {
+        tuningRunner->setGlobalSizeType(GlobalSizeType::Vulkan);
+    }
 
     DeviceInfo info = computeEngine->getCurrentDeviceInfo();
     logger.log(std::string("Initializing tuner for device: ") + info.getName());
@@ -162,9 +172,13 @@ void TunerCore::setValidationRange(const size_t argumentId, const size_t validat
 void TunerCore::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
     const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
 {
-    if (kernelId > kernelManager->getKernelCount() || referenceKernelId > kernelManager->getKernelCount())
+    if (!kernelManager->isKernel(kernelId) && !kernelManager->isKernelComposition(kernelId))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
+    }
+    if (!kernelManager->isKernel(referenceKernelId) || kernelManager->getKernel(referenceKernelId).hasTuningManipulator())
+    {
+        throw std::runtime_error(std::string("Reference kernel cannot be composite and cannot use tuning manipulator: ") + std::to_string(kernelId));
     }
     tuningRunner->setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
 }
@@ -172,7 +186,7 @@ void TunerCore::setReferenceKernel(const size_t kernelId, const size_t reference
 void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
     const std::vector<size_t>& resultArgumentIds)
 {
-    if (kernelId > kernelManager->getKernelCount())
+    if (!kernelManager->isKernel(kernelId) && !kernelManager->isKernelComposition(kernelId))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
     }
@@ -181,11 +195,16 @@ void TunerCore::setReferenceClass(const size_t kernelId, std::unique_ptr<Referen
 
 void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator)
 {
-    if (kernelId > kernelManager->getKernelCount())
+    if (!kernelManager->isKernel(kernelId) && !kernelManager->isKernelComposition(kernelId))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
     }
     tuningRunner->setTuningManipulator(kernelId, std::move(tuningManipulator));
+
+    if (kernelManager->isKernel(kernelId))
+    {
+        kernelManager->getKernel(kernelId).setTuningManipulatorFlag(true);
+    }
 }
 
 void TunerCore::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)

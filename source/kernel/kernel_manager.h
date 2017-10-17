@@ -35,13 +35,13 @@ public:
     void addConstraint(const size_t id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setArguments(const size_t id, const std::vector<size_t>& argumentIndices);
+    void setTuningManipulatorFlag(const size_t id, const bool tuningManipulatorFlag);
     void addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName,
         const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction,
         const Dimension& modifierDimension);
     void setCompositionKernelArguments(const size_t compositionId, const size_t kernelId, const std::vector<size_t>& argumentIds);
 
     // Getters
-    size_t getKernelCount() const;
     const Kernel& getKernel(const size_t id) const;
     Kernel& getKernel(const size_t id);
     size_t getCompositionCount() const;
