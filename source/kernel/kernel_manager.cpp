@@ -34,14 +34,14 @@ size_t KernelManager::addKernelFromFile(const std::string& filePath, const std::
     return addKernel(source, kernelName, globalSize, localSize);
 }
 
-size_t KernelManager::addKernelComposition(const std::vector<size_t>& kernelIds)
+size_t KernelManager::addKernelComposition(const std::string& compositionName, const std::vector<size_t>& kernelIds)
 {
     if (!containsUnique(kernelIds))
     {
         throw std::runtime_error("Kernels added to kernel composition must be unique");
     }
 
-    std::vector<Kernel*> compositionKernels;
+    std::vector<const Kernel*> compositionKernels;
     for (const auto& id : kernelIds)
     {
         if (!isKernel(id))
@@ -51,7 +51,7 @@ size_t KernelManager::addKernelComposition(const std::vector<size_t>& kernelIds)
         compositionKernels.push_back(&kernels.at(id));
     }
 
-    kernelCompositions.emplace_back(nextId, compositionKernels);
+    kernelCompositions.emplace_back(nextId, compositionName, compositionKernels);
     return nextId++;
 }
 
@@ -105,6 +105,69 @@ KernelConfiguration KernelManager::getKernelConfiguration(const size_t id, const
     return KernelConfiguration(global, local, parameterValues);
 }
 
+KernelConfiguration KernelManager::getKernelCompositionConfiguration(const size_t compositionId,
+    const std::vector<ParameterValue>& parameterValues) const
+{
+    if (!isKernelComposition(compositionId))
+    {
+        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
+    }
+
+    const KernelComposition& kernelComposition = getKernelComposition(compositionId);
+    std::vector<std::pair<size_t, DimensionVector>> globalSizes;
+    std::vector<std::pair<size_t, DimensionVector>> localSizes;
+
+    for (const auto& kernel : kernelComposition.getKernels())
+    {
+        globalSizes.push_back(std::make_pair(kernel->getId(), kernel->getGlobalSize()));
+        localSizes.push_back(std::make_pair(kernel->getId(), kernel->getLocalSize()));
+    }
+    
+    for (const auto& value : parameterValues)
+    {
+        const KernelParameter* targetParameter = nullptr;
+        for (const auto& parameter : kernelComposition.getParameters())
+        {
+            if (parameter.getName() == std::get<0>(value))
+            {
+                targetParameter = &parameter;
+                break;
+            }
+        }
+
+        if (targetParameter == nullptr)
+        {
+            throw std::runtime_error(std::string("Parameter with name <") + std::get<0>(value)
+                + "> is not associated with kernel composition with id: " + std::to_string(compositionId));
+        }
+
+        for (auto& globalSizePair : globalSizes)
+        {
+            for (const auto kernelId : targetParameter->getCompositionKernels())
+            {
+                if (globalSizePair.first == kernelId)
+                {
+                    globalSizePair.second = modifyDimensionVector(globalSizePair.second, DimensionVectorType::Global, *targetParameter,
+                        std::get<1>(value));
+                }
+            }
+        }
+        for (auto& localSizePair : localSizes)
+        {
+            for (const auto kernelId : targetParameter->getCompositionKernels())
+            {
+                if (localSizePair.first == kernelId)
+                {
+                    localSizePair.second = modifyDimensionVector(localSizePair.second, DimensionVectorType::Local, *targetParameter,
+                        std::get<1>(value));
+                }
+            }
+        }
+    }
+
+    return KernelConfiguration(globalSizes, localSizes, parameterValues);
+}
+
 std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const size_t id, const DeviceInfo& deviceInfo) const
 {
     if (!isKernel(id))
@@ -127,7 +190,7 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
     return configurations;
 }
 
-std::vector<KernelConfiguration> KernelManager::getCompositionKernelConfigurations(const size_t compositionId, const DeviceInfo& deviceInfo) const
+std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfigurations(const size_t compositionId, const DeviceInfo& deviceInfo) const
 {
     if (!isKernelComposition(compositionId))
     {

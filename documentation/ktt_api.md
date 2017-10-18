@@ -89,12 +89,13 @@ Specialized method can, for example, run part of the computation directly in C++
 
 Composition handling methods
 ----------------------------
-* `size_t addKernelComposition(const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)`:
+* `size_t addKernelComposition(const std::string& compositionName, const std::vector<size_t> kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)`:
 Creates a kernel composition from specifie kernels.
 Tuning manipulator is required in order to launch kernel composition with tuner.
 Following regular kernel methods can also be applied on kernel composition and will call corresponding method for all kernels inside the composition: `setKernelArguments()`, `addParameter()` (both versions), `addConstraint()`.
 Kernel compositions do not inherit any parameters or constraints from the original kernels.
 Adding parameters or constraints to kernels inside given composition will not affect the original kernels or other compositions.
+Composition name is used during output printing.
 
 * `void addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)`:
 Calls thread modifier version of `addParameter()` method for single kernel inside kernel composition.
@@ -190,7 +191,8 @@ Result validation methods
 * `void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)`:
 Sets reference kernel for specified kernel.
 Reference kernel output will be compared to tuned kernel output in order to ensure correctness of computation.
-Reference kernel can be the same as tuned kernel (reference kernel only uses single configuration). Only specified output arguments will be validated.
+Reference kernel uses only single configuration, it cannot be composite and cannot use tuning manipulator. 
+Only specified output arguments will be validated.
 
 * `void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds)`:
 Sets reference class for specified kernel.

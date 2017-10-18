@@ -86,7 +86,8 @@ public:
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
 
     // Composition handling methods
-    size_t addKernelComposition(const std::vector<size_t>& kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator);
+    size_t addKernelComposition(const std::string& compositionName, const std::vector<size_t>& kernelIds,
+        std::unique_ptr<TuningManipulator> tuningManipulator);
     void addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName,
         const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction,
         const Dimension& modifierDimension);

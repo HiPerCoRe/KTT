@@ -59,9 +59,10 @@ size_t TunerCore::addKernelFromFile(const std::string& filePath, const std::stri
     return kernelManager->addKernelFromFile(filePath, kernelName, globalSize, localSize);
 }
 
-size_t TunerCore::addKernelComposition(const std::vector<size_t>& kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)
+size_t TunerCore::addKernelComposition(const std::string& compositionName, const std::vector<size_t>& kernelIds,
+    std::unique_ptr<TuningManipulator> tuningManipulator)
 {
-    size_t compositionId = kernelManager->addKernelComposition(kernelIds);
+    size_t compositionId = kernelManager->addKernelComposition(compositionName, kernelIds);
     tuningRunner->setTuningManipulator(compositionId, std::move(tuningManipulator));
     return compositionId;
 }
@@ -178,7 +179,7 @@ void TunerCore::setReferenceKernel(const size_t kernelId, const size_t reference
     }
     if (!kernelManager->isKernel(referenceKernelId) || kernelManager->getKernel(referenceKernelId).hasTuningManipulator())
     {
-        throw std::runtime_error(std::string("Reference kernel cannot be composite and cannot use tuning manipulator: ") + std::to_string(kernelId));
+        throw std::runtime_error(std::string("Invalid reference kernel id: ") + std::to_string(kernelId));
     }
     tuningRunner->setReferenceKernel(kernelId, referenceKernelId, referenceKernelConfiguration, resultArgumentIds);
 }

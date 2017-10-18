@@ -26,7 +26,8 @@ public:
     size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
     size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
-    size_t addKernelComposition(const std::vector<size_t>& kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator);
+    size_t addKernelComposition(const std::string& compositionName, const std::vector<size_t>& kernelIds,
+        std::unique_ptr<TuningManipulator> tuningManipulator);
     void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
         const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
     void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,

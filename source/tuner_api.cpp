@@ -107,11 +107,12 @@ void Tuner::setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningMa
     }
 }
 
-size_t Tuner::addKernelComposition(const std::vector<size_t>& kernelIds, std::unique_ptr<TuningManipulator> tuningManipulator)
+size_t Tuner::addKernelComposition(const std::string& compositionName, const std::vector<size_t>& kernelIds,
+    std::unique_ptr<TuningManipulator> tuningManipulator)
 {
     try
     {
-        return tunerCore->addKernelComposition(kernelIds, std::move(tuningManipulator));
+        return tunerCore->addKernelComposition(compositionName, kernelIds, std::move(tuningManipulator));
     }
     catch (const std::runtime_error& error)
     {

@@ -26,6 +26,7 @@ public:
     std::vector<DimensionVector> getGlobalSizes() const;
     std::vector<DimensionVector> getLocalSizes() const;
     std::vector<ParameterValue> getParameterValues() const;
+    bool isComposite() const;
 
     friend class PSOSearcher;
     friend std::ostream& operator<<(std::ostream&, const KernelConfiguration&);
@@ -36,6 +37,7 @@ private:
     std::vector<std::pair<size_t, DimensionVector>> globalSizes;
     std::vector<std::pair<size_t, DimensionVector>> localSizes;
     std::vector<ParameterValue> parameterValues;
+    bool compositeConfiguration;
 };
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& kernelConfiguration);

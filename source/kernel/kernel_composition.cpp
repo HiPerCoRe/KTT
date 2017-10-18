@@ -5,8 +5,9 @@
 namespace ktt
 {
 
-KernelComposition::KernelComposition(const size_t id, const std::vector<Kernel*>& kernels) :
+KernelComposition::KernelComposition(const size_t id, const std::string& name, const std::vector<const Kernel*>& kernels) :
     id(id),
+    name(name),
     kernels(kernels)
 {}
 
@@ -108,7 +109,12 @@ size_t KernelComposition::getId() const
     return id;
 }
 
-std::vector<Kernel*> KernelComposition::getKernels() const
+std::string KernelComposition::getName() const
+{
+    return name;
+}
+
+std::vector<const Kernel*> KernelComposition::getKernels() const
 {
     return kernels;
 }

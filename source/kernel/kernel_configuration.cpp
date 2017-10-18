@@ -7,7 +7,8 @@ KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, cons
     const std::vector<ParameterValue>& parameterValues) :
     globalSize(globalSize),
     localSize(localSize),
-    parameterValues(parameterValues)
+    parameterValues(parameterValues),
+    compositeConfiguration(false)
 {}
     
 KernelConfiguration::KernelConfiguration(const std::vector<std::pair<size_t, DimensionVector>>& globalSizes,
@@ -16,7 +17,8 @@ KernelConfiguration::KernelConfiguration(const std::vector<std::pair<size_t, Dim
     localSize(DimensionVector(1, 1, 1)),
     globalSizes(globalSizes),
     localSizes(localSizes),
-    parameterValues(parameterValues)
+    parameterValues(parameterValues),
+    compositeConfiguration(true)
 {}
 
 DimensionVector KernelConfiguration::getGlobalSize() const
@@ -92,6 +94,11 @@ std::vector<DimensionVector> KernelConfiguration::getLocalSizes() const
 std::vector<ParameterValue> KernelConfiguration::getParameterValues() const
 {
     return parameterValues;
+}
+
+bool KernelConfiguration::isComposite() const
+{
+    return compositeConfiguration;
 }
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& kernelConfiguration)

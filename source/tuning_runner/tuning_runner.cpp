@@ -39,7 +39,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         throw std::runtime_error("Kernel tuning cannot be performed in computation mode");
     }
 
-    if (!kernelManager->isKernel(id) && !kernelManager->isKernelComposition(id))
+    if (!kernelManager->isKernel(id))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
@@ -99,7 +99,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
 void TuningRunner::runKernelPublic(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-    if (!kernelManager->isKernel(kernelId) && !kernelManager->isKernelComposition(kernelId))
+    if (!kernelManager->isKernel(kernelId))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(kernelId));
     }

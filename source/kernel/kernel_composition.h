@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <string>
 #include <vector>
 
 #include "kernel.h"
@@ -12,7 +13,7 @@ class KernelComposition
 {
 public:
     // Constructor
-    explicit KernelComposition(const size_t id, const std::vector<Kernel*>& kernels);
+    explicit KernelComposition(const size_t id, const std::string& name, const std::vector<const Kernel*>& kernels);
 
     // Core methods
     void addParameter(const KernelParameter& parameter);
@@ -23,7 +24,8 @@ public:
 
     // Getters
     size_t getId() const;
-    std::vector<Kernel*> getKernels() const;
+    std::string getName() const;
+    std::vector<const Kernel*> getKernels() const;
     std::vector<KernelParameter> getParameters() const;
     std::vector<KernelConstraint> getConstraints() const;
     std::vector<size_t> getSharedArgumentIds() const;
@@ -32,7 +34,8 @@ public:
 private:
     // Attributes
     size_t id;
-    std::vector<Kernel*> kernels;
+    std::string name;
+    std::vector<const Kernel*> kernels;
     std::vector<KernelParameter> parameters;
     std::vector<KernelConstraint> constraints;
     std::vector<size_t> sharedArgumentIds;
