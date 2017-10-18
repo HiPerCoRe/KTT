@@ -24,6 +24,7 @@ public:
     size_t getArgumentCount() const;
     const KernelArgument& getArgument(const size_t id) const;
     KernelArgument& getArgument(const size_t id);
+    std::vector<KernelArgument*> getArguments(const std::vector<size_t>& argumentIds);
 
 private:
     // Attributes

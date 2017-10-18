@@ -137,14 +137,29 @@ size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, c
 
 void TunerCore::tuneKernel(const size_t kernelId)
 {
-    std::vector<TuningResult> results = tuningRunner->tuneKernel(kernelId);
+    std::vector<TuningResult> results;
+    if (kernelManager->isKernelComposition(kernelId))
+    {
+        results = tuningRunner->tuneKernelComposition(kernelId);
+    }
+    else
+    {
+        results = tuningRunner->tuneKernel(kernelId);
+    }
     resultPrinter.setResult(kernelId, results);
 }
 
 void TunerCore::runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-    tuningRunner->runKernelPublic(kernelId, kernelConfiguration, outputDescriptors);
+    if (kernelManager->isKernelComposition(kernelId))
+    {
+        tuningRunner->runKernelComposition(kernelId, kernelConfiguration, outputDescriptors);
+    }
+    else
+    {
+        tuningRunner->runKernel(kernelId, kernelConfiguration, outputDescriptors);
+    }
 }
 
 void TunerCore::setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)

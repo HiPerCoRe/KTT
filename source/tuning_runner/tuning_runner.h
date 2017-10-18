@@ -28,7 +28,10 @@ public:
 
     // Core methods
     std::vector<TuningResult> tuneKernel(const size_t id);
-    void runKernelPublic(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
+    std::vector<TuningResult> tuneKernelComposition(const size_t id);
+    void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
+        const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
+    void runKernelComposition(const size_t compositionId, const std::vector<ParameterValue>& compositionConfiguration,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
     void setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
     void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
@@ -55,17 +58,18 @@ private:
     GlobalSizeType globalSizeType;
 
     // Helper methods
-    TuningResult runKernel(const Kernel& kernel, const KernelConfiguration& currentConfiguration,
+    TuningResult runKernelSimple(const Kernel& kernel, const KernelConfiguration& currentConfiguration,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
-    TuningResult runKernelWithManipulator(TuningManipulator* manipulator, const KernelRuntimeData& kernelData,
+    TuningResult runKernelWithManipulator(const Kernel& kernel, TuningManipulator* manipulator, const KernelConfiguration& currentConfiguration,
+        const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
+    TuningResult runKernelCompositionWithManipulator(const KernelComposition& kernelComposition, TuningManipulator* manipulator,
         const KernelConfiguration& currentConfiguration, const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
     std::unique_ptr<Searcher> getSearcher(const SearchMethod& searchMethod, const std::vector<double>& searchArguments,
         const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters) const;
-    std::vector<KernelArgument> getKernelArguments(const size_t kernelId) const;
-    std::vector<KernelArgument*> getKernelArgumentPointers(const size_t kernelId) const;
     bool validateResult(const Kernel& kernel, const TuningResult& tuningResult);
     std::string getSearchMethodName(const SearchMethod& searchMethod) const;
     void printConfiguration(std::ostream& outputTarget, const KernelConfiguration& configuration) const;
+    Kernel compositionToKernel(const KernelComposition& composition) const;
 };
 
 } // namespace ktt

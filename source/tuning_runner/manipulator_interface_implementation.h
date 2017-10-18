@@ -52,7 +52,7 @@ private:
 
     // Helper methods
     std::vector<KernelArgument*> getArgumentPointers(const std::vector<size_t>& argumentIndices);
-    void updateArgumentHost(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
+    void updateArgumentSimple(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
         const ArgumentUploadType& argumentUploadType);
 };
 

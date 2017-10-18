@@ -52,4 +52,20 @@ KernelArgument& ArgumentManager::getArgument(const size_t id)
     return const_cast<KernelArgument&>(static_cast<const ArgumentManager*>(this)->getArgument(id));
 }
 
+std::vector<KernelArgument*> ArgumentManager::getArguments(const std::vector<size_t>& argumentIds)
+{
+    std::vector<KernelArgument*> result;
+
+    for (const auto id : argumentIds)
+    {
+        if (id >= argumentCount)
+        {
+            throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
+        }
+        result.push_back(&arguments.at(id));
+    }
+
+    return result;
+}
+
 } // namespace ktt

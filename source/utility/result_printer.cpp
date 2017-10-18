@@ -216,19 +216,36 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, std::ostr
 
 void ResultPrinter::printConfigurationVerbose(std::ostream& outputTarget, const KernelConfiguration& kernelConfiguration) const
 {
-    DimensionVector convertedGlobalSize = kernelConfiguration.getGlobalSize();
-    DimensionVector localSize = kernelConfiguration.getLocalSize();
-    if (globalSizeType == GlobalSizeType::Cuda)
+    std::vector<DimensionVector> globalSizes = kernelConfiguration.getGlobalSizes();
+    std::vector<DimensionVector> localSizes = kernelConfiguration.getLocalSizes();
+
+    for (size_t i = 0; i < globalSizes.size(); i++)
     {
-        convertedGlobalSize = DimensionVector(std::get<0>(convertedGlobalSize) / std::get<0>(localSize), std::get<1>(convertedGlobalSize)
-            / std::get<1>(localSize), std::get<2>(convertedGlobalSize) / std::get<2>(localSize));
+        DimensionVector convertedGlobalSize = globalSizes.at(i);
+        DimensionVector localSize = localSizes.at(i);
+
+        if (globalSizeType == GlobalSizeType::Cuda)
+        {
+            convertedGlobalSize = DimensionVector(std::get<0>(convertedGlobalSize) / std::get<0>(localSize), std::get<1>(convertedGlobalSize)
+                / std::get<1>(localSize), std::get<2>(convertedGlobalSize) / std::get<2>(localSize));
+        }
+
+        if (globalSizes.size() > 1)
+        {
+            outputTarget << "global size " << i << ": " << std::get<0>(convertedGlobalSize) << ", " << std::get<1>(convertedGlobalSize) << ", "
+                << std::get<2>(convertedGlobalSize) << "; ";
+            outputTarget << "local size " << i << ": " << std::get<0>(localSize) << ", " << std::get<1>(localSize) << ", " << std::get<2>(localSize)
+                << "; ";
+        }
+        else
+        {
+            outputTarget << "global size: " << std::get<0>(convertedGlobalSize) << ", " << std::get<1>(convertedGlobalSize) << ", "
+                << std::get<2>(convertedGlobalSize) << "; ";
+            outputTarget << "local size: " << std::get<0>(localSize) << ", " << std::get<1>(localSize) << ", " << std::get<2>(localSize) << "; ";
+        }
     }
 
-    outputTarget << "global size: " << std::get<0>(convertedGlobalSize) << ", " << std::get<1>(convertedGlobalSize) << ", "
-        << std::get<2>(convertedGlobalSize) << "; ";
-    outputTarget << "local size: " << std::get<0>(localSize) << ", " << std::get<1>(localSize) << ", " << std::get<2>(localSize) << "; ";
     outputTarget << "parameters: ";
-
     if (kernelConfiguration.getParameterValues().size() == 0)
     {
         outputTarget << "none";

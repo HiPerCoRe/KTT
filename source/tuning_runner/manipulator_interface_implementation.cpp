@@ -78,12 +78,12 @@ std::vector<ParameterValue> ManipulatorInterfaceImplementation::getCurrentConfig
 
 void ManipulatorInterfaceImplementation::updateArgumentScalar(const size_t argumentId, const void* argumentData)
 {
-    updateArgumentHost(argumentId, argumentData, 1, ArgumentUploadType::Scalar);
+    updateArgumentSimple(argumentId, argumentData, 1, ArgumentUploadType::Scalar);
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentLocal(const size_t argumentId, const size_t numberOfElements)
 {
-    updateArgumentHost(argumentId, nullptr, numberOfElements, ArgumentUploadType::Local);
+    updateArgumentSimple(argumentId, nullptr, numberOfElements, ArgumentUploadType::Local);
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData)
@@ -148,7 +148,7 @@ void ManipulatorInterfaceImplementation::swapKernelArguments(const size_t kernel
     
     if (!elementExists(argumentIdFirst, indices) || !elementExists(argumentIdSecond, indices))
     {
-        throw std::runtime_error(std::string("One of the following argument ids are not associated with this kernel: ")
+        throw std::runtime_error(std::string("One of the following argument ids is not associated with this kernel: ")
             + std::to_string(argumentIdFirst) + ", " + std::to_string(argumentIdSecond) + ", kernel id: " + std::to_string(kernelId));
     }
 
@@ -220,9 +220,9 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Argum
 
 void ManipulatorInterfaceImplementation::clearData()
 {
-    kernelDataMap.clear();
     currentResult = KernelRunResult(0, 0);
     currentConfiguration = KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>{});
+    kernelDataMap.clear();
     vectorArgumentMap.clear();
     nonVectorArgumentMap.clear();
 }
@@ -268,7 +268,7 @@ std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPoin
     return result;
 }
 
-void ManipulatorInterfaceImplementation::updateArgumentHost(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
+void ManipulatorInterfaceImplementation::updateArgumentSimple(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
     const ArgumentUploadType& argumentUploadType)
 {
     auto argumentPointer = nonVectorArgumentMap.find(argumentId);
