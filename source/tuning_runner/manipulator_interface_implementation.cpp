@@ -11,7 +11,7 @@ namespace ktt
 ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeEngine* computeEngine) :
     computeEngine(computeEngine),
     currentResult(KernelRunResult(0, 0)),
-    currentConfiguration(KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>{}))
+    currentConfiguration(KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), {}, GlobalSizeType::Opencl))
 {}
 
 void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId)
@@ -221,7 +221,7 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Argum
 void ManipulatorInterfaceImplementation::clearData()
 {
     currentResult = KernelRunResult(0, 0);
-    currentConfiguration = KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>{});
+    currentConfiguration = KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), {}, GlobalSizeType::Opencl);
     kernelDataMap.clear();
     vectorArgumentMap.clear();
     nonVectorArgumentMap.clear();

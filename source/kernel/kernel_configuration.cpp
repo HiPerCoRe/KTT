@@ -4,20 +4,23 @@ namespace ktt
 {
 
 KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
-    const std::vector<ParameterValue>& parameterValues) :
+    const std::vector<ParameterValue>& parameterValues, const GlobalSizeType& globalSizeType) :
     globalSize(globalSize),
     localSize(localSize),
     parameterValues(parameterValues),
+    globalSizeType(globalSizeType),
     compositeConfiguration(false)
 {}
     
 KernelConfiguration::KernelConfiguration(const std::vector<std::pair<size_t, DimensionVector>>& globalSizes,
-    const std::vector<std::pair<size_t, DimensionVector>>& localSizes, const std::vector<ParameterValue>& parameterValues) :
+    const std::vector<std::pair<size_t, DimensionVector>>& localSizes, const std::vector<ParameterValue>& parameterValues,
+    const GlobalSizeType& globalSizeType) :
     globalSize(DimensionVector(1, 1, 1)),
     localSize(DimensionVector(1, 1, 1)),
     globalSizes(globalSizes),
     localSizes(localSizes),
     parameterValues(parameterValues),
+    globalSizeType(globalSizeType),
     compositeConfiguration(true)
 {}
 
@@ -96,6 +99,11 @@ std::vector<ParameterValue> KernelConfiguration::getParameterValues() const
     return parameterValues;
 }
 
+GlobalSizeType KernelConfiguration::getGlobalSizeType() const
+{
+    return globalSizeType;
+}
+
 bool KernelConfiguration::isComposite() const
 {
     return compositeConfiguration;
@@ -103,12 +111,37 @@ bool KernelConfiguration::isComposite() const
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& kernelConfiguration)
 {
-    outputTarget << "global size: " << std::get<0>(kernelConfiguration.globalSize) << ", " << std::get<1>(kernelConfiguration.globalSize) << ", "
-        << std::get<2>(kernelConfiguration.globalSize) << "; ";
-    outputTarget << "local size: " << std::get<0>(kernelConfiguration.localSize) << ", " << std::get<1>(kernelConfiguration.localSize) << ", "
-        << std::get<2>(kernelConfiguration.localSize) << "; ";
-    outputTarget << "parameters: ";
+    std::vector<DimensionVector> globalSizes = kernelConfiguration.getGlobalSizes();
+    std::vector<DimensionVector> localSizes = kernelConfiguration.getLocalSizes();
 
+    for (size_t i = 0; i < globalSizes.size(); i++)
+    {
+        DimensionVector convertedGlobalSize = globalSizes.at(i);
+        DimensionVector localSize = localSizes.at(i);
+
+        if (kernelConfiguration.globalSizeType == GlobalSizeType::Cuda)
+        {
+            std::get<0>(convertedGlobalSize) = std::get<0>(convertedGlobalSize) / std::get<0>(localSize);
+            std::get<1>(convertedGlobalSize) = std::get<1>(convertedGlobalSize) / std::get<1>(localSize);
+            std::get<2>(convertedGlobalSize) = std::get<2>(convertedGlobalSize) / std::get<2>(localSize);
+        }
+
+        if (globalSizes.size() > 1)
+        {
+            outputTarget << "global size " << i << ": " << std::get<0>(convertedGlobalSize) << ", " << std::get<1>(convertedGlobalSize) << ", "
+                << std::get<2>(convertedGlobalSize) << "; ";
+            outputTarget << "local size " << i << ": " << std::get<0>(localSize) << ", " << std::get<1>(localSize) << ", " << std::get<2>(localSize)
+                << "; ";
+        }
+        else
+        {
+            outputTarget << "global size: " << std::get<0>(convertedGlobalSize) << ", " << std::get<1>(convertedGlobalSize) << ", "
+                << std::get<2>(convertedGlobalSize) << "; ";
+            outputTarget << "local size: " << std::get<0>(localSize) << ", " << std::get<1>(localSize) << ", " << std::get<2>(localSize) << "; ";
+        }
+    }
+    
+    outputTarget << "parameters: ";
     if (kernelConfiguration.parameterValues.size() == 0)
     {
         outputTarget << "none";

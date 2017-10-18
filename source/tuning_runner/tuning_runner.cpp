@@ -23,8 +23,7 @@ TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kern
     resultValidator(nullptr),
     manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine)),
     searchMethod(SearchMethod::FullSearch),
-    runMode(runMode),
-    globalSizeType(GlobalSizeType::Opencl)
+    runMode(runMode)
 {
     if (runMode == RunMode::Tuning)
     {
@@ -60,8 +59,8 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const size_t id)
         try
         {
             std::stringstream stream;
-            stream << "Launching kernel <" << kernel.getName() << "> with configuration (" << i + 1 << " / " << configurationsCount << "): ";
-            printConfiguration(stream, currentConfiguration);
+            stream << "Launching kernel <" << kernel.getName() << "> with configuration (" << i + 1 << " / " << configurationsCount << "): "
+                << currentConfiguration;
             logger->log(stream.str());
 
             if (kernel.hasTuningManipulator())
@@ -134,8 +133,7 @@ std::vector<TuningResult> TuningRunner::tuneKernelComposition(const size_t id)
         {
             std::stringstream stream;
             stream << "Launching kernel composition <" << composition.getName() << "> with configuration (" << i + 1 << " / " << configurationsCount
-                << "): ";
-            printConfiguration(stream, currentConfiguration);
+                << "): " << currentConfiguration;
             logger->log(stream.str());
 
             auto manipulatorPointer = manipulatorMap.find(id);
@@ -179,8 +177,7 @@ void TuningRunner::runKernel(const size_t kernelId, const std::vector<ParameterV
     const KernelConfiguration launchConfiguration = kernelManager->getKernelConfiguration(kernelId, kernelConfiguration);
 
     std::stringstream stream;
-    stream << "Running kernel <" << kernel.getName() << "> with configuration: ";
-    printConfiguration(stream, launchConfiguration);
+    stream << "Running kernel <" << kernel.getName() << "> with configuration: " << launchConfiguration;
     logger->log(stream.str());
 
     try
@@ -215,8 +212,7 @@ void TuningRunner::runKernelComposition(const size_t compositionId, const std::v
     const KernelConfiguration launchConfiguration = kernelManager->getKernelCompositionConfiguration(compositionId, compositionConfiguration);
 
     std::stringstream stream;
-    stream << "Running kernel composition <" << composition.getName() << "> with configuration: ";
-    printConfiguration(stream, launchConfiguration);
+    stream << "Running kernel composition <" << composition.getName() << "> with configuration: " << launchConfiguration;
     logger->log(stream.str());
 
     try
@@ -306,11 +302,6 @@ void TuningRunner::enableArgumentPrinting(const size_t argumentId, const std::st
         throw std::runtime_error("Argument printing cannot be performed in computation mode");
     }
     resultValidator->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
-}
-
-void TuningRunner::setGlobalSizeType(const GlobalSizeType& globalSizeType)
-{
-    this->globalSizeType = globalSizeType;
 }
 
 TuningResult TuningRunner::runKernelSimple(const Kernel& kernel, const KernelConfiguration& currentConfiguration,
@@ -494,34 +485,6 @@ std::string TuningRunner::getSearchMethodName(const SearchMethod& searchMethod) 
     default:
         return std::string("Unknown search method");
     }
-}
-
-void TuningRunner::printConfiguration(std::ostream& outputTarget, const KernelConfiguration& configuration) const
-{
-    if (globalSizeType == GlobalSizeType::Cuda)
-    {
-        outputTarget << "global size: " << std::get<0>(configuration.getGlobalSize()) / std::get<0>(configuration.getLocalSize()) << ", "
-            << std::get<1>(configuration.getGlobalSize()) / std::get<1>(configuration.getLocalSize()) << ", "
-            << std::get<2>(configuration.getGlobalSize()) / std::get<2>(configuration.getLocalSize()) << "; ";
-    }
-    else
-    {
-        outputTarget << "global size: " << std::get<0>(configuration.getGlobalSize()) << ", " << std::get<1>(configuration.getGlobalSize()) << ", "
-            << std::get<2>(configuration.getGlobalSize()) << "; ";
-    }
-    outputTarget << "local size: " << std::get<0>(configuration.getLocalSize()) << ", " << std::get<1>(configuration.getLocalSize()) << ", "
-        << std::get<2>(configuration.getLocalSize()) << "; ";
-    outputTarget << "parameters: ";
-
-    if (configuration.getParameterValues().size() == 0)
-    {
-        outputTarget << "none";
-    }
-    for (const auto& value : configuration.getParameterValues())
-    {
-        outputTarget << std::get<0>(value) << ": " << std::get<1>(value) << " ";
-    }
-    outputTarget << std::endl;
 }
 
 Kernel TuningRunner::compositionToKernel(const KernelComposition& composition) const

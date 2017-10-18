@@ -19,29 +19,17 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
     {
         computeEngine = std::make_unique<CudaCore>(deviceIndex, runMode);
         kernelManager->setGlobalSizeType(GlobalSizeType::Cuda);
-        resultPrinter.setGlobalSizeType(GlobalSizeType::Cuda);
     }
     else if (computeApi == ComputeApi::Vulkan)
     {
         computeEngine = std::make_unique<VulkanCore>(deviceIndex);
         kernelManager->setGlobalSizeType(GlobalSizeType::Vulkan);
-        resultPrinter.setGlobalSizeType(GlobalSizeType::Vulkan);
     }
     else
     {
         throw std::runtime_error("Specified compute API is not supported");
     }
-
     tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeEngine.get(), runMode);
-
-    if (computeApi == ComputeApi::Cuda)
-    {
-        tuningRunner->setGlobalSizeType(GlobalSizeType::Cuda);
-    }
-    else if (computeApi == ComputeApi::Vulkan)
-    {
-        tuningRunner->setGlobalSizeType(GlobalSizeType::Vulkan);
-    }
 
     DeviceInfo info = computeEngine->getCurrentDeviceInfo();
     logger.log(std::string("Initializing tuner for device: ") + info.getName());
@@ -126,7 +114,6 @@ void TunerCore::setCompositionKernelArguments(const size_t compositionId, const 
 void TunerCore::setGlobalSizeType(const GlobalSizeType& globalSizeType)
 {
     kernelManager->setGlobalSizeType(globalSizeType);
-    resultPrinter.setGlobalSizeType(globalSizeType);
 }
 
 size_t TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,

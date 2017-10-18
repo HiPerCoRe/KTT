@@ -56,7 +56,8 @@ TEST_CASE("Kernel configuration retrieval", "[kernelManager]")
         values.push_back(ktt::ParameterValue("param_two", 5));
         values.push_back(ktt::ParameterValue("param_one", 2));
 
-        ktt::KernelConfiguration config(manager.getKernel(id).getGlobalSize(), manager.getKernel(id).getLocalSize(), values);
+        ktt::KernelConfiguration config(manager.getKernel(id).getGlobalSize(), manager.getKernel(id).getLocalSize(), values,
+            ktt::GlobalSizeType::Opencl);
         auto source = manager.getKernelSourceWithDefines(id, config);
         std::string expectedSource("#define param_one 2\n#define param_two 5\n" + manager.getKernel(id).getSource());
 

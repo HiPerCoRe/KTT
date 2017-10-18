@@ -28,8 +28,8 @@ public:
         particlePositions(swarmSize),
         globalBestTime(std::numeric_limits<double>::max()),
         localBestTimes(swarmSize, std::numeric_limits<double>::max()),
-        globalBestConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>()),
-        localBestConfigurations(swarmSize, KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>())),
+        globalBestConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), {}, GlobalSizeType::Opencl),
+        localBestConfigurations(swarmSize, KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), {}, GlobalSizeType::Opencl)),
         generator(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count())),
         intDistribution(0, static_cast<int>(configurations.size())),
         probabilityDistribution(0.0, 1.0)

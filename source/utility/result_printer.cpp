@@ -7,7 +7,6 @@ namespace ktt
 
 ResultPrinter::ResultPrinter() :
     timeUnit(TimeUnit::Microseconds),
-    globalSizeType(GlobalSizeType::Opencl),
     printInvalidResult(false)
 {}
 
@@ -45,11 +44,6 @@ void ResultPrinter::setResult(const size_t kernelId, const std::vector<TuningRes
 void ResultPrinter::setTimeUnit(const TimeUnit& timeUnit)
 {
     this->timeUnit = timeUnit;
-}
-
-void ResultPrinter::setGlobalSizeType(const GlobalSizeType& globalSizeType)
-{
-    this->globalSizeType = globalSizeType;
 }
 
 void ResultPrinter::setInvalidResultPrinting(const bool flag)
@@ -132,7 +126,20 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, std::ostr
     {
         outputTarget << "Total duration (" << getTimeUnitTag(timeUnit) << "),";
     }
-    outputTarget << "Kernel duration (" << getTimeUnitTag(timeUnit) << "),Global size,Local size";
+    outputTarget << "Kernel duration (" << getTimeUnitTag(timeUnit) << ")";
+
+    size_t kernelCount = results.at(0).getConfiguration().getGlobalSizes().size();
+    if (kernelCount == 1)
+    {
+        outputTarget << ",Global size,Local size";
+    }
+    else
+    {
+        for (size_t i = 0; i < kernelCount; i++)
+        {
+            outputTarget << ",Global size " << i << ",Local size " << i;
+        }
+    }
 
     auto parameters = results.at(0).getConfiguration().getParameterValues();
     if (parameters.size() > 0)
@@ -172,7 +179,19 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, std::ostr
         outputTarget << std::endl;
 
         // Header
-        outputTarget << "Kernel name,Status,Global size,Local size";
+        outputTarget << "Kernel name,Status";
+
+        if (kernelCount == 1)
+        {
+            outputTarget << ",Global size,Local size";
+        }
+        else
+        {
+            for (size_t i = 0; i < kernelCount; i++)
+            {
+                outputTarget << ",Global size " << i << ",Local size " << i;
+            }
+        }
 
         auto parameters = results.at(0).getConfiguration().getParameterValues();
         if (parameters.size() > 0)
@@ -224,7 +243,7 @@ void ResultPrinter::printConfigurationVerbose(std::ostream& outputTarget, const 
         DimensionVector convertedGlobalSize = globalSizes.at(i);
         DimensionVector localSize = localSizes.at(i);
 
-        if (globalSizeType == GlobalSizeType::Cuda)
+        if (kernelConfiguration.getGlobalSizeType() == GlobalSizeType::Cuda)
         {
             convertedGlobalSize = DimensionVector(std::get<0>(convertedGlobalSize) / std::get<0>(localSize), std::get<1>(convertedGlobalSize)
                 / std::get<1>(localSize), std::get<2>(convertedGlobalSize) / std::get<2>(localSize));
@@ -259,19 +278,30 @@ void ResultPrinter::printConfigurationVerbose(std::ostream& outputTarget, const 
 
 void ResultPrinter::printConfigurationCsv(std::ostream& outputTarget, const KernelConfiguration& kernelConfiguration) const
 {
-    DimensionVector global = kernelConfiguration.getGlobalSize();
-    DimensionVector local = kernelConfiguration.getLocalSize();
+    std::vector<DimensionVector> globalSizes = kernelConfiguration.getGlobalSizes();
+    std::vector<DimensionVector> localSizes = kernelConfiguration.getLocalSizes();
 
-    size_t globalSum = std::get<0>(global) * std::get<1>(global) * std::get<2>(global);
-    size_t localSum = std::get<0>(local) * std::get<1>(local) * std::get<2>(local);
-
-    if (globalSizeType == GlobalSizeType::Cuda)
+    for (size_t i = 0; i < globalSizes.size(); i++)
     {
-        globalSum /= localSum;
-    }
+        DimensionVector global = globalSizes.at(i);
+        DimensionVector local = localSizes.at(i);
 
-    outputTarget << globalSum << ",";
-    outputTarget << localSum;
+        size_t globalSum = std::get<0>(global) * std::get<1>(global) * std::get<2>(global);
+        size_t localSum = std::get<0>(local) * std::get<1>(local) * std::get<2>(local);
+
+        if (kernelConfiguration.getGlobalSizeType() == GlobalSizeType::Cuda)
+        {
+            globalSum /= localSum;
+        }
+
+        outputTarget << globalSum << ",";
+        outputTarget << localSum;
+
+        if (i + 1 != globalSizes.size())
+        {
+            outputTarget << ",";
+        }
+    }
 
     auto parameterValues = kernelConfiguration.getParameterValues();
     if (parameterValues.size() > 0)

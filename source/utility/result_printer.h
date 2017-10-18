@@ -20,14 +20,12 @@ public:
     void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
     void setResult(const size_t kernelId, const std::vector<TuningResult>& results);
     void setTimeUnit(const TimeUnit& timeUnit);
-    void setGlobalSizeType(const GlobalSizeType& globalSizeType);
     void setInvalidResultPrinting(const bool flag);
     std::vector<ParameterValue> getBestConfiguration(const size_t kernelId) const;
 
 private:
     std::map<size_t, std::vector<TuningResult>> resultMap;
     TimeUnit timeUnit;
-    GlobalSizeType globalSizeType;
     bool printInvalidResult;
 
     void printVerbose(const std::vector<TuningResult>& results, std::ostream& outputTarget) const;

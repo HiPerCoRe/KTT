@@ -41,7 +41,6 @@ public:
     void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
     void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
     void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
-    void setGlobalSizeType(const GlobalSizeType& globalSizeType);
 
 private:
     // Attributes
@@ -55,7 +54,6 @@ private:
     SearchMethod searchMethod;
     std::vector<double> searchArguments;
     RunMode runMode;
-    GlobalSizeType globalSizeType;
 
     // Helper methods
     TuningResult runKernelSimple(const Kernel& kernel, const KernelConfiguration& currentConfiguration,
@@ -68,7 +66,6 @@ private:
         const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters) const;
     bool validateResult(const Kernel& kernel, const TuningResult& tuningResult);
     std::string getSearchMethodName(const SearchMethod& searchMethod) const;
-    void printConfiguration(std::ostream& outputTarget, const KernelConfiguration& configuration) const;
     Kernel compositionToKernel(const KernelComposition& composition) const;
 };
 

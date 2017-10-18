@@ -102,7 +102,7 @@ KernelConfiguration KernelManager::getKernelConfiguration(const size_t id, const
         local = modifyDimensionVector(local, DimensionVectorType::Local, *targetParameter, std::get<1>(value));
     }
 
-    return KernelConfiguration(global, local, parameterValues);
+    return KernelConfiguration(global, local, parameterValues, globalSizeType);
 }
 
 KernelConfiguration KernelManager::getKernelCompositionConfiguration(const size_t compositionId,
@@ -165,7 +165,7 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const size_
         }
     }
 
-    return KernelConfiguration(globalSizes, localSizes, parameterValues);
+    return KernelConfiguration(globalSizes, localSizes, parameterValues, globalSizeType);
 }
 
 std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const size_t id, const DeviceInfo& deviceInfo) const
@@ -180,7 +180,7 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const si
 
     if (kernel.getParameters().size() == 0)
     {
-        configurations.emplace_back(kernel.getGlobalSize(), kernel.getLocalSize(), std::vector<ParameterValue>{});
+        configurations.emplace_back(kernel.getGlobalSize(), kernel.getLocalSize(), std::vector<ParameterValue>{}, globalSizeType);
     }
     else
     {
@@ -210,7 +210,7 @@ std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfiguratio
     std::vector<KernelConfiguration> kernelConfigurations;
     if (composition.getParameters().size() == 0)
     {
-        kernelConfigurations.emplace_back(globalSizes, localSizes, std::vector<ParameterValue>{});
+        kernelConfigurations.emplace_back(globalSizes, localSizes, std::vector<ParameterValue>{}, globalSizeType);
     }
     else
     {
@@ -396,7 +396,7 @@ void KernelManager::computeConfigurations(const size_t currentParameterIndex, co
 {
     if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
-        KernelConfiguration configuration(globalSize, localSize, parameterValues);
+        KernelConfiguration configuration(globalSize, localSize, parameterValues, globalSizeType);
         if (configurationIsValid(configuration, constraints, deviceInfo))
         {
             finalResult.push_back(configuration);
@@ -425,7 +425,7 @@ void KernelManager::computeCompositionConfigurations(const size_t currentParamet
 {
     if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
-        KernelConfiguration configuration(globalSizes, localSizes, parameterValues);
+        KernelConfiguration configuration(globalSizes, localSizes, parameterValues, globalSizeType);
         if (configurationIsValid(configuration, constraints, deviceInfo))
         {
             finalResult.push_back(configuration);

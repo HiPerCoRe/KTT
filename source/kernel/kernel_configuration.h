@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ktt_type_aliases.h"
+#include "enum/global_size_type.h"
 
 namespace ktt
 {
@@ -15,9 +16,10 @@ class KernelConfiguration
 {
 public:
     explicit KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
-        const std::vector<ParameterValue>& parameterValues);
+        const std::vector<ParameterValue>& parameterValues, const GlobalSizeType& globalSizeType);
     explicit KernelConfiguration(const std::vector<std::pair<size_t, DimensionVector>>& globalSizes,
-        const std::vector<std::pair<size_t, DimensionVector>>& localSizes, const std::vector<ParameterValue>& parameterValues);
+        const std::vector<std::pair<size_t, DimensionVector>>& localSizes, const std::vector<ParameterValue>& parameterValues,
+        const GlobalSizeType& globalSizeType);
 
     DimensionVector getGlobalSize() const;
     DimensionVector getLocalSize() const;
@@ -26,6 +28,7 @@ public:
     std::vector<DimensionVector> getGlobalSizes() const;
     std::vector<DimensionVector> getLocalSizes() const;
     std::vector<ParameterValue> getParameterValues() const;
+    GlobalSizeType getGlobalSizeType() const;
     bool isComposite() const;
 
     friend class PSOSearcher;
@@ -37,6 +40,7 @@ private:
     std::vector<std::pair<size_t, DimensionVector>> globalSizes;
     std::vector<std::pair<size_t, DimensionVector>> localSizes;
     std::vector<ParameterValue> parameterValues;
+    GlobalSizeType globalSizeType;
     bool compositeConfiguration;
 };
 
