@@ -1,6 +1,7 @@
 #include <stdexcept>
 
 #include "cuda_core.h"
+#include "utility/ktt_utility.h"
 #include "utility/timer.h"
 
 namespace ktt
@@ -11,7 +12,8 @@ namespace ktt
 CudaCore::CudaCore(const size_t deviceIndex, const RunMode& runMode) :
     deviceIndex(deviceIndex),
     compilerOptions(std::string("--gpu-architecture=compute_30")),
-    runMode(runMode)
+    runMode(runMode),
+    globalSizeCorrection(false)
 {
     checkCudaError(cuInit(0), "cuInit");
 
@@ -70,6 +72,11 @@ DeviceInfo CudaCore::getCurrentDeviceInfo() const
 void CudaCore::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
+}
+
+void CudaCore::setAutomaticGlobalSizeCorrection(const bool flag)
+{
+    globalSizeCorrection = flag;
 }
 
 void CudaCore::uploadArgument(KernelArgument& kernelArgument)
@@ -249,11 +256,17 @@ float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& glo
     }
 
     // Tuner internally uses OpenCL version of global size specification
-    std::vector<unsigned int> convertedGlobalSize{ static_cast<unsigned int>(globalSize.at(0) / localSize.at(0)),
-        static_cast<unsigned int>(globalSize.at(1) / localSize.at(1)), static_cast<unsigned int>(globalSize.at(2) / localSize.at(2)) };
+    std::vector<size_t> convertedGlobalSize{ globalSize.at(0) / localSize.at(0), globalSize.at(1) / localSize.at(1),
+        globalSize.at(2) / localSize.at(2) };
+
+    if (globalSizeCorrection)
+    {
+        convertedGlobalSize = roundUpGlobalSize(convertedGlobalSize, localSize);
+    }
 
     checkCudaError(cuEventRecord(start->getEvent(), stream->getStream()), "cuEventRecord");
-    checkCudaError(cuLaunchKernel(kernel.getKernel(), convertedGlobalSize.at(0), convertedGlobalSize.at(1), convertedGlobalSize.at(2),
+    checkCudaError(cuLaunchKernel(kernel.getKernel(), static_cast<unsigned int>(convertedGlobalSize.at(0)),
+        static_cast<unsigned int>(convertedGlobalSize.at(1)), static_cast<unsigned int>(convertedGlobalSize.at(2)),
         static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)), static_cast<unsigned int>(localSize.at(2)),
         static_cast<unsigned int>(localMemorySize), stream->getStream(), kernelArgumentsVoid.data(), nullptr), "cuLaunchKernel");
     checkCudaError(cuEventRecord(end->getEvent(), stream->getStream()), "cuEventRecord");
@@ -417,6 +430,11 @@ DeviceInfo CudaCore::getCurrentDeviceInfo() const
 }
 
 void CudaCore::setCompilerOptions(const std::string&)
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+}
+
+void CudaCore::setAutomaticGlobalSizeCorrection(const bool)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }

@@ -24,8 +24,9 @@ public:
     virtual KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) = 0;
 
-    // Compute API compiler options setup
+    // Utility methods
     virtual void setCompilerOptions(const std::string& options) = 0;
+    virtual void setAutomaticGlobalSizeCorrection(const bool flag) = 0;
 
     // Argument handling methods
     virtual void uploadArgument(KernelArgument& kernelArgument) = 0;

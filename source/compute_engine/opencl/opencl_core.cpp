@@ -1,4 +1,5 @@
 #include "opencl_core.h"
+#include "utility/ktt_utility.h"
 #include "utility/timer.h"
 
 namespace ktt
@@ -8,7 +9,8 @@ OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex, con
     platformIndex(platformIndex),
     deviceIndex(deviceIndex),
     compilerOptions(std::string("")),
-    runMode(runMode)
+    runMode(runMode),
+    globalSizeCorrection(false)
 {
     auto platforms = getOpenclPlatforms();
     if (platformIndex >= platforms.size())
@@ -80,6 +82,11 @@ DeviceInfo OpenclCore::getCurrentDeviceInfo() const
 void OpenclCore::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
+}
+
+void OpenclCore::setAutomaticGlobalSizeCorrection(const bool flag)
+{
+    globalSizeCorrection = flag;
 }
 
 void OpenclCore::uploadArgument(KernelArgument& kernelArgument)
@@ -265,8 +272,14 @@ cl_ulong OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_
 {
     cl_event profilingEvent;
 
-    cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), static_cast<cl_uint>(globalSize.size()), nullptr,
-        globalSize.data(), localSize.data(), 0, nullptr, &profilingEvent);
+    std::vector<size_t> correctedGlobalSize = globalSize;
+    if (globalSizeCorrection)
+    {
+        correctedGlobalSize = roundUpGlobalSize(globalSize, localSize);
+    }
+
+    cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), static_cast<cl_uint>(correctedGlobalSize.size()), nullptr,
+        correctedGlobalSize.data(), localSize.data(), 0, nullptr, &profilingEvent);
     checkOpenclError(result, "clEnqueueNDRangeKernel");
 
     // Wait for computation to finish

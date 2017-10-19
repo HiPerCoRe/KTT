@@ -145,6 +145,7 @@ public:
     DeviceInfo getCurrentDeviceInfo() const;
 
     // Utility methods
+    void setAutomaticGlobalSizeCorrection(const bool flag);
     void setGlobalSizeType(const GlobalSizeType& globalSizeType);
     void setLoggingTarget(std::ostream& outputTarget);
     void setLoggingTarget(const std::string& filePath);

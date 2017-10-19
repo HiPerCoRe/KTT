@@ -33,8 +33,9 @@ public:
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const override;
     DeviceInfo getCurrentDeviceInfo() const override;
 
-    // Compiler options setup
+    // Utility methods
     void setCompilerOptions(const std::string& options) override;
+    void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
     // Argument handling methods
     void uploadArgument(KernelArgument& kernelArgument) override;
@@ -60,11 +61,12 @@ private:
     // Attributes
     size_t platformIndex;
     size_t deviceIndex;
+    std::string compilerOptions;
+    RunMode runMode;
+    bool globalSizeCorrection;
     std::unique_ptr<OpenclContext> context;
     std::unique_ptr<OpenclCommandQueue> commandQueue;
-    std::string compilerOptions;
     std::set<std::unique_ptr<OpenclBuffer>> buffers;
-    RunMode runMode;
 
     // Helper methods
     static PlatformInfo getOpenclPlatformInfo(const size_t platformIndex);

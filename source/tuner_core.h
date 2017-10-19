@@ -65,6 +65,7 @@ public:
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);
+    void setAutomaticGlobalSizeCorrection(const bool flag);
     void printComputeApiInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const;

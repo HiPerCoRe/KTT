@@ -169,7 +169,7 @@ Sets time unit used during printing of results to specified unit.
 This only affects `printResult()` methods. Default time unit is microseconds. 
 
 * `void setInvalidResultPrinting(const bool flag)`:
-Enables or disables printing of results from failed kernel runs based on provided flag.
+Toggles printing of results from failed kernel runs.
 Invalid results will be separated from valid results during printing.
 Printing of invalid results is disabled by default.
 
@@ -210,6 +210,11 @@ By default, all elements of an argument are validated.
 
 Utility methods
 ---------------
+
+* `void setAutomaticGlobalSizeCorrection(const bool flag)`:
+Toggles automatic correction for global size, which ensures that global size in each dimension is always a multiple of local size in corresponding dimension.
+Performs a roundup to the nearest higher multiple.
+Automatic global size correction is turned off by default.
 
 * `void setGlobalSizeType(const GlobalSizeType& globalSizeType)`:
 Sets global size specification type to specified compute API style.

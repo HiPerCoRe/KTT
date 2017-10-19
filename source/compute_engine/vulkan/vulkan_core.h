@@ -40,8 +40,9 @@ public:
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const override;
     DeviceInfo getCurrentDeviceInfo() const override;
 
-    // Compiler options setup
+    // Utility methods
     void setCompilerOptions(const std::string& options) override;
+    void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
     // Argument handling methods
     void uploadArgument(KernelArgument& kernelArgument) override;
@@ -61,6 +62,7 @@ private:
     // Attributes
     size_t deviceIndex;
     std::string compilerOptions;
+    bool globalSizeCorrection;
     VulkanInstance vulkanInstance;
     std::unique_ptr<VulkanDevice> device;
     std::unique_ptr<VulkanQueue> queue;
@@ -87,8 +89,9 @@ public:
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const override;
     DeviceInfo getCurrentDeviceInfo() const override;
 
-    // Compiler options setup
+    // Utility methods
     void setCompilerOptions(const std::string& options) override;
+    void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
     // Argument handling methods
     void uploadArgument(KernelArgument& kernelArgument) override;

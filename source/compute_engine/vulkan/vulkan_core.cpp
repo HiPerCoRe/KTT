@@ -10,7 +10,8 @@ namespace ktt
 
 VulkanCore::VulkanCore(const size_t deviceIndex) :
     deviceIndex(deviceIndex),
-    compilerOptions(std::string(""))
+    compilerOptions(std::string("")),
+    globalSizeCorrection(false)
 {
     auto devices = getVulkanDevices();
     if (deviceIndex >= devices.size())
@@ -66,6 +67,11 @@ DeviceInfo VulkanCore::getCurrentDeviceInfo() const
 void VulkanCore::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
+}
+
+void VulkanCore::setAutomaticGlobalSizeCorrection(const bool flag)
+{
+    globalSizeCorrection = flag;
 }
 
 void VulkanCore::uploadArgument(KernelArgument& kernelArgument)
@@ -204,6 +210,11 @@ DeviceInfo VulkanCore::getCurrentDeviceInfo() const
 }
 
 void VulkanCore::setCompilerOptions(const std::string&)
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+void VulkanCore::setAutomaticGlobalSizeCorrection(const bool)
 {
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }

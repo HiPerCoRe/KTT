@@ -256,6 +256,11 @@ void TunerCore::setCompilerOptions(const std::string& options)
     computeEngine->setCompilerOptions(options);
 }
 
+void TunerCore::setAutomaticGlobalSizeCorrection(const bool flag)
+{
+    computeEngine->setAutomaticGlobalSizeCorrection(flag);
+}
+
 void TunerCore::printComputeApiInfo(std::ostream& outputTarget) const
 {
     computeEngine->printComputeApiInfo(outputTarget);

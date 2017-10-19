@@ -42,8 +42,9 @@ public:
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const override;
     DeviceInfo getCurrentDeviceInfo() const override;
 
-    // Compiler options setup
+    // Utility methods
     void setCompilerOptions(const std::string& options) override;
+    void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
     // Argument handling methods
     void uploadArgument(KernelArgument& kernelArgument) override;
@@ -68,11 +69,12 @@ public:
 
 private:
     size_t deviceIndex;
+    std::string compilerOptions;
+    RunMode runMode;
+    bool globalSizeCorrection;
     std::unique_ptr<CudaContext> context;
     std::unique_ptr<CudaStream> stream;
-    std::string compilerOptions;
     std::set<std::unique_ptr<CudaBuffer>> buffers;
-    RunMode runMode;
 
     DeviceInfo getCudaDeviceInfo(const size_t deviceIndex) const;
     std::vector<CudaDevice> getCudaDevices() const;
@@ -96,8 +98,9 @@ public:
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const override;
     DeviceInfo getCurrentDeviceInfo() const override;
 
-    // Compiler options setup
+    // Utility methods
     void setCompilerOptions(const std::string& options) override;
+    void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
     // Argument handling methods
     void uploadArgument(KernelArgument& kernelArgument) override;

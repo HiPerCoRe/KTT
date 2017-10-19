@@ -354,6 +354,11 @@ DeviceInfo Tuner::getCurrentDeviceInfo() const
     }
 }
 
+void Tuner::setAutomaticGlobalSizeCorrection(const bool flag)
+{
+    tunerCore->setAutomaticGlobalSizeCorrection(flag);
+}
+
 void Tuner::setGlobalSizeType(const GlobalSizeType& globalSizeType)
 {
     tunerCore->setGlobalSizeType(globalSizeType);
