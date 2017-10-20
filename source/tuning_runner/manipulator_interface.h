@@ -2,8 +2,8 @@
 
 #include <cstddef>
 #include <vector>
-
 #include "ktt_type_aliases.h"
+#include "api/dimension_vector.h"
 
 namespace ktt
 {
@@ -15,25 +15,25 @@ public:
     virtual ~ManipulatorInterface() = default;
 
     // Kernel run methods
-    virtual void runKernel(const size_t kernelId) = 0;
-    virtual void runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize) = 0;
+    virtual void runKernel(const KernelId id) = 0;
+    virtual void runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize) = 0;
 
     // Configuration retrieval methods
-    virtual DimensionVector getCurrentGlobalSize(const size_t kernelId) const = 0;
-    virtual DimensionVector getCurrentLocalSize(const size_t kernelId) const = 0;
-    virtual std::vector<ParameterValue> getCurrentConfiguration() const = 0;
+    virtual DimensionVector getCurrentGlobalSize(const KernelId id) const = 0;
+    virtual DimensionVector getCurrentLocalSize(const KernelId id) const = 0;
+    virtual std::vector<ParameterPair> getCurrentConfiguration() const = 0;
 
     // Argument update and retrieval methods
-    virtual void updateArgumentScalar(const size_t argumentId, const void* argumentData) = 0;
-    virtual void updateArgumentLocal(const size_t argumentId, const size_t numberOfElements) = 0;
-    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData) = 0;
-    virtual void updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements) = 0;
-    virtual void getArgumentVector(const size_t argumentId, void* destination) const = 0;
-    virtual void getArgumentVector(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const = 0;
+    virtual void updateArgumentScalar(const ArgumentId id, const void* argumentData) = 0;
+    virtual void updateArgumentLocal(const ArgumentId id, const size_t numberOfElements) = 0;
+    virtual void updateArgumentVector(const ArgumentId id, const void* argumentData) = 0;
+    virtual void updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements) = 0;
+    virtual void getArgumentVector(const ArgumentId id, void* destination) const = 0;
+    virtual void getArgumentVector(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const = 0;
 
     // Kernel argument handling methods
-    virtual void changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds) = 0;
-    virtual void swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond) = 0;
+    virtual void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds) = 0;
+    virtual void swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond) = 0;
 };
 
 } // namespace ktt

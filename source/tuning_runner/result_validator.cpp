@@ -1,6 +1,5 @@
 #include <string>
 #include <utility>
-
 #include "result_validator.h"
 #include "utility/ktt_utility.h"
 
@@ -17,47 +16,47 @@ ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelManager
     validationMethod(ValidationMethod::SideBySideComparison)
 {}
 
-void ResultValidator::setReferenceKernel(const size_t kernelId, const size_t referenceKernelId,
-    const std::vector<ParameterValue>& referenceKernelConfiguration, const std::vector<size_t>& resultArgumentIds)
+void ResultValidator::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
+    const std::vector<ArgumentId>& validatedArgumentIds)
 {
-    if (referenceKernelMap.find(kernelId) != referenceKernelMap.end())
+    if (referenceKernels.find(id) != referenceKernels.end())
     {
-        referenceKernelMap.erase(kernelId);
+        referenceKernels.erase(id);
     }
-    referenceKernelMap.insert(std::make_pair(kernelId, std::make_tuple(referenceKernelId, referenceKernelConfiguration, resultArgumentIds)));
+    referenceKernels.insert(std::make_pair(id, std::make_tuple(referenceId, referenceConfiguration, validatedArgumentIds)));
 }
 
-void ResultValidator::setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass,
-    const std::vector<size_t>& resultArgumentIds)
+void ResultValidator::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass,
+    const std::vector<ArgumentId>& validatedArgumentIds)
 {
-    if (referenceClassMap.find(kernelId) != referenceClassMap.end())
+    if (referenceClasses.find(id) != referenceClasses.end())
     {
-        referenceClassMap.erase(kernelId);
+        referenceClasses.erase(id);
     }
-    referenceClassMap.insert(std::make_pair(kernelId, std::make_tuple(std::move(referenceClass), resultArgumentIds)));
+    referenceClasses.insert(std::make_pair(id, std::make_tuple(std::move(referenceClass), validatedArgumentIds)));
 }
 
-void ResultValidator::setToleranceThreshold(const double toleranceThreshold)
+void ResultValidator::setToleranceThreshold(const double threshold)
 {
-    if (toleranceThreshold < 0.0)
+    if (threshold < 0.0)
     {
         throw std::runtime_error("Tolerance threshold cannot be negative");
     }
-    this->toleranceThreshold = toleranceThreshold;
+    this->toleranceThreshold = threshold;
 }
 
-void ResultValidator::setValidationMethod(const ValidationMethod& validationMethod)
+void ResultValidator::setValidationMethod(const ValidationMethod& method)
 {
-    this->validationMethod = validationMethod;
+    this->validationMethod = method;
 }
 
-void ResultValidator::setValidationRange(const size_t argumentId, const size_t validationRange)
+void ResultValidator::setValidationRange(const ArgumentId id, const size_t range)
 {
-    if (argumentValidationRangeMap.find(argumentId) != argumentValidationRangeMap.end())
+    if (argumentValidationRanges.find(id) != argumentValidationRanges.end())
     {
-        argumentValidationRangeMap.erase(argumentId);
+        argumentValidationRanges.erase(id);
     }
-    argumentValidationRangeMap.insert(std::make_pair(argumentId, validationRange));
+    argumentValidationRanges.insert(std::make_pair(id, range));
 }
 
 void ResultValidator::computeReferenceResult(const Kernel& kernel)
@@ -68,21 +67,21 @@ void ResultValidator::computeReferenceResult(const Kernel& kernel)
 
 void ResultValidator::clearReferenceResults()
 {
-    referenceClassResultMap.clear();
-    referenceKernelResultMap.clear();
+    referenceClassResults.clear();
+    referenceKernelResults.clear();
 }
 
-bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const KernelConfiguration& kernelConfiguration)
+bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const KernelConfiguration& configuration)
 {
-    size_t kernelId = kernel.getId();
+    KernelId kernelId = kernel.getId();
 
-    auto referenceClassPointer = referenceClassMap.find(kernelId);
-    if (referenceClassPointer == referenceClassMap.end())
+    auto referenceClassPointer = referenceClasses.find(kernelId);
+    if (referenceClassPointer == referenceClasses.end())
     {
         return true; // reference class not present, no validation required
     }
 
-    std::vector<size_t> argumentIds = std::get<1>(referenceClassPointer->second);
+    std::vector<ArgumentId> argumentIds = std::get<1>(referenceClassPointer->second);
     std::vector<KernelArgument> resultArguments;
 
     for (const auto argumentId : argumentIds)
@@ -91,20 +90,20 @@ bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const Ker
         resultArguments.push_back(resultArgument);
     }
 
-    return validateArguments(resultArguments, referenceClassResultMap.find(kernelId)->second, kernel.getName(), kernelConfiguration);
+    return validateArguments(resultArguments, referenceClassResults.find(kernelId)->second, kernel.getName(), configuration);
 }
 
-bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const KernelConfiguration& kernelConfiguration)
+bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const KernelConfiguration& configuration)
 {
-    size_t kernelId = kernel.getId();
+    KernelId kernelId = kernel.getId();
 
-    auto referenceKernelPointer = referenceKernelMap.find(kernelId);
-    if (referenceKernelPointer == referenceKernelMap.end())
+    auto referenceKernelPointer = referenceKernels.find(kernelId);
+    if (referenceKernelPointer == referenceKernels.end())
     {
         return true; // reference kernel not present, no validation required
     }
 
-    std::vector<size_t> argumentIds = std::get<2>(referenceKernelPointer->second);
+    std::vector<ArgumentId> argumentIds = std::get<2>(referenceKernelPointer->second);
     std::vector<KernelArgument> resultArguments;
 
     for (const auto argumentId : argumentIds)
@@ -113,7 +112,7 @@ bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const Ke
         resultArguments.push_back(resultArgument);
     }
 
-    return validateArguments(resultArguments, referenceKernelResultMap.find(kernelId)->second, kernel.getName(), kernelConfiguration);
+    return validateArguments(resultArguments, referenceKernelResults.find(kernelId)->second, kernel.getName(), configuration);
 }
 
 double ResultValidator::getToleranceThreshold() const
@@ -128,25 +127,25 @@ ValidationMethod ResultValidator::getValidationMethod() const
 
 void ResultValidator::computeReferenceResultWithClass(const Kernel& kernel)
 {
-    size_t kernelId = kernel.getId();
+    KernelId kernelId = kernel.getId();
 
-    auto referenceClassPointer = referenceClassMap.find(kernelId);
-    if (referenceClassPointer == referenceClassMap.end())
+    auto referenceClassPointer = referenceClasses.find(kernelId);
+    if (referenceClassPointer == referenceClasses.end())
     {
         return; // reference class not present
     }
 
     ReferenceClass* referenceClass = std::get<0>(referenceClassPointer->second).get();
-    std::vector<size_t> referenceArgumentIndices = std::get<1>(referenceClassPointer->second);
+    std::vector<ArgumentId> referenceArgumentIds = std::get<1>(referenceClassPointer->second);
 
-    for (const auto argumentId : referenceArgumentIndices)
+    for (const auto argumentId : referenceArgumentIds)
     {
-        if (!elementExists(argumentId, kernel.getArgumentIndices()))
+        if (!elementExists(argumentId, kernel.getArgumentIds()))
         {
             throw std::runtime_error(std::string("Reference argument with id: ") + std::to_string(argumentId)
                 + " is not assciated with kernel with id: " + std::to_string(kernel.getId()));
         }
-        if (argumentManager->getArgument(argumentId).getArgumentAccessType() == ArgumentAccessType::ReadOnly)
+        if (argumentManager->getArgument(argumentId).getAccessType() == ArgumentAccessType::ReadOnly)
         {
             throw std::runtime_error(std::string("Reference argument with following id is marked as read only: ") + std::to_string(argumentId));
         }
@@ -156,7 +155,7 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel& kernel)
     referenceClass->computeResult();
     std::vector<KernelArgument> referenceResult;
 
-    for (const auto referenceArgumentId : referenceArgumentIndices)
+    for (const auto referenceArgumentId : referenceArgumentIds)
     {
         size_t numberOfElements = referenceClass->getNumberOfElements(referenceArgumentId);
         const auto& argument = argumentManager->getArgument(referenceArgumentId);
@@ -167,34 +166,33 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel& kernel)
         }
 
         referenceResult.emplace_back(KernelArgument(referenceArgumentId, referenceClass->getData(referenceArgumentId),
-            numberOfElements, argument.getArgumentDataType(), argument.getArgumentMemoryLocation(), argument.getArgumentAccessType(),
-            argument.getArgumentUploadType()));
+            numberOfElements, argument.getDataType(), argument.getMemoryLocation(), argument.getAccessType(), argument.getUploadType()));
     }
-    referenceClassResultMap.insert(std::make_pair(kernelId, referenceResult));
+    referenceClassResults.insert(std::make_pair(kernelId, referenceResult));
 }
 
 void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
 {
-    size_t kernelId = kernel.getId();
+    KernelId kernelId = kernel.getId();
 
-    auto referenceKernelPointer = referenceKernelMap.find(kernelId);
-    if (referenceKernelPointer == referenceKernelMap.end())
+    auto referenceKernelPointer = referenceKernels.find(kernelId);
+    if (referenceKernelPointer == referenceKernels.end())
     {
         return; // reference kernel not present
     }
 
-    size_t referenceKernelId = std::get<0>(referenceKernelPointer->second);
-    std::vector<ParameterValue> referenceParameters = std::get<1>(referenceKernelPointer->second);
-    std::vector<size_t> referenceArgumentIndices = std::get<2>(referenceKernelPointer->second);
+    KernelId referenceKernelId = std::get<0>(referenceKernelPointer->second);
+    std::vector<ParameterPair> referenceParameters = std::get<1>(referenceKernelPointer->second);
+    std::vector<ArgumentId> referenceArgumentIds = std::get<2>(referenceKernelPointer->second);
 
-    for (const auto argumentId : referenceArgumentIndices)
+    for (const auto argumentId : referenceArgumentIds)
     {
-        if (!elementExists(argumentId, kernel.getArgumentIndices()))
+        if (!elementExists(argumentId, kernel.getArgumentIds()))
         {
             throw std::runtime_error(std::string("Reference argument with id: ") + std::to_string(argumentId)
                 + " is not assciated with kernel with id: " + std::to_string(kernel.getId()));
         }
-        if (argumentManager->getArgument(argumentId).getArgumentAccessType() == ArgumentAccessType::ReadOnly)
+        if (argumentManager->getArgument(argumentId).getAccessType() == ArgumentAccessType::ReadOnly)
         {
             throw std::runtime_error(std::string("Reference argument with following id is marked as read only: ") + std::to_string(argumentId));
         }
@@ -209,17 +207,17 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
         configuration.getLocalSize(), {}), getKernelArgumentPointers(referenceKernelId), {});
     std::vector<KernelArgument> referenceResult;
 
-    for (const auto argumentId : referenceArgumentIndices)
+    for (const auto argumentId : referenceArgumentIds)
     {
         referenceResult.push_back(computeEngine->downloadArgument(argumentId));
     }
 
     computeEngine->clearBuffers();
-    referenceKernelResultMap.insert(std::make_pair(kernelId, referenceResult));
+    referenceKernelResults.insert(std::make_pair(kernelId, referenceResult));
 }
 
 bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments,
-    const std::string kernelName, const KernelConfiguration& kernelConfiguration) const
+    const std::string kernelName, const KernelConfiguration& configuration) const
 {
     bool validationResult = true;
 
@@ -234,9 +232,9 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
                 continue;
             }
 
-            ArgumentDataType referenceDataType = referenceArgument.getArgumentDataType();
+            ArgumentDataType referenceDataType = referenceArgument.getDataType();
 
-            if (referenceDataType != resultArgument.getArgumentDataType())
+            if (referenceDataType != resultArgument.getDataType())
             {
                 logger->log(std::string("Reference class argument data type mismatch for argument id: ") + std::to_string(resultArgument.getId()));
                 return false;
@@ -309,15 +307,15 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
     return validationResult;
 }
 
-std::vector<KernelArgument*> ResultValidator::getKernelArgumentPointers(const size_t kernelId) const
+std::vector<KernelArgument*> ResultValidator::getKernelArgumentPointers(const KernelId id) const
 {
     std::vector<KernelArgument*> result;
 
-    std::vector<size_t> argumentIndices = kernelManager->getKernel(kernelId).getArgumentIndices();
+    std::vector<ArgumentId> argumentIds = kernelManager->getKernel(id).getArgumentIds();
     
-    for (const auto index : argumentIndices)
+    for (const auto id : argumentIds)
     {
-        result.push_back(&argumentManager->getArgument(index));
+        result.push_back(&argumentManager->getArgument(id));
     }
 
     return result;

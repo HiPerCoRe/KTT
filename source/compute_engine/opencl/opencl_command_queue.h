@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-
 #include "CL/cl.h"
 #include "opencl_utility.h"
 

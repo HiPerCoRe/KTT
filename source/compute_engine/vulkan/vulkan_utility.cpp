@@ -1,7 +1,6 @@
 #ifdef PLATFORM_VULKAN
 
 #include <stdexcept>
-
 #include "vulkan_utility.h"
 
 namespace ktt

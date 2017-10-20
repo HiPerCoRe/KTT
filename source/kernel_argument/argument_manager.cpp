@@ -1,68 +1,68 @@
 #include <string>
-
 #include "argument_manager.h"
 
 namespace ktt
 {
 
 ArgumentManager::ArgumentManager(const RunMode& runMode) :
-    argumentCount(0),
+    nextArgumentId(0),
     runMode(runMode)
 {}
 
-size_t ArgumentManager::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+ArgumentId ArgumentManager::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType)
 {
     if (runMode == RunMode::Tuning)
     {
-        arguments.emplace_back(argumentCount, data, numberOfElements, dataType, memoryLocation, accessType, uploadType);
+        arguments.emplace_back(nextArgumentId, data, numberOfElements, dataType, memoryLocation, accessType, uploadType);
     }
     else
     {
-        arguments.emplace_back(argumentCount, data, numberOfElements, dataType, memoryLocation, accessType, uploadType, false);
+        arguments.emplace_back(nextArgumentId, data, numberOfElements, dataType, memoryLocation, accessType, uploadType,
+            false);
     }
-    return argumentCount++;
+    return nextArgumentId++;
 }
 
-void ArgumentManager::updateArgument(const size_t id, const void* data, const size_t numberOfElements)
+void ArgumentManager::updateArgument(const ArgumentId id, const void* data, const size_t numberOfElements)
 {
-    if (id >= argumentCount)
+    if (id >= nextArgumentId)
     {
         throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
     }
-    arguments.at(id).updateData(data, numberOfElements);
+    arguments.at(static_cast<size_t>(id)).updateData(data, numberOfElements);
 }
 
 size_t ArgumentManager::getArgumentCount() const
 {
-    return argumentCount;
+    return arguments.size();
 }
 
-const KernelArgument& ArgumentManager::getArgument(const size_t id) const
+const KernelArgument& ArgumentManager::getArgument(const ArgumentId id) const
 {
-    if (id >= argumentCount)
+    if (id >= nextArgumentId)
     {
         throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
     }
-    return arguments.at(id);
+    return arguments.at(static_cast<size_t>(id));
 }
 
-KernelArgument& ArgumentManager::getArgument(const size_t id)
+KernelArgument& ArgumentManager::getArgument(const ArgumentId id)
 {
     return const_cast<KernelArgument&>(static_cast<const ArgumentManager*>(this)->getArgument(id));
 }
 
-std::vector<KernelArgument*> ArgumentManager::getArguments(const std::vector<size_t>& argumentIds)
+std::vector<KernelArgument*> ArgumentManager::getArguments(const std::vector<ArgumentId>& argumentIds)
 {
     std::vector<KernelArgument*> result;
 
     for (const auto id : argumentIds)
     {
-        if (id >= argumentCount)
+        if (id >= nextArgumentId)
         {
             throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
         }
-        result.push_back(&arguments.at(id));
+        result.push_back(&arguments.at(static_cast<size_t>(id)));
     }
 
     return result;

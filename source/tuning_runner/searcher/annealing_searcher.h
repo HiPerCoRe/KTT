@@ -5,7 +5,6 @@
 #include <limits>
 #include <random>
 #include <stdexcept>
-
 #include "searcher.h"
 
 namespace ktt
@@ -110,9 +109,9 @@ private:
         {
             size_t differences = 0;
             size_t settingId = 0;
-            for (const auto& parameter : configuration.getParameterValues())
+            for (const auto& parameter : configuration.getParameterPairs())
             {
-                if (std::get<1>(parameter) != std::get<1>(configurations.at(referenceId).getParameterValues().at(settingId)))
+                if (std::get<1>(parameter) != std::get<1>(configurations.at(referenceId).getParameterPairs().at(settingId)))
                 {
                     differences++;
                 }

@@ -29,6 +29,162 @@ OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex, con
     commandQueue = std::make_unique<OpenclCommandQueue>(context->getContext(), device);
 }
 
+KernelRunResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
+{
+    std::unique_ptr<OpenclProgram> program = createAndBuildProgram(kernelData.getSource());
+    std::unique_ptr<OpenclKernel> kernel = createKernel(*program, kernelData.getName());
+
+    for (const auto argument : argumentPointers)
+    {
+        setKernelArgument(*kernel, *argument);
+    }
+
+    Timer timer;
+    timer.start();
+    cl_ulong duration = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize());
+    timer.stop();
+    uint64_t overhead = timer.getElapsedTime();
+
+    for (const auto& descriptor : outputDescriptors)
+    {
+        if (descriptor.getOutputSizeInBytes() == 0)
+        {
+            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
+        }
+        else
+        {
+            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+        }
+    }
+
+    return KernelRunResult(static_cast<uint64_t>(duration), overhead);
+}
+
+void OpenclCore::setCompilerOptions(const std::string& options)
+{
+    compilerOptions = options;
+}
+
+void OpenclCore::setAutomaticGlobalSizeCorrection(const TunerFlag flag)
+{
+    globalSizeCorrection = flag;
+}
+
+void OpenclCore::uploadArgument(KernelArgument& kernelArgument)
+{
+    if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
+    {
+        return;
+    }
+    clearBuffer(kernelArgument.getId());
+
+    bool zeroCopy = false;
+    if (runMode == RunMode::Computation && kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+    {
+        zeroCopy = true;
+    }
+
+    std::unique_ptr<OpenclBuffer> buffer = std::make_unique<OpenclBuffer>(context->getContext(), kernelArgument, zeroCopy);
+    if (!zeroCopy)
+    {
+        buffer->uploadData(commandQueue->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
+    }
+    buffers.insert(std::move(buffer)); // buffer data will be stolen
+}
+
+void OpenclCore::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes)
+{
+    OpenclBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    buffer->uploadData(commandQueue->getQueue(), data, dataSizeInBytes);
+}
+
+KernelArgument OpenclCore::downloadArgument(const ArgumentId id) const
+{
+    OpenclBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
+        buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
+    buffer->downloadData(commandQueue->getQueue(), argument.getData(), argument.getDataSizeInBytes());
+    
+    return argument;
+}
+
+void OpenclCore::downloadArgument(const ArgumentId id, void* destination) const
+{
+    OpenclBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    buffer->downloadData(commandQueue->getQueue(), destination, buffer->getBufferSize());
+}
+
+void OpenclCore::downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
+{
+    OpenclBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    buffer->downloadData(commandQueue->getQueue(), destination, dataSizeInBytes);
+}
+
+void OpenclCore::clearBuffer(const ArgumentId id)
+{
+    auto iterator = buffers.cbegin();
+
+    while (iterator != buffers.cend())
+    {
+        if (iterator->get()->getKernelArgumentId() == id)
+        {
+            buffers.erase(iterator);
+            return;
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
+}
+
+void OpenclCore::clearBuffers()
+{
+    buffers.clear();
+}
+
+void OpenclCore::clearBuffers(const ArgumentAccessType& accessType)
+{
+    auto iterator = buffers.cbegin();
+
+    while (iterator != buffers.cend())
+    {
+        if (iterator->get()->getOpenclMemoryFlag() == getOpenclMemoryType(accessType))
+        {
+            iterator = buffers.erase(iterator);
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
+}
+
 void OpenclCore::printComputeApiInfo(std::ostream& outputTarget) const
 {
     auto platforms = getOpenclPlatforms();
@@ -79,162 +235,6 @@ DeviceInfo OpenclCore::getCurrentDeviceInfo() const
     return getOpenclDeviceInfo(platformIndex, deviceIndex);
 }
 
-void OpenclCore::setCompilerOptions(const std::string& options)
-{
-    compilerOptions = options;
-}
-
-void OpenclCore::setAutomaticGlobalSizeCorrection(const bool flag)
-{
-    globalSizeCorrection = flag;
-}
-
-void OpenclCore::uploadArgument(KernelArgument& kernelArgument)
-{
-    if (kernelArgument.getArgumentUploadType() != ArgumentUploadType::Vector)
-    {
-        return;
-    }
-    clearBuffer(kernelArgument.getId());
-
-    bool zeroCopy = false;
-    if (runMode == RunMode::Computation && kernelArgument.getArgumentMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
-    {
-        zeroCopy = true;
-    }
-
-    std::unique_ptr<OpenclBuffer> buffer = std::make_unique<OpenclBuffer>(context->getContext(), kernelArgument, zeroCopy);
-    if (!zeroCopy)
-    {
-        buffer->uploadData(commandQueue->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
-    }
-    buffers.insert(std::move(buffer)); // buffer data will be stolen
-}
-
-void OpenclCore::updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes)
-{
-    OpenclBuffer* buffer = findBuffer(argumentId);
-
-    if (buffer == nullptr)
-    {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
-    }
-
-    buffer->uploadData(commandQueue->getQueue(), data, dataSizeInBytes);
-}
-
-KernelArgument OpenclCore::downloadArgument(const size_t argumentId) const
-{
-    OpenclBuffer* buffer = findBuffer(argumentId);
-
-    if (buffer == nullptr)
-    {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
-    }
-
-    KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
-        buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
-    buffer->downloadData(commandQueue->getQueue(), argument.getData(), argument.getDataSizeInBytes());
-    
-    return argument;
-}
-
-void OpenclCore::downloadArgument(const size_t argumentId, void* destination) const
-{
-    OpenclBuffer* buffer = findBuffer(argumentId);
-
-    if (buffer == nullptr)
-    {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
-    }
-
-    buffer->downloadData(commandQueue->getQueue(), destination, buffer->getBufferSize());
-}
-
-void OpenclCore::downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const
-{
-    OpenclBuffer* buffer = findBuffer(argumentId);
-
-    if (buffer == nullptr)
-    {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(argumentId));
-    }
-
-    buffer->downloadData(commandQueue->getQueue(), destination, dataSizeInBytes);
-}
-
-void OpenclCore::clearBuffer(const size_t argumentId)
-{
-    auto iterator = buffers.cbegin();
-
-    while (iterator != buffers.cend())
-    {
-        if (iterator->get()->getKernelArgumentId() == argumentId)
-        {
-            buffers.erase(iterator);
-            return;
-        }
-        else
-        {
-            ++iterator;
-        }
-    }
-}
-
-void OpenclCore::clearBuffers()
-{
-    buffers.clear();
-}
-
-void OpenclCore::clearBuffers(const ArgumentAccessType& accessType)
-{
-    auto iterator = buffers.cbegin();
-
-    while (iterator != buffers.cend())
-    {
-        if (iterator->get()->getOpenclMemoryFlag() == getOpenclMemoryType(accessType))
-        {
-            iterator = buffers.erase(iterator);
-        }
-        else
-        {
-            ++iterator;
-        }
-    }
-}
-
-KernelRunResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-    const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
-{
-    std::unique_ptr<OpenclProgram> program = createAndBuildProgram(kernelData.getSource());
-    std::unique_ptr<OpenclKernel> kernel = createKernel(*program, kernelData.getName());
-
-    for (const auto argument : argumentPointers)
-    {
-        setKernelArgument(*kernel, *argument);
-    }
-
-    Timer timer;
-    timer.start();
-    cl_ulong duration = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize());
-    timer.stop();
-    uint64_t overhead = timer.getElapsedTime();
-
-    for (const auto& descriptor : outputDescriptors)
-    {
-        if (descriptor.getOutputSizeInBytes() == 0)
-        {
-            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
-        }
-        else
-        {
-            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
-        }
-    }
-
-    return KernelRunResult(static_cast<uint64_t>(duration), overhead);
-}
-
 std::unique_ptr<OpenclProgram> OpenclCore::createAndBuildProgram(const std::string& source) const
 {
     auto program = std::make_unique<OpenclProgram>(source, context->getContext(), context->getDevices());
@@ -244,7 +244,7 @@ std::unique_ptr<OpenclProgram> OpenclCore::createAndBuildProgram(const std::stri
 
 void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argument)
 {
-    if (argument.getArgumentUploadType() == ArgumentUploadType::Vector)
+    if (argument.getUploadType() == ArgumentUploadType::Vector)
     {
         if (!loadBufferFromCache(argument.getId(), kernel))
         {
@@ -252,7 +252,7 @@ void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argumen
             loadBufferFromCache(argument.getId(), kernel);
         }
     }
-    else if (argument.getArgumentUploadType() == ArgumentUploadType::Scalar)
+    else if (argument.getUploadType() == ArgumentUploadType::Scalar)
     {
         kernel.setKernelArgumentScalar(argument.getData(), argument.getElementSizeInBytes());
     }
@@ -395,11 +395,11 @@ DeviceType OpenclCore::getDeviceType(const cl_device_type deviceType)
     }
 }
 
-OpenclBuffer* OpenclCore::findBuffer(const size_t argumentId) const
+OpenclBuffer* OpenclCore::findBuffer(const ArgumentId id) const
 {
     for (const auto& buffer : buffers)
     {
-        if (buffer->getKernelArgumentId() == argumentId)
+        if (buffer->getKernelArgumentId() == id)
         {
             return buffer.get();
         }
@@ -414,9 +414,9 @@ void OpenclCore::setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffe
     kernel.setKernelArgumentVector((void*)&clBuffer);
 }
 
-bool OpenclCore::loadBufferFromCache(const size_t argumentId, OpenclKernel& kernel) const
+bool OpenclCore::loadBufferFromCache(const ArgumentId id, OpenclKernel& kernel) const
 {
-    OpenclBuffer* buffer = findBuffer(argumentId);
+    OpenclBuffer* buffer = findBuffer(id);
 
     if (buffer != nullptr)
     {

@@ -3,7 +3,6 @@
 #include <fstream>
 #include <memory>
 #include <vector>
-
 #include "compute_engine/compute_engine.h"
 #include "enum/compute_api.h"
 #include "enum/run_mode.h"
@@ -23,48 +22,47 @@ public:
     explicit TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const RunMode& runMode);
 
     // Kernel manager methods
-    size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
-    size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
+    KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
+    KernelId addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
-    size_t addKernelComposition(const std::string& compositionName, const std::vector<size_t>& kernelIds,
-        std::unique_ptr<TuningManipulator> tuningManipulator);
-    void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-        const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
-    void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds,
+        std::unique_ptr<TuningManipulator> manipulator);
+    void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
+        const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
+    void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
-    void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIndices);
-    void addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName,
-        const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction,
+    void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
+    void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+        const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
         const Dimension& modifierDimension);
-    void setCompositionKernelArguments(const size_t compositionId, const size_t kernelId, const std::vector<size_t>& argumentIds);
-    void setGlobalSizeType(const GlobalSizeType& globalSizeType);
+    void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
+    void setGlobalSizeType(const GlobalSizeType& type);
 
     // Argument manager methods
-    size_t addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+    ArgumentId addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
         const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
 
     // Tuning runner methods
-    void tuneKernel(const size_t kernelId);
-    void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
-        const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
-    void setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
-    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
-    void setValidationRange(const size_t argumentId, const size_t validationRange);
-    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
-        const std::vector<size_t>& resultArgumentIds);
-    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
-    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
+    void tuneKernel(const KernelId id);
+    void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
+    void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
+    void setValidationMethod(const ValidationMethod& method, const double toleranceThreshold);
+    void setValidationRange(const ArgumentId id, const size_t range);
+    void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
+        const std::vector<ArgumentId>& validatedArgumentIds);
+    void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
+    void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
 
     // Result printer methods
-    void setPrintingTimeUnit(const TimeUnit& timeUnit);
-    void setInvalidResultPrinting(const bool flag);
-    void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
-    void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
-    std::vector<ParameterValue> getBestConfiguration(const size_t kernelId) const;
+    void setPrintingTimeUnit(const TimeUnit& unit);
+    void setInvalidResultPrinting(const TunerFlag flag);
+    void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const;
+    void printResult(const KernelId id, const std::string& filePath, const PrintFormat& format) const;
+    std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);
-    void setAutomaticGlobalSizeCorrection(const bool flag);
+    void setAutomaticGlobalSizeCorrection(const TunerFlag flag);
     void printComputeApiInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const;

@@ -3,17 +3,17 @@
 namespace ktt
 {
 
-ArgumentOutputDescriptor::ArgumentOutputDescriptor(const size_t argumentId, void* outputDestination) :
-    ArgumentOutputDescriptor(argumentId, outputDestination, 0)
+ArgumentOutputDescriptor::ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination) :
+    ArgumentOutputDescriptor(id, outputDestination, 0)
 {}
 
-ArgumentOutputDescriptor::ArgumentOutputDescriptor(const size_t argumentId, void* outputDestination, const size_t outputSizeInBytes) :
-    argumentId(argumentId),
+ArgumentOutputDescriptor::ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSizeInBytes) :
+    argumentId(id),
     outputDestination(outputDestination),
     outputSizeInBytes(outputSizeInBytes)
 {}
 
-size_t ArgumentOutputDescriptor::getArgumentId() const
+ArgumentId ArgumentOutputDescriptor::getArgumentId() const
 {
     return argumentId;
 }

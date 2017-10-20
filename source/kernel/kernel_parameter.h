@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-
+#include "ktt_type_aliases.h"
 #include "enum/dimension.h"
 #include "enum/thread_modifier_action.h"
 #include "enum/thread_modifier_type.h"
@@ -13,17 +13,17 @@ namespace ktt
 class KernelParameter
 {
 public:
-    explicit KernelParameter(const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
-        const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
+    explicit KernelParameter(const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& modifierType,
+        const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
 
-    void addCompositionKernel(const size_t id);
+    void addCompositionKernel(const KernelId id);
 
     std::string getName() const;
     std::vector<size_t> getValues() const;
-    ThreadModifierType getThreadModifierType() const;
-    ThreadModifierAction getThreadModifierAction() const;
+    ThreadModifierType getModifierType() const;
+    ThreadModifierAction getModifierAction() const;
     Dimension getModifierDimension() const;
-    std::vector<size_t> getCompositionKernels() const;
+    std::vector<KernelId> getCompositionKernels() const;
 
     bool operator==(const KernelParameter& other) const;
     bool operator!=(const KernelParameter& other) const;
@@ -34,7 +34,7 @@ private:
     ThreadModifierType threadModifierType;
     ThreadModifierAction threadModifierAction;
     Dimension modifierDimension;
-    std::vector<size_t> compositionKernels;
+    std::vector<KernelId> compositionKernels;
 };
 
 } // namespace ktt

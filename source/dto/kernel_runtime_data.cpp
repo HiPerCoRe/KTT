@@ -1,39 +1,38 @@
 #include "kernel_runtime_data.h"
-#include "utility/ktt_utility.h"
 
 namespace ktt
 {
 
-KernelRuntimeData::KernelRuntimeData(const size_t id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize, const std::vector<size_t>& argumentIndices) :
+KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
+    const DimensionVector& localSize, const std::vector<ArgumentId>& argumentIds) :
     id(id),
     name(name),
     source(source),
-    globalSize(convertDimensionVector(globalSize)),
-    localSize(convertDimensionVector(localSize)),
+    globalSize(globalSize.getVector()),
+    localSize(localSize.getVector()),
     globalSizeDimensionVector(globalSize),
     localSizeDimensionVector(localSize),
-    argumentIndices(argumentIndices)
+    argumentIds(argumentIds)
 {}
 
 void KernelRuntimeData::setGlobalSize(const DimensionVector& globalSize)
 {
     this->globalSizeDimensionVector = globalSize;
-    this->globalSize = convertDimensionVector(globalSize);
+    this->globalSize = globalSize.getVector();
 }
 
 void KernelRuntimeData::setLocalSize(const DimensionVector& localSize)
 {
     this->localSizeDimensionVector = localSize;
-    this->localSize = convertDimensionVector(localSize);
+    this->localSize = localSize.getVector();
 }
 
-void KernelRuntimeData::setArgumentIndices(const std::vector<size_t>& argumentIndices)
+void KernelRuntimeData::setArgumentIndices(const std::vector<ArgumentId>& argumentIds)
 {
-    this->argumentIndices = argumentIndices;
+    this->argumentIds = argumentIds;
 }
 
-size_t KernelRuntimeData::getId() const
+KernelId KernelRuntimeData::getId() const
 {
     return id;
 }
@@ -68,9 +67,9 @@ DimensionVector KernelRuntimeData::getLocalSizeDimensionVector() const
     return localSizeDimensionVector;
 }
 
-std::vector<size_t> KernelRuntimeData::getArgumentIndices() const
+std::vector<ArgumentId> KernelRuntimeData::getArgumentIds() const
 {
-    return argumentIndices;
+    return argumentIds;
 }
 
 } // namespace ktt

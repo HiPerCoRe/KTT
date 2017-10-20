@@ -1,5 +1,4 @@
 #include "catch.hpp"
-
 #include "compute_engine/opencl/opencl_core.h"
 #include "kernel_argument/kernel_argument.h"
 
@@ -49,10 +48,10 @@ TEST_CASE("Working with OpenCL buffer", "[openclCore]")
         core.uploadArgument(argument);
         ktt::KernelArgument resultArgument = core.downloadArgument(argument.getId());
 
-        REQUIRE(resultArgument.getArgumentDataType() == argument.getArgumentDataType());
-        REQUIRE(resultArgument.getArgumentMemoryLocation() == argument.getArgumentMemoryLocation());
-        REQUIRE(resultArgument.getArgumentAccessType() == argument.getArgumentAccessType());
-        REQUIRE(resultArgument.getArgumentUploadType() == argument.getArgumentUploadType());
+        REQUIRE(resultArgument.getDataType() == argument.getDataType());
+        REQUIRE(resultArgument.getMemoryLocation() == argument.getMemoryLocation());
+        REQUIRE(resultArgument.getAccessType() == argument.getAccessType());
+        REQUIRE(resultArgument.getUploadType() == argument.getUploadType());
         REQUIRE(resultArgument.getDataSizeInBytes() == argument.getDataSizeInBytes());
         std::vector<float> result = resultArgument.getDataFloat();
         for (size_t i = 0; i < data.size(); i++)

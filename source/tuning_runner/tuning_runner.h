@@ -4,7 +4,6 @@
 #include <memory>
 #include <utility>
 #include <vector>
-
 #include "manipulator_interface_implementation.h"
 #include "result_validator.h"
 #include "searcher/searcher.h"
@@ -27,19 +26,17 @@ public:
         const RunMode& runMode);
 
     // Core methods
-    std::vector<TuningResult> tuneKernel(const size_t id);
-    std::vector<TuningResult> tuneKernelComposition(const size_t id);
-    void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
-        const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
-    void runKernelComposition(const size_t compositionId, const std::vector<ParameterValue>& compositionConfiguration,
-        const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
-    void setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
-    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
-    void setValidationRange(const size_t argumentId, const size_t validationRange);
-    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
-        const std::vector<size_t>& resultArgumentIds);
-    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
-    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
+    std::vector<TuningResult> tuneKernel(const KernelId id);
+    std::vector<TuningResult> tuneKernelComposition(const KernelId id);
+    void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
+    void runComposition(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
+    void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
+    void setValidationMethod(const ValidationMethod& method, const double toleranceThreshold);
+    void setValidationRange(const ArgumentId id, const size_t range);
+    void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
+        const std::vector<ArgumentId>& validatedArgumentIds);
+    void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
+    void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
 
 private:
     // Attributes
@@ -48,23 +45,23 @@ private:
     Logger* logger;
     ComputeEngine* computeEngine;
     std::unique_ptr<ResultValidator> resultValidator;
-    std::map<size_t, std::unique_ptr<TuningManipulator>> manipulatorMap;
+    std::map<KernelId, std::unique_ptr<TuningManipulator>> tuningManipulators;
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
     SearchMethod searchMethod;
     std::vector<double> searchArguments;
     RunMode runMode;
 
     // Helper methods
-    TuningResult runKernelSimple(const Kernel& kernel, const KernelConfiguration& currentConfiguration,
-        const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
-    TuningResult runKernelWithManipulator(const Kernel& kernel, TuningManipulator* manipulator, const KernelConfiguration& currentConfiguration,
-        const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
-    TuningResult runKernelCompositionWithManipulator(const KernelComposition& kernelComposition, TuningManipulator* manipulator,
-        const KernelConfiguration& currentConfiguration, const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
-    std::unique_ptr<Searcher> getSearcher(const SearchMethod& searchMethod, const std::vector<double>& searchArguments,
+    TuningResult runKernelSimple(const Kernel& kernel, const KernelConfiguration& configuration,
+        const std::vector<ArgumentOutputDescriptor>& output);
+    TuningResult runKernelWithManipulator(const Kernel& kernel, TuningManipulator* manipulator, const KernelConfiguration& configuration,
+        const std::vector<ArgumentOutputDescriptor>& output);
+    TuningResult runCompositionWithManipulator(const KernelComposition& composition, TuningManipulator* manipulator,
+        const KernelConfiguration& configuration, const std::vector<ArgumentOutputDescriptor>& output);
+    std::unique_ptr<Searcher> getSearcher(const SearchMethod& method, const std::vector<double>& arguments,
         const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters) const;
-    bool validateResult(const Kernel& kernel, const TuningResult& tuningResult);
-    std::string getSearchMethodName(const SearchMethod& searchMethod) const;
+    bool validateResult(const Kernel& kernel, const TuningResult& result);
+    std::string getSearchMethodName(const SearchMethod& method) const;
     Kernel compositionToKernel(const KernelComposition& composition) const;
 };
 

@@ -1,12 +1,11 @@
 #include <stdexcept>
-
 #include "kernel.h"
 #include "utility/ktt_utility.h"
 
 namespace ktt
 {
 
-Kernel::Kernel(const size_t id, const std::string& source, const std::string& name, const DimensionVector& globalSize,
+Kernel::Kernel(const KernelId id, const std::string& source, const std::string& name, const DimensionVector& globalSize,
     const DimensionVector& localSize) :
     id(id),
     source(source),
@@ -39,17 +38,17 @@ void Kernel::addConstraint(const KernelConstraint& constraint)
     constraints.push_back(constraint);
 }
 
-void Kernel::setArguments(const std::vector<size_t>& argumentIndices)
+void Kernel::setArguments(const std::vector<ArgumentId>& argumentIds)
 {
-    this->argumentIndices = argumentIndices;
+    this->argumentIds = argumentIds;
 }
 
-void Kernel::setTuningManipulatorFlag(const bool tuningManipulatorFlag)
+void Kernel::setTuningManipulatorFlag(const TunerFlag flag)
 {
-    this->tuningManipulatorFlag = tuningManipulatorFlag;
+    this->tuningManipulatorFlag = flag;
 }
 
-size_t Kernel::getId() const
+KernelId Kernel::getId() const
 {
     return id;
 }
@@ -86,12 +85,12 @@ std::vector<KernelConstraint> Kernel::getConstraints() const
 
 size_t Kernel::getArgumentCount() const
 {
-    return argumentIndices.size();
+    return argumentIds.size();
 }
 
-std::vector<size_t> Kernel::getArgumentIndices() const
+std::vector<ArgumentId> Kernel::getArgumentIds() const
 {
-    return argumentIndices;
+    return argumentIds;
 }
 
 bool Kernel::hasParameter(const std::string& parameterName) const

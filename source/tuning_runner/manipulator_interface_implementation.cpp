@@ -1,6 +1,5 @@
 #include <stdexcept>
 #include <utility>
-
 #include "manipulator_interface_implementation.h"
 #include "utility/ktt_utility.h"
 #include "utility/timer.h"
@@ -11,120 +10,116 @@ namespace ktt
 ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeEngine* computeEngine) :
     computeEngine(computeEngine),
     currentResult(KernelRunResult(0, 0)),
-    currentConfiguration(KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), {}, GlobalSizeType::Opencl))
+    currentConfiguration(KernelConfiguration(DimensionVector(), DimensionVector(), std::vector<ParameterPair>{}, GlobalSizeType::Opencl))
 {}
 
-void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId)
+void ManipulatorInterfaceImplementation::runKernel(const KernelId id)
 {
-    auto dataPointer = kernelDataMap.find(kernelId);
-    if (dataPointer == kernelDataMap.end())
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
     {
-        throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
-            + " was called inside tuning manipulator which did not advertise utilization of this kernel");
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
-    runKernel(kernelId, dataPointer->second.getGlobalSizeDimensionVector(), dataPointer->second.getLocalSizeDimensionVector());
+    runKernel(id, dataPointer->second.getGlobalSizeDimensionVector(), dataPointer->second.getLocalSizeDimensionVector());
 }
 
-void ManipulatorInterfaceImplementation::runKernel(const size_t kernelId, const DimensionVector& globalSize,
+void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
     Timer timer;
     timer.start();
 
-    auto dataPointer = kernelDataMap.find(kernelId);
-    if (dataPointer == kernelDataMap.end())
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
     {
-        throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
-            + " was called inside tuning manipulator which did not advertise utilization of this kernel");
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
     KernelRuntimeData kernelData = dataPointer->second;
     kernelData.setGlobalSize(globalSize);
     kernelData.setLocalSize(localSize);
 
-    KernelRunResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIndices()), {});
+    KernelRunResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()),
+        std::vector<ArgumentOutputDescriptor>{});
     currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead());
 
     timer.stop();
     currentResult.increaseOverhead(timer.getElapsedTime());
 }
 
-DimensionVector ManipulatorInterfaceImplementation::getCurrentGlobalSize(const size_t kernelId) const
+DimensionVector ManipulatorInterfaceImplementation::getCurrentGlobalSize(const KernelId id) const
 {
-    auto dataPointer = kernelDataMap.find(kernelId);
-    if (dataPointer == kernelDataMap.end())
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
     {
-        throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
-            + " was called inside tuning manipulator which did not advertise utilization of this kernel");
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
     return dataPointer->second.getGlobalSizeDimensionVector();
 }
 
-DimensionVector ManipulatorInterfaceImplementation::getCurrentLocalSize(const size_t kernelId) const
+DimensionVector ManipulatorInterfaceImplementation::getCurrentLocalSize(const KernelId id) const
 {
-    auto dataPointer = kernelDataMap.find(kernelId);
-    if (dataPointer == kernelDataMap.end())
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
     {
-        throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
-            + " was called inside tuning manipulator which did not advertise utilization of this kernel");
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
     return dataPointer->second.getLocalSizeDimensionVector();
 }
 
-std::vector<ParameterValue> ManipulatorInterfaceImplementation::getCurrentConfiguration() const
+std::vector<ParameterPair> ManipulatorInterfaceImplementation::getCurrentConfiguration() const
 {
-    return currentConfiguration.getParameterValues();
+    return currentConfiguration.getParameterPairs();
 }
 
-void ManipulatorInterfaceImplementation::updateArgumentScalar(const size_t argumentId, const void* argumentData)
+void ManipulatorInterfaceImplementation::updateArgumentScalar(const ArgumentId id, const void* argumentData)
 {
-    updateArgumentSimple(argumentId, argumentData, 1, ArgumentUploadType::Scalar);
+    updateArgumentSimple(id, argumentData, 1, ArgumentUploadType::Scalar);
 }
 
-void ManipulatorInterfaceImplementation::updateArgumentLocal(const size_t argumentId, const size_t numberOfElements)
+void ManipulatorInterfaceImplementation::updateArgumentLocal(const ArgumentId id, const size_t numberOfElements)
 {
-    updateArgumentSimple(argumentId, nullptr, numberOfElements, ArgumentUploadType::Local);
+    updateArgumentSimple(id, nullptr, numberOfElements, ArgumentUploadType::Local);
 }
 
-void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData)
+void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId id, const void* argumentData)
 {
-    auto argumentPointer = vectorArgumentMap.find(argumentId);
-    if (argumentPointer == vectorArgumentMap.end())
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
     {
-        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(argumentId, argumentData, argumentPointer->second->getDataSizeInBytes());
+    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getDataSizeInBytes());
 }
 
-void ManipulatorInterfaceImplementation::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)
+void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)
 {
-    auto argumentPointer = vectorArgumentMap.find(argumentId);
-    if (argumentPointer == vectorArgumentMap.end())
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
     {
-        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(argumentId, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
 }
 
-void ManipulatorInterfaceImplementation::getArgumentVector(const size_t argumentId, void* destination) const
+void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination) const
 {
-    computeEngine->downloadArgument(argumentId, destination);
+    computeEngine->downloadArgument(id, destination);
 }
 
-void ManipulatorInterfaceImplementation::getArgumentVector(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const
+void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
 {
-    computeEngine->downloadArgument(argumentId, destination, dataSizeInBytes);
+    computeEngine->downloadArgument(id, destination, dataSizeInBytes);
 }
 
-void ManipulatorInterfaceImplementation::changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
+void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
-    auto dataPointer = kernelDataMap.find(kernelId);
-    if (dataPointer == kernelDataMap.end())
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
     {
-        throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
-            + " was called inside tuning manipulator which did not advertise utilization of this kernel");
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
     if (!containsUnique(argumentIds))
@@ -135,21 +130,20 @@ void ManipulatorInterfaceImplementation::changeKernelArguments(const size_t kern
     dataPointer->second.setArgumentIndices(argumentIds);
 }
 
-void ManipulatorInterfaceImplementation::swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond)
+void ManipulatorInterfaceImplementation::swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond)
 {
-    auto dataPointer = kernelDataMap.find(kernelId);
-    if (dataPointer == kernelDataMap.end())
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
     {
-        throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
-            + " was called inside tuning manipulator which did not advertise utilization of this kernel");
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    auto indices = dataPointer->second.getArgumentIndices();
+    auto indices = dataPointer->second.getArgumentIds();
     
     if (!elementExists(argumentIdFirst, indices) || !elementExists(argumentIdSecond, indices))
     {
         throw std::runtime_error(std::string("One of the following argument ids is not associated with this kernel: ")
-            + std::to_string(argumentIdFirst) + ", " + std::to_string(argumentIdSecond) + ", kernel id: " + std::to_string(kernelId));
+            + std::to_string(argumentIdFirst) + ", " + std::to_string(argumentIdSecond) + ", kernel id: " + std::to_string(id));
     }
 
     size_t firstIndex;
@@ -170,42 +164,42 @@ void ManipulatorInterfaceImplementation::swapKernelArguments(const size_t kernel
     dataPointer->second.setArgumentIndices(indices);
 }
 
-void ManipulatorInterfaceImplementation::addKernel(const size_t id, const KernelRuntimeData& kernelRuntimeData)
+void ManipulatorInterfaceImplementation::addKernel(const KernelId id, const KernelRuntimeData& data)
 {
-    kernelDataMap.insert(std::make_pair(id, kernelRuntimeData));
+    kernelData.insert(std::make_pair(id, data));
 }
 
-void ManipulatorInterfaceImplementation::setConfiguration(const KernelConfiguration& kernelConfiguration)
+void ManipulatorInterfaceImplementation::setConfiguration(const KernelConfiguration& configuration)
 {
-    currentConfiguration = kernelConfiguration;
+    currentConfiguration = configuration;
 }
 
-void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<KernelArgument*>& kernelArguments)
+void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<KernelArgument*>& arguments)
 {
-    for (const auto& kernelArgument : kernelArguments)
+    for (const auto& kernelArgument : arguments)
     {
-        if (kernelArgument->getArgumentUploadType() == ArgumentUploadType::Vector)
+        if (kernelArgument->getUploadType() == ArgumentUploadType::Vector)
         {
-            vectorArgumentMap.insert(std::make_pair(kernelArgument->getId(), kernelArgument));
+            vectorArguments.insert(std::make_pair(kernelArgument->getId(), kernelArgument));
         }
         else
         {
-            nonVectorArgumentMap.insert(std::make_pair(kernelArgument->getId(), *kernelArgument));
+            nonVectorArguments.insert(std::make_pair(kernelArgument->getId(), *kernelArgument));
         }
     }
 }
 
 void ManipulatorInterfaceImplementation::uploadBuffers()
 {
-    for (auto& argument : vectorArgumentMap)
+    for (auto& argument : vectorArguments)
     {
         computeEngine->uploadArgument(*argument.second);
     }
 }
 
-void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const
+void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<ArgumentOutputDescriptor>& output) const
 {
-    for (const auto& descriptor : outputDescriptors)
+    for (const auto& descriptor : output)
     {
         if (descriptor.getOutputSizeInBytes() == 0)
         {
@@ -221,10 +215,10 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Argum
 void ManipulatorInterfaceImplementation::clearData()
 {
     currentResult = KernelRunResult(0, 0);
-    currentConfiguration = KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), {}, GlobalSizeType::Opencl);
-    kernelDataMap.clear();
-    vectorArgumentMap.clear();
-    nonVectorArgumentMap.clear();
+    currentConfiguration = KernelConfiguration(DimensionVector(), DimensionVector(), std::vector<ParameterPair>{}, GlobalSizeType::Opencl);
+    kernelData.clear();
+    vectorArguments.clear();
+    nonVectorArguments.clear();
 }
 
 KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const
@@ -232,17 +226,17 @@ KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const
     return currentResult;
 }
 
-std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<size_t>& argumentIndices)
+std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<ArgumentId>& argumentIds)
 {
     std::vector<KernelArgument*> result;
 
-    for (const auto index : argumentIndices)
+    for (const auto id : argumentIds)
     {
         bool argumentAdded = false;
 
-        for (const auto argument : vectorArgumentMap)
+        for (const auto argument : vectorArguments)
         {
-            if (index == argument.second->getId())
+            if (id == argument.second->getId())
             {
                 result.push_back(argument.second);
                 argumentAdded = true;
@@ -255,9 +249,9 @@ std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPoin
             continue;
         }
 
-        for (auto& argument : nonVectorArgumentMap)
+        for (auto& argument : nonVectorArguments)
         {
-            if (index == argument.second.getId())
+            if (id == argument.second.getId())
             {
                 result.push_back(&argument.second);
                 break;
@@ -268,25 +262,25 @@ std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPoin
     return result;
 }
 
-void ManipulatorInterfaceImplementation::updateArgumentSimple(const size_t argumentId, const void* argumentData, const size_t numberOfElements,
-    const ArgumentUploadType& argumentUploadType)
+void ManipulatorInterfaceImplementation::updateArgumentSimple(const ArgumentId id, const void* argumentData, const size_t numberOfElements,
+    const ArgumentUploadType& uploadType)
 {
-    auto argumentPointer = nonVectorArgumentMap.find(argumentId);
-    if (argumentPointer == nonVectorArgumentMap.end())
+    auto argumentPointer = nonVectorArguments.find(id);
+    if (argumentPointer == nonVectorArguments.end())
     {
-        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(argumentId));
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    if (argumentPointer->second.getArgumentUploadType() != argumentUploadType)
+    if (argumentPointer->second.getUploadType() != uploadType)
     {
         throw std::runtime_error("Cannot convert between scalar and vector arguments");
     }
 
-    auto updatedArgument = KernelArgument(argumentId, argumentData, numberOfElements, argumentPointer->second.getArgumentDataType(),
-        argumentPointer->second.getArgumentMemoryLocation(), argumentPointer->second.getArgumentAccessType(), argumentUploadType);
+    auto updatedArgument = KernelArgument(id, argumentData, numberOfElements, argumentPointer->second.getDataType(),
+        argumentPointer->second.getMemoryLocation(), argumentPointer->second.getAccessType(), uploadType);
 
-    nonVectorArgumentMap.erase(argumentId);
-    nonVectorArgumentMap.insert(std::make_pair(argumentId, updatedArgument));
+    nonVectorArguments.erase(id);
+    nonVectorArguments.insert(std::make_pair(id, updatedArgument));
 }
 
 } // namespace ktt

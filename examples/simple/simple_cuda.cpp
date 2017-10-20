@@ -1,8 +1,6 @@
 #include <iostream>
-#include <stdexcept>
 #include <string>
 #include <vector>
-
 #include "tuner_api.h"
 
 // Implementation of reference class interface for result validation
@@ -24,13 +22,13 @@ public:
         }
     }
 
-    const void* getData(const size_t argumentId) const override
+    const void* getData(const ktt::ArgumentId id) const override
     {
-        if (argumentId == resultArgumentId)
+        if (id == resultArgumentId)
         {
             return (void*)result.data();
         }
-        throw std::runtime_error("No result available for specified argument id");
+        return nullptr;
     }
 
 private:
@@ -48,17 +46,17 @@ int main(int argc, char** argv)
 
     if (argc >= 2)
     {
-        deviceIndex = std::stoul(std::string{ argv[1] });
+        deviceIndex = std::stoul(std::string{argv[1]});
         if (argc >= 3)
         {
-            kernelFile = std::string{ argv[2] };
+            kernelFile = std::string{argv[2]};
         }
     }
 
     // Declare kernel parameters
     const size_t numberOfElements = 1024 * 1024;
-    const ktt::DimensionVector blockDimensions(256, 1, 1);
-    const ktt::DimensionVector gridDimensions(numberOfElements / std::get<0>(blockDimensions), 1, 1);
+    const ktt::DimensionVector blockDimensions(256);
+    const ktt::DimensionVector gridDimensions(numberOfElements / blockDimensions.getSizeX());
 
     // Declare data variables
     std::vector<float> a(numberOfElements);
@@ -76,19 +74,19 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(0, deviceIndex, ktt::ComputeApi::Cuda);
 
     // Add new kernel to tuner, specify kernel name, grid dimensions and block dimensions
-    size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("simpleKernel"), gridDimensions, blockDimensions);
+    ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, std::string("simpleKernel"), gridDimensions, blockDimensions);
 
     // Add new arguments to tuner, argument data is copied from std::vector containers
-    size_t aId = tuner.addArgument(a, ktt::ArgumentAccessType::ReadOnly);
-    size_t bId = tuner.addArgument(b, ktt::ArgumentAccessType::ReadOnly);
-    size_t resultId = tuner.addArgument(result, ktt::ArgumentAccessType::WriteOnly);
+    ktt::ArgumentId aId = tuner.addArgumentVector(a, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId bId = tuner.addArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId resultId = tuner.addArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
 
     // Set kernel arguments by providing corresponding argument ids returned by addArgument() method, order of arguments is important
-    tuner.setKernelArguments(kernelId, std::vector<size_t>{ aId, bId, resultId });
+    tuner.setKernelArguments(kernelId, std::vector<size_t>{aId, bId, resultId});
 
     // Set reference class, which implements C++ version of kernel computation in order to validate results provided by kernel,
     // provide list of arguments which will be validated
-    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(a, b, result, resultId), std::vector<size_t>{ resultId });
+    tuner.setReferenceClass(kernelId, std::make_unique<SimpleReferenceClass>(a, b, result, resultId), std::vector<size_t>{resultId});
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);

@@ -5,7 +5,6 @@
 #include <regex>
 #include <string>
 #include <vector>
-
 #include "cuda.h"
 #include "nvrtc.h"
 #include "cuda_utility.h"

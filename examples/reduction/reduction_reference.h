@@ -1,19 +1,18 @@
 #pragma once
 
 #include <iomanip>
-
 #include "tuner_api.h"
 
 class referenceReduction : public ktt::ReferenceClass
 {
 public:
-    referenceReduction(const std::vector<float>& src, const size_t resultArgumentId) :
+    referenceReduction(const std::vector<float>& src, const ktt::ArgumentId resultArgumentId) :
         src(src),
         resultArgumentId(resultArgumentId)
     {}
 
     // High precision of reduction
-    virtual void computeResult() override {
+    void computeResult() override {
         std::vector<double> resD(src.size());
         size_t resSize = src.size();
         for (int i = 0; i < resSize; i++)
@@ -30,19 +29,19 @@ public:
         std::cout << "Reference in double: " << std::setprecision(10) << resD[0] << std::endl;
     }
 
-    virtual const void* getData(const size_t argumentId) const override {
-        if (argumentId == resultArgumentId) {
+    const void* getData(const ktt::ArgumentId id) const override {
+        if (id == resultArgumentId) {
             return (void*)res.data();
         }
-        throw std::runtime_error("No result available for specified argument id");
+        return nullptr;
     }
 
-    virtual size_t getNumberOfElements(const size_t argumentId) const override {
+    size_t getNumberOfElements(const size_t argumentId) const override {
         return 1;
     }
 
 private:
     std::vector<float> res;
     std::vector<float> src;
-    size_t resultArgumentId;
+    ktt::ArgumentId resultArgumentId;
 };

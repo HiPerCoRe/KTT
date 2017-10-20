@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
 #include "kernel_run_result.h"
 #include "kernel/kernel_configuration.h"
 

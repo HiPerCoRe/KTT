@@ -2,9 +2,7 @@
 #include <random>
 #include <string>
 #include <vector>
-
 #include "tuner_api.h"
-
 #include "coulomb_sum_3d_iterative_tunable.h"
 
 int main(int argc, char** argv)
@@ -15,10 +13,10 @@ int main(int argc, char** argv)
 
     if (argc >= 2)
     {
-        platformIndex = std::stoul(std::string{ argv[1] });
+        platformIndex = std::stoul(std::string{argv[1]});
         if (argc >= 3)
         {
-            deviceIndex = std::stoul(std::string{ argv[2] });
+            deviceIndex = std::stoul(std::string{argv[2]});
         }
     }
 
@@ -30,8 +28,8 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
     // Create tunable coulomb and execute tuning
-    tunableCoulomb* coulomb = new tunableCoulomb(&tuner, gridSize, atoms);
-    tuner.setTuningManipulator(coulomb->getKernelId(), std::unique_ptr<tunableCoulomb>(coulomb));
+    TunableCoulomb* coulomb = new TunableCoulomb(&tuner, gridSize, atoms);
+    tuner.setTuningManipulator(coulomb->getKernelId(), std::unique_ptr<TunableCoulomb>(coulomb));
     coulomb->tune();
 
     return 0;

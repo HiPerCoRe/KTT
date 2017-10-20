@@ -1,12 +1,11 @@
 #include <cstring>
 #include <stdexcept>
-
 #include "kernel_argument.h"
 
 namespace ktt
 {
 
-KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, const ArgumentDataType& dataType,
+KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElements, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType) :
     id(id),
     numberOfElements(numberOfElements),
@@ -23,12 +22,12 @@ KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, c
     prepareData(numberOfElements, argumentDataType);
 }
 
-KernelArgument::KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType) :
     KernelArgument(id, data, numberOfElements, dataType, memoryLocation, accessType, uploadType, true)
 {}
 
-KernelArgument::KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool dataOwned) :
     id(id),
     numberOfElements(numberOfElements),
@@ -71,7 +70,7 @@ void KernelArgument::updateData(const void* data, const size_t numberOfElements)
     }
 }
 
-size_t KernelArgument::getId() const
+ArgumentId KernelArgument::getId() const
 {
     return id;
 }
@@ -81,22 +80,22 @@ size_t KernelArgument::getNumberOfElements() const
     return numberOfElements;
 }
 
-ArgumentDataType KernelArgument::getArgumentDataType() const
+ArgumentDataType KernelArgument::getDataType() const
 {
     return argumentDataType;
 }
 
-ArgumentMemoryLocation KernelArgument::getArgumentMemoryLocation() const
+ArgumentMemoryLocation KernelArgument::getMemoryLocation() const
 {
     return argumentMemoryLocation;
 }
 
-ArgumentAccessType KernelArgument::getArgumentAccessType() const
+ArgumentAccessType KernelArgument::getAccessType() const
 {
     return argumentAccessType;
 }
 
-ArgumentUploadType KernelArgument::getArgumentUploadType() const
+ArgumentUploadType KernelArgument::getUploadType() const
 {
     return argumentUploadType;
 }
@@ -243,55 +242,55 @@ bool KernelArgument::operator!=(const KernelArgument& other) const
     return !(*this == other);
 }
 
-void KernelArgument::initializeData(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType)
+void KernelArgument::initializeData(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType)
 {
-    prepareData(numberOfElements, argumentDataType);
+    prepareData(numberOfElements, dataType);
     std::memcpy(getData(), data, numberOfElements * getElementSizeInBytes());
 }
 
-void KernelArgument::prepareData(const size_t numberOfElements, const ArgumentDataType& argumentDataType)
+void KernelArgument::prepareData(const size_t numberOfElements, const ArgumentDataType& dataType)
 {
-    if (argumentDataType == ArgumentDataType::Char)
+    if (dataType == ArgumentDataType::Char)
     {
         dataChar.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::UnsignedChar)
+    else if (dataType == ArgumentDataType::UnsignedChar)
     {
         dataUnsignedChar.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Short)
+    else if (dataType == ArgumentDataType::Short)
     {
         dataShort.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::UnsignedShort)
+    else if (dataType == ArgumentDataType::UnsignedShort)
     {
         dataUnsignedShort.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Int)
+    else if (dataType == ArgumentDataType::Int)
     {
         dataInt.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::UnsignedInt)
+    else if (dataType == ArgumentDataType::UnsignedInt)
     {
         dataUnsignedInt.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Long)
+    else if (dataType == ArgumentDataType::Long)
     {
         dataLong.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::UnsignedLong)
+    else if (dataType == ArgumentDataType::UnsignedLong)
     {
         dataUnsignedLong.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Half)
+    else if (dataType == ArgumentDataType::Half)
     {
         dataHalf.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Float)
+    else if (dataType == ArgumentDataType::Float)
     {
         dataFloat.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Double)
+    else if (dataType == ArgumentDataType::Double)
     {
         dataDouble.resize(numberOfElements);
     }

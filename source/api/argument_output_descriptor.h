@@ -13,21 +13,23 @@
 #endif // _MSC_VER
 #endif // KTT_API
 
+#include "ktt_type_aliases.h"
+
 namespace ktt
 {
 
 class KTT_API ArgumentOutputDescriptor
 {
 public:
-    explicit ArgumentOutputDescriptor(const size_t argumentId, void* outputDestination);
-    explicit ArgumentOutputDescriptor(const size_t argumentId, void* outputDestination, const size_t outputSizeInBytes);
+    explicit ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination);
+    explicit ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSizeInBytes);
 
-    size_t getArgumentId() const;
+    ArgumentId getArgumentId() const;
     void* getOutputDestination() const;
     size_t getOutputSizeInBytes() const;
 
 private:
-    size_t argumentId;
+    ArgumentId argumentId;
     void* outputDestination;
     size_t outputSizeInBytes;
 };

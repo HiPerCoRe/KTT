@@ -3,7 +3,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
-
+#include "ktt_type_aliases.h"
 #include "api/argument_output_descriptor.h"
 #include "api/device_info.h"
 #include "api/platform_info.h"
@@ -26,15 +26,15 @@ public:
 
     // Utility methods
     virtual void setCompilerOptions(const std::string& options) = 0;
-    virtual void setAutomaticGlobalSizeCorrection(const bool flag) = 0;
+    virtual void setAutomaticGlobalSizeCorrection(const TunerFlag flag) = 0;
 
     // Argument handling methods
     virtual void uploadArgument(KernelArgument& kernelArgument) = 0;
-    virtual void updateArgument(const size_t argumentId, const void* data, const size_t dataSizeInBytes) = 0;
-    virtual KernelArgument downloadArgument(const size_t argumentId) const = 0;
-    virtual void downloadArgument(const size_t argumentId, void* destination) const = 0;
-    virtual void downloadArgument(const size_t argumentId, void* destination, const size_t dataSizeInBytes) const = 0;
-    virtual void clearBuffer(const size_t argumentId) = 0;
+    virtual void updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes) = 0;
+    virtual KernelArgument downloadArgument(const ArgumentId id) const = 0;
+    virtual void downloadArgument(const ArgumentId id, void* destination) const = 0;
+    virtual void downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const = 0;
+    virtual void clearBuffer(const ArgumentId id) = 0;
     virtual void clearBuffers() = 0;
     virtual void clearBuffers(const ArgumentAccessType& accessType) = 0;
 

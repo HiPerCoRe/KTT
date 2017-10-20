@@ -1,11 +1,10 @@
 #include <stdexcept>
-
 #include "kernel_composition.h"
 
 namespace ktt
 {
 
-KernelComposition::KernelComposition(const size_t id, const std::string& name, const std::vector<const Kernel*>& kernels) :
+KernelComposition::KernelComposition(const KernelId id, const std::string& name, const std::vector<const Kernel*>& kernels) :
     id(id),
     name(name),
     kernels(kernels)
@@ -19,7 +18,7 @@ void KernelComposition::addParameter(const KernelParameter& parameter)
     }
 
     KernelParameter parameterCopy = parameter;
-    if (parameter.getThreadModifierType() != ThreadModifierType::None)
+    if (parameter.getModifierType() != ThreadModifierType::None)
     {
         for (const auto kernel : kernels)
         {
@@ -32,7 +31,7 @@ void KernelComposition::addParameter(const KernelParameter& parameter)
 
 void KernelComposition::addConstraint(const KernelConstraint& constraint)
 {
-    auto parameterNames = constraint.getParameterNames();
+    std::vector<std::string> parameterNames = constraint.getParameterNames();
 
     for (const auto& parameterName : parameterNames)
     {
@@ -45,12 +44,12 @@ void KernelComposition::addConstraint(const KernelConstraint& constraint)
     constraints.push_back(constraint);
 }
 
-void KernelComposition::setSharedArguments(const std::vector<size_t>& argumentIds)
+void KernelComposition::setSharedArguments(const std::vector<ArgumentId>& argumentIds)
 {
     this->sharedArgumentIds = argumentIds;
 }
 
-void KernelComposition::addKernelParameter(const size_t kernelId, const KernelParameter& parameter)
+void KernelComposition::addKernelParameter(const KernelId id, const KernelParameter& parameter)
 {
     if (!hasParameter(parameter.getName()))
     {
@@ -67,8 +66,8 @@ void KernelComposition::addKernelParameter(const size_t kernelId, const KernelPa
         }
     }
 
-    if (parameter.getThreadModifierAction() != targetParameter->getThreadModifierAction()
-        || parameter.getThreadModifierType() != targetParameter->getThreadModifierType()
+    if (parameter.getModifierAction() != targetParameter->getModifierAction()
+        || parameter.getModifierType() != targetParameter->getModifierType()
         || parameter.getModifierDimension() != targetParameter->getModifierDimension()
         || parameter.getValues().size() != targetParameter->getValues().size())
     {
@@ -85,17 +84,17 @@ void KernelComposition::addKernelParameter(const size_t kernelId, const KernelPa
 
     for (const auto currentKernelId : targetParameter->getCompositionKernels())
     {
-        if (currentKernelId == kernelId)
+        if (currentKernelId == id)
         {
             throw std::runtime_error(std::string("Composition parameter with name ") + targetParameter->getName()
-                + " already affects kernel with id: " + std::to_string(kernelId));
+                + " already affects kernel with id: " + std::to_string(id));
         }
     }
 
-    targetParameter->addCompositionKernel(kernelId);
+    targetParameter->addCompositionKernel(id);
 }
 
-void KernelComposition::setKernelArguments(const size_t id, const std::vector<size_t>& argumentIds)
+void KernelComposition::setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
     if (kernelArgumentIds.find(id) != kernelArgumentIds.end())
     {
@@ -104,7 +103,7 @@ void KernelComposition::setKernelArguments(const size_t id, const std::vector<si
     kernelArgumentIds.insert(std::make_pair(id, argumentIds));
 }
 
-size_t KernelComposition::getId() const
+KernelId KernelComposition::getId() const
 {
     return id;
 }
@@ -129,14 +128,14 @@ std::vector<KernelConstraint> KernelComposition::getConstraints() const
     return constraints;
 }
 
-std::vector<size_t> KernelComposition::getSharedArgumentIds() const
+std::vector<ArgumentId> KernelComposition::getSharedArgumentIds() const
 {
     return sharedArgumentIds;
 }
 
-std::vector<size_t> KernelComposition::getKernelArgumentIds(const size_t kernelId) const
+std::vector<ArgumentId> KernelComposition::getKernelArgumentIds(const KernelId id) const
 {
-    auto pointer = kernelArgumentIds.find(kernelId);
+    auto pointer = kernelArgumentIds.find(id);
     if (pointer != kernelArgumentIds.end())
     {
         return pointer->second;

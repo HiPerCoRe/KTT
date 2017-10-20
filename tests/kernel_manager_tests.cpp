@@ -1,18 +1,17 @@
 #include "catch.hpp"
-
 #include "api/device_info.h"
 #include "kernel/kernel_manager.h"
 
 TEST_CASE("Kernel handling operations", "[kernelManager]")
 {
     ktt::KernelManager manager;
-    size_t id = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024, 1, 1),
-        ktt::DimensionVector(16, 16, 1));
+    ktt::KernelId id = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024),
+        ktt::DimensionVector(16, 16));
 
     SECTION("Kernel id is assigned correctly")
     {
-        size_t secondId = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"),
-            ktt::DimensionVector(1024, 1, 1), ktt::DimensionVector(16, 16, 1));
+        ktt::KernelId secondId = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"),
+            ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
 
         REQUIRE(secondId == 1);
     }
@@ -43,8 +42,8 @@ TEST_CASE("Kernel handling operations", "[kernelManager]")
 TEST_CASE("Kernel configuration retrieval", "[kernelManager]")
 {
     ktt::KernelManager manager;
-    size_t id = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024, 1, 1),
-        ktt::DimensionVector(16, 16, 1));
+    ktt::KernelId id = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024),
+        ktt::DimensionVector(16, 16));
     manager.addParameter(id, std::string("param_one"), std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
         ktt::Dimension::X);
     manager.addParameter(id, std::string("param_two"), std::vector<size_t>{5, 10}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
@@ -52,11 +51,11 @@ TEST_CASE("Kernel configuration retrieval", "[kernelManager]")
 
     SECTION("Kernel source with defines is returned correctly")
     {
-        std::vector<ktt::ParameterValue> values;
-        values.push_back(ktt::ParameterValue("param_two", 5));
-        values.push_back(ktt::ParameterValue("param_one", 2));
+        std::vector<ktt::ParameterPair> parameterPairs;
+        parameterPairs.push_back(ktt::ParameterPair("param_two", 5));
+        parameterPairs.push_back(ktt::ParameterPair("param_one", 2));
 
-        ktt::KernelConfiguration config(manager.getKernel(id).getGlobalSize(), manager.getKernel(id).getLocalSize(), values,
+        ktt::KernelConfiguration config(manager.getKernel(id).getGlobalSize(), manager.getKernel(id).getLocalSize(), parameterPairs,
             ktt::GlobalSizeType::Opencl);
         auto source = manager.getKernelSourceWithDefines(id, config);
         std::string expectedSource("#define param_one 2\n#define param_two 5\n" + manager.getKernel(id).getSource());

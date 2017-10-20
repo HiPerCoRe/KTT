@@ -3,7 +3,6 @@
 #ifdef PLATFORM_CUDA
 
 #include <string>
-
 #include "cuda.h"
 #include "nvrtc.h"
 

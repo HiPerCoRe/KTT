@@ -16,7 +16,6 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
-
 #include "enum/device_type.h"
 
 namespace ktt

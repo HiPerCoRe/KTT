@@ -1,6 +1,5 @@
 #include <fstream>
 #include <iostream>
-
 #include "logger.h"
 
 namespace ktt

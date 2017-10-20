@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
 #include "CL/cl.h"
 #include "opencl_command_queue.h"
 #include "opencl_utility.h"
@@ -24,9 +23,9 @@ public:
         kernelArgumentId(kernelArgument.getId()),
         bufferSize(kernelArgument.getDataSizeInBytes()),
         elementSize(kernelArgument.getElementSizeInBytes()),
-        dataType(kernelArgument.getArgumentDataType()),
-        memoryLocation(kernelArgument.getArgumentMemoryLocation()),
-        accessType(kernelArgument.getArgumentAccessType()),
+        dataType(kernelArgument.getDataType()),
+        memoryLocation(kernelArgument.getMemoryLocation()),
+        accessType(kernelArgument.getAccessType()),
         openclMemoryFlag(getOpenclMemoryType(accessType)),
         hostPointer(nullptr),
         zeroCopy(zeroCopy)
@@ -125,7 +124,7 @@ public:
         return context;
     }
 
-    size_t getKernelArgumentId() const
+    ArgumentId getKernelArgumentId() const
     {
         return kernelArgumentId;
     }
@@ -167,7 +166,7 @@ public:
 
 private:
     cl_context context;
-    size_t kernelArgumentId;
+    ArgumentId kernelArgumentId;
     size_t bufferSize;
     size_t elementSize;
     ArgumentDataType dataType;

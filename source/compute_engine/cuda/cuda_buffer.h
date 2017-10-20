@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
 #include "cuda.h"
 #include "cuda_utility.h"
 #include "enum/argument_access_type.h"
@@ -21,9 +20,9 @@ public:
         kernelArgumentId(kernelArgument.getId()),
         bufferSize(kernelArgument.getDataSizeInBytes()),
         elementSize(kernelArgument.getElementSizeInBytes()),
-        dataType(kernelArgument.getArgumentDataType()),
-        memoryLocation(kernelArgument.getArgumentMemoryLocation()),
-        accessType(kernelArgument.getArgumentAccessType()),
+        dataType(kernelArgument.getDataType()),
+        memoryLocation(kernelArgument.getMemoryLocation()),
+        accessType(kernelArgument.getAccessType()),
         hostBufferRaw(nullptr),
         zeroCopy(zeroCopy)
     {
@@ -125,7 +124,7 @@ public:
         }
     }
 
-    size_t getKernelArgumentId() const
+    ArgumentId getKernelArgumentId() const
     {
         return kernelArgumentId;
     }
@@ -180,7 +179,7 @@ public:
     }
 
 private:
-    size_t kernelArgumentId;
+    ArgumentId kernelArgumentId;
     size_t bufferSize;
     size_t elementSize;
     ArgumentDataType dataType;

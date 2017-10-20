@@ -2,7 +2,7 @@
 
 #include "tuner_api.h"
 
-class tunableCoulomb : public ktt::TuningManipulator {
+class TunableCoulomb : public ktt::TuningManipulator {
     ktt::Tuner *tuner;
     int atoms;
     int gridSize;
@@ -16,19 +16,19 @@ class tunableCoulomb : public ktt::TuningManipulator {
     std::vector<float> atomInfoW;
     std::vector<float> energyGrid;
 
-    size_t kernelId;
-    size_t referenceKernelId;
-    size_t atomInfoId;
-    size_t atomInfoPrecompId;
-    size_t atomInfoXId;
-    size_t atomInfoYId;
-    size_t atomInfoZId;
-    size_t atomInfoZ2Id;
-    size_t atomInfoWId;
-    size_t numberOfAtomsId;
-    size_t gridSpacingId;
-    size_t zIndexId;
-    size_t energyGridId;
+    ktt::KernelId kernelId;
+    ktt::KernelId referenceKernelId;
+    ktt::ArgumentId atomInfoId;
+    ktt::ArgumentId atomInfoPrecompId;
+    ktt::ArgumentId atomInfoXId;
+    ktt::ArgumentId atomInfoYId;
+    ktt::ArgumentId atomInfoZId;
+    ktt::ArgumentId atomInfoZ2Id;
+    ktt::ArgumentId atomInfoWId;
+    ktt::ArgumentId numberOfAtomsId;
+    ktt::ArgumentId gridSpacingId;
+    ktt::ArgumentId zIndexId;
+    ktt::ArgumentId energyGridId;
 
     void initWithRandomData() {
         energyGrid.assign(gridSize*gridSize*gridSize, 0.0f);
@@ -63,7 +63,7 @@ class tunableCoulomb : public ktt::TuningManipulator {
 public:
 /* 
     Constructor creates internal structures and setups tuning environment */
-    tunableCoulomb(ktt::Tuner *tuner, int gridSize, int atoms) {
+    TunableCoulomb(ktt::Tuner *tuner, int gridSize, int atoms) {
         this->tuner = tuner;
 
         // configure input size and create random input
@@ -73,41 +73,41 @@ public:
 
         // create kernel
         const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
-        const ktt::DimensionVector workGroupDimensions(1, 1, 1);
-        const ktt::DimensionVector referenceWorkGroupDimensions(16, 16, 1);
+        const ktt::DimensionVector workGroupDimensions;
+        const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
         kernelId = tuner->addKernelFromFile("../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_kernel.cl", "directCoulombSum", ndRangeDimensions, workGroupDimensions);
         referenceKernelId = tuner->addKernelFromFile("../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_reference_kernel.cl", "directCoulombSumReference", ndRangeDimensions, referenceWorkGroupDimensions);
 
         // create input/output in tuner
-        atomInfoId = tuner->addArgument(atomInfo, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoPrecompId = tuner->addArgument(atomInfoPrecomp, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoXId = tuner->addArgument(atomInfoX, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoYId = tuner->addArgument(atomInfoY, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoZId = tuner->addArgument(atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoZ2Id = tuner->addArgument(atomInfoZ2, ktt::ArgumentAccessType::ReadOnly);
-        atomInfoWId = tuner->addArgument(atomInfoW, ktt::ArgumentAccessType::ReadOnly);
-        numberOfAtomsId = tuner->addArgument(atoms);
-        gridSpacingId = tuner->addArgument(gridSpacing);
+        atomInfoId = tuner->addArgumentVector(atomInfo, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoPrecompId = tuner->addArgumentVector(atomInfoPrecomp, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoXId = tuner->addArgumentVector(atomInfoX, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoYId = tuner->addArgumentVector(atomInfoY, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoZId = tuner->addArgumentVector(atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoZ2Id = tuner->addArgumentVector(atomInfoZ2, ktt::ArgumentAccessType::ReadOnly);
+        atomInfoWId = tuner->addArgumentVector(atomInfoW, ktt::ArgumentAccessType::ReadOnly);
+        numberOfAtomsId = tuner->addArgumentScalar(atoms);
+        gridSpacingId = tuner->addArgumentScalar(gridSpacing);
         int zIndex = 0;
-        zIndexId = tuner->addArgument(zIndex);
-        energyGridId = tuner->addArgument(energyGrid, ktt::ArgumentAccessType::ReadWrite);
-        tuner->setKernelArguments(kernelId, std::vector<size_t>{ atomInfoPrecompId, atomInfoXId, atomInfoYId, atomInfoZ2Id, atomInfoWId, numberOfAtomsId, gridSpacingId, zIndexId, energyGridId });
-        tuner->setKernelArguments(referenceKernelId, std::vector<size_t>{ atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId });
+        zIndexId = tuner->addArgumentScalar(zIndex);
+        energyGridId = tuner->addArgumentVector(energyGrid, ktt::ArgumentAccessType::ReadWrite);
+        tuner->setKernelArguments(kernelId, std::vector<size_t>{atomInfoPrecompId, atomInfoXId, atomInfoYId, atomInfoZ2Id, atomInfoWId, numberOfAtomsId, gridSpacingId, zIndexId, energyGridId});
+        tuner->setKernelArguments(referenceKernelId, std::vector<size_t>{atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId});
 
         // create parameter space
 
         // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-        tuner->addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{ /*4, 8, 16,*/ 32 }, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
-        tuner->addParameter(kernelId, std::string("WORK_GROUP_SIZE_Y"), std::vector<size_t>{ 1, 2, 4, 8, 16, 32 }, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
-        tuner->addParameter(kernelId, std::string("INNER_UNROLL_FACTOR"), std::vector<size_t>{ 0, 1, 2, 4, 8, 16, 32 });
-        tuner->addParameter(kernelId, std::string("USE_CONSTANT_MEMORY"), std::vector<size_t>{ 0, 1 });
-        tuner->addParameter(kernelId, std::string("VECTOR_TYPE"), std::vector<size_t>{ 1, 2, 4, 8 });
-        tuner->addParameter(kernelId, std::string("USE_SOA"), std::vector<size_t>{ 0, 1, 2 });
+        tuner->addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{/*4, 8, 16,*/ 32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
+        tuner->addParameter(kernelId, std::string("WORK_GROUP_SIZE_Y"), std::vector<size_t>{1, 2, 4, 8, 16, 32}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
+        tuner->addParameter(kernelId, std::string("INNER_UNROLL_FACTOR"), std::vector<size_t>{0, 1, 2, 4, 8, 16, 32});
+        tuner->addParameter(kernelId, std::string("USE_CONSTANT_MEMORY"), std::vector<size_t>{0, 1});
+        tuner->addParameter(kernelId, std::string("VECTOR_TYPE"), std::vector<size_t>{1, 2, 4, 8});
+        tuner->addParameter(kernelId, std::string("USE_SOA"), std::vector<size_t>{0, 1, 2});
         // Using vectorized SoA only makes sense when vectors are longer than 1
-        auto vectorizedSoA = [](std::vector<size_t> vector) { return vector.at(0) > 1 || vector.at(1) != 2; };
-        tuner->addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{ "VECTOR_TYPE", "USE_SOA" });
+        auto vectorizedSoA = [](std::vector<size_t> vector) {return vector.at(0) > 1 || vector.at(1) != 2;};
+        tuner->addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"});
         // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR
-        tuner->addParameter(kernelId, std::string("OUTER_UNROLL_FACTOR"), std::vector<size_t>{ 1, 2, 4, 8 }, ktt::ThreadModifierType::Global, ktt::ThreadModifierAction::Divide, ktt::Dimension::X);
+        tuner->addParameter(kernelId, std::string("OUTER_UNROLL_FACTOR"), std::vector<size_t>{1, 2, 4, 8}, ktt::ThreadModifierType::Global, ktt::ThreadModifierAction::Divide, ktt::Dimension::X);
         
          // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
         tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
@@ -115,18 +115,18 @@ public:
         //tuner->setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double> { 0.01 });
  
         // set reference kernel
-        tuner->setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ energyGridId });
+        tuner->setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<size_t>{energyGridId});
     }
 
 /*
     launchComputation is responsible for actual execution of tuned kernel */
-    virtual void launchComputation(const size_t kernelId) override {
+    void launchComputation(const ktt::KernelId kernelId) override {
         // get kernel data
         ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);
         ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
-        std::vector<ktt::ParameterValue> parameterValues = getCurrentConfiguration();
+        std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
 
-        std::get<2>(globalSize) = 1;
+        globalSize.setSizeZ(1);
 
         // iterate over slices
         for (int i = 0; i < gridSize; i++) {
@@ -156,10 +156,8 @@ public:
         tuner->printResult(kernelId, std::string("coulomb_sum_3d_iterative_output.csv"), ktt::PrintFormat::CSV);
     }
 
-/*
-    simple utility methods */
-    size_t getKernelId() const {
+    ktt::KernelId getKernelId() const
+    {
         return kernelId;
     }
 };
-

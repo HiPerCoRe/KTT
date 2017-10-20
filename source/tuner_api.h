@@ -22,7 +22,7 @@
 #include <type_traits>
 #include <vector>
 
-// Type aliases and enums relevant to usage of API methods
+// Type aliases and enums
 #include "ktt_type_aliases.h"
 #include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
@@ -38,12 +38,11 @@
 #include "enum/thread_modifier_type.h"
 #include "enum/validation_method.h"
 
-// Information about platforms and devices
-#include "api/device_info.h"
-#include "api/platform_info.h"
-
-// Description of kernel output
+// Data holders
 #include "api/argument_output_descriptor.h"
+#include "api/device_info.h"
+#include "api/dimension_vector.h"
+#include "api/platform_info.h"
 
 // Reference class interface
 #include "api/reference_class.h"
@@ -57,9 +56,8 @@
 namespace ktt
 {
 
-using half_float::half; // Utilize half data type without namespace specifier
-
-class TunerCore; // Forward declaration of TunerCore class
+using half_float::half;
+class TunerCore;
 
 class KTT_API Tuner
 {
@@ -71,69 +69,69 @@ public:
     ~Tuner();
 
     // Basic kernel handling methods
-    size_t addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
-    size_t addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
+    KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
-    void setKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds);
-    void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues);
+    KernelId addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
+        const DimensionVector& localSize);
+    void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
+    void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues);
 
     // Advanced kernel handling methods
-    void addParameter(const size_t kernelId, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-        const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension);
-    void addConstraint(const size_t kernelId, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
+        const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
+    void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
-    void setTuningManipulator(const size_t kernelId, std::unique_ptr<TuningManipulator> tuningManipulator);
+    void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
 
     // Composition handling methods
-    size_t addKernelComposition(const std::string& compositionName, const std::vector<size_t>& kernelIds,
-        std::unique_ptr<TuningManipulator> tuningManipulator);
-    void addCompositionKernelParameter(const size_t compositionId, const size_t kernelId, const std::string& parameterName,
-        const std::vector<size_t>& parameterValues, const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction,
+    KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds,
+        std::unique_ptr<TuningManipulator> manipulator);
+    void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+        const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
         const Dimension& modifierDimension);
-    void setCompositionKernelArguments(const size_t compositionId, const size_t kernelId, const std::vector<size_t>& argumentIds);
+    void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
 
     // Argument handling methods
-    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentAccessType& accessType)
+    template <typename T> ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(data.data(), data.size(), dataType, ArgumentMemoryLocation::Device, accessType);
     }
-    template <typename T> size_t addArgument(const std::vector<T>& data, const ArgumentAccessType& accessType,
+    template <typename T> ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType,
         const ArgumentMemoryLocation& memoryLocation)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(data.data(), data.size(), dataType, memoryLocation, accessType);
     }
-    template <typename T> size_t addArgument(const T& scalarValue)
+    template <typename T> ArgumentId addArgumentScalar(const T& data)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(&scalarValue, dataType);
+        return addArgument(&data, dataType);
     }
-    template <typename T> size_t addArgument(const size_t localMemoryElementsCount)
+    template <typename T> ArgumentId addArgumentLocal(const size_t localMemoryElementsCount)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(localMemoryElementsCount, dataType);
     }
 
     // Kernel launch and tuning methods
-    void tuneKernel(const size_t kernelId);
-    void runKernel(const size_t kernelId, const std::vector<ParameterValue>& kernelConfiguration,
-        const std::vector<ArgumentOutputDescriptor>& outputDescriptors);
-    void setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments);
+    void tuneKernel(const KernelId id);
+    void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
+    void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
 
     // Result retrieval methods
-    void setPrintingTimeUnit(const TimeUnit& timeUnit);
-    void setInvalidResultPrinting(const bool flag);
-    void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
-    void printResult(const size_t kernelId, const std::string& filePath, const PrintFormat& printFormat) const;
-    std::vector<ParameterValue> getBestConfiguration(const size_t kernelId) const;
+    void setPrintingTimeUnit(const TimeUnit& unit);
+    void setInvalidResultPrinting(const TunerFlag flag);
+    void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const;
+    void printResult(const KernelId id, const std::string& filePath, const PrintFormat& format) const;
+    std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
 
     // Result validation methods
-    void setReferenceKernel(const size_t kernelId, const size_t referenceKernelId, const std::vector<ParameterValue>& referenceKernelConfiguration,
-        const std::vector<size_t>& resultArgumentIds);
-    void setReferenceClass(const size_t kernelId, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<size_t>& resultArgumentIds);
-    void setValidationMethod(const ValidationMethod& validationMethod, const double toleranceThreshold);
-    void setValidationRange(const size_t argumentId, const size_t validationRange);
+    void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
+        const std::vector<ArgumentId>& validatedArgumentIds);
+    void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
+    void setValidationMethod(const ValidationMethod& method, const double toleranceThreshold);
+    void setValidationRange(const ArgumentId id, const size_t range);
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);
@@ -143,8 +141,8 @@ public:
     DeviceInfo getCurrentDeviceInfo() const;
 
     // Utility methods
-    void setAutomaticGlobalSizeCorrection(const bool flag);
-    void setGlobalSizeType(const GlobalSizeType& globalSizeType);
+    void setAutomaticGlobalSizeCorrection(const TunerFlag flag);
+    void setGlobalSizeType(const GlobalSizeType& type);
     void setLoggingTarget(std::ostream& outputTarget);
     void setLoggingTarget(const std::string& filePath);
 
@@ -153,10 +151,10 @@ private:
     std::unique_ptr<TunerCore> tunerCore;
 
     // Helper methods
-    size_t addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& dataType,
+    KernelId addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& dataType,
         const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType);
-    size_t addArgument(const void* scalarData, const ArgumentDataType& dataType);
-    size_t addArgument(const size_t localMemoryElementsCount, const ArgumentDataType& dataType);
+    KernelId addArgument(const void* scalarData, const ArgumentDataType& dataType);
+    KernelId addArgument(const size_t localMemoryElementsCount, const ArgumentDataType& dataType);
 
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {

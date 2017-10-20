@@ -1,7 +1,5 @@
-#include "catch.hpp"
-
 #include <cmath>
-
+#include "catch.hpp"
 #include "kernel_argument/argument_manager.h"
 
 template <typename T> bool around(const T value, const T other, const T tolerance)
@@ -14,15 +12,15 @@ TEST_CASE("Argument addition and retrieval", "[argumentManager]")
     ktt::ArgumentManager manager(ktt::RunMode::Tuning);
 
     std::vector<float> data{ 1.0f, 2.0f, 3.0f, 4.0f };
-    size_t id = manager.addArgument(data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
+    ktt::ArgumentId id = manager.addArgument(data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
         ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector);
 
     REQUIRE(manager.getArgumentCount() == 1);
     auto argument = manager.getArgument(id);
-    REQUIRE(argument.getArgumentUploadType() == ktt::ArgumentUploadType::Vector);
-    REQUIRE(argument.getArgumentDataType() == ktt::ArgumentDataType::Float);
-    REQUIRE(argument.getArgumentMemoryLocation() == ktt::ArgumentMemoryLocation::Device);
-    REQUIRE(argument.getArgumentAccessType() == ktt::ArgumentAccessType::ReadOnly);
+    REQUIRE(argument.getUploadType() == ktt::ArgumentUploadType::Vector);
+    REQUIRE(argument.getDataType() == ktt::ArgumentDataType::Float);
+    REQUIRE(argument.getMemoryLocation() == ktt::ArgumentMemoryLocation::Device);
+    REQUIRE(argument.getAccessType() == ktt::ArgumentAccessType::ReadOnly);
     REQUIRE(argument.getDataSizeInBytes() == 4 * sizeof(float));
     REQUIRE(argument.getElementSizeInBytes() == sizeof(float));
 
