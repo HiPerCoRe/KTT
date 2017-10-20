@@ -131,11 +131,6 @@ Elements count specifies, how many elements of provided data type will the argum
 Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 
-* `void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)`:
-Enables printing of specified output argument to specified file.
-It is possible to specify whether to print only valid, invalid or all arguments.
-It is not recommended to enable argument printing for very large arguments.
-
 Kernel launch and tuning methods
 --------------------------------
 

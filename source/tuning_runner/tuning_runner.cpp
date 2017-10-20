@@ -295,15 +295,6 @@ void TuningRunner::setTuningManipulator(const size_t kernelId, std::unique_ptr<T
     manipulatorMap.insert(std::make_pair(kernelId, std::move(tuningManipulator)));
 }
 
-void TuningRunner::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
-{
-    if (runMode == RunMode::Computation)
-    {
-        throw std::runtime_error("Argument printing cannot be performed in computation mode");
-    }
-    resultValidator->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
-}
-
 TuningResult TuningRunner::runKernelSimple(const Kernel& kernel, const KernelConfiguration& currentConfiguration,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {

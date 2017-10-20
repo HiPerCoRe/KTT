@@ -9,7 +9,6 @@
 #include "enum/argument_data_type.h"
 #include "enum/argument_memory_location.h"
 #include "enum/argument_upload_type.h"
-#include "enum/argument_print_condition.h"
 
 namespace ktt
 {
@@ -85,15 +84,5 @@ private:
     void initializeData(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType);
     void prepareData(const size_t numberOfElements, const ArgumentDataType& argumentDataType);
 };
-
-std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument);
-
-template <typename T> void printVector(std::ostream& outputTarget, const std::vector<T>& data)
-{
-    for (size_t i = 0; i < data.size(); i++)
-    {
-        outputTarget << i << ": " << data.at(i) << std::endl;
-    }
-}
 
 } // namespace ktt

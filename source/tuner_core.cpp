@@ -210,15 +210,6 @@ void TunerCore::setTuningManipulator(const size_t kernelId, std::unique_ptr<Tuni
     }
 }
 
-void TunerCore::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
-{
-    if (argumentId >= argumentManager->getArgumentCount())
-    {
-        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(argumentId));
-    }
-    tuningRunner->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
-}
-
 void TunerCore::setPrintingTimeUnit(const TimeUnit& timeUnit)
 {
     resultPrinter.setTimeUnit(timeUnit);

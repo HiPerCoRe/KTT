@@ -27,7 +27,6 @@
 #include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
 #include "enum/argument_memory_location.h"
-#include "enum/argument_print_condition.h"
 #include "enum/compute_api.h"
 #include "enum/dimension.h"
 #include "enum/global_size_type.h"
@@ -115,7 +114,6 @@ public:
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(localMemoryElementsCount, dataType);
     }
-    void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Kernel launch and tuning methods
     void tuneKernel(const size_t kernelId);

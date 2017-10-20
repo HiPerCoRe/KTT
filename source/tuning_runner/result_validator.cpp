@@ -13,7 +13,6 @@ ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelManager
     kernelManager(kernelManager),
     logger(logger),
     computeEngine(computeEngine),
-    argumentPrinter(logger),
     toleranceThreshold(1e-4),
     validationMethod(ValidationMethod::SideBySideComparison)
 {}
@@ -115,12 +114,6 @@ bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const Ke
     }
 
     return validateArguments(resultArguments, referenceKernelResultMap.find(kernelId)->second, kernel.getName(), kernelConfiguration);
-}
-
-void ResultValidator::enableArgumentPrinting(const size_t argumentId, const std::string& filePath,
-    const ArgumentPrintCondition& argumentPrintCondition)
-{
-    argumentPrinter.setArgumentPrintData(argumentId, filePath, argumentPrintCondition);
 }
 
 double ResultValidator::getToleranceThreshold() const
@@ -300,11 +293,6 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             else
             {
                 throw std::runtime_error("Unsupported argument data type");
-            }
-
-            if (argumentPrinter.argumentPrintDataExists(resultArgument.getId()))
-            {
-                argumentPrinter.printArgument(resultArgument, kernelName, kernelConfiguration, currentResult);
             }
 
             validationResult &= currentResult;

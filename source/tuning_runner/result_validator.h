@@ -14,7 +14,6 @@
 #include "enum/validation_method.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
-#include "utility/argument_printer.h"
 #include "utility/logger.h"
 
 namespace ktt
@@ -37,7 +36,6 @@ public:
     void clearReferenceResults();
     bool validateArgumentsWithClass(const Kernel& kernel, const KernelConfiguration& kernelConfiguration);
     bool validateArgumentsWithKernel(const Kernel& kernel, const KernelConfiguration& kernelConfiguration);
-    void enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition);
 
     // Getters
     double getToleranceThreshold() const;
@@ -49,7 +47,6 @@ private:
     KernelManager* kernelManager;
     Logger* logger;
     ComputeEngine* computeEngine;
-    ArgumentPrinter argumentPrinter;
     double toleranceThreshold;
     ValidationMethod validationMethod;
     std::map<size_t, size_t> argumentValidationRangeMap;

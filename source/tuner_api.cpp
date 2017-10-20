@@ -150,18 +150,6 @@ void Tuner::setCompositionKernelArguments(const size_t compositionId, const size
     }
 }
 
-void Tuner::enableArgumentPrinting(const size_t argumentId, const std::string& filePath, const ArgumentPrintCondition& argumentPrintCondition)
-{
-    try
-    {
-        tunerCore->enableArgumentPrinting(argumentId, filePath, argumentPrintCondition);
-    }
-    catch (const std::runtime_error& error)
-    {
-        tunerCore->log(error.what());
-    }
-}
-
 void Tuner::tuneKernel(const size_t kernelId)
 {
     try
