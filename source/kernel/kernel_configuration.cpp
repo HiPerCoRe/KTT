@@ -4,23 +4,20 @@ namespace ktt
 {
 
 KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
-    const std::vector<ParameterPair>& parameterPairs, const GlobalSizeType& type) :
+    const std::vector<ParameterPair>& parameterPairs) :
     globalSize(globalSize),
     localSize(localSize),
     parameterPairs(parameterPairs),
-    globalSizeType(type),
     compositeConfiguration(false)
 {}
     
 KernelConfiguration::KernelConfiguration(const std::vector<std::pair<KernelId, DimensionVector>>& compositionGlobalSizes,
-    const std::vector<std::pair<KernelId, DimensionVector>>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs,
-    const GlobalSizeType& type) :
+    const std::vector<std::pair<KernelId, DimensionVector>>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairse) :
     globalSize(DimensionVector()),
     localSize(DimensionVector()),
     compositionGlobalSizes(compositionGlobalSizes),
     compositionLocalSizes(compositionLocalSizes),
     parameterPairs(parameterPairs),
-    globalSizeType(globalSizeType),
     compositeConfiguration(true)
 {}
 
@@ -99,11 +96,6 @@ std::vector<ParameterPair> KernelConfiguration::getParameterPairs() const
     return parameterPairs;
 }
 
-GlobalSizeType KernelConfiguration::getGlobalSizeType() const
-{
-    return globalSizeType;
-}
-
 bool KernelConfiguration::isComposite() const
 {
     return compositeConfiguration;
@@ -116,22 +108,17 @@ std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& 
 
     for (size_t i = 0; i < globalSizes.size(); i++)
     {
-        DimensionVector convertedGlobalSize = globalSizes.at(i);
+        DimensionVector globalSize = globalSizes.at(i);
         DimensionVector localSize = localSizes.at(i);
-
-        if (configuration.globalSizeType == GlobalSizeType::Cuda)
-        {
-            convertedGlobalSize.divide(localSize);
-        }
 
         if (globalSizes.size() > 1)
         {
-            outputTarget << "global size " << i << ": " << convertedGlobalSize << "; ";
+            outputTarget << "global size " << i << ": " << globalSize << "; ";
             outputTarget << "local size " << i << ": " << localSize << "; ";
         }
         else
         {
-            outputTarget << "global size: " << convertedGlobalSize << "; ";
+            outputTarget << "global size: " << globalSize << "; ";
             outputTarget << "local size: " << localSize << "; ";
         }
     }

@@ -6,7 +6,6 @@
 #include "kernel_configuration.h"
 #include "api/device_info.h"
 #include "enum/dimension_vector_type.h"
-#include "enum/global_size_type.h"
 
 namespace ktt
 {
@@ -27,7 +26,6 @@ public:
     KernelConfiguration getKernelCompositionConfiguration(const KernelId compositionId, const std::vector<ParameterPair>& parameterPairs) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const KernelId id, const DeviceInfo& deviceInfo) const;
     std::vector<KernelConfiguration> getKernelCompositionConfigurations(const KernelId compositionId, const DeviceInfo& deviceInfo) const;
-    void setGlobalSizeType(const GlobalSizeType& type);
 
     // Kernel modification methods
     void addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& modifierType,
@@ -55,20 +53,16 @@ private:
     KernelId nextId;
     std::vector<Kernel> kernels;
     std::vector<KernelComposition> kernelCompositions;
-    GlobalSizeType globalSizeType;
 
     // Helper methods
     std::string loadFileToString(const std::string& filePath) const;
     void computeConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo, const std::vector<KernelParameter>& parameters,
         const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs, const DimensionVector& globalSize,
-        const DimensionVector& localSize, const DimensionVector& defaultLocalSize, std::vector<KernelConfiguration>& finalResult) const;
+        const DimensionVector& localSize, std::vector<KernelConfiguration>& finalResult) const;
     void computeCompositionConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo,
         const std::vector<KernelParameter>& parameters, const std::vector<KernelConstraint>& constraints,
         const std::vector<ParameterPair>& parameterPairs, std::vector<std::pair<KernelId, DimensionVector>>& globalSizes,
-        std::vector<std::pair<KernelId, DimensionVector>>& localSizes, std::vector<std::pair<KernelId, DimensionVector>>& defaultLocalSizes,
-        std::vector<KernelConfiguration>& finalResult) const;
-    void modifyDimensionVector(DimensionVector& vector, const DimensionVectorType& dimensionVectorType, const KernelParameter& parameter,
-        const size_t parameterValue) const;
+        std::vector<std::pair<KernelId, DimensionVector>>& localSizes, std::vector<KernelConfiguration>& finalResult) const;
     bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints,
         const DeviceInfo& deviceInfo) const;
 };

@@ -239,22 +239,17 @@ void ResultPrinter::printConfigurationVerbose(std::ostream& outputTarget, const 
 
     for (size_t i = 0; i < globalSizes.size(); i++)
     {
-        DimensionVector convertedGlobalSize = globalSizes.at(i);
+        DimensionVector globalSize = globalSizes.at(i);
         DimensionVector localSize = localSizes.at(i);
-
-        if (configuration.getGlobalSizeType() == GlobalSizeType::Cuda)
-        {
-            convertedGlobalSize.divide(localSize);
-        }
 
         if (globalSizes.size() > 1)
         {
-            outputTarget << "global size " << i << ": " << convertedGlobalSize << "; ";
+            outputTarget << "global size " << i << ": " << globalSize << "; ";
             outputTarget << "local size " << i << ": " << localSize << "; ";
         }
         else
         {
-            outputTarget << "global size: " << convertedGlobalSize << "; ";
+            outputTarget << "global size: " << globalSize << "; ";
             outputTarget << "local size: " << localSize << "; ";
         }
     }
@@ -283,11 +278,6 @@ void ResultPrinter::printConfigurationCsv(std::ostream& outputTarget, const Kern
 
         size_t totalGlobalSize = globalSize.getTotalSize();
         size_t totalLocalSize = localSize.getTotalSize();
-
-        if (configuration.getGlobalSizeType() == GlobalSizeType::Cuda)
-        {
-            totalGlobalSize /= totalLocalSize;
-        }
 
         outputTarget << totalGlobalSize << ",";
         outputTarget << totalLocalSize;

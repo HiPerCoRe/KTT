@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include "dto/tuning_result.h"
-#include "enum/global_size_type.h"
 #include "enum/print_format.h"
 #include "enum/time_unit.h"
 

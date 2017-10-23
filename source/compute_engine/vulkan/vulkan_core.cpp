@@ -10,6 +10,7 @@ namespace ktt
 VulkanCore::VulkanCore(const size_t deviceIndex) :
     deviceIndex(deviceIndex),
     compilerOptions(std::string("")),
+    globalSizeType(GlobalSizeType::Vulkan),
     globalSizeCorrection(false)
 {
     auto devices = getVulkanDevices();
@@ -33,6 +34,11 @@ KernelRunResult VulkanCore::runKernel(const KernelRuntimeData& kernelData, const
 void VulkanCore::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
+}
+
+void VulkanCore::setGlobalSizeType(const GlobalSizeType& type)
+{
+    globalSizeType = type;
 }
 
 void VulkanCore::setAutomaticGlobalSizeCorrection(const TunerFlag flag)
@@ -194,6 +200,11 @@ KernelRunResult VulkanCore::runKernel(const KernelRuntimeData&, const std::vecto
 }
 
 void VulkanCore::setCompilerOptions(const std::string&)
+{
+    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
+}
+
+void VulkanCore::setGlobalSizeType(const GlobalSizeType&)
 {
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }

@@ -18,12 +18,10 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
     else if (computeApi == ComputeApi::Cuda)
     {
         computeEngine = std::make_unique<CudaCore>(deviceIndex, runMode);
-        kernelManager->setGlobalSizeType(GlobalSizeType::Cuda);
     }
     else if (computeApi == ComputeApi::Vulkan)
     {
         computeEngine = std::make_unique<VulkanCore>(deviceIndex);
-        kernelManager->setGlobalSizeType(GlobalSizeType::Vulkan);
     }
     else
     {
@@ -109,11 +107,6 @@ void TunerCore::setCompositionKernelArguments(const KernelId compositionId, cons
     }
 
     kernelManager->setCompositionKernelArguments(compositionId, kernelId, argumentIds);
-}
-
-void TunerCore::setGlobalSizeType(const GlobalSizeType& type)
-{
-    kernelManager->setGlobalSizeType(type);
 }
 
 ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
@@ -244,6 +237,11 @@ std::vector<ParameterPair> TunerCore::getBestConfiguration(const KernelId id) co
 void TunerCore::setCompilerOptions(const std::string& options)
 {
     computeEngine->setCompilerOptions(options);
+}
+
+void TunerCore::setGlobalSizeType(const GlobalSizeType& type)
+{
+    computeEngine->setGlobalSizeType(type);
 }
 
 void TunerCore::setAutomaticGlobalSizeCorrection(const TunerFlag flag)

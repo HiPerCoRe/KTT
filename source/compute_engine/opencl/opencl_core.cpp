@@ -10,6 +10,7 @@ OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex, con
     deviceIndex(deviceIndex),
     compilerOptions(std::string("")),
     runMode(runMode),
+    globalSizeType(GlobalSizeType::Opencl),
     globalSizeCorrection(false)
 {
     auto platforms = getOpenclPlatforms();
@@ -64,6 +65,11 @@ KernelRunResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const
 void OpenclCore::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
+}
+
+void OpenclCore::setGlobalSizeType(const GlobalSizeType& type)
+{
+    globalSizeType = type;
 }
 
 void OpenclCore::setAutomaticGlobalSizeCorrection(const TunerFlag flag)
@@ -273,9 +279,15 @@ cl_ulong OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_
     cl_event profilingEvent;
 
     std::vector<size_t> correctedGlobalSize = globalSize;
+    if (globalSizeType == GlobalSizeType::Cuda)
+    {
+        correctedGlobalSize.at(0) *= localSize.at(0);
+        correctedGlobalSize.at(1) *= localSize.at(1);
+        correctedGlobalSize.at(2) *= localSize.at(2);
+    }
     if (globalSizeCorrection)
     {
-        correctedGlobalSize = roundUpGlobalSize(globalSize, localSize);
+        correctedGlobalSize = roundUpGlobalSize(correctedGlobalSize, localSize);
     }
 
     cl_int result = clEnqueueNDRangeKernel(commandQueue->getQueue(), kernel.getKernel(), static_cast<cl_uint>(correctedGlobalSize.size()), nullptr,

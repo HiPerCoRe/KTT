@@ -36,7 +36,6 @@ public:
         const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
         const Dimension& modifierDimension);
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
-    void setGlobalSizeType(const GlobalSizeType& type);
 
     // Argument manager methods
     ArgumentId addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
@@ -60,8 +59,9 @@ public:
     void printResult(const KernelId id, const std::string& filePath, const PrintFormat& format) const;
     std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
 
-    // Compute API methods
+    // Compute engine methods
     void setCompilerOptions(const std::string& options);
+    void setGlobalSizeType(const GlobalSizeType& type);
     void setAutomaticGlobalSizeCorrection(const TunerFlag flag);
     void printComputeApiInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;

@@ -7,21 +7,13 @@ namespace ktt
 {
 
 KernelManager::KernelManager() :
-    nextId(0),
-    globalSizeType(GlobalSizeType::Opencl)
+    nextId(0)
 {}
 
 KernelId KernelManager::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    DimensionVector convertedGlobalSize = globalSize;
-
-    if (globalSizeType == GlobalSizeType::Cuda)
-    {
-        convertedGlobalSize.multiply(localSize);
-    }
-
-    kernels.emplace_back(nextId, source, kernelName, convertedGlobalSize, localSize);
+    kernels.emplace_back(nextId, source, kernelName, globalSize, localSize);
     return nextId++;
 }
 
@@ -96,11 +88,17 @@ KernelConfiguration KernelManager::getKernelConfiguration(const KernelId id, con
                 + std::to_string(id));
         }
 
-        modifyDimensionVector(global, DimensionVectorType::Global, *targetParameter, std::get<1>(parameterPair));
-        modifyDimensionVector(local, DimensionVectorType::Local, *targetParameter, std::get<1>(parameterPair));
+        if (targetParameter->getModifierType() == ThreadModifierType::Global)
+        {
+            global.modifyByValue(std::get<1>(parameterPair), targetParameter->getModifierAction(), targetParameter->getModifierDimension());
+        }
+        else if (targetParameter->getModifierType() == ThreadModifierType::Local)
+        {
+            local.modifyByValue(std::get<1>(parameterPair), targetParameter->getModifierAction(), targetParameter->getModifierDimension());
+        }
     }
 
-    return KernelConfiguration(global, local, parameterPairs, globalSizeType);
+    return KernelConfiguration(global, local, parameterPairs);
 }
 
 KernelConfiguration KernelManager::getKernelCompositionConfiguration(const KernelId compositionId,
@@ -143,9 +141,10 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
         {
             for (const auto kernelId : targetParameter->getCompositionKernels())
             {
-                if (globalSizePair.first == kernelId)
+                if (globalSizePair.first == kernelId && targetParameter->getModifierType() == ThreadModifierType::Global)
                 {
-                    modifyDimensionVector(globalSizePair.second, DimensionVectorType::Global, *targetParameter, std::get<1>(parameterPair));
+                    globalSizePair.second.modifyByValue(std::get<1>(parameterPair), targetParameter->getModifierAction(),
+                        targetParameter->getModifierDimension());
                 }
             }
         }
@@ -153,15 +152,16 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
         {
             for (const auto kernelId : targetParameter->getCompositionKernels())
             {
-                if (localSizePair.first == kernelId)
+                if (localSizePair.first == kernelId && targetParameter->getModifierType() == ThreadModifierType::Local)
                 {
-                    modifyDimensionVector(localSizePair.second, DimensionVectorType::Local, *targetParameter, std::get<1>(parameterPair));
+                    localSizePair.second.modifyByValue(std::get<1>(parameterPair), targetParameter->getModifierAction(),
+                        targetParameter->getModifierDimension());
                 }
             }
         }
     }
 
-    return KernelConfiguration(globalSizes, localSizes, parameterPairs, globalSizeType);
+    return KernelConfiguration(globalSizes, localSizes, parameterPairs);
 }
 
 std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const KernelId id, const DeviceInfo& deviceInfo) const
@@ -176,12 +176,12 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const Ke
 
     if (kernel.getParameters().size() == 0)
     {
-        configurations.emplace_back(kernel.getGlobalSize(), kernel.getLocalSize(), std::vector<ParameterPair>{}, globalSizeType);
+        configurations.emplace_back(kernel.getGlobalSize(), kernel.getLocalSize(), std::vector<ParameterPair>{});
     }
     else
     {
         computeConfigurations(0, deviceInfo, kernel.getParameters(), kernel.getConstraints(), std::vector<ParameterPair>(0), kernel.getGlobalSize(),
-            kernel.getLocalSize(), kernel.getLocalSize(), configurations);
+            kernel.getLocalSize(), configurations);
     }
     return configurations;
 }
@@ -206,20 +206,15 @@ std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfiguratio
     std::vector<KernelConfiguration> kernelConfigurations;
     if (composition.getParameters().size() == 0)
     {
-        kernelConfigurations.emplace_back(globalSizes, localSizes, std::vector<ParameterPair>{}, globalSizeType);
+        kernelConfigurations.emplace_back(globalSizes, localSizes, std::vector<ParameterPair>{});
     }
     else
     {
         computeCompositionConfigurations(0, deviceInfo, composition.getParameters(), composition.getConstraints(), std::vector<ParameterPair>(0),
-            globalSizes, localSizes, localSizes, kernelConfigurations);
+            globalSizes, localSizes, kernelConfigurations);
     }
 
     return kernelConfigurations;
-}
-
-void KernelManager::setGlobalSizeType(const GlobalSizeType& type)
-{
-    this->globalSizeType = type;
 }
 
 void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values,
@@ -388,11 +383,11 @@ std::string KernelManager::loadFileToString(const std::string& filePath) const
 void KernelManager::computeConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo,
     const std::vector<KernelParameter>& parameters, const std::vector<KernelConstraint>& constraints,
     const std::vector<ParameterPair>& parameterPairs, const DimensionVector& globalSize, const DimensionVector& localSize,
-    const DimensionVector& defaultLocalSize, std::vector<KernelConfiguration>& finalResult) const
+    std::vector<KernelConfiguration>& finalResult) const
 {
     if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
-        KernelConfiguration configuration(globalSize, localSize, parameterPairs, globalSizeType);
+        KernelConfiguration configuration(globalSize, localSize, parameterPairs);
         if (configurationIsValid(configuration, constraints, deviceInfo))
         {
             finalResult.push_back(configuration);
@@ -409,33 +404,28 @@ void KernelManager::computeConfigurations(const size_t currentParameterIndex, co
         DimensionVector newGlobalSize = globalSize;
         DimensionVector newLocalSize = localSize;
 
-        if (globalSizeType == GlobalSizeType::Cuda)
+        if (parameter.getModifierType() == ThreadModifierType::Global)
         {
-            newGlobalSize.divide(defaultLocalSize);
+            newGlobalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
         }
-
-        modifyDimensionVector(newGlobalSize, DimensionVectorType::Global, parameter, value);
-        modifyDimensionVector(newLocalSize, DimensionVectorType::Local, parameter, value);
-
-        if (globalSizeType == GlobalSizeType::Cuda)
+        else if (parameter.getModifierType() == ThreadModifierType::Local)
         {
-            newGlobalSize.multiply(defaultLocalSize);
+            newLocalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
         }
 
         computeConfigurations(currentParameterIndex + 1, deviceInfo, parameters, constraints, newParameterPairs, newGlobalSize, newLocalSize,
-            defaultLocalSize, finalResult);
+            finalResult);
     }
 }
 
 void KernelManager::computeCompositionConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo,
     const std::vector<KernelParameter>& parameters, const std::vector<KernelConstraint>& constraints,
     const std::vector<ParameterPair>& parameterPairs, std::vector<std::pair<KernelId, DimensionVector>>& globalSizes,
-    std::vector<std::pair<KernelId, DimensionVector>>& localSizes, std::vector<std::pair<KernelId, DimensionVector>>& defaultLocalSizes,
-    std::vector<KernelConfiguration>& finalResult) const
+    std::vector<std::pair<KernelId, DimensionVector>>& localSizes, std::vector<KernelConfiguration>& finalResult) const
 {
     if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
-        KernelConfiguration configuration(globalSizes, localSizes, parameterPairs, globalSizeType);
+        KernelConfiguration configuration(globalSizes, localSizes, parameterPairs);
         if (configurationIsValid(configuration, constraints, deviceInfo))
         {
             finalResult.push_back(configuration);
@@ -453,59 +443,24 @@ void KernelManager::computeCompositionConfigurations(const size_t currentParamet
         {
             for (auto& globalSizePair : globalSizes)
             {
-                if (compositionKernelId == globalSizePair.first)
+                if (compositionKernelId == globalSizePair.first && parameter.getModifierType() == ThreadModifierType::Global)
                 {
-                    if (globalSizeType == GlobalSizeType::Cuda)
-                    {
-                        for (const auto& defaultLocalSizePair : defaultLocalSizes)
-                        {
-                            if (globalSizePair.first == defaultLocalSizePair.first)
-                            {
-                                globalSizePair.second.divide(defaultLocalSizePair.second);
-                                break;
-                            }
-                        }
-                    }
-                    modifyDimensionVector(globalSizePair.second, DimensionVectorType::Global, parameter, value);
-                    if (globalSizeType == GlobalSizeType::Cuda)
-                    {
-                        for (const auto& defaultLocalSizePair : defaultLocalSizes)
-                        {
-                            if (globalSizePair.first == defaultLocalSizePair.first)
-                            {
-                                globalSizePair.second.multiply(defaultLocalSizePair.second);
-                                break;
-                            }
-                        }
-                    }
+                    globalSizePair.second.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
                 }
             }
 
             for (auto& localSizePair : localSizes)
             {
-                if (compositionKernelId == localSizePair.first)
+                if (compositionKernelId == localSizePair.first && parameter.getModifierType() == ThreadModifierType::Local)
                 {
-                    modifyDimensionVector(localSizePair.second, DimensionVectorType::Local, parameter, value);
+                    localSizePair.second.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
                 }
             }
         }
 
         computeCompositionConfigurations(currentParameterIndex + 1, deviceInfo, parameters, constraints, newParameterPairs, globalSizes, localSizes,
-            defaultLocalSizes, finalResult);
+            finalResult);
     }
-}
-
-void KernelManager::modifyDimensionVector(DimensionVector& vector, const DimensionVectorType& dimensionVectorType, const KernelParameter& parameter,
-    const size_t parameterValue) const
-{
-    if (parameter.getModifierType() == ThreadModifierType::None
-        || dimensionVectorType == DimensionVectorType::Global && parameter.getModifierType() == ThreadModifierType::Local
-        || dimensionVectorType == DimensionVectorType::Local && parameter.getModifierType() == ThreadModifierType::Global)
-    {
-        return;
-    }
-
-    vector.modifyByValue(parameterValue, parameter.getModifierAction(), parameter.getModifierDimension());
 }
 
 bool KernelManager::configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints,

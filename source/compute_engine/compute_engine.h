@@ -9,6 +9,7 @@
 #include "api/platform_info.h"
 #include "dto/kernel_run_result.h"
 #include "dto/kernel_runtime_data.h"
+#include "enum/global_size_type.h"
 #include "kernel_argument/kernel_argument.h"
 
 namespace ktt
@@ -26,6 +27,7 @@ public:
 
     // Utility methods
     virtual void setCompilerOptions(const std::string& options) = 0;
+    virtual void setGlobalSizeType(const GlobalSizeType& type) = 0;
     virtual void setAutomaticGlobalSizeCorrection(const TunerFlag flag) = 0;
 
     // Argument handling methods

@@ -39,6 +39,7 @@ public:
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
+    void setGlobalSizeType(const GlobalSizeType& type) override;
     void setAutomaticGlobalSizeCorrection(const TunerFlag flag) override;
 
     // Argument handling methods
@@ -61,6 +62,7 @@ private:
     // Attributes
     size_t deviceIndex;
     std::string compilerOptions;
+    GlobalSizeType globalSizeType;
     TunerFlag globalSizeCorrection;
     VulkanInstance vulkanInstance;
     std::unique_ptr<VulkanDevice> device;
@@ -87,6 +89,7 @@ public:
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
+    void setGlobalSizeType(const GlobalSizeType& type) override;
     void setAutomaticGlobalSizeCorrection(const TunerFlag flag) override;
 
     // Argument handling methods
