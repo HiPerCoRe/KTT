@@ -36,7 +36,7 @@ public:
         return nullptr;
     }
 
-    size_t getNumberOfElements(const size_t argumentId) const override {
+    size_t getNumberOfElements(const ktt::ArgumentId argumentId) const override {
         return 1;
     }
 

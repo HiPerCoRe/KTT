@@ -9,21 +9,21 @@ int main(int argc, char** argv)
     // Initialize platform index, device index and paths to kernels
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
-    auto kernelFile = std::string("../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl");
-    auto referenceKernelFile = std::string("../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl");
+    std::string kernelFile = "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl";
+    std::string referenceKernelFile = "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl";
 
     if (argc >= 2)
     {
-        platformIndex = std::stoul(std::string{argv[1]});
+        platformIndex = std::stoul(std::string(argv[1]));
         if (argc >= 3)
         {
-            deviceIndex = std::stoul(std::string{argv[2]});
+            deviceIndex = std::stoul(std::string(argv[2]));
             if (argc >= 4)
             {
-                kernelFile = std::string{argv[3]};
+                kernelFile = std::string(argv[3]);
                 if (argc >= 5)
                 {
-                    referenceKernelFile = std::string{argv[4]};
+                    referenceKernelFile = std::string(argv[4]);
                 }
             }
         }
@@ -65,8 +65,8 @@ int main(int argc, char** argv)
 
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
-    ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, std::string("directCoulombSum"), ndRangeDimensions, workGroupDimensions);
-    ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("directCoulombSumReference"), ndRangeDimensions,
+    ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "directCoulombSum", ndRangeDimensions, workGroupDimensions);
+    ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "directCoulombSumReference", ndRangeDimensions,
         referenceWorkGroupDimensions);
 
     ktt::ArgumentId aiId = tuner.addArgumentVector(atomInfo, ktt::ArgumentAccessType::ReadOnly);
@@ -101,17 +101,15 @@ int main(int argc, char** argv)
     auto vec = [](std::vector<size_t> vector) {return vector.at(0) || vector.at(1) == 1;};
     tuner.addConstraint(kernelId, vec, {"USE_SOA", "VECTOR_SIZE"});
 
-    tuner.setKernelArguments(kernelId, std::vector<size_t>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId});
-    tuner.setKernelArguments(referenceKernelId, std::vector<size_t>{aiId, aId, gsId, gridId});
+    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId});
+    tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{aiId, aId, gsId, gridId});
 
-    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<size_t>{gridId});
+    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{gridId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
-
-    //tuner.setSearchMethod(kernelId, ktt::SearchMethod::RandomSearch, std::vector<double> { 0.1 });
 
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-    tuner.printResult(kernelId, std::string("coulomb_sum_3d_output.csv"), ktt::PrintFormat::CSV);
+    tuner.printResult(kernelId, "coulomb_sum_3d_output.csv", ktt::PrintFormat::CSV);
 
     return 0;
 }

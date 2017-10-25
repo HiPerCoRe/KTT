@@ -20,7 +20,7 @@ public:
         int nUp = ((n+512-1)/512)*512; // maximal WG size used in tuning parameters
         ktt::DimensionVector ndRangeDimensions(nUp, 1, 1);
         ktt::DimensionVector workGroupDimensions(1, 1, 1);
-        kernelId = tuner->addKernelFromFile("../examples/reduction/reduction_kernel.cl", std::string("reduce"), ndRangeDimensions, workGroupDimensions);
+        kernelId = tuner->addKernelFromFile("../examples/reduction/reduction_kernel.cl", "reduce", ndRangeDimensions, workGroupDimensions);
 
         // create input/output
         srcId = tuner->addArgumentVector(*src, ktt::ArgumentAccessType::ReadWrite);
@@ -29,7 +29,7 @@ public:
         int offset = 0;
         inOffsetId = tuner->addArgumentScalar(offset);
         outOffsetId = tuner->addArgumentScalar(offset);
-        tuner->setKernelArguments(kernelId, std::vector<size_t>{srcId, dstId, nId, inOffsetId, outOffsetId});
+        tuner->setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{srcId, dstId, nId, inOffsetId, outOffsetId});
 
         // get number of compute units
         const ktt::DeviceInfo di = tuner->getCurrentDeviceInfo();
@@ -55,14 +55,14 @@ public:
         auto unboundedWG = [](std::vector<size_t> v) {return (!v[0] || v[1] >= 32);};
         tuner->addConstraint(kernelId, unboundedWG, {"UNBOUNDED_WG", "WORK_GROUP_SIZE_X"});
 
-        tuner->setReferenceClass(kernelId, std::make_unique<referenceReduction>(*src, dstId), std::vector<size_t>{dstId});
+        tuner->setReferenceClass(kernelId, std::make_unique<referenceReduction>(*src, dstId), std::vector<ktt::ArgumentId>{dstId});
         tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n*500.0f/10000000.0f);
         tuner->setValidationRange(dstId, 1);
     }
 
 /*
     launchComputation is responsible for actual execution of tuned kernel */
-    void launchComputation(const size_t kernelId) override {
+    void launchComputation(const ktt::KernelId kernelId) override {
         ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelId);
         ktt::DimensionVector localSize = getCurrentLocalSize(kernelId);
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
@@ -111,7 +111,7 @@ public:
     void tune() {
         tuner->tuneKernel(kernelId);
         tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-        tuner->printResult(kernelId, std::string("reduction_output.csv"), ktt::PrintFormat::CSV);
+        tuner->printResult(kernelId, "reduction_output.csv", ktt::PrintFormat::CSV);
     }
 
 /*

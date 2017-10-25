@@ -12,7 +12,7 @@ KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, cons
 {}
     
 KernelConfiguration::KernelConfiguration(const std::vector<std::pair<KernelId, DimensionVector>>& compositionGlobalSizes,
-    const std::vector<std::pair<KernelId, DimensionVector>>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairse) :
+    const std::vector<std::pair<KernelId, DimensionVector>>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs) :
     globalSize(DimensionVector()),
     localSize(DimensionVector()),
     compositionGlobalSizes(compositionGlobalSizes),
