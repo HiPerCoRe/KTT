@@ -64,12 +64,6 @@ Sets tuning manipulator for specified kernel.
 Tuning manipulator enables customization of kernel execution by providing specialized method for computation.
 Specialized method can, for example, run part of the computation directly in C++ code, utilize iterative kernel launches, etc.
 
-When tuning manipulator is utilized, total execution duration is calculated from two components.
-First component is the sum of execution times of all kernel launches inside `launchComputation()` method.
-Second component is the execution time of `launchComputation()` method itself, minus the execution times of kernel launches.
-Note that initial buffer transfer times are not included in the total duration (same as in the case of kernel tuning without manipulator).
-Buffer update and retrieval times for methods called inside `launchComputation()` method are included in the second component.
-
 Composition handling methods
 ----------------------------
 * `KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds, std::unique_ptr<TuningManipulator> manipulator)`:
@@ -267,6 +261,11 @@ Default implementation is provided by API.
 Inheriting class must provide implementation for this method. Provided argument is an id of currently tuned kernel.
 In the simplest case, this method only calls `runKernel()` method with provided kernel id as its first argument.
 This method can also call any other methods available in base TuningManipulator class.
+Total execution duration is calculated from two components.
+First component is the sum of execution times of all kernel launches inside this method.
+Second component is the execution time of the method itself, minus the execution times of kernel launches.
+Note that initial buffer transfer times are not included in the total duration (same as in the case of kernel tuning without manipulator).
+Other buffer update and retrieval times are included in the second component.
 
 * `TunerFlag enableArgumentPreload() const`:
 Inheriting class can override this method if needed.

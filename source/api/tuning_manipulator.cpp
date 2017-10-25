@@ -78,12 +78,12 @@ void TuningManipulator::swapKernelArguments(const KernelId id, const ArgumentId 
 
 void TuningManipulator::createArgumentBuffer(const ArgumentId id)
 {
-    // to do
+    manipulatorInterface->createArgumentBuffer(id);
 }
 
 void TuningManipulator::destroyArgumentBuffer(const ArgumentId id)
 {
-    // to do
+    manipulatorInterface->destroyArgumentBuffer(id);
 }
 
 size_t TuningManipulator::getParameterValue(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs)

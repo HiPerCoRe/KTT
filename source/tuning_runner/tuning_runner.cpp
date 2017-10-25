@@ -317,7 +317,10 @@ TuningResult TuningRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     manipulatorInterfaceImplementation->addKernel(kernelId, kernelData);
     manipulatorInterfaceImplementation->setConfiguration(configuration);
     manipulatorInterfaceImplementation->setKernelArguments(argumentManager->getArguments(kernel.getArgumentIds()));
-    manipulatorInterfaceImplementation->uploadBuffers();
+    if (manipulator->enableArgumentPreload())
+    {
+        manipulatorInterfaceImplementation->uploadBuffers();
+    }
 
     Timer timer;
     try
@@ -374,7 +377,10 @@ TuningResult TuningRunner::runCompositionWithManipulator(const KernelComposition
 
     manipulatorInterfaceImplementation->setConfiguration(configuration);
     manipulatorInterfaceImplementation->setKernelArguments(allArguments);
-    manipulatorInterfaceImplementation->uploadBuffers();
+    if (manipulator->enableArgumentPreload())
+    {
+        manipulatorInterfaceImplementation->uploadBuffers();
+    }
 
     Timer timer;
     try

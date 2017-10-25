@@ -54,7 +54,7 @@ public:
     void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond);
 
-    // Argument buffer handling methods
+    // Buffer handling methods
     void createArgumentBuffer(const ArgumentId id);
     void destroyArgumentBuffer(const ArgumentId id);
 

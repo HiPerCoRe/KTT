@@ -34,6 +34,10 @@ public:
     // Kernel argument handling methods
     virtual void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds) = 0;
     virtual void swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond) = 0;
+
+    // Buffer handling methods
+    virtual void createArgumentBuffer(const ArgumentId id) = 0;
+    virtual void destroyArgumentBuffer(const ArgumentId id) = 0;
 };
 
 } // namespace ktt

@@ -30,6 +30,8 @@ public:
     void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const override;
     void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds) override;
     void swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond) override;
+    void createArgumentBuffer(const ArgumentId id) override;
+    void destroyArgumentBuffer(const ArgumentId id) override;
 
     // Core methods
     void addKernel(const KernelId id, const KernelRuntimeData& data);

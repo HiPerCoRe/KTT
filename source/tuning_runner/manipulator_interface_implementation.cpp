@@ -170,6 +170,33 @@ void ManipulatorInterfaceImplementation::swapKernelArguments(const KernelId id, 
     dataPointer->second.setArgumentIndices(indices);
 }
 
+void ManipulatorInterfaceImplementation::createArgumentBuffer(const ArgumentId id)
+{
+    Timer timer;
+    timer.start();
+
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+    computeEngine->uploadArgument(*argumentPointer->second);
+
+    timer.stop();
+    currentResult.increaseOverhead(timer.getElapsedTime());
+}
+
+void ManipulatorInterfaceImplementation::destroyArgumentBuffer(const ArgumentId id)
+{
+    Timer timer;
+    timer.start();
+
+    computeEngine->clearBuffer(id);
+
+    timer.stop();
+    currentResult.increaseOverhead(timer.getElapsedTime());
+}
+
 void ManipulatorInterfaceImplementation::addKernel(const KernelId id, const KernelRuntimeData& data)
 {
     kernelData.insert(std::make_pair(id, data));
