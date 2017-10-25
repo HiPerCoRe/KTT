@@ -31,6 +31,7 @@ public:
     // Virtual methods
     virtual ~TuningManipulator();
     virtual void launchComputation(const KernelId id) = 0;
+    virtual TunerFlag enableArgumentPreload() const;
 
     // Kernel run methods
     void runKernel(const KernelId id);
@@ -52,6 +53,10 @@ public:
     // Kernel argument handling methods
     void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond);
+
+    // Argument buffer handling methods
+    void createArgumentBuffer(const ArgumentId id);
+    void destroyArgumentBuffer(const ArgumentId id);
 
     // Utility methods
     static size_t getParameterValue(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs);

@@ -64,6 +64,12 @@ Sets tuning manipulator for specified kernel.
 Tuning manipulator enables customization of kernel execution by providing specialized method for computation.
 Specialized method can, for example, run part of the computation directly in C++ code, utilize iterative kernel launches, etc.
 
+When tuning manipulator is utilized, total execution duration is calculated from two components.
+First component is the sum of execution times of all kernel launches inside `launchComputation()` method.
+Second component is the execution time of `launchComputation()` method itself, minus the execution times of kernel launches.
+Note that initial buffer transfer times are not included in the total duration (same as in the case of kernel tuning without manipulator).
+Buffer update and retrieval times for methods called inside `launchComputation()` method are included in the second component.
+
 Composition handling methods
 ----------------------------
 * `KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds, std::unique_ptr<TuningManipulator> manipulator)`:
@@ -259,11 +265,19 @@ Default implementation is provided by API.
 
 * `void launchComputation(const KernelId id)`:
 Inheriting class must provide implementation for this method. Provided argument is an id of currently tuned kernel.
-This method must, at very least, call `runKernel()` method with provided kernel id as its first argument.
+In the simplest case, this method only calls `runKernel()` method with provided kernel id as its first argument.
 This method can also call any other methods available in base TuningManipulator class.
 
+* `TunerFlag enableArgumentPreload() const`:
+Inheriting class can override this method if needed.
+Controls whether all manipulator arguments will be automatically uploaded to corresponding buffers before running any kernels.
+Turning this behavior off is useful when utilizing kernel compositions where different kernels use different arguments which would not all fit into available memory.
+Buffer creation and deletion can then be controlled by calling `createArgumentBuffer()` and `destroyArgumentBuffer()` methods for corresponding arguments.
+Any leftover arguments after manipulator execution finishes will still be automatically cleaned up.
+Argument preload is turned on by default.
+
 * `void runKernel(const KernelId id)`:
-Launches kernel with specified id, using thread sizes based only on the current configuration.
+Launches kernel with specified id, using thread sizes based on the current configuration.
 Provided kernel id must be either id of main kernel or id of one of composition kernels.
 
 * `void runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize)`:
@@ -307,7 +321,7 @@ Retrieves specified vector argument.
 Destination buffer size needs to be equal or greater than argument size.
 This method is useful for iterative kernel launches.
 
-* `void getArgumentVector(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const`:
+* `void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const`:
 Retrieves part of specified vector argument.
 Destination buffer size needs to be equal or greater than specified data size.
 This method is useful for iterative kernel launches.
@@ -320,6 +334,14 @@ This method only affects run of `launchComputation()` method under current confi
 * `void swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond)`:
 Swaps positions of specified kernel arguments for specified kernel.
 This method only affects run of `launchComputation()` method under current configuration.
+
+* `void createArgumentBuffer(const ArgumentId id)`:
+Transfers specified kernel argument to a buffer from which it can be accessed by compute API.
+This method should be utilized only if argument preload is disabled.
+
+* `void destroyArgumentBuffer(const ArgumentId id)`:
+Deletes compute API buffer for specified kernel argument.
+This method should be utilized only if argument preload is disabled.
 
 * `size_t getParameterValue(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs)`:
 Returns value of specified parameter from provided list of parameters.

@@ -11,6 +11,11 @@ void TuningManipulator::runKernel(const KernelId id)
     manipulatorInterface->runKernel(id);
 }
 
+TunerFlag TuningManipulator::enableArgumentPreload() const
+{
+    return true;
+}
+
 void TuningManipulator::runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize)
 {
     manipulatorInterface->runKernel(id, globalSize, localSize);
@@ -69,6 +74,16 @@ void TuningManipulator::changeKernelArguments(const KernelId id, const std::vect
 void TuningManipulator::swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond)
 {
     manipulatorInterface->swapKernelArguments(id, argumentIdFirst, argumentIdSecond);
+}
+
+void TuningManipulator::createArgumentBuffer(const ArgumentId id)
+{
+    // to do
+}
+
+void TuningManipulator::destroyArgumentBuffer(const ArgumentId id)
+{
+    // to do
 }
 
 size_t TuningManipulator::getParameterValue(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs)

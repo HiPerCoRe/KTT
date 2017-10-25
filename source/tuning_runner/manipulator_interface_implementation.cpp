@@ -109,9 +109,15 @@ void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, 
     computeEngine->downloadArgument(id, destination);
 }
 
-void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
+void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
 {
-    computeEngine->downloadArgument(id, destination, dataSizeInBytes);
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+
+    computeEngine->downloadArgument(id, destination, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
 }
 
 void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)

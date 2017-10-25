@@ -156,9 +156,7 @@ std::vector<TuningResult> TuningRunner::tuneKernelComposition(const KernelId id)
             results.emplace_back(composition.getName(), currentConfiguration, "Results differ");
         }
 
-        computeEngine->clearBuffers(ArgumentAccessType::ReadWrite);
-        computeEngine->clearBuffers(ArgumentAccessType::WriteOnly);
-        computeEngine->clearBuffers(ArgumentAccessType::ReadOnly);
+        computeEngine->clearBuffers();
     }
 
     computeEngine->clearBuffers();
