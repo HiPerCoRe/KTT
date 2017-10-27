@@ -10,7 +10,7 @@ std::string programSource(std::string("")
     + "    result[index] = a[index] + b[index] + number;\n"
     + "}\n");
 
-TEST_CASE("Working with program and kernel", "[openclCore]")
+TEST_CASE("Working with program and kernel", "Component: OpenclCore")
 {
     ktt::OpenclCore core(0, 0, ktt::RunMode::Tuning);
 
@@ -27,11 +27,11 @@ TEST_CASE("Working with program and kernel", "[openclCore]")
 
     SECTION("Trying to build program with invalid source throws")
     {
-        REQUIRE_THROWS(core.createAndBuildProgram(std::string("Invalid")));
+        REQUIRE_THROWS(core.createAndBuildProgram("Invalid"));
     }
 }
 
-TEST_CASE("Working with OpenCL buffer", "[openclCore]")
+TEST_CASE("Working with OpenCL buffer", "Component: OpenclCore")
 {
     ktt::OpenclCore core(0, 0, ktt::RunMode::Tuning);
     std::vector<float> data;

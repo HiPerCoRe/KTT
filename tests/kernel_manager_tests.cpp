@@ -2,16 +2,15 @@
 #include "api/device_info.h"
 #include "kernel/kernel_manager.h"
 
-TEST_CASE("Kernel handling operations", "[kernelManager]")
+TEST_CASE("Kernel handling operations", "Component: KernelManager")
 {
     ktt::KernelManager manager;
-    ktt::KernelId id = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024),
-        ktt::DimensionVector(16, 16));
+    ktt::KernelId id = manager.addKernelFromFile("../tests/test_kernel.cl", "testKernel", ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
 
     SECTION("Kernel id is assigned correctly")
     {
-        ktt::KernelId secondId = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"),
-            ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
+        ktt::KernelId secondId = manager.addKernelFromFile("../tests/test_kernel.cl", "testKernel", ktt::DimensionVector(1024),
+            ktt::DimensionVector(16, 16));
 
         REQUIRE(secondId == 1);
     }
@@ -32,21 +31,20 @@ TEST_CASE("Kernel handling operations", "[kernelManager]")
 
     SECTION("Parameter with same name cannot be added twice")
     {
-        manager.addParameter(id, std::string("param"), std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
+        manager.addParameter(id, "param", std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
             ktt::Dimension::X);
-        REQUIRE_THROWS_AS(manager.addParameter(id, std::string("param"), std::vector<size_t>{3}, ktt::ThreadModifierType::None,
-            ktt::ThreadModifierAction::Add, ktt::Dimension::X), std::runtime_error);
+        REQUIRE_THROWS_AS(manager.addParameter(id, "param", std::vector<size_t>{3}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
+            ktt::Dimension::X), std::runtime_error);
     }
 }
 
-TEST_CASE("Kernel configuration retrieval", "[kernelManager]")
+TEST_CASE("Kernel configuration retrieval", "Component: KernelManager")
 {
     ktt::KernelManager manager;
-    ktt::KernelId id = manager.addKernelFromFile(std::string("../tests/test_kernel.cl"), std::string("testKernel"), ktt::DimensionVector(1024),
-        ktt::DimensionVector(16, 16));
-    manager.addParameter(id, std::string("param_one"), std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
+    ktt::KernelId id = manager.addKernelFromFile("../tests/test_kernel.cl", "testKernel", ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
+    manager.addParameter(id, "param_one", std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
         ktt::Dimension::X);
-    manager.addParameter(id, std::string("param_two"), std::vector<size_t>{5, 10}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
+    manager.addParameter(id, "param_two", std::vector<size_t>{5, 10}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
         ktt::Dimension::X);
 
     SECTION("Kernel source with defines is returned correctly")
@@ -56,7 +54,7 @@ TEST_CASE("Kernel configuration retrieval", "[kernelManager]")
         parameterPairs.push_back(ktt::ParameterPair("param_one", 2));
 
         ktt::KernelConfiguration config(manager.getKernel(id).getGlobalSize(), manager.getKernel(id).getLocalSize(), parameterPairs);
-        auto source = manager.getKernelSourceWithDefines(id, config);
+        std::string source = manager.getKernelSourceWithDefines(id, config);
         std::string expectedSource("#define param_one 2\n#define param_two 5\n" + manager.getKernel(id).getSource());
 
         REQUIRE(source == expectedSource);
@@ -64,9 +62,9 @@ TEST_CASE("Kernel configuration retrieval", "[kernelManager]")
 
     SECTION("Kernel configurations are computed correctly")
     {
-        ktt::DeviceInfo deviceInfo(0, std::string("Device"));
+        ktt::DeviceInfo deviceInfo(0, "Device");
         deviceInfo.setMaxWorkGroupSize(1024);
-        auto configurations = manager.getKernelConfigurations(id, deviceInfo);
+        std::vector<ktt::KernelConfiguration> configurations = manager.getKernelConfigurations(id, deviceInfo);
 
         REQUIRE(configurations.size() == 6);
     }

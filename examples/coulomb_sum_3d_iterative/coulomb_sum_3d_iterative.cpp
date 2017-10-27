@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 
     // Set the problem size and declare data variables
     const int atoms = 4000;
-    const int gridSize = 256;
+    const int gridSize = 64;
     float gridSpacing = 0.5f;
     int zIndex = 0;
     std::vector<float> atomInfo;
@@ -109,14 +109,14 @@ int main(int argc, char** argv)
     std::vector<float> atomInfoW;
     std::vector<float> energyGrid;
 
-    energyGrid.assign(gridSize*gridSize*gridSize, 0.0f);
+    energyGrid.assign(gridSize * gridSize * gridSize, 0.0f);
     atomInfoX.resize(atoms);
     atomInfoY.resize(atoms);
     atomInfoZ.resize(atoms);
     atomInfoZ2.resize(atoms);
     atomInfoW.resize(atoms);
-    atomInfo.resize(atoms*4);
-    atomInfoPrecomp.resize(atoms*4);
+    atomInfo.resize(atoms * 4);
+    atomInfoPrecomp.resize(atoms * 4);
 
     std::random_device device;
     std::default_random_engine engine(device());

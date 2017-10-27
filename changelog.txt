@@ -1,4 +1,4 @@
-Version 0.5 (x.10.2017)
+Version 0.5 (27.10.2017)
 * Added support for kernel compositions
 * Added two different tuner modes - tuning mode and low overhead computation mode
 * Added support for storing buffers in host memory, including support for zero-copy buffers when computation mode is used
