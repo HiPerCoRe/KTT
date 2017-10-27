@@ -1,59 +1,81 @@
 #include <fstream>
 #include <sstream>
-
 #include "kernel_manager.h"
+#include "utility/ktt_utility.h"
 
 namespace ktt
 {
 
 KernelManager::KernelManager() :
-    kernelCount(0)
+    nextId(0)
 {}
 
-size_t KernelManager::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
+KernelId KernelManager::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    kernels.emplace_back(Kernel(kernelCount, source, kernelName, globalSize, localSize));
-    return kernelCount++;
+    kernels.emplace_back(nextId, source, kernelName, globalSize, localSize);
+    return nextId++;
 }
 
-size_t KernelManager::addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
+KernelId KernelManager::addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
     std::string source = loadFileToString(filePath);
     return addKernel(source, kernelName, globalSize, localSize);
 }
 
-std::string KernelManager::getKernelSourceWithDefines(const size_t id, const KernelConfiguration& kernelConfiguration) const
+KernelId KernelManager::addKernelComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds)
 {
-    std::string source = kernels.at(id).getSource();
+    if (!containsUnique(kernelIds))
+    {
+        throw std::runtime_error("Kernels added to kernel composition must be unique");
+    }
 
-    for (const auto& parameterValue : kernelConfiguration.getParameterValues())
+    std::vector<const Kernel*> compositionKernels;
+    for (const auto& id : kernelIds)
+    {
+        if (!isKernel(id))
+        {
+            throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+        }
+        compositionKernels.push_back(&kernels.at(id));
+    }
+
+    kernelCompositions.emplace_back(nextId, compositionName, compositionKernels);
+    return nextId++;
+}
+
+std::string KernelManager::getKernelSourceWithDefines(const KernelId id, const KernelConfiguration& configuration) const
+{
+    std::string source = getKernel(id).getSource();
+
+    for (const auto& parameterPair : configuration.getParameterPairs())
     {
         std::stringstream stream;
-        stream << std::get<1>(parameterValue); // clean way to convert number to string
-        source = std::string("#define ") + std::get<0>(parameterValue) + std::string(" ") + stream.str() + std::string("\n") + source;
+        stream << std::get<1>(parameterPair); // clean way to convert number to string
+        source = std::string("#define ") + std::get<0>(parameterPair) + std::string(" ") + stream.str() + std::string("\n") + source;
     }
 
     return source;
 }
 
-KernelConfiguration KernelManager::getKernelConfiguration(const size_t id, const std::vector<ParameterValue>& parameterValues) const
+KernelConfiguration KernelManager::getKernelConfiguration(const KernelId id, const std::vector<ParameterPair>& parameterPairs) const
 {
-    if (id >= kernelCount)
+    if (!isKernel(id))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
 
-    DimensionVector global = kernels.at(id).getGlobalSize();
-    DimensionVector local = kernels.at(id).getLocalSize();
+    const Kernel& kernel = getKernel(id);
+    DimensionVector global = kernel.getGlobalSize();
+    DimensionVector local = kernel.getLocalSize();
     
-    for (const auto& value : parameterValues)
+    for (const auto& parameterPair : parameterPairs)
     {
         const KernelParameter* targetParameter = nullptr;
-        for (const auto& parameter : kernels.at(id).getParameters())
+        for (const auto& parameter : kernel.getParameters())
         {
-            if (parameter.getName() == std::get<0>(value))
+            if (parameter.getName() == std::get<0>(parameterPair))
             {
                 targetParameter = &parameter;
                 break;
@@ -62,98 +84,286 @@ KernelConfiguration KernelManager::getKernelConfiguration(const size_t id, const
 
         if (targetParameter == nullptr)
         {
-            throw std::runtime_error(std::string("Parameter with name <") + std::get<0>(value) + "> is not associated with kernel with id: "
+            throw std::runtime_error(std::string("Parameter with name <") + std::get<0>(parameterPair) + "> is not associated with kernel with id: "
                 + std::to_string(id));
         }
 
-        global = modifyDimensionVector(global, DimensionVectorType::Global, *targetParameter, std::get<1>(value));
-        local = modifyDimensionVector(local, DimensionVectorType::Local, *targetParameter, std::get<1>(value));
+        if (targetParameter->getModifierType() == ThreadModifierType::Global)
+        {
+            global.modifyByValue(std::get<1>(parameterPair), targetParameter->getModifierAction(), targetParameter->getModifierDimension());
+        }
+        else if (targetParameter->getModifierType() == ThreadModifierType::Local)
+        {
+            local.modifyByValue(std::get<1>(parameterPair), targetParameter->getModifierAction(), targetParameter->getModifierDimension());
+        }
     }
 
-    return KernelConfiguration(global, local, parameterValues);
+    return KernelConfiguration(global, local, parameterPairs);
 }
 
-std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const size_t id, const DeviceInfo& deviceInfo) const
+KernelConfiguration KernelManager::getKernelCompositionConfiguration(const KernelId compositionId,
+    const std::vector<ParameterPair>& parameterPairs) const
 {
-    if (id >= kernelCount)
+    if (!isComposition(compositionId))
+    {
+        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
+    }
+
+    const KernelComposition& kernelComposition = getKernelComposition(compositionId);
+    std::vector<std::pair<KernelId, DimensionVector>> globalSizes;
+    std::vector<std::pair<KernelId, DimensionVector>> localSizes;
+
+    for (const auto& kernel : kernelComposition.getKernels())
+    {
+        globalSizes.push_back(std::make_pair(kernel->getId(), kernel->getGlobalSize()));
+        localSizes.push_back(std::make_pair(kernel->getId(), kernel->getLocalSize()));
+    }
+    
+    for (const auto& parameterPair : parameterPairs)
+    {
+        const KernelParameter* targetParameter = nullptr;
+        for (const auto& parameter : kernelComposition.getParameters())
+        {
+            if (parameter.getName() == std::get<0>(parameterPair))
+            {
+                targetParameter = &parameter;
+                break;
+            }
+        }
+
+        if (targetParameter == nullptr)
+        {
+            throw std::runtime_error(std::string("Parameter with name <") + std::get<0>(parameterPair)
+                + "> is not associated with kernel composition with id: " + std::to_string(compositionId));
+        }
+
+        for (auto& globalSizePair : globalSizes)
+        {
+            for (const auto kernelId : targetParameter->getCompositionKernels())
+            {
+                if (globalSizePair.first == kernelId && targetParameter->getModifierType() == ThreadModifierType::Global)
+                {
+                    globalSizePair.second.modifyByValue(std::get<1>(parameterPair), targetParameter->getModifierAction(),
+                        targetParameter->getModifierDimension());
+                }
+            }
+        }
+        for (auto& localSizePair : localSizes)
+        {
+            for (const auto kernelId : targetParameter->getCompositionKernels())
+            {
+                if (localSizePair.first == kernelId && targetParameter->getModifierType() == ThreadModifierType::Local)
+                {
+                    localSizePair.second.modifyByValue(std::get<1>(parameterPair), targetParameter->getModifierAction(),
+                        targetParameter->getModifierDimension());
+                }
+            }
+        }
+    }
+
+    return KernelConfiguration(globalSizes, localSizes, parameterPairs);
+}
+
+std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const KernelId id, const DeviceInfo& deviceInfo) const
+{
+    if (!isKernel(id))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
 
     std::vector<KernelConfiguration> configurations;
+    const Kernel& kernel = getKernel(id);
 
-    if (kernels.at(id).getParameters().size() == 0)
+    if (kernel.getParameters().size() == 0)
     {
-        configurations.emplace_back(KernelConfiguration(kernels.at(id).getGlobalSize(), kernels.at(id).getLocalSize(),
-            std::vector<ParameterValue>{}));
+        configurations.emplace_back(kernel.getGlobalSize(), kernel.getLocalSize(), std::vector<ParameterPair>{});
     }
     else
     {
-        computeConfigurations(0, deviceInfo, kernels.at(id).getParameters(), kernels.at(id).getConstraints(), std::vector<ParameterValue>(0),
-            kernels.at(id).getGlobalSize(), kernels.at(id).getLocalSize(), configurations);
+        computeConfigurations(0, deviceInfo, kernel.getParameters(), kernel.getConstraints(), std::vector<ParameterPair>(0), kernel.getGlobalSize(),
+            kernel.getLocalSize(), configurations);
     }
     return configurations;
 }
 
-void KernelManager::addParameter(const size_t id, const std::string& name, const std::vector<size_t>& values,
-    const ThreadModifierType& threadModifierType, const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension)
+std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfigurations(const KernelId compositionId, const DeviceInfo& deviceInfo) const
 {
-    if (id >= kernelCount)
+    if (!isComposition(compositionId))
+    {
+        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
+    }
+
+    const KernelComposition& composition = getKernelComposition(compositionId);
+    std::vector<std::pair<KernelId, DimensionVector>> globalSizes;
+    std::vector<std::pair<KernelId, DimensionVector>> localSizes;
+
+    for (const auto& kernel : composition.getKernels())
+    {
+        globalSizes.push_back(std::make_pair(kernel->getId(), kernel->getGlobalSize()));
+        localSizes.push_back(std::make_pair(kernel->getId(), kernel->getLocalSize()));
+    }
+
+    std::vector<KernelConfiguration> kernelConfigurations;
+    if (composition.getParameters().size() == 0)
+    {
+        kernelConfigurations.emplace_back(globalSizes, localSizes, std::vector<ParameterPair>{});
+    }
+    else
+    {
+        computeCompositionConfigurations(0, deviceInfo, composition.getParameters(), composition.getConstraints(), std::vector<ParameterPair>(0),
+            globalSizes, localSizes, kernelConfigurations);
+    }
+
+    return kernelConfigurations;
+}
+
+void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values,
+    const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension)
+{
+    if (isKernel(id))
+    {
+        getKernel(id).addParameter(KernelParameter(name, values, modifierType, modifierAction, modifierDimension));
+    }
+    else if (isComposition(id))
+    {
+        getKernelComposition(id).addParameter(KernelParameter(name, values, modifierType, modifierAction, modifierDimension));
+    }
+    else
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
-    kernels.at(id).addParameter(KernelParameter(name, values, threadModifierType, threadModifierAction, modifierDimension));
 }
 
-void KernelManager::addConstraint(const size_t id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+void KernelManager::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {
-    if (id >= kernelCount)
+    if (isKernel(id))
+    {
+        getKernel(id).addConstraint(KernelConstraint(constraintFunction, parameterNames));
+    }
+    else if (isComposition(id))
+    {
+        getKernelComposition(id).addConstraint(KernelConstraint(constraintFunction, parameterNames));
+    }
+    else
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
-    kernels.at(id).addConstraint(KernelConstraint(constraintFunction, parameterNames));
 }
 
-void KernelManager::setArguments(const size_t id, const std::vector<size_t>& argumentIndices)
+void KernelManager::setArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
-    if (id >= kernelCount)
+    if (isKernel(id))
+    {
+        getKernel(id).setArguments(argumentIds);
+    }
+    else if (isComposition(id))
+    {
+        getKernelComposition(id).setSharedArguments(argumentIds);
+    }
+    else
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
-    kernels.at(id).setArguments(argumentIndices);
 }
 
-void KernelManager::setSearchMethod(const size_t id, const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+void KernelManager::setTuningManipulatorFlag(const KernelId id, const TunerFlag flag)
 {
-    if (id >= kernelCount)
+    if (!isKernel(id))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
-    kernels.at(id).setSearchMethod(searchMethod, searchArguments);
+    getKernel(id).setTuningManipulatorFlag(flag);
 }
 
-size_t KernelManager::getKernelCount() const
+void KernelManager::addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+    const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
+    const Dimension& modifierDimension)
 {
-    return kernelCount;
-}
-
-const Kernel* KernelManager::getKernel(const size_t id) const
-{
-    if (id >= kernelCount)
+    if (!isComposition(compositionId))
     {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
     }
-    return &kernels.at(id);
+
+    getKernelComposition(kernelId).addKernelParameter(kernelId, KernelParameter(parameterName, parameterValues, modifierType, modifierAction,
+        modifierDimension));
 }
 
-Kernel* KernelManager::getKernel(const size_t id)
+void KernelManager::setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds)
 {
-    if (id >= kernelCount)
+    if (!isComposition(compositionId))
     {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
     }
-    return &kernels.at(id);
+
+    getKernelComposition(compositionId).setKernelArguments(kernelId, argumentIds);
+}
+
+const Kernel& KernelManager::getKernel(const KernelId id) const
+{
+    for (const auto& kernel : kernels)
+    {
+        if (kernel.getId() == id)
+        {
+            return kernel;
+        }
+    }
+
+    throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+}
+
+Kernel& KernelManager::getKernel(const KernelId id)
+{
+    return const_cast<Kernel&>(static_cast<const KernelManager*>(this)->getKernel(id));
+}
+
+size_t KernelManager::getCompositionCount() const
+{
+    return kernelCompositions.size();
+}
+
+const KernelComposition& KernelManager::getKernelComposition(const KernelId id) const
+{
+    for (const auto& kernelComposition : kernelCompositions)
+    {
+        if (kernelComposition.getId() == id)
+        {
+            return kernelComposition;
+        }
+    }
+
+    throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(id));
+}
+
+KernelComposition& KernelManager::getKernelComposition(const KernelId id)
+{
+    return const_cast<KernelComposition&>(static_cast<const KernelManager*>(this)->getKernelComposition(id));
+}
+
+bool KernelManager::isKernel(const KernelId id) const
+{
+    for (const auto& kernel : kernels)
+    {
+        if (kernel.getId() == id)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool KernelManager::isComposition(const KernelId id) const
+{
+    for (const auto& kernelComposition : kernelCompositions)
+    {
+        if (kernelComposition.getId() == id)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 std::string KernelManager::loadFileToString(const std::string& filePath) const
@@ -172,12 +382,12 @@ std::string KernelManager::loadFileToString(const std::string& filePath) const
 
 void KernelManager::computeConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo,
     const std::vector<KernelParameter>& parameters, const std::vector<KernelConstraint>& constraints,
-    const std::vector<ParameterValue>& parameterValues, const DimensionVector& globalSize, const DimensionVector& localSize,
+    const std::vector<ParameterPair>& parameterPairs, const DimensionVector& globalSize, const DimensionVector& localSize,
     std::vector<KernelConfiguration>& finalResult) const
 {
     if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
-        KernelConfiguration configuration(globalSize, localSize, parameterValues);
+        KernelConfiguration configuration(globalSize, localSize, parameterPairs);
         if (configurationIsValid(configuration, constraints, deviceInfo))
         {
             finalResult.push_back(configuration);
@@ -188,55 +398,68 @@ void KernelManager::computeConfigurations(const size_t currentParameterIndex, co
     KernelParameter parameter = parameters.at(currentParameterIndex); // process next parameter
     for (const auto& value : parameter.getValues()) // recursively build tree of configurations for each parameter value
     {
-        auto newParameterValues = parameterValues;
-        newParameterValues.push_back(ParameterValue(parameter.getName(), value));
+        auto newParameterPairs = parameterPairs;
+        newParameterPairs.push_back(ParameterPair(parameter.getName(), value));
 
-        auto newGlobalSize = modifyDimensionVector(globalSize, DimensionVectorType::Global, parameter, value);
-        auto newLocalSize = modifyDimensionVector(localSize, DimensionVectorType::Local, parameter, value);
+        DimensionVector newGlobalSize = globalSize;
+        DimensionVector newLocalSize = localSize;
 
-        computeConfigurations(currentParameterIndex + 1, deviceInfo, parameters, constraints, newParameterValues, newGlobalSize, newLocalSize,
+        if (parameter.getModifierType() == ThreadModifierType::Global)
+        {
+            newGlobalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
+        }
+        else if (parameter.getModifierType() == ThreadModifierType::Local)
+        {
+            newLocalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
+        }
+
+        computeConfigurations(currentParameterIndex + 1, deviceInfo, parameters, constraints, newParameterPairs, newGlobalSize, newLocalSize,
             finalResult);
     }
 }
 
-DimensionVector KernelManager::modifyDimensionVector(const DimensionVector& vector, const DimensionVectorType& dimensionVectorType,
-    const KernelParameter& parameter, const size_t parameterValue) const
+void KernelManager::computeCompositionConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo,
+    const std::vector<KernelParameter>& parameters, const std::vector<KernelConstraint>& constraints,
+    const std::vector<ParameterPair>& parameterPairs, std::vector<std::pair<KernelId, DimensionVector>>& globalSizes,
+    std::vector<std::pair<KernelId, DimensionVector>>& localSizes, std::vector<KernelConfiguration>& finalResult) const
 {
-    if (parameter.getThreadModifierType() == ThreadModifierType::None
-        || dimensionVectorType == DimensionVectorType::Global && parameter.getThreadModifierType() == ThreadModifierType::Local
-        || dimensionVectorType == DimensionVectorType::Local && parameter.getThreadModifierType() == ThreadModifierType::Global)
+    if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
-        return vector;
+        KernelConfiguration configuration(globalSizes, localSizes, parameterPairs);
+        if (configurationIsValid(configuration, constraints, deviceInfo))
+        {
+            finalResult.push_back(configuration);
+        }
+        return;
     }
 
-    ThreadModifierAction action = parameter.getThreadModifierAction();
-    if (action == ThreadModifierAction::Add)
+    KernelParameter parameter = parameters.at(currentParameterIndex); // process next parameter
+    for (const auto& value : parameter.getValues()) // recursively build tree of configurations for each parameter value
     {
-        size_t x = parameter.getModifierDimension() == Dimension::X ? std::get<0>(vector) + parameterValue : std::get<0>(vector);
-        size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) + parameterValue : std::get<1>(vector);
-        size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) + parameterValue : std::get<2>(vector);
-        return DimensionVector(x, y, z);
-    }
-    else if (action == ThreadModifierAction::Subtract)
-    {
-        size_t x = parameter.getModifierDimension() == Dimension::X ? std::get<0>(vector) - parameterValue : std::get<0>(vector);
-        size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) - parameterValue : std::get<1>(vector);
-        size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) - parameterValue : std::get<2>(vector);
-        return DimensionVector(x, y, z);
-    }
-    else if (action == ThreadModifierAction::Multiply)
-    {
-        size_t x = parameter.getModifierDimension() == Dimension::X ? std::get<0>(vector) * parameterValue : std::get<0>(vector);
-        size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) * parameterValue : std::get<1>(vector);
-        size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) * parameterValue : std::get<2>(vector);
-        return DimensionVector(x, y, z);
-    }
-    else // divide
-    {
-        size_t x = parameter.getModifierDimension() == Dimension::X ? std::get<0>(vector) / parameterValue : std::get<0>(vector);
-        size_t y = parameter.getModifierDimension() == Dimension::Y ? std::get<1>(vector) / parameterValue : std::get<1>(vector);
-        size_t z = parameter.getModifierDimension() == Dimension::Z ? std::get<2>(vector) / parameterValue : std::get<2>(vector);
-        return DimensionVector(x, y, z);
+        auto newParameterPairs = parameterPairs;
+        newParameterPairs.push_back(ParameterPair(parameter.getName(), value));
+
+        for (const auto compositionKernelId : parameter.getCompositionKernels())
+        {
+            for (auto& globalSizePair : globalSizes)
+            {
+                if (compositionKernelId == globalSizePair.first && parameter.getModifierType() == ThreadModifierType::Global)
+                {
+                    globalSizePair.second.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
+                }
+            }
+
+            for (auto& localSizePair : localSizes)
+            {
+                if (compositionKernelId == localSizePair.first && parameter.getModifierType() == ThreadModifierType::Local)
+                {
+                    localSizePair.second.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
+                }
+            }
+        }
+
+        computeCompositionConfigurations(currentParameterIndex + 1, deviceInfo, parameters, constraints, newParameterPairs, globalSizes, localSizes,
+            finalResult);
     }
 }
 
@@ -250,11 +473,11 @@ bool KernelManager::configurationIsValid(const KernelConfiguration& configuratio
 
         for (size_t i = 0; i < constraintNames.size(); i++)
         {
-            for (const auto& parameterValue : configuration.getParameterValues())
+            for (const auto& parameterPair : configuration.getParameterPairs())
             {
-                if (std::get<0>(parameterValue) == constraintNames.at(i))
+                if (std::get<0>(parameterPair) == constraintNames.at(i))
                 {
-                    constraintValues.at(i) = std::get<1>(parameterValue);
+                    constraintValues.at(i) = std::get<1>(parameterPair);
                     break;
                 }
             }
@@ -267,10 +490,13 @@ bool KernelManager::configurationIsValid(const KernelConfiguration& configuratio
         }
     }
 
-    auto localSize = configuration.getLocalSize();
-    if (std::get<0>(localSize) * std::get<1>(localSize) * std::get<2>(localSize) > deviceInfo.getMaxWorkGroupSize())
+    std::vector<DimensionVector> localSizes = configuration.getLocalSizes();
+    for (const auto& localSize : localSizes)
     {
-        return false;
+        if (localSize.getTotalSize() > deviceInfo.getMaxWorkGroupSize())
+        {
+            return false;
+        }
     }
 
     return true;

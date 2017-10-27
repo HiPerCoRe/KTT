@@ -3,7 +3,6 @@
 #include <map>
 #include <string>
 #include <vector>
-
 #include "dto/tuning_result.h"
 #include "enum/print_format.h"
 #include "enum/time_unit.h"
@@ -16,22 +15,24 @@ class ResultPrinter
 public:
     ResultPrinter();
 
-    void printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const;
-    void setResult(const size_t kernelId, const std::vector<TuningResult>& result, const std::vector<TuningResult>& invalidResult);
-    void setTimeUnit(const TimeUnit& timeUnit);
-    void setInvalidResultPrinting(const bool flag);
+    void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const;
+    void setResult(const KernelId id, const std::vector<TuningResult>& results);
+    void setTimeUnit(const TimeUnit& unit);
+    void setInvalidResultPrinting(const TunerFlag flag);
+    std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
 
 private:
-    std::map<size_t, std::vector<TuningResult>> resultMap;
-    std::map<size_t, std::vector<TuningResult>> invalidResultMap;
+    std::map<KernelId, std::vector<TuningResult>> kernelResults;
     TimeUnit timeUnit;
-    bool printInvalidResult;
+    TunerFlag printInvalidResult;
 
-    void printVerbose(const std::vector<TuningResult>& results, const std::vector<TuningResult>& invalidResults, std::ostream& outputTarget) const;
-    void printCsv(const std::vector<TuningResult>& results, const std::vector<TuningResult>& invalidResults, std::ostream& outputTarget) const;
+    void printVerbose(const std::vector<TuningResult>& results, std::ostream& outputTarget) const;
+    void printCsv(const std::vector<TuningResult>& results, std::ostream& outputTarget) const;
+    void printConfigurationVerbose(std::ostream& outputTarget, const KernelConfiguration& configuration) const;
+    void printConfigurationCsv(std::ostream& outputTarget, const KernelConfiguration& configuration) const;
     TuningResult getBestResult(const std::vector<TuningResult>& results) const;
-    uint64_t convertTime(const uint64_t timeInNanoseconds, const TimeUnit& targetUnit) const;
-    std::string getTimeUnitTag(const TimeUnit& timeUnit) const;
+    static uint64_t convertTime(const uint64_t timeInNanoseconds, const TimeUnit& targetUnit);
+    static std::string getTimeUnitTag(const TimeUnit& unit);
 };
 
 } // namespace ktt

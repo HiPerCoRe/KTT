@@ -29,6 +29,9 @@
     typedef float16 vector;
 #endif // VECTOR_TYPE
 
+#if VECTOR_SIZE > 1
+__kernel __attribute__((vec_type_hint(vector)))
+#endif
 __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA vector* atomInfoX, MEMORY_TYPE_SOA vector* atomInfoY,
     MEMORY_TYPE_SOA vector* atomInfoZ, MEMORY_TYPE_SOA vector* atomInfoW, int numberOfAtoms, float gridSpacing, __global float* energyGrid)
 {
@@ -112,7 +115,9 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA
 
     #if USE_SOA < 2
     #if VECTOR_TYPE == 1
+    #if INNER_UNROLL_FACTOR > 0
     #pragma unroll INNER_UNROLL_FACTOR
+    #endif
     for (int i = 0; i < numberOfAtoms; i++)
     {
         #if USE_SOA == 0
@@ -205,7 +210,9 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA
     }
 
     #elif VECTOR_TYPE == 2
+    #if INNER_UNROLL_FACTOR > 0
     #pragma unroll INNER_UNROLL_FACTOR
+    #endif
     for (int i = 0; i < numberOfAtoms / (1 + SOA_UNROLL); i++)
     {
         #if USE_SOA == 0
@@ -331,7 +338,9 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA
     }
 
     #elif VECTOR_TYPE == 4
+    #if INNER_UNROLL_FACTOR > 0
     #pragma unroll INNER_UNROLL_FACTOR
+    #endif
     for (int i = 0; i < numberOfAtoms / (1 + SOA_UNROLL * 3); i++)
     {
         #if USE_SOA == 0
@@ -523,7 +532,9 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA
     }
 
     #elif VECTOR_TYPE == 8
+    #if INNER_UNROLL_FACTOR > 0
     #pragma unroll INNER_UNROLL_FACTOR
+    #endif
     for (int i = 0; i < numberOfAtoms / (2 - SOA_UNROLL) / (1 + SOA_UNROLL * 7); i++)
     {
         #if USE_SOA == 0
@@ -881,7 +892,9 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS vector* atomInfo, MEMORY_TYPE_SOA
     #endif // VECTOR_TYPE
 
     #elif USE_SOA == 2
+    #if INNER_UNROLL_FACTOR > 0
     #pragma unroll INNER_UNROLL_FACTOR
+    #endif
     for (int i = 0; i < numberOfAtoms / VECTOR_TYPE; i++)
     {
         vector distanceX = coordX - atomInfoX[i];

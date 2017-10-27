@@ -1,6 +1,5 @@
 #include "catch.hpp"
-
-#include "compute_api_driver/opencl/opencl_core.h"
+#include "compute_engine/opencl/opencl_core.h"
 #include "kernel_argument/kernel_argument.h"
 
 std::string programSource(std::string("")
@@ -11,9 +10,9 @@ std::string programSource(std::string("")
     + "    result[index] = a[index] + b[index] + number;\n"
     + "}\n");
 
-TEST_CASE("Working with program and kernel", "[openclCore]")
+TEST_CASE("Working with program and kernel", "Component: OpenclCore")
 {
-    ktt::OpenclCore core(0, 0);
+    ktt::OpenclCore core(0, 0, ktt::RunMode::Tuning);
 
     auto program = core.createAndBuildProgram(programSource);
     REQUIRE(program->getSource() == programSource);
@@ -28,40 +27,31 @@ TEST_CASE("Working with program and kernel", "[openclCore]")
 
     SECTION("Trying to build program with invalid source throws")
     {
-        REQUIRE_THROWS(core.createAndBuildProgram(std::string("Invalid")));
+        REQUIRE_THROWS(core.createAndBuildProgram("Invalid"));
     }
 }
 
-TEST_CASE("Working with OpenCL buffer", "[openclCore]")
+TEST_CASE("Working with OpenCL buffer", "Component: OpenclCore")
 {
-    ktt::OpenclCore core(0, 0);
+    ktt::OpenclCore core(0, 0, ktt::RunMode::Tuning);
     std::vector<float> data;
     for (size_t i = 0; i < 64; i++)
     {
         data.push_back(static_cast<float>(i));
     }
 
-    auto argument = ktt::KernelArgument(0, data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryType::ReadOnly,
-        ktt::ArgumentUploadType::Vector);
-
-    SECTION("Creating OpenCL buffer")
-    {
-        std::unique_ptr<ktt::OpenclBuffer> buffer = core.createBuffer(argument);
-        REQUIRE(buffer->getOpenclMemoryFlag() == CL_MEM_READ_ONLY);
-        REQUIRE(buffer->getBuffer() != nullptr);
-        REQUIRE(buffer->getBufferSize() == data.size() * sizeof(float));
-        REQUIRE(buffer->getElementSize() == sizeof(float));
-        REQUIRE(buffer->getKernelArgumentId() == argument.getId());
-    }
+    auto argument = ktt::KernelArgument(0, data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
+        ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector);
 
     SECTION("Transfering argument to / from device")
     {
         core.uploadArgument(argument);
         ktt::KernelArgument resultArgument = core.downloadArgument(argument.getId());
 
-        REQUIRE(resultArgument.getArgumentDataType() == argument.getArgumentDataType());
-        REQUIRE(resultArgument.getArgumentMemoryType() == argument.getArgumentMemoryType());
-        REQUIRE(resultArgument.getArgumentUploadType() == argument.getArgumentUploadType());
+        REQUIRE(resultArgument.getDataType() == argument.getDataType());
+        REQUIRE(resultArgument.getMemoryLocation() == argument.getMemoryLocation());
+        REQUIRE(resultArgument.getAccessType() == argument.getAccessType());
+        REQUIRE(resultArgument.getUploadType() == argument.getUploadType());
         REQUIRE(resultArgument.getDataSizeInBytes() == argument.getDataSizeInBytes());
         std::vector<float> result = resultArgument.getDataFloat();
         for (size_t i = 0; i < data.size(); i++)

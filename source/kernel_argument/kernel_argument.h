@@ -3,12 +3,12 @@
 #include <cstdint>
 #include <iostream>
 #include <vector>
-
 #include "half.hpp"
+#include "ktt_types.h"
+#include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
-#include "enum/argument_memory_type.h"
+#include "enum/argument_memory_location.h"
 #include "enum/argument_upload_type.h"
-#include "enum/argument_print_condition.h"
 
 namespace ktt
 {
@@ -19,20 +19,24 @@ class KernelArgument
 {
 public:
     // Constructors
-    explicit KernelArgument(const size_t id, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
-    explicit KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-        const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType);
+    explicit KernelArgument(const ArgumentId id, const size_t numberOfElements, const ArgumentDataType& dataType,
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
+    explicit KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
+    explicit KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType,
+        const bool dataOwned);
 
     // Core methods
     void updateData(const void* data, const size_t numberOfElements);
 
     // Getters
-    size_t getId() const;
+    ArgumentId getId() const;
     size_t getNumberOfElements() const;
-    ArgumentDataType getArgumentDataType() const;
-    ArgumentMemoryType getArgumentMemoryType() const;
-    ArgumentUploadType getArgumentUploadType() const;
+    ArgumentDataType getDataType() const;
+    ArgumentMemoryLocation getMemoryLocation() const;
+    ArgumentAccessType getAccessType() const;
+    ArgumentUploadType getUploadType() const;
     size_t getElementSizeInBytes() const;
     size_t getDataSizeInBytes() const;
     const void* getData() const;
@@ -52,14 +56,14 @@ public:
     // Operators
     bool operator==(const KernelArgument& other) const;
     bool operator!=(const KernelArgument& other) const;
-    friend std::ostream& operator<<(std::ostream&, const KernelArgument&);
 
 private:
     // Attributes
-    size_t id;
+    ArgumentId id;
     size_t numberOfElements;
     ArgumentDataType argumentDataType;
-    ArgumentMemoryType argumentMemoryType;
+    ArgumentMemoryLocation argumentMemoryLocation;
+    ArgumentAccessType argumentAccessType;
     ArgumentUploadType argumentUploadType;
     std::vector<int8_t> dataChar;
     std::vector<uint8_t> dataUnsignedChar;
@@ -72,20 +76,12 @@ private:
     std::vector<half> dataHalf;
     std::vector<float> dataFloat;
     std::vector<double> dataDouble;
+    bool dataOwned;
+    const void* referencedData;
 
     // Helper methods
-    void initializeData(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType);
-    void prepareData(const size_t numberOfElements, const ArgumentDataType& argumentDataType);
+    void initializeData(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType);
+    void prepareData(const size_t numberOfElements, const ArgumentDataType& dataType);
 };
-
-std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument);
-
-template <typename T> void printVector(std::ostream& outputTarget, const std::vector<T>& data)
-{
-    for (size_t i = 0; i < data.size(); i++)
-    {
-        outputTarget << i << ": " << data.at(i) << std::endl;
-    }
-}
 
 } // namespace ktt

@@ -1,17 +1,18 @@
+#include <stdexcept>
 #include "kernel.h"
 #include "utility/ktt_utility.h"
 
 namespace ktt
 {
 
-Kernel::Kernel(const size_t id, const std::string& source, const std::string& name, const DimensionVector& globalSize,
+Kernel::Kernel(const KernelId id, const std::string& source, const std::string& name, const DimensionVector& globalSize,
     const DimensionVector& localSize) :
     id(id),
     source(source),
     name(name),
     globalSize(globalSize),
     localSize(localSize),
-    searchMethod(SearchMethod::FullSearch)
+    tuningManipulatorFlag(false)
 {}
 
 void Kernel::addParameter(const KernelParameter& parameter)
@@ -29,7 +30,7 @@ void Kernel::addConstraint(const KernelConstraint& constraint)
 
     for (const auto& parameterName : parameterNames)
     {
-        if (!parameterExists(parameterName))
+        if (!hasParameter(parameterName))
         {
             throw std::runtime_error(std::string("Constraint parameter with given name does not exist: ") + parameterName);
         }
@@ -37,26 +38,17 @@ void Kernel::addConstraint(const KernelConstraint& constraint)
     constraints.push_back(constraint);
 }
 
-void Kernel::setArguments(const std::vector<size_t>& argumentIndices)
+void Kernel::setArguments(const std::vector<ArgumentId>& argumentIds)
 {
-    this->argumentIndices = argumentIndices;
+    this->argumentIds = argumentIds;
 }
 
-void Kernel::setSearchMethod(const SearchMethod& searchMethod, const std::vector<double>& searchArguments)
+void Kernel::setTuningManipulatorFlag(const TunerFlag flag)
 {
-    if (searchMethod == SearchMethod::RandomSearch && searchArguments.size() < 1
-        || searchMethod == SearchMethod::Annealing && searchArguments.size() < 2
-        || searchMethod == SearchMethod::PSO && searchArguments.size() < 5)
-    {
-        throw std::runtime_error(std::string("Insufficient number of arguments given for specified search method: ")
-            + getSearchMethodName(searchMethod));
-    }
-    
-    this->searchArguments = searchArguments;
-    this->searchMethod = searchMethod;
+    this->tuningManipulatorFlag = flag;
 }
 
-size_t Kernel::getId() const
+KernelId Kernel::getId() const
 {
     return id;
 }
@@ -93,25 +85,15 @@ std::vector<KernelConstraint> Kernel::getConstraints() const
 
 size_t Kernel::getArgumentCount() const
 {
-    return argumentIndices.size();
+    return argumentIds.size();
 }
 
-std::vector<size_t> Kernel::getArgumentIndices() const
+std::vector<ArgumentId> Kernel::getArgumentIds() const
 {
-    return argumentIndices;
+    return argumentIds;
 }
 
-SearchMethod Kernel::getSearchMethod() const
-{
-    return searchMethod;
-}
-
-std::vector<double> Kernel::getSearchArguments() const
-{
-    return searchArguments;
-}
-
-bool Kernel::parameterExists(const std::string& parameterName) const
+bool Kernel::hasParameter(const std::string& parameterName) const
 {
     for (const auto& currentParameter : parameters)
     {
@@ -123,21 +105,9 @@ bool Kernel::parameterExists(const std::string& parameterName) const
     return false;
 }
 
-std::string Kernel::getSearchMethodName(const SearchMethod& searchMethod) const
+bool Kernel::hasTuningManipulator() const
 {
-    switch (searchMethod)
-    {
-    case SearchMethod::FullSearch:
-        return std::string("FullSearch");
-    case SearchMethod::RandomSearch:
-        return std::string("RandomSearch");
-    case SearchMethod::PSO:
-        return std::string("PSO");
-    case SearchMethod::Annealing:
-        return std::string("Annealing");
-    default:
-        return std::string("Unknown search method");
-    }
+    return tuningManipulatorFlag;
 }
 
 } // namespace ktt

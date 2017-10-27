@@ -3,7 +3,6 @@
 #include <random>
 #include <string>
 #include <vector>
-
 #include "tuner_api.h"
 
 int main(int argc, char** argv)
@@ -11,21 +10,21 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
-    auto kernelFile = std::string("../examples/nbody/nbody_kernel1.cl");
-    auto referenceKernelFile = std::string("../examples/nbody/nbody_reference_kernel.cl");
+    std::string kernelFile = "../examples/nbody/nbody_kernel1.cl";
+    std::string referenceKernelFile = "../examples/nbody/nbody_reference_kernel.cl";
 
     if (argc >= 2)
     {
-        platformIndex = std::stoul(std::string{ argv[1] });
+        platformIndex = std::stoul(std::string(argv[1]));
         if (argc >= 3)
         {
-            deviceIndex = std::stoul(std::string{ argv[2] });
+            deviceIndex = std::stoul(std::string(argv[2]));
             if (argc >= 4)
             {
-                kernelFile = std::string{ argv[3] };
+                kernelFile = std::string(argv[3]);
                 if (argc >= 5)
                 {
-                    referenceKernelFile = std::string{ argv[4] };
+                    referenceKernelFile = std::string(argv[4]);
                 }
             }
         }
@@ -34,9 +33,9 @@ int main(int argc, char** argv)
     // Declare kernel parameters
     const int numberOfBodies = 8192;
     // Total NDRange size matches number of grid points
-    const ktt::DimensionVector ndRangeDimensions(numberOfBodies, 1, 1);
-    const ktt::DimensionVector workGroupDimensions(1, 1, 1);
-    const ktt::DimensionVector referenceWorkGroupDimensions(64, 1, 1);
+    const ktt::DimensionVector ndRangeDimensions(numberOfBodies);
+    const ktt::DimensionVector workGroupDimensions;
+    const ktt::DimensionVector referenceWorkGroupDimensions(64);
 
     // Declare data variables
     float timeDelta = 0.001f;
@@ -87,70 +86,69 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
     // Add two kernels to tuner, one of the kernels acts as reference kernel
-    size_t kernelId = tuner.addKernelFromFile(kernelFile, std::string("nbody_kernel"), ndRangeDimensions, workGroupDimensions);
-    size_t referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("nbody_kernel"), ndRangeDimensions,
-        referenceWorkGroupDimensions);
+    ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "nbody_kernel", ndRangeDimensions, workGroupDimensions);
+    ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "nbody_kernel", ndRangeDimensions, referenceWorkGroupDimensions);
 
-     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    tuner.addParameter(kernelId, std::string("WORK_GROUP_SIZE_X"), std::vector<size_t>{ 32, 64, 128, 256, 512}, ktt::ThreadModifierType::Local,
-        ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
-    tuner.addParameter(kernelId, std::string("OUTER_UNROLL_FACTOR"), std::vector<size_t>{ 1, 2, 4, 8, 16, 32 }, ktt::ThreadModifierType::Global,
-        ktt::ThreadModifierAction::Divide, ktt::Dimension::X);
-    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", { 1, 2, 4, 8, 16, 32, 64, 128, 256 });
-    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", { 1, 2, 4, 8, 16, 32 });
-    tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", { 0, 1 });
-    tuner.addParameter(kernelId, "USE_SOA", { 0, 1 });
-    tuner.addParameter(kernelId, "LOCAL_MEM", { 0, 1 });
-    tuner.addParameter(kernelId, std::string("VECTOR_TYPE"), std::vector<size_t>{ 1, 2, 4, 8, 16 });
+    // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {32, 64, 128, 256, 512}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply,
+        ktt::Dimension::X);
+    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", {1, 2, 4, 8, 16, 32}, ktt::ThreadModifierType::Global, ktt::ThreadModifierAction::Divide,
+        ktt::Dimension::X);
+    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", {1, 2, 4, 8, 16, 32, 64, 128, 256});
+    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", {1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
+    tuner.addParameter(kernelId, "USE_SOA", {0, 1});
+    tuner.addParameter(kernelId, "LOCAL_MEM", {0, 1});
+    tuner.addParameter(kernelId, "VECTOR_TYPE", {1, 2, 4, 8, 16});
 
-     // Add all arguments utilized by kernels
-    size_t oldBodyInfoId = tuner.addArgument(oldBodyInfo, ktt::ArgumentMemoryType::ReadOnly);
-    size_t oldPosXId = tuner.addArgument(oldPosX, ktt::ArgumentMemoryType::ReadOnly);
-    size_t oldPosYId = tuner.addArgument(oldPosY, ktt::ArgumentMemoryType::ReadOnly);
-    size_t oldPosZId = tuner.addArgument(oldPosZ, ktt::ArgumentMemoryType::ReadOnly);
-    size_t massId = tuner.addArgument(bodyMass, ktt::ArgumentMemoryType::ReadOnly);
-    size_t newBodyInfoId = tuner.addArgument(newBodyInfo, ktt::ArgumentMemoryType::WriteOnly);
+    // Add all arguments utilized by kernels
+    ktt::ArgumentId oldBodyInfoId = tuner.addArgumentVector(oldBodyInfo, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId oldPosXId = tuner.addArgumentVector(oldPosX, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId oldPosYId = tuner.addArgumentVector(oldPosY, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId oldPosZId = tuner.addArgumentVector(oldPosZ, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId massId = tuner.addArgumentVector(bodyMass, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId newBodyInfoId = tuner.addArgumentVector(newBodyInfo, ktt::ArgumentAccessType::WriteOnly);
 
-    size_t oldVelId = tuner.addArgument(oldBodyVel, ktt::ArgumentMemoryType::ReadOnly);
-    size_t oldVelXId = tuner.addArgument(oldVelX, ktt::ArgumentMemoryType::ReadOnly);
-    size_t oldVelYId = tuner.addArgument(oldVelY, ktt::ArgumentMemoryType::ReadOnly);
-    size_t oldVelZId = tuner.addArgument(oldVelZ, ktt::ArgumentMemoryType::ReadOnly);
-    size_t newBodyVelId = tuner.addArgument(newBodyVel, ktt::ArgumentMemoryType::WriteOnly);
+    ktt::ArgumentId oldVelId = tuner.addArgumentVector(oldBodyVel, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId oldVelXId = tuner.addArgumentVector(oldVelX, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId oldVelYId = tuner.addArgumentVector(oldVelY, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId oldVelZId = tuner.addArgumentVector(oldVelZ, ktt::ArgumentAccessType::ReadOnly);
+    ktt::ArgumentId newBodyVelId = tuner.addArgumentVector(newBodyVel, ktt::ArgumentAccessType::WriteOnly);
 
-    size_t deltaTimeId = tuner.addArgument(timeDelta);
-    size_t dampingId = tuner.addArgument(damping);
-    size_t softeningSqrId = tuner.addArgument(softeningSqr);
-    size_t numberOfBodiesId = tuner.addArgument(numberOfBodies);
+    ktt::ArgumentId deltaTimeId = tuner.addArgumentScalar(timeDelta);
+    ktt::ArgumentId dampingId = tuner.addArgumentScalar(damping);
+    ktt::ArgumentId softeningSqrId = tuner.addArgumentScalar(softeningSqr);
+    ktt::ArgumentId numberOfBodiesId = tuner.addArgumentScalar(numberOfBodies);
 
     // Add conditions
-    auto lteq = [](std::vector<size_t> vector) { return vector.at(0) <= vector.at(1); };
-    tuner.addConstraint(kernelId, lteq, { "INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR" } );
-    auto lteq256 = [](std::vector<size_t> vector) { return vector.at(0) * vector.at(1) <= 256; };
-    tuner.addConstraint(kernelId, lteq, { "INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2" } );
-    auto vectorizedSoA = [](std::vector<size_t> vector) { return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1); };
-    tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{ "VECTOR_TYPE", "USE_SOA" });
+    auto lteq = [](std::vector<size_t> vector) {return vector.at(0) <= vector.at(1);};
+    tuner.addConstraint(kernelId, lteq, {"INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR"});
+    auto lteq256 = [](std::vector<size_t> vector) {return vector.at(0) * vector.at(1) <= 256;};
+    tuner.addConstraint(kernelId, lteq, {"INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2"});
+    auto vectorizedSoA = [](std::vector<size_t> vector) {return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1);};
+    tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"});
 
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
-    tuner.setKernelArguments(kernelId,
-        std::vector<size_t>{ deltaTimeId, 
+    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{deltaTimeId,
         oldBodyInfoId, oldPosXId, oldPosYId, oldPosZId, massId, newBodyInfoId, // position
         oldVelId, oldVelXId, oldVelYId, oldVelZId, newBodyVelId, // velocity
-        dampingId, softeningSqrId, numberOfBodiesId });
-    tuner.setKernelArguments(referenceKernelId, 
-        std::vector<size_t>{ deltaTimeId, oldBodyInfoId, newBodyInfoId, oldVelId, newBodyVelId, dampingId, softeningSqrId });
+        dampingId, softeningSqrId, numberOfBodiesId});
+    tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{deltaTimeId, oldBodyInfoId, newBodyInfoId, oldVelId, newBodyVelId,
+        dampingId, softeningSqrId});
 
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
 
-     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
-    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterValue>{}, std::vector<size_t>{ newBodyVelId, newBodyInfoId });
+    // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
+    tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{newBodyVelId,
+        newBodyInfoId});
   
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-    tuner.printResult(kernelId, std::string("nbody_output.csv"), ktt::PrintFormat::CSV);
+    tuner.printResult(kernelId, "nbody_output.csv", ktt::PrintFormat::CSV);
 
     return 0;
 }

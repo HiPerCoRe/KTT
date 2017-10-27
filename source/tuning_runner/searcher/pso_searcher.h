@@ -4,7 +4,6 @@
 #include <chrono>
 #include <limits>
 #include <random>
-
 #include "searcher.h"
 #include "kernel/kernel_parameter.h"
 
@@ -28,8 +27,8 @@ public:
         particlePositions(swarmSize),
         globalBestTime(std::numeric_limits<double>::max()),
         localBestTimes(swarmSize, std::numeric_limits<double>::max()),
-        globalBestConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>()),
-        localBestConfigurations(swarmSize, KernelConfiguration(DimensionVector(0, 0, 0), DimensionVector(0, 0, 0), std::vector<ParameterValue>())),
+        globalBestConfiguration(DimensionVector(), DimensionVector(), std::vector<ParameterPair>{}),
+        localBestConfigurations(swarmSize, KernelConfiguration(DimensionVector(), DimensionVector(), std::vector<ParameterPair>{})),
         generator(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count())),
         intDistribution(0, static_cast<int>(configurations.size())),
         probabilityDistribution(0.0, 1.0)
@@ -69,20 +68,20 @@ public:
         do
         {
             auto nextConfiguration = configurations.at(index);
-            for (size_t i = 0; i < nextConfiguration.getParameterValues().size(); i++)
+            for (size_t i = 0; i < nextConfiguration.getParameterPairs().size(); i++)
             {
                 if (probabilityDistribution(generator) <= influenceGlobal)
                 {
-                    nextConfiguration.parameterValues.at(i) = globalBestConfiguration.getParameterValues().at(i);
+                    nextConfiguration.parameterPairs.at(i) = globalBestConfiguration.getParameterPairs().at(i);
                 }
                 else if (probabilityDistribution(generator) <= influenceLocal)
                 {
-                    nextConfiguration.parameterValues.at(i) = localBestConfigurations.at(particleIndex).getParameterValues().at(i);
+                    nextConfiguration.parameterPairs.at(i) = localBestConfigurations.at(particleIndex).getParameterPairs().at(i);
                 }
                 else if (probabilityDistribution(generator) <= influenceRandom)
                 {
                     std::uniform_int_distribution<size_t> distribution(0, parameters.at(i).getValues().size());
-                    std::get<1>(nextConfiguration.parameterValues.at(i)) = parameters.at(i).getValues().at(distribution(generator));
+                    std::get<1>(nextConfiguration.parameterPairs.at(i)) = parameters.at(i).getValues().at(distribution(generator));
                 }
             }
             newIndex = indexFromConfiguration(nextConfiguration);
@@ -134,14 +133,14 @@ private:
         for (auto& configuration : configurations)
         {
             size_t matchesCount = 0;
-            for (size_t i = 0; i < configuration.getParameterValues().size(); i++)
+            for (size_t i = 0; i < configuration.getParameterPairs().size(); i++)
             {
-                if (std::get<1>(configuration.getParameterValues().at(i)) == std::get<1>(target.getParameterValues().at(i)))
+                if (std::get<1>(configuration.getParameterPairs().at(i)) == std::get<1>(target.getParameterPairs().at(i)))
                 {
                     matchesCount++;
                 }
             }
-            if (matchesCount == configuration.getParameterValues().size())
+            if (matchesCount == configuration.getParameterPairs().size())
             {
                 return configurationIndex;
             }

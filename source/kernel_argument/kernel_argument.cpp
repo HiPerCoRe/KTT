@@ -1,18 +1,19 @@
 #include <cstring>
 #include <stdexcept>
-
 #include "kernel_argument.h"
 
 namespace ktt
 {
 
-KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType) :
+KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElements, const ArgumentDataType& dataType,
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType) :
     id(id),
     numberOfElements(numberOfElements),
-    argumentDataType(argumentDataType),
-    argumentMemoryType(argumentMemoryType),
-    argumentUploadType(argumentUploadType)
+    argumentDataType(dataType),
+    argumentMemoryLocation(memoryLocation),
+    argumentAccessType(accessType),
+    argumentUploadType(uploadType),
+    dataOwned(true)
 {
     if (numberOfElements == 0)
     {
@@ -21,22 +22,33 @@ KernelArgument::KernelArgument(const size_t id, const size_t numberOfElements, c
     prepareData(numberOfElements, argumentDataType);
 }
 
-KernelArgument::KernelArgument(const size_t id, const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType,
-    const ArgumentMemoryType& argumentMemoryType, const ArgumentUploadType& argumentUploadType) :
+KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType) :
+    KernelArgument(id, data, numberOfElements, dataType, memoryLocation, accessType, uploadType, true)
+{}
+
+KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool dataOwned) :
     id(id),
     numberOfElements(numberOfElements),
-    argumentDataType(argumentDataType),
-    argumentMemoryType(argumentMemoryType),
-    argumentUploadType(argumentUploadType)
+    argumentDataType(dataType),
+    argumentMemoryLocation(memoryLocation),
+    argumentAccessType(accessType),
+    argumentUploadType(uploadType),
+    dataOwned(dataOwned)
 {
     if (numberOfElements == 0)
     {
         throw std::runtime_error("Data provided for kernel argument is empty");
     }
 
-    if (data != nullptr)
+    if (dataOwned && data != nullptr)
     {
         initializeData(data, numberOfElements, argumentDataType);
+    }
+    if (!dataOwned)
+    {
+        referencedData = data;
     }
 }
 
@@ -46,11 +58,19 @@ void KernelArgument::updateData(const void* data, const size_t numberOfElements)
     {
         throw std::runtime_error("Data provided for kernel argument is empty");
     }
+
     this->numberOfElements = numberOfElements;
-    initializeData(data, numberOfElements, argumentDataType);
+    if (dataOwned)
+    {
+        initializeData(data, numberOfElements, argumentDataType);
+    }
+    else
+    {
+        referencedData = data;
+    }
 }
 
-size_t KernelArgument::getId() const
+ArgumentId KernelArgument::getId() const
 {
     return id;
 }
@@ -60,17 +80,22 @@ size_t KernelArgument::getNumberOfElements() const
     return numberOfElements;
 }
 
-ArgumentDataType KernelArgument::getArgumentDataType() const
+ArgumentDataType KernelArgument::getDataType() const
 {
     return argumentDataType;
 }
 
-ArgumentMemoryType KernelArgument::getArgumentMemoryType() const
+ArgumentMemoryLocation KernelArgument::getMemoryLocation() const
 {
-    return argumentMemoryType;
+    return argumentMemoryLocation;
 }
 
-ArgumentUploadType KernelArgument::getArgumentUploadType() const
+ArgumentAccessType KernelArgument::getAccessType() const
+{
+    return argumentAccessType;
+}
+
+ArgumentUploadType KernelArgument::getUploadType() const
 {
     return argumentUploadType;
 }
@@ -113,6 +138,11 @@ size_t KernelArgument::getDataSizeInBytes() const
 
 const void* KernelArgument::getData() const
 {
+    if (!dataOwned)
+    {
+        return referencedData;
+    }
+
     switch (argumentDataType)
     {
     case ArgumentDataType::Char:
@@ -212,55 +242,55 @@ bool KernelArgument::operator!=(const KernelArgument& other) const
     return !(*this == other);
 }
 
-void KernelArgument::initializeData(const void* data, const size_t numberOfElements, const ArgumentDataType& argumentDataType)
+void KernelArgument::initializeData(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType)
 {
-    prepareData(numberOfElements, argumentDataType);
+    prepareData(numberOfElements, dataType);
     std::memcpy(getData(), data, numberOfElements * getElementSizeInBytes());
 }
 
-void KernelArgument::prepareData(const size_t numberOfElements, const ArgumentDataType& argumentDataType)
+void KernelArgument::prepareData(const size_t numberOfElements, const ArgumentDataType& dataType)
 {
-    if (argumentDataType == ArgumentDataType::Char)
+    if (dataType == ArgumentDataType::Char)
     {
         dataChar.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::UnsignedChar)
+    else if (dataType == ArgumentDataType::UnsignedChar)
     {
         dataUnsignedChar.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Short)
+    else if (dataType == ArgumentDataType::Short)
     {
         dataShort.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::UnsignedShort)
+    else if (dataType == ArgumentDataType::UnsignedShort)
     {
         dataUnsignedShort.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Int)
+    else if (dataType == ArgumentDataType::Int)
     {
         dataInt.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::UnsignedInt)
+    else if (dataType == ArgumentDataType::UnsignedInt)
     {
         dataUnsignedInt.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Long)
+    else if (dataType == ArgumentDataType::Long)
     {
         dataLong.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::UnsignedLong)
+    else if (dataType == ArgumentDataType::UnsignedLong)
     {
         dataUnsignedLong.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Half)
+    else if (dataType == ArgumentDataType::Half)
     {
         dataHalf.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Float)
+    else if (dataType == ArgumentDataType::Float)
     {
         dataFloat.resize(numberOfElements);
     }
-    else if (argumentDataType == ArgumentDataType::Double)
+    else if (dataType == ArgumentDataType::Double)
     {
         dataDouble.resize(numberOfElements);
     }
@@ -268,60 +298,6 @@ void KernelArgument::prepareData(const size_t numberOfElements, const ArgumentDa
     {
         throw std::runtime_error("Unsupported argument data type was provided for kernel argument");
     }
-}
-
-std::ostream& operator<<(std::ostream& outputTarget, const KernelArgument& kernelArgument)
-{
-    if (kernelArgument.argumentDataType == ArgumentDataType::Char)
-    {
-        printVector(outputTarget, kernelArgument.dataChar);
-    }
-    else if (kernelArgument.argumentDataType == ArgumentDataType::UnsignedChar)
-    {
-        printVector(outputTarget, kernelArgument.dataUnsignedChar);
-    }
-    else if (kernelArgument.argumentDataType == ArgumentDataType::Short)
-    {
-        printVector(outputTarget, kernelArgument.dataShort);
-    }
-    else if (kernelArgument.argumentDataType == ArgumentDataType::UnsignedShort)
-    {
-        printVector(outputTarget, kernelArgument.dataUnsignedShort);
-    }
-    else if (kernelArgument.argumentDataType == ArgumentDataType::Int)
-    {
-        printVector(outputTarget, kernelArgument.dataInt);
-    }
-    else if (kernelArgument.argumentDataType == ArgumentDataType::UnsignedInt)
-    {
-        printVector(outputTarget, kernelArgument.dataUnsignedInt);
-    }
-    else if (kernelArgument.argumentDataType == ArgumentDataType::Long)
-    {
-        printVector(outputTarget, kernelArgument.dataLong);
-    }
-    else if (kernelArgument.argumentDataType == ArgumentDataType::UnsignedLong)
-    {
-        printVector(outputTarget, kernelArgument.dataUnsignedLong);
-    }
-    else if (kernelArgument.argumentDataType == ArgumentDataType::Half)
-    {
-        printVector(outputTarget, kernelArgument.dataHalf);
-    }
-    else if (kernelArgument.argumentDataType == ArgumentDataType::Float)
-    {
-        printVector(outputTarget, kernelArgument.dataFloat);
-    }
-    else if (kernelArgument.argumentDataType == ArgumentDataType::Double)
-    {
-        printVector(outputTarget, kernelArgument.dataDouble);
-    }
-    else
-    {
-        throw std::runtime_error("Unsupported argument data type was provided for kernel argument");
-    }
-
-    return outputTarget;
 }
 
 } // namespace ktt

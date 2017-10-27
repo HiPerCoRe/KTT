@@ -3,14 +3,19 @@
 namespace ktt
 {
 
-KernelParameter::KernelParameter(const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& threadModifierType,
-    const ThreadModifierAction& threadModifierAction, const Dimension& modifierDimension) :
+KernelParameter::KernelParameter(const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& modifierType,
+    const ThreadModifierAction& modifierAction, const Dimension& modifierDimension) :
     name(name),
     values(values),
-    threadModifierType(threadModifierType),
-    threadModifierAction(threadModifierAction),
+    threadModifierType(modifierType),
+    threadModifierAction(modifierAction),
     modifierDimension(modifierDimension)
 {}
+
+void KernelParameter::addCompositionKernel(const KernelId id)
+{
+    compositionKernels.push_back(static_cast<size_t>(id));
+}
 
 std::string KernelParameter::getName() const
 {
@@ -22,12 +27,12 @@ std::vector<size_t> KernelParameter::getValues() const
     return values;
 }
 
-ThreadModifierType KernelParameter::getThreadModifierType() const
+ThreadModifierType KernelParameter::getModifierType() const
 {
     return threadModifierType;
 }
 
-ThreadModifierAction KernelParameter::getThreadModifierAction() const
+ThreadModifierAction KernelParameter::getModifierAction() const
 {
     return threadModifierAction;
 }
@@ -35,6 +40,11 @@ ThreadModifierAction KernelParameter::getThreadModifierAction() const
 Dimension KernelParameter::getModifierDimension() const
 {
     return modifierDimension;
+}
+
+std::vector<KernelId> KernelParameter::getCompositionKernels() const
+{
+    return compositionKernels;
 }
 
 bool KernelParameter::operator==(const KernelParameter& other) const

@@ -1,9 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
 #include "tuner_api.h"
-
 #include "reduction_tunable.h"
 
 int main(int argc, char** argv)
@@ -14,10 +12,10 @@ int main(int argc, char** argv)
 
     if (argc >= 2)
     {
-        platformIndex = std::stoul(std::string{ argv[1] });
+        platformIndex = std::stoul(std::string(argv[1]));
         if (argc >= 3)
         {
-            deviceIndex = std::stoul(std::string{ argv[2] });
+            deviceIndex = std::stoul(std::string(argv[2]));
         }
     }
 
@@ -39,8 +37,8 @@ int main(int argc, char** argv)
 
     ktt::Tuner tuner(platformIndex, deviceIndex);
 
-    tunableReduction* reduction = new tunableReduction(&tuner, &src, &dst, nAlloc);
-    tuner.setTuningManipulator(reduction->getKernelId(), std::unique_ptr<tunableReduction>(reduction));
+    TunableReduction* reduction = new TunableReduction(&tuner, &src, &dst, nAlloc);
+    tuner.setTuningManipulator(reduction->getKernelId(), std::unique_ptr<TunableReduction>(reduction));
     reduction->tune();
 
     return 0;

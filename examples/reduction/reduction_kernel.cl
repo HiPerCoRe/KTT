@@ -161,4 +161,3 @@ __kernel void reduce(__global const VEC* in, __global float* out, unsigned int n
     }
 #endif
 }
-

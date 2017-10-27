@@ -1,14 +1,14 @@
 #pragma once
 
+#include <cstddef>
 #include <set>
 #include <vector>
-
-#include "ktt_type_aliases.h"
 
 namespace ktt
 {
 
-std::vector<size_t> convertDimensionVector(const DimensionVector& vector);
+size_t roundUp(const size_t number, const size_t multiple);
+std::vector<size_t> roundUpGlobalSize(const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize);
 
 template <typename T> bool elementExists(const T& element, const std::vector<T>& vector)
 {

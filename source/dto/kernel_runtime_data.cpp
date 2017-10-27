@@ -3,18 +3,38 @@
 namespace ktt
 {
 
-KernelRuntimeData::KernelRuntimeData(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize, const std::vector<size_t>& argumentIndices) :
+KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
+    const DimensionVector& localSize, const std::vector<ArgumentId>& argumentIds) :
+    id(id),
     name(name),
     source(source),
-    globalSize(globalSize),
-    localSize(localSize),
-    argumentIndices(argumentIndices)
+    globalSize(globalSize.getVector()),
+    localSize(localSize.getVector()),
+    globalSizeDimensionVector(globalSize),
+    localSizeDimensionVector(localSize),
+    argumentIds(argumentIds)
 {}
 
-void KernelRuntimeData::setArgumentIndices(const std::vector<size_t>& argumentIndices)
+void KernelRuntimeData::setGlobalSize(const DimensionVector& globalSize)
 {
-    this->argumentIndices = argumentIndices;
+    this->globalSizeDimensionVector = globalSize;
+    this->globalSize = globalSize.getVector();
+}
+
+void KernelRuntimeData::setLocalSize(const DimensionVector& localSize)
+{
+    this->localSizeDimensionVector = localSize;
+    this->localSize = localSize.getVector();
+}
+
+void KernelRuntimeData::setArgumentIndices(const std::vector<ArgumentId>& argumentIds)
+{
+    this->argumentIds = argumentIds;
+}
+
+KernelId KernelRuntimeData::getId() const
+{
+    return id;
 }
 
 std::string KernelRuntimeData::getName() const
@@ -27,19 +47,29 @@ std::string KernelRuntimeData::getSource() const
     return source;
 }
 
-DimensionVector KernelRuntimeData::getGlobalSize() const
+std::vector<size_t> KernelRuntimeData::getGlobalSize() const
 {
     return globalSize;
 }
 
-DimensionVector KernelRuntimeData::getLocalSize() const
+std::vector<size_t> KernelRuntimeData::getLocalSize() const
 {
     return localSize;
 }
 
-std::vector<size_t> KernelRuntimeData::getArgumentIndices() const
+DimensionVector KernelRuntimeData::getGlobalSizeDimensionVector() const
 {
-    return argumentIndices;
+    return globalSizeDimensionVector;
+}
+
+DimensionVector KernelRuntimeData::getLocalSizeDimensionVector() const
+{
+    return localSizeDimensionVector;
+}
+
+std::vector<ArgumentId> KernelRuntimeData::getArgumentIds() const
+{
+    return argumentIds;
 }
 
 } // namespace ktt

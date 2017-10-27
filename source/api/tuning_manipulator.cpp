@@ -6,106 +6,93 @@ namespace ktt
 
 TuningManipulator::~TuningManipulator() = default;
 
-std::vector<std::pair<size_t, ThreadSizeUsage>> TuningManipulator::getUtilizedKernelIds() const
+void TuningManipulator::runKernel(const KernelId id)
 {
-    return std::vector<std::pair<size_t, ThreadSizeUsage>>{};
+    manipulatorInterface->runKernel(id);
 }
 
-void TuningManipulator::runKernel(const size_t kernelId)
+TunerFlag TuningManipulator::enableArgumentPreload() const
 {
-    manipulatorInterface->runKernel(kernelId);
+    return true;
 }
 
-void TuningManipulator::runKernel(const size_t kernelId, const DimensionVector& globalSize, const DimensionVector& localSize)
+void TuningManipulator::runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize)
 {
-    manipulatorInterface->runKernel(kernelId, globalSize, localSize);
+    manipulatorInterface->runKernel(id, globalSize, localSize);
 }
 
-DimensionVector TuningManipulator::getCurrentGlobalSize(const size_t kernelId) const
+DimensionVector TuningManipulator::getCurrentGlobalSize(const KernelId id) const
 {
-    return manipulatorInterface->getCurrentGlobalSize(kernelId);
+    return manipulatorInterface->getCurrentGlobalSize(id);
 }
 
-DimensionVector TuningManipulator::getCurrentLocalSize(const size_t kernelId) const
+DimensionVector TuningManipulator::getCurrentLocalSize(const KernelId id) const
 {
-    return manipulatorInterface->getCurrentLocalSize(kernelId);
+    return manipulatorInterface->getCurrentLocalSize(id);
 }
 
-std::vector<ParameterValue> TuningManipulator::getCurrentConfiguration() const
+std::vector<ParameterPair> TuningManipulator::getCurrentConfiguration() const
 {
     return manipulatorInterface->getCurrentConfiguration();
 }
 
-void TuningManipulator::updateArgumentScalar(const size_t argumentId, const void* argumentData)
+void TuningManipulator::updateArgumentScalar(const ArgumentId id, const void* argumentData)
 {
-    manipulatorInterface->updateArgumentScalar(argumentId, argumentData);
+    manipulatorInterface->updateArgumentScalar(id, argumentData);
 }
 
-void TuningManipulator::updateArgumentLocal(const size_t argumentId, const size_t numberOfElements)
+void TuningManipulator::updateArgumentLocal(const ArgumentId id, const size_t numberOfElements)
 {
-    manipulatorInterface->updateArgumentLocal(argumentId, numberOfElements);
+    manipulatorInterface->updateArgumentLocal(id, numberOfElements);
 }
 
-void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData)
+void TuningManipulator::updateArgumentVector(const ArgumentId id, const void* argumentData)
 {
-    manipulatorInterface->updateArgumentVector(argumentId, argumentData);
+    manipulatorInterface->updateArgumentVector(id, argumentData);
 }
 
-void TuningManipulator::updateArgumentVector(const size_t argumentId, const void* argumentData, const size_t numberOfElements)
+void TuningManipulator::updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)
 {
-    manipulatorInterface->updateArgumentVector(argumentId, argumentData, numberOfElements);
+    manipulatorInterface->updateArgumentVector(id, argumentData, numberOfElements);
 }
 
-ResultArgument TuningManipulator::getArgumentVector(const size_t argumentId)
+void TuningManipulator::getArgumentVector(const ArgumentId id, void* destination) const
 {
-    return manipulatorInterface->getArgumentVector(argumentId);
+    manipulatorInterface->getArgumentVector(id, destination);
 }
 
-void TuningManipulator::changeKernelArguments(const size_t kernelId, const std::vector<size_t>& argumentIds)
+void TuningManipulator::getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
 {
-    manipulatorInterface->changeKernelArguments(kernelId, argumentIds);
+    manipulatorInterface->getArgumentVector(id, destination, numberOfElements);
 }
 
-void TuningManipulator::swapKernelArguments(const size_t kernelId, const size_t argumentIdFirst, const size_t argumentIdSecond)
+void TuningManipulator::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
-    manipulatorInterface->swapKernelArguments(kernelId, argumentIdFirst, argumentIdSecond);
+    manipulatorInterface->changeKernelArguments(id, argumentIds);
 }
 
-std::vector<size_t> TuningManipulator::convertFromDimensionVector(const DimensionVector& vector)
+void TuningManipulator::swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond)
 {
-    std::vector<size_t> result;
-
-    result.push_back(std::get<0>(vector));
-    result.push_back(std::get<1>(vector));
-    result.push_back(std::get<2>(vector));
-
-    return result;
+    manipulatorInterface->swapKernelArguments(id, argumentIdFirst, argumentIdSecond);
 }
 
-DimensionVector TuningManipulator::convertToDimensionVector(const std::vector<size_t>& vector)
+void TuningManipulator::createArgumentBuffer(const ArgumentId id)
 {
-    if (vector.size() > 2)
+    manipulatorInterface->createArgumentBuffer(id);
+}
+
+void TuningManipulator::destroyArgumentBuffer(const ArgumentId id)
+{
+    manipulatorInterface->destroyArgumentBuffer(id);
+}
+
+size_t TuningManipulator::getParameterValue(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs)
+{
+    for (const auto& parameterPair : parameterPairs)
     {
-        return DimensionVector(vector.at(0), vector.at(1), vector.at(2));
-    }
-    if (vector.size() > 1)
-    {
-        return DimensionVector(vector.at(0), vector.at(1), 1);
-    }
-    if (vector.size() > 1)
-    {
-        return DimensionVector(vector.at(0), 1, 1);
-    }
-    return DimensionVector(1, 1, 1);
-}
-
-size_t TuningManipulator::getParameterValue(const std::string& parameterName, const std::vector<ParameterValue>& parameterValues)
-{
-    for (const auto& parameterValue : parameterValues)
-    {
-        if (std::get<0>(parameterValue) == parameterName)
+        if (std::get<0>(parameterPair) == parameterName)
         {
-            return std::get<1>(parameterValue);
+            return std::get<1>(parameterPair);
         }
     }
     throw std::runtime_error(std::string("No parameter with following name found: ") + parameterName);

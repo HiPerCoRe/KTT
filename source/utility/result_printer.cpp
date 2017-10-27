@@ -1,5 +1,4 @@
 #include <algorithm>
-
 #include "result_printer.h"
 
 namespace ktt
@@ -10,69 +9,71 @@ ResultPrinter::ResultPrinter() :
     printInvalidResult(false)
 {}
 
-void ResultPrinter::printResult(const size_t kernelId, std::ostream& outputTarget, const PrintFormat& printFormat) const
+void ResultPrinter::printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const
 {
-    if (resultMap.find(kernelId) == resultMap.end())
+    if (kernelResults.find(id) == kernelResults.end())
     {
-        throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(kernelId));
+        throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(id));
     }
 
-    auto results = resultMap.find(kernelId)->second;
-    if (results.size() == 0)
-    {
-        throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(kernelId));
-    }
+    std::vector<TuningResult> results = kernelResults.find(id)->second;
 
-    std::vector<TuningResult> invalidResults;
-    if (invalidResultMap.find(kernelId) != invalidResultMap.end())
-    {
-        invalidResults = invalidResultMap.find(kernelId)->second;
-    }
-
-    switch (printFormat)
+    switch (format)
     {
     case PrintFormat::CSV:
-        printCsv(results, invalidResults, outputTarget);
+        printCsv(results, outputTarget);
         break;
     case PrintFormat::Verbose:
-        printVerbose(results, invalidResults, outputTarget);
+        printVerbose(results, outputTarget);
         break;
     default:
         throw std::runtime_error("Unknown print format");
     }
 }
 
-void ResultPrinter::setResult(const size_t kernelId, const std::vector<TuningResult>& result, const std::vector<TuningResult>& invalidResult)
+void ResultPrinter::setResult(const KernelId id, const std::vector<TuningResult>& results)
 {
-    if (resultMap.find(kernelId) != resultMap.end())
+    if (kernelResults.find(id) != kernelResults.end())
     {
-        resultMap.erase(kernelId);
+        kernelResults.erase(id);
     }
-    resultMap.insert(std::make_pair(kernelId, result));
 
-    if (invalidResultMap.find(kernelId) != invalidResultMap.end())
-    {
-        invalidResultMap.erase(kernelId);
-    }
-    invalidResultMap.insert(std::make_pair(kernelId, invalidResult));
+    kernelResults.insert(std::make_pair(id, results));
 }
 
-void ResultPrinter::setTimeUnit(const TimeUnit& timeUnit)
+void ResultPrinter::setTimeUnit(const TimeUnit& unit)
 {
-    this->timeUnit = timeUnit;
+    this->timeUnit = unit;
 }
 
-void ResultPrinter::setInvalidResultPrinting(const bool flag)
+void ResultPrinter::setInvalidResultPrinting(const TunerFlag flag)
 {
     printInvalidResult = flag;
 }
 
-void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, const std::vector<TuningResult>& invalidResults,
-    std::ostream& outputTarget) const
+std::vector<ParameterPair> ResultPrinter::getBestConfiguration(const KernelId id) const
+{
+    if (kernelResults.find(id) == kernelResults.end())
+    {
+        throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(id));
+    }
+
+    std::vector<TuningResult> results = kernelResults.find(id)->second;
+    TuningResult bestResult = getBestResult(results);
+    return bestResult.getConfiguration().getParameterPairs();
+}
+
+void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::ostream& outputTarget) const
 {
     for (const auto& result : results)
     {
-        outputTarget << "Result for kernel <" << result.getKernelName() << ">, configuration: " << std::endl << result.getConfiguration();
+        if (!result.isValid())
+        {
+            continue;
+        }
+
+        outputTarget << "Result for kernel <" << result.getKernelName() << ">, configuration: " << std::endl;
+        printConfigurationVerbose(outputTarget, result.getConfiguration());
         outputTarget << "Kernel duration: " << convertTime(result.getKernelDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
         if (result.getManipulatorDuration() != 0)
         {
@@ -81,30 +82,42 @@ void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, const
         outputTarget << std::endl;
     }
 
-    auto bestResult = getBestResult(results);
-    outputTarget << "Best result: " << std::endl;
-    outputTarget << "Configuration: " << bestResult.getConfiguration();
-    outputTarget << "Kernel duration: " << convertTime(bestResult.getKernelDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
-    if (bestResult.getManipulatorDuration() != 0)
+    TuningResult bestResult = getBestResult(results);
+    if (bestResult.isValid())
     {
-        outputTarget << "Total duration: " << convertTime(bestResult.getTotalDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
+        outputTarget << "Best result for kernel <" << bestResult.getKernelName() << ">: " << std::endl;
+        outputTarget << "Configuration: ";
+        printConfigurationVerbose(outputTarget, bestResult.getConfiguration());
+        outputTarget << "Kernel duration: " << convertTime(bestResult.getKernelDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
+        if (bestResult.getManipulatorDuration() != 0)
+        {
+            outputTarget << "Total duration: " << convertTime(bestResult.getTotalDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
+        }
+        outputTarget << std::endl;
     }
-    outputTarget << std::endl;
+    else
+    {
+        outputTarget << "No best result found" << std::endl;
+    }
 
     if (printInvalidResult)
     {
-        for (const auto& result : invalidResults)
+        for (const auto& result : results)
         {
-            outputTarget << "Invalid result for kernel <" << result.getKernelName() << ">, configuration: " << std::endl
-                << result.getConfiguration();
+            if (result.isValid())
+            {
+                continue;
+            }
+
+            outputTarget << "Invalid result for kernel <" << result.getKernelName() << ">, configuration: " << std::endl;
+            printConfigurationVerbose(outputTarget, result.getConfiguration());
             outputTarget << "Result status: " << result.getStatusMessage();
             outputTarget << std::endl << std::endl;
         }
     }
 }
 
-void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std::vector<TuningResult>& invalidResults,
-    std::ostream& outputTarget) const
+void ResultPrinter::printCsv(const std::vector<TuningResult>& results, std::ostream& outputTarget) const
 {
     // Header
     outputTarget << "Kernel name,";
@@ -112,18 +125,31 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std
     {
         outputTarget << "Total duration (" << getTimeUnitTag(timeUnit) << "),";
     }
-    outputTarget << "Kernel duration (" << getTimeUnitTag(timeUnit) << "),Global size,Local size";
+    outputTarget << "Kernel duration (" << getTimeUnitTag(timeUnit) << ")";
 
-    auto parameters = results.at(0).getConfiguration().getParameterValues();
-    if (parameters.size() > 0)
+    size_t kernelCount = results.at(0).getConfiguration().getGlobalSizes().size();
+    if (kernelCount == 1)
+    {
+        outputTarget << ",Global size,Local size";
+    }
+    else
+    {
+        for (size_t i = 0; i < kernelCount; i++)
+        {
+            outputTarget << ",Global size " << i << ",Local size " << i;
+        }
+    }
+
+    std::vector<ParameterPair> parameterPairs = results.at(0).getConfiguration().getParameterPairs();
+    if (parameterPairs.size() > 0)
     {
         outputTarget << ",";
     }
 
-    for (size_t i = 0; i < parameters.size(); i++)
+    for (size_t i = 0; i < parameterPairs.size(); i++)
     {
-        outputTarget << std::get<0>(parameters.at(i));
-        if (i + 1 != parameters.size())
+        outputTarget << std::get<0>(parameterPairs.at(i));
+        if (i + 1 != parameterPairs.size())
         {
             outputTarget << ",";
         }
@@ -133,9 +159,10 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std
     // Values
     for (const auto& result : results)
     {
-        auto configuration = result.getConfiguration();
-        auto global = configuration.getGlobalSize();
-        auto local = configuration.getLocalSize();
+        if (!result.isValid())
+        {
+            continue;
+        }
 
         outputTarget << result.getKernelName() << ",";
         if (results.at(0).getManipulatorDuration() != 0)
@@ -143,43 +170,38 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std
             outputTarget << convertTime(result.getTotalDuration(), timeUnit) << ",";
         }
         outputTarget << convertTime(result.getKernelDuration(), timeUnit) << ",";
-        outputTarget << std::get<0>(global) * std::get<1>(global) * std::get<2>(global) << ",";
-        outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local);
-
-        auto parameterValues = configuration.getParameterValues();
-        if (parameterValues.size() > 0)
-        {
-            outputTarget << ",";
-        }
-
-        for (size_t i = 0; i < parameterValues.size(); i++)
-        {
-            outputTarget << std::get<1>(parameterValues.at(i));
-            if (i + 1 != parameterValues.size())
-            {
-                outputTarget << ",";
-            }
-        }
-        outputTarget << std::endl;
+        printConfigurationCsv(outputTarget, result.getConfiguration());
     }
 
-    if (printInvalidResult && invalidResults.size() > 0)
+    if (printInvalidResult)
     {
         outputTarget << std::endl;
 
         // Header
-        outputTarget << "Kernel name,Status,Global size,Local size";
+        outputTarget << "Kernel name,Status";
 
-        auto parameters = results.at(0).getConfiguration().getParameterValues();
-        if (parameters.size() > 0)
+        if (kernelCount == 1)
+        {
+            outputTarget << ",Global size,Local size";
+        }
+        else
+        {
+            for (size_t i = 0; i < kernelCount; i++)
+            {
+                outputTarget << ",Global size " << i << ",Local size " << i;
+            }
+        }
+
+        std::vector<ParameterPair> parameterPairs = results.at(0).getConfiguration().getParameterPairs();
+        if (parameterPairs.size() > 0)
         {
             outputTarget << ",";
         }
 
-        for (size_t i = 0; i < parameters.size(); i++)
+        for (size_t i = 0; i < parameterPairs.size(); i++)
         {
-            outputTarget << std::get<0>(parameters.at(i));
-            if (i + 1 != parameters.size())
+            outputTarget << std::get<0>(parameterPairs.at(i));
+            if (i + 1 != parameterPairs.size())
             {
                 outputTarget << ",";
             }
@@ -187,11 +209,12 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std
         outputTarget << std::endl;
 
         // Values
-        for (const auto& result : invalidResults)
+        for (const auto& result : results)
         {
-            auto configuration = result.getConfiguration();
-            auto global = configuration.getGlobalSize();
-            auto local = configuration.getLocalSize();
+            if (result.isValid())
+            {
+                continue;
+            }
 
             outputTarget << result.getKernelName() << ",";
             std::string statusMessage = result.getStatusMessage();
@@ -202,27 +225,84 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, const std
                     statusMessage[i] = ' ';
                 }
             }
+
             outputTarget << statusMessage << ",";
-            outputTarget << std::get<0>(global) * std::get<1>(global) * std::get<2>(global) << ",";
-            outputTarget << std::get<0>(local) * std::get<1>(local) * std::get<2>(local);
-
-            auto parameterValues = configuration.getParameterValues();
-            if (parameterValues.size() > 0)
-            {
-                outputTarget << ",";
-            }
-
-            for (size_t i = 0; i < parameterValues.size(); i++)
-            {
-                outputTarget << std::get<1>(parameterValues.at(i));
-                if (i + 1 != parameterValues.size())
-                {
-                    outputTarget << ",";
-                }
-            }
-            outputTarget << std::endl;
+            printConfigurationCsv(outputTarget, result.getConfiguration());
         }
     }
+}
+
+void ResultPrinter::printConfigurationVerbose(std::ostream& outputTarget, const KernelConfiguration& configuration) const
+{
+    std::vector<DimensionVector> globalSizes = configuration.getGlobalSizes();
+    std::vector<DimensionVector> localSizes = configuration.getLocalSizes();
+
+    for (size_t i = 0; i < globalSizes.size(); i++)
+    {
+        DimensionVector globalSize = globalSizes.at(i);
+        DimensionVector localSize = localSizes.at(i);
+
+        if (globalSizes.size() > 1)
+        {
+            outputTarget << "global size " << i << ": " << globalSize << "; ";
+            outputTarget << "local size " << i << ": " << localSize << "; ";
+        }
+        else
+        {
+            outputTarget << "global size: " << globalSize << "; ";
+            outputTarget << "local size: " << localSize << "; ";
+        }
+    }
+
+    outputTarget << "parameters: ";
+    if (configuration.getParameterPairs().size() == 0)
+    {
+        outputTarget << "none";
+    }
+    for (const auto& parameterPair : configuration.getParameterPairs())
+    {
+        outputTarget << std::get<0>(parameterPair) << ": " << std::get<1>(parameterPair) << " ";
+    }
+    outputTarget << std::endl;
+}
+
+void ResultPrinter::printConfigurationCsv(std::ostream& outputTarget, const KernelConfiguration& configuration) const
+{
+    std::vector<DimensionVector> globalSizes = configuration.getGlobalSizes();
+    std::vector<DimensionVector> localSizes = configuration.getLocalSizes();
+
+    for (size_t i = 0; i < globalSizes.size(); i++)
+    {
+        DimensionVector globalSize = globalSizes.at(i);
+        DimensionVector localSize = localSizes.at(i);
+
+        size_t totalGlobalSize = globalSize.getTotalSize();
+        size_t totalLocalSize = localSize.getTotalSize();
+
+        outputTarget << totalGlobalSize << ",";
+        outputTarget << totalLocalSize;
+
+        if (i + 1 != globalSizes.size())
+        {
+            outputTarget << ",";
+        }
+    }
+
+    std::vector<ParameterPair> parameterPairs = configuration.getParameterPairs();
+    if (parameterPairs.size() > 0)
+    {
+        outputTarget << ",";
+    }
+
+    for (size_t i = 0; i < parameterPairs.size(); i++)
+    {
+        outputTarget << std::get<1>(parameterPairs.at(i));
+        if (i + 1 != parameterPairs.size())
+        {
+            outputTarget << ",";
+        }
+    }
+    outputTarget << std::endl;
 }
 
 TuningResult ResultPrinter::getBestResult(const std::vector<TuningResult>& results) const
@@ -240,7 +320,7 @@ TuningResult ResultPrinter::getBestResult(const std::vector<TuningResult>& resul
     return bestResult;
 }
 
-uint64_t ResultPrinter::convertTime(const uint64_t timeInNanoseconds, const TimeUnit& targetUnit) const
+uint64_t ResultPrinter::convertTime(const uint64_t timeInNanoseconds, const TimeUnit& targetUnit)
 {
     switch (targetUnit)
     {
@@ -257,9 +337,9 @@ uint64_t ResultPrinter::convertTime(const uint64_t timeInNanoseconds, const Time
     }
 }
 
-std::string ResultPrinter::getTimeUnitTag(const TimeUnit& timeUnit) const
+std::string ResultPrinter::getTimeUnitTag(const TimeUnit& unit)
 {
-    switch (timeUnit)
+    switch (unit)
     {
     case TimeUnit::Nanoseconds:
         return std::string("ns");

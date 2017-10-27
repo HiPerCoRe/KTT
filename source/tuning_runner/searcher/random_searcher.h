@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <random>
-
 #include "searcher.h"
 
 namespace ktt
