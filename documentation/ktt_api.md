@@ -1,7 +1,7 @@
 KTT API documentation
 =====================
 
-This file describes the API of KTT framework. All classes and methods are located in the `ktt` namespace.
+This file describes the API of KTT library. All classes and methods are located in the `ktt` namespace.
 
 Constructors
 ------------
@@ -13,20 +13,20 @@ Indices for all available platforms and devices can be retrieved by calling `pri
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi)`:
 Similar to previous constructor, but also allows choice of compute API.
-If selected compute API is Nvidia CUDA, platform index is ignored.
+If specified compute API is CUDA, platform index is ignored.
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const RunMode& runMode)`:
 Similar to previous constructor, but also allows choice of run mode.
 Two different run modes are supported.
 
 In tuning mode, all kernel arguments are copied inside tuner when argument addition methods are called.
-Additionally, extra argument copies are created for each kernel launch under different configuration.
+Additionally, extra argument copies are created by compute API for each kernel launch under different configuration.
 It is possible to perform output validation.
 
 In computation mode, tuner directly uses buffers provided by client application.
-It is furthermore possible to perform argument zero-copy by using appropriate argument flags, which results in output
-data being written directly to client buffers.
-Output validation is disabled and calling any method related to validation will result in an exception.
+It is furthermore possible to perform argument zero-copy by using appropriate argument flags, which causes the compute API
+to directly access client buffers. This results in no data copies being made on certain platforms.
+Output validation is disabled and calling methods related to validation will result in an exception.
 
 Basic kernel handling methods
 -----------------------------
@@ -61,14 +61,14 @@ Adds new constraint for specified kernel. Constraints are used to prevent genera
 
 * `void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)`:
 Sets tuning manipulator for specified kernel.
-Tuning manipulator enables customization of kernel execution by providing specialized method for computation.
+Tuning manipulator enables customization of kernel execution by allowing user to provide specialized method for computation.
 Specialized method can, for example, run part of the computation directly in C++ code, utilize iterative kernel launches, etc.
 
 Composition handling methods
 ----------------------------
 * `KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds, std::unique_ptr<TuningManipulator> manipulator)`:
 Creates a kernel composition from specified kernels.
-Following regular kernel methods can also be applied on kernel composition and will call corresponding method for all kernels inside the composition: `setKernelArguments()`, `addParameter()` (both versions), `addConstraint()`.
+Following kernel handling methods can also be applied to kernel composition and will call corresponding method for all kernels inside the composition: `setKernelArguments()`, `addParameter()` (both versions), `addConstraint()`.
 Kernel compositions do not inherit any parameters or constraints from the original kernels.
 Adding parameters or constraints to kernels inside given composition will not affect the original kernels or other compositions.
 Tuning manipulator is required in order to launch kernel composition with tuner.
@@ -103,7 +103,7 @@ Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be 
 Returns id assigned to argument by tuner.
 
 * `ArgumentId addArgumentLocal(const size_t localMemoryElementsCount)`:
-Adds new local memory argument to tuner. All local memory arguments are read-only.
+Adds new local (shared) memory argument to tuner. All local memory arguments are read-only.
 Elements count specifies, how many elements of provided data type will the argument contain.
 Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
@@ -118,8 +118,8 @@ Starts the tuning process for specified kernel.
 Runs specified kernel using provided configuration.
 Output arguments can be retrieved by providing output descriptors.
 Each output descriptor contains id of an argument to be retrieved, memory location where data will be written and optionally
-size of the data if only part of an argument needs to be retrieved.
-Target memory location's size has to be equal or greater than size of retrieved data.
+size of data if only part of an argument needs to be retrieved.
+Target memory location size has to be equal or greater than size of retrieved data.
 No result validation is performed.
 
 * `void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments)`:
@@ -322,7 +322,7 @@ This method is useful for iterative kernel launches.
 
 * `void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const`:
 Retrieves part of specified vector argument.
-Destination buffer size needs to be equal or greater than specified data size.
+Destination buffer size needs to be equal or greater than specified size.
 This method is useful for iterative kernel launches.
 
 * `void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)`:

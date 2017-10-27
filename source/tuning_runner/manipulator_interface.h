@@ -2,7 +2,7 @@
 
 #include <cstddef>
 #include <vector>
-#include "ktt_type_aliases.h"
+#include "ktt_types.h"
 #include "api/dimension_vector.h"
 
 namespace ktt
@@ -29,7 +29,7 @@ public:
     virtual void updateArgumentVector(const ArgumentId id, const void* argumentData) = 0;
     virtual void updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements) = 0;
     virtual void getArgumentVector(const ArgumentId id, void* destination) const = 0;
-    virtual void getArgumentVector(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const = 0;
+    virtual void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const = 0;
 
     // Kernel argument handling methods
     virtual void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds) = 0;

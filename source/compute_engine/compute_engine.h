@@ -3,7 +3,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
-#include "ktt_type_aliases.h"
+#include "ktt_types.h"
 #include "api/argument_output_descriptor.h"
 #include "api/device_info.h"
 #include "api/platform_info.h"

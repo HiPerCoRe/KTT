@@ -1,3 +1,17 @@
+Version 0.5 (x.10.2017)
+* Added support for kernel compositions
+* Added two different tuner modes - tuning mode and low overhead computation mode
+* Added support for storing buffers in host memory, including support for zero-copy buffers when computation mode is used
+* Kernel arguments can now be retrieved through API by utilizing new method for running kernels
+* Added an option to automatically ensure that global size is multiple of local size
+* Best kernel configuration can now be retrieved through API
+* Added an option to switch between CUDA and OpenCL global size notation
+* Improvements to tuning manipulator API
+* Usability improvements to dimension vector
+* Tweaks to CUDA back-end
+* Minor improvements to result printer
+* Improved examples and documentation
+
 Version 0.4 (19/6/2017)
 * Added support for CUDA API
 * Significantly improved tuning manipulator API

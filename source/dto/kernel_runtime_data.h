@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-#include "ktt_type_aliases.h"
+#include "ktt_types.h"
 #include "api/dimension_vector.h"
 #include "kernel_argument/kernel_argument.h"
 

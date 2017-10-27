@@ -144,30 +144,30 @@ void ManipulatorInterfaceImplementation::swapKernelArguments(const KernelId id, 
         throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    auto indices = dataPointer->second.getArgumentIds();
+    std::vector<ArgumentId> argumentIds = dataPointer->second.getArgumentIds();
     
-    if (!elementExists(argumentIdFirst, indices) || !elementExists(argumentIdSecond, indices))
+    if (!elementExists(argumentIdFirst, argumentIds) || !elementExists(argumentIdSecond, argumentIds))
     {
         throw std::runtime_error(std::string("One of the following argument ids is not associated with this kernel: ")
             + std::to_string(argumentIdFirst) + ", " + std::to_string(argumentIdSecond) + ", kernel id: " + std::to_string(id));
     }
 
-    size_t firstIndex;
-    size_t secondIndex;
-    for (size_t i = 0; i < indices.size(); i++)
+    ArgumentId firstId;
+    ArgumentId secondId;
+    for (size_t i = 0; i < argumentIds.size(); i++)
     {
-        if (indices.at(i) == argumentIdFirst)
+        if (argumentIds.at(i) == argumentIdFirst)
         {
-            firstIndex = i;
+            firstId = i;
         }
-        if (indices.at(i) == argumentIdSecond)
+        if (argumentIds.at(i) == argumentIdSecond)
         {
-            secondIndex = i;
+            secondId = i;
         }
     }
-    std::swap(indices.at(firstIndex), indices.at(secondIndex));
+    std::swap(argumentIds.at(firstId), argumentIds.at(secondId));
 
-    dataPointer->second.setArgumentIndices(indices);
+    dataPointer->second.setArgumentIndices(argumentIds);
 }
 
 void ManipulatorInterfaceImplementation::createArgumentBuffer(const ArgumentId id)

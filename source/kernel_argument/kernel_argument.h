@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 #include "half.hpp"
-#include "ktt_type_aliases.h"
+#include "ktt_types.h"
 #include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
 #include "enum/argument_memory_location.h"

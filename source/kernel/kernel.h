@@ -5,7 +5,7 @@
 #include <vector>
 #include "kernel_constraint.h"
 #include "kernel_parameter.h"
-#include "ktt_type_aliases.h"
+#include "ktt_types.h"
 #include "api/dimension_vector.h"
 
 namespace ktt

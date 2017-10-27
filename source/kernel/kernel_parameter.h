@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-#include "ktt_type_aliases.h"
+#include "ktt_types.h"
 #include "enum/dimension.h"
 #include "enum/thread_modifier_action.h"
 #include "enum/thread_modifier_type.h"

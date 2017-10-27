@@ -1,18 +1,5 @@
 #pragma once
 
-#ifndef KTT_API
-#if defined(_MSC_VER) && !defined(KTT_TESTS)
-    #pragma warning(disable : 4251) // MSVC irrelevant warning (as long as there are no public attributes)
-    #if defined(KTT_LIBRARY)
-        #define KTT_API __declspec(dllexport)
-    #else
-        #define KTT_API __declspec(dllimport)
-    #endif // KTT_LIBRARY
-#else
-    #define KTT_API
-#endif // _MSC_VER
-#endif // KTT_API
-
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -22,8 +9,11 @@
 #include <type_traits>
 #include <vector>
 
-// Type aliases and enums
-#include "ktt_type_aliases.h"
+// Compatibility for multiple platforms
+#include "ktt_platform.h"
+
+// Data types and enums
+#include "ktt_types.h"
 #include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
 #include "enum/argument_memory_location.h"

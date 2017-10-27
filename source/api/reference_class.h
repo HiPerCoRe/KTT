@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ktt_type_aliases.h"
+#include "ktt_types.h"
 
 namespace ktt
 {

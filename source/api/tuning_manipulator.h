@@ -1,22 +1,10 @@
 #pragma once
 
-#ifndef KTT_API
-#if defined(_MSC_VER) && !defined(KTT_TESTS)
-    #pragma warning(disable : 4251) // MSVC irrelevant warning (as long as there are no public attributes)
-    #if defined(KTT_LIBRARY)
-        #define KTT_API __declspec(dllexport)
-    #else
-        #define KTT_API __declspec(dllimport)
-    #endif // KTT_LIBRARY
-#else
-    #define KTT_API
-#endif // _MSC_VER
-#endif // KTT_API
-
 #include <cstddef>
 #include <utility>
 #include <vector>
-#include "ktt_type_aliases.h"
+#include "ktt_platform.h"
+#include "ktt_types.h"
 #include "api/dimension_vector.h"
 
 namespace ktt
@@ -48,7 +36,7 @@ public:
     void updateArgumentVector(const ArgumentId id, const void* argumentData);
     void updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements);
     void getArgumentVector(const ArgumentId id, void* destination) const;
-    void getArgumentVector(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const;
+    void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const;
 
     // Kernel argument handling methods
     void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);

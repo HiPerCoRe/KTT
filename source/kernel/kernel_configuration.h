@@ -3,8 +3,7 @@
 #include <ostream>
 #include <utility>
 #include <vector>
-
-#include "ktt_type_aliases.h"
+#include "ktt_types.h"
 #include "api/dimension_vector.h"
 
 namespace ktt
