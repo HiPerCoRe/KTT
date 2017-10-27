@@ -53,8 +53,6 @@ std::string getNvrtcEnumName(const nvrtcResult value)
         return std::string("NVRTC_ERROR_INVALID_OPTION");
     case NVRTC_ERROR_COMPILATION:
         return std::string("NVRTC_ERROR_COMPILATION");
-    case NVRTC_ERROR_NAME_EXPRESSION_NOT_VALID:
-        return std::string("NVRTC_ERROR_NAME_EXPRESSION_NOT_VALID");
     default:
         return std::to_string(static_cast<int>(value));
     }
