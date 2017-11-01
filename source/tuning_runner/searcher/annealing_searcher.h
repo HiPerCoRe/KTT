@@ -33,36 +33,31 @@ public:
         {
             throw std::runtime_error("Configurations vector provided for searcher is empty");
         }
-        auto initialState = static_cast<size_t>(intDistribution(generator));
+        size_t initialState = static_cast<size_t>(intDistribution(generator));
         currentState = initialState;
         index = initialState;
     }
 
-    KernelConfiguration getNextConfiguration() override
+    void calculateNextConfiguration(const double previousDuration) override
     {
-        visitedStatesCount++;
-        return configurations.at(index);
-    }
-
-    void calculateNextConfiguration(const double previousConfigurationDuration) override
-    {
-        if (previousConfigurationDuration > 0.0) // workaround for recursive calls
+        if (previousDuration > 0.0) // workaround for recursive calls
         {
+            visitedStatesCount++;
             exploredIndices.push_back(currentState);
-            executionTimes.at(index) = previousConfigurationDuration;
+            executionTimes.at(index) = previousDuration;
         }
         
-        auto progress = visitedStatesCount / static_cast<double>(getConfigurationsCount());
-        auto temperature = maximumTemperature * (1.0 - progress);
+        double progress = visitedStatesCount / static_cast<double>(getConfigurationsCount());
+        double temperature = maximumTemperature * (1.0 - progress);
 
-        auto acceptanceProbability = getAcceptanceProbability(executionTimes.at(currentState), executionTimes.at(neighbourState), temperature);
-        auto randomProbability = probabilityDistribution(generator);
+        double acceptanceProbability = getAcceptanceProbability(executionTimes.at(currentState), executionTimes.at(neighbourState), temperature);
+        double randomProbability = probabilityDistribution(generator);
         if (acceptanceProbability > randomProbability)
         {
             currentState = neighbourState;
         }
 
-        auto neighbours = getNeighbours(currentState);
+        std::vector<size_t> neighbours = getNeighbours(currentState);
         neighbourState = neighbours.at(static_cast<size_t>(intDistribution(generator)) % neighbours.size());
 
         if (executionTimes.at(neighbourState) != std::numeric_limits<double>::max())
@@ -76,6 +71,11 @@ public:
         }
         alreadyVisistedStatesCount = 0;
         index = neighbourState;
+    }
+
+    KernelConfiguration getCurrentConfiguration() const override
+    {
+        return configurations.at(index);
     }
 
     size_t getConfigurationsCount() const override

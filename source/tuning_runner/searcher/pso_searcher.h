@@ -44,30 +44,25 @@ public:
         index = particlePositions.at(particleIndex);
     }
 
-    KernelConfiguration getNextConfiguration() override
-    {
-        return configurations.at(index);
-    }
-
-    void calculateNextConfiguration(const double previousConfigurationDuration) override
+    void calculateNextConfiguration(const double previousDuration) override
     {
         exploredIndices.push_back(index);
-        executionTimes.at(index) = previousConfigurationDuration;
-        if (previousConfigurationDuration < localBestTimes.at(particleIndex))
+        executionTimes.at(index) = previousDuration;
+        if (previousDuration < localBestTimes.at(particleIndex))
         {
-            localBestTimes.at(particleIndex) = previousConfigurationDuration;
+            localBestTimes.at(particleIndex) = previousDuration;
             localBestConfigurations.at(particleIndex) = configurations.at(index);
         }
-        if (previousConfigurationDuration < globalBestTime)
+        if (previousDuration < globalBestTime)
         {
-            globalBestTime = previousConfigurationDuration;
+            globalBestTime = previousDuration;
             globalBestConfiguration = configurations.at(index);
         }
         
-        auto newIndex = index;
+        size_t newIndex = index;
         do
         {
-            auto nextConfiguration = configurations.at(index);
+            KernelConfiguration nextConfiguration = configurations.at(index);
             for (size_t i = 0; i < nextConfiguration.getParameterPairs().size(); i++)
             {
                 if (probabilityDistribution(generator) <= influenceGlobal)
@@ -95,6 +90,11 @@ public:
             particleIndex = 0;
         }
         index = particlePositions[particleIndex];
+    }
+
+    KernelConfiguration getCurrentConfiguration() const override
+    {
+        return configurations.at(index);
     }
 
     size_t getConfigurationsCount() const override
@@ -130,7 +130,7 @@ private:
     size_t indexFromConfiguration(const KernelConfiguration& target) const
     {
         size_t configurationIndex = 0;
-        for (auto& configuration : configurations)
+        for (const auto& configuration : configurations)
         {
             size_t matchesCount = 0;
             for (size_t i = 0; i < configuration.getParameterPairs().size(); i++)

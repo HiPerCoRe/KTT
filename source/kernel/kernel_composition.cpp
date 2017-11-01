@@ -103,6 +103,40 @@ void KernelComposition::setKernelArguments(const KernelId id, const std::vector<
     kernelArgumentIds.insert(std::make_pair(id, argumentIds));
 }
 
+Kernel KernelComposition::transformToKernel() const
+{
+    Kernel kernel(id, "", name, DimensionVector(), DimensionVector());
+    kernel.setTuningManipulatorFlag(true);
+
+    for (const auto& constraint : constraints)
+    {
+        kernel.addConstraint(constraint);
+    }
+
+    for (const auto& parameter : parameters)
+    {
+        kernel.addParameter(parameter);
+    }
+
+    std::vector<size_t> argumentIds;
+    for (const auto id : sharedArgumentIds)
+    {
+        argumentIds.push_back(id);
+    }
+
+    for (const auto& kernel : kernels)
+    {
+        std::vector<ArgumentId> kernelArgumentIds = getKernelArgumentIds(kernel->getId());
+        for (const auto id : kernelArgumentIds)
+        {
+            argumentIds.push_back(id);
+        }
+    }
+    kernel.setArguments(argumentIds);
+
+    return kernel;
+}
+
 KernelId KernelComposition::getId() const
 {
     return id;

@@ -25,14 +25,14 @@ public:
         std::shuffle(std::begin(this->configurations), std::end(this->configurations), engine);
     }
 
-    KernelConfiguration getNextConfiguration() override
-    {
-        return configurations.at(index);
-    }
-
     void calculateNextConfiguration(const double) override
     {
         index++;
+    }
+
+    KernelConfiguration getCurrentConfiguration() const override
+    {
+        return configurations.at(index);
     }
 
     size_t getConfigurationsCount() const override

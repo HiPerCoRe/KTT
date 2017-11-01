@@ -4,13 +4,12 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include "configuration_manager.h"
 #include "manipulator_interface_implementation.h"
 #include "result_validator.h"
-#include "searcher/searcher.h"
 #include "api/tuning_manipulator.h"
 #include "compute_engine/compute_engine.h"
 #include "dto/tuning_result.h"
-#include "enum/search_method.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
 #include "utility/logger.h"
@@ -44,11 +43,10 @@ private:
     KernelManager* kernelManager;
     Logger* logger;
     ComputeEngine* computeEngine;
+    ConfigurationManager configurationManager;
     std::unique_ptr<ResultValidator> resultValidator;
     std::map<KernelId, std::unique_ptr<TuningManipulator>> tuningManipulators;
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
-    SearchMethod searchMethod;
-    std::vector<double> searchArguments;
     RunMode runMode;
 
     // Helper methods
@@ -58,11 +56,7 @@ private:
         const std::vector<ArgumentOutputDescriptor>& output);
     TuningResult runCompositionWithManipulator(const KernelComposition& composition, TuningManipulator* manipulator,
         const KernelConfiguration& configuration, const std::vector<ArgumentOutputDescriptor>& output);
-    std::unique_ptr<Searcher> getSearcher(const SearchMethod& method, const std::vector<double>& arguments,
-        const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters) const;
     bool validateResult(const Kernel& kernel, const TuningResult& result);
-    std::string getSearchMethodName(const SearchMethod& method) const;
-    Kernel compositionToKernel(const KernelComposition& composition) const;
 };
 
 } // namespace ktt

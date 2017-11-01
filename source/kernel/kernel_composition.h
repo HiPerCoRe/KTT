@@ -20,6 +20,7 @@ public:
     void setSharedArguments(const std::vector<ArgumentId>& argumentIds);
     void addKernelParameter(const KernelId id, const KernelParameter& parameter);
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
+    Kernel transformToKernel() const;
 
     // Getters
     KernelId getId() const;
