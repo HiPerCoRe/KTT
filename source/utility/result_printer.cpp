@@ -46,21 +46,9 @@ void ResultPrinter::setTimeUnit(const TimeUnit& unit)
     this->timeUnit = unit;
 }
 
-void ResultPrinter::setInvalidResultPrinting(const TunerFlag flag)
+void ResultPrinter::setInvalidResultPrinting(const bool flag)
 {
     printInvalidResult = flag;
-}
-
-std::vector<ParameterPair> ResultPrinter::getBestConfiguration(const KernelId id) const
-{
-    if (kernelResults.find(id) == kernelResults.end())
-    {
-        throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(id));
-    }
-
-    std::vector<TuningResult> results = kernelResults.find(id)->second;
-    TuningResult bestResult = getBestResult(results);
-    return bestResult.getConfiguration().getParameterPairs();
 }
 
 void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::ostream& outputTarget) const

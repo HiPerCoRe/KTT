@@ -114,6 +114,14 @@ Kernel launch and tuning methods
 * `void tuneKernel(const KernelId id)`:
 Starts the tuning process for specified kernel.
 
+* `void tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)`:
+Performs one step of kernel tuning process, trying out the next configuration.
+If all configurations were already tested, runs kernel using the best configuration.
+Output arguments can be retrieved by providing output descriptors.
+Each output descriptor contains id of an argument to be retrieved, memory location where data will be written and optionally
+size of data if only part of an argument needs to be retrieved.
+Target memory location size has to be equal or greater than size of retrieved data.
+
 * `void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)`:
 Runs specified kernel using provided configuration.
 Output arguments can be retrieved by providing output descriptors.
@@ -140,7 +148,7 @@ Result retrieval methods
 Sets time unit used during printing of results to specified unit.
 This only affects `printResult()` methods. Default time unit is microseconds. 
 
-* `void setInvalidResultPrinting(const TunerFlag flag)`:
+* `void setInvalidResultPrinting(const bool flag)`:
 Toggles printing of results from failed kernel runs.
 Invalid results will be separated from valid results during printing.
 Printing of invalid results is disabled by default.
@@ -206,7 +214,7 @@ Retrieves object containing detailed information about currently used device (su
 Utility methods
 ---------------
 
-* `void setAutomaticGlobalSizeCorrection(const TunerFlag flag)`:
+* `void setAutomaticGlobalSizeCorrection(const bool flag)`:
 Toggles automatic correction for global size, which ensures that global size in each dimension is always a multiple of local size in corresponding dimension.
 Performs a roundup to the nearest higher multiple.
 Automatic global size correction is turned off by default.
@@ -267,7 +275,7 @@ Second component is the execution time of the method itself, minus the execution
 Note that initial buffer transfer times are not included in the total duration (same as in the case of kernel tuning without manipulator).
 Other buffer update and retrieval times are included in the second component.
 
-* `TunerFlag enableArgumentPreload() const`:
+* `bool enableArgumentPreload() const`:
 Inheriting class can override this method if needed.
 Controls whether all manipulator arguments will be automatically uploaded to corresponding buffers before running any kernels.
 Turning this behavior off is useful when utilizing kernel compositions where different kernels use different arguments which would not all fit into available memory.

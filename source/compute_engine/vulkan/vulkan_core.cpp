@@ -41,7 +41,7 @@ void VulkanCore::setGlobalSizeType(const GlobalSizeType& type)
     globalSizeType = type;
 }
 
-void VulkanCore::setAutomaticGlobalSizeCorrection(const TunerFlag flag)
+void VulkanCore::setAutomaticGlobalSizeCorrection(const bool flag)
 {
     globalSizeCorrection = flag;
 }
@@ -209,7 +209,7 @@ void VulkanCore::setGlobalSizeType(const GlobalSizeType&)
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }
 
-void VulkanCore::setAutomaticGlobalSizeCorrection(const TunerFlag)
+void VulkanCore::setAutomaticGlobalSizeCorrection(const bool)
 {
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }

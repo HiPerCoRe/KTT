@@ -11,7 +11,7 @@ void TuningManipulator::runKernel(const KernelId id)
     manipulatorInterface->runKernel(id);
 }
 
-TunerFlag TuningManipulator::enableArgumentPreload() const
+bool TuningManipulator::enableArgumentPreload() const
 {
     return true;
 }

@@ -26,10 +26,11 @@ public:
     void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
     bool hasKernelConfigurations(const KernelId id) const;
     void clearData(const KernelId id);
+    void clearSearcher(const KernelId id);
 
-    // Search methods
-    KernelConfiguration getCurrentConfiguration(const KernelId id);
-    KernelConfiguration getBestConfiguration(const KernelId id);
+    // Configuration search methods
+    KernelConfiguration getCurrentConfiguration(const KernelId id) const;
+    KernelConfiguration getBestConfiguration(const KernelId id) const;
     void calculateNextConfiguration(const KernelId id, const KernelConfiguration& previous, const double previousDuration);
     size_t getConfigurationCount(const KernelId id) const;
 

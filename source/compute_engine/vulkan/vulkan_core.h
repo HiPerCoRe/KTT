@@ -40,7 +40,7 @@ public:
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType& type) override;
-    void setAutomaticGlobalSizeCorrection(const TunerFlag flag) override;
+    void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
     // Argument handling methods
     void uploadArgument(KernelArgument& kernelArgument) override;
@@ -63,7 +63,7 @@ private:
     size_t deviceIndex;
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
-    TunerFlag globalSizeCorrection;
+    bool globalSizeCorrection;
     VulkanInstance vulkanInstance;
     std::unique_ptr<VulkanDevice> device;
     std::unique_ptr<VulkanQueue> queue;
@@ -90,7 +90,7 @@ public:
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType& type) override;
-    void setAutomaticGlobalSizeCorrection(const TunerFlag flag) override;
+    void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
     // Argument handling methods
     void uploadArgument(KernelArgument& kernelArgument) override;

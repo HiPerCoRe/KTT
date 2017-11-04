@@ -120,13 +120,25 @@ void TunerCore::tuneKernel(const KernelId id)
     std::vector<TuningResult> results;
     if (kernelManager->isComposition(id))
     {
-        results = tuningRunner->tuneKernelComposition(id);
+        results = tuningRunner->tuneComposition(id);
     }
     else
     {
         results = tuningRunner->tuneKernel(id);
     }
     resultPrinter.setResult(id, results);
+}
+
+void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+{
+    if (kernelManager->isComposition(id))
+    {
+        tuningRunner->tuneCompositionByStep(id, output);
+    }
+    else
+    {
+        tuningRunner->tuneKernelByStep(id, output);
+    }
 }
 
 void TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)
@@ -202,12 +214,17 @@ void TunerCore::setTuningManipulator(const KernelId id, std::unique_ptr<TuningMa
     }
 }
 
+std::vector<ParameterPair> TunerCore::getBestConfiguration(const KernelId id) const
+{
+    return tuningRunner->getBestConfiguration(id);
+}
+
 void TunerCore::setPrintingTimeUnit(const TimeUnit& unit)
 {
     resultPrinter.setTimeUnit(unit);
 }
 
-void TunerCore::setInvalidResultPrinting(const TunerFlag flag)
+void TunerCore::setInvalidResultPrinting(const bool flag)
 {
     resultPrinter.setInvalidResultPrinting(flag);
 }
@@ -229,11 +246,6 @@ void TunerCore::printResult(const KernelId id, const std::string& filePath, cons
     resultPrinter.printResult(id, outputFile, format);
 }
 
-std::vector<ParameterPair> TunerCore::getBestConfiguration(const KernelId id) const
-{
-    return resultPrinter.getBestConfiguration(id);
-}
-
 void TunerCore::setCompilerOptions(const std::string& options)
 {
     computeEngine->setCompilerOptions(options);
@@ -244,7 +256,7 @@ void TunerCore::setGlobalSizeType(const GlobalSizeType& type)
     computeEngine->setGlobalSizeType(type);
 }
 
-void TunerCore::setAutomaticGlobalSizeCorrection(const TunerFlag flag)
+void TunerCore::setAutomaticGlobalSizeCorrection(const bool flag)
 {
     computeEngine->setAutomaticGlobalSizeCorrection(flag);
 }

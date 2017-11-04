@@ -33,7 +33,7 @@ public:
     void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
-    void setTuningManipulatorFlag(const KernelId id, const TunerFlag flag);
+    void setTuningManipulatorFlag(const KernelId id, const bool flag);
     void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
         const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
         const Dimension& modifierDimension);

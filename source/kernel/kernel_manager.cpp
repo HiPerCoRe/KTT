@@ -267,7 +267,7 @@ void KernelManager::setArguments(const KernelId id, const std::vector<ArgumentId
     }
 }
 
-void KernelManager::setTuningManipulatorFlag(const KernelId id, const TunerFlag flag)
+void KernelManager::setTuningManipulatorFlag(const KernelId id, const bool flag)
 {
     if (!isKernel(id))
     {

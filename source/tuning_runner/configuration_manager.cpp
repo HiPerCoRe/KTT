@@ -40,18 +40,23 @@ bool ConfigurationManager::hasKernelConfigurations(const KernelId id) const
 
 void ConfigurationManager::clearData(const KernelId id)
 {
-    if (searchers.find(id) != searchers.end())
-    {
-        searchers.erase(id);
-    }
-    
+    clearSearcher(id);
+
     if (bestConfigurations.find(id) != bestConfigurations.end())
     {
         bestConfigurations.erase(id);
     }
 }
 
-KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelId id)
+void ConfigurationManager::clearSearcher(const KernelId id)
+{
+    if (searchers.find(id) != searchers.end())
+    {
+        searchers.erase(id);
+    }
+}
+
+KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelId id) const
 {
     auto searcherPair = searchers.find(id);
     if (searcherPair == searchers.end())
@@ -62,7 +67,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelId
     return searcherPair->second->getCurrentConfiguration();
 }
 
-KernelConfiguration ConfigurationManager::getBestConfiguration(const KernelId id)
+KernelConfiguration ConfigurationManager::getBestConfiguration(const KernelId id) const
 {
     auto configurationPair = bestConfigurations.find(id);
     if (configurationPair == bestConfigurations.end())

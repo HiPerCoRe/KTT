@@ -43,7 +43,7 @@ void Kernel::setArguments(const std::vector<ArgumentId>& argumentIds)
     this->argumentIds = argumentIds;
 }
 
-void Kernel::setTuningManipulatorFlag(const TunerFlag flag)
+void Kernel::setTuningManipulatorFlag(const bool flag)
 {
     this->tuningManipulatorFlag = flag;
 }

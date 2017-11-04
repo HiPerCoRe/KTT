@@ -18,13 +18,12 @@ public:
     void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const;
     void setResult(const KernelId id, const std::vector<TuningResult>& results);
     void setTimeUnit(const TimeUnit& unit);
-    void setInvalidResultPrinting(const TunerFlag flag);
-    std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
+    void setInvalidResultPrinting(const bool flag);
 
 private:
     std::map<KernelId, std::vector<TuningResult>> kernelResults;
     TimeUnit timeUnit;
-    TunerFlag printInvalidResult;
+    bool printInvalidResult;
 
     void printVerbose(const std::vector<TuningResult>& results, std::ostream& outputTarget) const;
     void printCsv(const std::vector<TuningResult>& results, std::ostream& outputTarget) const;

@@ -42,7 +42,7 @@ public:
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType& type) override;
-    void setAutomaticGlobalSizeCorrection(const TunerFlag flag) override;
+    void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
     // Argument handling methods
     void uploadArgument(KernelArgument& kernelArgument) override;
@@ -72,7 +72,7 @@ private:
     std::string compilerOptions;
     RunMode runMode;
     GlobalSizeType globalSizeType;
-    TunerFlag globalSizeCorrection;
+    bool globalSizeCorrection;
     std::unique_ptr<CudaContext> context;
     std::unique_ptr<CudaStream> stream;
     std::set<std::unique_ptr<CudaBuffer>> buffers;
@@ -100,7 +100,7 @@ public:
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType& type) override;
-    void setAutomaticGlobalSizeCorrection(const TunerFlag flag) override;
+    void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
     // Argument handling methods
     void uploadArgument(KernelArgument& kernelArgument) override;

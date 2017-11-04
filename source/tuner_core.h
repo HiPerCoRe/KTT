@@ -43,6 +43,7 @@ public:
 
     // Tuning runner methods
     void tuneKernel(const KernelId id);
+    void tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output);
     void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
     void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod& method, const double toleranceThreshold);
@@ -51,18 +52,18 @@ public:
         const std::vector<ArgumentId>& validatedArgumentIds);
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
+    std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
 
     // Result printer methods
     void setPrintingTimeUnit(const TimeUnit& unit);
-    void setInvalidResultPrinting(const TunerFlag flag);
+    void setInvalidResultPrinting(const bool flag);
     void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const;
     void printResult(const KernelId id, const std::string& filePath, const PrintFormat& format) const;
-    std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
 
     // Compute engine methods
     void setCompilerOptions(const std::string& options);
     void setGlobalSizeType(const GlobalSizeType& type);
-    void setAutomaticGlobalSizeCorrection(const TunerFlag flag);
+    void setAutomaticGlobalSizeCorrection(const bool flag);
     void printComputeApiInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const;

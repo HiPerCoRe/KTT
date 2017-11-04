@@ -26,7 +26,9 @@ public:
 
     // Core methods
     std::vector<TuningResult> tuneKernel(const KernelId id);
-    std::vector<TuningResult> tuneKernelComposition(const KernelId id);
+    std::vector<TuningResult> tuneComposition(const KernelId id);
+    void tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output);
+    void tuneCompositionByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output);
     void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
     void runComposition(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
     void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
@@ -36,6 +38,7 @@ public:
         const std::vector<ArgumentId>& validatedArgumentIds);
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
+    std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
 
 private:
     // Attributes

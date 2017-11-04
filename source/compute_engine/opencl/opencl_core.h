@@ -33,7 +33,7 @@ public:
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType& type) override;
-    void setAutomaticGlobalSizeCorrection(const TunerFlag flag) override;
+    void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
     // Argument handling methods
     void uploadArgument(KernelArgument& kernelArgument) override;
@@ -64,7 +64,7 @@ private:
     std::string compilerOptions;
     RunMode runMode;
     GlobalSizeType globalSizeType;
-    TunerFlag globalSizeCorrection;
+    bool globalSizeCorrection;
     std::unique_ptr<OpenclContext> context;
     std::unique_ptr<OpenclCommandQueue> commandQueue;
     std::set<std::unique_ptr<OpenclBuffer>> buffers;

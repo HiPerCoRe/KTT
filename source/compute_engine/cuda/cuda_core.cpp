@@ -67,7 +67,7 @@ void CudaCore::setGlobalSizeType(const GlobalSizeType& type)
     globalSizeType = type;
 }
 
-void CudaCore::setAutomaticGlobalSizeCorrection(const TunerFlag flag)
+void CudaCore::setAutomaticGlobalSizeCorrection(const bool flag)
 {
     globalSizeCorrection = flag;
 }
@@ -432,7 +432,7 @@ void CudaCore::setGlobalSizeType(const GlobalSizeType&)
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
-void CudaCore::setAutomaticGlobalSizeCorrection(const TunerFlag)
+void CudaCore::setAutomaticGlobalSizeCorrection(const bool)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }

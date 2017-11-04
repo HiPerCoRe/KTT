@@ -72,7 +72,7 @@ void OpenclCore::setGlobalSizeType(const GlobalSizeType& type)
     globalSizeType = type;
 }
 
-void OpenclCore::setAutomaticGlobalSizeCorrection(const TunerFlag flag)
+void OpenclCore::setAutomaticGlobalSizeCorrection(const bool flag)
 {
     globalSizeCorrection = flag;
 }

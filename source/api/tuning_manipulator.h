@@ -19,7 +19,7 @@ public:
     // Virtual methods
     virtual ~TuningManipulator();
     virtual void launchComputation(const KernelId id) = 0;
-    virtual TunerFlag enableArgumentPreload() const;
+    virtual bool enableArgumentPreload() const;
 
     // Kernel run methods
     void runKernel(const KernelId id);

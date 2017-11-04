@@ -162,6 +162,19 @@ void Tuner::tuneKernel(const KernelId id)
     }
 }
 
+void Tuner::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+{
+    try
+    {
+        tunerCore->tuneKernelByStep(id, output);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 void Tuner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)
 {
     try
@@ -193,7 +206,7 @@ void Tuner::setPrintingTimeUnit(const TimeUnit& unit)
     tunerCore->setPrintingTimeUnit(unit);
 }
 
-void Tuner::setInvalidResultPrinting(const TunerFlag flag)
+void Tuner::setInvalidResultPrinting(const bool flag)
 {
     tunerCore->setInvalidResultPrinting(flag);
 }
@@ -340,7 +353,7 @@ DeviceInfo Tuner::getCurrentDeviceInfo() const
     }
 }
 
-void Tuner::setAutomaticGlobalSizeCorrection(const TunerFlag flag)
+void Tuner::setAutomaticGlobalSizeCorrection(const bool flag)
 {
     tunerCore->setAutomaticGlobalSizeCorrection(flag);
 }

@@ -106,12 +106,13 @@ public:
 
     // Kernel launch and tuning methods
     void tuneKernel(const KernelId id);
+    void tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output);
     void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
     void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
 
     // Result retrieval methods
     void setPrintingTimeUnit(const TimeUnit& unit);
-    void setInvalidResultPrinting(const TunerFlag flag);
+    void setInvalidResultPrinting(const bool flag);
     void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const;
     void printResult(const KernelId id, const std::string& filePath, const PrintFormat& format) const;
     std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
@@ -131,7 +132,7 @@ public:
     DeviceInfo getCurrentDeviceInfo() const;
 
     // Utility methods
-    void setAutomaticGlobalSizeCorrection(const TunerFlag flag);
+    void setAutomaticGlobalSizeCorrection(const bool flag);
     void setGlobalSizeType(const GlobalSizeType& type);
     void setLoggingTarget(std::ostream& outputTarget);
     void setLoggingTarget(const std::string& filePath);

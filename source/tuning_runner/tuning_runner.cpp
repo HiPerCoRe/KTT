@@ -15,15 +15,10 @@ TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kern
     kernelManager(kernelManager),
     logger(logger),
     computeEngine(computeEngine),
-    resultValidator(nullptr),
+    resultValidator(std::make_unique<ResultValidator>(argumentManager, kernelManager, logger, computeEngine)),
     manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine)),
     runMode(runMode)
-{
-    if (runMode == RunMode::Tuning)
-    {
-        resultValidator = std::make_unique<ResultValidator>(argumentManager, kernelManager, logger, computeEngine);
-    }
-}
+{}
 
 std::vector<TuningResult> TuningRunner::tuneKernel(const KernelId id)
 {
@@ -41,6 +36,7 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const KernelId id)
     const Kernel& kernel = kernelManager->getKernel(id);
     resultValidator->computeReferenceResult(kernel);
 
+    configurationManager.clearData(id);
     configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id, computeEngine->getCurrentDeviceInfo()),
         kernel.getParameters());
     size_t configurationsCount = configurationManager.getConfigurationCount(id);
@@ -95,11 +91,11 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const KernelId id)
 
     computeEngine->clearBuffers();
     resultValidator->clearReferenceResults();
-    configurationManager.clearData(id);
+    configurationManager.clearSearcher(id);
     return results;
 }
 
-std::vector<TuningResult> TuningRunner::tuneKernelComposition(const KernelId id)
+std::vector<TuningResult> TuningRunner::tuneComposition(const KernelId id)
 {
     if (runMode == RunMode::Computation)
     {
@@ -116,6 +112,7 @@ std::vector<TuningResult> TuningRunner::tuneKernelComposition(const KernelId id)
     const Kernel compatibilityKernel = composition.transformToKernel();
     resultValidator->computeReferenceResult(compatibilityKernel);
 
+    configurationManager.clearData(id);
     configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id, computeEngine->getCurrentDeviceInfo()),
         composition.getParameters());
     size_t configurationsCount = configurationManager.getConfigurationCount(id);
@@ -157,8 +154,96 @@ std::vector<TuningResult> TuningRunner::tuneKernelComposition(const KernelId id)
 
     computeEngine->clearBuffers();
     resultValidator->clearReferenceResults();
-    configurationManager.clearData(id);
+    configurationManager.clearSearcher(id);
     return results;
+}
+
+void TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+{
+    if (!kernelManager->isKernel(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+
+    const Kernel& kernel = kernelManager->getKernel(id);
+    resultValidator->computeReferenceResult(kernel);
+
+    if (!configurationManager.hasKernelConfigurations(id))
+    {
+        configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id, computeEngine->getCurrentDeviceInfo()),
+            kernel.getParameters());
+    }
+
+    KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
+    TuningResult result(kernel.getName(), currentConfiguration);
+
+    try
+    {
+        std::stringstream stream;
+        stream << "Launching kernel <" << kernel.getName() << "> with configuration: " << currentConfiguration;
+        logger->log(stream.str());
+
+        if (kernel.hasTuningManipulator())
+        {
+            auto manipulatorPointer = tuningManipulators.find(id);
+            result = runKernelWithManipulator(kernel, manipulatorPointer->second.get(), currentConfiguration, output);
+        }
+        else
+        {
+            result = runKernelSimple(kernel, currentConfiguration, output);
+        }
+    }
+    catch (const std::runtime_error& error)
+    {
+        logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
+    }
+
+    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+    validateResult(kernel, result);
+
+    computeEngine->clearBuffers();
+    resultValidator->clearReferenceResults();
+}
+
+void TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+{
+    if (!kernelManager->isComposition(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(id));
+    }
+
+    const KernelComposition& composition = kernelManager->getKernelComposition(id);
+    const Kernel compatibilityKernel = composition.transformToKernel();
+    resultValidator->computeReferenceResult(compatibilityKernel);
+
+    if (!configurationManager.hasKernelConfigurations(id))
+    {
+        configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id,
+            computeEngine->getCurrentDeviceInfo()), composition.getParameters());
+    }
+
+    KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
+    TuningResult result(composition.getName(), currentConfiguration);
+
+    try
+    {
+        std::stringstream stream;
+        stream << "Launching kernel composition <" << composition.getName() << "> with configuration: " << currentConfiguration;
+        logger->log(stream.str());
+
+        auto manipulatorPointer = tuningManipulators.find(id);
+        result = runCompositionWithManipulator(composition, manipulatorPointer->second.get(), currentConfiguration, output);
+    }
+    catch (const std::runtime_error& error)
+    {
+        logger->log(std::string("Kernel composition run failed, reason: ") + error.what() + "\n");
+    }
+
+    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+    validateResult(compatibilityKernel, result);
+
+    computeEngine->clearBuffers();
+    resultValidator->clearReferenceResults();
 }
 
 void TuningRunner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)
@@ -230,40 +315,24 @@ void TuningRunner::setSearchMethod(const SearchMethod& method, const std::vector
 
 void TuningRunner::setValidationMethod(const ValidationMethod& method, const double toleranceThreshold)
 {
-    if (runMode == RunMode::Computation)
-    {
-        throw std::runtime_error("Validation cannot be performed in computation mode");
-    }
     resultValidator->setValidationMethod(method);
     resultValidator->setToleranceThreshold(toleranceThreshold);
 }
 
 void TuningRunner::setValidationRange(const ArgumentId id, const size_t range)
 {
-    if (runMode == RunMode::Computation)
-    {
-        throw std::runtime_error("Validation cannot be performed in computation mode");
-    }
     resultValidator->setValidationRange(id, range);
 }
 
 void TuningRunner::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
     const std::vector<ArgumentId>& validatedArgumentIds)
 {
-    if (runMode == RunMode::Computation)
-    {
-        throw std::runtime_error("Validation cannot be performed in computation mode");
-    }
     resultValidator->setReferenceKernel(id, referenceId, referenceConfiguration, validatedArgumentIds);
 }
 
 void TuningRunner::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass,
     const std::vector<ArgumentId>& validatedArgumentIds)
 {
-    if (runMode == RunMode::Computation)
-    {
-        throw std::runtime_error("Validation cannot be performed in computation mode");
-    }
     resultValidator->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
 }
 
@@ -274,6 +343,11 @@ void TuningRunner::setTuningManipulator(const KernelId id, std::unique_ptr<Tunin
         tuningManipulators.erase(id);
     }
     tuningManipulators.insert(std::make_pair(id, std::move(manipulator)));
+}
+
+std::vector<ParameterPair> TuningRunner::getBestConfiguration(const KernelId id) const
+{
+    return configurationManager.getBestConfiguration(id).getParameterPairs();
 }
 
 TuningResult TuningRunner::runKernelSimple(const Kernel& kernel, const KernelConfiguration& configuration,
@@ -394,11 +468,6 @@ TuningResult TuningRunner::runCompositionWithManipulator(const KernelComposition
 
 bool TuningRunner::validateResult(const Kernel& kernel, const TuningResult& result)
 {
-    if (runMode == RunMode::Computation)
-    {
-        throw std::runtime_error("Validation cannot be performed in computation mode");
-    }
-
     if (!result.isValid())
     {
         return false;

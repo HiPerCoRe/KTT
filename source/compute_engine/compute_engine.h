@@ -28,7 +28,7 @@ public:
     // Utility methods
     virtual void setCompilerOptions(const std::string& options) = 0;
     virtual void setGlobalSizeType(const GlobalSizeType& type) = 0;
-    virtual void setAutomaticGlobalSizeCorrection(const TunerFlag flag) = 0;
+    virtual void setAutomaticGlobalSizeCorrection(const bool flag) = 0;
 
     // Argument handling methods
     virtual void uploadArgument(KernelArgument& kernelArgument) = 0;
