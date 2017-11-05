@@ -47,7 +47,7 @@ public:
             executionTimes.at(index) = previousDuration;
         }
         
-        double progress = visitedStatesCount / static_cast<double>(getConfigurationsCount());
+        double progress = visitedStatesCount / static_cast<double>(getConfigurationCount());
         double temperature = maximumTemperature * (1.0 - progress);
 
         double acceptanceProbability = getAcceptanceProbability(executionTimes.at(currentState), executionTimes.at(neighbourState), temperature);
@@ -78,9 +78,14 @@ public:
         return configurations.at(index);
     }
 
-    size_t getConfigurationsCount() const override
+    size_t getConfigurationCount() const override
     {
         return std::max(static_cast<size_t>(1), std::min(configurations.size(), static_cast<size_t>(configurations.size() * fraction)));
+    }
+
+    size_t getUnexploredConfigurationCount() const override
+    {
+        return getConfigurationCount() - visitedStatesCount;
     }
 
 private:

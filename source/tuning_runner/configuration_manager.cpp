@@ -64,6 +64,17 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelId
         throw std::runtime_error(std::string("Configuration for kernel with following id is not present: ") + std::to_string(id));
     }
 
+    if (searcherPair->second->getUnexploredConfigurationCount() <= 0)
+    {
+        auto configurationPair = bestConfigurations.find(id);
+        if (configurationPair == bestConfigurations.end())
+        {
+            throw std::runtime_error(std::string("No configurations left to explore and no best configuration recorded for kernel with id: ")
+                + std::to_string(id));
+        }
+        return configurationPair->second.first;
+    }
+
     return searcherPair->second->getCurrentConfiguration();
 }
 
@@ -108,7 +119,7 @@ size_t ConfigurationManager::getConfigurationCount(const KernelId id) const
         throw std::runtime_error(std::string("Configuration for kernel with following id is not present: ") + std::to_string(id));
     }
 
-    return searcherPair->second->getConfigurationsCount();
+    return searcherPair->second->getConfigurationCount();
 }
 
 void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMethod& method, const std::vector<double>& arguments,

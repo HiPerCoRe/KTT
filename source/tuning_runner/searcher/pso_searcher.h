@@ -22,6 +22,7 @@ public:
         influenceGlobal(influenceGlobal),
         influenceLocal(influenceLocal),
         influenceRandom(influenceRandom),
+        visitedStatesCount(0),
         executionTimes(configurations.size(), std::numeric_limits<double>::max()),
         particleIndex(0),
         particlePositions(swarmSize),
@@ -90,6 +91,7 @@ public:
             particleIndex = 0;
         }
         index = particlePositions[particleIndex];
+        visitedStatesCount++;
     }
 
     KernelConfiguration getCurrentConfiguration() const override
@@ -97,9 +99,14 @@ public:
         return configurations.at(index);
     }
 
-    size_t getConfigurationsCount() const override
+    size_t getConfigurationCount() const override
     {
         return std::max(static_cast<size_t>(1), std::min(configurations.size(), static_cast<size_t>(configurations.size() * fraction)));
+    }
+
+    size_t getUnexploredConfigurationCount() const override
+    {
+        return getConfigurationCount() - visitedStatesCount;
     }
 
 private:
@@ -110,6 +117,7 @@ private:
     double influenceGlobal;
     double influenceLocal;
     double influenceRandom;
+    size_t visitedStatesCount;
     
     std::vector<double> executionTimes;
     std::vector<size_t> exploredIndices;
