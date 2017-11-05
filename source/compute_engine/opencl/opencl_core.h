@@ -14,7 +14,6 @@
 #include "opencl_program.h"
 #include "compute_engine/compute_engine.h"
 #include "dto/kernel_run_result.h"
-#include "enum/run_mode.h"
 #include "kernel_argument/kernel_argument.h"
 
 namespace ktt
@@ -24,7 +23,7 @@ class OpenclCore : public ComputeEngine
 {
 public:
     // Constructor
-    explicit OpenclCore(const size_t platformIndex, const size_t deviceIndex, const RunMode& runMode);
+    explicit OpenclCore(const size_t platformIndex, const size_t deviceIndex);
 
     // Kernel execution method
     KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -62,7 +61,6 @@ private:
     size_t platformIndex;
     size_t deviceIndex;
     std::string compilerOptions;
-    RunMode runMode;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
     std::unique_ptr<OpenclContext> context;

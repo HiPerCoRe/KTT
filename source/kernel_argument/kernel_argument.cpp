@@ -23,11 +23,6 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElement
 }
 
 KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
-    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType) :
-    KernelArgument(id, data, numberOfElements, dataType, memoryLocation, accessType, uploadType, true)
-{}
-
-KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool dataOwned) :
     id(id),
     numberOfElements(numberOfElements),

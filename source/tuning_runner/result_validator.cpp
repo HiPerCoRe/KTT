@@ -165,8 +165,8 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel& kernel)
             numberOfElements = argument.getNumberOfElements();
         }
 
-        referenceResult.emplace_back(KernelArgument(referenceArgumentId, referenceClass->getData(referenceArgumentId),
-            numberOfElements, argument.getDataType(), argument.getMemoryLocation(), argument.getAccessType(), argument.getUploadType()));
+        referenceResult.emplace_back(referenceArgumentId, referenceClass->getData(referenceArgumentId), numberOfElements, argument.getDataType(),
+            argument.getMemoryLocation(), argument.getAccessType(), argument.getUploadType(), true);
     }
     referenceClassResults.insert(std::make_pair(kernelId, referenceResult));
 }

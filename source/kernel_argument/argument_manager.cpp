@@ -4,23 +4,14 @@
 namespace ktt
 {
 
-ArgumentManager::ArgumentManager(const RunMode& runMode) :
-    nextArgumentId(0),
-    runMode(runMode)
+ArgumentManager::ArgumentManager() :
+    nextArgumentId(0)
 {}
 
 ArgumentId ArgumentManager::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
-    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType)
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool copyData)
 {
-    if (runMode == RunMode::Tuning)
-    {
-        arguments.emplace_back(nextArgumentId, data, numberOfElements, dataType, memoryLocation, accessType, uploadType);
-    }
-    else
-    {
-        arguments.emplace_back(nextArgumentId, data, numberOfElements, dataType, memoryLocation, accessType, uploadType,
-            false);
-    }
+    arguments.emplace_back(nextArgumentId, data, numberOfElements, dataType, memoryLocation, accessType, uploadType, copyData);
     return nextArgumentId++;
 }
 

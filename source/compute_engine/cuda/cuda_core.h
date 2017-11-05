@@ -21,7 +21,6 @@
 
 #include "compute_engine/compute_engine.h"
 #include "dto/kernel_run_result.h"
-#include "enum/run_mode.h"
 #include "kernel_argument/kernel_argument.h"
 
 namespace ktt
@@ -33,7 +32,7 @@ class CudaCore : public ComputeEngine
 {
 public:
     // Constructor
-    explicit CudaCore(const size_t deviceIndex, const RunMode& runMode);
+    explicit CudaCore(const size_t deviceIndex);
 
     // Kernel execution method
     KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -70,7 +69,6 @@ public:
 private:
     size_t deviceIndex;
     std::string compilerOptions;
-    RunMode runMode;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
     std::unique_ptr<CudaContext> context;
@@ -91,7 +89,7 @@ class CudaCore : public ComputeEngine
 {
 public:
     // Constructor
-    explicit CudaCore(const size_t deviceIndex, const RunMode& runMode);
+    explicit CudaCore(const size_t deviceIndex);
 
     // Kernel execution method
     KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,

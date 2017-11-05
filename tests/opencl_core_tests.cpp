@@ -12,7 +12,7 @@ std::string programSource(std::string("")
 
 TEST_CASE("Working with program and kernel", "Component: OpenclCore")
 {
-    ktt::OpenclCore core(0, 0, ktt::RunMode::Tuning);
+    ktt::OpenclCore core(0, 0);
 
     auto program = core.createAndBuildProgram(programSource);
     REQUIRE(program->getSource() == programSource);
@@ -33,7 +33,7 @@ TEST_CASE("Working with program and kernel", "Component: OpenclCore")
 
 TEST_CASE("Working with OpenCL buffer", "Component: OpenclCore")
 {
-    ktt::OpenclCore core(0, 0, ktt::RunMode::Tuning);
+    ktt::OpenclCore core(0, 0);
     std::vector<float> data;
     for (size_t i = 0; i < 64; i++)
     {
@@ -41,7 +41,7 @@ TEST_CASE("Working with OpenCL buffer", "Component: OpenclCore")
     }
 
     auto argument = ktt::KernelArgument(0, data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
-        ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector);
+        ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector, true);
 
     SECTION("Transfering argument to / from device")
     {

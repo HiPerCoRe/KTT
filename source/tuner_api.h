@@ -21,7 +21,6 @@
 #include "enum/dimension.h"
 #include "enum/global_size_type.h"
 #include "enum/print_format.h"
-#include "enum/run_mode.h"
 #include "enum/time_unit.h"
 #include "enum/search_method.h"
 #include "enum/thread_modifier_action.h"
@@ -55,7 +54,6 @@ public:
     // Constructors and destructor
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex);
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
-    explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const RunMode& runMode);
     ~Tuner();
 
     // Basic kernel handling methods
@@ -85,13 +83,13 @@ public:
     template <typename T> ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(data.data(), data.size(), dataType, ArgumentMemoryLocation::Device, accessType);
+        return addArgument(data.data(), data.size(), dataType, ArgumentMemoryLocation::Device, accessType, true);
     }
     template <typename T> ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType,
-        const ArgumentMemoryLocation& memoryLocation)
+        const ArgumentMemoryLocation& memoryLocation, const bool copyData)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(data.data(), data.size(), dataType, memoryLocation, accessType);
+        return addArgument(data.data(), data.size(), dataType, memoryLocation, accessType, copyData);
     }
     template <typename T> ArgumentId addArgumentScalar(const T& data)
     {
@@ -143,7 +141,7 @@ private:
 
     // Helper methods
     KernelId addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& dataType,
-        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType);
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const bool copyData);
     KernelId addArgument(const void* scalarData, const ArgumentDataType& dataType);
     KernelId addArgument(const size_t localMemoryElementsCount, const ArgumentDataType& dataType);
 

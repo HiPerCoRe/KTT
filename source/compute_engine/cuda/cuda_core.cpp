@@ -8,10 +8,9 @@ namespace ktt
 
 #ifdef PLATFORM_CUDA
 
-CudaCore::CudaCore(const size_t deviceIndex, const RunMode& runMode) :
+CudaCore::CudaCore(const size_t deviceIndex) :
     deviceIndex(deviceIndex),
     compilerOptions(std::string("--gpu-architecture=compute_30")),
-    runMode(runMode),
     globalSizeType(GlobalSizeType::Cuda),
     globalSizeCorrection(false)
 {
@@ -80,18 +79,18 @@ void CudaCore::uploadArgument(KernelArgument& kernelArgument)
     }
     
     clearBuffer(kernelArgument.getId());
+    std::unique_ptr<CudaBuffer> buffer = nullptr;
 
-    bool zeroCopy = false;
-    if (runMode == RunMode::Computation && kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
     {
-        zeroCopy = true;
+        buffer = std::make_unique<CudaBuffer>(kernelArgument, true);
     }
-
-    std::unique_ptr<CudaBuffer> buffer = std::make_unique<CudaBuffer>(kernelArgument, zeroCopy);
-    if (!zeroCopy)
+    else
     {
+        buffer = std::make_unique<CudaBuffer>(kernelArgument, false);
         buffer->uploadData(kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
     }
+
     buffers.insert(std::move(buffer)); // buffer data will be stolen
 }
 
@@ -412,7 +411,7 @@ CUdeviceptr* CudaCore::loadBufferFromCache(const ArgumentId id) const
 
 #else
 
-CudaCore::CudaCore(const size_t, const RunMode&)
+CudaCore::CudaCore(const size_t)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }

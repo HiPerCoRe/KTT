@@ -21,8 +21,7 @@ class TuningRunner
 {
 public:
     // Constructor
-    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine,
-        const RunMode& runMode);
+    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine);
 
     // Core methods
     std::vector<TuningResult> tuneKernel(const KernelId id);
@@ -50,7 +49,6 @@ private:
     std::unique_ptr<ResultValidator> resultValidator;
     std::map<KernelId, std::unique_ptr<TuningManipulator>> tuningManipulators;
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
-    RunMode runMode;
 
     // Helper methods
     TuningResult runKernelSimple(const Kernel& kernel, const KernelConfiguration& configuration,
@@ -60,6 +58,7 @@ private:
     TuningResult runCompositionWithManipulator(const KernelComposition& composition, TuningManipulator* manipulator,
         const KernelConfiguration& configuration, const std::vector<ArgumentOutputDescriptor>& output);
     bool validateResult(const Kernel& kernel, const TuningResult& result);
+    bool hasWritableZeroCopyArguments(const Kernel& kernel);
 };
 
 } // namespace ktt

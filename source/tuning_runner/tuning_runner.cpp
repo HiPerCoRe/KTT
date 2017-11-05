@@ -9,37 +9,34 @@
 namespace ktt
 {
 
-TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine,
-    const RunMode& runMode) :
+TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine) :
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     logger(logger),
     computeEngine(computeEngine),
     resultValidator(std::make_unique<ResultValidator>(argumentManager, kernelManager, logger, computeEngine)),
-    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine)),
-    runMode(runMode)
+    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine))
 {}
 
 std::vector<TuningResult> TuningRunner::tuneKernel(const KernelId id)
 {
-    if (runMode == RunMode::Computation)
-    {
-        throw std::runtime_error("Kernel tuning cannot be performed in computation mode");
-    }
-
     if (!kernelManager->isKernel(id))
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
 
-    std::vector<TuningResult> results;
     const Kernel& kernel = kernelManager->getKernel(id);
-    resultValidator->computeReferenceResult(kernel);
+    if (hasWritableZeroCopyArguments(kernel))
+    {
+        throw std::runtime_error("Kernel tuning cannot be performed with writable zero-copy arguments");
+    }
 
+    resultValidator->computeReferenceResult(kernel);
     configurationManager.clearData(id);
     configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id, computeEngine->getCurrentDeviceInfo()),
         kernel.getParameters());
     size_t configurationsCount = configurationManager.getConfigurationCount(id);
+    std::vector<TuningResult> results;
 
     for (size_t i = 0; i < configurationsCount; i++)
     {
@@ -97,25 +94,24 @@ std::vector<TuningResult> TuningRunner::tuneKernel(const KernelId id)
 
 std::vector<TuningResult> TuningRunner::tuneComposition(const KernelId id)
 {
-    if (runMode == RunMode::Computation)
-    {
-        throw std::runtime_error("Kernel tuning cannot be performed in computation mode");
-    }
-
     if (!kernelManager->isComposition(id))
     {
         throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(id));
     }
 
-    std::vector<TuningResult> results;
     const KernelComposition& composition = kernelManager->getKernelComposition(id);
     const Kernel compatibilityKernel = composition.transformToKernel();
-    resultValidator->computeReferenceResult(compatibilityKernel);
+    if (hasWritableZeroCopyArguments(compatibilityKernel))
+    {
+        throw std::runtime_error("Kernel composition tuning cannot be performed with writable zero-copy arguments");
+    }
 
+    resultValidator->computeReferenceResult(compatibilityKernel);
     configurationManager.clearData(id);
     configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id, computeEngine->getCurrentDeviceInfo()),
         composition.getParameters());
     size_t configurationsCount = configurationManager.getConfigurationCount(id);
+    std::vector<TuningResult> results;
 
     for (size_t i = 0; i < configurationsCount; i++)
     {
@@ -487,6 +483,21 @@ bool TuningRunner::validateResult(const Kernel& kernel, const TuningResult& resu
     }
 
     return resultIsCorrect;
+}
+
+bool TuningRunner::hasWritableZeroCopyArguments(const Kernel& kernel)
+{
+    std::vector<KernelArgument*> arguments = argumentManager->getArguments(kernel.getArgumentIds());
+
+    for (const auto argument : arguments)
+    {
+        if (argument->getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy && argument->getAccessType() != ArgumentAccessType::ReadOnly)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 } // namespace ktt

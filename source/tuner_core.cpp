@@ -7,17 +7,17 @@
 namespace ktt
 {
 
-TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const RunMode& runMode) :
-    argumentManager(std::make_unique<ArgumentManager>(runMode)),
+TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi) :
+    argumentManager(std::make_unique<ArgumentManager>()),
     kernelManager(std::make_unique<KernelManager>())
 {
     if (computeApi == ComputeApi::Opencl)
     {
-        computeEngine = std::make_unique<OpenclCore>(platformIndex, deviceIndex, runMode);
+        computeEngine = std::make_unique<OpenclCore>(platformIndex, deviceIndex);
     }
     else if (computeApi == ComputeApi::Cuda)
     {
-        computeEngine = std::make_unique<CudaCore>(deviceIndex, runMode);
+        computeEngine = std::make_unique<CudaCore>(deviceIndex);
     }
     else if (computeApi == ComputeApi::Vulkan)
     {
@@ -27,7 +27,7 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
     {
         throw std::runtime_error("Specified compute API is not supported");
     }
-    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeEngine.get(), runMode);
+    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeEngine.get());
 
     DeviceInfo info = computeEngine->getCurrentDeviceInfo();
     logger.log(std::string("Initializing tuner for device: ") + info.getName());
@@ -110,9 +110,9 @@ void TunerCore::setCompositionKernelArguments(const KernelId compositionId, cons
 }
 
 ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
-    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType)
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool copyData)
 {
-    return argumentManager->addArgument(data, numberOfElements, dataType, memoryLocation, accessType, uploadType);
+    return argumentManager->addArgument(data, numberOfElements, dataType, memoryLocation, accessType, uploadType, copyData);
 }
 
 void TunerCore::tuneKernel(const KernelId id)

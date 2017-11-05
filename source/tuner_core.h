@@ -5,7 +5,6 @@
 #include <vector>
 #include "compute_engine/compute_engine.h"
 #include "enum/compute_api.h"
-#include "enum/run_mode.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
 #include "tuning_runner/tuning_runner.h"
@@ -19,7 +18,7 @@ class TunerCore
 {
 public:
     // Constructor
-    explicit TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const RunMode& runMode);
+    explicit TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
 
     // Kernel manager methods
     KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
@@ -39,7 +38,8 @@ public:
 
     // Argument manager methods
     ArgumentId addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
-        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType,
+        const bool copyData);
 
     // Tuning runner methods
     void tuneKernel(const KernelId id);

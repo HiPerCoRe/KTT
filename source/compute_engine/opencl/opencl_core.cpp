@@ -5,11 +5,10 @@
 namespace ktt
 {
 
-OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex, const RunMode& runMode) :
+OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex) :
     platformIndex(platformIndex),
     deviceIndex(deviceIndex),
     compilerOptions(std::string("")),
-    runMode(runMode),
     globalSizeType(GlobalSizeType::Opencl),
     globalSizeCorrection(false)
 {
@@ -83,19 +82,20 @@ void OpenclCore::uploadArgument(KernelArgument& kernelArgument)
     {
         return;
     }
+
     clearBuffer(kernelArgument.getId());
+    std::unique_ptr<OpenclBuffer> buffer = nullptr;
 
-    bool zeroCopy = false;
-    if (runMode == RunMode::Computation && kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
     {
-        zeroCopy = true;
+        buffer = std::make_unique<OpenclBuffer>(context->getContext(), kernelArgument, true);
     }
-
-    std::unique_ptr<OpenclBuffer> buffer = std::make_unique<OpenclBuffer>(context->getContext(), kernelArgument, zeroCopy);
-    if (!zeroCopy)
+    else
     {
+        buffer = std::make_unique<OpenclBuffer>(context->getContext(), kernelArgument, false);
         buffer->uploadData(commandQueue->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
     }
+
     buffers.insert(std::move(buffer)); // buffer data will be stolen
 }
 

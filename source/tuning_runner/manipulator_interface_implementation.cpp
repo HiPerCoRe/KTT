@@ -310,7 +310,7 @@ void ManipulatorInterfaceImplementation::updateArgumentSimple(const ArgumentId i
     }
 
     auto updatedArgument = KernelArgument(id, argumentData, numberOfElements, argumentPointer->second.getDataType(),
-        argumentPointer->second.getMemoryLocation(), argumentPointer->second.getAccessType(), uploadType);
+        argumentPointer->second.getMemoryLocation(), argumentPointer->second.getAccessType(), uploadType, true);
 
     nonVectorArguments.erase(id);
     nonVectorArguments.insert(std::make_pair(id, updatedArgument));

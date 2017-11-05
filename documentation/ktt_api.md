@@ -8,25 +8,12 @@ Constructors
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex)`:
 Creates new tuner object for specified platform and device.
-Tuner uses OpenCL as compute API and operates in tuning mode.
+Tuner uses OpenCL as compute API.
 Indices for all available platforms and devices can be retrieved by calling `printComputeApiInfo()` method.
 
 * `Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi)`:
 Similar to previous constructor, but also allows choice of compute API.
 If specified compute API is CUDA, platform index is ignored.
-
-* `Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const RunMode& runMode)`:
-Similar to previous constructor, but also allows choice of run mode.
-Two different run modes are supported.
-
-In tuning mode, all kernel arguments are copied inside tuner when argument addition methods are called.
-Additionally, extra argument copies are created by compute API for each kernel launch under different configuration.
-It is possible to perform output validation.
-
-In computation mode, tuner directly uses buffers provided by client application.
-It is furthermore possible to perform argument zero-copy by using appropriate argument flags, which causes the compute API
-to directly access client buffers. This results in no data copies being made on certain platforms.
-Output validation is disabled and calling methods related to validation will result in an exception.
 
 Basic kernel handling methods
 -----------------------------
@@ -84,18 +71,19 @@ Argument handling methods
 -------------------------
 
 * `ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType)`:
-Adds new vector argument to tuner.
-During usage, argument will be copied to device memory.
-Argument access type specifies whether argument is used for input or output (or both).
-Supported data type sizes are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
+Adds new vector argument to tuner. Makes copy of argument data, so the original user vector remains unaffected by tuner operations.
+Argument data will be accessed from device memory during its usage by compute API.
+Argument access type specifies whether argument is used for input, output or both.
+Supported data type lengths are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 
-* `ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType, const ArgumentMemoryLocation& memoryLocation)`:
-Similar to previous method, but also allows choice of argument memory location.
-Argument memory location specifies whether argument will be copied to device or host memory during its usage.
-If `ArgumentMemoryLocation::HostZeroCopy` is selected and tuner is in computation mode, client buffer will be used
-directly for input and output. In certain scenarios, this will prevent any argument copies from being made.
-In tuning mode, this flag acts in the same way as `ArgumentMemoryLocation::Host`.
+* `ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType, const ArgumentMemoryLocation& memoryLocation, const bool copyData)`:
+Similar to previous method, but also allows choice of argument memory location and whether argument data is copied to tuner.
+If copy data flag is set to false, tuner will directly use data in original user vector for its operations. This results in lower memory overhead, but relies on a user to keep data in vector valid.
+Argument memory location specifies whether argument will be accessed from device or host memory during its usage by compute API.
+Note that regular kernel tuning cannot be performed if host zero-copy flag is selected for writable arguments. Kernel tuning by step and kernel running can still be performed.
+Note that in some cases where host zero-copy flag is used, extra buffer copy is still made internally by compute API. This behavior depends on particular device and compute API.
+See KTT buffer diagram for better overview of buffer management.
 
 * `ArgumentId addArgumentScalar(const T& data)`:
 Adds new scalar argument to tuner. All scalar arguments are read-only.
@@ -139,7 +127,7 @@ Other methods require following search arguments:
     - Annealing - (0) fraction, (1) maximum temperature
 
     Fraction argument specifies how many configurations out of all configurations will be explored during the tuning process (eg. setting fraction to 0.5 will cause tuner to explore half of the configurations).
-    Swarm size argument will be converted to size_t.
+    Swarm size argument will be converted to `size_t` data type.
 
 Result retrieval methods
 ------------------------
@@ -209,7 +197,7 @@ Retrieves list of objects containing detailed information about all available de
 DeviceInfo object supports output operator.
 
 * `DeviceInfo getCurrentDeviceInfo()`:
-Retrieves object containing detailed information about currently used device (such as device name, memory sizes, list of extensions, etc.).
+Retrieves device info object for currently used device.
 
 Utility methods
 ---------------
@@ -305,33 +293,27 @@ Returns configuration used inside current run of `launchComputation()` method.
 * `void updateArgumentScalar(const ArgumentId id, const void* argumentData)`:
 Updates specified scalar argument.
 This method only affects run of `launchComputation()` method under current configuration.
-This method is useful for iterative kernel launches.
 
 * `void updateArgumentLocal(const ArgumentId id, const size_t numberOfElements)`:
 Updates specified local memory argument.
 This method only affects run of `launchComputation()` method under current configuration.
-This method is useful for iterative kernel launches.
 
 * `void updateArgumentVector(const ArgumentId id, const void* argumentData)`:
 Updates specified vector argument.
 This method only affects run of `launchComputation()` method under current configuration.
-This method is useful for iterative kernel launches.
 
 * `void updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)`:
 Updates specified vector argument.
 Possibly also modifies number of elements inside the argument.
 This method only affects run of `launchComputation()` method under current configuration.
-This method is useful for iterative kernel launches.
 
 * `void getArgumentVector(const ArgumentId id, void* destination) const`:
 Retrieves specified vector argument.
 Destination buffer size needs to be equal or greater than argument size.
-This method is useful for iterative kernel launches.
 
 * `void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const`:
 Retrieves part of specified vector argument.
 Destination buffer size needs to be equal or greater than specified size.
-This method is useful for iterative kernel launches.
 
 * `void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)`:
 Sets kernel arguments for specified kernel by providing corresponding argument ids.
