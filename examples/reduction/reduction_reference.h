@@ -29,7 +29,7 @@ public:
         std::cout << "Reference in double: " << std::setprecision(10) << resD[0] << std::endl;
     }
 
-    const void* getData(const ktt::ArgumentId id) const override {
+    void* getData(const ktt::ArgumentId id) override {
         if (id == resultArgumentId) {
             return (void*)res.data();
         }

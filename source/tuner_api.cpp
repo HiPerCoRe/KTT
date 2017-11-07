@@ -369,12 +369,13 @@ void Tuner::setLoggingTarget(const std::string& filePath)
     tunerCore->setLoggingTarget(filePath);
 }
 
-size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& dataType,
+ArgumentId Tuner::addArgument(void* vectorData, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const bool copyData)
 {
     try
     {
-        return tunerCore->addArgument(vectorData, numberOfElements, dataType, memoryLocation, accessType, ArgumentUploadType::Vector, copyData);
+        return tunerCore->addArgument(vectorData, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType,
+            ArgumentUploadType::Vector, copyData);
     }
     catch (const std::runtime_error& error)
     {
@@ -383,12 +384,12 @@ size_t Tuner::addArgument(const void* vectorData, const size_t numberOfElements,
     }
 }
 
-size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& dataType)
+ArgumentId Tuner::addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType)
 {
     try
     {
-        return tunerCore->addArgument(scalarData, 1, dataType, ArgumentMemoryLocation::Device, ArgumentAccessType::ReadOnly,
-            ArgumentUploadType::Scalar, true);
+        return tunerCore->addArgument(data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType);
     }
     catch (const std::runtime_error& error)
     {
@@ -397,12 +398,12 @@ size_t Tuner::addArgument(const void* scalarData, const ArgumentDataType& dataTy
     }
 }
 
-size_t Tuner::addArgument(const size_t localMemoryElementsCount, const ArgumentDataType& dataType)
+ArgumentId Tuner::addArgument(const size_t localMemoryElementsCount, const size_t elementSizeInBytes, const ArgumentDataType& dataType)
 {
     try
     {
-        return tunerCore->addArgument(nullptr, localMemoryElementsCount, dataType, ArgumentMemoryLocation::Device, ArgumentAccessType::ReadOnly,
-            ArgumentUploadType::Local, true);
+        return tunerCore->addArgument(nullptr, localMemoryElementsCount, elementSizeInBytes, dataType, ArgumentMemoryLocation::Device,
+            ArgumentAccessType::ReadOnly, ArgumentUploadType::Local);
     }
     catch (const std::runtime_error& error)
     {

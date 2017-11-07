@@ -17,6 +17,7 @@
 #include "enum/argument_access_type.h"
 #include "enum/argument_data_type.h"
 #include "enum/argument_memory_location.h"
+#include "enum/argument_upload_type.h"
 #include "enum/compute_api.h"
 #include "enum/dimension.h"
 #include "enum/global_size_type.h"
@@ -83,23 +84,23 @@ public:
     template <typename T> ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(data.data(), data.size(), dataType, ArgumentMemoryLocation::Device, accessType, true);
+        return addArgument(data.data(), data.size(), sizeof(T), dataType, ArgumentMemoryLocation::Device, accessType, ArgumentUploadType::Vector);
     }
-    template <typename T> ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType,
+    template <typename T> ArgumentId addArgumentVector(std::vector<T>& data, const ArgumentAccessType& accessType,
         const ArgumentMemoryLocation& memoryLocation, const bool copyData)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(data.data(), data.size(), dataType, memoryLocation, accessType, copyData);
+        return addArgument(data.data(), data.size(), sizeof(T), dataType, memoryLocation, accessType, copyData);
     }
     template <typename T> ArgumentId addArgumentScalar(const T& data)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(&data, dataType);
+        return addArgument(&data, 1, sizeof(T), dataType, ArgumentMemoryLocation::Device, ArgumentAccessType::ReadOnly, ArgumentUploadType::Scalar);
     }
     template <typename T> ArgumentId addArgumentLocal(const size_t localMemoryElementsCount)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
-        return addArgument(localMemoryElementsCount, dataType);
+        return addArgument(localMemoryElementsCount, sizeof(T), dataType);
     }
 
     // Kernel launch and tuning methods
@@ -140,10 +141,11 @@ private:
     std::unique_ptr<TunerCore> tunerCore;
 
     // Helper methods
-    KernelId addArgument(const void* vectorData, const size_t numberOfElements, const ArgumentDataType& dataType,
+    ArgumentId addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
         const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const bool copyData);
-    KernelId addArgument(const void* scalarData, const ArgumentDataType& dataType);
-    KernelId addArgument(const size_t localMemoryElementsCount, const ArgumentDataType& dataType);
+    ArgumentId addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
+        const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
+    ArgumentId addArgument(const size_t localMemoryElementsCount, const size_t elementSizeInBytes, const ArgumentDataType& dataType);
 
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {
@@ -199,8 +201,7 @@ private:
         }
         else
         {
-            std::cerr << "Unsupported argument data type" << std::endl;
-            throw std::runtime_error("Unsupported argument data type");
+            return ArgumentDataType::Custom;
         }
     }
 };

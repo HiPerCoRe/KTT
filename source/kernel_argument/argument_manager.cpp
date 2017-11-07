@@ -8,11 +8,29 @@ ArgumentManager::ArgumentManager() :
     nextArgumentId(0)
 {}
 
-ArgumentId ArgumentManager::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
-    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool copyData)
+ArgumentId ArgumentManager::addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
+    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType,
+    const bool copyData)
 {
-    arguments.emplace_back(nextArgumentId, data, numberOfElements, dataType, memoryLocation, accessType, uploadType, copyData);
+    arguments.emplace_back(nextArgumentId, data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType, copyData);
     return nextArgumentId++;
+}
+
+ArgumentId ArgumentManager::addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
+    const ArgumentDataType& dataType, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType,
+    const ArgumentUploadType& uploadType)
+{
+    arguments.emplace_back(nextArgumentId, data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType);
+    return nextArgumentId++;
+}
+
+void ArgumentManager::updateArgument(const ArgumentId id, void* data, const size_t numberOfElements)
+{
+    if (id >= nextArgumentId)
+    {
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
+    }
+    arguments.at(id).updateData(data, numberOfElements);
 }
 
 void ArgumentManager::updateArgument(const ArgumentId id, const void* data, const size_t numberOfElements)
@@ -21,7 +39,7 @@ void ArgumentManager::updateArgument(const ArgumentId id, const void* data, cons
     {
         throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
     }
-    arguments.at(static_cast<size_t>(id)).updateData(data, numberOfElements);
+    arguments.at(id).updateData(data, numberOfElements);
 }
 
 size_t ArgumentManager::getArgumentCount() const
@@ -35,7 +53,7 @@ const KernelArgument& ArgumentManager::getArgument(const ArgumentId id) const
     {
         throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
     }
-    return arguments.at(static_cast<size_t>(id));
+    return arguments.at(id);
 }
 
 KernelArgument& ArgumentManager::getArgument(const ArgumentId id)
@@ -53,7 +71,7 @@ std::vector<KernelArgument*> ArgumentManager::getArguments(const std::vector<Arg
         {
             throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
         }
-        result.push_back(&arguments.at(static_cast<size_t>(id)));
+        result.push_back(&arguments.at(id));
     }
 
     return result;

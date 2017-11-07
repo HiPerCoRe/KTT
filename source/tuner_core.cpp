@@ -109,10 +109,17 @@ void TunerCore::setCompositionKernelArguments(const KernelId compositionId, cons
     kernelManager->setCompositionKernelArguments(compositionId, kernelId, argumentIds);
 }
 
-ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElements, const ArgumentDataType& dataType,
+ArgumentId TunerCore::addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool copyData)
 {
-    return argumentManager->addArgument(data, numberOfElements, dataType, memoryLocation, accessType, uploadType, copyData);
+    return argumentManager->addArgument(data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType, copyData);
+}
+
+ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
+    const ArgumentDataType& dataType, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType,
+    const ArgumentUploadType& uploadType)
+{
+    return argumentManager->addArgument(data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType);
 }
 
 void TunerCore::tuneKernel(const KernelId id)

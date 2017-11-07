@@ -120,8 +120,8 @@ KernelArgument OpenclCore::downloadArgument(const ArgumentId id) const
         throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
     }
 
-    KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getDataType(),
-        buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
+    KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getElementSize(),
+        buffer->getDataType(), buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
     buffer->downloadData(commandQueue->getQueue(), argument.getData(), argument.getDataSizeInBytes());
     
     return argument;

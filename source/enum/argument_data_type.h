@@ -15,7 +15,8 @@ enum class ArgumentDataType
     UnsignedLong,
     Half,
     Float,
-    Double
+    Double,
+    Custom
 };
 
 } // namespace ktt

@@ -132,7 +132,6 @@ std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& 
     {
         outputTarget << std::get<0>(parameterPair) << ": " << std::get<1>(parameterPair) << " ";
     }
-    outputTarget << std::endl;
 
     return outputTarget;
 }

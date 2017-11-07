@@ -12,8 +12,8 @@ TEST_CASE("Argument addition and retrieval", "Component: ArgumentManager")
     ktt::ArgumentManager manager;
 
     std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f};
-    ktt::ArgumentId id = manager.addArgument(data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
-        ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector, true);
+    ktt::ArgumentId id = manager.addArgument(data.data(), data.size(), sizeof(float), ktt::ArgumentDataType::Float,
+        ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector, true);
 
     REQUIRE(id == 0);
     REQUIRE(manager.getArgumentCount() == 1);
@@ -25,7 +25,7 @@ TEST_CASE("Argument addition and retrieval", "Component: ArgumentManager")
     REQUIRE(argument.getDataSizeInBytes() == 4 * sizeof(float));
     REQUIRE(argument.getElementSizeInBytes() == sizeof(float));
 
-    std::vector<float> floats = argument.getDataFloat();
+    std::vector<float> floats = argument.getDataWithType<float>();
     REQUIRE(floats.size() == 4);
 
     for (size_t i = 0; i < floats.size(); i++)
@@ -35,7 +35,7 @@ TEST_CASE("Argument addition and retrieval", "Component: ArgumentManager")
 
     SECTION("Adding empty argument is not allowed")
     {
-        REQUIRE_THROWS(manager.addArgument(data.data(), 0, ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
+        REQUIRE_THROWS(manager.addArgument(data.data(), 0, sizeof(float), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
             ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector, true));
     }
 }
@@ -47,14 +47,14 @@ TEST_CASE("Argument update", "Component: ArgumentManager")
         ktt::ArgumentManager manager;
 
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f};
-        ktt::ArgumentId id = manager.addArgument(data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
-            ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector, true);
+        ktt::ArgumentId id = manager.addArgument(data.data(), data.size(), sizeof(float), ktt::ArgumentDataType::Float,
+            ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector, true);
 
         std::vector<float> newData{5.0f, 6.0f};
         manager.updateArgument(id, newData.data(), 2);
 
         ktt::KernelArgument argument = manager.getArgument(id);
-        std::vector<float> floats = argument.getDataFloat();
+        std::vector<float> floats = argument.getDataWithType<float>();
         REQUIRE(floats.size() == 2);
 
         for (size_t i = 0; i < floats.size(); i++)
@@ -77,8 +77,8 @@ TEST_CASE("Argument update", "Component: ArgumentManager")
         ktt::ArgumentManager manager;
 
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f};
-        ktt::ArgumentId id = manager.addArgument(data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
-            ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector, false);
+        ktt::ArgumentId id = manager.addArgument(data.data(), data.size(), sizeof(float), ktt::ArgumentDataType::Float,
+            ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector, false);
 
         std::vector<float> newData{5.0f, 6.0f};
         manager.updateArgument(id, newData.data(), 2);

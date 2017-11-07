@@ -23,7 +23,7 @@ public:
         }
     }
 
-    const void* getData(const ktt::ArgumentId id) const override
+    void* getData(const ktt::ArgumentId id) override
     {
         if (id == resultId)
         {

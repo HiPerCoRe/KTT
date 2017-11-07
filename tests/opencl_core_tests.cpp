@@ -40,8 +40,8 @@ TEST_CASE("Working with OpenCL buffer", "Component: OpenclCore")
         data.push_back(static_cast<float>(i));
     }
 
-    auto argument = ktt::KernelArgument(0, data.data(), data.size(), ktt::ArgumentDataType::Float, ktt::ArgumentMemoryLocation::Device,
-        ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector, true);
+    auto argument = ktt::KernelArgument(0, data.data(), data.size(), sizeof(float), ktt::ArgumentDataType::Float,
+        ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentUploadType::Vector, true);
 
     SECTION("Transfering argument to / from device")
     {
@@ -53,7 +53,7 @@ TEST_CASE("Working with OpenCL buffer", "Component: OpenclCore")
         REQUIRE(resultArgument.getAccessType() == argument.getAccessType());
         REQUIRE(resultArgument.getUploadType() == argument.getUploadType());
         REQUIRE(resultArgument.getDataSizeInBytes() == argument.getDataSizeInBytes());
-        std::vector<float> result = resultArgument.getDataFloat();
+        std::vector<float> result = resultArgument.getDataWithType<float>();
         for (size_t i = 0; i < data.size(); i++)
         {
             REQUIRE(result.at(i) == data.at(i));

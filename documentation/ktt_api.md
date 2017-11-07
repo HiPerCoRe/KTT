@@ -77,7 +77,7 @@ Argument access type specifies whether argument is used for input, output or bot
 Supported data type lengths are 8, 16, 32 and 64 bits. Provided data type must be trivially copyable.
 Returns id assigned to argument by tuner.
 
-* `ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType, const ArgumentMemoryLocation& memoryLocation, const bool copyData)`:
+* `ArgumentId addArgumentVector(std::vector<T>& data, const ArgumentAccessType& accessType, const ArgumentMemoryLocation& memoryLocation, const bool copyData)`:
 Similar to previous method, but also allows choice of argument memory location and whether argument data is copied to tuner.
 If copy data flag is set to false, tuner will directly use data in original user vector for its operations. This results in lower memory overhead, but relies on a user to keep data in vector valid.
 Argument memory location specifies whether argument will be accessed from device or host memory during its usage by compute API.
@@ -215,9 +215,11 @@ This method makes it possible to use OpenCL style in CUDA and vice versa.
 
 * `void setLoggingTarget(std::ostream& outputTarget)`:
 Sets target for info messages logging to specified output stream.
+Default logging target is `std::clog`.
 
 * `void setLoggingTarget(const std::string& filePath)`:
 Sets target for info messages logging to specified file.
+Default logging target is `std::clog`.
 
 Reference class usage
 =====================
@@ -233,7 +235,7 @@ Default implementation is provided by API.
 Inheriting class must provide implementation for this method.
 Reference results for all validated arguments must be computed inside this method and stored for later retrieval by tuner.
 
-* `void* getData(const ArgumentId id) const`:
+* `void* getData(const ArgumentId id)`:
 Inheriting class must provide implementation for this method.
 Returns pointer to buffer containing reference result for specified validated argument.
 This method will only be called after running `computeResult()`.

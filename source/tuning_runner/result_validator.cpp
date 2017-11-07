@@ -165,8 +165,9 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel& kernel)
             numberOfElements = argument.getNumberOfElements();
         }
 
-        referenceResult.emplace_back(referenceArgumentId, referenceClass->getData(referenceArgumentId), numberOfElements, argument.getDataType(),
-            argument.getMemoryLocation(), argument.getAccessType(), argument.getUploadType(), true);
+        referenceResult.emplace_back(referenceArgumentId, referenceClass->getData(referenceArgumentId), numberOfElements,
+            argument.getElementSizeInBytes(), argument.getDataType(), argument.getMemoryLocation(), argument.getAccessType(),
+            argument.getUploadType(), false);
     }
     referenceClassResults.insert(std::make_pair(kernelId, referenceResult));
 }
@@ -243,50 +244,62 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             bool currentResult;
             if (referenceDataType == ArgumentDataType::Char)
             {
-                currentResult = validateResult(resultArgument.getDataChar(), referenceArgument.getDataChar(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int8_t>(), referenceArgument.getDataWithType<int8_t>(),
+                    resultArgument.getId());
             }
             else if (referenceDataType == ArgumentDataType::UnsignedChar)
             {
-                currentResult = validateResult(resultArgument.getDataUnsignedChar(), referenceArgument.getDataUnsignedChar(),
+                currentResult = validateResult(resultArgument.getDataWithType<uint8_t>(), referenceArgument.getDataWithType<uint8_t>(),
                     resultArgument.getId());
             }
             else if (referenceDataType == ArgumentDataType::Short)
             {
-                currentResult = validateResult(resultArgument.getDataShort(), referenceArgument.getDataShort(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int16_t>(), referenceArgument.getDataWithType<int16_t>(),
+                    resultArgument.getId());
             }
             else if (referenceDataType == ArgumentDataType::UnsignedShort)
             {
-                currentResult = validateResult(resultArgument.getDataUnsignedShort(), referenceArgument.getDataUnsignedShort(),
+                currentResult = validateResult(resultArgument.getDataWithType<uint16_t>(), referenceArgument.getDataWithType<uint16_t>(),
                     resultArgument.getId());
             }
             else if (referenceDataType == ArgumentDataType::Int)
             {
-                currentResult = validateResult(resultArgument.getDataInt(), referenceArgument.getDataInt(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int32_t>(), referenceArgument.getDataWithType<int32_t>(),
+                    resultArgument.getId());
             }
             else if (referenceDataType == ArgumentDataType::UnsignedInt)
             {
-                currentResult = validateResult(resultArgument.getDataUnsignedInt(), referenceArgument.getDataUnsignedInt(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<uint32_t>(), referenceArgument.getDataWithType<uint32_t>(),
+                    resultArgument.getId());
             }
             else if (referenceDataType == ArgumentDataType::Long)
             {
-                currentResult = validateResult(resultArgument.getDataLong(), referenceArgument.getDataLong(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int64_t>(), referenceArgument.getDataWithType<int64_t>(),
+                    resultArgument.getId());
             }
             else if (referenceDataType == ArgumentDataType::UnsignedLong)
             {
-                currentResult = validateResult(resultArgument.getDataUnsignedLong(), referenceArgument.getDataUnsignedLong(),
+                currentResult = validateResult(resultArgument.getDataWithType<uint64_t>(), referenceArgument.getDataWithType<uint64_t>(),
                     resultArgument.getId());
             }
             else if (referenceDataType == ArgumentDataType::Half)
             {
-                currentResult = validateResult(resultArgument.getDataHalf(), referenceArgument.getDataHalf(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<half>(), referenceArgument.getDataWithType<half>(),
+                    resultArgument.getId());
             }
             else if (referenceDataType == ArgumentDataType::Float)
             {
-                currentResult = validateResult(resultArgument.getDataFloat(), referenceArgument.getDataFloat(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<float>(), referenceArgument.getDataWithType<float>(),
+                    resultArgument.getId());
             }
             else if (referenceDataType == ArgumentDataType::Double)
             {
-                currentResult = validateResult(resultArgument.getDataDouble(), referenceArgument.getDataDouble(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<double>(), referenceArgument.getDataWithType<double>(),
+                    resultArgument.getId());
+            }
+            else if (referenceDataType == ArgumentDataType::Custom)
+            {
+                throw std::runtime_error("Validation of arguments with custom data types is not supported yet");
             }
             else
             {

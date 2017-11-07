@@ -309,8 +309,8 @@ void ManipulatorInterfaceImplementation::updateArgumentSimple(const ArgumentId i
         throw std::runtime_error("Cannot convert between scalar and vector arguments");
     }
 
-    auto updatedArgument = KernelArgument(id, argumentData, numberOfElements, argumentPointer->second.getDataType(),
-        argumentPointer->second.getMemoryLocation(), argumentPointer->second.getAccessType(), uploadType, true);
+    auto updatedArgument = KernelArgument(id, argumentData, numberOfElements, argumentPointer->second.getElementSizeInBytes(),
+        argumentPointer->second.getDataType(), argumentPointer->second.getMemoryLocation(), argumentPointer->second.getAccessType(), uploadType);
 
     nonVectorArguments.erase(id);
     nonVectorArguments.insert(std::make_pair(id, updatedArgument));

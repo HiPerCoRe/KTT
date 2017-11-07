@@ -8,6 +8,7 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
+#include "half.hpp"
 #include "api/reference_class.h"
 #include "compute_engine/compute_engine.h"
 #include "enum/validation_method.h"
@@ -17,6 +18,8 @@
 
 namespace ktt
 {
+
+using half_float::half;
 
 class ResultValidator
 {
