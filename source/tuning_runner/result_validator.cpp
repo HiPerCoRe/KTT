@@ -59,6 +59,15 @@ void ResultValidator::setValidationRange(const ArgumentId id, const size_t range
     argumentValidationRanges.insert(std::make_pair(id, range));
 }
 
+void ResultValidator::setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
+{
+    if (argumentComparators.find(id) != argumentComparators.end())
+    {
+        argumentComparators.erase(id);
+    }
+    argumentComparators.insert(std::make_pair(id, comparator));
+}
+
 void ResultValidator::computeReferenceResult(const Kernel& kernel)
 {
     computeReferenceResultWithClass(kernel);

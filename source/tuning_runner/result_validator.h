@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -34,6 +35,7 @@ public:
     void setToleranceThreshold(const double threshold);
     void setValidationMethod(const ValidationMethod& method);
     void setValidationRange(const ArgumentId id, const size_t range);
+    void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
     void computeReferenceResult(const Kernel& kernel);
     void clearReferenceResults();
     bool validateArgumentsWithClass(const Kernel& kernel, const KernelConfiguration& configuration);
@@ -52,6 +54,7 @@ private:
     double toleranceThreshold;
     ValidationMethod validationMethod;
     std::map<ArgumentId, size_t> argumentValidationRanges;
+    std::map<ArgumentId, std::function<bool(const void*, const void*)>> argumentComparators;
     std::map<KernelId, std::tuple<std::unique_ptr<ReferenceClass>, std::vector<ArgumentId>>> referenceClasses;
     std::map<KernelId, std::tuple<KernelId, std::vector<ParameterPair>, std::vector<ArgumentId>>> referenceKernels;
     std::map<KernelId, std::vector<KernelArgument>> referenceClassResults;

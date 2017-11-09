@@ -33,6 +33,7 @@ public:
     void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod& method, const double toleranceThreshold);
     void setValidationRange(const ArgumentId id, const size_t range);
+    void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
     void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
         const std::vector<ArgumentId>& validatedArgumentIds);
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);

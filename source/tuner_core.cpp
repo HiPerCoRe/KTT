@@ -183,6 +183,15 @@ void TunerCore::setValidationRange(const ArgumentId id, const size_t range)
     tuningRunner->setValidationRange(id, range);
 }
 
+void TunerCore::setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
+{
+    if (id > argumentManager->getArgumentCount())
+    {
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
+    }
+    tuningRunner->setArgumentComparator(id, comparator);
+}
+
 void TunerCore::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
     const std::vector<ArgumentId>& validatedArgumentIds)
 {

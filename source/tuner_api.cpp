@@ -293,6 +293,18 @@ void Tuner::setValidationRange(const ArgumentId id, const size_t range)
     }
 }
 
+void Tuner::setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
+{
+    try
+    {
+        tunerCore->setArgumentComparator(id, comparator);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+    }
+}
+
 void Tuner::setCompilerOptions(const std::string& options)
 {
     tunerCore->setCompilerOptions(options);

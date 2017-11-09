@@ -320,6 +320,11 @@ void TuningRunner::setValidationRange(const ArgumentId id, const size_t range)
     resultValidator->setValidationRange(id, range);
 }
 
+void TuningRunner::setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
+{
+    resultValidator->setArgumentComparator(id, comparator);
+}
+
 void TuningRunner::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
     const std::vector<ArgumentId>& validatedArgumentIds)
 {

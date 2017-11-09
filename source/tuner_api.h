@@ -122,6 +122,7 @@ public:
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
     void setValidationMethod(const ValidationMethod& method, const double toleranceThreshold);
     void setValidationRange(const ArgumentId id, const size_t range);
+    void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
 
     // Compute API methods
     void setCompilerOptions(const std::string& options);
@@ -149,10 +150,15 @@ private:
 
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {
-        if (!std::is_trivially_copyable<T>())
+        if (!std::is_trivially_copyable<T>() || typeid(T) == typeid(bool))
         {
             std::cerr << "Unsupported argument data type" << std::endl;
             throw std::runtime_error("Unsupported argument data type");
+        }
+
+        if (!std::is_arithmetic<T>())
+        {
+            return ArgumentDataType::Custom;
         }
 
         if (sizeof(T) == 1 && std::is_unsigned<T>())
@@ -199,10 +205,9 @@ private:
         {
             return ArgumentDataType::Long;
         }
-        else
-        {
-            return ArgumentDataType::Custom;
-        }
+
+        std::cerr << "Unsupported argument data type" << std::endl;
+        throw std::runtime_error("Unsupported argument data type");
     }
 };
 
