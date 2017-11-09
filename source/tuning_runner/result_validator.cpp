@@ -243,7 +243,7 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             }
 
             ArgumentDataType referenceDataType = referenceArgument.getDataType();
-
+            ArgumentId id = resultArgument.getId();
             if (referenceDataType != resultArgument.getDataType())
             {
                 logger->log(std::string("Reference class argument data type mismatch for argument id: ") + std::to_string(resultArgument.getId()));
@@ -253,62 +253,79 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             bool currentResult;
             if (referenceDataType == ArgumentDataType::Char)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<int8_t>(), referenceArgument.getDataWithType<int8_t>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int8_t>(), referenceArgument.getDataWithType<int8_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedChar)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<uint8_t>(), referenceArgument.getDataWithType<uint8_t>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<uint8_t>(), referenceArgument.getDataWithType<uint8_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Short)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<int16_t>(), referenceArgument.getDataWithType<int16_t>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int16_t>(), referenceArgument.getDataWithType<int16_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedShort)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<uint16_t>(), referenceArgument.getDataWithType<uint16_t>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<uint16_t>(), referenceArgument.getDataWithType<uint16_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Int)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<int32_t>(), referenceArgument.getDataWithType<int32_t>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int32_t>(), referenceArgument.getDataWithType<int32_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedInt)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<uint32_t>(), referenceArgument.getDataWithType<uint32_t>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<uint32_t>(), referenceArgument.getDataWithType<uint32_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Long)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<int64_t>(), referenceArgument.getDataWithType<int64_t>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int64_t>(), referenceArgument.getDataWithType<int64_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedLong)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<uint64_t>(), referenceArgument.getDataWithType<uint64_t>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<uint64_t>(), referenceArgument.getDataWithType<uint64_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Half)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<half>(), referenceArgument.getDataWithType<half>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<half>(), referenceArgument.getDataWithType<half>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Float)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<float>(), referenceArgument.getDataWithType<float>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<float>(), referenceArgument.getDataWithType<float>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Double)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<double>(), referenceArgument.getDataWithType<double>(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<double>(), referenceArgument.getDataWithType<double>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Custom)
             {
-                throw std::runtime_error("Validation of arguments with custom data types is not supported yet");
+                auto comparatorPointer = argumentComparators.find(id);
+                if (comparatorPointer == argumentComparators.end())
+                {
+                    throw std::runtime_error("Validation of custom data type arguments requires usage of argument comparator");
+                }
+                if (validationMethod == ValidationMethod::AbsoluteDifference)
+                {
+                    throw std::runtime_error("Absolute difference validation method is not supported for custom data type arguments");
+                }
+                
+                size_t resultSize = resultArgument.getNumberOfElements();
+                size_t referenceSize = referenceArgument.getNumberOfElements();
+                auto argumentRangePointer = argumentValidationRanges.find(id);
+                if (argumentRangePointer == argumentValidationRanges.end() && resultSize != referenceSize)
+                {
+                    logger->log(std::string("Number of elements in results differs for argument with id: ") + std::to_string(id)
+                        + ", reference size: " + std::to_string(referenceSize) + ", result size: " + std::to_string(resultSize));
+                    currentResult = false;
+                }
+                else if (argumentRangePointer != argumentValidationRanges.end())
+                {
+                    currentResult = validateResultCustom(id, resultArgument.getData(), referenceArgument.getData(), argumentRangePointer->second,
+                        resultArgument.getElementSizeInBytes(), comparatorPointer->second);
+                }
+                else
+                {
+                    currentResult = validateResultCustom(id, resultArgument.getData(), referenceArgument.getData(), resultSize,
+                        resultArgument.getElementSizeInBytes(), comparatorPointer->second);
+                }
             }
             else
             {
@@ -341,6 +358,22 @@ std::vector<KernelArgument*> ResultValidator::getKernelArgumentPointers(const Ke
     }
 
     return result;
+}
+
+bool ResultValidator::validateResultCustom(const ArgumentId id, const void* result, const void* referenceResult, const size_t numberOfElements,
+    const size_t elementSizeInBytes, const std::function<bool(const void*, const void*)>& comparator) const
+{
+    for (size_t i = 0; i < numberOfElements * elementSizeInBytes; i += elementSizeInBytes)
+    {
+        if (!comparator((uint8_t*)result + i, (uint8_t*)referenceResult + i))
+        {
+            logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: "
+                + std::to_string(i / elementSizeInBytes));
+            return false;
+        }
+    }
+
+    return true;
 }
 
 } // namespace ktt

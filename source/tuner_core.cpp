@@ -189,6 +189,11 @@ void TunerCore::setArgumentComparator(const ArgumentId id, const std::function<b
     {
         throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
     }
+    if (argumentManager->getArgument(id).getDataType() != ArgumentDataType::Custom)
+    {
+        throw std::runtime_error("Argument comparator can only be set for custom data type arguments");
+    }
+
     tuningRunner->setArgumentComparator(id, comparator);
 }
 

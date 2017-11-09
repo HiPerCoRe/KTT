@@ -66,6 +66,8 @@ private:
     bool validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments,
         const std::string kernelName, const KernelConfiguration& configuration) const;
     std::vector<KernelArgument*> getKernelArgumentPointers(const KernelId id) const;
+    bool validateResultCustom(const ArgumentId id, const void* result, const void* referenceResult, const size_t numberOfElements,
+        const size_t elementSizeInBytes, const std::function<bool(const void*, const void*)>& comparator) const;
 
     template <typename T> bool validateResult(const std::vector<T>& result, const std::vector<T>& referenceResult, const ArgumentId id) const
     {
