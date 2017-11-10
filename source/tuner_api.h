@@ -1,3 +1,6 @@
+/** @file tuner_api.h
+  * @brief File containing public API for KTT library.
+  */
 #pragma once
 
 #include <functional>
@@ -43,41 +46,165 @@
 // Support for 16-bit floating point data type
 #include "half.hpp"
 
+/** @namespace ktt
+  * @brief All classes, methods and type aliases related to KTT library are located inside ktt namespace.
+  */
 namespace ktt
 {
 
 using half_float::half;
 class TunerCore;
 
+/** @class Tuner
+  * @brief Class which serves as the main part of public API for KTT library.
+  */
 class KTT_API Tuner
 {
 public:
-    // Constructors and destructor
+    /** @fn Tuner(const size_t platformIndex, const size_t deviceIndex)
+      * @brief Constructor, which creates new tuner object for specified platform and device. Tuner uses OpenCL as compute API. Indices for available
+      * platforms and devices can be retrieved by calling printComputeApiInfo() method.
+      * @param platformIndex Index for platform used by created tuner.
+      * @param deviceIndex Index for device used by created tuner.
+      */
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex);
+
+    /** @fn Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi)
+      * @brief Constructor, which creates new tuner object for specified platform, device and compute API. Indices for available platforms
+      * and devices can be retrieved by calling printComputeApiInfo() method. If specified compute API is CUDA, platform index is ignored.
+      * @param platformIndex Index for platform used by created tuner.
+      * @param deviceIndex Index for device used by created tuner.
+      * @param computeApi Compute API used by created tuner.
+      */
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
+
+    /** @fn ~Tuner()
+      * @brief Tuner destructor.
+      */
     ~Tuner();
 
-    // Basic kernel handling methods
+    /** @fn addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize)
+      * @brief Adds new kernel to tuner from source inside string. Requires specification of kernel name and default global and local thread sizes.
+      * @param source Kernel source code written in corresponding compute API language.
+      * @param kernelName Name of kernel function inside kernel source code.
+      * @param globalSize Dimensions for base kernel global size (eg. grid size in CUDA).
+      * @param localSize Dimensions for base kernel local size (eg. block size in CUDA).
+      * @return Id assigned to kernel by tuner. The id can be used in other API methods.
+      */
     KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
+
+    /** @fn addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
+      * const DimensionVector& localSize)
+      * @brief Adds new kernel to tuner from file. Requires specification of kernel name and default global and local thread sizes.
+      * @param filePath Path to file with kernel source code written in corresponding compute API language.
+      * @param kernelName Name of kernel function inside kernel source code.
+      * @param globalSize Dimensions for base kernel global size (eg. grid size in CUDA).
+      * @param localSize Dimensions for base kernel local size (eg. block size in CUDA).
+      * @return Id assigned to kernel by tuner. The id can be used in other API methods.
+      */
     KernelId addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
+
+    /** @fn setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
+      * @brief Sets kernel arguments for specified kernel by providing corresponding argument ids.
+      * @param id Id of kernel for which the arguments are set.
+      * @param argumentIds Ids of arguments to be used by specified kernel. Order of ids must match the order of kernel arguments specified in kernel
+      * function. Argument ids for single kernel must be unique.
+      */
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
+
+    /** @fn addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues)
+      * @brief Adds new parameter for specified kernel, providing parameter name and list of allowed values. When the corresponding kernel
+      * is launched, parameters will be added to kernel source code as preprocessor definitions. During the tuning process, tuner will generate
+      * configurations for combinations of kernel parameters and their values.
+      * @param id Id of kernel for which the parameter is added.
+      * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
+      * @param parameterValues List of allowed values for the parameter.
+      */
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues);
 
-    // Advanced kernel handling methods
+    /** @fn addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
+      * const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension)
+      * @brief Adds new parameter for specified kernel, providing parameter name and list of allowed values. When the corresponding kernel
+      * is launched, parameters will be added to kernel source code as preprocessor definitions. During the tuning process, tuner will generate
+      * configurations for combinations of kernel parameters and their values.
+      *
+      * This version of method allows the parameter to act as thread size modifier. Parameter value modifies number of threads in either global
+      * or local space in specified dimension. Form of modification depends on thread modifier action argument. If there are multiple thread
+      * modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
+      * @param id Id of kernel for which the parameter is added.
+      * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
+      * @param parameterValues List of allowed values for the parameter.
+      * @param modifierType Type of thread modifier. See ThreadModifierType for more information.
+      * @param modifierAction Action of thread modifier. See ThreadModifierAction for more information.
+      * @param modifierDimension Dimension which will be affected by thread modifier. See Dimension for more information.
+      */
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
         const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
+
+    /** @fn addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+      * const std::vector<std::string>& parameterNames)
+      * @brief Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid
+      * configurations (eg. conflicting parameter values).
+      * @param id Id of kernel for which the constraint is added.
+      * @param constraintFunction Function which returns true if provided combination of parameter values is valid. Returns false otherwise.
+      * @param parameterNames Names of kernel parameters which will be affected by the constraint function. The order of parameter names will
+      * correspond to the order of parameter values inside constraint function vector argument.
+      */
     void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
+
+    /** @fn setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
+      * @brief Sets tuning manipulator for specified kernel. Tuning manipulator enables customization of kernel execution. This is useful in several
+      * cases, eg. running part of the computation in C++ code, utilizing iterative kernel launches or composite kernels. See TuningManipulator for
+      * more information.
+      * @param id Id of kernel for which the tuning manipulator is set.
+      * @param manipulator Tuning manipulator for specified kernel.
+      */
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
 
-    // Composition handling methods
+    /** @fn addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds,
+      * std::unique_ptr<TuningManipulator> manipulator)
+      * @brief Creates a kernel composition using specified kernels. Following methods can be used with kernel compositions and will call
+      * the corresponding method for all kernels inside the composition: setKernelArguments(), addParameter() (both versions), addConstraint().
+      * 
+      * Kernel compositions do not inherit any parameters or constraints from the original kernels. Setting kernel arguments and adding parameters
+      * or constraints to kernels inside given composition will not affect the original kernels or other compositions. Tuning manipulator is required
+      * in order to launch kernel composition with tuner. See TuningManipulator for more information.
+      * @param compositionName Name of kernel composition. The name is used during output printing.
+      * @param kernelIds Ids of kernels which will be included in the composition.
+      * @param manipulator Tuning manipulator for the composition.
+      * @return Id assigned to kernel composition by tuner. The id can be used in other API methods.
+      */
     KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds,
         std::unique_ptr<TuningManipulator> manipulator);
+
+    /** @fn addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+      * const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
+      * const Dimension& modifierDimension)
+      * @brief Calls addParameter() method (version with thread modifier) for a single kernel inside specified kernel composition. Does not affect
+      * standalone kernels or other compositions.
+      * @param compositionId Id of composition which includes the specified kernel.
+      * @param kernelId Id of kernel inside the composition for which the parameter is added.
+      * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
+      * @param parameterValues List of allowed values for the parameter.
+      * @param modifierType Type of thread modifier. See ThreadModifierType for more information.
+      * @param modifierAction Action of thread modifier. See ThreadModifierAction for more information.
+      * @param modifierDimension Dimension which will be affected by thread modifier. See Dimension for more information.
+      */
     void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
         const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
         const Dimension& modifierDimension);
+
+    /** @fn setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds)
+      * @brief Calls setKernelArguments() method for a single kernel inside specified kernel composition. Does not affect standalone kernels or other
+      * compositions.
+      * @param compositionId Id of composition which includes the specified kernel.
+      * @param kernelId Id of kernel inside the composition for which the arguments are set.
+      * @param argumentIds Ids of arguments to be used by specified kernel inside the composition. Order of ids must match the order of kernel
+      * arguments specified in kernel function. Argument ids for single kernel must be unique.
+      */
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
 
     // Argument handling methods

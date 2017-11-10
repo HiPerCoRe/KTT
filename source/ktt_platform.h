@@ -1,3 +1,6 @@
+/** @file ktt_platform.h
+  * @brief File containing preprocessor definitions which ensure compatibility for multiple compilers.
+  */
 #pragma once
 
 #ifndef KTT_API
