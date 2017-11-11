@@ -138,14 +138,16 @@ void TunerCore::tuneKernel(const KernelId id)
 
 void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
 {
+    TuningResult result;
     if (kernelManager->isComposition(id))
     {
-        tuningRunner->tuneCompositionByStep(id, output);
+        result = tuningRunner->tuneCompositionByStep(id, output);
     }
     else
     {
-        tuningRunner->tuneKernelByStep(id, output);
+        result = tuningRunner->tuneKernelByStep(id, output);
     }
+    resultPrinter.addResult(id, result);
 }
 
 void TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)

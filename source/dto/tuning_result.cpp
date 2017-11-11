@@ -3,6 +3,16 @@
 namespace ktt
 {
 
+TuningResult::TuningResult() :
+    kernelName(""),
+    configuration(DimensionVector(0), DimensionVector(0), std::vector<ParameterPair>{}),
+    kernelDuration(UINT64_MAX),
+    kernelOverhead(0),
+    manipulatorDuration(0),
+    valid(false),
+    statusMessage("")
+{}
+
 TuningResult::TuningResult(const std::string& kernelName, const KernelConfiguration& configuration) :
     kernelName(kernelName),
     configuration(configuration),

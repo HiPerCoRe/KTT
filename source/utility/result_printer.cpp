@@ -31,6 +31,16 @@ void ResultPrinter::printResult(const KernelId id, std::ostream& outputTarget, c
     }
 }
 
+void ResultPrinter::addResult(const KernelId id, const TuningResult& result)
+{
+    if (kernelResults.find(id) == kernelResults.end())
+    {
+        kernelResults.insert(std::make_pair(id, std::vector<TuningResult>{}));
+    }
+
+    kernelResults.find(id)->second.push_back(result);
+}
+
 void ResultPrinter::setResult(const KernelId id, const std::vector<TuningResult>& results)
 {
     if (kernelResults.find(id) != kernelResults.end())

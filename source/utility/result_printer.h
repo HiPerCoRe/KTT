@@ -16,6 +16,7 @@ public:
     ResultPrinter();
 
     void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const;
+    void addResult(const KernelId id, const TuningResult& result);
     void setResult(const KernelId id, const std::vector<TuningResult>& results);
     void setTimeUnit(const TimeUnit& unit);
     void setInvalidResultPrinting(const bool flag);

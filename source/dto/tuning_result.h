@@ -13,6 +13,7 @@ namespace ktt
 class TuningResult
 {
 public:
+    TuningResult();
     explicit TuningResult(const std::string& kernelName, const KernelConfiguration& configuration);
     explicit TuningResult(const std::string& kernelName, const KernelConfiguration& configuration, const KernelRunResult& kernelRunResult);
     explicit TuningResult(const std::string& kernelName, const KernelConfiguration& configuration, const std::string& statusMessage);

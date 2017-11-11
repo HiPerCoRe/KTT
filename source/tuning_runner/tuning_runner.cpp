@@ -154,7 +154,7 @@ std::vector<TuningResult> TuningRunner::tuneComposition(const KernelId id)
     return results;
 }
 
-void TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+TuningResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -199,9 +199,10 @@ void TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<Argumen
 
     computeEngine->clearBuffers();
     resultValidator->clearReferenceResults();
+    return result;
 }
 
-void TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+TuningResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
 {
     if (!kernelManager->isComposition(id))
     {
@@ -240,6 +241,7 @@ void TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<Ar
 
     computeEngine->clearBuffers();
     resultValidator->clearReferenceResults();
+    return result;
 }
 
 void TuningRunner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)

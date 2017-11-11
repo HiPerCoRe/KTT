@@ -16,8 +16,8 @@ class ReferenceClass
 {
 public:
     /** @fn ~ReferenceClass()
-      * @brief Reference class destructor. Inheriting class can override destructor with custom implementation if needed. Default implementation
-      * is provided by KTT library.
+      * @brief Reference class destructor. Inheriting class can override destructor with custom implementation. Default implementation is
+      * provided by KTT library.
       */
     virtual ~ReferenceClass() = default;
 
