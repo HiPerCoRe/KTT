@@ -1,3 +1,6 @@
+/** @file tuning_manipulator.h
+  * @brief File containing functionality related to customizing kernel runs with tuning manipulator.
+  */
 #pragma once
 
 #include <cstddef>
@@ -13,10 +16,18 @@ namespace ktt
 class TuningRunner;
 class ManipulatorInterface;
 
+/** @class TuningManipulator
+  * @brief Class which can be used to customize kernel launch in order to run some part of computation on CPU, utilize iterative kernel launches,
+  * kernel compositions and more. In order to use this functionality, new class which publicly inherits from tuning manipulator class has to be
+  * defined.
+  */
 class KTT_API TuningManipulator
 {
 public:
-    // Virtual methods
+    /** @fn ~TuningManipulator()
+      * @brief Tuning manipulator destructor. Inheriting class can override destructor with custom implementation if needed. Default implementation
+      * is provided by KTT library.
+      */
     virtual ~TuningManipulator();
     virtual void launchComputation(const KernelId id) = 0;
     virtual bool enableArgumentPreload() const;

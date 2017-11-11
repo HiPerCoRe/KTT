@@ -302,10 +302,6 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
                 {
                     throw std::runtime_error("Validation of custom data type arguments requires usage of argument comparator");
                 }
-                if (validationMethod == ValidationMethod::AbsoluteDifference)
-                {
-                    throw std::runtime_error("Absolute difference validation method is not supported for custom data type arguments");
-                }
                 
                 size_t resultSize = resultArgument.getNumberOfElements();
                 size_t referenceSize = referenceArgument.getNumberOfElements();

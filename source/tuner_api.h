@@ -207,61 +207,254 @@ public:
       */
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
 
-    // Argument handling methods
+    /** @fn addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType)
+      * @brief Adds new vector argument to tuner. Makes copy of argument data, so the source data vector remains unaffected by tuner operations.
+      * Argument data will be accessed from device memory during its usage by compute API.
+      * @param data Argument data provided in std::vector. Provided data type must be trivially copyable. Bool data type is currently not supported.
+      * @param accessType Access type of argument specifies whether argument is used for input or output. See ArgumentAccessType for more
+      * information.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
     template <typename T> ArgumentId addArgumentVector(const std::vector<T>& data, const ArgumentAccessType& accessType)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(data.data(), data.size(), sizeof(T), dataType, ArgumentMemoryLocation::Device, accessType, ArgumentUploadType::Vector);
     }
+
+    /** @fn addArgumentVector(std::vector<T>& data, const ArgumentAccessType& accessType, const ArgumentMemoryLocation& memoryLocation,
+      * const bool copyData)
+      * @brief Adds new vector argument to tuner. Allows choice for argument memory location and whether argument data is copied to tuner.
+      * @param data Argument data provided in std::vector. Provided data type must be trivially copyable. Bool data type is currently not supported.
+      * @param accessType Access type of argument specifies whether argument is used for input or output. See ArgumentAccessType for more
+      * information.
+      * @param memoryLocation Memory location of argument specifies whether argument will be accessed from device or host memory during its usage
+      * by compute API. See ArgumentMemoryLocation for more information.
+      * @param copyData Flag which specifies whether the argument is copied inside tuner. If set to false, tuner will store reference of source data
+      * vector and will access it directly during kernel launch operations. This results in lower memory overhead, but relies on a user to keep data
+      * in source vector valid.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
     template <typename T> ArgumentId addArgumentVector(std::vector<T>& data, const ArgumentAccessType& accessType,
         const ArgumentMemoryLocation& memoryLocation, const bool copyData)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(data.data(), data.size(), sizeof(T), dataType, memoryLocation, accessType, copyData);
     }
+
+    /** @fn addArgumentScalar(const T& data)
+      * @brief Adds new scalar argument to tuner. All scalar arguments are read-only.
+      * @param data Argument data provided as single scalar value. The data type must be trivially copyable. Bool data type is currently not
+      * supported.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
     template <typename T> ArgumentId addArgumentScalar(const T& data)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(&data, 1, sizeof(T), dataType, ArgumentMemoryLocation::Device, ArgumentAccessType::ReadOnly, ArgumentUploadType::Scalar);
     }
+
+    /** @fn addArgumentLocal(const size_t localMemoryElementsCount)
+      * @brief Adds new local memory (shared memory in CUDA) argument to tuner. All local memory arguments are read-only.
+      * @param localMemoryElementsCount Specifies how many elements of provided data type the argument contains.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
     template <typename T> ArgumentId addArgumentLocal(const size_t localMemoryElementsCount)
     {
         ArgumentDataType dataType = getMatchingArgumentDataType<T>();
         return addArgument(localMemoryElementsCount, sizeof(T), dataType);
     }
 
-    // Kernel launch and tuning methods
+    /** @fn tuneKernel(const KernelId id)
+      * @brief Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters
+      * and constraints. The configurations will be launched in order that depends on specified SearchMethod.
+      * @param id Id of kernel for which the tuning begins.
+      */
     void tuneKernel(const KernelId id);
+
+    /** @fn tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+      * @brief Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, creates
+      * configuration space based on combinations of provided kernel parameters and constraints. Each time this method is called, launches single
+      * kernel configuration. If all configurations were already tested, runs kernel using the best configuration. Output data can be retrieved
+      * by providing output descriptors.
+      * @param id Id of kernel for which the tuning by step begins.
+      * @param output User-provided memory locations for kernel arguments which should be retrieved. See ArgumentOutputDescriptor for more
+      * information.
+      */
     void tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output);
+
+    /** @fn runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)
+      * @brief Runs specified kernel using provided configuration. Does not perform result validation.
+      * @param id Id of kernel which is run.
+      * @param configuration Configuration under which the kernel will be launched. See ::ParameterPair for more information.
+      * @param output User-provided memory locations for kernel arguments which should be retrieved. See ArgumentOutputDescriptor for more
+      * information.
+      */
     void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
+
+    /** @fn setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments)
+      * @brief Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.
+      * Default search method is full search, which requires no search arguments.
+      * @param method Search method which will be used during kernel tuning. See SearchMethod for more information.
+      * @param arguments Arguments necessary for specified search method to work. Following arguments are required for corresponding search method,
+      * the order of arguments is important:
+      * - RandomSearch - fraction
+      * - PSO - fraction, swarm size, global influence, local influence, random influence
+      * - Annealing - fraction, maximum temperature
+      * 
+      * Fraction argument specifies the number of configurations which will be explored, eg. when fraction is set to 0.5, 50% of all configurations
+      * will be explored.
+      */
     void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
 
-    // Result retrieval methods
+    /** @fn setPrintingTimeUnit(const TimeUnit& unit)
+      * @brief Sets time unit used during printing of results inside printResult() methods. Default time unit is microseconds. 
+      * @param unit Time unit which will be used inside printResult() methods. See TimeUnit for more information.
+      */
     void setPrintingTimeUnit(const TimeUnit& unit);
+
+    /** @fn setInvalidResultPrinting(const bool flag)
+      * @brief Toggles printing of results from failed kernel runs. Invalid results will be separated from valid results during printing.
+      * Printing of invalid results is disabled by default.
+      * @param flag If true, printing of invalid results is enabled. It is disabled otherwise.
+      */
     void setInvalidResultPrinting(const bool flag);
+
+    /** @fn printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const
+      * @brief Prints tuning results for specified kernel to specified output stream. Valid results will be printed only if methods tuneKernel() or
+      * tuneKernelByStep() were already called for corresponding kernel.
+      * @param id Id of kernel for which the results are printed.
+      * @param outputTarget Location where the results are printed.
+      * @param format Format in which the results are printed. See PrintFormat for more information.
+      */
     void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const;
+
+    /** @fn printResult(const KernelId id, const std::string& filePath, const PrintFormat& format) const
+      * @brief Prints tuning results for specified kernel to specified file. Valid results will be printed only if methods tuneKernel() or
+      * tuneKernelByStep() were already called for corresponding kernel.
+      * @param id Id of kernel for which the results are printed.
+      * @param filePath Path to file where the results are printed.
+      * @param format Format in which the results are printed. See PrintFormat for more information.
+      */
     void printResult(const KernelId id, const std::string& filePath, const PrintFormat& format) const;
+
+    /** @fn getBestConfiguration(const KernelId id) const
+      * @brief Returns the best configuration found for specified kernel. Valid configuration will be returned only if methods tuneKernel() or
+      * tuneKernelByStep() were already called for corresponding kernel.
+      * @param id Id of kernel for which the best configuration is returned.
+      * @return Best configuration found for specified kernel. See ::ParameterPair for more information.
+      */
     std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
 
-    // Result validation methods
+    /** @fn setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
+      * const std::vector<ArgumentId>& validatedArgumentIds)
+      * @brief Sets reference kernel for specified kernel. Reference kernel output will be compared to tuned kernel output in order to ensure
+      * correctness of computation. Reference kernel uses only single configuration which cannot be composite and cannot use tuning manipulator.
+      * @param id Id of kernel for which reference kernel is set.
+      * @param referenceId Id of reference kernel. This can be the same as validated kernel. This can be useful in cases where kernel has
+      * a configuration which is known to produce correct results.
+      * @param referenceConfiguration Configuration under which the reference kernel will be launched to produce reference output.
+      * @param validatedArgumentIds Ids of kernel arguments which will be validated. The validated arguments must be vector arguments and cannot be
+      * read-only.
+      */
     void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
         const std::vector<ArgumentId>& validatedArgumentIds);
+
+    /** @fn setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds)
+      * @brief Sets reference class for specified kernel. Reference class output will be compared to tuned kernel output in order to ensure
+      * correctness of computation.
+      * @param id Id of kernel for which reference class is set.
+      * @param referenceClass Reference class which produces reference output for specified kernel. See ReferenceClass for more information.
+      * @param validatedArgumentIds Ids of kernel arguments which will be validated. The validated arguments must be vector arguments and cannot be
+      * read-only.
+      */
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
+
+    /** @fn setValidationMethod(const ValidationMethod& method, const double toleranceThreshold)
+      * @brief Sets validation method and tolerance threshold for floating-point argument validation. Default validation method is side by side
+      * comparison. Default tolerance threshold is 1e-4.
+      * @param method Validation method which will be used for floating-point argument validation. See ValidationMethod for more information.
+      * @param toleranceThreshold Output validation threshold. If difference between tuned kernel output and reference output is within tolerance
+      * threshold, the tuned kernel output will be considered correct.
+      */
     void setValidationMethod(const ValidationMethod& method, const double toleranceThreshold);
+
+    /** @fn setValidationRange(const ArgumentId id, const size_t range)
+      * @brief Sets validation range for specified argument to specified validation range. Only elements within validation range, starting with
+      * the first element, will be validated. All elements are validated by default.
+      * @param id Id of argument for which the validation range is set.
+      * @param range Range inside which the argument elements will be validated, starting from the first element.
+      */
     void setValidationRange(const ArgumentId id, const size_t range);
+
+    /** @fn setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
+      * @brief Sets argument comparator for specified argument with custom data type. Arguments with custom data type cannot be compared using
+      * built-in comparison operators and require user to provide comparator. Comparator cannot be set for built-in data types.
+      * @param id Id of argument for which the comparator is set.
+      * @param comparator Function which receives two elements with data type matching the data type of specified kernel argument and returns true
+      * if the elements are equal. Returns false otherwise.
+      */
     void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
 
-    // Compute API methods
+    /** @fn setCompilerOptions(const std::string& options)
+      * @brief Sets compute API compiler options to specified options. There are no default options for OpenCL back-end. Default option for CUDA
+      * back-end is "--gpu-architecture=compute_30".
+      * @param options Compute API compiler options. If multiple options are used, they need to be separated by a single space character.
+      */
     void setCompilerOptions(const std::string& options);
+
+    /** @fn printComputeApiInfo(std::ostream& outputTarget) const
+      * @brief Prints basic information about available platforms and devices to specified output stream. Also prints indices assigned to them
+      * by KTT library.
+      * @param outputTarget Location where the information is printed.
+      */
     void printComputeApiInfo(std::ostream& outputTarget) const;
+
+    /** @fn getPlatformInfo() const
+      * @brief Retrieves detailed information about all available platforms (eg. platform name, vendor). See PlatformInfo for more information.
+      * @return Information about all available platforms.
+      */
     std::vector<PlatformInfo> getPlatformInfo() const;
+
+    /** @fn getDeviceInfo(const size_t platformIndex) const
+      * @brief Retrieves detailed information about all available devices (eg. device name, memory capacity) on specified platform. See DeviceInfo
+      * for more information.
+      * @param platformIndex Index of platform for which the device information is retrieved.
+      * @return Information about all available devices on specified platform.
+      */
     std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const;
+
+    /** @fn getCurrentDeviceInfo() const
+      * @brief Retrieves detailed information about device (eg. device name, memory capacity) used by the tuner. See DeviceInfo for more information.
+      * @return Information about device used by the tuner.
+      */
     DeviceInfo getCurrentDeviceInfo() const;
 
-    // Utility methods
+    /** @fn setAutomaticGlobalSizeCorrection(const bool flag)
+      * @brief Toggles automatic correction for global size, which ensures that global size in each dimension is always a multiple of local size in
+      * corresponding dimension. Performs a roundup to the nearest higher multiple. Automatic global size correction is disabled by default.
+      * @param flag If true, automatic global size correction is enabled. It is disabled otherwise.
+      */
     void setAutomaticGlobalSizeCorrection(const bool flag);
+
+    /** @fn setGlobalSizeType(const GlobalSizeType& type)
+      * @brief Sets global size specification type to specified compute API style. In OpenCL, NDrange size is specified as number of work-items in
+      * a work-group multiplied by number of work-groups. In CUDA, grid size is specified as number of threads in a block divided by number
+      * of blocks. This method makes it possible to use OpenCL style in CUDA and vice versa. Default global size type is the one corresponding to
+      * compute API of the tuner.
+      * @param type Global size type which is set for tuner. See GlobalSizeType for more information.
+      */
     void setGlobalSizeType(const GlobalSizeType& type);
+
+    /** @fn setLoggingTarget(std::ostream& outputTarget)
+      * @brief Sets the target for info messages logging to specified output stream. Default logging target is `std::clog`.
+      * @param outputTarget Location where tuner info messages are printed.
+      */
     void setLoggingTarget(std::ostream& outputTarget);
+
+    /** @fn setLoggingTarget(const std::string& filePath)
+      * @brief Sets the target for info messages logging to specified file. Default logging target is `std::clog`.
+      * @param filePath Path to file where tuner info messages are printed.
+      */
     void setLoggingTarget(const std::string& filePath);
 
 private:
