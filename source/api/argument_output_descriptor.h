@@ -16,7 +16,7 @@ namespace ktt
 class KTT_API ArgumentOutputDescriptor
 {
 public:
-    /** @fn ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination)
+    /** @fn explicit ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination)
       * @brief Constructor, which creates new output descriptor object for specified kernel argument.
       * @param id Id of vector argument which is retrieved.
       * @param outputDestination Pointer to destination where vector argument data will be copied. Destination buffer size needs to be equal or
@@ -24,7 +24,7 @@ public:
       */
     explicit ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination);
 
-    /** @fn ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSizeInBytes)
+    /** @fn explicit ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSizeInBytes)
       * @brief Constructor, which creates new output descriptor object for specified kernel argument.
       * @param id Id of vector argument which is retrieved.
       * @param outputDestination Pointer to destination where vector argument data will be copied. Destination buffer size needs to be equal or
@@ -33,19 +33,19 @@ public:
       */
     explicit ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSizeInBytes);
 
-    /** @fn getArgumentId() const
+    /** @fn ArgumentId getArgumentId() const
       * @brief Getter for id of argument tied to output descriptor.
       * @return Id of argument tied to output descriptor.
       */
     ArgumentId getArgumentId() const;
 
-    /** @fn getOutputDestination() const
+    /** @fn void* getOutputDestination() const
       * @brief Getter for pointer to destination buffer tied to output descriptor.
       * @return Pointer to destination buffer tied to output descriptor.
       */
     void* getOutputDestination() const;
 
-    /** @fn getOutputSizeInBytes() const
+    /** @fn size_t getOutputSizeInBytes() const
       * @brief Getter for data size retrieved with output descriptor.
       * @return Data size retrieved with output descriptor. Returns 0 if entire argument is retrieved.
       */

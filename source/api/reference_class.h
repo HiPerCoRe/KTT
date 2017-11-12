@@ -15,19 +15,19 @@ namespace ktt
 class ReferenceClass
 {
 public:
-    /** @fn ~ReferenceClass()
+    /** @fn virtual ~ReferenceClass() = default
       * @brief Reference class destructor. Inheriting class can override destructor with custom implementation. Default implementation is
       * provided by KTT library.
       */
     virtual ~ReferenceClass() = default;
 
-    /** @fn computeResult()
+    /** @fn virtual void computeResult() = 0
       * @brief Computes reference output for all kernel arguments validated by the class and stores it for later retrieval by tuner. Inheriting class
       * must provide implementation for this method.
       */
     virtual void computeResult() = 0;
 
-    /** @fn getData(const ArgumentId id)
+    /** @fn virtual void* getData(const ArgumentId id) = 0
       * @brief Returns pointer to buffer containing reference output for specified kernel argument. This method will be called only after running
       * computeResult() method. It can be called multiple times for same kernel argument. Inheriting class must provide implementation for this
       * method.
@@ -37,7 +37,7 @@ public:
       */
     virtual void* getData(const ArgumentId id) = 0;
 
-    /** @fn getNumberOfElements(const ArgumentId id) const
+    /** @fn virtual size_t getNumberOfElements(const ArgumentId id) const
       * @brief Returns number of validated elements returned by getData() method for specified kernel argument. This method will be called only after
       * running computeResult() method. It can be called multiple times for same kernel argument. Inheriting class can override this method, which is
       * useful in conjuction with Tuner::setValidationRange() method. If number of validated elements equals zero, all elements in corresponding
