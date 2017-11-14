@@ -1,5 +1,5 @@
 /** @file platform_info.h
-  * @brief File containing functionality related to retrieving information about compute API platforms.
+  * @brief Functionality related to retrieving information about compute API platforms.
   */
 #pragma once
 

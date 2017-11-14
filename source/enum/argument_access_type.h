@@ -1,5 +1,5 @@
 /** @file argument_access_type.h
-  * @brief File containing enum definition for access type of kernel arguments.
+  * @brief Definition of enum for access type of kernel arguments.
   */
 #pragma once
 
@@ -11,18 +11,15 @@ namespace ktt
   */
 enum class ArgumentAccessType
 {
-    /** @var ReadOnly
-      * @brief Specifies that kernel argument is read-only. Attempting to modify the argument may result in error.
+    /** @brief Specifies that kernel argument is read-only. Attempting to modify the argument may result in error.
       */
     ReadOnly,
 
-    /** @var WriteOnly
-      * @brief Specifies that kernel argument is write-only. Attempting to read the argument may result in error.
+    /** @brief Specifies that kernel argument is write-only. Attempting to read the argument may result in error.
       */
     WriteOnly,
 
-    /** @var ReadWrite
-      * @brief Specifies that kernel argument can be both read and modified.
+    /** @brief Specifies that kernel argument can be both read and modified.
       */
     ReadWrite
 };

@@ -1,5 +1,5 @@
 /** @file reference_class.h
-  * @brief File containing functionality related to validating kernel output with reference class.
+  * @brief Functionality related to validating kernel output with reference class.
   */
 #pragma once
 

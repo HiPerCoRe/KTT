@@ -1,5 +1,5 @@
 /** @file argument_output_descriptor.h
-  * @brief File containing functionality related to retrieving kernel argument data with KTT API.
+  * @brief Functionality related to retrieving kernel output with KTT API.
   */
 #pragma once
 

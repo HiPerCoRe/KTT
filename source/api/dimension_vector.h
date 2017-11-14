@@ -1,5 +1,5 @@
 /** @file dimension_vector.h
-  * @brief File containing functionality related to specifying thread sizes of a kernel.
+  * @brief Functionality related to specifying thread sizes of a kernel.
   */
 #pragma once
 

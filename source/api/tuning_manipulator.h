@@ -1,5 +1,5 @@
 /** @file tuning_manipulator.h
-  * @brief File containing functionality related to customizing kernel runs with tuning manipulator.
+  * @brief Functionality related to customizing kernel runs with tuning manipulator.
   */
 #pragma once
 
@@ -32,8 +32,8 @@ public:
 
     /** @fn virtual void launchComputation(const KernelId id) = 0
       * @brief This method is responsible for directly running the computation and ensuring that correct results are computed. It may utilize any
-      * other method inside the tuning manipulator as well as any user-defined methods. Any tuning manipulator methods run from this method only
-      * affects current invocation of launchComputation() method. Inheriting class must provide implementation for this method.
+      * other method inside the tuning manipulator as well as any user-defined methods. Any other tuning manipulator methods run from this method
+      * only affect current invocation of launchComputation() method. Inheriting class must provide implementation for this method.
       *
       * When tuning manipulator is used, total execution duration is calculated from two components. First component is the sum of execution times
       * of all kernel launches inside this method. Second component is the execution time of the method itself, minus the execution times of kernel

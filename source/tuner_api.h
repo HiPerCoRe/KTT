@@ -1,5 +1,5 @@
 /** @file tuner_api.h
-  * @brief File containing public API for KTT library.
+  * @brief Public API for KTT library.
   */
 #pragma once
 

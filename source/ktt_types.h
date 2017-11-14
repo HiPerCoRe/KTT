@@ -1,5 +1,5 @@
 /** @file ktt_types.h
-  * @brief File containing definitions of KTT type aliases.
+  * @brief Definitions for KTT type aliases.
   */
 #pragma once
 

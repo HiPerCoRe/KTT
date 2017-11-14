@@ -1,5 +1,5 @@
 /** @file device_info.h
-  * @brief File containing functionality related to retrieving information about compute API devices.
+  * @brief Functionality related to retrieving information about compute API devices.
   */
 #pragma once
 
