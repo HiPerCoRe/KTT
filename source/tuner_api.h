@@ -137,9 +137,9 @@ public:
       * @param id Id of kernel for which the parameter is added.
       * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
       * @param parameterValues List of allowed values for the parameter.
-      * @param modifierType Type of thread modifier. See ThreadModifierType for more information.
-      * @param modifierAction Action of thread modifier. See ThreadModifierAction for more information.
-      * @param modifierDimension Dimension which will be affected by thread modifier. See Dimension for more information.
+      * @param modifierType Type of thread modifier. See ::ThreadModifierType for more information.
+      * @param modifierAction Action of thread modifier. See ::ThreadModifierAction for more information.
+      * @param modifierDimension Dimension which will be affected by thread modifier. See ::Dimension for more information.
       */
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
         const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
@@ -190,9 +190,9 @@ public:
       * @param kernelId Id of kernel inside the composition for which the parameter is added.
       * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
       * @param parameterValues List of allowed values for the parameter.
-      * @param modifierType Type of thread modifier. See ThreadModifierType for more information.
-      * @param modifierAction Action of thread modifier. See ThreadModifierAction for more information.
-      * @param modifierDimension Dimension which will be affected by thread modifier. See Dimension for more information.
+      * @param modifierType Type of thread modifier. See ::ThreadModifierType for more information.
+      * @param modifierAction Action of thread modifier. See ::ThreadModifierAction for more information.
+      * @param modifierDimension Dimension which will be affected by thread modifier. See ::Dimension for more information.
       */
     void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
         const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
@@ -229,7 +229,7 @@ public:
       * @param accessType Access type of argument specifies whether argument is used for input or output. See ::ArgumentAccessType for more
       * information.
       * @param memoryLocation Memory location of argument specifies whether argument will be accessed from device or host memory during its usage
-      * by compute API. See ArgumentMemoryLocation for more information.
+      * by compute API. See ::ArgumentMemoryLocation for more information.
       * @param copyData Flag which specifies whether the argument is copied inside tuner. If set to false, tuner will store reference of source data
       * vector and will access it directly during kernel launch operations. This results in lower memory overhead, but relies on a user to keep data
       * in source vector valid.
@@ -267,7 +267,7 @@ public:
 
     /** @fn void tuneKernel(const KernelId id)
       * @brief Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters
-      * and constraints. The configurations will be launched in order that depends on specified SearchMethod.
+      * and constraints. The configurations will be launched in order that depends on specified ::SearchMethod.
       * @param id Id of kernel for which the tuning begins.
       */
     void tuneKernel(const KernelId id);
@@ -309,7 +309,7 @@ public:
 
     /** @fn void setPrintingTimeUnit(const TimeUnit& unit)
       * @brief Sets time unit used during printing of results inside printResult() methods. Default time unit is microseconds. 
-      * @param unit Time unit which will be used inside printResult() methods. See TimeUnit for more information.
+      * @param unit Time unit which will be used inside printResult() methods. See ::TimeUnit for more information.
       */
     void setPrintingTimeUnit(const TimeUnit& unit);
 
@@ -325,7 +325,7 @@ public:
       * tuneKernelByStep() were already called for corresponding kernel.
       * @param id Id of kernel for which the results are printed.
       * @param outputTarget Location where the results are printed.
-      * @param format Format in which the results are printed. See PrintFormat for more information.
+      * @param format Format in which the results are printed. See ::PrintFormat for more information.
       */
     void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const;
 
@@ -334,7 +334,7 @@ public:
       * tuneKernelByStep() were already called for corresponding kernel.
       * @param id Id of kernel for which the results are printed.
       * @param filePath Path to file where the results are printed.
-      * @param format Format in which the results are printed. See PrintFormat for more information.
+      * @param format Format in which the results are printed. See ::PrintFormat for more information.
       */
     void printResult(const KernelId id, const std::string& filePath, const PrintFormat& format) const;
 
@@ -374,7 +374,7 @@ public:
     /** @fn void setValidationMethod(const ValidationMethod& method, const double toleranceThreshold)
       * @brief Sets validation method and tolerance threshold for floating-point argument validation. Default validation method is side by side
       * comparison. Default tolerance threshold is 1e-4.
-      * @param method Validation method which will be used for floating-point argument validation. See ValidationMethod for more information.
+      * @param method Validation method which will be used for floating-point argument validation. See ::ValidationMethod for more information.
       * @param toleranceThreshold Output validation threshold. If difference between tuned kernel output and reference output is within tolerance
       * threshold, the tuned kernel output will be considered correct.
       */
@@ -443,7 +443,7 @@ public:
       * a work-group multiplied by number of work-groups. In CUDA, grid size is specified as number of threads in a block divided by number
       * of blocks. This method makes it possible to use OpenCL style in CUDA and vice versa. Default global size type is the one corresponding to
       * compute API of the tuner.
-      * @param type Global size type which is set for tuner. See GlobalSizeType for more information.
+      * @param type Global size type which is set for tuner. See ::GlobalSizeType for more information.
       */
     void setGlobalSizeType(const GlobalSizeType& type);
 

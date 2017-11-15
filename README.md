@@ -10,18 +10,16 @@ Main features
 to optimize computation for particular device
 * Support for iterative kernel launches and composite kernels
 * Ability to automatically ensure correctness of tuned computation with reference kernel or C++ function
-* Support for 2 distinct modes - find the best kernel configuration for device in tuning mode, then launch the optimized
-kernel repeatedly for different inputs in computation mode with very low overhead
-* Support for multiple compute APIs in a single library, switching between CUDA and OpenCL requires only minor changes
-in C++ code (eg. changing the kernel source file), no library recompilation is needed
-* Large number of customization options, including an ability to specify custom tolerance threshold for floating-point
-argument validation, an ability to change kernel compiler flags and more
-* No direct usage of vendor specific SDKs is needed, only corresponding device drivers have to be installed
+* Ability to run kernels with low overhead after finding optimal configuration during kernel tuning
+* Support for multiple compute APIs, switching between CUDA and OpenCL requires only minor changes in C++ code
+(eg. changing the kernel source file), no library recompilation is needed
+* Large number of customization options, including ability to specify custom tolerance threshold for floating-point
+argument validation, ability to change kernel compiler flags and more
 
 Getting started
 ---------------
 
-* Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/documentation/ktt_api.md).
+* Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/documentation).
 * Newest version of KTT library can be found [here](https://github.com/Fillo7/KTT/releases).
 * Prebuilt binaries are currently available only for some platforms. Other platforms require manual build.
 * Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support.
@@ -51,7 +49,7 @@ Building KTT
 systems are Linux and Windows.
 
 * The prerequisites to build KTT are:
-    - C++14 compiler, for example Clang 3.4, GCC 5.0, MSVC 19.0 (Visual Studio 2015) or newer
+    - C++14 compiler, for example Clang 3.5, GCC 5.0, MSVC 19.0 (Visual Studio 2015) or newer
     - OpenCL or CUDA library, supported SDKs are AMD APP SDK 3.0, Intel SDK for OpenCL and NVIDIA CUDA Toolkit 7.5 or newer
     - [Premake 5](https://premake.github.io/download.html) (alpha 12 or newer)
     

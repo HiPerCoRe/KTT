@@ -11,15 +11,15 @@ namespace ktt
   */
 enum class Dimension
 {
-    /**  @brief Kernel parameter will modify thread size in dimension X.
+    /** @brief Kernel parameter will modify thread size in dimension X.
       */
     X,
 
-    /**  @brief Kernel parameter will modify thread size in dimension Y.
+    /** @brief Kernel parameter will modify thread size in dimension Y.
       */
     Y,
 
-    /**  @brief Kernel parameter will modify thread size in dimension Z.
+    /** @brief Kernel parameter will modify thread size in dimension Z.
       */
     Z
 };
