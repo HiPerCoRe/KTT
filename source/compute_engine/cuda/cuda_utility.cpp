@@ -8,54 +8,15 @@ namespace ktt
 
 std::string getCudaEnumName(const CUresult value)
 {
-    switch (value)
-    {
-    case CUDA_SUCCESS:
-        return std::string("CUDA_SUCCESS");
-    case CUDA_ERROR_INVALID_VALUE:
-        return std::string("CUDA_ERROR_INVALID_VALUE");
-    case CUDA_ERROR_OUT_OF_MEMORY:
-        return std::string("CUDA_ERROR_OUT_OF_MEMORY");
-    case CUDA_ERROR_NO_DEVICE:
-        return std::string("CUDA_ERROR_NO_DEVICE");
-    case CUDA_ERROR_INVALID_SOURCE:
-        return std::string("CUDA_ERROR_INVALID_SOURCE");
-    case CUDA_ERROR_FILE_NOT_FOUND:
-        return std::string("CUDA_ERROR_FILE_NOT_FOUND");
-    case CUDA_ERROR_INVALID_HANDLE:
-        return std::string("CUDA_ERROR_INVALID_HANDLE");
-    case CUDA_ERROR_ILLEGAL_ADDRESS:
-        return std::string("CUDA_ERROR_ILLEGAL_ADDRESS");
-    case CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES:
-        return std::string("CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES");
-    case CUDA_ERROR_LAUNCH_FAILED:
-        return std::string("CUDA_ERROR_LAUNCH_FAILED");
-    default:
-        return std::to_string(static_cast<int>(value));
-    }
+    const char* name;
+    cuGetErrorName(value, &name);
+    return name;
 }
 
 std::string getNvrtcEnumName(const nvrtcResult value)
 {
-    switch (value)
-    {
-    case NVRTC_SUCCESS:
-        return std::string("NVRTC_SUCCESS");
-    case NVRTC_ERROR_OUT_OF_MEMORY:
-        return std::string("NVRTC_ERROR_OUT_OF_MEMORY");
-    case NVRTC_ERROR_PROGRAM_CREATION_FAILURE:
-        return std::string("NVRTC_ERROR_PROGRAM_CREATION_FAILURE");
-    case NVRTC_ERROR_INVALID_INPUT:
-        return std::string("NVRTC_ERROR_INVALID_INPUT");
-    case NVRTC_ERROR_INVALID_PROGRAM:
-        return std::string("NVRTC_ERROR_INVALID_PROGRAM");
-    case NVRTC_ERROR_INVALID_OPTION:
-        return std::string("NVRTC_ERROR_INVALID_OPTION");
-    case NVRTC_ERROR_COMPILATION:
-        return std::string("NVRTC_ERROR_COMPILATION");
-    default:
-        return std::to_string(static_cast<int>(value));
-    }
+    std::string name = nvrtcGetErrorString(value);
+    return name;
 }
 
 void checkCudaError(const CUresult value)

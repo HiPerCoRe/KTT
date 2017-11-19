@@ -121,7 +121,7 @@ public:
       * configurations for combinations of kernel parameters and their values.
       * @param id Id of kernel for which the parameter is added.
       * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
-      * @param parameterValues List of allowed values for the parameter.
+      * @param parameterValues Vector of allowed values for the parameter.
       */
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues);
 
@@ -136,7 +136,7 @@ public:
       * modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
       * @param id Id of kernel for which the parameter is added.
       * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
-      * @param parameterValues List of allowed values for the parameter.
+      * @param parameterValues Vector of allowed values for the parameter.
       * @param modifierType Type of thread modifier. See ::ThreadModifierType for more information.
       * @param modifierAction Action of thread modifier. See ::ThreadModifierAction for more information.
       * @param modifierDimension Dimension which will be affected by thread modifier. See ::Dimension for more information.
@@ -189,7 +189,7 @@ public:
       * @param compositionId Id of composition which includes the specified kernel.
       * @param kernelId Id of kernel inside the composition for which the parameter is added.
       * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
-      * @param parameterValues List of allowed values for the parameter.
+      * @param parameterValues Vector of allowed values for the parameter.
       * @param modifierType Type of thread modifier. See ::ThreadModifierType for more information.
       * @param modifierAction Action of thread modifier. See ::ThreadModifierAction for more information.
       * @param modifierDimension Dimension which will be affected by thread modifier. See ::Dimension for more information.
