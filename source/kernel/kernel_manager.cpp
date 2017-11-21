@@ -234,6 +234,23 @@ void KernelManager::addParameter(const KernelId id, const std::string& name, con
     }
 }
 
+void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<double>& values)
+{
+    /*if (isKernel(id))
+    {
+        getKernel(id).addParameter(KernelParameter(name, values));
+    }
+    else if (isComposition(id))
+    {
+        getKernelComposition(id).addParameter(KernelParameter(name, values));
+    }
+    else
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }*/
+    throw std::runtime_error("Unsupported operation");
+}
+
 void KernelManager::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {

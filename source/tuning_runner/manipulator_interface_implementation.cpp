@@ -306,7 +306,7 @@ void ManipulatorInterfaceImplementation::updateArgumentSimple(const ArgumentId i
 
     if (argumentPointer->second.getUploadType() != uploadType)
     {
-        throw std::runtime_error("Cannot convert between scalar and vector arguments");
+        throw std::runtime_error("Cannot convert between vector and non-vector arguments");
     }
 
     auto updatedArgument = KernelArgument(id, argumentData, numberOfElements, argumentPointer->second.getElementSizeInBytes(),

@@ -30,6 +30,7 @@ public:
     // Kernel modification methods
     void addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& modifierType,
         const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
+    void addParameter(const KernelId id, const std::string& name, const std::vector<double>& values);
     void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);

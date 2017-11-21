@@ -116,7 +116,7 @@ public:
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
 
     /** @fn void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues)
-      * @brief Adds new parameter for specified kernel, providing parameter name and list of allowed values. When the corresponding kernel
+      * @brief Adds new integer parameter for specified kernel, providing parameter name and list of allowed values. When the corresponding kernel
       * is launched, parameters will be added to kernel source code as preprocessor definitions. During the tuning process, tuner will generate
       * configurations for combinations of kernel parameters and their values.
       * @param id Id of kernel for which the parameter is added.
@@ -125,9 +125,19 @@ public:
       */
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues);
 
+    /** @fn void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues)
+      * @brief Adds new floating-point parameter for specified kernel, providing parameter name and list of allowed values. When the corresponding
+      * kernel is launched, parameters will be added to kernel source code as preprocessor definitions. During the tuning process, tuner will
+      * generate configurations for combinations of kernel parameters and their values.
+      * @param id Id of kernel for which the parameter is added.
+      * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
+      * @param parameterValues Vector of allowed values for the parameter.
+      */
+    void addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
+
     /** @fn void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
       * const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension)
-      * @brief Adds new parameter for specified kernel, providing parameter name and list of allowed values. When the corresponding kernel
+      * @brief Adds new integer parameter for specified kernel, providing parameter name and list of allowed values. When the corresponding kernel
       * is launched, parameters will be added to kernel source code as preprocessor definitions. During the tuning process, tuner will generate
       * configurations for combinations of kernel parameters and their values.
       *
@@ -255,7 +265,10 @@ public:
     }
 
     /** @fn template <typename T> ArgumentId addArgumentLocal(const size_t localMemoryElementsCount)
-      * @brief Adds new local memory (shared memory in CUDA) argument to tuner. All local memory arguments are read-only.
+      * @brief Adds new local memory (shared memory in CUDA) argument to tuner. All local memory arguments are read-only and cannot be initialized
+      * from host memory. In case of CUDA API usage, local memory arguments cannot be directly set as kernel function arguments. Setting a local
+      * memory argument to kernel in CUDA means that corresponding amount of memory will be allocated for kernel to use. In that case, all local
+      * memory argument ids should be specified at the end of the vector when calling setKernelArguments() method.
       * @param localMemoryElementsCount Specifies how many elements of provided data type the argument contains.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */

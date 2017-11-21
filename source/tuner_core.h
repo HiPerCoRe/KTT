@@ -28,6 +28,7 @@ public:
         std::unique_ptr<TuningManipulator> manipulator);
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
         const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
+    void addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
     void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);

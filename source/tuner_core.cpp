@@ -59,6 +59,11 @@ void TunerCore::addParameter(const KernelId id, const std::string& parameterName
     kernelManager->addParameter(id, parameterName, parameterValues, modifierType, modifierAction, modifierDimension);
 }
 
+void TunerCore::addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues)
+{
+    kernelManager->addParameter(id, parameterName, parameterValues);
+}
+
 void TunerCore::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {

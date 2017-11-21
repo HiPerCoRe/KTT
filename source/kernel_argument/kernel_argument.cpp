@@ -64,7 +64,7 @@ KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size
     dataCopied(true),
     referencedData(nullptr)
 {
-    if (numberOfElements == 0)
+    if (numberOfElements == 0 && data != nullptr)
     {
         throw std::runtime_error("Size of kernel argument must be greater than zero");
     }
@@ -95,7 +95,7 @@ void KernelArgument::updateData(void* data, const size_t numberOfElements)
 
 void KernelArgument::updateData(const void* data, const size_t numberOfElements)
 {
-    if (numberOfElements == 0)
+    if (numberOfElements == 0 && data != nullptr)
     {
         throw std::runtime_error("Size of kernel argument must be greater than zero");
     }

@@ -61,6 +61,19 @@ void Tuner::addParameter(const KernelId id, const std::string& parameterName, co
     }
 }
 
+void Tuner::addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues)
+{
+    try
+    {
+        tunerCore->addParameter(id, parameterName, parameterValues);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 void Tuner::addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
     const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension)
 {
