@@ -17,7 +17,11 @@ enum class ValidationMethod
 
     /** @brief Calculates difference each time when comparing individual elements, then compares this difference to specified threshold.
       */
-    SideBySideComparison
+    SideBySideComparison,
+
+    /** @brief Calculates difference each time when comparing individual elements, then compares this difference to specified threshold.
+      */
+    SideBySideRelativeComparison,
 };
 
 } // namespace ktt

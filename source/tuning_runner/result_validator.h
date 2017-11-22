@@ -103,7 +103,7 @@ private:
             }
             return true;
         }
-        else
+        else if (validationMethod == ValidationMethod::SideBySideComparison)
         {
             for (size_t i = 0; i < range; i++)
             {
@@ -112,6 +112,20 @@ private:
                     logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
                         + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
                         + ", difference: " + std::to_string(std::fabs(result.at(i) - referenceResult.at(i))));
+                    return false;
+                }
+            }
+            return true;
+        }
+        else  if (validationMethod == ValidationMethod::SideBySideRelativeComparison)
+        {
+            for (size_t i = 0; i < range; i++)
+            {
+                if (std::fabs(result.at(i) - referenceResult.at(i)) / referenceResult.at(i) > toleranceThreshold)
+                {
+                    logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
+                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
+                        + ", relative difference: " + std::to_string(std::fabs(result.at(i) - referenceResult.at(i))));
                     return false;
                 }
             }
