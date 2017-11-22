@@ -121,11 +121,12 @@ private:
         {
             for (size_t i = 0; i < range; i++)
             {
-                if (std::fabs(result.at(i) - referenceResult.at(i)) / referenceResult.at(i) > toleranceThreshold)
+            	double diff = std::fabs(result.at(i) - referenceResult.at(i));
+                if ((diff > 0.0001) && (diff / referenceResult.at(i) > toleranceThreshold)) // FIXME make threshold setable
                 {
                     logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
                         + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
-                        + ", relative difference: " + std::to_string(std::fabs(result.at(i) - referenceResult.at(i))));
+                        + ", relative difference: " + std::to_string(diff / referenceResult.at(i)));
                     return false;
                 }
             }
