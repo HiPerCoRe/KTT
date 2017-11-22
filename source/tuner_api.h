@@ -299,7 +299,7 @@ public:
     /** @fn void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)
       * @brief Runs specified kernel using provided configuration. Does not perform result validation.
       * @param id Id of kernel which is run.
-      * @param configuration Configuration under which the kernel will be launched. See ::ParameterPair for more information.
+      * @param configuration Configuration under which the kernel will be launched. See ParameterPair for more information.
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See ArgumentOutputDescriptor for more
       * information.
       */
@@ -355,7 +355,7 @@ public:
       * @brief Returns the best configuration found for specified kernel. Valid configuration will be returned only if methods tuneKernel() or
       * tuneKernelByStep() were already called for corresponding kernel.
       * @param id Id of kernel for which the best configuration is returned.
-      * @return Best configuration found for specified kernel. See ::ParameterPair for more information.
+      * @return Best configuration found for specified kernel. See ParameterPair for more information.
       */
     std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
 
@@ -402,8 +402,8 @@ public:
     void setValidationRange(const ArgumentId id, const size_t range);
 
     /** @fn void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
-      * @brief Sets argument comparator for specified argument with custom data type. Arguments with custom data type cannot be compared using
-      * built-in comparison operators and require user to provide comparator. Comparator cannot be set for built-in data types.
+      * @brief Sets argument comparator for specified kernel argument. Arguments with custom data type cannot be compared using built-in comparison
+      * operators and require user to provide a comparator. Comparator can also be optionally added for arguments with built-in data types.
       * @param id Id of argument for which the comparator is set.
       * @param comparator Function which receives two elements with data type matching the data type of specified kernel argument and returns true
       * if the elements are equal. Returns false otherwise.

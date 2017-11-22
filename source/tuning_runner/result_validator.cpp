@@ -251,7 +251,31 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             }
 
             bool currentResult;
-            if (referenceDataType == ArgumentDataType::Char)
+            auto comparatorPointer = argumentComparators.find(id);
+
+            if (comparatorPointer != argumentComparators.end())
+            {
+                size_t resultSize = resultArgument.getNumberOfElements();
+                size_t referenceSize = referenceArgument.getNumberOfElements();
+                auto argumentRangePointer = argumentValidationRanges.find(id);
+                if (argumentRangePointer == argumentValidationRanges.end() && resultSize != referenceSize)
+                {
+                    logger->log(std::string("Number of elements in results differs for argument with id: ") + std::to_string(id)
+                        + ", reference size: " + std::to_string(referenceSize) + ", result size: " + std::to_string(resultSize));
+                    currentResult = false;
+                }
+                else if (argumentRangePointer != argumentValidationRanges.end())
+                {
+                    currentResult = validateResultCustom(id, resultArgument.getData(), referenceArgument.getData(), argumentRangePointer->second,
+                        resultArgument.getElementSizeInBytes(), comparatorPointer->second);
+                }
+                else
+                {
+                    currentResult = validateResultCustom(id, resultArgument.getData(), referenceArgument.getData(), resultSize,
+                        resultArgument.getElementSizeInBytes(), comparatorPointer->second);
+                }
+            }
+            else if (referenceDataType == ArgumentDataType::Char)
             {
                 currentResult = validateResult(resultArgument.getDataWithType<int8_t>(), referenceArgument.getDataWithType<int8_t>(), id);
             }
@@ -295,37 +319,9 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             {
                 currentResult = validateResult(resultArgument.getDataWithType<double>(), referenceArgument.getDataWithType<double>(), id);
             }
-            else if (referenceDataType == ArgumentDataType::Custom)
-            {
-                auto comparatorPointer = argumentComparators.find(id);
-                if (comparatorPointer == argumentComparators.end())
-                {
-                    throw std::runtime_error("Validation of custom data type arguments requires usage of argument comparator");
-                }
-                
-                size_t resultSize = resultArgument.getNumberOfElements();
-                size_t referenceSize = referenceArgument.getNumberOfElements();
-                auto argumentRangePointer = argumentValidationRanges.find(id);
-                if (argumentRangePointer == argumentValidationRanges.end() && resultSize != referenceSize)
-                {
-                    logger->log(std::string("Number of elements in results differs for argument with id: ") + std::to_string(id)
-                        + ", reference size: " + std::to_string(referenceSize) + ", result size: " + std::to_string(resultSize));
-                    currentResult = false;
-                }
-                else if (argumentRangePointer != argumentValidationRanges.end())
-                {
-                    currentResult = validateResultCustom(id, resultArgument.getData(), referenceArgument.getData(), argumentRangePointer->second,
-                        resultArgument.getElementSizeInBytes(), comparatorPointer->second);
-                }
-                else
-                {
-                    currentResult = validateResultCustom(id, resultArgument.getData(), referenceArgument.getData(), resultSize,
-                        resultArgument.getElementSizeInBytes(), comparatorPointer->second);
-                }
-            }
             else
             {
-                throw std::runtime_error("Unsupported argument data type");
+                throw std::runtime_error("Validation of custom data type arguments requires usage of argument comparator");
             }
 
             validationResult &= currentResult;

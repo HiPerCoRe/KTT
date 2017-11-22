@@ -90,7 +90,7 @@ public:
 
     /** @fn std::vector<ParameterPair> getCurrentConfiguration() const
       * @brief Returns configuration used inside current invocation of launchComputation() method.
-      * @return Current configuration. See ::ParameterPair for more information.
+      * @return Current configuration. See ParameterPair for more information.
       */
     std::vector<ParameterPair> getCurrentConfiguration() const;
 

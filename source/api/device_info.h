@@ -50,13 +50,13 @@ public:
     std::string getExtensions() const;
 
     /** @fn DeviceType getDeviceType() const
-      * @brief Getter for type of device. See DeviceType for more information.
+      * @brief Getter for type of device. See ::DeviceType for more information.
       * @return Type of device.
       */
     DeviceType getDeviceType() const;
 
     /** @fn std::string getDeviceTypeAsString() const
-      * @brief Getter for type of device converted to string. See DeviceType for more information.
+      * @brief Getter for type of device converted to string. See ::DeviceType for more information.
       * @return Type of device converted to string.
       */
     std::string getDeviceTypeAsString() const;
