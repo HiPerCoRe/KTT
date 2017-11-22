@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <string>
+#include <iostream>
 #include "ktt_platform.h"
 
 namespace ktt
