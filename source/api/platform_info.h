@@ -71,8 +71,6 @@ public:
       */
     void setExtensions(const std::string& extensions);
 
-    KTT_API friend std::ostream& operator<<(std::ostream&, const PlatformInfo&);
-
 private:
     size_t id;
     std::string name;

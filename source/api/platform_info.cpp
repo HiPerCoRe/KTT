@@ -50,11 +50,11 @@ void PlatformInfo::setExtensions(const std::string& extensions)
 
 std::ostream& operator<<(std::ostream& outputTarget, const PlatformInfo& platformInfo)
 {
-    outputTarget << "Printing detailed info for platform with id: " << platformInfo.id << std::endl;
-    outputTarget << "Name: " << platformInfo.name << std::endl;
-    outputTarget << "Vendor: " << platformInfo.vendor << std::endl;
-    outputTarget << "Compute API version: " << platformInfo.version << std::endl;
-    outputTarget << "Extensions: " << platformInfo.extensions << std::endl;
+    outputTarget << "Printing detailed info for platform with id: " << platformInfo.getId() << std::endl;
+    outputTarget << "Name: " << platformInfo.getName() << std::endl;
+    outputTarget << "Vendor: " << platformInfo.getVendor() << std::endl;
+    outputTarget << "Compute API version: " << platformInfo.getVersion() << std::endl;
+    outputTarget << "Extensions: " << platformInfo.getExtensions() << std::endl;
     return outputTarget;
 }
 

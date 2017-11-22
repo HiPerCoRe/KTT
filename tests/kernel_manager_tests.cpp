@@ -50,8 +50,8 @@ TEST_CASE("Kernel configuration retrieval", "Component: KernelManager")
     SECTION("Kernel source with defines is returned correctly")
     {
         std::vector<ktt::ParameterPair> parameterPairs;
-        parameterPairs.push_back(ktt::ParameterPair("param_two", 5));
-        parameterPairs.push_back(ktt::ParameterPair("param_one", 2));
+        parameterPairs.push_back(ktt::ParameterPair("param_two", static_cast<size_t>(5)));
+        parameterPairs.push_back(ktt::ParameterPair("param_one", static_cast<size_t>(2)));
 
         ktt::KernelConfiguration config(manager.getKernel(id).getGlobalSize(), manager.getKernel(id).getLocalSize(), parameterPairs);
         std::string source = manager.getKernelSourceWithDefines(id, config);

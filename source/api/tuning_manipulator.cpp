@@ -90,9 +90,21 @@ size_t TuningManipulator::getParameterValue(const std::string& parameterName, co
 {
     for (const auto& parameterPair : parameterPairs)
     {
-        if (std::get<0>(parameterPair) == parameterName)
+        if (parameterPair.getName() == parameterName)
         {
-            return std::get<1>(parameterPair);
+            return parameterPair.getValue();
+        }
+    }
+    throw std::runtime_error(std::string("No parameter with following name found: ") + parameterName);
+}
+
+double TuningManipulator::getParameterValueDouble(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs)
+{
+    for (const auto& parameterPair : parameterPairs)
+    {
+        if (parameterPair.getName() == parameterName)
+        {
+            return parameterPair.getValueDouble();
         }
     }
     throw std::runtime_error(std::string("No parameter with following name found: ") + parameterName);

@@ -55,6 +55,12 @@ public:
       */
     DeviceType getDeviceType() const;
 
+    /** @fn std::string getDeviceTypeAsString() const
+      * @brief Getter for type of device converted to string. See DeviceType for more information.
+      * @return Type of device converted to string.
+      */
+    std::string getDeviceTypeAsString() const;
+
     /** @fn uint64_t getGlobalMemorySize() const
       * @brief Getter for global memory size of device retrieved from compute API.
       * @return Global memory size of device retrieved from compute API.
@@ -133,8 +139,6 @@ public:
       */
     void setMaxWorkGroupSize(const size_t maxWorkGroupSize);
 
-    KTT_API friend std::ostream& operator<<(std::ostream&, const DeviceInfo&);
-
 private:
     size_t id;
     std::string name;
@@ -146,8 +150,6 @@ private:
     uint64_t maxConstantBufferSize;
     uint32_t maxComputeUnits;
     size_t maxWorkGroupSize;
-
-    static std::string deviceTypeToString(const DeviceType& deviceType);
 };
 
 /** @fn std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo)

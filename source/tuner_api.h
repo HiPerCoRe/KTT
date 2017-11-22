@@ -125,7 +125,7 @@ public:
       */
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues);
 
-    /** @fn void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues)
+    /** @fn void addParameterDouble(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues)
       * @brief Adds new floating-point parameter for specified kernel, providing parameter name and list of allowed values. When the corresponding
       * kernel is launched, parameters will be added to kernel source code as preprocessor definitions. During the tuning process, tuner will
       * generate configurations for combinations of kernel parameters and their values.
@@ -133,7 +133,7 @@ public:
       * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
       * @param parameterValues Vector of allowed values for the parameter.
       */
-    void addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
+    void addParameterDouble(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
 
     /** @fn void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
       * const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension)

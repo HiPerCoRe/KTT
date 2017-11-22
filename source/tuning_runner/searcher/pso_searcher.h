@@ -77,7 +77,7 @@ public:
                 else if (probabilityDistribution(generator) <= influenceRandom)
                 {
                     std::uniform_int_distribution<size_t> distribution(0, parameters.at(i).getValues().size());
-                    std::get<1>(nextConfiguration.parameterPairs.at(i)) = parameters.at(i).getValues().at(distribution(generator));
+                    nextConfiguration.parameterPairs.at(i).setValue(parameters.at(i).getValues().at(distribution(generator)));
                 }
             }
             newIndex = indexFromConfiguration(nextConfiguration);
@@ -143,7 +143,7 @@ private:
             size_t matchesCount = 0;
             for (size_t i = 0; i < configuration.getParameterPairs().size(); i++)
             {
-                if (std::get<1>(configuration.getParameterPairs().at(i)) == std::get<1>(target.getParameterPairs().at(i)))
+                if (configuration.getParameterPairs().at(i).getValue() == target.getParameterPairs().at(i).getValue())
                 {
                     matchesCount++;
                 }

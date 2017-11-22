@@ -4,6 +4,7 @@
 #include <vector>
 #include "ktt_types.h"
 #include "api/dimension_vector.h"
+#include "api/parameter_pair.h"
 
 namespace ktt
 {

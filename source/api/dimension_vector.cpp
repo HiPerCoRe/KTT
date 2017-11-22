@@ -194,7 +194,7 @@ void DimensionVector::divideByValue(const size_t value, const Dimension modifier
 
 std::ostream& operator<<(std::ostream& outputTarget, const DimensionVector& dimensionVector)
 {
-    outputTarget << dimensionVector.sizeX << ", " << dimensionVector.sizeY << ", " << dimensionVector.sizeZ;
+    outputTarget << dimensionVector.getSizeX() << ", " << dimensionVector.getSizeY() << ", " << dimensionVector.getSizeZ();
     return outputTarget;
 }
 

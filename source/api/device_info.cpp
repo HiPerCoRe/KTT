@@ -33,6 +33,23 @@ DeviceType DeviceInfo::getDeviceType() const
     return deviceType;
 }
 
+std::string DeviceInfo::getDeviceTypeAsString() const
+{
+    switch (deviceType)
+    {
+    case ktt::DeviceType::Accelerator:
+        return std::string("Accelerator");
+    case ktt::DeviceType::CPU:
+        return std::string("CPU");
+    case ktt::DeviceType::Custom:
+        return std::string("Custom");
+    case ktt::DeviceType::Default:
+        return std::string("Default");
+    default:
+        return std::string("GPU");
+    }
+}
+
 uint64_t DeviceInfo::getGlobalMemorySize() const
 {
     return globalMemorySize;
@@ -98,35 +115,18 @@ void DeviceInfo::setMaxWorkGroupSize(const size_t maxWorkGroupSize)
     this->maxWorkGroupSize = maxWorkGroupSize;
 }
 
-std::string DeviceInfo::deviceTypeToString(const DeviceType& deviceType)
-{
-    switch (deviceType)
-    {
-    case ktt::DeviceType::Accelerator:
-        return std::string("Accelerator");
-    case ktt::DeviceType::CPU:
-        return std::string("CPU");
-    case ktt::DeviceType::Custom:
-        return std::string("Custom");
-    case ktt::DeviceType::Default:
-        return std::string("Default");
-    default:
-        return std::string("GPU");
-    }
-}
-
 std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo)
 {
-    outputTarget << "Printing detailed info for device with id: " << deviceInfo.id << std::endl;
-    outputTarget << "Name: " << deviceInfo.name << std::endl;
-    outputTarget << "Vendor: " << deviceInfo.vendor << std::endl;
-    outputTarget << "Device type: " << deviceInfo.deviceTypeToString(deviceInfo.deviceType) << std::endl;
-    outputTarget << "Global memory size: " << deviceInfo.globalMemorySize << std::endl;
-    outputTarget << "Local memory size: " << deviceInfo.localMemorySize << std::endl;
-    outputTarget << "Maximum constant buffer size: " << deviceInfo.maxConstantBufferSize << std::endl;
-    outputTarget << "Maximum parallel compute units: " << deviceInfo.maxComputeUnits << std::endl;
-    outputTarget << "Maximum work-group size: " << deviceInfo.maxWorkGroupSize << std::endl;
-    outputTarget << "Extensions: " << deviceInfo.extensions << std::endl;
+    outputTarget << "Printing detailed info for device with id: " << deviceInfo.getId() << std::endl;
+    outputTarget << "Name: " << deviceInfo.getName() << std::endl;
+    outputTarget << "Vendor: " << deviceInfo.getVendor() << std::endl;
+    outputTarget << "Device type: " << deviceInfo.getDeviceTypeAsString() << std::endl;
+    outputTarget << "Global memory size: " << deviceInfo.getGlobalMemorySize() << std::endl;
+    outputTarget << "Local memory size: " << deviceInfo.getLocalMemorySize() << std::endl;
+    outputTarget << "Maximum constant buffer size: " << deviceInfo.getMaxConstantBufferSize() << std::endl;
+    outputTarget << "Maximum parallel compute units: " << deviceInfo.getMaxComputeUnits() << std::endl;
+    outputTarget << "Maximum work-group size: " << deviceInfo.getMaxWorkGroupSize() << std::endl;
+    outputTarget << "Extensions: " << deviceInfo.getExtensions() << std::endl;
     return outputTarget;
 }
 

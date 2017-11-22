@@ -61,7 +61,7 @@ void Tuner::addParameter(const KernelId id, const std::string& parameterName, co
     }
 }
 
-void Tuner::addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues)
+void Tuner::addParameterDouble(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues)
 {
     try
     {

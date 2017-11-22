@@ -146,7 +146,7 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, std::ostr
 
     for (size_t i = 0; i < parameterPairs.size(); i++)
     {
-        outputTarget << std::get<0>(parameterPairs.at(i));
+        outputTarget << parameterPairs.at(i).getName();
         if (i + 1 != parameterPairs.size())
         {
             outputTarget << ",";
@@ -198,7 +198,7 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, std::ostr
 
         for (size_t i = 0; i < parameterPairs.size(); i++)
         {
-            outputTarget << std::get<0>(parameterPairs.at(i));
+            outputTarget << parameterPairs.at(i).getName();
             if (i + 1 != parameterPairs.size())
             {
                 outputTarget << ",";
@@ -259,7 +259,7 @@ void ResultPrinter::printConfigurationVerbose(std::ostream& outputTarget, const 
     }
     for (const auto& parameterPair : configuration.getParameterPairs())
     {
-        outputTarget << std::get<0>(parameterPair) << ": " << std::get<1>(parameterPair) << " ";
+        outputTarget << parameterPair << " ";
     }
     outputTarget << std::endl;
 }
@@ -294,7 +294,15 @@ void ResultPrinter::printConfigurationCsv(std::ostream& outputTarget, const Kern
 
     for (size_t i = 0; i < parameterPairs.size(); i++)
     {
-        outputTarget << std::get<1>(parameterPairs.at(i));
+        if (!parameterPairs.at(i).hasValueDouble())
+        {
+            outputTarget << parameterPairs.at(i).getValue();
+        }
+        else
+        {
+            outputTarget << parameterPairs.at(i).getValueDouble();
+        }
+
         if (i + 1 != parameterPairs.size())
         {
             outputTarget << ",";

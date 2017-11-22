@@ -9,6 +9,7 @@
 #include "ktt_platform.h"
 #include "ktt_types.h"
 #include "api/dimension_vector.h"
+#include "api/parameter_pair.h"
 
 namespace ktt
 {
@@ -170,10 +171,16 @@ public:
     void destroyArgumentBuffer(const ArgumentId id);
 
     /** @fn static size_t getParameterValue(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs)
-      * @brief Returns value of specified parameter from provided vector of parameters.
-      * @return Value of specified parameter.
+      * @brief Returns integer value of specified parameter from provided vector of parameters.
+      * @return Integer value of specified parameter.
       */
     static size_t getParameterValue(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs);
+
+    /** @fn static double getParameterValueDouble(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs)
+      * @brief Returns floating-point value of specified parameter from provided vector of parameters.
+      * @return Floating-point value of specified parameter.
+      */
+    static double getParameterValueDouble(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs);
 
     friend class TuningRunner;
 

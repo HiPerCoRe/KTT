@@ -130,7 +130,7 @@ std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& 
     }
     for (const auto& parameterPair : configuration.parameterPairs)
     {
-        outputTarget << std::get<0>(parameterPair) << ": " << std::get<1>(parameterPair) << " ";
+        outputTarget << parameterPair << " ";
     }
 
     return outputTarget;

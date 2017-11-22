@@ -131,8 +131,6 @@ public:
       */
     bool operator!=(const DimensionVector& other) const;
 
-    KTT_API friend std::ostream& operator<<(std::ostream&, const DimensionVector&);
-
 private:
     size_t sizeX;
     size_t sizeY;

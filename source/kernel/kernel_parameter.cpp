@@ -9,7 +9,17 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<size
     values(values),
     threadModifierType(modifierType),
     threadModifierAction(modifierAction),
-    modifierDimension(modifierDimension)
+    modifierDimension(modifierDimension),
+    isDouble(false)
+{}
+
+KernelParameter::KernelParameter(const std::string& name, const std::vector<double>& values) :
+    name(name),
+    valuesDouble(values),
+    threadModifierType(ThreadModifierType::None),
+    threadModifierAction(ThreadModifierAction::Add),
+    modifierDimension(Dimension::X),
+    isDouble(true)
 {}
 
 void KernelParameter::addCompositionKernel(const KernelId id)
@@ -25,6 +35,11 @@ std::string KernelParameter::getName() const
 std::vector<size_t> KernelParameter::getValues() const
 {
     return values;
+}
+
+std::vector<double> KernelParameter::getValuesDouble() const
+{
+    return valuesDouble;
 }
 
 ThreadModifierType KernelParameter::getModifierType() const
@@ -45,6 +60,11 @@ Dimension KernelParameter::getModifierDimension() const
 std::vector<KernelId> KernelParameter::getCompositionKernels() const
 {
     return compositionKernels;
+}
+
+bool KernelParameter::hasValuesDouble() const
+{
+    return isDouble;
 }
 
 bool KernelParameter::operator==(const KernelParameter& other) const

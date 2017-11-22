@@ -116,7 +116,7 @@ private:
             size_t settingId = 0;
             for (const auto& parameter : configuration.getParameterPairs())
             {
-                if (std::get<1>(parameter) != std::get<1>(configurations.at(referenceId).getParameterPairs().at(settingId)))
+                if (parameter.getValue() != configurations.at(referenceId).getParameterPairs().at(settingId).getValue())
                 {
                     differences++;
                 }
