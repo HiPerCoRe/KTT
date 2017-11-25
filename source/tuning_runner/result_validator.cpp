@@ -319,9 +319,13 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             {
                 currentResult = validateResult(resultArgument.getDataWithType<double>(), referenceArgument.getDataWithType<double>(), id);
             }
-            else
+            else if (referenceDataType == ArgumentDataType::Custom)
             {
                 throw std::runtime_error("Validation of custom data type arguments requires usage of argument comparator");
+            }
+            else
+            {
+                throw std::runtime_error("Unsupported argument data type");
             }
 
             validationResult &= currentResult;

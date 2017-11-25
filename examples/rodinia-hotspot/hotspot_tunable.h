@@ -62,20 +62,20 @@ class tunableHotspot : public ktt::TuningManipulator {
       // so far none
 
       // Add all arguments utilized by kernels
-      iterationId = tuner->addArgument(iteration);
-      size_t powerId = tuner->addArgument(power, ktt::ArgumentMemoryType::ReadOnly);
-      tempSrcId = tuner->addArgument(tempSrc, ktt::ArgumentMemoryType::ReadWrite);
-      tempDstId = tuner->addArgument(tempDst, ktt::ArgumentMemoryType::ReadWrite);
-      size_t grid_colsId = tuner->addArgument(grid_cols);
-      size_t grid_rowsId = tuner->addArgument(grid_rows);
+      iterationId = tuner->addArgumentScalar(iteration);
+      size_t powerId = tuner->addArgumentVector(power, ktt::ArgumentAccessType::ReadOnly);
+      tempSrcId = tuner->addArgumentVector(tempSrc, ktt::ArgumentAccessType::ReadWrite);
+      tempDstId = tuner->addArgumentVector(tempDst, ktt::ArgumentAccessType::ReadWrite);
+      size_t grid_colsId = tuner->addArgumentScalar(grid_cols);
+      size_t grid_rowsId = tuner->addArgumentScalar(grid_rows);
 
-      size_t borderColsId = tuner->addArgument(borderCols);
-      size_t borderRowsId = tuner->addArgument(borderRows);
-      size_t CapId = tuner->addArgument(Cap);
-      size_t RxId = tuner->addArgument(Rx);
-      size_t RyId = tuner->addArgument(Ry);
-      size_t RzId = tuner->addArgument(Rz);
-      size_t stepId = tuner->addArgument(step);
+      size_t borderColsId = tuner->addArgumentScalar(borderCols);
+      size_t borderRowsId = tuner->addArgumentScalar(borderRows);
+      size_t CapId = tuner->addArgumentScalar(Cap);
+      size_t RxId = tuner->addArgumentScalar(Rx);
+      size_t RyId = tuner->addArgumentScalar(Ry);
+      size_t RzId = tuner->addArgumentScalar(Rz);
+      size_t stepId = tuner->addArgumentScalar(step);
 
 
       // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
@@ -98,8 +98,8 @@ class tunableHotspot : public ktt::TuningManipulator {
     //launchComputation is responsible for actual execution of tuned kernel */
     virtual void launchComputation(const size_t kernelId) override {
 
-        std::vector<ktt::ParameterValue> parameterValues = getCurrentConfiguration();
-        auto blocksize = std::get<1>(parameterValues[0]);
+        std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
+        auto blocksize = parameterValues[0].getValue();
         smallBlockCol = blocksize-(pyramid_height)*EXPAND_RATE;
         smallBlockRow = blocksize-(pyramid_height)*EXPAND_RATE;
         blockCols = grid_cols/smallBlockCol+((grid_cols%smallBlockCol==0)?0:1);

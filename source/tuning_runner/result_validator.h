@@ -117,20 +117,24 @@ private:
             }
             return true;
         }
-        else  if (validationMethod == ValidationMethod::SideBySideRelativeComparison)
+        else if (validationMethod == ValidationMethod::SideBySideRelativeComparison)
         {
             for (size_t i = 0; i < range; i++)
             {
-            	double diff = std::fabs(result.at(i) - referenceResult.at(i));
-                if ((diff > 0.0001) && (diff / referenceResult.at(i) > toleranceThreshold)) // FIXME make threshold setable
+                double difference = std::fabs(result.at(i) - referenceResult.at(i));
+                if ((difference > 1e-4) && (difference / referenceResult.at(i) > toleranceThreshold)) // FIXME make threshold setable
                 {
                     logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
                         + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
-                        + ", relative difference: " + std::to_string(diff / referenceResult.at(i)));
+                        + ", relative difference: " + std::to_string(difference / referenceResult.at(i)));
                     return false;
                 }
             }
             return true;
+        }
+        else
+        {
+            throw std::runtime_error("Unsupported validation method");
         }
     }
 

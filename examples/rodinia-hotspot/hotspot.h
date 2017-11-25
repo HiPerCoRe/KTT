@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <assert.h>
 
 #ifdef RD_WG_SIZE_0_0
@@ -36,11 +35,11 @@
 
 
 /* chip parameters	*/
-const static float t_chip = 0.0005;
-const static float chip_height = 0.016;
-const static float chip_width = 0.016;
+const static float t_chip = 0.0005f;
+const static float chip_height = 0.016f;
+const static float chip_width = 0.016f;
 /* ambient temperature, assuming no package at all	*/
-const static float amb_temp = 80.0;
+const static float amb_temp = 80.0f;
 
 /*// OpenCL globals
 cl_context context;

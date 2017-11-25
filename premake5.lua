@@ -297,12 +297,13 @@ project "reduction_opencl"
     includedirs { "source" }
     links { "ktt" }
 
-project "ExampleHotspot"
+if os.target() == "linux" then
+project "hotspot_opencl"
     kind "ConsoleApp"
-
-    files { "./examples/rodinia-hotspot/hotspot.h", "./examples/rodinia-hotspot/hotspot_tunable.h", "./examples/rodinia-hotspot/hotspot_reference_kernel.cl", "./examples/rodinia-hotspot/hotspot.cpp", "./examples/rodinia-hotspot/*.cl" }
+    files { "examples/rodinia-hotspot/*.h", "examples/rodinia-hotspot/*.cpp", "examples/rodinia-hotspot/*.cl" }
     includedirs { "source" }
-    links { "KernelTuningToolkit" }
+    links { "ktt" }
+end
 
 if cuda_examples then
 

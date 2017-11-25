@@ -11,17 +11,17 @@ namespace ktt
   */
 enum class ValidationMethod
 {
-    /** @brief Calculates sum of all differences between individual element comparisons, then compares this sum to specified threshold.
+    /** @brief Calculates sum of differences between each pair of elements, then compares the sum to specified threshold.
       */
     AbsoluteDifference,
 
-    /** @brief Calculates difference each time when comparing individual elements, then compares this difference to specified threshold.
+    /** @brief Calculates difference for each pair of elements, then compares the difference to specified threshold.
       */
     SideBySideComparison,
 
-    /** @brief Calculates difference each time when comparing individual elements, then compares this difference to specified threshold.
+    /** @brief Calculates difference for each pair of elements, then compares the difference divided by reference value to specified threshold.
       */
-    SideBySideRelativeComparison,
+    SideBySideRelativeComparison
 };
 
 } // namespace ktt

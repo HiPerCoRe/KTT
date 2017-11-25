@@ -46,7 +46,7 @@ class referenceHotspot : public ktt::ReferenceClass {
     }
 
     //launchComputation is responsible for actual execution of tuned kernel */
-    virtual void computeResult() override {
+    void computeResult() override {
 
       int t;
       for (t = 0; t < total_iterations; t += pyramid_height) {
@@ -70,7 +70,7 @@ class referenceHotspot : public ktt::ReferenceClass {
       writeoutput(tempDst, grid_rows, grid_cols, ofile);
 
     }
-    virtual const void* getData(const size_t argumentId) const override {
+    void* getData(const size_t argumentId) override {
       if (argumentId == resultArgumentId) {
         if (srcPosition)
           return (void*)tempDst;
@@ -80,7 +80,7 @@ class referenceHotspot : public ktt::ReferenceClass {
       throw std::runtime_error("No result available for specified argument id");
     }
 
-    virtual size_t getNumberOfElements(const size_t argumentId) const override {
+    size_t getNumberOfElements(const size_t argumentId) const override {
       return size;
     }
 
