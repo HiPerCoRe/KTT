@@ -297,6 +297,13 @@ project "reduction_opencl"
     includedirs { "source" }
     links { "ktt" }
 
+project "ExampleHotspot"
+    kind "ConsoleApp"
+
+    files { "./examples/rodinia-hotspot/hotspot.h", "./examples/rodinia-hotspot/hotspot_tunable.h", "./examples/rodinia-hotspot/hotspot_reference_kernel.cl", "./examples/rodinia-hotspot/hotspot.cpp", "./examples/rodinia-hotspot/*.cl" }
+    includedirs { "source" }
+    links { "KernelTuningToolkit" }
+
 if cuda_examples then
 
 project "simple_cuda"
