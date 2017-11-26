@@ -30,6 +30,7 @@ public:
     std::vector<KernelConstraint> getConstraints() const;
     std::vector<ArgumentId> getSharedArgumentIds() const;
     std::vector<ArgumentId> getKernelArgumentIds(const KernelId id) const;
+    bool hasParameter(const std::string& parameterName) const;
 
 private:
     // Attributes
@@ -40,8 +41,6 @@ private:
     std::vector<KernelConstraint> constraints;
     std::vector<ArgumentId> sharedArgumentIds;
     std::map<KernelId, std::vector<ArgumentId>> kernelArgumentIds;
-
-    bool hasParameter(const std::string& parameterName) const;
 };
 
 } // namespace ktt

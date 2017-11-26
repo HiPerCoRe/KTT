@@ -19,8 +19,7 @@ class TuningRunner
 {
 public:
     // Constructor
-    explicit TuningRunner(ArgumentManager* argumentManager, ComputeEngine* computeEngine, KernelManager* kernelManager, KernelRunner* kernelRunner,
-        Logger* logger);
+    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner, Logger* logger);
 
     // Core methods
     std::vector<KernelResult> tuneKernel(const KernelId id);
@@ -39,7 +38,6 @@ public:
 private:
     // Attributes
     ArgumentManager* argumentManager;
-    ComputeEngine* computeEngine;
     KernelManager* kernelManager;
     KernelRunner* kernelRunner;
     Logger* logger;

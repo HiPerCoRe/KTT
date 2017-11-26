@@ -6,8 +6,9 @@
 namespace ktt
 {
 
-KernelManager::KernelManager() :
-    nextId(0)
+KernelManager::KernelManager(const DeviceInfo& currentDeviceInfo) :
+    nextId(0),
+    currentDeviceInfo(currentDeviceInfo)
 {}
 
 KernelId KernelManager::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -171,7 +172,7 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
     return KernelConfiguration(globalSizes, localSizes, parameterPairs);
 }
 
-std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const KernelId id, const DeviceInfo& deviceInfo) const
+std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const KernelId id) const
 {
     if (!isKernel(id))
     {
@@ -187,13 +188,13 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const Ke
     }
     else
     {
-        computeConfigurations(0, deviceInfo, kernel.getParameters(), kernel.getConstraints(), std::vector<ParameterPair>(0), kernel.getGlobalSize(),
+        computeConfigurations(0, kernel.getParameters(), kernel.getConstraints(), std::vector<ParameterPair>(0), kernel.getGlobalSize(),
             kernel.getLocalSize(), configurations);
     }
     return configurations;
 }
 
-std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfigurations(const KernelId compositionId, const DeviceInfo& deviceInfo) const
+std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfigurations(const KernelId compositionId) const
 {
     if (!isComposition(compositionId))
     {
@@ -217,8 +218,8 @@ std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfiguratio
     }
     else
     {
-        computeCompositionConfigurations(0, deviceInfo, composition.getParameters(), composition.getConstraints(), std::vector<ParameterPair>(0),
-            globalSizes, localSizes, kernelConfigurations);
+        computeCompositionConfigurations(0, composition.getParameters(), composition.getConstraints(), std::vector<ParameterPair>(0), globalSizes,
+            localSizes, kernelConfigurations);
     }
 
     return kernelConfigurations;
@@ -404,15 +405,14 @@ std::string KernelManager::loadFileToString(const std::string& filePath) const
     return stream.str();
 }
 
-void KernelManager::computeConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo,
-    const std::vector<KernelParameter>& parameters, const std::vector<KernelConstraint>& constraints,
-    const std::vector<ParameterPair>& parameterPairs, const DimensionVector& globalSize, const DimensionVector& localSize,
-    std::vector<KernelConfiguration>& finalResult) const
+void KernelManager::computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
+    const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs, const DimensionVector& globalSize,
+    const DimensionVector& localSize, std::vector<KernelConfiguration>& finalResult) const
 {
     if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
         KernelConfiguration configuration(globalSize, localSize, parameterPairs);
-        if (configurationIsValid(configuration, constraints, deviceInfo))
+        if (configurationIsValid(configuration, constraints))
         {
             finalResult.push_back(configuration);
         }
@@ -439,8 +439,7 @@ void KernelManager::computeConfigurations(const size_t currentParameterIndex, co
                 newLocalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
             }
 
-            computeConfigurations(currentParameterIndex + 1, deviceInfo, parameters, constraints, newParameterPairs, newGlobalSize, newLocalSize,
-                finalResult);
+            computeConfigurations(currentParameterIndex + 1, parameters, constraints, newParameterPairs, newGlobalSize, newLocalSize, finalResult);
         }
     }
     else
@@ -453,21 +452,20 @@ void KernelManager::computeConfigurations(const size_t currentParameterIndex, co
             DimensionVector newGlobalSize = globalSize;
             DimensionVector newLocalSize = localSize;
 
-            computeConfigurations(currentParameterIndex + 1, deviceInfo, parameters, constraints, newParameterPairs, newGlobalSize, newLocalSize,
-                finalResult);
+            computeConfigurations(currentParameterIndex + 1, parameters, constraints, newParameterPairs, newGlobalSize, newLocalSize, finalResult);
         }
     }
 }
 
-void KernelManager::computeCompositionConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo,
-    const std::vector<KernelParameter>& parameters, const std::vector<KernelConstraint>& constraints,
-    const std::vector<ParameterPair>& parameterPairs, std::vector<std::pair<KernelId, DimensionVector>>& globalSizes,
-    std::vector<std::pair<KernelId, DimensionVector>>& localSizes, std::vector<KernelConfiguration>& finalResult) const
+void KernelManager::computeCompositionConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
+    const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs,
+    std::vector<std::pair<KernelId, DimensionVector>>& globalSizes, std::vector<std::pair<KernelId, DimensionVector>>& localSizes,
+    std::vector<KernelConfiguration>& finalResult) const
 {
     if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
         KernelConfiguration configuration(globalSizes, localSizes, parameterPairs);
-        if (configurationIsValid(configuration, constraints, deviceInfo))
+        if (configurationIsValid(configuration, constraints))
         {
             finalResult.push_back(configuration);
         }
@@ -501,8 +499,8 @@ void KernelManager::computeCompositionConfigurations(const size_t currentParamet
                 }
             }
 
-            computeCompositionConfigurations(currentParameterIndex + 1, deviceInfo, parameters, constraints, newParameterPairs, globalSizes,
-                localSizes, finalResult);
+            computeCompositionConfigurations(currentParameterIndex + 1, parameters, constraints, newParameterPairs, globalSizes, localSizes,
+                finalResult);
         }
     }
     else
@@ -512,14 +510,13 @@ void KernelManager::computeCompositionConfigurations(const size_t currentParamet
             auto newParameterPairs = parameterPairs;
             newParameterPairs.push_back(ParameterPair(parameter.getName(), value));
 
-            computeCompositionConfigurations(currentParameterIndex + 1, deviceInfo, parameters, constraints, newParameterPairs, globalSizes,
-                localSizes, finalResult);
+            computeCompositionConfigurations(currentParameterIndex + 1, parameters, constraints, newParameterPairs, globalSizes, localSizes,
+                finalResult);
         }
     }
 }
 
-bool KernelManager::configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints,
-    const DeviceInfo& deviceInfo) const
+bool KernelManager::configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints) const
 {
     for (const auto& constraint : constraints)
     {
@@ -548,7 +545,7 @@ bool KernelManager::configurationIsValid(const KernelConfiguration& configuratio
     std::vector<DimensionVector> localSizes = configuration.getLocalSizes();
     for (const auto& localSize : localSizes)
     {
-        if (localSize.getTotalSize() > deviceInfo.getMaxWorkGroupSize())
+        if (localSize.getTotalSize() > currentDeviceInfo.getMaxWorkGroupSize())
         {
             return false;
         }

@@ -25,6 +25,8 @@ public:
     KernelResult runComposition(const KernelId id, const std::vector<ParameterPair>& configuration,
         const std::vector<ArgumentOutputDescriptor>& output);
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
+
+    // Compute engine methods
     KernelArgument downloadArgument(const ArgumentId id) const;
     void clearBuffers(const ArgumentAccessType& accessType);
     void clearBuffers();

@@ -9,10 +9,8 @@
 namespace ktt
 {
 
-TuningRunner::TuningRunner(ArgumentManager* argumentManager, ComputeEngine* computeEngine, KernelManager* kernelManager, KernelRunner* kernelRunner,
-    Logger* logger) :
+TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner, Logger* logger) :
     argumentManager(argumentManager),
-    computeEngine(computeEngine),
     kernelManager(kernelManager),
     kernelRunner(kernelRunner),
     logger(logger),
@@ -34,8 +32,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
 
     resultValidator->computeReferenceResult(kernel);
     configurationManager.clearData(id);
-    configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id, computeEngine->getCurrentDeviceInfo()),
-        kernel.getParameters());
+    configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id), kernel.getParameters());
     size_t configurationsCount = configurationManager.getConfigurationCount(id);
     std::vector<KernelResult> results;
 
@@ -88,8 +85,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
 
     resultValidator->computeReferenceResult(compatibilityKernel);
     configurationManager.clearData(id);
-    configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id, computeEngine->getCurrentDeviceInfo()),
-        composition.getParameters());
+    configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id), composition.getParameters());
     size_t configurationsCount = configurationManager.getConfigurationCount(id);
     std::vector<KernelResult> results;
 
@@ -132,8 +128,7 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
 
     if (!configurationManager.hasKernelConfigurations(id))
     {
-        configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id, computeEngine->getCurrentDeviceInfo()),
-            kernel.getParameters());
+        configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id), kernel.getParameters());
     }
 
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
@@ -160,8 +155,7 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
 
     if (!configurationManager.hasKernelConfigurations(id))
     {
-        configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id,
-            computeEngine->getCurrentDeviceInfo()), composition.getParameters());
+        configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id), composition.getParameters());
     }
 
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);

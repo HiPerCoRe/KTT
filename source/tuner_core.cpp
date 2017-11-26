@@ -8,8 +8,7 @@ namespace ktt
 {
 
 TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi) :
-    argumentManager(std::make_unique<ArgumentManager>()),
-    kernelManager(std::make_unique<KernelManager>())
+    argumentManager(std::make_unique<ArgumentManager>())
 {
     if (computeApi == ComputeApi::Opencl)
     {
@@ -27,11 +26,13 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
     {
         throw std::runtime_error("Specified compute API is not supported");
     }
-    kernelRunner = std::make_unique<KernelRunner>(argumentManager.get(), kernelManager.get(), &logger, computeEngine.get());
-    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), computeEngine.get(), kernelManager.get(), kernelRunner.get(), &logger);
 
     DeviceInfo info = computeEngine->getCurrentDeviceInfo();
     logger.log(std::string("Initializing tuner for device: ") + info.getName());
+
+    kernelManager = std::make_unique<KernelManager>(info);
+    kernelRunner = std::make_unique<KernelRunner>(argumentManager.get(), kernelManager.get(), &logger, computeEngine.get());
+    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), kernelRunner.get(), &logger);
 }
 
 KernelId TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
