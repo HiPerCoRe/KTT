@@ -3,6 +3,10 @@
 namespace ktt
 {
 
+KernelConfiguration::KernelConfiguration() :
+    compositeConfiguration(false)
+{}
+
 KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
     const std::vector<ParameterPair>& parameterPairs) :
     globalSize(globalSize),

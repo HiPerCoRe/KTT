@@ -39,14 +39,14 @@ public:
     void setKernelArguments(const std::vector<KernelArgument*>& arguments);
     void uploadBuffers();
     void downloadBuffers(const std::vector<ArgumentOutputDescriptor>& output) const;
-    KernelRunResult getCurrentResult() const;
+    KernelResult getCurrentResult() const;
     void clearData();
 
 private:
     // Attributes
     ComputeEngine* computeEngine;
-    KernelRunResult currentResult;
     KernelConfiguration currentConfiguration;
+    KernelResult currentResult;
     std::map<size_t, KernelRuntimeData> kernelData;
     std::map<size_t, KernelArgument*> vectorArguments;
     std::map<size_t, KernelArgument> nonVectorArguments;

@@ -13,8 +13,6 @@
 #include "opencl_platform.h"
 #include "opencl_program.h"
 #include "compute_engine/compute_engine.h"
-#include "dto/kernel_run_result.h"
-#include "kernel_argument/kernel_argument.h"
 
 namespace ktt
 {
@@ -26,7 +24,7 @@ public:
     explicit OpenclCore(const size_t platformIndex, const size_t deviceIndex);
 
     // Kernel execution method
-    KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
     // Utility methods

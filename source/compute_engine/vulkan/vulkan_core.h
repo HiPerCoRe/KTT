@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "compute_engine/compute_engine.h"
 
 #ifdef PLATFORM_VULKAN
 #include "vulkan/vulkan.h"
@@ -18,10 +19,6 @@
 #include "vulkan_utility.h"
 #endif // PLATFORM_VULKAN
 
-#include "compute_engine/compute_engine.h"
-#include "dto/kernel_run_result.h"
-#include "kernel_argument/kernel_argument.h"
-
 namespace ktt
 {
 
@@ -34,7 +31,7 @@ public:
     explicit VulkanCore(const size_t deviceIndex);
 
     // Kernel execution method
-    KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
     // Utility methods
@@ -84,7 +81,7 @@ public:
     // Constructor
     explicit VulkanCore(const size_t deviceIndex);
 
-    KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
     // Utility methods

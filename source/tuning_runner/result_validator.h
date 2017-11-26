@@ -11,10 +11,10 @@
 #include <vector>
 #include "half.hpp"
 #include "api/reference_class.h"
-#include "compute_engine/compute_engine.h"
 #include "enum/validation_method.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
+#include "tuning_runner/kernel_runner.h"
 #include "utility/logger.h"
 
 namespace ktt
@@ -26,7 +26,7 @@ class ResultValidator
 {
 public:
     // Constructor
-    explicit ResultValidator(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine);
+    explicit ResultValidator(ArgumentManager* argumentManager, KernelRunner* kernelRunner, Logger* logger);
 
     // Core methods
     void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
@@ -48,9 +48,8 @@ public:
 private:
     // Attributes
     ArgumentManager* argumentManager;
-    KernelManager* kernelManager;
+    KernelRunner* kernelRunner;
     Logger* logger;
-    ComputeEngine* computeEngine;
     double toleranceThreshold;
     ValidationMethod validationMethod;
     std::map<ArgumentId, size_t> argumentValidationRanges;
@@ -65,7 +64,6 @@ private:
     void computeReferenceResultWithKernel(const Kernel& kernel);
     bool validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments,
         const std::string kernelName, const KernelConfiguration& configuration) const;
-    std::vector<KernelArgument*> getKernelArgumentPointers(const KernelId id) const;
     bool validateResultCustom(const ArgumentId id, const void* result, const void* referenceResult, const size_t numberOfElements,
         const size_t elementSizeInBytes, const std::function<bool(const void*, const void*)>& comparator) const;
 

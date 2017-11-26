@@ -6,12 +6,10 @@
 namespace ktt
 {
 
-ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger,
-    ComputeEngine* computeEngine) :
+ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelRunner* kernelRunner, Logger* logger) :
     argumentManager(argumentManager),
-    kernelManager(kernelManager),
+    kernelRunner(kernelRunner),
     logger(logger),
-    computeEngine(computeEngine),
     toleranceThreshold(1e-4),
     validationMethod(ValidationMethod::SideBySideComparison)
 {}
@@ -95,7 +93,7 @@ bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const Ker
 
     for (const auto argumentId : argumentIds)
     {
-        KernelArgument resultArgument = computeEngine->downloadArgument(argumentId);
+        KernelArgument resultArgument = kernelRunner->downloadArgument(argumentId);
         resultArguments.push_back(resultArgument);
     }
 
@@ -117,7 +115,7 @@ bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const Ke
 
     for (const auto argumentId : argumentIds)
     {
-        KernelArgument resultArgument = computeEngine->downloadArgument(argumentId);
+        KernelArgument resultArgument = kernelRunner->downloadArgument(argumentId);
         resultArguments.push_back(resultArgument);
     }
 
@@ -208,21 +206,16 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
         }
     }
 
-    const Kernel& referenceKernel = kernelManager->getKernel(referenceKernelId);
-    KernelConfiguration configuration = kernelManager->getKernelConfiguration(referenceKernelId, referenceParameters);
-    std::string source = kernelManager->getKernelSourceWithDefines(referenceKernelId, configuration);
-
     logger->log(std::string("Computing reference kernel result for kernel: ") + kernel.getName());
-    auto result = computeEngine->runKernel(KernelRuntimeData(referenceKernelId, referenceKernel.getName(), source, configuration.getGlobalSize(),
-        configuration.getLocalSize(), {}), getKernelArgumentPointers(referenceKernelId), {});
-    std::vector<KernelArgument> referenceResult;
+    kernelRunner->runKernel(referenceKernelId, referenceParameters, std::vector<ArgumentOutputDescriptor>{});
 
+    std::vector<KernelArgument> referenceResult;
     for (const auto argumentId : referenceArgumentIds)
     {
-        referenceResult.push_back(computeEngine->downloadArgument(argumentId));
+        referenceResult.push_back(kernelRunner->downloadArgument(argumentId));
     }
 
-    computeEngine->clearBuffers();
+    kernelRunner->clearBuffers();
     referenceKernelResults.insert(std::make_pair(kernelId, referenceResult));
 }
 
@@ -340,20 +333,6 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
     }
 
     return validationResult;
-}
-
-std::vector<KernelArgument*> ResultValidator::getKernelArgumentPointers(const KernelId id) const
-{
-    std::vector<KernelArgument*> result;
-
-    std::vector<ArgumentId> argumentIds = kernelManager->getKernel(id).getArgumentIds();
-    
-    for (const auto id : argumentIds)
-    {
-        result.push_back(&argumentManager->getArgument(id));
-    }
-
-    return result;
 }
 
 bool ResultValidator::validateResultCustom(const ArgumentId id, const void* result, const void* referenceResult, const size_t numberOfElements,

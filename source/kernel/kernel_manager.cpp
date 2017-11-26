@@ -79,29 +79,29 @@ KernelConfiguration KernelManager::getKernelConfiguration(const KernelId id, con
     
     for (const auto& parameterPair : parameterPairs)
     {
-        const KernelParameter* targetParameter = nullptr;
+        bool parameterFound = false;
+
         for (const auto& parameter : kernel.getParameters())
         {
             if (parameter.getName() == parameterPair.getName())
             {
-                targetParameter = &parameter;
+                if (parameter.getModifierType() == ThreadModifierType::Global)
+                {
+                    global.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
+                }
+                else if (parameter.getModifierType() == ThreadModifierType::Local)
+                {
+                    local.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
+                }
+                parameterFound = true;
                 break;
             }
         }
 
-        if (targetParameter == nullptr)
+        if (!parameterFound)
         {
-            throw std::runtime_error(std::string("Parameter with name <") + parameterPair.getName() + "> is not associated with kernel with id: "
+            throw std::runtime_error(std::string("Parameter with name ") + parameterPair.getName() + " is not associated with kernel with id: "
                 + std::to_string(id));
-        }
-
-        if (targetParameter->getModifierType() == ThreadModifierType::Global)
-        {
-            global.modifyByValue(parameterPair.getValue(), targetParameter->getModifierAction(), targetParameter->getModifierDimension());
-        }
-        else if (targetParameter->getModifierType() == ThreadModifierType::Local)
-        {
-            local.modifyByValue(parameterPair.getValue(), targetParameter->getModifierAction(), targetParameter->getModifierDimension());
         }
     }
 
@@ -128,43 +128,43 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
     
     for (const auto& parameterPair : parameterPairs)
     {
-        const KernelParameter* targetParameter = nullptr;
+        bool parameterFound = false;
+
         for (const auto& parameter : kernelComposition.getParameters())
         {
             if (parameter.getName() == parameterPair.getName())
             {
-                targetParameter = &parameter;
+                for (auto& globalSizePair : globalSizes)
+                {
+                    for (const auto kernelId : parameter.getCompositionKernels())
+                    {
+                        if (globalSizePair.first == kernelId && parameter.getModifierType() == ThreadModifierType::Global)
+                        {
+                            globalSizePair.second.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(),
+                                parameter.getModifierDimension());
+                        }
+                    }
+                }
+                for (auto& localSizePair : localSizes)
+                {
+                    for (const auto kernelId : parameter.getCompositionKernels())
+                    {
+                        if (localSizePair.first == kernelId && parameter.getModifierType() == ThreadModifierType::Local)
+                        {
+                            localSizePair.second.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(),
+                                parameter.getModifierDimension());
+                        }
+                    }
+                }
+                parameterFound = true;
                 break;
             }
         }
 
-        if (targetParameter == nullptr)
+        if (!parameterFound)
         {
-            throw std::runtime_error(std::string("Parameter with name <") + parameterPair.getName()
-                + "> is not associated with kernel composition with id: " + std::to_string(compositionId));
-        }
-
-        for (auto& globalSizePair : globalSizes)
-        {
-            for (const auto kernelId : targetParameter->getCompositionKernels())
-            {
-                if (globalSizePair.first == kernelId && targetParameter->getModifierType() == ThreadModifierType::Global)
-                {
-                    globalSizePair.second.modifyByValue(parameterPair.getValue(), targetParameter->getModifierAction(),
-                        targetParameter->getModifierDimension());
-                }
-            }
-        }
-        for (auto& localSizePair : localSizes)
-        {
-            for (const auto kernelId : targetParameter->getCompositionKernels())
-            {
-                if (localSizePair.first == kernelId && targetParameter->getModifierType() == ThreadModifierType::Local)
-                {
-                    localSizePair.second.modifyByValue(parameterPair.getValue(), targetParameter->getModifierAction(),
-                        targetParameter->getModifierDimension());
-                }
-            }
+            throw std::runtime_error(std::string("Parameter with name ") + parameterPair.getName()
+                + " is not associated with kernel composition with id: " + std::to_string(compositionId));
         }
     }
 

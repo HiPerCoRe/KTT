@@ -25,7 +25,7 @@ VulkanCore::VulkanCore(const size_t deviceIndex) :
     commandBuffer = std::make_unique<VulkanCommandBuffer>(device->getDevice(), commandPool->getCommandPool());
 }
 
-KernelRunResult VulkanCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+KernelResult VulkanCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
     throw std::runtime_error("runKernel() method is not supported for Vulkan yet");
@@ -194,7 +194,7 @@ VulkanCore::VulkanCore(const size_t)
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }
 
-KernelRunResult VulkanCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<ArgumentOutputDescriptor>&)
+KernelResult VulkanCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<ArgumentOutputDescriptor>&)
 {
     throw std::runtime_error("Support for Vulkan API is not included in this version of KTT library");
 }

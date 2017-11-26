@@ -26,20 +26,15 @@ CudaCore::CudaCore(const size_t deviceIndex) :
     stream = std::make_unique<CudaStream>(context->getContext(), devices.at(deviceIndex).getDevice());
 }
 
-KernelRunResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+KernelResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
     std::unique_ptr<CudaProgram> program = createAndBuildProgram(kernelData.getSource());
     std::unique_ptr<CudaKernel> kernel = createKernel(*program, kernelData.getName());
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
-    Timer timer;
-    timer.start();
     float duration = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
         getSharedMemorySizeInBytes(argumentPointers));
-
-    timer.stop();
-    uint64_t overhead = timer.getElapsedTime();
 
     for (const auto& descriptor : outputDescriptors)
     {
@@ -53,7 +48,7 @@ KernelRunResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const s
         }
     }
 
-    return KernelRunResult(static_cast<uint64_t>(duration), overhead);
+    return KernelResult(kernelData.getName(), static_cast<uint64_t>(duration));
 }
 
 void CudaCore::setCompilerOptions(const std::string& options)
@@ -416,7 +411,7 @@ CudaCore::CudaCore(const size_t)
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
-KernelRunResult CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<ArgumentOutputDescriptor>&)
+KernelResult CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<ArgumentOutputDescriptor>&)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }

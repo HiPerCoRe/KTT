@@ -16,7 +16,7 @@ void ResultPrinter::printResult(const KernelId id, std::ostream& outputTarget, c
         throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(id));
     }
 
-    std::vector<TuningResult> results = kernelResults.find(id)->second;
+    std::vector<KernelResult> results = kernelResults.find(id)->second;
 
     switch (format)
     {
@@ -31,17 +31,17 @@ void ResultPrinter::printResult(const KernelId id, std::ostream& outputTarget, c
     }
 }
 
-void ResultPrinter::addResult(const KernelId id, const TuningResult& result)
+void ResultPrinter::addResult(const KernelId id, const KernelResult& result)
 {
     if (kernelResults.find(id) == kernelResults.end())
     {
-        kernelResults.insert(std::make_pair(id, std::vector<TuningResult>{}));
+        kernelResults.insert(std::make_pair(id, std::vector<KernelResult>{}));
     }
 
     kernelResults.find(id)->second.push_back(result);
 }
 
-void ResultPrinter::setResult(const KernelId id, const std::vector<TuningResult>& results)
+void ResultPrinter::setResult(const KernelId id, const std::vector<KernelResult>& results)
 {
     if (kernelResults.find(id) != kernelResults.end())
     {
@@ -61,7 +61,7 @@ void ResultPrinter::setInvalidResultPrinting(const bool flag)
     printInvalidResult = flag;
 }
 
-void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::ostream& outputTarget) const
+void ResultPrinter::printVerbose(const std::vector<KernelResult>& results, std::ostream& outputTarget) const
 {
     for (const auto& result : results)
     {
@@ -70,7 +70,7 @@ void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::
             continue;
         }
 
-        outputTarget << "Result for kernel <" << result.getKernelName() << ">, configuration: " << std::endl;
+        outputTarget << "Result for kernel " << result.getKernelName() << ", configuration: " << std::endl;
         printConfigurationVerbose(outputTarget, result.getConfiguration());
         outputTarget << "Kernel duration: " << convertTime(result.getKernelDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
         if (result.getManipulatorDuration() != 0)
@@ -80,10 +80,10 @@ void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::
         outputTarget << std::endl;
     }
 
-    TuningResult bestResult = getBestResult(results);
+    KernelResult bestResult = getBestResult(results);
     if (bestResult.isValid())
     {
-        outputTarget << "Best result for kernel <" << bestResult.getKernelName() << ">: " << std::endl;
+        outputTarget << "Best result for kernel " << bestResult.getKernelName() << ": " << std::endl;
         outputTarget << "Configuration: ";
         printConfigurationVerbose(outputTarget, bestResult.getConfiguration());
         outputTarget << "Kernel duration: " << convertTime(bestResult.getKernelDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
@@ -107,15 +107,15 @@ void ResultPrinter::printVerbose(const std::vector<TuningResult>& results, std::
                 continue;
             }
 
-            outputTarget << "Invalid result for kernel <" << result.getKernelName() << ">, configuration: " << std::endl;
+            outputTarget << "Invalid result for kernel " << result.getKernelName() << ", configuration: " << std::endl;
             printConfigurationVerbose(outputTarget, result.getConfiguration());
-            outputTarget << "Result status: " << result.getStatusMessage();
+            outputTarget << "Error message: " << result.getErrorMessage();
             outputTarget << std::endl << std::endl;
         }
     }
 }
 
-void ResultPrinter::printCsv(const std::vector<TuningResult>& results, std::ostream& outputTarget) const
+void ResultPrinter::printCsv(const std::vector<KernelResult>& results, std::ostream& outputTarget) const
 {
     // Header
     outputTarget << "Kernel name,";
@@ -176,7 +176,7 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, std::ostr
         outputTarget << std::endl;
 
         // Header
-        outputTarget << "Kernel name,Status";
+        outputTarget << "Kernel name,Error message";
 
         if (kernelCount == 1)
         {
@@ -215,7 +215,7 @@ void ResultPrinter::printCsv(const std::vector<TuningResult>& results, std::ostr
             }
 
             outputTarget << result.getKernelName() << ",";
-            std::string statusMessage = result.getStatusMessage();
+            std::string statusMessage = result.getErrorMessage();
             for (size_t i = 0; i < statusMessage.length(); i++)
             {
                 if (statusMessage[i] == '\n' || statusMessage[i] == ',')
@@ -311,13 +311,14 @@ void ResultPrinter::printConfigurationCsv(std::ostream& outputTarget, const Kern
     outputTarget << std::endl;
 }
 
-TuningResult ResultPrinter::getBestResult(const std::vector<TuningResult>& results) const
+KernelResult ResultPrinter::getBestResult(const std::vector<KernelResult>& results) const
 {
-    TuningResult bestResult = results.at(0);
+    KernelResult bestResult = KernelResult();
+    bestResult.setKernelDuration(UINT64_MAX);
 
     for (const auto& result : results)
     {
-        if (result.getTotalDuration() < bestResult.getTotalDuration())
+        if (result.isValid() && result.getTotalDuration() < bestResult.getTotalDuration())
         {
             bestResult = result;
         }

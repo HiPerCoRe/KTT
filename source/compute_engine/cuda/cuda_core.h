@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "compute_engine/compute_engine.h"
 
 #ifdef PLATFORM_CUDA
 #include "cuda.h"
@@ -19,10 +20,6 @@
 #include "cuda_utility.h"
 #endif // PLATFORM_CUDA
 
-#include "compute_engine/compute_engine.h"
-#include "dto/kernel_run_result.h"
-#include "kernel_argument/kernel_argument.h"
-
 namespace ktt
 {
 
@@ -35,7 +32,7 @@ public:
     explicit CudaCore(const size_t deviceIndex);
 
     // Kernel execution method
-    KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
     // Utility methods
@@ -92,7 +89,7 @@ public:
     explicit CudaCore(const size_t deviceIndex);
 
     // Kernel execution method
-    KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
     // Utility methods

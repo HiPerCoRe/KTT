@@ -29,7 +29,7 @@ OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex) :
     commandQueue = std::make_unique<OpenclCommandQueue>(context->getContext(), device);
 }
 
-KernelRunResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+KernelResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
     std::unique_ptr<OpenclProgram> program = createAndBuildProgram(kernelData.getSource());
@@ -40,11 +40,7 @@ KernelRunResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const
         setKernelArgument(*kernel, *argument);
     }
 
-    Timer timer;
-    timer.start();
     cl_ulong duration = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize());
-    timer.stop();
-    uint64_t overhead = timer.getElapsedTime();
 
     for (const auto& descriptor : outputDescriptors)
     {
@@ -58,7 +54,7 @@ KernelRunResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const
         }
     }
 
-    return KernelRunResult(static_cast<uint64_t>(duration), overhead);
+    return KernelResult(kernelData.getName(), static_cast<uint64_t>(duration));
 }
 
 void OpenclCore::setCompilerOptions(const std::string& options)

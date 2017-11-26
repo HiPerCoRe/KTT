@@ -362,7 +362,7 @@ public:
     /** @fn void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
       * const std::vector<ArgumentId>& validatedArgumentIds)
       * @brief Sets reference kernel for specified kernel. Reference kernel output will be compared to tuned kernel output in order to ensure
-      * correctness of computation. Reference kernel uses only single configuration which cannot be composite and cannot use tuning manipulator.
+      * correctness of computation. Reference kernel uses only single configuration and cannot be composite.
       * @param id Id of kernel for which reference kernel is set.
       * @param referenceId Id of reference kernel. This can be the same as validated kernel. This can be useful in cases where kernel has
       * a configuration which is known to produce correct results.

@@ -9,8 +9,8 @@ namespace ktt
 
 ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeEngine* computeEngine) :
     computeEngine(computeEngine),
-    currentResult(KernelRunResult(0, 0)),
-    currentConfiguration(KernelConfiguration(DimensionVector(), DimensionVector(), std::vector<ParameterPair>{}))
+    currentConfiguration(KernelConfiguration()),
+    currentResult("", currentConfiguration)
 {}
 
 void ManipulatorInterfaceImplementation::runKernel(const KernelId id)
@@ -39,12 +39,12 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
     kernelData.setGlobalSize(globalSize);
     kernelData.setLocalSize(localSize);
 
-    KernelRunResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()),
+    KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()),
         std::vector<ArgumentOutputDescriptor>{});
-    currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead());
+    currentResult.setKernelDuration(currentResult.getKernelDuration() + result.getKernelDuration());
 
     timer.stop();
-    currentResult.increaseOverhead(timer.getElapsedTime());
+    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
 }
 
 DimensionVector ManipulatorInterfaceImplementation::getCurrentGlobalSize(const KernelId id) const
@@ -183,7 +183,7 @@ void ManipulatorInterfaceImplementation::createArgumentBuffer(const ArgumentId i
     computeEngine->uploadArgument(*argumentPointer->second);
 
     timer.stop();
-    currentResult.increaseOverhead(timer.getElapsedTime());
+    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
 }
 
 void ManipulatorInterfaceImplementation::destroyArgumentBuffer(const ArgumentId id)
@@ -194,7 +194,7 @@ void ManipulatorInterfaceImplementation::destroyArgumentBuffer(const ArgumentId 
     computeEngine->clearBuffer(id);
 
     timer.stop();
-    currentResult.increaseOverhead(timer.getElapsedTime());
+    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
 }
 
 void ManipulatorInterfaceImplementation::addKernel(const KernelId id, const KernelRuntimeData& data)
@@ -205,6 +205,8 @@ void ManipulatorInterfaceImplementation::addKernel(const KernelId id, const Kern
 void ManipulatorInterfaceImplementation::setConfiguration(const KernelConfiguration& configuration)
 {
     currentConfiguration = configuration;
+    currentResult.setConfiguration(currentConfiguration);
+    currentResult.setValid(true);
 }
 
 void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<KernelArgument*>& arguments)
@@ -247,14 +249,14 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Argum
 
 void ManipulatorInterfaceImplementation::clearData()
 {
-    currentResult = KernelRunResult(0, 0);
-    currentConfiguration = KernelConfiguration(DimensionVector(), DimensionVector(), std::vector<ParameterPair>{});
+    currentResult = KernelResult();
+    currentConfiguration = KernelConfiguration();
     kernelData.clear();
     vectorArguments.clear();
     nonVectorArguments.clear();
 }
 
-KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const
+KernelResult ManipulatorInterfaceImplementation::getCurrentResult() const
 {
     return currentResult;
 }

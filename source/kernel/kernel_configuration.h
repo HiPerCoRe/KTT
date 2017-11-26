@@ -15,6 +15,7 @@ class PSOSearcher;
 class KernelConfiguration
 {
 public:
+    KernelConfiguration();
     explicit KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
         const std::vector<ParameterPair>& parameterPairs);
     explicit KernelConfiguration(const std::vector<std::pair<KernelId, DimensionVector>>& compositionGlobalSizes,
