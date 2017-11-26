@@ -17,11 +17,7 @@ enum class GlobalSizeType
 
     /** @brief Global thread size uses CUDA format for grid dimensions specification.
       */
-    Cuda,
-
-    /** @brief Currently unspecified format.
-      */
-    Vulkan
+    Cuda
 };
 
 } // namespace ktt

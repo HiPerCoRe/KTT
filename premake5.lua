@@ -1,6 +1,5 @@
 -- Configuration variables
 cuda_examples = false
-vulkan_examples = false
 
 -- Helper functions to find compute API headers and libraries
 function findLibrariesAmd()
@@ -97,29 +96,6 @@ function findLibrariesNvidia()
     return true
 end
 
-function findVulkan()
-    local path = os.getenv("VULKAN_SDK")
-    
-    if not path then
-        return false
-    end
-    
-    includedirs { "$(VULKAN_SDK)/Include" }
-    
-    filter "platforms:x86"
-        libdirs { "$(VULKAN_SDK)/Lib32" }
-
-    filter "platforms:x86_64"
-        libdirs { "$(VULKAN_SDK)/Lib" }
-    
-    filter {}
-    vulkan_examples = true
-    defines { "PLATFORM_VULKAN" }
-    links { "vulkan-1" }
-    
-    return true
-end
-
 function findLibraries()
     if findLibrariesAmd() then
         return true
@@ -155,12 +131,6 @@ newoption
     trigger = "outdir",
     value = "path",
     description = "Specifies output directory for generated files"
-}
-
-newoption
-{
-    trigger = "vulkan",
-    description = "Enables compilation of Vulkan back-end"
 }
 
 newoption
@@ -240,14 +210,6 @@ project "ktt"
         libraries = findLibraries()
     end
     
-    if _OPTIONS["vulkan"] then
-        vulkan = findVulkan()
-        
-        if not vulkan then
-            error("Vulkan SDK was not found")
-        end
-    end
-    
     if not libraries then
         error("Compute API libraries were not found")
     end
@@ -320,16 +282,6 @@ project "info_cuda"
     links { "ktt" }
 
 end -- cuda_examples
-
-if vulkan_examples then
-
-project "info_vulkan"
-    kind "ConsoleApp"
-    files { "examples/compute_api_info/compute_api_info_vulkan.cpp" }
-    includedirs { "source" }
-    links { "ktt" }
-
-end -- vulkan_examples
 
 end -- _OPTIONS["no-examples"]
     

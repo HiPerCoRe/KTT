@@ -32,7 +32,7 @@ public:
     explicit CudaCore(const size_t deviceIndex);
 
     // Kernel execution method
-    KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    KernelResult runKernel(const QueueId queue, const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
     // Utility methods
@@ -40,12 +40,16 @@ public:
     void setGlobalSizeType(const GlobalSizeType& type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
+    // Queue handling methods
+    QueueId getDefaultQueue() const override;
+    QueueId createQueue() override;
+
     // Argument handling methods
-    void uploadArgument(KernelArgument& kernelArgument) override;
-    void updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes) override;
-    KernelArgument downloadArgument(const ArgumentId id) const override;
-    void downloadArgument(const ArgumentId id, void* destination) const override;
-    void downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
+    void uploadArgument(const QueueId queue, KernelArgument& kernelArgument) override;
+    void updateArgument(const QueueId queue, const ArgumentId id, const void* data, const size_t dataSizeInBytes) override;
+    KernelArgument downloadArgument(const QueueId queue, const ArgumentId id) const override;
+    void downloadArgument(const QueueId queue, const ArgumentId id, void* destination) const override;
+    void downloadArgument(const QueueId queue, const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType& accessType) override;
@@ -60,7 +64,7 @@ public:
     std::unique_ptr<CudaProgram> createAndBuildProgram(const std::string& source) const;
     std::unique_ptr<CudaEvent> createEvent() const;
     std::unique_ptr<CudaKernel> createKernel(const CudaProgram& program, const std::string& kernelName) const;
-    float enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+    float enqueueKernel(const QueueId queue, CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize) const;
 
 private:
@@ -68,13 +72,14 @@ private:
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
+    QueueId nextId;
     std::unique_ptr<CudaContext> context;
-    std::unique_ptr<CudaStream> stream;
+    std::vector<std::unique_ptr<CudaStream>> streams;
     std::set<std::unique_ptr<CudaBuffer>> buffers;
 
     DeviceInfo getCudaDeviceInfo(const size_t deviceIndex) const;
     std::vector<CudaDevice> getCudaDevices() const;
-    std::vector<CUdeviceptr*> getKernelArguments(const std::vector<KernelArgument*>& argumentPointers);
+    std::vector<CUdeviceptr*> getKernelArguments(const QueueId queue, const std::vector<KernelArgument*>& argumentPointers);
     size_t getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& argumentPointers) const;
     CudaBuffer* findBuffer(const ArgumentId id) const;
     CUdeviceptr* loadBufferFromCache(const ArgumentId id) const;
@@ -89,7 +94,7 @@ public:
     explicit CudaCore(const size_t deviceIndex);
 
     // Kernel execution method
-    KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    KernelResult runKernel(const QueueId queue, const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
     // Utility methods
@@ -97,12 +102,16 @@ public:
     void setGlobalSizeType(const GlobalSizeType& type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
 
+    // Queue handling methods
+    QueueId getDefaultQueue() const override;
+    QueueId createQueue() override;
+
     // Argument handling methods
-    void uploadArgument(KernelArgument& kernelArgument) override;
-    void updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes) override;
-    KernelArgument downloadArgument(const ArgumentId id) const override;
-    void downloadArgument(const ArgumentId id, void* destination) const override;
-    void downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
+    void uploadArgument(const QueueId queue, KernelArgument& kernelArgument) override;
+    void updateArgument(const QueueId queue, const ArgumentId id, const void* data, const size_t dataSizeInBytes) override;
+    KernelArgument downloadArgument(const QueueId queue, const ArgumentId id) const override;
+    void downloadArgument(const QueueId queue, const ArgumentId id, void* destination) const override;
+    void downloadArgument(const QueueId queue, const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType& accessType) override;

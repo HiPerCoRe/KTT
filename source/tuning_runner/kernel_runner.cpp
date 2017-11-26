@@ -96,7 +96,7 @@ void KernelRunner::setTuningManipulator(const KernelId id, std::unique_ptr<Tunin
 
 KernelArgument KernelRunner::downloadArgument(const ArgumentId id) const
 {
-    return computeEngine->downloadArgument(id);
+    return computeEngine->downloadArgument(computeEngine->getDefaultQueue(), id);
 }
 
 void KernelRunner::clearBuffers(const ArgumentAccessType& accessType)
@@ -117,7 +117,8 @@ KernelResult KernelRunner::runKernelSimple(const Kernel& kernel, const KernelCon
     std::string source = kernelManager->getKernelSourceWithDefines(kernelId, configuration);
 
     KernelRuntimeData kernelData(kernelId, kernelName, source, configuration.getGlobalSize(), configuration.getLocalSize(), kernel.getArgumentIds());
-    KernelResult result = computeEngine->runKernel(kernelData, argumentManager->getArguments(kernel.getArgumentIds()), output);
+    KernelResult result = computeEngine->runKernel(computeEngine->getDefaultQueue(), kernelData,
+        argumentManager->getArguments(kernel.getArgumentIds()), output);
     result.setConfiguration(configuration);
     return result;
 }

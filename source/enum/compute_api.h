@@ -17,11 +17,7 @@ enum class ComputeApi
 
     /** @brief Tuner will use CUDA as compute API.
       */
-    Cuda,
-
-    /** @brief Tuner will use Vulkan as compute API. Vulkan API is not supported by KTT library yet.
-      */
-    Vulkan
+    Cuda
 };
 
 } // namespace ktt
