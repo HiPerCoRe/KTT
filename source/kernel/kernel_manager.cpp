@@ -48,9 +48,14 @@ KernelId KernelManager::addKernelComposition(const std::string& compositionName,
 
 std::string KernelManager::getKernelSourceWithDefines(const KernelId id, const KernelConfiguration& configuration) const
 {
+    return getKernelSourceWithDefines(id, configuration.getParameterPairs());
+}
+
+std::string KernelManager::getKernelSourceWithDefines(const KernelId id, const std::vector<ParameterPair>& configuration) const
+{
     std::string source = getKernel(id).getSource();
 
-    for (const auto& parameterPair : configuration.getParameterPairs())
+    for (const auto& parameterPair : configuration)
     {
         std::stringstream stream;
         if (!parameterPair.hasValueDouble())

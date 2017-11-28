@@ -22,6 +22,7 @@ public:
         const DimensionVector& localSize);
     KernelId addKernelComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds);
     std::string getKernelSourceWithDefines(const KernelId id, const KernelConfiguration& configuration) const;
+    std::string getKernelSourceWithDefines(const KernelId id, const std::vector<ParameterPair>& configuration) const;
     KernelConfiguration getKernelConfiguration(const KernelId id, const std::vector<ParameterPair>& parameterPairs) const;
     KernelConfiguration getKernelCompositionConfiguration(const KernelId compositionId, const std::vector<ParameterPair>& parameterPairs) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const KernelId id) const;

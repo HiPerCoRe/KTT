@@ -207,6 +207,7 @@ void ManipulatorInterfaceImplementation::addKernel(const KernelId id, const Kern
 void ManipulatorInterfaceImplementation::setConfiguration(const KernelConfiguration& configuration)
 {
     currentConfiguration = configuration;
+    currentResult.setKernelDuration(0);
     currentResult.setConfiguration(currentConfiguration);
     currentResult.setValid(true);
 }

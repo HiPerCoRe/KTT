@@ -5,7 +5,7 @@ namespace ktt
 
 KernelResult::KernelResult() :
     kernelName(""),
-    kernelDuration(0),
+    kernelDuration(UINT64_MAX),
     manipulatorDuration(0),
     memoryTransferDuration(0),
     overhead(0),
@@ -16,7 +16,7 @@ KernelResult::KernelResult() :
 KernelResult::KernelResult(const std::string& kernelName, const KernelConfiguration& configuration) :
     kernelName(kernelName),
     configuration(configuration),
-    kernelDuration(0),
+    kernelDuration(UINT64_MAX),
     manipulatorDuration(0),
     memoryTransferDuration(0),
     overhead(0),
@@ -37,7 +37,7 @@ KernelResult::KernelResult(const std::string& kernelName, uint64_t kernelDuratio
 KernelResult::KernelResult(const std::string& kernelName, const KernelConfiguration& configuration, const std::string& errorMessage) :
     kernelName(kernelName),
     configuration(configuration),
-    kernelDuration(0),
+    kernelDuration(UINT64_MAX),
     manipulatorDuration(0),
     memoryTransferDuration(0),
     overhead(0),
