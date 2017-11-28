@@ -285,6 +285,17 @@ public:
       */
     void tuneKernel(const KernelId id);
 
+    /** @fn void dryTuneKernel(const KernelId id, const std::string& filePath)
+      * @brief Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration 
+      * space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on specified 
+      * ::SearchMethod.
+      * Important: no checks if tuning data relates to the kernel, tuning parameters  and hardware are performed, 
+      * it is up to user to ensure that dryTuneKernel reads correct file.
+      * @param id Id of kernel for which the tuning begins.
+      * @param filePath Path to CSV file with tuning parameters.
+      */
+    void dryTuneKernel(const KernelId id, const std::string& filePath);
+
     /** @fn void tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
       * @brief Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, creates
       * configuration space based on combinations of provided kernel parameters and constraints. Each time this method is called, launches single

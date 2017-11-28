@@ -10,6 +10,7 @@
 #include "tuning_runner/tuning_runner.h"
 #include "utility/logger.h"
 #include "utility/result_printer.h"
+#include "utility/result_loader.h"
 
 namespace ktt
 {
@@ -46,6 +47,7 @@ public:
 
     // Tuning runner methods
     void tuneKernel(const KernelId id);
+    void dryTuneKernel(const KernelId id, const std::string& filePath);
     void tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output);
     void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
     void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);

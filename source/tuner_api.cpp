@@ -171,6 +171,19 @@ void Tuner::tuneKernel(const KernelId id)
     }
 }
 
+void Tuner::dryTuneKernel(const KernelId id, const std::string& filePath)
+{
+    try
+    {
+        tunerCore->dryTuneKernel(id, filePath);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 void Tuner::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
 {
     try

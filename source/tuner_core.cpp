@@ -141,6 +141,20 @@ void TunerCore::tuneKernel(const KernelId id)
     resultPrinter.setResult(id, results);
 }
 
+void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
+{
+    std::vector<TuningResult> results;
+    if (kernelManager->isComposition(id))
+    {
+        throw std::runtime_error("Dry run is not implemented for compositions");
+    }
+    else
+    {
+        results = tuningRunner->dryTuneKernel(id, filePath);
+    }
+    resultPrinter.setResult(id, results);
+}
+
 void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
 {
     TuningResult result;

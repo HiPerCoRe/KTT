@@ -107,6 +107,8 @@ int main(int argc, char** argv)
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{gridId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
 
+    tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{0.01});
+
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, "coulomb_sum_3d_output.csv", ktt::PrintFormat::CSV);
