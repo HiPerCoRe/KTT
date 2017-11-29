@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "CL/cl.h"
+#include "ktt_types.h"
 #include "opencl_utility.h"
 
 namespace ktt
@@ -10,7 +11,8 @@ namespace ktt
 class OpenclCommandQueue
 {
 public:
-    explicit OpenclCommandQueue(const cl_context context, const cl_device_id device) :
+    explicit OpenclCommandQueue(const QueueId id, const cl_context context, const cl_device_id device) :
+        id(id),
         context(context),
         device(device)
     {
@@ -30,6 +32,11 @@ public:
         checkOpenclError(clReleaseCommandQueue(queue), "clReleaseCommandQueue");
     }
 
+    QueueId getId() const
+    {
+        return id;
+    }
+
     cl_context getContext() const
     {
         return context;
@@ -46,6 +53,7 @@ public:
     }
 
 private:
+    QueueId id;
     cl_context context;
     cl_device_id device;
     cl_command_queue queue;

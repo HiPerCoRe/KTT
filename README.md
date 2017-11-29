@@ -71,7 +71,6 @@ systems are Linux and Windows.
     - `--no-examples` disables compilation of examples
     - `--tests` enables compilation of unit tests
     - `--no-cuda` disables inclusion of CUDA API during compilation, only affects Nvidia platform
-    - `--vulkan` enables inclusion of Vulkan API during compilation, note that Vulkan is not fully supported yet
 
 Original project
 ----------------

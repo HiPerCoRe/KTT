@@ -14,7 +14,7 @@
 namespace ktt
 {
 
-class TuningRunner;
+class KernelRunner;
 class ManipulatorInterface;
 
 /** @class TuningManipulator
@@ -182,7 +182,7 @@ public:
       */
     static double getParameterValueDouble(const std::string& parameterName, const std::vector<ParameterPair>& parameterPairs);
 
-    friend class TuningRunner;
+    friend class KernelRunner;
 
 private:
     ManipulatorInterface* manipulatorInterface;

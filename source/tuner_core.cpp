@@ -1,15 +1,13 @@
 #include "tuner_core.h"
 #include "compute_engine/cuda/cuda_core.h"
 #include "compute_engine/opencl/opencl_core.h"
-#include "compute_engine/vulkan/vulkan_core.h"
 #include "utility/ktt_utility.h"
 
 namespace ktt
 {
 
 TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi) :
-    argumentManager(std::make_unique<ArgumentManager>()),
-    kernelManager(std::make_unique<KernelManager>())
+    argumentManager(std::make_unique<ArgumentManager>())
 {
     if (computeApi == ComputeApi::Opencl)
     {
@@ -19,18 +17,17 @@ TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const
     {
         computeEngine = std::make_unique<CudaCore>(deviceIndex);
     }
-    else if (computeApi == ComputeApi::Vulkan)
-    {
-        computeEngine = std::make_unique<VulkanCore>(deviceIndex);
-    }
     else
     {
         throw std::runtime_error("Specified compute API is not supported");
     }
-    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), &logger, computeEngine.get());
 
     DeviceInfo info = computeEngine->getCurrentDeviceInfo();
     logger.log(std::string("Initializing tuner for device: ") + info.getName());
+
+    kernelManager = std::make_unique<KernelManager>(info);
+    kernelRunner = std::make_unique<KernelRunner>(argumentManager.get(), kernelManager.get(), &logger, computeEngine.get());
+    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), kernelRunner.get(), &logger);
 }
 
 KernelId TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -49,7 +46,7 @@ KernelId TunerCore::addComposition(const std::string& compositionName, const std
     std::unique_ptr<TuningManipulator> manipulator)
 {
     KernelId compositionId = kernelManager->addKernelComposition(compositionName, kernelIds);
-    tuningRunner->setTuningManipulator(compositionId, std::move(manipulator));
+    kernelRunner->setTuningManipulator(compositionId, std::move(manipulator));
     return compositionId;
 }
 
@@ -114,6 +111,15 @@ void TunerCore::setCompositionKernelArguments(const KernelId compositionId, cons
     kernelManager->setCompositionKernelArguments(compositionId, kernelId, argumentIds);
 }
 
+std::string TunerCore::getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const
+{
+    if (!kernelManager->isKernel(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+    return kernelManager->getKernelSourceWithDefines(id, configuration);
+}
+
 ArgumentId TunerCore::addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool copyData)
 {
@@ -127,23 +133,22 @@ ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElement
     return argumentManager->addArgument(data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType);
 }
 
-void TunerCore::tuneKernel(const KernelId id)
+void TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)
 {
-    std::vector<TuningResult> results;
     if (kernelManager->isComposition(id))
     {
-        results = tuningRunner->tuneComposition(id);
+        kernelRunner->runComposition(id, configuration, output);
     }
     else
     {
-        results = tuningRunner->tuneKernel(id);
+        kernelRunner->runKernel(id, configuration, output);
     }
-    resultPrinter.setResult(id, results);
+    kernelRunner->clearBuffers();
 }
 
 void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
 {
-    std::vector<TuningResult> results;
+    std::vector<KernelResult> results;
     if (kernelManager->isComposition(id))
     {
         throw std::runtime_error("Dry run is not implemented for compositions");
@@ -155,9 +160,37 @@ void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
     resultPrinter.setResult(id, results);
 }
 
+void TunerCore::setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
+{
+    if (!kernelManager->isKernel(id) && !kernelManager->isComposition(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+    kernelRunner->setTuningManipulator(id, std::move(manipulator));
+
+    if (kernelManager->isKernel(id))
+    {
+        kernelManager->getKernel(id).setTuningManipulatorFlag(true);
+    }
+}
+
+void TunerCore::tuneKernel(const KernelId id)
+{
+    std::vector<KernelResult> results;
+    if (kernelManager->isComposition(id))
+    {
+        results = tuningRunner->tuneComposition(id);
+    }
+    else
+    {
+        results = tuningRunner->tuneKernel(id);
+    }
+    resultPrinter.setResult(id, results);
+}
+
 void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
 {
-    TuningResult result;
+    KernelResult result;
     if (kernelManager->isComposition(id))
     {
         result = tuningRunner->tuneCompositionByStep(id, output);
@@ -169,17 +202,6 @@ void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOu
     resultPrinter.addResult(id, result);
 }
 
-void TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)
-{
-    if (kernelManager->isComposition(id))
-    {
-        tuningRunner->runComposition(id, configuration, output);
-    }
-    else
-    {
-        tuningRunner->runKernel(id, configuration, output);
-    }
-}
 
 void TunerCore::setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments)
 {
@@ -210,7 +232,6 @@ void TunerCore::setArgumentComparator(const ArgumentId id, const std::function<b
     {
         throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
     }
-
     tuningRunner->setArgumentComparator(id, comparator);
 }
 
@@ -221,7 +242,7 @@ void TunerCore::setReferenceKernel(const KernelId id, const KernelId referenceId
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
-    if (!kernelManager->isKernel(referenceId) || kernelManager->getKernel(referenceId).hasTuningManipulator())
+    if (!kernelManager->isKernel(referenceId))
     {
         throw std::runtime_error(std::string("Invalid reference kernel id: ") + std::to_string(referenceId));
     }
@@ -236,20 +257,6 @@ void TunerCore::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceCl
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
     tuningRunner->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
-}
-
-void TunerCore::setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
-{
-    if (!kernelManager->isKernel(id) && !kernelManager->isComposition(id))
-    {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
-    }
-    tuningRunner->setTuningManipulator(id, std::move(manipulator));
-
-    if (kernelManager->isKernel(id))
-    {
-        kernelManager->getKernel(id).setTuningManipulatorFlag(true);
-    }
 }
 
 std::vector<ParameterPair> TunerCore::getBestConfiguration(const KernelId id) const

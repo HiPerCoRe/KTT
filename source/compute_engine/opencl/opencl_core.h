@@ -13,8 +13,6 @@
 #include "opencl_platform.h"
 #include "opencl_program.h"
 #include "compute_engine/compute_engine.h"
-#include "dto/kernel_run_result.h"
-#include "kernel_argument/kernel_argument.h"
 
 namespace ktt
 {
@@ -26,20 +24,24 @@ public:
     explicit OpenclCore(const size_t platformIndex, const size_t deviceIndex);
 
     // Kernel execution method
-    KernelRunResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    KernelResult runKernel(const QueueId queue, const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType& type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
+    
+    // Queue handling methods
+    QueueId getDefaultQueue() const override;
+    QueueId createQueue() override;
 
     // Argument handling methods
-    void uploadArgument(KernelArgument& kernelArgument) override;
-    void updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes) override;
-    KernelArgument downloadArgument(const ArgumentId id) const override;
-    void downloadArgument(const ArgumentId id, void* destination) const override;
-    void downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
+    void uploadArgument(const QueueId queue, KernelArgument& kernelArgument) override;
+    void updateArgument(const QueueId queue, const ArgumentId id, const void* data, const size_t dataSizeInBytes) override;
+    KernelArgument downloadArgument(const QueueId queue, const ArgumentId id) const override;
+    void downloadArgument(const QueueId queue, const ArgumentId id, void* destination) const override;
+    void downloadArgument(const QueueId queue, const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType& accessType) override;
@@ -52,9 +54,9 @@ public:
 
     // Low-level kernel execution methods
     std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;
-    void setKernelArgument(OpenclKernel& kernel, KernelArgument& argument);
-    std::unique_ptr<OpenclKernel> createKernel(const OpenclProgram& program, const std::string& kernelName) const;
-    cl_ulong enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize) const;
+    void setKernelArgument(const QueueId queue, OpenclKernel& kernel, KernelArgument& argument);
+    cl_ulong enqueueKernel(const QueueId queue, OpenclKernel& kernel, const std::vector<size_t>& globalSize,
+        const std::vector<size_t>& localSize) const;
 
 private:
     // Attributes
@@ -63,8 +65,9 @@ private:
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
+    QueueId nextId;
     std::unique_ptr<OpenclContext> context;
-    std::unique_ptr<OpenclCommandQueue> commandQueue;
+    std::vector<std::unique_ptr<OpenclCommandQueue>> commandQueues;
     std::set<std::unique_ptr<OpenclBuffer>> buffers;
 
     // Helper methods

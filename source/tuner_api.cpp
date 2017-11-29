@@ -270,6 +270,19 @@ std::vector<ParameterPair> Tuner::getBestConfiguration(const KernelId id) const
     }
 }
 
+std::string Tuner::getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const
+{
+    try
+    {
+        return tunerCore->getKernelSource(id, configuration);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 void Tuner::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
     const std::vector<ArgumentId>& validatedArgumentIds)
 {

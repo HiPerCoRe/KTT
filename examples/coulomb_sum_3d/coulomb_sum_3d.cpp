@@ -109,6 +109,7 @@ int main(int argc, char** argv)
 
     //tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{0.01});
 
+    //tuner.dryTuneKernel(kernelId, "coulomb_sum_3d_output.csv");
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, "coulomb_sum_3d_output.csv", ktt::PrintFormat::CSV);

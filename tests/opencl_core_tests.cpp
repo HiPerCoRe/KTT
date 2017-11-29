@@ -17,7 +17,7 @@ TEST_CASE("Working with program and kernel", "Component: OpenclCore")
     auto program = core.createAndBuildProgram(programSource);
     REQUIRE(program->getSource() == programSource);
 
-    auto kernel = core.createKernel(*program, "testKernel");
+    auto kernel = std::make_unique<ktt::OpenclKernel>(program->getProgram(), "testKernel");
     REQUIRE(kernel->getArgumentsCount() == 0);
     REQUIRE(kernel->getKernelName() == "testKernel");
 
@@ -45,8 +45,8 @@ TEST_CASE("Working with OpenCL buffer", "Component: OpenclCore")
 
     SECTION("Transfering argument to / from device")
     {
-        core.uploadArgument(argument);
-        ktt::KernelArgument resultArgument = core.downloadArgument(argument.getId());
+        core.uploadArgument(core.getDefaultQueue(), argument);
+        ktt::KernelArgument resultArgument = core.downloadArgument(core.getDefaultQueue(), argument.getId());
 
         REQUIRE(resultArgument.getDataType() == argument.getDataType());
         REQUIRE(resultArgument.getMemoryLocation() == argument.getMemoryLocation());

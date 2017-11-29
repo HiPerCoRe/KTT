@@ -9,8 +9,8 @@ namespace ktt
 
 ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeEngine* computeEngine) :
     computeEngine(computeEngine),
-    currentResult(KernelRunResult(0, 0)),
-    currentConfiguration(KernelConfiguration(DimensionVector(), DimensionVector(), std::vector<ParameterPair>{}))
+    currentConfiguration(KernelConfiguration()),
+    currentResult("", currentConfiguration)
 {}
 
 void ManipulatorInterfaceImplementation::runKernel(const KernelId id)
@@ -39,12 +39,12 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
     kernelData.setGlobalSize(globalSize);
     kernelData.setLocalSize(localSize);
 
-    KernelRunResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()),
+    KernelResult result = computeEngine->runKernel(computeEngine->getDefaultQueue(), kernelData, getArgumentPointers(kernelData.getArgumentIds()),
         std::vector<ArgumentOutputDescriptor>{});
-    currentResult = KernelRunResult(currentResult.getDuration() + result.getDuration(), currentResult.getOverhead());
+    currentResult.setKernelDuration(currentResult.getKernelDuration() + result.getKernelDuration());
 
     timer.stop();
-    currentResult.increaseOverhead(timer.getElapsedTime());
+    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
 }
 
 DimensionVector ManipulatorInterfaceImplementation::getCurrentGlobalSize(const KernelId id) const
@@ -90,7 +90,7 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId i
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getDataSizeInBytes());
+    computeEngine->updateArgument(computeEngine->getDefaultQueue(), id, argumentData, argumentPointer->second->getDataSizeInBytes());
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)
@@ -101,12 +101,13 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId i
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+    computeEngine->updateArgument(computeEngine->getDefaultQueue(), id, argumentData,
+        argumentPointer->second->getElementSizeInBytes() * numberOfElements);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination) const
 {
-    computeEngine->downloadArgument(id, destination);
+    computeEngine->downloadArgument(computeEngine->getDefaultQueue(), id, destination);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
@@ -117,7 +118,8 @@ void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, 
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->downloadArgument(id, destination, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+    computeEngine->downloadArgument(computeEngine->getDefaultQueue(), id, destination,
+        argumentPointer->second->getElementSizeInBytes() * numberOfElements);
 }
 
 void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
@@ -180,10 +182,10 @@ void ManipulatorInterfaceImplementation::createArgumentBuffer(const ArgumentId i
     {
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
-    computeEngine->uploadArgument(*argumentPointer->second);
+    computeEngine->uploadArgument(computeEngine->getDefaultQueue(), *argumentPointer->second);
 
     timer.stop();
-    currentResult.increaseOverhead(timer.getElapsedTime());
+    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
 }
 
 void ManipulatorInterfaceImplementation::destroyArgumentBuffer(const ArgumentId id)
@@ -194,7 +196,7 @@ void ManipulatorInterfaceImplementation::destroyArgumentBuffer(const ArgumentId 
     computeEngine->clearBuffer(id);
 
     timer.stop();
-    currentResult.increaseOverhead(timer.getElapsedTime());
+    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
 }
 
 void ManipulatorInterfaceImplementation::addKernel(const KernelId id, const KernelRuntimeData& data)
@@ -205,6 +207,9 @@ void ManipulatorInterfaceImplementation::addKernel(const KernelId id, const Kern
 void ManipulatorInterfaceImplementation::setConfiguration(const KernelConfiguration& configuration)
 {
     currentConfiguration = configuration;
+    currentResult.setKernelDuration(0);
+    currentResult.setConfiguration(currentConfiguration);
+    currentResult.setValid(true);
 }
 
 void ManipulatorInterfaceImplementation::setKernelArguments(const std::vector<KernelArgument*>& arguments)
@@ -226,7 +231,7 @@ void ManipulatorInterfaceImplementation::uploadBuffers()
 {
     for (auto& argument : vectorArguments)
     {
-        computeEngine->uploadArgument(*argument.second);
+        computeEngine->uploadArgument(computeEngine->getDefaultQueue(), *argument.second);
     }
 }
 
@@ -236,25 +241,26 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Argum
     {
         if (descriptor.getOutputSizeInBytes() == 0)
         {
-            computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
+            computeEngine->downloadArgument(computeEngine->getDefaultQueue(), descriptor.getArgumentId(), descriptor.getOutputDestination());
         }
         else
         {
-            computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+            computeEngine->downloadArgument(computeEngine->getDefaultQueue(), descriptor.getArgumentId(), descriptor.getOutputDestination(),
+                descriptor.getOutputSizeInBytes());
         }
     }
 }
 
 void ManipulatorInterfaceImplementation::clearData()
 {
-    currentResult = KernelRunResult(0, 0);
-    currentConfiguration = KernelConfiguration(DimensionVector(), DimensionVector(), std::vector<ParameterPair>{});
+    currentResult = KernelResult();
+    currentConfiguration = KernelConfiguration();
     kernelData.clear();
     vectorArguments.clear();
     nonVectorArguments.clear();
 }
 
-KernelRunResult ManipulatorInterfaceImplementation::getCurrentResult() const
+KernelResult ManipulatorInterfaceImplementation::getCurrentResult() const
 {
     return currentResult;
 }

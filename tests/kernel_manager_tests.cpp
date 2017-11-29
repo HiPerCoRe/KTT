@@ -4,7 +4,8 @@
 
 TEST_CASE("Kernel handling operations", "Component: KernelManager")
 {
-    ktt::KernelManager manager;
+    ktt::DeviceInfo deviceInfo(0, "Device");
+    ktt::KernelManager manager(deviceInfo);
     ktt::KernelId id = manager.addKernelFromFile("../tests/test_kernel.cl", "testKernel", ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
 
     SECTION("Kernel id is assigned correctly")
@@ -40,7 +41,9 @@ TEST_CASE("Kernel handling operations", "Component: KernelManager")
 
 TEST_CASE("Kernel configuration retrieval", "Component: KernelManager")
 {
-    ktt::KernelManager manager;
+    ktt::DeviceInfo deviceInfo(0, "Device");
+    deviceInfo.setMaxWorkGroupSize(1024);
+    ktt::KernelManager manager(deviceInfo);
     ktt::KernelId id = manager.addKernelFromFile("../tests/test_kernel.cl", "testKernel", ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
     manager.addParameter(id, "param_one", std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
         ktt::Dimension::X);
@@ -62,10 +65,7 @@ TEST_CASE("Kernel configuration retrieval", "Component: KernelManager")
 
     SECTION("Kernel configurations are computed correctly")
     {
-        ktt::DeviceInfo deviceInfo(0, "Device");
-        deviceInfo.setMaxWorkGroupSize(1024);
-        std::vector<ktt::KernelConfiguration> configurations = manager.getKernelConfigurations(id, deviceInfo);
-
+        std::vector<ktt::KernelConfiguration> configurations = manager.getKernelConfigurations(id);
         REQUIRE(configurations.size() == 6);
     }
 }

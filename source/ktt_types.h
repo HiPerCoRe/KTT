@@ -18,4 +18,9 @@ using ArgumentId = size_t;
   */
 using KernelId = size_t;
 
+/** @typedef QueueId
+  * @brief Data type for referencing compute API queues in KTT.
+  */
+using QueueId = size_t;
+
 } // namespace ktt

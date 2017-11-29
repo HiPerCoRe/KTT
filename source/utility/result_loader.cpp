@@ -81,7 +81,7 @@ bool ResultLoader::loadResults(const std::string& filePath)
     return true;
 }
 
-TuningResult ResultLoader::readResult(const KernelConfiguration& configuration) {
+KernelResult ResultLoader::readResult(const KernelConfiguration& configuration) {
     const std::vector<ParameterPair> paramPairs = configuration.getParameterPairs();
     if (paramsLength != paramPairs.size())
     {
@@ -101,8 +101,8 @@ TuningResult ResultLoader::readResult(const KernelConfiguration& configuration) 
         }
         if (match)
         {
-            KernelRunResult krr(val[0], val[0]);
-            TuningResult tr("dry run", configuration, krr);
+//            KernelRunResult krr(val[0], val[0]);
+            KernelResult tr("dry run", val[0]);
             return tr;
         }
     }

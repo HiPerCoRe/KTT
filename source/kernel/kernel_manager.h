@@ -14,7 +14,7 @@ class KernelManager
 {
 public:
     // Constructor
-    KernelManager();
+    KernelManager(const DeviceInfo& currentDeviceInfo);
 
     // Core methods
     KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
@@ -22,10 +22,11 @@ public:
         const DimensionVector& localSize);
     KernelId addKernelComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds);
     std::string getKernelSourceWithDefines(const KernelId id, const KernelConfiguration& configuration) const;
+    std::string getKernelSourceWithDefines(const KernelId id, const std::vector<ParameterPair>& configuration) const;
     KernelConfiguration getKernelConfiguration(const KernelId id, const std::vector<ParameterPair>& parameterPairs) const;
     KernelConfiguration getKernelCompositionConfiguration(const KernelId compositionId, const std::vector<ParameterPair>& parameterPairs) const;
-    std::vector<KernelConfiguration> getKernelConfigurations(const KernelId id, const DeviceInfo& deviceInfo) const;
-    std::vector<KernelConfiguration> getKernelCompositionConfigurations(const KernelId compositionId, const DeviceInfo& deviceInfo) const;
+    std::vector<KernelConfiguration> getKernelConfigurations(const KernelId id) const;
+    std::vector<KernelConfiguration> getKernelCompositionConfigurations(const KernelId compositionId) const;
 
     // Kernel modification methods
     void addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& modifierType,
@@ -54,18 +55,18 @@ private:
     KernelId nextId;
     std::vector<Kernel> kernels;
     std::vector<KernelComposition> kernelCompositions;
+    DeviceInfo currentDeviceInfo;
 
     // Helper methods
     std::string loadFileToString(const std::string& filePath) const;
-    void computeConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo, const std::vector<KernelParameter>& parameters,
+    void computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
         const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs, const DimensionVector& globalSize,
         const DimensionVector& localSize, std::vector<KernelConfiguration>& finalResult) const;
-    void computeCompositionConfigurations(const size_t currentParameterIndex, const DeviceInfo& deviceInfo,
-        const std::vector<KernelParameter>& parameters, const std::vector<KernelConstraint>& constraints,
-        const std::vector<ParameterPair>& parameterPairs, std::vector<std::pair<KernelId, DimensionVector>>& globalSizes,
-        std::vector<std::pair<KernelId, DimensionVector>>& localSizes, std::vector<KernelConfiguration>& finalResult) const;
-    bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints,
-        const DeviceInfo& deviceInfo) const;
+    void computeCompositionConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
+        const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs,
+        std::vector<std::pair<KernelId, DimensionVector>>& globalSizes, std::vector<std::pair<KernelId, DimensionVector>>& localSizes,
+        std::vector<KernelConfiguration>& finalResult) const;
+    bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints) const;
 };
 
 } // namespace ktt

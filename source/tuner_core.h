@@ -7,6 +7,7 @@
 #include "enum/compute_api.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
+#include "tuning_runner/kernel_runner.h"
 #include "tuning_runner/tuning_runner.h"
 #include "utility/logger.h"
 #include "utility/result_printer.h"
@@ -37,6 +38,7 @@ public:
         const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
         const Dimension& modifierDimension);
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
+    std::string getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const;
 
     // Argument manager methods
     ArgumentId addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
@@ -45,11 +47,14 @@ public:
     ArgumentId addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
         const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType);
 
-    // Tuning runner methods
+    // Kernel runner methods
+    void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
+    void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
+
+    // Kernel tuner methods
     void tuneKernel(const KernelId id);
     void dryTuneKernel(const KernelId id, const std::string& filePath);
     void tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output);
-    void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
     void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod& method, const double toleranceThreshold);
     void setValidationRange(const ArgumentId id, const size_t range);
@@ -57,7 +62,6 @@ public:
     void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
         const std::vector<ArgumentId>& validatedArgumentIds);
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
-    void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
     std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
 
     // Result printer methods
@@ -82,12 +86,13 @@ public:
 
 private:
     // Attributes
+    Logger logger;
+    ResultPrinter resultPrinter;
     std::unique_ptr<ArgumentManager> argumentManager;
     std::unique_ptr<KernelManager> kernelManager;
     std::unique_ptr<ComputeEngine> computeEngine;
+    std::unique_ptr<KernelRunner> kernelRunner;
     std::unique_ptr<TuningRunner> tuningRunner;
-    Logger logger;
-    ResultPrinter resultPrinter;
 };
 
 } // namespace ktt
