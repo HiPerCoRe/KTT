@@ -31,8 +31,10 @@ Tutorials are short examples aimed at introducing people to KTT library. Each tu
 of the API. All tutorials are available for both OpenCL and CUDA back-ends. Tutorials assume that reader has some knowledge
 about C++ and GPU programming. List of currently available tutorials:
 
-* `compute_api_info`: tutorial focused on retrieving information about compute API platforms and devices through KTT API
-* `running_kernel`: tutorial focused on running simple kernel with KTT library
+* `compute_api_info`: Tutorial covers retrieving information about compute API platforms and devices through KTT API.
+* `running_kernel`: Tutorial covers running simple kernel with KTT library and retrieving output.
+* `tuning_kernel_simple`: Tutorial covers simple kernel tuning using small number of tuning parameters and reference class
+to ensure correctness of computation.
 
 Examples
 --------
@@ -40,12 +42,11 @@ Examples
 Examples showcase how KTT library could be utilized in real-world scenarios. Examples are more complex than tutorials and
 assume that reader is familiar with KTT API. List of currently available examples:
 
-* `coulomb_sum_2d`: example which showcases tuning of electrostatic potential map computation, focuses on a single slice
-* `coulomb_sum_3d_iterative`: 3D version of previous example, utilizes kernel which computes single slice and launches
-it iteratively
-* `coulomb_sum_3d`: alternative to iterative version, utilizes kernel which computes entire map in single invocation
-* `nbody`: example which showcases tuning of N-body simulation
-* `reduction`: example which showcases tuning of vector reduction, launches same kernel iteratively
+* `coulomb_sum_2d`: Example which showcases tuning of electrostatic potential map computation, it focuses on a single slice.
+* `coulomb_sum_3d_iterative`: 3D version of previous example, utilizes kernel from 2D version and launches it iteratively.
+* `coulomb_sum_3d`: Alternative to iterative version, utilizes kernel which computes entire map in single invocation.
+* `nbody`: Example which showcases tuning of N-body simulation.
+* `reduction`: Example which showcases tuning of vector reduction, launches a kernel iteratively.
 
 Building KTT
 ------------

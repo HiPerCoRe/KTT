@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     ktt::ArgumentId bId = tuner.addArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId resultId = tuner.addArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
 
-    // Set arguments to the added kernel by providing their ids. The order of ids needs to match the order of arguments inside OpenCL kernel
+    // Set arguments for the added kernel by providing their ids. The order of ids needs to match the order of arguments inside OpenCL kernel
     // function.
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aId, bId, resultId});
 

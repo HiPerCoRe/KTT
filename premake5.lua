@@ -278,6 +278,12 @@ project "01_running_kernel_opencl"
     includedirs { "source" }
     links { "ktt" }
 
+project "02_tuning_kernel_simple_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_opencl.cpp", "tutorials/02_tuning_kernel_simple/opencl_kernel.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+    
 if cuda_projects then
 
 project "00_info_cuda"
@@ -292,6 +298,12 @@ project "01_running_kernel_cuda"
     includedirs { "source" }
     links { "ktt" }
 
+project "02_tuning_kernel_simple_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_cuda.cpp", "tutorials/02_tuning_kernel_simple/cuda_kernel.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+    
 end -- cuda_projects
 
 end -- _OPTIONS["no-tutorials"]

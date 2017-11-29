@@ -5,21 +5,16 @@
 
 int main(int argc, char** argv)
 {
-    // Initialize platform index, device index and path to kernel.
-    size_t platformIndex = 0;
+    // Initialize device index and path to kernel.
     size_t deviceIndex = 0;
     std::string kernelFile = "../tutorials/01_running_kernel/cuda_kernel.cu";
 
     if (argc >= 2)
     {
-        platformIndex = std::stoul(std::string(argv[1]));
+        deviceIndex = std::stoul(std::string(argv[1]));
         if (argc >= 3)
         {
-            deviceIndex = std::stoul(std::string(argv[2]));
-            if (argc >= 4)
-            {
-                kernelFile = std::string(argv[3]);
-            }
+            kernelFile = std::string(argv[2]);
         }
     }
 
@@ -40,8 +35,8 @@ int main(int argc, char** argv)
         b.at(i) = static_cast<float>(i + 1);
     }
 
-    // Create new tuner for specified platform and device, tuner uses CUDA as compute API.
-    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeApi::Cuda);
+    // Create new tuner for specified device, tuner uses CUDA as compute API. Platform index is ignored in this case.
+    ktt::Tuner tuner(0, deviceIndex, ktt::ComputeApi::Cuda);
 
     // Add new kernel to tuner, specify path to kernel source, kernel function name, grid dimensions and block dimensions. KTT returns handle
     // to the newly added kernel, which can be used to reference this kernel in other API methods.
@@ -53,7 +48,7 @@ int main(int argc, char** argv)
     ktt::ArgumentId bId = tuner.addArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId resultId = tuner.addArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
 
-    // Set arguments to the added kernel by providing their ids. The order of ids needs to match the order of arguments inside CUDA kernel
+    // Set arguments for the added kernel by providing their ids. The order of ids needs to match the order of arguments inside CUDA kernel
     // function.
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aId, bId, resultId});
 
