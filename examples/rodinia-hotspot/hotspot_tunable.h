@@ -33,12 +33,12 @@ class tunableHotspot : public ktt::TuningManipulator {
       grid_width = chip_width / grid_cols;
 
       Cap = FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height;
-      Rx = grid_width / (2.0 * K_SI * t_chip * grid_height);
-      Ry = grid_height / (2.0 * K_SI * t_chip * grid_width);
+      Rx = grid_width / (2.0f * K_SI * t_chip * grid_height);
+      Ry = grid_height / (2.0f * K_SI * t_chip * grid_width);
       Rz = t_chip / (K_SI * grid_height * grid_width);
 
       max_slope = MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI);
-      step = PRECISION / max_slope / 100.0;
+      step = PRECISION / max_slope / 100.0f;
 
 
       tempSrc = std::vector<float>(size);
@@ -87,7 +87,7 @@ class tunableHotspot : public ktt::TuningManipulator {
 
       //tuner->enableArgumentPrinting(tempDstId, ofile, ktt::ArgumentPrintCondition::All);
       // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
-      tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
+      tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
 
       // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
       tuner->setReferenceClass(kernelId, std::make_unique<referenceHotspot>(tempDstId, grid_rows, grid_cols, pyramid_height, total_iterations, tfile, pfile, borderCols, borderRows, smallBlockCol, smallBlockRow, blockCols, blockRows, grid_height, grid_width, Cap, Rx, Ry, Rz, max_slope, step), std::vector<size_t>{ tempDstId });
@@ -100,8 +100,8 @@ class tunableHotspot : public ktt::TuningManipulator {
 
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
         auto blocksize = parameterValues[0].getValue();
-        smallBlockCol = blocksize-(pyramid_height)*EXPAND_RATE;
-        smallBlockRow = blocksize-(pyramid_height)*EXPAND_RATE;
+        smallBlockCol = (int)blocksize-(pyramid_height)*EXPAND_RATE;
+        smallBlockRow = (int)blocksize-(pyramid_height)*EXPAND_RATE;
         blockCols = grid_cols/smallBlockCol+((grid_cols%smallBlockCol==0)?0:1);
         blockRows = grid_rows/smallBlockRow+((grid_rows%smallBlockRow==0)?0:1);
         const ktt::DimensionVector ndRangeDimensions(blocksize*blockCols,blocksize*blockRows, 1);

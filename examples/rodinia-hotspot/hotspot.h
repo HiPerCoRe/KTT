@@ -20,13 +20,13 @@
 # define EXPAND_RATE 2// add one iteration will extend the pyramid base by 2 per each borderline
 
 /* maximum power density possible (say 300W for a 10mm x 10mm chip)	*/
-#define MAX_PD	(3.0e6)
+const float MAX_PD = 3.0e6;
 /* required precision in degrees	*/
-#define PRECISION	0.001
-#define SPEC_HEAT_SI 1.75e6
-#define K_SI 100
+const float PRECISION = 0.001f;
+const float SPEC_HEAT_SI = 1.75e6;
+const int K_SI = 100;
 /* capacitance fitting factor	*/
-#define FACTOR_CHIP	0.5
+const float FACTOR_CHIP = 0.5f;
 
 
 #define MIN(a, b) ((a)<=(b) ? (a) : (b))

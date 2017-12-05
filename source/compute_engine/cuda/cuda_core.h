@@ -43,6 +43,8 @@ public:
     // Queue handling methods
     QueueId getDefaultQueue() const override;
     QueueId createQueue() override;
+    void synchronizeQueue(const QueueId queue) override;
+    void synchronizeDevice() override;
 
     // Argument handling methods
     void uploadArgument(const QueueId queue, KernelArgument& kernelArgument) override;
@@ -105,6 +107,8 @@ public:
     // Queue handling methods
     QueueId getDefaultQueue() const override;
     QueueId createQueue() override;
+    void synchronizeQueue(const QueueId queue) override;
+    void synchronizeDevice() override;
 
     // Argument handling methods
     void uploadArgument(const QueueId queue, KernelArgument& kernelArgument) override;

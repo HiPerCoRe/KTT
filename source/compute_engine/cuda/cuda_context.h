@@ -12,7 +12,7 @@ public:
     explicit CudaContext(const CUdevice device) :
         device(device)
     {
-        checkCudaError(cuCtxCreate(&context, 0, device), "cuCtxCreate");
+        checkCudaError(cuCtxCreate(&context, CU_CTX_SCHED_BLOCKING_SYNC, device), "cuCtxCreate");
     }
 
     ~CudaContext()

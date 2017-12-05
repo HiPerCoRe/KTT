@@ -33,6 +33,8 @@ public:
     // Queue handling methods
     virtual QueueId getDefaultQueue() const = 0;
     virtual QueueId createQueue() = 0;
+    virtual void synchronizeQueue(const QueueId queue) = 0;
+    virtual void synchronizeDevice() = 0;
 
     // Argument handling methods
     virtual void uploadArgument(const QueueId queue, KernelArgument& kernelArgument) = 0;
