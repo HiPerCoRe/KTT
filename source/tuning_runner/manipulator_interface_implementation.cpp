@@ -39,7 +39,7 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
     kernelData.setGlobalSize(globalSize);
     kernelData.setLocalSize(localSize);
 
-    KernelResult result = computeEngine->runKernel(computeEngine->getDefaultQueue(), kernelData, getArgumentPointers(kernelData.getArgumentIds()),
+    KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()),
         std::vector<ArgumentOutputDescriptor>{});
     currentResult.setKernelDuration(currentResult.getKernelDuration() + result.getKernelDuration());
 
@@ -90,7 +90,7 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId i
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(computeEngine->getDefaultQueue(), id, argumentData, argumentPointer->second->getDataSizeInBytes());
+    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getDataSizeInBytes());
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)
@@ -101,13 +101,12 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId i
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(computeEngine->getDefaultQueue(), id, argumentData,
-        argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination) const
 {
-    computeEngine->downloadArgument(computeEngine->getDefaultQueue(), id, destination);
+    computeEngine->downloadArgument(id, destination);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
@@ -118,8 +117,7 @@ void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, 
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->downloadArgument(computeEngine->getDefaultQueue(), id, destination,
-        argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+    computeEngine->downloadArgument(id, destination, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
 }
 
 void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
@@ -182,7 +180,7 @@ void ManipulatorInterfaceImplementation::createArgumentBuffer(const ArgumentId i
     {
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
-    computeEngine->uploadArgument(computeEngine->getDefaultQueue(), *argumentPointer->second);
+    computeEngine->uploadArgument(*argumentPointer->second);
 
     timer.stop();
     currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
@@ -231,7 +229,7 @@ void ManipulatorInterfaceImplementation::uploadBuffers()
 {
     for (auto& argument : vectorArguments)
     {
-        computeEngine->uploadArgument(computeEngine->getDefaultQueue(), *argument.second);
+        computeEngine->uploadArgument(*argument.second);
     }
 }
 
@@ -241,12 +239,11 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Argum
     {
         if (descriptor.getOutputSizeInBytes() == 0)
         {
-            computeEngine->downloadArgument(computeEngine->getDefaultQueue(), descriptor.getArgumentId(), descriptor.getOutputDestination());
+            computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
         }
         else
         {
-            computeEngine->downloadArgument(computeEngine->getDefaultQueue(), descriptor.getArgumentId(), descriptor.getOutputDestination(),
-                descriptor.getOutputSizeInBytes());
+            computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
         }
     }
 }

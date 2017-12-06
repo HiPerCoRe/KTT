@@ -5,13 +5,13 @@
 namespace ktt
 {
 
-OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex) :
+OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex, const size_t queueCount) :
     platformIndex(platformIndex),
     deviceIndex(deviceIndex),
+    queueCount(queueCount),
     compilerOptions(std::string("")),
     globalSizeType(GlobalSizeType::Opencl),
-    globalSizeCorrection(false),
-    nextId(0)
+    globalSizeCorrection(false)
 {
     auto platforms = getOpenclPlatforms();
     if (platformIndex >= platforms.size())
@@ -27,42 +27,53 @@ OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex) :
 
     cl_device_id device = devices.at(deviceIndex).getId();
     context = std::make_unique<OpenclContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id>{ device });
-    auto commandQueue = std::make_unique<OpenclCommandQueue>(nextId, context->getContext(), device);
-    nextId++;
-    commandQueues.push_back(std::move(commandQueue));
+    for (size_t i = 0; i < queueCount; i++)
+    {
+        auto commandQueue = std::make_unique<OpenclCommandQueue>(i, context->getContext(), device);
+        commandQueues.push_back(std::move(commandQueue));
+    }
 }
 
-KernelResult OpenclCore::runKernel(const QueueId queue, const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+KernelResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-    if (queue >= commandQueues.size())
-    {
-        throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
-    }
-
     std::unique_ptr<OpenclProgram> program = createAndBuildProgram(kernelData.getSource());
     auto kernel = std::make_unique<OpenclKernel>(program->getProgram(), kernelData.getName());
 
     for (const auto argument : argumentPointers)
     {
-        setKernelArgument(queue, *kernel, *argument);
+        setKernelArgument(*kernel, *argument);
     }
 
-    cl_ulong duration = enqueueKernel(queue, *kernel, kernelData.getGlobalSize(), kernelData.getLocalSize());
+    cl_ulong duration = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), getDefaultQueue(), true);
 
     for (const auto& descriptor : outputDescriptors)
     {
         if (descriptor.getOutputSizeInBytes() == 0)
         {
-            downloadArgument(queue, descriptor.getArgumentId(), descriptor.getOutputDestination());
+            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
         }
         else
         {
-            downloadArgument(queue, descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
         }
     }
 
     return KernelResult(kernelData.getName(), static_cast<uint64_t>(duration));
+}
+
+void OpenclCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
+    const bool synchronizeFlag)
+{
+    std::unique_ptr<OpenclProgram> program = createAndBuildProgram(kernelData.getSource());
+    auto kernel = std::make_unique<OpenclKernel>(program->getProgram(), kernelData.getName());
+
+    for (const auto argument : argumentPointers)
+    {
+        setKernelArgument(*kernel, *argument);
+    }
+
+    enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, synchronizeFlag);
 }
 
 void OpenclCore::setCompilerOptions(const std::string& options)
@@ -85,11 +96,16 @@ QueueId OpenclCore::getDefaultQueue() const
     return 0;
 }
 
-QueueId OpenclCore::createQueue()
+std::vector<QueueId> OpenclCore::getAllQueues() const
 {
-    auto commandQueue = std::make_unique<OpenclCommandQueue>(nextId, context->getContext(), commandQueues.at(getDefaultQueue())->getDevice());
-    commandQueues.push_back(std::move(commandQueue));
-    return nextId++;
+    std::vector<QueueId> result;
+
+    for (size_t i = 0; i < commandQueues.size(); i++)
+    {
+        result.push_back(i);
+    }
+
+    return result;
 }
 
 void OpenclCore::synchronizeQueue(const QueueId queue)
@@ -110,11 +126,16 @@ void OpenclCore::synchronizeDevice()
     }
 }
 
-void OpenclCore::uploadArgument(const QueueId queue, KernelArgument& kernelArgument)
+void OpenclCore::uploadArgument(KernelArgument& kernelArgument)
+{
+    uploadArgument(kernelArgument, getDefaultQueue(), true);
+}
+
+void OpenclCore::uploadArgument(KernelArgument& kernelArgument, const QueueId queue, const bool synchronizeFlag)
 {
     if (queue >= commandQueues.size())
     {
-        throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
+        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
     }
 
     if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
@@ -132,17 +153,23 @@ void OpenclCore::uploadArgument(const QueueId queue, KernelArgument& kernelArgum
     else
     {
         buffer = std::make_unique<OpenclBuffer>(context->getContext(), kernelArgument, false);
-        buffer->uploadData(commandQueues.at(queue)->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
+        buffer->uploadData(commandQueues.at(queue)->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(), synchronizeFlag);
     }
 
     buffers.insert(std::move(buffer)); // buffer data will be stolen
 }
 
-void OpenclCore::updateArgument(const QueueId queue, const ArgumentId id, const void* data, const size_t dataSizeInBytes)
+void OpenclCore::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes)
+{
+    updateArgument(id, data, dataSizeInBytes, getDefaultQueue(), true);
+}
+
+void OpenclCore::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue,
+    const bool synchronizeFlag)
 {
     if (queue >= commandQueues.size())
     {
-        throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
+        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
     }
 
     OpenclBuffer* buffer = findBuffer(id);
@@ -152,16 +179,56 @@ void OpenclCore::updateArgument(const QueueId queue, const ArgumentId id, const 
         throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
     }
 
-    buffer->uploadData(commandQueues.at(queue)->getQueue(), data, dataSizeInBytes);
+    buffer->uploadData(commandQueues.at(queue)->getQueue(), data, dataSizeInBytes, synchronizeFlag);
 }
 
-KernelArgument OpenclCore::downloadArgument(const QueueId queue, const ArgumentId id) const
+void OpenclCore::downloadArgument(const ArgumentId id, void* destination) const
+{
+    downloadArgument(id, destination, getDefaultQueue(), true);
+}
+
+void OpenclCore::downloadArgument(const ArgumentId id, void* destination, const QueueId queue, const bool synchronizeFlag) const
 {
     if (queue >= commandQueues.size())
     {
-        throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
+        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
     }
 
+    OpenclBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, buffer->getBufferSize(), synchronizeFlag);
+}
+
+void OpenclCore::downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
+{
+    downloadArgument(id, destination, dataSizeInBytes, getDefaultQueue(), true);
+}
+
+void OpenclCore::downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue,
+    const bool synchronizeFlag) const
+{
+    if (queue >= commandQueues.size())
+    {
+        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
+    }
+
+    OpenclBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, dataSizeInBytes, synchronizeFlag);
+}
+
+KernelArgument OpenclCore::downloadArgument(const ArgumentId id) const
+{
     OpenclBuffer* buffer = findBuffer(id);
 
     if (buffer == nullptr)
@@ -171,43 +238,9 @@ KernelArgument OpenclCore::downloadArgument(const QueueId queue, const ArgumentI
 
     KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getElementSize(),
         buffer->getDataType(), buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
-    buffer->downloadData(commandQueues.at(queue)->getQueue(), argument.getData(), argument.getDataSizeInBytes());
+    buffer->downloadData(commandQueues.at(getDefaultQueue())->getQueue(), argument.getData(), argument.getDataSizeInBytes(), true);
     
     return argument;
-}
-
-void OpenclCore::downloadArgument(const QueueId queue, const ArgumentId id, void* destination) const
-{
-    if (queue >= commandQueues.size())
-    {
-        throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
-    }
-
-    OpenclBuffer* buffer = findBuffer(id);
-
-    if (buffer == nullptr)
-    {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-    }
-
-    buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, buffer->getBufferSize());
-}
-
-void OpenclCore::downloadArgument(const QueueId queue, const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
-{
-    if (queue >= commandQueues.size())
-    {
-        throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
-    }
-
-    OpenclBuffer* buffer = findBuffer(id);
-
-    if (buffer == nullptr)
-    {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-    }
-
-    buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, dataSizeInBytes);
 }
 
 void OpenclCore::clearBuffer(const ArgumentId id)
@@ -307,18 +340,13 @@ std::unique_ptr<OpenclProgram> OpenclCore::createAndBuildProgram(const std::stri
     return program;
 }
 
-void OpenclCore::setKernelArgument(const QueueId queue, OpenclKernel& kernel, KernelArgument& argument)
+void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argument)
 {
-    if (queue >= commandQueues.size())
-    {
-        throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
-    }
-
     if (argument.getUploadType() == ArgumentUploadType::Vector)
     {
         if (!loadBufferFromCache(argument.getId(), kernel))
         {
-            uploadArgument(queue, argument);
+            uploadArgument(argument);
             loadBufferFromCache(argument.getId(), kernel);
         }
     }
@@ -332,15 +360,13 @@ void OpenclCore::setKernelArgument(const QueueId queue, OpenclKernel& kernel, Ke
     }
 }
 
-cl_ulong OpenclCore::enqueueKernel(const QueueId queue, OpenclKernel& kernel, const std::vector<size_t>& globalSize,
-    const std::vector<size_t>& localSize) const
+cl_ulong OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+    const QueueId queue, const bool synchronizeFlag) const
 {
     if (queue >= commandQueues.size())
     {
-        throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
+        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
     }
-
-    cl_event profilingEvent;
 
     std::vector<size_t> correctedGlobalSize = globalSize;
     if (globalSizeType == GlobalSizeType::Cuda)
@@ -354,8 +380,17 @@ cl_ulong OpenclCore::enqueueKernel(const QueueId queue, OpenclKernel& kernel, co
         correctedGlobalSize = roundUpGlobalSize(correctedGlobalSize, localSize);
     }
 
-    cl_int result = clEnqueueNDRangeKernel(commandQueues.at(queue)->getQueue(), kernel.getKernel(), static_cast<cl_uint>(correctedGlobalSize.size()),
-        nullptr, correctedGlobalSize.data(), localSize.data(), 0, nullptr, &profilingEvent);
+    if (!synchronizeFlag)
+    {
+        cl_int result = clEnqueueNDRangeKernel(commandQueues.at(queue)->getQueue(), kernel.getKernel(),
+            static_cast<cl_uint>(correctedGlobalSize.size()), nullptr, correctedGlobalSize.data(), localSize.data(), 0, nullptr, nullptr);
+        checkOpenclError(result, "clEnqueueNDRangeKernel");
+        return 0;
+    }
+
+    cl_event profilingEvent;
+    cl_int result = clEnqueueNDRangeKernel(commandQueues.at(queue)->getQueue(), kernel.getKernel(),
+        static_cast<cl_uint>(correctedGlobalSize.size()), nullptr, correctedGlobalSize.data(), localSize.data(), 0, nullptr, &profilingEvent);
     checkOpenclError(result, "clEnqueueNDRangeKernel");
 
     // Wait for computation to finish

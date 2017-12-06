@@ -62,21 +62,33 @@ class KTT_API Tuner
 {
 public:
     /** @fn explicit Tuner(const size_t platformIndex, const size_t deviceIndex)
-      * @brief Constructor, which creates new tuner object for specified platform and device. Tuner uses OpenCL as compute API. Indices for available
-      * platforms and devices can be retrieved by calling printComputeApiInfo() method.
+      * @brief Constructor, which creates new tuner object for specified platform and device. Tuner uses OpenCL as compute API, all commands are
+      * submitted to a single compute queue. Indices for available platforms and devices can be retrieved by calling printComputeApiInfo() method.
       * @param platformIndex Index for platform used by created tuner.
       * @param deviceIndex Index for device used by created tuner.
       */
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex);
 
     /** @fn explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi)
-      * @brief Constructor, which creates new tuner object for specified platform, device and compute API. Indices for available platforms
-      * and devices can be retrieved by calling printComputeApiInfo() method. If specified compute API is CUDA, platform index is ignored.
+      * @brief Constructor, which creates new tuner object for specified platform, device and compute API. All commands are submitted to a single
+      * compute queue. Indices for available platforms and devices can be retrieved by calling printComputeApiInfo() method. If specified compute API
+      * is CUDA, platform index is ignored.
       * @param platformIndex Index for platform used by created tuner.
       * @param deviceIndex Index for device used by created tuner.
       * @param computeApi Compute API used by created tuner.
       */
     explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
+
+    /** @fn explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const size_t computeQueuesCount)
+      * @brief Constructor, which creates new tuner object for specified platform, device and compute API. Several compute queues are created, based
+      * on specified count. Commands to different queues can be submitted by utilizing TuningManipulator. Indices for available platforms and devices
+      * can be retrieved by calling printComputeApiInfo() method. If specified compute API is CUDA, platform index is ignored.
+      * @param platformIndex Index for platform used by created tuner.
+      * @param deviceIndex Index for device used by created tuner.
+      * @param computeApi Compute API used by created tuner.
+      * @param computeQueueCount Number of compute queues created inside the tuner. Has to be greater than zero.
+      */
+    explicit Tuner(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const size_t computeQueueCount);
 
     /** @fn ~Tuner()
       * @brief Tuner destructor.
