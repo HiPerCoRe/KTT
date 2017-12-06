@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 
     // Set the problem size and declare data variables
     const int atoms = 4000;
-    const int gridSize = 64;
+    const int gridSize = 128;
     float gridSpacing = 0.5f;
     int zIndex = 0;
     std::vector<float> atomInfo;

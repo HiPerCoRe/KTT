@@ -111,6 +111,15 @@ void TunerCore::setCompositionKernelArguments(const KernelId compositionId, cons
     kernelManager->setCompositionKernelArguments(compositionId, kernelId, argumentIds);
 }
 
+std::string TunerCore::getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const
+{
+    if (!kernelManager->isKernel(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+    return kernelManager->getKernelSourceWithDefines(id, configuration);
+}
+
 ArgumentId TunerCore::addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
     const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool copyData)
 {

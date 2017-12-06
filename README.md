@@ -24,23 +24,29 @@ Getting started
 * Prebuilt binaries are currently available only for some platforms. Other platforms require manual build.
 * Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support.
 
+Tutorials
+---------
+
+Tutorials are short examples aimed at introducing people to KTT library. Each tutorial focuses on explaining specific part
+of the API. All tutorials are available for both OpenCL and CUDA back-ends. Tutorials assume that reader has some knowledge
+about C++ and GPU programming. List of currently available tutorials:
+
+* `compute_api_info`: Tutorial covers retrieving information about compute API platforms and devices through KTT API.
+* `running_kernel`: Tutorial covers running simple kernel with KTT library and retrieving output.
+* `tuning_kernel_simple`: Tutorial covers simple kernel tuning using small number of tuning parameters and reference class
+to ensure correctness of computation.
+
 Examples
 --------
 
-Examples showcasing KTT functionality are located inside examples folder. List of currently available examples:
+Examples showcase how KTT library could be utilized in real-world scenarios. Examples are more complex than tutorials and
+assume that reader is familiar with KTT API. List of currently available examples:
 
-* `compute_api_info (OpenCL / CUDA)`: basic example showing how to retrieve detailed information about compute API platforms
-and devices through KTT API
-* `simple (OpenCL / CUDA)`: basic example showing how to run simple kernel with KTT framework, utilizes reference class,
-no actual autotuning is done
-* `coulomb_sum_2d (OpenCL)`: advanced example which utilizes large number of tuning parameters, thread modifiers
-and constraints
-* `coulomb_sum_3d_iterative (OpenCL)`: 3D version of previous example, utilizes tuning manipulator to iteratively
-launch 2D kernel
-* `coulomb_sum_3d (OpenCL)`: alternative to iterative version, utilizes several tuning parameters and reference kernel
-* `nbody (OpenCL)`: advanced example which utilizes tuning parameters, multiple constraints and validation of multiple
-arguments with reference kernel
-* `reduction (OpenCL)`: advanced example which utilizes reference class, tuning manipulator and several tuning parameters
+* `coulomb_sum_2d`: Example which showcases tuning of electrostatic potential map computation, it focuses on a single slice.
+* `coulomb_sum_3d_iterative`: 3D version of previous example, utilizes kernel from 2D version and launches it iteratively.
+* `coulomb_sum_3d`: Alternative to iterative version, utilizes kernel which computes entire map in single invocation.
+* `nbody`: Example which showcases tuning of N-body simulation.
+* `reduction`: Example which showcases tuning of vector reduction, launches a kernel iteratively.
 
 Building KTT
 ------------
@@ -69,6 +75,7 @@ systems are Linux and Windows.
     - `--outdir=path` specifies custom build directory, default build directory is `build`
     - `--platform=vendor` specifies SDK used for building KTT, useful when multiple SDKs are installed
     - `--no-examples` disables compilation of examples
+    - `--no-tutorials` disables compilation of tutorials
     - `--tests` enables compilation of unit tests
     - `--no-cuda` disables inclusion of CUDA API during compilation, only affects Nvidia platform
 
@@ -79,5 +86,5 @@ KTT is based on [CLTune project](https://github.com/CNugteren/CLTune). Some part
 however internal structure was almost completely rewritten from scratch. Portions of code for following features were ported
 from CLTune:
 * PSO and annealing searcher
-* Generation of kernel configurations
+* Generating of kernel configurations
 * Tuning parameter constraints

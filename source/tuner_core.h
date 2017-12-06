@@ -37,6 +37,7 @@ public:
         const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
         const Dimension& modifierDimension);
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
+    std::string getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const;
 
     // Argument manager methods
     ArgumentId addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
