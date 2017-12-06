@@ -10,7 +10,7 @@ class tunableHotspot : public ktt::TuningManipulator {
     //Constructor creates internal structures and setups the tuning environment
     // it takes arguments passed from command line arguments and initializes all data variables
     
-    tunableHotspot(ktt::Tuner *tuner, std::string kernelFile, int grid_rows, int grid_cols, int pyramid_height, int total_iterations, char* tfile, char* pfile, char *ofile) : TuningManipulator() {
+    tunableHotspot(ktt::Tuner *tuner, std::string kernelFile, int grid_rows, int grid_cols, int total_iterations, char* tfile, char* pfile, char *ofile) : TuningManipulator() {
 
       this->tuner = tuner;
 
@@ -18,15 +18,14 @@ class tunableHotspot : public ktt::TuningManipulator {
       // we need some of them calculated to set the ndRange for example
       this->grid_rows = grid_rows;
       this->grid_cols = grid_cols;
-      this->pyramid_height = pyramid_height;
       this->total_iterations = total_iterations;
       this->ofile = ofile;
       size = grid_rows*grid_cols;
       // --------------- pyramid parameters --------------- 
-      borderCols = (pyramid_height)*EXPAND_RATE/2;
-      borderRows = (pyramid_height)*EXPAND_RATE/2;
-      smallBlockCol = BLOCK_SIZE_REF-(pyramid_height)*EXPAND_RATE;
-      smallBlockRow = BLOCK_SIZE_REF-(pyramid_height)*EXPAND_RATE;
+      borderCols = PYRAMID_HEIGHT_REF*EXPAND_RATE/2;
+      borderRows = PYRAMID_HEIGHT_REF*EXPAND_RATE/2;
+      smallBlockCol = BLOCK_SIZE_REF-PYRAMID_HEIGHT_REF*EXPAND_RATE;
+      smallBlockRow = BLOCK_SIZE_REF-PYRAMID_HEIGHT_REF*EXPAND_RATE;
       blockCols = grid_cols/smallBlockCol+((grid_cols%smallBlockCol==0)?0:1);
       blockRows = grid_rows/smallBlockRow+((grid_rows%smallBlockRow==0)?0:1);
       grid_height = chip_height / grid_rows;
@@ -57,10 +56,11 @@ class tunableHotspot : public ktt::TuningManipulator {
       // 
       kernelId = tuner->addKernelFromFile(kernelFile, std::string("hotspot"), ndRangeDimensions, workGroupDimensions);
       // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-      tuner->addParameter(kernelId, "BLOCK_SIZE", {4, 8, 16, 32});
+      tuner->addParameter(kernelId, "BLOCK_SIZE", {8, 16, 32});
+      tuner->addParameter(kernelId, "PYRAMID_HEIGHT", {1, 2, 4});
       // Add conditions
-      // so far none
-
+      auto enoughToCompute = [](std::vector<size_t> vector) {return vector.at(0)/(vector.at(1)*2) > 1;};
+      tuner->addConstraint(kernelId, enoughToCompute, {"BLOCK_SIZE", "PYRAMID_HEIGHT"});
       // Add all arguments utilized by kernels
       iterationId = tuner->addArgumentScalar(iteration);
       size_t powerId = tuner->addArgumentVector(power, ktt::ArgumentAccessType::ReadOnly);
@@ -90,7 +90,7 @@ class tunableHotspot : public ktt::TuningManipulator {
       tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
 
       // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
-      tuner->setReferenceClass(kernelId, std::make_unique<referenceHotspot>(tempDstId, grid_rows, grid_cols, pyramid_height, total_iterations, tfile, pfile, borderCols, borderRows, smallBlockCol, smallBlockRow, blockCols, blockRows, grid_height, grid_width, Cap, Rx, Ry, Rz, max_slope, step), std::vector<size_t>{ tempDstId });
+      tuner->setReferenceClass(kernelId, std::make_unique<referenceHotspot>(tempDstId, grid_rows, grid_cols, total_iterations, tfile, pfile, borderCols, borderRows, smallBlockCol, smallBlockRow, blockCols, blockRows, grid_height, grid_width, Cap, Rx, Ry, Rz, max_slope, step), std::vector<size_t>{ tempDstId });
 
 
     }
@@ -100,8 +100,9 @@ class tunableHotspot : public ktt::TuningManipulator {
 
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
         auto blocksize = parameterValues[0].getValue();
-        smallBlockCol = blocksize-(pyramid_height)*EXPAND_RATE;
-        smallBlockRow = blocksize-(pyramid_height)*EXPAND_RATE;
+        int pyramid_height = parameterValues[1].getValue();
+        smallBlockCol = blocksize-pyramid_height*EXPAND_RATE;
+        smallBlockRow = blocksize-pyramid_height*EXPAND_RATE;
         blockCols = grid_cols/smallBlockCol+((grid_cols%smallBlockCol==0)?0:1);
         blockRows = grid_rows/smallBlockRow+((grid_rows%smallBlockRow==0)?0:1);
         const ktt::DimensionVector ndRangeDimensions(blocksize*blockCols,blocksize*blockRows, 1);
@@ -159,7 +160,6 @@ class tunableHotspot : public ktt::TuningManipulator {
     std::vector<float> tempSrc; 
     std::vector<float> tempDst; 
     std::vector<float> power; 
-    int pyramid_height; //number of iterations
     int total_iterations;
     int iteration; //TODO comment about why there are various iteration variables
 

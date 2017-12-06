@@ -34,29 +34,28 @@ int main(int argc, char** argv)
   int grid_rows,grid_cols = 1024;
   char *tfile, *pfile, *ofile;
 
-  int pyramid_height = 2; //number of iterations
   int total_iterations = 60;
 
-  if (argc >=4 && argc < 10)
+  if (argc >=4 && argc < 9)
     usage(argc, argv);
   if((grid_rows = atoi(argv[4]))<=0||
       (grid_cols = atoi(argv[4]))<=0||
-      (pyramid_height = atoi(argv[5]))<=0||
-      (total_iterations = atoi(argv[6]))<=0)
+  //    (pyramid_height = atoi(argv[5]))<=0||
+      (total_iterations = atoi(argv[5]))<=0)
     usage(argc, argv);
 
   //input file of temperatures
-  tfile=argv[7];
+  tfile=argv[6];
   //input file of power
-  pfile=argv[8];
+  pfile=argv[7];
   //output file for temperatures
-  ofile=argv[9];
+  ofile=argv[8];
 
   // Create tuner object for chosen platform and device
   ktt::Tuner tuner(platformIndex, deviceIndex);
   tuner.setCompilerOptions("-I./");
 
-  tunableHotspot* hotspot = new tunableHotspot(&tuner, kernelFile, grid_rows, grid_cols, pyramid_height, total_iterations, tfile, pfile, ofile);
+  tunableHotspot* hotspot = new tunableHotspot(&tuner, kernelFile, grid_rows, grid_cols, total_iterations, tfile, pfile, ofile);
   tuner.setTuningManipulator(hotspot->getKernelId(), std::unique_ptr<tunableHotspot>(hotspot));
   hotspot->tune();
   return 0;
@@ -65,12 +64,11 @@ int main(int argc, char** argv)
 
 
 void usage(int argc, char **argv) {
-  fprintf(stderr, "Usage: %s <platform index> <device index> <kernel file> <grid_rows/grid_cols> <pyramid_height> <sim_time> <temp_file> <power_file> <output_file>\n", argv[0]);
+  fprintf(stderr, "Usage: %s <platform index> <device index> <kernel file> <grid_rows/grid_cols> <sim_time> <temp_file> <power_file> <output_file>\n", argv[0]);
   fprintf(stderr, "\t <platform index> - the index of the platform, starting from 0\n");
   fprintf(stderr, "\t <device index> - the index of the device, starting from 0\n");
   fprintf(stderr, "\t <kernel file> - the path to kernel file\n");
   fprintf(stderr, "\t <grid_rows/grid_cols>  - number of rows/cols in the grid (positive integer)\n");
-  fprintf(stderr, "\t <pyramid_height> - pyramid heigh(positive integer)\n");
   fprintf(stderr, "\t <sim_time>   - number of iterations\n");
   fprintf(stderr, "\t <temp_file>  - name of the file containing the initial temperature values of each cell\n");
   fprintf(stderr, "\t <power_file> - name of the file containing the dissipated power values of each cell\n");

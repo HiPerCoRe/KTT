@@ -16,6 +16,7 @@
 #define BLOCK_SIZE_REF 8                                                             
 #endif
 
+#define PYRAMID_HEIGHT_REF 2
 #define STR_SIZE 256
 # define EXPAND_RATE 2// add one iteration will extend the pyramid base by 2 per each borderline
 

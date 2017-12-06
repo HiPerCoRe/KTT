@@ -12,14 +12,13 @@ class referenceHotspot : public ktt::ReferenceClass {
     //Constructor creates internal structures and setups the tuning environment
     // it takes arguments passed from command line arguments and initializes all data variables
 
-    referenceHotspot(size_t resultId, int grid_rows, int grid_cols, int pyramid_height, int total_iterations, char* tfile, char*pfile, int borderCols, int borderRows, int smallBlockCol, int smallBlockRow, int blockCols, int blockRows, float grid_height, float grid_width, float Cap, float Rx, float Ry, float Rz, float max_slope, float step) : ReferenceClass() {
+    referenceHotspot(size_t resultId, int grid_rows, int grid_cols, int total_iterations, char* tfile, char*pfile, int borderCols, int borderRows, int smallBlockCol, int smallBlockRow, int blockCols, int blockRows, float grid_height, float grid_width, float Cap, float Rx, float Ry, float Rz, float max_slope, float step) : ReferenceClass() {
 
       // Initialize data variables
       // we need some of them calculated to set the ndRange for example
       this->resultArgumentId = resultId;
       this->grid_rows = grid_rows;
       this->grid_cols = grid_cols;
-      this->pyramid_height = pyramid_height;
       this->total_iterations = total_iterations;
       size = grid_rows*grid_cols;
       this->blockCols = blockCols;
@@ -49,15 +48,15 @@ class referenceHotspot : public ktt::ReferenceClass {
     void computeResult() override {
 
       int t;
-      for (t = 0; t < total_iterations; t += pyramid_height) {
+      for (t = 0; t < total_iterations; t += PYRAMID_HEIGHT_REF) {
 
         // Specify kernel arguments
-        int iter = MIN(pyramid_height, total_iterations - t);
+        int iter = MIN(PYRAMID_HEIGHT_REF, total_iterations - t);
         // Run the kernel, order of tempSrc and tempDst swaping in each iteration
         compute_tran_temp(tempDst, iter, tempSrc, power, grid_rows, grid_cols);
 
         // Swap the source and destination temperatures
-        if (t + pyramid_height < total_iterations)
+        if (t + PYRAMID_HEIGHT_REF < total_iterations)
         {
           float* tmp = tempSrc;
           tempSrc = tempDst;
@@ -93,7 +92,6 @@ class referenceHotspot : public ktt::ReferenceClass {
     float* tempSrc; 
     float* tempDst; 
     float* power; 
-    int pyramid_height; //number of iterations
     int total_iterations;
 
 
