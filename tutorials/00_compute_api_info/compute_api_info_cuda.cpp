@@ -4,13 +4,13 @@
 
 int main()
 {
-    // Create new tuner
+    // Create new tuner which uses CUDA as compute API.
     ktt::Tuner tuner(0, 0, ktt::ComputeApi::Cuda);
 
-    // Print basic information about available platforms and devices to standard output
+    // Print basic information about available platforms and devices to standard output.
     tuner.printComputeApiInfo(std::cout);
 
-    // Print detailed information about all platforms and devices to standard output
+    // Print detailed information about platforms and devices to standard output.
     std::vector<ktt::PlatformInfo> platformInfo = tuner.getPlatformInfo();
     for (size_t i = 0; i < platformInfo.size(); i++)
     {

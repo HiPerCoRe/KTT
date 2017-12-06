@@ -92,6 +92,24 @@ QueueId OpenclCore::createQueue()
     return nextId++;
 }
 
+void OpenclCore::synchronizeQueue(const QueueId queue)
+{
+    if (queue >= commandQueues.size())
+    {
+        throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
+    }
+
+    checkOpenclError(clFinish(commandQueues.at(queue)->getQueue()), "clFinish");
+}
+
+void OpenclCore::synchronizeDevice()
+{
+    for (auto& commandQueue : commandQueues)
+    {
+        checkOpenclError(clFinish(commandQueue->getQueue()), "clFinish");
+    }
+}
+
 void OpenclCore::uploadArgument(const QueueId queue, KernelArgument& kernelArgument)
 {
     if (queue >= commandQueues.size())
@@ -341,7 +359,6 @@ cl_ulong OpenclCore::enqueueKernel(const QueueId queue, OpenclKernel& kernel, co
     checkOpenclError(result, "clEnqueueNDRangeKernel");
 
     // Wait for computation to finish
-    checkOpenclError(clFinish(commandQueues.at(queue)->getQueue()), "clFinish");
     checkOpenclError(clWaitForEvents(1, &profilingEvent), "clWaitForEvents");
 
     cl_ulong duration = getKernelRunDuration(profilingEvent);

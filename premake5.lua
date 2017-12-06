@@ -1,5 +1,5 @@
 -- Configuration variables
-cuda_examples = false
+cuda_projects = false
 
 -- Helper functions to find compute API headers and libraries
 function findLibrariesAmd()
@@ -88,7 +88,7 @@ function findLibrariesNvidia()
     links { "OpenCL" }
         
     if not _OPTIONS["no-cuda"] then
-        cuda_examples = true
+        cuda_projects = true
         defines { "PLATFORM_CUDA" }
         links { "cuda", "nvrtc" }
     end
@@ -142,13 +142,19 @@ newoption
 newoption
 {
     trigger = "tests",
-    description = "Enables compilation of supplied unit tests"
+    description = "Enables compilation of unit tests"
 }
 
 newoption
 {
     trigger = "no-examples",
-    description = "Disables compilation of supplied examples"
+    description = "Disables compilation of examples"
+}
+
+newoption
+{
+    trigger = "no-tutorials",
+    description = "Disables compilation of tutorials"
 }
 
 -- Project configuration
@@ -158,8 +164,8 @@ workspace "ktt"
         buildPath = _OPTIONS["outdir"]
     end
     
-    configurations { "Debug", "Release" }
-    platforms { "x86", "x86_64" }
+    configurations { "Release", "Debug" }
+    platforms { "x86_64", "x86" }
     location (buildPath)
     language "C++"
     cppdialect "C++14"
@@ -217,18 +223,6 @@ project "ktt"
 -- Examples configuration 
 if not _OPTIONS["no-examples"] then
 
-project "simple_opencl"
-    kind "ConsoleApp"
-    files { "examples/simple/simple_opencl.cpp", "examples/simple/simple_opencl_kernel.cl" }
-    includedirs { "source" }
-    links { "ktt" }
-
-project "info_opencl"
-    kind "ConsoleApp"
-    files { "examples/compute_api_info/compute_api_info_opencl.cpp" }
-    includedirs { "source" }
-    links { "ktt" }
-
 project "nbody_opencl"
     kind "ConsoleApp"
     files { "examples/nbody/*.cpp", "examples/nbody/*.cl" }
@@ -267,24 +261,53 @@ project "hotspot_opencl"
     links { "ktt" }
 end
 
-if cuda_examples then
-
-project "simple_cuda"
-    kind "ConsoleApp"
-    files { "examples/simple/simple_cuda.cpp", "examples/simple/simple_cuda_kernel.cu" }
-    includedirs { "source" }
-    links { "ktt" }
-    
-project "info_cuda"
-    kind "ConsoleApp"
-    files { "examples/compute_api_info/compute_api_info_cuda.cpp" }
-    includedirs { "source" }
-    links { "ktt" }
-
-end -- cuda_examples
-
 end -- _OPTIONS["no-examples"]
+
+-- Tutorials configuration 
+if not _OPTIONS["no-tutorials"] then
+
+project "00_info_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/00_compute_api_info/compute_api_info_opencl.cpp" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "01_running_kernel_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/01_running_kernel/running_kernel_opencl.cpp", "tutorials/01_running_kernel/opencl_kernel.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "02_tuning_kernel_simple_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_opencl.cpp", "tutorials/02_tuning_kernel_simple/opencl_kernel.cl" }
+    includedirs { "source" }
+    links { "ktt" }
     
+if cuda_projects then
+
+project "00_info_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/00_compute_api_info/compute_api_info_cuda.cpp" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "01_running_kernel_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/01_running_kernel/running_kernel_cuda.cpp", "tutorials/01_running_kernel/cuda_kernel.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "02_tuning_kernel_simple_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_cuda.cpp", "tutorials/02_tuning_kernel_simple/cuda_kernel.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+    
+end -- cuda_projects
+
+end -- _OPTIONS["no-tutorials"]
+
 -- Unit tests configuration   
 if _OPTIONS["tests"] then
 

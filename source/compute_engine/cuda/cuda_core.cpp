@@ -86,6 +86,24 @@ QueueId CudaCore::createQueue()
     return nextId++;
 }
 
+void CudaCore::synchronizeQueue(const QueueId queue)
+{
+    if (queue >= streams.size())
+    {
+        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
+    }
+
+    checkCudaError(cuStreamSynchronize(streams.at(queue)->getStream()), "cuStreamSynchronize");
+}
+
+void CudaCore::synchronizeDevice()
+{
+    for (auto& stream : streams)
+    {
+        checkCudaError(cuStreamSynchronize(stream->getStream()), "cuStreamSynchronize");
+    }
+}
+
 void CudaCore::uploadArgument(const QueueId queue, KernelArgument& kernelArgument)
 {
     if (queue >= streams.size())
@@ -489,6 +507,16 @@ QueueId CudaCore::getDefaultQueue() const
 }
 
 QueueId CudaCore::createQueue()
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+}
+
+void CudaCore::synchronizeQueue(const QueueId)
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+}
+
+void CudaCore::synchronizeDevice()
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
