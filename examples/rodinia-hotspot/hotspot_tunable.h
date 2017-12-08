@@ -2,7 +2,6 @@
 
 #include "tuner_api.h"
 #include "hotspot.h"
-#include "hotspot_reference.h"
 
 class tunableHotspot : public ktt::TuningManipulator {
   public:
@@ -10,7 +9,7 @@ class tunableHotspot : public ktt::TuningManipulator {
     //Constructor creates internal structures and setups the tuning environment
     // it takes arguments passed from command line arguments and initializes all data variables
     
-    tunableHotspot(ktt::Tuner *tuner, std::string kernelFile, int grid_rows, int grid_cols, int total_iterations, char* tfile, char* pfile, char *ofile) : TuningManipulator() {
+    tunableHotspot(ktt::Tuner *tuner, size_t kernelId, int grid_rows, int grid_cols, int total_iterations, char *ofile, size_t tempSrcId, size_t tempDstId, size_t iterationId, size_t borderRowsId, size_t borderColsId) : TuningManipulator() {
 
       this->tuner = tuner;
 
@@ -20,78 +19,14 @@ class tunableHotspot : public ktt::TuningManipulator {
       this->grid_cols = grid_cols;
       this->total_iterations = total_iterations;
       this->ofile = ofile;
-      size = grid_rows*grid_cols;
-      // --------------- pyramid parameters --------------- 
-      borderCols = PYRAMID_HEIGHT_REF*EXPAND_RATE/2;
-      borderRows = PYRAMID_HEIGHT_REF*EXPAND_RATE/2;
-      smallBlockCol = BLOCK_SIZE_REF-PYRAMID_HEIGHT_REF*EXPAND_RATE;
-      smallBlockRow = BLOCK_SIZE_REF-PYRAMID_HEIGHT_REF*EXPAND_RATE;
-      blockCols = grid_cols/smallBlockCol+((grid_cols%smallBlockCol==0)?0:1);
-      blockRows = grid_rows/smallBlockRow+((grid_rows%smallBlockRow==0)?0:1);
-      grid_height = chip_height / grid_rows;
-      grid_width = chip_width / grid_cols;
-
-      Cap = FACTOR_CHIP * SPEC_HEAT_SI * t_chip * grid_width * grid_height;
-      Rx = grid_width / (2.0 * K_SI * t_chip * grid_height);
-      Ry = grid_height / (2.0 * K_SI * t_chip * grid_width);
-      Rz = t_chip / (K_SI * grid_height * grid_width);
-
-      max_slope = MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI);
-      step = PRECISION / max_slope / 100.0;
-
-
-      tempSrc = std::vector<float>(size);
-      tempDst = std::vector<float>(size);
-      power = std::vector<float>(size);
-
-      // Read input data from disk
-      readinput(tempSrc, grid_rows, grid_cols, tfile);
-      readinput(power, grid_rows, grid_cols, pfile);
-
-      // Declare kernel parameters
-      // Total NDRange size matches number of grid points
-      const ktt::DimensionVector ndRangeDimensions(1, 1, 1);
-      const ktt::DimensionVector workGroupDimensions(1, 1, 1);
-      // Add two kernels to tuner, one of the kernels acts as reference kernel
-      // 
-      kernelId = tuner->addKernelFromFile(kernelFile, std::string("hotspot"), ndRangeDimensions, workGroupDimensions);
-      // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-      tuner->addParameter(kernelId, "BLOCK_SIZE", {8, 16, 32});
-      tuner->addParameter(kernelId, "PYRAMID_HEIGHT", {1, 2, 4});
-      // Add conditions
-      auto enoughToCompute = [](std::vector<size_t> vector) {return vector.at(0)/(vector.at(1)*2) > 1;};
-      tuner->addConstraint(kernelId, enoughToCompute, {"BLOCK_SIZE", "PYRAMID_HEIGHT"});
-      // Add all arguments utilized by kernels
-      iterationId = tuner->addArgumentScalar(iteration);
-      size_t powerId = tuner->addArgumentVector(power, ktt::ArgumentAccessType::ReadOnly);
-      tempSrcId = tuner->addArgumentVector(tempSrc, ktt::ArgumentAccessType::ReadWrite);
-      tempDstId = tuner->addArgumentVector(tempDst, ktt::ArgumentAccessType::ReadWrite);
-      size_t grid_colsId = tuner->addArgumentScalar(grid_cols);
-      size_t grid_rowsId = tuner->addArgumentScalar(grid_rows);
-
-      size_t borderColsId = tuner->addArgumentScalar(borderCols);
-      size_t borderRowsId = tuner->addArgumentScalar(borderRows);
-      size_t CapId = tuner->addArgumentScalar(Cap);
-      size_t RxId = tuner->addArgumentScalar(Rx);
-      size_t RyId = tuner->addArgumentScalar(Ry);
-      size_t RzId = tuner->addArgumentScalar(Rz);
-      size_t stepId = tuner->addArgumentScalar(step);
-
-
-      // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
-      tuner->setKernelArguments(kernelId,
-          std::vector<size_t>{ iterationId, 
-          powerId, tempSrcId, tempDstId,
-          grid_colsId, grid_rowsId, borderColsId, borderRowsId,
-          CapId, RxId, RyId, RzId, stepId });
-
-      //tuner->enableArgumentPrinting(tempDstId, ofile, ktt::ArgumentPrintCondition::All);
-      // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
-      tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
-
-      // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
-      tuner->setReferenceClass(kernelId, std::make_unique<referenceHotspot>(tempDstId, grid_rows, grid_cols, total_iterations, tfile, pfile, borderCols, borderRows, smallBlockCol, smallBlockRow, blockCols, blockRows, grid_height, grid_width, Cap, Rx, Ry, Rz, max_slope, step), std::vector<size_t>{ tempDstId });
-
+      
+      // Ids of relevant parameters of the kernel, these will be updated
+      this->kernelId = kernelId;
+      this->tempSrcId = tempSrcId;
+      this->tempDstId = tempDstId;
+      this->iterationId = iterationId;
+      this->borderRowsId = borderRowsId;
+      this->borderColsId = borderColsId;
 
     }
 
@@ -99,12 +34,17 @@ class tunableHotspot : public ktt::TuningManipulator {
     virtual void launchComputation(const size_t kernelId) override {
 
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
-        auto blocksize = parameterValues[0].getValue();
+        int blocksize = parameterValues[0].getValue();
         int pyramid_height = parameterValues[1].getValue();
-        smallBlockCol = blocksize-pyramid_height*EXPAND_RATE;
-        smallBlockRow = blocksize-pyramid_height*EXPAND_RATE;
-        blockCols = grid_cols/smallBlockCol+((grid_cols%smallBlockCol==0)?0:1);
-        blockRows = grid_rows/smallBlockRow+((grid_rows%smallBlockRow==0)?0:1);
+        int smallBlockCol = blocksize-pyramid_height*EXPAND_RATE;
+        int smallBlockRow = blocksize-pyramid_height*EXPAND_RATE;
+        int blockCols = grid_cols/smallBlockCol+((grid_cols%smallBlockCol==0)?0:1);
+        int blockRows = grid_rows/smallBlockRow+((grid_rows%smallBlockRow==0)?0:1);
+        int borderCols = pyramid_height*EXPAND_RATE/2;
+        int borderRows = pyramid_height*EXPAND_RATE/2;
+        updateArgumentScalar(borderColsId, &borderCols);
+        updateArgumentScalar(borderRowsId, &borderRows);
+        
         const ktt::DimensionVector ndRangeDimensions(blocksize*blockCols,blocksize*blockRows, 1);
         const ktt::DimensionVector workGroupDimensions(blocksize, blocksize, 1);
         bool srcPosition = true; //if the original pointer to source temperature is in tempSrc, true. otherwise false.
@@ -115,7 +55,7 @@ class tunableHotspot : public ktt::TuningManipulator {
           // Specify kernel arguments
           int iter = MIN(pyramid_height, total_iterations - t);
           updateArgumentScalar(iterationId, &iter);
-          // Run the kernel
+          // run the kernel
           runKernel(kernelId, ndRangeDimensions, workGroupDimensions);
 
           if (t + pyramid_height < total_iterations) //if there will be another iteration
@@ -152,27 +92,13 @@ class tunableHotspot : public ktt::TuningManipulator {
     size_t iterationId;
     size_t tempSrcId;
     size_t tempDstId;
+    size_t borderRowsId;
+    size_t borderColsId;
 
-
-    int size;
     int grid_rows;
     int grid_cols;
-    std::vector<float> tempSrc; 
-    std::vector<float> tempDst; 
-    std::vector<float> power; 
     int total_iterations;
     int iteration; //TODO comment about why there are various iteration variables
-
-
-    int blockRows, blockCols;
-    int smallBlockRow, smallBlockCol;
-    int borderRows, borderCols;
-    float grid_height, grid_width;
-
-    float Cap;
-    float Rx, Ry, Rz;
-    float max_slope;
-    float step;
 
     char* ofile; //the name of output file for temperatures
 
