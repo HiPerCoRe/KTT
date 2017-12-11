@@ -69,13 +69,16 @@ class tunableHotspot : public ktt::TuningManipulator {
           }
         }
 
-
-        // Write final output to output file
-        /*if (srcPosition)
-          writeoutput(tempDst, grid_rows, grid_cols, ofile);
-        else
-          writeoutput(tempSrc, grid_rows, grid_cols, ofile);
-*/
+        if (!srcPosition)
+        {
+          float* src = (float*) malloc(size* sizeof(float));
+          getArgumentVector(tempSrcId, src);
+          float* dst = (float*) malloc(size* sizeof(float));
+          getArgumentVector(tempDstId, dst);
+          for (int j = 0; j < size; j++)
+            dst[j] = src[j];
+          updateArgumentVector(tempDstId, dst);
+        }
     }
 
     void tune() {
