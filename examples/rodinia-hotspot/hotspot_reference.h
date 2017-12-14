@@ -13,7 +13,7 @@ class referenceManipulator : public ktt::TuningManipulator {
     //Constructor creates internal structures and setups the tuning environment
     // it takes arguments passed from command line arguments and initializes all data variables
     
-    referenceManipulator(ktt::Tuner *tuner, size_t referenceKernelId, int grid_rows, int grid_cols, int total_iterations, char *ofile, size_t tempSrcId, size_t tempDstId, size_t iterationId, size_t borderRowsId, size_t borderColsId) : TuningManipulator() {
+    referenceManipulator(ktt::Tuner *tuner, size_t referenceKernelId, int grid_rows, int grid_cols, int total_iterations, int size, char *ofile, size_t tempSrcId, size_t tempDstId, size_t iterationId, size_t borderRowsId, size_t borderColsId) : TuningManipulator() {
 
       this->tuner = tuner;
 
@@ -23,6 +23,7 @@ class referenceManipulator : public ktt::TuningManipulator {
       this->grid_cols = grid_cols;
       this->total_iterations = total_iterations;
       this->ofile = ofile;
+      this->size = size;
       
       // Ids of relevant parameters of the kernel, these will be updated
       this->referenceKernelId = referenceKernelId;
@@ -95,6 +96,7 @@ class referenceManipulator : public ktt::TuningManipulator {
     int grid_cols;
     int total_iterations;
     int iteration; //TODO comment about why there are various iteration variables
+    int size;
 
     char* ofile; //the name of output file for temperatures
 

@@ -85,9 +85,9 @@ int main(int argc, char** argv)
   max_slope = MAX_PD / (FACTOR_CHIP * t_chip * SPEC_HEAT_SI);
   step = PRECISION / max_slope;
 
-  tempSrc = std::vector<float>(size);
-  tempDst = std::vector<float>(size);
-  power = std::vector<float>(size);
+  tempSrc = std::vector<float>(size, 0.0);
+  tempDst = std::vector<float>(size, 0.0);
+  power = std::vector<float>(size, 0.0);
 
   // Read input data from disk
   readinput(tempSrc, grid_rows, grid_cols, tfile);
@@ -104,13 +104,19 @@ int main(int argc, char** argv)
   kernelId = tuner.addKernelFromFile(kernelFile, std::string("hotspot"), ndRangeDimensions, workGroupDimensions);
   referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("hotspot"), ndRangeDimensions, workGroupDimensions);
   // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-  tuner.addParameter(kernelId, "BLOCK_SIZE", {8, 16, 32});
-  tuner.addParameter(kernelId, "PYRAMID_HEIGHT", {2}); //, 2, 4});
-  tuner.addParameter(kernelId, "LOCAL_MEMORY", {0,1});
+  tuner.addParameter(kernelId, "BLOCK_SIZE_ROWS", {8, 16, 32, 64});
+  tuner.addParameter(kernelId, "BLOCK_SIZE_COLS", {8, 16, 32, 64});
+  tuner.addParameter(kernelId, "PYRAMID_HEIGHT", {1, 2, 4, 8}); //, 2, 4});
+  tuner.addParameter(kernelId, "WORK_GROUP_Y", {4, 8, 16, 32, 64});
+  tuner.addParameter(kernelId, "LOCAL_MEMORY", {0, 1});
   tuner.addParameter(kernelId, "LOOP_UNROLL", {0,1});
   // Add conditions
-  auto enoughToCompute = [](std::vector<size_t> vector) {return vector.at(0)/(vector.at(1)*2) > 1;};
-  tuner.addConstraint(kernelId, enoughToCompute, {"BLOCK_SIZE", "PYRAMID_HEIGHT"});
+  auto enoughToCompute = [](std::vector<size_t> vector) {return vector.at(0)/(vector.at(2)*2) > 1 && vector.at(1)/(vector.at(2)*2) > 1;};
+  tuner.addConstraint(kernelId, enoughToCompute, {"BLOCK_SIZE_COLS", "WORK_GROUP_Y", "PYRAMID_HEIGHT"});
+  auto workGroupSmaller = [](std::vector<size_t> vector) {return vector.at(0)<=vector.at(1);};
+  auto workGroupDividable = [](std::vector<size_t> vector) {return vector.at(1)%vector.at(0) == 0;};
+  tuner.addConstraint(kernelId, workGroupSmaller, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"});
+  tuner.addConstraint(kernelId, workGroupDividable, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"});
   // Add all arguments utilized by kernels
   size_t iterationId = tuner.addArgumentScalar(0);
   size_t powerId = tuner.addArgumentVector(power, ktt::ArgumentAccessType::ReadOnly);
@@ -140,17 +146,18 @@ int main(int argc, char** argv)
       grid_colsId, grid_rowsId, borderColsId, borderRowsId,
       CapId, RxId, RyId, RzId, stepId });
   
-  tunableHotspot* hotspot = new tunableHotspot(&tuner, kernelId, grid_rows, grid_cols, total_iterations, ofile, tempSrcId, tempDstId, iterationId, borderRowsId, borderColsId);
+  tunableHotspot* hotspot = new tunableHotspot(&tuner, kernelId, grid_rows, grid_cols, total_iterations, size, ofile, tempSrcId, tempDstId, iterationId, borderRowsId, borderColsId);
 
-  referenceManipulator* referenceHotspot = new referenceManipulator(&tuner, referenceKernelId, grid_rows, grid_cols, total_iterations, refofile, tempSrcId, tempDstId, iterationId, borderRowsId, borderColsId);
+  referenceManipulator* referenceHotspot = new referenceManipulator(&tuner, referenceKernelId, grid_rows, grid_cols, total_iterations, size, refofile, tempSrcId, tempDstId, iterationId, borderRowsId, borderColsId);
+
   tuner.setTuningManipulator(hotspot->getKernelId(), std::unique_ptr<tunableHotspot>(hotspot));
   tuner.setTuningManipulator(referenceHotspot->getKernelId(), std::unique_ptr<referenceManipulator>(referenceHotspot));
 
-      // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
-      tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01f);
+  // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
+  tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01f);
 
-      // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
-      tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<size_t>{ tempDstId });
+  // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
+  tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<size_t>{tempDstId });
   hotspot->tune();
   return 0;
 }

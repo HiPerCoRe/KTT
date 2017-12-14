@@ -1,5 +1,5 @@
 #define IN_RANGE(x, min, max)   ((x)>=(min) && (x)<=(max))
-#define BLOCK_SIZE_REF 16
+#define BLOCK_SIZE_REF 16 //has to be the value as in hotspot_reference.h
 
 __kernel void hotspot(  int iteration,  //number of iteration
                                global float *power,   //power input
@@ -95,8 +95,6 @@ __kernel void hotspot(  int iteration,  //number of iteration
 			(temp_on_cuda[S][tx] + temp_on_cuda[N][tx] - 2.0f * temp_on_cuda[ty][tx]) * Ry_1 + 
 			(temp_on_cuda[ty][E] + temp_on_cuda[ty][W] - 2.0f * temp_on_cuda[ty][tx]) * Rx_1 + 
 			(amb_temp - temp_on_cuda[ty][tx]) * Rz_1);
-        //printf("referenceKernel iteration %d temp_t[%d][%d] = %f\n", i, ty, tx, temp_t[ty][tx]);
-
 		}
 		barrier(CLK_LOCAL_MEM_FENCE);
 		
