@@ -12,8 +12,6 @@
   #define BLOCK_SIZE_REF RD_WG_SIZE_0
 #elif defined(RD_WG_SIZE)
   #define BLOCK_SIZE_REF RD_WG_SIZE
-#else
-#define BLOCK_SIZE_REF 8                                                             
 #endif
 
 #define STR_SIZE 256
