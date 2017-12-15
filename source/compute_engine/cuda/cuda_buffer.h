@@ -107,6 +107,28 @@ public:
         }
     }
 
+    void uploadData(CUstream stream, const void* source, const size_t dataSize, const bool blockingFlag)
+    {
+        if (bufferSize < dataSize)
+        {
+            resize(dataSize);
+        }
+
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCudaError(cuMemcpyHtoDAsync(deviceBuffer, source, dataSize, stream), "cuMemcpyHtoDAsync");
+        }
+        else
+        {
+            checkCudaError(cuMemcpyHtoDAsync(hostBuffer, source, dataSize, stream), "cuMemcpyHtoDAsync");
+        }
+
+        if (blockingFlag)
+        {
+            checkCudaError(cuStreamSynchronize(stream), "cuStreamSynchronize");
+        }
+    }
+
     void downloadData(void* destination, const size_t dataSize) const
     {
         if (bufferSize < dataSize)
@@ -121,6 +143,28 @@ public:
         else
         {
             checkCudaError(cuMemcpyDtoH(destination, hostBuffer, dataSize), "cuMemcpyDtoH");
+        }
+    }
+
+    void downloadData(CUstream stream, void* destination, const size_t dataSize, const bool blockingFlag) const
+    {
+        if (bufferSize < dataSize)
+        {
+            throw std::runtime_error("Size of data to download is higher than size of buffer");
+        }
+
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCudaError(cuMemcpyDtoHAsync(destination, deviceBuffer, dataSize, stream), "cuMemcpyDtoHAsync");
+        }
+        else
+        {
+            checkCudaError(cuMemcpyDtoHAsync(destination, hostBuffer, dataSize, stream), "cuMemcpyDtoHAsync");
+        }
+
+        if (blockingFlag)
+        {
+            checkCudaError(cuStreamSynchronize(stream), "cuStreamSynchronize");
         }
     }
 

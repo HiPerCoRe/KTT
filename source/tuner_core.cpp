@@ -6,16 +6,16 @@
 namespace ktt
 {
 
-TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi) :
+TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const size_t queueCount) :
     argumentManager(std::make_unique<ArgumentManager>())
 {
     if (computeApi == ComputeApi::Opencl)
     {
-        computeEngine = std::make_unique<OpenclCore>(platformIndex, deviceIndex);
+        computeEngine = std::make_unique<OpenclCore>(platformIndex, deviceIndex, queueCount);
     }
     else if (computeApi == ComputeApi::Cuda)
     {
-        computeEngine = std::make_unique<CudaCore>(deviceIndex);
+        computeEngine = std::make_unique<CudaCore>(deviceIndex, queueCount);
     }
     else
     {
