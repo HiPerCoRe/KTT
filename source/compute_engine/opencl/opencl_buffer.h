@@ -109,13 +109,13 @@ public:
 
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
-            cl_int result = clEnqueueReadBuffer(queue, buffer, blockingFlag, 0, dataSize, destination, 0, nullptr, nullptr);
+            cl_int result = clEnqueueReadBuffer(queue, buffer, blockingCall, 0, dataSize, destination, 0, nullptr, nullptr);
             checkOpenclError(result, "clEnqueueReadBuffer");
         }
         else
         {
             cl_int result;
-            void* source = clEnqueueMapBuffer(queue, buffer, blockingFlag, CL_MAP_READ, 0, dataSize, 0, nullptr, nullptr, &result);
+            void* source = clEnqueueMapBuffer(queue, buffer, blockingCall, CL_MAP_READ, 0, dataSize, 0, nullptr, nullptr, &result);
             checkOpenclError(result, "clEnqueueMapBuffer");
 
             std::memcpy(destination, source, dataSize);

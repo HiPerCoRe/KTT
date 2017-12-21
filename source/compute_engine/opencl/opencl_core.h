@@ -9,6 +9,7 @@
 #include "opencl_command_queue.h"
 #include "opencl_context.h"
 #include "opencl_device.h"
+#include "opencl_event.h"
 #include "opencl_kernel.h"
 #include "opencl_platform.h"
 #include "opencl_program.h"

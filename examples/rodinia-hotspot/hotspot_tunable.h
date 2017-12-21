@@ -35,10 +35,10 @@ class tunableHotspot : public ktt::TuningManipulator {
     virtual void launchComputation(const size_t kernelId) override {
 
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
-        int blocksizeRows = parameterValues[0].getValue();
-        int blocksizeCols = parameterValues[1].getValue();
-        int pyramid_height = parameterValues[2].getValue();
-        int workGroupY = parameterValues[3].getValue();
+        int blocksizeRows = (int)parameterValues[0].getValue();
+        int blocksizeCols = (int)parameterValues[1].getValue();
+        int pyramid_height = (int)parameterValues[2].getValue();
+        int workGroupY = (int)parameterValues[3].getValue();
         int smallBlockCol = blocksizeCols-pyramid_height*EXPAND_RATE;
         int smallBlockRow = blocksizeRows-pyramid_height*EXPAND_RATE;
         int blockCols = grid_cols/smallBlockCol+((grid_cols%smallBlockCol==0)?0:1);

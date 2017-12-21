@@ -39,7 +39,7 @@ int main(int argc, char** argv)
   int pyramid_height = 2; //number of iterations
   int total_iterations = 60;
 
-  if (argc >=4 && argc < 9)
+  if (argc < 9)
     usage(argc, argv);
   if((grid_rows = atoi(argv[4]))<=0||
       (grid_cols = atoi(argv[4]))<=0||

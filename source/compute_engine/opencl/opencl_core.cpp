@@ -388,17 +388,15 @@ cl_ulong OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_
         return 0;
     }
 
-    cl_event profilingEvent;
+	OpenclEvent profilingEvent;
     cl_int result = clEnqueueNDRangeKernel(commandQueues.at(queue)->getQueue(), kernel.getKernel(),
-        static_cast<cl_uint>(correctedGlobalSize.size()), nullptr, correctedGlobalSize.data(), localSize.data(), 0, nullptr, &profilingEvent);
+        static_cast<cl_uint>(correctedGlobalSize.size()), nullptr, correctedGlobalSize.data(), localSize.data(), 0, nullptr, profilingEvent.getEvent());
     checkOpenclError(result, "clEnqueueNDRangeKernel");
 
     // Wait for computation to finish
-    checkOpenclError(clWaitForEvents(1, &profilingEvent), "clWaitForEvents");
+    checkOpenclError(clWaitForEvents(1, profilingEvent.getEvent()), "clWaitForEvents");
 
-    cl_ulong duration = getKernelRunDuration(profilingEvent);
-    checkOpenclError(clReleaseEvent(profilingEvent), "clReleaseEvent");
-
+    cl_ulong duration = profilingEvent.getKernelRunDuration();
     return duration;
 }
 
