@@ -11,7 +11,8 @@ OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex, con
     queueCount(queueCount),
     compilerOptions(std::string("")),
     globalSizeType(GlobalSizeType::Opencl),
-    globalSizeCorrection(false)
+    globalSizeCorrection(false),
+	programCacheFlag(false)
 {
     auto platforms = getOpenclPlatforms();
     if (platformIndex >= platforms.size())
@@ -35,10 +36,27 @@ OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex, con
 }
 
 KernelResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-    const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
+	const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-    std::unique_ptr<OpenclProgram> program = createAndBuildProgram(kernelData.getSource());
-    auto kernel = std::make_unique<OpenclKernel>(program->getProgram(), kernelData.getName());
+	std::unique_ptr<OpenclProgram> program;
+	OpenclProgram* programPointer;
+
+	if (programCacheFlag)
+	{
+		if (programCache.find(kernelData.getSource()) == programCache.end())
+		{
+			program = createAndBuildProgram(kernelData.getSource());
+			programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
+		}
+		auto cachePointer = programCache.find(kernelData.getSource());
+		programPointer = cachePointer->second.get();
+	}
+	else
+	{
+		program = createAndBuildProgram(kernelData.getSource());
+		programPointer = program.get();
+	}
+    auto kernel = std::make_unique<OpenclKernel>(programPointer->getProgram(), kernelData.getName());
 
     for (const auto argument : argumentPointers)
     {
@@ -65,8 +83,25 @@ KernelResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const st
 void OpenclCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
     const bool synchronizeFlag)
 {
-    std::unique_ptr<OpenclProgram> program = createAndBuildProgram(kernelData.getSource());
-    auto kernel = std::make_unique<OpenclKernel>(program->getProgram(), kernelData.getName());
+	std::unique_ptr<OpenclProgram> program;
+	OpenclProgram* programPointer;
+
+	if (programCacheFlag)
+	{
+		if (programCache.find(kernelData.getSource()) == programCache.end())
+		{
+			program = createAndBuildProgram(kernelData.getSource());
+			programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
+		}
+		auto cachePointer = programCache.find(kernelData.getSource());
+		programPointer = cachePointer->second.get();
+	}
+	else
+	{
+		program = createAndBuildProgram(kernelData.getSource());
+		programPointer = program.get();
+	}
+    auto kernel = std::make_unique<OpenclKernel>(programPointer->getProgram(), kernelData.getName());
 
     for (const auto argument : argumentPointers)
     {
@@ -89,6 +124,17 @@ void OpenclCore::setGlobalSizeType(const GlobalSizeType& type)
 void OpenclCore::setAutomaticGlobalSizeCorrection(const bool flag)
 {
     globalSizeCorrection = flag;
+}
+
+void OpenclCore::setProgramCache(const bool flag)
+{
+	clearProgramCache();
+	programCacheFlag = flag;
+}
+
+void OpenclCore::clearProgramCache()
+{
+	programCache.clear();
 }
 
 QueueId OpenclCore::getDefaultQueue() const
@@ -388,15 +434,15 @@ cl_ulong OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_
         return 0;
     }
 
-	OpenclEvent profilingEvent;
+	std::unique_ptr<OpenclEvent> profilingEvent = std::make_unique<OpenclEvent>();
     cl_int result = clEnqueueNDRangeKernel(commandQueues.at(queue)->getQueue(), kernel.getKernel(),
-        static_cast<cl_uint>(correctedGlobalSize.size()), nullptr, correctedGlobalSize.data(), localSize.data(), 0, nullptr, profilingEvent.getEvent());
+        static_cast<cl_uint>(correctedGlobalSize.size()), nullptr, correctedGlobalSize.data(), localSize.data(), 0, nullptr, profilingEvent->getEvent());
     checkOpenclError(result, "clEnqueueNDRangeKernel");
 
     // Wait for computation to finish
-    checkOpenclError(clWaitForEvents(1, profilingEvent.getEvent()), "clWaitForEvents");
+    checkOpenclError(clWaitForEvents(1, profilingEvent->getEvent()), "clWaitForEvents");
 
-    cl_ulong duration = profilingEvent.getKernelRunDuration();
+    cl_ulong duration = profilingEvent->getKernelRunDuration();
     return duration;
 }
 
