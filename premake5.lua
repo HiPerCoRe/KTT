@@ -253,12 +253,19 @@ project "reduction_opencl"
     includedirs { "source" }
     links { "ktt" }
 
+project "sort_opencl"
+    kind "ConsoleApp"
+    files {"examples/shoc-sort/*.h", "examples/shoc-sort/*.cpp", "examples/shoc-sort/*.cl"}
+    includedirs {"source"}
+    links {"ktt"}
+
 if os.target() == "linux" then
 project "hotspot_opencl"
     kind "ConsoleApp"
     files { "examples/rodinia-hotspot/*.h", "examples/rodinia-hotspot/*.cpp", "examples/rodinia-hotspot/*.cl" }
     includedirs { "source" }
     links { "ktt" }
+
 end
 
 end -- _OPTIONS["no-examples"]
