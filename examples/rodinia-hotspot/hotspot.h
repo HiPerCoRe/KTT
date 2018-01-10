@@ -1,5 +1,4 @@
-#ifndef HOTSPOT_H
-#define HOTSPOT_H
+#pragma once
 
 #include <stdio.h>
 #include <string.h>
@@ -57,4 +56,3 @@ void readinput(std::vector<float>&, int, int, char *);
 void writeoutput(float*, int, int, char *);
 void readinput(float*, int, int, char *);
 void usage(int, char **);
-#endif
