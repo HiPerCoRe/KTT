@@ -7,6 +7,7 @@
 #include <limits.h>
 
 #include "tuner_api.h"
+#include "sort.h"
 #include "sort_reference.h"
 #include "sort_tunable.h"
 
@@ -38,7 +39,7 @@ int main(int argc, char** argv)
 
   if (argc >= 5)
   {
-    problemSize = atoi(argv[5]);
+    problemSize = atoi(argv[4]);
   }
   
   int size = problemSize * 1024 * 1024;
@@ -77,20 +78,21 @@ int main(int argc, char** argv)
   //Add arguments for kernels
   size_t inId = tuner.addArgumentVector(std::vector<unsigned int>(in), ktt::ArgumentAccessType::ReadWrite);
   size_t outId = tuner.addArgumentVector(std::vector<unsigned int>(out), ktt::ArgumentAccessType::ReadWrite);
-  size_t isumsId; //vector, readwrite, must be added after global and local size are determined, as its size depends on the number of groups
+  size_t isumsId = tuner.addArgumentVector(std::vector<unsigned int>(0), ktt::ArgumentAccessType::ReadWrite); //vector, readwrite, must be added after global and local size are determined, as its size depends on the number of groups
   size_t sizeId = tuner.addArgumentScalar(size);
   size_t workGroupSizeId = tuner.addArgumentScalar(workGroupDimensions.getSizeX());
 
-  size_t localMem1Id; //local, workgroupsize*sizeof(unsigned int), must be added after local size is determined, as its size depends on that
-  size_t localMem2Id; //local, 2*workgroupsize*sizeof(unsigned int), must be added after local size is determined, as its size depends on that
+  size_t localMem1Id = tuner.addArgumentLocal(8); //local, workgroupsize*sizeof(unsigned int), must be added after local size is determined, as its size depends on that
+  size_t localMem2Id = tuner.addArgumentLocal(8); //local, 2*workgroupsize*sizeof(unsigned int), must be added after local size is determined, as its size depends on that
   int shift = 0;
   size_t shiftId = tuner.addArgumentScalar(shift); //will be updated as the kernel execution is iterative
 
   tuner.setKernelArguments(kernelIds[0], std::vector<size_t>{inId, isumsId, sizeId, localMem1Id, shiftId});
   tuner.setKernelArguments(kernelIds[1], std::vector<size_t>{isumsId, workGroupSizeId, localMem2Id});
   tuner.setKernelArguments(kernelIds[2], std::vector<size_t>{inId, isumsId, outId, sizeId, localMem2Id, shiftId});
-  tunableSort * sort = new tunableSort(&tuner, kernelIds, size, in, out, isumsId, localMem1Id, localMem2Id, workGroupSizeId, shiftId);
+  tunableSort * sort = new tunableSort(&tuner, kernelIds, size, inId, outId, isumsId, localMem1Id, localMem2Id, workGroupSizeId, shiftId);
   kernelId = tuner.addComposition("sort", kernelIds, std::unique_ptr<tunableSort>(sort));
+  sort->setKernelId(kernelId);
   tuner.setTuningManipulator(kernelId, std::unique_ptr<tunableSort>(sort));
 
   tuner.setKernelArguments(referenceKernelIds[0], std::vector<size_t>{inId, isumsId, sizeId, localMem1Id, shiftId});

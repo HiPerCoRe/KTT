@@ -1,7 +1,6 @@
 #pragma once
 
 #include "tuner_api.h"
-#include "sort.h"
 
 class tunableSort : public ktt::TuningManipulator {
   public:
@@ -65,6 +64,16 @@ class tunableSort : public ktt::TuningManipulator {
 
     }
 
+    void tune() {
+      tuner->tuneKernel(kernelId);
+      tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
+      tuner->printResult(kernelId, std::string("sort_result.csv"), ktt::PrintFormat::CSV);
+    }
+
+    void setKernelId(size_t id) {
+      kernelId = id;
+    }
+
   private:
 
     ktt::Tuner* tuner;
@@ -75,7 +84,8 @@ class tunableSort : public ktt::TuningManipulator {
     size_t localMem1Id;
     size_t localMem2Id;
     size_t workGroupSizeId;
-    std::vector<size_t> kernelIds;
+    size_t kernelId; //id of the composite kernel
+    std::vector<size_t> kernelIds; //ids of the internal kernels
 
     int shift;
     int size;

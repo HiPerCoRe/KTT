@@ -1,7 +1,6 @@
 #pragma once
 
 #include "tuner_api.h"
-#include "sort.h"
 
 //the main code and reference kernel adopted from SHOC benchmark, example sort
 class referenceSort : public ktt::TuningManipulator {
