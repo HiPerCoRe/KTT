@@ -609,8 +609,7 @@ KernelResult CudaCore::runKernel(const KernelRuntimeData&, const std::vector<Ker
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
-void CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<ArgumentOutputDescriptor>&, const QueueId,
-    const bool)
+void CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId, const bool)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
@@ -690,7 +689,7 @@ void CudaCore::downloadArgument(const ArgumentId, void*, const QueueId, const bo
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
-void CudaCore::downloadArgument(const ArgumentId void*, const size_t) const
+void CudaCore::downloadArgument(const ArgumentId, void*, const size_t) const
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }

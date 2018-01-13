@@ -111,8 +111,8 @@ public:
     // Kernel execution method
     KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
-    void runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-        const std::vector<ArgumentOutputDescriptor>& outputDescriptors, const QueueId queue, const bool synchronizeFlag) override;
+    void runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
+        const bool synchronizeFlag) override;
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
