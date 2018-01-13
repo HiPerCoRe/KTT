@@ -35,8 +35,8 @@ public:
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType& type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
-	void setProgramCache(const bool flag) override;
-	void clearProgramCache() override;
+    void setProgramCache(const bool flag) override;
+    void clearProgramCache() override;
 
     // Queue handling methods
     QueueId getDefaultQueue() const override;
@@ -80,11 +80,11 @@ private:
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
-	bool programCacheFlag;
+    bool programCacheFlag;
     std::unique_ptr<OpenclContext> context;
     std::vector<std::unique_ptr<OpenclCommandQueue>> commandQueues;
     std::set<std::unique_ptr<OpenclBuffer>> buffers;
-	std::map<std::string, std::unique_ptr<OpenclProgram>> programCache;
+    std::map<std::string, std::unique_ptr<OpenclProgram>> programCache;
 
     // Helper methods
     static PlatformInfo getOpenclPlatformInfo(const size_t platformIndex);
