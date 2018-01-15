@@ -38,10 +38,10 @@ KernelResult KernelRunner::runKernel(const KernelId id, const std::vector<Parame
     {
         if (kernel.hasTuningManipulator())
         {
-			computeEngine->setProgramCache(true);
+            computeEngine->setProgramCache(true);
             auto manipulatorPointer = tuningManipulators.find(id);
             result = runKernelWithManipulator(kernel, manipulatorPointer->second.get(), launchConfiguration, output);
-			computeEngine->setProgramCache(false);
+            computeEngine->setProgramCache(false);
         }
         else
         {
@@ -67,7 +67,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const std::vector<P
 
     const KernelComposition& composition = kernelManager->getKernelComposition(id);
     const KernelConfiguration launchConfiguration = kernelManager->getKernelCompositionConfiguration(id, configuration);
-	computeEngine->setProgramCache(true);
+    computeEngine->setProgramCache(true);
 
     std::stringstream stream;
     stream << "Running kernel composition " << composition.getName() << " with configuration: " << launchConfiguration;
@@ -85,7 +85,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const std::vector<P
         result = KernelResult(composition.getName(), launchConfiguration, error.what());
     }
 
-	computeEngine->setProgramCache(false);
+    computeEngine->setProgramCache(false);
     return result;
 }
 

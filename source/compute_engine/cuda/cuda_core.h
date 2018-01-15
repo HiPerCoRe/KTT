@@ -42,8 +42,8 @@ public:
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType& type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
-	void setProgramCache(const bool flag) override;
-	void clearProgramCache() override;
+    void setProgramCache(const bool flag) override;
+    void clearProgramCache() override;
 
     // Queue handling methods
     QueueId getDefaultQueue() const override;
@@ -86,11 +86,11 @@ private:
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
-	bool programCacheFlag;
+    bool programCacheFlag;
     std::unique_ptr<CudaContext> context;
     std::vector<std::unique_ptr<CudaStream>> streams;
     std::set<std::unique_ptr<CudaBuffer>> buffers;
-	std::map<std::string, std::unique_ptr<CudaProgram>> programCache;
+    std::map<std::string, std::unique_ptr<CudaProgram>> programCache;
 
     DeviceInfo getCudaDeviceInfo(const size_t deviceIndex) const;
     std::vector<CudaDevice> getCudaDevices() const;
@@ -111,15 +111,15 @@ public:
     // Kernel execution method
     KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
-    void runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-        const std::vector<ArgumentOutputDescriptor>& outputDescriptors, const QueueId queue, const bool synchronizeFlag) override;
+    void runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
+        const bool synchronizeFlag) override;
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType& type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
-	void setProgramCache(const bool flag) override;
-	void clearProgramCache() override;
+    void setProgramCache(const bool flag) override;
+    void clearProgramCache() override;
 
     // Queue handling methods
     QueueId getDefaultQueue() const override;

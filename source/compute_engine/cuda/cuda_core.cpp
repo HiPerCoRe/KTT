@@ -14,7 +14,7 @@ CudaCore::CudaCore(const size_t deviceIndex, const size_t queueCount) :
     compilerOptions(std::string("--gpu-architecture=compute_30")),
     globalSizeType(GlobalSizeType::Cuda),
     globalSizeCorrection(false),
-	programCacheFlag(false)
+    programCacheFlag(false)
 {
     checkCudaError(cuInit(0), "cuInit");
 
@@ -35,25 +35,25 @@ CudaCore::CudaCore(const size_t deviceIndex, const size_t queueCount) :
 KernelResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-	std::unique_ptr<CudaProgram> program;
-	CudaProgram* programPointer;
+    std::unique_ptr<CudaProgram> program;
+    CudaProgram* programPointer;
 
-	if (programCacheFlag)
-	{
-		if (programCache.find(kernelData.getSource()) == programCache.end())
-		{
-			program = createAndBuildProgram(kernelData.getSource());
-			programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
-		}
-		auto cachePointer = programCache.find(kernelData.getSource());
-		programPointer = cachePointer->second.get();
-	}
-	else
-	{
-		program = createAndBuildProgram(kernelData.getSource());
-		programPointer = program.get();
-	}
-	std::unique_ptr<CudaKernel> kernel = createKernel(*programPointer, kernelData.getName());
+    if (programCacheFlag)
+    {
+        if (programCache.find(kernelData.getSource()) == programCache.end())
+        {
+            program = createAndBuildProgram(kernelData.getSource());
+            programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
+        }
+        auto cachePointer = programCache.find(kernelData.getSource());
+        programPointer = cachePointer->second.get();
+    }
+    else
+    {
+        program = createAndBuildProgram(kernelData.getSource());
+        programPointer = program.get();
+    }
+    std::unique_ptr<CudaKernel> kernel = createKernel(*programPointer, kernelData.getName());
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
     float duration = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
@@ -77,24 +77,24 @@ KernelResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std:
 void CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
     const bool synchronizeFlag)
 {
-	std::unique_ptr<CudaProgram> program;
-	CudaProgram* programPointer;
+    std::unique_ptr<CudaProgram> program;
+    CudaProgram* programPointer;
 
-	if (programCacheFlag)
-	{
-		if (programCache.find(kernelData.getSource()) == programCache.end())
-		{
-			program = createAndBuildProgram(kernelData.getSource());
-			programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
-		}
-		auto cachePointer = programCache.find(kernelData.getSource());
-		programPointer = cachePointer->second.get();
-	}
-	else
-	{
-		program = createAndBuildProgram(kernelData.getSource());
-		programPointer = program.get();
-	}
+    if (programCacheFlag)
+    {
+        if (programCache.find(kernelData.getSource()) == programCache.end())
+        {
+            program = createAndBuildProgram(kernelData.getSource());
+            programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
+        }
+        auto cachePointer = programCache.find(kernelData.getSource());
+        programPointer = cachePointer->second.get();
+    }
+    else
+    {
+        program = createAndBuildProgram(kernelData.getSource());
+        programPointer = program.get();
+    }
     std::unique_ptr<CudaKernel> kernel = createKernel(*programPointer, kernelData.getName());
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
@@ -119,13 +119,13 @@ void CudaCore::setAutomaticGlobalSizeCorrection(const bool flag)
 
 void CudaCore::setProgramCache(const bool flag)
 {
-	clearProgramCache();
-	programCacheFlag = flag;
+    clearProgramCache();
+    programCacheFlag = flag;
 }
 
 void CudaCore::clearProgramCache()
 {
-	programCache.clear();
+    programCache.clear();
 }
 
 QueueId CudaCore::getDefaultQueue() const
@@ -609,8 +609,7 @@ KernelResult CudaCore::runKernel(const KernelRuntimeData&, const std::vector<Ker
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
-void CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<ArgumentOutputDescriptor>&, const QueueId,
-    const bool)
+void CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId, const bool)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
@@ -632,12 +631,12 @@ void CudaCore::setAutomaticGlobalSizeCorrection(const bool)
 
 void CudaCore::setProgramCache(const bool)
 {
-	throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 void CudaCore::clearProgramCache()
 {
-	throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
 QueueId CudaCore::getDefaultQueue() const
@@ -690,7 +689,7 @@ void CudaCore::downloadArgument(const ArgumentId, void*, const QueueId, const bo
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
 
-void CudaCore::downloadArgument(const ArgumentId void*, const size_t) const
+void CudaCore::downloadArgument(const ArgumentId, void*, const size_t) const
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
 }
