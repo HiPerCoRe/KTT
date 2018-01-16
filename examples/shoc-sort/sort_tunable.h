@@ -20,6 +20,7 @@ class tunableSort : public ktt::TuningManipulator {
     this->localMem2Id = localMem2Id;
     this->workGroupSizeId = workGroupSizeId;
     this->shiftId = shiftId;
+    kernelId = -1;
 
   }
 
@@ -29,8 +30,8 @@ class tunableSort : public ktt::TuningManipulator {
       const ktt::DimensionVector workGroupDimensions(256, 1, 1);
 
       int localSize = workGroupDimensions.getSizeX();
-      updateArgumentLocal(localMem1Id, localSize * sizeof(unsigned int));
-      updateArgumentLocal(localMem2Id, 2 * localSize * sizeof(unsigned int));
+      //updateArgumentLocal(localMem1Id, localSize);
+      //updateArgumentLocal(localMem2Id, 2 * localSize);
       updateArgumentScalar(workGroupSizeId, &localSize);
       
       for (int shift = 0; shift < sizeof(unsigned int)*8; shift += radix_width)
@@ -42,10 +43,6 @@ class tunableSort : public ktt::TuningManipulator {
         // right used in binning.
         updateArgumentScalar(shiftId, &shift);
 
-        // Also, the sort is not in place, so swap the input and output
-        // buffers on each pass.
-        swapKernelArguments(kernelIds[0], inId, outId);
-        swapKernelArguments(kernelIds[2], inId, outId);
 
         // Each thread block gets an equal portion of the
         // input array, and computes occurrences of each digit.
@@ -60,11 +57,17 @@ class tunableSort : public ktt::TuningManipulator {
         // that is seeded with the scanned histograms which rebins,
         // locally scans, then scatters keys to global memory
         runKernel(kernelIds[2], ndRangeDimensions, workGroupDimensions);
+        
+        // Also, the sort is not in place, so swap the input and output
+        // buffers on each pass.
+        swapKernelArguments(kernelIds[0], inId, outId);
+        swapKernelArguments(kernelIds[2], inId, outId);
       }
 
     }
 
     void tune() {
+      printf("kernelId %d\n", kernelId);
       tuner->tuneKernel(kernelId);
       tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
       tuner->printResult(kernelId, std::string("sort_result.csv"), ktt::PrintFormat::CSV);
