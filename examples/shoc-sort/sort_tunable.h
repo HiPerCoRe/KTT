@@ -6,7 +6,7 @@ class tunableSort : public ktt::TuningManipulator {
   public:
     // Constructor creates internal structures and setups the environment
     // it takes arguments from command line and generated input data
-    tunableSort(ktt::Tuner *tuner, std::vector<size_t> kernelIds, int size, size_t inId, size_t outId, size_t isumsId, size_t localMem1Id, size_t localMem2Id, size_t workGroupSizeId, size_t shiftId) : TuningManipulator() 
+    tunableSort(ktt::Tuner *tuner, std::vector<size_t> kernelIds, int size, size_t inId, size_t outId, size_t isumsId, size_t sizeId, size_t localMem1Id, size_t localMem2Id, size_t workGroupSizeId, size_t shiftId) : TuningManipulator() 
   {
     this->tuner = tuner;
 
@@ -16,6 +16,7 @@ class tunableSort : public ktt::TuningManipulator {
     this->inId = inId;
     this->outId = outId;
     this->isumsId = isumsId;
+    this->sizeId = sizeId;
     this->localMem1Id = localMem1Id;
     this->localMem2Id = localMem2Id;
     this->workGroupSizeId = workGroupSizeId;
@@ -43,24 +44,38 @@ class tunableSort : public ktt::TuningManipulator {
         // right used in binning.
         updateArgumentScalar(shiftId, &shift);
 
+        // Also, the sort is not in place, so swap the input and output
+        // buffers on each pass.
+        bool even = ((shift / radix_width) % 2 == 0) ? true : false;
+
+        if (even)
+        {
+          changeKernelArguments(kernelIds[0], {inId, isumsId, 3 /* == sizeId*/, localMem1Id, shiftId});
+        }
+        else // i.e. odd pass
+        {
+          changeKernelArguments(kernelIds[0], {outId, isumsId, sizeId, localMem1Id, shiftId});
+        }
 
         // Each thread block gets an equal portion of the
         // input array, and computes occurrences of each digit.
         runKernel(kernelIds[0], ndRangeDimensions, workGroupDimensions);
+        printf("Kenrel reduce done\n------------------------------------------------------------\n");
 
         // Next, a top-level exclusive scan is performed on the
         // per block histograms.  This is done by a single
         // work group (note global size here is the same as local).
         runKernel(kernelIds[1], workGroupDimensions, workGroupDimensions);
+        printf("Kernel top scan done\n------------------------------------------------------------\n");
 
         // Finally, a bottom-level scan is performed by each block
         // that is seeded with the scanned histograms which rebins,
         // locally scans, then scatters keys to global memory
         runKernel(kernelIds[2], ndRangeDimensions, workGroupDimensions);
+        printf("Kernel bottom scan done\n------------------------------------------------------------\n");
         
         // Also, the sort is not in place, so swap the input and output
         // buffers on each pass.
-        swapKernelArguments(kernelIds[0], inId, outId);
         swapKernelArguments(kernelIds[2], inId, outId);
       }
 
@@ -84,6 +99,7 @@ class tunableSort : public ktt::TuningManipulator {
     size_t outId;
     size_t shiftId;
     size_t isumsId;
+    size_t sizeId;
     size_t localMem1Id;
     size_t localMem2Id;
     size_t workGroupSizeId;

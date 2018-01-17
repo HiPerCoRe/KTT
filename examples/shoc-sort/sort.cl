@@ -29,8 +29,6 @@ reduce(__global const FPTYPE * in, //input vector of unsorted number
     int tid = get_local_id(0);
     int i = block_start + tid;
 
-    if (tid==0)
-      printf("kernel reduce start\n");
     // The per thread histogram, initially 0's.
     int digit_counts[16] = { 0, 0, 0, 0, 0, 0, 0, 0,
                              0, 0, 0, 0, 0, 0, 0, 0 };
@@ -71,8 +69,6 @@ reduce(__global const FPTYPE * in, //input vector of unsorted number
             isums[(d * get_num_groups(0)) + get_group_id(0)] = lmem[0];
         }
     }
-    if (tid==0)
-      printf("kernel reduce end\n");
 }
 
 // This kernel scans the contents of local memory using a work
@@ -107,7 +103,6 @@ top_scan(__global FPTYPE * isums, //vector of histograms of all groups, global m
          const int n, //number of groups
          __local FPTYPE * lmem) //helper variable for scnLocalMem method, size 2*n_threads
 {
-      printf("kernel top scan start\n");
     __local int s_seed;
     s_seed = 0; barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -115,8 +110,6 @@ top_scan(__global FPTYPE * isums, //vector of histograms of all groups, global m
     // propagate the seed value
     int last_thread = (get_local_id(0) < n &&
                       (get_local_id(0)+1) == n) ? 1 : 0;
-    if (last_thread)
-      printf("kernel top scan start\n");
 
     for (int d = 0; d < 16; d++)
     {
@@ -142,8 +135,6 @@ top_scan(__global FPTYPE * isums, //vector of histograms of all groups, global m
         }
         barrier(CLK_LOCAL_MEM_FENCE);
     }
-    if (last_thread)
-      printf("kernel top scan end\n");
 }
 
 
@@ -183,8 +174,6 @@ bottom_scan(__global const FPTYPE * in, //numbers to be sorted
     int i = block_start + get_local_id(0);
     int window = block_start;
     
-    if (get_local_id(0) == 0)
-      printf("kernel bottom scan start\n");
 
     // Set the histogram in local memory to zero
     // and read in the scanned seeds from gmem
@@ -267,7 +256,5 @@ bottom_scan(__global const FPTYPE * in, //numbers to be sorted
         window += get_local_size(0);
         i += get_local_size(0);
     }
-    if (get_local_id(0) == 0)
-      printf("kernel bottom scan end\n");
 }
 

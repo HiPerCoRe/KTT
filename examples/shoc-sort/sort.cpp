@@ -44,12 +44,12 @@ int main(int argc, char** argv)
   int size = problemSize * 256 * 256;
 
   // Create input and output vectors and initialize with random numbers
-  std::vector<unsigned int> *in = new std::vector<unsigned int>(size);
+  std::vector<unsigned int> in = std::vector<unsigned int>(size);
 
   srand((unsigned int)time(NULL));
   for (int i = 0; i < size; i++)
   {
-    (*in)[i] = rand();
+    in[i] = rand();
   }
 
   // Create tuner object for chosen platform and device
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
   printf("ids kernel %u %u %u\n", kernelIds[0], kernelIds[1], kernelIds[2]);
 
   //Add arguments for kernels
-  size_t inId = tuner.addArgumentVector(std::vector<unsigned int>(*in), ktt::ArgumentAccessType::ReadWrite);
+  size_t inId = tuner.addArgumentVector(std::vector<unsigned int>(in), ktt::ArgumentAccessType::ReadWrite);
   size_t outId = tuner.addArgumentVector(std::vector<unsigned int>(size), ktt::ArgumentAccessType::ReadWrite);
   int isumsSize = 64*16;
   size_t isumsId = tuner.addArgumentVector(std::vector<unsigned int>(isumsSize), ktt::ArgumentAccessType::ReadWrite); //vector, readwrite, must be added after global and local size are determined, as its size depends on the number of groups
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
   int shift = 0;
   size_t shiftId = tuner.addArgumentScalar(shift); //will be updated as the kernel execution is iterative
 
-  tunableSort * sort = new tunableSort(&tuner, kernelIds, size, inId, outId, isumsId, localMem1Id, localMem2Id, workGroupSizeId, shiftId);
+  tunableSort * sort = new tunableSort(&tuner, kernelIds, size, inId, outId, isumsId, sizeId, localMem1Id, localMem2Id, workGroupSizeId, shiftId);
   kernelId = tuner.addComposition("sort", kernelIds, std::unique_ptr<tunableSort>(sort));
   sort->setKernelId(kernelId);
   tuner.setCompositionKernelArguments(kernelId, kernelIds[0], std::vector<size_t>{inId, isumsId, sizeId, localMem1Id, shiftId});
@@ -96,8 +96,9 @@ int main(int argc, char** argv)
 
   tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.9f);
 
-  tuner.setReferenceClass(kernelId, std::make_unique<referenceSort>(&tuner, in), std::vector<ktt::ArgumentId>{outId});
+  tuner.setReferenceClass(kernelId, std::make_unique<referenceSort>(&tuner, &in), std::vector<ktt::ArgumentId>{outId});
 
+  setbuf(stdout, NULL);
   sort->tune();
   return 0;
 }
