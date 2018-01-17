@@ -24,8 +24,8 @@ public:
     // Kernel execution method
     virtual KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) = 0;
-    virtual void runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
-        const bool synchronizeFlag) = 0;
+    virtual EventId runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) = 0;
+    virtual KernelResult getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) = 0;
 
     // Utility methods
     virtual void setCompilerOptions(const std::string& options) = 0;

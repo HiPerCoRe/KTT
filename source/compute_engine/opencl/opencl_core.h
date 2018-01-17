@@ -28,8 +28,8 @@ public:
     // Kernel execution method
     KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
-    void runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
-        const bool synchronizeFlag) override;
+    EventId runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) override;
+    KernelResult getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
@@ -69,8 +69,8 @@ public:
     // Low-level kernel execution methods
     std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;
     void setKernelArgument(OpenclKernel& kernel, KernelArgument& argument);
-    cl_ulong enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize, const QueueId queue,
-        const bool synchronizeFlag) const;
+    EventId enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+        const QueueId queue);
 
 private:
     // Attributes
@@ -85,6 +85,8 @@ private:
     std::vector<std::unique_ptr<OpenclCommandQueue>> commandQueues;
     std::set<std::unique_ptr<OpenclBuffer>> buffers;
     std::map<std::string, std::unique_ptr<OpenclProgram>> programCache;
+    EventId nextEventId;
+    std::map<EventId, std::unique_ptr<OpenclEvent>> kernelEvents;
 
     // Helper methods
     static PlatformInfo getOpenclPlatformInfo(const size_t platformIndex);

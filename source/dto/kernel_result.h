@@ -20,7 +20,6 @@ public:
     void setConfiguration(const KernelConfiguration& configuration);
     void setKernelDuration(const uint64_t kernelDuration);
     void setManipulatorDuration(const uint64_t manipulatorDuration);
-    void setMemoryTransferDuration(const uint64_t memoryTransferDuration);
     void setOverhead(const uint64_t overhead);
     void setErrorMessage(const std::string& errorMessage);
     void setValid(const bool flag);
@@ -29,7 +28,6 @@ public:
     KernelConfiguration getConfiguration() const;
     uint64_t getKernelDuration() const;
     uint64_t getManipulatorDuration() const;
-    uint64_t getMemoryTransferDuration() const;
     uint64_t getOverhead() const;
     uint64_t getTotalDuration() const;
     std::string getErrorMessage() const;
@@ -40,7 +38,6 @@ private:
     KernelConfiguration configuration;
     uint64_t kernelDuration;
     uint64_t manipulatorDuration;
-    uint64_t memoryTransferDuration;
     uint64_t overhead;
     std::string errorMessage;
     bool valid;

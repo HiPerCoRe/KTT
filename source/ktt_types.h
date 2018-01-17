@@ -23,4 +23,9 @@ using KernelId = size_t;
   */
 using QueueId = size_t;
 
+/** @typedef EventId
+  * Data type for referencing compute API events in KTT.
+  */
+using EventId = size_t;
+
 } // namespace ktt

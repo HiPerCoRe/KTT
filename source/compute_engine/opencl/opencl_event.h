@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string>
 #include "CL/cl.h"
+#include "ktt_types.h"
 #include "opencl_utility.h"
 
 namespace ktt
@@ -9,9 +11,24 @@ namespace ktt
 class OpenclEvent
 {
 public:
+    OpenclEvent(const EventId id, const std::string& kernelName) :
+        id(id),
+        kernelName(kernelName)
+    {}
+
     ~OpenclEvent()
     {
         checkOpenclError(clReleaseEvent(event), "clReleaseEvent");
+    }
+
+    EventId getId() const
+    {
+        return id;
+    }
+
+    std::string getKernelName() const
+    {
+        return kernelName;
     }
 
     cl_event* getEvent()
@@ -30,6 +47,8 @@ public:
     }
 
 private:
+    EventId id;
+    std::string kernelName;
     cl_event event;
 };
 

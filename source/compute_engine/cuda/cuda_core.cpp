@@ -74,8 +74,7 @@ KernelResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std:
     return KernelResult(kernelData.getName(), static_cast<uint64_t>(duration));
 }
 
-void CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
-    const bool synchronizeFlag)
+EventId CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
 {
     std::unique_ptr<CudaProgram> program;
     CudaProgram* programPointer;
@@ -99,7 +98,13 @@ void CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
     enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments, getSharedMemorySizeInBytes(argumentPointers),
-        queue, synchronizeFlag);
+        queue, false);
+    return 0;
+}
+
+KernelResult CudaCore::getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
+{
+    throw std::runtime_error("to do");
 }
 
 void CudaCore::setCompilerOptions(const std::string& options)
@@ -119,7 +124,10 @@ void CudaCore::setAutomaticGlobalSizeCorrection(const bool flag)
 
 void CudaCore::setProgramCache(const bool flag)
 {
-    clearProgramCache();
+    if (!flag)
+    {
+        clearProgramCache();
+    }
     programCacheFlag = flag;
 }
 
@@ -601,142 +609,147 @@ CUdeviceptr* CudaCore::loadBufferFromCache(const ArgumentId id) const
 
 CudaCore::CudaCore(const size_t, const size_t)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 KernelResult CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<ArgumentOutputDescriptor>&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-void CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId, const bool)
+EventId CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+}
+
+KernelResult CudaCore::getKernelResult(const EventId, const std::vector<ArgumentOutputDescriptor>&)
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::setCompilerOptions(const std::string&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::setGlobalSizeType(const GlobalSizeType&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::setAutomaticGlobalSizeCorrection(const bool)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::setProgramCache(const bool)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::clearProgramCache()
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 QueueId CudaCore::getDefaultQueue() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 std::vector<QueueId> CudaCore::getAllQueues() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::synchronizeQueue(const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::synchronizeDevice()
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::uploadArgument(KernelArgument&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::uploadArgument(KernelArgument&, const QueueId, const bool)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::updateArgument(const ArgumentId, const void*, const size_t)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::updateArgument(const ArgumentId, const void*, const size_t, const QueueId, const bool)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::downloadArgument(const ArgumentId, void*) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::downloadArgument(const ArgumentId, void*, const QueueId, const bool) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::downloadArgument(const ArgumentId, void*, const size_t) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::downloadArgument(const ArgumentId, void*, const size_t, const QueueId, const bool) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 KernelArgument CudaCore::downloadArgument(const ArgumentId) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::clearBuffer(const ArgumentId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::clearBuffers()
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::clearBuffers(const ArgumentAccessType&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::printComputeApiInfo(std::ostream&) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 std::vector<PlatformInfo> CudaCore::getPlatformInfo() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 std::vector<DeviceInfo> CudaCore::getDeviceInfo(const size_t) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 DeviceInfo CudaCore::getCurrentDeviceInfo() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 #endif // PLATFORM_CUDA

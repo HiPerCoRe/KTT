@@ -7,7 +7,6 @@ KernelResult::KernelResult() :
     kernelName(""),
     kernelDuration(UINT64_MAX),
     manipulatorDuration(0),
-    memoryTransferDuration(0),
     overhead(0),
     errorMessage(""),
     valid(false)
@@ -18,7 +17,6 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     configuration(configuration),
     kernelDuration(UINT64_MAX),
     manipulatorDuration(0),
-    memoryTransferDuration(0),
     overhead(0),
     errorMessage(""),
     valid(true)
@@ -28,7 +26,6 @@ KernelResult::KernelResult(const std::string& kernelName, uint64_t kernelDuratio
     kernelName(kernelName),
     kernelDuration(kernelDuration),
     manipulatorDuration(0),
-    memoryTransferDuration(0),
     overhead(0),
     errorMessage(""),
     valid(true)
@@ -39,7 +36,6 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     configuration(configuration),
     kernelDuration(UINT64_MAX),
     manipulatorDuration(0),
-    memoryTransferDuration(0),
     overhead(0),
     errorMessage(errorMessage),
     valid(false)
@@ -63,11 +59,6 @@ void KernelResult::setKernelDuration(const uint64_t kernelDuration)
 void KernelResult::setManipulatorDuration(const uint64_t manipulatorDuration)
 {
     this->manipulatorDuration = manipulatorDuration;
-}
-
-void KernelResult::setMemoryTransferDuration(const uint64_t memoryTransferDuration)
-{
-    this->memoryTransferDuration = memoryTransferDuration;
 }
 
 void KernelResult::setOverhead(const uint64_t overhead)
@@ -105,11 +96,6 @@ uint64_t KernelResult::getManipulatorDuration() const
     return manipulatorDuration;
 }
 
-uint64_t KernelResult::getMemoryTransferDuration() const
-{
-    return memoryTransferDuration;
-}
-
 uint64_t KernelResult::getOverhead() const
 {
     return overhead;
@@ -117,7 +103,7 @@ uint64_t KernelResult::getOverhead() const
 
 uint64_t KernelResult::getTotalDuration() const
 {
-    return kernelDuration + manipulatorDuration + memoryTransferDuration;
+    return kernelDuration + manipulatorDuration;
 }
 
 std::string KernelResult::getErrorMessage() const
