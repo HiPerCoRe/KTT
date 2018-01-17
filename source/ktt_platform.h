@@ -1,5 +1,5 @@
 /** @file ktt_platform.h
-  * @brief Preprocessor definitions which ensure compatibility for multiple compilers.
+  * Preprocessor definitions which ensure compatibility for multiple compilers.
   */
 #pragma once
 
