@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include "manipulator_interface.h"
 #include "compute_engine/compute_engine.h"
 #include "dto/kernel_runtime_data.h"
@@ -61,10 +62,12 @@ private:
     std::map<size_t, KernelRuntimeData> kernelData;
     std::map<size_t, KernelArgument*> vectorArguments;
     std::map<size_t, KernelArgument> nonVectorArguments;
+    std::map<QueueId, std::set<EventId>> enqueuedEvents;
 
     // Helper methods
     std::vector<KernelArgument*> getArgumentPointers(const std::vector<ArgumentId>& argumentIds);
     void updateArgumentSimple(const ArgumentId id, const void* argumentData, const size_t numberOfElements, const ArgumentUploadType& uploadType);
+    void processEvents(const std::set<EventId>& events);
 };
 
 } // namespace ktt
