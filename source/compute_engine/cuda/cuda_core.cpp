@@ -14,7 +14,8 @@ CudaCore::CudaCore(const size_t deviceIndex, const size_t queueCount) :
     compilerOptions(std::string("--gpu-architecture=compute_30")),
     globalSizeType(GlobalSizeType::Cuda),
     globalSizeCorrection(false),
-    programCacheFlag(false)
+    programCacheFlag(false),
+    nextEventId(0)
 {
     checkCudaError(cuInit(0), "cuInit");
 
@@ -35,43 +36,9 @@ CudaCore::CudaCore(const size_t deviceIndex, const size_t queueCount) :
 KernelResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-    std::unique_ptr<CudaProgram> program;
-    CudaProgram* programPointer;
-
-    if (programCacheFlag)
-    {
-        if (programCache.find(kernelData.getSource()) == programCache.end())
-        {
-            program = createAndBuildProgram(kernelData.getSource());
-            programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
-        }
-        auto cachePointer = programCache.find(kernelData.getSource());
-        programPointer = cachePointer->second.get();
-    }
-    else
-    {
-        program = createAndBuildProgram(kernelData.getSource());
-        programPointer = program.get();
-    }
-    std::unique_ptr<CudaKernel> kernel = createKernel(*programPointer, kernelData.getName());
-    std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
-
-    float duration = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
-        getSharedMemorySizeInBytes(argumentPointers), getDefaultQueue(), true);
-
-    for (const auto& descriptor : outputDescriptors)
-    {
-        if (descriptor.getOutputSizeInBytes() == 0)
-        {
-            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
-        }
-        else
-        {
-            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
-        }
-    }
-
-    return KernelResult(kernelData.getName(), static_cast<uint64_t>(duration));
+    EventId eventId = runKernel(kernelData, argumentPointers, getDefaultQueue());
+    KernelResult result = getKernelResult(eventId, outputDescriptors);
+    return result;
 }
 
 EventId CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
@@ -94,17 +61,42 @@ EventId CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vect
         program = createAndBuildProgram(kernelData.getSource());
         programPointer = program.get();
     }
-    std::unique_ptr<CudaKernel> kernel = createKernel(*programPointer, kernelData.getName());
+    auto kernel = std::make_unique<CudaKernel>(programPointer->getPtxSource(), kernelData.getName());
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
-    enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments, getSharedMemorySizeInBytes(argumentPointers),
-        queue, false);
-    return 0;
+    return enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
+        getSharedMemorySizeInBytes(argumentPointers), queue );
 }
 
 KernelResult CudaCore::getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
-    throw std::runtime_error("to do");
+    auto eventPointer = kernelEvents.find(id);
+
+    if (eventPointer == kernelEvents.end())
+    {
+        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
+            + std::to_string(id));
+    }
+
+    // Wait until the second event in pair (the end event) finishes
+    checkCudaError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+    std::string name = eventPointer->second.first->getKernelName();
+    float duration = getKernelRunDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
+    kernelEvents.erase(id);
+
+    for (const auto& descriptor : outputDescriptors)
+    {
+        if (descriptor.getOutputSizeInBytes() == 0)
+        {
+            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
+        }
+        else
+        {
+            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+        }
+    }
+
+    return KernelResult(name, static_cast<uint64_t>(duration));
 }
 
 void CudaCore::setCompilerOptions(const std::string& options)
@@ -415,20 +407,8 @@ std::unique_ptr<CudaProgram> CudaCore::createAndBuildProgram(const std::string& 
     return program;
 }
 
-std::unique_ptr<CudaEvent> CudaCore::createEvent() const
-{
-    auto event = std::make_unique<CudaEvent>();
-    return event;
-}
-
-std::unique_ptr<CudaKernel> CudaCore::createKernel(const CudaProgram& program, const std::string& kernelName) const
-{
-    auto kernel = std::make_unique<CudaKernel>(program.getPtxSource(), kernelName);
-    return kernel;
-}
-
-float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-    const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue, const bool synchronizeFlag) const
+EventId CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+    const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue)
 {
     if (queue >= streams.size())
     {
@@ -453,31 +433,21 @@ float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& glo
         correctedGlobalSize.at(2) /= localSize.at(2);
     }
 
-    if (!synchronizeFlag)
-    {
-        checkCudaError(cuLaunchKernel(kernel.getKernel(), static_cast<unsigned int>(correctedGlobalSize.at(0)),
-            static_cast<unsigned int>(correctedGlobalSize.at(1)), static_cast<unsigned int>(correctedGlobalSize.at(2)),
-            static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)), static_cast<unsigned int>(localSize.at(2)),
-            static_cast<unsigned int>(localMemorySize), streams.at(queue)->getStream(), kernelArgumentsVoid.data(), nullptr),
-            "cuLaunchKernel");
-        return 0.0f;
-    }
+    EventId eventId = nextEventId;
+    auto startEvent = std::make_unique<CudaEvent>(eventId, kernel.getKernelName());
+    auto endEvent = std::make_unique<CudaEvent>(eventId, kernel.getKernelName());
+    nextEventId++;
 
-    auto start = createEvent();
-    auto end = createEvent();
-
-    checkCudaError(cuEventRecord(start->getEvent(), streams.at(queue)->getStream()), "cuEventRecord");
+    checkCudaError(cuEventRecord(startEvent->getEvent(), streams.at(queue)->getStream()), "cuEventRecord");
     checkCudaError(cuLaunchKernel(kernel.getKernel(), static_cast<unsigned int>(correctedGlobalSize.at(0)),
         static_cast<unsigned int>(correctedGlobalSize.at(1)), static_cast<unsigned int>(correctedGlobalSize.at(2)),
         static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)), static_cast<unsigned int>(localSize.at(2)),
         static_cast<unsigned int>(localMemorySize), streams.at(queue)->getStream(), kernelArgumentsVoid.data(), nullptr),
         "cuLaunchKernel");
-    checkCudaError(cuEventRecord(end->getEvent(), streams.at(queue)->getStream()), "cuEventRecord");
+    checkCudaError(cuEventRecord(endEvent->getEvent(), streams.at(queue)->getStream()), "cuEventRecord");
 
-    // Wait for computation to finish
-    checkCudaError(cuEventSynchronize(end->getEvent()), "cuEventSynchronize");
-
-    return getKernelRunDuration(start->getEvent(), end->getEvent());
+    kernelEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
+    return eventId;
 }
 
 std::vector<CudaDevice> CudaCore::getCudaDevices() const

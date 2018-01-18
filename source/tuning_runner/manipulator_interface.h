@@ -17,7 +17,15 @@ public:
 
     // Kernel run methods
     virtual void runKernel(const KernelId id) = 0;
+    virtual void runKernelAsync(const KernelId id, const QueueId queue) = 0;
     virtual void runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize) = 0;
+    virtual void runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize, const QueueId queue) = 0;
+
+    // Queue handling methods
+    virtual QueueId getDefaultDeviceQueue() const = 0;
+    virtual std::vector<QueueId> getAllDeviceQueues() const = 0;
+    virtual void synchronizeQueue(const QueueId queue) = 0;
+    virtual void synchronizeDevice() = 0;
 
     // Configuration retrieval methods
     virtual DimensionVector getCurrentGlobalSize(const KernelId id) const = 0;
@@ -28,9 +36,13 @@ public:
     virtual void updateArgumentScalar(const ArgumentId id, const void* argumentData) = 0;
     virtual void updateArgumentLocal(const ArgumentId id, const size_t numberOfElements) = 0;
     virtual void updateArgumentVector(const ArgumentId id, const void* argumentData) = 0;
+    virtual void updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const QueueId queue) = 0;
     virtual void updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements) = 0;
+    virtual void updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const size_t numberOfElements, const QueueId queue) = 0;
     virtual void getArgumentVector(const ArgumentId id, void* destination) const = 0;
+    virtual void getArgumentVectorAsync(const ArgumentId id, void* destination, const QueueId queue) const = 0;
     virtual void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const = 0;
+    virtual void getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements, const QueueId queue) const = 0;
 
     // Kernel argument handling methods
     virtual void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds) = 0;
@@ -38,6 +50,7 @@ public:
 
     // Buffer handling methods
     virtual void createArgumentBuffer(const ArgumentId id) = 0;
+    virtual void createArgumentBufferAsync(const ArgumentId id, const QueueId queue) = 0;
     virtual void destroyArgumentBuffer(const ArgumentId id) = 0;
 };
 

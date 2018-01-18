@@ -23,6 +23,11 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id)
     runKernel(id, dataPointer->second.getGlobalSizeDimensionVector(), dataPointer->second.getLocalSizeDimensionVector());
 }
 
+void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const QueueId queue)
+{
+    throw std::runtime_error("to do");
+}
+
 void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
@@ -45,6 +50,32 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
 
     timer.stop();
     currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
+}
+
+void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize,
+    const QueueId queue)
+{
+    throw std::runtime_error("to do");
+}
+
+QueueId ManipulatorInterfaceImplementation::getDefaultDeviceQueue() const
+{
+    return computeEngine->getDefaultQueue();
+}
+
+std::vector<QueueId> ManipulatorInterfaceImplementation::getAllDeviceQueues() const
+{
+    return computeEngine->getAllQueues();
+}
+
+void ManipulatorInterfaceImplementation::synchronizeQueue(const QueueId queue)
+{
+    computeEngine->synchronizeQueue(queue);
+}
+
+void ManipulatorInterfaceImplementation::synchronizeDevice()
+{
+    computeEngine->synchronizeDevice();
 }
 
 DimensionVector ManipulatorInterfaceImplementation::getCurrentGlobalSize(const KernelId id) const
@@ -93,6 +124,11 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId i
     computeEngine->updateArgument(id, argumentData, argumentPointer->second->getDataSizeInBytes());
 }
 
+void ManipulatorInterfaceImplementation::updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const QueueId queue)
+{
+    throw std::runtime_error("to do");
+}
+
 void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)
 {
     auto argumentPointer = vectorArguments.find(id);
@@ -104,9 +140,20 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId i
     computeEngine->updateArgument(id, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
 }
 
+void ManipulatorInterfaceImplementation::updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const size_t numberOfElements,
+    const QueueId queue)
+{
+    throw std::runtime_error("to do");
+}
+
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination) const
 {
     computeEngine->downloadArgument(id, destination);
+}
+
+void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId id, void* destination, const QueueId queue) const
+{
+    throw std::runtime_error("to do");
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
@@ -118,6 +165,12 @@ void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, 
     }
 
     computeEngine->downloadArgument(id, destination, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+}
+
+void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements,
+    const QueueId queue) const
+{
+    throw std::runtime_error("to do");
 }
 
 void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
@@ -184,6 +237,11 @@ void ManipulatorInterfaceImplementation::createArgumentBuffer(const ArgumentId i
 
     timer.stop();
     currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
+}
+
+void ManipulatorInterfaceImplementation::createArgumentBufferAsync(const ArgumentId id, const QueueId queue)
+{
+    throw std::runtime_error("to do");
 }
 
 void ManipulatorInterfaceImplementation::destroyArgumentBuffer(const ArgumentId id)

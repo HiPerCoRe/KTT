@@ -81,11 +81,11 @@ private:
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
     bool programCacheFlag;
+    EventId nextEventId;
     std::unique_ptr<OpenclContext> context;
     std::vector<std::unique_ptr<OpenclCommandQueue>> commandQueues;
     std::set<std::unique_ptr<OpenclBuffer>> buffers;
     std::map<std::string, std::unique_ptr<OpenclProgram>> programCache;
-    EventId nextEventId;
     std::map<EventId, std::unique_ptr<OpenclEvent>> kernelEvents;
 
     // Helper methods

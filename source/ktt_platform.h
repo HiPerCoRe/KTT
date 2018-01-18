@@ -1,5 +1,5 @@
 /** @file ktt_platform.h
-  * Preprocessor definitions which ensure compatibility for multiple compilers.
+  * Preprocessor definitions which ensure compatibility for multiple compilers and KTT version definitions.
   */
 #pragma once
 
@@ -15,3 +15,15 @@
     #define KTT_API
 #endif // _MSC_VER
 #endif // KTT_API
+
+/** Major version of KTT framework. First number in KTT version description.
+  */
+#define KTT_VERSION_MAJOR 0
+
+/** Minor version of KTT framework. Second number in KTT version description.
+  */
+#define KTT_VERSION_MINOR 6
+
+/** Patch version of KTT framework. Third number in KTT version description.
+  */
+#define KTT_VERSION_PATCH 0

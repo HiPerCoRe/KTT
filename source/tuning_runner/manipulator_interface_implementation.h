@@ -18,19 +18,30 @@ public:
 
     // Inherited methods
     void runKernel(const KernelId id) override;
+    void runKernelAsync(const KernelId id, const QueueId queue) override;
     void runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize) override;
+    void runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize, const QueueId queue) override;
+    QueueId getDefaultDeviceQueue() const override;
+    std::vector<QueueId> getAllDeviceQueues() const override;
+    void synchronizeQueue(const QueueId queue) override;
+    void synchronizeDevice() override;
     DimensionVector getCurrentGlobalSize(const KernelId id) const override;
     DimensionVector getCurrentLocalSize(const KernelId id) const override;
     std::vector<ParameterPair> getCurrentConfiguration() const override;
     void updateArgumentScalar(const ArgumentId id, const void* argumentData) override;
     void updateArgumentLocal(const ArgumentId id, const size_t numberOfElements) override;
     void updateArgumentVector(const ArgumentId id, const void* argumentData) override;
+    void updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const QueueId queue) override;
     void updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements) override;
+    void updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const size_t numberOfElements, const QueueId queue) override;
     void getArgumentVector(const ArgumentId id, void* destination) const override;
+    void getArgumentVectorAsync(const ArgumentId id, void* destination, const QueueId queue) const override;
     void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const override;
+    void getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements, const QueueId queue) const override;
     void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds) override;
     void swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond) override;
     void createArgumentBuffer(const ArgumentId id) override;
+    void createArgumentBufferAsync(const ArgumentId id, const QueueId queue) override;
     void destroyArgumentBuffer(const ArgumentId id) override;
 
     // Core methods

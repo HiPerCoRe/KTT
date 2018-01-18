@@ -103,7 +103,7 @@ int main(int argc, char** argv)
         ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
 
     // Previously added parameter affects thread block size of kernel. However, when block size is changed, grid size has to be modified as well,
-    // so that grid size multiplied by block size remains unchanged. This means that another parameter which affects grid size needs to be added.
+    // so that grid size multiplied by block size remains unchanged. This means that another parameter which affects grid size has to be added.
     tuner.addParameter(kernelId, "divide_grid_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ThreadModifierType::Global,
         ktt::ThreadModifierAction::Divide, ktt::Dimension::X);
 

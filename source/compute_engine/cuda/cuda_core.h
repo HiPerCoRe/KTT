@@ -5,6 +5,7 @@
 #include <ostream>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 #include "compute_engine/compute_engine.h"
 
@@ -75,10 +76,8 @@ public:
 
     // Low-level kernel execution methods
     std::unique_ptr<CudaProgram> createAndBuildProgram(const std::string& source) const;
-    std::unique_ptr<CudaEvent> createEvent() const;
-    std::unique_ptr<CudaKernel> createKernel(const CudaProgram& program, const std::string& kernelName) const;
-    float enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-        const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue, const bool synchronizeFlag) const;
+    EventId enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+        const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue);
 
 private:
     size_t deviceIndex;
@@ -87,10 +86,12 @@ private:
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
     bool programCacheFlag;
+    EventId nextEventId;
     std::unique_ptr<CudaContext> context;
     std::vector<std::unique_ptr<CudaStream>> streams;
     std::set<std::unique_ptr<CudaBuffer>> buffers;
     std::map<std::string, std::unique_ptr<CudaProgram>> programCache;
+    std::map<EventId, std::pair<std::unique_ptr<CudaEvent>, std::unique_ptr<CudaEvent>>> kernelEvents;
 
     DeviceInfo getCudaDeviceInfo(const size_t deviceIndex) const;
     std::vector<CudaDevice> getCudaDevices() const;

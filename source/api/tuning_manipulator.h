@@ -63,6 +63,15 @@ public:
       */
     void runKernel(const KernelId id);
 
+    /** @fn void runKernelAsync(const KernelId id, const QueueId queue)
+      * Runs kernel with specified id using thread sizes based on the current configuration. Kernel will be launched asynchronously in specified
+      * queue.
+      * @param id Id of kernel which will be run. It must either match the id used to launch kernel from tuner API or be included inside composition
+      * which was launched from tuner API.
+      * @param queue Id of queue in which the command to run kernel will be submitted.
+      */
+    void runKernelAsync(const KernelId id, const QueueId queue);
+
     /** @fn void runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize)
       * Runs kernel with specified id using specified thread sizes.
       * @param id Id of kernel which will be run. It must either match the id used to launch kernel from tuner API or be included inside composition
@@ -71,6 +80,39 @@ public:
       * @param localSize Dimensions for local size with which the kernel will be run.
       */
     void runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize);
+
+    /** @fn void runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize, const QueueId queue)
+      * Runs kernel with specified id using specified thread sizes. Kernel will be launched asynchronously in specified queue.
+      * @param id Id of kernel which will be run. It must either match the id used to launch kernel from tuner API or be included inside composition
+      * which was launched from tuner API.
+      * @param globalSize Dimensions for global size with which the kernel will be run.
+      * @param localSize Dimensions for local size with which the kernel will be run.
+      * @param queue Id of queue in which the command to run kernel will be submitted.
+      */
+    void runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize, const QueueId queue);
+
+    /** @fn QueueId getDefaultDeviceQueue() const
+      * Retrieves id of device queue to which all synchronous commands are submitted.
+      * @return Id of device queue to which all synchronous commands are submitted.
+      */
+    QueueId getDefaultDeviceQueue() const;
+
+    /** @fn std::vector<QueueId> getAllDeviceQueues() const
+      * Retrieves ids of all available device queues. Number of available device queues can be specified during tuner creation.
+      * @return Ids of all available device queues.
+      */
+    std::vector<QueueId> getAllDeviceQueues() const;
+
+    /** @fn void synchronizeQueue(const QueueId queue)
+      * Waits until all commands submitted to specified device queue are completed.
+      * @param queue Id of queue which will be synchronized.
+      */
+    void synchronizeQueue(const QueueId queue);
+
+    /** @fn void synchronizeDevice()
+      * Waits until all commands submitted to all device queues are completed.
+      */
+    void synchronizeDevice();
 
     /** @fn DimensionVector getCurrentGlobalSize(const KernelId id) const
       * Returns global thread size of specified kernel based on the current configuration.
@@ -115,6 +157,14 @@ public:
       */
     void updateArgumentVector(const ArgumentId id, const void* argumentData);
 
+    /** @fn void updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, QueueId queue)
+      * Updates specified vector argument. Does not modify argument size. Argument will be updated asynchronously in specified queue.
+      * @param id Id of vector argument which will be updated.
+      * @param argumentData Pointer to new data for vector argument. Number of elements and data types for old and new data have to match.
+      * @param queue Id of queue in which the command to update argument will be submitted.
+      */
+    void updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, QueueId queue);
+
     /** @fn void updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)
       * Updates specified vector argument. Possibly also modifies argument size.
       * @param id Id of vector argument which will be updated.
@@ -122,6 +172,15 @@ public:
       * @param numberOfElements Number of elements inside updated vector argument.
       */
     void updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements);
+
+    /** @fn void updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const size_t numberOfElements, QueueId queue)
+      * Updates specified vector argument. Possibly also modifies argument size. Argument will be updated asynchronously in specified queue.
+      * @param id Id of vector argument which will be updated.
+      * @param argumentData Pointer to new data for vector argument. Data types for old and new data have to match.
+      * @param numberOfElements Number of elements inside updated vector argument.
+      * @param queue Id of queue in which the command to update argument will be submitted.
+      */
+    void updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const size_t numberOfElements, QueueId queue);
 
     /** @fn void getArgumentVector(const ArgumentId id, void* destination) const
       * Retrieves specified vector argument.
@@ -131,6 +190,15 @@ public:
       */
     void getArgumentVector(const ArgumentId id, void* destination) const;
 
+    /** @fn void getArgumentVectorAsync(const ArgumentId id, void* destination, QueueId queue) const
+      * Retrieves specified vector argument. Argument will be retrieved asynchronously in specified queue.
+      * @param id Id of vector argument which will be retrieved.
+      * @param destination Pointer to destination where vector argument data will be copied. Destination buffer size needs to be equal or greater
+      * than argument size.
+      * @param queue Id of queue in which the command to retrieve argument will be submitted.
+      */
+    void getArgumentVectorAsync(const ArgumentId id, void* destination, QueueId queue) const;
+
     /** @fn void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
       * Retrieves part of specified vector argument.
       * @param id Id of vector argument which will be retrieved.
@@ -139,6 +207,16 @@ public:
       * @param numberOfElements Number of elements which will be copied to specified destination, starting with first element.
       */
     void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const;
+
+    /** @fn void getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements, QueueId queue) const
+      * Retrieves part of specified vector argument. Argument will be retrieved asynchronously in specified queue.
+      * @param id Id of vector argument which will be retrieved.
+      * @param destination Pointer to destination where vector argument data will be copied. Destination buffer size needs to be equal or greater
+      * than size of specified number of elements.
+      * @param numberOfElements Number of elements which will be copied to specified destination, starting with first element.
+      * @param queue Id of queue in which the command to retrieve argument will be submitted.
+      */
+    void getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements, QueueId queue) const;
 
     /** @fn void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
       * Changes kernel arguments for specified kernel by providing corresponding argument ids.
@@ -162,6 +240,15 @@ public:
       * @param id Id of argument for which the buffer will be created.
       */
     void createArgumentBuffer(const ArgumentId id);
+
+    /** @fn void createArgumentBufferAsync(const ArgumentId id, QueueId queue)
+      * Transfers specified kernel argument to a buffer from which it can be accessed by compute API. This method should be utilized only if
+      * argument preload is disabled. See enableArgumentPreload() for more information. Argument will be transferred asynchronously in specified
+      * queue.
+      * @param id Id of argument for which the buffer will be created.
+      * @param queue Id of queue in which the command to transfer argument will be submitted.
+      */
+    void createArgumentBufferAsync(const ArgumentId id, QueueId queue);
 
     /** @fn void destroyArgumentBuffer(const ArgumentId id)
       * Destroys compute API buffer for specified kernel argument. This method should be utilized only if argument preload is disabled.
