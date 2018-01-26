@@ -38,8 +38,10 @@ KernelResult KernelRunner::runKernel(const KernelId id, const std::vector<Parame
     {
         if (kernel.hasTuningManipulator())
         {
+            computeEngine->setProgramCache(true);
             auto manipulatorPointer = tuningManipulators.find(id);
             result = runKernelWithManipulator(kernel, manipulatorPointer->second.get(), launchConfiguration, output);
+            computeEngine->setProgramCache(false);
         }
         else
         {
@@ -65,6 +67,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const std::vector<P
 
     const KernelComposition& composition = kernelManager->getKernelComposition(id);
     const KernelConfiguration launchConfiguration = kernelManager->getKernelCompositionConfiguration(id, configuration);
+    computeEngine->setProgramCache(true);
 
     std::stringstream stream;
     stream << "Running kernel composition " << composition.getName() << " with configuration: " << launchConfiguration;
@@ -82,6 +85,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const std::vector<P
         result = KernelResult(composition.getName(), launchConfiguration, error.what());
     }
 
+    computeEngine->setProgramCache(false);
     return result;
 }
 
@@ -96,7 +100,7 @@ void KernelRunner::setTuningManipulator(const KernelId id, std::unique_ptr<Tunin
 
 KernelArgument KernelRunner::downloadArgument(const ArgumentId id) const
 {
-    return computeEngine->downloadArgument(computeEngine->getDefaultQueue(), id);
+    return computeEngine->downloadArgument(id);
 }
 
 void KernelRunner::clearBuffers(const ArgumentAccessType& accessType)
@@ -117,8 +121,7 @@ KernelResult KernelRunner::runKernelSimple(const Kernel& kernel, const KernelCon
     std::string source = kernelManager->getKernelSourceWithDefines(kernelId, configuration);
 
     KernelRuntimeData kernelData(kernelId, kernelName, source, configuration.getGlobalSize(), configuration.getLocalSize(), kernel.getArgumentIds());
-    KernelResult result = computeEngine->runKernel(computeEngine->getDefaultQueue(), kernelData,
-        argumentManager->getArguments(kernel.getArgumentIds()), output);
+    KernelResult result = computeEngine->runKernel(kernelData, argumentManager->getArguments(kernel.getArgumentIds()), output);
     result.setConfiguration(configuration);
     return result;
 }

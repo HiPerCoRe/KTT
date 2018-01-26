@@ -1,7 +1,7 @@
 KTT - Kernel Tuning Toolkit
 ===========================
 
-KTT is a C++ tuning library for OpenCL and CUDA kernels. Project is currently in late beta stage with all of the baseline
+KTT is a C++ tuning framework for OpenCL and CUDA kernels. Project is currently in late beta stage with all of the baseline
 functionality available.
 
 Main features
@@ -20,26 +20,26 @@ Getting started
 ---------------
 
 * Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/documentation).
-* Newest version of KTT library can be found [here](https://github.com/Fillo7/KTT/releases).
+* Newest version of KTT framework can be found [here](https://github.com/Fillo7/KTT/releases).
 * Prebuilt binaries are currently available only for some platforms. Other platforms require manual build.
 * Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support.
 
 Tutorials
 ---------
 
-Tutorials are short examples aimed at introducing people to KTT library. Each tutorial focuses on explaining specific part
+Tutorials are short examples aimed at introducing people to KTT framework. Each tutorial focuses on explaining specific part
 of the API. All tutorials are available for both OpenCL and CUDA back-ends. Tutorials assume that reader has some knowledge
 about C++ and GPU programming. List of currently available tutorials:
 
 * `compute_api_info`: Tutorial covers retrieving information about compute API platforms and devices through KTT API.
-* `running_kernel`: Tutorial covers running simple kernel with KTT library and retrieving output.
+* `running_kernel`: Tutorial covers running simple kernel with KTT framework and retrieving output.
 * `tuning_kernel_simple`: Tutorial covers simple kernel tuning using small number of tuning parameters and reference class
 to ensure correctness of computation.
 
 Examples
 --------
 
-Examples showcase how KTT library could be utilized in real-world scenarios. Examples are more complex than tutorials and
+Examples showcase how KTT framework could be utilized in real-world scenarios. Examples are more complex than tutorials and
 assume that reader is familiar with KTT API. List of currently available examples:
 
 * `coulomb_sum_2d`: Example which showcases tuning of electrostatic potential map computation, it focuses on a single slice.

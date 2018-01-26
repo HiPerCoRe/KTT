@@ -82,16 +82,6 @@ cl_mem_flags getOpenclMemoryType(const ArgumentAccessType& accessType)
     }
 }
 
-cl_ulong getKernelRunDuration(const cl_event profilingEvent)
-{
-    cl_ulong executionStart;
-    cl_ulong executionEnd;
-    checkOpenclError(clGetEventProfilingInfo(profilingEvent, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &executionStart, nullptr));
-    checkOpenclError(clGetEventProfilingInfo(profilingEvent, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &executionEnd, nullptr));
-
-    return executionEnd - executionStart;
-}
-
 std::string getPlatformInfoString(const cl_platform_id id, const cl_platform_info info)
 {
     size_t infoSize;

@@ -23,6 +23,16 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id)
     runKernel(id, dataPointer->second.getGlobalSizeDimensionVector(), dataPointer->second.getLocalSizeDimensionVector());
 }
 
+void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const QueueId queue)
+{
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
+    {
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+    runKernelAsync(id, dataPointer->second.getGlobalSizeDimensionVector(), dataPointer->second.getLocalSizeDimensionVector(), queue);
+}
+
 void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
@@ -39,12 +49,77 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
     kernelData.setGlobalSize(globalSize);
     kernelData.setLocalSize(localSize);
 
-    KernelResult result = computeEngine->runKernel(computeEngine->getDefaultQueue(), kernelData, getArgumentPointers(kernelData.getArgumentIds()),
+    KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()),
         std::vector<ArgumentOutputDescriptor>{});
     currentResult.setKernelDuration(currentResult.getKernelDuration() + result.getKernelDuration());
 
     timer.stop();
     currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
+}
+
+void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize,
+    const QueueId queue)
+{
+    Timer timer;
+    timer.start();
+
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
+    {
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+
+    KernelRuntimeData kernelData = dataPointer->second;
+    kernelData.setGlobalSize(globalSize);
+    kernelData.setLocalSize(localSize);
+
+    EventId kernelEvent = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()), queue);
+    auto eventPointer = enqueuedEvents.find(queue);
+    if (eventPointer == enqueuedEvents.end())
+    {
+        enqueuedEvents.insert(std::make_pair(queue, std::set<EventId>{kernelEvent}));
+    }
+    else
+    {
+        eventPointer->second.insert(kernelEvent);
+    }
+
+    timer.stop();
+    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
+}
+
+QueueId ManipulatorInterfaceImplementation::getDefaultDeviceQueue() const
+{
+    return computeEngine->getDefaultQueue();
+}
+
+std::vector<QueueId> ManipulatorInterfaceImplementation::getAllDeviceQueues() const
+{
+    return computeEngine->getAllQueues();
+}
+
+void ManipulatorInterfaceImplementation::synchronizeQueue(const QueueId queue)
+{
+    computeEngine->synchronizeQueue(queue);
+
+    auto eventPointer = enqueuedEvents.find(queue);
+    if (eventPointer != enqueuedEvents.end())
+    {
+        processEvents(eventPointer->second);
+        enqueuedEvents.erase(queue);
+    }
+}
+
+void ManipulatorInterfaceImplementation::synchronizeDevice()
+{
+    computeEngine->synchronizeDevice();
+
+    auto iterator = enqueuedEvents.cbegin();
+    while (iterator != enqueuedEvents.cend())
+    {
+        processEvents(iterator->second);
+    }
+    enqueuedEvents.clear();
 }
 
 DimensionVector ManipulatorInterfaceImplementation::getCurrentGlobalSize(const KernelId id) const
@@ -90,7 +165,18 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId i
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(computeEngine->getDefaultQueue(), id, argumentData, argumentPointer->second->getDataSizeInBytes());
+    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getDataSizeInBytes());
+}
+
+void ManipulatorInterfaceImplementation::updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const QueueId queue)
+{
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+
+    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getDataSizeInBytes(), queue, false);
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)
@@ -101,13 +187,41 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId i
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(computeEngine->getDefaultQueue(), id, argumentData,
-        argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+}
+
+void ManipulatorInterfaceImplementation::updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const size_t numberOfElements,
+    const QueueId queue)
+{
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+
+    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements, queue, false);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination) const
 {
-    computeEngine->downloadArgument(computeEngine->getDefaultQueue(), id, destination);
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+
+    computeEngine->downloadArgument(id, destination);
+}
+
+void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId id, void* destination, const QueueId queue) const
+{
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+
+    computeEngine->downloadArgument(id, destination, queue, false);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
@@ -118,8 +232,19 @@ void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, 
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->downloadArgument(computeEngine->getDefaultQueue(), id, destination,
-        argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+    computeEngine->downloadArgument(id, destination, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+}
+
+void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements,
+    const QueueId queue) const
+{
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+
+    computeEngine->downloadArgument(id, destination, argumentPointer->second->getElementSizeInBytes() * numberOfElements, queue, false);
 }
 
 void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
@@ -182,7 +307,23 @@ void ManipulatorInterfaceImplementation::createArgumentBuffer(const ArgumentId i
     {
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
-    computeEngine->uploadArgument(computeEngine->getDefaultQueue(), *argumentPointer->second);
+    computeEngine->uploadArgument(*argumentPointer->second);
+
+    timer.stop();
+    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
+}
+
+void ManipulatorInterfaceImplementation::createArgumentBufferAsync(const ArgumentId id, const QueueId queue)
+{
+    Timer timer;
+    timer.start();
+
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+    computeEngine->uploadArgument(*argumentPointer->second, queue, false);
 
     timer.stop();
     currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
@@ -231,7 +372,7 @@ void ManipulatorInterfaceImplementation::uploadBuffers()
 {
     for (auto& argument : vectorArguments)
     {
-        computeEngine->uploadArgument(computeEngine->getDefaultQueue(), *argument.second);
+        computeEngine->uploadArgument(*argument.second);
     }
 }
 
@@ -241,12 +382,11 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Argum
     {
         if (descriptor.getOutputSizeInBytes() == 0)
         {
-            computeEngine->downloadArgument(computeEngine->getDefaultQueue(), descriptor.getArgumentId(), descriptor.getOutputDestination());
+            computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
         }
         else
         {
-            computeEngine->downloadArgument(computeEngine->getDefaultQueue(), descriptor.getArgumentId(), descriptor.getOutputDestination(),
-                descriptor.getOutputSizeInBytes());
+            computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
         }
     }
 }
@@ -320,6 +460,14 @@ void ManipulatorInterfaceImplementation::updateArgumentSimple(const ArgumentId i
 
     nonVectorArguments.erase(id);
     nonVectorArguments.insert(std::make_pair(id, updatedArgument));
+}
+
+void ManipulatorInterfaceImplementation::processEvents(const std::set<EventId>& events)
+{
+    for (const auto& currentEvent : events)
+    {
+        KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<ArgumentOutputDescriptor>{});
+    }
 }
 
 } // namespace ktt

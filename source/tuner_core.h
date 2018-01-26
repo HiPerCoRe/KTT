@@ -20,7 +20,7 @@ class TunerCore
 {
 public:
     // Constructor
-    explicit TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi);
+    explicit TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const size_t queueCount);
 
     // Kernel manager methods
     KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);

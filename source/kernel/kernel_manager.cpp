@@ -315,7 +315,7 @@ void KernelManager::addCompositionKernelParameter(const KernelId compositionId, 
         throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
     }
 
-    getKernelComposition(kernelId).addKernelParameter(kernelId, KernelParameter(parameterName, parameterValues, modifierType, modifierAction,
+    getKernelComposition(compositionId).addKernelParameter(kernelId, KernelParameter(parameterName, parameterValues, modifierType, modifierAction,
         modifierDimension));
 }
 

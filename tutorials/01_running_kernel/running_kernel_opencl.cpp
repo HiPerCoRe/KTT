@@ -64,5 +64,12 @@ int main(int argc, char** argv)
     // argument which was created earlier. Note that the memory location size needs to be equal or greater than retrieved argument size.
     tuner.runKernel(kernelId, {}, std::vector<ktt::ArgumentOutputDescriptor>{ktt::ArgumentOutputDescriptor(resultId, result.data())});
 
+    // Print first ten elements from result to check they were computed correctly.
+    for (size_t i = 0; i < 10; i++)
+    {
+        std::cout << result.at(i) << " ";
+    }
+    std::cout << std::endl;
+
     return 0;
 }

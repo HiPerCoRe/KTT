@@ -1,5 +1,4 @@
-#ifndef HOTSPOT_H
-#define HOTSPOT_H
+#pragma once
 
 #include <stdio.h>
 #include <string.h>
@@ -12,8 +11,6 @@
   #define BLOCK_SIZE_REF RD_WG_SIZE_0
 #elif defined(RD_WG_SIZE)
   #define BLOCK_SIZE_REF RD_WG_SIZE
-#else
-#define BLOCK_SIZE_REF 8                                                             
 #endif
 
 #define STR_SIZE 256
@@ -59,4 +56,3 @@ void readinput(std::vector<float>&, int, int, char *);
 void writeoutput(float*, int, int, char *);
 void readinput(float*, int, int, char *);
 void usage(int, char **);
-#endif
