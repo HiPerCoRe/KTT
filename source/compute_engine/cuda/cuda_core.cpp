@@ -719,12 +719,12 @@ EventId CudaCore::downloadArgumentAsync(const ArgumentId, void*, const size_t, c
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-KernelArgument CudaCore::downloadArgumentObject(const ArgumentId, uint64_t* downloadDuration) const
+KernelArgument CudaCore::downloadArgumentObject(const ArgumentId, uint64_t*) const
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-uint64_t getArgumentOperationDuration(const EventId) const
+uint64_t CudaCore::getArgumentOperationDuration(const EventId) const
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }

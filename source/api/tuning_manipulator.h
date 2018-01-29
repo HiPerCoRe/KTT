@@ -36,10 +36,9 @@ public:
       * other method inside the tuning manipulator as well as any user-defined methods. Any other tuning manipulator methods run from this method
       * only affect current invocation of launchComputation() method. Inheriting class must provide implementation for this method.
       *
-      * When tuning manipulator is used, total execution duration is calculated from two components. First component is the sum of execution times
-      * of all kernel launches inside this method. Second component is the execution time of the method itself, minus the execution times of kernel
-      * launches. Initial buffer transfer times are not included in the total duration, same as in the case of kernel tuning without manipulator.
-      * Other buffer update and retrieval times are included in the second component.
+      * When tuning manipulator is used, computation duration is calculated based on duration of launchComputation() method. Initial buffer transfer
+      * times are not included in this duration (eg. duration of createArgumentBuffer() methods). KTT framework overhead and kernel compilation times
+      * are not included in the final duration either.
       * @param id Id of a kernel or kernel composition which will be used to launch kernel from tuner API.
       */
     virtual void launchComputation(const KernelId id) = 0;

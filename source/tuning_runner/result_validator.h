@@ -38,8 +38,8 @@ public:
     void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
     void computeReferenceResult(const Kernel& kernel);
     void clearReferenceResults();
-    bool validateArgumentsWithClass(const Kernel& kernel, const KernelConfiguration& configuration);
-    bool validateArgumentsWithKernel(const Kernel& kernel, const KernelConfiguration& configuration);
+    bool validateArgumentsWithClass(const Kernel& kernel);
+    bool validateArgumentsWithKernel(const Kernel& kernel);
 
     // Getters
     double getToleranceThreshold() const;
@@ -63,7 +63,7 @@ private:
     void computeReferenceResultWithClass(const Kernel& kernel);
     void computeReferenceResultWithKernel(const Kernel& kernel);
     bool validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments,
-        const std::string kernelName, const KernelConfiguration& configuration) const;
+        const std::string kernelName) const;
     bool validateResultCustom(const ArgumentId id, const void* result, const void* referenceResult, const size_t numberOfElements,
         const size_t elementSizeInBytes, const std::function<bool(const void*, const void*)>& comparator) const;
 

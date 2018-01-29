@@ -74,7 +74,7 @@ bool ResultLoader::loadResults(const std::string& filePath)
         }
         std::vector<int> runValues;
         runValues.push_back(std::stoi(params[timeIndex]));
-        for (int i = paramsBegin; i < paramsBegin+paramsLength; i++)
+        for (size_t i = paramsBegin; i < paramsBegin+paramsLength; i++)
             runValues.push_back(std::stoi(params[i]));
         values.push_back(runValues);
     }

@@ -78,7 +78,7 @@ void ResultValidator::clearReferenceResults()
     referenceKernelResults.clear();
 }
 
-bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const KernelConfiguration& configuration)
+bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel)
 {
     KernelId kernelId = kernel.getId();
 
@@ -97,10 +97,10 @@ bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const Ker
         resultArguments.push_back(resultArgument);
     }
 
-    return validateArguments(resultArguments, referenceClassResults.find(kernelId)->second, kernel.getName(), configuration);
+    return validateArguments(resultArguments, referenceClassResults.find(kernelId)->second, kernel.getName());
 }
 
-bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const KernelConfiguration& configuration)
+bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel)
 {
     KernelId kernelId = kernel.getId();
 
@@ -119,7 +119,7 @@ bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const Ke
         resultArguments.push_back(resultArgument);
     }
 
-    return validateArguments(resultArguments, referenceKernelResults.find(kernelId)->second, kernel.getName(), configuration);
+    return validateArguments(resultArguments, referenceKernelResults.find(kernelId)->second, kernel.getName());
 }
 
 double ResultValidator::getToleranceThreshold() const
@@ -220,7 +220,7 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
 }
 
 bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments,
-    const std::string kernelName, const KernelConfiguration& configuration) const
+    const std::string kernelName) const
 {
     bool validationResult = true;
 

@@ -111,7 +111,7 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
             results.emplace_back(kernel.getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what());
         }
 
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         results.push_back(result);
     }
 
@@ -266,8 +266,8 @@ bool TuningRunner::validateResult(const Kernel& kernel, const KernelResult& resu
         return false;
     }
 
-    bool resultIsCorrect = resultValidator->validateArgumentsWithClass(kernel, result.getConfiguration());
-    resultIsCorrect &= resultValidator->validateArgumentsWithKernel(kernel, result.getConfiguration());
+    bool resultIsCorrect = resultValidator->validateArgumentsWithClass(kernel);
+    resultIsCorrect &= resultValidator->validateArgumentsWithKernel(kernel);
 
     if (resultIsCorrect)
     {

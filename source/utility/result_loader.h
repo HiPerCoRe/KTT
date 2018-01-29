@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <map>
 #include <string>
 #include <vector>
@@ -20,8 +21,8 @@ public:
 private:
     std::vector<std::vector<int>> values;
     int timeIndex;
-    int paramsBegin;
-    int paramsLength;
+    size_t paramsBegin;
+    size_t paramsLength;
 };
 
 } // namespace ktt

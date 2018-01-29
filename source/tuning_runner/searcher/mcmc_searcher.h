@@ -42,8 +42,6 @@ public:
         exploredIndices[index] = true;
         executionTimes.at(index) = previousDuration;
 
-        double progress = visitedStatesCount / static_cast<double>(getConfigurationCount());
-
         // acceptation of a new state
         std::cout << "Exec times " << executionTimes.at(originState) << " -> " << executionTimes.at(currentState) << "\n";
         if ((executionTimes.at(currentState) <= executionTimes.at(originState))
