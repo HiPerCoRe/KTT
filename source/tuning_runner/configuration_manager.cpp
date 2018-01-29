@@ -143,7 +143,7 @@ void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMet
         searchers.insert(std::make_pair(id, std::make_unique<AnnealingSearcher>(configurations, arguments.at(0), arguments.at(1))));
         break;
     case SearchMethod::MCMC:
-        searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, arguments.at(0))));
+        searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, arguments.at(0), std::vector<double>(arguments.begin()+1, arguments.end()))));
         break;
     default:
         throw std::runtime_error("Specified searcher is not supported");

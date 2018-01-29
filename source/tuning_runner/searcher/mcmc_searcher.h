@@ -15,7 +15,7 @@ class MCMCSearcher : public Searcher
 public:
     static const size_t maximumDifferences = 3;
 
-    MCMCSearcher(const std::vector<KernelConfiguration>& configurations,  const double fraction) :
+    MCMCSearcher(const std::vector<KernelConfiguration>& configurations,  const double fraction, const std::vector<double> start) :
         configurations(configurations),
         fraction(fraction),
         visitedStatesCount(0),
@@ -31,7 +31,12 @@ public:
         {
             throw std::runtime_error("Configurations vector provided for searcher is empty");
         }
-        size_t initialState = static_cast<size_t>(intDistribution(generator));
+
+        size_t initialState;
+        if (start.size()) 
+            initialState = searchStateIndex(start);
+        else
+            initialState = static_cast<size_t>(intDistribution(generator));
         originState = currentState = initialState;
         index = initialState;
     }
@@ -131,6 +136,31 @@ private:
         }
 
         return neighbours;
+    }
+
+    size_t searchStateIndex(const std::vector<double> &state) {
+        int states = state.size();
+        size_t ret = 0;
+        bool match;
+        for (const auto& configuration : configurations) {
+            match = true;
+            for (int i = 0; i < states; i++) {
+                if (configuration.getParameterPairs().at(i).getValue() != state[i]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match)
+                break;
+            ret++;
+        }
+
+        if (!match) {
+            std::cerr << "WARNING, MCMC starting point not found." << std::endl;
+            ret = 0;
+        }
+
+        return ret;
     }
 };
 
