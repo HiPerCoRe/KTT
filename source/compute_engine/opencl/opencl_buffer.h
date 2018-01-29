@@ -73,53 +73,67 @@ public:
         bufferSize = newBufferSize;
     }
 
-    void uploadData(cl_command_queue queue, const void* source, const size_t dataSize, const bool blockingFlag)
+    void uploadData(cl_command_queue queue, const void* source, const size_t dataSize, cl_event* recordingEvent)
     {
         if (bufferSize < dataSize)
         {
             resize(dataSize);
         }
 
-        cl_bool blockingCall = static_cast<cl_bool>(blockingFlag);
-
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
-            cl_int result = clEnqueueWriteBuffer(queue, buffer, blockingCall, 0, dataSize, source, 0, nullptr, nullptr);
-            checkOpenclError(result, "clEnqueueWriteBuffer");
+            if (recordingEvent == nullptr)
+            {
+                cl_int result = clEnqueueWriteBuffer(queue, buffer, CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
+                checkOpenclError(result, "clEnqueueWriteBuffer");
+            }
+            else
+            {
+                cl_int result = clEnqueueWriteBuffer(queue, buffer, CL_FALSE, 0, dataSize, source, 0, nullptr, recordingEvent);
+                checkOpenclError(result, "clEnqueueWriteBuffer");
+            }
         }
         else
         {
+            // Asynchronous buffer operations on mapped memory are currently not supported
             cl_int result;
-            void* destination = clEnqueueMapBuffer(queue, buffer, blockingCall, CL_MAP_WRITE, 0, dataSize, 0, nullptr, nullptr, &result);
+            void* destination = clEnqueueMapBuffer(queue, buffer, CL_TRUE, CL_MAP_WRITE, 0, dataSize, 0, nullptr, nullptr, &result);
             checkOpenclError(result, "clEnqueueMapBuffer");
 
             std::memcpy(destination, source, dataSize);
-            checkOpenclError(clEnqueueUnmapMemObject(queue, buffer, destination, 0, nullptr, nullptr), "clEnqueueUnmapMemObject");
+            checkOpenclError(clEnqueueUnmapMemObject(queue, buffer, destination, 0, nullptr, recordingEvent), "clEnqueueUnmapMemObject");
         }
     }
 
-    void downloadData(cl_command_queue queue, void* destination, const size_t dataSize, const bool blockingFlag) const
+    void downloadData(cl_command_queue queue, void* destination, const size_t dataSize, cl_event* recordingEvent) const
     {
         if (bufferSize < dataSize)
         {
             throw std::runtime_error("Size of data to download is larger than size of buffer");
         }
 
-        cl_bool blockingCall = static_cast<cl_bool>(blockingFlag);
-
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
-            cl_int result = clEnqueueReadBuffer(queue, buffer, blockingCall, 0, dataSize, destination, 0, nullptr, nullptr);
-            checkOpenclError(result, "clEnqueueReadBuffer");
+            if (recordingEvent == nullptr)
+            {
+                cl_int result = clEnqueueReadBuffer(queue, buffer, CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
+                checkOpenclError(result, "clEnqueueReadBuffer");
+            }
+            else
+            {
+                cl_int result = clEnqueueReadBuffer(queue, buffer, CL_FALSE, 0, dataSize, destination, 0, nullptr, recordingEvent);
+                checkOpenclError(result, "clEnqueueReadBuffer");
+            }
         }
         else
         {
+            // Asynchronous buffer operations on mapped memory are currently not supported
             cl_int result;
-            void* source = clEnqueueMapBuffer(queue, buffer, blockingCall, CL_MAP_READ, 0, dataSize, 0, nullptr, nullptr, &result);
+            void* source = clEnqueueMapBuffer(queue, buffer, CL_TRUE, CL_MAP_READ, 0, dataSize, 0, nullptr, nullptr, &result);
             checkOpenclError(result, "clEnqueueMapBuffer");
 
             std::memcpy(destination, source, dataSize);
-            checkOpenclError(clEnqueueUnmapMemObject(queue, buffer, source, 0, nullptr, nullptr), "clEnqueueUnmapMemObject");
+            checkOpenclError(clEnqueueUnmapMemObject(queue, buffer, source, 0, nullptr, recordingEvent), "clEnqueueUnmapMemObject");
         }
     }
 

@@ -45,7 +45,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
         KernelResult result = kernelRunner->runKernel(id, currentConfiguration.getParameterPairs(), std::vector<ArgumentOutputDescriptor>{});
 
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         if (validateResult(kernel, result))
         {
             results.push_back(result);
@@ -98,7 +98,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
         KernelResult result = kernelRunner->runComposition(id, currentConfiguration.getParameterPairs(), std::vector<ArgumentOutputDescriptor>{});
 
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         if (validateResult(compatibilityKernel, result))
         {
             results.push_back(result);
@@ -134,7 +134,7 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
     KernelResult result = kernelRunner->runKernel(id, currentConfiguration.getParameterPairs(), output);
 
-    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
     validateResult(kernel, result);
 
     kernelRunner->clearBuffers();
@@ -161,7 +161,7 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
     KernelResult result = kernelRunner->runComposition(id, currentConfiguration.getParameterPairs(), output);
 
-    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
     validateResult(compatibilityKernel, result);
 
     kernelRunner->clearBuffers();
@@ -219,7 +219,7 @@ bool TuningRunner::validateResult(const Kernel& kernel, const KernelResult& resu
 
     if (resultIsCorrect)
     {
-        logger->log(std::string("Kernel run completed successfully in ") + std::to_string((result.getTotalDuration()) / 1'000'000)
+        logger->log(std::string("Kernel run completed successfully in ") + std::to_string((result.getComputationDuration()) / 1'000'000)
             + "ms\n");
     }
     else

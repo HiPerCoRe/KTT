@@ -62,12 +62,14 @@ private:
     std::map<size_t, KernelRuntimeData> kernelData;
     std::map<size_t, KernelArgument*> vectorArguments;
     std::map<size_t, KernelArgument> nonVectorArguments;
-    std::map<QueueId, std::set<EventId>> enqueuedEvents;
+    mutable std::map<QueueId, std::set<EventId>> enqueuedKernelEvents;
+    mutable std::map<QueueId, std::set<EventId>> enqueuedBufferEvents;
 
     // Helper methods
     std::vector<KernelArgument*> getArgumentPointers(const std::vector<ArgumentId>& argumentIds);
     void updateArgumentSimple(const ArgumentId id, const void* argumentData, const size_t numberOfElements, const ArgumentUploadType& uploadType);
-    void processEvents(const std::set<EventId>& events);
+    void storeEvent(const QueueId queue, const EventId event, const bool kernelEvent) const;
+    void processEvents(const std::set<EventId>& events, const bool kernelEvent) const;
 };
 
 } // namespace ktt

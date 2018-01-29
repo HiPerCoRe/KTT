@@ -43,7 +43,7 @@ void checkCudaError(const nvrtcResult value, const std::string& message)
     }
 }
 
-float getKernelRunDuration(const CUevent start, const CUevent end)
+float getEventCommandDuration(const CUevent start, const CUevent end)
 {
     float result;
     checkCudaError(cuEventElapsedTime(&result, start, end), "cuEventElapsedTime");

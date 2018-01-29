@@ -11,9 +11,16 @@ namespace ktt
 class OpenclEvent
 {
 public:
+    OpenclEvent(const EventId id, const bool validFlag) :
+        id(id),
+        kernelName(""),
+        validFlag(validFlag)
+    {}
+
     OpenclEvent(const EventId id, const std::string& kernelName) :
         id(id),
-        kernelName(kernelName)
+        kernelName(kernelName),
+        validFlag(true)
     {}
 
     ~OpenclEvent()
@@ -36,7 +43,12 @@ public:
         return &event;
     }
 
-    cl_ulong getKernelRunDuration()
+    bool isValid() const
+    {
+        return validFlag;
+    }
+
+    cl_ulong getEventCommandDuration()
     {
         cl_ulong start;
         cl_ulong end;
@@ -50,6 +62,7 @@ private:
     EventId id;
     std::string kernelName;
     cl_event event;
+    bool validFlag;
 };
 
 } // namespace ktt

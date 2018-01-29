@@ -11,9 +11,18 @@ namespace ktt
 class CudaEvent
 {
 public:
+    CudaEvent(const EventId id, const bool validFlag) :
+        id(id),
+        kernelName(""),
+        validFlag(validFlag)
+    {
+        checkCudaError(cuEventCreate(&event, CU_EVENT_DEFAULT), "cuEventCreate");
+    }
+
     CudaEvent(const EventId id, const std::string& kernelName) :
         id(id),
-        kernelName(kernelName)
+        kernelName(kernelName),
+        validFlag(true)
     {
         checkCudaError(cuEventCreate(&event, CU_EVENT_DEFAULT), "cuEventCreate");
     }
@@ -38,10 +47,16 @@ public:
         return event;
     }
 
+    bool isValid() const
+    {
+        return validFlag;
+    }
+
 private:
     EventId id;
     std::string kernelName;
     CUevent event;
+    bool validFlag;
 };
 
 } // namespace ktt

@@ -159,6 +159,7 @@ public:
 
     /** @fn void updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, QueueId queue)
       * Updates specified vector argument. Does not modify argument size. Argument will be updated asynchronously in specified queue.
+      * Note that asynchronous buffer operations are not yet supported for OpenCL buffers mapped into host memory.
       * @param id Id of vector argument which will be updated.
       * @param argumentData Pointer to new data for vector argument. Number of elements and data types for old and new data have to match.
       * @param queue Id of queue in which the command to update argument will be submitted.
@@ -175,6 +176,7 @@ public:
 
     /** @fn void updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const size_t numberOfElements, QueueId queue)
       * Updates specified vector argument. Possibly also modifies argument size. Argument will be updated asynchronously in specified queue.
+      * Note that asynchronous buffer operations are not yet supported for OpenCL buffers mapped into host memory.
       * @param id Id of vector argument which will be updated.
       * @param argumentData Pointer to new data for vector argument. Data types for old and new data have to match.
       * @param numberOfElements Number of elements inside updated vector argument.
@@ -192,6 +194,7 @@ public:
 
     /** @fn void getArgumentVectorAsync(const ArgumentId id, void* destination, QueueId queue) const
       * Retrieves specified vector argument. Argument will be retrieved asynchronously in specified queue.
+      * Note that asynchronous buffer operations are not yet supported for OpenCL buffers mapped into host memory.
       * @param id Id of vector argument which will be retrieved.
       * @param destination Pointer to destination where vector argument data will be copied. Destination buffer size needs to be equal or greater
       * than argument size.
@@ -201,6 +204,7 @@ public:
 
     /** @fn void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
       * Retrieves part of specified vector argument.
+      * Note that asynchronous buffer operations are not yet supported for OpenCL buffers mapped into host memory.
       * @param id Id of vector argument which will be retrieved.
       * @param destination Pointer to destination where vector argument data will be copied. Destination buffer size needs to be equal or greater
       * than size of specified number of elements.
@@ -210,6 +214,7 @@ public:
 
     /** @fn void getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements, QueueId queue) const
       * Retrieves part of specified vector argument. Argument will be retrieved asynchronously in specified queue.
+      * Note that asynchronous buffer operations are not yet supported for OpenCL buffers mapped into host memory.
       * @param id Id of vector argument which will be retrieved.
       * @param destination Pointer to destination where vector argument data will be copied. Destination buffer size needs to be equal or greater
       * than size of specified number of elements.
@@ -245,6 +250,7 @@ public:
       * Transfers specified kernel argument to a buffer from which it can be accessed by compute API. This method should be utilized only if
       * argument preload is disabled. See enableArgumentPreload() for more information. Argument will be transferred asynchronously in specified
       * queue.
+      * Note that asynchronous buffer operations are not yet supported for OpenCL buffers mapped into host memory.
       * @param id Id of argument for which the buffer will be created.
       * @param queue Id of queue in which the command to transfer argument will be submitted.
       */

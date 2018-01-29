@@ -46,7 +46,7 @@ TEST_CASE("Working with OpenCL buffer", "Component: OpenclCore")
     SECTION("Transfering argument to / from device")
     {
         core.uploadArgument(argument);
-        ktt::KernelArgument resultArgument = core.downloadArgument(argument.getId());
+        ktt::KernelArgument resultArgument = core.downloadArgumentObject(argument.getId(), nullptr);
 
         REQUIRE(resultArgument.getDataType() == argument.getDataType());
         REQUIRE(resultArgument.getMemoryLocation() == argument.getMemoryLocation());

@@ -107,13 +107,14 @@ public:
         }
     }
 
-    void uploadData(CUstream stream, const void* source, const size_t dataSize, const bool blockingFlag)
+    void uploadData(CUstream stream, const void* source, const size_t dataSize, CUevent startEvent, CUevent endEvent)
     {
         if (bufferSize < dataSize)
         {
             resize(dataSize);
         }
 
+        checkCudaError(cuEventRecord(startEvent, stream), "cuEventRecord");
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
             checkCudaError(cuMemcpyHtoDAsync(deviceBuffer, source, dataSize, stream), "cuMemcpyHtoDAsync");
@@ -122,11 +123,7 @@ public:
         {
             checkCudaError(cuMemcpyHtoDAsync(hostBuffer, source, dataSize, stream), "cuMemcpyHtoDAsync");
         }
-
-        if (blockingFlag)
-        {
-            checkCudaError(cuStreamSynchronize(stream), "cuStreamSynchronize");
-        }
+        checkCudaError(cuEventRecord(endEvent, stream), "cuEventRecord");
     }
 
     void downloadData(void* destination, const size_t dataSize) const
@@ -146,13 +143,14 @@ public:
         }
     }
 
-    void downloadData(CUstream stream, void* destination, const size_t dataSize, const bool blockingFlag) const
+    void downloadData(CUstream stream, void* destination, const size_t dataSize, CUevent startEvent, CUevent endEvent) const
     {
         if (bufferSize < dataSize)
         {
             throw std::runtime_error("Size of data to download is higher than size of buffer");
         }
 
+        checkCudaError(cuEventRecord(startEvent, stream), "cuEventRecord");
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
             checkCudaError(cuMemcpyDtoHAsync(destination, deviceBuffer, dataSize, stream), "cuMemcpyDtoHAsync");
@@ -161,11 +159,7 @@ public:
         {
             checkCudaError(cuMemcpyDtoHAsync(destination, hostBuffer, dataSize, stream), "cuMemcpyDtoHAsync");
         }
-
-        if (blockingFlag)
-        {
-            checkCudaError(cuStreamSynchronize(stream), "cuStreamSynchronize");
-        }
+        checkCudaError(cuEventRecord(endEvent, stream), "cuEventRecord");
     }
 
     ArgumentId getKernelArgumentId() const

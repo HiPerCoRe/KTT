@@ -36,9 +36,6 @@ void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const
 void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    Timer timer;
-    timer.start();
-
     auto dataPointer = kernelData.find(id);
     if (dataPointer == kernelData.end())
     {
@@ -51,18 +48,11 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
 
     KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()),
         std::vector<ArgumentOutputDescriptor>{});
-    currentResult.setKernelDuration(currentResult.getKernelDuration() + result.getKernelDuration());
-
-    timer.stop();
-    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
 }
 
 void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize,
     const QueueId queue)
 {
-    Timer timer;
-    timer.start();
-
     auto dataPointer = kernelData.find(id);
     if (dataPointer == kernelData.end())
     {
@@ -73,19 +63,8 @@ void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const
     kernelData.setGlobalSize(globalSize);
     kernelData.setLocalSize(localSize);
 
-    EventId kernelEvent = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()), queue);
-    auto eventPointer = enqueuedEvents.find(queue);
-    if (eventPointer == enqueuedEvents.end())
-    {
-        enqueuedEvents.insert(std::make_pair(queue, std::set<EventId>{kernelEvent}));
-    }
-    else
-    {
-        eventPointer->second.insert(kernelEvent);
-    }
-
-    timer.stop();
-    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
+    EventId kernelEvent = computeEngine->runKernelAsync(kernelData, getArgumentPointers(kernelData.getArgumentIds()), queue);
+    storeEvent(queue, kernelEvent, true);
 }
 
 QueueId ManipulatorInterfaceImplementation::getDefaultDeviceQueue() const
@@ -102,11 +81,18 @@ void ManipulatorInterfaceImplementation::synchronizeQueue(const QueueId queue)
 {
     computeEngine->synchronizeQueue(queue);
 
-    auto eventPointer = enqueuedEvents.find(queue);
-    if (eventPointer != enqueuedEvents.end())
+    auto eventPointer = enqueuedKernelEvents.find(queue);
+    if (eventPointer != enqueuedKernelEvents.end())
     {
-        processEvents(eventPointer->second);
-        enqueuedEvents.erase(queue);
+        processEvents(eventPointer->second, true);
+        enqueuedKernelEvents.erase(queue);
+    }
+
+    auto bufferEventPointer = enqueuedBufferEvents.find(queue);
+    if (bufferEventPointer != enqueuedBufferEvents.end())
+    {
+        processEvents(bufferEventPointer->second, false);
+        enqueuedBufferEvents.erase(queue);
     }
 }
 
@@ -114,12 +100,19 @@ void ManipulatorInterfaceImplementation::synchronizeDevice()
 {
     computeEngine->synchronizeDevice();
 
-    auto iterator = enqueuedEvents.cbegin();
-    while (iterator != enqueuedEvents.cend())
+    auto iterator = enqueuedKernelEvents.cbegin();
+    while (iterator != enqueuedKernelEvents.cend())
     {
-        processEvents(iterator->second);
+        processEvents(iterator->second, true);
     }
-    enqueuedEvents.clear();
+    enqueuedKernelEvents.clear();
+
+    auto bufferIterator = enqueuedBufferEvents.cbegin();
+    while (bufferIterator != enqueuedBufferEvents.cend())
+    {
+        processEvents(bufferIterator->second, true);
+    }
+    enqueuedBufferEvents.clear();
 }
 
 DimensionVector ManipulatorInterfaceImplementation::getCurrentGlobalSize(const KernelId id) const
@@ -176,7 +169,8 @@ void ManipulatorInterfaceImplementation::updateArgumentVectorAsync(const Argumen
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getDataSizeInBytes(), queue, false);
+    EventId bufferEvent = computeEngine->updateArgumentAsync(id, argumentData, argumentPointer->second->getDataSizeInBytes(), queue);
+    storeEvent(queue, bufferEvent, false);
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)
@@ -199,7 +193,9 @@ void ManipulatorInterfaceImplementation::updateArgumentVectorAsync(const Argumen
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements, queue, false);
+    EventId bufferEvent = computeEngine->updateArgumentAsync(id, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements,
+        queue);
+    storeEvent(queue, bufferEvent, false);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination) const
@@ -221,7 +217,8 @@ void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->downloadArgument(id, destination, queue, false);
+    EventId bufferEvent = computeEngine->downloadArgumentAsync(id, destination, queue);
+    storeEvent(queue, bufferEvent, false);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
@@ -244,7 +241,9 @@ void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->downloadArgument(id, destination, argumentPointer->second->getElementSizeInBytes() * numberOfElements, queue, false);
+    EventId bufferEvent = computeEngine->downloadArgumentAsync(id, destination, argumentPointer->second->getElementSizeInBytes() * numberOfElements,
+        queue);
+    storeEvent(queue, bufferEvent, false);
 }
 
 void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
@@ -323,7 +322,9 @@ void ManipulatorInterfaceImplementation::createArgumentBufferAsync(const Argumen
     {
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
-    computeEngine->uploadArgument(*argumentPointer->second, queue, false);
+
+    EventId bufferEvent = computeEngine->uploadArgumentAsync(*argumentPointer->second, queue);
+    storeEvent(queue, bufferEvent, false);
 
     timer.stop();
     currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
@@ -348,7 +349,7 @@ void ManipulatorInterfaceImplementation::addKernel(const KernelId id, const Kern
 void ManipulatorInterfaceImplementation::setConfiguration(const KernelConfiguration& configuration)
 {
     currentConfiguration = configuration;
-    currentResult.setKernelDuration(0);
+    currentResult.setComputationDuration(0);
     currentResult.setConfiguration(currentConfiguration);
     currentResult.setValid(true);
 }
@@ -393,6 +394,11 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Argum
 
 void ManipulatorInterfaceImplementation::clearData()
 {
+    if (!enqueuedKernelEvents.empty() || !enqueuedBufferEvents.empty())
+    {
+        synchronizeDevice();
+    }
+    
     currentResult = KernelResult();
     currentConfiguration = KernelConfiguration();
     kernelData.clear();
@@ -462,11 +468,49 @@ void ManipulatorInterfaceImplementation::updateArgumentSimple(const ArgumentId i
     nonVectorArguments.insert(std::make_pair(id, updatedArgument));
 }
 
-void ManipulatorInterfaceImplementation::processEvents(const std::set<EventId>& events)
+void ManipulatorInterfaceImplementation::storeEvent(const QueueId queue, const EventId event, const bool kernelEvent) const
 {
-    for (const auto& currentEvent : events)
+    if (kernelEvent)
     {
-        KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<ArgumentOutputDescriptor>{});
+        auto eventPointer = enqueuedKernelEvents.find(queue);
+        if (eventPointer == enqueuedKernelEvents.end())
+        {
+            enqueuedKernelEvents.insert(std::make_pair(queue, std::set<EventId>{event}));
+        }
+        else
+        {
+            eventPointer->second.insert(event);
+        }
+    }
+    else
+    {
+        auto eventPointer = enqueuedBufferEvents.find(queue);
+        if (eventPointer == enqueuedBufferEvents.end())
+        {
+            enqueuedBufferEvents.insert(std::make_pair(queue, std::set<EventId>{event}));
+        }
+        else
+        {
+            eventPointer->second.insert(event);
+        }
+    }
+}
+
+void ManipulatorInterfaceImplementation::processEvents(const std::set<EventId>& events, const bool kernelEvent) const
+{
+    if (kernelEvent)
+    {
+        for (const auto& currentEvent : events)
+        {
+            KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<ArgumentOutputDescriptor>{});
+        }
+    }
+    else
+    {
+        for (const auto& currentEvent : events)
+        {
+            uint64_t result = computeEngine->getArgumentOperationDuration(currentEvent);
+        }
     }
 }
 

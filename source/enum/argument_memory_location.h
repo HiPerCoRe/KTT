@@ -23,7 +23,7 @@ enum class ArgumentMemoryLocation
 
     /** Argument data will be accessed from host memory without explicitly creating additional compute API buffer. This flag cannot be used
       * for writable arguments during regular kernel tuning. It can be used for any arguments during kernel tuning by step and kernel running. Note
-      * that even when this flag is used, extra buffer copy is still sometimes created internally by compute API. This bevaiour depends on particular
+      * that even when this flag is used, extra buffer copy is still sometimes created internally by compute API. This behaviour depends on particular
       * API and device.
       */
     HostZeroCopy

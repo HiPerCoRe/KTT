@@ -100,7 +100,7 @@ void KernelRunner::setTuningManipulator(const KernelId id, std::unique_ptr<Tunin
 
 KernelArgument KernelRunner::downloadArgument(const ArgumentId id) const
 {
-    return computeEngine->downloadArgument(id);
+    return computeEngine->downloadArgumentObject(id, nullptr);
 }
 
 void KernelRunner::clearBuffers(const ArgumentAccessType& accessType)
@@ -165,7 +165,7 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     size_t manipulatorDuration = timer.getElapsedTime();
     manipulatorDuration -= result.getOverhead();
     result.setKernelName(kernel.getName());
-    result.setManipulatorDuration(manipulatorDuration);
+    result.setComputationDuration(manipulatorDuration);
     return result;
 }
 
@@ -224,7 +224,7 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
     size_t manipulatorDuration = timer.getElapsedTime();
     manipulatorDuration -= result.getOverhead();
     result.setKernelName(composition.getName());
-    result.setManipulatorDuration(manipulatorDuration);
+    result.setComputationDuration(manipulatorDuration);
     return result;
 }
 
