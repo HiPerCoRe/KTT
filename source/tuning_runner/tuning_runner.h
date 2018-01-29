@@ -23,6 +23,7 @@ public:
 
     // Core methods
     std::vector<KernelResult> tuneKernel(const KernelId id);
+    std::vector<KernelResult> dryTuneKernel(const KernelId id, const std::string& filePath);
     std::vector<KernelResult> tuneComposition(const KernelId id);
     KernelResult tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output);
     KernelResult tuneCompositionByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output);

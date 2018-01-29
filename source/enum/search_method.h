@@ -27,7 +27,11 @@ enum class SearchMethod
     /** Explores fraction of kernel configurations using simulated annealing method. The fraction size is controlled with parameter.
       * Additional parameter specifies maximum temperature.
       */
-    Annealing
+    Annealing,
+
+    /** @brief Explores fraction of kernel configuration using Markov chain Monte Carlo method. The fraction size is controlled with parameter.
+      */
+    MCMC
 };
 
 } // namespace ktt
