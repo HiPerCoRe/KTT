@@ -76,7 +76,7 @@ public:
     // Low-level kernel execution methods
     std::unique_ptr<CudaProgram> createAndBuildProgram(const std::string& source) const;
     EventId enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-        const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue);
+        const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue, const uint64_t kernelLaunchOverhead);
 
 private:
     size_t deviceIndex;

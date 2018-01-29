@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include "cuda.h"
 #include "cuda_utility.h"
@@ -14,15 +15,17 @@ public:
     CudaEvent(const EventId id, const bool validFlag) :
         id(id),
         kernelName(""),
-        validFlag(validFlag)
+        validFlag(validFlag),
+        overhead(0)
     {
         checkCudaError(cuEventCreate(&event, CU_EVENT_DEFAULT), "cuEventCreate");
     }
 
-    CudaEvent(const EventId id, const std::string& kernelName) :
+    CudaEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead) :
         id(id),
         kernelName(kernelName),
-        validFlag(true)
+        validFlag(true),
+        overhead(kernelLaunchOverhead)
     {
         checkCudaError(cuEventCreate(&event, CU_EVENT_DEFAULT), "cuEventCreate");
     }
@@ -52,11 +55,17 @@ public:
         return validFlag;
     }
 
+    uint64_t getOverhead() const
+    {
+        return overhead;
+    }
+
 private:
     EventId id;
     std::string kernelName;
     CUevent event;
     bool validFlag;
+    uint64_t overhead;
 };
 
 } // namespace ktt

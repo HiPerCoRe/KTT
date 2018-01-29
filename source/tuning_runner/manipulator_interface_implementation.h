@@ -2,6 +2,7 @@
 
 #include <map>
 #include <set>
+#include <utility>
 #include "manipulator_interface.h"
 #include "compute_engine/compute_engine.h"
 #include "dto/kernel_runtime_data.h"
@@ -63,13 +64,15 @@ private:
     std::map<size_t, KernelArgument*> vectorArguments;
     std::map<size_t, KernelArgument> nonVectorArguments;
     mutable std::map<QueueId, std::set<EventId>> enqueuedKernelEvents;
-    mutable std::map<QueueId, std::set<EventId>> enqueuedBufferEvents;
+    mutable std::map<QueueId, std::set<std::pair<EventId, bool>>> enqueuedBufferEvents;
 
     // Helper methods
     std::vector<KernelArgument*> getArgumentPointers(const std::vector<ArgumentId>& argumentIds);
     void updateArgumentSimple(const ArgumentId id, const void* argumentData, const size_t numberOfElements, const ArgumentUploadType& uploadType);
-    void storeEvent(const QueueId queue, const EventId event, const bool kernelEvent) const;
-    void processEvents(const std::set<EventId>& events, const bool kernelEvent) const;
+    void storeKernelEvent(const QueueId queue, const EventId event) const;
+    void storeBufferEvent(const QueueId queue, const EventId event, const bool increaseOverhead) const;
+    void processKernelEvents(const std::set<EventId>& events);
+    void processBufferEvents(const std::set<std::pair<EventId, bool>>& events);
 };
 
 } // namespace ktt

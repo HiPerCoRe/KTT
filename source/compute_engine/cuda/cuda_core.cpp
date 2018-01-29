@@ -43,6 +43,9 @@ KernelResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std:
 
 EventId CudaCore::runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
 {
+    Timer overheadTimer;
+    overheadTimer.start();
+
     std::unique_ptr<CudaProgram> program;
     CudaProgram* programPointer;
 
@@ -64,8 +67,10 @@ EventId CudaCore::runKernelAsync(const KernelRuntimeData& kernelData, const std:
     auto kernel = std::make_unique<CudaKernel>(programPointer->getPtxSource(), kernelData.getName());
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
+    overheadTimer.stop();
+
     return enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
-        getSharedMemorySizeInBytes(argumentPointers), queue );
+        getSharedMemorySizeInBytes(argumentPointers), queue, overheadTimer.getElapsedTime());
 }
 
 KernelResult CudaCore::getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const
@@ -82,6 +87,7 @@ KernelResult CudaCore::getKernelResult(const EventId id, const std::vector<Argum
     checkCudaError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
     std::string name = eventPointer->second.first->getKernelName();
     float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
+    uint64_t overhead = eventPointer->second.first->getOverhead();
     kernelEvents.erase(id);
 
     for (const auto& descriptor : outputDescriptors)
@@ -96,7 +102,9 @@ KernelResult CudaCore::getKernelResult(const EventId id, const std::vector<Argum
         }
     }
 
-    return KernelResult(name, static_cast<uint64_t>(duration));
+    KernelResult result(name, static_cast<uint64_t>(duration));
+    result.setOverhead(overhead);
+    return result;
 }
 
 void CudaCore::setCompilerOptions(const std::string& options)
@@ -445,7 +453,7 @@ std::unique_ptr<CudaProgram> CudaCore::createAndBuildProgram(const std::string& 
 }
 
 EventId CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-    const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue)
+    const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue, const uint64_t kernelLaunchOverhead)
 {
     if (queue >= streams.size())
     {
@@ -471,8 +479,8 @@ EventId CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& g
     }
 
     EventId eventId = nextEventId;
-    auto startEvent = std::make_unique<CudaEvent>(eventId, kernel.getKernelName());
-    auto endEvent = std::make_unique<CudaEvent>(eventId, kernel.getKernelName());
+    auto startEvent = std::make_unique<CudaEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
+    auto endEvent = std::make_unique<CudaEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
     nextEventId++;
 
     checkCudaError(cuEventRecord(startEvent->getEvent(), streams.at(queue)->getStream()), "cuEventRecord");

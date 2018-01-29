@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include "CL/cl.h"
 #include "ktt_types.h"
@@ -14,13 +15,15 @@ public:
     OpenclEvent(const EventId id, const bool validFlag) :
         id(id),
         kernelName(""),
-        validFlag(validFlag)
+        validFlag(validFlag),
+        overhead(0)
     {}
 
-    OpenclEvent(const EventId id, const std::string& kernelName) :
+    OpenclEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead) :
         id(id),
         kernelName(kernelName),
-        validFlag(true)
+        validFlag(true),
+        overhead(kernelLaunchOverhead)
     {}
 
     ~OpenclEvent()
@@ -47,8 +50,13 @@ public:
     {
         return validFlag;
     }
+    
+    uint64_t getOverhead() const
+    {
+        return overhead;
+    }
 
-    cl_ulong getEventCommandDuration()
+    cl_ulong getEventCommandDuration() const
     {
         cl_ulong start;
         cl_ulong end;
@@ -63,6 +71,7 @@ private:
     std::string kernelName;
     cl_event event;
     bool validFlag;
+    uint64_t overhead;
 };
 
 } // namespace ktt

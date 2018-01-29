@@ -30,6 +30,8 @@ public:
     std::string getErrorMessage() const;
     bool isValid() const;
 
+    void increaseOverhead(const uint64_t overhead);
+
 private:
     std::string kernelName;
     KernelConfiguration configuration;

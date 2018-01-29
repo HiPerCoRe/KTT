@@ -69,7 +69,7 @@ public:
     std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;
     void setKernelArgument(OpenclKernel& kernel, KernelArgument& argument);
     EventId enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-        const QueueId queue) const;
+        const QueueId queue, const uint64_t kernelLaunchOverhead) const;
 
 private:
     // Attributes

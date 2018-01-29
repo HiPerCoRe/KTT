@@ -46,6 +46,9 @@ KernelResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const st
 
 EventId OpenclCore::runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
 {
+    Timer overheadTimer;
+    overheadTimer.start();
+
     std::unique_ptr<OpenclProgram> program;
     OpenclProgram* programPointer;
 
@@ -71,7 +74,9 @@ EventId OpenclCore::runKernelAsync(const KernelRuntimeData& kernelData, const st
         setKernelArgument(*kernel, *argument);
     }
 
-    return enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue);
+    overheadTimer.stop();
+
+    return enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, overheadTimer.getElapsedTime());
 }
 
 KernelResult OpenclCore::getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const
@@ -87,6 +92,7 @@ KernelResult OpenclCore::getKernelResult(const EventId id, const std::vector<Arg
     checkOpenclError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
     std::string name = eventPointer->second->getKernelName();
     cl_ulong duration = eventPointer->second->getEventCommandDuration();
+    uint64_t overhead = eventPointer->second->getOverhead();
     kernelEvents.erase(id);
 
     for (const auto& descriptor : outputDescriptors)
@@ -101,7 +107,9 @@ KernelResult OpenclCore::getKernelResult(const EventId id, const std::vector<Arg
         }
     }
 
-    return KernelResult(name, static_cast<uint64_t>(duration));
+    KernelResult result(name, static_cast<uint64_t>(duration));
+    result.setOverhead(overhead);
+    return result;
 }
 
 void OpenclCore::setCompilerOptions(const std::string& options)
@@ -471,7 +479,7 @@ void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argumen
 }
 
 EventId OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-    const QueueId queue) const
+    const QueueId queue, const uint64_t kernelLaunchOverhead) const
 {
     if (queue >= commandQueues.size())
     {
@@ -491,7 +499,7 @@ EventId OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t
     }
 
     EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenclEvent>(eventId, kernel.getKernelName());
+    auto profilingEvent = std::make_unique<OpenclEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
     nextEventId++;
 
     cl_int result = clEnqueueNDRangeKernel(commandQueues.at(queue)->getQueue(), kernel.getKernel(),

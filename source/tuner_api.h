@@ -298,11 +298,11 @@ public:
     void tuneKernel(const KernelId id);
 
     /** @fn void dryTuneKernel(const KernelId id, const std::string& filePath)
-      * @brief Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration 
-      * space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on specified 
-      * ::SearchMethod.
-      * Important: no checks if tuning data relates to the kernel, tuning parameters  and hardware are performed, 
-      * it is up to user to ensure that dryTuneKernel reads correct file.
+      * Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration
+      * space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on
+      * specified ::SearchMethod.
+      * Important: no checks if tuning data relates to the kernel, tuning parameters or hardware are performed, it is up to user to ensure that
+      * dryTuneKernel() reads correct file.
       * @param id Id of kernel for which the tuning begins.
       * @param filePath Path to CSV file with tuning parameters.
       */
@@ -337,6 +337,7 @@ public:
       * - RandomSearch - fraction
       * - PSO - fraction, swarm size, global influence, local influence, random influence
       * - Annealing - fraction, maximum temperature
+      * - MCMC - fraction
       * 
       * Fraction argument specifies the number of configurations which will be explored, eg. when fraction is set to 0.5, 50% of all configurations
       * will be explored.

@@ -97,4 +97,9 @@ bool KernelResult::isValid() const
     return valid;
 }
 
+void KernelResult::increaseOverhead(const uint64_t overhead)
+{
+    this->overhead += overhead;
+}
+
 } // namespace ktt

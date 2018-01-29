@@ -48,6 +48,7 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
 
     KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()),
         std::vector<ArgumentOutputDescriptor>{});
+    currentResult.increaseOverhead(result.getOverhead());
 }
 
 void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize,
@@ -64,7 +65,7 @@ void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const
     kernelData.setLocalSize(localSize);
 
     EventId kernelEvent = computeEngine->runKernelAsync(kernelData, getArgumentPointers(kernelData.getArgumentIds()), queue);
-    storeEvent(queue, kernelEvent, true);
+    storeKernelEvent(queue, kernelEvent);
 }
 
 QueueId ManipulatorInterfaceImplementation::getDefaultDeviceQueue() const
@@ -84,14 +85,14 @@ void ManipulatorInterfaceImplementation::synchronizeQueue(const QueueId queue)
     auto eventPointer = enqueuedKernelEvents.find(queue);
     if (eventPointer != enqueuedKernelEvents.end())
     {
-        processEvents(eventPointer->second, true);
+        processKernelEvents(eventPointer->second);
         enqueuedKernelEvents.erase(queue);
     }
 
     auto bufferEventPointer = enqueuedBufferEvents.find(queue);
     if (bufferEventPointer != enqueuedBufferEvents.end())
     {
-        processEvents(bufferEventPointer->second, false);
+        processBufferEvents(bufferEventPointer->second);
         enqueuedBufferEvents.erase(queue);
     }
 }
@@ -103,14 +104,14 @@ void ManipulatorInterfaceImplementation::synchronizeDevice()
     auto iterator = enqueuedKernelEvents.cbegin();
     while (iterator != enqueuedKernelEvents.cend())
     {
-        processEvents(iterator->second, true);
+        processKernelEvents(iterator->second);
     }
     enqueuedKernelEvents.clear();
 
     auto bufferIterator = enqueuedBufferEvents.cbegin();
     while (bufferIterator != enqueuedBufferEvents.cend())
     {
-        processEvents(bufferIterator->second, true);
+        processBufferEvents(bufferIterator->second);
     }
     enqueuedBufferEvents.clear();
 }
@@ -170,7 +171,7 @@ void ManipulatorInterfaceImplementation::updateArgumentVectorAsync(const Argumen
     }
 
     EventId bufferEvent = computeEngine->updateArgumentAsync(id, argumentData, argumentPointer->second->getDataSizeInBytes(), queue);
-    storeEvent(queue, bufferEvent, false);
+    storeBufferEvent(queue, bufferEvent, false);
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)
@@ -195,7 +196,7 @@ void ManipulatorInterfaceImplementation::updateArgumentVectorAsync(const Argumen
 
     EventId bufferEvent = computeEngine->updateArgumentAsync(id, argumentData, argumentPointer->second->getElementSizeInBytes() * numberOfElements,
         queue);
-    storeEvent(queue, bufferEvent, false);
+    storeBufferEvent(queue, bufferEvent, false);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination) const
@@ -218,7 +219,7 @@ void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId
     }
 
     EventId bufferEvent = computeEngine->downloadArgumentAsync(id, destination, queue);
-    storeEvent(queue, bufferEvent, false);
+    storeBufferEvent(queue, bufferEvent, false);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
@@ -243,7 +244,7 @@ void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId
 
     EventId bufferEvent = computeEngine->downloadArgumentAsync(id, destination, argumentPointer->second->getElementSizeInBytes() * numberOfElements,
         queue);
-    storeEvent(queue, bufferEvent, false);
+    storeBufferEvent(queue, bufferEvent, false);
 }
 
 void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
@@ -309,7 +310,7 @@ void ManipulatorInterfaceImplementation::createArgumentBuffer(const ArgumentId i
     computeEngine->uploadArgument(*argumentPointer->second);
 
     timer.stop();
-    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
+    currentResult.increaseOverhead(timer.getElapsedTime());
 }
 
 void ManipulatorInterfaceImplementation::createArgumentBufferAsync(const ArgumentId id, const QueueId queue)
@@ -324,10 +325,10 @@ void ManipulatorInterfaceImplementation::createArgumentBufferAsync(const Argumen
     }
 
     EventId bufferEvent = computeEngine->uploadArgumentAsync(*argumentPointer->second, queue);
-    storeEvent(queue, bufferEvent, false);
+    storeBufferEvent(queue, bufferEvent, true);
 
     timer.stop();
-    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
+    currentResult.increaseOverhead(timer.getElapsedTime());
 }
 
 void ManipulatorInterfaceImplementation::destroyArgumentBuffer(const ArgumentId id)
@@ -338,7 +339,7 @@ void ManipulatorInterfaceImplementation::destroyArgumentBuffer(const ArgumentId 
     computeEngine->clearBuffer(id);
 
     timer.stop();
-    currentResult.setOverhead(currentResult.getOverhead() + timer.getElapsedTime());
+    currentResult.increaseOverhead(timer.getElapsedTime());
 }
 
 void ManipulatorInterfaceImplementation::addKernel(const KernelId id, const KernelRuntimeData& data)
@@ -468,48 +469,49 @@ void ManipulatorInterfaceImplementation::updateArgumentSimple(const ArgumentId i
     nonVectorArguments.insert(std::make_pair(id, updatedArgument));
 }
 
-void ManipulatorInterfaceImplementation::storeEvent(const QueueId queue, const EventId event, const bool kernelEvent) const
+void ManipulatorInterfaceImplementation::storeKernelEvent(const QueueId queue, const EventId event) const
 {
-    if (kernelEvent)
+    auto eventPointer = enqueuedKernelEvents.find(queue);
+    if (eventPointer == enqueuedKernelEvents.end())
     {
-        auto eventPointer = enqueuedKernelEvents.find(queue);
-        if (eventPointer == enqueuedKernelEvents.end())
-        {
-            enqueuedKernelEvents.insert(std::make_pair(queue, std::set<EventId>{event}));
-        }
-        else
-        {
-            eventPointer->second.insert(event);
-        }
+        enqueuedKernelEvents.insert(std::make_pair(queue, std::set<EventId>{event}));
     }
     else
     {
-        auto eventPointer = enqueuedBufferEvents.find(queue);
-        if (eventPointer == enqueuedBufferEvents.end())
-        {
-            enqueuedBufferEvents.insert(std::make_pair(queue, std::set<EventId>{event}));
-        }
-        else
-        {
-            eventPointer->second.insert(event);
-        }
+        eventPointer->second.insert(event);
     }
 }
 
-void ManipulatorInterfaceImplementation::processEvents(const std::set<EventId>& events, const bool kernelEvent) const
+void ManipulatorInterfaceImplementation::storeBufferEvent(const QueueId queue, const EventId event, const bool increaseOverhead) const
 {
-    if (kernelEvent)
+    auto eventPointer = enqueuedBufferEvents.find(queue);
+    if (eventPointer == enqueuedBufferEvents.end())
     {
-        for (const auto& currentEvent : events)
-        {
-            KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<ArgumentOutputDescriptor>{});
-        }
+        enqueuedBufferEvents.insert(std::make_pair(queue, std::set<std::pair<EventId, bool>>{std::make_pair(event, increaseOverhead)}));
     }
     else
     {
-        for (const auto& currentEvent : events)
+        eventPointer->second.insert(std::make_pair(event, increaseOverhead));
+    }
+}
+
+void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<EventId>& events)
+{
+    for (const auto& currentEvent : events)
+    {
+        KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<ArgumentOutputDescriptor>{});
+        currentResult.increaseOverhead(result.getOverhead());
+    }
+}
+
+void ManipulatorInterfaceImplementation::processBufferEvents(const std::set<std::pair<EventId, bool>>& events)
+{
+    for (const auto& currentEvent : events)
+    {
+        uint64_t result = computeEngine->getArgumentOperationDuration(currentEvent.first);
+        if (currentEvent.second)
         {
-            uint64_t result = computeEngine->getArgumentOperationDuration(currentEvent);
+            currentResult.increaseOverhead(result);
         }
     }
 }

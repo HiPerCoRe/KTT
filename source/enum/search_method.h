@@ -29,7 +29,7 @@ enum class SearchMethod
       */
     Annealing,
 
-    /** @brief Explores fraction of kernel configuration using Markov chain Monte Carlo method. The fraction size is controlled with parameter.
+    /** Explores fraction of kernel configurations using Markov chain Monte Carlo method. The fraction size is controlled with parameter.
       */
     MCMC
 };
