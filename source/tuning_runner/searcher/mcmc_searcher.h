@@ -139,12 +139,12 @@ private:
     }
 
     size_t searchStateIndex(const std::vector<double> &state) {
-        int states = state.size();
+        size_t states = state.size();
         size_t ret = 0;
         bool match;
         for (const auto& configuration : configurations) {
             match = true;
-            for (int i = 0; i < states; i++) {
+            for (size_t i = 0; i < states; i++) {
                 if (configuration.getParameterPairs().at(i).getValue() != state[i]) {
                     match = false;
                     break;

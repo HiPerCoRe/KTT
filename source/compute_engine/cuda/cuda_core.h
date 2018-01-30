@@ -51,6 +51,7 @@ public:
     std::vector<QueueId> getAllQueues() const override;
     void synchronizeQueue(const QueueId queue) override;
     void synchronizeDevice() override;
+    void clearEvents() override;
 
     // Argument handling methods
     uint64_t uploadArgument(KernelArgument& kernelArgument) override;
@@ -127,6 +128,7 @@ public:
     std::vector<QueueId> getAllQueues() const override;
     void synchronizeQueue(const QueueId queue) override;
     void synchronizeDevice() override;
+    void clearEvents() override;
 
     // Argument handling methods
     uint64_t uploadArgument(KernelArgument& kernelArgument) override;

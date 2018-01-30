@@ -50,6 +50,8 @@ KernelResult KernelRunner::runKernel(const KernelId id, const std::vector<Parame
     }
     catch (const std::runtime_error& error)
     {
+        computeEngine->synchronizeDevice();
+        computeEngine->clearEvents();
         logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
         result = KernelResult(kernel.getName(), launchConfiguration, error.what());
     }
@@ -81,6 +83,8 @@ KernelResult KernelRunner::runComposition(const KernelId id, const std::vector<P
     }
     catch (const std::runtime_error& error)
     {
+        computeEngine->synchronizeDevice();
+        computeEngine->clearEvents();
         logger->log(std::string("Kernel composition run failed, reason: ") + error.what() + "\n");
         result = KernelResult(composition.getName(), launchConfiguration, error.what());
     }

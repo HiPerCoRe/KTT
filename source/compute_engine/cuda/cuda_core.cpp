@@ -171,6 +171,12 @@ void CudaCore::synchronizeDevice()
     }
 }
 
+void CudaCore::clearEvents()
+{
+    kernelEvents.clear();
+    bufferEvents.clear();
+}
+
 uint64_t CudaCore::uploadArgument(KernelArgument& kernelArgument)
 {
     if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
@@ -683,6 +689,11 @@ void CudaCore::synchronizeQueue(const QueueId)
 }
 
 void CudaCore::synchronizeDevice()
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+}
+
+void CudaCore::clearEvents()
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }

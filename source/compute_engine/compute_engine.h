@@ -39,6 +39,7 @@ public:
     virtual std::vector<QueueId> getAllQueues() const = 0;
     virtual void synchronizeQueue(const QueueId queue) = 0;
     virtual void synchronizeDevice() = 0;
+    virtual void clearEvents() = 0;
 
     // Argument handling methods
     virtual uint64_t uploadArgument(KernelArgument& kernelArgument) = 0;

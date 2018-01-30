@@ -176,6 +176,12 @@ void OpenclCore::synchronizeDevice()
     }
 }
 
+void OpenclCore::clearEvents()
+{
+    kernelEvents.clear();
+    bufferEvents.clear();
+}
+
 uint64_t OpenclCore::uploadArgument(KernelArgument& kernelArgument)
 {
     if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
