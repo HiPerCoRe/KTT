@@ -15,20 +15,25 @@ public:
     OpenclEvent(const EventId id, const bool validFlag) :
         id(id),
         kernelName(""),
+        overhead(0),
         validFlag(validFlag),
-        overhead(0)
+        releaseFlag(false)
     {}
 
     OpenclEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead) :
         id(id),
         kernelName(kernelName),
+        overhead(kernelLaunchOverhead),
         validFlag(true),
-        overhead(kernelLaunchOverhead)
+        releaseFlag(false)
     {}
 
     ~OpenclEvent()
     {
-        checkOpenclError(clReleaseEvent(event), "clReleaseEvent");
+        if (releaseFlag)
+        {
+            checkOpenclError(clReleaseEvent(event), "clReleaseEvent");
+        }
     }
 
     EventId getId() const
@@ -40,20 +45,20 @@ public:
     {
         return kernelName;
     }
-
-    cl_event* getEvent()
+    
+    uint64_t getOverhead() const
     {
-        return &event;
+        return overhead;
     }
 
     bool isValid() const
     {
         return validFlag;
     }
-    
-    uint64_t getOverhead() const
+
+    cl_event* getEvent()
     {
-        return overhead;
+        return &event;
     }
 
     cl_ulong getEventCommandDuration() const
@@ -66,12 +71,18 @@ public:
         return end - start;
     }
 
+    void setReleaseFlag()
+    {
+        releaseFlag = true;
+    }
+
 private:
     EventId id;
     std::string kernelName;
-    cl_event event;
-    bool validFlag;
     uint64_t overhead;
+    bool validFlag;
+    bool releaseFlag;
+    cl_event event;
 };
 
 } // namespace ktt

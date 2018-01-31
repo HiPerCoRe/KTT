@@ -220,6 +220,8 @@ EventId OpenclCore::uploadArgumentAsync(KernelArgument& kernelArgument, const Qu
         auto profilingEvent = std::make_unique<OpenclEvent>(eventId, true);
         buffer->uploadData(commandQueues.at(queue)->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
             profilingEvent->getEvent());
+
+        profilingEvent->setReleaseFlag();
         bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     }
 
@@ -252,6 +254,7 @@ EventId OpenclCore::updateArgumentAsync(const ArgumentId id, const void* data, c
     auto profilingEvent = std::make_unique<OpenclEvent>(eventId, true);
     buffer->uploadData(commandQueues.at(queue)->getQueue(), data, dataSizeInBytes, profilingEvent->getEvent());
 
+    profilingEvent->setReleaseFlag();
     bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     nextEventId++;
     return eventId;
@@ -281,6 +284,7 @@ EventId OpenclCore::downloadArgumentAsync(const ArgumentId id, void* destination
     auto profilingEvent = std::make_unique<OpenclEvent>(eventId, true);
     buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, buffer->getBufferSize(), profilingEvent->getEvent());
 
+    profilingEvent->setReleaseFlag();
     bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     nextEventId++;
     return eventId;
@@ -310,6 +314,7 @@ EventId OpenclCore::downloadArgumentAsync(const ArgumentId id, void* destination
     auto profilingEvent = std::make_unique<OpenclEvent>(eventId, true);
     buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, dataSizeInBytes, profilingEvent->getEvent());
 
+    profilingEvent->setReleaseFlag();
     bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     nextEventId++;
     return eventId;
@@ -332,6 +337,7 @@ KernelArgument OpenclCore::downloadArgumentObject(const ArgumentId id, uint64_t*
     buffer->downloadData(commandQueues.at(getDefaultQueue())->getQueue(), argument.getData(), argument.getDataSizeInBytes(),
         profilingEvent->getEvent());
 
+    profilingEvent->setReleaseFlag();
     bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     nextEventId++;
 
@@ -512,6 +518,7 @@ EventId OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t
         static_cast<cl_uint>(correctedGlobalSize.size()), nullptr, correctedGlobalSize.data(), localSize.data(), 0, nullptr, profilingEvent->getEvent());
     checkOpenclError(result, "clEnqueueNDRangeKernel");
 
+    profilingEvent->setReleaseFlag();
     kernelEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     return eventId;
 }
