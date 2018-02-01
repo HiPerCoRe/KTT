@@ -40,6 +40,7 @@ bool ResultLoader::loadResults(const std::string& filePath)
         params.push_back(substr);
     }
 
+    // backward compatibility, new version produces Computation duration only
     if (params[1] == "Kernel duration (us)")
     {
         timeIndex = 1;
@@ -49,6 +50,11 @@ bool ResultLoader::loadResults(const std::string& filePath)
     {
         timeIndex = 2;
         paramsBegin = 5;
+    }
+    else if (params[1] == "Computation duration (us)")
+    {
+        timeIndex = 1;
+        paramsBegin = 4;
     }
     else
     {
