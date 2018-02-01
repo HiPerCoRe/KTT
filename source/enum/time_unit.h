@@ -1,5 +1,5 @@
 /** @file time_unit.h
-  * @brief Definition of enum for time unit used during printing of kernel results.
+  * Definition of enum for time unit used during printing of kernel results.
   */
 #pragma once
 
@@ -7,23 +7,23 @@ namespace ktt
 {
 
 /** @enum TimeUnit
-  * @brief Enum for time unit used during printing of kernel results.
+  * Enum for time unit used during printing of kernel results.
   */
 enum class TimeUnit
 {
-    /** @brief Timings inside kernel results will be printed in nanoseconds.
+    /** Times inside kernel results will be printed in nanoseconds.
       */
     Nanoseconds,
 
-    /** @brief Timings inside kernel results will be printed in microseconds.
+    /** Times inside kernel results will be printed in microseconds.
       */
     Microseconds,
 
-    /** @brief Timings inside kernel results will be printed in milliseconds.
+    /** Times inside kernel results will be printed in milliseconds.
       */
     Milliseconds,
 
-    /** @brief Timings inside kernel results will be printed in seconds.
+    /** Times inside kernel results will be printed in seconds.
       */
     Seconds
 };

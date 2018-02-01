@@ -21,11 +21,11 @@ public:
     // Destructor
     virtual ~ComputeEngine() = default;
 
-    // Kernel execution method
+    // Kernel handling methods
     virtual KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) = 0;
-    virtual void runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
-        const bool synchronizeFlag) = 0;
+    virtual EventId runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) = 0;
+    virtual KernelResult getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const = 0;
 
     // Utility methods
     virtual void setCompilerOptions(const std::string& options) = 0;
@@ -39,19 +39,19 @@ public:
     virtual std::vector<QueueId> getAllQueues() const = 0;
     virtual void synchronizeQueue(const QueueId queue) = 0;
     virtual void synchronizeDevice() = 0;
+    virtual void clearEvents() = 0;
 
     // Argument handling methods
-    virtual void uploadArgument(KernelArgument& kernelArgument) = 0;
-    virtual void uploadArgument(KernelArgument& kernelArgument, const QueueId queue, const bool synchronizeFlag) = 0;
-    virtual void updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes) = 0;
-    virtual void updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue,
-        const bool synchronizeFlag) = 0;
-    virtual void downloadArgument(const ArgumentId id, void* destination) const = 0;
-    virtual void downloadArgument(const ArgumentId id, void* destination, const QueueId queue, const bool synchronizeFlag) const = 0;
-    virtual void downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const = 0;
-    virtual void downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue,
-        const bool synchronizeFlag) const = 0;
-    virtual KernelArgument downloadArgument(const ArgumentId id) const = 0;
+    virtual uint64_t uploadArgument(KernelArgument& kernelArgument) = 0;
+    virtual EventId uploadArgumentAsync(KernelArgument& kernelArgument, const QueueId queue) = 0;
+    virtual uint64_t updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes) = 0;
+    virtual EventId updateArgumentAsync(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue) = 0;
+    virtual uint64_t downloadArgument(const ArgumentId id, void* destination) const = 0;
+    virtual EventId downloadArgumentAsync(const ArgumentId id, void* destination, const QueueId queue) const = 0;
+    virtual uint64_t downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const = 0;
+    virtual EventId downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const = 0;
+    virtual KernelArgument downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const = 0;
+    virtual uint64_t getArgumentOperationDuration(const EventId id) const = 0;
     virtual void clearBuffer(const ArgumentId id) = 0;
     virtual void clearBuffers() = 0;
     virtual void clearBuffers(const ArgumentAccessType& accessType) = 0;

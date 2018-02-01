@@ -14,7 +14,7 @@ std::string getNvrtcEnumName(const nvrtcResult value);
 void checkCudaError(const CUresult value);
 void checkCudaError(const CUresult value, const std::string& message);
 void checkCudaError(const nvrtcResult value, const std::string& message);
-float getKernelRunDuration(const CUevent start, const CUevent end);
+float getEventCommandDuration(const CUevent start, const CUevent end);
 
 } // namespace ktt
 

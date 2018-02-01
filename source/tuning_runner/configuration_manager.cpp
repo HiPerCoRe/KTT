@@ -4,6 +4,7 @@
 #include "searcher/full_searcher.h"
 #include "searcher/pso_searcher.h"
 #include "searcher/random_searcher.h"
+#include "searcher/mcmc_searcher.h"
 
 namespace ktt
 {
@@ -22,6 +23,7 @@ void ConfigurationManager::setKernelConfigurations(const KernelId id, const std:
 void ConfigurationManager::setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments)
 {
     if (method == SearchMethod::RandomSearch && arguments.size() < 1
+        || method == SearchMethod::MCMC && arguments.size() < 1
         || method == SearchMethod::Annealing && arguments.size() < 2
         || method == SearchMethod::PSO && arguments.size() < 5)
     {
@@ -140,6 +142,9 @@ void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMet
     case SearchMethod::Annealing:
         searchers.insert(std::make_pair(id, std::make_unique<AnnealingSearcher>(configurations, arguments.at(0), arguments.at(1))));
         break;
+    case SearchMethod::MCMC:
+        searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, arguments.at(0), std::vector<double>(arguments.begin()+1, arguments.end()))));
+        break;
     default:
         throw std::runtime_error("Specified searcher is not supported");
     }
@@ -157,6 +162,8 @@ std::string ConfigurationManager::getSearchMethodName(const SearchMethod& method
         return std::string("PSO");
     case SearchMethod::Annealing:
         return std::string("Annealing");
+    case SearchMethod::MCMC:
+        return std::string("Markov chain Monte Carlo");
     default:
         return std::string("Unknown search method");
     }

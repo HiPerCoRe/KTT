@@ -5,9 +5,7 @@ namespace ktt
 
 KernelResult::KernelResult() :
     kernelName(""),
-    kernelDuration(UINT64_MAX),
-    manipulatorDuration(0),
-    memoryTransferDuration(0),
+    computationDuration(UINT64_MAX),
     overhead(0),
     errorMessage(""),
     valid(false)
@@ -16,19 +14,15 @@ KernelResult::KernelResult() :
 KernelResult::KernelResult(const std::string& kernelName, const KernelConfiguration& configuration) :
     kernelName(kernelName),
     configuration(configuration),
-    kernelDuration(UINT64_MAX),
-    manipulatorDuration(0),
-    memoryTransferDuration(0),
+    computationDuration(UINT64_MAX),
     overhead(0),
     errorMessage(""),
     valid(true)
 {}
 
-KernelResult::KernelResult(const std::string& kernelName, uint64_t kernelDuration) :
+KernelResult::KernelResult(const std::string& kernelName, uint64_t computationDuration) :
     kernelName(kernelName),
-    kernelDuration(kernelDuration),
-    manipulatorDuration(0),
-    memoryTransferDuration(0),
+    computationDuration(computationDuration),
     overhead(0),
     errorMessage(""),
     valid(true)
@@ -37,9 +31,7 @@ KernelResult::KernelResult(const std::string& kernelName, uint64_t kernelDuratio
 KernelResult::KernelResult(const std::string& kernelName, const KernelConfiguration& configuration, const std::string& errorMessage) :
     kernelName(kernelName),
     configuration(configuration),
-    kernelDuration(UINT64_MAX),
-    manipulatorDuration(0),
-    memoryTransferDuration(0),
+    computationDuration(UINT64_MAX),
     overhead(0),
     errorMessage(errorMessage),
     valid(false)
@@ -55,19 +47,9 @@ void KernelResult::setConfiguration(const KernelConfiguration& configuration)
     this->configuration = configuration;
 }
 
-void KernelResult::setKernelDuration(const uint64_t kernelDuration)
+void KernelResult::setComputationDuration(const uint64_t computationDuration)
 {
-    this->kernelDuration = kernelDuration;
-}
-
-void KernelResult::setManipulatorDuration(const uint64_t manipulatorDuration)
-{
-    this->manipulatorDuration = manipulatorDuration;
-}
-
-void KernelResult::setMemoryTransferDuration(const uint64_t memoryTransferDuration)
-{
-    this->memoryTransferDuration = memoryTransferDuration;
+    this->computationDuration = computationDuration;
 }
 
 void KernelResult::setOverhead(const uint64_t overhead)
@@ -95,29 +77,14 @@ KernelConfiguration KernelResult::getConfiguration() const
     return configuration;
 }
 
-uint64_t KernelResult::getKernelDuration() const
+uint64_t KernelResult::getComputationDuration() const
 {
-    return kernelDuration;
-}
-
-uint64_t KernelResult::getManipulatorDuration() const
-{
-    return manipulatorDuration;
-}
-
-uint64_t KernelResult::getMemoryTransferDuration() const
-{
-    return memoryTransferDuration;
+    return computationDuration;
 }
 
 uint64_t KernelResult::getOverhead() const
 {
     return overhead;
-}
-
-uint64_t KernelResult::getTotalDuration() const
-{
-    return kernelDuration + manipulatorDuration + memoryTransferDuration;
 }
 
 std::string KernelResult::getErrorMessage() const
@@ -128,6 +95,11 @@ std::string KernelResult::getErrorMessage() const
 bool KernelResult::isValid() const
 {
     return valid;
+}
+
+void KernelResult::increaseOverhead(const uint64_t overhead)
+{
+    this->overhead += overhead;
 }
 
 } // namespace ktt

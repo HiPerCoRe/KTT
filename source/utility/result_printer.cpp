@@ -72,11 +72,7 @@ void ResultPrinter::printVerbose(const std::vector<KernelResult>& results, std::
 
         outputTarget << "Result for kernel " << result.getKernelName() << ", configuration: " << std::endl;
         printConfigurationVerbose(outputTarget, result.getConfiguration());
-        outputTarget << "Kernel duration: " << convertTime(result.getKernelDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
-        if (result.getManipulatorDuration() != 0)
-        {
-            outputTarget << "Total duration: " << convertTime(result.getTotalDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
-        }
+        outputTarget << "Computation duration: " << convertTime(result.getComputationDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
         outputTarget << std::endl;
     }
 
@@ -86,11 +82,8 @@ void ResultPrinter::printVerbose(const std::vector<KernelResult>& results, std::
         outputTarget << "Best result for kernel " << bestResult.getKernelName() << ": " << std::endl;
         outputTarget << "Configuration: ";
         printConfigurationVerbose(outputTarget, bestResult.getConfiguration());
-        outputTarget << "Kernel duration: " << convertTime(bestResult.getKernelDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
-        if (bestResult.getManipulatorDuration() != 0)
-        {
-            outputTarget << "Total duration: " << convertTime(bestResult.getTotalDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
-        }
+        outputTarget << "Computation duration: " << convertTime(bestResult.getComputationDuration(), timeUnit) << getTimeUnitTag(timeUnit)
+            << std::endl;
         outputTarget << std::endl;
     }
     else
@@ -118,12 +111,7 @@ void ResultPrinter::printVerbose(const std::vector<KernelResult>& results, std::
 void ResultPrinter::printCsv(const std::vector<KernelResult>& results, std::ostream& outputTarget) const
 {
     // Header
-    outputTarget << "Kernel name,";
-    if (results.at(0).getManipulatorDuration() != 0)
-    {
-        outputTarget << "Total duration (" << getTimeUnitTag(timeUnit) << "),";
-    }
-    outputTarget << "Kernel duration (" << getTimeUnitTag(timeUnit) << ")";
+    outputTarget << "Kernel name," << "Computation duration (" << getTimeUnitTag(timeUnit) << ")";
 
     size_t kernelCount = results.at(0).getConfiguration().getGlobalSizes().size();
     if (kernelCount == 1)
@@ -163,11 +151,7 @@ void ResultPrinter::printCsv(const std::vector<KernelResult>& results, std::ostr
         }
 
         outputTarget << result.getKernelName() << ",";
-        if (results.at(0).getManipulatorDuration() != 0)
-        {
-            outputTarget << convertTime(result.getTotalDuration(), timeUnit) << ",";
-        }
-        outputTarget << convertTime(result.getKernelDuration(), timeUnit) << ",";
+        outputTarget << convertTime(result.getComputationDuration(), timeUnit) << ",";
         printConfigurationCsv(outputTarget, result.getConfiguration());
     }
 
@@ -314,11 +298,11 @@ void ResultPrinter::printConfigurationCsv(std::ostream& outputTarget, const Kern
 KernelResult ResultPrinter::getBestResult(const std::vector<KernelResult>& results) const
 {
     KernelResult bestResult = KernelResult();
-    bestResult.setKernelDuration(UINT64_MAX);
+    bestResult.setComputationDuration(UINT64_MAX);
 
     for (const auto& result : results)
     {
-        if (result.isValid() && result.getTotalDuration() < bestResult.getTotalDuration())
+        if (result.isValid() && result.getComputationDuration() < bestResult.getComputationDuration())
         {
             bestResult = result;
         }

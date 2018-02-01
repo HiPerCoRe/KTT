@@ -50,6 +50,8 @@ KernelResult KernelRunner::runKernel(const KernelId id, const std::vector<Parame
     }
     catch (const std::runtime_error& error)
     {
+        computeEngine->synchronizeDevice();
+        computeEngine->clearEvents();
         logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
         result = KernelResult(kernel.getName(), launchConfiguration, error.what());
     }
@@ -81,6 +83,8 @@ KernelResult KernelRunner::runComposition(const KernelId id, const std::vector<P
     }
     catch (const std::runtime_error& error)
     {
+        computeEngine->synchronizeDevice();
+        computeEngine->clearEvents();
         logger->log(std::string("Kernel composition run failed, reason: ") + error.what() + "\n");
         result = KernelResult(composition.getName(), launchConfiguration, error.what());
     }
@@ -100,7 +104,7 @@ void KernelRunner::setTuningManipulator(const KernelId id, std::unique_ptr<Tunin
 
 KernelArgument KernelRunner::downloadArgument(const ArgumentId id) const
 {
-    return computeEngine->downloadArgument(id);
+    return computeEngine->downloadArgumentObject(id, nullptr);
 }
 
 void KernelRunner::clearBuffers(const ArgumentAccessType& accessType)
@@ -165,7 +169,7 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     size_t manipulatorDuration = timer.getElapsedTime();
     manipulatorDuration -= result.getOverhead();
     result.setKernelName(kernel.getName());
-    result.setManipulatorDuration(manipulatorDuration);
+    result.setComputationDuration(manipulatorDuration);
     return result;
 }
 
@@ -224,7 +228,7 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
     size_t manipulatorDuration = timer.getElapsedTime();
     manipulatorDuration -= result.getOverhead();
     result.setKernelName(composition.getName());
-    result.setManipulatorDuration(manipulatorDuration);
+    result.setComputationDuration(manipulatorDuration);
     return result;
 }
 

@@ -25,11 +25,11 @@ public:
     // Constructor
     explicit OpenclCore(const size_t platformIndex, const size_t deviceIndex, const size_t queueCount);
 
-    // Kernel execution method
+    // Kernel handling methods
     KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
-    void runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
-        const bool synchronizeFlag) override;
+    EventId runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) override;
+    KernelResult getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const override;
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
@@ -43,19 +43,19 @@ public:
     std::vector<QueueId> getAllQueues() const override;
     void synchronizeQueue(const QueueId queue) override;
     void synchronizeDevice() override;
+    void clearEvents() override;
 
     // Argument handling methods
-    void uploadArgument(KernelArgument& kernelArgument) override;
-    void uploadArgument(KernelArgument& kernelArgument, const QueueId queue, const bool synchronizeFlag) override;
-    void updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes) override;
-    void updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue,
-        const bool synchronizeFlag) override;
-    void downloadArgument(const ArgumentId id, void* destination) const override;
-    void downloadArgument(const ArgumentId id, void* destination, const QueueId queue, const bool synchronizeFlag) const override;
-    void downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
-    void downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue,
-        const bool synchronizeFlag) const override;
-    KernelArgument downloadArgument(const ArgumentId id) const override;
+    uint64_t uploadArgument(KernelArgument& kernelArgument) override;
+    EventId uploadArgumentAsync(KernelArgument& kernelArgument, const QueueId queue) override;
+    uint64_t updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes) override;
+    EventId updateArgumentAsync(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue) override;
+    uint64_t downloadArgument(const ArgumentId id, void* destination) const override;
+    EventId downloadArgumentAsync(const ArgumentId id, void* destination, const QueueId queue) const override;
+    uint64_t downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
+    EventId downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const override;
+    KernelArgument downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const override;
+    uint64_t getArgumentOperationDuration(const EventId id) const override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType& accessType) override;
@@ -69,8 +69,8 @@ public:
     // Low-level kernel execution methods
     std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;
     void setKernelArgument(OpenclKernel& kernel, KernelArgument& argument);
-    cl_ulong enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize, const QueueId queue,
-        const bool synchronizeFlag) const;
+    EventId enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+        const QueueId queue, const uint64_t kernelLaunchOverhead) const;
 
 private:
     // Attributes
@@ -81,10 +81,13 @@ private:
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
     bool programCacheFlag;
+    mutable EventId nextEventId;
     std::unique_ptr<OpenclContext> context;
     std::vector<std::unique_ptr<OpenclCommandQueue>> commandQueues;
     std::set<std::unique_ptr<OpenclBuffer>> buffers;
     std::map<std::string, std::unique_ptr<OpenclProgram>> programCache;
+    mutable std::map<EventId, std::unique_ptr<OpenclEvent>> kernelEvents;
+    mutable std::map<EventId, std::unique_ptr<OpenclEvent>> bufferEvents;
 
     // Helper methods
     static PlatformInfo getOpenclPlatformInfo(const size_t platformIndex);

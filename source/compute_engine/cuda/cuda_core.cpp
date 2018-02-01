@@ -14,7 +14,8 @@ CudaCore::CudaCore(const size_t deviceIndex, const size_t queueCount) :
     compilerOptions(std::string("--gpu-architecture=compute_30")),
     globalSizeType(GlobalSizeType::Cuda),
     globalSizeCorrection(false),
-    programCacheFlag(false)
+    programCacheFlag(false),
+    nextEventId(0)
 {
     checkCudaError(cuInit(0), "cuInit");
 
@@ -35,6 +36,16 @@ CudaCore::CudaCore(const size_t deviceIndex, const size_t queueCount) :
 KernelResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
 {
+    EventId eventId = runKernelAsync(kernelData, argumentPointers, getDefaultQueue());
+    KernelResult result = getKernelResult(eventId, outputDescriptors);
+    return result;
+}
+
+EventId CudaCore::runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
+{
+    Timer overheadTimer;
+    overheadTimer.start();
+
     std::unique_ptr<CudaProgram> program;
     CudaProgram* programPointer;
 
@@ -53,11 +64,31 @@ KernelResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std:
         program = createAndBuildProgram(kernelData.getSource());
         programPointer = program.get();
     }
-    std::unique_ptr<CudaKernel> kernel = createKernel(*programPointer, kernelData.getName());
+    auto kernel = std::make_unique<CudaKernel>(programPointer->getPtxSource(), kernelData.getName());
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
-    float duration = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
-        getSharedMemorySizeInBytes(argumentPointers), getDefaultQueue(), true);
+    overheadTimer.stop();
+
+    return enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
+        getSharedMemorySizeInBytes(argumentPointers), queue, overheadTimer.getElapsedTime());
+}
+
+KernelResult CudaCore::getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const
+{
+    auto eventPointer = kernelEvents.find(id);
+
+    if (eventPointer == kernelEvents.end())
+    {
+        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
+            + std::to_string(id));
+    }
+
+    // Wait until the second event in pair (the end event) finishes
+    checkCudaError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+    std::string name = eventPointer->second.first->getKernelName();
+    float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
+    uint64_t overhead = eventPointer->second.first->getOverhead();
+    kernelEvents.erase(id);
 
     for (const auto& descriptor : outputDescriptors)
     {
@@ -71,35 +102,9 @@ KernelResult CudaCore::runKernel(const KernelRuntimeData& kernelData, const std:
         }
     }
 
-    return KernelResult(kernelData.getName(), static_cast<uint64_t>(duration));
-}
-
-void CudaCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue,
-    const bool synchronizeFlag)
-{
-    std::unique_ptr<CudaProgram> program;
-    CudaProgram* programPointer;
-
-    if (programCacheFlag)
-    {
-        if (programCache.find(kernelData.getSource()) == programCache.end())
-        {
-            program = createAndBuildProgram(kernelData.getSource());
-            programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
-        }
-        auto cachePointer = programCache.find(kernelData.getSource());
-        programPointer = cachePointer->second.get();
-    }
-    else
-    {
-        program = createAndBuildProgram(kernelData.getSource());
-        programPointer = program.get();
-    }
-    std::unique_ptr<CudaKernel> kernel = createKernel(*programPointer, kernelData.getName());
-    std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
-
-    enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments, getSharedMemorySizeInBytes(argumentPointers),
-        queue, synchronizeFlag);
+    KernelResult result(name, static_cast<uint64_t>(duration));
+    result.setOverhead(overhead);
+    return result;
 }
 
 void CudaCore::setCompilerOptions(const std::string& options)
@@ -119,7 +124,10 @@ void CudaCore::setAutomaticGlobalSizeCorrection(const bool flag)
 
 void CudaCore::setProgramCache(const bool flag)
 {
-    clearProgramCache();
+    if (!flag)
+    {
+        clearProgramCache();
+    }
     programCacheFlag = flag;
 }
 
@@ -163,30 +171,24 @@ void CudaCore::synchronizeDevice()
     }
 }
 
-void CudaCore::uploadArgument(KernelArgument& kernelArgument)
+void CudaCore::clearEvents()
+{
+    kernelEvents.clear();
+    bufferEvents.clear();
+}
+
+uint64_t CudaCore::uploadArgument(KernelArgument& kernelArgument)
 {
     if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
     {
-        return;
-    }
-    
-    clearBuffer(kernelArgument.getId());
-    std::unique_ptr<CudaBuffer> buffer = nullptr;
-
-    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
-    {
-        buffer = std::make_unique<CudaBuffer>(kernelArgument, true);
-    }
-    else
-    {
-        buffer = std::make_unique<CudaBuffer>(kernelArgument, false);
-        buffer->uploadData(kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
+        return 0;
     }
 
-    buffers.insert(std::move(buffer)); // buffer data will be stolen
+    EventId eventId = uploadArgumentAsync(kernelArgument, getDefaultQueue());
+    return getArgumentOperationDuration(eventId);
 }
 
-void CudaCore::uploadArgument(KernelArgument& kernelArgument, const QueueId queue, const bool synchronizeFlag)
+EventId CudaCore::uploadArgumentAsync(KernelArgument& kernelArgument, const QueueId queue)
 {
     if (queue >= streams.size())
     {
@@ -195,38 +197,41 @@ void CudaCore::uploadArgument(KernelArgument& kernelArgument, const QueueId queu
 
     if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
     {
-        return;
+        return UINT64_MAX;
     }
     
     clearBuffer(kernelArgument.getId());
     std::unique_ptr<CudaBuffer> buffer = nullptr;
+    EventId eventId = nextEventId;
 
     if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
     {
         buffer = std::make_unique<CudaBuffer>(kernelArgument, true);
+        bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::make_unique<CudaEvent>(eventId, false),
+            std::make_unique<CudaEvent>(eventId, false))));
     }
     else
     {
         buffer = std::make_unique<CudaBuffer>(kernelArgument, false);
-        buffer->uploadData(streams.at(queue)->getStream(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(), synchronizeFlag);
+        auto startEvent = std::make_unique<CudaEvent>(eventId, true);
+        auto endEvent = std::make_unique<CudaEvent>(eventId, true);
+        buffer->uploadData(streams.at(queue)->getStream(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(), startEvent->getEvent(),
+            endEvent->getEvent());
+        bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
     }
 
     buffers.insert(std::move(buffer)); // buffer data will be stolen
+    nextEventId++;
+    return eventId;
 }
 
-void CudaCore::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes)
+uint64_t CudaCore::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes)
 {
-    CudaBuffer* buffer = findBuffer(id);
-
-    if (buffer == nullptr)
-    {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-    }
-
-    buffer->uploadData(data, dataSizeInBytes);
+    EventId eventId = updateArgumentAsync(id, data, dataSizeInBytes, getDefaultQueue());
+    return getArgumentOperationDuration(eventId);
 }
 
-void CudaCore::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue, const bool synchronizeFlag)
+EventId CudaCore::updateArgumentAsync(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue)
 {
     if (queue >= streams.size())
     {
@@ -240,52 +245,23 @@ void CudaCore::updateArgument(const ArgumentId id, const void* data, const size_
         throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
     }
 
-    buffer->uploadData(streams.at(queue)->getStream(), data, dataSizeInBytes, synchronizeFlag);
+    EventId eventId = nextEventId;
+    auto startEvent = std::make_unique<CudaEvent>(eventId, true);
+    auto endEvent = std::make_unique<CudaEvent>(eventId, true);
+    buffer->uploadData(streams.at(queue)->getStream(), data, dataSizeInBytes, startEvent->getEvent(), endEvent->getEvent());
+
+    bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
+    nextEventId++;
+    return eventId;
 }
 
-void CudaCore::downloadArgument(const ArgumentId id, void* destination) const
+uint64_t CudaCore::downloadArgument(const ArgumentId id, void* destination) const
 {
-    CudaBuffer* buffer = findBuffer(id);
-
-    if (buffer == nullptr)
-    {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-    }
-
-    buffer->downloadData(destination, buffer->getBufferSize());
+    EventId eventId = downloadArgumentAsync(id, destination, getDefaultQueue());
+    return getArgumentOperationDuration(eventId);
 }
 
-void CudaCore::downloadArgument(const ArgumentId id, void* destination, const QueueId queue, const bool synchronizeFlag) const
-{
-    if (queue >= streams.size())
-    {
-        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
-    }
-
-    CudaBuffer* buffer = findBuffer(id);
-
-    if (buffer == nullptr)
-    {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-    }
-
-    buffer->downloadData(streams.at(queue)->getStream(), destination, buffer->getBufferSize(), synchronizeFlag);
-}
-
-void CudaCore::downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
-{
-    CudaBuffer* buffer = findBuffer(id);
-
-    if (buffer == nullptr)
-    {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-    }
-
-    buffer->downloadData(destination, dataSizeInBytes);
-}
-
-void CudaCore::downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue,
-    const bool synchronizeFlag) const
+EventId CudaCore::downloadArgumentAsync(const ArgumentId id, void* destination, const QueueId queue) const
 {
     if (queue >= streams.size())
     {
@@ -299,10 +275,47 @@ void CudaCore::downloadArgument(const ArgumentId id, void* destination, const si
         throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
     }
 
-    buffer->downloadData(streams.at(queue)->getStream(), destination, dataSizeInBytes, synchronizeFlag);
+    EventId eventId = nextEventId;
+    auto startEvent = std::make_unique<CudaEvent>(eventId, true);
+    auto endEvent = std::make_unique<CudaEvent>(eventId, true);
+    buffer->downloadData(streams.at(queue)->getStream(), destination, buffer->getBufferSize(), startEvent->getEvent(), endEvent->getEvent());
+
+    bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
+    nextEventId++;
+    return eventId;
 }
 
-KernelArgument CudaCore::downloadArgument(const ArgumentId id) const
+uint64_t CudaCore::downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
+{
+    EventId eventId = downloadArgumentAsync(id, destination, dataSizeInBytes, getDefaultQueue());
+    return getArgumentOperationDuration(eventId);
+}
+
+EventId CudaCore::downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const
+{
+    if (queue >= streams.size())
+    {
+        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
+    }
+
+    CudaBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    EventId eventId = nextEventId;
+    auto startEvent = std::make_unique<CudaEvent>(eventId, true);
+    auto endEvent = std::make_unique<CudaEvent>(eventId, true);
+    buffer->downloadData(streams.at(queue)->getStream(), destination, dataSizeInBytes, startEvent->getEvent(), endEvent->getEvent());
+
+    bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
+    nextEventId++;
+    return eventId;
+}
+
+KernelArgument CudaCore::downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const
 {
     CudaBuffer* buffer = findBuffer(id);
 
@@ -313,9 +326,47 @@ KernelArgument CudaCore::downloadArgument(const ArgumentId id) const
 
     KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getElementSize(),
         buffer->getDataType(), buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
-    buffer->downloadData(argument.getData(), argument.getDataSizeInBytes());
     
+    EventId eventId = nextEventId;
+    auto startEvent = std::make_unique<CudaEvent>(eventId, true);
+    auto endEvent = std::make_unique<CudaEvent>(eventId, true);
+    buffer->downloadData(streams.at(getDefaultQueue())->getStream(), argument.getData(), argument.getDataSizeInBytes(), startEvent->getEvent(),
+        endEvent->getEvent());
+
+    bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
+    nextEventId++;
+
+    uint64_t duration = getArgumentOperationDuration(eventId);
+    if (downloadDuration != nullptr)
+    {
+        *downloadDuration = duration;
+    }
+
     return argument;
+}
+
+uint64_t CudaCore::getArgumentOperationDuration(const EventId id) const
+{
+    auto eventPointer = bufferEvents.find(id);
+
+    if (eventPointer == bufferEvents.end())
+    {
+        throw std::runtime_error(std::string("Buffer event with following id does not exist or its result was already retrieved: ")
+            + std::to_string(id));
+    }
+
+    if (!eventPointer->second.first->isValid())
+    {
+        bufferEvents.erase(id);
+        return 0;
+    }
+
+    // Wait until the second event in pair (the end event) finishes
+    checkCudaError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+    float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
+    bufferEvents.erase(id);
+
+    return static_cast<uint64_t>(duration);
 }
 
 void CudaCore::clearBuffer(const ArgumentId id)
@@ -407,20 +458,8 @@ std::unique_ptr<CudaProgram> CudaCore::createAndBuildProgram(const std::string& 
     return program;
 }
 
-std::unique_ptr<CudaEvent> CudaCore::createEvent() const
-{
-    auto event = std::make_unique<CudaEvent>();
-    return event;
-}
-
-std::unique_ptr<CudaKernel> CudaCore::createKernel(const CudaProgram& program, const std::string& kernelName) const
-{
-    auto kernel = std::make_unique<CudaKernel>(program.getPtxSource(), kernelName);
-    return kernel;
-}
-
-float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-    const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue, const bool synchronizeFlag) const
+EventId CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+    const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue, const uint64_t kernelLaunchOverhead)
 {
     if (queue >= streams.size())
     {
@@ -445,31 +484,21 @@ float CudaCore::enqueueKernel(CudaKernel& kernel, const std::vector<size_t>& glo
         correctedGlobalSize.at(2) /= localSize.at(2);
     }
 
-    if (!synchronizeFlag)
-    {
-        checkCudaError(cuLaunchKernel(kernel.getKernel(), static_cast<unsigned int>(correctedGlobalSize.at(0)),
-            static_cast<unsigned int>(correctedGlobalSize.at(1)), static_cast<unsigned int>(correctedGlobalSize.at(2)),
-            static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)), static_cast<unsigned int>(localSize.at(2)),
-            static_cast<unsigned int>(localMemorySize), streams.at(queue)->getStream(), kernelArgumentsVoid.data(), nullptr),
-            "cuLaunchKernel");
-        return 0.0f;
-    }
+    EventId eventId = nextEventId;
+    auto startEvent = std::make_unique<CudaEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
+    auto endEvent = std::make_unique<CudaEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
+    nextEventId++;
 
-    auto start = createEvent();
-    auto end = createEvent();
-
-    checkCudaError(cuEventRecord(start->getEvent(), streams.at(queue)->getStream()), "cuEventRecord");
+    checkCudaError(cuEventRecord(startEvent->getEvent(), streams.at(queue)->getStream()), "cuEventRecord");
     checkCudaError(cuLaunchKernel(kernel.getKernel(), static_cast<unsigned int>(correctedGlobalSize.at(0)),
         static_cast<unsigned int>(correctedGlobalSize.at(1)), static_cast<unsigned int>(correctedGlobalSize.at(2)),
         static_cast<unsigned int>(localSize.at(0)), static_cast<unsigned int>(localSize.at(1)), static_cast<unsigned int>(localSize.at(2)),
         static_cast<unsigned int>(localMemorySize), streams.at(queue)->getStream(), kernelArgumentsVoid.data(), nullptr),
         "cuLaunchKernel");
-    checkCudaError(cuEventRecord(end->getEvent(), streams.at(queue)->getStream()), "cuEventRecord");
+    checkCudaError(cuEventRecord(endEvent->getEvent(), streams.at(queue)->getStream()), "cuEventRecord");
 
-    // Wait for computation to finish
-    checkCudaError(cuEventSynchronize(end->getEvent()), "cuEventSynchronize");
-
-    return getKernelRunDuration(start->getEvent(), end->getEvent());
+    kernelEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
+    return eventId;
 }
 
 std::vector<CudaDevice> CudaCore::getCudaDevices() const
@@ -601,142 +630,157 @@ CUdeviceptr* CudaCore::loadBufferFromCache(const ArgumentId id) const
 
 CudaCore::CudaCore(const size_t, const size_t)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 KernelResult CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<ArgumentOutputDescriptor>&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-void CudaCore::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId, const bool)
+EventId CudaCore::runKernelAsync(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+}
+
+KernelResult CudaCore::getKernelResult(const EventId, const std::vector<ArgumentOutputDescriptor>&) const
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::setCompilerOptions(const std::string&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::setGlobalSizeType(const GlobalSizeType&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::setAutomaticGlobalSizeCorrection(const bool)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::setProgramCache(const bool)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::clearProgramCache()
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 QueueId CudaCore::getDefaultQueue() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 std::vector<QueueId> CudaCore::getAllQueues() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::synchronizeQueue(const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::synchronizeDevice()
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-void CudaCore::uploadArgument(KernelArgument&)
+void CudaCore::clearEvents()
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-void CudaCore::uploadArgument(KernelArgument&, const QueueId, const bool)
+uint64_t CudaCore::uploadArgument(KernelArgument&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-void CudaCore::updateArgument(const ArgumentId, const void*, const size_t)
+EventId CudaCore::uploadArgumentAsync(KernelArgument&, const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-void CudaCore::updateArgument(const ArgumentId, const void*, const size_t, const QueueId, const bool)
+uint64_t CudaCore::updateArgument(const ArgumentId, const void*, const size_t)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-void CudaCore::downloadArgument(const ArgumentId, void*) const
+EventId CudaCore::updateArgumentAsync(const ArgumentId, const void*, const size_t, const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-void CudaCore::downloadArgument(const ArgumentId, void*, const QueueId, const bool) const
+uint64_t CudaCore::downloadArgument(const ArgumentId, void*) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-void CudaCore::downloadArgument(const ArgumentId, void*, const size_t) const
+EventId CudaCore::downloadArgumentAsync(const ArgumentId, void*, const QueueId) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-void CudaCore::downloadArgument(const ArgumentId, void*, const size_t, const QueueId, const bool) const
+uint64_t CudaCore::downloadArgument(const ArgumentId, void*, const size_t) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
-KernelArgument CudaCore::downloadArgument(const ArgumentId) const
+EventId CudaCore::downloadArgumentAsync(const ArgumentId, void*, const size_t, const QueueId) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+}
+
+KernelArgument CudaCore::downloadArgumentObject(const ArgumentId, uint64_t*) const
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+}
+
+uint64_t CudaCore::getArgumentOperationDuration(const EventId) const
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::clearBuffer(const ArgumentId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::clearBuffers()
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::clearBuffers(const ArgumentAccessType&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 void CudaCore::printComputeApiInfo(std::ostream&) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 std::vector<PlatformInfo> CudaCore::getPlatformInfo() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 std::vector<DeviceInfo> CudaCore::getDeviceInfo(const size_t) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 DeviceInfo CudaCore::getCurrentDeviceInfo() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT library");
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }
 
 #endif // PLATFORM_CUDA

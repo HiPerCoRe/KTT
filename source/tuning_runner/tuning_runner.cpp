@@ -5,6 +5,7 @@
 #include "tuning_runner.h"
 #include "utility/ktt_utility.h"
 #include "utility/timer.h"
+#include "utility/result_loader.h"
 
 namespace ktt
 {
@@ -45,7 +46,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
         KernelResult result = kernelRunner->runKernel(id, currentConfiguration.getParameterPairs(), std::vector<ArgumentOutputDescriptor>{});
 
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         if (validateResult(kernel, result))
         {
             results.push_back(result);
@@ -61,6 +62,57 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
         {
             kernelRunner->clearBuffers(ArgumentAccessType::ReadOnly);
         }
+    }
+
+    kernelRunner->clearBuffers();
+    resultValidator->clearReferenceResults();
+    configurationManager.clearSearcher(id);
+    return results;
+}
+
+std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const std::string& filePath)
+{
+    if (!kernelManager->isKernel(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+
+    ResultLoader resultLoader;
+    if (!resultLoader.loadResults(filePath))
+    {
+        throw std::runtime_error(std::string("Cannot read file: ") + filePath);
+    }
+
+    const Kernel& kernel = kernelManager->getKernel(id);
+
+    configurationManager.clearData(id);
+    configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id), kernel.getParameters());
+    size_t configurationsCount = configurationManager.getConfigurationCount(id);
+    std::vector<KernelResult> results;
+
+    for (size_t i = 0; i < configurationsCount; i++)
+    {
+        KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
+        KernelResult result(kernel.getName(), currentConfiguration);
+
+        try
+        {
+            std::stringstream stream;
+            stream << "Launching kernel <" << kernel.getName() << "> with configuration (" << i + 1 << " / " << configurationsCount << "): "
+                << currentConfiguration;
+            logger->log(stream.str());
+
+            result = resultLoader.readResult(currentConfiguration);
+            result.setConfiguration(currentConfiguration);
+        }
+        catch (const std::runtime_error& error)
+        {
+            logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
+            results.emplace_back(kernel.getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what());
+        }
+
+        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
+        results.push_back(result);
     }
 
     kernelRunner->clearBuffers();
@@ -98,7 +150,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
         KernelResult result = kernelRunner->runComposition(id, currentConfiguration.getParameterPairs(), std::vector<ArgumentOutputDescriptor>{});
 
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         if (validateResult(compatibilityKernel, result))
         {
             results.push_back(result);
@@ -134,7 +186,7 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
     KernelResult result = kernelRunner->runKernel(id, currentConfiguration.getParameterPairs(), output);
 
-    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
     validateResult(kernel, result);
 
     kernelRunner->clearBuffers();
@@ -161,7 +213,7 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
     KernelResult result = kernelRunner->runComposition(id, currentConfiguration.getParameterPairs(), output);
 
-    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getTotalDuration()));
+    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
     validateResult(compatibilityKernel, result);
 
     kernelRunner->clearBuffers();
@@ -214,12 +266,12 @@ bool TuningRunner::validateResult(const Kernel& kernel, const KernelResult& resu
         return false;
     }
 
-    bool resultIsCorrect = resultValidator->validateArgumentsWithClass(kernel, result.getConfiguration());
-    resultIsCorrect &= resultValidator->validateArgumentsWithKernel(kernel, result.getConfiguration());
+    bool resultIsCorrect = resultValidator->validateArgumentsWithClass(kernel);
+    resultIsCorrect &= resultValidator->validateArgumentsWithKernel(kernel);
 
     if (resultIsCorrect)
     {
-        logger->log(std::string("Kernel run completed successfully in ") + std::to_string((result.getTotalDuration()) / 1'000'000)
+        logger->log(std::string("Kernel run completed successfully in ") + std::to_string((result.getComputationDuration()) / 1'000'000)
             + "ms\n");
     }
     else

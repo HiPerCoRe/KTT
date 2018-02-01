@@ -6,19 +6,49 @@ namespace ktt
 
 TuningManipulator::~TuningManipulator() = default;
 
-void TuningManipulator::runKernel(const KernelId id)
-{
-    manipulatorInterface->runKernel(id);
-}
-
 bool TuningManipulator::enableArgumentPreload() const
 {
     return true;
 }
 
+void TuningManipulator::runKernel(const KernelId id)
+{
+    manipulatorInterface->runKernel(id);
+}
+
+void TuningManipulator::runKernelAsync(const KernelId id, const QueueId queue)
+{
+    manipulatorInterface->runKernelAsync(id, queue);
+}
+
 void TuningManipulator::runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize)
 {
     manipulatorInterface->runKernel(id, globalSize, localSize);
+}
+
+void TuningManipulator::runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize, const QueueId queue)
+{
+    manipulatorInterface->runKernelAsync(id, globalSize, localSize, queue);
+}
+
+QueueId TuningManipulator::getDefaultDeviceQueue() const
+{
+    return manipulatorInterface->getDefaultDeviceQueue();
+}
+
+std::vector<QueueId> TuningManipulator::getAllDeviceQueues() const
+{
+    return manipulatorInterface->getAllDeviceQueues();
+}
+
+void TuningManipulator::synchronizeQueue(const QueueId queue)
+{
+    manipulatorInterface->synchronizeQueue(queue);
+}
+
+void TuningManipulator::synchronizeDevice()
+{
+    manipulatorInterface->synchronizeDevice();
 }
 
 DimensionVector TuningManipulator::getCurrentGlobalSize(const KernelId id) const
@@ -51,9 +81,19 @@ void TuningManipulator::updateArgumentVector(const ArgumentId id, const void* ar
     manipulatorInterface->updateArgumentVector(id, argumentData);
 }
 
+void TuningManipulator::updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, QueueId queue)
+{
+    manipulatorInterface->updateArgumentVectorAsync(id, argumentData, queue);
+}
+
 void TuningManipulator::updateArgumentVector(const ArgumentId id, const void* argumentData, const size_t numberOfElements)
 {
     manipulatorInterface->updateArgumentVector(id, argumentData, numberOfElements);
+}
+
+void TuningManipulator::updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const size_t numberOfElements, QueueId queue)
+{
+    manipulatorInterface->updateArgumentVectorAsync(id, argumentData, numberOfElements, queue);
 }
 
 void TuningManipulator::getArgumentVector(const ArgumentId id, void* destination) const
@@ -61,9 +101,19 @@ void TuningManipulator::getArgumentVector(const ArgumentId id, void* destination
     manipulatorInterface->getArgumentVector(id, destination);
 }
 
+void TuningManipulator::getArgumentVectorAsync(const ArgumentId id, void* destination, QueueId queue) const
+{
+    manipulatorInterface->getArgumentVectorAsync(id, destination, queue);
+}
+
 void TuningManipulator::getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const
 {
     manipulatorInterface->getArgumentVector(id, destination, numberOfElements);
+}
+
+void TuningManipulator::getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements, QueueId queue) const
+{
+    manipulatorInterface->getArgumentVectorAsync(id, destination, numberOfElements, queue);
 }
 
 void TuningManipulator::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
@@ -79,6 +129,11 @@ void TuningManipulator::swapKernelArguments(const KernelId id, const ArgumentId 
 void TuningManipulator::createArgumentBuffer(const ArgumentId id)
 {
     manipulatorInterface->createArgumentBuffer(id);
+}
+
+void TuningManipulator::createArgumentBufferAsync(const ArgumentId id, QueueId queue)
+{
+    manipulatorInterface->createArgumentBufferAsync(id, queue);
 }
 
 void TuningManipulator::destroyArgumentBuffer(const ArgumentId id)
