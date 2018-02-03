@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
-    const int numberOfBodies = 8192;
+    const int numberOfBodies = 32*1024;
     // Total NDRange size matches number of grid points
     const ktt::DimensionVector ndRangeDimensions(numberOfBodies);
     const ktt::DimensionVector workGroupDimensions;
@@ -94,8 +94,8 @@ int main(int argc, char** argv)
         ktt::Dimension::X);
     tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", {1, 2, 4, 8}, ktt::ThreadModifierType::Global, ktt::ThreadModifierAction::Divide,
         ktt::Dimension::X);
-    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", {1, 2, 4, 8, 16, 32});
-    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", {1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", {0, 1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", {0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
     tuner.addParameter(kernelId, "USE_SOA", {0, 1});
     tuner.addParameter(kernelId, "LOCAL_MEM", {0, 1});
