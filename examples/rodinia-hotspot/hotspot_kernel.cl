@@ -32,9 +32,9 @@ __kernel void hotspot(  int iteration,  //number of iteration
 
   step_div_Cap=step/Cap;
 
-  Rx_1=1/Rx;
-  Ry_1=1/Ry;
-  Rz_1=1/Rz;
+  Rx_1=1.0f/Rx;
+  Ry_1=1.0f/Ry;
+  Rz_1=1.0f/Rz;
 
   // each block finally computes result for a small block
   // after N iterations. 
@@ -128,22 +128,27 @@ __kernel void hotspot(  int iteration,  //number of iteration
             (temp_on_cuda[S][tx] + temp_on_cuda[N][tx] - 2.0f * temp_on_cuda[ty][tx]) * Ry_1 +
             (temp_on_cuda[ty][E] + temp_on_cuda[ty][W] - 2.0f * temp_on_cuda[ty][tx]) * Rx_1 +
             (amb_temp - temp_on_cuda[ty][tx]) * Rz_1);
-#endif
+#endif /* LOCAL_MEMORY */
       }
-      barrier(CLK_LOCAL_MEM_FENCE);
-      if(j == BLOCK_SIZE_ROWS/WORK_GROUP_Y -1)
-        break;
-      if(computed[j])	 //Assign the computation range
-      {
-        temp_on_cuda[ty][tx]= temp_t[ty][tx];
-      }
-      barrier(CLK_LOCAL_MEM_FENCE);
       ty += WORK_GROUP_Y;
       N = ty-1;
       S = ty+1;
       N = (N < validYmin) ? validYmin : N;
       S = (S > validYmax) ? validYmax : S;
     }
+    barrier(CLK_LOCAL_MEM_FENCE);
+    ty = get_local_id(1);
+    for (int j = 0; j < BLOCK_SIZE_ROWS/WORK_GROUP_Y; j++)
+    {
+      if(j == BLOCK_SIZE_ROWS/WORK_GROUP_Y -1)
+        break;
+      if(computed[j])	 //Assign the computation range
+      {
+        temp_on_cuda[ty][tx]= temp_t[ty][tx];
+      }
+      ty += WORK_GROUP_Y;
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
   }
   else if (iteration == 2)
   {
@@ -179,20 +184,25 @@ __kernel void hotspot(  int iteration,  //number of iteration
             (temp_on_cuda[S][tx] + temp_on_cuda[N][tx] - 2.0f * temp_on_cuda[ty][tx]) * Ry_1 +
             (temp_on_cuda[ty][E] + temp_on_cuda[ty][W] - 2.0f * temp_on_cuda[ty][tx]) * Rx_1 +
             (amb_temp - temp_on_cuda[ty][tx]) * Rz_1);
-#endif
+#endif /* LOCAL_MEMORY */
       }
-      barrier(CLK_LOCAL_MEM_FENCE);
-      if(computed[j])	 //Assign the computation range
-      {
-        temp_on_cuda[ty][tx]= temp_t[ty][tx];
-      }
-      barrier(CLK_LOCAL_MEM_FENCE);
       ty += WORK_GROUP_Y;
       N = ty-1;
       S = ty+1;
       N = (N < validYmin) ? validYmin : N;
       S = (S > validYmax) ? validYmax : S;
     }
+    barrier(CLK_LOCAL_MEM_FENCE);
+    ty = get_local_id(1);
+    for (int j = 0; j < BLOCK_SIZE_ROWS/WORK_GROUP_Y; j++)
+    {
+      if(computed[j])	 //Assign the computation range
+      {
+        temp_on_cuda[ty][tx]= temp_t[ty][tx];
+      }
+      ty += WORK_GROUP_Y;
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
     i = 1;
     ty = get_local_id(1);
     N = ty-1;
@@ -225,25 +235,30 @@ __kernel void hotspot(  int iteration,  //number of iteration
             (temp_on_cuda[S][tx] + temp_on_cuda[N][tx] - 2.0f * temp_on_cuda[ty][tx]) * Ry_1 +
             (temp_on_cuda[ty][E] + temp_on_cuda[ty][W] - 2.0f * temp_on_cuda[ty][tx]) * Rx_1 +
             (amb_temp - temp_on_cuda[ty][tx]) * Rz_1);
-#endif
+#endif /* LOCAL_MEMORY */
       }
-      barrier(CLK_LOCAL_MEM_FENCE);
-      if(j == BLOCK_SIZE_ROWS/WORK_GROUP_Y -1)
-        break;
-      if(computed[j])	 //Assign the computation range
-      {
-        temp_on_cuda[ty][tx]= temp_t[ty][tx];
-      }
-      barrier(CLK_LOCAL_MEM_FENCE);
       ty += WORK_GROUP_Y;
       N = ty-1;
       S = ty+1;
       N = (N < validYmin) ? validYmin : N;
       S = (S > validYmax) ? validYmax : S;
     }
+    barrier(CLK_LOCAL_MEM_FENCE);
+    ty = get_local_id(1);
+    for (int j = 0; j < BLOCK_SIZE_ROWS/WORK_GROUP_Y; j++)
+    {
+      if(j == BLOCK_SIZE_ROWS/WORK_GROUP_Y -1)
+        break;
+      if(computed[j])	 //Assign the computation range
+      {
+        temp_on_cuda[ty][tx]= temp_t[ty][tx];
+      }
+      ty += WORK_GROUP_Y;
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
   }
   else {
-#endif
+#endif /* LOOP_UNROLL */
     for (int i=0; i<iteration ; i++){
       ty = get_local_id(1);
       int N = ty-1;
@@ -275,23 +290,27 @@ __kernel void hotspot(  int iteration,  //number of iteration
               (temp_on_cuda[S][tx] + temp_on_cuda[N][tx] - 2.0f * temp_on_cuda[ty][tx]) * Ry_1 + 
               (temp_on_cuda[ty][E] + temp_on_cuda[ty][W] - 2.0f * temp_on_cuda[ty][tx]) * Rx_1 + 
               (amb_temp - temp_on_cuda[ty][tx]) * Rz_1);
-#endif
+#endif /* LOCAL_MEMORY */
         }
-        barrier(CLK_LOCAL_MEM_FENCE);
-
+	ty += WORK_GROUP_Y;
+        N = ty-1;
+        S = ty+1;
+        N = (N < validYmin) ? validYmin : N;
+        S = (S > validYmax) ? validYmax : S;
+      }
+      barrier(CLK_LOCAL_MEM_FENCE);
+      ty = get_local_id(1);
+      for (int j = 0; j < BLOCK_SIZE_ROWS/WORK_GROUP_Y; j++)
+      {
         if(i==iteration-1 && j == BLOCK_SIZE_ROWS/WORK_GROUP_Y -1)
           break;
         if(computed[j])	 //Assign the computation range
         {
           temp_on_cuda[ty][tx]= temp_t[ty][tx];
         }
-        barrier(CLK_LOCAL_MEM_FENCE);
         ty += WORK_GROUP_Y;
-        N = ty-1;
-        S = ty+1;
-        N = (N < validYmin) ? validYmin : N;
-        S = (S > validYmax) ? validYmax : S;
       }
+      barrier(CLK_LOCAL_MEM_FENCE);
     }
 #if LOOP_UNROLL
   }

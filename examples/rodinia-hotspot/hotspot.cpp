@@ -159,7 +159,12 @@ int main(int argc, char** argv)
 
   // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
   tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<size_t>{tempDstId });
+
   hotspot->tune();
+
+  tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
+  tuner.printResult(kernelId, "hotspot_output.csv", ktt::PrintFormat::CSV);
+
   return 0;
 }
 
