@@ -100,6 +100,8 @@ int main(int argc, char** argv)
     tuner.addConstraint(kernelId, lt, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"});
     auto vec = [](std::vector<size_t> vector) {return vector.at(0) || vector.at(1) == 1;};
     tuner.addConstraint(kernelId, vec, {"USE_SOA", "VECTOR_SIZE"});
+    auto par = [](std::vector<size_t> vector) {return vector.at(0) * vector.at(1) >= 64;};
+    tuner.addConstraint(kernelId, par, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"});
 
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{aiId, aId, gsId, gridId});

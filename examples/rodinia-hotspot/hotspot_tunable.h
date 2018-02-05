@@ -69,6 +69,7 @@ class tunableHotspot : public ktt::TuningManipulator {
           }
         }
 
+        //TODO this would be much more efficient to solve it by copy kernel
         if (!srcPosition)
         {
           float* src = (float*) malloc(size* sizeof(float));
@@ -78,6 +79,8 @@ class tunableHotspot : public ktt::TuningManipulator {
           for (int j = 0; j < size; j++)
             dst[j] = src[j];
           updateArgumentVector(tempDstId, dst);
+	  free(src);
+          free(dst);
         }
     }
 

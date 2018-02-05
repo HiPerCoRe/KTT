@@ -105,7 +105,9 @@ void loadThreadData(
 	float bodyPos[OUTER_UNROLL_FACTOR][3], float bodyVel[OUTER_UNROLL_FACTOR][3], float bodyMass[OUTER_UNROLL_FACTOR]) // thread data
 {
 	int index = get_global_id(0) * OUTER_UNROLL_FACTOR;
+#if INNER_UNROLL_FACTOR2 > 0
 	# pragma unroll INNER_UNROLL_FACTOR2
+#endif
 	for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
 		#if USE_SOA == 0
 		{
@@ -202,7 +204,9 @@ __kernel void nbody_kernel(float timeDelta,
 	float bodyMass[OUTER_UNROLL_FACTOR];
 
 	// clear acceleration
+#if INNER_UNROLL_FACTOR2 > 0
 	# pragma unroll INNER_UNROLL_FACTOR2
+#endif
 	for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
 		bodyAcc[j][0] = bodyAcc[j][1] = bodyAcc[j][2] = (vector)0.f;
 	}
@@ -222,9 +226,13 @@ __kernel void nbody_kernel(float timeDelta,
 			barrier(CLK_LOCAL_MEM_FENCE);
 		#endif // LOCAL_MEM == 1 
 			// calculate the acceleration between the thread body and each other body loaded to buffer
+        #if INNER_UNROLL_FACTOR1 > 0
 		# pragma unroll INNER_UNROLL_FACTOR1
+        #endif
 		for(int index =  0; index < WORK_GROUP_SIZE_X; index++) {
+            #if INNER_UNROLL_FACTOR2 > 0
 			# pragma unroll INNER_UNROLL_FACTOR2
+            #endif
 			for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
 				#if LOCAL_MEM == 1
 					updateAcc(bodyAcc[j], bodyPos[j],
@@ -247,7 +255,9 @@ __kernel void nbody_kernel(float timeDelta,
 	// sum elements of acceleration vector, if any
 	float resAccX, resAccY, resAccZ;
 	int index = get_global_id(0) * OUTER_UNROLL_FACTOR;
+    #if INNER_UNROLL_FACTOR2 > 0
 	# pragma unroll INNER_UNROLL_FACTOR2
+    #endif
 	for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
 		resAccX = resAccY = resAccZ = 0.f;
 		for (int i = 0; i < VECTOR_TYPE; i++) 
