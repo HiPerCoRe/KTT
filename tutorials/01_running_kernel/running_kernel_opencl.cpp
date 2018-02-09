@@ -3,12 +3,18 @@
 #include <vector>
 #include "tuner_api.h"
 
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../tutorials/01_running_kernel/opencl_kernel.cl"
+#else
+    #define KTT_KERNEL_FILE "../../tutorials/01_running_kernel/opencl_kernel.cl"
+#endif
+
 int main(int argc, char** argv)
 {
     // Initialize platform index, device index and path to kernel.
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
-    std::string kernelFile = "../tutorials/01_running_kernel/opencl_kernel.cl";
+    std::string kernelFile = KTT_KERNEL_FILE;
 
     if (argc >= 2)
     {

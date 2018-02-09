@@ -2,15 +2,21 @@
 #include "api/device_info.h"
 #include "kernel/kernel_manager.h"
 
+#if defined(_MSC_VER)
+    #define KTT_TEST_KERNEL_FILE "../tests/test_kernel.cl"
+#else
+    #define KTT_TEST_KERNEL_FILE "../../tests/test_kernel.cl"
+#endif
+
 TEST_CASE("Kernel handling operations", "Component: KernelManager")
 {
     ktt::DeviceInfo deviceInfo(0, "Device");
     ktt::KernelManager manager(deviceInfo);
-    ktt::KernelId id = manager.addKernelFromFile("../tests/test_kernel.cl", "testKernel", ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
+    ktt::KernelId id = manager.addKernelFromFile(KTT_TEST_KERNEL_FILE, "testKernel", ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
 
     SECTION("Kernel id is assigned correctly")
     {
-        ktt::KernelId secondId = manager.addKernelFromFile("../tests/test_kernel.cl", "testKernel", ktt::DimensionVector(1024),
+        ktt::KernelId secondId = manager.addKernelFromFile(KTT_TEST_KERNEL_FILE, "testKernel", ktt::DimensionVector(1024),
             ktt::DimensionVector(16, 16));
 
         REQUIRE(secondId == 1);
@@ -44,7 +50,7 @@ TEST_CASE("Kernel configuration retrieval", "Component: KernelManager")
     ktt::DeviceInfo deviceInfo(0, "Device");
     deviceInfo.setMaxWorkGroupSize(1024);
     ktt::KernelManager manager(deviceInfo);
-    ktt::KernelId id = manager.addKernelFromFile("../tests/test_kernel.cl", "testKernel", ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
+    ktt::KernelId id = manager.addKernelFromFile(KTT_TEST_KERNEL_FILE, "testKernel", ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
     manager.addParameter(id, "param_one", std::vector<size_t>{1, 2, 3}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,
         ktt::Dimension::X);
     manager.addParameter(id, "param_two", std::vector<size_t>{5, 10}, ktt::ThreadModifierType::None, ktt::ThreadModifierAction::Add,

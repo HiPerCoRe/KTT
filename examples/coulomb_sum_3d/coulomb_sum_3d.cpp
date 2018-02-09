@@ -4,13 +4,21 @@
 #include <vector>
 #include "tuner_api.h"
 
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl"
+#else
+    #define KTT_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl"
+#endif
+
 int main(int argc, char** argv)
 {
     // Initialize platform index, device index and paths to kernels
     size_t platformIndex = 0;
     size_t deviceIndex = 0;
-    std::string kernelFile = "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl";
-    std::string referenceKernelFile = "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl";
+    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
 
     if (argc >= 2)
     {

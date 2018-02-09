@@ -217,7 +217,7 @@ project "ktt"
     end
     
     if not libraries then
-        error("Compute API libraries were not found")
+        error("Compute API libraries were not found. Please ensure that path to your device vendor SDK is correctly set in the environment variables.")
     end
     
 -- Examples configuration 

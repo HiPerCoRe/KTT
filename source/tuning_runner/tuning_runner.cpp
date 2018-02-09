@@ -115,8 +115,6 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
         results.push_back(result);
     }
 
-    kernelRunner->clearBuffers();
-    resultValidator->clearReferenceResults();
     configurationManager.clearSearcher(id);
     return results;
 }

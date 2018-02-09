@@ -178,6 +178,17 @@ public:
     void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
 
+    /** @fn void setLocalMemoryModifier(const KernelId id, const ArgumentId argumentId, const std::string& parameterName,
+      * const ThreadModifierAction& modifierAction)
+      * Makes existing kernel parameter behave as a local memory size modifier of specified kernel argument for specified kernel.
+      * @param id Id of kernel which will be affected by local memory modifier.
+      * @param argumentId Id of kernel argument which will be affected by local memory modifier.
+      * @param parameterName Name of existing kernel parameter.
+      * @param modifierAction Action of thread modifier. See ::ThreadModifierAction for more information.
+      */
+    // void setLocalMemoryModifier(const KernelId id, const ArgumentId argumentId, const std::string& parameterName,
+    //    const ThreadModifierAction& modifierAction);
+
     /** @fn void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
       * Sets tuning manipulator for specified kernel. Tuning manipulator enables customization of kernel execution. This is useful in several cases,
       * eg. running part of the computation in C++ code, utilizing iterative kernel launches or composite kernels. See TuningManipulator for more

@@ -3,11 +3,17 @@
 #include <vector>
 #include "tuner_api.h"
 
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../tutorials/01_running_kernel/cuda_kernel.cu"
+#else
+    #define KTT_KERNEL_FILE "../../tutorials/01_running_kernel/cuda_kernel.cu"
+#endif
+
 int main(int argc, char** argv)
 {
     // Initialize device index and path to kernel.
     size_t deviceIndex = 0;
-    std::string kernelFile = "../tutorials/01_running_kernel/cuda_kernel.cu";
+    std::string kernelFile = KTT_KERNEL_FILE;
 
     if (argc >= 2)
     {
