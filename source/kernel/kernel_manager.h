@@ -63,13 +63,13 @@ private:
 
     // Helper methods
     std::string loadFileToString(const std::string& filePath) const;
-    void computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
+    void computeConfigurations(const KernelId kernelId, const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
         const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs, const DimensionVector& globalSize,
-        const DimensionVector& localSize, std::vector<KernelConfiguration>& finalResult) const;
+        const DimensionVector& localSize, const std::vector<LocalMemoryModifier>& modifiers, std::vector<KernelConfiguration>& finalResult) const;
     void computeCompositionConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
         const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs,
-        std::vector<std::pair<KernelId, DimensionVector>>& globalSizes, std::vector<std::pair<KernelId, DimensionVector>>& localSizes,
-        std::vector<KernelConfiguration>& finalResult) const;
+        const std::vector<std::pair<KernelId, DimensionVector>>& globalSizes, const std::vector<std::pair<KernelId, DimensionVector>>& localSizes,
+        const std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>>& modifiers, std::vector<KernelConfiguration>& finalResult) const;
     bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints) const;
 };
 

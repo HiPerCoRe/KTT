@@ -30,6 +30,11 @@ void Kernel::addLocalMemoryModifier(const std::string& parameterName, const Argu
     {
         if (parameter.getName() == parameterName)
         {
+            if (parameter.hasValuesDouble())
+            {
+                throw std::runtime_error("Parameter with floating-point values cannot act as a modifier");
+            }
+
             parameter.setLocalMemoryArgumentModifier(argumentId, modifierAction);
             return;
         }

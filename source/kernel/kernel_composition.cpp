@@ -40,6 +40,11 @@ void KernelComposition::addLocalMemoryModifier(const std::string& parameterName,
     {
         if (parameter.getName() == parameterName)
         {
+            if (parameter.hasValuesDouble())
+            {
+                throw std::runtime_error("Parameter with floating-point values cannot act as a modifier");
+            }
+
             parameter.setLocalMemoryArgumentModifier(argumentId, modifierAction);
             return;
         }
@@ -123,6 +128,11 @@ void KernelComposition::addKernelLocalMemoryModifier(const KernelId id, const st
     {
         if (parameter.getName() == parameterName)
         {
+            if (parameter.hasValuesDouble())
+            {
+                throw std::runtime_error("Parameter with floating-point values cannot act as a modifier");
+            }
+
             parameter.setLocalMemoryArgumentModifier(id, argumentId, modifierAction);
             return;
         }
