@@ -100,18 +100,18 @@ int main(int argc, char** argv)
 
     // Add new parameter for kernel. Specify parameter name and possible values for this parameter. When kernel is tuned, the parameter value
     // is added to kernel source as preprocessor definition, eg. for parameter value 32, it is added as "#define multiply_block_size 32".
-    // In this case, the parameter also affects block size. This is specified with KTT enums, ThreadModifierType specifies that parameter
-    // affects block size of a kernel, ThreadModifierAction specifies that block size is multiplied by value of the parameter, dimension
-    // specifies that dimension X of thread block is affected by the parameter.
+    // In this case, the parameter also affects block size. This is specified with KTT enums, ModifierType specifies that parameter affects
+    // block size of a kernel, ModifierAction specifies that block size is multiplied by value of the parameter, ModifierDimension specifies that
+    // dimension X of thread block is affected by the parameter.
     // Previously, the block size of kernel was set to one. This simply means that the block size of kernel is controlled explicitly by
     // value of this parameter, eg. size of one is multiplied by 32, which means that result size is 32.
-    tuner.addParameter(kernelId, "multiply_block_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ThreadModifierType::Local,
-        ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
+    tuner.addParameter(kernelId, "multiply_block_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ModifierType::Local,
+        ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
 
     // Previously added parameter affects thread block size of kernel. However, when block size is changed, grid size has to be modified as well,
     // so that grid size multiplied by block size remains unchanged. This means that another parameter which affects grid size has to be added.
-    tuner.addParameter(kernelId, "divide_grid_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ThreadModifierType::Global,
-        ktt::ThreadModifierAction::Divide, ktt::Dimension::X);
+    tuner.addParameter(kernelId, "divide_grid_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ModifierType::Global, ktt::ModifierAction::Divide,
+        ktt::ModifierDimension::X);
 
     // Add constraint to ensure that only valid versions of kernel will be generated. Previously, two kernel parameters with 4 possible values each
     // were added for kernel. This means that there are 16 possible versions of kernel that can be run, one version for each combination of parameter

@@ -68,24 +68,24 @@ void DimensionVector::divide(const DimensionVector& divisor)
     sizeZ /= divisor.sizeZ;
 }
 
-void DimensionVector::modifyByValue(const size_t value, const ThreadModifierAction& modifierAction, const Dimension modifierDimension)
+void DimensionVector::modifyByValue(const size_t value, const ModifierAction& modifierAction, const ModifierDimension& modifierDimension)
 {
     switch (modifierAction)
     {
-    case ThreadModifierAction::Add:
+    case ModifierAction::Add:
         addValue(value, modifierDimension);
         break;
-    case ThreadModifierAction::Subtract:
+    case ModifierAction::Subtract:
         subtractValue(value, modifierDimension);
         break;
-    case ThreadModifierAction::Multiply:
+    case ModifierAction::Multiply:
         multiplyByValue(value, modifierDimension);
         break;
-    case ThreadModifierAction::Divide:
+    case ModifierAction::Divide:
         divideByValue(value, modifierDimension);
         break;
     default:
-        throw std::runtime_error("Unknown thread modifier action");
+        throw std::runtime_error("Unknown modifier action");
     }
 }
 
@@ -128,13 +128,13 @@ bool DimensionVector::operator!=(const DimensionVector& other) const
     return !(*this == other);
 }
 
-void DimensionVector::addValue(const size_t value, const Dimension modifierDimension)
+void DimensionVector::addValue(const size_t value, const ModifierDimension& modifierDimension)
 {
-    if (modifierDimension == Dimension::X)
+    if (modifierDimension == ModifierDimension::X)
     {
         sizeX += value;
     }
-    else if (modifierDimension == Dimension::Y)
+    else if (modifierDimension == ModifierDimension::Y)
     {
         sizeY += value;
     }
@@ -144,13 +144,13 @@ void DimensionVector::addValue(const size_t value, const Dimension modifierDimen
     }
 }
 
-void DimensionVector::subtractValue(const size_t value, const Dimension modifierDimension)
+void DimensionVector::subtractValue(const size_t value, const ModifierDimension& modifierDimension)
 {
-    if (modifierDimension == Dimension::X)
+    if (modifierDimension == ModifierDimension::X)
     {
         sizeX -= value;
     }
-    else if (modifierDimension == Dimension::Y)
+    else if (modifierDimension == ModifierDimension::Y)
     {
         sizeY -= value;
     }
@@ -160,13 +160,13 @@ void DimensionVector::subtractValue(const size_t value, const Dimension modifier
     }
 }
 
-void DimensionVector::multiplyByValue(const size_t value, const Dimension modifierDimension)
+void DimensionVector::multiplyByValue(const size_t value, const ModifierDimension& modifierDimension)
 {
-    if (modifierDimension == Dimension::X)
+    if (modifierDimension == ModifierDimension::X)
     {
         sizeX *= value;
     }
-    else if (modifierDimension == Dimension::Y)
+    else if (modifierDimension == ModifierDimension::Y)
     {
         sizeY *= value;
     }
@@ -176,13 +176,13 @@ void DimensionVector::multiplyByValue(const size_t value, const Dimension modifi
     }
 }
 
-void DimensionVector::divideByValue(const size_t value, const Dimension modifierDimension)
+void DimensionVector::divideByValue(const size_t value, const ModifierDimension& modifierDimension)
 {
-    if (modifierDimension == Dimension::X)
+    if (modifierDimension == ModifierDimension::X)
     {
         sizeX /= value;
     }
-    else if (modifierDimension == Dimension::Y)
+    else if (modifierDimension == ModifierDimension::Y)
     {
         sizeY /= value;
     }

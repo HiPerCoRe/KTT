@@ -29,16 +29,20 @@ public:
     std::vector<KernelConfiguration> getKernelCompositionConfigurations(const KernelId compositionId) const;
 
     // Kernel modification methods
-    void addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& modifierType,
-        const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
+    void addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values, const ModifierType& modifierType,
+        const ModifierAction& modifierAction, const ModifierDimension& modifierDimension);
     void addParameter(const KernelId id, const std::string& name, const std::vector<double>& values);
+    void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
+        const ModifierAction& modifierAction);
     void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void setTuningManipulatorFlag(const KernelId id, const bool flag);
     void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-        const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
-        const Dimension& modifierDimension);
+        const std::vector<size_t>& parameterValues, const ModifierType& modifierType, const ModifierAction& modifierAction,
+        const ModifierDimension& modifierDimension);
+    void addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+        const ArgumentId argumentId, const ModifierAction& modifierAction);
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
 
     // Getters

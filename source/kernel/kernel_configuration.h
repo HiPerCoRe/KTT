@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <tuple>
 #include <utility>
 #include <vector>
 #include "ktt_types.h"
@@ -18,13 +19,21 @@ public:
     KernelConfiguration();
     explicit KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
         const std::vector<ParameterPair>& parameterPairs);
+    explicit KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
+        const std::vector<ParameterPair>& parameterPairs,
+        const std::vector<std::tuple<ArgumentId, ModifierAction, size_t>>& localMemoryArgumentModifiers);
     explicit KernelConfiguration(const std::vector<std::pair<KernelId, DimensionVector>>& compositionGlobalSizes,
         const std::vector<std::pair<KernelId, DimensionVector>>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs);
+    explicit KernelConfiguration(const std::vector<std::pair<KernelId, DimensionVector>>& compositionGlobalSizes,
+        const std::vector<std::pair<KernelId, DimensionVector>>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs,
+        const std::vector<std::pair<KernelId, std::vector<std::tuple<ArgumentId, ModifierAction, size_t>>>>& compositionLocalMemoryArgumentModifiers);
 
     DimensionVector getGlobalSize() const;
     DimensionVector getLocalSize() const;
+    std::vector<std::tuple<ArgumentId, ModifierAction, size_t>> getLocalMemoryArgumentModifiers() const;
     DimensionVector getCompositionKernelGlobalSize(const KernelId id) const;
     DimensionVector getCompositionKernelLocalSize(const KernelId id) const;
+    std::vector<std::tuple<ArgumentId, ModifierAction, size_t>> getCompositionKernelLocalMemoryArgumentModifiers(const KernelId id) const;
     std::vector<DimensionVector> getGlobalSizes() const;
     std::vector<DimensionVector> getLocalSizes() const;
     std::vector<ParameterPair> getParameterPairs() const;
@@ -36,8 +45,10 @@ public:
 private:
     DimensionVector globalSize;
     DimensionVector localSize;
+    std::vector<std::tuple<ArgumentId, ModifierAction, size_t>> localMemoryArgumentModifiers;
     std::vector<std::pair<KernelId, DimensionVector>> compositionGlobalSizes;
     std::vector<std::pair<KernelId, DimensionVector>> compositionLocalSizes;
+    std::vector<std::pair<KernelId, std::vector<std::tuple<ArgumentId, ModifierAction, size_t>>>> compositionLocalMemoryArgumentModifiers;
     std::vector<ParameterPair> parameterPairs;
     bool compositeConfiguration;
 };

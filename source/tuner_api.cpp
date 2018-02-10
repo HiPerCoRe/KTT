@@ -56,7 +56,7 @@ void Tuner::addParameter(const KernelId id, const std::string& parameterName, co
 {
     try
     {
-        tunerCore->addParameter(id, parameterName, parameterValues, ThreadModifierType::None, ThreadModifierAction::Multiply, Dimension::X);
+        tunerCore->addParameter(id, parameterName, parameterValues, ModifierType::None, ModifierAction::Multiply, ModifierDimension::X);
     }
     catch (const std::runtime_error& error)
     {
@@ -79,11 +79,25 @@ void Tuner::addParameterDouble(const KernelId id, const std::string& parameterNa
 }
 
 void Tuner::addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-    const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension)
+    const ModifierType& modifierType, const ModifierAction& modifierAction, const ModifierDimension& modifierDimension)
 {
     try
     {
         tunerCore->addParameter(id, parameterName, parameterValues, modifierType, modifierAction, modifierDimension);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+void Tuner::addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
+    const ModifierAction& modifierAction)
+{
+    try
+    {
+        tunerCore->addLocalMemoryModifier(id, parameterName, argumentId, modifierAction);
     }
     catch (const std::runtime_error& error)
     {
@@ -134,13 +148,27 @@ KernelId Tuner::addComposition(const std::string& compositionName, const std::ve
 }
 
 void Tuner::addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-    const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
-    const Dimension& modifierDimension)
+    const std::vector<size_t>& parameterValues, const ModifierType& modifierType, const ModifierAction& modifierAction,
+    const ModifierDimension& modifierDimension)
 {
     try
     {
         tunerCore->addCompositionKernelParameter(compositionId, kernelId, parameterName, parameterValues, modifierType, modifierAction,
             modifierDimension);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+void Tuner::addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+    const ArgumentId argumentId, const ModifierAction& modifierAction)
+{
+    try
+    {
+        tunerCore->addCompositionKernelLocalMemoryModifier(compositionId, kernelId, parameterName, argumentId, modifierAction);
     }
     catch (const std::runtime_error& error)
     {

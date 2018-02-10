@@ -23,20 +23,25 @@ public:
     explicit TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const size_t queueCount);
 
     // Kernel manager methods
-    KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize, const DimensionVector& localSize);
+    KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
+        const DimensionVector& localSize);
     KernelId addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
         const DimensionVector& localSize);
     KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds,
         std::unique_ptr<TuningManipulator> manipulator);
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-        const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
+        const ModifierType& modifierType, const ModifierAction& modifierAction, const ModifierDimension& modifierDimension);
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
+    void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
+        const ModifierAction& modifierAction);
     void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-        const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
-        const Dimension& modifierDimension);
+        const std::vector<size_t>& parameterValues, const ModifierType& modifierType, const ModifierAction& modifierAction,
+        const ModifierDimension& modifierDimension);
+    void addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+        const ArgumentId argumentId, const ModifierAction& modifierAction);
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
     std::string getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const;
 

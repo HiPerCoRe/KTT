@@ -51,7 +51,7 @@ KernelId TunerCore::addComposition(const std::string& compositionName, const std
 }
 
 void TunerCore::addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-    const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension)
+    const ModifierType& modifierType, const ModifierAction& modifierAction, const ModifierDimension& modifierDimension)
 {
     kernelManager->addParameter(id, parameterName, parameterValues, modifierType, modifierAction, modifierDimension);
 }
@@ -59,6 +59,12 @@ void TunerCore::addParameter(const KernelId id, const std::string& parameterName
 void TunerCore::addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues)
 {
     kernelManager->addParameter(id, parameterName, parameterValues);
+}
+
+void TunerCore::addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
+    const ModifierAction& modifierAction)
+{
+    kernelManager->addLocalMemoryModifier(id, parameterName, argumentId, modifierAction);
 }
 
 void TunerCore::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
@@ -86,11 +92,17 @@ void TunerCore::setKernelArguments(const KernelId id, const std::vector<Argument
 }
 
 void TunerCore::addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-    const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
-    const Dimension& modifierDimension)
+    const std::vector<size_t>& parameterValues, const ModifierType& modifierType, const ModifierAction& modifierAction,
+    const ModifierDimension& modifierDimension)
 {
     kernelManager->addCompositionKernelParameter(compositionId, kernelId, parameterName, parameterValues, modifierType, modifierAction,
         modifierDimension);
+}
+
+void TunerCore::addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+    const ArgumentId argumentId, const ModifierAction& modifierAction)
+{
+    kernelManager->addCompositionKernelLocalMemoryModifier(compositionId, kernelId, parameterName, argumentId, modifierAction);
 }
 
 void TunerCore::setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds)

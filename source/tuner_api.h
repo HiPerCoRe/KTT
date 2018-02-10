@@ -22,13 +22,13 @@
 #include "enum/argument_memory_location.h"
 #include "enum/argument_upload_type.h"
 #include "enum/compute_api.h"
-#include "enum/dimension.h"
 #include "enum/global_size_type.h"
+#include "enum/modifier_action.h"
+#include "enum/modifier_dimension.h"
+#include "enum/modifier_type.h"
 #include "enum/print_format.h"
 #include "enum/time_unit.h"
 #include "enum/search_method.h"
-#include "enum/thread_modifier_action.h"
-#include "enum/thread_modifier_type.h"
 #include "enum/validation_method.h"
 
 // Data holders
@@ -148,23 +148,34 @@ public:
     void addParameterDouble(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
 
     /** @fn void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-      * const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension)
+      * const ModifierType& modifierType, const ModifierAction& modifierAction, const ModifierDimension& modifierDimension)
       * Adds new integer parameter for specified kernel, providing parameter name and list of allowed values. When the corresponding kernel
       * is launched, parameters will be added to kernel source code as preprocessor definitions. During the tuning process, tuner will generate
       * configurations for combinations of kernel parameters and their values.
       *
       * This version of method allows the parameter to act as thread size modifier. Parameter value modifies number of threads in either global
-      * or local space in specified dimension. Form of modification depends on thread modifier action argument. If there are multiple thread
-      * modifiers present for same space and dimension, actions are applied in the order of parameters' addition.
+      * or local space in specified dimension. Form of modification depends on modifier action argument. If there are multiple thread modifiers
+      * present for same space and dimension, actions are applied in the order of parameters' addition.
       * @param id Id of kernel for which the parameter will be added.
       * @param parameterName Name of a parameter. Parameter names for single kernel must be unique.
       * @param parameterValues Vector of allowed values for the parameter.
-      * @param modifierType Type of thread modifier. See ::ThreadModifierType for more information.
-      * @param modifierAction Action of thread modifier. See ::ThreadModifierAction for more information.
-      * @param modifierDimension Dimension which will be affected by thread modifier. See ::Dimension for more information.
+      * @param modifierType Type of thread modifier. See ::ModifierType for more information.
+      * @param modifierAction Action of thread modifier. See ::ModifierAction for more information.
+      * @param modifierDimension Dimension which will be affected by thread modifier. See ::ModifierDimension for more information.
       */
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-        const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
+        const ModifierType& modifierType, const ModifierAction& modifierAction, const ModifierDimension& modifierDimension);
+
+    /** @fn void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
+      * const ModifierAction& modifierAction)
+      * Makes existing kernel parameter behave as a local memory size modifier for specified kernel argument for specified kernel.
+      * @param id Id of kernel which will be affected by local memory modifier.
+      * @param parameterName Name of existing kernel parameter.
+      * @param argumentId Id of local memory kernel argument which will be affected by local memory modifier.
+      * @param modifierAction Action of local memory modifier. See ::ModifierAction for more information.
+      */
+    void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
+        const ModifierAction& modifierAction);
 
     /** @fn void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
       * const std::vector<std::string>& parameterNames)
@@ -177,17 +188,6 @@ public:
       */
     void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
-
-    /** @fn void setLocalMemoryModifier(const KernelId id, const ArgumentId argumentId, const std::string& parameterName,
-      * const ThreadModifierAction& modifierAction)
-      * Makes existing kernel parameter behave as a local memory size modifier of specified kernel argument for specified kernel.
-      * @param id Id of kernel which will be affected by local memory modifier.
-      * @param argumentId Id of kernel argument which will be affected by local memory modifier.
-      * @param parameterName Name of existing kernel parameter.
-      * @param modifierAction Action of thread modifier. See ::ThreadModifierAction for more information.
-      */
-    // void setLocalMemoryModifier(const KernelId id, const ArgumentId argumentId, const std::string& parameterName,
-    //    const ThreadModifierAction& modifierAction);
 
     /** @fn void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
       * Sets tuning manipulator for specified kernel. Tuning manipulator enables customization of kernel execution. This is useful in several cases,
@@ -215,21 +215,34 @@ public:
         std::unique_ptr<TuningManipulator> manipulator);
 
     /** @fn void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-      * const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
-      * const Dimension& modifierDimension)
+      * const std::vector<size_t>& parameterValues, const ModifierType& modifierType, const ModifierAction& modifierAction,
+      * const ModifierDimension& modifierDimension)
       * Calls addParameter() method (version with thread modifier) for a single kernel inside specified kernel composition. Does not affect
       * standalone kernels or other compositions.
       * @param compositionId Id of composition which includes the specified kernel.
       * @param kernelId Id of kernel inside the composition for which the parameter will be added.
       * @param parameterName Name of a parameter. Parameter names for a single kernel must be unique.
       * @param parameterValues Vector of allowed values for the parameter.
-      * @param modifierType Type of thread modifier. See ::ThreadModifierType for more information.
-      * @param modifierAction Action of thread modifier. See ::ThreadModifierAction for more information.
-      * @param modifierDimension Dimension which will be affected by thread modifier. See ::Dimension for more information.
+      * @param modifierType Type of thread modifier. See ::ModifierType for more information.
+      * @param modifierAction Action of thread modifier. See ::ModifierAction for more information.
+      * @param modifierDimension Dimension which will be affected by thread modifier. See ::ModifierDimension for more information.
       */
     void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-        const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
-        const Dimension& modifierDimension);
+        const std::vector<size_t>& parameterValues, const ModifierType& modifierType, const ModifierAction& modifierAction,
+        const ModifierDimension& modifierDimension);
+
+    /** @fn void addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+      * const ArgumentId argumentId, const ModifierAction& modifierAction)
+      * Calls addLocalMemoryModifier() method for a single kernel inside specified kernel composition. Does not affect standalone kernels or other
+      * compositions.
+      * @param compositionId Id of composition which includes the specified kernel.
+      * @param kernelId Id of kernel which will be affected by local memory modifier.
+      * @param parameterName Name of existing kernel parameter.
+      * @param argumentId Id of local memory kernel argument which will be affected by local memory modifier.
+      * @param modifierAction Action of local memory modifier. See ::ModifierAction for more information.
+      */
+    void addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+        const ArgumentId argumentId, const ModifierAction& modifierAction);
 
     /** @fn void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds)
       * Calls setKernelArguments() method for a single kernel inside specified kernel composition. Does not affect standalone kernels or other

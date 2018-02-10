@@ -98,10 +98,10 @@ int main(int argc, char** argv)
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "nbody_kernel", ndRangeDimensions, referenceWorkGroupDimensions);
 
     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {64, 128, 256, 512}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply,
-        ktt::Dimension::X);
-    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", {1, 2, 4, 8}, ktt::ThreadModifierType::Global, ktt::ThreadModifierAction::Divide,
-        ktt::Dimension::X);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {64, 128, 256, 512}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply,
+        ktt::ModifierDimension::X);
+    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", {1, 2, 4, 8}, ktt::ModifierType::Global, ktt::ModifierAction::Divide,
+        ktt::ModifierDimension::X);
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", {0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", {0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
