@@ -70,7 +70,7 @@ EventId CudaCore::runKernelAsync(const KernelRuntimeData& kernelData, const std:
     overheadTimer.stop();
 
     return enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
-        getSharedMemorySizeInBytes(argumentPointers), queue, overheadTimer.getElapsedTime());
+        getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
 }
 
 KernelResult CudaCore::getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const
@@ -586,16 +586,51 @@ std::vector<CUdeviceptr*> CudaCore::getKernelArguments(const std::vector<KernelA
     return result;
 }
 
-size_t CudaCore::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& argumentPointers) const
+size_t CudaCore::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& argumentPointers,
+    const std::vector<LocalMemoryModifier>& modifiers) const
 {
+    for (const auto& modifier : modifiers)
+    {
+        bool modifierArgumentFound = false;
+
+        for (const auto argument : argumentPointers)
+        {
+            if (modifier.getArgument() == argument->getId() && argument->getUploadType() == ArgumentUploadType::Local)
+            {
+                modifierArgumentFound = true;
+            }
+        }
+
+        if (!modifierArgumentFound)
+        {
+            throw std::runtime_error(std::string("No matching local memory argument found for modifier, argument id in modifier: ")
+                + std::to_string(modifier.getArgument()));
+        }
+    }
+
     size_t result = 0;
 
     for (const auto argument : argumentPointers)
     {
-        if (argument->getUploadType() == ArgumentUploadType::Local)
+        if (argument->getUploadType() != ArgumentUploadType::Local)
         {
-            result += argument->getDataSizeInBytes();
+            continue;
         }
+
+        size_t numberOfElements = argument->getNumberOfElements();
+
+        for (const auto& modifier : modifiers)
+        {
+            if (modifier.getArgument() != argument->getId())
+            {
+                continue;
+            }
+
+            numberOfElements = modifier.getModifiedValue(numberOfElements);
+        }
+
+        size_t argumentSize = argument->getElementSizeInBytes() * numberOfElements;
+        result += argumentSize;
     }
 
     return result;

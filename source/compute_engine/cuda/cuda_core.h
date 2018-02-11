@@ -97,7 +97,7 @@ private:
     DeviceInfo getCudaDeviceInfo(const size_t deviceIndex) const;
     std::vector<CudaDevice> getCudaDevices() const;
     std::vector<CUdeviceptr*> getKernelArguments(const std::vector<KernelArgument*>& argumentPointers);
-    size_t getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& argumentPointers) const;
+    size_t getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
     CudaBuffer* findBuffer(const ArgumentId id) const;
     CUdeviceptr* loadBufferFromCache(const ArgumentId id) const;
 };

@@ -69,9 +69,17 @@ EventId OpenclCore::runKernelAsync(const KernelRuntimeData& kernelData, const st
     }
     auto kernel = std::make_unique<OpenclKernel>(programPointer->getProgram(), kernelData.getName());
 
+    checkLocalMemoryModifiers(argumentPointers, kernelData.getLocalMemoryModifiers());
     for (const auto argument : argumentPointers)
     {
-        setKernelArgument(*kernel, *argument);
+        if (argument->getUploadType() == ArgumentUploadType::Local)
+        {
+            setKernelArgument(*kernel, *argument, kernelData.getLocalMemoryModifiers());
+        }
+        else
+        {
+            setKernelArgument(*kernel, *argument);
+        }
     }
 
     overheadTimer.stop();
@@ -490,6 +498,21 @@ void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argumen
     }
 }
 
+void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers)
+{
+    size_t numberOfElements = argument.getNumberOfElements();
+
+    for (const auto& modifier : modifiers)
+    {
+        if (modifier.getArgument() == argument.getId())
+        {
+            numberOfElements = modifier.getModifiedValue(numberOfElements);
+        }
+    }
+
+    kernel.setKernelArgumentLocal(argument.getElementSizeInBytes() * numberOfElements);
+}
+
 EventId OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
     const QueueId queue, const uint64_t kernelLaunchOverhead) const
 {
@@ -656,6 +679,29 @@ bool OpenclCore::loadBufferFromCache(const ArgumentId id, OpenclKernel& kernel) 
     }
 
     return false;
+}
+
+void OpenclCore::checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers,
+    const std::vector<LocalMemoryModifier>& modifiers) const
+{
+    for (const auto& modifier : modifiers)
+    {
+        bool modifierArgumentFound = false;
+
+        for (const auto argument : argumentPointers)
+        {
+            if (modifier.getArgument() == argument->getId() && argument->getUploadType() == ArgumentUploadType::Local)
+            {
+                modifierArgumentFound = true;
+            }
+        }
+
+        if (!modifierArgumentFound)
+        {
+            throw std::runtime_error(std::string("No matching local memory argument found for modifier, argument id in modifier: ")
+                + std::to_string(modifier.getArgument()));
+        }
+    }
 }
 
 } // namespace ktt

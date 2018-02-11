@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "local_memory_modifier.h"
 
 namespace ktt
@@ -42,6 +43,23 @@ ModifierAction LocalMemoryModifier::getAction() const
 size_t LocalMemoryModifier::getValue() const
 {
     return value;
+}
+
+size_t LocalMemoryModifier::getModifiedValue(const size_t value) const
+{
+    switch (action)
+    {
+    case ModifierAction::Add:
+        return value + this->value;
+    case ModifierAction::Subtract:
+        return value - this->value;
+    case ModifierAction::Multiply:
+        return value * this->value;
+    case ModifierAction::Divide:
+        return value / this->value;
+    default:
+        throw std::runtime_error("Unknown modifier action");
+    }
 }
 
 } // namespace ktt

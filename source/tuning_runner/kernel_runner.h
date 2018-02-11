@@ -21,7 +21,9 @@ public:
     explicit KernelRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine);
 
     // Core methods
+    KernelResult runKernel(const KernelId id, const KernelConfiguration& configuration, const std::vector<ArgumentOutputDescriptor>& output);
     KernelResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output);
+    KernelResult runComposition(const KernelId id, const KernelConfiguration& configuration, const std::vector<ArgumentOutputDescriptor>& output);
     KernelResult runComposition(const KernelId id, const std::vector<ParameterPair>& configuration,
         const std::vector<ArgumentOutputDescriptor>& output);
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);

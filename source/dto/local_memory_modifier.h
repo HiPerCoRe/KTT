@@ -20,6 +20,7 @@ public:
     ArgumentId getArgument() const;
     ModifierAction getAction() const;
     size_t getValue() const;
+    size_t getModifiedValue(const size_t value) const;
 
 private:
     KernelId kernel;

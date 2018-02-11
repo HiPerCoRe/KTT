@@ -13,9 +13,7 @@ namespace ktt
 class ResultLoader
 {
 public:
-    ResultLoader();
     bool loadResults(const std::string& filePath);
-
     KernelResult readResult(const KernelConfiguration& configuration);
 
 private:

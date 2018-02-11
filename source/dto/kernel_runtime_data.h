@@ -4,6 +4,7 @@
 #include <vector>
 #include "ktt_types.h"
 #include "api/dimension_vector.h"
+#include "dto/local_memory_modifier.h"
 #include "kernel_argument/kernel_argument.h"
 
 namespace ktt
@@ -12,8 +13,10 @@ namespace ktt
 class KernelRuntimeData
 {
 public:
-    KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
+    explicit KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
         const DimensionVector& localSize, const std::vector<ArgumentId>& argumentIds);
+    explicit KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
+        const DimensionVector& localSize, const std::vector<ArgumentId>& argumentIds, const std::vector<LocalMemoryModifier>& localMemoryModifiers);
 
     void setGlobalSize(const DimensionVector& globalSize);
     void setLocalSize(const DimensionVector& localSize);
@@ -27,6 +30,7 @@ public:
     DimensionVector getGlobalSizeDimensionVector() const;
     DimensionVector getLocalSizeDimensionVector() const;
     std::vector<ArgumentId> getArgumentIds() const;
+    std::vector<LocalMemoryModifier> getLocalMemoryModifiers() const;
 
 private:
     KernelId id;
@@ -37,6 +41,7 @@ private:
     DimensionVector globalSizeDimensionVector;
     DimensionVector localSizeDimensionVector;
     std::vector<ArgumentId> argumentIds;
+    std::vector<LocalMemoryModifier> localMemoryModifiers;
 };
 
 } // namespace ktt

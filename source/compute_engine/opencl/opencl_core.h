@@ -69,6 +69,7 @@ public:
     // Low-level kernel execution methods
     std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;
     void setKernelArgument(OpenclKernel& kernel, KernelArgument& argument);
+    void setKernelArgument(OpenclKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers);
     EventId enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const QueueId queue, const uint64_t kernelLaunchOverhead) const;
 
@@ -98,6 +99,7 @@ private:
     OpenclBuffer* findBuffer(const ArgumentId id) const;
     void setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffer& buffer) const;
     bool loadBufferFromCache(const ArgumentId id, OpenclKernel& openclKernel) const;
+    void checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
 };
 
 } // namespace ktt

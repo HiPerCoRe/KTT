@@ -1,4 +1,5 @@
 -- Configuration variables
+ktt_library_name = "ktt_0_6"
 cuda_projects = false
 
 -- Helper functions to find compute API headers and libraries
@@ -201,7 +202,8 @@ project "ktt"
     files { "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "source" }
     defines { "KTT_LIBRARY" }
-    
+    targetname (ktt_library_name)
+
     local libraries = false
     
     if _OPTIONS["platform"] then
