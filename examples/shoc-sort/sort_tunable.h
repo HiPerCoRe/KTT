@@ -26,11 +26,11 @@ class tunableSort : public ktt::TuningManipulator {
   }
 
     //run the code with kernels
-    virtual void launchComputation(const size_t kernelId) override {
+    void launchComputation(const size_t kernelId) override {
       const ktt::DimensionVector ndRangeDimensions(16384, 1, 1);
       const ktt::DimensionVector workGroupDimensions(256, 1, 1);
 
-      int localSize = workGroupDimensions.getSizeX();
+      size_t localSize = workGroupDimensions.getSizeX();
       //updateArgumentLocal(localMem1Id, localSize);
       //updateArgumentLocal(localMem2Id, 2 * localSize);
       updateArgumentScalar(workGroupSizeId, &localSize);
@@ -82,7 +82,7 @@ class tunableSort : public ktt::TuningManipulator {
     }
 
     void tune() {
-      printf("kernelId %d\n", kernelId);
+      printf("kernelId %u\n", kernelId);
       tuner->tuneKernel(kernelId);
       tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
       tuner->printResult(kernelId, std::string("sort_result.csv"), ktt::PrintFormat::CSV);

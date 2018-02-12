@@ -90,7 +90,7 @@ std::vector<LocalMemoryModifier> KernelConfiguration::getCompositionKernelLocalM
         }
     }
 
-    throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    return std::vector<LocalMemoryModifier>{};
 }
 
 std::vector<DimensionVector> KernelConfiguration::getGlobalSizes() const

@@ -167,7 +167,7 @@ workspace "ktt"
     
     configurations { "Release", "Debug" }
     platforms { "x86_64", "x86" }
-    location (buildPath)
+    location(buildPath)
     language "C++"
     cppdialect "C++14"
 
@@ -202,7 +202,7 @@ project "ktt"
     files { "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "source" }
     defines { "KTT_LIBRARY" }
-    targetname (ktt_library_name)
+    targetname(ktt_library_name)
 
     local libraries = false
     
@@ -248,10 +248,16 @@ project "coulomb_sum_3d_iterative_opencl"
     files { "examples/coulomb_sum_3d_iterative/*.h", "examples/coulomb_sum_3d_iterative/*.cpp", "examples/coulomb_sum_3d_iterative/*.cl" }
     includedirs { "source" }
     links { "ktt" }
-    
+
 project "reduction_opencl"
     kind "ConsoleApp"
     files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "sort_opencl"
+    kind "ConsoleApp"
+    files { "examples/shoc-sort/*.h", "examples/shoc-sort/*.cpp", "examples/shoc-sort/*.cl" }
     includedirs { "source" }
     links { "ktt" }
 
@@ -259,11 +265,6 @@ if os.target() == "linux" then
 project "hotspot_opencl"
     kind "ConsoleApp"
     files { "examples/rodinia-hotspot/*.h", "examples/rodinia-hotspot/*.cpp", "examples/rodinia-hotspot/*.cl" }
-    includedirs { "source" }
-    links { "ktt" }
-project "sort_opencl"
-    kind "ConsoleApp"
-    files { "examples/shoc-sort/*.h", "examples/shoc-sort/*.cpp", "examples/shoc-sort/*.cl" }
     includedirs { "source" }
     links { "ktt" }
 end
@@ -335,9 +336,4 @@ project "tests"
     else
         findLibraries()
     end
-    
-    if _OPTIONS["vulkan"] then
-        findVulkan()
-    end
-    
 end -- _OPTIONS["tests"]

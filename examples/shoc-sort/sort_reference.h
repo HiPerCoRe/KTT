@@ -7,31 +7,23 @@ class referenceSort : public ktt::ReferenceClass {
   public:
     // Constructor creates internal structures and setups the environment
     // it takes arguments from command line and generated input data
-    referenceSort(ktt::Tuner *tuner, std::vector<unsigned int> *in)
-  {
-    this->tuner = tuner;
-
-    this->in = in;
-
-  }
+    referenceSort(const std::vector<unsigned int>& data) :
+      data(data)
+    {}
 
     //run the code with kernels
     void computeResult() override {
-      std::sort(in->begin(), in->end());
-      out = in;
+      std::sort(data.begin(), data.end());
     }
+
     void* getData(const ktt::ArgumentId id) override {
-        return out;
+        return data.data();
     }
 
     size_t getNumberOfElements(const ktt::ArgumentId argumentId) const override {
-      return out->size();
+      return data.size();
     }
 
-
   private:
-
-    ktt::Tuner* tuner;
-    std::vector<unsigned int> *in;
-    std::vector<unsigned int> *out;
+      std::vector<unsigned int> data;
 };
