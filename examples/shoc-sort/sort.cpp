@@ -74,8 +74,6 @@ int main(int argc, char** argv)
   kernelIds[1] = tuner.addKernelFromFile(kernelFile, std::string("top_scan"), workGroupDimensions, workGroupDimensions);
   kernelIds[2] = tuner.addKernelFromFile(kernelFile, std::string("bottom_scan"), ndRangeDimensions, workGroupDimensions);
 
-  printf("ids kernel %u %u %u\n", kernelIds[0], kernelIds[1], kernelIds[2]);
-
   //Add arguments for kernels
   ktt::ArgumentId inId = tuner.addArgumentVector(in, ktt::ArgumentAccessType::ReadWrite);
   ktt::ArgumentId outId = tuner.addArgumentVector(std::vector<unsigned int>(size), ktt::ArgumentAccessType::ReadWrite);
@@ -96,7 +94,6 @@ int main(int argc, char** argv)
   tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<size_t>{inId, isumsId, sizeId, localMem1Id, shiftId});
   tuner.setCompositionKernelArguments(compositionId, kernelIds[1], std::vector<size_t>{isumsId, workGroupSizeId, localMem2Id});
   tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<size_t>{inId, isumsId, outId, sizeId, localMem3Id, shiftId});
-  printf("kernelId %u\n", compositionId);
 
   tuner.addParameter(compositionId, "BLOCK_SIZE_ROWS", { 8, 16, 32, 64 });
 
