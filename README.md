@@ -35,6 +35,8 @@ about C++ and GPU programming. List of currently available tutorials:
 * `running_kernel`: Tutorial covers running simple kernel with KTT framework and retrieving output.
 * `tuning_kernel_simple`: Tutorial covers simple kernel tuning using small number of tuning parameters and reference class
 to ensure correctness of computation.
+* `custom_kernel_arguments`: Tutorial covers using kernel arguments with custom data types and validating the output with
+argument comparator.
 
 Examples
 --------

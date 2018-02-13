@@ -292,6 +292,12 @@ project "02_tuning_kernel_simple_opencl"
     includedirs { "source" }
     links { "ktt" }
     
+project "03_custom_kernel_arguments_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_opencl.cpp", "tutorials/03_custom_kernel_arguments/opencl_kernel.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
 if cuda_projects then
 
 project "00_info_cuda"
@@ -311,7 +317,13 @@ project "02_tuning_kernel_simple_cuda"
     files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_cuda.cpp", "tutorials/02_tuning_kernel_simple/cuda_kernel.cu" }
     includedirs { "source" }
     links { "ktt" }
-    
+   
+project "03_custom_kernel_arguments_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_cuda.cpp", "tutorials/03_custom_kernel_arguments/cuda_kernel.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+ 
 end -- cuda_projects
 
 end -- _OPTIONS["no-tutorials"]
