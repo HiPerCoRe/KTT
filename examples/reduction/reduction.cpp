@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     int nUp = ((n+512-1)/512)*512; // maximum WG size used in tuning parameters
     ktt::DimensionVector ndRangeDimensions(nUp);
     ktt::DimensionVector workGroupDimensions;
-    ktt::KernelId kernelId = tuner.addKernelFromFile(KTT_KERNEL_FILE, "reduce", ndRangeDimensions, workGroupDimensions);
+    ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "reduce", ndRangeDimensions, workGroupDimensions);
 
     // create input/output
     ktt::ArgumentId srcId = tuner.addArgumentVector(src, ktt::ArgumentAccessType::ReadWrite);
