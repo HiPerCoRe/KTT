@@ -3,12 +3,12 @@
 namespace ktt
 {
 
-DeviceInfo::DeviceInfo(const size_t id, const std::string& name) :
-    id(id),
+DeviceInfo::DeviceInfo(const DeviceIndex device, const std::string& name) :
+    id(device),
     name(name)
 {}
 
-size_t DeviceInfo::getId() const
+DeviceIndex DeviceInfo::getId() const
 {
     return id;
 }
@@ -85,7 +85,7 @@ void DeviceInfo::setExtensions(const std::string& extensions)
     this->extensions = extensions;
 }
 
-void DeviceInfo::setDeviceType(const DeviceType& deviceType)
+void DeviceInfo::setDeviceType(const DeviceType deviceType)
 {
     this->deviceType = deviceType;
 }
@@ -117,7 +117,7 @@ void DeviceInfo::setMaxWorkGroupSize(const size_t maxWorkGroupSize)
 
 std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo)
 {
-    outputTarget << "Printing detailed info for device with id: " << deviceInfo.getId() << std::endl;
+    outputTarget << "Printing detailed info for device with index: " << deviceInfo.getId() << std::endl;
     outputTarget << "Name: " << deviceInfo.getName() << std::endl;
     outputTarget << "Vendor: " << deviceInfo.getVendor() << std::endl;
     outputTarget << "Device type: " << deviceInfo.getDeviceTypeAsString() << std::endl;

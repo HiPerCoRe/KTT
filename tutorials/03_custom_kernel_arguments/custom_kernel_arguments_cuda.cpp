@@ -67,7 +67,7 @@ private:
 int main(int argc, char** argv)
 {
     // Initialize device index and path to kernel.
-    size_t deviceIndex = 0;
+    ktt::DeviceIndex deviceIndex = 0;
     std::string kernelFile = KTT_KERNEL_FILE;
 
     if (argc >= 2)
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
     }
 
     // Create new tuner for specified device, tuner uses CUDA as compute API.
-    ktt::Tuner tuner(0, deviceIndex, ktt::ComputeApi::Cuda);
+    ktt::Tuner tuner(0, deviceIndex, ktt::ComputeAPI::CUDA);
 
     // Add new kernel to tuner, specify path to kernel source, kernel function name, grid dimensions and block dimensions.
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "vectorAddition", gridDimensions, blockDimensions);

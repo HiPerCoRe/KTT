@@ -44,7 +44,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
         logger->log(stream.str());
 
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
-        KernelResult result = kernelRunner->runKernel(id, currentConfiguration, std::vector<ArgumentOutputDescriptor>{});
+        KernelResult result = kernelRunner->runKernel(id, currentConfiguration, std::vector<OutputDescriptor>{});
 
         configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         if (validateResult(kernel, result))
@@ -146,7 +146,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
         logger->log(stream.str());
 
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
-        KernelResult result = kernelRunner->runComposition(id, currentConfiguration, std::vector<ArgumentOutputDescriptor>{});
+        KernelResult result = kernelRunner->runComposition(id, currentConfiguration, std::vector<OutputDescriptor>{});
 
         configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         if (validateResult(compatibilityKernel, result))
@@ -166,7 +166,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
     return results;
 }
 
-KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -192,7 +192,7 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     return result;
 }
 
-KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
 {
     if (!kernelManager->isComposition(id))
     {
@@ -219,12 +219,12 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     return result;
 }
 
-void TuningRunner::setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments)
+void TuningRunner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     configurationManager.setSearchMethod(method, arguments);
 }
 
-void TuningRunner::setValidationMethod(const ValidationMethod& method, const double toleranceThreshold)
+void TuningRunner::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
     resultValidator->setValidationMethod(method);
     resultValidator->setToleranceThreshold(toleranceThreshold);

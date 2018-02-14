@@ -6,10 +6,10 @@
 namespace ktt
 {
 
-class OpenclDevice
+class OpenCLDevice
 {
 public:
-    explicit OpenclDevice(const cl_device_id id, const std::string& name) :
+    explicit OpenCLDevice(const cl_device_id id, const std::string& name) :
         id(id),
         name(name)
     {}

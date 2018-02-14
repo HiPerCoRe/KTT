@@ -9,10 +9,10 @@
 namespace ktt
 {
 
-class OpenclEvent
+class OpenCLEvent
 {
 public:
-    OpenclEvent(const EventId id, const bool validFlag) :
+    OpenCLEvent(const EventId id, const bool validFlag) :
         id(id),
         kernelName(""),
         overhead(0),
@@ -20,7 +20,7 @@ public:
         releaseFlag(false)
     {}
 
-    OpenclEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead) :
+    OpenCLEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead) :
         id(id),
         kernelName(kernelName),
         overhead(kernelLaunchOverhead),
@@ -28,11 +28,11 @@ public:
         releaseFlag(false)
     {}
 
-    ~OpenclEvent()
+    ~OpenCLEvent()
     {
         if (releaseFlag)
         {
-            checkOpenclError(clReleaseEvent(event), "clReleaseEvent");
+            checkOpenCLError(clReleaseEvent(event), "clReleaseEvent");
         }
     }
 
@@ -65,8 +65,8 @@ public:
     {
         cl_ulong start;
         cl_ulong end;
-        checkOpenclError(clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, nullptr), "clGetEventProfilingInfo");
-        checkOpenclError(clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, nullptr), "clGetEventProfilingInfo");
+        checkOpenCLError(clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, nullptr), "clGetEventProfilingInfo");
+        checkOpenCLError(clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, nullptr), "clGetEventProfilingInfo");
 
         return end - start;
     }

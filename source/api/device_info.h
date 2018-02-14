@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include "ktt_platform.h"
+#include "ktt_types.h"
 #include "enum/device_type.h"
 
 namespace ktt
@@ -18,18 +19,18 @@ namespace ktt
 class KTT_API DeviceInfo
 {
 public:
-    /** @fn explicit DeviceInfo(const size_t id, const std::string& name)
+    /** @fn explicit DeviceInfo(const DeviceIndex device, const std::string& name)
       * Constructor which creates new device info object.
-      * @param id Id of device assigned by KTT framework.
+      * @param device Index of device assigned by KTT framework.
       * @param name Name of device retrieved from compute API.
       */
-    explicit DeviceInfo(const size_t id, const std::string& name);
+    explicit DeviceInfo(const DeviceIndex device, const std::string& name);
 
-    /** @fn size_t getId() const
-      * Getter for id of device assigned by KTT framework.
-      * @return Id of device assigned by KTT framework.
+    /** @fn DeviceIndex getId() const
+      * Getter for index of device assigned by KTT framework.
+      * @return Index of device assigned by KTT framework.
       */
-    size_t getId() const;
+    DeviceIndex getId() const;
 
     /** @fn std::string getName() const
       * Getter for name of device retrieved from compute API.
@@ -103,11 +104,11 @@ public:
       */
     void setExtensions(const std::string& extensions);
 
-    /** @fn void setDeviceType(const DeviceType& deviceType)
+    /** @fn void setDeviceType(const DeviceType deviceType)
       * Setter for type of device.
       * @param deviceType Type of device.
       */
-    void setDeviceType(const DeviceType& deviceType);
+    void setDeviceType(const DeviceType deviceType);
 
     /** @fn void setGlobalMemorySize(const uint64_t globalMemorySize)
       * Setter for global memory size of device.
@@ -140,7 +141,7 @@ public:
     void setMaxWorkGroupSize(const size_t maxWorkGroupSize);
 
 private:
-    size_t id;
+    DeviceIndex id;
     std::string name;
     std::string vendor;
     std::string extensions;

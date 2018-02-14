@@ -7,22 +7,22 @@
 namespace ktt
 {
 
-class OpenclContext
+class OpenCLContext
 {
 public:
-    explicit OpenclContext(const cl_platform_id platform, const std::vector<cl_device_id>& devices) :
+    explicit OpenCLContext(const cl_platform_id platform, const std::vector<cl_device_id>& devices) :
         platform(platform),
         devices(devices)
     {
 		cl_context_properties properties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0 };
         cl_int result;
         context = clCreateContext(properties, static_cast<cl_uint>(devices.size()), devices.data(), nullptr, nullptr, &result);
-        checkOpenclError(result, "clCreateContext");
+        checkOpenCLError(result, "clCreateContext");
     }
 
-    ~OpenclContext()
+    ~OpenCLContext()
     {
-        checkOpenclError(clReleaseContext(context), "clReleaseContext");
+        checkOpenCLError(clReleaseContext(context), "clReleaseContext");
     }
 
     cl_platform_id getPlatform() const

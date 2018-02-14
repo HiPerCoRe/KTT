@@ -4,8 +4,8 @@
 namespace ktt
 {
 
-KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
-    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType) :
+KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType) :
     id(id),
     numberOfElements(numberOfElements),
     elementSizeInBytes(elementSizeInBytes),
@@ -24,8 +24,8 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElement
 }
 
 KernelArgument::KernelArgument(const ArgumentId id, void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
-    const ArgumentDataType& dataType, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType,
-    const ArgumentUploadType& uploadType, const bool dataCopied) :
+    const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType,
+    const ArgumentUploadType uploadType, const bool dataCopied) :
     id(id),
     numberOfElements(numberOfElements),
     elementSizeInBytes(elementSizeInBytes),
@@ -52,8 +52,8 @@ KernelArgument::KernelArgument(const ArgumentId id, void* data, const size_t num
 }
 
 KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
-    const ArgumentDataType& dataType, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType,
-    const ArgumentUploadType& uploadType) :
+    const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType,
+    const ArgumentUploadType uploadType) :
     id(id),
     numberOfElements(numberOfElements),
     elementSizeInBytes(elementSizeInBytes),

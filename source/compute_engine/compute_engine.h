@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 #include "ktt_types.h"
-#include "api/argument_output_descriptor.h"
 #include "api/device_info.h"
+#include "api/output_descriptor.h"
 #include "api/platform_info.h"
 #include "dto/kernel_result.h"
 #include "dto/kernel_runtime_data.h"
@@ -23,13 +23,13 @@ public:
 
     // Kernel handling methods
     virtual KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-        const std::vector<ArgumentOutputDescriptor>& outputDescriptors) = 0;
+        const std::vector<OutputDescriptor>& outputDescriptors) = 0;
     virtual EventId runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) = 0;
-    virtual KernelResult getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const = 0;
+    virtual KernelResult getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const = 0;
 
     // Utility methods
     virtual void setCompilerOptions(const std::string& options) = 0;
-    virtual void setGlobalSizeType(const GlobalSizeType& type) = 0;
+    virtual void setGlobalSizeType(const GlobalSizeType type) = 0;
     virtual void setAutomaticGlobalSizeCorrection(const bool flag) = 0;
     virtual void setProgramCache(const bool flag) = 0;
     virtual void clearProgramCache() = 0;
@@ -54,12 +54,12 @@ public:
     virtual uint64_t getArgumentOperationDuration(const EventId id) const = 0;
     virtual void clearBuffer(const ArgumentId id) = 0;
     virtual void clearBuffers() = 0;
-    virtual void clearBuffers(const ArgumentAccessType& accessType) = 0;
+    virtual void clearBuffers(const ArgumentAccessType accessType) = 0;
 
     // Information retrieval methods
-    virtual void printComputeApiInfo(std::ostream& outputTarget) const = 0;
+    virtual void printComputeAPIInfo(std::ostream& outputTarget) const = 0;
     virtual std::vector<PlatformInfo> getPlatformInfo() const = 0;
-    virtual std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const = 0;
+    virtual std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const = 0;
     virtual DeviceInfo getCurrentDeviceInfo() const = 0;
 };
 

@@ -15,10 +15,10 @@
 namespace ktt
 {
 
-class OpenclBuffer
+class OpenCLBuffer
 {
 public:
-    explicit OpenclBuffer(const cl_context context, KernelArgument& kernelArgument, const bool zeroCopy) :
+    explicit OpenCLBuffer(const cl_context context, KernelArgument& kernelArgument, const bool zeroCopy) :
         context(context),
         kernelArgumentId(kernelArgument.getId()),
         bufferSize(kernelArgument.getDataSizeInBytes()),
@@ -26,7 +26,7 @@ public:
         dataType(kernelArgument.getDataType()),
         memoryLocation(kernelArgument.getMemoryLocation()),
         accessType(kernelArgument.getAccessType()),
-        openclMemoryFlag(getOpenclMemoryType(accessType)),
+        openclMemoryFlag(getOpenCLMemoryType(accessType)),
         hostPointer(nullptr),
         zeroCopy(zeroCopy)
     {
@@ -45,12 +45,12 @@ public:
 
         cl_int result;
         buffer = clCreateBuffer(context, openclMemoryFlag, bufferSize, hostPointer, &result);
-        checkOpenclError(result, "clCreateBuffer");
+        checkOpenCLError(result, "clCreateBuffer");
     }
 
-    ~OpenclBuffer()
+    ~OpenCLBuffer()
     {
-        checkOpenclError(clReleaseMemObject(buffer), "clReleaseMemObject");
+        checkOpenCLError(clReleaseMemObject(buffer), "clReleaseMemObject");
     }
 
     void resize(const size_t newBufferSize)
@@ -65,11 +65,11 @@ public:
             return;
         }
 
-        checkOpenclError(clReleaseMemObject(buffer), "clReleaseMemObject");
+        checkOpenCLError(clReleaseMemObject(buffer), "clReleaseMemObject");
 
         cl_int result;
         buffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, hostPointer, &result);
-        checkOpenclError(result, "clCreateBuffer");
+        checkOpenCLError(result, "clCreateBuffer");
         bufferSize = newBufferSize;
     }
 
@@ -85,12 +85,12 @@ public:
             if (recordingEvent == nullptr)
             {
                 cl_int result = clEnqueueWriteBuffer(queue, buffer, CL_TRUE, 0, dataSize, source, 0, nullptr, nullptr);
-                checkOpenclError(result, "clEnqueueWriteBuffer");
+                checkOpenCLError(result, "clEnqueueWriteBuffer");
             }
             else
             {
                 cl_int result = clEnqueueWriteBuffer(queue, buffer, CL_FALSE, 0, dataSize, source, 0, nullptr, recordingEvent);
-                checkOpenclError(result, "clEnqueueWriteBuffer");
+                checkOpenCLError(result, "clEnqueueWriteBuffer");
             }
         }
         else
@@ -98,10 +98,10 @@ public:
             // Asynchronous buffer operations on mapped memory are currently not supported
             cl_int result;
             void* destination = clEnqueueMapBuffer(queue, buffer, CL_TRUE, CL_MAP_WRITE, 0, dataSize, 0, nullptr, nullptr, &result);
-            checkOpenclError(result, "clEnqueueMapBuffer");
+            checkOpenCLError(result, "clEnqueueMapBuffer");
 
             std::memcpy(destination, source, dataSize);
-            checkOpenclError(clEnqueueUnmapMemObject(queue, buffer, destination, 0, nullptr, recordingEvent), "clEnqueueUnmapMemObject");
+            checkOpenCLError(clEnqueueUnmapMemObject(queue, buffer, destination, 0, nullptr, recordingEvent), "clEnqueueUnmapMemObject");
         }
     }
 
@@ -117,12 +117,12 @@ public:
             if (recordingEvent == nullptr)
             {
                 cl_int result = clEnqueueReadBuffer(queue, buffer, CL_TRUE, 0, dataSize, destination, 0, nullptr, nullptr);
-                checkOpenclError(result, "clEnqueueReadBuffer");
+                checkOpenCLError(result, "clEnqueueReadBuffer");
             }
             else
             {
                 cl_int result = clEnqueueReadBuffer(queue, buffer, CL_FALSE, 0, dataSize, destination, 0, nullptr, recordingEvent);
-                checkOpenclError(result, "clEnqueueReadBuffer");
+                checkOpenCLError(result, "clEnqueueReadBuffer");
             }
         }
         else
@@ -130,10 +130,10 @@ public:
             // Asynchronous buffer operations on mapped memory are currently not supported
             cl_int result;
             void* source = clEnqueueMapBuffer(queue, buffer, CL_TRUE, CL_MAP_READ, 0, dataSize, 0, nullptr, nullptr, &result);
-            checkOpenclError(result, "clEnqueueMapBuffer");
+            checkOpenCLError(result, "clEnqueueMapBuffer");
 
             std::memcpy(destination, source, dataSize);
-            checkOpenclError(clEnqueueUnmapMemObject(queue, buffer, source, 0, nullptr, recordingEvent), "clEnqueueUnmapMemObject");
+            checkOpenCLError(clEnqueueUnmapMemObject(queue, buffer, source, 0, nullptr, recordingEvent), "clEnqueueUnmapMemObject");
         }
     }
 

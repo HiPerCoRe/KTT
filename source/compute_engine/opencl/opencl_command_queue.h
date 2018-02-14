@@ -8,10 +8,10 @@
 namespace ktt
 {
 
-class OpenclCommandQueue
+class OpenCLCommandQueue
 {
 public:
-    explicit OpenclCommandQueue(const QueueId id, const cl_context context, const cl_device_id device) :
+    explicit OpenCLCommandQueue(const QueueId id, const cl_context context, const cl_device_id device) :
         id(id),
         context(context),
         device(device)
@@ -20,16 +20,16 @@ public:
         #ifdef CL_VERSION_2_0
             cl_queue_properties properties[] = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
             queue = clCreateCommandQueueWithProperties(context, device, properties, &result);
-            checkOpenclError(result, "clCreateCommandQueueWithProperties");
+            checkOpenCLError(result, "clCreateCommandQueueWithProperties");
         #else
             queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &result);
-            checkOpenclError(result, "clCreateCommandQueue");
+            checkOpenCLError(result, "clCreateCommandQueue");
         #endif
     }
 
-    ~OpenclCommandQueue()
+    ~OpenCLCommandQueue()
     {
-        checkOpenclError(clReleaseCommandQueue(queue), "clReleaseCommandQueue");
+        checkOpenCLError(clReleaseCommandQueue(queue), "clReleaseCommandQueue");
     }
 
     QueueId getId() const

@@ -68,7 +68,7 @@ void DimensionVector::divide(const DimensionVector& divisor)
     sizeZ /= divisor.sizeZ;
 }
 
-void DimensionVector::modifyByValue(const size_t value, const ModifierAction& modifierAction, const ModifierDimension& modifierDimension)
+void DimensionVector::modifyByValue(const size_t value, const ModifierAction modifierAction, const ModifierDimension modifierDimension)
 {
     switch (modifierAction)
     {
@@ -128,7 +128,7 @@ bool DimensionVector::operator!=(const DimensionVector& other) const
     return !(*this == other);
 }
 
-void DimensionVector::addValue(const size_t value, const ModifierDimension& modifierDimension)
+void DimensionVector::addValue(const size_t value, const ModifierDimension modifierDimension)
 {
     if (modifierDimension == ModifierDimension::X)
     {
@@ -144,7 +144,7 @@ void DimensionVector::addValue(const size_t value, const ModifierDimension& modi
     }
 }
 
-void DimensionVector::subtractValue(const size_t value, const ModifierDimension& modifierDimension)
+void DimensionVector::subtractValue(const size_t value, const ModifierDimension modifierDimension)
 {
     if (modifierDimension == ModifierDimension::X)
     {
@@ -160,7 +160,7 @@ void DimensionVector::subtractValue(const size_t value, const ModifierDimension&
     }
 }
 
-void DimensionVector::multiplyByValue(const size_t value, const ModifierDimension& modifierDimension)
+void DimensionVector::multiplyByValue(const size_t value, const ModifierDimension modifierDimension)
 {
     if (modifierDimension == ModifierDimension::X)
     {
@@ -176,7 +176,7 @@ void DimensionVector::multiplyByValue(const size_t value, const ModifierDimensio
     }
 }
 
-void DimensionVector::divideByValue(const size_t value, const ModifierDimension& modifierDimension)
+void DimensionVector::divideByValue(const size_t value, const ModifierDimension modifierDimension)
 {
     if (modifierDimension == ModifierDimension::X)
     {

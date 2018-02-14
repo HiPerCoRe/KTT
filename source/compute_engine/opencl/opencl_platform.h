@@ -6,10 +6,10 @@
 namespace ktt
 {
 
-class OpenclPlatform
+class OpenCLPlatform
 {
 public:
-    explicit OpenclPlatform(const cl_platform_id id, const std::string& name) :
+    explicit OpenCLPlatform(const cl_platform_id id, const std::string& name) :
         id(id),
         name(name)
     {}

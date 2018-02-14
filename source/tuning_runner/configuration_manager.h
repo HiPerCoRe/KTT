@@ -23,7 +23,7 @@ public:
     // Core methods
     void setKernelConfigurations(const KernelId id, const std::vector<KernelConfiguration>& configurations,
         const std::vector<KernelParameter>& parameters);
-    void setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments);
+    void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     bool hasKernelConfigurations(const KernelId id) const;
     void clearData(const KernelId id);
     void clearSearcher(const KernelId id);
@@ -42,9 +42,9 @@ private:
     std::vector<double> searchArguments;
 
     // Helper methods
-    void initializeSearcher(const KernelId id, const SearchMethod& method, const std::vector<double>& arguments,
+    void initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,
         const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters);
-    static std::string getSearchMethodName(const SearchMethod& method);
+    static std::string getSearchMethodName(const SearchMethod method);
 };
 
 } // namespace ktt

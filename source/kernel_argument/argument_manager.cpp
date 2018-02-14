@@ -8,17 +8,16 @@ ArgumentManager::ArgumentManager() :
     nextArgumentId(0)
 {}
 
-ArgumentId ArgumentManager::addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
-    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType,
-    const bool copyData)
+ArgumentId ArgumentManager::addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType, const bool copyData)
 {
     arguments.emplace_back(nextArgumentId, data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType, copyData);
     return nextArgumentId++;
 }
 
 ArgumentId ArgumentManager::addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
-    const ArgumentDataType& dataType, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType,
-    const ArgumentUploadType& uploadType)
+    const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType,
+    const ArgumentUploadType uploadType)
 {
     arguments.emplace_back(nextArgumentId, data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType);
     return nextArgumentId++;

@@ -46,8 +46,7 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
     kernelData.setGlobalSize(globalSize);
     kernelData.setLocalSize(localSize);
 
-    KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()),
-        std::vector<ArgumentOutputDescriptor>{});
+    KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()), std::vector<OutputDescriptor>{});
     currentResult.increaseOverhead(result.getOverhead());
 }
 
@@ -378,7 +377,7 @@ void ManipulatorInterfaceImplementation::uploadBuffers()
     }
 }
 
-void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<ArgumentOutputDescriptor>& output) const
+void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<OutputDescriptor>& output) const
 {
     for (const auto& descriptor : output)
     {
@@ -449,7 +448,7 @@ std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPoin
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentSimple(const ArgumentId id, const void* argumentData, const size_t numberOfElements,
-    const ArgumentUploadType& uploadType)
+    const ArgumentUploadType uploadType)
 {
     auto argumentPointer = nonVectorArguments.find(id);
     if (argumentPointer == nonVectorArguments.end())
@@ -499,7 +498,7 @@ void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<Even
 {
     for (const auto& currentEvent : events)
     {
-        KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<ArgumentOutputDescriptor>{});
+        KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<OutputDescriptor>{});
         currentResult.increaseOverhead(result.getOverhead());
     }
 }

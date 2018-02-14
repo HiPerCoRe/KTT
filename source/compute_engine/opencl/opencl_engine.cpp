@@ -1,56 +1,56 @@
-#include "opencl_core.h"
+#include "opencl_engine.h"
 #include "utility/ktt_utility.h"
 #include "utility/timer.h"
 
 namespace ktt
 {
 
-OpenclCore::OpenclCore(const size_t platformIndex, const size_t deviceIndex, const size_t queueCount) :
+OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     platformIndex(platformIndex),
     deviceIndex(deviceIndex),
     queueCount(queueCount),
     compilerOptions(std::string("")),
-    globalSizeType(GlobalSizeType::Opencl),
+    globalSizeType(GlobalSizeType::OpenCL),
     globalSizeCorrection(false),
     programCacheFlag(false),
     nextEventId(0)
 {
-    auto platforms = getOpenclPlatforms();
+    auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
     {
         throw std::runtime_error(std::string("Invalid platform index: ") + std::to_string(platformIndex));
     }
 
-    auto devices = getOpenclDevices(platforms.at(platformIndex));
+    auto devices = getOpenCLDevices(platforms.at(platformIndex));
     if (deviceIndex >= devices.size())
     {
         throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
     }
 
     cl_device_id device = devices.at(deviceIndex).getId();
-    context = std::make_unique<OpenclContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id>{ device });
-    for (size_t i = 0; i < queueCount; i++)
+    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id>{device});
+    for (uint32_t i = 0; i < queueCount; i++)
     {
-        auto commandQueue = std::make_unique<OpenclCommandQueue>(i, context->getContext(), device);
+        auto commandQueue = std::make_unique<OpenCLCommandQueue>(i, context->getContext(), device);
         commandQueues.push_back(std::move(commandQueue));
     }
 }
 
-KernelResult OpenclCore::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-    const std::vector<ArgumentOutputDescriptor>& outputDescriptors)
+KernelResult OpenCLEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    const std::vector<OutputDescriptor>& outputDescriptors)
 {
     EventId eventId = runKernelAsync(kernelData, argumentPointers, getDefaultQueue());
     KernelResult result = getKernelResult(eventId, outputDescriptors);
     return result;
 }
 
-EventId OpenclCore::runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
+EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
 {
     Timer overheadTimer;
     overheadTimer.start();
 
-    std::unique_ptr<OpenclProgram> program;
-    OpenclProgram* programPointer;
+    std::unique_ptr<OpenCLProgram> program;
+    OpenCLProgram* programPointer;
 
     if (programCacheFlag)
     {
@@ -67,7 +67,7 @@ EventId OpenclCore::runKernelAsync(const KernelRuntimeData& kernelData, const st
         program = createAndBuildProgram(kernelData.getSource());
         programPointer = program.get();
     }
-    auto kernel = std::make_unique<OpenclKernel>(programPointer->getProgram(), kernelData.getName());
+    auto kernel = std::make_unique<OpenCLKernel>(programPointer->getProgram(), kernelData.getName());
 
     checkLocalMemoryModifiers(argumentPointers, kernelData.getLocalMemoryModifiers());
     for (const auto argument : argumentPointers)
@@ -87,7 +87,7 @@ EventId OpenclCore::runKernelAsync(const KernelRuntimeData& kernelData, const st
     return enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, overheadTimer.getElapsedTime());
 }
 
-KernelResult OpenclCore::getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const
+KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
 {
     auto eventPointer = kernelEvents.find(id);
 
@@ -97,7 +97,7 @@ KernelResult OpenclCore::getKernelResult(const EventId id, const std::vector<Arg
             + std::to_string(id));
     }
 
-    checkOpenclError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
+    checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
     std::string name = eventPointer->second->getKernelName();
     cl_ulong duration = eventPointer->second->getEventCommandDuration();
     uint64_t overhead = eventPointer->second->getOverhead();
@@ -120,22 +120,22 @@ KernelResult OpenclCore::getKernelResult(const EventId id, const std::vector<Arg
     return result;
 }
 
-void OpenclCore::setCompilerOptions(const std::string& options)
+void OpenCLEngine::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
 }
 
-void OpenclCore::setGlobalSizeType(const GlobalSizeType& type)
+void OpenCLEngine::setGlobalSizeType(const GlobalSizeType type)
 {
     globalSizeType = type;
 }
 
-void OpenclCore::setAutomaticGlobalSizeCorrection(const bool flag)
+void OpenCLEngine::setAutomaticGlobalSizeCorrection(const bool flag)
 {
     globalSizeCorrection = flag;
 }
 
-void OpenclCore::setProgramCache(const bool flag)
+void OpenCLEngine::setProgramCache(const bool flag)
 {
     if (!flag)
     {
@@ -144,53 +144,53 @@ void OpenclCore::setProgramCache(const bool flag)
     programCacheFlag = flag;
 }
 
-void OpenclCore::clearProgramCache()
+void OpenCLEngine::clearProgramCache()
 {
     programCache.clear();
 }
 
-QueueId OpenclCore::getDefaultQueue() const
+QueueId OpenCLEngine::getDefaultQueue() const
 {
     return 0;
 }
 
-std::vector<QueueId> OpenclCore::getAllQueues() const
+std::vector<QueueId> OpenCLEngine::getAllQueues() const
 {
     std::vector<QueueId> result;
 
     for (size_t i = 0; i < commandQueues.size(); i++)
     {
-        result.push_back(i);
+        result.push_back(static_cast<QueueId>(i));
     }
 
     return result;
 }
 
-void OpenclCore::synchronizeQueue(const QueueId queue)
+void OpenCLEngine::synchronizeQueue(const QueueId queue)
 {
     if (queue >= commandQueues.size())
     {
         throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
     }
 
-    checkOpenclError(clFinish(commandQueues.at(queue)->getQueue()), "clFinish");
+    checkOpenCLError(clFinish(commandQueues.at(queue)->getQueue()), "clFinish");
 }
 
-void OpenclCore::synchronizeDevice()
+void OpenCLEngine::synchronizeDevice()
 {
     for (auto& commandQueue : commandQueues)
     {
-        checkOpenclError(clFinish(commandQueue->getQueue()), "clFinish");
+        checkOpenCLError(clFinish(commandQueue->getQueue()), "clFinish");
     }
 }
 
-void OpenclCore::clearEvents()
+void OpenCLEngine::clearEvents()
 {
     kernelEvents.clear();
     bufferEvents.clear();
 }
 
-uint64_t OpenclCore::uploadArgument(KernelArgument& kernelArgument)
+uint64_t OpenCLEngine::uploadArgument(KernelArgument& kernelArgument)
 {
     if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
     {
@@ -201,7 +201,7 @@ uint64_t OpenclCore::uploadArgument(KernelArgument& kernelArgument)
     return getArgumentOperationDuration(eventId);
 }
 
-EventId OpenclCore::uploadArgumentAsync(KernelArgument& kernelArgument, const QueueId queue)
+EventId OpenCLEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const QueueId queue)
 {
     if (queue >= commandQueues.size())
     {
@@ -214,18 +214,18 @@ EventId OpenclCore::uploadArgumentAsync(KernelArgument& kernelArgument, const Qu
     }
 
     clearBuffer(kernelArgument.getId());
-    std::unique_ptr<OpenclBuffer> buffer = nullptr;
+    std::unique_ptr<OpenCLBuffer> buffer = nullptr;
     EventId eventId = nextEventId;
 
     if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
     {
-        buffer = std::make_unique<OpenclBuffer>(context->getContext(), kernelArgument, true);
-        bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenclEvent>(eventId, false)));
+        buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
+        bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
     }
     else
     {
-        buffer = std::make_unique<OpenclBuffer>(context->getContext(), kernelArgument, false);
-        auto profilingEvent = std::make_unique<OpenclEvent>(eventId, true);
+        buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
+        auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
         buffer->uploadData(commandQueues.at(queue)->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
             profilingEvent->getEvent());
 
@@ -238,20 +238,20 @@ EventId OpenclCore::uploadArgumentAsync(KernelArgument& kernelArgument, const Qu
     return eventId;
 }
 
-uint64_t OpenclCore::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes)
+uint64_t OpenCLEngine::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes)
 {
     EventId eventId = updateArgumentAsync(id, data, dataSizeInBytes, getDefaultQueue());
     return getArgumentOperationDuration(eventId);
 }
 
-EventId OpenclCore::updateArgumentAsync(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue)
+EventId OpenCLEngine::updateArgumentAsync(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue)
 {
     if (queue >= commandQueues.size())
     {
         throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
     }
 
-    OpenclBuffer* buffer = findBuffer(id);
+    OpenCLBuffer* buffer = findBuffer(id);
 
     if (buffer == nullptr)
     {
@@ -259,7 +259,7 @@ EventId OpenclCore::updateArgumentAsync(const ArgumentId id, const void* data, c
     }
 
     EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenclEvent>(eventId, true);
+    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
     buffer->uploadData(commandQueues.at(queue)->getQueue(), data, dataSizeInBytes, profilingEvent->getEvent());
 
     profilingEvent->setReleaseFlag();
@@ -268,20 +268,20 @@ EventId OpenclCore::updateArgumentAsync(const ArgumentId id, const void* data, c
     return eventId;
 }
 
-uint64_t OpenclCore::downloadArgument(const ArgumentId id, void* destination) const
+uint64_t OpenCLEngine::downloadArgument(const ArgumentId id, void* destination) const
 {
     EventId eventId = downloadArgumentAsync(id, destination, getDefaultQueue());
     return getArgumentOperationDuration(eventId);
 }
 
-EventId OpenclCore::downloadArgumentAsync(const ArgumentId id, void* destination, const QueueId queue) const
+EventId OpenCLEngine::downloadArgumentAsync(const ArgumentId id, void* destination, const QueueId queue) const
 {
     if (queue >= commandQueues.size())
     {
         throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
     }
 
-    OpenclBuffer* buffer = findBuffer(id);
+    OpenCLBuffer* buffer = findBuffer(id);
 
     if (buffer == nullptr)
     {
@@ -289,7 +289,7 @@ EventId OpenclCore::downloadArgumentAsync(const ArgumentId id, void* destination
     }
 
     EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenclEvent>(eventId, true);
+    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
     buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, buffer->getBufferSize(), profilingEvent->getEvent());
 
     profilingEvent->setReleaseFlag();
@@ -298,20 +298,20 @@ EventId OpenclCore::downloadArgumentAsync(const ArgumentId id, void* destination
     return eventId;
 }
 
-uint64_t OpenclCore::downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
+uint64_t OpenCLEngine::downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
 {
     EventId eventId = downloadArgumentAsync(id, destination, dataSizeInBytes, getDefaultQueue());
     return getArgumentOperationDuration(eventId);
 }
 
-EventId OpenclCore::downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const
+EventId OpenCLEngine::downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const
 {
     if (queue >= commandQueues.size())
     {
         throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
     }
 
-    OpenclBuffer* buffer = findBuffer(id);
+    OpenCLBuffer* buffer = findBuffer(id);
 
     if (buffer == nullptr)
     {
@@ -319,7 +319,7 @@ EventId OpenclCore::downloadArgumentAsync(const ArgumentId id, void* destination
     }
 
     EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenclEvent>(eventId, true);
+    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
     buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, dataSizeInBytes, profilingEvent->getEvent());
 
     profilingEvent->setReleaseFlag();
@@ -328,9 +328,9 @@ EventId OpenclCore::downloadArgumentAsync(const ArgumentId id, void* destination
     return eventId;
 }
 
-KernelArgument OpenclCore::downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const
+KernelArgument OpenCLEngine::downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const
 {
-    OpenclBuffer* buffer = findBuffer(id);
+    OpenCLBuffer* buffer = findBuffer(id);
 
     if (buffer == nullptr)
     {
@@ -341,7 +341,7 @@ KernelArgument OpenclCore::downloadArgumentObject(const ArgumentId id, uint64_t*
         buffer->getDataType(), buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
 
     EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenclEvent>(eventId, true);
+    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
     buffer->downloadData(commandQueues.at(getDefaultQueue())->getQueue(), argument.getData(), argument.getDataSizeInBytes(),
         profilingEvent->getEvent());
 
@@ -358,7 +358,7 @@ KernelArgument OpenclCore::downloadArgumentObject(const ArgumentId id, uint64_t*
     return argument;
 }
 
-uint64_t OpenclCore::getArgumentOperationDuration(const EventId id) const
+uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId id) const
 {
     auto eventPointer = bufferEvents.find(id);
 
@@ -374,14 +374,14 @@ uint64_t OpenclCore::getArgumentOperationDuration(const EventId id) const
         return 0;
     }
 
-    checkOpenclError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
+    checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
     cl_ulong duration = eventPointer->second->getEventCommandDuration();
     bufferEvents.erase(id);
 
     return static_cast<uint64_t>(duration);
 }
 
-void OpenclCore::clearBuffer(const ArgumentId id)
+void OpenCLEngine::clearBuffer(const ArgumentId id)
 {
     auto iterator = buffers.cbegin();
 
@@ -399,18 +399,18 @@ void OpenclCore::clearBuffer(const ArgumentId id)
     }
 }
 
-void OpenclCore::clearBuffers()
+void OpenCLEngine::clearBuffers()
 {
     buffers.clear();
 }
 
-void OpenclCore::clearBuffers(const ArgumentAccessType& accessType)
+void OpenCLEngine::clearBuffers(const ArgumentAccessType accessType)
 {
     auto iterator = buffers.cbegin();
 
     while (iterator != buffers.cend())
     {
-        if (iterator->get()->getOpenclMemoryFlag() == getOpenclMemoryType(accessType))
+        if (iterator->get()->getOpenclMemoryFlag() == getOpenCLMemoryType(accessType))
         {
             iterator = buffers.erase(iterator);
         }
@@ -421,14 +421,14 @@ void OpenclCore::clearBuffers(const ArgumentAccessType& accessType)
     }
 }
 
-void OpenclCore::printComputeApiInfo(std::ostream& outputTarget) const
+void OpenCLEngine::printComputeAPIInfo(std::ostream& outputTarget) const
 {
-    auto platforms = getOpenclPlatforms();
+    auto platforms = getOpenCLPlatforms();
 
     for (size_t i = 0; i < platforms.size(); i++)
     {
         outputTarget << "Platform " << i << ": " << platforms.at(i).getName() << std::endl;
-        auto devices = getOpenclDevices(platforms.at(i));
+        auto devices = getOpenCLDevices(platforms.at(i));
 
         outputTarget << "Devices for platform " << i << ":" << std::endl;
         for (size_t j = 0; j < devices.size(); j++)
@@ -439,46 +439,46 @@ void OpenclCore::printComputeApiInfo(std::ostream& outputTarget) const
     }
 }
 
-std::vector<PlatformInfo> OpenclCore::getPlatformInfo() const
+std::vector<PlatformInfo> OpenCLEngine::getPlatformInfo() const
 {
     std::vector<PlatformInfo> result;
-    auto platforms = getOpenclPlatforms();
+    auto platforms = getOpenCLPlatforms();
 
     for (size_t i = 0; i < platforms.size(); i++)
     {
-        result.push_back(getOpenclPlatformInfo(i));
+        result.push_back(getOpenCLPlatformInfo(static_cast<PlatformIndex>(i)));
     }
 
     return result;
 }
 
-std::vector<DeviceInfo> OpenclCore::getDeviceInfo(const size_t platformIndex) const
+std::vector<DeviceInfo> OpenCLEngine::getDeviceInfo(const PlatformIndex platform) const
 {
     std::vector<DeviceInfo> result;
-    auto platforms = getOpenclPlatforms();
-    auto devices = getOpenclDevices(platforms.at(platformIndex));
+    auto platforms = getOpenCLPlatforms();
+    auto devices = getOpenCLDevices(platforms.at(platform));
 
     for (size_t i = 0; i < devices.size(); i++)
     {
-        result.push_back(getOpenclDeviceInfo(platformIndex, i));
+        result.push_back(getOpenCLDeviceInfo(platform, static_cast<DeviceIndex>(i)));
     }
 
     return result;
 }
 
-DeviceInfo OpenclCore::getCurrentDeviceInfo() const
+DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
 {
-    return getOpenclDeviceInfo(platformIndex, deviceIndex);
+    return getOpenCLDeviceInfo(platformIndex, deviceIndex);
 }
 
-std::unique_ptr<OpenclProgram> OpenclCore::createAndBuildProgram(const std::string& source) const
+std::unique_ptr<OpenCLProgram> OpenCLEngine::createAndBuildProgram(const std::string& source) const
 {
-    auto program = std::make_unique<OpenclProgram>(source, context->getContext(), context->getDevices());
+    auto program = std::make_unique<OpenCLProgram>(source, context->getContext(), context->getDevices());
     program->build(compilerOptions);
     return program;
 }
 
-void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argument)
+void OpenCLEngine::setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument)
 {
     if (argument.getUploadType() == ArgumentUploadType::Vector)
     {
@@ -498,7 +498,7 @@ void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argumen
     }
 }
 
-void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers)
+void OpenCLEngine::setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers)
 {
     size_t numberOfElements = argument.getNumberOfElements();
 
@@ -513,7 +513,7 @@ void OpenclCore::setKernelArgument(OpenclKernel& kernel, KernelArgument& argumen
     kernel.setKernelArgumentLocal(argument.getElementSizeInBytes() * numberOfElements);
 }
 
-EventId OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+EventId OpenCLEngine::enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
     const QueueId queue, const uint64_t kernelLaunchOverhead) const
 {
     if (queue >= commandQueues.size())
@@ -522,7 +522,7 @@ EventId OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t
     }
 
     std::vector<size_t> correctedGlobalSize = globalSize;
-    if (globalSizeType == GlobalSizeType::Cuda)
+    if (globalSizeType == GlobalSizeType::CUDA)
     {
         correctedGlobalSize.at(0) *= localSize.at(0);
         correctedGlobalSize.at(1) *= localSize.at(1);
@@ -534,24 +534,24 @@ EventId OpenclCore::enqueueKernel(OpenclKernel& kernel, const std::vector<size_t
     }
 
     EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenclEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
+    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
     nextEventId++;
 
     cl_int result = clEnqueueNDRangeKernel(commandQueues.at(queue)->getQueue(), kernel.getKernel(),
         static_cast<cl_uint>(correctedGlobalSize.size()), nullptr, correctedGlobalSize.data(), localSize.data(), 0, nullptr, profilingEvent->getEvent());
-    checkOpenclError(result, "clEnqueueNDRangeKernel");
+    checkOpenCLError(result, "clEnqueueNDRangeKernel");
 
     profilingEvent->setReleaseFlag();
     kernelEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     return eventId;
 }
 
-PlatformInfo OpenclCore::getOpenclPlatformInfo(const size_t platformIndex)
+PlatformInfo OpenCLEngine::getOpenCLPlatformInfo(const PlatformIndex platform)
 {
-    auto platforms = getOpenclPlatforms();
-    PlatformInfo result(platformIndex, platforms.at(platformIndex).getName());
+    auto platforms = getOpenCLPlatforms();
+    PlatformInfo result(platform, platforms.at(platform).getName());
 
-    cl_platform_id id = platforms.at(platformIndex).getId();
+    cl_platform_id id = platforms.at(platform).getId();
     result.setExtensions(getPlatformInfoString(id, CL_PLATFORM_EXTENSIONS));
     result.setVendor(getPlatformInfoString(id, CL_PLATFORM_VENDOR));
     result.setVersion(getPlatformInfoString(id, CL_PLATFORM_VERSION));
@@ -559,80 +559,80 @@ PlatformInfo OpenclCore::getOpenclPlatformInfo(const size_t platformIndex)
     return result;
 }
 
-DeviceInfo OpenclCore::getOpenclDeviceInfo(const size_t platformIndex, const size_t deviceIndex)
+DeviceInfo OpenCLEngine::getOpenCLDeviceInfo(const PlatformIndex platform, const DeviceIndex device)
 {
-    auto platforms = getOpenclPlatforms();
-    auto devices = getOpenclDevices(platforms.at(platformIndex));
-    DeviceInfo result(deviceIndex, devices.at(deviceIndex).getName());
+    auto platforms = getOpenCLPlatforms();
+    auto devices = getOpenCLDevices(platforms.at(platform));
+    DeviceInfo result(device, devices.at(device).getName());
 
-    cl_device_id id = devices.at(deviceIndex).getId();
+    cl_device_id id = devices.at(device).getId();
     result.setExtensions(getDeviceInfoString(id, CL_DEVICE_EXTENSIONS));
     result.setVendor(getDeviceInfoString(id, CL_DEVICE_VENDOR));
         
     uint64_t globalMemorySize;
-    checkOpenclError(clGetDeviceInfo(id, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(uint64_t), &globalMemorySize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(uint64_t), &globalMemorySize, nullptr));
     result.setGlobalMemorySize(globalMemorySize);
 
     uint64_t localMemorySize;
-    checkOpenclError(clGetDeviceInfo(id, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(uint64_t), &localMemorySize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(uint64_t), &localMemorySize, nullptr));
     result.setLocalMemorySize(localMemorySize);
 
     uint64_t maxConstantBufferSize;
-    checkOpenclError(clGetDeviceInfo(id, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(uint64_t), &maxConstantBufferSize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(uint64_t), &maxConstantBufferSize, nullptr));
     result.setMaxConstantBufferSize(maxConstantBufferSize);
 
     uint32_t maxComputeUnits;
-    checkOpenclError(clGetDeviceInfo(id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(uint32_t), &maxComputeUnits, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(uint32_t), &maxComputeUnits, nullptr));
     result.setMaxComputeUnits(maxComputeUnits);
 
     size_t maxWorkGroupSize;
-    checkOpenclError(clGetDeviceInfo(id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroupSize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroupSize, nullptr));
     result.setMaxWorkGroupSize(maxWorkGroupSize);
 
     cl_device_type deviceType;
-    checkOpenclError(clGetDeviceInfo(id, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr));
     result.setDeviceType(getDeviceType(deviceType));
 
     return result;
 }
 
-std::vector<OpenclPlatform> OpenclCore::getOpenclPlatforms()
+std::vector<OpenCLPlatform> OpenCLEngine::getOpenCLPlatforms()
 {
     cl_uint platformCount;
-    checkOpenclError(clGetPlatformIDs(0, nullptr, &platformCount));
+    checkOpenCLError(clGetPlatformIDs(0, nullptr, &platformCount));
 
     std::vector<cl_platform_id> platformIds(platformCount);
-    checkOpenclError(clGetPlatformIDs(platformCount, platformIds.data(), nullptr));
+    checkOpenCLError(clGetPlatformIDs(platformCount, platformIds.data(), nullptr));
 
-    std::vector<OpenclPlatform> platforms;
+    std::vector<OpenCLPlatform> platforms;
     for (const auto platformId : platformIds)
     {
         std::string name = getPlatformInfoString(platformId, CL_PLATFORM_NAME);
-        platforms.push_back(OpenclPlatform(platformId, name));
+        platforms.push_back(OpenCLPlatform(platformId, name));
     }
 
     return platforms;
 }
 
-std::vector<OpenclDevice> OpenclCore::getOpenclDevices(const OpenclPlatform& platform)
+std::vector<OpenCLDevice> OpenCLEngine::getOpenCLDevices(const OpenCLPlatform& platform)
 {
     cl_uint deviceCount;
-    checkOpenclError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount));
+    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount));
 
     std::vector<cl_device_id> deviceIds(deviceCount);
-    checkOpenclError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, deviceCount, deviceIds.data(), nullptr));
+    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, deviceCount, deviceIds.data(), nullptr));
 
-    std::vector<OpenclDevice> devices;
+    std::vector<OpenCLDevice> devices;
     for (const auto deviceId : deviceIds)
     {
         std::string name = getDeviceInfoString(deviceId, CL_DEVICE_NAME);
-        devices.push_back(OpenclDevice(deviceId, name));
+        devices.push_back(OpenCLDevice(deviceId, name));
     }
 
     return devices;
 }
 
-DeviceType OpenclCore::getDeviceType(const cl_device_type deviceType)
+DeviceType OpenCLEngine::getDeviceType(const cl_device_type deviceType)
 {
     switch (deviceType)
     {
@@ -649,7 +649,7 @@ DeviceType OpenclCore::getDeviceType(const cl_device_type deviceType)
     }
 }
 
-OpenclBuffer* OpenclCore::findBuffer(const ArgumentId id) const
+OpenCLBuffer* OpenCLEngine::findBuffer(const ArgumentId id) const
 {
     for (const auto& buffer : buffers)
     {
@@ -662,15 +662,15 @@ OpenclBuffer* OpenclCore::findBuffer(const ArgumentId id) const
     return nullptr;
 }
 
-void OpenclCore::setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffer& buffer) const
+void OpenCLEngine::setKernelArgumentVector(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const
 {
     cl_mem clBuffer = buffer.getBuffer();
     kernel.setKernelArgumentVector((void*)&clBuffer);
 }
 
-bool OpenclCore::loadBufferFromCache(const ArgumentId id, OpenclKernel& kernel) const
+bool OpenCLEngine::loadBufferFromCache(const ArgumentId id, OpenCLKernel& kernel) const
 {
-    OpenclBuffer* buffer = findBuffer(id);
+    OpenCLBuffer* buffer = findBuffer(id);
 
     if (buffer != nullptr)
     {
@@ -681,7 +681,7 @@ bool OpenclCore::loadBufferFromCache(const ArgumentId id, OpenclKernel& kernel) 
     return false;
 }
 
-void OpenclCore::checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers,
+void OpenCLEngine::checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers,
     const std::vector<LocalMemoryModifier>& modifiers) const
 {
     for (const auto& modifier : modifiers)

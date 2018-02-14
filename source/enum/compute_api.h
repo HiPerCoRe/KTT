@@ -6,18 +6,18 @@
 namespace ktt
 {
 
-/** @enum ComputeApi
+/** @enum ComputeAPI
   * Enum for compute API used by KTT library. It is utilized during tuner creation.
   */
-enum class ComputeApi
+enum class ComputeAPI
 {
     /** Tuner will use OpenCL as compute API.
       */
-    Opencl,
+    OpenCL,
 
     /** Tuner will use CUDA as compute API.
       */
-    Cuda
+    CUDA
 };
 
 } // namespace ktt

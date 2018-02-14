@@ -16,12 +16,12 @@ public:
 
     // Core methods
     void addParameter(const KernelParameter& parameter);
-    void addLocalMemoryModifier(const std::string& parameterName, const ArgumentId argumentId, const ModifierAction& modifierAction);
+    void addLocalMemoryModifier(const std::string& parameterName, const ArgumentId argumentId, const ModifierAction modifierAction);
     void addConstraint(const KernelConstraint& constraint);
     void setSharedArguments(const std::vector<ArgumentId>& argumentIds);
     void addKernelParameter(const KernelId id, const KernelParameter& parameter);
     void addKernelLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
-        const ModifierAction& modifierAction);
+        const ModifierAction modifierAction);
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     Kernel transformToKernel() const;
 

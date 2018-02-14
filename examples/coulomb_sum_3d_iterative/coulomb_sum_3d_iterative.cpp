@@ -81,8 +81,8 @@ private:
 int main(int argc, char** argv)
 {
     // Initialize platform index, device index and paths to kernels
-    size_t platformIndex = 0;
-    size_t deviceIndex = 0;
+    ktt::PlatformIndex platformIndex = 0;
+    ktt::DeviceIndex deviceIndex = 0;
     std::string kernelFile = KTT_KERNEL_FILE;
     std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
 

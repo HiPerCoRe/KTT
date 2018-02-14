@@ -13,11 +13,11 @@ enum class GlobalSizeType
 {
     /** Global thread size uses OpenCL format for NDRange dimensions specification.
       */
-    Opencl,
+    OpenCL,
 
     /** Global thread size uses CUDA format for grid dimensions specification.
       */
-    Cuda
+    CUDA
 };
 
 } // namespace ktt

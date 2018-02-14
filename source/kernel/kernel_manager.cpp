@@ -260,8 +260,8 @@ std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfiguratio
     return kernelConfigurations;
 }
 
-void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values, const ModifierType& modifierType,
-    const ModifierAction& modifierAction, const ModifierDimension& modifierDimension)
+void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values, const ModifierType modifierType,
+    const ModifierAction modifierAction, const ModifierDimension modifierDimension)
 {
     if (isKernel(id))
     {
@@ -295,7 +295,7 @@ void KernelManager::addParameter(const KernelId id, const std::string& name, con
 }
 
 void KernelManager::addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
-    const ModifierAction& modifierAction)
+    const ModifierAction modifierAction)
 {
     if (isKernel(id))
     {
@@ -354,8 +354,8 @@ void KernelManager::setTuningManipulatorFlag(const KernelId id, const bool flag)
 }
 
 void KernelManager::addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-    const std::vector<size_t>& parameterValues, const ModifierType& modifierType, const ModifierAction& modifierAction,
-    const ModifierDimension& modifierDimension)
+    const std::vector<size_t>& parameterValues, const ModifierType modifierType, const ModifierAction modifierAction,
+    const ModifierDimension modifierDimension)
 {
     if (!isComposition(compositionId))
     {
@@ -367,7 +367,7 @@ void KernelManager::addCompositionKernelParameter(const KernelId compositionId, 
 }
 
 void KernelManager::addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-    const ArgumentId argumentId, const ModifierAction& modifierAction)
+    const ArgumentId argumentId, const ModifierAction modifierAction)
 {
     if (!isComposition(compositionId))
     {

@@ -24,8 +24,8 @@
 int main(int argc, char** argv)
 {
   //Initialize platform and device index
-  size_t platformIndex = 0;
-  size_t deviceIndex = 0;
+  ktt::PlatformIndex platformIndex = 0;
+  ktt::DeviceIndex deviceIndex = 0;
   std::string kernelFile = KTT_KERNEL_FILE;
 
   if (argc >= 2)

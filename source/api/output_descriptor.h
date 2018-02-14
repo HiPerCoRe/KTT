@@ -1,4 +1,4 @@
-/** @file argument_output_descriptor.h
+/** @file output_descriptor.h
   * Functionality related to retrieving kernel output with KTT API.
   */
 #pragma once
@@ -10,28 +10,28 @@ namespace ktt
 {
 
 
-/** @class ArgumentOutputDescriptor
+/** @class OutputDescriptor
   * Class which can be used to retrieve kernel argument data when calling certain KTT API methods.
   */
-class KTT_API ArgumentOutputDescriptor
+class KTT_API OutputDescriptor
 {
 public:
-    /** @fn explicit ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination)
+    /** @fn explicit OutputDescriptor(const ArgumentId id, void* outputDestination)
       * Constructor, which creates new output descriptor object for specified kernel argument.
       * @param id Id of vector argument which will be retrieved.
       * @param outputDestination Pointer to destination where vector argument data will be copied. Destination buffer size needs to be equal or
       * greater than argument size.
       */
-    explicit ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination);
+    explicit OutputDescriptor(const ArgumentId id, void* outputDestination);
 
-    /** @fn explicit ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSizeInBytes)
+    /** @fn explicit OutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSizeInBytes)
       * Constructor, which creates new output descriptor object for specified kernel argument.
       * @param id Id of vector argument which will be retrieved.
       * @param outputDestination Pointer to destination where vector argument data will be copied. Destination buffer size needs to be equal or
       * greater than specified output size.
       * @param outputSizeInBytes Size of output in bytes which will be copied to specified destination, starting with first byte in argument.
       */
-    explicit ArgumentOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSizeInBytes);
+    explicit OutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSizeInBytes);
 
     /** @fn ArgumentId getArgumentId() const
       * Getter for id of argument tied to output descriptor.

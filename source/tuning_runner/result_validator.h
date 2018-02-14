@@ -33,7 +33,7 @@ public:
         const std::vector<ArgumentId>& validatedArgumentIds);
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
     void setToleranceThreshold(const double threshold);
-    void setValidationMethod(const ValidationMethod& method);
+    void setValidationMethod(const ValidationMethod method);
     void setValidationRange(const ArgumentId id, const size_t range);
     void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
     void computeReferenceResult(const Kernel& kernel);

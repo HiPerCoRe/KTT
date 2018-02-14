@@ -18,8 +18,7 @@ KernelRunner::KernelRunner(ArgumentManager* argumentManager, KernelManager* kern
     manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine))
 {}
 
-KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguration& configuration,
-    const std::vector<ArgumentOutputDescriptor>& output)
+KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -58,15 +57,13 @@ KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguratio
     return result;
 }
 
-KernelResult KernelRunner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration,
-    const std::vector<ArgumentOutputDescriptor>& output)
+KernelResult KernelRunner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
 {
     const KernelConfiguration launchConfiguration = kernelManager->getKernelConfiguration(id, configuration);
     return runKernel(id, launchConfiguration, output);
 }
 
-KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfiguration& configuration,
-    const std::vector<ArgumentOutputDescriptor>& output)
+KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output)
 {
     if (!kernelManager->isComposition(id))
     {
@@ -99,7 +96,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
 }
 
 KernelResult KernelRunner::runComposition(const KernelId id, const std::vector<ParameterPair>& configuration,
-    const std::vector<ArgumentOutputDescriptor>& output)
+    const std::vector<OutputDescriptor>& output)
 {
     const KernelConfiguration launchConfiguration = kernelManager->getKernelCompositionConfiguration(id, configuration);
     return runComposition(id, launchConfiguration, output);
@@ -119,7 +116,7 @@ KernelArgument KernelRunner::downloadArgument(const ArgumentId id) const
     return computeEngine->downloadArgumentObject(id, nullptr);
 }
 
-void KernelRunner::clearBuffers(const ArgumentAccessType& accessType)
+void KernelRunner::clearBuffers(const ArgumentAccessType accessType)
 {
     computeEngine->clearBuffers(accessType);
 }
@@ -130,7 +127,7 @@ void KernelRunner::clearBuffers()
 }
 
 KernelResult KernelRunner::runKernelSimple(const Kernel& kernel, const KernelConfiguration& configuration,
-    const std::vector<ArgumentOutputDescriptor>& output)
+    const std::vector<OutputDescriptor>& output)
 {
     KernelId kernelId = kernel.getId();
     std::string kernelName = kernel.getName();
@@ -144,7 +141,7 @@ KernelResult KernelRunner::runKernelSimple(const Kernel& kernel, const KernelCon
 }
 
 KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, TuningManipulator* manipulator, const KernelConfiguration& configuration,
-    const std::vector<ArgumentOutputDescriptor>& output)
+    const std::vector<OutputDescriptor>& output)
 {
     KernelId kernelId = kernel.getId();
     std::string source = kernelManager->getKernelSourceWithDefines(kernelId, configuration);
@@ -187,7 +184,7 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
 }
 
 KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition& composition, TuningManipulator* manipulator,
-    const KernelConfiguration& configuration, const std::vector<ArgumentOutputDescriptor>& output)
+    const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output)
 {
     manipulator->manipulatorInterface = manipulatorInterfaceImplementation.get();
     std::vector<KernelArgument*> allArguments = argumentManager->getArguments(composition.getSharedArgumentIds());

@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "ktt_types.h"
 #include "opencl_buffer.h"
 #include "opencl_command_queue.h"
 #include "opencl_context.h"
@@ -19,21 +20,21 @@
 namespace ktt
 {
 
-class OpenclCore : public ComputeEngine
+class OpenCLEngine : public ComputeEngine
 {
 public:
     // Constructor
-    explicit OpenclCore(const size_t platformIndex, const size_t deviceIndex, const size_t queueCount);
+    explicit OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount);
 
     // Kernel handling methods
     KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-        const std::vector<ArgumentOutputDescriptor>& outputDescriptors) override;
+        const std::vector<OutputDescriptor>& outputDescriptors) override;
     EventId runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) override;
-    KernelResult getKernelResult(const EventId id, const std::vector<ArgumentOutputDescriptor>& outputDescriptors) const override;
+    KernelResult getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const override;
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
-    void setGlobalSizeType(const GlobalSizeType& type) override;
+    void setGlobalSizeType(const GlobalSizeType type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
     void setProgramCache(const bool flag) override;
     void clearProgramCache() override;
@@ -58,47 +59,47 @@ public:
     uint64_t getArgumentOperationDuration(const EventId id) const override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
-    void clearBuffers(const ArgumentAccessType& accessType) override;
+    void clearBuffers(const ArgumentAccessType accessType) override;
 
     // Information retrieval methods
-    void printComputeApiInfo(std::ostream& outputTarget) const override;
+    void printComputeAPIInfo(std::ostream& outputTarget) const override;
     std::vector<PlatformInfo> getPlatformInfo() const override;
-    std::vector<DeviceInfo> getDeviceInfo(const size_t platformIndex) const override;
+    std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const override;
     DeviceInfo getCurrentDeviceInfo() const override;
 
     // Low-level kernel execution methods
-    std::unique_ptr<OpenclProgram> createAndBuildProgram(const std::string& source) const;
-    void setKernelArgument(OpenclKernel& kernel, KernelArgument& argument);
-    void setKernelArgument(OpenclKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers);
-    EventId enqueueKernel(OpenclKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+    std::unique_ptr<OpenCLProgram> createAndBuildProgram(const std::string& source) const;
+    void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument);
+    void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers);
+    EventId enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const QueueId queue, const uint64_t kernelLaunchOverhead) const;
 
 private:
     // Attributes
-    size_t platformIndex;
-    size_t deviceIndex;
-    size_t queueCount;
+    PlatformIndex platformIndex;
+    DeviceIndex deviceIndex;
+    uint32_t queueCount;
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
     bool programCacheFlag;
     mutable EventId nextEventId;
-    std::unique_ptr<OpenclContext> context;
-    std::vector<std::unique_ptr<OpenclCommandQueue>> commandQueues;
-    std::set<std::unique_ptr<OpenclBuffer>> buffers;
-    std::map<std::string, std::unique_ptr<OpenclProgram>> programCache;
-    mutable std::map<EventId, std::unique_ptr<OpenclEvent>> kernelEvents;
-    mutable std::map<EventId, std::unique_ptr<OpenclEvent>> bufferEvents;
+    std::unique_ptr<OpenCLContext> context;
+    std::vector<std::unique_ptr<OpenCLCommandQueue>> commandQueues;
+    std::set<std::unique_ptr<OpenCLBuffer>> buffers;
+    std::map<std::string, std::unique_ptr<OpenCLProgram>> programCache;
+    mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> kernelEvents;
+    mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> bufferEvents;
 
     // Helper methods
-    static PlatformInfo getOpenclPlatformInfo(const size_t platformIndex);
-    static DeviceInfo getOpenclDeviceInfo(const size_t platformIndex, const size_t deviceIndex);
-    static std::vector<OpenclPlatform> getOpenclPlatforms();
-    static std::vector<OpenclDevice> getOpenclDevices(const OpenclPlatform& platform);
+    static PlatformInfo getOpenCLPlatformInfo(const PlatformIndex platform);
+    static DeviceInfo getOpenCLDeviceInfo(const PlatformIndex platform, const DeviceIndex device);
+    static std::vector<OpenCLPlatform> getOpenCLPlatforms();
+    static std::vector<OpenCLDevice> getOpenCLDevices(const OpenCLPlatform& platform);
     static DeviceType getDeviceType(const cl_device_type deviceType);
-    OpenclBuffer* findBuffer(const ArgumentId id) const;
-    void setKernelArgumentVector(OpenclKernel& kernel, const OpenclBuffer& buffer) const;
-    bool loadBufferFromCache(const ArgumentId id, OpenclKernel& openclKernel) const;
+    OpenCLBuffer* findBuffer(const ArgumentId id) const;
+    void setKernelArgumentVector(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const;
+    bool loadBufferFromCache(const ArgumentId id, OpenCLKernel& kernel) const;
     void checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
 };
 

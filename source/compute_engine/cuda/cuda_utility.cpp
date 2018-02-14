@@ -6,7 +6,7 @@
 namespace ktt
 {
 
-std::string getCudaEnumName(const CUresult value)
+std::string getCUDAEnumName(const CUresult value)
 {
     const char* name;
     cuGetErrorName(value, &name);
@@ -19,23 +19,23 @@ std::string getNvrtcEnumName(const nvrtcResult value)
     return name;
 }
 
-void checkCudaError(const CUresult value)
+void checkCUDAError(const CUresult value)
 {
     if (value != CUDA_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal CUDA error: ") + getCudaEnumName(value));
+        throw std::runtime_error(std::string("Internal CUDA error: ") + getCUDAEnumName(value));
     }
 }
 
-void checkCudaError(const CUresult value, const std::string& message)
+void checkCUDAError(const CUresult value, const std::string& message)
 {
     if (value != CUDA_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal CUDA error: ") + getCudaEnumName(value) + "\nAdditional info: " + message);
+        throw std::runtime_error(std::string("Internal CUDA error: ") + getCUDAEnumName(value) + "\nAdditional info: " + message);
     }
 }
 
-void checkCudaError(const nvrtcResult value, const std::string& message)
+void checkCUDAError(const nvrtcResult value, const std::string& message)
 {
     if (value != NVRTC_SUCCESS)
     {
@@ -46,7 +46,7 @@ void checkCudaError(const nvrtcResult value, const std::string& message)
 float getEventCommandDuration(const CUevent start, const CUevent end)
 {
     float result;
-    checkCudaError(cuEventElapsedTime(&result, start, end), "cuEventElapsedTime");
+    checkCUDAError(cuEventElapsedTime(&result, start, end), "cuEventElapsedTime");
 
     return result * 1'000'000.0f; // return duration in nanoseconds
 }

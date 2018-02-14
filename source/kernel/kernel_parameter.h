@@ -14,12 +14,12 @@ namespace ktt
 class KernelParameter
 {
 public:
-    explicit KernelParameter(const std::string& name, const std::vector<size_t>& values, const ModifierType& modifierType,
-        const ModifierAction& modifierAction, const ModifierDimension& modifierDimension);
+    explicit KernelParameter(const std::string& name, const std::vector<size_t>& values, const ModifierType modifierType,
+        const ModifierAction modifierAction, const ModifierDimension modifierDimension);
     explicit KernelParameter(const std::string& name, const std::vector<double>& values);
 
-    void setLocalMemoryArgumentModifier(const ArgumentId id, const ModifierAction& modifierAction);
-    void setLocalMemoryArgumentModifier(const KernelId compositionKernelId, ArgumentId id, const ModifierAction& modifierAction);
+    void setLocalMemoryArgumentModifier(const ArgumentId id, const ModifierAction modifierAction);
+    void setLocalMemoryArgumentModifier(const KernelId compositionKernelId, ArgumentId id, const ModifierAction modifierAction);
     void addCompositionKernel(const KernelId id);
 
     std::string getName() const;

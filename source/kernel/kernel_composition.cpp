@@ -29,7 +29,7 @@ void KernelComposition::addParameter(const KernelParameter& parameter)
     parameters.push_back(parameterCopy);
 }
 
-void KernelComposition::addLocalMemoryModifier(const std::string& parameterName, const ArgumentId argumentId, const ModifierAction& modifierAction)
+void KernelComposition::addLocalMemoryModifier(const std::string& parameterName, const ArgumentId argumentId, const ModifierAction modifierAction)
 {
     if (!hasParameter(parameterName))
     {
@@ -117,7 +117,7 @@ void KernelComposition::addKernelParameter(const KernelId id, const KernelParame
 }
 
 void KernelComposition::addKernelLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
-    const ModifierAction& modifierAction)
+    const ModifierAction modifierAction)
 {
     if (!hasParameter(parameterName))
     {

@@ -43,7 +43,7 @@ void ResultValidator::setToleranceThreshold(const double threshold)
     this->toleranceThreshold = threshold;
 }
 
-void ResultValidator::setValidationMethod(const ValidationMethod& method)
+void ResultValidator::setValidationMethod(const ValidationMethod method)
 {
     this->validationMethod = method;
 }
@@ -207,7 +207,7 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
     }
 
     logger->log(std::string("Computing reference kernel result for kernel: ") + kernel.getName());
-    kernelRunner->runKernel(referenceKernelId, referenceParameters, std::vector<ArgumentOutputDescriptor>{});
+    kernelRunner->runKernel(referenceKernelId, referenceParameters, std::vector<OutputDescriptor>{});
 
     std::vector<KernelArgument> referenceResult;
     for (const auto argumentId : referenceArgumentIds)

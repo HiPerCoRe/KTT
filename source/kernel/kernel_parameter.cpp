@@ -4,8 +4,8 @@
 namespace ktt
 {
 
-KernelParameter::KernelParameter(const std::string& name, const std::vector<size_t>& values, const ModifierType& modifierType,
-    const ModifierAction& modifierAction, const ModifierDimension& modifierDimension) :
+KernelParameter::KernelParameter(const std::string& name, const std::vector<size_t>& values, const ModifierType modifierType,
+    const ModifierAction modifierAction, const ModifierDimension modifierDimension) :
     name(name),
     values(values),
     modifierType(modifierType),
@@ -25,7 +25,7 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<doub
     localMemoryModifierFlag(false)
 {}
 
-void KernelParameter::setLocalMemoryArgumentModifier(const ArgumentId id, const ModifierAction& modifierAction)
+void KernelParameter::setLocalMemoryArgumentModifier(const ArgumentId id, const ModifierAction modifierAction)
 {
     for (auto& argumentPair : localMemoryArguments)
     {
@@ -40,7 +40,7 @@ void KernelParameter::setLocalMemoryArgumentModifier(const ArgumentId id, const 
     localMemoryModifierFlag = true;
 }
 
-void KernelParameter::setLocalMemoryArgumentModifier(const KernelId compositionKernelId, ArgumentId id, const ModifierAction& modifierAction)
+void KernelParameter::setLocalMemoryArgumentModifier(const KernelId compositionKernelId, ArgumentId id, const ModifierAction modifierAction)
 {
     if (!elementExists(compositionKernelId, localMemoryModifierKernels))
     {
