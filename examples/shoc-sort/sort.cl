@@ -1,5 +1,13 @@
 #define FPTYPE uint
+//#define FPVECTNUM 16 -- this will be defined by KTT as it is a tuning parameter
+#if FPVECTNUM == 4
 #define FPVECTYPE uint4
+#elif FPVECTNUM == 8
+#define FPVECTYPE uint8
+#else
+#define FPVECTYPE uint16
+#endif
+
 
 #pragma OPENCL EXTENSION cl_khr_byte_addressable_store : enable
 
@@ -16,9 +24,9 @@ reduce(__global const FPTYPE * in, //input vector of unsorted number
     // First, calculate the bounds of the region of the array
     // that this block will sum.  We need these regions to match
     // perfectly with those in the bottom-level scan, so we index
-    // as if vector types of length 4 were in use.  This prevents
+    // as if vector types of length FPVECTNUM were in use.  This prevents
     // errors due to slightly misaligned regions.
-    int region_size = ((n / 4) / get_num_groups(0)) * 4;
+    int region_size = ((n / FPVECTNUM) / get_num_groups(0)) * FPVECTNUM;
     int block_start = get_group_id(0) * region_size;
 
     // Give the last block any extra elements
@@ -160,9 +168,10 @@ bottom_scan(__global const FPTYPE * in, //numbers to be sorted
 
     // Prepare for reading 4-element vectors
     // Assume n is divisible by 4
+    // with vectors of different length, the same applies for 8 and 16
     __global FPVECTYPE *in4  = (__global FPVECTYPE*) in;
     __global FPVECTYPE *out4 = (__global FPVECTYPE*) out;
-    int n4 = n / 4; //vector type is 4 wide
+    int n4 = n / FPVECTNUM; //vector type is 4 wide
 
     int region_size = n4 / get_num_groups(0);
     int block_start = get_group_id(0) * region_size;
@@ -196,7 +205,7 @@ bottom_scan(__global const FPTYPE * in, //numbers to be sorted
         if (i < block_stop) // Make sure we don't read out of bounds
         {
             val_4 = in4[i];
-
+#if FPVECTNUM == 4
             // Mask the keys to get the appropriate digit
             key_4.x = (val_4.x >> shift) & 0xFU;
             key_4.y = (val_4.y >> shift) & 0xFU;
@@ -208,6 +217,65 @@ bottom_scan(__global const FPTYPE * in, //numbers to be sorted
             histogram[key_4.y]++;
             histogram[key_4.z]++;
             histogram[key_4.w]++;
+
+#elif FPVECTNUM == 8
+            // Mask the keys to get the appropriate digit
+            key_4.s0 = (val_4.s0 >> shift) & 0xFU;
+            key_4.s1 = (val_4.s1 >> shift) & 0xFU;
+            key_4.s2 = (val_4.s2 >> shift) & 0xFU;
+            key_4.s3 = (val_4.s3 >> shift) & 0xFU;
+            key_4.s4 = (val_4.s4 >> shift) & 0xFU;
+            key_4.s5 = (val_4.s5 >> shift) & 0xFU;
+            key_4.s6 = (val_4.s6 >> shift) & 0xFU;
+            key_4.s7 = (val_4.s7 >> shift) & 0xFU;
+
+            // Update the histogram
+            histogram[key_4.s0]++;
+            histogram[key_4.s1]++;
+            histogram[key_4.s2]++;
+            histogram[key_4.s3]++;
+            histogram[key_4.s4]++;
+            histogram[key_4.s5]++;
+            histogram[key_4.s6]++;
+            histogram[key_4.s7]++;
+
+#elif FPVECTNUM == 16
+            // Mask the keys to get the appropriate digit
+            key_4.s0 = (val_4.s0 >> shift) & 0xFU;
+            key_4.s1 = (val_4.s1 >> shift) & 0xFU;
+            key_4.s2 = (val_4.s2 >> shift) & 0xFU;
+            key_4.s3 = (val_4.s3 >> shift) & 0xFU;
+            key_4.s4 = (val_4.s4 >> shift) & 0xFU;
+            key_4.s5 = (val_4.s5 >> shift) & 0xFU;
+            key_4.s6 = (val_4.s6 >> shift) & 0xFU;
+            key_4.s7 = (val_4.s7 >> shift) & 0xFU;
+            key_4.s8 = (val_4.s8 >> shift) & 0xFU;
+            key_4.s9 = (val_4.s9 >> shift) & 0xFU;
+            key_4.sa = (val_4.sa >> shift) & 0xFU;
+            key_4.sb = (val_4.sb >> shift) & 0xFU;
+            key_4.sc = (val_4.sc >> shift) & 0xFU;
+            key_4.sd = (val_4.sd >> shift) & 0xFU;
+            key_4.se = (val_4.se >> shift) & 0xFU;
+            key_4.sf = (val_4.sf >> shift) & 0xFU;
+
+            // Update the histogram
+            histogram[key_4.s0]++;
+            histogram[key_4.s1]++;
+            histogram[key_4.s2]++;
+            histogram[key_4.s3]++;
+            histogram[key_4.s4]++;
+            histogram[key_4.s5]++;
+            histogram[key_4.s6]++;
+            histogram[key_4.s7]++;
+            histogram[key_4.s8]++;
+            histogram[key_4.s9]++;
+            histogram[key_4.sa]++;
+            histogram[key_4.sb]++;
+            histogram[key_4.sc]++;
+            histogram[key_4.sd]++;
+            histogram[key_4.se]++;
+            histogram[key_4.sf]++;
+#endif
         }
 
         // Scan the digit counts in local memory
@@ -221,6 +289,7 @@ bottom_scan(__global const FPTYPE * in, //numbers to be sorted
         if (i < block_stop) // Make sure we don't write out of bounds
         {
             int address;
+#if FPVECTNUM == 4
             address = histogram[key_4.x] + l_scanned_seeds[key_4.x] + l_block_counts[key_4.x];
             out[address] = val_4.x;
             histogram[key_4.x]++;
@@ -236,6 +305,105 @@ bottom_scan(__global const FPTYPE * in, //numbers to be sorted
             address = histogram[key_4.w] + l_scanned_seeds[key_4.w] + l_block_counts[key_4.w];
             out[address] = val_4.w;
             histogram[key_4.w]++;
+
+#elif FPVECTNUM == 8
+            address = histogram[key_4.s0] + l_scanned_seeds[key_4.s0] + l_block_counts[key_4.s0];
+            out[address] = val_4.s0;
+            histogram[key_4.s0]++;
+
+            address = histogram[key_4.s1] + l_scanned_seeds[key_4.s1] + l_block_counts[key_4.s1];
+            out[address] = val_4.s1;
+            histogram[key_4.s1]++;
+
+            address = histogram[key_4.s2] + l_scanned_seeds[key_4.s2] + l_block_counts[key_4.s2];
+            out[address] = val_4.s2;
+            histogram[key_4.s2]++;
+
+            address = histogram[key_4.s3] + l_scanned_seeds[key_4.s3] + l_block_counts[key_4.s3];
+            out[address] = val_4.s3;
+            histogram[key_4.s3]++;
+
+            address = histogram[key_4.s4] + l_scanned_seeds[key_4.s4] + l_block_counts[key_4.s4];
+            out[address] = val_4.s4;
+            histogram[key_4.s4]++;
+
+            address = histogram[key_4.s5] + l_scanned_seeds[key_4.s5] + l_block_counts[key_4.s5];
+            out[address] = val_4.s5;
+            histogram[key_4.s5]++;
+
+            address = histogram[key_4.s6] + l_scanned_seeds[key_4.s6] + l_block_counts[key_4.s6];
+            out[address] = val_4.s6;
+            histogram[key_4.s6]++;
+
+            address = histogram[key_4.s7] + l_scanned_seeds[key_4.s7] + l_block_counts[key_4.s7];
+            out[address] = val_4.s7;
+            histogram[key_4.s7]++;
+
+#elif FPVECTNUM == 16
+            address = histogram[key_4.s0] + l_scanned_seeds[key_4.s0] + l_block_counts[key_4.s0];
+            out[address] = val_4.s0;
+            histogram[key_4.s0]++;
+
+            address = histogram[key_4.s1] + l_scanned_seeds[key_4.s1] + l_block_counts[key_4.s1];
+            out[address] = val_4.s1;
+            histogram[key_4.s1]++;
+
+            address = histogram[key_4.s2] + l_scanned_seeds[key_4.s2] + l_block_counts[key_4.s2];
+            out[address] = val_4.s2;
+            histogram[key_4.s2]++;
+
+            address = histogram[key_4.s3] + l_scanned_seeds[key_4.s3] + l_block_counts[key_4.s3];
+            out[address] = val_4.s3;
+            histogram[key_4.s3]++;
+
+            address = histogram[key_4.s4] + l_scanned_seeds[key_4.s4] + l_block_counts[key_4.s4];
+            out[address] = val_4.s4;
+            histogram[key_4.s4]++;
+
+            address = histogram[key_4.s5] + l_scanned_seeds[key_4.s5] + l_block_counts[key_4.s5];
+            out[address] = val_4.s5;
+            histogram[key_4.s5]++;
+
+            address = histogram[key_4.s6] + l_scanned_seeds[key_4.s6] + l_block_counts[key_4.s6];
+            out[address] = val_4.s6;
+            histogram[key_4.s6]++;
+
+            address = histogram[key_4.s7] + l_scanned_seeds[key_4.s7] + l_block_counts[key_4.s7];
+            out[address] = val_4.s7;
+            histogram[key_4.s7]++;
+
+            address = histogram[key_4.s8] + l_scanned_seeds[key_4.s8] + l_block_counts[key_4.s8];
+            out[address] = val_4.s8;
+            histogram[key_4.s8]++;
+
+            address = histogram[key_4.s9] + l_scanned_seeds[key_4.s9] + l_block_counts[key_4.s9];
+            out[address] = val_4.s9;
+            histogram[key_4.s9]++;
+
+            address = histogram[key_4.sa] + l_scanned_seeds[key_4.sa] + l_block_counts[key_4.sa];
+            out[address] = val_4.sa;
+            histogram[key_4.sa]++;
+
+            address = histogram[key_4.sb] + l_scanned_seeds[key_4.sb] + l_block_counts[key_4.sb];
+            out[address] = val_4.sb;
+            histogram[key_4.sb]++;
+
+            address = histogram[key_4.sc] + l_scanned_seeds[key_4.sc] + l_block_counts[key_4.sc];
+            out[address] = val_4.sc;
+            histogram[key_4.sc]++;
+
+            address = histogram[key_4.sd] + l_scanned_seeds[key_4.sd] + l_block_counts[key_4.sd];
+            out[address] = val_4.sd;
+            histogram[key_4.sd]++;
+
+            address = histogram[key_4.se] + l_scanned_seeds[key_4.se] + l_block_counts[key_4.se];
+            out[address] = val_4.se;
+            histogram[key_4.se]++;
+
+            address = histogram[key_4.sf] + l_scanned_seeds[key_4.sf] + l_block_counts[key_4.sf];
+            out[address] = val_4.sf;
+            histogram[key_4.sf]++;
+#endif
         }
 
         // Before proceeding, make sure everyone has finished their current

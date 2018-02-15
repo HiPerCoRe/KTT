@@ -18,14 +18,13 @@ class referenceSort : public ktt::ReferenceClass {
     //run the code with kernels
     void computeResult() override {
       std::sort(in->begin(), in->end());
-      out = in;
     }
     void* getData(const ktt::ArgumentId id) override {
-        return out;
+        return in->data();
     }
 
     size_t getNumberOfElements(const ktt::ArgumentId argumentId) const override {
-      return out->size();
+      return in->size();
     }
 
 
