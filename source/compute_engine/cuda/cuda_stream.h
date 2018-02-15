@@ -8,20 +8,20 @@
 namespace ktt
 {
 
-class CudaStream
+class CUDAStream
 {
 public:
-    explicit CudaStream(const QueueId id, const CUcontext context, const CUdevice device) :
+    explicit CUDAStream(const QueueId id, const CUcontext context, const CUdevice device) :
         id(id),
         context(context),
         device(device)
     {
-        checkCudaError(cuStreamCreate(&stream, CU_STREAM_DEFAULT), "cuStreamCreate");
+        checkCUDAError(cuStreamCreate(&stream, CU_STREAM_DEFAULT), "cuStreamCreate");
     }
 
-    ~CudaStream()
+    ~CUDAStream()
     {
-        checkCudaError(cuStreamDestroy(stream), "cuStreamDestroy");
+        checkCUDAError(cuStreamDestroy(stream), "cuStreamDestroy");
     }
 
     QueueId getId() const

@@ -29,16 +29,20 @@ public:
     std::vector<KernelConfiguration> getKernelCompositionConfigurations(const KernelId compositionId) const;
 
     // Kernel modification methods
-    void addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& modifierType,
-        const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
+    void addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values, const ModifierType modifierType,
+        const ModifierAction modifierAction, const ModifierDimension modifierDimension);
     void addParameter(const KernelId id, const std::string& name, const std::vector<double>& values);
+    void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
+        const ModifierAction modifierAction);
     void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void setTuningManipulatorFlag(const KernelId id, const bool flag);
     void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-        const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
-        const Dimension& modifierDimension);
+        const std::vector<size_t>& parameterValues, const ModifierType modifierType, const ModifierAction modifierAction,
+        const ModifierDimension modifierDimension);
+    void addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+        const ArgumentId argumentId, const ModifierAction modifierAction);
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
 
     // Getters
@@ -59,13 +63,13 @@ private:
 
     // Helper methods
     std::string loadFileToString(const std::string& filePath) const;
-    void computeConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
+    void computeConfigurations(const KernelId kernelId, const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
         const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs, const DimensionVector& globalSize,
-        const DimensionVector& localSize, std::vector<KernelConfiguration>& finalResult) const;
+        const DimensionVector& localSize, const std::vector<LocalMemoryModifier>& modifiers, std::vector<KernelConfiguration>& finalResult) const;
     void computeCompositionConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
         const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs,
-        std::vector<std::pair<KernelId, DimensionVector>>& globalSizes, std::vector<std::pair<KernelId, DimensionVector>>& localSizes,
-        std::vector<KernelConfiguration>& finalResult) const;
+        const std::vector<std::pair<KernelId, DimensionVector>>& globalSizes, const std::vector<std::pair<KernelId, DimensionVector>>& localSizes,
+        const std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>>& modifiers, std::vector<KernelConfiguration>& finalResult) const;
     bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints) const;
 };
 

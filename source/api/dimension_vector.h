@@ -6,8 +6,8 @@
 #include <iostream>
 #include <vector>
 #include "ktt_platform.h"
-#include "enum/dimension.h"
-#include "enum/thread_modifier_action.h"
+#include "enum/modifier_action.h"
+#include "enum/modifier_dimension.h"
 
 namespace ktt
 {
@@ -81,13 +81,13 @@ public:
       */
     void divide(const DimensionVector& divisor);
 
-    /** @fn void modifyByValue(const size_t value, const ThreadModifierAction& modifierAction, const Dimension modifierDimension)
+    /** @fn void modifyByValue(const size_t value, const ModifierAction modifierAction, const ModifierDimension modifierDimension)
       * Modifies thread size in single dimension based on provided value and action.
       * @param value Value which will be used to modify thread size in single dimension based on specified action.
       * @param modifierAction Specifies which operation should be performed with thread size and specified value.
       * @param modifierDimension Specifies which dimension will be affected by the action.
       */
-    void modifyByValue(const size_t value, const ThreadModifierAction& modifierAction, const Dimension modifierDimension);
+    void modifyByValue(const size_t value, const ModifierAction modifierAction, const ModifierDimension modifierDimension);
 
     /** @fn size_t getSizeX() const
       * Getter for thread size in dimension x.
@@ -136,10 +136,10 @@ private:
     size_t sizeY;
     size_t sizeZ;
 
-    void addValue(const size_t value, const Dimension modifierDimension);
-    void subtractValue(const size_t value, const Dimension modifierDimension);
-    void multiplyByValue(const size_t value, const Dimension modifierDimension);
-    void divideByValue(const size_t value, const Dimension modifierDimension);
+    void addValue(const size_t value, const ModifierDimension modifierDimension);
+    void subtractValue(const size_t value, const ModifierDimension modifierDimension);
+    void multiplyByValue(const size_t value, const ModifierDimension modifierDimension);
+    void divideByValue(const size_t value, const ModifierDimension modifierDimension);
 };
 
 /** @fn std::ostream& operator<<(std::ostream& outputTarget, const DimensionVector& dimensionVector)

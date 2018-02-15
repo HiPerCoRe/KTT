@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include "ktt_platform.h"
+#include "ktt_types.h"
 
 namespace ktt
 {
@@ -16,18 +17,18 @@ namespace ktt
 class KTT_API PlatformInfo
 {
 public:
-    /** @fn explicit PlatformInfo(const size_t id, const std::string& name)
+    /** @fn explicit PlatformInfo(const PlatformIndex platform, const std::string& name)
       * Constructor, which creates new platform info object.
-      * @param id Id of platform assigned by KTT framework.
+      * @param platform Index of platform assigned by KTT framework.
       * @param name Name of platform retrieved from compute API.
       */
-    explicit PlatformInfo(const size_t id, const std::string& name);
+    explicit PlatformInfo(const PlatformIndex platform, const std::string& name);
 
-    /** @fn size_t getId() const
-      * Getter for id of platform assigned by KTT framework.
-      * @return Id of platform assigned by KTT framework.
+    /** @fn PlatformIndex getId() const
+      * Getter for index of platform assigned by KTT framework.
+      * @return Index of platform assigned by KTT framework.
       */
-    size_t getId() const;
+    PlatformIndex getId() const;
 
     /** @fn std::string getName() const
       * Getter for name of platform retrieved from compute API.
@@ -72,7 +73,7 @@ public:
     void setExtensions(const std::string& extensions);
 
 private:
-    size_t id;
+    PlatformIndex id;
     std::string name;
     std::string vendor;
     std::string version;

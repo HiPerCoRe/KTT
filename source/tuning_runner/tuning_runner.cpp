@@ -44,7 +44,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
         logger->log(stream.str());
 
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
-        KernelResult result = kernelRunner->runKernel(id, currentConfiguration.getParameterPairs(), std::vector<ArgumentOutputDescriptor>{});
+        KernelResult result = kernelRunner->runKernel(id, currentConfiguration, std::vector<OutputDescriptor>{});
 
         configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         if (validateResult(kernel, result))
@@ -80,7 +80,7 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
     ResultLoader resultLoader;
     if (!resultLoader.loadResults(filePath))
     {
-        throw std::runtime_error(std::string("Cannot read file: ") + filePath);
+        throw std::runtime_error(std::string("Unable to open file: ") + filePath);
     }
 
     const Kernel& kernel = kernelManager->getKernel(id);
@@ -115,8 +115,6 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
         results.push_back(result);
     }
 
-    kernelRunner->clearBuffers();
-    resultValidator->clearReferenceResults();
     configurationManager.clearSearcher(id);
     return results;
 }
@@ -148,7 +146,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
         logger->log(stream.str());
 
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
-        KernelResult result = kernelRunner->runComposition(id, currentConfiguration.getParameterPairs(), std::vector<ArgumentOutputDescriptor>{});
+        KernelResult result = kernelRunner->runComposition(id, currentConfiguration, std::vector<OutputDescriptor>{});
 
         configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         if (validateResult(compatibilityKernel, result))
@@ -168,7 +166,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
     return results;
 }
 
-KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -184,7 +182,7 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     }
 
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
-    KernelResult result = kernelRunner->runKernel(id, currentConfiguration.getParameterPairs(), output);
+    KernelResult result = kernelRunner->runKernel(id, currentConfiguration, output);
 
     configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
     validateResult(kernel, result);
@@ -194,7 +192,7 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     return result;
 }
 
-KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
 {
     if (!kernelManager->isComposition(id))
     {
@@ -211,7 +209,7 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     }
 
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
-    KernelResult result = kernelRunner->runComposition(id, currentConfiguration.getParameterPairs(), output);
+    KernelResult result = kernelRunner->runComposition(id, currentConfiguration, output);
 
     configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
     validateResult(compatibilityKernel, result);
@@ -221,12 +219,12 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     return result;
 }
 
-void TuningRunner::setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments)
+void TuningRunner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     configurationManager.setSearchMethod(method, arguments);
 }
 
-void TuningRunner::setValidationMethod(const ValidationMethod& method, const double toleranceThreshold)
+void TuningRunner::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
     resultValidator->setValidationMethod(method);
     resultValidator->setToleranceThreshold(toleranceThreshold);

@@ -5,6 +5,11 @@ namespace ktt
 
 KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
     const DimensionVector& localSize, const std::vector<ArgumentId>& argumentIds) :
+    KernelRuntimeData(id, name, source, globalSize, localSize, argumentIds, std::vector<LocalMemoryModifier>{})
+{}
+
+KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
+    const DimensionVector& localSize, const std::vector<ArgumentId>& argumentIds, const std::vector<LocalMemoryModifier>& localMemoryModifiers) :
     id(id),
     name(name),
     source(source),
@@ -12,7 +17,8 @@ KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name,
     localSize(localSize.getVector()),
     globalSizeDimensionVector(globalSize),
     localSizeDimensionVector(localSize),
-    argumentIds(argumentIds)
+    argumentIds(argumentIds),
+    localMemoryModifiers(localMemoryModifiers)
 {}
 
 void KernelRuntimeData::setGlobalSize(const DimensionVector& globalSize)
@@ -70,6 +76,11 @@ DimensionVector KernelRuntimeData::getLocalSizeDimensionVector() const
 std::vector<ArgumentId> KernelRuntimeData::getArgumentIds() const
 {
     return argumentIds;
+}
+
+std::vector<LocalMemoryModifier> KernelRuntimeData::getLocalMemoryModifiers() const
+{
+    return localMemoryModifiers;
 }
 
 } // namespace ktt

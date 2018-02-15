@@ -1,4 +1,5 @@
 -- Configuration variables
+ktt_library_name = "ktt_0_6"
 cuda_projects = false
 
 -- Helper functions to find compute API headers and libraries
@@ -166,7 +167,7 @@ workspace "ktt"
     
     configurations { "Release", "Debug" }
     platforms { "x86_64", "x86" }
-    location (buildPath)
+    location(buildPath)
     language "C++"
     cppdialect "C++14"
 
@@ -201,7 +202,8 @@ project "ktt"
     files { "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "source" }
     defines { "KTT_LIBRARY" }
-    
+    targetname(ktt_library_name)
+
     local libraries = false
     
     if _OPTIONS["platform"] then
@@ -217,7 +219,7 @@ project "ktt"
     end
     
     if not libraries then
-        error("Compute API libraries were not found")
+        error("Compute API libraries were not found. Please ensure that path to your device vendor SDK is correctly set in the environment variables.")
     end
     
 -- Examples configuration 
@@ -246,10 +248,16 @@ project "coulomb_sum_3d_iterative_opencl"
     files { "examples/coulomb_sum_3d_iterative/*.h", "examples/coulomb_sum_3d_iterative/*.cpp", "examples/coulomb_sum_3d_iterative/*.cl" }
     includedirs { "source" }
     links { "ktt" }
-    
+
 project "reduction_opencl"
     kind "ConsoleApp"
     files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "sort_opencl"
+    kind "ConsoleApp"
+    files { "examples/shoc-sort/*.h", "examples/shoc-sort/*.cpp", "examples/shoc-sort/*.cl" }
     includedirs { "source" }
     links { "ktt" }
 
@@ -257,11 +265,6 @@ if os.target() == "linux" then
 project "hotspot_opencl"
     kind "ConsoleApp"
     files { "examples/rodinia-hotspot/*.h", "examples/rodinia-hotspot/*.cpp", "examples/rodinia-hotspot/*.cl" }
-    includedirs { "source" }
-    links { "ktt" }
-project "sort_opencl"
-    kind "ConsoleApp"
-    files { "examples/shoc-sort/*.h", "examples/shoc-sort/*.cpp", "examples/shoc-sort/*.cl" }
     includedirs { "source" }
     links { "ktt" }
 end
@@ -289,6 +292,12 @@ project "02_tuning_kernel_simple_opencl"
     includedirs { "source" }
     links { "ktt" }
     
+project "03_custom_kernel_arguments_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_opencl.cpp", "tutorials/03_custom_kernel_arguments/opencl_kernel.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
 if cuda_projects then
 
 project "00_info_cuda"
@@ -308,7 +317,13 @@ project "02_tuning_kernel_simple_cuda"
     files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_cuda.cpp", "tutorials/02_tuning_kernel_simple/cuda_kernel.cu" }
     includedirs { "source" }
     links { "ktt" }
-    
+   
+project "03_custom_kernel_arguments_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_cuda.cpp", "tutorials/03_custom_kernel_arguments/cuda_kernel.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+ 
 end -- cuda_projects
 
 end -- _OPTIONS["no-tutorials"]
@@ -333,9 +348,4 @@ project "tests"
     else
         findLibraries()
     end
-    
-    if _OPTIONS["vulkan"] then
-        findVulkan()
-    end
-    
 end -- _OPTIONS["tests"]

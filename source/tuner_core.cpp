@@ -1,21 +1,21 @@
 #include "tuner_core.h"
-#include "compute_engine/cuda/cuda_core.h"
-#include "compute_engine/opencl/opencl_core.h"
+#include "compute_engine/cuda/cuda_engine.h"
+#include "compute_engine/opencl/opencl_engine.h"
 #include "utility/ktt_utility.h"
 
 namespace ktt
 {
 
-TunerCore::TunerCore(const size_t platformIndex, const size_t deviceIndex, const ComputeApi& computeApi, const size_t queueCount) :
+TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t queueCount) :
     argumentManager(std::make_unique<ArgumentManager>())
 {
-    if (computeApi == ComputeApi::Opencl)
+    if (computeAPI == ComputeAPI::OpenCL)
     {
-        computeEngine = std::make_unique<OpenclCore>(platformIndex, deviceIndex, queueCount);
+        computeEngine = std::make_unique<OpenCLEngine>(platform, device, queueCount);
     }
-    else if (computeApi == ComputeApi::Cuda)
+    else if (computeAPI == ComputeAPI::CUDA)
     {
-        computeEngine = std::make_unique<CudaCore>(deviceIndex, queueCount);
+        computeEngine = std::make_unique<CUDAEngine>(device, queueCount);
     }
     else
     {
@@ -51,7 +51,7 @@ KernelId TunerCore::addComposition(const std::string& compositionName, const std
 }
 
 void TunerCore::addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-    const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction, const Dimension& modifierDimension)
+    const ModifierType modifierType, const ModifierAction modifierAction, const ModifierDimension modifierDimension)
 {
     kernelManager->addParameter(id, parameterName, parameterValues, modifierType, modifierAction, modifierDimension);
 }
@@ -59,6 +59,12 @@ void TunerCore::addParameter(const KernelId id, const std::string& parameterName
 void TunerCore::addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues)
 {
     kernelManager->addParameter(id, parameterName, parameterValues);
+}
+
+void TunerCore::addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
+    const ModifierAction modifierAction)
+{
+    kernelManager->addLocalMemoryModifier(id, parameterName, argumentId, modifierAction);
 }
 
 void TunerCore::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
@@ -86,11 +92,17 @@ void TunerCore::setKernelArguments(const KernelId id, const std::vector<Argument
 }
 
 void TunerCore::addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-    const std::vector<size_t>& parameterValues, const ThreadModifierType& modifierType, const ThreadModifierAction& modifierAction,
-    const Dimension& modifierDimension)
+    const std::vector<size_t>& parameterValues, const ModifierType modifierType, const ModifierAction modifierAction,
+    const ModifierDimension modifierDimension)
 {
     kernelManager->addCompositionKernelParameter(compositionId, kernelId, parameterName, parameterValues, modifierType, modifierAction,
         modifierDimension);
+}
+
+void TunerCore::addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
+    const ArgumentId argumentId, const ModifierAction modifierAction)
+{
+    kernelManager->addCompositionKernelLocalMemoryModifier(compositionId, kernelId, parameterName, argumentId, modifierAction);
 }
 
 void TunerCore::setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds)
@@ -120,20 +132,19 @@ std::string TunerCore::getKernelSource(const KernelId id, const std::vector<Para
     return kernelManager->getKernelSourceWithDefines(id, configuration);
 }
 
-ArgumentId TunerCore::addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType& dataType,
-    const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType, const ArgumentUploadType& uploadType, const bool copyData)
+ArgumentId TunerCore::addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType, const bool copyData)
 {
     return argumentManager->addArgument(data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType, copyData);
 }
 
-ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
-    const ArgumentDataType& dataType, const ArgumentMemoryLocation& memoryLocation, const ArgumentAccessType& accessType,
-    const ArgumentUploadType& uploadType)
+ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType)
 {
     return argumentManager->addArgument(data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType);
 }
 
-void TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<ArgumentOutputDescriptor>& output)
+void TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
 {
     if (kernelManager->isComposition(id))
     {
@@ -188,7 +199,7 @@ void TunerCore::tuneKernel(const KernelId id)
     resultPrinter.setResult(id, results);
 }
 
-void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOutputDescriptor>& output)
+void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
 {
     KernelResult result;
     if (kernelManager->isComposition(id))
@@ -203,12 +214,12 @@ void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<ArgumentOu
 }
 
 
-void TunerCore::setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments)
+void TunerCore::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     tuningRunner->setSearchMethod(method, arguments);
 }
 
-void TunerCore::setValidationMethod(const ValidationMethod& method, const double toleranceThreshold)
+void TunerCore::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
     tuningRunner->setValidationMethod(method, toleranceThreshold);
 }
@@ -264,7 +275,7 @@ std::vector<ParameterPair> TunerCore::getBestConfiguration(const KernelId id) co
     return tuningRunner->getBestConfiguration(id);
 }
 
-void TunerCore::setPrintingTimeUnit(const TimeUnit& unit)
+void TunerCore::setPrintingTimeUnit(const TimeUnit unit)
 {
     resultPrinter.setTimeUnit(unit);
 }
@@ -274,12 +285,12 @@ void TunerCore::setInvalidResultPrinting(const bool flag)
     resultPrinter.setInvalidResultPrinting(flag);
 }
 
-void TunerCore::printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const
+void TunerCore::printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat format) const
 {
     resultPrinter.printResult(id, outputTarget, format);
 }
 
-void TunerCore::printResult(const KernelId id, const std::string& filePath, const PrintFormat& format) const
+void TunerCore::printResult(const KernelId id, const std::string& filePath, const PrintFormat format) const
 {
     std::ofstream outputFile(filePath);
 
@@ -296,7 +307,7 @@ void TunerCore::setCompilerOptions(const std::string& options)
     computeEngine->setCompilerOptions(options);
 }
 
-void TunerCore::setGlobalSizeType(const GlobalSizeType& type)
+void TunerCore::setGlobalSizeType(const GlobalSizeType type)
 {
     computeEngine->setGlobalSizeType(type);
 }
@@ -306,9 +317,9 @@ void TunerCore::setAutomaticGlobalSizeCorrection(const bool flag)
     computeEngine->setAutomaticGlobalSizeCorrection(flag);
 }
 
-void TunerCore::printComputeApiInfo(std::ostream& outputTarget) const
+void TunerCore::printComputeAPIInfo(std::ostream& outputTarget) const
 {
-    computeEngine->printComputeApiInfo(outputTarget);
+    computeEngine->printComputeAPIInfo(outputTarget);
 }
 
 std::vector<PlatformInfo> TunerCore::getPlatformInfo() const
@@ -316,9 +327,9 @@ std::vector<PlatformInfo> TunerCore::getPlatformInfo() const
     return computeEngine->getPlatformInfo();
 }
 
-std::vector<DeviceInfo> TunerCore::getDeviceInfo(const size_t platformIndex) const
+std::vector<DeviceInfo> TunerCore::getDeviceInfo(const PlatformIndex platform) const
 {
-    return computeEngine->getDeviceInfo(platformIndex);
+    return computeEngine->getDeviceInfo(platform);
 }
 
 DeviceInfo TunerCore::getCurrentDeviceInfo() const

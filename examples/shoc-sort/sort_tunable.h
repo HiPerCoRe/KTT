@@ -6,7 +6,7 @@ class tunableSort : public ktt::TuningManipulator {
   public:
     // Constructor creates internal structures and setups the environment
     // it takes arguments from command line and generated input data
-    tunableSort(ktt::Tuner *tuner, std::vector<size_t> kernelIds, int size, size_t inId, size_t outId, size_t isumsId, size_t sizeId, size_t localMem1Id, size_t localMem2Id, size_t localMem3Id, size_t numberOfGroupsId, size_t shiftId) : TuningManipulator() 
+    tunableSort(ktt::Tuner *tuner, std::vector<ktt::KernelId> kernelIds, int size, ktt::ArgumentId inId, ktt::ArgumentId outId, ktt::ArgumentId isumsId, ktt::ArgumentId sizeId, ktt::ArgumentId localMem1Id, ktt::ArgumentId localMem2Id, ktt::ArgumentId localMem3Id, ktt::ArgumentId numberOfGroupsId, ktt::ArgumentId shiftId) : TuningManipulator() 
   {
     this->tuner = tuner;
 
@@ -27,7 +27,7 @@ class tunableSort : public ktt::TuningManipulator {
   }
 
     //run the code with kernels
-    virtual void launchComputation(const size_t kernelId) override {
+    void launchComputation(const size_t kernelId) override {
 
       std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
       int localSize = (int)parameterValues[0].getValue();
@@ -100,6 +100,7 @@ class tunableSort : public ktt::TuningManipulator {
       }
       delete[] in;
       delete[] out;
+      delete[] is;
     }
 
     void tune() {
@@ -115,17 +116,17 @@ class tunableSort : public ktt::TuningManipulator {
   private:
 
     ktt::Tuner* tuner;
-    size_t inId;
-    size_t outId;
-    size_t shiftId;
-    size_t isumsId;
-    size_t sizeId;
-    size_t localMem1Id;
-    size_t localMem2Id;
-    size_t localMem3Id;
-    size_t numberOfGroupsId;
-    size_t kernelId; //id of the composite kernel
-    std::vector<size_t> kernelIds; //ids of the internal kernels
+    ktt::ArgumentId inId;
+    ktt::ArgumentId outId;
+    ktt::ArgumentId shiftId;
+    ktt::ArgumentId isumsId;
+    ktt::ArgumentId sizeId;
+    ktt::ArgumentId localMem1Id;
+    ktt::ArgumentId localMem2Id;
+    ktt::ArgumentId localMem3Id;
+    ktt::ArgumentId numberOfGroupsId;
+    ktt::KernelId kernelId; //id of the composite kernel
+    std::vector<ktt::KernelId> kernelIds; //ids of the internal kernels
 
     int shift;
     int size;

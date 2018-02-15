@@ -20,6 +20,7 @@ public:
 
     // Core methods
     void addParameter(const KernelParameter& parameter);
+    void addLocalMemoryModifier(const std::string& parameterName, const ArgumentId argumentId, const ModifierAction& modifierAction);
     void addConstraint(const KernelConstraint& constraint);
     void setArguments(const std::vector<ArgumentId>& argumentIds);
     void setTuningManipulatorFlag(const bool flag);

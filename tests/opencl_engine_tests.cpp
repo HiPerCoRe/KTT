@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "compute_engine/opencl/opencl_core.h"
+#include "compute_engine/opencl/opencl_engine.h"
 #include "kernel_argument/kernel_argument.h"
 
 std::string programSource(std::string("")
@@ -10,14 +10,14 @@ std::string programSource(std::string("")
     + "    result[index] = a[index] + b[index] + number;\n"
     + "}\n");
 
-TEST_CASE("Working with program and kernel", "Component: OpenclCore")
+TEST_CASE("Working with OpenCL program and kernel", "Component: OpenCLEngine")
 {
-    ktt::OpenclCore core(0, 0, 1);
+    ktt::OpenCLEngine engine(0, 0, 1);
 
-    auto program = core.createAndBuildProgram(programSource);
+    auto program = engine.createAndBuildProgram(programSource);
     REQUIRE(program->getSource() == programSource);
 
-    auto kernel = std::make_unique<ktt::OpenclKernel>(program->getProgram(), "testKernel");
+    auto kernel = std::make_unique<ktt::OpenCLKernel>(program->getProgram(), "testKernel");
     REQUIRE(kernel->getArgumentsCount() == 0);
     REQUIRE(kernel->getKernelName() == "testKernel");
 
@@ -27,13 +27,13 @@ TEST_CASE("Working with program and kernel", "Component: OpenclCore")
 
     SECTION("Trying to build program with invalid source throws")
     {
-        REQUIRE_THROWS(core.createAndBuildProgram("Invalid"));
+        REQUIRE_THROWS(engine.createAndBuildProgram("Invalid"));
     }
 }
 
-TEST_CASE("Working with OpenCL buffer", "Component: OpenclCore")
+TEST_CASE("Working with OpenCL buffer", "Component: OpenCLEngine")
 {
-    ktt::OpenclCore core(0, 0, 1);
+    ktt::OpenCLEngine engine(0, 0, 1);
     std::vector<float> data;
     for (size_t i = 0; i < 64; i++)
     {
@@ -45,8 +45,8 @@ TEST_CASE("Working with OpenCL buffer", "Component: OpenclCore")
 
     SECTION("Transfering argument to / from device")
     {
-        core.uploadArgument(argument);
-        ktt::KernelArgument resultArgument = core.downloadArgumentObject(argument.getId(), nullptr);
+        engine.uploadArgument(argument);
+        ktt::KernelArgument resultArgument = engine.downloadArgumentObject(argument.getId(), nullptr);
 
         REQUIRE(resultArgument.getDataType() == argument.getDataType());
         REQUIRE(resultArgument.getMemoryLocation() == argument.getMemoryLocation());

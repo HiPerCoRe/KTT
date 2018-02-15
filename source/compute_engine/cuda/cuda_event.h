@@ -9,30 +9,30 @@
 namespace ktt
 {
 
-class CudaEvent
+class CUDAEvent
 {
 public:
-    CudaEvent(const EventId id, const bool validFlag) :
+    CUDAEvent(const EventId id, const bool validFlag) :
         id(id),
         kernelName(""),
         validFlag(validFlag),
         overhead(0)
     {
-        checkCudaError(cuEventCreate(&event, CU_EVENT_DEFAULT), "cuEventCreate");
+        checkCUDAError(cuEventCreate(&event, CU_EVENT_DEFAULT), "cuEventCreate");
     }
 
-    CudaEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead) :
+    CUDAEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead) :
         id(id),
         kernelName(kernelName),
         validFlag(true),
         overhead(kernelLaunchOverhead)
     {
-        checkCudaError(cuEventCreate(&event, CU_EVENT_DEFAULT), "cuEventCreate");
+        checkCUDAError(cuEventCreate(&event, CU_EVENT_DEFAULT), "cuEventCreate");
     }
 
-    ~CudaEvent()
+    ~CUDAEvent()
     {
-        checkCudaError(cuEventDestroy(event), "cuEventDestroy");
+        checkCUDAError(cuEventDestroy(event), "cuEventDestroy");
     }
 
     EventId getId() const

@@ -9,7 +9,7 @@ ResultPrinter::ResultPrinter() :
     printInvalidResult(false)
 {}
 
-void ResultPrinter::printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat& format) const
+void ResultPrinter::printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat format) const
 {
     if (kernelResults.find(id) == kernelResults.end())
     {
@@ -51,7 +51,7 @@ void ResultPrinter::setResult(const KernelId id, const std::vector<KernelResult>
     kernelResults.insert(std::make_pair(id, results));
 }
 
-void ResultPrinter::setTimeUnit(const TimeUnit& unit)
+void ResultPrinter::setTimeUnit(const TimeUnit unit)
 {
     this->timeUnit = unit;
 }
@@ -311,7 +311,7 @@ KernelResult ResultPrinter::getBestResult(const std::vector<KernelResult>& resul
     return bestResult;
 }
 
-uint64_t ResultPrinter::convertTime(const uint64_t timeInNanoseconds, const TimeUnit& targetUnit)
+uint64_t ResultPrinter::convertTime(const uint64_t timeInNanoseconds, const TimeUnit targetUnit)
 {
     switch (targetUnit)
     {
@@ -328,7 +328,7 @@ uint64_t ResultPrinter::convertTime(const uint64_t timeInNanoseconds, const Time
     }
 }
 
-std::string ResultPrinter::getTimeUnitTag(const TimeUnit& unit)
+std::string ResultPrinter::getTimeUnitTag(const TimeUnit unit)
 {
     switch (unit)
     {

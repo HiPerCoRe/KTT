@@ -33,7 +33,7 @@ public:
         const std::vector<ArgumentId>& validatedArgumentIds);
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
     void setToleranceThreshold(const double threshold);
-    void setValidationMethod(const ValidationMethod& method);
+    void setValidationMethod(const ValidationMethod method);
     void setValidationRange(const ArgumentId id, const size_t range);
     void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
     void computeReferenceResult(const Kernel& kernel);
@@ -120,7 +120,7 @@ private:
             for (size_t i = 0; i < range; i++)
             {
                 double difference = std::fabs(result.at(i) - referenceResult.at(i));
-                if ((difference > 1e-4) && (difference / referenceResult.at(i) > toleranceThreshold)) // FIXME make threshold setable
+                if ((difference > 1e-4) && (difference / referenceResult.at(i) > toleranceThreshold))
                 {
                     logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
                         + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))

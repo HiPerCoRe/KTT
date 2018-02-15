@@ -3,6 +3,12 @@
 #include <vector>
 #include "tuner_api.h"
 
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../tutorials/02_tuning_kernel_simple/opencl_kernel.cl"
+#else
+    #define KTT_KERNEL_FILE "../../tutorials/02_tuning_kernel_simple/opencl_kernel.cl"
+#endif
+
 // Definition of class which will be used by tuner to automatically validate kernel output. It needs to publicly inherit from abstract class which is
 // declared in KTT API.
 class SimpleValidator : public ktt::ReferenceClass
@@ -46,9 +52,9 @@ private:
 int main(int argc, char** argv)
 {
     // Initialize platform index, device index and path to kernel.
-    size_t platformIndex = 0;
-    size_t deviceIndex = 0;
-    std::string kernelFile = "../tutorials/02_tuning_kernel_simple/opencl_kernel.cl";
+    ktt::PlatformIndex platformIndex = 0;
+    ktt::DeviceIndex deviceIndex = 0;
+    std::string kernelFile = KTT_KERNEL_FILE;
 
     if (argc >= 2)
     {
@@ -99,13 +105,13 @@ int main(int argc, char** argv)
 
     // Add new parameter for kernel. Specify parameter name and possible values for this parameter. When kernel is tuned, the parameter value
     // is added to kernel source as preprocessor definition, eg. for parameter value 32, it is added as "#define multiply_work_group_size 32".
-    // In this case, the parameter also affects work-group size. This is specified with KTT enums, ThreadModifierType specifies that parameter
-    // affects work-group size of a kernel, ThreadModifierAction specifies that work-group size is multiplied by value of the parameter, dimension
+    // In this case, the parameter also affects work-group size. This is specified with KTT enums, ModifierType specifies that parameter affects
+    // work-group size of a kernel, ModifierAction specifies that work-group size is multiplied by value of the parameter, ModifierDimension
     // specifies that dimension X of work-group is affected by the parameter.
     // Previously, the work-group size of kernel was set to one. This simply means that the work-group size of kernel is controlled explicitly by
     // value of this parameter, eg. size of one is multiplied by 32, which means that result size is 32.
-    tuner.addParameter(kernelId, "multiply_work_group_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ThreadModifierType::Local,
-        ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
+    tuner.addParameter(kernelId, "multiply_work_group_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ModifierType::Local,
+        ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
 
     // Start tuning for specified kernel. This generates multiple versions of the kernel based on provided tuning parameters and their values. In
     // this case, only single parameter with 4 values was added, which means that 4 different versions of kernel will be run, each version

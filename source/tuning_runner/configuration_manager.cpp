@@ -20,7 +20,7 @@ void ConfigurationManager::setKernelConfigurations(const KernelId id, const std:
     initializeSearcher(id, searchMethod, searchArguments, configurations, parameters);
 }
 
-void ConfigurationManager::setSearchMethod(const SearchMethod& method, const std::vector<double>& arguments)
+void ConfigurationManager::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     if (method == SearchMethod::RandomSearch && arguments.size() < 1
         || method == SearchMethod::MCMC && arguments.size() < 1
@@ -124,7 +124,7 @@ size_t ConfigurationManager::getConfigurationCount(const KernelId id) const
     return searcherPair->second->getConfigurationCount();
 }
 
-void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMethod& method, const std::vector<double>& arguments,
+void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,
     const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters)
 {
     switch (method)
@@ -150,7 +150,7 @@ void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMet
     }
 }
 
-std::string ConfigurationManager::getSearchMethodName(const SearchMethod& method)
+std::string ConfigurationManager::getSearchMethodName(const SearchMethod method)
 {
     switch (method)
     {

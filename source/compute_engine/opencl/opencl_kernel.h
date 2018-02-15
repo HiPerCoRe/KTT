@@ -7,39 +7,39 @@
 namespace ktt
 {
 
-class OpenclKernel
+class OpenCLKernel
 {
 public:
-    explicit OpenclKernel(const cl_program program, const std::string& kernelName) :
+    explicit OpenCLKernel(const cl_program program, const std::string& kernelName) :
         program(program),
         kernelName(kernelName),
         argumentsCount(0)
     {
         cl_int result;
         kernel = clCreateKernel(program, &kernelName[0], &result);
-        checkOpenclError(result, "clCreateKernel");
+        checkOpenCLError(result, "clCreateKernel");
     }
 
-    ~OpenclKernel()
+    ~OpenCLKernel()
     {
-        checkOpenclError(clReleaseKernel(kernel), "clReleaseKernel");
+        checkOpenCLError(clReleaseKernel(kernel), "clReleaseKernel");
     }
 
     void setKernelArgumentVector(const void* buffer)
     {
-        checkOpenclError(clSetKernelArg(kernel, argumentsCount, sizeof(cl_mem), buffer), "clSetKernelArg");
+        checkOpenCLError(clSetKernelArg(kernel, argumentsCount, sizeof(cl_mem), buffer), "clSetKernelArg");
         argumentsCount++;
     }
 
     void setKernelArgumentScalar(const void* scalarValue, const size_t valueSize)
     {
-        checkOpenclError(clSetKernelArg(kernel, argumentsCount, valueSize, scalarValue), "clSetKernelArg");
+        checkOpenCLError(clSetKernelArg(kernel, argumentsCount, valueSize, scalarValue), "clSetKernelArg");
         argumentsCount++;
     }
 
     void setKernelArgumentLocal(const size_t localSizeInBytes)
     {
-        checkOpenclError(clSetKernelArg(kernel, argumentsCount, localSizeInBytes, nullptr), "clSetKernelArg");
+        checkOpenCLError(clSetKernelArg(kernel, argumentsCount, localSizeInBytes, nullptr), "clSetKernelArg");
         argumentsCount++;
     }
 

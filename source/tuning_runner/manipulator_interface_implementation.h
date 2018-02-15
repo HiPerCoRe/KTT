@@ -51,7 +51,7 @@ public:
     void setConfiguration(const KernelConfiguration& configuration);
     void setKernelArguments(const std::vector<KernelArgument*>& arguments);
     void uploadBuffers();
-    void downloadBuffers(const std::vector<ArgumentOutputDescriptor>& output) const;
+    void downloadBuffers(const std::vector<OutputDescriptor>& output) const;
     KernelResult getCurrentResult() const;
     void clearData();
 
@@ -68,7 +68,7 @@ private:
 
     // Helper methods
     std::vector<KernelArgument*> getArgumentPointers(const std::vector<ArgumentId>& argumentIds);
-    void updateArgumentSimple(const ArgumentId id, const void* argumentData, const size_t numberOfElements, const ArgumentUploadType& uploadType);
+    void updateArgumentSimple(const ArgumentId id, const void* argumentData, const size_t numberOfElements, const ArgumentUploadType uploadType);
     void storeKernelEvent(const QueueId queue, const EventId event) const;
     void storeBufferEvent(const QueueId queue, const EventId event, const bool increaseOverhead) const;
     void processKernelEvents(const std::set<EventId>& events);

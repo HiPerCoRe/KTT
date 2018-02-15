@@ -8,10 +8,6 @@
 namespace ktt
 {
 
-ResultLoader::ResultLoader() 
-{
-}
-
 bool ResultLoader::loadResults(const std::string& filePath) 
 {
     values.clear();

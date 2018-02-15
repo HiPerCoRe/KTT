@@ -18,7 +18,7 @@ void KernelComposition::addParameter(const KernelParameter& parameter)
     }
 
     KernelParameter parameterCopy = parameter;
-    if (parameter.getModifierType() != ThreadModifierType::None)
+    if (parameter.getModifierType() != ModifierType::None)
     {
         for (const auto kernel : kernels)
         {
@@ -27,6 +27,28 @@ void KernelComposition::addParameter(const KernelParameter& parameter)
     }
 
     parameters.push_back(parameterCopy);
+}
+
+void KernelComposition::addLocalMemoryModifier(const std::string& parameterName, const ArgumentId argumentId, const ModifierAction modifierAction)
+{
+    if (!hasParameter(parameterName))
+    {
+        throw std::runtime_error(std::string("Parameter with name does not exist: ") + parameterName);
+    }
+
+    for (auto& parameter : parameters)
+    {
+        if (parameter.getName() == parameterName)
+        {
+            if (parameter.hasValuesDouble())
+            {
+                throw std::runtime_error("Parameter with floating-point values cannot act as a modifier");
+            }
+
+            parameter.setLocalMemoryArgumentModifier(argumentId, modifierAction);
+            return;
+        }
+    }
 }
 
 void KernelComposition::addConstraint(const KernelConstraint& constraint)
@@ -92,6 +114,29 @@ void KernelComposition::addKernelParameter(const KernelId id, const KernelParame
     }
 
     targetParameter->addCompositionKernel(id);
+}
+
+void KernelComposition::addKernelLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
+    const ModifierAction modifierAction)
+{
+    if (!hasParameter(parameterName))
+    {
+        throw std::runtime_error(std::string("Parameter with name does not exist: ") + parameterName);
+    }
+
+    for (auto& parameter : parameters)
+    {
+        if (parameter.getName() == parameterName)
+        {
+            if (parameter.hasValuesDouble())
+            {
+                throw std::runtime_error("Parameter with floating-point values cannot act as a modifier");
+            }
+
+            parameter.setLocalMemoryArgumentModifier(id, argumentId, modifierAction);
+            return;
+        }
+    }
 }
 
 void KernelComposition::setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)

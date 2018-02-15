@@ -1,4 +1,4 @@
-/** @file thread_modifier_type.h
+/** @file modifier_type.h
   * Definition of enum for modifier type for kernel parameters.
   */
 #pragma once
@@ -6,10 +6,10 @@
 namespace ktt
 {
 
-/** @enum ThreadModifierType
+/** @enum ModifierType
   * Enum for modifier type for kernel parameters. Specifies whether kernel parameter value affects corresponding kernel thread size.
   */
-enum class ThreadModifierType
+enum class ModifierType
 {
     /** Parameter value does not affect any thread sizes of corresponding kernel.
       */

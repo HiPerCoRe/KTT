@@ -4,13 +4,21 @@
 #include <vector>
 #include "tuner_api.h"
 
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl"
+#else
+    #define KTT_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl"
+#endif
+
 int main(int argc, char** argv)
 {
     // Initialize platform index, device index and paths to kernels
-    size_t platformIndex = 0;
-    size_t deviceIndex = 0;
-    std::string kernelFile = "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl";
-    std::string referenceKernelFile = "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl";
+    ktt::PlatformIndex platformIndex = 0;
+    ktt::DeviceIndex deviceIndex = 0;
+    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
 
     if (argc >= 2)
     {
@@ -79,18 +87,18 @@ int main(int argc, char** argv)
     ktt::ArgumentId gridId = tuner.addArgumentVector(energyGrid, ktt::ArgumentAccessType::WriteOnly);
 
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {16, 32}, 
-        ktt::ThreadModifierType::Local, 
-        ktt::ThreadModifierAction::Multiply, 
-        ktt::Dimension::X);
+        ktt::ModifierType::Local, 
+        ktt::ModifierAction::Multiply, 
+        ktt::ModifierDimension::X);
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", {1, 2, 4, 8}, 
-        ktt::ThreadModifierType::Local, 
-        ktt::ThreadModifierAction::Multiply, 
-        ktt::Dimension::Y);
+        ktt::ModifierType::Local, 
+        ktt::ModifierAction::Multiply, 
+        ktt::ModifierDimension::Y);
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Z", {1});
     tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 4, 8, 16, 32},
-        ktt::ThreadModifierType::Global,
-        ktt::ThreadModifierAction::Divide,
-        ktt::Dimension::Z);
+        ktt::ModifierType::Global,
+        ktt::ModifierAction::Divide,
+        ktt::ModifierDimension::Z);
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
     tuner.addParameter(kernelId, "USE_SOA", {0, 1});
