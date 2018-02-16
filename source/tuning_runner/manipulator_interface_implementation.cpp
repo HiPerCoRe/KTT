@@ -246,6 +246,41 @@ void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId
     storeBufferEvent(queue, bufferEvent, false);
 }
 
+void ManipulatorInterfaceImplementation::copyArgumentVector(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements)
+{
+    auto argumentPointer = vectorArguments.find(destination);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(destination));
+    }
+
+    auto argumentPointerSource = vectorArguments.find(source);
+    if (argumentPointerSource == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(source));
+    }
+
+    computeEngine->copyArgument(destination, source, argumentPointer->second->getElementSizeInBytes() * numberOfElements);
+}
+
+void ManipulatorInterfaceImplementation::copyArgumentVectorAsync(const ArgumentId destination, const ArgumentId source,
+    const size_t numberOfElements, const QueueId queue)
+{
+    auto argumentPointer = vectorArguments.find(destination);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(destination));
+    }
+
+    auto argumentPointerSource = vectorArguments.find(source);
+    if (argumentPointerSource == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(source));
+    }
+
+    computeEngine->copyArgumentAsync(destination, source, argumentPointer->second->getElementSizeInBytes() * numberOfElements, queue);
+}
+
 void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
     auto dataPointer = kernelData.find(id);

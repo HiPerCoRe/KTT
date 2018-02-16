@@ -61,6 +61,8 @@ public:
     uint64_t downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
     EventId downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const override;
     KernelArgument downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const override;
+    uint64_t copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes) override;
+    EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
@@ -136,6 +138,8 @@ public:
     uint64_t downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
     EventId downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const override;
     KernelArgument downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const override;
+    uint64_t copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes) override;
+    EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;

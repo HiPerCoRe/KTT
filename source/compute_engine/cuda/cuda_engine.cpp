@@ -328,6 +328,52 @@ KernelArgument CUDAEngine::downloadArgumentObject(const ArgumentId id, uint64_t*
     return argument;
 }
 
+uint64_t CUDAEngine::copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes)
+{
+    EventId eventId = copyArgumentAsync(destination, source, dataSizeInBytes, getDefaultQueue());
+    return getArgumentOperationDuration(eventId);
+}
+
+EventId CUDAEngine::copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue)
+{
+    if (queue >= streams.size())
+    {
+        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
+    }
+
+    CUDABuffer* destinationBuffer = findBuffer(destination);
+    CUDABuffer* sourceBuffer = findBuffer(source);
+
+    if (destinationBuffer == nullptr || sourceBuffer == nullptr)
+    {
+        throw std::runtime_error(std::string("One of the buffers with following ids does not exist: ") + std::to_string(destination) + ", "
+            + std::to_string(source));
+    }
+
+    if (sourceBuffer->getDataType() != destinationBuffer->getDataType())
+    {
+        throw std::runtime_error("Data type for buffers during copying operation must match");
+    }
+
+    EventId eventId = nextEventId;
+    auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
+    auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
+
+    if (dataSizeInBytes == 0)
+    {
+        destinationBuffer->uploadData(streams.at(queue)->getStream(), sourceBuffer, sourceBuffer->getBufferSize(), startEvent->getEvent(),
+            endEvent->getEvent());
+    }
+    else
+    {
+        destinationBuffer->uploadData(streams.at(queue)->getStream(), sourceBuffer, dataSizeInBytes, startEvent->getEvent(), endEvent->getEvent());
+    }
+
+    bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
+    nextEventId++;
+    return eventId;
+}
+
 uint64_t CUDAEngine::getArgumentOperationDuration(const EventId id) const
 {
     auto eventPointer = bufferEvents.find(id);
@@ -747,6 +793,16 @@ EventId CUDAEngine::downloadArgumentAsync(const ArgumentId, void*, const size_t,
 }
 
 KernelArgument CUDAEngine::downloadArgumentObject(const ArgumentId, uint64_t*) const
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+}
+
+uint64_t CUDAEngine::copyArgument(const ArgumentId, const ArgumentId, const size_t)
+{
+    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+}
+
+EventId CUDAEngine::copyArgumentAsync(const ArgumentId, const ArgumentId, const size_t, const QueueId)
 {
     throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
 }

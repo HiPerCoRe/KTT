@@ -126,6 +126,25 @@ public:
         checkCUDAError(cuEventRecord(endEvent, stream), "cuEventRecord");
     }
 
+    void uploadData(CUstream stream, const CUDABuffer* source, const size_t dataSize, CUevent startEvent, CUevent endEvent)
+    {
+        if (bufferSize < dataSize)
+        {
+            resize(dataSize);
+        }
+
+        checkCUDAError(cuEventRecord(startEvent, stream), "cuEventRecord");
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCUDAError(cuMemcpyDtoDAsync(deviceBuffer, *source->getBuffer(), dataSize, stream), "cuMemcpyDtoDAsync");
+        }
+        else
+        {
+            checkCUDAError(cuMemcpyDtoDAsync(hostBuffer, *source->getBuffer(), dataSize, stream), "cuMemcpyDtoDAsync");
+        }
+        checkCUDAError(cuEventRecord(endEvent, stream), "cuEventRecord");
+    }
+
     void downloadData(void* destination, const size_t dataSize) const
     {
         if (bufferSize < dataSize)

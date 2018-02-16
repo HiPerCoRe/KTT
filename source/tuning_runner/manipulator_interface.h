@@ -43,6 +43,9 @@ public:
     virtual void getArgumentVectorAsync(const ArgumentId id, void* destination, const QueueId queue) const = 0;
     virtual void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const = 0;
     virtual void getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements, const QueueId queue) const = 0;
+    virtual void copyArgumentVector(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements) = 0;
+    virtual void copyArgumentVectorAsync(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements,
+        const QueueId queue) = 0;
 
     // Kernel argument handling methods
     virtual void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds) = 0;

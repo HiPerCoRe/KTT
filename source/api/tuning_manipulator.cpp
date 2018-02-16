@@ -116,6 +116,17 @@ void TuningManipulator::getArgumentVectorAsync(const ArgumentId id, void* destin
     manipulatorInterface->getArgumentVectorAsync(id, destination, numberOfElements, queue);
 }
 
+void TuningManipulator::copyArgumentVector(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements)
+{
+    manipulatorInterface->copyArgumentVector(destination, source, numberOfElements);
+}
+
+void TuningManipulator::copyArgumentVectorAsync(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements,
+    const QueueId queue)
+{
+    manipulatorInterface->copyArgumentVectorAsync(destination, source, numberOfElements, queue);
+}
+
 void TuningManipulator::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
     manipulatorInterface->changeKernelArguments(id, argumentIds);

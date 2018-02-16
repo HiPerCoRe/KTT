@@ -341,6 +341,52 @@ KernelArgument OpenCLEngine::downloadArgumentObject(const ArgumentId id, uint64_
     return argument;
 }
 
+uint64_t OpenCLEngine::copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes)
+{
+    EventId eventId = copyArgumentAsync(destination, source, dataSizeInBytes, getDefaultQueue());
+    return getArgumentOperationDuration(eventId);
+}
+
+EventId OpenCLEngine::copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue)
+{
+    if (queue >= commandQueues.size())
+    {
+        throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
+    }
+
+    OpenCLBuffer* destinationBuffer = findBuffer(destination);
+    OpenCLBuffer* sourceBuffer = findBuffer(source);
+
+    if (destinationBuffer == nullptr || sourceBuffer == nullptr)
+    {
+        throw std::runtime_error(std::string("One of the buffers with following ids does not exist: ") + std::to_string(destination) + ", "
+            + std::to_string(source));
+    }
+
+    if (sourceBuffer->getDataType() != destinationBuffer->getDataType())
+    {
+        throw std::runtime_error("Data type for buffers during copying operation must match");
+    }
+
+    EventId eventId = nextEventId;
+    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
+
+    if (dataSizeInBytes == 0)
+    {
+        destinationBuffer->uploadData(commandQueues.at(queue)->getQueue(), sourceBuffer->getBuffer(), sourceBuffer->getBufferSize(),
+            profilingEvent->getEvent());
+    }
+    else
+    {
+        destinationBuffer->uploadData(commandQueues.at(queue)->getQueue(), sourceBuffer->getBuffer(), dataSizeInBytes, profilingEvent->getEvent());
+    }
+
+    profilingEvent->setReleaseFlag();
+    bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
+    nextEventId++;
+    return eventId;
+}
+
 uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId id) const
 {
     auto eventPointer = bufferEvents.find(id);

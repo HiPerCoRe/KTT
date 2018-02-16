@@ -40,6 +40,8 @@ public:
     void getArgumentVectorAsync(const ArgumentId id, void* destination, const QueueId queue) const override;
     void getArgumentVector(const ArgumentId id, void* destination, const size_t numberOfElements) const override;
     void getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements, const QueueId queue) const override;
+    void copyArgumentVector(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements) override;
+    void copyArgumentVectorAsync(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements, const QueueId queue) override;
     void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds) override;
     void swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond) override;
     void createArgumentBuffer(const ArgumentId id) override;

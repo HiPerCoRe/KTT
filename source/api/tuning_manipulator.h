@@ -222,6 +222,24 @@ public:
       */
     void getArgumentVectorAsync(const ArgumentId id, void* destination, const size_t numberOfElements, QueueId queue) const;
 
+    /** @fn void copyArgumentVector(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements)
+      * Copies part of source vector argument to destination vector argument.
+      * @param destination Id of destination vector argument.
+      * @param source Id of source vector argument.
+      * @param numberOfElements Number of elements which will be copied to destination argument, starting with first element.
+      */
+    void copyArgumentVector(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements);
+
+    /** @fn void copyArgumentVectorAsync(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements, const QueueId queue)
+      * Copies part of source vector argument to destination vector argument. Argument will be copied asynchronously in specified queue.
+      * Note that asynchronous buffer operations are not yet supported for OpenCL buffers mapped into host memory.
+      * @param destination Id of destination vector argument.
+      * @param source Id of source vector argument.
+      * @param numberOfElements Number of elements which will be copied to destination argument, starting with first element.
+      * @param queue Id of queue in which the command to copy argument will be submitted.
+      */
+    void copyArgumentVectorAsync(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements, const QueueId queue);
+
     /** @fn void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
       * Changes kernel arguments for specified kernel by providing corresponding argument ids.
       * @param id Id of kernel for which the arguments will be changed.

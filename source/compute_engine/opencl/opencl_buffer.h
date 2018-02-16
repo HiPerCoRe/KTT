@@ -104,6 +104,22 @@ public:
             checkOpenCLError(clEnqueueUnmapMemObject(queue, buffer, destination, 0, nullptr, recordingEvent), "clEnqueueUnmapMemObject");
         }
     }
+    
+    void uploadData(cl_command_queue queue, const cl_mem source, const size_t dataSize, cl_event* recordingEvent)
+    {
+        if (bufferSize < dataSize)
+        {
+            resize(dataSize);
+        }
+
+        if (recordingEvent == nullptr)
+        {
+            throw std::runtime_error("Recording event for buffer copying operation cannot be null");
+        }
+
+        cl_int result = clEnqueueCopyBuffer(queue, source, buffer, 0, 0, dataSize, 0, nullptr, recordingEvent);
+        checkOpenCLError(result, "clEnqueueCopyBuffer");
+    }
 
     void downloadData(cl_command_queue queue, void* destination, const size_t dataSize, cl_event* recordingEvent) const
     {
