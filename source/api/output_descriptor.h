@@ -3,6 +3,7 @@
   */
 #pragma once
 
+#include <cstddef>
 #include "ktt_platform.h"
 #include "ktt_types.h"
 

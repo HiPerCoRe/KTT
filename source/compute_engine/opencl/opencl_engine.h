@@ -51,8 +51,6 @@ public:
     EventId uploadArgumentAsync(KernelArgument& kernelArgument, const QueueId queue) override;
     uint64_t updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes) override;
     EventId updateArgumentAsync(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue) override;
-    uint64_t downloadArgument(const ArgumentId id, void* destination) const override;
-    EventId downloadArgumentAsync(const ArgumentId id, void* destination, const QueueId queue) const override;
     uint64_t downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const override;
     EventId downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const override;
     KernelArgument downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const override;

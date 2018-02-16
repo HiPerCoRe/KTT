@@ -158,7 +158,7 @@ void ManipulatorInterfaceImplementation::updateArgumentVector(const ArgumentId i
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->updateArgument(id, argumentData, argumentPointer->second->getDataSizeInBytes());
+    computeEngine->updateArgument(id, argumentData, 0);
 }
 
 void ManipulatorInterfaceImplementation::updateArgumentVectorAsync(const ArgumentId id, const void* argumentData, const QueueId queue)
@@ -169,7 +169,7 @@ void ManipulatorInterfaceImplementation::updateArgumentVectorAsync(const Argumen
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    EventId bufferEvent = computeEngine->updateArgumentAsync(id, argumentData, argumentPointer->second->getDataSizeInBytes(), queue);
+    EventId bufferEvent = computeEngine->updateArgumentAsync(id, argumentData, 0, queue);
     storeBufferEvent(queue, bufferEvent, false);
 }
 
@@ -206,7 +206,7 @@ void ManipulatorInterfaceImplementation::getArgumentVector(const ArgumentId id, 
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    computeEngine->downloadArgument(id, destination);
+    computeEngine->downloadArgument(id, destination, 0);
 }
 
 void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId id, void* destination, const QueueId queue) const
@@ -217,7 +217,7 @@ void ManipulatorInterfaceImplementation::getArgumentVectorAsync(const ArgumentId
         throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
     }
 
-    EventId bufferEvent = computeEngine->downloadArgumentAsync(id, destination, queue);
+    EventId bufferEvent = computeEngine->downloadArgumentAsync(id, destination, 0, queue);
     storeBufferEvent(queue, bufferEvent, false);
 }
 
@@ -381,14 +381,7 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Outpu
 {
     for (const auto& descriptor : output)
     {
-        if (descriptor.getOutputSizeInBytes() == 0)
-        {
-            computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
-        }
-        else
-        {
-            computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
-        }
+        computeEngine->downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
     }
 }
 

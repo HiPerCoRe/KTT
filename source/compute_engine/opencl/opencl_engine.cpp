@@ -105,14 +105,7 @@ KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<O
 
     for (const auto& descriptor : outputDescriptors)
     {
-        if (descriptor.getOutputSizeInBytes() == 0)
-        {
-            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination());
-        }
-        else
-        {
-            downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
-        }
+        downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
     }
 
     KernelResult result(name, static_cast<uint64_t>(duration));
@@ -208,12 +201,16 @@ EventId OpenCLEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const 
         throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
     }
 
+    if (findBuffer(kernelArgument.getId()) != nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id already exists: ") + std::to_string(kernelArgument.getId()));
+    }
+
     if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
     {
         return UINT64_MAX;
     }
 
-    clearBuffer(kernelArgument.getId());
     std::unique_ptr<OpenCLBuffer> buffer = nullptr;
     EventId eventId = nextEventId;
 
@@ -260,37 +257,15 @@ EventId OpenCLEngine::updateArgumentAsync(const ArgumentId id, const void* data,
 
     EventId eventId = nextEventId;
     auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
-    buffer->uploadData(commandQueues.at(queue)->getQueue(), data, dataSizeInBytes, profilingEvent->getEvent());
-
-    profilingEvent->setReleaseFlag();
-    bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
-    nextEventId++;
-    return eventId;
-}
-
-uint64_t OpenCLEngine::downloadArgument(const ArgumentId id, void* destination) const
-{
-    EventId eventId = downloadArgumentAsync(id, destination, getDefaultQueue());
-    return getArgumentOperationDuration(eventId);
-}
-
-EventId OpenCLEngine::downloadArgumentAsync(const ArgumentId id, void* destination, const QueueId queue) const
-{
-    if (queue >= commandQueues.size())
+    
+    if (dataSizeInBytes == 0)
     {
-        throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
+        buffer->uploadData(commandQueues.at(queue)->getQueue(), data, buffer->getBufferSize(), profilingEvent->getEvent());
     }
-
-    OpenCLBuffer* buffer = findBuffer(id);
-
-    if (buffer == nullptr)
+    else
     {
-        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+        buffer->uploadData(commandQueues.at(queue)->getQueue(), data, dataSizeInBytes, profilingEvent->getEvent());
     }
-
-    EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
-    buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, buffer->getBufferSize(), profilingEvent->getEvent());
 
     profilingEvent->setReleaseFlag();
     bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
@@ -320,7 +295,15 @@ EventId OpenCLEngine::downloadArgumentAsync(const ArgumentId id, void* destinati
 
     EventId eventId = nextEventId;
     auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
-    buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, dataSizeInBytes, profilingEvent->getEvent());
+
+    if (dataSizeInBytes == 0)
+    {
+        buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, buffer->getBufferSize(), profilingEvent->getEvent());
+    }
+    else
+    {
+        buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, dataSizeInBytes, profilingEvent->getEvent());
+    }
 
     profilingEvent->setReleaseFlag();
     bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
