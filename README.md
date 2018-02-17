@@ -19,8 +19,7 @@ argument validation, ability to change kernel compiler flags and more
 Getting started
 ---------------
 
-* Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/documentation). Open `index.html`
-to start reading it.
+* Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/documentation).
 * Newest version of KTT framework can be found [here](https://github.com/Fillo7/KTT/releases).
 * Prebuilt binaries are currently available only for some platforms. Other platforms require manual build.
 * Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support.
@@ -50,6 +49,7 @@ assume that reader is familiar with KTT API. List of currently available example
 * `coulomb_sum_3d`: Alternative to iterative version, utilizes kernel which computes entire map in single invocation.
 * `nbody`: Example which showcases tuning of N-body simulation.
 * `reduction`: Example which showcases tuning of vector reduction, launches a kernel iteratively.
+* `sort`: Sorting example, combines multiple kernels into kernel composition.
 
 Building KTT
 ------------

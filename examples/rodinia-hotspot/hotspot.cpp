@@ -9,13 +9,21 @@
 #include "hotspot_tunable.h"
 #include "hotspot_reference.h"
 
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/rodinia-hotspot/hotspot_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/rodinia-hotspot/hotspot_reference_kernel.cl"
+#else
+    #define KTT_KERNEL_FILE "../../examples/rodinia-hotspot/hotspot_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/rodinia-hotspot/hotspot_reference_kernel.cl"
+#endif
+
 int main(int argc, char** argv)
 {
   // Initialize platform and device index
-  size_t platformIndex = 0;
-  size_t deviceIndex = 0;
-  auto kernelFile = std::string("../../examples/rodinia-hotspot/hotspot_kernel.cl");
-  auto referenceKernelFile = std::string("../../examples/rodinia-hotspot/hotspot_reference_kernel.cl");
+  ktt::PlatformIndex platformIndex = 0;
+  ktt::DeviceIndex deviceIndex = 0;
+  std::string kernelFile = KTT_KERNEL_FILE;
+  std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
 
   if (argc >= 2)
   {
@@ -55,8 +63,6 @@ int main(int argc, char** argv)
   ofile=argv[8];
   char refofile[] = "reference_output.txt";
 
-
-
   // Create tuner object for chosen platform and device
   ktt::Tuner tuner(platformIndex, deviceIndex);
   tuner.setCompilerOptions("-I./");
@@ -95,8 +101,8 @@ int main(int argc, char** argv)
   readinput(power, grid_rows, grid_cols, pfile);
 
   // Declare kernel parameters
-  size_t kernelId;
-  size_t referenceKernelId;
+  ktt::KernelId kernelId;
+  ktt::KernelId referenceKernelId;
   // Total NDRange size matches number of grid points
   const ktt::DimensionVector ndRangeDimensions(1, 1, 1);
   const ktt::DimensionVector workGroupDimensions(1, 1, 1);
@@ -119,30 +125,30 @@ int main(int argc, char** argv)
   tuner.addConstraint(kernelId, workGroupSmaller, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"});
   tuner.addConstraint(kernelId, workGroupDividable, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"});
   // Add all arguments utilized by kernels
-  size_t iterationId = tuner.addArgumentScalar(0);
-  size_t powerId = tuner.addArgumentVector(power, ktt::ArgumentAccessType::ReadOnly);
-  size_t tempSrcId = tuner.addArgumentVector(std::vector<float>(tempSrc), ktt::ArgumentAccessType::ReadWrite);
-  size_t tempDstId = tuner.addArgumentVector(std::vector<float>(tempDst), ktt::ArgumentAccessType::ReadWrite);
-  size_t grid_colsId = tuner.addArgumentScalar(grid_cols);
-  size_t grid_rowsId = tuner.addArgumentScalar(grid_rows);
+  ktt::ArgumentId iterationId = tuner.addArgumentScalar(0);
+  ktt::ArgumentId powerId = tuner.addArgumentVector(power, ktt::ArgumentAccessType::ReadOnly);
+  ktt::ArgumentId tempSrcId = tuner.addArgumentVector(std::vector<float>(tempSrc), ktt::ArgumentAccessType::ReadWrite);
+  ktt::ArgumentId tempDstId = tuner.addArgumentVector(std::vector<float>(tempDst), ktt::ArgumentAccessType::ReadWrite);
+  ktt::ArgumentId grid_colsId = tuner.addArgumentScalar(grid_cols);
+  ktt::ArgumentId grid_rowsId = tuner.addArgumentScalar(grid_rows);
 
-  size_t borderColsId = tuner.addArgumentScalar(borderCols);
-  size_t borderRowsId = tuner.addArgumentScalar(borderRows);
-  size_t CapId = tuner.addArgumentScalar(Cap);
-  size_t RxId = tuner.addArgumentScalar(Rx);
-  size_t RyId = tuner.addArgumentScalar(Ry);
-  size_t RzId = tuner.addArgumentScalar(Rz);
-  size_t stepId = tuner.addArgumentScalar(step);
+  ktt::ArgumentId borderColsId = tuner.addArgumentScalar(borderCols);
+  ktt::ArgumentId borderRowsId = tuner.addArgumentScalar(borderRows);
+  ktt::ArgumentId CapId = tuner.addArgumentScalar(Cap);
+  ktt::ArgumentId RxId = tuner.addArgumentScalar(Rx);
+  ktt::ArgumentId RyId = tuner.addArgumentScalar(Ry);
+  ktt::ArgumentId RzId = tuner.addArgumentScalar(Rz);
+  ktt::ArgumentId stepId = tuner.addArgumentScalar(step);
 
 
   // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
   tuner.setKernelArguments(kernelId,
-      std::vector<size_t>{ iterationId, 
+      std::vector<ktt::ArgumentId>{ iterationId, 
       powerId, tempSrcId, tempDstId,
       grid_colsId, grid_rowsId, borderColsId, borderRowsId,
       CapId, RxId, RyId, RzId, stepId });
   tuner.setKernelArguments(referenceKernelId,
-      std::vector<size_t>{ iterationId, 
+      std::vector<ktt::ArgumentId>{ iterationId, 
       powerId, tempSrcId, tempDstId,
       grid_colsId, grid_rowsId, borderColsId, borderRowsId,
       CapId, RxId, RyId, RzId, stepId });
@@ -158,7 +164,7 @@ int main(int argc, char** argv)
   tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01f);
 
   // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
-  tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<size_t>{tempDstId });
+  tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<ktt::ArgumentId>{tempDstId});
 
   hotspot->tune();
 

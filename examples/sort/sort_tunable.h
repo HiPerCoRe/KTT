@@ -6,7 +6,7 @@ class tunableSort : public ktt::TuningManipulator {
   public:
     // Constructor creates internal structures and setups the environment
     // it takes arguments from command line and generated input data
-    tunableSort(ktt::Tuner *tuner, std::vector<ktt::KernelId> kernelIds, int size, ktt::ArgumentId inId, ktt::ArgumentId outId, ktt::ArgumentId isumsId, ktt::ArgumentId sizeId, ktt::ArgumentId localMem1Id, ktt::ArgumentId localMem2Id, ktt::ArgumentId localMem3Id, ktt::ArgumentId numberOfGroupsId, ktt::ArgumentId shiftId) : TuningManipulator() 
+    tunableSort(ktt::Tuner *tuner, std::vector<ktt::KernelId> kernelIds, int size, ktt::ArgumentId inId, ktt::ArgumentId outId, ktt::ArgumentId isumsId, ktt::ArgumentId sizeId, ktt::ArgumentId localMem1Id, ktt::ArgumentId localMem2Id, ktt::ArgumentId localMem3Id, ktt::ArgumentId numberOfGroupsId, ktt::ArgumentId shiftId)
   {
     this->tuner = tuner;
 
@@ -27,7 +27,7 @@ class tunableSort : public ktt::TuningManipulator {
   }
 
     //run the code with kernels
-    void launchComputation(const size_t kernelId) override {
+    void launchComputation(const ktt::KernelId kernelId) override {
 
       std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
       int localSize = (int)parameterValues[0].getValue();
@@ -41,13 +41,11 @@ class tunableSort : public ktt::TuningManipulator {
       updateArgumentLocal(localMem2Id, 2*localSize);
       updateArgumentLocal(localMem3Id, 2*localSize);//local, 2*workgroupsize*sizeof(unsigned int)
       int isumsSize = (numberOfGroups*16*sizeof(unsigned int));
-      unsigned int* is = new unsigned int[isumsSize];
-      updateArgumentVector(isumsId, is, isumsSize);
+      std::vector<unsigned int> is(isumsSize);
+      updateArgumentVector(isumsId, is.data(), isumsSize);
 //vector, readwrite, must be added after global and local size are determined, as its size depends on the number of groups
 
       bool inOutSwapped = false;
-      unsigned int *out = new unsigned int[size];
-      unsigned int *in = new unsigned int[size];
 
       for (int shift = 0; shift < sizeof(unsigned int)*8; shift += radix_width)
       {
@@ -64,7 +62,7 @@ class tunableSort : public ktt::TuningManipulator {
 
         if (even)
         {
-          changeKernelArguments(kernelIds[0], {inId, isumsId, 3 /* == sizeId*/, localMem1Id, shiftId});
+          changeKernelArguments(kernelIds[0], {inId, isumsId, sizeId, localMem1Id, shiftId});
         }
         else // i.e. odd pass
         {
@@ -93,14 +91,8 @@ class tunableSort : public ktt::TuningManipulator {
 
       }
       if (inOutSwapped) { //copy contents of in to out, since they are swapped
-        getArgumentVector(outId, out);
-        getArgumentVector(inId, in);
-        std::copy(in, in+size, out);
-        updateArgumentVector(outId, out);
+        copyArgumentVector(outId, inId, size);
       }
-      delete[] in;
-      delete[] out;
-      delete[] is;
     }
 
     void tune() {

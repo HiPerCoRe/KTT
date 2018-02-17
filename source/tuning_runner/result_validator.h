@@ -145,7 +145,7 @@ private:
             {
                 logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
                     + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
-                    + ", difference: " + std::to_string(std::fabs(result.at(i) - referenceResult.at(i))));
+                    + ", difference: " + std::to_string(static_cast<T>(std::fabs(result.at(i) - referenceResult.at(i)))));
                 return false;
             }
         }

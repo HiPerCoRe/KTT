@@ -2,7 +2,6 @@ var NAVTREE =
 [
   [ "Kernel Tuning Toolkit", "index.html", [
     [ "KTT - Kernel Tuning Toolkit", "index.html", null ],
-    [ "KTT FAQ", "md_documentation_faq.html", null ],
     [ "Namespace Members", "namespacemembers.html", [
       [ "All", "namespacemembers.html", null ],
       [ "Functions", "namespacemembers_func.html", null ],
@@ -30,7 +29,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"modifier__dimension_8h.html#a47158e719571f19776b1dc4a1183eb39a02129bb861061d1a052c592e2dc6b383"
+"modifier__dimension_8h.html#a47158e719571f19776b1dc4a1183eb39a21c2e59531c8710156d34a3c30ac81d5"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

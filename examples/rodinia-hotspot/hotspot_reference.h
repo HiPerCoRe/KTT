@@ -13,7 +13,7 @@ class referenceManipulator : public ktt::TuningManipulator {
     //Constructor creates internal structures and setups the tuning environment
     // it takes arguments passed from command line arguments and initializes all data variables
     
-    referenceManipulator(ktt::Tuner *tuner, size_t referenceKernelId, int grid_rows, int grid_cols, int total_iterations, int size, char *ofile, size_t tempSrcId, size_t tempDstId, size_t iterationId, size_t borderRowsId, size_t borderColsId) : TuningManipulator() {
+    referenceManipulator(ktt::Tuner *tuner, ktt::KernelId referenceKernelId, int grid_rows, int grid_cols, int total_iterations, int size, char *ofile, ktt::ArgumentId tempSrcId, ktt::ArgumentId tempDstId, ktt::ArgumentId iterationId, ktt::ArgumentId borderRowsId, ktt::ArgumentId borderColsId) {
 
       this->tuner = tuner;
 
@@ -36,7 +36,7 @@ class referenceManipulator : public ktt::TuningManipulator {
     }
 
     //launchComputation is responsible for actual execution of tuned kernel */
-    virtual void launchComputation(const size_t kernelId) override {
+    void launchComputation(const ktt::KernelId kernelId) override {
 
 
         int smallBlockCol = BLOCK_SIZE_REF-PYRAMID_HEIGHT_REF*EXPAND_RATE;
@@ -71,29 +71,23 @@ class referenceManipulator : public ktt::TuningManipulator {
 
         if (!srcPosition)
         {
-          float* src = (float*) malloc(size* sizeof(float));
-          getArgumentVector(tempSrcId, src);
-          float* dst = (float*) malloc(size* sizeof(float));
-          getArgumentVector(tempDstId, dst);
-          for (int j = 0; j < size; j++)
-            dst[j] = src[j];
-          updateArgumentVector(tempDstId, dst);
+          copyArgumentVector(tempDstId, tempSrcId, size);
         }
     }
 
-    size_t getKernelId() const {
+    ktt::KernelId getKernelId() const {
         return referenceKernelId;
     }
     
   private:
     
     ktt::Tuner* tuner;
-    size_t referenceKernelId; //the id of this kernel
-    size_t iterationId;
-    size_t tempSrcId;
-    size_t tempDstId;
-    size_t borderRowsId;
-    size_t borderColsId;
+    ktt::KernelId referenceKernelId; //the id of this kernel
+    ktt::ArgumentId iterationId;
+    ktt::ArgumentId tempSrcId;
+    ktt::ArgumentId tempDstId;
+    ktt::ArgumentId borderRowsId;
+    ktt::ArgumentId borderColsId;
 
     int grid_rows;
     int grid_cols;

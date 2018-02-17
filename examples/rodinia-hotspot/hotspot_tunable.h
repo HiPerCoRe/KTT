@@ -9,7 +9,7 @@ class tunableHotspot : public ktt::TuningManipulator {
     //Constructor creates internal structures and setups the tuning environment
     // it takes arguments passed from command line arguments and initializes all data variables
     
-    tunableHotspot(ktt::Tuner *tuner, size_t kernelId, int grid_rows, int grid_cols, int total_iterations, int size, char *ofile, size_t tempSrcId, size_t tempDstId, size_t iterationId, size_t borderRowsId, size_t borderColsId) : TuningManipulator() {
+    tunableHotspot(ktt::Tuner *tuner, ktt::KernelId kernelId, int grid_rows, int grid_cols, int total_iterations, int size, char *ofile, ktt::ArgumentId tempSrcId, ktt::ArgumentId tempDstId, ktt::ArgumentId iterationId, ktt::ArgumentId borderRowsId, ktt::ArgumentId borderColsId) {
 
       this->tuner = tuner;
 
@@ -32,7 +32,7 @@ class tunableHotspot : public ktt::TuningManipulator {
     }
 
     //launchComputation is responsible for actual execution of tuned kernel */
-    virtual void launchComputation(const size_t kernelId) override {
+    void launchComputation(const ktt::KernelId kernelId) override {
 
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
         int blocksizeRows = (int)parameterValues[0].getValue();
@@ -69,18 +69,9 @@ class tunableHotspot : public ktt::TuningManipulator {
           }
         }
 
-        //TODO this would be much more efficient to solve it by copy kernel
         if (!srcPosition)
         {
-          float* src = (float*) malloc(size* sizeof(float));
-          getArgumentVector(tempSrcId, src);
-          float* dst = (float*) malloc(size* sizeof(float));
-          getArgumentVector(tempDstId, dst);
-          for (int j = 0; j < size; j++)
-            dst[j] = src[j];
-          updateArgumentVector(tempDstId, dst);
-	  free(src);
-          free(dst);
+          copyArgumentVector(tempDstId, tempSrcId, size);
         }
     }
 
@@ -90,19 +81,19 @@ class tunableHotspot : public ktt::TuningManipulator {
         tuner->printResult(kernelId, std::string("reduction_output.csv"), ktt::PrintFormat::CSV);
     }
 
-    size_t getKernelId() const {
+    ktt::KernelId getKernelId() const {
         return kernelId;
     }
     
   private:
     
     ktt::Tuner* tuner;
-    size_t kernelId;
-    size_t iterationId;
-    size_t tempSrcId;
-    size_t tempDstId;
-    size_t borderRowsId;
-    size_t borderColsId;
+    ktt::KernelId kernelId;
+    ktt::ArgumentId iterationId;
+    ktt::ArgumentId tempSrcId;
+    ktt::ArgumentId tempDstId;
+    ktt::ArgumentId borderRowsId;
+    ktt::ArgumentId borderColsId;
 
     int grid_rows;
     int grid_cols;

@@ -257,7 +257,7 @@ project "reduction_opencl"
 
 project "sort_opencl"
     kind "ConsoleApp"
-    files { "examples/shoc-sort/*.h", "examples/shoc-sort/*.cpp", "examples/shoc-sort/*.cl" }
+    files { "examples/sort/*.h", "examples/sort/*.cpp", "examples/sort/*.cl" }
     includedirs { "source" }
     links { "ktt" }
 
