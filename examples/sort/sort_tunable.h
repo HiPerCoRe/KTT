@@ -101,7 +101,7 @@ class tunableSort : public ktt::TuningManipulator {
       tuner->printResult(kernelId, std::string("sort_result.csv"), ktt::PrintFormat::CSV);
     }
 
-    void setKernelId(size_t id) {
+    void setKernelId(ktt::KernelId id) {
       kernelId = id;
     }
 

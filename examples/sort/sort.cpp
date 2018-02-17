@@ -16,9 +16,9 @@
 #endif
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/shoc-sort/sort.cl"
+    #define KTT_KERNEL_FILE "../examples/sort/sort.cl"
 #else
-    #define KTT_KERNEL_FILE "../../examples/shoc-sort/sort.cl"
+    #define KTT_KERNEL_FILE "../../examples/sort/sort.cl"
 #endif
 
 int main(int argc, char** argv)
