@@ -62,7 +62,7 @@ private:
     DeviceInfo currentDeviceInfo;
 
     // Helper methods
-    std::string loadFileToString(const std::string& filePath) const;
+    static std::string loadFileToString(const std::string& filePath);
     void computeConfigurations(const KernelId kernelId, const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
         const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs, const DimensionVector& globalSize,
         const DimensionVector& localSize, const std::vector<LocalMemoryModifier>& modifiers, std::vector<KernelConfiguration>& finalResult) const;

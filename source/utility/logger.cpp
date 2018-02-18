@@ -13,6 +13,7 @@ Logger::Logger() :
 void Logger::setLoggingTarget(std::ostream& outputTarget)
 {
     this->outputTarget = &outputTarget;
+    filePathValid = false;
 }
 
 void Logger::setLoggingTarget(const std::string& filePath)

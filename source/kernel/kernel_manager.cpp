@@ -454,7 +454,7 @@ bool KernelManager::isComposition(const KernelId id) const
     return false;
 }
 
-std::string KernelManager::loadFileToString(const std::string& filePath) const
+std::string KernelManager::loadFileToString(const std::string& filePath)
 {
     std::ifstream file(filePath);
 
