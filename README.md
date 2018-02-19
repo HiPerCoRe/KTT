@@ -20,7 +20,7 @@ ability to change kernel compiler flags and more
 Getting started
 ---------------
 
-* Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/docs).
+* Documentation for KTT API can be found [here](https://fillo7.github.io/KTT/).
 * Newest version of KTT framework can be found [here](https://github.com/Fillo7/KTT/releases).
 * Prebuilt binaries are available only for some platforms. Other platforms require manual build.
 * Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support.
