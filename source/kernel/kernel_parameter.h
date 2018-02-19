@@ -1,11 +1,12 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 #include "ktt_types.h"
-#include "enum/dimension.h"
-#include "enum/thread_modifier_action.h"
-#include "enum/thread_modifier_type.h"
+#include "enum/modifier_action.h"
+#include "enum/modifier_dimension.h"
+#include "enum/modifier_type.h"
 
 namespace ktt
 {
@@ -13,17 +14,25 @@ namespace ktt
 class KernelParameter
 {
 public:
-    explicit KernelParameter(const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& modifierType,
-        const ThreadModifierAction& modifierAction, const Dimension& modifierDimension);
+    explicit KernelParameter(const std::string& name, const std::vector<size_t>& values, const ModifierType modifierType,
+        const ModifierAction modifierAction, const ModifierDimension modifierDimension);
+    explicit KernelParameter(const std::string& name, const std::vector<double>& values);
 
+    void setLocalMemoryArgumentModifier(const ArgumentId id, const ModifierAction modifierAction);
+    void setLocalMemoryArgumentModifier(const KernelId compositionKernelId, ArgumentId id, const ModifierAction modifierAction);
     void addCompositionKernel(const KernelId id);
 
     std::string getName() const;
     std::vector<size_t> getValues() const;
-    ThreadModifierType getModifierType() const;
-    ThreadModifierAction getModifierAction() const;
-    Dimension getModifierDimension() const;
+    std::vector<double> getValuesDouble() const;
+    ModifierType getModifierType() const;
+    ModifierAction getModifierAction() const;
+    ModifierDimension getModifierDimension() const;
     std::vector<KernelId> getCompositionKernels() const;
+    bool hasValuesDouble() const;
+    bool isLocalMemoryModifier() const;
+    std::vector<std::pair<ArgumentId, ModifierAction>> getLocalMemoryArguments() const;
+    std::vector<KernelId> getLocalMemoryModifierKernels() const;
 
     bool operator==(const KernelParameter& other) const;
     bool operator!=(const KernelParameter& other) const;
@@ -31,10 +40,15 @@ public:
 private:
     std::string name;
     std::vector<size_t> values;
-    ThreadModifierType threadModifierType;
-    ThreadModifierAction threadModifierAction;
-    Dimension modifierDimension;
+    std::vector<double> valuesDouble;
+    ModifierType modifierType;
+    ModifierAction modifierAction;
+    ModifierDimension modifierDimension;
     std::vector<KernelId> compositionKernels;
+    bool isDouble;
+    bool localMemoryModifierFlag;
+    std::vector<std::pair<ArgumentId, ModifierAction>> localMemoryArguments;
+    std::vector<KernelId> localMemoryModifierKernels;
 };
 
 } // namespace ktt

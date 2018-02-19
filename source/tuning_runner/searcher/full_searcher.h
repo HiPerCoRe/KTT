@@ -18,19 +18,24 @@ public:
         }
     }
 
-    KernelConfiguration getNextConfiguration() override
-    {
-        return configurations.at(index);
-    }
-
     void calculateNextConfiguration(const double) override
     {
         index++;
     }
 
-    size_t getConfigurationsCount() const override
+    KernelConfiguration getCurrentConfiguration() const override
+    {
+        return configurations.at(index);
+    }
+
+    size_t getConfigurationCount() const override
     {
         return configurations.size();
+    }
+
+    size_t getUnexploredConfigurationCount() const override
+    {
+        return getConfigurationCount() - index;
     }
 
 private:

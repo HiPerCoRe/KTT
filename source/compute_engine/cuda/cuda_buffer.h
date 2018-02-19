@@ -13,10 +13,10 @@
 namespace ktt
 {
 
-class CudaBuffer
+class CUDABuffer
 {
 public:
-    explicit CudaBuffer(KernelArgument& kernelArgument, const bool zeroCopy) :
+    explicit CUDABuffer(KernelArgument& kernelArgument, const bool zeroCopy) :
         kernelArgumentId(kernelArgument.getId()),
         bufferSize(kernelArgument.getDataSizeInBytes()),
         elementSize(kernelArgument.getElementSizeInBytes()),
@@ -28,38 +28,38 @@ public:
     {
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
-            checkCudaError(cuMemAlloc(&deviceBuffer, bufferSize), "cuMemAlloc");
+            checkCUDAError(cuMemAlloc(&deviceBuffer, bufferSize), "cuMemAlloc");
         }
         else
         {
             if (zeroCopy)
             {
                 hostBufferRaw = kernelArgument.getData();
-                checkCudaError(cuMemHostRegister(hostBufferRaw, bufferSize, CU_MEMHOSTREGISTER_DEVICEMAP), "cuMemHostRegister");
+                checkCUDAError(cuMemHostRegister(hostBufferRaw, bufferSize, CU_MEMHOSTREGISTER_DEVICEMAP), "cuMemHostRegister");
             }
             else
             {
-                checkCudaError(cuMemAllocHost(&hostBufferRaw, bufferSize), "cuMemAllocHost");
+                checkCUDAError(cuMemAllocHost(&hostBufferRaw, bufferSize), "cuMemAllocHost");
             }
-            checkCudaError(cuMemHostGetDevicePointer(&hostBuffer, hostBufferRaw, 0), "cuMemHostGetDevicePointer");
+            checkCUDAError(cuMemHostGetDevicePointer(&hostBuffer, hostBufferRaw, 0), "cuMemHostGetDevicePointer");
         }
     }
 
-    ~CudaBuffer()
+    ~CUDABuffer()
     {
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
-            checkCudaError(cuMemFree(deviceBuffer), "cuMemFree");
+            checkCUDAError(cuMemFree(deviceBuffer), "cuMemFree");
         }
         else
         {
             if (zeroCopy)
             {
-                checkCudaError(cuMemHostUnregister(hostBufferRaw), "cuMemHostUnregister");
+                checkCUDAError(cuMemHostUnregister(hostBufferRaw), "cuMemHostUnregister");
             }
             else
             {
-                checkCudaError(cuMemFreeHost(hostBufferRaw), "cuMemFreeHost");
+                checkCUDAError(cuMemFreeHost(hostBufferRaw), "cuMemFreeHost");
             }
         }
     }
@@ -78,14 +78,14 @@ public:
 
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
-            checkCudaError(cuMemFree(deviceBuffer), "cuMemFree");
-            checkCudaError(cuMemAlloc(&deviceBuffer, newBufferSize), "cuMemAlloc");
+            checkCUDAError(cuMemFree(deviceBuffer), "cuMemFree");
+            checkCUDAError(cuMemAlloc(&deviceBuffer, newBufferSize), "cuMemAlloc");
         }
         else
         {
-            checkCudaError(cuMemFreeHost(hostBufferRaw), "cuMemFreeHost");
-            checkCudaError(cuMemAllocHost(&hostBufferRaw, newBufferSize), "cuMemAllocHost");
-            checkCudaError(cuMemHostGetDevicePointer(&hostBuffer, hostBufferRaw, 0), "cuMemHostGetDevicePointer");
+            checkCUDAError(cuMemFreeHost(hostBufferRaw), "cuMemFreeHost");
+            checkCUDAError(cuMemAllocHost(&hostBufferRaw, newBufferSize), "cuMemAllocHost");
+            checkCUDAError(cuMemHostGetDevicePointer(&hostBuffer, hostBufferRaw, 0), "cuMemHostGetDevicePointer");
         }
         bufferSize = newBufferSize;
     }
@@ -99,12 +99,50 @@ public:
 
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
-            checkCudaError(cuMemcpyHtoD(deviceBuffer, source, dataSize), "cuMemcpyHtoD");
+            checkCUDAError(cuMemcpyHtoD(deviceBuffer, source, dataSize), "cuMemcpyHtoD");
         }
         else
         {
-            checkCudaError(cuMemcpyHtoD(hostBuffer, source, dataSize), "cuMemcpyHtoD");
+            checkCUDAError(cuMemcpyHtoD(hostBuffer, source, dataSize), "cuMemcpyHtoD");
         }
+    }
+
+    void uploadData(CUstream stream, const void* source, const size_t dataSize, CUevent startEvent, CUevent endEvent)
+    {
+        if (bufferSize < dataSize)
+        {
+            resize(dataSize);
+        }
+
+        checkCUDAError(cuEventRecord(startEvent, stream), "cuEventRecord");
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCUDAError(cuMemcpyHtoDAsync(deviceBuffer, source, dataSize, stream), "cuMemcpyHtoDAsync");
+        }
+        else
+        {
+            checkCUDAError(cuMemcpyHtoDAsync(hostBuffer, source, dataSize, stream), "cuMemcpyHtoDAsync");
+        }
+        checkCUDAError(cuEventRecord(endEvent, stream), "cuEventRecord");
+    }
+
+    void uploadData(CUstream stream, const CUDABuffer* source, const size_t dataSize, CUevent startEvent, CUevent endEvent)
+    {
+        if (bufferSize < dataSize)
+        {
+            resize(dataSize);
+        }
+
+        checkCUDAError(cuEventRecord(startEvent, stream), "cuEventRecord");
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCUDAError(cuMemcpyDtoDAsync(deviceBuffer, *source->getBuffer(), dataSize, stream), "cuMemcpyDtoDAsync");
+        }
+        else
+        {
+            checkCUDAError(cuMemcpyDtoDAsync(hostBuffer, *source->getBuffer(), dataSize, stream), "cuMemcpyDtoDAsync");
+        }
+        checkCUDAError(cuEventRecord(endEvent, stream), "cuEventRecord");
     }
 
     void downloadData(void* destination, const size_t dataSize) const
@@ -116,12 +154,31 @@ public:
 
         if (memoryLocation == ArgumentMemoryLocation::Device)
         {
-            checkCudaError(cuMemcpyDtoH(destination, deviceBuffer, dataSize), "cuMemcpyDtoH");
+            checkCUDAError(cuMemcpyDtoH(destination, deviceBuffer, dataSize), "cuMemcpyDtoH");
         }
         else
         {
-            checkCudaError(cuMemcpyDtoH(destination, hostBuffer, dataSize), "cuMemcpyDtoH");
+            checkCUDAError(cuMemcpyDtoH(destination, hostBuffer, dataSize), "cuMemcpyDtoH");
         }
+    }
+
+    void downloadData(CUstream stream, void* destination, const size_t dataSize, CUevent startEvent, CUevent endEvent) const
+    {
+        if (bufferSize < dataSize)
+        {
+            throw std::runtime_error("Size of data to download is higher than size of buffer");
+        }
+
+        checkCUDAError(cuEventRecord(startEvent, stream), "cuEventRecord");
+        if (memoryLocation == ArgumentMemoryLocation::Device)
+        {
+            checkCUDAError(cuMemcpyDtoHAsync(destination, deviceBuffer, dataSize, stream), "cuMemcpyDtoHAsync");
+        }
+        else
+        {
+            checkCUDAError(cuMemcpyDtoHAsync(destination, hostBuffer, dataSize, stream), "cuMemcpyDtoHAsync");
+        }
+        checkCUDAError(cuEventRecord(endEvent, stream), "cuEventRecord");
     }
 
     ArgumentId getKernelArgumentId() const

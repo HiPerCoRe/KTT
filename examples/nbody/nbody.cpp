@@ -5,13 +5,21 @@
 #include <vector>
 #include "tuner_api.h"
 
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/nbody/nbody_kernel1.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/nbody/nbody_reference_kernel.cl"
+#else
+    #define KTT_KERNEL_FILE "../../examples/nbody/nbody_kernel1.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/nbody/nbody_reference_kernel.cl"
+#endif
+
 int main(int argc, char** argv)
 {
     // Initialize platform and device index
-    size_t platformIndex = 0;
-    size_t deviceIndex = 0;
-    std::string kernelFile = "../examples/nbody/nbody_kernel1.cl";
-    std::string referenceKernelFile = "../examples/nbody/nbody_reference_kernel.cl";
+    ktt::PlatformIndex platformIndex = 0;
+    ktt::DeviceIndex deviceIndex = 0;
+    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
 
     if (argc >= 2)
     {
@@ -31,7 +39,7 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
-    const int numberOfBodies = 8192;
+    const int numberOfBodies = 32*1024;
     // Total NDRange size matches number of grid points
     const ktt::DimensionVector ndRangeDimensions(numberOfBodies);
     const ktt::DimensionVector workGroupDimensions;
@@ -90,12 +98,12 @@ int main(int argc, char** argv)
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "nbody_kernel", ndRangeDimensions, referenceWorkGroupDimensions);
 
     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {32, 64, 128, 256, 512}, ktt::ThreadModifierType::Local, ktt::ThreadModifierAction::Multiply,
-        ktt::Dimension::X);
-    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", {1, 2, 4, 8, 16, 32}, ktt::ThreadModifierType::Global, ktt::ThreadModifierAction::Divide,
-        ktt::Dimension::X);
-    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", {1, 2, 4, 8, 16, 32, 64, 128, 256});
-    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", {1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {64, 128, 256, 512}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply,
+        ktt::ModifierDimension::X);
+    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", {1, 2, 4, 8}, ktt::ModifierType::Global, ktt::ModifierAction::Divide,
+        ktt::ModifierDimension::X);
+    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", {0, 1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", {0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
     tuner.addParameter(kernelId, "USE_SOA", {0, 1});
     tuner.addParameter(kernelId, "LOCAL_MEM", {0, 1});

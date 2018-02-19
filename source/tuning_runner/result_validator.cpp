@@ -6,12 +6,10 @@
 namespace ktt
 {
 
-ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger,
-    ComputeEngine* computeEngine) :
+ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelRunner* kernelRunner, Logger* logger) :
     argumentManager(argumentManager),
-    kernelManager(kernelManager),
+    kernelRunner(kernelRunner),
     logger(logger),
-    computeEngine(computeEngine),
     toleranceThreshold(1e-4),
     validationMethod(ValidationMethod::SideBySideComparison)
 {}
@@ -45,7 +43,7 @@ void ResultValidator::setToleranceThreshold(const double threshold)
     this->toleranceThreshold = threshold;
 }
 
-void ResultValidator::setValidationMethod(const ValidationMethod& method)
+void ResultValidator::setValidationMethod(const ValidationMethod method)
 {
     this->validationMethod = method;
 }
@@ -57,6 +55,15 @@ void ResultValidator::setValidationRange(const ArgumentId id, const size_t range
         argumentValidationRanges.erase(id);
     }
     argumentValidationRanges.insert(std::make_pair(id, range));
+}
+
+void ResultValidator::setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
+{
+    if (argumentComparators.find(id) != argumentComparators.end())
+    {
+        argumentComparators.erase(id);
+    }
+    argumentComparators.insert(std::make_pair(id, comparator));
 }
 
 void ResultValidator::computeReferenceResult(const Kernel& kernel)
@@ -71,7 +78,7 @@ void ResultValidator::clearReferenceResults()
     referenceKernelResults.clear();
 }
 
-bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const KernelConfiguration& configuration)
+bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel)
 {
     KernelId kernelId = kernel.getId();
 
@@ -86,14 +93,14 @@ bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const Ker
 
     for (const auto argumentId : argumentIds)
     {
-        KernelArgument resultArgument = computeEngine->downloadArgument(argumentId);
+        KernelArgument resultArgument = kernelRunner->downloadArgument(argumentId);
         resultArguments.push_back(resultArgument);
     }
 
-    return validateArguments(resultArguments, referenceClassResults.find(kernelId)->second, kernel.getName(), configuration);
+    return validateArguments(resultArguments, referenceClassResults.find(kernelId)->second, kernel.getName());
 }
 
-bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const KernelConfiguration& configuration)
+bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel)
 {
     KernelId kernelId = kernel.getId();
 
@@ -108,11 +115,11 @@ bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const Ke
 
     for (const auto argumentId : argumentIds)
     {
-        KernelArgument resultArgument = computeEngine->downloadArgument(argumentId);
+        KernelArgument resultArgument = kernelRunner->downloadArgument(argumentId);
         resultArguments.push_back(resultArgument);
     }
 
-    return validateArguments(resultArguments, referenceKernelResults.find(kernelId)->second, kernel.getName(), configuration);
+    return validateArguments(resultArguments, referenceKernelResults.find(kernelId)->second, kernel.getName());
 }
 
 double ResultValidator::getToleranceThreshold() const
@@ -165,8 +172,9 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel& kernel)
             numberOfElements = argument.getNumberOfElements();
         }
 
-        referenceResult.emplace_back(KernelArgument(referenceArgumentId, referenceClass->getData(referenceArgumentId),
-            numberOfElements, argument.getDataType(), argument.getMemoryLocation(), argument.getAccessType(), argument.getUploadType()));
+        referenceResult.emplace_back(referenceArgumentId, referenceClass->getData(referenceArgumentId), numberOfElements,
+            argument.getElementSizeInBytes(), argument.getDataType(), argument.getMemoryLocation(), argument.getAccessType(),
+            argument.getUploadType(), false);
     }
     referenceClassResults.insert(std::make_pair(kernelId, referenceResult));
 }
@@ -198,26 +206,21 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
         }
     }
 
-    const Kernel& referenceKernel = kernelManager->getKernel(referenceKernelId);
-    KernelConfiguration configuration = kernelManager->getKernelConfiguration(referenceKernelId, referenceParameters);
-    std::string source = kernelManager->getKernelSourceWithDefines(referenceKernelId, configuration);
-
     logger->log(std::string("Computing reference kernel result for kernel: ") + kernel.getName());
-    auto result = computeEngine->runKernel(KernelRuntimeData(referenceKernelId, referenceKernel.getName(), source, configuration.getGlobalSize(),
-        configuration.getLocalSize(), {}), getKernelArgumentPointers(referenceKernelId), {});
-    std::vector<KernelArgument> referenceResult;
+    kernelRunner->runKernel(referenceKernelId, referenceParameters, std::vector<OutputDescriptor>{});
 
+    std::vector<KernelArgument> referenceResult;
     for (const auto argumentId : referenceArgumentIds)
     {
-        referenceResult.push_back(computeEngine->downloadArgument(argumentId));
+        referenceResult.push_back(kernelRunner->downloadArgument(argumentId));
     }
 
-    computeEngine->clearBuffers();
+    kernelRunner->clearBuffers();
     referenceKernelResults.insert(std::make_pair(kernelId, referenceResult));
 }
 
 bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resultArguments, const std::vector<KernelArgument>& referenceArguments,
-    const std::string kernelName, const KernelConfiguration& configuration) const
+    const std::string kernelName) const
 {
     bool validationResult = true;
 
@@ -233,7 +236,7 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             }
 
             ArgumentDataType referenceDataType = referenceArgument.getDataType();
-
+            ArgumentId id = resultArgument.getId();
             if (referenceDataType != resultArgument.getDataType())
             {
                 logger->log(std::string("Reference class argument data type mismatch for argument id: ") + std::to_string(resultArgument.getId()));
@@ -241,52 +244,77 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             }
 
             bool currentResult;
-            if (referenceDataType == ArgumentDataType::Char)
+            auto comparatorPointer = argumentComparators.find(id);
+
+            if (comparatorPointer != argumentComparators.end())
             {
-                currentResult = validateResult(resultArgument.getDataChar(), referenceArgument.getDataChar(), resultArgument.getId());
+                size_t resultSize = resultArgument.getNumberOfElements();
+                size_t referenceSize = referenceArgument.getNumberOfElements();
+                auto argumentRangePointer = argumentValidationRanges.find(id);
+                if (argumentRangePointer == argumentValidationRanges.end() && resultSize != referenceSize)
+                {
+                    logger->log(std::string("Number of elements in results differs for argument with id: ") + std::to_string(id)
+                        + ", reference size: " + std::to_string(referenceSize) + ", result size: " + std::to_string(resultSize));
+                    currentResult = false;
+                }
+                else if (argumentRangePointer != argumentValidationRanges.end())
+                {
+                    currentResult = validateResultCustom(id, resultArgument.getData(), referenceArgument.getData(), argumentRangePointer->second,
+                        resultArgument.getElementSizeInBytes(), comparatorPointer->second);
+                }
+                else
+                {
+                    currentResult = validateResultCustom(id, resultArgument.getData(), referenceArgument.getData(), resultSize,
+                        resultArgument.getElementSizeInBytes(), comparatorPointer->second);
+                }
+            }
+            else if (referenceDataType == ArgumentDataType::Char)
+            {
+                currentResult = validateResult(resultArgument.getDataWithType<int8_t>(), referenceArgument.getDataWithType<int8_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedChar)
             {
-                currentResult = validateResult(resultArgument.getDataUnsignedChar(), referenceArgument.getDataUnsignedChar(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<uint8_t>(), referenceArgument.getDataWithType<uint8_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Short)
             {
-                currentResult = validateResult(resultArgument.getDataShort(), referenceArgument.getDataShort(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int16_t>(), referenceArgument.getDataWithType<int16_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedShort)
             {
-                currentResult = validateResult(resultArgument.getDataUnsignedShort(), referenceArgument.getDataUnsignedShort(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<uint16_t>(), referenceArgument.getDataWithType<uint16_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Int)
             {
-                currentResult = validateResult(resultArgument.getDataInt(), referenceArgument.getDataInt(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int32_t>(), referenceArgument.getDataWithType<int32_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedInt)
             {
-                currentResult = validateResult(resultArgument.getDataUnsignedInt(), referenceArgument.getDataUnsignedInt(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<uint32_t>(), referenceArgument.getDataWithType<uint32_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Long)
             {
-                currentResult = validateResult(resultArgument.getDataLong(), referenceArgument.getDataLong(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<int64_t>(), referenceArgument.getDataWithType<int64_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedLong)
             {
-                currentResult = validateResult(resultArgument.getDataUnsignedLong(), referenceArgument.getDataUnsignedLong(),
-                    resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<uint64_t>(), referenceArgument.getDataWithType<uint64_t>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Half)
             {
-                currentResult = validateResult(resultArgument.getDataHalf(), referenceArgument.getDataHalf(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<half>(), referenceArgument.getDataWithType<half>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Float)
             {
-                currentResult = validateResult(resultArgument.getDataFloat(), referenceArgument.getDataFloat(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<float>(), referenceArgument.getDataWithType<float>(), id);
             }
             else if (referenceDataType == ArgumentDataType::Double)
             {
-                currentResult = validateResult(resultArgument.getDataDouble(), referenceArgument.getDataDouble(), resultArgument.getId());
+                currentResult = validateResult(resultArgument.getDataWithType<double>(), referenceArgument.getDataWithType<double>(), id);
+            }
+            else if (referenceDataType == ArgumentDataType::Custom)
+            {
+                throw std::runtime_error("Validation of custom data type arguments requires usage of argument comparator");
             }
             else
             {
@@ -307,18 +335,20 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
     return validationResult;
 }
 
-std::vector<KernelArgument*> ResultValidator::getKernelArgumentPointers(const KernelId id) const
+bool ResultValidator::validateResultCustom(const ArgumentId id, const void* result, const void* referenceResult, const size_t numberOfElements,
+    const size_t elementSizeInBytes, const std::function<bool(const void*, const void*)>& comparator) const
 {
-    std::vector<KernelArgument*> result;
-
-    std::vector<ArgumentId> argumentIds = kernelManager->getKernel(id).getArgumentIds();
-    
-    for (const auto id : argumentIds)
+    for (size_t i = 0; i < numberOfElements * elementSizeInBytes; i += elementSizeInBytes)
     {
-        result.push_back(&argumentManager->getArgument(id));
+        if (!comparator((uint8_t*)result + i, (uint8_t*)referenceResult + i))
+        {
+            logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: "
+                + std::to_string(i / elementSizeInBytes));
+            return false;
+        }
     }
 
-    return result;
+    return true;
 }
 
 } // namespace ktt

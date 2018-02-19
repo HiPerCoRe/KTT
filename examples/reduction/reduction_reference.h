@@ -24,12 +24,12 @@ public:
             if (resSize%2) resD[resSize/2-1] += resD[resSize-1];
             resSize = resSize/2;
         }
-        res.clear();
+
         res.push_back((float)resD[0]);
         std::cout << "Reference in double: " << std::setprecision(10) << resD[0] << std::endl;
     }
 
-    const void* getData(const ktt::ArgumentId id) const override {
+    void* getData(const ktt::ArgumentId id) override {
         if (id == resultArgumentId) {
             return (void*)res.data();
         }

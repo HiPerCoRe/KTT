@@ -4,7 +4,7 @@
 namespace ktt
 {
 
-std::string getOpenclEnumName(const cl_int value)
+std::string getOpenCLEnumName(const cl_int value)
 {
     switch (value)
     {
@@ -51,23 +51,23 @@ std::string getOpenclEnumName(const cl_int value)
     }
 }
 
-void checkOpenclError(const cl_int value)
+void checkOpenCLError(const cl_int value)
 {
     if (value != CL_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal OpenCL error: ") + getOpenclEnumName(value));
+        throw std::runtime_error(std::string("Internal OpenCL error: ") + getOpenCLEnumName(value));
     }
 }
 
-void checkOpenclError(const cl_int value, const std::string& message)
+void checkOpenCLError(const cl_int value, const std::string& message)
 {
     if (value != CL_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal OpenCL error: ") + getOpenclEnumName(value) + "\nAdditional info: " + message);
+        throw std::runtime_error(std::string("Internal OpenCL error: ") + getOpenCLEnumName(value) + "\nAdditional info: " + message);
     }
 }
 
-cl_mem_flags getOpenclMemoryType(const ArgumentAccessType& accessType)
+cl_mem_flags getOpenCLMemoryType(const ArgumentAccessType accessType)
 {
     switch (accessType)
     {
@@ -82,22 +82,12 @@ cl_mem_flags getOpenclMemoryType(const ArgumentAccessType& accessType)
     }
 }
 
-cl_ulong getKernelRunDuration(const cl_event profilingEvent)
-{
-    cl_ulong executionStart;
-    cl_ulong executionEnd;
-    checkOpenclError(clGetEventProfilingInfo(profilingEvent, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &executionStart, nullptr));
-    checkOpenclError(clGetEventProfilingInfo(profilingEvent, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &executionEnd, nullptr));
-
-    return executionEnd - executionStart;
-}
-
 std::string getPlatformInfoString(const cl_platform_id id, const cl_platform_info info)
 {
     size_t infoSize;
-    checkOpenclError(clGetPlatformInfo(id, info, 0, nullptr, &infoSize));
+    checkOpenCLError(clGetPlatformInfo(id, info, 0, nullptr, &infoSize), "clGetPlatformInfo");
     std::string infoString(infoSize, ' ');
-    checkOpenclError(clGetPlatformInfo(id, info, infoSize, &infoString[0], nullptr));
+    checkOpenCLError(clGetPlatformInfo(id, info, infoSize, &infoString[0], nullptr), "clGetPlatformInfo");
     
     return infoString;
 }
@@ -105,9 +95,9 @@ std::string getPlatformInfoString(const cl_platform_id id, const cl_platform_inf
 std::string getDeviceInfoString(const cl_device_id id, const cl_device_info info)
 {
     size_t infoSize;
-    checkOpenclError(clGetDeviceInfo(id, info, 0, nullptr, &infoSize));
+    checkOpenCLError(clGetDeviceInfo(id, info, 0, nullptr, &infoSize), "clGetDeviceInfo");
     std::string infoString(infoSize, ' ');
-    checkOpenclError(clGetDeviceInfo(id, info, infoSize, &infoString[0], nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, info, infoSize, &infoString[0], nullptr), "clGetDeviceInfo");
 
     return infoString;
 }

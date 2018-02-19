@@ -1,6 +1,6 @@
 -- Configuration variables
-cuda_examples = false
-vulkan_examples = false
+ktt_library_name = "ktt_0_6"
+cuda_projects = false
 
 -- Helper functions to find compute API headers and libraries
 function findLibrariesAmd()
@@ -89,34 +89,11 @@ function findLibrariesNvidia()
     links { "OpenCL" }
         
     if not _OPTIONS["no-cuda"] then
-        cuda_examples = true
+        cuda_projects = true
         defines { "PLATFORM_CUDA" }
         links { "cuda", "nvrtc" }
     end
         
-    return true
-end
-
-function findVulkan()
-    local path = os.getenv("VULKAN_SDK")
-    
-    if not path then
-        return false
-    end
-    
-    includedirs { "$(VULKAN_SDK)/Include" }
-    
-    filter "platforms:x86"
-        libdirs { "$(VULKAN_SDK)/Lib32" }
-
-    filter "platforms:x86_64"
-        libdirs { "$(VULKAN_SDK)/Lib" }
-    
-    filter {}
-    vulkan_examples = true
-    defines { "PLATFORM_VULKAN" }
-    links { "vulkan-1" }
-    
     return true
 end
 
@@ -159,12 +136,6 @@ newoption
 
 newoption
 {
-    trigger = "vulkan",
-    description = "Enables compilation of Vulkan back-end"
-}
-
-newoption
-{
     trigger = "no-cuda",
     description = "Disables compilation of CUDA back-end (Nvidia platform only)"
 }
@@ -172,13 +143,19 @@ newoption
 newoption
 {
     trigger = "tests",
-    description = "Enables compilation of supplied unit tests"
+    description = "Enables compilation of unit tests"
 }
 
 newoption
 {
     trigger = "no-examples",
-    description = "Disables compilation of supplied examples"
+    description = "Disables compilation of examples"
+}
+
+newoption
+{
+    trigger = "no-tutorials",
+    description = "Disables compilation of tutorials"
 }
 
 -- Project configuration
@@ -188,9 +165,9 @@ workspace "ktt"
         buildPath = _OPTIONS["outdir"]
     end
     
-    configurations { "Debug", "Release" }
-    platforms { "x86", "x86_64" }
-    location (buildPath)
+    configurations { "Release", "Debug" }
+    platforms { "x86_64", "x86" }
+    location(buildPath)
     language "C++"
     cppdialect "C++14"
 
@@ -225,7 +202,8 @@ project "ktt"
     files { "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "source" }
     defines { "KTT_LIBRARY" }
-    
+    targetname(ktt_library_name)
+
     local libraries = false
     
     if _OPTIONS["platform"] then
@@ -240,32 +218,12 @@ project "ktt"
         libraries = findLibraries()
     end
     
-    if _OPTIONS["vulkan"] then
-        vulkan = findVulkan()
-        
-        if not vulkan then
-            error("Vulkan SDK was not found")
-        end
-    end
-    
     if not libraries then
-        error("Compute API libraries were not found")
+        error("Compute API libraries were not found. Please ensure that path to your device vendor SDK is correctly set in the environment variables.")
     end
     
 -- Examples configuration 
 if not _OPTIONS["no-examples"] then
-
-project "simple_opencl"
-    kind "ConsoleApp"
-    files { "examples/simple/simple_opencl.cpp", "examples/simple/simple_opencl_kernel.cl" }
-    includedirs { "source" }
-    links { "ktt" }
-
-project "info_opencl"
-    kind "ConsoleApp"
-    files { "examples/compute_api_info/compute_api_info_opencl.cpp" }
-    includedirs { "source" }
-    links { "ktt" }
 
 project "nbody_opencl"
     kind "ConsoleApp"
@@ -290,41 +248,86 @@ project "coulomb_sum_3d_iterative_opencl"
     files { "examples/coulomb_sum_3d_iterative/*.h", "examples/coulomb_sum_3d_iterative/*.cpp", "examples/coulomb_sum_3d_iterative/*.cl" }
     includedirs { "source" }
     links { "ktt" }
-    
+
 project "reduction_opencl"
     kind "ConsoleApp"
     files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }
     includedirs { "source" }
     links { "ktt" }
 
-if cuda_examples then
-
-project "simple_cuda"
+project "sort_opencl"
     kind "ConsoleApp"
-    files { "examples/simple/simple_cuda.cpp", "examples/simple/simple_cuda_kernel.cu" }
-    includedirs { "source" }
-    links { "ktt" }
-    
-project "info_cuda"
-    kind "ConsoleApp"
-    files { "examples/compute_api_info/compute_api_info_cuda.cpp" }
+    files { "examples/sort/*.h", "examples/sort/*.cpp", "examples/sort/*.cl" }
     includedirs { "source" }
     links { "ktt" }
 
-end -- cuda_examples
-
-if vulkan_examples then
-
-project "info_vulkan"
+if os.target() == "linux" then
+project "hotspot_opencl"
     kind "ConsoleApp"
-    files { "examples/compute_api_info/compute_api_info_vulkan.cpp" }
+    files { "examples/rodinia-hotspot/*.h", "examples/rodinia-hotspot/*.cpp", "examples/rodinia-hotspot/*.cl" }
     includedirs { "source" }
     links { "ktt" }
-
-end -- vulkan_examples
+end
 
 end -- _OPTIONS["no-examples"]
+
+-- Tutorials configuration 
+if not _OPTIONS["no-tutorials"] then
+
+project "00_info_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/00_compute_api_info/compute_api_info_opencl.cpp" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "01_running_kernel_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/01_running_kernel/running_kernel_opencl.cpp", "tutorials/01_running_kernel/opencl_kernel.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "02_tuning_kernel_simple_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_opencl.cpp", "tutorials/02_tuning_kernel_simple/opencl_kernel.cl" }
+    includedirs { "source" }
+    links { "ktt" }
     
+project "03_custom_kernel_arguments_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_opencl.cpp", "tutorials/03_custom_kernel_arguments/opencl_kernel.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
+if cuda_projects then
+
+project "00_info_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/00_compute_api_info/compute_api_info_cuda.cpp" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "01_running_kernel_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/01_running_kernel/running_kernel_cuda.cpp", "tutorials/01_running_kernel/cuda_kernel.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "02_tuning_kernel_simple_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_cuda.cpp", "tutorials/02_tuning_kernel_simple/cuda_kernel.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+   
+project "03_custom_kernel_arguments_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_cuda.cpp", "tutorials/03_custom_kernel_arguments/cuda_kernel.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+ 
+end -- cuda_projects
+
+end -- _OPTIONS["no-tutorials"]
+
 -- Unit tests configuration   
 if _OPTIONS["tests"] then
 
@@ -345,9 +348,4 @@ project "tests"
     else
         findLibraries()
     end
-    
-    if _OPTIONS["vulkan"] then
-        findVulkan()
-    end
-    
 end -- _OPTIONS["tests"]

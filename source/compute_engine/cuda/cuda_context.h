@@ -6,18 +6,18 @@
 namespace ktt
 {
 
-class CudaContext
+class CUDAContext
 {
 public:
-    explicit CudaContext(const CUdevice device) :
+    explicit CUDAContext(const CUdevice device) :
         device(device)
     {
-        checkCudaError(cuCtxCreate(&context, 0, device), "cuCtxCreate");
+        checkCUDAError(cuCtxCreate(&context, CU_CTX_SCHED_BLOCKING_SYNC, device), "cuCtxCreate");
     }
 
-    ~CudaContext()
+    ~CUDAContext()
     {
-        checkCudaError(cuCtxDestroy(context), "cuCtxDestroy");
+        checkCUDAError(cuCtxDestroy(context), "cuCtxDestroy");
     }
 
     CUdevice getDevice() const

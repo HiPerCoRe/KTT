@@ -3,23 +3,30 @@
 #include <string>
 #include "cuda.h"
 #include "cuda_utility.h"
+#include "ktt_types.h"
 
 namespace ktt
 {
 
-class CudaStream
+class CUDAStream
 {
 public:
-    explicit CudaStream(const CUcontext context, const CUdevice device) :
+    explicit CUDAStream(const QueueId id, const CUcontext context, const CUdevice device) :
+        id(id),
         context(context),
         device(device)
     {
-        checkCudaError(cuStreamCreate(&stream, CU_STREAM_DEFAULT), "cuStreamCreate");
+        checkCUDAError(cuStreamCreate(&stream, CU_STREAM_DEFAULT), "cuStreamCreate");
     }
 
-    ~CudaStream()
+    ~CUDAStream()
     {
-        checkCudaError(cuStreamDestroy(stream), "cuStreamDestroy");
+        checkCUDAError(cuStreamDestroy(stream), "cuStreamDestroy");
+    }
+
+    QueueId getId() const
+    {
+        return id;
     }
 
     CUcontext getcontext() const
@@ -38,6 +45,7 @@ public:
     }
 
 private:
+    QueueId id;
     CUcontext context;
     CUdevice device;
     CUstream stream;

@@ -4,6 +4,14 @@
 #include <vector>
 #include "tuner_api.h"
 
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_reference_kernel.cl"
+#else
+    #define KTT_KERNEL_FILE "../../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_reference_kernel.cl"
+#endif
+
 class CoulombManipulator : public ktt::TuningManipulator
 {
 public:
@@ -73,10 +81,10 @@ private:
 int main(int argc, char** argv)
 {
     // Initialize platform index, device index and paths to kernels
-    size_t platformIndex = 0;
-    size_t deviceIndex = 0;
-    std::string kernelFile = "../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_kernel.cl";
-    std::string referenceKernelFile = "../examples/coulomb_sum_3d_iterative/coulomb_sum_3d_iterative_reference_kernel.cl";
+    ktt::PlatformIndex platformIndex = 0;
+    ktt::DeviceIndex deviceIndex = 0;
+    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
 
     if (argc >= 2)
     {
@@ -97,7 +105,7 @@ int main(int argc, char** argv)
 
     // Set the problem size and declare data variables
     const int atoms = 4000;
-    const int gridSize = 64;
+    const int gridSize = 256;
     float gridSpacing = 0.5f;
     int zIndex = 0;
     std::vector<float> atomInfo;
@@ -169,10 +177,10 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId});
 
     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", std::vector<size_t>{4, 8, 16, 32}, ktt::ThreadModifierType::Local,
-        ktt::ThreadModifierAction::Multiply, ktt::Dimension::X);
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", std::vector<size_t>{1, 2, 4, 8, 16, 32}, ktt::ThreadModifierType::Local,
-        ktt::ThreadModifierAction::Multiply, ktt::Dimension::Y);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", std::vector<size_t>{4, 8, 16, 32}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply,
+        ktt::ModifierDimension::X);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", std::vector<size_t>{1, 2, 4, 8, 16, 32}, ktt::ModifierType::Local,
+        ktt::ModifierAction::Multiply, ktt::ModifierDimension::Y);
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", std::vector<size_t>{0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", std::vector<size_t>{0, 1});
     tuner.addParameter(kernelId, "VECTOR_TYPE", std::vector<size_t>{1, 2, 4, 8});
@@ -181,10 +189,13 @@ int main(int argc, char** argv)
     // Using vectorized SoA only makes sense when vectors are longer than 1
     auto vectorizedSoA = [](std::vector<size_t> vector) {return vector.at(0) > 1 || vector.at(1) != 2;};
     tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"});
+    // Ensure sufficient parallelism
+    auto par = [](std::vector<size_t> vector) {return vector.at(0) * vector.at(1) >= 64;};
+    tuner.addConstraint(kernelId, par, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"});
 
     // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR
-    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", std::vector<size_t>{1, 2, 4, 8}, ktt::ThreadModifierType::Global,
-        ktt::ThreadModifierAction::Divide, ktt::Dimension::X);
+    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", std::vector<size_t>{1, 2, 4, 8}, ktt::ModifierType::Global, ktt::ModifierAction::Divide,
+        ktt::ModifierDimension::X);
         
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);

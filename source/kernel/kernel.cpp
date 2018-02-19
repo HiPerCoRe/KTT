@@ -24,6 +24,24 @@ void Kernel::addParameter(const KernelParameter& parameter)
     parameters.push_back(parameter);
 }
 
+void Kernel::addLocalMemoryModifier(const std::string& parameterName, const ArgumentId argumentId, const ModifierAction& modifierAction)
+{
+    for (auto& parameter : parameters)
+    {
+        if (parameter.getName() == parameterName)
+        {
+            if (parameter.hasValuesDouble())
+            {
+                throw std::runtime_error("Parameter with floating-point values cannot act as a modifier");
+            }
+
+            parameter.setLocalMemoryArgumentModifier(argumentId, modifierAction);
+            return;
+        }
+    }
+    throw std::runtime_error(std::string("Parameter with name does not exist: ") + parameterName);
+}
+
 void Kernel::addConstraint(const KernelConstraint& constraint)
 {
     auto parameterNames = constraint.getParameterNames();
@@ -43,7 +61,7 @@ void Kernel::setArguments(const std::vector<ArgumentId>& argumentIds)
     this->argumentIds = argumentIds;
 }
 
-void Kernel::setTuningManipulatorFlag(const TunerFlag flag)
+void Kernel::setTuningManipulatorFlag(const bool flag)
 {
     this->tuningManipulatorFlag = flag;
 }

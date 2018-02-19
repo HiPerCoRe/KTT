@@ -16,10 +16,14 @@ public:
 
     // Core methods
     void addParameter(const KernelParameter& parameter);
+    void addLocalMemoryModifier(const std::string& parameterName, const ArgumentId argumentId, const ModifierAction modifierAction);
     void addConstraint(const KernelConstraint& constraint);
     void setSharedArguments(const std::vector<ArgumentId>& argumentIds);
     void addKernelParameter(const KernelId id, const KernelParameter& parameter);
+    void addKernelLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
+        const ModifierAction modifierAction);
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
+    Kernel transformToKernel() const;
 
     // Getters
     KernelId getId() const;
@@ -29,6 +33,7 @@ public:
     std::vector<KernelConstraint> getConstraints() const;
     std::vector<ArgumentId> getSharedArgumentIds() const;
     std::vector<ArgumentId> getKernelArgumentIds(const KernelId id) const;
+    bool hasParameter(const std::string& parameterName) const;
 
 private:
     // Attributes
@@ -39,8 +44,6 @@ private:
     std::vector<KernelConstraint> constraints;
     std::vector<ArgumentId> sharedArgumentIds;
     std::map<KernelId, std::vector<ArgumentId>> kernelArgumentIds;
-
-    bool hasParameter(const std::string& parameterName) const;
 };
 
 } // namespace ktt

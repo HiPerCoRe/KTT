@@ -6,10 +6,10 @@
 namespace ktt
 {
 
-class CudaDevice
+class CUDADevice
 {
 public:
-    explicit CudaDevice(const CUdevice device, const std::string& name) :
+    explicit CUDADevice(const CUdevice device, const std::string& name) :
         device(device),
         name(name)
     {}

@@ -1,16 +1,54 @@
 #include "kernel_parameter.h"
+#include "utility/ktt_utility.h"
 
 namespace ktt
 {
 
-KernelParameter::KernelParameter(const std::string& name, const std::vector<size_t>& values, const ThreadModifierType& modifierType,
-    const ThreadModifierAction& modifierAction, const Dimension& modifierDimension) :
+KernelParameter::KernelParameter(const std::string& name, const std::vector<size_t>& values, const ModifierType modifierType,
+    const ModifierAction modifierAction, const ModifierDimension modifierDimension) :
     name(name),
     values(values),
-    threadModifierType(modifierType),
-    threadModifierAction(modifierAction),
-    modifierDimension(modifierDimension)
+    modifierType(modifierType),
+    modifierAction(modifierAction),
+    modifierDimension(modifierDimension),
+    isDouble(false),
+    localMemoryModifierFlag(false)
 {}
+
+KernelParameter::KernelParameter(const std::string& name, const std::vector<double>& values) :
+    name(name),
+    valuesDouble(values),
+    modifierType(ModifierType::None),
+    modifierAction(ModifierAction::Add),
+    modifierDimension(ModifierDimension::X),
+    isDouble(true),
+    localMemoryModifierFlag(false)
+{}
+
+void KernelParameter::setLocalMemoryArgumentModifier(const ArgumentId id, const ModifierAction modifierAction)
+{
+    for (auto& argumentPair : localMemoryArguments)
+    {
+        if (id == argumentPair.first)
+        {
+            argumentPair.second = modifierAction;
+            return;
+        }
+    }
+
+    localMemoryArguments.push_back(std::make_pair(id, modifierAction));
+    localMemoryModifierFlag = true;
+}
+
+void KernelParameter::setLocalMemoryArgumentModifier(const KernelId compositionKernelId, ArgumentId id, const ModifierAction modifierAction)
+{
+    if (!elementExists(compositionKernelId, localMemoryModifierKernels))
+    {
+        localMemoryModifierKernels.push_back(compositionKernelId);
+    }
+
+    setLocalMemoryArgumentModifier(id, modifierAction);
+}
 
 void KernelParameter::addCompositionKernel(const KernelId id)
 {
@@ -27,17 +65,22 @@ std::vector<size_t> KernelParameter::getValues() const
     return values;
 }
 
-ThreadModifierType KernelParameter::getModifierType() const
+std::vector<double> KernelParameter::getValuesDouble() const
 {
-    return threadModifierType;
+    return valuesDouble;
 }
 
-ThreadModifierAction KernelParameter::getModifierAction() const
+ModifierType KernelParameter::getModifierType() const
 {
-    return threadModifierAction;
+    return modifierType;
 }
 
-Dimension KernelParameter::getModifierDimension() const
+ModifierAction KernelParameter::getModifierAction() const
+{
+    return modifierAction;
+}
+
+ModifierDimension KernelParameter::getModifierDimension() const
 {
     return modifierDimension;
 }
@@ -45,6 +88,26 @@ Dimension KernelParameter::getModifierDimension() const
 std::vector<KernelId> KernelParameter::getCompositionKernels() const
 {
     return compositionKernels;
+}
+
+bool KernelParameter::hasValuesDouble() const
+{
+    return isDouble;
+}
+
+bool KernelParameter::isLocalMemoryModifier() const
+{
+    return localMemoryModifierFlag;
+}
+
+std::vector<std::pair<ArgumentId, ModifierAction>> KernelParameter::getLocalMemoryArguments() const
+{
+    return localMemoryArguments;
+}
+
+std::vector<KernelId> KernelParameter::getLocalMemoryModifierKernels() const
+{
+    return localMemoryModifierKernels;
 }
 
 bool KernelParameter::operator==(const KernelParameter& other) const

@@ -7,14 +7,14 @@
 namespace ktt
 {
 
-class CudaKernel
+class CUDAKernel
 {
 public:
-    explicit CudaKernel(const std::string& ptxSource, const std::string& kernelName) :
+    explicit CUDAKernel(const std::string& ptxSource, const std::string& kernelName) :
         kernelName(kernelName)
     {
-        checkCudaError(cuModuleLoadDataEx(&module, &ptxSource[0], 0, nullptr, nullptr), "cuModuleLoadDataEx");
-        checkCudaError(cuModuleGetFunction(&kernel, module, &kernelName[0]), "cuModuleGetFunction");
+        checkCUDAError(cuModuleLoadDataEx(&module, &ptxSource[0], 0, nullptr, nullptr), "cuModuleLoadDataEx");
+        checkCUDAError(cuModuleGetFunction(&kernel, module, &kernelName[0]), "cuModuleGetFunction");
     }
 
     CUmodule getModule() const
