@@ -105,7 +105,7 @@ int main(int argc, char** argv)
   //parameter for the length of OpenCl vector data types used in the kernels
   tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
 
-  tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.9f);
+  tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.9);
 
   tuner.setReferenceClass(compositionId, std::make_unique<referenceSort>(in), std::vector<ktt::ArgumentId>{outId});
 

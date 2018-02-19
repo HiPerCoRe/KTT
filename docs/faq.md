@@ -31,7 +31,7 @@ can report a bug [here](https://github.com/Fillo7/KTT/issues).
 utilizes iterative kernel launches. Can such application be ported to KTT?**<br/>
 A: Yes, in this case you need to utilize tuning manipulator API, which is fully documented. You can
 also check out some of the examples which already utilize tuning manipulator (eg.
-[reduction](https://github.com/Fillo7/KTT/tree/master/examples/reduction) or
+[reduction](https://github.com/Fillo7/KTT/tree/master/examples/reduction),
 [coulomb_sum_3d_iterative](https://github.com/Fillo7/KTT/tree/master/examples/coulomb_sum_3d_iterative)).
 
 **Q: Running my application with KTT uses much more memory than running it natively.**<br/>

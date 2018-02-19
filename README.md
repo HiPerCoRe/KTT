@@ -1,27 +1,28 @@
 KTT - Kernel Tuning Toolkit
 ===========================
 
-KTT is a C++ tuning framework for OpenCL and CUDA kernels. Project is currently in late beta stage with all of the baseline
-functionality available.
+KTT is a C++ tuning framework for OpenCL and CUDA kernels. Project is currently in release candidate stage with
+stable API and all of the planned functionality available.
 
 Main features
 -------------
 * Ability to define kernel tuning parameters like thread count, vector data types and loop unroll factors in order
 to optimize computation for particular device
 * Support for iterative kernel launches and composite kernels
+* Support for multiple compute queues and asynchronous operations
+* Support for online autotuning - kernel tuning combined with regular kernel running
 * Ability to automatically ensure correctness of tuned computation with reference kernel or C++ function
-* Ability to run kernels with low overhead after finding optimal configuration during kernel tuning
 * Support for multiple compute APIs, switching between CUDA and OpenCL requires only minor changes in C++ code
 (eg. changing the kernel source file), no library recompilation is needed
-* Large number of customization options, including ability to specify custom tolerance threshold for floating-point
-argument validation, ability to change kernel compiler flags and more
+* Large number of customization options, including support for kernel arguments with user-defined data types,
+ability to change kernel compiler flags and more
 
 Getting started
 ---------------
 
-* Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/documentation).
+* Documentation for KTT API can be found [here](https://github.com/Fillo7/KTT/blob/master/docs).
 * Newest version of KTT framework can be found [here](https://github.com/Fillo7/KTT/releases).
-* Prebuilt binaries are currently available only for some platforms. Other platforms require manual build.
+* Prebuilt binaries are available only for some platforms. Other platforms require manual build.
 * Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support.
 
 Tutorials

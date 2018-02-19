@@ -1,5 +1,21 @@
-Version 0.6 (x/2/2018)
-* Todo
+Version 0.6 (19/2/2018)
+* Added support for multiple compute queues and asynchronous operations
+* Added support for online autotuning - kernel tuning combined with regular kernel running
+* Added support for kernel arguments with user-defined data types
+* Users now have greater control over kernel argument handling, tuner run modes were deprecated as a result
+* Validated kernel arguments can now have user-defined comparator
+* Added MCMC searcher
+* Added local memory argument modifiers which work similarly to kernel thread size modifiers
+* Added new buffer handling methods to tuning manipulator API
+* Added support for floating-point kernel parameters
+* Added method for retrieving kernel source code for specified kernel configuration
+* Implemented caching of compiled kernels when using tuning manipulator
+* Fixed several bugs in kernel composition methods
+* Fixed several rare bugs which could occur while using tuning manipulator
+* Added tutorials and several new examples
+* Fixed paths to kernel files in examples on Linux
+* Significantly improved documentation and added FAQ
+* Added macro definitions for KTT version
 
 Version 0.5 (27/10/2017)
 * Added support for kernel compositions
