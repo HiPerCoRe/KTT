@@ -100,8 +100,8 @@ int main(int argc, char** argv)
   tuner.addParameter(compositionId, "LOCAL_SIZE", {128, 256, 512});
   //local size below 128, i.e. 64 or 32, does not work correctly, not even with the benchmark code
   tuner.addParameter(compositionId, "GLOBAL_SIZE", {512, 1024, 2048, 4096, 8192, 16384, 32768});
-  //auto workGroupSmaller = [](std::vector<size_t> vector) {return vector.at(0)<=vector.at(1);};
-  //tuner.addConstraint(compositionId, workGroupSmaller, {"LOCAL_SIZE", "GLOBAL_SIZE"});
+  auto workGroupConstraint = [](std::vector<size_t> vector) {return vector.at(0) != 128 || vector.at(1) != 32768;};
+  tuner.addConstraint(compositionId, workGroupConstraint, {"LOCAL_SIZE", "GLOBAL_SIZE"});
   //parameter for the length of OpenCl vector data types used in the kernels
   tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
 

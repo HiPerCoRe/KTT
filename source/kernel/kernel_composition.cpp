@@ -153,14 +153,14 @@ Kernel KernelComposition::transformToKernel() const
     Kernel kernel(id, "", name, DimensionVector(), DimensionVector());
     kernel.setTuningManipulatorFlag(true);
 
-    for (const auto& constraint : constraints)
-    {
-        kernel.addConstraint(constraint);
-    }
-
     for (const auto& parameter : parameters)
     {
         kernel.addParameter(parameter);
+    }
+
+    for (const auto& constraint : constraints)
+    {
+        kernel.addConstraint(constraint);
     }
 
     std::vector<size_t> argumentIds;
