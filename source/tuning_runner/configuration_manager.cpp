@@ -2,7 +2,6 @@
 #include "configuration_manager.h"
 #include "searcher/annealing_searcher.h"
 #include "searcher/full_searcher.h"
-#include "searcher/pso_searcher.h"
 #include "searcher/random_searcher.h"
 #include "searcher/mcmc_searcher.h"
 
@@ -24,8 +23,7 @@ void ConfigurationManager::setSearchMethod(const SearchMethod method, const std:
 {
     if (method == SearchMethod::RandomSearch && arguments.size() < 1
         || method == SearchMethod::MCMC && arguments.size() < 1
-        || method == SearchMethod::Annealing && arguments.size() < 2
-        || method == SearchMethod::PSO && arguments.size() < 5)
+        || method == SearchMethod::Annealing && arguments.size() < 2)
     {
         throw std::runtime_error(std::string("Insufficient number of arguments given for specified search method: ")
             + getSearchMethodName(method));
@@ -135,15 +133,12 @@ void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMet
     case SearchMethod::RandomSearch:
         searchers.insert(std::make_pair(id, std::make_unique<RandomSearcher>(configurations, arguments.at(0))));
         break;
-    case SearchMethod::PSO:
-        searchers.insert(std::make_pair(id, std::make_unique<PSOSearcher>(configurations, parameters, arguments.at(0),
-            static_cast<size_t>(arguments.at(1)), arguments.at(2), arguments.at(3), arguments.at(4))));
-        break;
     case SearchMethod::Annealing:
         searchers.insert(std::make_pair(id, std::make_unique<AnnealingSearcher>(configurations, arguments.at(0), arguments.at(1))));
         break;
     case SearchMethod::MCMC:
-        searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, arguments.at(0), std::vector<double>(arguments.begin()+1, arguments.end()))));
+        searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, arguments.at(0),
+            std::vector<double>(arguments.begin() + 1, arguments.end()))));
         break;
     default:
         throw std::runtime_error("Specified searcher is not supported");
@@ -158,8 +153,6 @@ std::string ConfigurationManager::getSearchMethodName(const SearchMethod method)
         return std::string("FullSearch");
     case SearchMethod::RandomSearch:
         return std::string("RandomSearch");
-    case SearchMethod::PSO:
-        return std::string("PSO");
     case SearchMethod::Annealing:
         return std::string("Annealing");
     case SearchMethod::MCMC:

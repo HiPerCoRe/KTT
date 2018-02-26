@@ -89,6 +89,6 @@ Original project
 KTT is based on [CLTune project](https://github.com/CNugteren/CLTune). Some parts of KTT API are similar to CLTune API,
 however internal structure was almost completely rewritten from scratch. Portions of code for following features were ported
 from CLTune:
-* PSO and annealing searcher
+* Annealing searcher
 * Generating of kernel configurations
 * Tuning parameter constraints

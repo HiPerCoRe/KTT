@@ -19,11 +19,6 @@ enum class SearchMethod
       */
     RandomSearch,
 
-    /** Explores fraction of kernel configurations using particle swarm optimization method. The fraction size is controlled with parameter.
-      * Additional parameters specify swarm size and swarm influences.
-      */
-    PSO,
-
     /** Explores fraction of kernel configurations using simulated annealing method. The fraction size is controlled with parameter.
       * Additional parameter specifies maximum temperature.
       */

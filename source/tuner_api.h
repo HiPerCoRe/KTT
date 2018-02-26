@@ -357,7 +357,6 @@ public:
       * @param arguments Arguments necessary for specified search method to work. Following arguments are required for corresponding search method,
       * the order of arguments is important:
       * - RandomSearch - fraction
-      * - PSO - fraction, swarm size, global influence, local influence, random influence
       * - Annealing - fraction, maximum temperature
       * - MCMC - fraction
       * 

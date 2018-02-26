@@ -11,8 +11,6 @@
 namespace ktt
 {
 
-class PSOSearcher;
-
 class KernelConfiguration
 {
 public:
@@ -38,7 +36,6 @@ public:
     std::vector<ParameterPair> getParameterPairs() const;
     bool isComposite() const;
 
-    friend class PSOSearcher;
     friend std::ostream& operator<<(std::ostream&, const KernelConfiguration&);
 
 private:

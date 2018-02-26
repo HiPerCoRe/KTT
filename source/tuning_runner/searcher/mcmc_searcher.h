@@ -15,7 +15,7 @@ class MCMCSearcher : public Searcher
 public:
     static const size_t maximumDifferences = 3;
 
-    MCMCSearcher(const std::vector<KernelConfiguration>& configurations,  const double fraction, const std::vector<double> start) :
+    MCMCSearcher(const std::vector<KernelConfiguration>& configurations, const double fraction, const std::vector<double>& start) :
         configurations(configurations),
         fraction(fraction),
         visitedStatesCount(0),
@@ -33,7 +33,7 @@ public:
         }
 
         size_t initialState;
-        if (start.size()) 
+        if (start.size() > 0) 
             initialState = searchStateIndex(start);
         else
             initialState = static_cast<size_t>(intDistribution(generator));

@@ -9,6 +9,11 @@ namespace ktt
 TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t queueCount) :
     argumentManager(std::make_unique<ArgumentManager>())
 {
+    if (queueCount == 0)
+    {
+        throw std::runtime_error("Number of compute queues must be greater than zero");
+    }
+
     if (computeAPI == ComputeAPI::OpenCL)
     {
         computeEngine = std::make_unique<OpenCLEngine>(platform, device, queueCount);
