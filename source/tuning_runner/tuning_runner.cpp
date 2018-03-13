@@ -166,7 +166,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
     return results;
 }
 
-KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
+KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -174,7 +174,11 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     }
 
     const Kernel& kernel = kernelManager->getKernel(id);
-    resultValidator->computeReferenceResult(kernel);
+    if (recomputeReference)
+    {
+        resultValidator->clearReferenceResults(id);
+        resultValidator->computeReferenceResult(kernel);
+    }
 
     if (!configurationManager.hasKernelConfigurations(id))
     {
@@ -188,11 +192,10 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     validateResult(kernel, result);
 
     kernelRunner->clearBuffers();
-    resultValidator->clearReferenceResults();
     return result;
 }
 
-KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
+KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
 {
     if (!kernelManager->isComposition(id))
     {
@@ -201,7 +204,11 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
 
     const KernelComposition& composition = kernelManager->getKernelComposition(id);
     const Kernel compatibilityKernel = composition.transformToKernel();
-    resultValidator->computeReferenceResult(compatibilityKernel);
+    if (recomputeReference)
+    {
+        resultValidator->clearReferenceResults(id);
+        resultValidator->computeReferenceResult(compatibilityKernel);
+    }
 
     if (!configurationManager.hasKernelConfigurations(id))
     {
@@ -215,7 +222,6 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     validateResult(compatibilityKernel, result);
 
     kernelRunner->clearBuffers();
-    resultValidator->clearReferenceResults();
     return result;
 }
 

@@ -336,11 +336,23 @@ public:
       * Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, it creates
       * configuration space based on combinations of provided kernel parameters and constraints. Each time this method is called, it launches single
       * kernel configuration. If all configurations were already tested, runs kernel using the best configuration. Output data can be retrieved
-      * by providing output descriptors.
+      * by providing output descriptors. Always performs recomputation of reference output.
       * @param id Id of kernel for which the tuning by step will start.
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
       */
     void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output);
+
+    /** @fn void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+      * Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, it creates
+      * configuration space based on combinations of provided kernel parameters and constraints. Each time this method is called, it launches single
+      * kernel configuration. If all configurations were already tested, runs kernel using the best configuration. Output data can be retrieved
+      * by providing output descriptors. Allows control over recomputation of reference output.
+      * @param id Id of kernel for which the tuning by step will start.
+      * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
+      * @param recomputeReference Flag which controls whether recomputation of reference output should be performed or not. Useful if kernel data
+      * between individual method invocations sometimes change.
+      */
+    void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
 
     /** @fn void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
       * Runs specified kernel using provided configuration. Does not perform result validation.

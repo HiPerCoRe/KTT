@@ -25,8 +25,8 @@ public:
     std::vector<KernelResult> tuneKernel(const KernelId id);
     std::vector<KernelResult> dryTuneKernel(const KernelId id, const std::string& filePath);
     std::vector<KernelResult> tuneComposition(const KernelId id);
-    KernelResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output);
-    KernelResult tuneCompositionByStep(const KernelId id, const std::vector<OutputDescriptor>& output);
+    KernelResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
+    KernelResult tuneCompositionByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void setValidationRange(const ArgumentId id, const size_t range);

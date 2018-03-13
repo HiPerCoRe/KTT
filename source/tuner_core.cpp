@@ -162,20 +162,6 @@ void TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& c
     kernelRunner->clearBuffers();
 }
 
-void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
-{
-    std::vector<KernelResult> results;
-    if (kernelManager->isComposition(id))
-    {
-        throw std::runtime_error("Dry run is not implemented for compositions");
-    }
-    else
-    {
-        results = tuningRunner->dryTuneKernel(id, filePath);
-    }
-    resultPrinter.setResult(id, results);
-}
-
 void TunerCore::setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
 {
     if (!kernelManager->isKernel(id) && !kernelManager->isComposition(id))
@@ -204,20 +190,33 @@ void TunerCore::tuneKernel(const KernelId id)
     resultPrinter.setResult(id, results);
 }
 
-void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
+void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
+{
+    std::vector<KernelResult> results;
+    if (kernelManager->isComposition(id))
+    {
+        throw std::runtime_error("Dry run is not implemented for compositions");
+    }
+    else
+    {
+        results = tuningRunner->dryTuneKernel(id, filePath);
+    }
+    resultPrinter.setResult(id, results);
+}
+
+void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
 {
     KernelResult result;
     if (kernelManager->isComposition(id))
     {
-        result = tuningRunner->tuneCompositionByStep(id, output);
+        result = tuningRunner->tuneCompositionByStep(id, output, recomputeReference);
     }
     else
     {
-        result = tuningRunner->tuneKernelByStep(id, output);
+        result = tuningRunner->tuneKernelByStep(id, output, recomputeReference);
     }
     resultPrinter.addResult(id, result);
 }
-
 
 void TunerCore::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {

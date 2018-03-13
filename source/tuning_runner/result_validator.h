@@ -38,6 +38,7 @@ public:
     void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
     void computeReferenceResult(const Kernel& kernel);
     void clearReferenceResults();
+    void clearReferenceResults(const KernelId id);
     bool validateArgumentsWithClass(const Kernel& kernel);
     bool validateArgumentsWithKernel(const Kernel& kernel);
 

@@ -60,7 +60,7 @@ public:
     // Kernel tuner methods
     void tuneKernel(const KernelId id);
     void dryTuneKernel(const KernelId id, const std::string& filePath);
-    void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output);
+    void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void setValidationRange(const ArgumentId id, const size_t range);
