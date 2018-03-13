@@ -82,6 +82,7 @@ systems are Linux and Windows.
     - `--no-tutorials` disables compilation of tutorials
     - `--tests` enables compilation of unit tests
     - `--no-cuda` disables inclusion of CUDA API during compilation, only affects Nvidia platform
+    - `--no-opencl` disables inclusion of OpenCL API during compilation
 
 Original project
 ----------------

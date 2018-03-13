@@ -1,6 +1,7 @@
 -- Configuration variables
 ktt_library_name = "ktt_0_6"
 cuda_projects = false
+opencl_projects = false
 
 -- Helper functions to find compute API headers and libraries
 function findLibrariesAmd()
@@ -28,7 +29,13 @@ function findLibrariesAmd()
         end
         
     filter {}
-    links { "OpenCL" }
+    
+    if not _OPTIONS["no-opencl"] then
+        opencl_projects = true
+        defines { "PLATFORM_OPENCL" }
+        links { "OpenCL" }
+    end
+    
     return true
 end
 
@@ -57,7 +64,13 @@ function findLibrariesIntel()
         end
         
     filter {}
-    links {"OpenCL"}
+    
+    if not _OPTIONS["no-opencl"] then
+        opencl_projects = true
+        defines { "PLATFORM_OPENCL" }
+        links { "OpenCL" }
+    end
+    
     return true
 end
 
@@ -86,7 +99,12 @@ function findLibrariesNvidia()
         end
         
     filter {}
-    links { "OpenCL" }
+    
+    if not _OPTIONS["no-opencl"] then
+        opencl_projects = true
+        defines { "PLATFORM_OPENCL" }
+        links { "OpenCL" }
+    end
         
     if not _OPTIONS["no-cuda"] then
         cuda_projects = true
@@ -138,6 +156,12 @@ newoption
 {
     trigger = "no-cuda",
     description = "Disables compilation of CUDA back-end (Nvidia platform only)"
+}
+
+newoption
+{
+    trigger = "no-opencl",
+    description = "Disables compilation of OpenCL back-end"
 }
 
 newoption
@@ -225,6 +249,7 @@ project "ktt"
 -- Examples configuration 
 if not _OPTIONS["no-examples"] then
 
+if opencl_projects then
 project "nbody_opencl"
     kind "ConsoleApp"
     files { "examples/nbody/*.cpp", "examples/nbody/*.cl" }
@@ -268,12 +293,14 @@ project "hotspot_opencl"
     includedirs { "source" }
     links { "ktt" }
 end
+end -- opencl_projects
 
 end -- _OPTIONS["no-examples"]
 
 -- Tutorials configuration 
 if not _OPTIONS["no-tutorials"] then
 
+if opencl_projects then
 project "00_info_opencl"
     kind "ConsoleApp"
     files { "tutorials/00_compute_api_info/compute_api_info_opencl.cpp" }
@@ -297,9 +324,9 @@ project "03_custom_kernel_arguments_opencl"
     files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_opencl.cpp", "tutorials/03_custom_kernel_arguments/opencl_kernel.cl" }
     includedirs { "source" }
     links { "ktt" }
-
+end -- opencl_projects
+    
 if cuda_projects then
-
 project "00_info_cuda"
     kind "ConsoleApp"
     files { "tutorials/00_compute_api_info/compute_api_info_cuda.cpp" }
@@ -323,7 +350,6 @@ project "03_custom_kernel_arguments_cuda"
     files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_cuda.cpp", "tutorials/03_custom_kernel_arguments/cuda_kernel.cu" }
     includedirs { "source" }
     links { "ktt" }
- 
 end -- cuda_projects
 
 end -- _OPTIONS["no-tutorials"]
@@ -336,6 +362,10 @@ project "tests"
     files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl", "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "tests", "source" }
     defines { "KTT_TESTS", "DO_NOT_USE_WMAIN" }
+    
+    if _OPTIONS["no-opencl"] then
+        removefiles { "tests/opencl_engine_tests.cpp" }
+    end
     
     if _OPTIONS["platform"] then
         if _OPTIONS["platform"] == "amd" then
