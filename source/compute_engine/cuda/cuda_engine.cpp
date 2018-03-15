@@ -577,9 +577,9 @@ std::vector<CUDADevice> CUDAEngine::getCUDADevices() const
     std::vector<CUDADevice> devices;
     for (const auto deviceId : deviceIds)
     {
-        std::string name(40, ' ');
-        checkCUDAError(cuDeviceGetName(&name[0], 40, deviceId), "cuDeviceGetName");
-        devices.push_back(CUDADevice(deviceId, name));
+        char name[40];
+        checkCUDAError(cuDeviceGetName(name, 40, deviceId), "cuDeviceGetName");
+        devices.push_back(CUDADevice(deviceId, std::string(name)));
     }
 
     return devices;

@@ -64,19 +64,19 @@ public:
         size_t size;
         checkCUDAError(nvrtcGetPTXSize(program, &size), "nvrtcGetPTXSize");
         
-        std::string result(size, ' ');
-        checkCUDAError(nvrtcGetPTX(program, &result[0]), "nvrtcGetPTX");
-        return result;
+        char result[size+1];
+        checkCUDAError(nvrtcGetPTX(program, result), "nvrtcGetPTX");
+        return std::string(result);
     }
 
     std::string getBuildInfo() const
     {
         size_t infoSize;
         checkCUDAError(nvrtcGetProgramLogSize(program, &infoSize), "nvrtcGetProgramLogSize");
-        std::string infoString(infoSize, ' ');
-        checkCUDAError(nvrtcGetProgramLog(program, &infoString[0]), "nvrtcGetProgramLog");
+        char infoCstr[infoSize+1];
+        checkCUDAError(nvrtcGetProgramLog(program, infoCstr), "nvrtcGetProgramLog");
 
-        return infoString;
+        return std::string(infoCstr);
     }
 
     std::string getSource() const

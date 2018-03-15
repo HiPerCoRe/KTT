@@ -39,11 +39,11 @@ public:
     {
         size_t infoSize;
         checkOpenCLError(clGetProgramBuildInfo(program, devices.at(0), CL_PROGRAM_BUILD_LOG, 0, nullptr, &infoSize), "clGetProgramBuildInfo");
-        std::string infoString(infoSize, ' ');
-        checkOpenCLError(clGetProgramBuildInfo(program, devices.at(0), CL_PROGRAM_BUILD_LOG, infoSize, &infoString[0], nullptr),
+        char infoCstr[infoSize+1];
+        checkOpenCLError(clGetProgramBuildInfo(program, devices.at(0), CL_PROGRAM_BUILD_LOG, infoSize, infoCstr, nullptr),
             "clGetProgramBuildInfo");
 
-        return infoString;
+        return std::string(infoCstr);
     }
 
     cl_context getContext() const
