@@ -240,8 +240,10 @@ int main(int argc, char** argv)
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, "gemm_batch_output.csv", ktt::PrintFormat::CSV);
 
-    std::vector<ktt::ParameterPair> bestConf = tuner.getBestConfiguration(kernelId);
-    
+    std::pair<std::vector<ktt::ParameterPair>, double> bestConf = tuner.getBestConfiguration(kernelId);
+
+    std::cout << "Performance: " << (double)(a*b*c*2)*(double)batch / std::get<1>(bestConf) << " GFlops" << std::endl;
+    std::cout << "Memory BW: " << (double)(a*b+c*a+c*b)*(double)(batch)*(double)sizeof(REAL) / std::get<1>(bestConf) << " GB/s" << std::endl;
 
     return 0;
 }
