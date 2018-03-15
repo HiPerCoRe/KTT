@@ -258,9 +258,9 @@ void TuningRunner::setReferenceClass(const KernelId id, std::unique_ptr<Referenc
     resultValidator->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
 }
 
-std::vector<ParameterPair> TuningRunner::getBestConfiguration(const KernelId id) const
+std::pair<std::vector<ParameterPair>, double> TuningRunner::getBestConfiguration(const KernelId id) const
 {
-    return configurationManager.getBestConfiguration(id).getParameterPairs();
+    return configurationManager.getBestConfigurationPair(id);
 }
 
 bool TuningRunner::validateResult(const Kernel& kernel, const KernelResult& result)

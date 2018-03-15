@@ -274,7 +274,7 @@ void TunerCore::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceCl
     tuningRunner->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
 }
 
-std::vector<ParameterPair> TunerCore::getBestConfiguration(const KernelId id) const
+std::pair<std::vector<ParameterPair>, double> TunerCore::getBestConfiguration(const KernelId id) const
 {
     return tuningRunner->getBestConfiguration(id);
 }

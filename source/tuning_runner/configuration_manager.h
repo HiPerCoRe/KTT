@@ -31,6 +31,7 @@ public:
     // Configuration search methods
     KernelConfiguration getCurrentConfiguration(const KernelId id) const;
     KernelConfiguration getBestConfiguration(const KernelId id) const;
+    std::pair<std::vector<ParameterPair>, double> getBestConfigurationPair(const KernelId id) const;
     void calculateNextConfiguration(const KernelId id, const KernelConfiguration& previous, const double previousDuration);
     size_t getConfigurationCount(const KernelId id) const;
 

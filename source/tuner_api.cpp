@@ -302,7 +302,7 @@ void Tuner::printResult(const KernelId id, const std::string& filePath, const Pr
     }
 }
 
-std::vector<ParameterPair> Tuner::getBestConfiguration(const KernelId id) const
+std::pair<std::vector<ParameterPair>, double> Tuner::getBestConfiguration(const KernelId id) const
 {
     try
     {

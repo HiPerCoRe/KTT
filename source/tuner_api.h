@@ -10,6 +10,7 @@
 #include <string>
 #include <typeinfo>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 // Compatibility for multiple platforms
@@ -408,13 +409,13 @@ public:
       */
     void printResult(const KernelId id, const std::string& filePath, const PrintFormat format) const;
 
-    /** @fn std::vector<ParameterPair> getBestConfiguration(const KernelId id) const
-      * Returns the best configuration found for specified kernel. Valid configuration will be returned only if method tuneKernel() or
-      * tuneKernelByStep() was already called for corresponding kernel.
+    /** @fn std::pair<std::vector<ParameterPair>, double> getBestConfiguration(const KernelId id) const
+      * Returns the best configuration found for specified kernel and its computation duration in nanoseconds. Valid configuration will be returned
+      * only if method tuneKernel() or tuneKernelByStep() was already called for corresponding kernel.
       * @param id Id of kernel for which the best configuration will be returned.
-      * @return Best configuration found for specified kernel. See ParameterPair for more information.
+      * @return Best configuration found for specified kernel and its computation duration in nanoseconds. See ParameterPair for more information.
       */
-    std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
+    std::pair<std::vector<ParameterPair>, double> getBestConfiguration(const KernelId id) const;
 
     /** @fn std::string getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const
       * Returns kernel source with preprocessor definitions for specified kernel based on provided configuration.
