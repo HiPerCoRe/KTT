@@ -1,3 +1,4 @@
+#include <limits>
 #include <stdexcept>
 #include "configuration_manager.h"
 #include "searcher/annealing_searcher.h"
@@ -87,6 +88,17 @@ KernelConfiguration ConfigurationManager::getBestConfiguration(const KernelId id
     }
 
     return configurationPair->second.first;
+}
+
+std::pair<std::vector<ParameterPair>, double> ConfigurationManager::getBestConfigurationPair(const KernelId id) const
+{
+    auto configurationPair = bestConfigurations.find(id);
+    if (configurationPair == bestConfigurations.end())
+    {
+        return std::make_pair(getCurrentConfiguration(id).getParameterPairs(), std::numeric_limits<double>::max());
+    }
+
+    return std::make_pair(configurationPair->second.first.getParameterPairs(), configurationPair->second.second);
 }
 
 void ConfigurationManager::calculateNextConfiguration(const KernelId id, const KernelConfiguration& previous, const double previousDuration)

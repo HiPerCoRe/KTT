@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef PLATFORM_OPENCL
+
 #include <string>
 #include "CL/cl.h"
 #include "enum/argument_access_type.h"
@@ -15,3 +17,5 @@ std::string getPlatformInfoString(const cl_platform_id id, const cl_platform_inf
 std::string getDeviceInfoString(const cl_device_id id, const cl_device_info info);
 
 } // namespace ktt
+
+#endif // PLATFORM_OPENCL

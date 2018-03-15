@@ -78,6 +78,12 @@ void ResultValidator::clearReferenceResults()
     referenceKernelResults.clear();
 }
 
+void ResultValidator::clearReferenceResults(const KernelId id)
+{
+    referenceClassResults.erase(id);
+    referenceKernelResults.erase(id);
+}
+
 bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel)
 {
     KernelId kernelId = kernel.getId();

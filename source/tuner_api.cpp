@@ -220,7 +220,20 @@ void Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescript
 {
     try
     {
-        tunerCore->tuneKernelByStep(id, output);
+        tunerCore->tuneKernelByStep(id, output, true);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+void Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+{
+    try
+    {
+        tunerCore->tuneKernelByStep(id, output, recomputeReference);
     }
     catch (const std::runtime_error& error)
     {
@@ -289,7 +302,7 @@ void Tuner::printResult(const KernelId id, const std::string& filePath, const Pr
     }
 }
 
-std::vector<ParameterPair> Tuner::getBestConfiguration(const KernelId id) const
+std::pair<std::vector<ParameterPair>, double> Tuner::getBestConfiguration(const KernelId id) const
 {
     try
     {

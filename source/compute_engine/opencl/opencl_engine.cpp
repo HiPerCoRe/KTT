@@ -5,6 +5,8 @@
 namespace ktt
 {
 
+#ifdef PLATFORM_OPENCL
+
 OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     platformIndex(platformIndex),
     deviceIndex(deviceIndex),
@@ -732,5 +734,164 @@ void OpenCLEngine::checkLocalMemoryModifiers(const std::vector<KernelArgument*>&
         }
     }
 }
+
+#else
+
+OpenCLEngine::OpenCLEngine(const PlatformIndex, const DeviceIndex, const uint32_t)
+{
+    throw std::runtime_error("Support for OpenCL API is not included in this version of KTT framework");
+}
+
+KernelResult OpenCLEngine::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<OutputDescriptor>&)
+{
+    throw std::runtime_error("");
+}
+
+EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+KernelResult OpenCLEngine::getKernelResult(const EventId, const std::vector<OutputDescriptor>&) const
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setCompilerOptions(const std::string&)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setGlobalSizeType(const GlobalSizeType)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setAutomaticGlobalSizeCorrection(const bool)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setProgramCache(const bool)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::clearProgramCache()
+{
+    throw std::runtime_error("");
+}
+
+QueueId OpenCLEngine::getDefaultQueue() const
+{
+    throw std::runtime_error("");
+}
+
+std::vector<QueueId> OpenCLEngine::getAllQueues() const
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::synchronizeQueue(const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::synchronizeDevice()
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::clearEvents()
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::uploadArgument(KernelArgument&)
+{
+    throw std::runtime_error("");
+}
+
+EventId OpenCLEngine::uploadArgumentAsync(KernelArgument&, const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::updateArgument(const ArgumentId, const void*, const size_t)
+{
+    throw std::runtime_error("");
+}
+
+EventId OpenCLEngine::updateArgumentAsync(const ArgumentId, const void*, const size_t, const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::downloadArgument(const ArgumentId, void*, const size_t) const
+{
+    throw std::runtime_error("");
+}
+
+EventId OpenCLEngine::downloadArgumentAsync(const ArgumentId, void*, const size_t, const QueueId) const
+{
+    throw std::runtime_error("");
+}
+
+KernelArgument OpenCLEngine::downloadArgumentObject(const ArgumentId, uint64_t*) const
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::copyArgument(const ArgumentId, const ArgumentId, const size_t)
+{
+    throw std::runtime_error("");
+}
+
+EventId OpenCLEngine::copyArgumentAsync(const ArgumentId, const ArgumentId, const size_t, const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId) const
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::clearBuffer(const ArgumentId)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::clearBuffers()
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::clearBuffers(const ArgumentAccessType)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::printComputeAPIInfo(std::ostream&) const
+{
+    throw std::runtime_error("");
+}
+
+std::vector<PlatformInfo> OpenCLEngine::getPlatformInfo() const
+{
+    throw std::runtime_error("");
+}
+
+std::vector<DeviceInfo> OpenCLEngine::getDeviceInfo(const PlatformIndex) const
+{
+    throw std::runtime_error("");
+}
+
+DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
+{
+    throw std::runtime_error("");
+}
+
+#endif // PLATFORM_OPENCL
 
 } // namespace ktt
