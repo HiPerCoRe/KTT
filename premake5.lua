@@ -286,12 +286,6 @@ project "sort_opencl"
     includedirs { "source" }
     links { "ktt" }
 
-project "gemm_batch_opencl"
-    kind "ConsoleApp"
-    files { "examples/gemm_batch/*.h", "examples/gemm_batch/*.cpp", "examples/gemm_batch/*.cl", "examples/gemm_batch/*.cu" }
-    includedirs { "source" }
-    links { "ktt" }
-
 if os.target() == "linux" then
 project "hotspot_opencl"
     kind "ConsoleApp"
@@ -356,6 +350,13 @@ project "03_custom_kernel_arguments_cuda"
     files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_cuda.cpp", "tutorials/03_custom_kernel_arguments/cuda_kernel.cu" }
     includedirs { "source" }
     links { "ktt" }
+
+project "gemm_batch_cuda"
+    kind "ConsoleApp"
+    files { "examples/gemm_batch/*.h", "examples/gemm_batch/*.cpp", "examples/gemm_batch/*.cl", "examples/gemm_batch/*.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+
 end -- cuda_projects
 
 end -- _OPTIONS["no-tutorials"]
