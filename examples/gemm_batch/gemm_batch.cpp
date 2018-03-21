@@ -3,21 +3,43 @@
 #include <vector>
 #include "tuner_api.h"
 
+#define STRIDED 1
+
+#if STRIDED == 1
+    #define STRIDE_BLOCK 32
+#endif
+
 #define USE_CUDA 1
 
-#if USE_CUDA == 0
-#if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cl"
-#else
-    #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cl"
-#endif
-#else
-#if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cu"
-#else
-    #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cu"
-#endif
-#endif
+#if STRIDED == 0
+    #if USE_CUDA == 0
+        #if defined(_MSC_VER)
+            #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cl"
+        #else
+            #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cl"
+        #endif
+    #else /* USE_CUDA */
+        #if defined(_MSC_VER)
+            #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cu"
+        #else
+            #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cu"
+        #endif
+    #endif /* USE_CUDA */
+#else /* STRIDED */
+    #if USE_CUDA == 0
+        #if defined(_MSC_VER)
+            #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cl"
+        #else
+            #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cl"
+        #endif
+    #else /* USE_CUDA */
+        #if defined(_MSC_VER)
+            #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel_strided.cu"
+        #else
+            #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel_strided.cu"
+        #endif
+    #endif /* USE_CUDA */
+#endif /* STRIDED */
 
 #define REAL float
 
@@ -36,6 +58,7 @@ public:
 
     void computeResult() override {
         res.resize(n*c*b);
+#if STRIDED == 0
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < c; j++)
                 for (int k = 0; k < b; k++) {
@@ -44,7 +67,7 @@ public:
                         tmp += srcA[i*a*b + k*a + l] * srcB[i*c*a + l*c + j];
                     res[i*c*b + k*c + j] = tmp;
                 }
-            if (i == 0) {
+            /*if (i == 0) {
                 for (int bl = 0; bl < b; bl++){
                     for (int al = 0; al < a; al++)
                         std::cout << srcA[i*a*b + bl*a + al] << " ";
@@ -60,8 +83,38 @@ public:
                         std::cout << res[i*c*b + bl*c + cl] << " ";
                     std::cout << "\n";
                 }
-            }
+            }*/
 	    }
+#else
+        for (int i = 0; i < n; i++) {
+            int startBlock = (i / STRIDE_BLOCK) * STRIDE_BLOCK;
+            int startLocal = i % STRIDE_BLOCK;
+            for (int j = 0; j < c; j++)
+                for (int k = 0; k < b; k++) {
+                    REAL tmp = 0.0f;
+                    for (int l = 0; l < a; l++)
+                        tmp += srcA[startBlock*a*b + (k*a + l)*STRIDE_BLOCK + startLocal] * srcB[startBlock*c*a + (l*c + j)*STRIDE_BLOCK + startLocal];
+                    res[startBlock*c*b + (k*c + j)*STRIDE_BLOCK + startLocal] = tmp;
+                }
+            if (i == 1) {
+                for (int bl = 0; bl < b; bl++){
+                    for (int al = 0; al < a; al++)
+                        std::cout << srcA[startBlock*a*b + (bl*a + al)*STRIDE_BLOCK + startLocal] << " ";
+                    std::cout << "\n";
+                }
+                for (int al = 0; al < a; al++){
+                    for (int cl = 0; cl < c; cl++)
+                        std::cout << srcB[startBlock*c*b + (al*c + cl)*STRIDE_BLOCK + startLocal] << " ";
+                    std::cout << "\n";
+                }
+                for (int bl = 0; bl < b; bl++){
+                    for (int cl = 0; cl < c; cl++)
+                        std::cout << res[startBlock*c*b + (bl*c + cl)*STRIDE_BLOCK + startLocal] << " ";
+                    std::cout << "\n";
+                }
+            }
+        }
+#endif
     }
 
     void* getData(const ktt::ArgumentId id) override {
@@ -96,13 +149,19 @@ public:
         ktt::DimensionVector localSize(1, 1, 1);
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
         int gran = getParameterValue("GRANULARITY", parameterValues);
+        int myBatch = batch / getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues); // is always 1 when STRIDED == 0
         if (gran == 1) {
 #if USE_CUDA == 0
-            globalSize.setSizeX(batch);
+            globalSize.setSizeX(myBatch);
 #else
-            globalSize.setSizeX(batch/getParameterValue("GROUP_SIZE_X", parameterValues));
+            globalSize.setSizeX(myBatch/getParameterValue("GROUP_SIZE_X", parameterValues));
 #endif
+#if STRIDED == 0
             localSize.setSizeX(getParameterValue("GROUP_SIZE_X", parameterValues));
+#else
+            localSize.setSizeX(STRIDE_BLOCK);
+            localSize.setSizeY(getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues));
+#endif
         }
         if (gran == 2) {
             int y = getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues);
@@ -210,22 +269,24 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "SIZE_A", {(size_t)a});
     tuner.addParameter(kernelId, "SIZE_B", {(size_t)b});
     tuner.addParameter(kernelId, "SIZE_C", {(size_t)c});
-//#if 0
-    tuner.addParameter(kernelId, "GRANULARITY", {1, 2, 3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
+#if STRIDED == 1
+    tuner.addParameter(kernelId, "STRIDE_BLOCK", {(size_t)STRIDE_BLOCK});
+#endif
+    tuner.addParameter(kernelId, "GRANULARITY", {1/*, 2, 3*/}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
+#if STRIDED == 0
     tuner.addParameter(kernelId, "GROUP_SIZE_X", {1, 32, 64, 128, 256, 512});
+#else
+    tuner.addParameter(kernelId, "GROUP_SIZE_X", {1, STRIDE_BLOCK});
+#endif
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_X", {1, (size_t)c});
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
-//#endif
-#if 0
-    tuner.addParameter(kernelId, "GRANULARITY", {3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
-    tuner.addParameter(kernelId, "GROUP_SIZE_X", {1, 32, 64, 128, 256, 512});
-    tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_X", {1, c});
-    tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {8});
-    tuner.addParameter(kernelId, "CACHING_STRATEGY", {1}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
-#endif
 
+#if STRIDED == 0
     auto parallelismConstraint = [](std::vector<size_t> v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
+#else
+    auto parallelismConstraint = [](std::vector<size_t> v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
+#endif
     tuner.addConstraint(kernelId, parallelismConstraint, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y"});
     auto tmpConstraint = [](std::vector<size_t> v) {return (v[0] < 3 || v[1] < 2);};
     tuner.addConstraint(kernelId, tmpConstraint, {"GRANULARITY", "CACHING_STRATEGY"});
