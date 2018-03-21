@@ -3,7 +3,7 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define STRIDED 1
+#define STRIDED 0
 
 #if STRIDED == 1
     #define STRIDE_BLOCK 32
@@ -28,9 +28,9 @@
 #else /* STRIDED */
     #if USE_CUDA == 0
         #if defined(_MSC_VER)
-            #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cl"
+            #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel_strided.cl"
         #else
-            #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cl"
+            #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel_strided.cl"
         #endif
     #else /* USE_CUDA */
         #if defined(_MSC_VER)
@@ -153,9 +153,16 @@ public:
         if (gran == 1) {
 #if USE_CUDA == 0
             globalSize.setSizeX(myBatch);
-#else
+    #if STRIDED == 1
+            globalSize.setSizeY(getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues));
+    #endif
+#else /* USE_CUDA */
+    #if STRIDED == 0
             globalSize.setSizeX(myBatch/getParameterValue("GROUP_SIZE_X", parameterValues));
-#endif
+    #else
+            globalSize.setSizeX(myBatch/STRIDE_BLOCK);
+    #endif
+#endif /* USE_CUDA */
 #if STRIDED == 0
             localSize.setSizeX(getParameterValue("GROUP_SIZE_X", parameterValues));
 #else
@@ -272,7 +279,11 @@ int main(int argc, char** argv)
 #if STRIDED == 1
     tuner.addParameter(kernelId, "STRIDE_BLOCK", {(size_t)STRIDE_BLOCK});
 #endif
-    tuner.addParameter(kernelId, "GRANULARITY", {1/*, 2, 3*/}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
+#if STRIDED == 0
+    tuner.addParameter(kernelId, "GRANULARITY", {1, 2, 3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
+#else
+    tuner.addParameter(kernelId, "GRANULARITY", {1}); // other granularities not supported
+#endif
 #if STRIDED == 0
     tuner.addParameter(kernelId, "GROUP_SIZE_X", {1, 32, 64, 128, 256, 512});
 #else
