@@ -46,14 +46,15 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
         KernelResult result = kernelRunner->runKernel(id, currentConfiguration, std::vector<OutputDescriptor>{});
 
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         if (validateResult(kernel, result))
         {
             results.push_back(result);
+            configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         }
         else
         {
             results.emplace_back(kernel.getName(), currentConfiguration, "Results differ");
+            configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
         }
 
         kernelRunner->clearBuffers(ArgumentAccessType::ReadWrite);
@@ -148,14 +149,15 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
         KernelResult result = kernelRunner->runComposition(id, currentConfiguration, std::vector<OutputDescriptor>{});
 
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         if (validateResult(compatibilityKernel, result))
         {
             results.push_back(result);
+            configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
         }
         else
         {
             results.emplace_back(composition.getName(), currentConfiguration, "Results differ");
+            configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
         }
 
         kernelRunner->clearBuffers();
@@ -188,8 +190,14 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
     KernelResult result = kernelRunner->runKernel(id, currentConfiguration, output);
 
-    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
-    validateResult(kernel, result);
+    if (validateResult(kernel, result))
+    {
+        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
+    }
+    else
+    {
+        configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
+    }
 
     kernelRunner->clearBuffers();
     return result;
@@ -218,8 +226,14 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
     KernelResult result = kernelRunner->runComposition(id, currentConfiguration, output);
 
-    configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
-    validateResult(compatibilityKernel, result);
+    if (validateResult(compatibilityKernel, result))
+    {
+        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
+    }
+    else
+    {
+        configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
+    }
 
     kernelRunner->clearBuffers();
     return result;
