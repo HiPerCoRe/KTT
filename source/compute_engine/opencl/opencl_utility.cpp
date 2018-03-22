@@ -88,20 +88,20 @@ std::string getPlatformInfoString(const cl_platform_id id, const cl_platform_inf
 {
     size_t infoSize;
     checkOpenCLError(clGetPlatformInfo(id, info, 0, nullptr, &infoSize), "clGetPlatformInfo");
-    char infoCstr[infoSize+1];
-    checkOpenCLError(clGetPlatformInfo(id, info, infoSize, infoCstr, nullptr), "clGetPlatformInfo");
+    std::string infoString(infoSize, '\0');
+    checkOpenCLError(clGetPlatformInfo(id, info, infoSize, &infoString[0], nullptr), "clGetPlatformInfo");
     
-    return std::string(infoCstr);
+    return infoString;
 }
 
 std::string getDeviceInfoString(const cl_device_id id, const cl_device_info info)
 {
     size_t infoSize;
     checkOpenCLError(clGetDeviceInfo(id, info, 0, nullptr, &infoSize), "clGetDeviceInfo");
-    char infoCstr[infoSize+1];
-    checkOpenCLError(clGetDeviceInfo(id, info, infoSize, infoCstr, nullptr), "clGetDeviceInfo");
+    std::string infoString(infoSize, '\0');
+    checkOpenCLError(clGetDeviceInfo(id, info, infoSize, &infoString[0], nullptr), "clGetDeviceInfo");
 
-    return std::string(infoCstr);
+    return infoString;
 }
 
 } // namespace ktt

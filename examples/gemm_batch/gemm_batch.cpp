@@ -171,7 +171,7 @@ public:
 #endif
         }
         if (gran == 2) {
-            int y = getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues);
+            size_t y = getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues);
 #if USE_CUDA == 0
             globalSize.setSizeX(batch*c / y);
             globalSize.setSizeY(y);
@@ -182,7 +182,7 @@ public:
             localSize.setSizeY(y);
         }
         if (gran == 3) {
-            int y = getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues);
+            size_t y = getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues);
 #if USE_CUDA == 0
             globalSize.setSizeX(batch*c);
             globalSize.setSizeY(y);
@@ -239,11 +239,11 @@ int main(int argc, char** argv)
     std::vector<REAL> dst(c*b*batch, 0.0f);
 
     // fill with random data
-    for (int i = 0; i < a*b*batch; i++)
+    for (size_t i = 0; i < a*b*batch; i++)
     {
         srcA[i] = 10.0f*((REAL)rand()) / ((REAL) RAND_MAX);
     }
-    for (int i = 0; i < c*a*batch; i++)
+    for (size_t i = 0; i < c*a*batch; i++)
     {
         srcB[i] = 10.0f*((REAL)rand()) / ((REAL) RAND_MAX);
     }
