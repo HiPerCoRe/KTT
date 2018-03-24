@@ -38,6 +38,12 @@
 #include "api/output_descriptor.h"
 #include "api/platform_info.h"
 
+// Stop conditions
+#include "api/stop_condition/configuration_duration.h"
+#include "api/stop_condition/configurations_explored_count.h"
+#include "api/stop_condition/configurations_explored_fraction.h"
+#include "api/stop_condition/tuning_time.h"
+
 // Reference class interface
 #include "api/reference_class.h"
 
@@ -317,10 +323,20 @@ public:
 
     /** @fn void tuneKernel(const KernelId id)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters
-      * and constraints. The configurations will be launched in order that depends on specified ::SearchMethod.
+      * and constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all
+      * configurations are explored.
       * @param id Id of kernel for which the tuning will start.
       */
     void tuneKernel(const KernelId id);
+
+    /** @fn void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+      * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters
+      * and constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end either when
+      * all configurations are explored or when specified stop condition is met.
+      * @param id Id of kernel for which the tuning will start.
+      * @param stopCondition Stop condition which decides whether to continue the tuning process. See StopCondition for more information.
+      */
+    void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
 
     /** @fn void dryTuneKernel(const KernelId id, const std::string& filePath)
       * Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration
@@ -365,16 +381,14 @@ public:
 
     /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
       * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.
-      * Default search method is full search, which requires no search arguments.
+      * Default search method is full search.
       * @param method Search method which will be used during kernel tuning. See SearchMethod for more information.
       * @param arguments Arguments necessary for specified search method to work. Following arguments are required for corresponding search method,
       * the order of arguments is important:
-      * - RandomSearch - fraction
-      * - Annealing - fraction, maximum temperature
-      * - MCMC - fraction
-      * 
-      * Fraction argument specifies the number of configurations which will be explored, eg. when fraction is set to 0.5, 50% of all configurations
-      * will be explored.
+      * - FullSearch - none
+      * - RandomSearch - none
+      * - Annealing - maximum temperature
+      * - MCMC - none
       */
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
 

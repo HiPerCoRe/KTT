@@ -7,6 +7,7 @@
 #include "configuration_manager.h"
 #include "kernel_runner.h"
 #include "result_validator.h"
+#include "api/stop_condition/stop_condition.h"
 #include "dto/kernel_result.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
@@ -22,9 +23,9 @@ public:
     explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner, Logger* logger);
 
     // Core methods
-    std::vector<KernelResult> tuneKernel(const KernelId id);
+    std::vector<KernelResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
     std::vector<KernelResult> dryTuneKernel(const KernelId id, const std::string& filePath);
-    std::vector<KernelResult> tuneComposition(const KernelId id);
+    std::vector<KernelResult> tuneComposition(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
     KernelResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     KernelResult tuneCompositionByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);

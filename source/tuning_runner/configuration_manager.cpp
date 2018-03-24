@@ -22,9 +22,7 @@ void ConfigurationManager::setKernelConfigurations(const KernelId id, const std:
 
 void ConfigurationManager::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
-    if (method == SearchMethod::RandomSearch && arguments.size() < 1
-        || method == SearchMethod::MCMC && arguments.size() < 1
-        || method == SearchMethod::Annealing && arguments.size() < 2)
+    if (method == SearchMethod::Annealing && arguments.size() < 1)
     {
         throw std::runtime_error(std::string("Insufficient number of arguments given for specified search method: ")
             + getSearchMethodName(method));
@@ -143,14 +141,14 @@ void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMet
         searchers.insert(std::make_pair(id, std::make_unique<FullSearcher>(configurations)));
         break;
     case SearchMethod::RandomSearch:
-        searchers.insert(std::make_pair(id, std::make_unique<RandomSearcher>(configurations, arguments.at(0))));
+        searchers.insert(std::make_pair(id, std::make_unique<RandomSearcher>(configurations)));
         break;
     case SearchMethod::Annealing:
-        searchers.insert(std::make_pair(id, std::make_unique<AnnealingSearcher>(configurations, arguments.at(0), arguments.at(1))));
+        searchers.insert(std::make_pair(id, std::make_unique<AnnealingSearcher>(configurations, arguments.at(0))));
         break;
     case SearchMethod::MCMC:
-        searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, arguments.at(0),
-            std::vector<double>(arguments.begin() + 1, arguments.end()))));
+        searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, std::vector<double>(arguments.begin(),
+            arguments.end()))));
         break;
     default:
         throw std::runtime_error("Specified searcher is not supported");

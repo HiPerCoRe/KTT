@@ -18,7 +18,7 @@ TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kern
     resultValidator(std::make_unique<ResultValidator>(argumentManager, kernelRunner, logger))
 {}
 
-std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
+std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -37,6 +37,11 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
     size_t configurationsCount = configurationManager.getConfigurationCount(id);
     std::vector<KernelResult> results;
 
+    if (stopCondition != nullptr)
+    {
+        stopCondition->initialize(configurationsCount);
+    }
+
     for (size_t i = 0; i < configurationsCount; i++)
     {
         std::stringstream stream;
@@ -50,11 +55,21 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
         {
             results.push_back(result);
             configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
+
+            if (stopCondition != nullptr)
+            {
+                stopCondition->updateStatus(static_cast<double>(result.getComputationDuration()));
+            }
         }
         else
         {
             results.emplace_back(kernel.getName(), currentConfiguration, "Results differ");
             configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
+
+            if (stopCondition != nullptr)
+            {
+                stopCondition->updateStatus(std::numeric_limits<double>::max());
+            }
         }
 
         kernelRunner->clearBuffers(ArgumentAccessType::ReadWrite);
@@ -62,6 +77,12 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id)
         if (kernel.hasTuningManipulator())
         {
             kernelRunner->clearBuffers(ArgumentAccessType::ReadOnly);
+        }
+
+        if (stopCondition != nullptr && stopCondition->isMet())
+        {
+            logger->log(stopCondition->getStatusString());
+            break;
         }
     }
 
@@ -120,7 +141,7 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
     return results;
 }
 
-std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
+std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
     if (!kernelManager->isComposition(id))
     {
@@ -140,6 +161,11 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
     size_t configurationsCount = configurationManager.getConfigurationCount(id);
     std::vector<KernelResult> results;
 
+    if (stopCondition != nullptr)
+    {
+        stopCondition->initialize(configurationsCount);
+    }
+
     for (size_t i = 0; i < configurationsCount; i++)
     {
         std::stringstream stream;
@@ -153,14 +179,30 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id)
         {
             results.push_back(result);
             configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
+
+            if (stopCondition != nullptr)
+            {
+                stopCondition->updateStatus(static_cast<double>(result.getComputationDuration()));
+            }
         }
         else
         {
             results.emplace_back(composition.getName(), currentConfiguration, "Results differ");
             configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
+
+            if (stopCondition != nullptr)
+            {
+                stopCondition->updateStatus(std::numeric_limits<double>::max());
+            }
         }
 
         kernelRunner->clearBuffers();
+
+        if (stopCondition != nullptr && stopCondition->isMet())
+        {
+            logger->log(stopCondition->getStatusString());
+            break;
+        }
     }
 
     resultValidator->clearReferenceResults();

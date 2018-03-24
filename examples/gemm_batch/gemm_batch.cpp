@@ -148,8 +148,8 @@ public:
         ktt::DimensionVector globalSize(1, 1, 1);
         ktt::DimensionVector localSize(1, 1, 1);
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
-        int gran = getParameterValue("GRANULARITY", parameterValues);
-        int myBatch = batch / getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues); // is always 1 when STRIDED == 0
+        size_t gran = getParameterValue("GRANULARITY", parameterValues);
+        size_t myBatch = batch / getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues); // is always 1 when STRIDED == 0
         if (gran == 1) {
 #if USE_CUDA == 0
             globalSize.setSizeX(myBatch);

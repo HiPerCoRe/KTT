@@ -116,8 +116,8 @@ int main(int argc, char** argv)
         gridSpacingId, energyGridId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId});
 
-    // Set search method to random search, only 10% of all configurations will be explored.
-    tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{0.1});
+    // Set search method to random search
+    tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{});
 
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
@@ -125,8 +125,8 @@ int main(int argc, char** argv)
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{energyGridId});
 
-    // Launch kernel tuning
-    tuner.tuneKernel(kernelId);
+    // Launch kernel tuning, end after exploring 10% of configurations
+    tuner.tuneKernel(kernelId, std::make_unique<ktt::ConfigurationsExploredFraction>(0.1));
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
