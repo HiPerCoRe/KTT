@@ -34,14 +34,9 @@ public:
         return configurations.at(index);
     }
 
-    size_t getConfigurationCount() const override
-    {
-        return configurations.size();
-    }
-
     size_t getUnexploredConfigurationCount() const override
     {
-        return getConfigurationCount() - index;
+        return configurations.size() - index;
     }
 
 private:

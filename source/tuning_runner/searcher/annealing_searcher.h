@@ -46,7 +46,7 @@ public:
             executionTimes.at(index) = previousDuration;
         }
         
-        double progress = visitedStatesCount / static_cast<double>(getConfigurationCount());
+        double progress = visitedStatesCount / static_cast<double>(configurations.size());
         double temperature = maximumTemperature * (1.0 - progress);
 
         double acceptanceProbability = getAcceptanceProbability(executionTimes.at(currentState), executionTimes.at(neighbourState), temperature);
@@ -77,14 +77,9 @@ public:
         return configurations.at(index);
     }
 
-    size_t getConfigurationCount() const override
-    {
-        return configurations.size();
-    }
-
     size_t getUnexploredConfigurationCount() const override
     {
-        return getConfigurationCount() - visitedStatesCount;
+        return configurations.size() - visitedStatesCount;
     }
 
 private:

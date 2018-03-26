@@ -44,6 +44,7 @@ public:
       * kernel argument will be validated.
       * @param id Id of kernel argument for which number of validated elements will be retrieved. This can be used by inheriting class to support
       * validation of multiple kernel arguments.
+      * @return Number of validated elements returned by getData() method for specified kernel argument.
       */
     virtual size_t getNumberOfElements(const ArgumentId id) const
     {

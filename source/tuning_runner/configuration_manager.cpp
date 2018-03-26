@@ -121,17 +121,6 @@ void ConfigurationManager::calculateNextConfiguration(const KernelId id, const K
     searcherPair->second->calculateNextConfiguration(previousDuration);
 }
 
-size_t ConfigurationManager::getConfigurationCount(const KernelId id) const
-{
-    auto searcherPair = searchers.find(id);
-    if (searcherPair == searchers.end())
-    {
-        throw std::runtime_error(std::string("Configuration for kernel with following id is not present: ") + std::to_string(id));
-    }
-
-    return searcherPair->second->getConfigurationCount();
-}
-
 void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,
     const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters)
 {

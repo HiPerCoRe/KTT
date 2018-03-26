@@ -40,9 +40,9 @@
 
 // Stop conditions
 #include "api/stop_condition/configuration_duration.h"
-#include "api/stop_condition/configurations_explored_count.h"
-#include "api/stop_condition/configurations_explored_fraction.h"
-#include "api/stop_condition/tuning_time.h"
+#include "api/stop_condition/configuration_count.h"
+#include "api/stop_condition/configuration_fraction.h"
+#include "api/stop_condition/tuning_duration.h"
 
 // Reference class interface
 #include "api/reference_class.h"

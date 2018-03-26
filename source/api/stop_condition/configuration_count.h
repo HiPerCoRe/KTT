@@ -1,5 +1,5 @@
-/** @file configurations_explored_count.h
-  * ...
+/** @file configuration_count.h
+  * Stop condition based on count of explored configurations.
   */
 #pragma once
 
@@ -9,16 +9,17 @@
 namespace ktt
 {
 
-/** @class ConfigurationsExploredCount
-  * ...
+/** @class ConfigurationCount
+  * Class which implements stop condition based on count of explored configurations.
   */
-class ConfigurationsExploredCount : public StopCondition
+class ConfigurationCount : public StopCondition
 {
 public:
-    /** @fn explicit ConfigurationsExploredCount(const size_t count)
-      * ...
+    /** @fn explicit ConfigurationCount(const size_t count)
+      * Initializes configuration count condition.
+      * @param count Total count of explored configurations which will be tested before condition is satisfied.
       */
-    explicit ConfigurationsExploredCount(const size_t count) :
+    explicit ConfigurationCount(const size_t count) :
         currentCount(0)
     {
         targetCount = std::max(static_cast<size_t>(1), count);
@@ -37,6 +38,11 @@ public:
         currentCount++;
     }
     
+    size_t getConfigurationCount() const override
+    {
+        return targetCount;
+    }
+
     std::string getStatusString() const override
     {
         if (isMet())
