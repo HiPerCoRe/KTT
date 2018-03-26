@@ -176,16 +176,16 @@ void TunerCore::setTuningManipulator(const KernelId id, std::unique_ptr<TuningMa
     }
 }
 
-void TunerCore::tuneKernel(const KernelId id)
+void TunerCore::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
     std::vector<KernelResult> results;
     if (kernelManager->isComposition(id))
     {
-        results = tuningRunner->tuneComposition(id);
+        results = tuningRunner->tuneComposition(id, std::move(stopCondition));
     }
     else
     {
-        results = tuningRunner->tuneKernel(id);
+        results = tuningRunner->tuneKernel(id, std::move(stopCondition));
     }
     resultPrinter.setResult(id, results);
 }

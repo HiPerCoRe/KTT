@@ -16,9 +16,8 @@ public:
     static const size_t maximumAlreadyVisitedStates = 10;
     static const size_t maximumDifferences = 3;
 
-    AnnealingSearcher(const std::vector<KernelConfiguration>& configurations, const double fraction, const double maximumTemperature) :
+    AnnealingSearcher(const std::vector<KernelConfiguration>& configurations, const double maximumTemperature) :
         configurations(configurations),
-        fraction(fraction),
         maximumTemperature(maximumTemperature),
         visitedStatesCount(0),
         currentState(0),
@@ -80,7 +79,7 @@ public:
 
     size_t getConfigurationCount() const override
     {
-        return std::max(static_cast<size_t>(1), std::min(configurations.size(), static_cast<size_t>(configurations.size() * fraction)));
+        return configurations.size();
     }
 
     size_t getUnexploredConfigurationCount() const override
@@ -91,7 +90,6 @@ public:
 private:
     std::vector<KernelConfiguration> configurations;
     size_t index;
-    double fraction;
     double maximumTemperature;
     size_t visitedStatesCount;
     size_t currentState;

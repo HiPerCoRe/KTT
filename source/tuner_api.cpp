@@ -194,7 +194,20 @@ void Tuner::tuneKernel(const KernelId id)
 {
     try
     {
-        tunerCore->tuneKernel(id);
+        tunerCore->tuneKernel(id, nullptr);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+void Tuner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+{
+    try
+    {
+        tunerCore->tuneKernel(id, std::move(stopCondition));
     }
     catch (const std::runtime_error& error)
     {

@@ -117,13 +117,12 @@ int main(int argc, char** argv)
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{gridId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
 
-    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{0.01, 16, 4, 1, 8, 0, 1, 0, 1}); /* optimum for GTX 1070, 128x128, 4000 atoms*/
-    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{0.01, 32, 8, 1, 16, 0, 1, 0, 1}); /* optimum for GTX 680, 128x128, 4000 atoms*/
-    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{0.01, 16, 8, 1, 32, 2, 1, 1, 2}); /* optimum for Vega 56, 128x128, 4000 atoms*/
-    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{0.01});
-    //tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{0.01});
+    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{16, 4, 1, 8, 0, 1, 0, 1}); /* optimum for GTX 1070, 128x128, 4000 atoms*/
+    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{32, 8, 1, 16, 0, 1, 0, 1}); /* optimum for GTX 680, 128x128, 4000 atoms*/
+    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{16, 8, 1, 32, 2, 1, 1, 2}); /* optimum for Vega 56, 128x128, 4000 atoms*/
+    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{});
+    //tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{});
 
-    //tuner.dryTuneKernel(kernelId, "/home/fila/prace/autotuning/KTT/build/coulomb_sum_3d_output.kepler.csv");
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, "coulomb_sum_3d_output.csv", ktt::PrintFormat::CSV);
