@@ -9,7 +9,7 @@
     #define STRIDE_BLOCK 32
 #endif
 
-#define USE_CUDA 1
+#define USE_CUDA 0
 
 #if STRIDED == 0
     #if USE_CUDA == 0
