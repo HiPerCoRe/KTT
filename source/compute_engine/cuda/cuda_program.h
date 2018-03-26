@@ -64,7 +64,7 @@ public:
         size_t size;
         checkCUDAError(nvrtcGetPTXSize(program, &size), "nvrtcGetPTXSize");
         
-        std::string result(size, '\0');
+        std::string result(size-1, '\0');
         checkCUDAError(nvrtcGetPTX(program, &result[0]), "nvrtcGetPTX");
         return result;
     }
@@ -73,7 +73,7 @@ public:
     {
         size_t infoSize;
         checkCUDAError(nvrtcGetProgramLogSize(program, &infoSize), "nvrtcGetProgramLogSize");
-        std::string infoString(infoSize, '\0');
+        std::string infoString(infoSize-1, '\0');
         checkCUDAError(nvrtcGetProgramLog(program, &infoString[0]), "nvrtcGetProgramLog");
 
         return infoString;

@@ -166,4 +166,3 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     }
 }
 #endif
-
