@@ -46,25 +46,25 @@ EventId CUDAEngine::runKernelAsync(const KernelRuntimeData& kernelData, const st
     Timer overheadTimer;
     overheadTimer.start();
 
-    std::unique_ptr<CUDAProgram> program;
-    CUDAProgram* programPointer;
+    std::string ptxSource;
 
     if (programCacheFlag)
     {
         if (programCache.find(kernelData.getSource()) == programCache.end())
         {
-            program = createAndBuildProgram(kernelData.getSource());
-            programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
+            std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
+            programCache.insert(std::make_pair(kernelData.getSource(), program->getPtxSource()));
         }
         auto cachePointer = programCache.find(kernelData.getSource());
-        programPointer = cachePointer->second.get();
+        ptxSource = cachePointer->second;
     }
     else
     {
-        program = createAndBuildProgram(kernelData.getSource());
-        programPointer = program.get();
+        std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
+        ptxSource = program->getPtxSource();
     }
-    auto kernel = std::make_unique<CUDAKernel>(programPointer->getPtxSource(), kernelData.getName());
+
+    auto kernel = std::make_unique<CUDAKernel>(ptxSource, kernelData.getName());
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
     overheadTimer.stop();
