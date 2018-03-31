@@ -54,13 +54,13 @@ public:
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType);
 
     // Kernel runner methods
-    void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
+    bool runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
 
     // Kernel tuner methods
     void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
     void dryTuneKernel(const KernelId id, const std::string& filePath);
-    void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
+    bool tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void setValidationRange(const ArgumentId id, const size_t range);

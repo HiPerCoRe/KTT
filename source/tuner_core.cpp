@@ -149,17 +149,21 @@ ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElement
     return argumentManager->addArgument(data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType);
 }
 
-void TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
+bool TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
 {
+    KernelResult result;
+
     if (kernelManager->isComposition(id))
     {
-        kernelRunner->runComposition(id, configuration, output);
+        result = kernelRunner->runComposition(id, configuration, output);
     }
     else
     {
-        kernelRunner->runKernel(id, configuration, output);
+        result = kernelRunner->runKernel(id, configuration, output);
     }
+
     kernelRunner->clearBuffers();
+    return result.isValid();
 }
 
 void TunerCore::setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
@@ -204,7 +208,7 @@ void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
     resultPrinter.setResult(id, results);
 }
 
-void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+bool TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
 {
     KernelResult result;
     if (kernelManager->isComposition(id))
@@ -215,7 +219,9 @@ void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDesc
     {
         result = tuningRunner->tuneKernelByStep(id, output, recomputeReference);
     }
+
     resultPrinter.addResult(id, result);
+    return result.isValid();
 }
 
 void TunerCore::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)

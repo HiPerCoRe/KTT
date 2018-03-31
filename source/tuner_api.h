@@ -368,16 +368,18 @@ public:
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
       * @param recomputeReference Flag which controls whether recomputation of reference output should be performed or not. Useful if kernel data
       * between individual method invocations sometimes change.
+      * @return True if a kernel execution was successful. False if there was an error or a kernel output did not match reference output.
       */
-    void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
+    bool tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
 
     /** @fn void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
       * Runs specified kernel using provided configuration. Does not perform result validation.
       * @param id Id of kernel which will be run.
       * @param configuration Configuration under which the kernel will be launched. See ParameterPair for more information.
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
+      * @return True if a kernel execution was successful. False if there was an error.
       */
-    void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
+    bool runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
 
     /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
       * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.
@@ -536,9 +538,8 @@ public:
 
     /** @fn void setGlobalSizeType(const GlobalSizeType type)
       * Sets global size specification type to specified compute API style. In OpenCL, NDrange size is specified as number of work-items in
-      * a work-group multiplied by number of work-groups. In CUDA, grid size is specified as number of threads in a block divided by number
-      * of blocks. This method makes it possible to use OpenCL style in CUDA and vice versa. Default global size type is the one corresponding to
-      * compute API of the tuner.
+      * a work-group multiplied by number of work-groups. In CUDA, grid size is specified as number of blocks. This method makes it possible to use
+      * OpenCL style in CUDA and vice versa. Default global size type is the one corresponding to compute API of the tuner.
       * @param type Global size type which will be set for tuner. See ::GlobalSizeType for more information.
       */
     void setGlobalSizeType(const GlobalSizeType type);

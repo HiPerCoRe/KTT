@@ -246,6 +246,8 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     }
     else
     {
+        result.setValid(false);
+        result.setErrorMessage("Results differ");
         configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
     }
 
@@ -282,6 +284,8 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     }
     else
     {
+        result.setValid(false);
+        result.setErrorMessage("Results differ");
         configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
     }
 

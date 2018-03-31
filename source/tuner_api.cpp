@@ -242,11 +242,11 @@ void Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescript
     }
 }
 
-void Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+bool Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
 {
     try
     {
-        tunerCore->tuneKernelByStep(id, output, recomputeReference);
+        return tunerCore->tuneKernelByStep(id, output, recomputeReference);
     }
     catch (const std::runtime_error& error)
     {
@@ -255,11 +255,11 @@ void Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescript
     }
 }
 
-void Tuner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
+bool Tuner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
 {
     try
     {
-        tunerCore->runKernel(id, configuration, output);
+        return tunerCore->runKernel(id, configuration, output);
     }
     catch (const std::runtime_error& error)
     {
