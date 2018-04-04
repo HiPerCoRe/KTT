@@ -389,6 +389,58 @@ EventId OpenCLEngine::copyArgumentAsync(const ArgumentId destination, const Argu
     return eventId;
 }
 
+uint64_t OpenCLEngine::persistArgument(KernelArgument& kernelArgument, const bool flag)
+{
+    bool bufferFound = false;
+    auto iterator = persistentBuffers.cbegin();
+
+    while (iterator != persistentBuffers.cend())
+    {
+        if (iterator->get()->getKernelArgumentId() == kernelArgument.getId())
+        {
+            bufferFound = true;
+            if (!flag)
+            {
+                persistentBuffers.erase(iterator);
+            }
+            break;
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
+    
+    if (flag && !bufferFound)
+    {
+        std::unique_ptr<OpenCLBuffer> buffer = nullptr;
+        EventId eventId = nextEventId;
+
+        if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+        {
+            buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
+            bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
+        }
+        else
+        {
+            buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
+            auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
+            buffer->uploadData(commandQueues.at(getDefaultQueue())->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
+                profilingEvent->getEvent());
+
+            profilingEvent->setReleaseFlag();
+            bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
+        }
+
+        persistentBuffers.insert(std::move(buffer)); // buffer data will be stolen
+        nextEventId++;
+
+        return getArgumentOperationDuration(eventId);
+    }
+
+    return 0;
+}
+
 uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId id) const
 {
     auto eventPointer = bufferEvents.find(id);
@@ -682,6 +734,14 @@ DeviceType OpenCLEngine::getDeviceType(const cl_device_type deviceType)
 
 OpenCLBuffer* OpenCLEngine::findBuffer(const ArgumentId id) const
 {
+    for (const auto& buffer : persistentBuffers)
+    {
+        if (buffer->getKernelArgumentId() == id)
+        {
+            return buffer.get();
+        }
+    }
+
     for (const auto& buffer : buffers)
     {
         if (buffer->getKernelArgumentId() == id)
@@ -848,6 +908,11 @@ uint64_t OpenCLEngine::copyArgument(const ArgumentId, const ArgumentId, const si
 }
 
 EventId OpenCLEngine::copyArgumentAsync(const ArgumentId, const ArgumentId, const size_t, const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::persistArgument(KernelArgument&, const bool)
 {
     throw std::runtime_error("");
 }

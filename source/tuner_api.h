@@ -321,6 +321,17 @@ public:
         return addArgument(localMemoryElementsCount, sizeof(T), dataType);
     }
 
+    /** @fn void persistArgument(const ArgumentId id, const bool flag)
+      * Controls whether specified vector argument is persisted inside a compute API buffer or not. Persisted arguments remain inside buffers even
+      * after the execution of kernel utilizing these arguments is finished. Persistence of kernel arguments is switched off by default. Persistent
+      * arguments are useful during online tuning when kernel output is computed over multiple kernel launches in different configurations. If
+      * a kernel is launched multiple times in the same configuration, it is best to utilize TuningManipulator and avoid persistent arguments.
+      * @param id Id of a vector argument.
+      * @param flag Specifies whether argument should be persisted or not. If true, specified vector argument is immidiately persisted. If false,
+      * compute API buffer for specified argument is immidiately removed.
+      */
+    void persistArgument(const ArgumentId id, const bool flag);
+
     /** @fn void tuneKernel(const KernelId id)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters
       * and constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all

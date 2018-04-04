@@ -100,7 +100,8 @@ KernelConfiguration KernelManager::getKernelConfiguration(const KernelId id, con
                 {
                     local.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
                 }
-                else if (parameter.getModifierType() == ModifierType::Both) {
+                else if (parameter.getModifierType() == ModifierType::Both)
+                {
                     local.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
                     global.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
                 }
@@ -160,7 +161,8 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
                 {
                     for (const auto kernelId : parameter.getCompositionKernels())
                     {
-                        if (globalSizePair.first == kernelId && (parameter.getModifierType() == ModifierType::Global || parameter.getModifierType() == ModifierType::Both))
+                        if (globalSizePair.first == kernelId && (parameter.getModifierType() == ModifierType::Global
+                            || parameter.getModifierType() == ModifierType::Both))
                         {
                             globalSizePair.second.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(),
                                 parameter.getModifierDimension());
@@ -171,7 +173,8 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
                 {
                     for (const auto kernelId : parameter.getCompositionKernels())
                     {
-                        if (localSizePair.first == kernelId && (parameter.getModifierType() == ModifierType::Local || parameter.getModifierType() == ModifierType::Both))
+                        if (localSizePair.first == kernelId && (parameter.getModifierType() == ModifierType::Local
+                            || parameter.getModifierType() == ModifierType::Both))
                         {
                             localSizePair.second.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(),
                                 parameter.getModifierDimension());
@@ -573,7 +576,8 @@ void KernelManager::computeCompositionConfigurations(const size_t currentParamet
             {
                 for (auto& globalSizePair : newGlobalSizes)
                 {
-                    if (compositionKernelId == globalSizePair.first && (parameter.getModifierType() == ModifierType::Global || parameter.getModifierType() == ModifierType::Both))
+                    if (compositionKernelId == globalSizePair.first && (parameter.getModifierType() == ModifierType::Global
+                        || parameter.getModifierType() == ModifierType::Both))
                     {
                         globalSizePair.second.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
                     }
@@ -581,7 +585,8 @@ void KernelManager::computeCompositionConfigurations(const size_t currentParamet
 
                 for (auto& localSizePair : newLocalSizes)
                 {
-                    if (compositionKernelId == localSizePair.first && (parameter.getModifierType() == ModifierType::Local || parameter.getModifierType() == ModifierType::Both))
+                    if (compositionKernelId == localSizePair.first && (parameter.getModifierType() == ModifierType::Local
+                        || parameter.getModifierType() == ModifierType::Both))
                     {
                         localSizePair.second.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
                     }

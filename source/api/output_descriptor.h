@@ -10,7 +10,6 @@
 namespace ktt
 {
 
-
 /** @class OutputDescriptor
   * Class which can be used to retrieve kernel argument data when calling certain KTT API methods.
   */

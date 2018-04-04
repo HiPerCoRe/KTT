@@ -80,6 +80,7 @@ public:
     void setCompilerOptions(const std::string& options);
     void setGlobalSizeType(const GlobalSizeType type);
     void setAutomaticGlobalSizeCorrection(const bool flag);
+    void persistArgument(const ArgumentId id, const bool flag);
     void printComputeAPIInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const;

@@ -190,6 +190,19 @@ void Tuner::setCompositionKernelArguments(const KernelId compositionId, const Ke
     }
 }
 
+void Tuner::persistArgument(const ArgumentId id, const bool flag)
+{
+    try
+    {
+        tunerCore->persistArgument(id, flag);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 void Tuner::tuneKernel(const KernelId id)
 {
     try
