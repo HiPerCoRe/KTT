@@ -1,5 +1,5 @@
-/** @file tuning_time.h
-  * ...
+/** @file tuning_duration.h
+  * Stop condition based on total tuning duration.
   */
 #pragma once
 
@@ -10,19 +10,21 @@
 namespace ktt
 {
 
-/** @class TuningTime
-  * ...
+/** @class TuningDuration
+  * Class which implements stop condition based on total tuning duration.
   */
-class TuningTime : public StopCondition
+class TuningDuration : public StopCondition
 {
 public:
-    /** @fn explicit TuningTime(const double time)
-      * ...
+    /** @fn explicit TuningDuration(const double duration)
+      * Initializes tuning duration condition.
+      * @param duration Condition will be satisfied when specified amount of time has passed. The measurement starts when kernel tuning begins.
+      * Duration is specified in seconds.
       */
-    explicit TuningTime(const double time) :
+    explicit TuningDuration(const double duration) :
         passedTime(0.0)
     {
-        targetTime = std::max(0.0, time);
+        targetTime = std::max(0.0, duration);
     }
 
     bool isMet() const override
@@ -30,8 +32,9 @@ public:
         return passedTime > targetTime;
     }
 
-    void initialize(const size_t) override
+    void initialize(const size_t totalConfigurationCount) override
     {
+        totalCount = totalConfigurationCount;
         initialTime = std::chrono::steady_clock::now();
     }
 
@@ -41,6 +44,11 @@ public:
         passedTime = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - initialTime).count()) / 1000.0;
     }
     
+    size_t getConfigurationCount() const override
+    {
+        return totalCount;
+    }
+
     std::string getStatusString() const override
     {
         if (isMet())
@@ -53,6 +61,7 @@ public:
     }
 
 private:
+    size_t totalCount;
     std::chrono::steady_clock::time_point initialTime;
     double passedTime;
     double targetTime;

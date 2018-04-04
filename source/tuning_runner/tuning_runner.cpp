@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <iterator>
 #include <sstream>
@@ -32,20 +33,23 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
     }
 
     resultValidator->computeReferenceResult(kernel);
-    configurationManager.clearData(id);
-    configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id), kernel.getParameters());
-    size_t configurationsCount = configurationManager.getConfigurationCount(id);
-    std::vector<KernelResult> results;
+    std::vector<KernelConfiguration> configurations = kernelManager->getKernelConfigurations(id);
+    size_t configurationCount = configurations.size();
 
     if (stopCondition != nullptr)
     {
-        stopCondition->initialize(configurationsCount);
+        stopCondition->initialize(configurationCount);
+        configurationCount = std::min(configurationCount, stopCondition->getConfigurationCount());
     }
 
-    for (size_t i = 0; i < configurationsCount; i++)
+    configurationManager.clearData(id);
+    configurationManager.setKernelConfigurations(id, configurations, kernel.getParameters());
+    std::vector<KernelResult> results;
+
+    for (size_t i = 0; i < configurationCount; i++)
     {
         std::stringstream stream;
-        stream << "Launching configuration: " << i + 1 << " / " << configurationsCount;
+        stream << "Launching configuration: " << i + 1 << " / " << configurationCount;
         logger->log(stream.str());
 
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
@@ -106,13 +110,14 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
     }
 
     const Kernel& kernel = kernelManager->getKernel(id);
+    std::vector<KernelConfiguration> configurations = kernelManager->getKernelConfigurations(id);
+    size_t configurationCount = configurations.size();
 
     configurationManager.clearData(id);
-    configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id), kernel.getParameters());
-    size_t configurationsCount = configurationManager.getConfigurationCount(id);
+    configurationManager.setKernelConfigurations(id, configurations, kernel.getParameters());
     std::vector<KernelResult> results;
 
-    for (size_t i = 0; i < configurationsCount; i++)
+    for (size_t i = 0; i < configurationCount; i++)
     {
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
         KernelResult result(kernel.getName(), currentConfiguration);
@@ -120,7 +125,7 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
         try
         {
             std::stringstream stream;
-            stream << "Launching kernel <" << kernel.getName() << "> with configuration (" << i + 1 << " / " << configurationsCount << "): "
+            stream << "Launching kernel <" << kernel.getName() << "> with configuration (" << i + 1 << " / " << configurationCount << "): "
                 << currentConfiguration;
             logger->log(stream.str());
 
@@ -156,20 +161,23 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
     }
 
     resultValidator->computeReferenceResult(compatibilityKernel);
-    configurationManager.clearData(id);
-    configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id), composition.getParameters());
-    size_t configurationsCount = configurationManager.getConfigurationCount(id);
-    std::vector<KernelResult> results;
+    std::vector<KernelConfiguration> configurations = kernelManager->getKernelCompositionConfigurations(id);
+    size_t configurationCount = configurations.size();
 
     if (stopCondition != nullptr)
     {
-        stopCondition->initialize(configurationsCount);
+        stopCondition->initialize(configurationCount);
+        configurationCount = std::min(configurationCount, stopCondition->getConfigurationCount());
     }
 
-    for (size_t i = 0; i < configurationsCount; i++)
+    configurationManager.clearData(id);
+    configurationManager.setKernelConfigurations(id, configurations, composition.getParameters());
+    std::vector<KernelResult> results;
+
+    for (size_t i = 0; i < configurationCount; i++)
     {
         std::stringstream stream;
-        stream << "Launching configuration: " << i + 1 << " / " << configurationsCount;
+        stream << "Launching configuration: " << i + 1 << " / " << configurationCount;
         logger->log(stream.str());
 
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
@@ -238,6 +246,8 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     }
     else
     {
+        result.setValid(false);
+        result.setErrorMessage("Results differ");
         configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
     }
 
@@ -274,6 +284,8 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     }
     else
     {
+        result.setValid(false);
+        result.setErrorMessage("Results differ");
         configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
     }
 

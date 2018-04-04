@@ -51,6 +51,7 @@ public:
     virtual KernelArgument downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const = 0;
     virtual uint64_t copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes) = 0;
     virtual EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) = 0;
+    virtual uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) = 0;
     virtual uint64_t getArgumentOperationDuration(const EventId id) const = 0;
     virtual void clearBuffer(const ArgumentId id) = 0;
     virtual void clearBuffers() = 0;

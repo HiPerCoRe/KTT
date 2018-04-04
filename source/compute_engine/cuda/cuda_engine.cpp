@@ -46,25 +46,25 @@ EventId CUDAEngine::runKernelAsync(const KernelRuntimeData& kernelData, const st
     Timer overheadTimer;
     overheadTimer.start();
 
-    std::unique_ptr<CUDAProgram> program;
-    CUDAProgram* programPointer;
+    std::string ptxSource;
 
     if (programCacheFlag)
     {
         if (programCache.find(kernelData.getSource()) == programCache.end())
         {
-            program = createAndBuildProgram(kernelData.getSource());
-            programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
+            std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
+            programCache.insert(std::make_pair(kernelData.getSource(), program->getPtxSource()));
         }
         auto cachePointer = programCache.find(kernelData.getSource());
-        programPointer = cachePointer->second.get();
+        ptxSource = cachePointer->second;
     }
     else
     {
-        program = createAndBuildProgram(kernelData.getSource());
-        programPointer = program.get();
+        std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
+        ptxSource = program->getPtxSource();
     }
-    auto kernel = std::make_unique<CUDAKernel>(programPointer->getPtxSource(), kernelData.getName());
+
+    auto kernel = std::make_unique<CUDAKernel>(ptxSource, kernelData.getName());
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
     overheadTimer.stop();
@@ -374,6 +374,58 @@ EventId CUDAEngine::copyArgumentAsync(const ArgumentId destination, const Argume
     return eventId;
 }
 
+uint64_t CUDAEngine::persistArgument(KernelArgument& kernelArgument, const bool flag)
+{
+    bool bufferFound = false;
+    auto iterator = persistentBuffers.cbegin();
+
+    while (iterator != persistentBuffers.cend())
+    {
+        if (iterator->get()->getKernelArgumentId() == kernelArgument.getId())
+        {
+            bufferFound = true;
+            if (!flag)
+            {
+                persistentBuffers.erase(iterator);
+            }
+            break;
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
+    
+    if (flag && !bufferFound)
+    {
+        std::unique_ptr<CUDABuffer> buffer = nullptr;
+        EventId eventId = nextEventId;
+
+        if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+        {
+            buffer = std::make_unique<CUDABuffer>(kernelArgument, true);
+            bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::make_unique<CUDAEvent>(eventId, false),
+                std::make_unique<CUDAEvent>(eventId, false))));
+        }
+        else
+        {
+            buffer = std::make_unique<CUDABuffer>(kernelArgument, false);
+            auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
+            auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
+            buffer->uploadData(streams.at(getDefaultQueue())->getStream(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
+                startEvent->getEvent(), endEvent->getEvent());
+            bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
+        }
+
+        persistentBuffers.insert(std::move(buffer)); // buffer data will be stolen
+        nextEventId++;
+
+        return getArgumentOperationDuration(eventId);
+    }
+
+    return 0;
+}
+
 uint64_t CUDAEngine::getArgumentOperationDuration(const EventId id) const
 {
     auto eventPointer = bufferEvents.find(id);
@@ -667,6 +719,14 @@ size_t CUDAEngine::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>
 
 CUDABuffer* CUDAEngine::findBuffer(const ArgumentId id) const
 {
+    for (const auto& buffer : persistentBuffers)
+    {
+        if (buffer->getKernelArgumentId() == id)
+        {
+            return buffer.get();
+        }
+    }
+
     for (const auto& buffer : buffers)
     {
         if (buffer->getKernelArgumentId() == id)
@@ -803,6 +863,11 @@ uint64_t CUDAEngine::copyArgument(const ArgumentId, const ArgumentId, const size
 }
 
 EventId CUDAEngine::copyArgumentAsync(const ArgumentId, const ArgumentId, const size_t, const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+uint64_t CUDAEngine::persistArgument(KernelArgument&, const bool)
 {
     throw std::runtime_error("");
 }

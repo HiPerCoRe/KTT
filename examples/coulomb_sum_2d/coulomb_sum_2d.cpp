@@ -126,7 +126,7 @@ int main(int argc, char** argv)
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{energyGridId});
 
     // Launch kernel tuning, end after exploring 10% of configurations
-    tuner.tuneKernel(kernelId, std::make_unique<ktt::ConfigurationsExploredFraction>(0.1));
+    tuner.tuneKernel(kernelId, std::make_unique<ktt::ConfigurationFraction>(0.1));
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);

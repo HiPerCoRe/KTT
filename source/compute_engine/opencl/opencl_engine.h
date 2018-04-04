@@ -60,6 +60,7 @@ public:
     KernelArgument downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const override;
     uint64_t copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes) override;
     EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) override;
+    uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
@@ -91,6 +92,7 @@ private:
     std::unique_ptr<OpenCLContext> context;
     std::vector<std::unique_ptr<OpenCLCommandQueue>> commandQueues;
     std::set<std::unique_ptr<OpenCLBuffer>> buffers;
+    std::set<std::unique_ptr<OpenCLBuffer>> persistentBuffers;
     std::map<std::string, std::unique_ptr<OpenCLProgram>> programCache;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> kernelEvents;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> bufferEvents;
@@ -145,6 +147,7 @@ public:
     KernelArgument downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const override;
     uint64_t copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes) override;
     EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) override;
+    uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
