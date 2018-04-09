@@ -36,6 +36,11 @@ public:
 
     size_t getUnexploredConfigurationCount() const override
     {
+        if (index >= configurations.size())
+        {
+            return 0;
+        }
+
         return configurations.size() - index;
     }
 

@@ -408,7 +408,10 @@ void ManipulatorInterfaceImplementation::uploadBuffers()
 {
     for (auto& argument : vectorArguments)
     {
-        computeEngine->uploadArgument(*argument.second);
+        if (!argument.second->isPersistent())
+        {
+            computeEngine->uploadArgument(*argument.second);
+        }
     }
 }
 

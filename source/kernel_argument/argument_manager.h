@@ -20,6 +20,7 @@ public:
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType);
     void updateArgument(const ArgumentId id, void* data, const size_t numberOfElements);
     void updateArgument(const ArgumentId id, const void* data, const size_t numberOfElements);
+    void setPersistentFlag(const ArgumentId id, const bool flag);
 
     // Getters
     size_t getArgumentCount() const;

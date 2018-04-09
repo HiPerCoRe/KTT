@@ -329,13 +329,8 @@ void TunerCore::setAutomaticGlobalSizeCorrection(const bool flag)
 
 void TunerCore::persistArgument(const ArgumentId id, const bool flag)
 {
+    argumentManager->setPersistentFlag(id, flag);
     KernelArgument& argument = argumentManager->getArgument(id);
-
-    if (argument.getUploadType() != ArgumentUploadType::Vector)
-    {
-        throw std::runtime_error("Non-vector kernel arguments cannot be persistent");
-    }
-
     computeEngine->persistArgument(argument, flag);
 }
 

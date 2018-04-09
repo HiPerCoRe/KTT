@@ -298,7 +298,7 @@ end -- opencl_projects
 if cuda_projects then
 project "gemm_batch_openclcuda"
     kind "ConsoleApp"
-    files { "examples/gemm_batch/*.h", "examples/gemm_batch/*.cpp", "examples/gemm_batch/*.cl", "examples/gemm_batch/*.cu" }
+    files { "examples/gemm_batch/*.h", "examples/gemm_batch/gemm_batch.cpp", "examples/gemm_batch/*.cl", "examples/gemm_batch/*.cu" }
     includedirs { "source" }
     links { "ktt" }
 end -- cuda_projects

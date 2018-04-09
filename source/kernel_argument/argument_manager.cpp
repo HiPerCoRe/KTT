@@ -41,6 +41,19 @@ void ArgumentManager::updateArgument(const ArgumentId id, const void* data, cons
     arguments.at(id).updateData(data, numberOfElements);
 }
 
+void ArgumentManager::setPersistentFlag(const ArgumentId id, const bool flag)
+{
+    if (id >= nextArgumentId)
+    {
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
+    }
+    if (arguments.at(id).getUploadType() != ArgumentUploadType::Vector)
+    {
+        throw std::runtime_error("Non-vector kernel arguments cannot be persistent");
+    }
+    arguments.at(id).setPersistentFlag(flag);
+}
+
 size_t ArgumentManager::getArgumentCount() const
 {
     return arguments.size();
