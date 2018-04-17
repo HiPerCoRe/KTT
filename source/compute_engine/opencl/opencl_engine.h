@@ -40,7 +40,8 @@ public:
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
-    void setProgramCache(const bool flag) override;
+    void setProgramCacheUsage(const bool flag) override;
+    void setProgramCacheCapacity(const size_t capacity) override;
     void clearProgramCache() override;
 
     // Queue handling methods
@@ -89,11 +90,12 @@ private:
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
     bool programCacheFlag;
+    size_t programCacheCapacity;
+    bool persistentBufferFlag;
     mutable EventId nextEventId;
     std::unique_ptr<OpenCLContext> context;
     std::vector<std::unique_ptr<OpenCLCommandQueue>> commandQueues;
     std::set<std::unique_ptr<OpenCLBuffer>> buffers;
-    bool persistentBufferFlag;
     std::set<std::unique_ptr<OpenCLBuffer>> persistentBuffers;
     std::map<std::string, std::unique_ptr<OpenCLProgram>> programCache;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> kernelEvents;
@@ -129,7 +131,8 @@ public:
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
-    void setProgramCache(const bool flag) override;
+    void setProgramCacheUsage(const bool flag) override;
+    void setProgramCacheCapacity(const size_t capacity) override;
     void clearProgramCache() override;
 
     // Queue handling methods

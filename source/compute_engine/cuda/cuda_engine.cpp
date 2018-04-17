@@ -14,9 +14,10 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     compilerOptions(std::string("--gpu-architecture=compute_30")),
     globalSizeType(GlobalSizeType::CUDA),
     globalSizeCorrection(false),
-    programCacheFlag(false),
-    nextEventId(0),
-    persistentBufferFlag(true)
+    programCacheFlag(true),
+    programCacheCapacity(10),
+    persistentBufferFlag(true),
+    nextEventId(0)
 {
     checkCUDAError(cuInit(0), "cuInit");
 
@@ -53,6 +54,10 @@ EventId CUDAEngine::runKernelAsync(const KernelRuntimeData& kernelData, const st
     {
         if (programCache.find(kernelData.getSource()) == programCache.end())
         {
+            if (programCache.size() >= programCacheCapacity)
+            {
+                clearProgramCache();
+            }
             std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
             programCache.insert(std::make_pair(kernelData.getSource(), program->getPtxSource()));
         }
@@ -116,13 +121,18 @@ void CUDAEngine::setAutomaticGlobalSizeCorrection(const bool flag)
     globalSizeCorrection = flag;
 }
 
-void CUDAEngine::setProgramCache(const bool flag)
+void CUDAEngine::setProgramCacheUsage(const bool flag)
 {
     if (!flag)
     {
         clearProgramCache();
     }
     programCacheFlag = flag;
+}
+
+void CUDAEngine::setProgramCacheCapacity(const size_t capacity)
+{
+    programCacheCapacity = capacity;
 }
 
 void CUDAEngine::clearProgramCache()
@@ -796,7 +806,12 @@ void CUDAEngine::setAutomaticGlobalSizeCorrection(const bool)
     throw std::runtime_error("");
 }
 
-void CUDAEngine::setProgramCache(const bool)
+void CUDAEngine::setProgramCacheUsage(const bool)
+{
+    throw std::runtime_error("");
+}
+
+void CUDAEngine::setProgramCacheCapacity(const size_t)
 {
     throw std::runtime_error("");
 }

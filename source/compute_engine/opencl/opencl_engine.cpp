@@ -14,9 +14,10 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
     compilerOptions(std::string("")),
     globalSizeType(GlobalSizeType::OpenCL),
     globalSizeCorrection(false),
-    programCacheFlag(false),
-    nextEventId(0),
-    persistentBufferFlag(true)
+    programCacheFlag(true),
+    programCacheCapacity(10),
+    persistentBufferFlag(true),
+    nextEventId(0)
 {
     auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
@@ -59,6 +60,10 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
     {
         if (programCache.find(kernelData.getSource()) == programCache.end())
         {
+            if (programCache.size() >= programCacheCapacity)
+            {
+                clearProgramCache();
+            }
             program = createAndBuildProgram(kernelData.getSource());
             programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
         }
@@ -131,13 +136,18 @@ void OpenCLEngine::setAutomaticGlobalSizeCorrection(const bool flag)
     globalSizeCorrection = flag;
 }
 
-void OpenCLEngine::setProgramCache(const bool flag)
+void OpenCLEngine::setProgramCacheUsage(const bool flag)
 {
     if (!flag)
     {
         clearProgramCache();
     }
     programCacheFlag = flag;
+}
+
+void OpenCLEngine::setProgramCacheCapacity(const size_t capacity)
+{
+    programCacheCapacity = capacity;
 }
 
 void OpenCLEngine::clearProgramCache()
@@ -841,7 +851,12 @@ void OpenCLEngine::setAutomaticGlobalSizeCorrection(const bool)
     throw std::runtime_error("");
 }
 
-void OpenCLEngine::setProgramCache(const bool)
+void OpenCLEngine::setProgramCacheUsage(const bool)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setProgramCacheCapacity(const size_t)
 {
     throw std::runtime_error("");
 }

@@ -514,6 +514,14 @@ public:
       */
     void setCompilerOptions(const std::string& options);
 
+    /** @fn void setProgramCacheCapacity(const size_t capacity)
+      * Sets capacity of a program cache. The cache contains recently compiled kernels which are prepared to be launched immidiately. Using the cache
+      * can significantly improve tuner performance during online tuning or iterative kernel running with TuningManipulator. Default program cache
+      * size is 10.
+      * @param capacity Controls program cache capacity. If zero, program cache is disabled completely.
+      */
+    void setProgramCacheCapacity(const size_t capacity);
+
     /** @fn void printComputeAPIInfo(std::ostream& outputTarget) const
       * Prints basic information about available platforms and devices to specified output stream. Also prints indices assigned to them
       * by KTT framework.

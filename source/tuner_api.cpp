@@ -420,6 +420,11 @@ void Tuner::setCompilerOptions(const std::string& options)
     tunerCore->setCompilerOptions(options);
 }
 
+void Tuner::setProgramCacheCapacity(const size_t capacity)
+{
+    tunerCore->setProgramCacheCapacity(capacity);
+}
+
 void Tuner::printComputeAPIInfo(std::ostream& outputTarget) const
 {
     try

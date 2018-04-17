@@ -327,6 +327,19 @@ void TunerCore::setAutomaticGlobalSizeCorrection(const bool flag)
     computeEngine->setAutomaticGlobalSizeCorrection(flag);
 }
 
+void TunerCore::setProgramCacheCapacity(const size_t capacity)
+{
+    if (capacity == 0)
+    {
+        computeEngine->setProgramCacheUsage(false);
+    }
+    else
+    {
+        computeEngine->setProgramCacheUsage(true);
+    }
+    computeEngine->setProgramCacheCapacity(capacity);
+}
+
 void TunerCore::persistArgument(const ArgumentId id, const bool flag)
 {
     argumentManager->setPersistentFlag(id, flag);
