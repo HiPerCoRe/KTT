@@ -31,6 +31,7 @@ public:
     KernelArgument downloadArgument(const ArgumentId id) const;
     void clearBuffers(const ArgumentAccessType accessType);
     void clearBuffers();
+    void setPersistentArgumentUsage(const bool flag);
 
 private:
     // Attributes

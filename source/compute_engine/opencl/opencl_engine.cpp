@@ -15,7 +15,8 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
     globalSizeType(GlobalSizeType::OpenCL),
     globalSizeCorrection(false),
     programCacheFlag(false),
-    nextEventId(0)
+    nextEventId(0),
+    persistentBufferFlag(true)
 {
     auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
@@ -464,6 +465,11 @@ uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId id) const
     return static_cast<uint64_t>(duration);
 }
 
+void OpenCLEngine::setPersistentBufferUsage(const bool flag)
+{
+    persistentBufferFlag = flag;
+}
+
 void OpenCLEngine::clearBuffer(const ArgumentId id)
 {
     auto iterator = buffers.cbegin();
@@ -734,11 +740,14 @@ DeviceType OpenCLEngine::getDeviceType(const cl_device_type deviceType)
 
 OpenCLBuffer* OpenCLEngine::findBuffer(const ArgumentId id) const
 {
-    for (const auto& buffer : persistentBuffers)
+    if (persistentBufferFlag)
     {
-        if (buffer->getKernelArgumentId() == id)
+        for (const auto& buffer : persistentBuffers)
         {
-            return buffer.get();
+            if (buffer->getKernelArgumentId() == id)
+            {
+                return buffer.get();
+            }
         }
     }
 
@@ -918,6 +927,11 @@ uint64_t OpenCLEngine::persistArgument(KernelArgument&, const bool)
 }
 
 uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId) const
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setPersistentBufferUsage(const bool)
 {
     throw std::runtime_error("");
 }

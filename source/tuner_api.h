@@ -326,6 +326,7 @@ public:
       * after the execution of kernel utilizing these arguments is finished. Persistence of kernel arguments is switched off by default. Persistent
       * arguments are useful during online tuning when kernel output is computed over multiple kernel launches in different configurations. If
       * a kernel is launched multiple times in the same configuration, it is best to utilize TuningManipulator and avoid persistent arguments.
+      * Note that persistent arguments are never utilized by reference kernels.
       * @param id Id of a vector argument.
       * @param flag Specifies whether argument should be persisted or not. If true, specified vector argument is immidiately persisted. If false,
       * compute API buffer for specified argument is immidiately removed.

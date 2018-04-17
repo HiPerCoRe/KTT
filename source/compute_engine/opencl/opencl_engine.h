@@ -62,6 +62,7 @@ public:
     EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) override;
     uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
+    void setPersistentBufferUsage(const bool flag) override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType accessType) override;
@@ -92,6 +93,7 @@ private:
     std::unique_ptr<OpenCLContext> context;
     std::vector<std::unique_ptr<OpenCLCommandQueue>> commandQueues;
     std::set<std::unique_ptr<OpenCLBuffer>> buffers;
+    bool persistentBufferFlag;
     std::set<std::unique_ptr<OpenCLBuffer>> persistentBuffers;
     std::map<std::string, std::unique_ptr<OpenCLProgram>> programCache;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> kernelEvents;
@@ -149,6 +151,7 @@ public:
     EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) override;
     uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
+    void setPersistentBufferUsage(const bool flag) override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType accessType) override;

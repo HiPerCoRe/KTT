@@ -126,6 +126,11 @@ void KernelRunner::clearBuffers()
     computeEngine->clearBuffers();
 }
 
+void KernelRunner::setPersistentArgumentUsage(const bool flag)
+{
+    computeEngine->setPersistentBufferUsage(flag);
+}
+
 KernelResult KernelRunner::runKernelSimple(const Kernel& kernel, const KernelConfiguration& configuration,
     const std::vector<OutputDescriptor>& output)
 {

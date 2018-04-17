@@ -15,7 +15,8 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     globalSizeType(GlobalSizeType::CUDA),
     globalSizeCorrection(false),
     programCacheFlag(false),
-    nextEventId(0)
+    nextEventId(0),
+    persistentBufferFlag(true)
 {
     checkCUDAError(cuInit(0), "cuInit");
 
@@ -468,6 +469,11 @@ void CUDAEngine::clearBuffer(const ArgumentId id)
     }
 }
 
+void CUDAEngine::setPersistentBufferUsage(const bool flag)
+{
+    persistentBufferFlag = flag;
+}
+
 void CUDAEngine::clearBuffers()
 {
     buffers.clear();
@@ -719,11 +725,14 @@ size_t CUDAEngine::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>
 
 CUDABuffer* CUDAEngine::findBuffer(const ArgumentId id) const
 {
-    for (const auto& buffer : persistentBuffers)
+    if (persistentBufferFlag)
     {
-        if (buffer->getKernelArgumentId() == id)
+        for (const auto& buffer : persistentBuffers)
         {
-            return buffer.get();
+            if (buffer->getKernelArgumentId() == id)
+            {
+                return buffer.get();
+            }
         }
     }
 
@@ -868,6 +877,11 @@ EventId CUDAEngine::copyArgumentAsync(const ArgumentId, const ArgumentId, const 
 }
 
 uint64_t CUDAEngine::persistArgument(KernelArgument&, const bool)
+{
+    throw std::runtime_error("");
+}
+
+void CUDAEngine::setPersistentBufferUsage(const bool)
 {
     throw std::runtime_error("");
 }
