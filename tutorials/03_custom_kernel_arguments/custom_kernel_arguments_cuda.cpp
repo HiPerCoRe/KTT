@@ -117,7 +117,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "divide_grid_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ModifierType::Global, ktt::ModifierAction::Divide,
         ktt::ModifierDimension::X);
 
-    auto multiplyEqualsDivide = [](std::vector<size_t> vector) {return vector.at(0) == vector.at(1);}; 
+    auto multiplyEqualsDivide = [](const std::vector<size_t>& vector) {return vector.at(0) == vector.at(1);}; 
     tuner.addConstraint(kernelId, multiplyEqualsDivide, std::vector<std::string>{"multiply_block_size", "divide_grid_size"});
 
     // Start kernel tuning and print results.

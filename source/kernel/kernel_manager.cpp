@@ -318,7 +318,7 @@ void KernelManager::addLocalMemoryModifier(const KernelId id, const std::string&
     }
 }
 
-void KernelManager::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+void KernelManager::addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {
     if (isKernel(id))
@@ -637,7 +637,7 @@ bool KernelManager::configurationIsValid(const KernelConfiguration& configuratio
     for (const auto& constraint : constraints)
     {
         std::vector<std::string> constraintNames = constraint.getParameterNames();
-        auto constraintValues = std::vector<size_t>(constraintNames.size());
+        std::vector<size_t> constraintValues(constraintNames.size());
 
         for (size_t i = 0; i < constraintNames.size(); i++)
         {

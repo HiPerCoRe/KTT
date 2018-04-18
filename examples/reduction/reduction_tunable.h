@@ -4,14 +4,8 @@
 
 class TunableReduction : public ktt::TuningManipulator {
 public:
-
-/* 
-    Constructor creates internal structures and setups tuning environment */
-    TunableReduction(const int n, std::vector<float> *src, std::vector<float> *dst, const ktt::ArgumentId srcId, const ktt::ArgumentId dstId,
-        const ktt::ArgumentId nId, const ktt::ArgumentId inOffsetId, const ktt::ArgumentId outOffsetId) :
-        n(n),
-        src(src),
-        dst(dst),
+    TunableReduction(const ktt::ArgumentId srcId, const ktt::ArgumentId dstId, const ktt::ArgumentId nId, const ktt::ArgumentId inOffsetId,
+        const ktt::ArgumentId outOffsetId) :
         srcId(srcId),
         dstId(dstId),
         nId(nId),
@@ -27,8 +21,8 @@ public:
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
         ktt::DimensionVector myGlobalSize = globalSize;
         
-        // change global size for constant numners of work-groups
-        //XXX this may be done also by thread modifier operators in constructor
+        // change global size for constant numbers of work-groups
+        // this may be done by thread modifier operators as well
         if (getParameterValue("UNBOUNDED_WG", parameterValues) == 0) {
             myGlobalSize = ktt::DimensionVector(getParameterValue("WG_NUM", parameterValues) * localSize.getSizeX());
         }
@@ -54,13 +48,10 @@ public:
                 updateArgumentScalar(nId, &n);
                 updateArgumentScalar(outOffsetId, &outOffset);
                 updateArgumentScalar(inOffsetId, &inOffset);
-                //std::cout << "n inOfs, outOfs " << n << " " << inOffset << " "
-                //    << outOffset << "\n";
-                //std::cout << "glob loc " << std::get<0>(myGlobalSize) << " "
-                //    << std::get<0>(localSize) << "\n";
+
                 runKernel(kernelId, myGlobalSize, localSize);
                 n = (n+wgSize*vectorSize-1)/(wgSize*vectorSize);
-                inOffset = outOffset/vectorSize; //XXX input is vectorized, output is scalar
+                inOffset = outOffset/vectorSize; // input is vectorized, output is scalar
                 outOffset += n;
                 iterations++;
             }
@@ -68,9 +59,6 @@ public:
     }
 
 private:
-    int n;
-    std::vector<float> *src;
-    std::vector<float> *dst;
     ktt::ArgumentId srcId;
     ktt::ArgumentId dstId;
     ktt::ArgumentId nId;

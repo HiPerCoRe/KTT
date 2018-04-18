@@ -106,7 +106,7 @@ void Tuner::addLocalMemoryModifier(const KernelId id, const std::string& paramet
     }
 }
 
-void Tuner::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+void Tuner::addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {
     try

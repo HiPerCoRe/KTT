@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     // values. However, in this case only versions where the two parameters have same value are valid. This can be specified to tuner by using
     // constraint. Constraint function receives several values for different parameters and checks whether their combination is valid. This function
     // is then added to tuner together with names of parameters that have their values checked inside the function.
-    auto multiplyEqualsDivide = [](std::vector<size_t> vector) {return vector.at(0) == vector.at(1);}; 
+    auto multiplyEqualsDivide = [](const std::vector<size_t>& vector) {return vector.at(0) == vector.at(1);}; 
     tuner.addConstraint(kernelId, multiplyEqualsDivide, std::vector<std::string>{"multiply_block_size", "divide_grid_size"});
 
     // Start tuning for specified kernel. This generates multiple versions of the kernel based on provided tuning parameters and their values. In

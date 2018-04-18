@@ -184,7 +184,7 @@ public:
     void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
         const ModifierAction modifierAction);
 
-    /** @fn void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    /** @fn void addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
       * const std::vector<std::string>& parameterNames)
       * Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter
       * values).
@@ -193,7 +193,7 @@ public:
       * @param parameterNames Names of kernel parameters which will be affected by the constraint function. The order of parameter names must
       * correspond to the order of parameter values inside constraint function vector argument.
       */
-    void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    void addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
 
     /** @fn void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)

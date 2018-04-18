@@ -118,10 +118,10 @@ int main(int argc, char** argv)
   tuner.addParameter(kernelId, "LOCAL_MEMORY", {0, 1});
   tuner.addParameter(kernelId, "LOOP_UNROLL", {0,1});
   // Add conditions
-  auto enoughToCompute = [](std::vector<size_t> vector) {return vector.at(0)/(vector.at(2)*2) > 1 && vector.at(1)/(vector.at(2)*2) > 1;};
+  auto enoughToCompute = [](const std::vector<size_t>& vector) {return vector.at(0)/(vector.at(2)*2) > 1 && vector.at(1)/(vector.at(2)*2) > 1;};
   tuner.addConstraint(kernelId, enoughToCompute, {"BLOCK_SIZE_COLS", "WORK_GROUP_Y", "PYRAMID_HEIGHT"});
-  auto workGroupSmaller = [](std::vector<size_t> vector) {return vector.at(0)<=vector.at(1);};
-  auto workGroupDividable = [](std::vector<size_t> vector) {return vector.at(1)%vector.at(0) == 0;};
+  auto workGroupSmaller = [](const std::vector<size_t>& vector) {return vector.at(0)<=vector.at(1);};
+  auto workGroupDividable = [](const std::vector<size_t>& vector) {return vector.at(1)%vector.at(0) == 0;};
   tuner.addConstraint(kernelId, workGroupSmaller, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"});
   tuner.addConstraint(kernelId, workGroupDividable, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"});
   // Add all arguments utilized by kernels

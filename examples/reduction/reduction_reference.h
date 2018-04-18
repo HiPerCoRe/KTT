@@ -3,10 +3,10 @@
 #include <iomanip>
 #include "tuner_api.h"
 
-class referenceReduction : public ktt::ReferenceClass
+class ReferenceReduction : public ktt::ReferenceClass
 {
 public:
-    referenceReduction(const std::vector<float>& src, const ktt::ArgumentId resultArgumentId) :
+    ReferenceReduction(const std::vector<float>& src, const ktt::ArgumentId resultArgumentId) :
         src(src),
         resultArgumentId(resultArgumentId)
     {}
@@ -31,12 +31,12 @@ public:
 
     void* getData(const ktt::ArgumentId id) override {
         if (id == resultArgumentId) {
-            return (void*)res.data();
+            return res.data();
         }
         return nullptr;
     }
 
-    size_t getNumberOfElements(const ktt::ArgumentId argumentId) const override {
+    size_t getNumberOfElements(const ktt::ArgumentId) const override {
         return 1;
     }
 

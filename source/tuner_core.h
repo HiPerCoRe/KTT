@@ -35,7 +35,7 @@ public:
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
     void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
         const ModifierAction modifierAction);
-    void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    void addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,

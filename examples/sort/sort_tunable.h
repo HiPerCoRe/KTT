@@ -29,6 +29,7 @@ class tunableSort : public ktt::TuningManipulator {
     //run the code with kernels
     void launchComputation(const ktt::KernelId kernelId) override {
 
+      const int radix_width = 4;
       std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
       int localSize = (int)parameterValues[0].getValue();
       const ktt::DimensionVector workGroupDimensions(localSize, 1, 1);

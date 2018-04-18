@@ -294,12 +294,12 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
 
 #if STRIDED == 0
-    auto parallelismConstraint = [](std::vector<size_t> v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
+    auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
 #else
-    auto parallelismConstraint = [](std::vector<size_t> v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
+    auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
 #endif
     tuner.addConstraint(kernelId, parallelismConstraint, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y"});
-    auto tmpConstraint = [](std::vector<size_t> v) {return (v[0] < 3 || v[1] < 2);};
+    auto tmpConstraint = [](const std::vector<size_t>& v) {return (v[0] < 3 || v[1] < 2);};
     tuner.addConstraint(kernelId, tmpConstraint, {"GRANULARITY", "CACHING_STRATEGY"});
 
     tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});

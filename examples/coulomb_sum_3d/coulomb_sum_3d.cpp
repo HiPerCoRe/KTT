@@ -104,11 +104,11 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "USE_SOA", {0, 1});
     tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2 , 4, 8, 16});
 
-    auto lt = [](std::vector<size_t> vector) {return vector.at(0) < vector.at(1);};
+    auto lt = [](const std::vector<size_t>& vector) {return vector.at(0) < vector.at(1);};
     tuner.addConstraint(kernelId, lt, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"});
-    auto vec = [](std::vector<size_t> vector) {return vector.at(0) || vector.at(1) == 1;};
+    auto vec = [](const std::vector<size_t>& vector) {return vector.at(0) || vector.at(1) == 1;};
     tuner.addConstraint(kernelId, vec, {"USE_SOA", "VECTOR_SIZE"});
-    auto par = [](std::vector<size_t> vector) {return vector.at(0) * vector.at(1) >= 64;};
+    auto par = [](const std::vector<size_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
     tuner.addConstraint(kernelId, par, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"});
 
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId});

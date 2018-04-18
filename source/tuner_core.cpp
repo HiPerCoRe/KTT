@@ -72,7 +72,7 @@ void TunerCore::addLocalMemoryModifier(const KernelId id, const std::string& par
     kernelManager->addLocalMemoryModifier(id, parameterName, argumentId, modifierAction);
 }
 
-void TunerCore::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+void TunerCore::addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {
     kernelManager->addConstraint(id, constraintFunction, parameterNames);
