@@ -55,6 +55,7 @@ public:
     void uploadBuffers();
     void downloadBuffers(const std::vector<OutputDescriptor>& output) const;
     KernelResult getCurrentResult() const;
+    void setAutomaticSynchronization(const bool flag);
     void clearData();
 
 private:
@@ -62,6 +63,7 @@ private:
     ComputeEngine* computeEngine;
     KernelConfiguration currentConfiguration;
     KernelResult currentResult;
+    bool automaticSynchronization;
     std::map<size_t, KernelRuntimeData> kernelData;
     std::map<size_t, KernelArgument*> vectorArguments;
     std::map<size_t, KernelArgument> nonVectorArguments;

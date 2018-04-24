@@ -205,6 +205,16 @@ public:
       */
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
 
+    /** @fn void setTuningManipulatorSynchronization(const KernelId id, const bool flag)
+      * Controls whether framework performs implicit device synchronization after launchComputation() method inside tuning manipulator has finished.
+      * Performing the synchronization is necessary for obtaining correct computation duration. Turning it off may increase performance during
+      * regular computation after the tuning has concluded. Synchronization is turned on by default.
+      * @param id Id of kernel for which the tuning manipulator synchronization flag will be set.
+      * @param flag If true, tuning manipulator synchronization will be turned on for specified kernel or kernel composition. It will be turned off
+      * otherwise.
+      */
+    void setTuningManipulatorSynchronization(const KernelId id, const bool flag);
+
     /** @fn KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds,
       * std::unique_ptr<TuningManipulator> manipulator)
       * Creates a kernel composition using specified kernels. Following methods can be used with kernel compositions and will call
@@ -353,9 +363,9 @@ public:
     /** @fn void dryTuneKernel(const KernelId id, const std::string& filePath)
       * Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration
       * space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on
-      * specified ::SearchMethod.
-      * Important: no checks if tuning data relates to the kernel, tuning parameters or hardware are performed, it is up to user to ensure that
-      * dryTuneKernel() reads correct file.
+      * specified ::SearchMethod. This method can be used to test behaviour and performance of newly implemented search methods. Note that no checks
+      * are performed whether the tuning data relates to kernel, tuning parameters or hardware. It is up to user to ensure that dryTuneKernel() reads
+      * a valid file.
       * @param id Id of kernel for which the tuning begins.
       * @param filePath Path to CSV file with tuning parameters.
       */

@@ -180,6 +180,16 @@ void TunerCore::setTuningManipulator(const KernelId id, std::unique_ptr<TuningMa
     }
 }
 
+void TunerCore::setTuningManipulatorSynchronization(const KernelId id, const bool flag)
+{
+    if (!kernelManager->isKernel(id) && !kernelManager->isComposition(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+
+    kernelRunner->setTuningManipulatorSynchronization(id, flag);
+}
+
 void TunerCore::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
     std::vector<KernelResult> results;

@@ -39,7 +39,7 @@ public:
       * When tuning manipulator is used, computation duration is calculated based on duration of launchComputation() method. Initial buffer transfer
       * times are not included in this duration (eg. duration of createArgumentBuffer() methods). KTT framework overhead and kernel compilation times
       * are not included in the final duration either.
-      * @param id Id of a kernel or kernel composition which will be used to launch kernel from tuner API.
+      * @param id Id of a kernel or a kernel composition which will be used to launch kernel from tuner API.
       */
     virtual void launchComputation(const KernelId id) = 0;
 
@@ -47,10 +47,10 @@ public:
       * Controls whether arguments for all kernels that are part of manipulator will be automatically uploaded to corresponding compute API
       * buffers before any kernel is run in the current invocation of launchComputation() method. Argument preload is turned on by default.
       *
-      * Turning this behavior off is useful when utilizing kernel compositions where different kernels use different arguments which would not all
-      * fit into available memory. Buffer creation and deletion can be then controlled by using createArgumentBuffer() and destroyArgumentBuffer()
-      * methods for corresponding arguments. Any leftover arguments after launchComputation() method finishes will still be automatically cleaned up.
-      * Inheriting class can override this method. 
+      * Turning this behavior off is useful during utilization of kernel compositions where different kernels use different arguments which would not
+      * all fit into available memory at once. Buffer creation and deletion can be then controlled by using createArgumentBuffer() and
+      * destroyArgumentBuffer() methods for corresponding arguments. Any leftover arguments after launchComputation() method has finished will still
+      * be automatically cleaned up. Inheriting class can override this method. 
       * @return Flag which controls whether the argument preload is enabled or not.
       */
     virtual bool enableArgumentPreload() const;

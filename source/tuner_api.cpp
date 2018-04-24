@@ -133,6 +133,19 @@ void Tuner::setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipu
     }
 }
 
+void Tuner::setTuningManipulatorSynchronization(const KernelId id, const bool flag)
+{
+    try
+    {
+        tunerCore->setTuningManipulatorSynchronization(id, flag);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 KernelId Tuner::addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds,
     std::unique_ptr<TuningManipulator> manipulator)
 {

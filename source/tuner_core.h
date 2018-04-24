@@ -56,6 +56,7 @@ public:
     // Kernel runner methods
     bool runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
+    void setTuningManipulatorSynchronization(const KernelId id, const bool flag);
 
     // Kernel tuner methods
     void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);

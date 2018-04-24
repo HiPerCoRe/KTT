@@ -107,6 +107,18 @@ void KernelRunner::setTuningManipulator(const KernelId id, std::unique_ptr<Tunin
     tuningManipulators.insert(std::make_pair(id, std::move(manipulator)));
 }
 
+void KernelRunner::setTuningManipulatorSynchronization(const KernelId id, const bool flag)
+{
+    if (flag && disabledSynchronizationManipulators.find(id) != disabledSynchronizationManipulators.end())
+    {
+        disabledSynchronizationManipulators.erase(id);
+    }
+    else if (!flag && disabledSynchronizationManipulators.find(id) == disabledSynchronizationManipulators.end())
+    {
+        disabledSynchronizationManipulators.insert(id);
+    }
+}
+
 KernelArgument KernelRunner::downloadArgument(const ArgumentId id) const
 {
     return computeEngine->downloadArgumentObject(id, nullptr);
@@ -158,6 +170,11 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
         manipulatorInterfaceImplementation->uploadBuffers();
     }
 
+    if (disabledSynchronizationManipulators.find(kernel.getId()) != disabledSynchronizationManipulators.end())
+    {
+        manipulatorInterfaceImplementation->setAutomaticSynchronization(false);
+    }
+
     Timer timer;
     try
     {
@@ -169,6 +186,7 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     {
         manipulatorInterfaceImplementation->clearData();
         manipulator->manipulatorInterface = nullptr;
+        manipulatorInterfaceImplementation->setAutomaticSynchronization(true);
         throw;
     }
 
@@ -176,6 +194,7 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     KernelResult result = manipulatorInterfaceImplementation->getCurrentResult();
     manipulatorInterfaceImplementation->clearData();
     manipulator->manipulatorInterface = nullptr;
+    manipulatorInterfaceImplementation->setAutomaticSynchronization(true);
 
     size_t manipulatorDuration = timer.getElapsedTime();
     manipulatorDuration -= result.getOverhead();
@@ -217,6 +236,11 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
         manipulatorInterfaceImplementation->uploadBuffers();
     }
 
+    if (disabledSynchronizationManipulators.find(composition.getId()) != disabledSynchronizationManipulators.end())
+    {
+        manipulatorInterfaceImplementation->setAutomaticSynchronization(false);
+    }
+
     Timer timer;
     try
     {
@@ -228,6 +252,7 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
     {
         manipulatorInterfaceImplementation->clearData();
         manipulator->manipulatorInterface = nullptr;
+        manipulatorInterfaceImplementation->setAutomaticSynchronization(true);
         throw;
     }
 
@@ -235,6 +260,7 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
     KernelResult result = manipulatorInterfaceImplementation->getCurrentResult();
     manipulatorInterfaceImplementation->clearData();
     manipulator->manipulatorInterface = nullptr;
+    manipulatorInterfaceImplementation->setAutomaticSynchronization(true);
 
     size_t manipulatorDuration = timer.getElapsedTime();
     manipulatorDuration -= result.getOverhead();
