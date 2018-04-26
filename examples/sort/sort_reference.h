@@ -2,28 +2,24 @@
 
 #include "tuner_api.h"
 
-//the main code and reference kernel adopted from SHOC benchmark, example sort
-class referenceSort : public ktt::ReferenceClass {
-  public:
-    // Constructor creates internal structures and setups the environment
-    // it takes arguments from command line and generated input data
-    referenceSort(const std::vector<unsigned int>& data) :
-      data(data)
+class ReferenceSort : public ktt::ReferenceClass {
+public:
+    ReferenceSort(const std::vector<unsigned int>& data) :
+        data(data)
     {}
 
-    //run the code with kernels
     void computeResult() override {
-      std::sort(data.begin(), data.end());
+        std::sort(data.begin(), data.end());
     }
 
-    void* getData(const ktt::ArgumentId id) override {
+    void* getData(const ktt::ArgumentId) override {
         return data.data();
     }
 
-    size_t getNumberOfElements(const ktt::ArgumentId argumentId) const override {
+    size_t getNumberOfElements(const ktt::ArgumentId) const override {
       return data.size();
     }
 
-  private:
-      std::vector<unsigned int> data;
+private:
+    std::vector<unsigned int> data;
 };
