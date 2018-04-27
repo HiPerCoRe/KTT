@@ -15,6 +15,7 @@
     #endif
 
 #define REAL float
+#define STEPS 100
 
 class referenceGemm : public ktt::ReferenceClass
 {
@@ -209,13 +210,17 @@ int main(int argc, char** argv)
 
     //tuner->setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});
     //tuner->setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
-    tuner->setValidationRange(dstId, c*b*batch);
+    //tuner->setValidationRange(dstId, c*b*batch);
 
     tuner->setTuningManipulator(kernelId, std::make_unique<cTunableGemm>(batch, a, b, c));
-    
-    tuner->tuneKernel(kernelId);
-    tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-    tuner->printResult(kernelId, "gemm_batch_output.csv", ktt::PrintFormat::CSV);
+   
+    std::vector<REAL> firstMatrix(32*32);
+    ktt::OutputDescriptor output(dstId, (void*)firstMatrix.data(), 32*32*sizeof(REAL));
+    for (int i = 0; i < STEPS; i++)
+        tuner->tuneKernelByStep(kernelId, {output});
+    //tuner->tuneKernel(kernelId);
+    //tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
+    //tuner->printResult(kernelId, "gemm_batch_output.csv", ktt::PrintFormat::CSV);
 
     std::pair<std::vector<ktt::ParameterPair>, double> bestConf = tuner->getBestConfiguration(kernelId);
 
