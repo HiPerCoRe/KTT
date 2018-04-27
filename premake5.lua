@@ -301,6 +301,12 @@ project "gemm_batch_openclcuda"
     files { "examples/gemm_batch/*.h", "examples/gemm_batch/gemm_batch.cpp", "examples/gemm_batch/*.cl", "examples/gemm_batch/*.cu" }
     includedirs { "source" }
     links { "ktt" }
+
+project "gemm_demo_openclcuda"
+    kind "ConsoleApp"
+    files { "examples/gemm_batch/*.h", "examples/gemm_batch/demo.cpp", "examples/gemm_batch/*.cl", "examples/gemm_batch/*.cu" }
+    includedirs { "source" }
+    links { "ktt" }
 end -- cuda_projects
 
 end -- _OPTIONS["no-examples"]
