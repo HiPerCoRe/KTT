@@ -16,7 +16,8 @@
     #endif
 
 #define REAL float
-#define STEPS 100
+#define STEPS 1000
+#define MAX_MEM 900000000
 
 class referenceGemm : public ktt::ReferenceClass
 {
@@ -94,6 +95,7 @@ public:
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
         size_t gran = getParameterValue("GRANULARITY", parameterValues);
         size_t myBatch = batch / getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues); 
+        std::cout << "batch: " << batch << std::endl;
         if (gran == 1) {
             globalSize.setSizeX(myBatch/getParameterValue("GROUP_SIZE_X", parameterValues));
             localSize.setSizeX(getParameterValue("GROUP_SIZE_X", parameterValues));
@@ -185,26 +187,6 @@ int main(int argc, char** argv)
         }
     }
 
-    // Declare and initialize data (m, n > 1)
-    unsigned int a = 32;
-    unsigned int b = 32;
-    unsigned int c = 32;
-    int batch = 1024*128;
-
-    std::vector<REAL> srcA(a*b*batch, 0.0f);
-    std::vector<REAL> srcB(c*a*batch, 0.0f);
-    std::vector<REAL> dst(c*b*batch, 0.0f);
-
-    // fill with random data
-    for (size_t i = 0; i < a*b*batch; i++)
-    {
-        srcA[i] = 10.0f*((REAL)rand()) / ((REAL) RAND_MAX);
-    }
-    for (size_t i = 0; i < c*a*batch; i++)
-    {
-        srcB[i] = 10.0f*((REAL)rand()) / ((REAL) RAND_MAX);
-    }
-
     int interface = 0;
     std::cout << "Which interface to use (0 = CUDA, 1 = OpenCL)? ";
     std::cin >> interface;
@@ -220,23 +202,42 @@ int main(int argc, char** argv)
         kernelFile = KTT_CU_KERNEL_FILE;
     }
     tuner->setGlobalSizeType(ktt::GlobalSizeType::CUDA);
-    //tuner->setLoggingTarget(std::string("/dev/null"));
-
-    // create input/output
-    ktt::ArgumentId srcAId = tuner->addArgumentVector(srcA, ktt::ArgumentAccessType::ReadOnly);
-    ktt::ArgumentId srcBId = tuner->addArgumentVector(srcB, ktt::ArgumentAccessType::ReadOnly);
-    ktt::ArgumentId dstId = tuner->addArgumentVector(dst, ktt::ArgumentAccessType::WriteOnly);
-    ktt::ArgumentId nId = tuner->addArgumentScalar(batch);
+    tuner->setLoggingTarget(std::string("/dev/null"));
 
     // tune kernels for different sizes
     for (int i = 0; i < 10; i++) {
-        a = (long long)(rand())*32 / RAND_MAX;
-        b = (long long)(rand())*32 / RAND_MAX;
-        c = (long long)(rand())*32 / RAND_MAX;
-        std::cout << "Tuning for matrices of size " 
+        // generate input size
+        int a = 2+(long long)(rand())*31 / RAND_MAX;
+        int b = 2+(long long)(rand())*31 / RAND_MAX;
+        int c = 2+(long long)(rand())*31 / RAND_MAX;
+        int batch = ((MAX_MEM/(sizeof(REAL)*(a*b+c*a+c*b)))/512)*512;
+
+        std::cout << "Tuning for matrices of size "
             << a << "x" << b << ", "
             << c << "x" << a << ", "
-            << c << "x" << b << std::endl;
+            << c << "x" << b << ", "
+            << "batch size " << batch << std::endl;
+
+        // create data in host memory
+        std::vector<REAL> srcA(a*b*batch, 0.0f);
+        std::vector<REAL> srcB(c*a*batch, 0.0f);
+        std::vector<REAL> dst(c*b*batch, 0.0f);
+
+        // fill with random values
+        for (size_t i = 0; i < a*b*batch; i++)
+            srcA[i] = 10.0f*((REAL)rand()) / ((REAL) RAND_MAX);
+        for (size_t i = 0; i < c*a*batch; i++)
+            srcB[i] = 10.0f*((REAL)rand()) / ((REAL) RAND_MAX);
+
+        // create input/output
+        ktt::ArgumentId srcAId = tuner->addArgumentVector(srcA, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryLocation::Device, false);
+        tuner->persistArgument(srcAId, true);
+        ktt::ArgumentId srcBId = tuner->addArgumentVector(srcB, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryLocation::Device, false);
+        tuner->persistArgument(srcBId, true);
+        ktt::ArgumentId dstId = tuner->addArgumentVector(dst, ktt::ArgumentAccessType::WriteOnly, ktt::ArgumentMemoryLocation::Device, false);
+        tuner->persistArgument(dstId, true);
+        ktt::ArgumentId nId = tuner->addArgumentScalar(batch);
+
         tuneKernel(tuner, kernelFile, srcAId, srcBId, dstId, nId, a, b, c, batch);
     }
 
