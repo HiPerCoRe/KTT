@@ -239,6 +239,10 @@ int main(int argc, char** argv)
         ktt::ArgumentId nId = tuner->addArgumentScalar(batch);
 
         tuneKernel(tuner, kernelFile, srcAId, srcBId, dstId, nId, a, b, c, batch);
+
+        tuner->persistArgument(srcAId, false);
+        tuner->persistArgument(srcBId, false);
+        tuner->persistArgument(dstId, false);
     }
 
     delete tuner;
