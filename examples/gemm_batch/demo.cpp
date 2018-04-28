@@ -95,7 +95,6 @@ public:
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
         size_t gran = getParameterValue("GRANULARITY", parameterValues);
         size_t myBatch = batch / getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues); 
-        std::cout << "batch: " << batch << std::endl;
         if (gran == 1) {
             globalSize.setSizeX(myBatch/getParameterValue("GROUP_SIZE_X", parameterValues));
             localSize.setSizeX(getParameterValue("GROUP_SIZE_X", parameterValues));
@@ -159,7 +158,6 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
         double perfActual = 0.0;
         double effActual = 0.0;
         double perfOverall = (double)((i+1)*a*b*c*2)*(double)batch / overallSec / 1000000000.0;
-        std::cout << overallSec << std::endl;
         std::cout << "Actual perf. " << perfActual << "GFlops, "
             << "actual BW " << effActual << "GB/s, "
             << "perf. with overhead " << perfOverall << "GFlops" << std::endl;
