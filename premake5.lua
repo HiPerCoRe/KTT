@@ -256,6 +256,12 @@ project "nbody_opencl"
     includedirs { "source" }
     links { "ktt" }
 
+project "bicg_opencl"
+    kind "ConsoleApp"
+    files { "examples/bicg/*.cpp", "examples/bicg/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
 project "coulomb_sum_2d_opencl"
     kind "ConsoleApp"
     files { "examples/coulomb_sum_2d/*.cpp", "examples/coulomb_sum_2d/*.cl" }
