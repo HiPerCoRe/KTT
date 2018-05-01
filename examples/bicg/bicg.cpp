@@ -101,15 +101,15 @@ public:
 		if (getParameterValue("FUSED", parameterValues) == 2) {
 			ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelFusedId);
 			ktt::DimensionVector localSize = getCurrentLocalSize(kernelFusedId);
-
-			const int rowsProcessed = getParameterValue("ROWS_PROCESSED", parameterValues);
-			const int tile = getParameterValue("TILE", parameterValues);
-			const int bicgBatch = getParameterValue("BICG_BATCH", parameterValues);
+            
+			const size_t rowsProcessed = getParameterValue("ROWS_PROCESSED", parameterValues);
+			const size_t tile = getParameterValue("TILE", parameterValues);
+			const size_t bicgBatch = getParameterValue("BICG_BATCH", parameterValues);
 			globalSize.setSizeX(M);
 			globalSize.setSizeY(N / rowsProcessed * tile / bicgBatch);
 			localSize.setSizeX(tile);
 			localSize.setSizeY(tile / bicgBatch);
-			printf("changed global to %d x %d and local to %d x %d\n", globalSize.getSizeX(), globalSize.getSizeY(), localSize.getSizeX(), localSize.getSizeY());
+			printf("changed global to %llu x %llu and local to %llu x %llu\n", globalSize.getSizeX(), globalSize.getSizeY(), localSize.getSizeX(), localSize.getSizeY());
 
 			runKernel(kernelFusedId, globalSize, localSize);
 			if (getParameterValue("ATOMICS", parameterValues) == 0) {
@@ -163,8 +163,8 @@ int main(int argc, char** argv)
 	// Declare kernel parameters
 	const ktt::DimensionVector ndRangeDimensions(M, N / 64); // replaced in manipulator
 	const ktt::DimensionVector workGroupDimensions(32, 4); // replaced in manipulator
-	const ktt::DimensionVector referenceNdRangeDimensions1(ceil(N / WORK_GROUP_X)*WORK_GROUP_X, 1);
-	const ktt::DimensionVector referenceNdRangeDimensions2(ceil(M / WORK_GROUP_X)*WORK_GROUP_X, 1);
+	const ktt::DimensionVector referenceNdRangeDimensions1(static_cast<size_t>(ceil(N / WORK_GROUP_X))*WORK_GROUP_X, 1);
+	const ktt::DimensionVector referenceNdRangeDimensions2(static_cast<size_t>(ceil(M / WORK_GROUP_X))*WORK_GROUP_X, 1);
 	const ktt::DimensionVector referenceWorkGroupDimensions(WORK_GROUP_X, 1);
 
 	// Declare data variables
@@ -239,9 +239,6 @@ int main(int argc, char** argv)
 	tuner.setCompositionKernelArguments(kernelId, kernelFusedRefId, { AId, x2Id, y2Id, x1Id, y1Id, nFusedRefId, mFusedRefId }); // reference fused kernel uses swapped M and N. same for x1/x2 and y1/y2
 	tuner.setCompositionKernelArguments(kernelId, kernel1Id, std::vector<ktt::ArgumentId>{AId, x1Id, y1Id, mRefId, nRefId});
 	tuner.setCompositionKernelArguments(kernelId, kernel2Id, std::vector<ktt::ArgumentId>{AId, x2Id, y2Id, mRefId, nRefId});
-
-	// Set search method to random search, only 10% of all configurations will be explored.
-	//tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{0.1});
 
 	// Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
 	tuner.setValidationMethod(ktt::ValidationMethod::SideBySideRelativeComparison, 0.001);

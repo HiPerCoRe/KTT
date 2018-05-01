@@ -33,6 +33,7 @@
 #include "enum/validation_method.h"
 
 // Data holders
+#include "api/computation_result.h"
 #include "api/device_info.h"
 #include "api/dimension_vector.h"
 #include "api/output_descriptor.h"
@@ -371,17 +372,18 @@ public:
       */
     void dryTuneKernel(const KernelId id, const std::string& filePath);
 
-    /** @fn void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
+    /** @fn ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
       * Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, it creates
       * configuration space based on combinations of provided kernel parameters and constraints. Each time this method is called, it launches single
       * kernel configuration. If all configurations were already tested, runs kernel using the best configuration. Output data can be retrieved
       * by providing output descriptors. Always performs recomputation of reference output.
       * @param id Id of kernel for which the tuning by step will start.
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
+      * @return Object containing information about computation using current kernel configuration. See ComputationResult for more information.
       */
-    void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output);
+    ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output);
 
-    /** @fn void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+    /** @fn ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
       * Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, it creates
       * configuration space based on combinations of provided kernel parameters and constraints. Each time this method is called, it launches single
       * kernel configuration. If all configurations were already tested, runs kernel using the best configuration. Output data can be retrieved
@@ -390,18 +392,19 @@ public:
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
       * @param recomputeReference Flag which controls whether recomputation of reference output should be performed or not. Useful if kernel data
       * between individual method invocations sometimes change.
-      * @return True if a kernel execution was successful. False if there was an error or a kernel output did not match reference output.
+      * @return Object containing information about computation using current kernel configuration. See ComputationResult for more information.
       */
-    bool tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
+    ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
 
-    /** @fn void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
+    /** @fn ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration,
+      * const std::vector<OutputDescriptor>& output)
       * Runs specified kernel using provided configuration. Does not perform result validation.
       * @param id Id of kernel which will be run.
       * @param configuration Configuration under which the kernel will be launched. See ParameterPair for more information.
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
-      * @return True if a kernel execution was successful. False if there was an error.
+      * @return Object containing information about computation using specified kernel configuration. See ComputationResult for more information.
       */
-    bool runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
+    ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
 
     /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
       * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.
@@ -447,13 +450,13 @@ public:
       */
     void printResult(const KernelId id, const std::string& filePath, const PrintFormat format) const;
 
-    /** @fn std::pair<std::vector<ParameterPair>, double> getBestConfiguration(const KernelId id) const
-      * Returns the best configuration found for specified kernel and its computation duration in nanoseconds. Valid configuration will be returned
-      * only if method tuneKernel() or tuneKernelByStep() was already called for corresponding kernel.
-      * @param id Id of kernel for which the best configuration will be returned.
-      * @return Best configuration found for specified kernel and its computation duration in nanoseconds. See ParameterPair for more information.
+    /** @fn ComputationResult getBestComputationResult(const KernelId id) const
+      * Returns the best computation result found for specified kernel. Valid result will be returned only if one of the kernel tuning methods was
+      * already called for corresponding kernel.
+      * @param id Id of kernel for which the best result will be returned.
+      * @return Object containing information about best computation result for specified kernel. See ComputationResult for more information.
       */
-    std::pair<std::vector<ParameterPair>, double> getBestConfiguration(const KernelId id) const;
+    ComputationResult getBestComputationResult(const KernelId id) const;
 
     /** @fn std::string getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const
       * Returns kernel source with preprocessor definitions for specified kernel based on provided configuration.

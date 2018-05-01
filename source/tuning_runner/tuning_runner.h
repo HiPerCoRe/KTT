@@ -35,7 +35,7 @@ public:
     void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
         const std::vector<ArgumentId>& validatedArgumentIds);
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
-    std::pair<std::vector<ParameterPair>, double> getBestConfiguration(const KernelId id) const;
+    ComputationResult getBestComputationResult(const KernelId id) const;
 
 private:
     // Attributes

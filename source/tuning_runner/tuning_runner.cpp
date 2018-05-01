@@ -58,7 +58,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
         if (validateResult(kernel, result))
         {
             results.push_back(result);
-            configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
+            configurationManager.calculateNextConfiguration(id, kernel.getName(), currentConfiguration, result.getComputationDuration());
 
             if (stopCondition != nullptr)
             {
@@ -68,7 +68,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
         else
         {
             results.emplace_back(kernel.getName(), currentConfiguration, "Results differ");
-            configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
+            configurationManager.calculateNextConfiguration(id, kernel.getName(), currentConfiguration, UINT64_MAX);
 
             if (stopCondition != nullptr)
             {
@@ -138,7 +138,7 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
             results.emplace_back(kernel.getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what());
         }
 
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
+        configurationManager.calculateNextConfiguration(id, kernel.getName(), currentConfiguration, result.getComputationDuration());
         results.push_back(result);
     }
 
@@ -186,7 +186,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
         if (validateResult(compatibilityKernel, result))
         {
             results.push_back(result);
-            configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
+            configurationManager.calculateNextConfiguration(id, composition.getName(), currentConfiguration, result.getComputationDuration());
 
             if (stopCondition != nullptr)
             {
@@ -196,7 +196,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
         else
         {
             results.emplace_back(composition.getName(), currentConfiguration, "Results differ");
-            configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
+            configurationManager.calculateNextConfiguration(id, composition.getName(), currentConfiguration, UINT64_MAX);
 
             if (stopCondition != nullptr)
             {
@@ -242,13 +242,13 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
 
     if (validateResult(kernel, result))
     {
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
+        configurationManager.calculateNextConfiguration(id, kernel.getName(), currentConfiguration, result.getComputationDuration());
     }
     else
     {
         result.setValid(false);
         result.setErrorMessage("Results differ");
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
+        configurationManager.calculateNextConfiguration(id, kernel.getName(), currentConfiguration, UINT64_MAX);
     }
 
     kernelRunner->clearBuffers();
@@ -280,13 +280,13 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
 
     if (validateResult(compatibilityKernel, result))
     {
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, static_cast<double>(result.getComputationDuration()));
+        configurationManager.calculateNextConfiguration(id, composition.getName(), currentConfiguration, result.getComputationDuration());
     }
     else
     {
         result.setValid(false);
         result.setErrorMessage("Results differ");
-        configurationManager.calculateNextConfiguration(id, currentConfiguration, std::numeric_limits<double>::max());
+        configurationManager.calculateNextConfiguration(id, composition.getName(), currentConfiguration, UINT64_MAX);
     }
 
     kernelRunner->clearBuffers();
@@ -326,9 +326,9 @@ void TuningRunner::setReferenceClass(const KernelId id, std::unique_ptr<Referenc
     resultValidator->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
 }
 
-std::pair<std::vector<ParameterPair>, double> TuningRunner::getBestConfiguration(const KernelId id) const
+ComputationResult TuningRunner::getBestComputationResult(const KernelId id) const
 {
-    return configurationManager.getBestConfigurationPair(id);
+    return configurationManager.getBestComputationResult(id);
 }
 
 bool TuningRunner::validateResult(const Kernel& kernel, const KernelResult& result)

@@ -149,7 +149,8 @@ ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElement
     return argumentManager->addArgument(data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType);
 }
 
-bool TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
+ComputationResult TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration,
+    const std::vector<OutputDescriptor>& output)
 {
     KernelResult result;
 
@@ -163,7 +164,15 @@ bool TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& c
     }
 
     kernelRunner->clearBuffers();
-    return result.isValid();
+
+    if (result.isValid())
+    {
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration());
+    }
+    else
+    {
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
+    }
 }
 
 void TunerCore::setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
@@ -218,9 +227,10 @@ void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
     resultPrinter.setResult(id, results);
 }
 
-bool TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+ComputationResult TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
 {
     KernelResult result;
+
     if (kernelManager->isComposition(id))
     {
         result = tuningRunner->tuneCompositionByStep(id, output, recomputeReference);
@@ -231,7 +241,15 @@ bool TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDesc
     }
 
     resultPrinter.addResult(id, result);
-    return result.isValid();
+    
+    if (result.isValid())
+    {
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration());
+    }
+    else
+    {
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
+    }
 }
 
 void TunerCore::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
@@ -290,9 +308,9 @@ void TunerCore::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceCl
     tuningRunner->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
 }
 
-std::pair<std::vector<ParameterPair>, double> TunerCore::getBestConfiguration(const KernelId id) const
+ComputationResult TunerCore::getBestComputationResult(const KernelId id) const
 {
-    return tuningRunner->getBestConfiguration(id);
+    return tuningRunner->getBestComputationResult(id);
 }
 
 void TunerCore::setPrintingTimeUnit(const TimeUnit unit)

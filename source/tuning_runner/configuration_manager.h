@@ -3,9 +3,11 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 #include "ktt_types.h"
+#include "api/computation_result.h"
 #include "enum/search_method.h"
 #include "kernel/kernel_configuration.h"
 #include "kernel/kernel_parameter.h"
@@ -31,13 +33,14 @@ public:
     // Configuration search methods
     KernelConfiguration getCurrentConfiguration(const KernelId id) const;
     KernelConfiguration getBestConfiguration(const KernelId id) const;
-    std::pair<std::vector<ParameterPair>, double> getBestConfigurationPair(const KernelId id) const;
-    void calculateNextConfiguration(const KernelId id, const KernelConfiguration& previous, const double previousDuration);
+    ComputationResult getBestComputationResult(const KernelId id) const;
+    void calculateNextConfiguration(const KernelId id, const std::string& kernelName, const KernelConfiguration& previous,
+        const uint64_t previousDuration);
 
 private:
     // Attributes
     std::map<KernelId, std::unique_ptr<Searcher>> searchers;
-    std::map<KernelId, std::pair<KernelConfiguration, double>> bestConfigurations;
+    std::map<KernelId, std::tuple<KernelConfiguration, std::string, uint64_t>> bestConfigurations;
     SearchMethod searchMethod;
     std::vector<double> searchArguments;
 

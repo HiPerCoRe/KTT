@@ -71,7 +71,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelId
             throw std::runtime_error(std::string("No configurations left to explore and no best configuration recorded for kernel with id: ")
                 + std::to_string(id));
         }
-        return configurationPair->second.first;
+        return std::get<0>(configurationPair->second);
     }
 
     return searcherPair->second->getCurrentConfiguration();
@@ -85,21 +85,23 @@ KernelConfiguration ConfigurationManager::getBestConfiguration(const KernelId id
         return getCurrentConfiguration(id);
     }
 
-    return configurationPair->second.first;
+    return std::get<0>(configurationPair->second);
 }
 
-std::pair<std::vector<ParameterPair>, double> ConfigurationManager::getBestConfigurationPair(const KernelId id) const
+ComputationResult ConfigurationManager::getBestComputationResult(const KernelId id) const
 {
     auto configurationPair = bestConfigurations.find(id);
     if (configurationPair == bestConfigurations.end())
     {
-        return std::make_pair(getCurrentConfiguration(id).getParameterPairs(), std::numeric_limits<double>::max());
+        return ComputationResult("", std::vector<ParameterPair>{}, "Valid result does not exist");
     }
 
-    return std::make_pair(configurationPair->second.first.getParameterPairs(), configurationPair->second.second);
+    return ComputationResult(std::get<1>(configurationPair->second), std::get<0>(configurationPair->second).getParameterPairs(),
+        std::get<2>(configurationPair->second));
 }
 
-void ConfigurationManager::calculateNextConfiguration(const KernelId id, const KernelConfiguration& previous, const double previousDuration)
+void ConfigurationManager::calculateNextConfiguration(const KernelId id, const std::string& kernelName, const KernelConfiguration& previous,
+    const uint64_t previousDuration)
 {
     auto searcherPair = searchers.find(id);
     if (searcherPair == searchers.end())
@@ -110,15 +112,15 @@ void ConfigurationManager::calculateNextConfiguration(const KernelId id, const K
     auto configurationPair = bestConfigurations.find(id);
     if (configurationPair == bestConfigurations.end())
     {
-        bestConfigurations.insert(std::make_pair(id, std::make_pair(previous, previousDuration)));
+        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previous, kernelName, previousDuration)));
     }
-    else if (configurationPair->second.second > previousDuration)
+    else if (std::get<2>(configurationPair->second) > previousDuration)
     {
         bestConfigurations.erase(id);
-        bestConfigurations.insert(std::make_pair(id, std::make_pair(previous, previousDuration)));
+        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previous, kernelName, previousDuration)));
     }
 
-    searcherPair->second->calculateNextConfiguration(previousDuration);
+    searcherPair->second->calculateNextConfiguration(static_cast<double>(previousDuration));
 }
 
 void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,

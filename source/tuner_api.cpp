@@ -255,11 +255,11 @@ void Tuner::dryTuneKernel(const KernelId id, const std::string& filePath)
     }
 }
 
-void Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
+ComputationResult Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
 {
     try
     {
-        tunerCore->tuneKernelByStep(id, output, true);
+        return tunerCore->tuneKernelByStep(id, output, true);
     }
     catch (const std::runtime_error& error)
     {
@@ -268,7 +268,7 @@ void Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescript
     }
 }
 
-bool Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+ComputationResult Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
 {
     try
     {
@@ -281,7 +281,7 @@ bool Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescript
     }
 }
 
-bool Tuner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
+ComputationResult Tuner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
 {
     try
     {
@@ -341,11 +341,11 @@ void Tuner::printResult(const KernelId id, const std::string& filePath, const Pr
     }
 }
 
-std::pair<std::vector<ParameterPair>, double> Tuner::getBestConfiguration(const KernelId id) const
+ComputationResult Tuner::getBestComputationResult(const KernelId id) const
 {
     try
     {
-        return tunerCore->getBestConfiguration(id);
+        return tunerCore->getBestComputationResult(id);
     }
     catch (const std::runtime_error& error)
     {

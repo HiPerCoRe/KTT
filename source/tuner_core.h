@@ -54,14 +54,14 @@ public:
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType);
 
     // Kernel runner methods
-    bool runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
+    ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
     void setTuningManipulatorSynchronization(const KernelId id, const bool flag);
 
     // Kernel tuner methods
     void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
     void dryTuneKernel(const KernelId id, const std::string& filePath);
-    bool tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
+    ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void setValidationRange(const ArgumentId id, const size_t range);
@@ -69,7 +69,7 @@ public:
     void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
         const std::vector<ArgumentId>& validatedArgumentIds);
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
-    std::pair<std::vector<ParameterPair>, double> getBestConfiguration(const KernelId id) const;
+    ComputationResult getBestComputationResult(const KernelId id) const;
 
     // Result printer methods
     void setPrintingTimeUnit(const TimeUnit unit);

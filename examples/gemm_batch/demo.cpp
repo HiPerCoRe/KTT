@@ -19,6 +19,15 @@
 #define STEPS 1000
 #define MAX_MEM 900000000
 
+class NullBuffer : public std::streambuf
+{
+public:
+    int overflow(int c)
+    {
+        return c;
+    }
+};
+
 class referenceGemm : public ktt::ReferenceClass
 {
 public:
@@ -164,9 +173,9 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
     }
 
     // print best
-    std::pair<std::vector<ktt::ParameterPair>, double> bestConf = tuner->getBestConfiguration(kernelId);
-    std::cout << "Performance: " << (double)(a*b*c*2)*(double)batch / std::get<1>(bestConf) << " GFlops" << std::endl;
-    std::cout << "Memory BW: " << (double)(a*b+c*a+c*b)*(double)(batch)*(double)sizeof(REAL) / std::get<1>(bestConf) << " GB/s" << std::endl;
+    ktt::ComputationResult bestConf = tuner->getBestComputationResult(kernelId);
+    std::cout << "Performance: " << (double)(a*b*c*2)*(double)batch / (double)bestConf.getDuration() << " GFlops" << std::endl;
+    std::cout << "Memory BW: " << (double)(a*b+c*a+c*b)*(double)(batch)*(double)sizeof(REAL) / (double)bestConf.getDuration() << " GB/s" << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -200,7 +209,10 @@ int main(int argc, char** argv)
         kernelFile = KTT_CU_KERNEL_FILE;
     }
     tuner->setGlobalSizeType(ktt::GlobalSizeType::CUDA);
-    tuner->setLoggingTarget(std::string("/dev/null"));
+
+    NullBuffer nullBuffer;
+    std::ostream nullStream(&nullBuffer);
+    tuner->setLoggingTarget(nullStream);
 
     // tune kernels for different sizes
     for (int i = 0; i < 10; i++) {
