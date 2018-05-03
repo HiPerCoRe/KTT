@@ -96,7 +96,7 @@ private:
     std::vector<std::unique_ptr<CUDAStream>> streams;
     std::set<std::unique_ptr<CUDABuffer>> buffers;
     std::set<std::unique_ptr<CUDABuffer>> persistentBuffers;
-    std::map<std::string, std::string> programCache;
+    std::map<std::string, std::unique_ptr<CUDAKernel>> kernelCache;
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> kernelEvents;
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> bufferEvents;
 

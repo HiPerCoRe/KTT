@@ -48,29 +48,31 @@ EventId CUDAEngine::runKernelAsync(const KernelRuntimeData& kernelData, const st
     Timer overheadTimer;
     overheadTimer.start();
 
-    std::string ptxSource;
+    CUDAKernel* kernel;
+    std::unique_ptr<CUDAKernel> kernelUnique;
 
     if (programCacheFlag)
     {
-        if (programCache.find(kernelData.getSource()) == programCache.end())
+        if (kernelCache.find(kernelData.getSource()) == kernelCache.end())
         {
-            if (programCache.size() >= programCacheCapacity)
+            if (kernelCache.size() >= programCacheCapacity)
             {
                 clearProgramCache();
             }
             std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
-            programCache.insert(std::make_pair(kernelData.getSource(), program->getPtxSource()));
+            auto kernel = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
+            kernelCache.insert(std::make_pair(kernelData.getSource(), std::move(kernel)));
         }
-        auto cachePointer = programCache.find(kernelData.getSource());
-        ptxSource = cachePointer->second;
+        auto cachePointer = kernelCache.find(kernelData.getSource());
+        kernel = cachePointer->second.get();
     }
     else
     {
         std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
-        ptxSource = program->getPtxSource();
+        kernelUnique = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
+        kernel = kernelUnique.get();
     }
 
-    auto kernel = std::make_unique<CUDAKernel>(ptxSource, kernelData.getName());
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
     overheadTimer.stop();
@@ -137,7 +139,7 @@ void CUDAEngine::setProgramCacheCapacity(const size_t capacity)
 
 void CUDAEngine::clearProgramCache()
 {
-    programCache.clear();
+    kernelCache.clear();
 }
 
 QueueId CUDAEngine::getDefaultQueue() const

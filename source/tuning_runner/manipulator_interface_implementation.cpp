@@ -101,17 +101,15 @@ void ManipulatorInterfaceImplementation::synchronizeDevice()
 {
     computeEngine->synchronizeDevice();
 
-    auto iterator = enqueuedKernelEvents.cbegin();
-    while (iterator != enqueuedKernelEvents.cend())
+    for (const auto& queueEventPair : enqueuedKernelEvents)
     {
-        processKernelEvents(iterator->second);
+        processKernelEvents(queueEventPair.second);
     }
     enqueuedKernelEvents.clear();
 
-    auto bufferIterator = enqueuedBufferEvents.cbegin();
-    while (bufferIterator != enqueuedBufferEvents.cend())
+    for (const auto& queueEventPair : enqueuedBufferEvents)
     {
-        processBufferEvents(bufferIterator->second);
+        processBufferEvents(queueEventPair.second);
     }
     enqueuedBufferEvents.clear();
 }

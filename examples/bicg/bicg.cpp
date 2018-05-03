@@ -109,7 +109,6 @@ public:
 			globalSize.setSizeY(N / rowsProcessed * tile / bicgBatch);
 			localSize.setSizeX(tile);
 			localSize.setSizeY(tile / bicgBatch);
-			printf("changed global to %llu x %llu and local to %llu x %llu\n", globalSize.getSizeX(), globalSize.getSizeY(), localSize.getSizeX(), localSize.getSizeY());
 
 			runKernel(kernelFusedId, globalSize, localSize);
 			if (getParameterValue("ATOMICS", parameterValues) == 0) {
