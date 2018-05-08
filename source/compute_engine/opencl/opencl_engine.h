@@ -97,7 +97,7 @@ private:
     std::vector<std::unique_ptr<OpenCLCommandQueue>> commandQueues;
     std::set<std::unique_ptr<OpenCLBuffer>> buffers;
     std::set<std::unique_ptr<OpenCLBuffer>> persistentBuffers;
-    std::map<std::string, std::unique_ptr<OpenCLProgram>> programCache;
+    std::map<std::pair<std::string, std::string>, std::pair<std::unique_ptr<OpenCLKernel>, std::unique_ptr<OpenCLProgram>>> kernelCache;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> kernelEvents;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> bufferEvents;
 

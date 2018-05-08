@@ -53,7 +53,7 @@ EventId CUDAEngine::runKernelAsync(const KernelRuntimeData& kernelData, const st
 
     if (programCacheFlag)
     {
-        if (kernelCache.find(kernelData.getSource()) == kernelCache.end())
+        if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
         {
             if (kernelCache.size() >= programCacheCapacity)
             {
@@ -61,9 +61,9 @@ EventId CUDAEngine::runKernelAsync(const KernelRuntimeData& kernelData, const st
             }
             std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
             auto kernel = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
-            kernelCache.insert(std::make_pair(kernelData.getSource(), std::move(kernel)));
+            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::move(kernel)));
         }
-        auto cachePointer = kernelCache.find(kernelData.getSource());
+        auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
         kernel = cachePointer->second.get();
     }
     else

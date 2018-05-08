@@ -53,31 +53,36 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
     Timer overheadTimer;
     overheadTimer.start();
 
+    OpenCLKernel* kernel;
+    std::unique_ptr<OpenCLKernel> kernelUnique;
     std::unique_ptr<OpenCLProgram> program;
-    OpenCLProgram* programPointer;
 
     if (programCacheFlag)
     {
-        if (programCache.find(kernelData.getSource()) == programCache.end())
+        if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
         {
-            if (programCache.size() >= programCacheCapacity)
+            if (kernelCache.size() >= programCacheCapacity)
             {
                 clearProgramCache();
             }
-            program = createAndBuildProgram(kernelData.getSource());
-            programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
+            std::unique_ptr<OpenCLProgram> program = createAndBuildProgram(kernelData.getSource());
+            auto kernel = std::make_unique<OpenCLKernel>(program->getProgram(), kernelData.getName());
+            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::make_pair(std::move(kernel),
+                std::move(program))));
         }
-        auto cachePointer = programCache.find(kernelData.getSource());
-        programPointer = cachePointer->second.get();
+        auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
+        kernel = cachePointer->second.first.get();
     }
     else
     {
         program = createAndBuildProgram(kernelData.getSource());
-        programPointer = program.get();
+        kernelUnique = std::make_unique<OpenCLKernel>(program->getProgram(), kernelData.getName());
+        kernel = kernelUnique.get();
     }
-    auto kernel = std::make_unique<OpenCLKernel>(programPointer->getProgram(), kernelData.getName());
 
     checkLocalMemoryModifiers(argumentPointers, kernelData.getLocalMemoryModifiers());
+    kernel->resetKernelArguments();
+
     for (const auto argument : argumentPointers)
     {
         if (argument->getUploadType() == ArgumentUploadType::Local)
@@ -152,7 +157,7 @@ void OpenCLEngine::setProgramCacheCapacity(const size_t capacity)
 
 void OpenCLEngine::clearProgramCache()
 {
-    programCache.clear();
+    kernelCache.clear();
 }
 
 QueueId OpenCLEngine::getDefaultQueue() const

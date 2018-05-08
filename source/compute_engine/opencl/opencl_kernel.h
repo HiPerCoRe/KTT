@@ -43,6 +43,11 @@ public:
         argumentsCount++;
     }
 
+    void resetKernelArguments()
+    {
+        argumentsCount = 0;
+    }
+
     cl_program getProgram() const
     {
         return program;
