@@ -170,23 +170,22 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
         manipulatorInterfaceImplementation->uploadBuffers();
     }
 
-    if (disabledSynchronizationManipulators.find(kernel.getId()) != disabledSynchronizationManipulators.end())
-    {
-        manipulatorInterfaceImplementation->setAutomaticSynchronization(false);
-    }
-
     Timer timer;
     try
     {
         timer.start();
         manipulator->launchComputation(kernelId);
+        if (disabledSynchronizationManipulators.find(kernel.getId()) == disabledSynchronizationManipulators.end())
+        {
+            manipulatorInterfaceImplementation->synchronizeDeviceInternal();
+        }
         timer.stop();
     }
     catch (const std::runtime_error&)
     {
+        manipulatorInterfaceImplementation->synchronizeDeviceInternal();
         manipulatorInterfaceImplementation->clearData();
         manipulator->manipulatorInterface = nullptr;
-        manipulatorInterfaceImplementation->setAutomaticSynchronization(true);
         throw;
     }
 
@@ -194,7 +193,6 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     KernelResult result = manipulatorInterfaceImplementation->getCurrentResult();
     manipulatorInterfaceImplementation->clearData();
     manipulator->manipulatorInterface = nullptr;
-    manipulatorInterfaceImplementation->setAutomaticSynchronization(true);
 
     size_t manipulatorDuration = timer.getElapsedTime();
     manipulatorDuration -= result.getOverhead();
@@ -236,23 +234,22 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
         manipulatorInterfaceImplementation->uploadBuffers();
     }
 
-    if (disabledSynchronizationManipulators.find(composition.getId()) != disabledSynchronizationManipulators.end())
-    {
-        manipulatorInterfaceImplementation->setAutomaticSynchronization(false);
-    }
-
     Timer timer;
     try
     {
         timer.start();
         manipulator->launchComputation(composition.getId());
+        if (disabledSynchronizationManipulators.find(composition.getId()) == disabledSynchronizationManipulators.end())
+        {
+            manipulatorInterfaceImplementation->synchronizeDeviceInternal();
+        }
         timer.stop();
     }
     catch (const std::runtime_error&)
     {
+        manipulatorInterfaceImplementation->synchronizeDeviceInternal();
         manipulatorInterfaceImplementation->clearData();
         manipulator->manipulatorInterface = nullptr;
-        manipulatorInterfaceImplementation->setAutomaticSynchronization(true);
         throw;
     }
 
@@ -260,7 +257,6 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
     KernelResult result = manipulatorInterfaceImplementation->getCurrentResult();
     manipulatorInterfaceImplementation->clearData();
     manipulator->manipulatorInterface = nullptr;
-    manipulatorInterfaceImplementation->setAutomaticSynchronization(true);
 
     size_t manipulatorDuration = timer.getElapsedTime();
     manipulatorDuration -= result.getOverhead();

@@ -10,8 +10,7 @@ namespace ktt
 ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeEngine* computeEngine) :
     computeEngine(computeEngine),
     currentConfiguration(KernelConfiguration()),
-    currentResult("", currentConfiguration),
-    automaticSynchronization(true)
+    currentResult("", currentConfiguration)
 {}
 
 void ManipulatorInterfaceImplementation::runKernel(const KernelId id)
@@ -422,13 +421,16 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Outpu
     }
 }
 
-void ManipulatorInterfaceImplementation::clearData()
+void ManipulatorInterfaceImplementation::synchronizeDeviceInternal()
 {
-    if (automaticSynchronization && (!enqueuedKernelEvents.empty() || !enqueuedBufferEvents.empty()))
+    if (!enqueuedKernelEvents.empty() || !enqueuedBufferEvents.empty())
     {
         synchronizeDevice();
     }
-    
+}
+
+void ManipulatorInterfaceImplementation::clearData()
+{
     currentResult = KernelResult();
     currentConfiguration = KernelConfiguration();
     kernelData.clear();
@@ -439,11 +441,6 @@ void ManipulatorInterfaceImplementation::clearData()
 KernelResult ManipulatorInterfaceImplementation::getCurrentResult() const
 {
     return currentResult;
-}
-
-void ManipulatorInterfaceImplementation::setAutomaticSynchronization(const bool flag)
-{
-    automaticSynchronization = flag;
 }
 
 std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<ArgumentId>& argumentIds)
