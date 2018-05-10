@@ -65,6 +65,10 @@ void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const
 
     EventId kernelEvent = computeEngine->runKernelAsync(kernelData, getArgumentPointers(kernelData.getArgumentIds()), queue);
     storeKernelEvent(queue, kernelEvent);
+    // if automatic synchronization is switched off, we need to get overhead
+    // here, otherwise it is lost
+    if (automaticSynchronization == false)
+        currentResult.increaseOverhead(computeEngine->getKernelOverhead(kernelEvent));
 }
 
 QueueId ManipulatorInterfaceImplementation::getDefaultDeviceQueue() const

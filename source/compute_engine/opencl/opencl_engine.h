@@ -35,6 +35,7 @@ public:
         const std::vector<OutputDescriptor>& outputDescriptors) override;
     EventId runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) override;
     KernelResult getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const override;
+    uint64_t getKernelOverhead(const EventId id) const override;
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
@@ -126,6 +127,7 @@ public:
         const std::vector<OutputDescriptor>& outputDescriptors) override;
     EventId runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) override;
     KernelResult getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const override;
+    uint64_t getKernelOverhead(const EventId id) const override;
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
