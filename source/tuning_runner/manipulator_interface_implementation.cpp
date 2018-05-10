@@ -66,6 +66,8 @@ void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const
 
     EventId kernelEvent = computeEngine->runKernelAsync(kernelData, getArgumentPointers(kernelData.getArgumentIds()), queue);
     storeKernelEvent(queue, kernelEvent);
+    currentResult.increaseOverhead(computeEngine->getKernelOverhead(kernelEvent));
+    std::cout << "XXX " << computeEngine->getKernelOverhead(kernelEvent) << "  " << currentResult.getOverhead() << "\n";
 }
 
 QueueId ManipulatorInterfaceImplementation::getDefaultDeviceQueue() const
