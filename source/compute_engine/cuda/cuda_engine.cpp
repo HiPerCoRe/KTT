@@ -105,8 +105,23 @@ KernelResult CUDAEngine::getKernelResult(const EventId id, const std::vector<Out
 
     KernelResult result(name, static_cast<uint64_t>(duration));
     result.setOverhead(overhead);
+
     return result;
 }
+
+uint64_t CUDAEngine::getKernelOverhead(const EventId id) const
+{
+    auto eventPointer = kernelEvents.find(id);
+
+    if (eventPointer == kernelEvents.end())
+    {
+        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
+            + std::to_string(id));
+    }
+
+    return eventPointer->second.first->getOverhead();
+}
+
 
 void CUDAEngine::setCompilerOptions(const std::string& options)
 {
@@ -789,6 +804,11 @@ EventId CUDAEngine::runKernelAsync(const KernelRuntimeData&, const std::vector<K
 }
 
 KernelResult CUDAEngine::getKernelResult(const EventId, const std::vector<OutputDescriptor>&) const
+{
+    throw std::runtime_error("");
+}
+
+uint64_t CUDAEngine::getKernelOverhead(const EventId id) const
 {
     throw std::runtime_error("");
 }

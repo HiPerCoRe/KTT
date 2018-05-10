@@ -126,6 +126,12 @@ KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<O
     return result;
 }
 
+uint64_t OpenCLEngine::getKernelOverhead(const EventId id) const
+{
+    //TODO implement me
+    return 0;
+}
+
 void OpenCLEngine::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
@@ -837,6 +843,11 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData&, const std::vector
 }
 
 KernelResult OpenCLEngine::getKernelResult(const EventId, const std::vector<OutputDescriptor>&) const
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::OpenCLEngine::getKernelOverhead(const EventId id) const 
 {
     throw std::runtime_error("");
 }

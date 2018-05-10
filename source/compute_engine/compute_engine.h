@@ -26,6 +26,7 @@ public:
         const std::vector<OutputDescriptor>& outputDescriptors) = 0;
     virtual EventId runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) = 0;
     virtual KernelResult getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const = 0;
+    virtual uint64_t getKernelOverhead(const EventId id) const = 0;
 
     // Utility methods
     virtual void setCompilerOptions(const std::string& options) = 0;
