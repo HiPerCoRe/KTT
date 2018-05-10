@@ -128,8 +128,15 @@ KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<O
 
 uint64_t OpenCLEngine::getKernelOverhead(const EventId id) const
 {
-    //TODO implement me
-    return 0;
+    auto eventPointer = kernelEvents.find(id);
+
+    if (eventPointer == kernelEvents.end())
+    {
+        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
+            + std::to_string(id));
+    }
+
+    return eventPointer->second->getOverhead();
 }
 
 void OpenCLEngine::setCompilerOptions(const std::string& options)
@@ -847,7 +854,7 @@ KernelResult OpenCLEngine::getKernelResult(const EventId, const std::vector<Outp
     throw std::runtime_error("");
 }
 
-uint64_t OpenCLEngine::OpenCLEngine::getKernelOverhead(const EventId id) const 
+uint64_t OpenCLEngine::getKernelOverhead(const EventId) const 
 {
     throw std::runtime_error("");
 }

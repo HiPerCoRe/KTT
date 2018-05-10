@@ -122,7 +122,6 @@ uint64_t CUDAEngine::getKernelOverhead(const EventId id) const
     return eventPointer->second.first->getOverhead();
 }
 
-
 void CUDAEngine::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
@@ -808,7 +807,7 @@ KernelResult CUDAEngine::getKernelResult(const EventId, const std::vector<Output
     throw std::runtime_error("");
 }
 
-uint64_t CUDAEngine::getKernelOverhead(const EventId id) const
+uint64_t CUDAEngine::getKernelOverhead(const EventId) const
 {
     throw std::runtime_error("");
 }
