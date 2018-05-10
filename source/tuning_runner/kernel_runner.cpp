@@ -170,16 +170,22 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
         manipulatorInterfaceImplementation->uploadBuffers();
     }
 
+    bool synchronize = true;
     if (disabledSynchronizationManipulators.find(kernel.getId()) != disabledSynchronizationManipulators.end())
     {
         manipulatorInterfaceImplementation->setAutomaticSynchronization(false);
+        synchronize = false;
     }
 
     Timer timer;
     try
     {
+        if (synchronize)
+            manipulator->synchronizeDevice();
         timer.start();
         manipulator->launchComputation(kernelId);
+        if (synchronize)
+            manipulator->synchronizeDevice();
         timer.stop();
     }
     catch (const std::runtime_error&)
