@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
-    const ktt::DimensionVector ndRangeDimensions(256, 256);
+    const ktt::DimensionVector ndRangeDimensions(512, 512);
     const ktt::DimensionVector workGroupDimensions;
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
     // Total NDRange size matches number of grid points
