@@ -14,7 +14,7 @@
 
 /* Problem size. */
 #define N 16384
-#define M 8192
+#define M 16384
 
 /* Thread block dimensions */
 #define WORK_GROUP_X 256

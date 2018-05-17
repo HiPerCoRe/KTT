@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     }
   }
 
-  int problemSize = 1; // In MiB
+  int problemSize = 32; // In MiB
 
   if (argc >= 5)
   {
