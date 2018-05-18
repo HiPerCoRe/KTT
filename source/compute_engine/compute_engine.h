@@ -32,9 +32,9 @@ public:
     virtual void setCompilerOptions(const std::string& options) = 0;
     virtual void setGlobalSizeType(const GlobalSizeType type) = 0;
     virtual void setAutomaticGlobalSizeCorrection(const bool flag) = 0;
-    virtual void setProgramCacheUsage(const bool flag) = 0;
-    virtual void setProgramCacheCapacity(const size_t capacity) = 0;
-    virtual void clearProgramCache() = 0;
+    virtual void setKernelCacheUsage(const bool flag) = 0;
+    virtual void setKernelCacheCapacity(const size_t capacity) = 0;
+    virtual void clearKernelCache() = 0;
 
     // Queue handling methods
     virtual QueueId getDefaultQueue() const = 0;

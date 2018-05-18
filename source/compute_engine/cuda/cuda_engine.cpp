@@ -14,8 +14,8 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     compilerOptions(std::string("--gpu-architecture=compute_30")),
     globalSizeType(GlobalSizeType::CUDA),
     globalSizeCorrection(false),
-    programCacheFlag(true),
-    programCacheCapacity(10),
+    kernelCacheFlag(true),
+    kernelCacheCapacity(10),
     persistentBufferFlag(true),
     nextEventId(0)
 {
@@ -51,13 +51,13 @@ EventId CUDAEngine::runKernelAsync(const KernelRuntimeData& kernelData, const st
     CUDAKernel* kernel;
     std::unique_ptr<CUDAKernel> kernelUnique;
 
-    if (programCacheFlag)
+    if (kernelCacheFlag)
     {
         if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
         {
-            if (kernelCache.size() >= programCacheCapacity)
+            if (kernelCache.size() >= kernelCacheCapacity)
             {
-                clearProgramCache();
+                clearKernelCache();
             }
             std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
             auto kernel = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
@@ -137,21 +137,21 @@ void CUDAEngine::setAutomaticGlobalSizeCorrection(const bool flag)
     globalSizeCorrection = flag;
 }
 
-void CUDAEngine::setProgramCacheUsage(const bool flag)
+void CUDAEngine::setKernelCacheUsage(const bool flag)
 {
     if (!flag)
     {
-        clearProgramCache();
+        clearKernelCache();
     }
-    programCacheFlag = flag;
+    kernelCacheFlag = flag;
 }
 
-void CUDAEngine::setProgramCacheCapacity(const size_t capacity)
+void CUDAEngine::setKernelCacheCapacity(const size_t capacity)
 {
-    programCacheCapacity = capacity;
+    kernelCacheCapacity = capacity;
 }
 
-void CUDAEngine::clearProgramCache()
+void CUDAEngine::clearKernelCache()
 {
     kernelCache.clear();
 }
@@ -827,17 +827,17 @@ void CUDAEngine::setAutomaticGlobalSizeCorrection(const bool)
     throw std::runtime_error("");
 }
 
-void CUDAEngine::setProgramCacheUsage(const bool)
+void CUDAEngine::setKernelCacheUsage(const bool)
 {
     throw std::runtime_error("");
 }
 
-void CUDAEngine::setProgramCacheCapacity(const size_t)
+void CUDAEngine::setKernelCacheCapacity(const size_t)
 {
     throw std::runtime_error("");
 }
 
-void CUDAEngine::clearProgramCache()
+void CUDAEngine::clearKernelCache()
 {
     throw std::runtime_error("");
 }

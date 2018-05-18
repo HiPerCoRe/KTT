@@ -14,8 +14,8 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
     compilerOptions(std::string("")),
     globalSizeType(GlobalSizeType::OpenCL),
     globalSizeCorrection(false),
-    programCacheFlag(true),
-    programCacheCapacity(10),
+    kernelCacheFlag(true),
+    kernelCacheCapacity(10),
     persistentBufferFlag(true),
     nextEventId(0)
 {
@@ -57,13 +57,13 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
     std::unique_ptr<OpenCLKernel> kernelUnique;
     std::unique_ptr<OpenCLProgram> program;
 
-    if (programCacheFlag)
+    if (kernelCacheFlag)
     {
         if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
         {
-            if (kernelCache.size() >= programCacheCapacity)
+            if (kernelCache.size() >= kernelCacheCapacity)
             {
-                clearProgramCache();
+                clearKernelCache();
             }
             std::unique_ptr<OpenCLProgram> program = createAndBuildProgram(kernelData.getSource());
             auto kernel = std::make_unique<OpenCLKernel>(program->getProgram(), kernelData.getName());
@@ -154,21 +154,21 @@ void OpenCLEngine::setAutomaticGlobalSizeCorrection(const bool flag)
     globalSizeCorrection = flag;
 }
 
-void OpenCLEngine::setProgramCacheUsage(const bool flag)
+void OpenCLEngine::setKernelCacheUsage(const bool flag)
 {
     if (!flag)
     {
-        clearProgramCache();
+        clearKernelCache();
     }
-    programCacheFlag = flag;
+    kernelCacheFlag = flag;
 }
 
-void OpenCLEngine::setProgramCacheCapacity(const size_t capacity)
+void OpenCLEngine::setKernelCacheCapacity(const size_t capacity)
 {
-    programCacheCapacity = capacity;
+    kernelCacheCapacity = capacity;
 }
 
-void OpenCLEngine::clearProgramCache()
+void OpenCLEngine::clearKernelCache()
 {
     kernelCache.clear();
 }
@@ -874,17 +874,17 @@ void OpenCLEngine::setAutomaticGlobalSizeCorrection(const bool)
     throw std::runtime_error("");
 }
 
-void OpenCLEngine::setProgramCacheUsage(const bool)
+void OpenCLEngine::setKernelCacheUsage(const bool)
 {
     throw std::runtime_error("");
 }
 
-void OpenCLEngine::setProgramCacheCapacity(const size_t)
+void OpenCLEngine::setKernelCacheCapacity(const size_t)
 {
     throw std::runtime_error("");
 }
 
-void OpenCLEngine::clearProgramCache()
+void OpenCLEngine::clearKernelCache()
 {
     throw std::runtime_error("");
 }

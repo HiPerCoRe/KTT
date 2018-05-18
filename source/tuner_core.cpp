@@ -355,17 +355,17 @@ void TunerCore::setAutomaticGlobalSizeCorrection(const bool flag)
     computeEngine->setAutomaticGlobalSizeCorrection(flag);
 }
 
-void TunerCore::setProgramCacheCapacity(const size_t capacity)
+void TunerCore::setKernelCacheCapacity(const size_t capacity)
 {
     if (capacity == 0)
     {
-        computeEngine->setProgramCacheUsage(false);
+        computeEngine->setKernelCacheUsage(false);
     }
     else
     {
-        computeEngine->setProgramCacheUsage(true);
+        computeEngine->setKernelCacheUsage(true);
     }
-    computeEngine->setProgramCacheCapacity(capacity);
+    computeEngine->setKernelCacheCapacity(capacity);
 }
 
 void TunerCore::persistArgument(const ArgumentId id, const bool flag)

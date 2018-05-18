@@ -433,9 +433,9 @@ void Tuner::setCompilerOptions(const std::string& options)
     tunerCore->setCompilerOptions(options);
 }
 
-void Tuner::setProgramCacheCapacity(const size_t capacity)
+void Tuner::setKernelCacheCapacity(const size_t capacity)
 {
-    tunerCore->setProgramCacheCapacity(capacity);
+    tunerCore->setKernelCacheCapacity(capacity);
 }
 
 void Tuner::printComputeAPIInfo(std::ostream& outputTarget) const

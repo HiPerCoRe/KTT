@@ -71,7 +71,7 @@ class KTT_API Tuner
 public:
     /** @fn explicit Tuner(const PlatformIndex platform, const DeviceIndex device)
       * Constructor, which creates new tuner object for specified platform and device. Tuner uses OpenCL as compute API, all commands are
-      * submitted to a single compute queue. Indices for available platforms and devices can be retrieved by calling printComputeApiInfo() method.
+      * submitted to a single compute queue. Indices for available platforms and devices can be retrieved by calling printComputeAPIInfo() method.
       * @param platform Index for platform used by created tuner.
       * @param device Index for device used by created tuner.
       */
@@ -79,7 +79,7 @@ public:
 
     /** @fn explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI)
       * Constructor, which creates new tuner object for specified platform, device and compute API. All commands are submitted to a single
-      * compute queue. Indices for available platforms and devices can be retrieved by calling printComputeApiInfo() method. If specified compute API
+      * compute queue. Indices for available platforms and devices can be retrieved by calling printComputeAPIInfo() method. If specified compute API
       * is CUDA, platform index is ignored.
       * @param platform Index for platform used by created tuner.
       * @param device Index for device used by created tuner.
@@ -90,7 +90,7 @@ public:
     /** @fn explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t computeQueueCount)
       * Constructor, which creates new tuner object for specified platform, device and compute API. Several compute queues are created, based
       * on specified count. Commands to different queues can be submitted by utilizing TuningManipulator. Indices for available platforms and devices
-      * can be retrieved by calling printComputeApiInfo() method. If specified compute API is CUDA, platform index is ignored.
+      * can be retrieved by calling printComputeAPIInfo() method. If specified compute API is CUDA, platform index is ignored.
       * @param platform Index for platform used by created tuner.
       * @param device Index for device used by created tuner.
       * @param computeAPI Compute API used by created tuner.
@@ -218,12 +218,12 @@ public:
 
     /** @fn KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds,
       * std::unique_ptr<TuningManipulator> manipulator)
-      * Creates a kernel composition using specified kernels. Following methods can be used with kernel compositions and will call
+      * Creates a kernel composition using specified kernels. The following methods can be used with kernel compositions and will call
       * the corresponding method for all kernels inside the composition: setKernelArguments(), addParameter() (both versions), addConstraint().
       * 
       * Kernel compositions do not inherit any parameters or constraints from the original kernels. Setting kernel arguments and adding parameters
       * or constraints to kernels inside given composition will not affect the original kernels or other compositions. Tuning manipulator is required
-      * in order to launch kernel composition with tuner. See TuningManipulator for more information.
+      * in order to launch kernel composition with the tuner. See TuningManipulator for more information.
       * @param compositionName Name of kernel composition. The name is used during output printing.
       * @param kernelIds Ids of kernels which will be included in the composition.
       * @param manipulator Tuning manipulator for the composition.
@@ -334,28 +334,27 @@ public:
 
     /** @fn void persistArgument(const ArgumentId id, const bool flag)
       * Controls whether specified vector argument is persisted inside a compute API buffer or not. Persisted arguments remain inside buffers even
-      * after the execution of kernel utilizing these arguments is finished. Persistence of kernel arguments is switched off by default. Persistent
-      * arguments are useful during online tuning when kernel output is computed over multiple kernel launches in different configurations. If
-      * a kernel is launched multiple times in the same configuration, it is best to utilize TuningManipulator and avoid persistent arguments.
-      * Note that persistent arguments are never utilized by reference kernels.
+      * after the execution of kernel utilizing these arguments has finished. Persistence of kernel arguments is switched off by default. Persistent
+      * arguments can be useful during online tuning and regular kernel running, when kernel output is computed over multiple kernel launches in
+      * different configurations. Note that persistent arguments are never utilized by reference kernels.
       * @param id Id of a vector argument.
       * @param flag Specifies whether argument should be persisted or not. If true, specified vector argument is immidiately persisted. If false,
-      * compute API buffer for specified argument is immidiately removed.
+      * compute API buffer for specified argument is immidiately destroyed.
       */
     void persistArgument(const ArgumentId id, const bool flag);
 
     /** @fn void tuneKernel(const KernelId id)
-      * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters
-      * and constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all
-      * configurations are explored.
+      * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
+      * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all configurations
+      * are explored.
       * @param id Id of kernel for which the tuning will start.
       */
     void tuneKernel(const KernelId id);
 
     /** @fn void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
-      * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters
-      * and constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end either when
-      * all configurations are explored or when specified stop condition is met.
+      * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
+      * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end either when all
+      * configurations are explored or when specified stop condition is met.
       * @param id Id of kernel for which the tuning will start.
       * @param stopCondition Stop condition which decides whether to continue the tuning process. See StopCondition for more information.
       */
@@ -527,13 +526,13 @@ public:
       */
     void setCompilerOptions(const std::string& options);
 
-    /** @fn void setProgramCacheCapacity(const size_t capacity)
-      * Sets capacity of a program cache. The cache contains recently compiled kernels which are prepared to be launched immidiately. Using the cache
-      * can significantly improve tuner performance during online tuning or iterative kernel running with TuningManipulator. Default program cache
-      * size is 10.
-      * @param capacity Controls program cache capacity. If zero, program cache is disabled completely.
+    /** @fn void setKernelCacheCapacity(const size_t capacity)
+      * Sets capacity of kernel cache inside the tuner. The cache contains recently compiled kernels which are prepared to be launched immidiately,
+      * eliminating compilation overhead. Using the cache can significantly improve tuner performance during online tuning or iterative kernel
+      * running with TuningManipulator. Default cache size is 10.
+      * @param capacity Controls kernel cache capacity. If zero, kernel cache is completely disabled.
       */
-    void setProgramCacheCapacity(const size_t capacity);
+    void setKernelCacheCapacity(const size_t capacity);
 
     /** @fn void printComputeAPIInfo(std::ostream& outputTarget) const
       * Prints basic information about available platforms and devices to specified output stream. Also prints indices assigned to them
