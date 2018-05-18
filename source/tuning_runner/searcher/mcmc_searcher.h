@@ -17,6 +17,7 @@ class MCMCSearcher : public Searcher
 {
 public:
     static const size_t maximumDifferences = 2;
+    static const size_t bootIterations = 10;
 
     MCMCSearcher(const std::vector<KernelConfiguration>& configurations, const std::vector<double>& start) :
         configurations(configurations),
@@ -38,8 +39,10 @@ public:
         size_t initialState;
         if (start.size() > 0) 
             initialState = searchStateIndex(start);
-        else
+        else {
             initialState = static_cast<size_t>(intDistribution(generator));
+            boot = bootIterations;
+        }
         originState = currentState = initialState;
         index = initialState;
 
@@ -54,9 +57,30 @@ public:
         unexploredIndices.erase(index);
         executionTimes.at(index) = previousDuration;
 
+        // boot-up, sweeps randomly across bootIterations states and sets
+        // origin of MCMC to the best state
+        if (boot > 0) 
+        {
+            if (executionTimes.at(currentState) <= executionTimes.at(originState)) {            
+                originState = currentState;
+                bestTime = executionTimes.at(currentState);
+#if MCMC_VERBOSITY > 0
+                std::cout << "MCMC BOOT step " << visitedStatesCount << ": New best performance (" << bestTime << ")!\n";
+#endif      
+            }
+            boot--;
+            while (unexploredIndices.find(index) == unexploredIndices.end() 
+                || unexploredIndices.empty()) 
+            {
+                index = static_cast<size_t>(intDistribution(generator));
+            }
+            currentState = index;
+            return;
+        }
+
         // acceptation of a new state
         if ((executionTimes.at(currentState) <= executionTimes.at(originState))
-        || probabilityDistribution(generator) < 0.05)
+        || probabilityDistribution(generator) < 0.02)
         {
             originState = currentState;
 #if MCMC_VERBOSITY > 0
@@ -124,6 +148,7 @@ private:
     size_t visitedStatesCount;
     size_t originState;
     size_t currentState;
+    size_t boot;
 
     std::vector<double> executionTimes;
     std::vector<bool> exploredIndices;
