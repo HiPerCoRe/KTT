@@ -44,9 +44,9 @@ public:
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
-    void setProgramCacheUsage(const bool flag) override;
-    void setProgramCacheCapacity(const size_t capacity) override;
-    void clearProgramCache() override;
+    void setKernelCacheUsage(const bool flag) override;
+    void setKernelCacheCapacity(const size_t capacity) override;
+    void clearKernelCache() override;
 
     // Queue handling methods
     QueueId getDefaultQueue() const override;
@@ -89,8 +89,8 @@ private:
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
-    bool programCacheFlag;
-    size_t programCacheCapacity;
+    bool kernelCacheFlag;
+    size_t kernelCacheCapacity;
     bool persistentBufferFlag;
     mutable EventId nextEventId;
     std::unique_ptr<CUDAContext> context;
@@ -128,9 +128,9 @@ public:
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
-    void setProgramCacheUsage(const bool flag) override;
-    void setProgramCacheCapacity(const size_t capacity) override;
-    void clearProgramCache() override;
+    void setKernelCacheUsage(const bool flag) override;
+    void setKernelCacheCapacity(const size_t capacity) override;
+    void clearKernelCache() override;
 
     // Queue handling methods
     QueueId getDefaultQueue() const override;
