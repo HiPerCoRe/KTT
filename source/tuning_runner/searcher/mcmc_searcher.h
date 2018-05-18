@@ -5,7 +5,10 @@
 #include <limits>
 #include <random>
 #include <stdexcept>
+#include <set>
 #include "searcher.h"
+
+#define MCMC_VERBOSITY 0
 
 namespace ktt
 {
@@ -13,7 +16,7 @@ namespace ktt
 class MCMCSearcher : public Searcher
 {
 public:
-    static const size_t maximumDifferences = 3;
+    static const size_t maximumDifferences = 2;
 
     MCMCSearcher(const std::vector<KernelConfiguration>& configurations, const std::vector<double>& start) :
         configurations(configurations),
@@ -24,7 +27,8 @@ public:
         exploredIndices(configurations.size(), false),
         generator(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count())),
         intDistribution(0, static_cast<int>(configurations.size())),
-        probabilityDistribution(0.0, 1.0)
+        probabilityDistribution(0.0, 1.0),
+        bestTime(std::numeric_limits<double>::max())
     {
         if (configurations.size() == 0)
         {
@@ -38,40 +42,60 @@ public:
             initialState = static_cast<size_t>(intDistribution(generator));
         originState = currentState = initialState;
         index = initialState;
+
+        for (int i = 0; i < configurations.size(); i++)
+            unexploredIndices.insert(i);
     }
 
     void calculateNextConfiguration(const double previousDuration) override
     {
         visitedStatesCount++;
         exploredIndices[index] = true;
+        unexploredIndices.erase(index);
         executionTimes.at(index) = previousDuration;
 
         // acceptation of a new state
-        std::cout << "Exec times " << executionTimes.at(originState) << " -> " << executionTimes.at(currentState) << "\n";
         if ((executionTimes.at(currentState) <= executionTimes.at(originState))
         || probabilityDistribution(generator) < 0.05)
         {
             originState = currentState;
-            std::cout << "Accepting a new state.\n";
+#if MCMC_VERBOSITY > 0
+            if (executionTimes.at(currentState) < bestTime)
+                bestTime = executionTimes.at(currentState);
+            if (executionTimes.at(currentState) <= executionTimes.at(originState))
+                std::cout << "MCMC step " << visitedStatesCount << ": Accepting a new state (performance improvement).\n";
+                if (executionTimes.at(currentState) == bestTime)
+                    std::cout << "MCMC step " << visitedStatesCount << ": New best performance (" << bestTime << ")!\n";
+            else
+                std::cout << "MCMC step " << visitedStatesCount << ": Accepting a new state (random escape).\n";
         }
+        else {
+            std::cout << "MCMC step " << visitedStatesCount << ": Continuing searching neighbours.\n";
+#endif
+        }
+
+        if (unexploredIndices.empty()) 
+            return;
 
         std::vector<size_t> neighbours = getNeighbours(originState);
 
         // reset origin position when there are no neighbours
         if (neighbours.size() == 0)
         {
-            std::cout << "No neighbours, reseting position.\n";
-            while (neighbours.size() == 0)
+#if MCMC_VERBOSITY > 0
+            std::cout << "MCMC step " << visitedStatesCount << ": No neighbours, reseting position.\n";
+#endif
+            while (unexploredIndices.find(originState) == unexploredIndices.end())
             {
                 originState = static_cast<size_t>(intDistribution(generator));
-                neighbours = getNeighbours(currentState);
             }
             index = currentState = originState;
-            exploredIndices[index] = true;
             return;
         }
 
-        std::cout << "Choosing randly one of " << neighbours.size() << " neighbours.\n"; 
+#if MCMC_VERBOSITY > 1
+        std::cout << "MCMC step " << visitedStatesCount << ": Choosing randomly one of " << neighbours.size() << " neighbours.\n"; 
+#endif
         // select a random neighbour state
         currentState = neighbours.at(static_cast<size_t>(intDistribution(generator)) % neighbours.size());
         
@@ -103,21 +127,24 @@ private:
 
     std::vector<double> executionTimes;
     std::vector<bool> exploredIndices;
+    std::set<size_t> unexploredIndices;
 
     std::default_random_engine generator;
     std::uniform_int_distribution<int> intDistribution;
     std::uniform_real_distribution<double> probabilityDistribution;
 
+    double bestTime;
+
     // Helper methods
     std::vector<size_t> getNeighbours(const size_t referenceId) const
     {
         std::vector<size_t> neighbours;
-        size_t otherId = 0;
-        for (const auto& configuration : configurations)
+//        for (const auto& configuration : configurations)
+        for (const auto& i : unexploredIndices)
         {
             size_t differences = 0;
             size_t settingId = 0;
-            for (const auto& parameter : configuration.getParameterPairs())
+            for (const auto& parameter : configurations[i].getParameterPairs())
             {
                 if (parameter.getValue() != configurations.at(referenceId).getParameterPairs().at(settingId).getValue())
                 {
@@ -126,12 +153,10 @@ private:
                 settingId++;
             }
 
-            if ((differences <= maximumDifferences) 
-            && !(exploredIndices[otherId]))
+            if (differences <= maximumDifferences) 
             {
-                neighbours.push_back(otherId);
+                neighbours.push_back(i);
             }
-            otherId++;
         }
 
         return neighbours;
