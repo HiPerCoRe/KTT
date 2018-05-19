@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">0.6</span>
+   &#160;<span id="projectnumber">0.7</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -441,7 +441,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>KernelRunner</b></td
 </table>
 </div><div class="memdoc">
 <p>Controls whether arguments for all kernels that are part of manipulator will be automatically uploaded to corresponding compute API buffers before any kernel is run in the current invocation of <a class="el" href="classktt_1_1_tuning_manipulator.html#aa5c993600def90f0e5e67c7a03fcdd0d">launchComputation()</a> method. Argument preload is turned on by default.</p>
-<p>Turning this behavior off is useful when utilizing kernel compositions where different kernels use different arguments which would not all fit into available memory. Buffer creation and deletion can be then controlled by using <a class="el" href="classktt_1_1_tuning_manipulator.html#ae79313db2ca9cca7e158716293558ffd">createArgumentBuffer()</a> and <a class="el" href="classktt_1_1_tuning_manipulator.html#ab4f9d73e032b7014ada30c8b336e6c0a">destroyArgumentBuffer()</a> methods for corresponding arguments. Any leftover arguments after <a class="el" href="classktt_1_1_tuning_manipulator.html#aa5c993600def90f0e5e67c7a03fcdd0d">launchComputation()</a> method finishes will still be automatically cleaned up. Inheriting class can override this method. </p><dl class="section return"><dt>Returns</dt><dd>Flag which controls whether the argument preload is enabled or not. </dd></dl>
+<p>Turning this behavior off is useful during utilization of kernel compositions where different kernels use different arguments which would not all fit into available memory at once. Buffer creation and deletion can be then controlled by using <a class="el" href="classktt_1_1_tuning_manipulator.html#ae79313db2ca9cca7e158716293558ffd">createArgumentBuffer()</a> and <a class="el" href="classktt_1_1_tuning_manipulator.html#ab4f9d73e032b7014ada30c8b336e6c0a">destroyArgumentBuffer()</a> methods for corresponding arguments. Any leftover arguments after <a class="el" href="classktt_1_1_tuning_manipulator.html#aa5c993600def90f0e5e67c7a03fcdd0d">launchComputation()</a> method has finished will still be automatically cleaned up. Inheriting class can override this method. </p><dl class="section return"><dt>Returns</dt><dd>Flag which controls whether the argument preload is enabled or not. </dd></dl>
 
 </div>
 </div>
@@ -817,7 +817,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>KernelRunner</b></td
 <p>This method is responsible for directly running the computation and ensuring that correct results are computed. It may utilize any other method inside the tuning manipulator as well as any user-defined methods. Any other tuning manipulator methods run from this method only affect current invocation of <a class="el" href="classktt_1_1_tuning_manipulator.html#aa5c993600def90f0e5e67c7a03fcdd0d">launchComputation()</a> method. Inheriting class must provide implementation for this method.</p>
 <p>When tuning manipulator is used, computation duration is calculated based on duration of <a class="el" href="classktt_1_1_tuning_manipulator.html#aa5c993600def90f0e5e67c7a03fcdd0d">launchComputation()</a> method. Initial buffer transfer times are not included in this duration (eg. duration of <a class="el" href="classktt_1_1_tuning_manipulator.html#ae79313db2ca9cca7e158716293558ffd">createArgumentBuffer()</a> methods). KTT framework overhead and kernel compilation times are not included in the final duration either. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">id</td><td>Id of a kernel or kernel composition which will be used to launch kernel from tuner API. </td></tr>
+    <tr><td class="paramname">id</td><td>Id of a kernel or a kernel composition which will be used to launch kernel from tuner API. </td></tr>
   </table>
   </dd>
 </dl>

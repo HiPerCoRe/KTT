@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">0.6</span>
+   &#160;<span id="projectnumber">0.7</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -101,6 +101,14 @@ $(document).ready(function(){initNavTree('namespacektt.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_computation_result.html">ComputationResult</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_configuration_count.html">ConfigurationCount</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_configuration_duration.html">ConfigurationDuration</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_configuration_fraction.html">ConfigurationFraction</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_device_info.html">DeviceInfo</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_dimension_vector.html">DimensionVector</a></td></tr>
@@ -113,7 +121,11 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_reference_class.html">ReferenceClass</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_stop_condition.html">StopCondition</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuner.html">Tuner</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_duration.html">TuningDuration</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html">TuningManipulator</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -203,21 +215,18 @@ Enumerations</h2></td></tr>
 <tr class="separator:a47158e719571f19776b1dc4a1183eb39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5bc0a65f097bc3326d6497c0f3877b0"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0">ModifierType</a> { <a class="el" href="namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a6adf97f83acf6453d4a6a4b1070f3754">ModifierType::None</a>, 
 <a class="el" href="namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a4cc6684df7b4a92b1dec6fce3264fac8">ModifierType::Global</a>, 
-<a class="el" href="namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a509820290d57f333403f490dde7316f4">ModifierType::Local</a>
+<a class="el" href="namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a509820290d57f333403f490dde7316f4">ModifierType::Local</a>, 
+<a class="el" href="namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a130c5b3473c57faa76e2a1c54e26f88e">ModifierType::Both</a>
  }</td></tr>
 <tr class="separator:ac5bc0a65f097bc3326d6497c0f3877b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a241748d791d84aed146db202c8b68beb"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a241748d791d84aed146db202c8b68beb">PrintFormat</a> { <a class="el" href="namespacektt.html#a241748d791d84aed146db202c8b68bebad4a9fa383ab700c5bdd6f31cf7df0faf">PrintFormat::Verbose</a>, 
 <a class="el" href="namespacektt.html#a241748d791d84aed146db202c8b68bebacc8d68c551c4a9a6d5313e07de4deafd">PrintFormat::CSV</a>
  }</td></tr>
 <tr class="separator:a241748d791d84aed146db202c8b68beb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f5b49f1e11331a499aa44fb1fa6788b"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788b">SearchMethod</a> { <br />
-&#160;&#160;<a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788ba4774784e057c4bbae83302ed0de38df6">SearchMethod::FullSearch</a>, 
+<tr class="memitem:a5f5b49f1e11331a499aa44fb1fa6788b"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788b">SearchMethod</a> { <a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788ba4774784e057c4bbae83302ed0de38df6">SearchMethod::FullSearch</a>, 
 <a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788ba9df32f1d41ae9ca3b761a36681bf2b51">SearchMethod::RandomSearch</a>, 
-<a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788baf420862e0547cdd30208d077b3d6f515">SearchMethod::PSO</a>, 
 <a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788ba044e7c937b44387edefa6ffa56f3a5c4">SearchMethod::Annealing</a>, 
-<br />
-&#160;&#160;<a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788bae47490d4199acfa62c17fde090cac73d">SearchMethod::MCMC</a>
-<br />
+<a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788bae47490d4199acfa62c17fde090cac73d">SearchMethod::MCMC</a>
  }</td></tr>
 <tr class="separator:a5f5b49f1e11331a499aa44fb1fa6788b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a161b9af8714615ef2c1770b020ce1511"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a161b9af8714615ef2c1770b020ce1511">TimeUnit</a> { <a class="el" href="namespacektt.html#a161b9af8714615ef2c1770b020ce1511afba00bdab687ce01136a86bac8bac578">TimeUnit::Nanoseconds</a>, 
@@ -695,6 +704,8 @@ Functions</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="ac5bc0a65f097bc3326d6497c0f3877b0a509820290d57f333403f490dde7316f4"></a>Local&#160;</td><td class="fielddoc"><p>Parameter value affects local thread size of corresponding kernel. </p>
 </td></tr>
+<tr><td class="fieldname"><a id="ac5bc0a65f097bc3326d6497c0f3877b0a130c5b3473c57faa76e2a1c54e26f88e"></a>Both&#160;</td><td class="fielddoc"><p>Parameter value affects both global and local thread size of corresponding kernel. </p>
+</td></tr>
 </table>
 
 </div>
@@ -749,15 +760,13 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Enum for search method used to explore configuration space during kernel tuning. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a5f5b49f1e11331a499aa44fb1fa6788ba4774784e057c4bbae83302ed0de38df6"></a>FullSearch&#160;</td><td class="fielddoc"><p>All kernel configurations will be explored. No additional search parameters are needed. </p>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a5f5b49f1e11331a499aa44fb1fa6788ba4774784e057c4bbae83302ed0de38df6"></a>FullSearch&#160;</td><td class="fielddoc"><p>Explores kernel configurations in deterministic order. No additional search parameters are needed. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a5f5b49f1e11331a499aa44fb1fa6788ba9df32f1d41ae9ca3b761a36681bf2b51"></a>RandomSearch&#160;</td><td class="fielddoc"><p>Explores random fraction of kernel configurations. The fraction size is controlled with parameter. </p>
+<tr><td class="fieldname"><a id="a5f5b49f1e11331a499aa44fb1fa6788ba9df32f1d41ae9ca3b761a36681bf2b51"></a>RandomSearch&#160;</td><td class="fielddoc"><p>Explores kernel configurations in random order. No additional search parameters are needed. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a5f5b49f1e11331a499aa44fb1fa6788baf420862e0547cdd30208d077b3d6f515"></a>PSO&#160;</td><td class="fielddoc"><p>Explores fraction of kernel configurations using particle swarm optimization method. The fraction size is controlled with parameter. Additional parameters specify swarm size and swarm influences. </p>
+<tr><td class="fieldname"><a id="a5f5b49f1e11331a499aa44fb1fa6788ba044e7c937b44387edefa6ffa56f3a5c4"></a>Annealing&#160;</td><td class="fielddoc"><p>Explores kernel configurations using simulated annealing method. Additional parameter specifies maximum temperature. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a5f5b49f1e11331a499aa44fb1fa6788ba044e7c937b44387edefa6ffa56f3a5c4"></a>Annealing&#160;</td><td class="fielddoc"><p>Explores fraction of kernel configurations using simulated annealing method. The fraction size is controlled with parameter. Additional parameter specifies maximum temperature. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a5f5b49f1e11331a499aa44fb1fa6788bae47490d4199acfa62c17fde090cac73d"></a>MCMC&#160;</td><td class="fielddoc"><p>Explores fraction of kernel configurations using Markov chain Monte Carlo method. The fraction size is controlled with parameter. </p>
+<tr><td class="fieldname"><a id="a5f5b49f1e11331a499aa44fb1fa6788bae47490d4199acfa62c17fde090cac73d"></a>MCMC&#160;</td><td class="fielddoc"><p>Explores kernel configurations using Markov chain Monte Carlo method. No additional search parameters are needed. </p>
 </td></tr>
 </table>
 

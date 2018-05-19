@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['outputdescriptor',['OutputDescriptor',['../classktt_1_1_output_descriptor.html',1,'ktt']]]
+  ['deviceinfo',['DeviceInfo',['../classktt_1_1_device_info.html',1,'ktt']]],
+  ['dimensionvector',['DimensionVector',['../classktt_1_1_dimension_vector.html',1,'ktt']]]
 ];
