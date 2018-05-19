@@ -65,6 +65,7 @@ void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const
 
     EventId kernelEvent = computeEngine->runKernelAsync(kernelData, getArgumentPointers(kernelData.getArgumentIds()), queue);
     storeKernelEvent(queue, kernelEvent);
+    currentResult.increaseOverhead(computeEngine->getKernelOverhead(kernelEvent));
 }
 
 QueueId ManipulatorInterfaceImplementation::getDefaultDeviceQueue() const
@@ -100,17 +101,15 @@ void ManipulatorInterfaceImplementation::synchronizeDevice()
 {
     computeEngine->synchronizeDevice();
 
-    auto iterator = enqueuedKernelEvents.cbegin();
-    while (iterator != enqueuedKernelEvents.cend())
+    for (const auto& queueEventPair : enqueuedKernelEvents)
     {
-        processKernelEvents(iterator->second);
+        processKernelEvents(queueEventPair.second);
     }
     enqueuedKernelEvents.clear();
 
-    auto bufferIterator = enqueuedBufferEvents.cbegin();
-    while (bufferIterator != enqueuedBufferEvents.cend())
+    for (const auto& queueEventPair : enqueuedBufferEvents)
     {
-        processBufferEvents(bufferIterator->second);
+        processBufferEvents(queueEventPair.second);
     }
     enqueuedBufferEvents.clear();
 }
@@ -408,7 +407,10 @@ void ManipulatorInterfaceImplementation::uploadBuffers()
 {
     for (auto& argument : vectorArguments)
     {
-        computeEngine->uploadArgument(*argument.second);
+        if (!argument.second->isPersistent())
+        {
+            computeEngine->uploadArgument(*argument.second);
+        }
     }
 }
 
@@ -420,13 +422,16 @@ void ManipulatorInterfaceImplementation::downloadBuffers(const std::vector<Outpu
     }
 }
 
-void ManipulatorInterfaceImplementation::clearData()
+void ManipulatorInterfaceImplementation::synchronizeDeviceInternal()
 {
     if (!enqueuedKernelEvents.empty() || !enqueuedBufferEvents.empty())
     {
         synchronizeDevice();
     }
-    
+}
+
+void ManipulatorInterfaceImplementation::clearData()
+{
     currentResult = KernelResult();
     currentConfiguration = KernelConfiguration();
     kernelData.clear();
@@ -526,8 +531,7 @@ void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<Even
 {
     for (const auto& currentEvent : events)
     {
-        KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<OutputDescriptor>{});
-        currentResult.increaseOverhead(result.getOverhead());
+        computeEngine->getKernelResult(currentEvent, std::vector<OutputDescriptor>{});
     }
 }
 

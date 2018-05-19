@@ -1,6 +1,12 @@
 var searchData=
 [
-  ['launchcomputation',['launchComputation',['../classktt_1_1_tuning_manipulator.html#aa5c993600def90f0e5e67c7a03fcdd0d',1,'ktt::TuningManipulator']]],
-  ['local',['Local',['../namespacektt.html#a27feefe5217ccf7232f658cd88143f0fa509820290d57f333403f490dde7316f4',1,'ktt::Local()'],['../namespacektt.html#ac17be234b9c499fc808a40ba1fb17af5a509820290d57f333403f490dde7316f4',1,'ktt::Local()'],['../namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a509820290d57f333403f490dde7316f4',1,'ktt::Local()']]],
-  ['long',['Long',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a8394f0347c184cf156ac5924dccb773b',1,'ktt']]]
+  ['ktt_20_2d_20kernel_20tuning_20toolkit',['KTT - Kernel Tuning Toolkit',['../index.html',1,'']]],
+  ['kernelid',['KernelId',['../namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba',1,'ktt']]],
+  ['ktt',['ktt',['../namespacektt.html',1,'']]],
+  ['ktt_5fplatform_2eh',['ktt_platform.h',['../ktt__platform_8h.html',1,'']]],
+  ['ktt_5ftypes_2eh',['ktt_types.h',['../ktt__types_8h.html',1,'']]],
+  ['ktt_5fversion_5fmajor',['KTT_VERSION_MAJOR',['../ktt__platform_8h.html#ad2cfb9fcbae19b1303040b0e2e8584b3',1,'ktt_platform.h']]],
+  ['ktt_5fversion_5fminor',['KTT_VERSION_MINOR',['../ktt__platform_8h.html#ae5ff38ea2d15f4dbba741735cc2c5959',1,'ktt_platform.h']]],
+  ['ktt_5fversion_5fpatch',['KTT_VERSION_PATCH',['../ktt__platform_8h.html#ac72a954d39b9511660df6fd96f698c2e',1,'ktt_platform.h']]],
+  ['ktt_20faq',['KTT FAQ',['../md_docs_faq_faq.html',1,'']]]
 ];

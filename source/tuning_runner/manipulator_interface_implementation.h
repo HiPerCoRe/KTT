@@ -55,6 +55,7 @@ public:
     void uploadBuffers();
     void downloadBuffers(const std::vector<OutputDescriptor>& output) const;
     KernelResult getCurrentResult() const;
+    void synchronizeDeviceInternal();
     void clearData();
 
 private:

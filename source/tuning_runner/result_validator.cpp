@@ -78,6 +78,12 @@ void ResultValidator::clearReferenceResults()
     referenceKernelResults.clear();
 }
 
+void ResultValidator::clearReferenceResults(const KernelId id)
+{
+    referenceClassResults.erase(id);
+    referenceKernelResults.erase(id);
+}
+
 bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel)
 {
     KernelId kernelId = kernel.getId();
@@ -207,6 +213,7 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
     }
 
     logger->log(std::string("Computing reference kernel result for kernel: ") + kernel.getName());
+    kernelRunner->setPersistentArgumentUsage(false);
     kernelRunner->runKernel(referenceKernelId, referenceParameters, std::vector<OutputDescriptor>{});
 
     std::vector<KernelArgument> referenceResult;
@@ -216,6 +223,7 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
     }
 
     kernelRunner->clearBuffers();
+    kernelRunner->setPersistentArgumentUsage(true);
     referenceKernelResults.insert(std::make_pair(kernelId, referenceResult));
 }
 

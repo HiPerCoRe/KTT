@@ -35,7 +35,7 @@ public:
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
     void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
         const ModifierAction modifierAction);
-    void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    void addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
@@ -54,13 +54,14 @@ public:
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType);
 
     // Kernel runner methods
-    void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
+    ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
+    void setTuningManipulatorSynchronization(const KernelId id, const bool flag);
 
     // Kernel tuner methods
-    void tuneKernel(const KernelId id);
+    void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
     void dryTuneKernel(const KernelId id, const std::string& filePath);
-    void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output);
+    ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void setValidationRange(const ArgumentId id, const size_t range);
@@ -68,7 +69,7 @@ public:
     void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
         const std::vector<ArgumentId>& validatedArgumentIds);
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
-    std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
+    ComputationResult getBestComputationResult(const KernelId id) const;
 
     // Result printer methods
     void setPrintingTimeUnit(const TimeUnit unit);
@@ -80,6 +81,8 @@ public:
     void setCompilerOptions(const std::string& options);
     void setGlobalSizeType(const GlobalSizeType type);
     void setAutomaticGlobalSizeCorrection(const bool flag);
+    void setKernelCacheCapacity(const size_t capacity);
+    void persistArgument(const ArgumentId id, const bool flag);
     void printComputeAPIInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const;

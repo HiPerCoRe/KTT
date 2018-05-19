@@ -9,6 +9,11 @@ namespace ktt
 TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t queueCount) :
     argumentManager(std::make_unique<ArgumentManager>())
 {
+    if (queueCount == 0)
+    {
+        throw std::runtime_error("Number of compute queues must be greater than zero");
+    }
+
     if (computeAPI == ComputeAPI::OpenCL)
     {
         computeEngine = std::make_unique<OpenCLEngine>(platform, device, queueCount);
@@ -67,7 +72,7 @@ void TunerCore::addLocalMemoryModifier(const KernelId id, const std::string& par
     kernelManager->addLocalMemoryModifier(id, parameterName, argumentId, modifierAction);
 }
 
-void TunerCore::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+void TunerCore::addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {
     kernelManager->addConstraint(id, constraintFunction, parameterNames);
@@ -144,31 +149,30 @@ ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElement
     return argumentManager->addArgument(data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType);
 }
 
-void TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
+ComputationResult TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration,
+    const std::vector<OutputDescriptor>& output)
 {
-    if (kernelManager->isComposition(id))
-    {
-        kernelRunner->runComposition(id, configuration, output);
-    }
-    else
-    {
-        kernelRunner->runKernel(id, configuration, output);
-    }
-    kernelRunner->clearBuffers();
-}
+    KernelResult result;
 
-void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
-{
-    std::vector<KernelResult> results;
     if (kernelManager->isComposition(id))
     {
-        throw std::runtime_error("Dry run is not implemented for compositions");
+        result = kernelRunner->runComposition(id, configuration, output);
     }
     else
     {
-        results = tuningRunner->dryTuneKernel(id, filePath);
+        result = kernelRunner->runKernel(id, configuration, output);
     }
-    resultPrinter.setResult(id, results);
+
+    kernelRunner->clearBuffers();
+
+    if (result.isValid())
+    {
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration());
+    }
+    else
+    {
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
+    }
 }
 
 void TunerCore::setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
@@ -185,34 +189,68 @@ void TunerCore::setTuningManipulator(const KernelId id, std::unique_ptr<TuningMa
     }
 }
 
-void TunerCore::tuneKernel(const KernelId id)
+void TunerCore::setTuningManipulatorSynchronization(const KernelId id, const bool flag)
+{
+    if (!kernelManager->isKernel(id) && !kernelManager->isComposition(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+
+    kernelRunner->setTuningManipulatorSynchronization(id, flag);
+}
+
+void TunerCore::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
     std::vector<KernelResult> results;
     if (kernelManager->isComposition(id))
     {
-        results = tuningRunner->tuneComposition(id);
+        results = tuningRunner->tuneComposition(id, std::move(stopCondition));
     }
     else
     {
-        results = tuningRunner->tuneKernel(id);
+        results = tuningRunner->tuneKernel(id, std::move(stopCondition));
     }
     resultPrinter.setResult(id, results);
 }
 
-void TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
+void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
 {
-    KernelResult result;
+    std::vector<KernelResult> results;
     if (kernelManager->isComposition(id))
     {
-        result = tuningRunner->tuneCompositionByStep(id, output);
+        throw std::runtime_error("Dry run is not implemented for compositions");
     }
     else
     {
-        result = tuningRunner->tuneKernelByStep(id, output);
+        results = tuningRunner->dryTuneKernel(id, filePath);
     }
-    resultPrinter.addResult(id, result);
+    resultPrinter.setResult(id, results);
 }
 
+ComputationResult TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+{
+    KernelResult result;
+
+    if (kernelManager->isComposition(id))
+    {
+        result = tuningRunner->tuneCompositionByStep(id, output, recomputeReference);
+    }
+    else
+    {
+        result = tuningRunner->tuneKernelByStep(id, output, recomputeReference);
+    }
+
+    resultPrinter.addResult(id, result);
+    
+    if (result.isValid())
+    {
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration());
+    }
+    else
+    {
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
+    }
+}
 
 void TunerCore::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
@@ -270,9 +308,9 @@ void TunerCore::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceCl
     tuningRunner->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
 }
 
-std::vector<ParameterPair> TunerCore::getBestConfiguration(const KernelId id) const
+ComputationResult TunerCore::getBestComputationResult(const KernelId id) const
 {
-    return tuningRunner->getBestConfiguration(id);
+    return tuningRunner->getBestComputationResult(id);
 }
 
 void TunerCore::setPrintingTimeUnit(const TimeUnit unit)
@@ -315,6 +353,26 @@ void TunerCore::setGlobalSizeType(const GlobalSizeType type)
 void TunerCore::setAutomaticGlobalSizeCorrection(const bool flag)
 {
     computeEngine->setAutomaticGlobalSizeCorrection(flag);
+}
+
+void TunerCore::setKernelCacheCapacity(const size_t capacity)
+{
+    if (capacity == 0)
+    {
+        computeEngine->setKernelCacheUsage(false);
+    }
+    else
+    {
+        computeEngine->setKernelCacheUsage(true);
+    }
+    computeEngine->setKernelCacheCapacity(capacity);
+}
+
+void TunerCore::persistArgument(const ArgumentId id, const bool flag)
+{
+    argumentManager->setPersistentFlag(id, flag);
+    KernelArgument& argument = argumentManager->getArgument(id);
+    computeEngine->persistArgument(argument, flag);
 }
 
 void TunerCore::printComputeAPIInfo(std::ostream& outputTarget) const

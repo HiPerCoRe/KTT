@@ -14,7 +14,8 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElement
     argumentAccessType(accessType),
     argumentUploadType(uploadType),
     dataCopied(true),
-    referencedData(nullptr)
+    referencedData(nullptr),
+    persistentFlag(false)
 {
     if (numberOfElements == 0)
     {
@@ -34,7 +35,8 @@ KernelArgument::KernelArgument(const ArgumentId id, void* data, const size_t num
     argumentAccessType(accessType),
     argumentUploadType(uploadType),
     dataCopied(dataCopied),
-    referencedData(nullptr)
+    referencedData(nullptr),
+    persistentFlag(false)
 {
     if (numberOfElements == 0)
     {
@@ -62,7 +64,8 @@ KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size
     argumentAccessType(accessType),
     argumentUploadType(uploadType),
     dataCopied(true),
-    referencedData(nullptr)
+    referencedData(nullptr),
+    persistentFlag(false)
 {
     if (numberOfElements == 0 && data != nullptr)
     {
@@ -105,6 +108,11 @@ void KernelArgument::updateData(const void* data, const size_t numberOfElements)
     {
         initializeData(data);
     }
+}
+
+void KernelArgument::setPersistentFlag(const bool flag)
+{
+    persistentFlag = flag;
 }
 
 ArgumentId KernelArgument::getId() const
@@ -165,6 +173,11 @@ void* KernelArgument::getData()
 bool KernelArgument::hasCopiedData() const
 {
     return dataCopied;
+}
+
+bool KernelArgument::isPersistent() const
+{
+    return persistentFlag;
 }
 
 bool KernelArgument::operator==(const KernelArgument& other) const

@@ -1,3 +1,16 @@
+Version 0.7 (19/5/2018)
+* Introduced stop condition API for offline tuning
+* Added support for persistent kernel arguments
+* Added global kernel cache, its capacity can be controlled through API
+* Significant improvements to online tuning capabilities and performance
+* Improvements to asynchronous functionality in tuning manipulator
+* Online tuning and kernel running methods now return information about computation status and duration
+* Fixed bug in device synchronization method in tuning manipulator
+* Fixed memory leak in CUDA backend
+* Fixed incorrect handling of invalid kernel results in some situations
+* Added new examples
+* Improvements to sort and reduction examples
+
 Version 0.6 (19/2/2018)
 * Added support for multiple compute queues and asynchronous operations
 * Added support for online autotuning - kernel tuning combined with regular kernel running
@@ -27,7 +40,7 @@ Version 0.5 (27/10/2017)
 * Added an option to switch between CUDA and OpenCL global size notation
 * Improvements to tuning manipulator API
 * Usability improvements to dimension vector
-* Tweaks to CUDA back-end
+* Tweaks to CUDA backend
 * Minor improvements to result printer
 * Improved examples and documentation
 
@@ -55,7 +68,7 @@ Version 0.3.1 (15/5/2017)
 * Added new utility methods to tuning manipulator API
 * Improvements to tuning manipulator
 * Fixed bugs in tuning manipulator API
-* Read-only arguments are now cached in OpenCL back-end
+* Read-only arguments are now cached in OpenCL backend
 * Improved documentation
 
 Version 0.3 (8/5/2017)

@@ -14,7 +14,9 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     compilerOptions(std::string("--gpu-architecture=compute_30")),
     globalSizeType(GlobalSizeType::CUDA),
     globalSizeCorrection(false),
-    programCacheFlag(false),
+    kernelCacheFlag(true),
+    kernelCacheCapacity(10),
+    persistentBufferFlag(true),
     nextEventId(0)
 {
     checkCUDAError(cuInit(0), "cuInit");
@@ -46,25 +48,31 @@ EventId CUDAEngine::runKernelAsync(const KernelRuntimeData& kernelData, const st
     Timer overheadTimer;
     overheadTimer.start();
 
-    std::unique_ptr<CUDAProgram> program;
-    CUDAProgram* programPointer;
+    CUDAKernel* kernel;
+    std::unique_ptr<CUDAKernel> kernelUnique;
 
-    if (programCacheFlag)
+    if (kernelCacheFlag)
     {
-        if (programCache.find(kernelData.getSource()) == programCache.end())
+        if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
         {
-            program = createAndBuildProgram(kernelData.getSource());
-            programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
+            if (kernelCache.size() >= kernelCacheCapacity)
+            {
+                clearKernelCache();
+            }
+            std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
+            auto kernel = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
+            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::move(kernel)));
         }
-        auto cachePointer = programCache.find(kernelData.getSource());
-        programPointer = cachePointer->second.get();
+        auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
+        kernel = cachePointer->second.get();
     }
     else
     {
-        program = createAndBuildProgram(kernelData.getSource());
-        programPointer = program.get();
+        std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
+        kernelUnique = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
+        kernel = kernelUnique.get();
     }
-    auto kernel = std::make_unique<CUDAKernel>(programPointer->getPtxSource(), kernelData.getName());
+
     std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
 
     overheadTimer.stop();
@@ -97,7 +105,21 @@ KernelResult CUDAEngine::getKernelResult(const EventId id, const std::vector<Out
 
     KernelResult result(name, static_cast<uint64_t>(duration));
     result.setOverhead(overhead);
+
     return result;
+}
+
+uint64_t CUDAEngine::getKernelOverhead(const EventId id) const
+{
+    auto eventPointer = kernelEvents.find(id);
+
+    if (eventPointer == kernelEvents.end())
+    {
+        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
+            + std::to_string(id));
+    }
+
+    return eventPointer->second.first->getOverhead();
 }
 
 void CUDAEngine::setCompilerOptions(const std::string& options)
@@ -115,18 +137,23 @@ void CUDAEngine::setAutomaticGlobalSizeCorrection(const bool flag)
     globalSizeCorrection = flag;
 }
 
-void CUDAEngine::setProgramCache(const bool flag)
+void CUDAEngine::setKernelCacheUsage(const bool flag)
 {
     if (!flag)
     {
-        clearProgramCache();
+        clearKernelCache();
     }
-    programCacheFlag = flag;
+    kernelCacheFlag = flag;
 }
 
-void CUDAEngine::clearProgramCache()
+void CUDAEngine::setKernelCacheCapacity(const size_t capacity)
 {
-    programCache.clear();
+    kernelCacheCapacity = capacity;
+}
+
+void CUDAEngine::clearKernelCache()
+{
+    kernelCache.clear();
 }
 
 QueueId CUDAEngine::getDefaultQueue() const
@@ -374,6 +401,58 @@ EventId CUDAEngine::copyArgumentAsync(const ArgumentId destination, const Argume
     return eventId;
 }
 
+uint64_t CUDAEngine::persistArgument(KernelArgument& kernelArgument, const bool flag)
+{
+    bool bufferFound = false;
+    auto iterator = persistentBuffers.cbegin();
+
+    while (iterator != persistentBuffers.cend())
+    {
+        if (iterator->get()->getKernelArgumentId() == kernelArgument.getId())
+        {
+            bufferFound = true;
+            if (!flag)
+            {
+                persistentBuffers.erase(iterator);
+            }
+            break;
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
+    
+    if (flag && !bufferFound)
+    {
+        std::unique_ptr<CUDABuffer> buffer = nullptr;
+        EventId eventId = nextEventId;
+
+        if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+        {
+            buffer = std::make_unique<CUDABuffer>(kernelArgument, true);
+            bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::make_unique<CUDAEvent>(eventId, false),
+                std::make_unique<CUDAEvent>(eventId, false))));
+        }
+        else
+        {
+            buffer = std::make_unique<CUDABuffer>(kernelArgument, false);
+            auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
+            auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
+            buffer->uploadData(streams.at(getDefaultQueue())->getStream(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
+                startEvent->getEvent(), endEvent->getEvent());
+            bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
+        }
+
+        persistentBuffers.insert(std::move(buffer)); // buffer data will be stolen
+        nextEventId++;
+
+        return getArgumentOperationDuration(eventId);
+    }
+
+    return 0;
+}
+
 uint64_t CUDAEngine::getArgumentOperationDuration(const EventId id) const
 {
     auto eventPointer = bufferEvents.find(id);
@@ -414,6 +493,11 @@ void CUDAEngine::clearBuffer(const ArgumentId id)
             ++iterator;
         }
     }
+}
+
+void CUDAEngine::setPersistentBufferUsage(const bool flag)
+{
+    persistentBufferFlag = flag;
 }
 
 void CUDAEngine::clearBuffers()
@@ -577,9 +661,9 @@ std::vector<CUDADevice> CUDAEngine::getCUDADevices() const
     std::vector<CUDADevice> devices;
     for (const auto deviceId : deviceIds)
     {
-        std::string name(40, ' ');
-        checkCUDAError(cuDeviceGetName(&name[0], 40, deviceId), "cuDeviceGetName");
-        devices.push_back(CUDADevice(deviceId, name));
+        char name[40];
+        checkCUDAError(cuDeviceGetName(name, 40, deviceId), "cuDeviceGetName");
+        devices.push_back(CUDADevice(deviceId, std::string(name)));
     }
 
     return devices;
@@ -667,6 +751,17 @@ size_t CUDAEngine::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>
 
 CUDABuffer* CUDAEngine::findBuffer(const ArgumentId id) const
 {
+    if (persistentBufferFlag)
+    {
+        for (const auto& buffer : persistentBuffers)
+        {
+            if (buffer->getKernelArgumentId() == id)
+            {
+                return buffer.get();
+            }
+        }
+    }
+
     for (const auto& buffer : buffers)
     {
         if (buffer->getKernelArgumentId() == id)
@@ -699,152 +794,172 @@ CUDAEngine::CUDAEngine(const DeviceIndex, const uint32_t)
 
 KernelResult CUDAEngine::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<OutputDescriptor>&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 EventId CUDAEngine::runKernelAsync(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 KernelResult CUDAEngine::getKernelResult(const EventId, const std::vector<OutputDescriptor>&) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
+}
+
+uint64_t CUDAEngine::getKernelOverhead(const EventId) const
+{
+    throw std::runtime_error("");
 }
 
 void CUDAEngine::setCompilerOptions(const std::string&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 void CUDAEngine::setGlobalSizeType(const GlobalSizeType)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 void CUDAEngine::setAutomaticGlobalSizeCorrection(const bool)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
-void CUDAEngine::setProgramCache(const bool)
+void CUDAEngine::setKernelCacheUsage(const bool)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
-void CUDAEngine::clearProgramCache()
+void CUDAEngine::setKernelCacheCapacity(const size_t)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
+}
+
+void CUDAEngine::clearKernelCache()
+{
+    throw std::runtime_error("");
 }
 
 QueueId CUDAEngine::getDefaultQueue() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 std::vector<QueueId> CUDAEngine::getAllQueues() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 void CUDAEngine::synchronizeQueue(const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 void CUDAEngine::synchronizeDevice()
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 void CUDAEngine::clearEvents()
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 uint64_t CUDAEngine::uploadArgument(KernelArgument&)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 EventId CUDAEngine::uploadArgumentAsync(KernelArgument&, const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 uint64_t CUDAEngine::updateArgument(const ArgumentId, const void*, const size_t)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 EventId CUDAEngine::updateArgumentAsync(const ArgumentId, const void*, const size_t, const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 uint64_t CUDAEngine::downloadArgument(const ArgumentId, void*, const size_t) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 EventId CUDAEngine::downloadArgumentAsync(const ArgumentId, void*, const size_t, const QueueId) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 KernelArgument CUDAEngine::downloadArgumentObject(const ArgumentId, uint64_t*) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 uint64_t CUDAEngine::copyArgument(const ArgumentId, const ArgumentId, const size_t)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 EventId CUDAEngine::copyArgumentAsync(const ArgumentId, const ArgumentId, const size_t, const QueueId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
+}
+
+uint64_t CUDAEngine::persistArgument(KernelArgument&, const bool)
+{
+    throw std::runtime_error("");
+}
+
+void CUDAEngine::setPersistentBufferUsage(const bool)
+{
+    throw std::runtime_error("");
 }
 
 uint64_t CUDAEngine::getArgumentOperationDuration(const EventId) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 void CUDAEngine::clearBuffer(const ArgumentId)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 void CUDAEngine::clearBuffers()
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 void CUDAEngine::clearBuffers(const ArgumentAccessType)
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 void CUDAEngine::printComputeAPIInfo(std::ostream&) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 std::vector<PlatformInfo> CUDAEngine::getPlatformInfo() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 std::vector<DeviceInfo> CUDAEngine::getDeviceInfo(const PlatformIndex) const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 DeviceInfo CUDAEngine::getCurrentDeviceInfo() const
 {
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+    throw std::runtime_error("");
 }
 
 #endif // PLATFORM_CUDA

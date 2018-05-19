@@ -36,10 +36,8 @@ KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguratio
     {
         if (kernel.hasTuningManipulator())
         {
-            computeEngine->setProgramCache(true);
             auto manipulatorPointer = tuningManipulators.find(id);
             result = runKernelWithManipulator(kernel, manipulatorPointer->second.get(), configuration, output);
-            computeEngine->setProgramCache(false);
         }
         else
         {
@@ -71,7 +69,6 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
     }
 
     const KernelComposition& composition = kernelManager->getKernelComposition(id);
-    computeEngine->setProgramCache(true);
 
     std::stringstream stream;
     stream << "Running kernel composition " << composition.getName() << " with configuration: " << configuration;
@@ -91,7 +88,6 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
         result = KernelResult(composition.getName(), configuration, error.what());
     }
 
-    computeEngine->setProgramCache(false);
     return result;
 }
 
@@ -111,6 +107,18 @@ void KernelRunner::setTuningManipulator(const KernelId id, std::unique_ptr<Tunin
     tuningManipulators.insert(std::make_pair(id, std::move(manipulator)));
 }
 
+void KernelRunner::setTuningManipulatorSynchronization(const KernelId id, const bool flag)
+{
+    if (flag && disabledSynchronizationManipulators.find(id) != disabledSynchronizationManipulators.end())
+    {
+        disabledSynchronizationManipulators.erase(id);
+    }
+    else if (!flag && disabledSynchronizationManipulators.find(id) == disabledSynchronizationManipulators.end())
+    {
+        disabledSynchronizationManipulators.insert(id);
+    }
+}
+
 KernelArgument KernelRunner::downloadArgument(const ArgumentId id) const
 {
     return computeEngine->downloadArgumentObject(id, nullptr);
@@ -124,6 +132,11 @@ void KernelRunner::clearBuffers(const ArgumentAccessType accessType)
 void KernelRunner::clearBuffers()
 {
     computeEngine->clearBuffers();
+}
+
+void KernelRunner::setPersistentArgumentUsage(const bool flag)
+{
+    computeEngine->setPersistentBufferUsage(flag);
 }
 
 KernelResult KernelRunner::runKernelSimple(const Kernel& kernel, const KernelConfiguration& configuration,
@@ -162,10 +175,15 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     {
         timer.start();
         manipulator->launchComputation(kernelId);
+        if (disabledSynchronizationManipulators.find(kernel.getId()) == disabledSynchronizationManipulators.end())
+        {
+            manipulatorInterfaceImplementation->synchronizeDeviceInternal();
+        }
         timer.stop();
     }
     catch (const std::runtime_error&)
     {
+        manipulatorInterfaceImplementation->synchronizeDeviceInternal();
         manipulatorInterfaceImplementation->clearData();
         manipulator->manipulatorInterface = nullptr;
         throw;
@@ -221,10 +239,15 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
     {
         timer.start();
         manipulator->launchComputation(composition.getId());
+        if (disabledSynchronizationManipulators.find(composition.getId()) == disabledSynchronizationManipulators.end())
+        {
+            manipulatorInterfaceImplementation->synchronizeDeviceInternal();
+        }
         timer.stop();
     }
     catch (const std::runtime_error&)
     {
+        manipulatorInterfaceImplementation->synchronizeDeviceInternal();
         manipulatorInterfaceImplementation->clearData();
         manipulator->manipulatorInterface = nullptr;
         throw;

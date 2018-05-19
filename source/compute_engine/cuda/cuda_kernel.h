@@ -17,6 +17,11 @@ public:
         checkCUDAError(cuModuleGetFunction(&kernel, module, &kernelName[0]), "cuModuleGetFunction");
     }
 
+    ~CUDAKernel()
+    {
+        checkCUDAError(cuModuleUnload(module), "cuModuleUnload");
+    }
+
     CUmodule getModule() const
     {
         return module;

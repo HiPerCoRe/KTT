@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
-    const ktt::DimensionVector ndRangeDimensions(256, 256);
+    const ktt::DimensionVector ndRangeDimensions(512, 512);
     const ktt::DimensionVector workGroupDimensions;
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
     // Total NDRange size matches number of grid points
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "USE_SOA", std::vector<size_t>{0, 1, 2});
 
     // Using vectorized SoA only makes sense when vectors are longer than 1
-    auto vectorizedSoA = [](std::vector<size_t> vector) {return vector.at(0) > 1 || vector.at(1) != 2;}; 
+    auto vectorizedSoA = [](const std::vector<size_t>& vector) {return vector.at(0) > 1 || vector.at(1) != 2;}; 
     tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"});
 
     // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR
@@ -116,8 +116,8 @@ int main(int argc, char** argv)
         gridSpacingId, energyGridId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId});
 
-    // Set search method to random search, only 10% of all configurations will be explored.
-    tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{0.1});
+    // Set search method to random search
+    tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{});
 
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
@@ -125,8 +125,8 @@ int main(int argc, char** argv)
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{energyGridId});
 
-    // Launch kernel tuning
-    tuner.tuneKernel(kernelId);
+    // Launch kernel tuning, end after exploring 10% of configurations
+    tuner.tuneKernel(kernelId, std::make_unique<ktt::ConfigurationFraction>(0.1));
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);

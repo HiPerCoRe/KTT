@@ -10,10 +10,9 @@ namespace ktt
 class RandomSearcher : public Searcher
 {
 public:
-    RandomSearcher(const std::vector<KernelConfiguration>& configurations, const double fraction) :
+    RandomSearcher(const std::vector<KernelConfiguration>& configurations) :
         configurations(configurations),
-        index(0),
-        fraction(fraction)
+        index(0)
     {
         if (configurations.size() == 0)
         {
@@ -35,20 +34,19 @@ public:
         return configurations.at(index);
     }
 
-    size_t getConfigurationCount() const override
-    {
-        return std::max(static_cast<size_t>(1), std::min(configurations.size(), static_cast<size_t>(configurations.size() * fraction)));
-    }
-
     size_t getUnexploredConfigurationCount() const override
     {
-        return getConfigurationCount() - index;
+        if (index >= configurations.size())
+        {
+            return 0;
+        }
+
+        return configurations.size() - index;
     }
 
 private:
     std::vector<KernelConfiguration> configurations;
     size_t index;
-    double fraction;
 };
 
 } // namespace ktt

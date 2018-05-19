@@ -1,11 +1,13 @@
 var searchData=
 [
-  ['unsignedchar',['UnsignedChar',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7aa93f121640d609f8772397a0f40f40d6',1,'ktt']]],
-  ['unsignedint',['UnsignedInt',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7ac93cff91b6b9a57fa32bbe1863150070',1,'ktt']]],
-  ['unsignedlong',['UnsignedLong',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a0c72cf9e88a9782dbad0fde761ae9352',1,'ktt']]],
-  ['unsignedshort',['UnsignedShort',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7aeb51124277f3ec904a9af74d5de34e7b',1,'ktt']]],
-  ['updateargumentlocal',['updateArgumentLocal',['../classktt_1_1_tuning_manipulator.html#a1e307646f17f2861d8c981308cd2221c',1,'ktt::TuningManipulator']]],
-  ['updateargumentscalar',['updateArgumentScalar',['../classktt_1_1_tuning_manipulator.html#a449df2809792e030439be9d70a8c07e6',1,'ktt::TuningManipulator']]],
-  ['updateargumentvector',['updateArgumentVector',['../classktt_1_1_tuning_manipulator.html#a872a3865330f2a15282facd6392ccdcd',1,'ktt::TuningManipulator::updateArgumentVector(const ArgumentId id, const void *argumentData)'],['../classktt_1_1_tuning_manipulator.html#ae996d65fb5ee74bf5dc71551f678026d',1,'ktt::TuningManipulator::updateArgumentVector(const ArgumentId id, const void *argumentData, const size_t numberOfElements)']]],
-  ['updateargumentvectorasync',['updateArgumentVectorAsync',['../classktt_1_1_tuning_manipulator.html#a89071adbe2f15811935caa5613ea4c14',1,'ktt::TuningManipulator::updateArgumentVectorAsync(const ArgumentId id, const void *argumentData, QueueId queue)'],['../classktt_1_1_tuning_manipulator.html#a8f850b561d79021d1613beb35b786b0b',1,'ktt::TuningManipulator::updateArgumentVectorAsync(const ArgumentId id, const void *argumentData, const size_t numberOfElements, QueueId queue)']]]
+  ['time_5funit_2eh',['time_unit.h',['../time__unit_8h.html',1,'']]],
+  ['timeunit',['TimeUnit',['../namespacektt.html#a161b9af8714615ef2c1770b020ce1511',1,'ktt']]],
+  ['tunekernel',['tuneKernel',['../classktt_1_1_tuner.html#a636f91eaddf8366905347259c1e6fa45',1,'ktt::Tuner::tuneKernel(const KernelId id)'],['../classktt_1_1_tuner.html#a05873eab51eac0d17adcfe5e54ca8740',1,'ktt::Tuner::tuneKernel(const KernelId id, std::unique_ptr&lt; StopCondition &gt; stopCondition)']]],
+  ['tunekernelbystep',['tuneKernelByStep',['../classktt_1_1_tuner.html#ae5c62e9e550a857082facfd9d129eaa5',1,'ktt::Tuner::tuneKernelByStep(const KernelId id, const std::vector&lt; OutputDescriptor &gt; &amp;output)'],['../classktt_1_1_tuner.html#a040a0a5e8a7dac656ab8eadcb727cd16',1,'ktt::Tuner::tuneKernelByStep(const KernelId id, const std::vector&lt; OutputDescriptor &gt; &amp;output, const bool recomputeReference)']]],
+  ['tuner',['Tuner',['../classktt_1_1_tuner.html',1,'ktt::Tuner'],['../classktt_1_1_tuner.html#a12bf48c69b2cb1836b7f854ab89dba97',1,'ktt::Tuner::Tuner(const PlatformIndex platform, const DeviceIndex device)'],['../classktt_1_1_tuner.html#a0b49b872dad86f4ce1c4d02d63a39ffc',1,'ktt::Tuner::Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI)'],['../classktt_1_1_tuner.html#a43f9416c764b3792a83f177324963aff',1,'ktt::Tuner::Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t computeQueueCount)']]],
+  ['tuner_5fapi_2eh',['tuner_api.h',['../tuner__api_8h.html',1,'']]],
+  ['tuning_5fduration_2eh',['tuning_duration.h',['../tuning__duration_8h.html',1,'']]],
+  ['tuning_5fmanipulator_2eh',['tuning_manipulator.h',['../tuning__manipulator_8h.html',1,'']]],
+  ['tuningduration',['TuningDuration',['../classktt_1_1_tuning_duration.html',1,'ktt::TuningDuration'],['../classktt_1_1_tuning_duration.html#aedc68c9e3bf876d3ec2a479592332a37',1,'ktt::TuningDuration::TuningDuration()']]],
+  ['tuningmanipulator',['TuningManipulator',['../classktt_1_1_tuning_manipulator.html',1,'ktt']]]
 ];

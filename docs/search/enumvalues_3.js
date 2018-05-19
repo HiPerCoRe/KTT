@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['float',['Float',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a22ae0e2b89e5e3d477f988cc36d3272b',1,'ktt']]],
-  ['fullsearch',['FullSearch',['../namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788ba4774784e057c4bbae83302ed0de38df6',1,'ktt']]]
+  ['default',['Default',['../namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01a7a1920d61156abc05a60135aefe8bc67',1,'ktt']]],
+  ['device',['Device',['../namespacektt.html#ac355e7acb6c66ab83a0238f94d880f62ae0ac20adce6ffee48c7151b070aa5737',1,'ktt']]],
+  ['divide',['Divide',['../namespacektt.html#aa22e627ca88d7d508cd228c977bf4dd8a0b914e196182d02615487e9793ecff3d',1,'ktt']]],
+  ['double',['Double',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7ad909d38d705ce75386dd86e611a82f5b',1,'ktt']]]
 ];

@@ -100,6 +100,11 @@ KernelConfiguration KernelManager::getKernelConfiguration(const KernelId id, con
                 {
                     local.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
                 }
+                else if (parameter.getModifierType() == ModifierType::Both)
+                {
+                    local.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
+                    global.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
+                }
 
                 if (parameter.isLocalMemoryModifier())
                 {
@@ -156,7 +161,8 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
                 {
                     for (const auto kernelId : parameter.getCompositionKernels())
                     {
-                        if (globalSizePair.first == kernelId && parameter.getModifierType() == ModifierType::Global)
+                        if (globalSizePair.first == kernelId && (parameter.getModifierType() == ModifierType::Global
+                            || parameter.getModifierType() == ModifierType::Both))
                         {
                             globalSizePair.second.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(),
                                 parameter.getModifierDimension());
@@ -167,7 +173,8 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
                 {
                     for (const auto kernelId : parameter.getCompositionKernels())
                     {
-                        if (localSizePair.first == kernelId && parameter.getModifierType() == ModifierType::Local)
+                        if (localSizePair.first == kernelId && (parameter.getModifierType() == ModifierType::Local
+                            || parameter.getModifierType() == ModifierType::Both))
                         {
                             localSizePair.second.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(),
                                 parameter.getModifierDimension());
@@ -311,7 +318,7 @@ void KernelManager::addLocalMemoryModifier(const KernelId id, const std::string&
     }
 }
 
-void KernelManager::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+void KernelManager::addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {
     if (isKernel(id))
@@ -502,6 +509,11 @@ void KernelManager::computeConfigurations(const KernelId kernelId, const size_t 
             {
                 newLocalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
             }
+            else if (parameter.getModifierType() == ModifierType::Both)
+            {
+                newGlobalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
+                newLocalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
+            }
 
             std::vector<LocalMemoryModifier> newModifiers = modifiers;
             if (parameter.isLocalMemoryModifier())
@@ -564,7 +576,8 @@ void KernelManager::computeCompositionConfigurations(const size_t currentParamet
             {
                 for (auto& globalSizePair : newGlobalSizes)
                 {
-                    if (compositionKernelId == globalSizePair.first && parameter.getModifierType() == ModifierType::Global)
+                    if (compositionKernelId == globalSizePair.first && (parameter.getModifierType() == ModifierType::Global
+                        || parameter.getModifierType() == ModifierType::Both))
                     {
                         globalSizePair.second.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
                     }
@@ -572,7 +585,8 @@ void KernelManager::computeCompositionConfigurations(const size_t currentParamet
 
                 for (auto& localSizePair : newLocalSizes)
                 {
-                    if (compositionKernelId == localSizePair.first && parameter.getModifierType() == ModifierType::Local)
+                    if (compositionKernelId == localSizePair.first && (parameter.getModifierType() == ModifierType::Local
+                        || parameter.getModifierType() == ModifierType::Both))
                     {
                         localSizePair.second.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
                     }
@@ -623,7 +637,7 @@ bool KernelManager::configurationIsValid(const KernelConfiguration& configuratio
     for (const auto& constraint : constraints)
     {
         std::vector<std::string> constraintNames = constraint.getParameterNames();
-        auto constraintValues = std::vector<size_t>(constraintNames.size());
+        std::vector<size_t> constraintValues(constraintNames.size());
 
         for (size_t i = 0; i < constraintNames.size(); i++)
         {

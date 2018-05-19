@@ -104,11 +104,11 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "USE_SOA", {0, 1});
     tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2 , 4, 8, 16});
 
-    auto lt = [](std::vector<size_t> vector) {return vector.at(0) < vector.at(1);};
+    auto lt = [](const std::vector<size_t>& vector) {return vector.at(0) < vector.at(1);};
     tuner.addConstraint(kernelId, lt, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"});
-    auto vec = [](std::vector<size_t> vector) {return vector.at(0) || vector.at(1) == 1;};
+    auto vec = [](const std::vector<size_t>& vector) {return vector.at(0) || vector.at(1) == 1;};
     tuner.addConstraint(kernelId, vec, {"USE_SOA", "VECTOR_SIZE"});
-    auto par = [](std::vector<size_t> vector) {return vector.at(0) * vector.at(1) >= 64;};
+    auto par = [](const std::vector<size_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
     tuner.addConstraint(kernelId, par, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"});
 
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId});
@@ -117,13 +117,12 @@ int main(int argc, char** argv)
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{gridId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
 
-    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{0.01, 16, 4, 1, 8, 0, 1, 0, 1}); /* optimum for GTX 1070, 128x128, 4000 atoms*/
-    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{0.01, 32, 8, 1, 16, 0, 1, 0, 1}); /* optimum for GTX 680, 128x128, 4000 atoms*/
-    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{0.01, 16, 8, 1, 32, 2, 1, 1, 2}); /* optimum for Vega 56, 128x128, 4000 atoms*/
-    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{0.01});
-    //tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{0.01});
+    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{16, 4, 1, 8, 0, 1, 0, 1}); /* optimum for GTX 1070, 128x128, 4000 atoms*/
+    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{32, 8, 1, 16, 0, 1, 0, 1}); /* optimum for GTX 680, 128x128, 4000 atoms*/
+    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{16, 8, 1, 32, 2, 1, 1, 2}); /* optimum for Vega 56, 128x128, 4000 atoms*/
+    //tuner.setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{});
+    //tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{});
 
-    //tuner.dryTuneKernel(kernelId, "/home/fila/prace/autotuning/KTT/build/coulomb_sum_3d_output.kepler.csv");
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, "coulomb_sum_3d_output.csv", ktt::PrintFormat::CSV);

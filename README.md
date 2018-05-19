@@ -1,16 +1,16 @@
 KTT - Kernel Tuning Toolkit
 ===========================
 
-KTT is a C++ tuning framework for OpenCL and CUDA kernels. Project is currently in release candidate stage with
+KTT is a tuning framework for OpenCL and CUDA kernels. The project is currently in release candidate stage with
 stable API and all of the planned functionality available.
 
 Main features
 -------------
-* Ability to define kernel tuning parameters like thread count, vector data types and loop unroll factors in order
-to optimize computation for particular device
+* Ability to define kernel tuning parameters such as kernel thread sizes, vector data types and loop unroll factors
+in order to optimize computation for a particular device
 * Support for iterative kernel launches and composite kernels
 * Support for multiple compute queues and asynchronous operations
-* Support for online autotuning - kernel tuning combined with regular kernel running
+* Support for online auto-tuning - kernel tuning combined with regular kernel running
 * Ability to automatically ensure correctness of tuned computation with reference kernel or C++ function
 * Support for multiple compute APIs, switching between CUDA and OpenCL requires only minor changes in C++ code
 (eg. changing the kernel source file), no library recompilation is needed
@@ -19,7 +19,6 @@ ability to change kernel compiler flags and more
 
 Getting started
 ---------------
-
 * Documentation for KTT API can be found [here](https://fillo7.github.io/KTT/).
 * Newest version of KTT framework can be found [here](https://github.com/Fillo7/KTT/releases).
 * Prebuilt binaries are available only for some platforms. Other platforms require manual build.
@@ -27,9 +26,8 @@ Getting started
 
 Tutorials
 ---------
-
 Tutorials are short examples aimed at introducing people to KTT framework. Each tutorial focuses on explaining specific part
-of the API. All tutorials are available for both OpenCL and CUDA back-ends. Tutorials assume that reader has some knowledge
+of the API. All tutorials are available for both OpenCL and CUDA backends. Tutorials assume that reader has some knowledge
 about C++ and GPU programming. List of currently available tutorials:
 
 * `compute_api_info`: Tutorial covers retrieving information about compute API platforms and devices through KTT API.
@@ -41,7 +39,6 @@ argument comparator.
 
 Examples
 --------
-
 Examples showcase how KTT framework could be utilized in real-world scenarios. Examples are more complex than tutorials and
 assume that reader is familiar with KTT API. List of currently available examples:
 
@@ -50,11 +47,11 @@ assume that reader is familiar with KTT API. List of currently available example
 * `coulomb_sum_3d`: Alternative to iterative version, utilizes kernel which computes entire map in single invocation.
 * `nbody`: Example which showcases tuning of N-body simulation.
 * `reduction`: Example which showcases tuning of vector reduction, launches a kernel iteratively.
-* `sort`: Sorting example, combines multiple kernels into kernel composition.
+* `sort`: Radix sort example, combines multiple kernels into kernel composition.
+* `bicg`: Biconjugate gradients method example, features reference class, kernel compositions and constraints.
 
 Building KTT
 ------------
-
 * KTT can be built as a dynamic (shared) library using command line build tool Premake. Currently supported operating
 systems are Linux and Windows.
 
@@ -82,13 +79,13 @@ systems are Linux and Windows.
     - `--no-tutorials` disables compilation of tutorials
     - `--tests` enables compilation of unit tests
     - `--no-cuda` disables inclusion of CUDA API during compilation, only affects Nvidia platform
+    - `--no-opencl` disables inclusion of OpenCL API during compilation
 
 Original project
 ----------------
-
 KTT is based on [CLTune project](https://github.com/CNugteren/CLTune). Some parts of KTT API are similar to CLTune API,
 however internal structure was almost completely rewritten from scratch. Portions of code for following features were ported
 from CLTune:
-* PSO and annealing searcher
+* Annealing searcher
 * Generating of kernel configurations
 * Tuning parameter constraints

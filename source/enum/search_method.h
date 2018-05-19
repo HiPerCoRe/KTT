@@ -11,25 +11,19 @@ namespace ktt
   */
 enum class SearchMethod
 {
-    /** All kernel configurations will be explored. No additional search parameters are needed.
+    /** Explores kernel configurations in deterministic order. No additional search parameters are needed.
       */
     FullSearch,
 
-    /** Explores random fraction of kernel configurations. The fraction size is controlled with parameter.
+    /** Explores kernel configurations in random order. No additional search parameters are needed.
       */
     RandomSearch,
 
-    /** Explores fraction of kernel configurations using particle swarm optimization method. The fraction size is controlled with parameter.
-      * Additional parameters specify swarm size and swarm influences.
-      */
-    PSO,
-
-    /** Explores fraction of kernel configurations using simulated annealing method. The fraction size is controlled with parameter.
-      * Additional parameter specifies maximum temperature.
+    /** Explores kernel configurations using simulated annealing method. Additional parameter specifies maximum temperature.
       */
     Annealing,
 
-    /** Explores fraction of kernel configurations using Markov chain Monte Carlo method. The fraction size is controlled with parameter.
+    /** Explores kernel configurations using Markov chain Monte Carlo method. No additional search parameters are needed.
       */
     MCMC
 };

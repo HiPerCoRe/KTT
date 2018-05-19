@@ -10,6 +10,7 @@
 #include <string>
 #include <typeinfo>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 // Compatibility for multiple platforms
@@ -32,10 +33,17 @@
 #include "enum/validation_method.h"
 
 // Data holders
+#include "api/computation_result.h"
 #include "api/device_info.h"
 #include "api/dimension_vector.h"
 #include "api/output_descriptor.h"
 #include "api/platform_info.h"
+
+// Stop conditions
+#include "api/stop_condition/configuration_duration.h"
+#include "api/stop_condition/configuration_count.h"
+#include "api/stop_condition/configuration_fraction.h"
+#include "api/stop_condition/tuning_duration.h"
 
 // Reference class interface
 #include "api/reference_class.h"
@@ -63,7 +71,7 @@ class KTT_API Tuner
 public:
     /** @fn explicit Tuner(const PlatformIndex platform, const DeviceIndex device)
       * Constructor, which creates new tuner object for specified platform and device. Tuner uses OpenCL as compute API, all commands are
-      * submitted to a single compute queue. Indices for available platforms and devices can be retrieved by calling printComputeApiInfo() method.
+      * submitted to a single compute queue. Indices for available platforms and devices can be retrieved by calling printComputeAPIInfo() method.
       * @param platform Index for platform used by created tuner.
       * @param device Index for device used by created tuner.
       */
@@ -71,7 +79,7 @@ public:
 
     /** @fn explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI)
       * Constructor, which creates new tuner object for specified platform, device and compute API. All commands are submitted to a single
-      * compute queue. Indices for available platforms and devices can be retrieved by calling printComputeApiInfo() method. If specified compute API
+      * compute queue. Indices for available platforms and devices can be retrieved by calling printComputeAPIInfo() method. If specified compute API
       * is CUDA, platform index is ignored.
       * @param platform Index for platform used by created tuner.
       * @param device Index for device used by created tuner.
@@ -82,7 +90,7 @@ public:
     /** @fn explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t computeQueueCount)
       * Constructor, which creates new tuner object for specified platform, device and compute API. Several compute queues are created, based
       * on specified count. Commands to different queues can be submitted by utilizing TuningManipulator. Indices for available platforms and devices
-      * can be retrieved by calling printComputeApiInfo() method. If specified compute API is CUDA, platform index is ignored.
+      * can be retrieved by calling printComputeAPIInfo() method. If specified compute API is CUDA, platform index is ignored.
       * @param platform Index for platform used by created tuner.
       * @param device Index for device used by created tuner.
       * @param computeAPI Compute API used by created tuner.
@@ -177,7 +185,7 @@ public:
     void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
         const ModifierAction modifierAction);
 
-    /** @fn void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    /** @fn void addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
       * const std::vector<std::string>& parameterNames)
       * Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter
       * values).
@@ -186,7 +194,7 @@ public:
       * @param parameterNames Names of kernel parameters which will be affected by the constraint function. The order of parameter names must
       * correspond to the order of parameter values inside constraint function vector argument.
       */
-    void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    void addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
 
     /** @fn void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
@@ -198,14 +206,24 @@ public:
       */
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
 
+    /** @fn void setTuningManipulatorSynchronization(const KernelId id, const bool flag)
+      * Controls whether framework performs implicit device synchronization after launchComputation() method inside tuning manipulator has finished.
+      * Performing the synchronization is necessary for obtaining correct computation duration. Turning it off may increase performance during
+      * regular computation after the tuning has concluded. Synchronization is turned on by default.
+      * @param id Id of kernel for which the tuning manipulator synchronization flag will be set.
+      * @param flag If true, tuning manipulator synchronization will be turned on for specified kernel or kernel composition. It will be turned off
+      * otherwise.
+      */
+    void setTuningManipulatorSynchronization(const KernelId id, const bool flag);
+
     /** @fn KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds,
       * std::unique_ptr<TuningManipulator> manipulator)
-      * Creates a kernel composition using specified kernels. Following methods can be used with kernel compositions and will call
+      * Creates a kernel composition using specified kernels. The following methods can be used with kernel compositions and will call
       * the corresponding method for all kernels inside the composition: setKernelArguments(), addParameter() (both versions), addConstraint().
       * 
       * Kernel compositions do not inherit any parameters or constraints from the original kernels. Setting kernel arguments and adding parameters
       * or constraints to kernels inside given composition will not affect the original kernels or other compositions. Tuning manipulator is required
-      * in order to launch kernel composition with tuner. See TuningManipulator for more information.
+      * in order to launch kernel composition with the tuner. See TuningManipulator for more information.
       * @param compositionName Name of kernel composition. The name is used during output printing.
       * @param kernelIds Ids of kernels which will be included in the composition.
       * @param manipulator Tuning manipulator for the composition.
@@ -314,55 +332,89 @@ public:
         return addArgument(localMemoryElementsCount, sizeof(T), dataType);
     }
 
+    /** @fn void persistArgument(const ArgumentId id, const bool flag)
+      * Controls whether specified vector argument is persisted inside a compute API buffer or not. Persisted arguments remain inside buffers even
+      * after the execution of kernel utilizing these arguments has finished. Persistence of kernel arguments is switched off by default. Persistent
+      * arguments can be useful during online tuning and regular kernel running, when kernel output is computed over multiple kernel launches in
+      * different configurations. Note that persistent arguments are never utilized by reference kernels.
+      * @param id Id of a vector argument.
+      * @param flag Specifies whether argument should be persisted or not. If true, specified vector argument is immidiately persisted. If false,
+      * compute API buffer for specified argument is immidiately destroyed.
+      */
+    void persistArgument(const ArgumentId id, const bool flag);
+
     /** @fn void tuneKernel(const KernelId id)
-      * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters
-      * and constraints. The configurations will be launched in order that depends on specified ::SearchMethod.
+      * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
+      * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all configurations
+      * are explored.
       * @param id Id of kernel for which the tuning will start.
       */
     void tuneKernel(const KernelId id);
 
+    /** @fn void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+      * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
+      * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end either when all
+      * configurations are explored or when specified stop condition is met.
+      * @param id Id of kernel for which the tuning will start.
+      * @param stopCondition Stop condition which decides whether to continue the tuning process. See StopCondition for more information.
+      */
+    void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
+
     /** @fn void dryTuneKernel(const KernelId id, const std::string& filePath)
       * Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration
       * space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on
-      * specified ::SearchMethod.
-      * Important: no checks if tuning data relates to the kernel, tuning parameters or hardware are performed, it is up to user to ensure that
-      * dryTuneKernel() reads correct file.
+      * specified ::SearchMethod. This method can be used to test behaviour and performance of newly implemented search methods. Note that no checks
+      * are performed whether the tuning data relates to kernel, tuning parameters or hardware. It is up to user to ensure that dryTuneKernel() reads
+      * a valid file.
       * @param id Id of kernel for which the tuning begins.
       * @param filePath Path to CSV file with tuning parameters.
       */
     void dryTuneKernel(const KernelId id, const std::string& filePath);
 
-    /** @fn void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
+    /** @fn ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
       * Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, it creates
       * configuration space based on combinations of provided kernel parameters and constraints. Each time this method is called, it launches single
       * kernel configuration. If all configurations were already tested, runs kernel using the best configuration. Output data can be retrieved
-      * by providing output descriptors.
+      * by providing output descriptors. Always performs recomputation of reference output.
       * @param id Id of kernel for which the tuning by step will start.
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
+      * @return Object containing information about computation using current kernel configuration. See ComputationResult for more information.
       */
-    void tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output);
+    ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output);
 
-    /** @fn void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
+    /** @fn ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+      * Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, it creates
+      * configuration space based on combinations of provided kernel parameters and constraints. Each time this method is called, it launches single
+      * kernel configuration. If all configurations were already tested, runs kernel using the best configuration. Output data can be retrieved
+      * by providing output descriptors. Allows control over recomputation of reference output.
+      * @param id Id of kernel for which the tuning by step will start.
+      * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
+      * @param recomputeReference Flag which controls whether recomputation of reference output should be performed or not. Useful if kernel data
+      * between individual method invocations sometimes change.
+      * @return Object containing information about computation using current kernel configuration. See ComputationResult for more information.
+      */
+    ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
+
+    /** @fn ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration,
+      * const std::vector<OutputDescriptor>& output)
       * Runs specified kernel using provided configuration. Does not perform result validation.
       * @param id Id of kernel which will be run.
       * @param configuration Configuration under which the kernel will be launched. See ParameterPair for more information.
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
+      * @return Object containing information about computation using specified kernel configuration. See ComputationResult for more information.
       */
-    void runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
+    ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
 
     /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
       * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.
-      * Default search method is full search, which requires no search arguments.
+      * Default search method is full search.
       * @param method Search method which will be used during kernel tuning. See SearchMethod for more information.
       * @param arguments Arguments necessary for specified search method to work. Following arguments are required for corresponding search method,
       * the order of arguments is important:
-      * - RandomSearch - fraction
-      * - PSO - fraction, swarm size, global influence, local influence, random influence
-      * - Annealing - fraction, maximum temperature
-      * - MCMC - fraction
-      * 
-      * Fraction argument specifies the number of configurations which will be explored, eg. when fraction is set to 0.5, 50% of all configurations
-      * will be explored.
+      * - FullSearch - none
+      * - RandomSearch - none
+      * - Annealing - maximum temperature
+      * - MCMC - none
       */
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
 
@@ -397,13 +449,13 @@ public:
       */
     void printResult(const KernelId id, const std::string& filePath, const PrintFormat format) const;
 
-    /** @fn std::vector<ParameterPair> getBestConfiguration(const KernelId id) const
-      * Returns the best configuration found for specified kernel. Valid configuration will be returned only if method tuneKernel() or
-      * tuneKernelByStep() was already called for corresponding kernel.
-      * @param id Id of kernel for which the best configuration will be returned.
-      * @return Best configuration found for specified kernel. See ParameterPair for more information.
+    /** @fn ComputationResult getBestComputationResult(const KernelId id) const
+      * Returns the best computation result found for specified kernel. Valid result will be returned only if one of the kernel tuning methods was
+      * already called for corresponding kernel.
+      * @param id Id of kernel for which the best result will be returned.
+      * @return Object containing information about best computation result for specified kernel. See ComputationResult for more information.
       */
-    std::vector<ParameterPair> getBestConfiguration(const KernelId id) const;
+    ComputationResult getBestComputationResult(const KernelId id) const;
 
     /** @fn std::string getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const
       * Returns kernel source with preprocessor definitions for specified kernel based on provided configuration.
@@ -474,6 +526,14 @@ public:
       */
     void setCompilerOptions(const std::string& options);
 
+    /** @fn void setKernelCacheCapacity(const size_t capacity)
+      * Sets capacity of kernel cache inside the tuner. The cache contains recently compiled kernels which are prepared to be launched immidiately,
+      * eliminating compilation overhead. Using the cache can significantly improve tuner performance during online tuning or iterative kernel
+      * running with TuningManipulator. Default cache size is 10.
+      * @param capacity Controls kernel cache capacity. If zero, kernel cache is completely disabled.
+      */
+    void setKernelCacheCapacity(const size_t capacity);
+
     /** @fn void printComputeAPIInfo(std::ostream& outputTarget) const
       * Prints basic information about available platforms and devices to specified output stream. Also prints indices assigned to them
       * by KTT framework.
@@ -510,9 +570,8 @@ public:
 
     /** @fn void setGlobalSizeType(const GlobalSizeType type)
       * Sets global size specification type to specified compute API style. In OpenCL, NDrange size is specified as number of work-items in
-      * a work-group multiplied by number of work-groups. In CUDA, grid size is specified as number of threads in a block divided by number
-      * of blocks. This method makes it possible to use OpenCL style in CUDA and vice versa. Default global size type is the one corresponding to
-      * compute API of the tuner.
+      * a work-group multiplied by number of work-groups. In CUDA, grid size is specified as number of blocks. This method makes it possible to use
+      * OpenCL style in CUDA and vice versa. Default global size type is the one corresponding to compute API of the tuner.
       * @param type Global size type which will be set for tuner. See ::GlobalSizeType for more information.
       */
     void setGlobalSizeType(const GlobalSizeType type);

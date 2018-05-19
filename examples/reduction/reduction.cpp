@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 
     for (int i = 0; i < n; i++)
     {
-        src[i] = 1000.0f*((float)rand()) / ((float) RAND_MAX);
+        src[i] = 1000.0f*((float)rand()) / ((float)RAND_MAX);
     }
 
     ktt::Tuner tuner(platformIndex, deviceIndex);
@@ -76,18 +76,18 @@ int main(int argc, char** argv)
         ktt::ModifierDimension::X);
     tuner.addParameter(kernelId, "USE_ATOMICS", {0, 1});
 
-    auto persistConstraint = [](std::vector<size_t> v) {return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0);};
+    auto persistConstraint = [](const std::vector<size_t>& v) {return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0);};
     tuner.addConstraint(kernelId, persistConstraint, {"UNBOUNDED_WG", "WG_NUM"});
-    auto persistentAtomic = [](std::vector<size_t> v) {return (v[0] == 1) || (v[0] == 0 && v[1] == 1);};
+    auto persistentAtomic = [](const std::vector<size_t>& v) {return (v[0] == 1) || (v[0] == 0 && v[1] == 1);};
     tuner.addConstraint(kernelId, persistentAtomic, {"UNBOUNDED_WG", "USE_ATOMICS"});
-    auto unboundedWG = [](std::vector<size_t> v) {return (!v[0] || v[1] >= 32);};
+    auto unboundedWG = [](const std::vector<size_t>& v) {return (!v[0] || v[1] >= 32);};
     tuner.addConstraint(kernelId, unboundedWG, {"UNBOUNDED_WG", "WORK_GROUP_SIZE_X"});
 
-    tuner.setReferenceClass(kernelId, std::make_unique<referenceReduction>(src, dstId), std::vector<ktt::ArgumentId>{dstId});
+    tuner.setReferenceClass(kernelId, std::make_unique<ReferenceReduction>(src, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n*500.0f/10'000'000.0f);
     tuner.setValidationRange(dstId, 1);
 
-    tuner.setTuningManipulator(kernelId, std::make_unique<TunableReduction>(nAlloc, &src, &dst, srcId, dstId, nId, inOffsetId, outOffsetId));
+    tuner.setTuningManipulator(kernelId, std::make_unique<TunableReduction>(srcId, dstId, nId, inOffsetId, outOffsetId));
     
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);

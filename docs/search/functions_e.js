@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['_7ereferenceclass',['~ReferenceClass',['../classktt_1_1_reference_class.html#ae8381dc2afcd9dece412d0c67f2ed77f',1,'ktt::ReferenceClass']]],
-  ['_7etuner',['~Tuner',['../classktt_1_1_tuner.html#a09198b07768176d263dbee8a6c54b377',1,'ktt::Tuner']]],
-  ['_7etuningmanipulator',['~TuningManipulator',['../classktt_1_1_tuning_manipulator.html#a9399d7fee67bf85ee73aedd3e8ba6201',1,'ktt::TuningManipulator']]]
+  ['updateargumentlocal',['updateArgumentLocal',['../classktt_1_1_tuning_manipulator.html#a1e307646f17f2861d8c981308cd2221c',1,'ktt::TuningManipulator']]],
+  ['updateargumentscalar',['updateArgumentScalar',['../classktt_1_1_tuning_manipulator.html#a449df2809792e030439be9d70a8c07e6',1,'ktt::TuningManipulator']]],
+  ['updateargumentvector',['updateArgumentVector',['../classktt_1_1_tuning_manipulator.html#a872a3865330f2a15282facd6392ccdcd',1,'ktt::TuningManipulator::updateArgumentVector(const ArgumentId id, const void *argumentData)'],['../classktt_1_1_tuning_manipulator.html#ae996d65fb5ee74bf5dc71551f678026d',1,'ktt::TuningManipulator::updateArgumentVector(const ArgumentId id, const void *argumentData, const size_t numberOfElements)']]],
+  ['updateargumentvectorasync',['updateArgumentVectorAsync',['../classktt_1_1_tuning_manipulator.html#a89071adbe2f15811935caa5613ea4c14',1,'ktt::TuningManipulator::updateArgumentVectorAsync(const ArgumentId id, const void *argumentData, QueueId queue)'],['../classktt_1_1_tuning_manipulator.html#a8f850b561d79021d1613beb35b786b0b',1,'ktt::TuningManipulator::updateArgumentVectorAsync(const ArgumentId id, const void *argumentData, const size_t numberOfElements, QueueId queue)']]],
+  ['updatestatus',['updateStatus',['../classktt_1_1_configuration_count.html#aa15b17ccc51de193e1e7e4b2af5bdb5b',1,'ktt::ConfigurationCount::updateStatus()'],['../classktt_1_1_configuration_duration.html#a36ec1e54444852d17a2b9dc4a86f9e9a',1,'ktt::ConfigurationDuration::updateStatus()'],['../classktt_1_1_configuration_fraction.html#ab14363a335a7df6c06986592fc51abde',1,'ktt::ConfigurationFraction::updateStatus()'],['../classktt_1_1_stop_condition.html#ab6c9c2da87d060f0e0385655a6ec8348',1,'ktt::StopCondition::updateStatus()'],['../classktt_1_1_tuning_duration.html#aa1b2f1d09e688a76ad618d9b72284226',1,'ktt::TuningDuration::updateStatus()']]]
 ];

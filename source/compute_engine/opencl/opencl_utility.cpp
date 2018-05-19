@@ -1,3 +1,5 @@
+#ifdef PLATFORM_OPENCL
+
 #include <stdexcept>
 #include "opencl_utility.h"
 
@@ -86,9 +88,13 @@ std::string getPlatformInfoString(const cl_platform_id id, const cl_platform_inf
 {
     size_t infoSize;
     checkOpenCLError(clGetPlatformInfo(id, info, 0, nullptr, &infoSize), "clGetPlatformInfo");
-    std::string infoString(infoSize, ' ');
+    std::string infoString(infoSize, '\0');
     checkOpenCLError(clGetPlatformInfo(id, info, infoSize, &infoString[0], nullptr), "clGetPlatformInfo");
-    
+ 
+    if (infoString.size() > 0)
+    {
+        infoString.resize(infoString.size() - 1);
+    }
     return infoString;
 }
 
@@ -96,10 +102,16 @@ std::string getDeviceInfoString(const cl_device_id id, const cl_device_info info
 {
     size_t infoSize;
     checkOpenCLError(clGetDeviceInfo(id, info, 0, nullptr, &infoSize), "clGetDeviceInfo");
-    std::string infoString(infoSize, ' ');
+    std::string infoString(infoSize, '\0');
     checkOpenCLError(clGetDeviceInfo(id, info, infoSize, &infoString[0], nullptr), "clGetDeviceInfo");
 
+    if (infoString.size() > 0)
+    {
+        infoString.resize(infoString.size() - 1);
+    }
     return infoString;
 }
 
 } // namespace ktt
+
+#endif // PLATFORM_OPENCL

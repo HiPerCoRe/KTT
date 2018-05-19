@@ -34,7 +34,7 @@ public:
     void addParameter(const KernelId id, const std::string& name, const std::vector<double>& values);
     void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
         const ModifierAction modifierAction);
-    void addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+    void addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
         const std::vector<std::string>& parameterNames);
     void setArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void setTuningManipulatorFlag(const KernelId id, const bool flag);

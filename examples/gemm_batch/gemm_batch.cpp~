@@ -1,0 +1,144 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include "tuner_api.h"
+
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cl"
+#else
+    #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cl"
+#endif
+
+class referenceGemm : public ktt::ReferenceClass
+{
+public:
+    referenceGemm(const std::vector<float>& srcA, const std::vector<float>& srcB, const int a, const int b, const int c, const int n, const ktt::ArgumentId resultArgumentId) :
+        srcA(srcA),
+	srcB(srcB),
+	a(a),
+	b(b),
+	c(c),
+	n(n),
+        resultArgumentId(resultArgumentId)
+    {}
+
+    void computeResult() override {
+        std::vector<float> resD(n*c*b);
+        for (int i = 0; i < resD.size(); i++)
+            resD[i] = 0.0f;
+
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < c; j++)
+                for (int k = 0; k < b; k++) {
+                    float tmp = 0.0f;
+                    for (int l = 0; l < a; l++)
+                        tmp += srcA[i*a*b + k*a + l] * srcB[i*c*a + l*c + j];
+                    resD[i*c*b + k*c + j]
+                }
+    }
+
+    void* getData(const ktt::ArgumentId id) override {
+        if (id == resultArgumentId) {
+            return (void*)res.data();
+        }
+        return nullptr;
+    }
+
+    size_t getNumberOfElements(const ktt::ArgumentId argumentId) const override {
+        return n*c*b;
+    }
+
+private:
+    std::vector<float> res;
+    std::vector<float> srcA;
+    std::vector<float> srcB;
+    int a, b, c, n;
+    ktt::ArgumentId resultArgumentId;
+};
+
+int main(int argc, char** argv)
+{
+    // Initialize platform and device index
+    ktt::PlatformIndex platformIndex = 0;
+    ktt::DeviceIndex deviceIndex = 0;
+    std::string kernelFile = KTT_KERNEL_FILE;
+
+    if (argc >= 2)
+    {
+        platformIndex = std::stoul(std::string(argv[1]));
+        if (argc >= 3)
+        {
+            deviceIndex = std::stoul(std::string(argv[2]));
+            if (argc >= 4)
+            {
+                kernelFile = std::string(argv[3]);
+            }
+        }
+    }
+
+    // Declare and initialize data (m, n > 1)
+    const int a = 16;
+    const int b = 16;
+    const int c = 16;
+    const int batch = 1024;
+    std::vector<float> srcA(a*b*batch, 0.0f);
+    std::vector<float> srcB(c*a*batch, 0.0f);
+    std::vector<float> dst(c*b*batch, 0.0f);
+
+    // fill with random data
+    for (int i = 0; i < a*b*batch; i++)
+    {
+        srcA[i] = 10.0f*((float)rand()) / ((float) RAND_MAX);
+    }
+    for (int i = 0; i < c*a*batch; i++)
+    {
+        srcB[i] = 10.0f*((float)rand()) / ((float) RAND_MAX);
+    }
+
+
+    ktt::Tuner tuner(platformIndex, deviceIndex);
+
+    // create kernel
+    ktt::DimensionVector ndRangeDimensions(n);
+    ktt::DimensionVector workGroupDimensions;
+    ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "gemm_batch", ndRangeDimensions, workGroupDimensions);
+
+    // create input/output
+    ktt::ArgumentId srcAId = tuner.addArgumentVector(srcA, ktt::ArgumentAccessType::ReadiOnly);
+    ktt::ArgumentId srcBId = tuner.addArgumentVector(srcB, ktt::ArgumentAccessType::ReadiOnly);
+    ktt::ArgumentId dstId = tuner.addArgumentVector(dst, ktt::ArgumentAccessType::WriteOnly);
+    ktt::ArgumentId nId = tuner.addArgumentScalar(batch);
+    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{srcAId, srcBId, dstId, nId});
+
+    tuner.addParameter(kernelId, "GRANULARITY", {1, 2, 3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
+    tuner.addParameter(kernelId, "GROUP_SIZE_X", {1, 32, 64, 128, 256, 512},
+        ktt::ModifierType::Local,
+        ktt::ModifierAction::Multiply,
+        ktt::ModifierDimension::X);
+    tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_X", {1, c},
+        ktt::ModifierType::Local,
+        ktt::ModifierAction::Multiply,
+        ktt::ModifierDimension::X);
+    tuner.addParameter(kernelId, "MG_GROUP_SIZE_Y", {1, 2, 4, 8, 16},
+        ktt::ModifierType::Local,
+        ktt::ModifierAction::Multiply,
+        ktt::ModifierDimension::Y);
+    tuner.addParameter(kernelId, "CG_GROUP_SIZE_Y", {1, b},
+        ktt::ModifierType::Local,
+        ktt::ModifierAction::Multiply,
+        ktt::ModifierDimension::Y);
+    tuner.addParameter(kernelId, "USE_LOCAL", {0, 1});
+
+    auto parallelismConstraint = [](std::vector<size_t> v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1 && v[4] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1 && v[3] > 1 && v[4] == 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] == 1 && v[4] > 1);};
+    tuner.addConstraint(kernelId, parallelismConstraint, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MG_GROUP_SIZE_Y", "CG_GROUP_SIZE_Y"});
+
+    tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, n, dstId), std::vector<ktt::ArgumentId>{dstId});
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
+    tuner.setValidationRange(dstId, c*b*n);
+    
+    tuner.tuneKernel(kernelId);
+    tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
+    tuner.printResult(kernelId, "gemm_batch_output.csv", ktt::PrintFormat::CSV);
+
+    return 0;
+}

@@ -129,11 +129,11 @@ int main(int argc, char** argv)
     ktt::ArgumentId numberOfBodiesId = tuner.addArgumentScalar(numberOfBodies);
 
     // Add conditions
-    auto lteq = [](std::vector<size_t> vector) {return vector.at(0) <= vector.at(1);};
+    auto lteq = [](const std::vector<size_t>& vector) {return vector.at(0) <= vector.at(1);};
     tuner.addConstraint(kernelId, lteq, {"INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR"});
-    auto lteq256 = [](std::vector<size_t> vector) {return vector.at(0) * vector.at(1) <= 256;};
+    auto lteq256 = [](const std::vector<size_t>& vector) {return vector.at(0) * vector.at(1) <= 256;};
     tuner.addConstraint(kernelId, lteq, {"INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2"});
-    auto vectorizedSoA = [](std::vector<size_t> vector) {return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1);};
+    auto vectorizedSoA = [](const std::vector<size_t>& vector) {return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1);};
     tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"});
 
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['opencl',['OpenCL',['../namespacektt.html#a319c9e3d66dd23fdd4f71b0c467d3b59a7982b09a852b37f2afb1227eaf552e47',1,'ktt::OpenCL()'],['../namespacektt.html#a16e643cd2325370c79affaeee8ef85f0a7982b09a852b37f2afb1227eaf552e47',1,'ktt::OpenCL()']]]
+  ['nanoseconds',['Nanoseconds',['../namespacektt.html#a161b9af8714615ef2c1770b020ce1511afba00bdab687ce01136a86bac8bac578',1,'ktt']]],
+  ['none',['None',['../namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a6adf97f83acf6453d4a6a4b1070f3754',1,'ktt']]]
 ];

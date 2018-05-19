@@ -28,6 +28,7 @@ public:
     // Core methods
     void updateData(void* data, const size_t numberOfElements);
     void updateData(const void* data, const size_t numberOfElements);
+    void setPersistentFlag(const bool flag);
 
     // Getters
     ArgumentId getId() const;
@@ -58,6 +59,7 @@ public:
         return result;
     }
     bool hasCopiedData() const;
+    bool isPersistent() const;
 
     // Operators
     bool operator==(const KernelArgument& other) const;
@@ -75,6 +77,7 @@ private:
     std::vector<uint8_t> copiedData;
     void* referencedData;
     bool dataCopied;
+    bool persistentFlag;
 
     // Helper methods
     void initializeData(const void* data);

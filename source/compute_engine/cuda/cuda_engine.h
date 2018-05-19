@@ -38,13 +38,15 @@ public:
         const std::vector<OutputDescriptor>& outputDescriptors) override;
     EventId runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) override;
     KernelResult getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const override;
+    uint64_t getKernelOverhead(const EventId id) const override;
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
-    void setProgramCache(const bool flag) override;
-    void clearProgramCache() override;
+    void setKernelCacheUsage(const bool flag) override;
+    void setKernelCacheCapacity(const size_t capacity) override;
+    void clearKernelCache() override;
 
     // Queue handling methods
     QueueId getDefaultQueue() const override;
@@ -63,7 +65,9 @@ public:
     KernelArgument downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const override;
     uint64_t copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes) override;
     EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) override;
+    uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
+    void setPersistentBufferUsage(const bool flag) override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType accessType) override;
@@ -85,12 +89,15 @@ private:
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
-    bool programCacheFlag;
+    bool kernelCacheFlag;
+    size_t kernelCacheCapacity;
+    bool persistentBufferFlag;
     mutable EventId nextEventId;
     std::unique_ptr<CUDAContext> context;
     std::vector<std::unique_ptr<CUDAStream>> streams;
     std::set<std::unique_ptr<CUDABuffer>> buffers;
-    std::map<std::string, std::unique_ptr<CUDAProgram>> programCache;
+    std::set<std::unique_ptr<CUDABuffer>> persistentBuffers;
+    std::map<std::pair<std::string, std::string>, std::unique_ptr<CUDAKernel>> kernelCache;
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> kernelEvents;
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> bufferEvents;
 
@@ -115,13 +122,15 @@ public:
         const std::vector<OutputDescriptor>& outputDescriptors) override;
     EventId runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue) override;
     KernelResult getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const override;
+    uint64_t getKernelOverhead(const EventId id) const override;
 
     // Utility methods
     void setCompilerOptions(const std::string& options) override;
     void setGlobalSizeType(const GlobalSizeType type) override;
     void setAutomaticGlobalSizeCorrection(const bool flag) override;
-    void setProgramCache(const bool flag) override;
-    void clearProgramCache() override;
+    void setKernelCacheUsage(const bool flag) override;
+    void setKernelCacheCapacity(const size_t capacity) override;
+    void clearKernelCache() override;
 
     // Queue handling methods
     QueueId getDefaultQueue() const override;
@@ -140,7 +149,9 @@ public:
     KernelArgument downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const override;
     uint64_t copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes) override;
     EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) override;
+    uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
+    void setPersistentBufferUsage(const bool flag) override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
     void clearBuffers(const ArgumentAccessType accessType) override;

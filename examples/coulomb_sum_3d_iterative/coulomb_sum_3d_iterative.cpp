@@ -187,10 +187,10 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "USE_SOA", std::vector<size_t>{0, 1, 2});
 
     // Using vectorized SoA only makes sense when vectors are longer than 1
-    auto vectorizedSoA = [](std::vector<size_t> vector) {return vector.at(0) > 1 || vector.at(1) != 2;};
+    auto vectorizedSoA = [](const std::vector<size_t>& vector) {return vector.at(0) > 1 || vector.at(1) != 2;};
     tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"});
     // Ensure sufficient parallelism
-    auto par = [](std::vector<size_t> vector) {return vector.at(0) * vector.at(1) >= 64;};
+    auto par = [](const std::vector<size_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
     tuner.addConstraint(kernelId, par, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"});
 
     // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR

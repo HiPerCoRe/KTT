@@ -5,6 +5,8 @@
 namespace ktt
 {
 
+#ifdef PLATFORM_OPENCL
+
 OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     platformIndex(platformIndex),
     deviceIndex(deviceIndex),
@@ -12,7 +14,9 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
     compilerOptions(std::string("")),
     globalSizeType(GlobalSizeType::OpenCL),
     globalSizeCorrection(false),
-    programCacheFlag(false),
+    kernelCacheFlag(true),
+    kernelCacheCapacity(10),
+    persistentBufferFlag(true),
     nextEventId(0)
 {
     auto platforms = getOpenCLPlatforms();
@@ -49,27 +53,36 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
     Timer overheadTimer;
     overheadTimer.start();
 
+    OpenCLKernel* kernel;
+    std::unique_ptr<OpenCLKernel> kernelUnique;
     std::unique_ptr<OpenCLProgram> program;
-    OpenCLProgram* programPointer;
 
-    if (programCacheFlag)
+    if (kernelCacheFlag)
     {
-        if (programCache.find(kernelData.getSource()) == programCache.end())
+        if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
         {
-            program = createAndBuildProgram(kernelData.getSource());
-            programCache.insert(std::make_pair(kernelData.getSource(), std::move(program)));
+            if (kernelCache.size() >= kernelCacheCapacity)
+            {
+                clearKernelCache();
+            }
+            std::unique_ptr<OpenCLProgram> program = createAndBuildProgram(kernelData.getSource());
+            auto kernel = std::make_unique<OpenCLKernel>(program->getProgram(), kernelData.getName());
+            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::make_pair(std::move(kernel),
+                std::move(program))));
         }
-        auto cachePointer = programCache.find(kernelData.getSource());
-        programPointer = cachePointer->second.get();
+        auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
+        kernel = cachePointer->second.first.get();
     }
     else
     {
         program = createAndBuildProgram(kernelData.getSource());
-        programPointer = program.get();
+        kernelUnique = std::make_unique<OpenCLKernel>(program->getProgram(), kernelData.getName());
+        kernel = kernelUnique.get();
     }
-    auto kernel = std::make_unique<OpenCLKernel>(programPointer->getProgram(), kernelData.getName());
 
     checkLocalMemoryModifiers(argumentPointers, kernelData.getLocalMemoryModifiers());
+    kernel->resetKernelArguments();
+
     for (const auto argument : argumentPointers)
     {
         if (argument->getUploadType() == ArgumentUploadType::Local)
@@ -113,6 +126,19 @@ KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<O
     return result;
 }
 
+uint64_t OpenCLEngine::getKernelOverhead(const EventId id) const
+{
+    auto eventPointer = kernelEvents.find(id);
+
+    if (eventPointer == kernelEvents.end())
+    {
+        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
+            + std::to_string(id));
+    }
+
+    return eventPointer->second->getOverhead();
+}
+
 void OpenCLEngine::setCompilerOptions(const std::string& options)
 {
     compilerOptions = options;
@@ -128,18 +154,23 @@ void OpenCLEngine::setAutomaticGlobalSizeCorrection(const bool flag)
     globalSizeCorrection = flag;
 }
 
-void OpenCLEngine::setProgramCache(const bool flag)
+void OpenCLEngine::setKernelCacheUsage(const bool flag)
 {
     if (!flag)
     {
-        clearProgramCache();
+        clearKernelCache();
     }
-    programCacheFlag = flag;
+    kernelCacheFlag = flag;
 }
 
-void OpenCLEngine::clearProgramCache()
+void OpenCLEngine::setKernelCacheCapacity(const size_t capacity)
 {
-    programCache.clear();
+    kernelCacheCapacity = capacity;
+}
+
+void OpenCLEngine::clearKernelCache()
+{
+    kernelCache.clear();
 }
 
 QueueId OpenCLEngine::getDefaultQueue() const
@@ -387,6 +418,58 @@ EventId OpenCLEngine::copyArgumentAsync(const ArgumentId destination, const Argu
     return eventId;
 }
 
+uint64_t OpenCLEngine::persistArgument(KernelArgument& kernelArgument, const bool flag)
+{
+    bool bufferFound = false;
+    auto iterator = persistentBuffers.cbegin();
+
+    while (iterator != persistentBuffers.cend())
+    {
+        if (iterator->get()->getKernelArgumentId() == kernelArgument.getId())
+        {
+            bufferFound = true;
+            if (!flag)
+            {
+                persistentBuffers.erase(iterator);
+            }
+            break;
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
+    
+    if (flag && !bufferFound)
+    {
+        std::unique_ptr<OpenCLBuffer> buffer = nullptr;
+        EventId eventId = nextEventId;
+
+        if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+        {
+            buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
+            bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
+        }
+        else
+        {
+            buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
+            auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
+            buffer->uploadData(commandQueues.at(getDefaultQueue())->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
+                profilingEvent->getEvent());
+
+            profilingEvent->setReleaseFlag();
+            bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
+        }
+
+        persistentBuffers.insert(std::move(buffer)); // buffer data will be stolen
+        nextEventId++;
+
+        return getArgumentOperationDuration(eventId);
+    }
+
+    return 0;
+}
+
 uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId id) const
 {
     auto eventPointer = bufferEvents.find(id);
@@ -408,6 +491,11 @@ uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId id) const
     bufferEvents.erase(id);
 
     return static_cast<uint64_t>(duration);
+}
+
+void OpenCLEngine::setPersistentBufferUsage(const bool flag)
+{
+    persistentBufferFlag = flag;
 }
 
 void OpenCLEngine::clearBuffer(const ArgumentId id)
@@ -680,6 +768,17 @@ DeviceType OpenCLEngine::getDeviceType(const cl_device_type deviceType)
 
 OpenCLBuffer* OpenCLEngine::findBuffer(const ArgumentId id) const
 {
+    if (persistentBufferFlag)
+    {
+        for (const auto& buffer : persistentBuffers)
+        {
+            if (buffer->getKernelArgumentId() == id)
+            {
+                return buffer.get();
+            }
+        }
+    }
+
     for (const auto& buffer : buffers)
     {
         if (buffer->getKernelArgumentId() == id)
@@ -732,5 +831,184 @@ void OpenCLEngine::checkLocalMemoryModifiers(const std::vector<KernelArgument*>&
         }
     }
 }
+
+#else
+
+OpenCLEngine::OpenCLEngine(const PlatformIndex, const DeviceIndex, const uint32_t)
+{
+    throw std::runtime_error("Support for OpenCL API is not included in this version of KTT framework");
+}
+
+KernelResult OpenCLEngine::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<OutputDescriptor>&)
+{
+    throw std::runtime_error("");
+}
+
+EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+KernelResult OpenCLEngine::getKernelResult(const EventId, const std::vector<OutputDescriptor>&) const
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::getKernelOverhead(const EventId) const 
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setCompilerOptions(const std::string&)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setGlobalSizeType(const GlobalSizeType)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setAutomaticGlobalSizeCorrection(const bool)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setKernelCacheUsage(const bool)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setKernelCacheCapacity(const size_t)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::clearKernelCache()
+{
+    throw std::runtime_error("");
+}
+
+QueueId OpenCLEngine::getDefaultQueue() const
+{
+    throw std::runtime_error("");
+}
+
+std::vector<QueueId> OpenCLEngine::getAllQueues() const
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::synchronizeQueue(const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::synchronizeDevice()
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::clearEvents()
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::uploadArgument(KernelArgument&)
+{
+    throw std::runtime_error("");
+}
+
+EventId OpenCLEngine::uploadArgumentAsync(KernelArgument&, const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::updateArgument(const ArgumentId, const void*, const size_t)
+{
+    throw std::runtime_error("");
+}
+
+EventId OpenCLEngine::updateArgumentAsync(const ArgumentId, const void*, const size_t, const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::downloadArgument(const ArgumentId, void*, const size_t) const
+{
+    throw std::runtime_error("");
+}
+
+EventId OpenCLEngine::downloadArgumentAsync(const ArgumentId, void*, const size_t, const QueueId) const
+{
+    throw std::runtime_error("");
+}
+
+KernelArgument OpenCLEngine::downloadArgumentObject(const ArgumentId, uint64_t*) const
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::copyArgument(const ArgumentId, const ArgumentId, const size_t)
+{
+    throw std::runtime_error("");
+}
+
+EventId OpenCLEngine::copyArgumentAsync(const ArgumentId, const ArgumentId, const size_t, const QueueId)
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::persistArgument(KernelArgument&, const bool)
+{
+    throw std::runtime_error("");
+}
+
+uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId) const
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::setPersistentBufferUsage(const bool)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::clearBuffer(const ArgumentId)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::clearBuffers()
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::clearBuffers(const ArgumentAccessType)
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::printComputeAPIInfo(std::ostream&) const
+{
+    throw std::runtime_error("");
+}
+
+std::vector<PlatformInfo> OpenCLEngine::getPlatformInfo() const
+{
+    throw std::runtime_error("");
+}
+
+std::vector<DeviceInfo> OpenCLEngine::getDeviceInfo(const PlatformIndex) const
+{
+    throw std::runtime_error("");
+}
+
+DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
+{
+    throw std::runtime_error("");
+}
+
+#endif // PLATFORM_OPENCL
 
 } // namespace ktt

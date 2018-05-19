@@ -106,7 +106,7 @@ void Tuner::addLocalMemoryModifier(const KernelId id, const std::string& paramet
     }
 }
 
-void Tuner::addConstraint(const KernelId id, const std::function<bool(std::vector<size_t>)>& constraintFunction,
+void Tuner::addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
     const std::vector<std::string>& parameterNames)
 {
     try
@@ -125,6 +125,19 @@ void Tuner::setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipu
     try
     {
         tunerCore->setTuningManipulator(id, std::move(manipulator));
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+void Tuner::setTuningManipulatorSynchronization(const KernelId id, const bool flag)
+{
+    try
+    {
+        tunerCore->setTuningManipulatorSynchronization(id, flag);
     }
     catch (const std::runtime_error& error)
     {
@@ -190,11 +203,37 @@ void Tuner::setCompositionKernelArguments(const KernelId compositionId, const Ke
     }
 }
 
+void Tuner::persistArgument(const ArgumentId id, const bool flag)
+{
+    try
+    {
+        tunerCore->persistArgument(id, flag);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 void Tuner::tuneKernel(const KernelId id)
 {
     try
     {
-        tunerCore->tuneKernel(id);
+        tunerCore->tuneKernel(id, nullptr);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+void Tuner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+{
+    try
+    {
+        tunerCore->tuneKernel(id, std::move(stopCondition));
     }
     catch (const std::runtime_error& error)
     {
@@ -216,11 +255,11 @@ void Tuner::dryTuneKernel(const KernelId id, const std::string& filePath)
     }
 }
 
-void Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
+ComputationResult Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
 {
     try
     {
-        tunerCore->tuneKernelByStep(id, output);
+        return tunerCore->tuneKernelByStep(id, output, true);
     }
     catch (const std::runtime_error& error)
     {
@@ -229,11 +268,24 @@ void Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescript
     }
 }
 
-void Tuner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
+ComputationResult Tuner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
 {
     try
     {
-        tunerCore->runKernel(id, configuration, output);
+        return tunerCore->tuneKernelByStep(id, output, recomputeReference);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
+ComputationResult Tuner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
+{
+    try
+    {
+        return tunerCore->runKernel(id, configuration, output);
     }
     catch (const std::runtime_error& error)
     {
@@ -289,11 +341,11 @@ void Tuner::printResult(const KernelId id, const std::string& filePath, const Pr
     }
 }
 
-std::vector<ParameterPair> Tuner::getBestConfiguration(const KernelId id) const
+ComputationResult Tuner::getBestComputationResult(const KernelId id) const
 {
     try
     {
-        return tunerCore->getBestConfiguration(id);
+        return tunerCore->getBestComputationResult(id);
     }
     catch (const std::runtime_error& error)
     {
@@ -379,6 +431,11 @@ void Tuner::setArgumentComparator(const ArgumentId id, const std::function<bool(
 void Tuner::setCompilerOptions(const std::string& options)
 {
     tunerCore->setCompilerOptions(options);
+}
+
+void Tuner::setKernelCacheCapacity(const size_t capacity)
+{
+    tunerCore->setKernelCacheCapacity(capacity);
 }
 
 void Tuner::printComputeAPIInfo(std::ostream& outputTarget) const

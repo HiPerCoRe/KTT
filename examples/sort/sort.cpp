@@ -7,7 +7,6 @@
 #include <limits.h>
 
 #include "tuner_api.h"
-#include "sort.h"
 #include "sort_reference.h"
 #include "sort_tunable.h"
 
@@ -23,7 +22,7 @@
 
 int main(int argc, char** argv)
 {
-  //Initialize platform and device index
+  // Initialize platform and device index
   ktt::PlatformIndex platformIndex = 0;
   ktt::DeviceIndex deviceIndex = 0;
   std::string kernelFile = KTT_KERNEL_FILE;
@@ -41,8 +40,7 @@ int main(int argc, char** argv)
     }
   }
 
-  // Declare data variables necessary for command line arguments parsing
-  int problemSize = 1; //in MiB
+  int problemSize = 32; // In MiB
 
   if (argc >= 5)
   {
@@ -63,10 +61,8 @@ int main(int argc, char** argv)
   // Create tuner object for chosen platform and device
   ktt::Tuner tuner(platformIndex, deviceIndex);
 
-  //Declare kernels
-  ktt::KernelId compositionId = -1; //id for composite kernel
-  std::vector<ktt::KernelId> kernelIds(3);//ids for specific kernels
-  // we will tune also global and local size so just initialize here
+  // Declare kernels and their dimensions
+  std::vector<ktt::KernelId> kernelIds(3);
   const ktt::DimensionVector ndRangeDimensions;
   const ktt::DimensionVector workGroupDimensions;
 
@@ -74,41 +70,44 @@ int main(int argc, char** argv)
   kernelIds[1] = tuner.addKernelFromFile(kernelFile, std::string("top_scan"), workGroupDimensions, workGroupDimensions);
   kernelIds[2] = tuner.addKernelFromFile(kernelFile, std::string("bottom_scan"), ndRangeDimensions, workGroupDimensions);
 
-  //Add arguments for kernels
+  // Add arguments for kernels
   ktt::ArgumentId inId = tuner.addArgumentVector(in, ktt::ArgumentAccessType::ReadWrite);
-  ktt::ArgumentId outId = tuner.addArgumentVector(std::vector<unsigned int>(size), ktt::ArgumentAccessType::ReadWrite);   
-  int numberOfGroups = 1;
-  int isumsSize = numberOfGroups*16*sizeof(unsigned int);
-  ktt::ArgumentId isumsId = tuner.addArgumentVector(std::vector<unsigned int>(isumsSize), ktt::ArgumentAccessType::ReadWrite); //vector, readwrite, must be added after global and local size are determined, as its size depends on the number of groups
+  ktt::ArgumentId outId = tuner.addArgumentVector(std::vector<unsigned int>(size), ktt::ArgumentAccessType::ReadWrite);
   ktt::ArgumentId sizeId = tuner.addArgumentScalar(size);
   ktt::ArgumentId numberOfGroupsId = tuner.addArgumentScalar(1);
-
-  int localSize = 1;  
-  ktt::ArgumentId localMem1Id = tuner.addArgumentLocal<unsigned int>(localSize); //local, workgroupsize*sizeof(unsigned int), must be added after local size is determined, as its size depends on that
-  ktt::ArgumentId localMem2Id = tuner.addArgumentLocal<unsigned int>(2*localSize); //local, 2*workgroupsize*sizeof(unsigned int), must be added after local size is determined, as its size depends on that
-  ktt::ArgumentId localMem3Id = tuner.addArgumentLocal<unsigned int>(2*localSize); //local, 2*workgroupsize*sizeof(unsigned int), must be added after local size is determined, as its size depends on that
   int shift = 0;
-  ktt::ArgumentId shiftId = tuner.addArgumentScalar(shift); //will be updated as the kernel execution is iterative
+  ktt::ArgumentId shiftId = tuner.addArgumentScalar(shift); // Will be updated as the kernel execution is iterative
+  
+  int numberOfGroups = 1;
+  int isumsSize = numberOfGroups * 16 * sizeof(unsigned int);
+  // Vector argument will be updated in tuning manipulator as its size depends on the number of work-groups
+  ktt::ArgumentId isumsId = tuner.addArgumentVector(std::vector<unsigned int>(isumsSize), ktt::ArgumentAccessType::ReadWrite);
 
-  tunableSort * sort = new tunableSort(&tuner, kernelIds, size, inId, outId, isumsId, sizeId, localMem1Id, localMem2Id, localMem3Id, numberOfGroupsId, shiftId);
-  compositionId = tuner.addComposition("sort", kernelIds, std::unique_ptr<tunableSort>(sort));
-  sort->setKernelId(compositionId);
+  // Local memory arguments will be updated in tuning manipulator as their size depends on work-group size
+  int localSize = 1;  
+  ktt::ArgumentId localMem1Id = tuner.addArgumentLocal<unsigned int>(localSize);
+  ktt::ArgumentId localMem2Id = tuner.addArgumentLocal<unsigned int>(2 * localSize);
+  ktt::ArgumentId localMem3Id = tuner.addArgumentLocal<unsigned int>(2 * localSize);
+  
+  ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, size, inId, outId, isumsId, sizeId,
+      localMem1Id, localMem2Id, localMem3Id, numberOfGroupsId, shiftId));
   tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<size_t>{inId, isumsId, sizeId, localMem1Id, shiftId});
   tuner.setCompositionKernelArguments(compositionId, kernelIds[1], std::vector<size_t>{isumsId, numberOfGroupsId, localMem2Id});
   tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<size_t>{inId, isumsId, outId, sizeId, localMem3Id, shiftId});
 
-  tuner.addParameter(compositionId, "LOCAL_SIZE", {128, 256, 512});
-  //local size below 128, i.e. 64 or 32, does not work correctly, not even with the benchmark code
-  tuner.addParameter(compositionId, "GLOBAL_SIZE", {512, 1024, 2048, 4096, 8192, 16384, 32768});
-  auto workGroupConstraint = [](std::vector<size_t> vector) {return vector.at(0) != 128 || vector.at(1) != 32768;};
-  tuner.addConstraint(compositionId, workGroupConstraint, {"LOCAL_SIZE", "GLOBAL_SIZE"});
-  //parameter for the length of OpenCl vector data types used in the kernels
+  // Parameter for the length of OpenCL vector data types used in the kernels
   tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
+  // Local size below 128 does not work correctly, not even with the benchmark code
+  tuner.addParameter(compositionId, "LOCAL_SIZE", {128, 256, 512});
+  tuner.addParameter(compositionId, "GLOBAL_SIZE", {512, 1024, 2048, 4096, 8192, 16384, 32768});
+  auto workGroupConstraint = [](const std::vector<size_t>& vector) {return vector.at(0) != 128 || vector.at(1) != 32768;};
+  tuner.addConstraint(compositionId, workGroupConstraint, {"LOCAL_SIZE", "GLOBAL_SIZE"});
 
   tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.9);
+  tuner.setReferenceClass(compositionId, std::make_unique<ReferenceSort>(in), std::vector<ktt::ArgumentId>{outId});
 
-  tuner.setReferenceClass(compositionId, std::make_unique<referenceSort>(in), std::vector<ktt::ArgumentId>{outId});
-
-  sort->tune();
+  tuner.tuneKernel(compositionId);
+  tuner.printResult(compositionId, std::cout, ktt::PrintFormat::Verbose);
+  tuner.printResult(compositionId, std::string("sort_result.csv"), ktt::PrintFormat::CSV);
   return 0;
 }

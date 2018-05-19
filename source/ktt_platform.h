@@ -22,7 +22,7 @@
 
 /** Minor version of KTT framework. Second number in KTT version description.
   */
-#define KTT_VERSION_MINOR 6
+#define KTT_VERSION_MINOR 7
 
 /** Patch version of KTT framework. Third number in KTT version description.
   */
