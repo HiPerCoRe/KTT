@@ -343,6 +343,12 @@ public:
       */
     void persistArgument(const ArgumentId id, const bool flag);
 
+    /** @fn void downloadPersistentArgument(const OutputDescriptor& output) const
+      * Downloads specified persistent argument from compute API buffer into specified memory location.
+      * @param output User-provided memory location for persistent kernel argument which should be retrieved. See OutputDescriptor for more information.
+      */
+    void downloadPersistentArgument(const OutputDescriptor& output) const;
+
     /** @fn void tuneKernel(const KernelId id)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
       * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all configurations

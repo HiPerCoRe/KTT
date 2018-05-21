@@ -83,6 +83,7 @@ public:
     void setAutomaticGlobalSizeCorrection(const bool flag);
     void setKernelCacheCapacity(const size_t capacity);
     void persistArgument(const ArgumentId id, const bool flag);
+    void downloadPersistentArgument(const OutputDescriptor& output) const;
     void printComputeAPIInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const;

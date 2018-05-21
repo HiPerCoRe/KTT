@@ -375,6 +375,11 @@ void TunerCore::persistArgument(const ArgumentId id, const bool flag)
     computeEngine->persistArgument(argument, flag);
 }
 
+void TunerCore::downloadPersistentArgument(const OutputDescriptor& output) const
+{
+    computeEngine->downloadArgument(output.getArgumentId(), output.getOutputDestination(), output.getOutputSizeInBytes());
+}
+
 void TunerCore::printComputeAPIInfo(std::ostream& outputTarget) const
 {
     computeEngine->printComputeAPIInfo(outputTarget);

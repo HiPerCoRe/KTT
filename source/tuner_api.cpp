@@ -216,6 +216,19 @@ void Tuner::persistArgument(const ArgumentId id, const bool flag)
     }
 }
 
+void Tuner::downloadPersistentArgument(const OutputDescriptor& output) const
+{
+    try
+    {
+        tunerCore->downloadPersistentArgument(output);
+    }
+    catch (const std::runtime_error& error)
+    {
+        tunerCore->log(error.what());
+        throw;
+    }
+}
+
 void Tuner::tuneKernel(const KernelId id)
 {
     try

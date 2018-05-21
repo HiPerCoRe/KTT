@@ -1,8 +1,7 @@
-Jiří Filipovič - Reduction and 3D Coulomb summation examples, proposal of new features and testing
-of overall KTT framework funcionality.
+List of KTT framework contributors:
 
-David Střelák - N-body example, testing of online tuning functionality.
-
-Jana Pazúriková - Sort and hotspot examples, testing of kernel composition functionality.
-
-Richard Trembecký - BICG example.
+* Jiří Filipovič - reduction and 3D Coulomb summation examples, proposal of new features and testing of overall
+  KTT framework functionality
+* David Střelák - N-body example, testing of online tuning functionality
+* Jana Pazúriková - radix sort and hotspot examples, testing of kernel composition functionality
+* Richard Trembecký - BICG example
