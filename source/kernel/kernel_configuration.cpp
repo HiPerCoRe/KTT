@@ -139,34 +139,19 @@ bool KernelConfiguration::isComposite() const
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& configuration)
 {
-    std::vector<DimensionVector> globalSizes = configuration.getGlobalSizes();
-    std::vector<DimensionVector> localSizes = configuration.getLocalSizes();
-
-    for (size_t i = 0; i < globalSizes.size(); i++)
-    {
-        DimensionVector globalSize = globalSizes.at(i);
-        DimensionVector localSize = localSizes.at(i);
-
-        if (globalSizes.size() > 1)
-        {
-            outputTarget << "global size " << i << ": " << globalSize << "; ";
-            outputTarget << "local size " << i << ": " << localSize << "; ";
-        }
-        else
-        {
-            outputTarget << "global size: " << globalSize << "; ";
-            outputTarget << "local size: " << localSize << "; ";
-        }
-    }
-    
-    outputTarget << "parameters: ";
     if (configuration.parameterPairs.size() == 0)
     {
         outputTarget << "none";
     }
-    for (const auto& parameterPair : configuration.parameterPairs)
+
+    std::vector<ParameterPair> parameterPairs = configuration.parameterPairs;
+    for (size_t i = 0; i < parameterPairs.size(); i++)
     {
-        outputTarget << parameterPair << " ";
+        outputTarget << parameterPairs.at(i);
+        if (i + 1 != parameterPairs.size())
+        {
+            outputTarget << ", ";
+        }
     }
 
     return outputTarget;

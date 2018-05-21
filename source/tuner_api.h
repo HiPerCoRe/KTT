@@ -24,6 +24,7 @@
 #include "enum/argument_upload_type.h"
 #include "enum/compute_api.h"
 #include "enum/global_size_type.h"
+#include "enum/logging_level.h"
 #include "enum/modifier_action.h"
 #include "enum/modifier_dimension.h"
 #include "enum/modifier_type.h"
@@ -581,6 +582,12 @@ public:
       * @param type Global size type which will be set for tuner. See ::GlobalSizeType for more information.
       */
     void setGlobalSizeType(const GlobalSizeType type);
+
+     /** @fn void setLoggingLevel(const LoggingLevel level)
+      * Sets logging level for tuner. Default logging level is info.
+      * @param level Logging level which will be used by tuner. See ::LoggingLevel for more information.
+      */
+    void setLoggingLevel(const LoggingLevel level);
 
     /** @fn void setLoggingTarget(std::ostream& outputTarget)
       * Sets the target for info messages logging to specified output stream. Default logging target is `std::clog`.

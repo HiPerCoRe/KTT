@@ -73,7 +73,7 @@ private:
         auto argumentRangePointer = argumentValidationRanges.find(id);
         if (argumentRangePointer == argumentValidationRanges.end() && result.size() != referenceResult.size())
         {
-            logger->log(std::string("Number of elements in results differs for argument with id: ") + std::to_string(id)
+            logger->log(LoggingLevel::Warning, std::string("Number of elements in results differs for argument with id: ") + std::to_string(id)
                 + ", reference size: " + std::to_string(referenceResult.size()) + ", result size: " + std::to_string(result.size()));
             return false;
         }
@@ -96,8 +96,8 @@ private:
             }
             if (difference > toleranceThreshold)
             {
-                logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", absolute difference is: "
-                    + std::to_string(difference));
+                logger->log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id)
+                    + ", absolute difference is: " + std::to_string(difference));
                 return false;
             }
             return true;
@@ -108,9 +108,9 @@ private:
             {
                 if (std::fabs(result.at(i) - referenceResult.at(i)) > toleranceThreshold)
                 {
-                    logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
-                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
-                        + ", difference: " + std::to_string(std::fabs(result.at(i) - referenceResult.at(i))));
+                    logger->log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: "
+                        + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
+                        + std::to_string(result.at(i)) + ", difference: " + std::to_string(std::fabs(result.at(i) - referenceResult.at(i))));
                     return false;
                 }
             }
@@ -123,9 +123,9 @@ private:
                 double difference = std::fabs(result.at(i) - referenceResult.at(i));
                 if ((difference > 1e-4) && (difference / referenceResult.at(i) > toleranceThreshold))
                 {
-                    logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
-                        + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
-                        + ", relative difference: " + std::to_string(difference / referenceResult.at(i)));
+                    logger->log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: "
+                        + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
+                        + std::to_string(result.at(i)) + ", relative difference: " + std::to_string(difference / referenceResult.at(i)));
                     return false;
                 }
             }
@@ -144,9 +144,10 @@ private:
         {
             if (result.at(i) != referenceResult.at(i))
             {
-                logger->log(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
-                    + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: " + std::to_string(result.at(i))
-                    + ", difference: " + std::to_string(static_cast<T>(std::fabs(result.at(i) - referenceResult.at(i)))));
+                logger->log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: "
+                    + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
+                    + std::to_string(result.at(i)) + ", difference: "
+                    + std::to_string(static_cast<T>(std::fabs(result.at(i) - referenceResult.at(i)))));
                 return false;
             }
         }
