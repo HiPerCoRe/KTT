@@ -1,5 +1,5 @@
 -- Configuration variables
-ktt_library_name = "ktt_0_6"
+ktt_library_name = "ktt"
 cuda_projects = false
 opencl_projects = false
 

@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">0.6</span>
+   &#160;<span id="projectnumber">0.7</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -93,13 +93,13 @@ $(document).ready(function(){initNavTree('index.html','');});
 <div class="title">KTT - Kernel Tuning Toolkit </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>KTT is a C++ tuning framework for OpenCL and CUDA kernels. Project is currently in release candidate stage with stable API and all of the planned functionality available.</p>
+<div class="textblock"><p>KTT is a tuning framework for OpenCL and CUDA kernels. The project is currently in release candidate stage with stable API and all of the planned functionality available.</p>
 <h2>Main features </h2>
 <ul>
-<li>Ability to define kernel tuning parameters like thread count, vector data types and loop unroll factors in order to optimize computation for particular device</li>
+<li>Ability to define kernel tuning parameters such as kernel thread sizes, vector data types and loop unroll factors in order to optimize computation for a particular device</li>
 <li>Support for iterative kernel launches and composite kernels</li>
 <li>Support for multiple compute queues and asynchronous operations</li>
-<li>Support for online autotuning - kernel tuning combined with regular kernel running</li>
+<li>Support for online auto-tuning - kernel tuning combined with regular kernel running</li>
 <li>Ability to automatically ensure correctness of tuned computation with reference kernel or C++ function</li>
 <li>Support for multiple compute APIs, switching between CUDA and OpenCL requires only minor changes in C++ code (eg. changing the kernel source file), no library recompilation is needed</li>
 <li>Large number of customization options, including support for kernel arguments with user-defined data types, ability to change kernel compiler flags and more</li>
@@ -112,7 +112,7 @@ $(document).ready(function(){initNavTree('index.html','');});
 <li>Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support.</li>
 </ul>
 <h2>Tutorials </h2>
-<p>Tutorials are short examples aimed at introducing people to KTT framework. Each tutorial focuses on explaining specific part of the API. All tutorials are available for both OpenCL and CUDA back-ends. Tutorials assume that reader has some knowledge about C++ and GPU programming. List of currently available tutorials:</p>
+<p>Tutorials are short examples aimed at introducing people to KTT framework. Each tutorial focuses on explaining specific part of the API. All tutorials are available for both OpenCL and CUDA backends. Tutorials assume that reader has some knowledge about C++ and GPU programming. List of currently available tutorials:</p>
 <ul>
 <li><code>compute_api_info</code>: Tutorial covers retrieving information about compute API platforms and devices through KTT API.</li>
 <li><code>running_kernel</code>: Tutorial covers running simple kernel with KTT framework and retrieving output.</li>
@@ -127,7 +127,8 @@ $(document).ready(function(){initNavTree('index.html','');});
 <li><code>coulomb_sum_3d</code>: Alternative to iterative version, utilizes kernel which computes entire map in single invocation.</li>
 <li><code>nbody</code>: Example which showcases tuning of N-body simulation.</li>
 <li><code>reduction</code>: Example which showcases tuning of vector reduction, launches a kernel iteratively.</li>
-<li><code>sort</code>: Sorting example, combines multiple kernels into kernel composition.</li>
+<li><code>sort</code>: Radix sort example, combines multiple kernels into kernel composition.</li>
+<li><code>bicg</code>: Biconjugate gradients method example, features reference class, kernel compositions and constraints.</li>
 </ul>
 <h2>Building KTT </h2>
 <ul>
@@ -158,12 +159,13 @@ $(document).ready(function(){initNavTree('index.html','');});
 <li><code>--no-tutorials</code> disables compilation of tutorials</li>
 <li><code>--tests</code> enables compilation of unit tests</li>
 <li><code>--no-cuda</code> disables inclusion of CUDA API during compilation, only affects Nvidia platform</li>
+<li><code>--no-opencl</code> disables inclusion of OpenCL API during compilation</li>
 </ul>
 </li>
 </ul>
 <h2>Original project </h2>
 <p>KTT is based on <a href="https://github.com/CNugteren/CLTune">CLTune project</a>. Some parts of KTT API are similar to CLTune API, however internal structure was almost completely rewritten from scratch. Portions of code for following features were ported from CLTune:</p><ul>
-<li>PSO and annealing searcher</li>
+<li>Annealing searcher</li>
 <li>Generating of kernel configurations</li>
 <li>Tuning parameter constraints </li>
 </ul>

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Kernel Tuning Toolkit: KTT FAQ</title>
+<title>Kernel Tuning Toolkit: Member List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">0.6</span>
+   &#160;<span id="projectnumber">0.7</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -71,7 +71,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('md_docs_faq.html','');});
+$(document).ready(function(){initNavTree('classktt_1_1_configuration_duration.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -90,25 +90,20 @@ $(document).ready(function(){initNavTree('md_docs_faq.html','');});
 
 <div class="header">
   <div class="headertitle">
-<div class="title">KTT FAQ </div>  </div>
+<div class="title">ktt::ConfigurationDuration Member List</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>This file provides answers to common questions that users might have involving the usage of KTT framework.</p>
-<h2>Building KTT </h2>
-<p><b>Q: During project file generation, Premake prints error that compute API libraries were not found.</b><br />
- A: There are two likely reasons for this. First, you need to make sure that compute SDK provided by your device vendor (eg. CUDA Toolkit) is installed correctly on your machine. Second, you need to set path to the SDK in your environment variables (eg. setting path to CUDA Toolkit on Linux: <code>export CUDA_PATH=/path/to/cuda/toolkit</code>). On Windows, the path to SDK is usually set automatically during SDK installation.</p>
-<p><b>Q: I'm getting compilation errors during KTT build.</b><br />
- A: List of compatible compilers can be found in readme on <a href="https://github.com/Fillo7/KTT">main KTT Github page</a>. If you are unable to build KTT with compatible compiler (generally any compiler which supports C++14), you can report a bug <a href="https://github.com/Fillo7/KTT/issues">here</a>.</p>
-<h2>Using KTT </h2>
-<p><b>Q: I've ported my native OpenCL / CUDA application to KTT but it crashes at runtime.</b><br />
- A: KTT checks for correct usage of the API during runtime. If it detects a problem, an exception is thrown. In most cases, the exception also contains an error message which describes the problem. If the exception message is not helpful and you believe that you are using the API correctly, you can report a bug <a href="https://github.com/Fillo7/KTT/issues">here</a>.</p>
-<p><b>Q: I have an application which performs some part of the computation directly in C/C++ code and utilizes iterative kernel launches. Can such application be ported to KTT?</b><br />
- A: Yes, in this case you need to utilize tuning manipulator API, which is fully documented. You can also check out some of the examples which already utilize tuning manipulator (eg. <a href="https://github.com/Fillo7/KTT/tree/master/examples/reduction">reduction</a>, <a href="https://github.com/Fillo7/KTT/tree/master/examples/coulomb_sum_3d_iterative">coulomb_sum_3d_iterative</a>).</p>
-<p><b>Q: Running my application with KTT uses much more memory than running it natively.</b><br />
- A: KTT by default makes a copy of all buffers that are added to tuner with addArgumentVector() method. This makes it safe for user to modify the original buffer without affecting the tuner. However, it also doubles the memory usage. If you are fine with tuner accessing your buffer directly, you can use overloaded version of addArgumentVector() method, which allows you to customize handling of buffers by tuner. You may also want to read KTT buffer diagram located in documentation folder to find out differences between various buffer configuration options.</p>
-<p><b>Q: I have a kernel composition for which I want to add a regular tuning parameter which does not affect thread sizes. However there is no such version of this method available for kernel compositions.</b><br />
- A: You can use methods which affect regular kernels for kernel compositions as well. In case you call such a method with kernel composition id as an argument, it will simply affect all kernels which are part of the composition. This works even if the tuning parameter is supposed to affect only single kernel inside composition because the parameters which do not affect thread sizes are only added to kernel source as preprocessor definitions, which can be ignored by specific kernels. </p>
-</div></div><!-- contents -->
+
+<p>This is the complete list of members for <a class="el" href="classktt_1_1_configuration_duration.html">ktt::ConfigurationDuration</a>, including all inherited members.</p>
+<table class="directory">
+  <tr class="even"><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html#a8e4dbd5e3739e62fee835ba6c49896c7">ConfigurationDuration</a>(const double duration)</td><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html">ktt::ConfigurationDuration</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">explicit</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html#ae447233d9f6717a194b8fbfedd5a3435">getConfigurationCount</a>() const override</td><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html">ktt::ConfigurationDuration</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">virtual</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html#ab2b2d386c82a0c16a240f22153616b9a">getStatusString</a>() const override</td><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html">ktt::ConfigurationDuration</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">virtual</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html#a03617f962e37ea36ce2d8b4e516e6faa">initialize</a>(const size_t totalConfigurationCount) override</td><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html">ktt::ConfigurationDuration</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">virtual</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html#a13e6dad923bd06fb2de3fe3ad01bec30">isMet</a>() const override</td><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html">ktt::ConfigurationDuration</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">virtual</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html#a36ec1e54444852d17a2b9dc4a86f9e9a">updateStatus</a>(const double previousConfigurationDuration) override</td><td class="entry"><a class="el" href="classktt_1_1_configuration_duration.html">ktt::ConfigurationDuration</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">virtual</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html#a03174c2a6251dc4ee72d02a767d86d79">~StopCondition</a>()=default</td><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html">ktt::StopCondition</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
+</table></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

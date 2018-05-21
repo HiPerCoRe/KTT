@@ -1,5 +1,9 @@
 var dir_ec7d085ec77f69a826fd0e2fbdff6456 =
 [
+    [ "stop_condition", "dir_f31298eab99f02f8dadb1d144a47ea65.html", "dir_f31298eab99f02f8dadb1d144a47ea65" ],
+    [ "computation_result.h", "computation__result_8h.html", [
+      [ "ComputationResult", "classktt_1_1_computation_result.html", "classktt_1_1_computation_result" ]
+    ] ],
     [ "device_info.h", "device__info_8h.html", "device__info_8h" ],
     [ "dimension_vector.h", "dimension__vector_8h.html", "dimension__vector_8h" ],
     [ "output_descriptor.h", "output__descriptor_8h.html", [

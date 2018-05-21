@@ -1,0 +1,8 @@
+Jiří Filipovič - Reduction and 3D Coulomb summation examples, proposal of new features and testing
+of overall KTT framework funcionality.
+
+David Střelák - N-body example, testing of online tuning functionality.
+
+Jana Pazúriková - Sort and hotspot examples, testing of kernel composition functionality.
+
+Richard Trembecký - BICG example.
