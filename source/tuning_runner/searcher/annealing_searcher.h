@@ -25,7 +25,7 @@ public:
         alreadyVisistedStatesCount(0),
         executionTimes(configurations.size(), std::numeric_limits<double>::max()),
         generator(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count())),
-        intDistribution(0, static_cast<int>(configurations.size())),
+        intDistribution(0, static_cast<int>(configurations.size()-1)),
         probabilityDistribution(0.0, 1.0)
     {
         if (configurations.size() == 0)
