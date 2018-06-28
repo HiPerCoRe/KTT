@@ -286,6 +286,12 @@ project "gemm_opencl"
     includedirs { "source" }
     links { "ktt" }
 
+project "conv_opencl"
+    kind "ConsoleApp"
+    files { "examples/cltune-conv/*.cpp", "examples/cltune-conv/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
 project "reduction_opencl"
     kind "ConsoleApp"
     files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }
