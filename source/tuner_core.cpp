@@ -28,11 +28,11 @@ TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, con
     }
 
     DeviceInfo info = computeEngine->getCurrentDeviceInfo();
-    logger.log(LoggingLevel::Info, std::string("Initializing tuner for device: ") + info.getName());
+    Logger::getLogger().log(LoggingLevel::Info, std::string("Initializing tuner for device ") + info.getName());
 
     kernelManager = std::make_unique<KernelManager>(info);
-    kernelRunner = std::make_unique<KernelRunner>(argumentManager.get(), kernelManager.get(), &logger, computeEngine.get());
-    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), kernelRunner.get(), &logger);
+    kernelRunner = std::make_unique<KernelRunner>(argumentManager.get(), kernelManager.get(), computeEngine.get());
+    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), kernelRunner.get());
 }
 
 KernelId TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -402,22 +402,22 @@ DeviceInfo TunerCore::getCurrentDeviceInfo() const
 
 void TunerCore::setLoggingLevel(const LoggingLevel level)
 {
-    logger.setLoggingLevel(level);
+    Logger::getLogger().setLoggingLevel(level);
 }
 
 void TunerCore::setLoggingTarget(std::ostream& outputTarget)
 {
-    logger.setLoggingTarget(outputTarget);
+    Logger::getLogger().setLoggingTarget(outputTarget);
 }
 
 void TunerCore::setLoggingTarget(const std::string& filePath)
 {
-    logger.setLoggingTarget(filePath);
+    Logger::getLogger().setLoggingTarget(filePath);
 }
 
 void TunerCore::log(const LoggingLevel level, const std::string& message) const
 {
-    logger.log(level, message);
+    Logger::getLogger().log(level, message);
 }
 
 } // namespace ktt

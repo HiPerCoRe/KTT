@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <random>
@@ -5,8 +6,14 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define KTT_KERNEL_FILE "../../examples/cltune-conv/conv.cl"
-#define KTT_REFERENCE_KERNEL_FILE "../../examples/cltune-conv/conv_reference.cl"
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/cltune-conv/conv.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/cltune-conv/conv_reference.cl"
+#else
+    #define KTT_KERNEL_FILE "../../examples/cltune-conv/conv.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/cltune-conv/conv_reference.cl"
+#endif
+
 // Settings (synchronise these with "conv.cc", "conv.opencl" and "conv_reference.opencl")
 #define HFS (3)        // Half filter size
 #define FS (HFS+HFS+1) // Filter size
@@ -20,7 +27,7 @@ bool IsMultiple(size_t a, size_t b) {
 class tunable: public ktt::TuningManipulator {
     public:
 
-        tunable(uint kSizeX, uint kSizeY)
+        tunable(uint32_t kSizeX, uint32_t kSizeY)
         {
             this->kSizeX = kSizeX;
             this->kSizeY = kSizeY;
@@ -40,8 +47,8 @@ class tunable: public ktt::TuningManipulator {
             runKernel(kernelId, ndRangeDimensions, workGroupDimensions);
         }
     private:
-        uint kSizeX;
-        uint kSizeY;
+        uint32_t kSizeX;
+        uint32_t kSizeY;
 };
 
 int main(int argc, char** argv)
@@ -72,8 +79,8 @@ int main(int argc, char** argv)
     // Declare kernel parameters
 
     // Declare data variables
-    const uint kSizeX = 8192; // Matrix dimension X
-    const uint kSizeY = 4096; // Matrix dimension Y
+    const uint32_t kSizeX = 8192; // Matrix dimension X
+    const uint32_t kSizeY = 4096; // Matrix dimension Y
 
     const ktt::DimensionVector ndRangeDimensions(kSizeX, kSizeY);
     const ktt::DimensionVector workGroupDimensions(1,1);
@@ -88,9 +95,9 @@ int main(int argc, char** argv)
     auto mat_a = std::vector<float>((kExtraSize+kSizeX)*(kExtraSize+kSizeY));
     auto mat_b = std::vector<float>(kSizeX*kSizeY);
     auto coeff = std::vector<float>(FS*FS);
-    for (uint i = 0; i < (kExtraSize+kSizeX)*(kExtraSize+kSizeY); i++)
+    for (uint32_t i = 0; i < (kExtraSize+kSizeX)*(kExtraSize+kSizeY); i++)
         mat_a.at(i) = distribution(engine);
-    for (uint i = 0; i < kSizeX*kSizeY; i++)
+    for (uint32_t i = 0; i < kSizeX*kSizeY; i++)
         mat_b.at(i) = 0.0f;
     // Creates the filter coefficients (gaussian blur)
     auto sigma = 1.0f;
@@ -187,4 +194,3 @@ int main(int argc, char** argv)
 
     return 0;
 };
-

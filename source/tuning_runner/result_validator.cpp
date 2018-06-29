@@ -6,10 +6,9 @@
 namespace ktt
 {
 
-ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelRunner* kernelRunner, Logger* logger) :
+ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelRunner* kernelRunner) :
     argumentManager(argumentManager),
     kernelRunner(kernelRunner),
-    logger(logger),
     toleranceThreshold(1e-4),
     validationMethod(ValidationMethod::SideBySideComparison)
 {}
@@ -164,7 +163,7 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel& kernel)
         }
     }
 
-    logger->log(LoggingLevel::Info, std::string("Computing reference class result for kernel: ") + kernel.getName());
+    Logger::getLogger().log(LoggingLevel::Info, std::string("Computing reference class result for kernel ") + kernel.getName());
     referenceClass->computeResult();
     std::vector<KernelArgument> referenceResult;
 
@@ -212,7 +211,7 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
         }
     }
 
-    logger->log(LoggingLevel::Info, std::string("Computing reference kernel result for kernel: ") + kernel.getName());
+    Logger::getLogger().log(LoggingLevel::Info, std::string("Computing reference kernel result for kernel ") + kernel.getName());
     kernelRunner->setPersistentArgumentUsage(false);
     kernelRunner->runKernel(referenceKernelId, referenceParameters, std::vector<OutputDescriptor>{});
 
@@ -247,7 +246,7 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             ArgumentId id = resultArgument.getId();
             if (referenceDataType != resultArgument.getDataType())
             {
-                logger->log(LoggingLevel::Warning, std::string("Reference class argument data type mismatch for argument id: ")
+                Logger::getLogger().log(LoggingLevel::Warning, std::string("Reference class argument data type mismatch for argument id: ")
                     + std::to_string(resultArgument.getId()));
                 return false;
             }
@@ -262,7 +261,7 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
                 auto argumentRangePointer = argumentValidationRanges.find(id);
                 if (argumentRangePointer == argumentValidationRanges.end() && resultSize != referenceSize)
                 {
-                    logger->log(LoggingLevel::Warning, std::string("Number of elements in results differs for argument with id: ")
+                    Logger::getLogger().log(LoggingLevel::Warning, std::string("Number of elements in results differs for argument with id: ")
                         + std::to_string(id) + ", reference size: " + std::to_string(referenceSize) + ", result size: "
                         + std::to_string(resultSize));
                     currentResult = false;
@@ -337,7 +336,7 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
 
         if (!argumentValidated)
         {
-            logger->log(LoggingLevel::Warning, std::string("Result for validated argument with following id not found: ")
+            Logger::getLogger().log(LoggingLevel::Warning, std::string("Result for validated argument with following id not found: ")
                 + std::to_string(referenceArgument.getId()));
             return false;
         }
@@ -353,7 +352,7 @@ bool ResultValidator::validateResultCustom(const ArgumentId id, const void* resu
     {
         if (!comparator((uint8_t*)result + i, (uint8_t*)referenceResult + i))
         {
-            logger->log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: "
+            Logger::getLogger().log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: "
                 + std::to_string(i / elementSizeInBytes));
             return false;
         }

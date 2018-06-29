@@ -97,7 +97,6 @@ public:
 
 private:
     // Attributes
-    Logger logger;
     ResultPrinter resultPrinter;
     std::unique_ptr<ArgumentManager> argumentManager;
     std::unique_ptr<KernelManager> kernelManager;

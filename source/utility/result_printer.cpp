@@ -72,7 +72,7 @@ void ResultPrinter::printVerbose(const std::vector<KernelResult>& results, std::
 
         outputTarget << "Result for kernel " << result.getKernelName() << ", configuration: " << std::endl;
         printConfigurationVerbose(outputTarget, result.getConfiguration());
-        outputTarget << "Computation duration: " << convertTime(result.getComputationDuration(), timeUnit) << getTimeUnitTag(timeUnit) << std::endl;
+        outputTarget << "Computation duration: " << convertTime(result.getComputationDuration(), timeUnit) << getTimeUnitTag(timeUnit);
         outputTarget << std::endl;
     }
 
@@ -82,8 +82,7 @@ void ResultPrinter::printVerbose(const std::vector<KernelResult>& results, std::
         outputTarget << "Best result for kernel " << bestResult.getKernelName() << ": " << std::endl;
         outputTarget << "Configuration: ";
         printConfigurationVerbose(outputTarget, bestResult.getConfiguration());
-        outputTarget << "Computation duration: " << convertTime(bestResult.getComputationDuration(), timeUnit) << getTimeUnitTag(timeUnit)
-            << std::endl;
+        outputTarget << "Computation duration: " << convertTime(bestResult.getComputationDuration(), timeUnit) << getTimeUnitTag(timeUnit);
         outputTarget << std::endl;
     }
     else
@@ -103,7 +102,7 @@ void ResultPrinter::printVerbose(const std::vector<KernelResult>& results, std::
             outputTarget << "Invalid result for kernel " << result.getKernelName() << ", configuration: " << std::endl;
             printConfigurationVerbose(outputTarget, result.getConfiguration());
             outputTarget << "Error message: " << result.getErrorMessage();
-            outputTarget << std::endl << std::endl;
+            outputTarget << std::endl;
         }
     }
 }

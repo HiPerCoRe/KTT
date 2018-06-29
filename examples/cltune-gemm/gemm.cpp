@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <random>
@@ -5,8 +6,13 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define KTT_KERNEL_FILE "../../examples/cltune-gemm/gemm.cl"
-#define KTT_REFERENCE_KERNEL_FILE "../../examples/cltune-gemm/gemm_reference.cl"
+#if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/cltune-gemm/gemm.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/cltune-gemm/gemm_reference.cl"
+#else
+    #define KTT_KERNEL_FILE "../../examples/cltune-gemm/gemm.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/cltune-gemm/gemm_reference.cl"
+#endif
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
 bool IsMultiple(size_t a, size_t b) {
@@ -15,7 +21,7 @@ bool IsMultiple(size_t a, size_t b) {
 class tunable: public ktt::TuningManipulator {
     public:
 
-        tunable(uint kSizeM, uint kSizeN)
+        tunable(uint32_t kSizeM, uint32_t kSizeN)
         {
             this->kSizeM = kSizeM;
             this->kSizeN = kSizeN;
@@ -38,8 +44,8 @@ class tunable: public ktt::TuningManipulator {
             runKernel(kernelId, ndRangeDimensions, workGroupDimensions);
         }
     private:
-        uint kSizeM;
-        uint kSizeN;
+        uint32_t kSizeM;
+        uint32_t kSizeN;
 };
 
 int main(int argc, char** argv)
@@ -70,9 +76,9 @@ int main(int argc, char** argv)
     // Declare kernel parameters
 
     // Declare data variables
-    const uint kSizeM = 2048;
-    const uint kSizeN = 2048;
-    const uint kSizeK = 2048;
+    const uint32_t kSizeM = 2048;
+    const uint32_t kSizeN = 2048;
+    const uint32_t kSizeK = 2048;
 
     const ktt::DimensionVector ndRangeDimensions(kSizeM, kSizeN);
     const ktt::DimensionVector workGroupDimensions(1,1);
@@ -86,11 +92,11 @@ int main(int argc, char** argv)
     auto mat_a = std::vector<float>(kSizeM*kSizeK);
     auto mat_b = std::vector<float>(kSizeN*kSizeK);
     auto mat_c = std::vector<float>(kSizeM*kSizeN);
-    for (uint i = 0; i < kSizeM*kSizeK; i++)
+    for (uint32_t i = 0; i < kSizeM*kSizeK; i++)
         mat_a.at(i) = distribution(engine);
-    for (uint i = 0; i < kSizeN*kSizeK; i++)
+    for (uint32_t i = 0; i < kSizeN*kSizeK; i++)
         mat_b.at(i) = distribution(engine);
-    for (uint i = 0; i < kSizeM*kSizeN; i++)
+    for (uint32_t i = 0; i < kSizeM*kSizeN; i++)
         mat_c.at(i) = 0.0f;
 
     // Create tuner object for chosen platform and device
