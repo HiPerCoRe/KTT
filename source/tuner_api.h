@@ -583,23 +583,23 @@ public:
       */
     void setGlobalSizeType(const GlobalSizeType type);
 
-     /** @fn void setLoggingLevel(const LoggingLevel level)
+     /** @fn static void setLoggingLevel(const LoggingLevel level)
       * Sets logging level for tuner. Default logging level is info.
       * @param level Logging level which will be used by tuner. See ::LoggingLevel for more information.
       */
-    void setLoggingLevel(const LoggingLevel level);
+    static void setLoggingLevel(const LoggingLevel level);
 
-    /** @fn void setLoggingTarget(std::ostream& outputTarget)
+    /** @fn static void setLoggingTarget(std::ostream& outputTarget)
       * Sets the target for info messages logging to specified output stream. Default logging target is `std::clog`.
       * @param outputTarget Location where tuner info messages will be printed.
       */
-    void setLoggingTarget(std::ostream& outputTarget);
+    static void setLoggingTarget(std::ostream& outputTarget);
 
-    /** @fn void setLoggingTarget(const std::string& filePath)
+    /** @fn static void setLoggingTarget(const std::string& filePath)
       * Sets the target for info messages logging to specified file. Default logging target is `std::clog`.
       * @param filePath Path to file where tuner info messages will printed.
       */
-    void setLoggingTarget(const std::string& filePath);
+    static void setLoggingTarget(const std::string& filePath);
 
 private:
     // Pointer to implementation class

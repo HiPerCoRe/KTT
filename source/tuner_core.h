@@ -90,10 +90,10 @@ public:
     DeviceInfo getCurrentDeviceInfo() const;
 
     // Logger methods
-    void setLoggingLevel(const LoggingLevel level);
-    void setLoggingTarget(std::ostream& outputTarget);
-    void setLoggingTarget(const std::string& filePath);
-    void log(const LoggingLevel level, const std::string& message) const;
+    static void setLoggingLevel(const LoggingLevel level);
+    static void setLoggingTarget(std::ostream& outputTarget);
+    static void setLoggingTarget(const std::string& filePath);
+    static void log(const LoggingLevel level, const std::string& message);
 
 private:
     // Attributes

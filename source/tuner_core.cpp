@@ -415,7 +415,7 @@ void TunerCore::setLoggingTarget(const std::string& filePath)
     Logger::getLogger().setLoggingTarget(filePath);
 }
 
-void TunerCore::log(const LoggingLevel level, const std::string& message) const
+void TunerCore::log(const LoggingLevel level, const std::string& message)
 {
     Logger::getLogger().log(level, message);
 }
