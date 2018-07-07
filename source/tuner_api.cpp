@@ -56,7 +56,7 @@ void Tuner::addParameter(const KernelId id, const std::string& parameterName, co
 {
     try
     {
-        tunerCore->addParameter(id, parameterName, parameterValues, ModifierType::None, ModifierAction::Multiply, ModifierDimension::X);
+        tunerCore->addParameter(id, parameterName, parameterValues);
     }
     catch (const std::runtime_error& error)
     {
@@ -78,12 +78,12 @@ void Tuner::addParameterDouble(const KernelId id, const std::string& parameterNa
     }
 }
 
-void Tuner::addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-    const ModifierType modifierType, const ModifierAction modifierAction, const ModifierDimension modifierDimension)
+void Tuner::setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
+    const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
 {
     try
     {
-        tunerCore->addParameter(id, parameterName, parameterValues, modifierType, modifierAction, modifierDimension);
+        tunerCore->setThreadModifier(id, modifierType, modifierDimension, parameterNames, modifierFunction);
     }
     catch (const std::runtime_error& error)
     {
@@ -92,12 +92,38 @@ void Tuner::addParameter(const KernelId id, const std::string& parameterName, co
     }
 }
 
-void Tuner::addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
-    const ModifierAction modifierAction)
+void Tuner::setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
+    const std::string& parameterName, const ModifierAction modifierAction)
+{
+    switch (modifierAction)
+    {
+    case ModifierAction::Add:
+        setThreadModifier(id, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize + parameters.at(0);});
+        break;
+    case ModifierAction::Subtract:
+        setThreadModifier(id, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize - parameters.at(0);});
+        break;
+    case ModifierAction::Multiply:
+        setThreadModifier(id, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize * parameters.at(0);});
+        break;
+    case ModifierAction::Divide:
+        setThreadModifier(id, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize / parameters.at(0);});
+        break;
+    default:
+        throw std::runtime_error("Unknown modifier action");
+    }
+}
+
+void Tuner::setLocalMemoryModifier(const KernelId id, const ArgumentId argumentId, const std::vector<std::string>& parameterNames,
+    const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
 {
     try
     {
-        tunerCore->addLocalMemoryModifier(id, parameterName, argumentId, modifierAction);
+        tunerCore->setLocalMemoryModifier(id, argumentId, parameterNames, modifierFunction);
     }
     catch (const std::runtime_error& error)
     {
@@ -106,12 +132,12 @@ void Tuner::addLocalMemoryModifier(const KernelId id, const std::string& paramet
     }
 }
 
-void Tuner::addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
-    const std::vector<std::string>& parameterNames)
+void Tuner::addConstraint(const KernelId id, const std::vector<std::string>& parameterNames,
+    const std::function<bool(const std::vector<size_t>&)>& constraintFunction)
 {
     try
     {
-        tunerCore->addConstraint(id, constraintFunction, parameterNames);
+        tunerCore->addConstraint(id, parameterNames, constraintFunction);
     }
     catch (const std::runtime_error& error)
     {
@@ -160,14 +186,13 @@ KernelId Tuner::addComposition(const std::string& compositionName, const std::ve
     }
 }
 
-void Tuner::addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-    const std::vector<size_t>& parameterValues, const ModifierType modifierType, const ModifierAction modifierAction,
-    const ModifierDimension modifierDimension)
+void Tuner::setCompositionKernelThreadModifier(const KernelId compositionId, const KernelId kernelId, const ModifierType modifierType,
+    const ModifierDimension modifierDimension, const std::vector<std::string>& parameterNames,
+    const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
 {
     try
     {
-        tunerCore->addCompositionKernelParameter(compositionId, kernelId, parameterName, parameterValues, modifierType, modifierAction,
-            modifierDimension);
+        tunerCore->setCompositionKernelThreadModifier(compositionId, kernelId, modifierType, modifierDimension, parameterNames, modifierFunction);
     }
     catch (const std::runtime_error& error)
     {
@@ -176,12 +201,38 @@ void Tuner::addCompositionKernelParameter(const KernelId compositionId, const Ke
     }
 }
 
-void Tuner::addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-    const ArgumentId argumentId, const ModifierAction modifierAction)
+void Tuner::setCompositionKernelThreadModifier(const KernelId compositionId, const KernelId kernelId, const ModifierType modifierType,
+    const ModifierDimension modifierDimension, const std::string& parameterName, const ModifierAction modifierAction)
+{
+    switch (modifierAction)
+    {
+    case ModifierAction::Add:
+        setCompositionKernelThreadModifier(compositionId, kernelId, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize + parameters.at(0);});
+        break;
+    case ModifierAction::Subtract:
+        setCompositionKernelThreadModifier(compositionId, kernelId, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize - parameters.at(0);});
+        break;
+    case ModifierAction::Multiply:
+        setCompositionKernelThreadModifier(compositionId, kernelId, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize * parameters.at(0);});
+        break;
+    case ModifierAction::Divide:
+        setCompositionKernelThreadModifier(compositionId, kernelId, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize / parameters.at(0);});
+        break;
+    default:
+        throw std::runtime_error("Unknown modifier action");
+    }
+}
+
+void Tuner::setCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const ArgumentId argumentId,
+    const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
 {
     try
     {
-        tunerCore->addCompositionKernelLocalMemoryModifier(compositionId, kernelId, parameterName, argumentId, modifierAction);
+        tunerCore->setCompositionKernelLocalMemoryModifier(compositionId, kernelId, argumentId, parameterNames, modifierFunction);
     }
     catch (const std::runtime_error& error)
     {

@@ -64,24 +64,20 @@ int main(int argc, char** argv)
     std::cout << "Number of compute units: " << di.getMaxComputeUnits() << std::endl;
     size_t cus = di.getMaxComputeUnits();
 
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {32, 64, 128, 256, 512},
-        ktt::ModifierType::Local,
-        ktt::ModifierAction::Multiply,
-        ktt::ModifierDimension::X);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {32, 64, 128, 256, 512});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
     tuner.addParameter(kernelId, "UNBOUNDED_WG", {0, 1});
     tuner.addParameter(kernelId, "WG_NUM", {0, cus, cus * 2, cus * 4, cus * 8, cus * 16});
-    tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2, 4, 8, 16},
-        ktt::ModifierType::Global,
-        ktt::ModifierAction::Divide,
-        ktt::ModifierDimension::X);
+    tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2, 4, 8, 16});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "VECTOR_SIZE", ktt::ModifierAction::Divide);
     tuner.addParameter(kernelId, "USE_ATOMICS", {0, 1});
 
     auto persistConstraint = [](const std::vector<size_t>& v) {return (v[0] && v[1] == 0) || (!v[0] && v[1] > 0);};
-    tuner.addConstraint(kernelId, persistConstraint, {"UNBOUNDED_WG", "WG_NUM"});
+    tuner.addConstraint(kernelId, {"UNBOUNDED_WG", "WG_NUM"}, persistConstraint);
     auto persistentAtomic = [](const std::vector<size_t>& v) {return (v[0] == 1) || (v[0] == 0 && v[1] == 1);};
-    tuner.addConstraint(kernelId, persistentAtomic, {"UNBOUNDED_WG", "USE_ATOMICS"});
+    tuner.addConstraint(kernelId, {"UNBOUNDED_WG", "USE_ATOMICS"}, persistentAtomic);
     auto unboundedWG = [](const std::vector<size_t>& v) {return (!v[0] || v[1] >= 32);};
-    tuner.addConstraint(kernelId, unboundedWG, {"UNBOUNDED_WG", "WORK_GROUP_SIZE_X"});
+    tuner.addConstraint(kernelId, {"UNBOUNDED_WG", "WORK_GROUP_SIZE_X"}, unboundedWG);
 
     tuner.setReferenceClass(kernelId, std::make_unique<ReferenceReduction>(src, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n*500.0f/10'000'000.0f);

@@ -42,12 +42,16 @@ std::string getOpenCLEnumName(const cl_int value)
         return std::string("CL_INVALID_ARG_VALUE");
     case CL_INVALID_ARG_SIZE:
         return std::string("CL_INVALID_ARG_SIZE");
+    case CL_INVALID_KERNEL_ARGS:
+        return std::string("CL_INVALID_KERNEL_ARGS");
     case CL_INVALID_WORK_GROUP_SIZE:
         return std::string("CL_INVALID_WORK_GROUP_SIZE");
     case CL_INVALID_WORK_ITEM_SIZE:
         return std::string("CL_INVALID_WORK_ITEM_SIZE");
     case CL_INVALID_BUFFER_SIZE:
         return std::string("CL_INVALID_BUFFER_SIZE");
+    case CL_INVALID_GLOBAL_WORK_SIZE:
+        return std::string("CL_INVALID_GLOBAL_WORK_SIZE");
     default:
         return std::to_string(static_cast<int>(value));
     }

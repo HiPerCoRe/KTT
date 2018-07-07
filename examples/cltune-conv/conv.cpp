@@ -144,15 +144,15 @@ int main(int argc, char** argv)
     if (v[0] == 2) { return (v[1] == v[2] + CeilDiv(2*HFS,v[3])); } // With halo threads
     else           { return (v[1] == v[2]); }                       // Without halo threads
   };
-  tuner.addConstraint(kernelId, HaloThreads, {"LOCAL", "TBX_XL", "TBX", "WPTX"});
-  tuner.addConstraint(kernelId, HaloThreads, {"LOCAL", "TBY_XL", "TBY", "WPTY"});
+  tuner.addConstraint(kernelId, {"LOCAL", "TBX_XL", "TBX", "WPTX"}, HaloThreads);
+  tuner.addConstraint(kernelId, {"LOCAL", "TBY_XL", "TBY", "WPTY"}, HaloThreads);
 
   // Sets the constrains on the vector size
   auto VectorConstraint = [] (std::vector<size_t> v) {
     if (v[0] == 2) { return IsMultiple(v[2],v[1]) && IsMultiple(2*HFS,v[1]); }
     else           { return IsMultiple(v[2],v[1]); }
   };
-  tuner.addConstraint(kernelId, VectorConstraint, {"LOCAL", "VECTOR", "WPTX"});
+  tuner.addConstraint(kernelId, {"LOCAL", "VECTOR", "WPTX"}, VectorConstraint);
 
   // Makes sure the work per thread is not too high, otherwise too many registers would be used.
   //auto WorkPerThreadConstraint = [] (std::vector<size_t> v) { return (v[0]*v[1] < 32); };
@@ -160,7 +160,7 @@ int main(int argc, char** argv)
 
   // Sets padding to zero in case local memory is not used
   auto PaddingConstraint = [] (std::vector<size_t> v) { return (v[1] == 0 || v[0] != 0); };
-  tuner.addConstraint(kernelId, PaddingConstraint, {"LOCAL", "PADDING"});
+  tuner.addConstraint(kernelId, {"LOCAL", "PADDING"}, PaddingConstraint);
 
 
 

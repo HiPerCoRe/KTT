@@ -54,6 +54,24 @@ void DimensionVector::setSizeZ(const size_t sizeZ)
     this->sizeZ = sizeZ;
 }
 
+void DimensionVector::setSize(const ModifierDimension modifierDimension, const size_t size)
+{
+    switch (modifierDimension)
+    {
+    case ModifierDimension::X:
+        sizeX = size;
+        break;
+    case ModifierDimension::Y:
+        sizeY = size;
+        break;
+    case ModifierDimension::Z:
+        sizeZ = size;
+        break;
+    default:
+        throw std::runtime_error("Unknown modifier dimension");
+    }
+}
+
 void DimensionVector::multiply(const DimensionVector& factor)
 {
     sizeX *= factor.sizeX;
@@ -102,6 +120,21 @@ size_t DimensionVector::getSizeY() const
 size_t DimensionVector::getSizeZ() const
 {
     return sizeZ;
+}
+
+size_t DimensionVector::getSize(const ModifierDimension modifierDimension) const
+{
+    switch (modifierDimension)
+    {
+    case ModifierDimension::X:
+        return sizeX;
+    case ModifierDimension::Y:
+        return sizeY;
+    case ModifierDimension::Z:
+        return sizeZ;
+    default:
+        throw std::runtime_error("Unknown modifier dimension");
+    }
 }
 
 size_t DimensionVector::getTotalSize() const
@@ -194,7 +227,7 @@ void DimensionVector::divideByValue(const size_t value, const ModifierDimension 
 
 std::ostream& operator<<(std::ostream& outputTarget, const DimensionVector& dimensionVector)
 {
-    outputTarget << dimensionVector.getSizeX() << ", " << dimensionVector.getSizeY() << ", " << dimensionVector.getSizeZ();
+    outputTarget << "(" << dimensionVector.getSizeX() << ", " << dimensionVector.getSizeY() << ", " << dimensionVector.getSizeZ() << ")";
     return outputTarget;
 }
 

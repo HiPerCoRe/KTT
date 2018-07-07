@@ -764,7 +764,7 @@ size_t CUDAEngine::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>
                 continue;
             }
 
-            numberOfElements = modifier.getModifiedValue(numberOfElements);
+            numberOfElements = modifier.getModifiedSize(numberOfElements);
         }
 
         size_t argumentSize = argument->getElementSizeInBytes() * numberOfElements;

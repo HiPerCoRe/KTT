@@ -226,10 +226,10 @@ int main(int argc, char** argv)
 	// Specify contraints
 	// All of the parameters are used only in the fused kernel
 	auto fused = [](std::vector<size_t> vector) {return vector.at(0) == 2 || ((vector.at(0) == 0 || vector.at(0) == 1) && vector.at(1) == 4 && vector.at(2) == 1 && vector.at(3) == 1 && vector.at(4) == 1 && vector.at(5) == 1 && vector.at(6) == 1 && vector.at(7) == 1 && vector.at(8) == 1 && vector.at(9) == 512 && vector.at(10) == 32); };
-	tuner.addConstraint(kernelId, fused, std::vector<std::string>{"FUSED", "BICG_BATCH", "USE_SHARED_MATRIX", "USE_SHARED_VECTOR_1", "USE_SHARED_VECTOR_2", "USE_SHARED_REDUCTION_1", "USE_SHARED_REDUCTION_2", "ATOMICS", "UNROLL_BICG_STEP", "ROWS_PROCESSED", "TILE"});
+	tuner.addConstraint(kernelId, std::vector<std::string>{"FUSED", "BICG_BATCH", "USE_SHARED_MATRIX", "USE_SHARED_VECTOR_1", "USE_SHARED_VECTOR_2", "USE_SHARED_REDUCTION_1", "USE_SHARED_REDUCTION_2", "ATOMICS", "UNROLL_BICG_STEP", "ROWS_PROCESSED", "TILE"}, fused);
 	// New NVidia GPUs have max. workgroup size of 1024, so   tile_x * tile_y <= 1024   ==>   tile_x * (tile_x / batch) <= 1024
 	auto maxWgSize = [](std::vector<size_t> vector) {return vector.at(0) * vector.at(0) / vector.at(1) <= MAX_WORK_GROUP_SIZE; };
-	tuner.addConstraint(kernelId, maxWgSize, std::vector<std::string>{"TILE", "BICG_BATCH"});
+	tuner.addConstraint(kernelId, std::vector<std::string>{"TILE", "BICG_BATCH"}, maxWgSize);
 
 	// Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
 	tuner.setCompositionKernelArguments(kernelId, kernelFusedId, { AId, x1Id, y1Id, x2Id, y2Id, mRefId, nRefId });

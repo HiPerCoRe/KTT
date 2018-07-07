@@ -1,7 +1,7 @@
 #pragma once
 
+#include <map>
 #include <ostream>
-#include <utility>
 #include <vector>
 #include "ktt_types.h"
 #include "api/dimension_vector.h"
@@ -19,11 +19,11 @@ public:
         const std::vector<ParameterPair>& parameterPairs);
     explicit KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
         const std::vector<ParameterPair>& parameterPairs, const std::vector<LocalMemoryModifier>& localMemoryModifiers);
-    explicit KernelConfiguration(const std::vector<std::pair<KernelId, DimensionVector>>& compositionGlobalSizes,
-        const std::vector<std::pair<KernelId, DimensionVector>>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs);
-    explicit KernelConfiguration(const std::vector<std::pair<KernelId, DimensionVector>>& compositionGlobalSizes,
-        const std::vector<std::pair<KernelId, DimensionVector>>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs,
-        const std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>>& compositionLocalMemoryModifiers);
+    explicit KernelConfiguration(const std::map<KernelId, DimensionVector>& compositionGlobalSizes,
+        const std::map<KernelId, DimensionVector>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs);
+    explicit KernelConfiguration(const std::map<KernelId, DimensionVector>& compositionGlobalSizes,
+        const std::map<KernelId, DimensionVector>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs,
+        const std::map<KernelId, std::vector<LocalMemoryModifier>>& compositionLocalMemoryModifiers);
 
     DimensionVector getGlobalSize() const;
     DimensionVector getLocalSize() const;
@@ -42,9 +42,9 @@ private:
     DimensionVector globalSize;
     DimensionVector localSize;
     std::vector<LocalMemoryModifier> localMemoryModifiers;
-    std::vector<std::pair<KernelId, DimensionVector>> compositionGlobalSizes;
-    std::vector<std::pair<KernelId, DimensionVector>> compositionLocalSizes;
-    std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>> compositionLocalMemoryModifiers;
+    std::map<KernelId, DimensionVector> compositionGlobalSizes;
+    std::map<KernelId, DimensionVector> compositionLocalSizes;
+    std::map<KernelId, std::vector<LocalMemoryModifier>> compositionLocalMemoryModifiers;
     std::vector<ParameterPair> parameterPairs;
     bool compositeConfiguration;
 };

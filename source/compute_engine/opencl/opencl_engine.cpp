@@ -647,7 +647,7 @@ void OpenCLEngine::setKernelArgument(OpenCLKernel& kernel, KernelArgument& argum
     {
         if (modifier.getArgument() == argument.getId())
         {
-            numberOfElements = modifier.getModifiedValue(numberOfElements);
+            numberOfElements = modifier.getModifiedSize(numberOfElements);
         }
     }
 

@@ -143,19 +143,19 @@ int main(int argc, char** argv)
     auto MultipleOfXMulYDivZ = [] (std::vector<size_t> v) { return IsMultiple(v[0], (v[1]*v[2])/v[3]); };
 
     // Sets constraints: Requirement for unrolling the KWG loop
-    tuner.addConstraint(kernelId, MultipleOfX, {"KWG", "KWI"});
+    tuner.addConstraint(kernelId, {"KWG", "KWI"}, MultipleOfX);
 
     // Sets constraints: Required for integer MWI and NWI
-    tuner.addConstraint(kernelId, MultipleOfXMulY, {"MWG", "MDIMC", "VWM"});
-    tuner.addConstraint(kernelId, MultipleOfXMulY, {"NWG", "NDIMC", "VWN"});
+    tuner.addConstraint(kernelId, {"MWG", "MDIMC", "VWM"}, MultipleOfXMulY);
+    tuner.addConstraint(kernelId, {"NWG", "NDIMC", "VWN"}, MultipleOfXMulY);
 
     // Sets constraints: Required for integer MWIA and NWIB
-    tuner.addConstraint(kernelId, MultipleOfXMulY, {"MWG", "MDIMA", "VWM"});
-    tuner.addConstraint(kernelId, MultipleOfXMulY, {"NWG", "NDIMB", "VWN"});
+    tuner.addConstraint(kernelId, {"MWG", "MDIMA", "VWM"}, MultipleOfXMulY);
+    tuner.addConstraint(kernelId, {"NWG", "NDIMB", "VWN"}, MultipleOfXMulY);
 
     // Sets constraints: KWG has to be a multiple of KDIMA = ((MDIMC*NDIMC)/(MDIMA)) and KDIMB = (...)
-    tuner.addConstraint(kernelId, MultipleOfXMulYDivZ, {"KWG", "MDIMC", "NDIMC", "MDIMA"});
-    tuner.addConstraint(kernelId, MultipleOfXMulYDivZ, {"KWG", "MDIMC", "NDIMC", "NDIMB"});
+    tuner.addConstraint(kernelId, {"KWG", "MDIMC", "NDIMC", "MDIMA"}, MultipleOfXMulYDivZ);
+    tuner.addConstraint(kernelId, {"KWG", "MDIMC", "NDIMC", "NDIMB"}, MultipleOfXMulYDivZ);
 
 
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
