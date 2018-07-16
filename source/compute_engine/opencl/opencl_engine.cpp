@@ -517,6 +517,19 @@ uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId id) const
     return static_cast<uint64_t>(duration);
 }
 
+void OpenCLEngine::resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
+{
+    OpenCLBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Resizing buffer for argument " + std::to_string(id));
+    buffer->resize(commandQueues.at(getDefaultQueue())->getQueue(), newSize, preserveData);
+}
+
 void OpenCLEngine::setPersistentBufferUsage(const bool flag)
 {
     persistentBufferFlag = flag;
@@ -990,6 +1003,11 @@ uint64_t OpenCLEngine::persistArgument(KernelArgument&, const bool)
 }
 
 uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId) const
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::resizeArgument(const ArgumentId, const size_t, const bool)
 {
     throw std::runtime_error("");
 }

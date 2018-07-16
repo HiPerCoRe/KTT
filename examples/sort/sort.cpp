@@ -79,7 +79,7 @@ int main(int argc, char** argv)
   ktt::ArgumentId shiftId = tuner.addArgumentScalar(shift); // Will be updated as the kernel execution is iterative
   
   int numberOfGroups = 1;
-  int isumsSize = numberOfGroups * 16 * sizeof(unsigned int);
+  int isumsSize = 16 * numberOfGroups;
   // Vector argument will be updated in tuning manipulator as its size depends on the number of work-groups
   ktt::ArgumentId isumsId = tuner.addArgumentVector(std::vector<unsigned int>(isumsSize), ktt::ArgumentAccessType::ReadWrite);
 

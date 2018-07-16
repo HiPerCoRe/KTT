@@ -55,6 +55,7 @@ public:
     virtual EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) = 0;
     virtual uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) = 0;
     virtual uint64_t getArgumentOperationDuration(const EventId id) const = 0;
+    virtual void resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) = 0;
     virtual void setPersistentBufferUsage(const bool flag) = 0;
     virtual void clearBuffer(const ArgumentId id) = 0;
     virtual void clearBuffers() = 0;

@@ -34,10 +34,9 @@ class TunableSort : public ktt::TuningManipulator {
       updateArgumentLocal(localMem1Id, localSize); // Local, workgroupsize * sizeof(unsigned int)
       updateArgumentLocal(localMem2Id, 2 * localSize);
       updateArgumentLocal(localMem3Id, 2 * localSize); // Local, 2 * workgroupsize * sizeof(unsigned int)
-      int isumsSize = (numberOfGroups * 16 * sizeof(unsigned int));
-      std::vector<unsigned int> is(isumsSize);
+      int isumsSize = 16 * numberOfGroups;
       // Vector, readwrite, must be added after global and local size are determined, as its size depends on the number of groups
-      updateArgumentVector(isumsId, is.data(), isumsSize);
+      resizeArgumentVector(isumsId, isumsSize, false);
 
       bool inOutSwapped = false;
 

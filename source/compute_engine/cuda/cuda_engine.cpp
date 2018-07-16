@@ -501,6 +501,19 @@ uint64_t CUDAEngine::getArgumentOperationDuration(const EventId id) const
     return static_cast<uint64_t>(duration);
 }
 
+void CUDAEngine::resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
+{
+    CUDABuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Resizing buffer for argument " + std::to_string(id));
+    buffer->resize(newSize, preserveData);
+}
+
 void CUDAEngine::clearBuffer(const ArgumentId id)
 {
     auto iterator = buffers.cbegin();
@@ -948,6 +961,11 @@ void CUDAEngine::setPersistentBufferUsage(const bool)
 }
 
 uint64_t CUDAEngine::getArgumentOperationDuration(const EventId) const
+{
+    throw std::runtime_error("");
+}
+
+void CUDAEngine::resizeArgument(const ArgumentId, const size_t, const bool)
 {
     throw std::runtime_error("");
 }
