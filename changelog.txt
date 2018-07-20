@@ -1,3 +1,12 @@
+Version 1.0 (20/7/2018)
+* First official release
+* Significantly improved logging system - added support for multiple logging levels and enhanced configuration possibilities
+* Added new debug level logging messages
+* Separated tuning parameter and thread modifier definition, a single modifier can now utilize multiple parameters
+* Thread modifiers and local memory modifiers can now be specified with a function, similar to constraints
+* Added buffer resize method to tuning manipulator API
+* Added new examples, updated old examples to utilize recently introduced KTT features
+
 Version 0.7 (19/5/2018)
 * Introduced stop condition API for offline tuning
 * Added support for persistent kernel arguments
