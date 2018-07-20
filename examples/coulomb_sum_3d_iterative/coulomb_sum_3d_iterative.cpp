@@ -43,7 +43,7 @@ public:
         for (int i = 0; i < gridSize; i++)
         {
             // Perform precomputation for 2D kernel
-            float z = gridSpacing * float(i);
+            float z = gridSpacing * static_cast<float>(i);
             if (getParameterValue("USE_SOA", parameterValues) == 0)
             {
                 for (int j = 0; j < atoms; j++)
@@ -60,8 +60,8 @@ public:
                 }
                 updateArgumentVector(atomInfoZ2Id, atomInfoZ2.data());
             }
+
             updateArgumentScalar(zIndexId, &i);
-        
             runKernel(kernelId, globalSize, localSize);
         }
     }
@@ -74,7 +74,7 @@ private:
     ktt::ArgumentId atomInfoZ2Id;
     ktt::ArgumentId zIndexId;
     std::vector<float> atomInfoPrecomp;
-    std::vector<float> atomInfoZ;
+    const std::vector<float>& atomInfoZ;
     std::vector<float> atomInfoZ2;
 };
 
@@ -108,42 +108,35 @@ int main(int argc, char** argv)
     const int gridSize = 256;
     float gridSpacing = 0.5f;
     int zIndex = 0;
-    std::vector<float> atomInfo;
-    std::vector<float> atomInfoPrecomp;
-    std::vector<float> atomInfoX;
-    std::vector<float> atomInfoY;
-    std::vector<float> atomInfoZ;
-    std::vector<float> atomInfoZ2;
-    std::vector<float> atomInfoW;
-    std::vector<float> energyGrid;
 
-    energyGrid.assign(gridSize * gridSize * gridSize, 0.0f);
-    atomInfoX.resize(atoms);
-    atomInfoY.resize(atoms);
-    atomInfoZ.resize(atoms);
-    atomInfoZ2.resize(atoms);
-    atomInfoW.resize(atoms);
-    atomInfo.resize(atoms * 4);
-    atomInfoPrecomp.resize(atoms * 4);
+    std::vector<float> atomInfo(4 * atoms);
+    std::vector<float> atomInfoPrecomp(4 * atoms);
+    std::vector<float> atomInfoX(atoms);
+    std::vector<float> atomInfoY(atoms);
+    std::vector<float> atomInfoZ(atoms);
+    std::vector<float> atomInfoZ2(atoms);
+    std::vector<float> atomInfoW(atoms);
+    std::vector<float> energyGrid(gridSize * gridSize * gridSize, 0.0f);
 
     std::random_device device;
     std::default_random_engine engine(device());
     std::uniform_real_distribution<float> distribution(0.0f, 40.0f);
+
     for (int i = 0; i < atoms; i++)
     {
         atomInfoX.at(i) = distribution(engine);
         atomInfoY.at(i) = distribution(engine);
         atomInfoZ.at(i) = distribution(engine);
-        atomInfoW.at(i) = distribution(engine)/40.0f;
+        atomInfoW.at(i) = distribution(engine) / 40.0f;
 
         atomInfo.at((4 * i)) = atomInfoX.at(i);
         atomInfo.at((4 * i) + 1) = atomInfoY.at(i);
         atomInfo.at((4 * i) + 2) = atomInfoZ.at(i);
         atomInfo.at((4 * i) + 3) = atomInfoW.at(i);
 
-        // do not store z, it will be rewritten anyway
         atomInfoPrecomp.at((4 * i)) = atomInfoX.at(i);
         atomInfoPrecomp.at((4 * i) + 1) = atomInfoY.at(i);
+        // Do not store z, it will be rewritten anyway
         atomInfoPrecomp.at((4 * i) + 3) = atomInfoW.at(i);
     }
 
@@ -177,10 +170,12 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId});
 
     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", std::vector<size_t>{4, 8, 16, 32}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply,
-        ktt::ModifierDimension::X);
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", std::vector<size_t>{1, 2, 4, 8, 16, 32}, ktt::ModifierType::Local,
-        ktt::ModifierAction::Multiply, ktt::ModifierDimension::Y);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", std::vector<size_t>{4, 8, 16, 32});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", std::vector<size_t>{1, 2, 4, 8, 16, 32});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
+
+    // Add additional tuning parameters
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", std::vector<size_t>{0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", std::vector<size_t>{0, 1});
     tuner.addParameter(kernelId, "VECTOR_TYPE", std::vector<size_t>{1, 2, 4, 8});
@@ -188,15 +183,15 @@ int main(int argc, char** argv)
 
     // Using vectorized SoA only makes sense when vectors are longer than 1
     auto vectorizedSoA = [](const std::vector<size_t>& vector) {return vector.at(0) > 1 || vector.at(1) != 2;};
-    tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"});
+    tuner.addConstraint(kernelId, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
     // Ensure sufficient parallelism
     auto par = [](const std::vector<size_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
-    tuner.addConstraint(kernelId, par, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"});
+    tuner.addConstraint(kernelId, std::vector<std::string>{"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, par);
 
     // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR
-    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", std::vector<size_t>{1, 2, 4, 8}, ktt::ModifierType::Global, ktt::ModifierAction::Divide,
-        ktt::ModifierDimension::X);
-        
+    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", std::vector<size_t>{1, 2, 4, 8});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR", ktt::ModifierAction::Divide);
+
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
 

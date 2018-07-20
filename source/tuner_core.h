@@ -30,19 +30,20 @@ public:
         const DimensionVector& localSize);
     KernelId addComposition(const std::string& compositionName, const std::vector<KernelId>& kernelIds,
         std::unique_ptr<TuningManipulator> manipulator);
-    void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues,
-        const ModifierType modifierType, const ModifierAction modifierAction, const ModifierDimension modifierDimension);
+    void addParameter(const KernelId id, const std::string& parameterName, const std::vector<size_t>& parameterValues);
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
-    void addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
-        const ModifierAction modifierAction);
-    void addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
-        const std::vector<std::string>& parameterNames);
+    void addConstraint(const KernelId id, const std::vector<std::string>& parameterNames,
+        const std::function<bool(const std::vector<size_t>&)>& constraintFunction);
+    void setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
+        const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
+    void setLocalMemoryModifier(const KernelId id, const ArgumentId argumentId, const std::vector<std::string>& parameterNames,
+        const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
+    void setCompositionKernelThreadModifier(const KernelId compositionId, const KernelId kernelId, const ModifierType modifierType,
+        const ModifierDimension modifierDimension, const std::vector<std::string>& parameterNames,
+        const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
+    void setCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const ArgumentId argumentId,
+        const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
-    void addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-        const std::vector<size_t>& parameterValues, const ModifierType modifierType, const ModifierAction modifierAction,
-        const ModifierDimension modifierDimension);
-    void addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-        const ArgumentId argumentId, const ModifierAction modifierAction);
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
     std::string getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const;
 
@@ -83,19 +84,20 @@ public:
     void setAutomaticGlobalSizeCorrection(const bool flag);
     void setKernelCacheCapacity(const size_t capacity);
     void persistArgument(const ArgumentId id, const bool flag);
+    void downloadPersistentArgument(const OutputDescriptor& output) const;
     void printComputeAPIInfo(std::ostream& outputTarget) const;
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const;
     DeviceInfo getCurrentDeviceInfo() const;
 
     // Logger methods
-    void setLoggingTarget(std::ostream& outputTarget);
-    void setLoggingTarget(const std::string& filePath);
-    void log(const std::string& message) const;
+    static void setLoggingLevel(const LoggingLevel level);
+    static void setLoggingTarget(std::ostream& outputTarget);
+    static void setLoggingTarget(const std::string& filePath);
+    static void log(const LoggingLevel level, const std::string& message);
 
 private:
     // Attributes
-    Logger logger;
     ResultPrinter resultPrinter;
     std::unique_ptr<ArgumentManager> argumentManager;
     std::unique_ptr<KernelManager> kernelManager;

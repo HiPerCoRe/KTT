@@ -21,15 +21,14 @@ KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, cons
     compositeConfiguration(false)
 {}
 
-KernelConfiguration::KernelConfiguration(const std::vector<std::pair<KernelId, DimensionVector>>& compositionGlobalSizes,
-    const std::vector<std::pair<KernelId, DimensionVector>>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs) :
-    KernelConfiguration(compositionGlobalSizes, compositionLocalSizes, parameterPairs,
-        std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>>{})
+KernelConfiguration::KernelConfiguration(const std::map<KernelId, DimensionVector>& compositionGlobalSizes,
+    const std::map<KernelId, DimensionVector>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs) :
+    KernelConfiguration(compositionGlobalSizes, compositionLocalSizes, parameterPairs, std::map<KernelId, std::vector<LocalMemoryModifier>>{})
 {}
 
-KernelConfiguration::KernelConfiguration(const std::vector<std::pair<KernelId, DimensionVector>>& compositionGlobalSizes,
-    const std::vector<std::pair<KernelId, DimensionVector>>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs,
-    const std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>>& compositionLocalMemoryModifiers) :
+KernelConfiguration::KernelConfiguration(const std::map<KernelId, DimensionVector>& compositionGlobalSizes,
+    const std::map<KernelId, DimensionVector>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs,
+    const std::map<KernelId, std::vector<LocalMemoryModifier>>& compositionLocalMemoryModifiers) :
     globalSize(DimensionVector()),
     localSize(DimensionVector()),
     compositionGlobalSizes(compositionGlobalSizes),
@@ -56,41 +55,32 @@ std::vector<LocalMemoryModifier> KernelConfiguration::getLocalMemoryModifiers() 
 
 DimensionVector KernelConfiguration::getCompositionKernelGlobalSize(const KernelId id) const
 {
-    for (const auto& globalSizePair : compositionGlobalSizes)
+    if (compositionGlobalSizes.find(id) == compositionGlobalSizes.end())
     {
-        if (globalSizePair.first == id)
-        {
-            return globalSizePair.second;
-        }
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
 
-    throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    return compositionGlobalSizes.find(id)->second;
 }
 
 DimensionVector KernelConfiguration::getCompositionKernelLocalSize(const KernelId id) const
 {
-    for (const auto& localSizePair : compositionLocalSizes)
+    if (compositionLocalSizes.find(id) == compositionLocalSizes.end())
     {
-        if (localSizePair.first == id)
-        {
-            return localSizePair.second;
-        }
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
 
-    throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    return compositionLocalSizes.find(id)->second;
 }
 
 std::vector<LocalMemoryModifier> KernelConfiguration::getCompositionKernelLocalMemoryModifiers(const KernelId id) const
 {
-    for (const auto& modifier : compositionLocalMemoryModifiers)
+    if (compositionLocalMemoryModifiers.find(id) == compositionLocalMemoryModifiers.end())
     {
-        if (modifier.first == id)
-        {
-            return modifier.second;
-        }
+        return std::vector<LocalMemoryModifier>{};
     }
 
-    return std::vector<LocalMemoryModifier>{};
+    return compositionLocalMemoryModifiers.find(id)->second;
 }
 
 std::vector<DimensionVector> KernelConfiguration::getGlobalSizes() const
@@ -149,24 +139,30 @@ std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& 
 
         if (globalSizes.size() > 1)
         {
-            outputTarget << "global size " << i << ": " << globalSize << "; ";
-            outputTarget << "local size " << i << ": " << localSize << "; ";
+            outputTarget << "global size " << i << " " << globalSize << ", ";
+            outputTarget << "local size " << i << " " << localSize << ", ";
         }
         else
         {
-            outputTarget << "global size: " << globalSize << "; ";
-            outputTarget << "local size: " << localSize << "; ";
+            outputTarget << "global size " << globalSize << ", ";
+            outputTarget << "local size " << localSize << ", ";
         }
     }
-    
+
     outputTarget << "parameters: ";
     if (configuration.parameterPairs.size() == 0)
     {
         outputTarget << "none";
     }
-    for (const auto& parameterPair : configuration.parameterPairs)
+
+    std::vector<ParameterPair> parameterPairs = configuration.parameterPairs;
+    for (size_t i = 0; i < parameterPairs.size(); i++)
     {
-        outputTarget << parameterPair << " ";
+        outputTarget << parameterPairs.at(i);
+        if (i + 1 != parameterPairs.size())
+        {
+            outputTarget << ", ";
+        }
     }
 
     return outputTarget;

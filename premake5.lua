@@ -280,6 +280,18 @@ project "coulomb_sum_3d_iterative_opencl"
     includedirs { "source" }
     links { "ktt" }
 
+project "gemm_opencl"
+    kind "ConsoleApp"
+    files { "examples/cltune-gemm/*.cpp", "examples/cltune-gemm/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "conv_opencl"
+    kind "ConsoleApp"
+    files { "examples/cltune-conv/*.cpp", "examples/cltune-conv/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
 project "reduction_opencl"
     kind "ConsoleApp"
     files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }

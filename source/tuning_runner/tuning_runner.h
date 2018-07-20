@@ -11,7 +11,6 @@
 #include "dto/kernel_result.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
-#include "utility/logger.h"
 
 namespace ktt
 {
@@ -20,7 +19,7 @@ class TuningRunner
 {
 public:
     // Constructor
-    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner, Logger* logger);
+    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner);
 
     // Core methods
     std::vector<KernelResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
@@ -42,7 +41,6 @@ private:
     ArgumentManager* argumentManager;
     KernelManager* kernelManager;
     KernelRunner* kernelRunner;
-    Logger* logger;
     ConfigurationManager configurationManager;
     std::unique_ptr<ResultValidator> resultValidator;
 

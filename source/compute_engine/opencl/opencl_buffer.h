@@ -1,11 +1,13 @@
 #pragma once
 
+#include <algorithm>
 #include <cstring>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include "CL/cl.h"
-#include "opencl_command_queue.h"
+#include "opencl_event.h"
 #include "opencl_utility.h"
 #include "kernel_argument/kernel_argument.h"
 #include "enum/argument_access_type.h"
@@ -53,7 +55,7 @@ public:
         checkOpenCLError(clReleaseMemObject(buffer), "clReleaseMemObject");
     }
 
-    void resize(const size_t newBufferSize)
+    void resize(cl_command_queue queue, const size_t newBufferSize, const bool preserveData)
     {
         if (zeroCopy)
         {
@@ -65,11 +67,31 @@ public:
             return;
         }
 
-        checkOpenCLError(clReleaseMemObject(buffer), "clReleaseMemObject");
+        if (!preserveData)
+        {
+            checkOpenCLError(clReleaseMemObject(buffer), "clReleaseMemObject");
+            cl_int result;
+            buffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, hostPointer, &result);
+            checkOpenCLError(result, "clCreateBuffer");
+        }
+        else
+        {
+            cl_mem newBuffer;
+            cl_int result;
+            auto event = std::make_unique<OpenCLEvent>(0, true);
 
-        cl_int result;
-        buffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, hostPointer, &result);
-        checkOpenCLError(result, "clCreateBuffer");
+            newBuffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, hostPointer, &result);
+            checkOpenCLError(result, "clCreateBuffer");
+            result = clEnqueueCopyBuffer(queue, buffer, newBuffer, 0, 0, std::min(bufferSize, newBufferSize), 0, nullptr, event->getEvent());
+            checkOpenCLError(result, "clEnqueueCopyBuffer");
+
+            event->setReleaseFlag();
+            checkOpenCLError(clWaitForEvents(1, event->getEvent()), "clWaitForEvents");
+
+            checkOpenCLError(clReleaseMemObject(buffer), "clReleaseMemObject");
+            buffer = newBuffer;
+        }
+
         bufferSize = newBufferSize;
     }
 
@@ -77,7 +99,7 @@ public:
     {
         if (bufferSize < dataSize)
         {
-            resize(dataSize);
+            resize(queue, dataSize, false);
         }
 
         if (memoryLocation == ArgumentMemoryLocation::Device)
@@ -109,7 +131,7 @@ public:
     {
         if (bufferSize < dataSize)
         {
-            resize(dataSize);
+            resize(queue, dataSize, false);
         }
 
         if (recordingEvent == nullptr)

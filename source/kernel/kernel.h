@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -7,6 +9,10 @@
 #include "kernel_parameter.h"
 #include "ktt_types.h"
 #include "api/dimension_vector.h"
+#include "api/parameter_pair.h"
+#include "dto/local_memory_modifier.h"
+#include "enum/modifier_dimension.h"
+#include "enum/modifier_type.h"
 
 namespace ktt
 {
@@ -20,8 +26,11 @@ public:
 
     // Core methods
     void addParameter(const KernelParameter& parameter);
-    void addLocalMemoryModifier(const std::string& parameterName, const ArgumentId argumentId, const ModifierAction& modifierAction);
     void addConstraint(const KernelConstraint& constraint);
+    void setThreadModifier(const ModifierType modifierType, const ModifierDimension modifierDimension,
+        const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
+    void setLocalMemoryModifier(const ArgumentId argumentId, const std::vector<std::string>& parameterNames,
+        const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
     void setArguments(const std::vector<ArgumentId>& argumentIds);
     void setTuningManipulatorFlag(const bool flag);
 
@@ -30,11 +39,14 @@ public:
     std::string getSource() const;
     std::string getName() const;
     DimensionVector getGlobalSize() const;
+    DimensionVector getModifiedGlobalSize(const std::vector<ParameterPair>& parameterPairs) const;
     DimensionVector getLocalSize() const;
+    DimensionVector getModifiedLocalSize(const std::vector<ParameterPair>& parameterPairs) const;
     std::vector<KernelParameter> getParameters() const;
     std::vector<KernelConstraint> getConstraints() const;
     size_t getArgumentCount() const;
     std::vector<ArgumentId> getArgumentIds() const;
+    std::vector<LocalMemoryModifier> getLocalMemoryModifiers(const std::vector<ParameterPair>& parameterPairs) const;
     bool hasParameter(const std::string& parameterName) const;
     bool hasTuningManipulator() const;
 
@@ -48,7 +60,15 @@ private:
     std::vector<KernelParameter> parameters;
     std::vector<KernelConstraint> constraints;
     std::vector<ArgumentId> argumentIds;
+    std::array<std::vector<std::string>, 3> globalThreadModifierNames;
+    std::array<std::function<size_t(const size_t, const std::vector<size_t>&)>, 3> globalThreadModifiers;
+    std::array<std::vector<std::string>, 3> localThreadModifierNames;
+    std::array<std::function<size_t(const size_t, const std::vector<size_t>&)>, 3> localThreadModifiers;
+    std::map<ArgumentId, std::vector<std::string>> localMemoryModifierNames;
+    std::map<ArgumentId, std::function<size_t(const size_t, const std::vector<size_t>&)>> localMemoryModifiers;
     bool tuningManipulatorFlag;
+
+    void validateModifierParameters(const std::vector<std::string>& parameterNames) const;
 };
 
 } // namespace ktt

@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
-    const int numberOfBodies = 32*1024;
+    const int numberOfBodies = 32 * 1024;
     // Total NDRange size matches number of grid points
     const ktt::DimensionVector ndRangeDimensions(numberOfBodies);
     const ktt::DimensionVector workGroupDimensions;
@@ -98,10 +98,10 @@ int main(int argc, char** argv)
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "nbody_kernel", ndRangeDimensions, referenceWorkGroupDimensions);
 
     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {64, 128, 256, 512}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply,
-        ktt::ModifierDimension::X);
-    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", {1, 2, 4, 8}, ktt::ModifierType::Global, ktt::ModifierAction::Divide,
-        ktt::ModifierDimension::X);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {64, 128, 256, 512});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
+    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", {1, 2, 4, 8});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR", ktt::ModifierAction::Divide);
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", {0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", {0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
@@ -130,11 +130,11 @@ int main(int argc, char** argv)
 
     // Add conditions
     auto lteq = [](const std::vector<size_t>& vector) {return vector.at(0) <= vector.at(1);};
-    tuner.addConstraint(kernelId, lteq, {"INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR"});
+    tuner.addConstraint(kernelId, {"INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR"}, lteq);
     auto lteq256 = [](const std::vector<size_t>& vector) {return vector.at(0) * vector.at(1) <= 256;};
-    tuner.addConstraint(kernelId, lteq, {"INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2"});
+    tuner.addConstraint(kernelId, {"INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2"}, lteq256);
     auto vectorizedSoA = [](const std::vector<size_t>& vector) {return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1);};
-    tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"});
+    tuner.addConstraint(kernelId, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
 
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{deltaTimeId,
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
         dampingId, softeningSqrId});
 
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
-    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001);
 
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{newBodyVelId,

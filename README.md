@@ -1,8 +1,8 @@
 KTT - Kernel Tuning Toolkit
 ===========================
 
-KTT is a tuning framework for OpenCL and CUDA kernels. The project is currently in release candidate stage with
-stable API and all of the planned functionality available.
+KTT is a tuning framework for OpenCL and CUDA kernels. Official 1.0 version with stable API and all of the planned
+functionality is now released.
 
 Main features
 -------------

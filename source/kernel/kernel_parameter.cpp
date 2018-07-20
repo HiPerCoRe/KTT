@@ -4,55 +4,26 @@
 namespace ktt
 {
 
-KernelParameter::KernelParameter(const std::string& name, const std::vector<size_t>& values, const ModifierType modifierType,
-    const ModifierAction modifierAction, const ModifierDimension modifierDimension) :
+KernelParameter::KernelParameter(const std::string& name, const std::vector<size_t>& values) :
     name(name),
     values(values),
-    modifierType(modifierType),
-    modifierAction(modifierAction),
-    modifierDimension(modifierDimension),
-    isDouble(false),
-    localMemoryModifierFlag(false)
-{}
+    isDouble(false)
+{
+    for (const auto value : values)
+    {
+        valuesDouble.push_back(static_cast<double>(value));
+    }
+}
 
 KernelParameter::KernelParameter(const std::string& name, const std::vector<double>& values) :
     name(name),
     valuesDouble(values),
-    modifierType(ModifierType::None),
-    modifierAction(ModifierAction::Add),
-    modifierDimension(ModifierDimension::X),
-    isDouble(true),
-    localMemoryModifierFlag(false)
-{}
-
-void KernelParameter::setLocalMemoryArgumentModifier(const ArgumentId id, const ModifierAction modifierAction)
+    isDouble(true)
 {
-    for (auto& argumentPair : localMemoryArguments)
+    for (const auto value : values)
     {
-        if (id == argumentPair.first)
-        {
-            argumentPair.second = modifierAction;
-            return;
-        }
+        this->values.push_back(static_cast<size_t>(value));
     }
-
-    localMemoryArguments.push_back(std::make_pair(id, modifierAction));
-    localMemoryModifierFlag = true;
-}
-
-void KernelParameter::setLocalMemoryArgumentModifier(const KernelId compositionKernelId, ArgumentId id, const ModifierAction modifierAction)
-{
-    if (!elementExists(compositionKernelId, localMemoryModifierKernels))
-    {
-        localMemoryModifierKernels.push_back(compositionKernelId);
-    }
-
-    setLocalMemoryArgumentModifier(id, modifierAction);
-}
-
-void KernelParameter::addCompositionKernel(const KernelId id)
-{
-    compositionKernels.push_back(static_cast<size_t>(id));
 }
 
 std::string KernelParameter::getName() const
@@ -70,44 +41,9 @@ std::vector<double> KernelParameter::getValuesDouble() const
     return valuesDouble;
 }
 
-ModifierType KernelParameter::getModifierType() const
-{
-    return modifierType;
-}
-
-ModifierAction KernelParameter::getModifierAction() const
-{
-    return modifierAction;
-}
-
-ModifierDimension KernelParameter::getModifierDimension() const
-{
-    return modifierDimension;
-}
-
-std::vector<KernelId> KernelParameter::getCompositionKernels() const
-{
-    return compositionKernels;
-}
-
 bool KernelParameter::hasValuesDouble() const
 {
     return isDouble;
-}
-
-bool KernelParameter::isLocalMemoryModifier() const
-{
-    return localMemoryModifierFlag;
-}
-
-std::vector<std::pair<ArgumentId, ModifierAction>> KernelParameter::getLocalMemoryArguments() const
-{
-    return localMemoryArguments;
-}
-
-std::vector<KernelId> KernelParameter::getLocalMemoryModifierKernels() const
-{
-    return localMemoryModifierKernels;
 }
 
 bool KernelParameter::operator==(const KernelParameter& other) const

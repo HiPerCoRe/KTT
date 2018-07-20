@@ -280,6 +280,17 @@ void ManipulatorInterfaceImplementation::copyArgumentVectorAsync(const ArgumentI
     computeEngine->copyArgumentAsync(destination, source, argumentPointer->second->getElementSizeInBytes() * numberOfElements, queue);
 }
 
+void ManipulatorInterfaceImplementation::resizeArgumentVector(const ArgumentId id, const size_t newNumberOfElements, const bool preserveOldData)
+{
+    auto argumentPointer = vectorArguments.find(id);
+    if (argumentPointer == vectorArguments.end())
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+
+    computeEngine->resizeArgument(id, argumentPointer->second->getElementSizeInBytes() * newNumberOfElements, preserveOldData);
+}
+
 void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
     auto dataPointer = kernelData.find(id);

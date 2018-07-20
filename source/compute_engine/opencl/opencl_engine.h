@@ -64,6 +64,7 @@ public:
     EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) override;
     uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
+    void resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) override;
     void setPersistentBufferUsage(const bool flag) override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
@@ -156,6 +157,7 @@ public:
     EventId copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue) override;
     uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
+    void resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) override;
     void setPersistentBufferUsage(const bool flag) override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;

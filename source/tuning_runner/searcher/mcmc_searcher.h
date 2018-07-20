@@ -16,7 +16,7 @@ namespace ktt
 class MCMCSearcher : public Searcher
 {
 public:
-    static const size_t maximumDifferences = 2;
+    static const size_t maximumDifferences = 1;
     static const size_t bootIterations = 10;
 
     MCMCSearcher(const std::vector<KernelConfiguration>& configurations, const std::vector<double>& start) :
@@ -27,7 +27,7 @@ public:
         executionTimes(configurations.size(), std::numeric_limits<double>::max()),
         exploredIndices(configurations.size(), false),
         generator(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count())),
-        intDistribution(0, static_cast<int>(configurations.size())),
+        intDistribution(0, static_cast<int>(configurations.size()-1)),
         probabilityDistribution(0.0, 1.0),
         bestTime(std::numeric_limits<double>::max())
     {

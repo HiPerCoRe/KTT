@@ -5,15 +5,15 @@
 #include <string>
 #include "kernel_runner.h"
 #include "utility/ktt_utility.h"
+#include "utility/logger.h"
 #include "utility/timer.h"
 
 namespace ktt
 {
 
-KernelRunner::KernelRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine) :
+KernelRunner::KernelRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, ComputeEngine* computeEngine) :
     argumentManager(argumentManager),
     kernelManager(kernelManager),
-    logger(logger),
     computeEngine(computeEngine),
     manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine))
 {}
@@ -29,7 +29,7 @@ KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguratio
 
     std::stringstream stream;
     stream << "Running kernel " << kernel.getName() << " with configuration: " << configuration;
-    logger->log(stream.str());
+    Logger::getLogger().log(LoggingLevel::Info, stream.str());
 
     KernelResult result;
     try
@@ -48,7 +48,7 @@ KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguratio
     {
         computeEngine->synchronizeDevice();
         computeEngine->clearEvents();
-        logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
+        Logger::getLogger().log(LoggingLevel::Warning, std::string("Kernel run failed, reason: ") + error.what() + "\n");
         result = KernelResult(kernel.getName(), configuration, error.what());
     }
 
@@ -72,7 +72,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
 
     std::stringstream stream;
     stream << "Running kernel composition " << composition.getName() << " with configuration: " << configuration;
-    logger->log(stream.str());
+    Logger::getLogger().log(LoggingLevel::Info, stream.str());
 
     KernelResult result;
     try
@@ -84,7 +84,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
     {
         computeEngine->synchronizeDevice();
         computeEngine->clearEvents();
-        logger->log(std::string("Kernel composition run failed, reason: ") + error.what() + "\n");
+        Logger::getLogger().log(LoggingLevel::Warning, std::string("Kernel composition run failed, reason: ") + error.what() + "\n");
         result = KernelResult(composition.getName(), configuration, error.what());
     }
 

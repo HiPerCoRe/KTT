@@ -79,7 +79,7 @@ int main(int argc, char** argv)
   ktt::ArgumentId shiftId = tuner.addArgumentScalar(shift); // Will be updated as the kernel execution is iterative
   
   int numberOfGroups = 1;
-  int isumsSize = numberOfGroups * 16 * sizeof(unsigned int);
+  int isumsSize = 16 * numberOfGroups;
   // Vector argument will be updated in tuning manipulator as its size depends on the number of work-groups
   ktt::ArgumentId isumsId = tuner.addArgumentVector(std::vector<unsigned int>(isumsSize), ktt::ArgumentAccessType::ReadWrite);
 
@@ -97,11 +97,22 @@ int main(int argc, char** argv)
 
   // Parameter for the length of OpenCL vector data types used in the kernels
   tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
+
   // Local size below 128 does not work correctly, not even with the benchmark code
   tuner.addParameter(compositionId, "LOCAL_SIZE", {128, 256, 512});
+  tuner.setThreadModifier(compositionId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "LOCAL_SIZE", ktt::ModifierAction::Multiply);
+
+  // Second kernel global size is always equal to local size
   tuner.addParameter(compositionId, "GLOBAL_SIZE", {512, 1024, 2048, 4096, 8192, 16384, 32768});
+  tuner.setCompositionKernelThreadModifier(compositionId, kernelIds[0], ktt::ModifierType::Global, ktt::ModifierDimension::X, "GLOBAL_SIZE",
+      ktt::ModifierAction::Multiply);
+  tuner.setCompositionKernelThreadModifier(compositionId, kernelIds[1], ktt::ModifierType::Global, ktt::ModifierDimension::X, "LOCAL_SIZE",
+      ktt::ModifierAction::Multiply);
+  tuner.setCompositionKernelThreadModifier(compositionId, kernelIds[2], ktt::ModifierType::Global, ktt::ModifierDimension::X, "GLOBAL_SIZE",
+      ktt::ModifierAction::Multiply);
+
   auto workGroupConstraint = [](const std::vector<size_t>& vector) {return vector.at(0) != 128 || vector.at(1) != 32768;};
-  tuner.addConstraint(compositionId, workGroupConstraint, {"LOCAL_SIZE", "GLOBAL_SIZE"});
+  tuner.addConstraint(compositionId, {"LOCAL_SIZE", "GLOBAL_SIZE"}, workGroupConstraint);
 
   tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.9);
   tuner.setReferenceClass(compositionId, std::make_unique<ReferenceSort>(in), std::vector<ktt::ArgumentId>{outId});

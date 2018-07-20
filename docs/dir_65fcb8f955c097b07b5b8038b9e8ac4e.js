@@ -8,6 +8,7 @@ var dir_65fcb8f955c097b07b5b8038b9e8ac4e =
     [ "device_type.h", "device__type_8h.html", "device__type_8h" ],
     [ "dimension_vector_type.h", "dimension__vector__type_8h.html", "dimension__vector__type_8h" ],
     [ "global_size_type.h", "global__size__type_8h.html", "global__size__type_8h" ],
+    [ "logging_level.h", "logging__level_8h.html", "logging__level_8h" ],
     [ "modifier_action.h", "modifier__action_8h.html", "modifier__action_8h" ],
     [ "modifier_dimension.h", "modifier__dimension_8h.html", "modifier__dimension_8h" ],
     [ "modifier_type.h", "modifier__type_8h.html", "modifier__type_8h" ],

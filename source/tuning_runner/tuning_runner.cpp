@@ -5,18 +5,18 @@
 #include <string>
 #include "tuning_runner.h"
 #include "utility/ktt_utility.h"
+#include "utility/logger.h"
 #include "utility/timer.h"
 #include "utility/result_loader.h"
 
 namespace ktt
 {
 
-TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner, Logger* logger) :
+TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner) :
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     kernelRunner(kernelRunner),
-    logger(logger),
-    resultValidator(std::make_unique<ResultValidator>(argumentManager, kernelRunner, logger))
+    resultValidator(std::make_unique<ResultValidator>(argumentManager, kernelRunner))
 {}
 
 std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
@@ -49,8 +49,8 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
     for (size_t i = 0; i < configurationCount; i++)
     {
         std::stringstream stream;
-        stream << "Launching configuration: " << i + 1 << " / " << configurationCount;
-        logger->log(stream.str());
+        stream << "Launching configuration " << i + 1 << "/" << configurationCount << " for kernel " << kernel.getName();
+        Logger::getLogger().log(LoggingLevel::Info, stream.str());
 
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
         KernelResult result = kernelRunner->runKernel(id, currentConfiguration, std::vector<OutputDescriptor>{});
@@ -85,7 +85,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
 
         if (stopCondition != nullptr && stopCondition->isMet())
         {
-            logger->log(stopCondition->getStatusString());
+            Logger::getLogger().log(LoggingLevel::Info, stopCondition->getStatusString());
             break;
         }
     }
@@ -125,16 +125,16 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
         try
         {
             std::stringstream stream;
-            stream << "Launching kernel <" << kernel.getName() << "> with configuration (" << i + 1 << " / " << configurationCount << "): "
+            stream << "Launching configuration " << i + 1 << "/" << configurationCount << " for kernel " << kernel.getName() << ": "
                 << currentConfiguration;
-            logger->log(stream.str());
+            Logger::getLogger().log(LoggingLevel::Info, stream.str());
 
             result = resultLoader.readResult(currentConfiguration);
             result.setConfiguration(currentConfiguration);
         }
         catch (const std::runtime_error& error)
         {
-            logger->log(std::string("Kernel run failed, reason: ") + error.what() + "\n");
+            Logger::getLogger().log(LoggingLevel::Warning, std::string("Kernel run failed, reason: ") + error.what() + "\n");
             results.emplace_back(kernel.getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what());
         }
 
@@ -177,8 +177,8 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
     for (size_t i = 0; i < configurationCount; i++)
     {
         std::stringstream stream;
-        stream << "Launching configuration: " << i + 1 << " / " << configurationCount;
-        logger->log(stream.str());
+        stream << "Launching configuration " << i + 1 << "/" << configurationCount << " for kernel composition " << composition.getName();
+        Logger::getLogger().log(LoggingLevel::Info, stream.str());
 
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
         KernelResult result = kernelRunner->runComposition(id, currentConfiguration, std::vector<OutputDescriptor>{});
@@ -208,7 +208,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
 
         if (stopCondition != nullptr && stopCondition->isMet())
         {
-            logger->log(stopCondition->getStatusString());
+            Logger::getLogger().log(LoggingLevel::Info, stopCondition->getStatusString());
             break;
         }
     }
@@ -343,12 +343,12 @@ bool TuningRunner::validateResult(const Kernel& kernel, const KernelResult& resu
 
     if (resultIsCorrect)
     {
-        logger->log(std::string("Kernel run completed successfully in ") + std::to_string((result.getComputationDuration()) / 1'000'000)
-            + "ms\n");
+        Logger::getLogger().log(LoggingLevel::Info, std::string("Kernel run completed successfully in ")
+            + std::to_string((result.getComputationDuration()) / 1'000'000) + "ms");
     }
     else
     {
-        logger->log("Kernel run completed successfully, but results differ\n");
+        Logger::getLogger().log(LoggingLevel::Warning, "Kernel run completed successfully, but results differ");
     }
 
     return resultIsCorrect;

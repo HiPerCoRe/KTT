@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
+#include <vector>
 #include "ktt_types.h"
-#include "enum/modifier_action.h"
 
 namespace ktt
 {
@@ -11,22 +12,20 @@ class LocalMemoryModifier
 {
 public:
     LocalMemoryModifier();
-    explicit LocalMemoryModifier(const KernelId kernel, const ArgumentId argument, const ModifierAction action, const size_t value);
-
-    void setAction(const ModifierAction action);
-    void setValue(const size_t value);
+    explicit LocalMemoryModifier(const KernelId kernel, const ArgumentId argument, const std::vector<size_t>& parameterValues,
+        const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
 
     KernelId getKernel() const;
     ArgumentId getArgument() const;
-    ModifierAction getAction() const;
-    size_t getValue() const;
-    size_t getModifiedValue(const size_t value) const;
+    std::vector<size_t> getParameterValues() const;
+    std::function<size_t(const size_t, const std::vector<size_t>&)> getModifierFunction() const;
+    size_t getModifiedSize(const size_t defaultSize) const;
 
 private:
     KernelId kernel;
     ArgumentId argument;
-    ModifierAction action;
-    size_t value;
+    std::vector<size_t> parameterValues;
+    std::function<size_t(const size_t, const std::vector<size_t>&)> modifierFunction;
 };
 
 } // namespace ktt

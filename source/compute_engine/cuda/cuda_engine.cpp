@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include "cuda_engine.h"
 #include "utility/ktt_utility.h"
+#include "utility/logger.h"
 #include "utility/timer.h"
 
 namespace ktt
@@ -19,6 +20,7 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     persistentBufferFlag(true),
     nextEventId(0)
 {
+    Logger::getLogger().log(LoggingLevel::Debug, "Initializing CUDA runtime");
     checkCUDAError(cuInit(0), "cuInit");
 
     auto devices = getCUDADevices();
@@ -27,7 +29,10 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
         throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
     }
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Initializing CUDA context");
     context = std::make_unique<CUDAContext>(devices.at(deviceIndex).getDevice());
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Initializing CUDA streams");
     for (uint32_t i = 0; i < queueCount; i++)
     {
         auto stream = std::make_unique<CUDAStream>(i, context->getContext(), devices.at(deviceIndex).getDevice());
@@ -90,6 +95,8 @@ KernelResult CUDAEngine::getKernelResult(const EventId id, const std::vector<Out
         throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
             + std::to_string(id));
     }
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Performing kernel synchronization for event id: " + std::to_string(id));
 
     // Wait until the second event in pair (the end event) finishes
     checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
@@ -228,6 +235,9 @@ EventId CUDAEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const Qu
     std::unique_ptr<CUDABuffer> buffer = nullptr;
     EventId eventId = nextEventId;
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
+        + std::to_string(eventId));
+
     if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
     {
         buffer = std::make_unique<CUDABuffer>(kernelArgument, true);
@@ -273,6 +283,8 @@ EventId CUDAEngine::updateArgumentAsync(const ArgumentId id, const void* data, c
     auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
     auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Updating buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
+
     if (dataSizeInBytes == 0)
     {
         buffer->uploadData(streams.at(queue)->getStream(), data, buffer->getBufferSize(), startEvent->getEvent(), endEvent->getEvent());
@@ -311,6 +323,8 @@ EventId CUDAEngine::downloadArgumentAsync(const ArgumentId id, void* destination
     auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
     auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
+
     if (dataSizeInBytes == 0)
     {
         buffer->downloadData(streams.at(queue)->getStream(), destination, buffer->getBufferSize(), startEvent->getEvent(), endEvent->getEvent());
@@ -340,6 +354,8 @@ KernelArgument CUDAEngine::downloadArgumentObject(const ArgumentId id, uint64_t*
     EventId eventId = nextEventId;
     auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
     auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
     buffer->downloadData(streams.at(getDefaultQueue())->getStream(), argument.getData(), argument.getDataSizeInBytes(), startEvent->getEvent(),
         endEvent->getEvent());
 
@@ -386,6 +402,9 @@ EventId CUDAEngine::copyArgumentAsync(const ArgumentId destination, const Argume
     auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
     auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Copying buffer for argument " + std::to_string(source) + " into buffer for argument "
+        + std::to_string(destination) + ", event id: " + std::to_string(eventId));
+
     if (dataSizeInBytes == 0)
     {
         destinationBuffer->uploadData(streams.at(queue)->getStream(), sourceBuffer, sourceBuffer->getBufferSize(), startEvent->getEvent(),
@@ -428,6 +447,9 @@ uint64_t CUDAEngine::persistArgument(KernelArgument& kernelArgument, const bool 
         std::unique_ptr<CUDABuffer> buffer = nullptr;
         EventId eventId = nextEventId;
 
+        Logger::getLogger().log(LoggingLevel::Debug, "Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId())
+            + ", event id: " + std::to_string(eventId));
+
         if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
         {
             buffer = std::make_unique<CUDABuffer>(kernelArgument, true);
@@ -469,12 +491,27 @@ uint64_t CUDAEngine::getArgumentOperationDuration(const EventId id) const
         return 0;
     }
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Performing buffer operation synchronization for event id: " + std::to_string(id));
+
     // Wait until the second event in pair (the end event) finishes
     checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
     float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
     bufferEvents.erase(id);
 
     return static_cast<uint64_t>(duration);
+}
+
+void CUDAEngine::resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
+{
+    CUDABuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Resizing buffer for argument " + std::to_string(id));
+    buffer->resize(newSize, preserveData);
 }
 
 void CUDAEngine::clearBuffer(const ArgumentId id)
@@ -602,6 +639,7 @@ EventId CUDAEngine::enqueueKernel(CUDAKernel& kernel, const std::vector<size_t>&
     auto endEvent = std::make_unique<CUDAEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
     nextEventId++;
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Launching kernel " + kernel.getKernelName() + ", event id: " + std::to_string(eventId));
     checkCUDAError(cuEventRecord(startEvent->getEvent(), streams.at(queue)->getStream()), "cuEventRecord");
     checkCUDAError(cuLaunchKernel(kernel.getKernel(), static_cast<unsigned int>(correctedGlobalSize.at(0)),
         static_cast<unsigned int>(correctedGlobalSize.at(1)), static_cast<unsigned int>(correctedGlobalSize.at(2)),
@@ -739,7 +777,7 @@ size_t CUDAEngine::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>
                 continue;
             }
 
-            numberOfElements = modifier.getModifiedValue(numberOfElements);
+            numberOfElements = modifier.getModifiedSize(numberOfElements);
         }
 
         size_t argumentSize = argument->getElementSizeInBytes() * numberOfElements;
@@ -923,6 +961,11 @@ void CUDAEngine::setPersistentBufferUsage(const bool)
 }
 
 uint64_t CUDAEngine::getArgumentOperationDuration(const EventId) const
+{
+    throw std::runtime_error("");
+}
+
+void CUDAEngine::resizeArgument(const ArgumentId, const size_t, const bool)
 {
     throw std::runtime_error("");
 }

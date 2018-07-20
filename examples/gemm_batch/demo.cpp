@@ -127,7 +127,7 @@ private:
     int batch, a, b, c;
 };
 
-void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID, ktt::ArgumentId& bID, ktt::ArgumentId &dstID, ktt::ArgumentId& nID, int a, int b, int c, int batch) {
+void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID, ktt::ArgumentId& bID, ktt::ArgumentId &dstID, ktt::ArgumentId& nID, int a, int b, int c, int batch, int stopBW) {
     clock_t beginOverallTime = clock();
 
     // create kernel
@@ -148,28 +148,41 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
     tuner->addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
     tuner->addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
     auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
-    tuner->addConstraint(kernelId, parallelismConstraint, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y"});
+    tuner->addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y"}, parallelismConstraint);
     auto tmpConstraint = [](const std::vector<size_t>& v) {return (v[0] < 3 || v[1] < 2);};
-    tuner->addConstraint(kernelId, tmpConstraint, {"GRANULARITY", "CACHING_STRATEGY"});
+    tuner->addConstraint(kernelId, {"GRANULARITY", "CACHING_STRATEGY"}, tmpConstraint);
     auto smConstraint = [](const std::vector<size_t>& v) {return (v[0] != 2) || (v[1]*v[2] + v[3]*v[1] + v[3]*v[2])*v[4]*sizeof(REAL) < 48*1024;};
-    tuner->addConstraint(kernelId, smConstraint, {"GRANULARITY", "SIZE_A", "SIZE_B", "SIZE_C", "MGCG_GROUP_SIZE_Y"});
+    tuner->addConstraint(kernelId, {"GRANULARITY", "SIZE_A", "SIZE_B", "SIZE_C", "MGCG_GROUP_SIZE_Y"}, smConstraint);
 
     // assign manipulator
     tuner->setTuningManipulator(kernelId, std::make_unique<cTunableGemm>(batch, a, b, c));
 
+    tuner->setSearchMethod(ktt::SearchMethod::MCMC, std::vector<double>{});
+
     // tune kernel   
     std::vector<REAL> firstMatrix(32*32);
+    ktt::ComputationResult res;
     ktt::OutputDescriptor output(dstID, (void*)firstMatrix.data(), 32*32*sizeof(REAL));
+    bool tune = true;
     for (int i = 0; i < STEPS; i++) {
-        tuner->tuneKernelByStep(kernelId, {output});
+        if (tune)
+            res = tuner->tuneKernelByStep(kernelId, {output});
+        else {
+            ktt::ComputationResult bestConf = tuner->getBestComputationResult(kernelId);
+            res = tuner->runKernel(kernelId, bestConf.getConfiguration(), {output});
+        }
         clock_t now = clock();
         double overallSec = double(now - beginOverallTime) / CLOCKS_PER_SEC;
-        double perfActual = 0.0;
-        double effActual = 0.0;
+        double perfActual = (double)(a*b*c*2)*(double)batch / res.getDuration();
+        double effActual = (double)(a*b+c*a+c*b) * (double)batch * (double)sizeof(REAL) / res.getDuration();
         double perfOverall = (double)((i+1)*a*b*c*2)*(double)batch / overallSec / 1000000000.0;
+        double bwOverall = (double)(i+1)*(double)((a*b+c*a+c*b)*sizeof(REAL))*(double)batch / overallSec / 1000000000.0;
         std::cout << "Actual perf. " << perfActual << "GFlops, "
             << "actual BW " << effActual << "GB/s, "
-            << "perf. with overhead " << perfOverall << "GFlops" << std::endl;
+            << "perf. with overhead " << perfOverall << "GFlops, " 
+            << "BW with overhead " << bwOverall << "GB/s" << std::endl;
+        if (effActual > (double)stopBW)
+            tune = false;
     }
 
     // print best
@@ -198,6 +211,10 @@ int main(int argc, char** argv)
     std::cout << "Which interface to use (0 = CUDA, 1 = OpenCL)? ";
     std::cin >> interface;
 
+    int stopBW = 0;
+    std::cout << "Enter bandwidth (GB/s) sufficient to stop tuning ";
+    std::cin >> stopBW;
+
     // create and configure tunner
     ktt::Tuner* tuner = NULL; 
     if (interface == 1) {
@@ -215,7 +232,7 @@ int main(int argc, char** argv)
     tuner->setLoggingTarget(nullStream);
 
     // tune kernels for different sizes
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 100; i++) {
         // generate input size
         int a = 2+(long long)(rand())*31 / RAND_MAX;
         int b = 2+(long long)(rand())*31 / RAND_MAX;
@@ -248,7 +265,7 @@ int main(int argc, char** argv)
         tuner->persistArgument(dstId, true);
         ktt::ArgumentId nId = tuner->addArgumentScalar(batch);
 
-        tuneKernel(tuner, kernelFile, srcAId, srcBId, dstId, nId, a, b, c, batch);
+        tuneKernel(tuner, kernelFile, srcAId, srcBId, dstId, nId, a, b, c, batch, stopBW);
 
         tuner->persistArgument(srcAId, false);
         tuner->persistArgument(srcBId, false);

@@ -17,38 +17,7 @@ void KernelComposition::addParameter(const KernelParameter& parameter)
         throw std::runtime_error(std::string("Parameter with given name already exists: ") + parameter.getName());
     }
 
-    KernelParameter parameterCopy = parameter;
-    if (parameter.getModifierType() != ModifierType::None)
-    {
-        for (const auto kernel : kernels)
-        {
-            parameterCopy.addCompositionKernel(kernel->getId());
-        }
-    }
-
-    parameters.push_back(parameterCopy);
-}
-
-void KernelComposition::addLocalMemoryModifier(const std::string& parameterName, const ArgumentId argumentId, const ModifierAction modifierAction)
-{
-    if (!hasParameter(parameterName))
-    {
-        throw std::runtime_error(std::string("Parameter with name does not exist: ") + parameterName);
-    }
-
-    for (auto& parameter : parameters)
-    {
-        if (parameter.getName() == parameterName)
-        {
-            if (parameter.hasValuesDouble())
-            {
-                throw std::runtime_error("Parameter with floating-point values cannot act as a modifier");
-            }
-
-            parameter.setLocalMemoryArgumentModifier(argumentId, modifierAction);
-            return;
-        }
-    }
+    parameters.push_back(parameter);
 }
 
 void KernelComposition::addConstraint(const KernelConstraint& constraint)
@@ -71,75 +40,62 @@ void KernelComposition::setSharedArguments(const std::vector<ArgumentId>& argume
     this->sharedArgumentIds = argumentIds;
 }
 
-void KernelComposition::addKernelParameter(const KernelId id, const KernelParameter& parameter)
+void KernelComposition::setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
+    const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
 {
-    if (!hasParameter(parameter.getName()))
-    {
-        parameters.push_back(parameter);
-    }
+    validateModifierParameters(parameterNames);
 
-    KernelParameter* targetParameter;
-    for (auto& existingParameter : parameters)
+    switch (modifierType)
     {
-        if (existingParameter == parameter)
+    case ModifierType::Global:
+        if (globalThreadModifiers.find(id) == globalThreadModifiers.end())
         {
-            targetParameter = &existingParameter;
-            break;
+            globalThreadModifiers.insert(std::make_pair(id,
+                std::array<std::function<size_t(const size_t, const std::vector<size_t>&)>, 3>{nullptr, nullptr, nullptr}));
+            globalThreadModifierNames.insert(std::make_pair(id, std::array<std::vector<std::string>, 3>{}));
         }
-    }
-
-    if (parameter.getModifierAction() != targetParameter->getModifierAction()
-        || parameter.getModifierType() != targetParameter->getModifierType()
-        || parameter.getModifierDimension() != targetParameter->getModifierDimension()
-        || parameter.getValues().size() != targetParameter->getValues().size())
-    {
-        throw std::runtime_error("Composition parameters with same name must have matching thread modifier properties");
-    }
-
-    for (size_t i = 0; i < parameter.getValues().size(); i++)
-    {
-        if (parameter.getValues().at(i) != targetParameter->getValues().at(i))
+        globalThreadModifiers.find(id)->second[static_cast<size_t>(modifierDimension)] = modifierFunction;
+        globalThreadModifierNames.find(id)->second[static_cast<size_t>(modifierDimension)] = parameterNames;
+        break;
+    case ModifierType::Local:
+        if (localThreadModifiers.find(id) == localThreadModifiers.end())
         {
-            throw std::runtime_error("Composition parameters with same name must have matching thread modifier properties");
+            localThreadModifiers.insert(std::make_pair(id,
+                std::array<std::function<size_t(const size_t, const std::vector<size_t>&)>, 3>{nullptr, nullptr, nullptr}));
+            localThreadModifierNames.insert(std::make_pair(id, std::array<std::vector<std::string>, 3>{}));
         }
-    }
-
-    for (const auto currentKernelId : targetParameter->getCompositionKernels())
-    {
-        if (currentKernelId == id)
-        {
-            throw std::runtime_error(std::string("Composition parameter with name ") + targetParameter->getName()
-                + " already affects kernel with id: " + std::to_string(id));
-        }
-    }
-
-    targetParameter->addCompositionKernel(id);
-}
-
-void KernelComposition::addKernelLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
-    const ModifierAction modifierAction)
-{
-    if (!hasParameter(parameterName))
-    {
-        throw std::runtime_error(std::string("Parameter with name does not exist: ") + parameterName);
-    }
-
-    for (auto& parameter : parameters)
-    {
-        if (parameter.getName() == parameterName)
-        {
-            if (parameter.hasValuesDouble())
-            {
-                throw std::runtime_error("Parameter with floating-point values cannot act as a modifier");
-            }
-
-            parameter.setLocalMemoryArgumentModifier(id, argumentId, modifierAction);
-            return;
-        }
+        localThreadModifiers.find(id)->second[static_cast<size_t>(modifierDimension)] = modifierFunction;
+        localThreadModifierNames.find(id)->second[static_cast<size_t>(modifierDimension)] = parameterNames;
+        break;
+    default:
+        throw std::runtime_error("Unknown modifier type");
     }
 }
 
-void KernelComposition::setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
+void KernelComposition::setLocalMemoryModifier(const KernelId id, const ArgumentId argumentId, const std::vector<std::string>& parameterNames,
+    const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
+
+{
+    validateModifierParameters(parameterNames);
+
+    if (localMemoryModifiers.find(id) == localMemoryModifiers.end())
+    {
+        localMemoryModifiers.insert(std::make_pair(id, std::map<ArgumentId, std::function<size_t(const size_t, const std::vector<size_t>&)>>{}));
+        localMemoryModifierNames.insert(std::make_pair(id, std::map<ArgumentId, std::vector<std::string>>{}));
+    }
+
+    auto kernelModifierMap = localMemoryModifiers.find(id)->second;
+    auto kernelModifierNameMap = localMemoryModifierNames.find(id)->second;
+    if (kernelModifierMap.find(argumentId) != kernelModifierMap.end())
+    {
+        kernelModifierMap.erase(argumentId);
+        kernelModifierNameMap.erase(argumentId);
+    }
+    kernelModifierMap.insert(std::make_pair(argumentId, modifierFunction));
+    kernelModifierNameMap.insert(std::make_pair(argumentId, parameterNames));
+}
+
+void KernelComposition::setArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
     if (kernelArgumentIds.find(id) != kernelArgumentIds.end())
     {
@@ -180,6 +136,160 @@ Kernel KernelComposition::transformToKernel() const
     kernel.setArguments(argumentIds);
 
     return kernel;
+}
+
+std::map<KernelId, DimensionVector> KernelComposition::getModifiedGlobalSizes(const std::vector<ParameterPair>& parameterPairs) const
+{
+    for (const auto& parameterPair : parameterPairs)
+    {
+        if (!hasParameter(parameterPair.getName()))
+        {
+            throw std::runtime_error(std::string("Parameter with name ") + parameterPair.getName()
+                + " is not associated with kernel composition with id " + std::to_string(id));
+        }
+    }
+
+    std::map<KernelId, DimensionVector> result;
+
+    for (const auto kernel : kernels)
+    {
+        DimensionVector kernelDimensions = kernel->getGlobalSize();
+
+        if (globalThreadModifiers.find(kernel->getId()) != globalThreadModifiers.end())
+        {
+            auto kernelGlobalThreadModifiers = globalThreadModifiers.find(kernel->getId())->second;
+            auto kernelGlobalThreadModifierNames = globalThreadModifierNames.find(kernel->getId())->second;
+
+            for (size_t i = 0; i < 3; i++)
+            {
+                std::vector<size_t> parameterValues;
+
+                for (const auto& parameterName : kernelGlobalThreadModifierNames[i])
+                {
+                    for (const auto& parameterPair : parameterPairs)
+                    {
+                        if (parameterName == parameterPair.getName())
+                        {
+                            parameterValues.push_back(parameterPair.getValue());
+                            break;
+                        }
+                    }
+                }
+
+                if (kernelGlobalThreadModifiers[i] != nullptr)
+                {
+                    kernelDimensions.setSize(static_cast<ModifierDimension>(i),
+                        kernelGlobalThreadModifiers[i](kernel->getGlobalSize().getSize(static_cast<ModifierDimension>(i)), parameterValues));
+                }
+            }
+        }
+
+        result.insert(std::make_pair(kernel->getId(), kernelDimensions));
+    }
+
+    return result;
+}
+
+std::map<KernelId, DimensionVector> KernelComposition::getModifiedLocalSizes(const std::vector<ParameterPair>& parameterPairs) const
+{
+    for (const auto& parameterPair : parameterPairs)
+    {
+        if (!hasParameter(parameterPair.getName()))
+        {
+            throw std::runtime_error(std::string("Parameter with name ") + parameterPair.getName()
+                + " is not associated with kernel composition with id " + std::to_string(id));
+        }
+    }
+
+    std::map<KernelId, DimensionVector> result;
+
+    for (const auto kernel : kernels)
+    {
+        DimensionVector kernelDimensions = kernel->getLocalSize();
+
+        if (localThreadModifiers.find(kernel->getId()) != localThreadModifiers.end())
+        {
+            auto kernelLocalThreadModifiers = localThreadModifiers.find(kernel->getId())->second;
+            auto kernelLocalThreadModifierNames = localThreadModifierNames.find(kernel->getId())->second;
+
+            for (size_t i = 0; i < 3; i++)
+            {
+                std::vector<size_t> parameterValues;
+
+                for (const auto& parameterName : kernelLocalThreadModifierNames[i])
+                {
+                    for (const auto& parameterPair : parameterPairs)
+                    {
+                        if (parameterName == parameterPair.getName())
+                        {
+                            parameterValues.push_back(parameterPair.getValue());
+                            break;
+                        }
+                    }
+                }
+
+                if (kernelLocalThreadModifiers[i] != nullptr)
+                {
+                    kernelDimensions.setSize(static_cast<ModifierDimension>(i),
+                        kernelLocalThreadModifiers[i](kernel->getLocalSize().getSize(static_cast<ModifierDimension>(i)), parameterValues));
+                }
+            }
+        }
+
+        result.insert(std::make_pair(kernel->getId(), kernelDimensions));
+    }
+
+    return result;
+}
+
+std::map<KernelId, std::vector<LocalMemoryModifier>> KernelComposition::getLocalMemoryModifiers(
+    const std::vector<ParameterPair>& parameterPairs) const
+{
+    for (const auto& parameterPair : parameterPairs)
+    {
+        if (!hasParameter(parameterPair.getName()))
+        {
+            throw std::runtime_error(std::string("Parameter with name ") + parameterPair.getName()
+                + " is not associated with kernel composition with id " + std::to_string(id));
+        }
+    }
+
+    std::map<KernelId, std::vector<LocalMemoryModifier>> result;
+
+    for (const auto kernel : kernels)
+    {
+        std::vector<LocalMemoryModifier> kernelModifiers;
+
+        if (localMemoryModifiers.find(kernel->getId()) != localMemoryModifiers.end())
+        {
+            auto kernelLocalMemoryModifiers = localMemoryModifiers.find(kernel->getId())->second;
+            auto kernelLocalMemoryModifierNames = localMemoryModifierNames.find(kernel->getId())->second;
+
+            for (const auto& modifier : kernelLocalMemoryModifiers)
+            {
+                std::vector<size_t> parameterValues;
+                std::vector<std::string> parameterNames = kernelLocalMemoryModifierNames.find(modifier.first)->second;
+
+                for (const auto& name : parameterNames)
+                {
+                    for (const auto& pair : parameterPairs)
+                    {
+                        if (name == pair.getName())
+                        {
+                            parameterValues.push_back(pair.getValue());
+                            break;
+                        }
+                    }
+                }
+
+                kernelModifiers.emplace_back(id, modifier.first, parameterValues, modifier.second);
+            }
+        }
+
+        result.insert(std::make_pair(kernel->getId(), kernelModifiers));
+    }
+
+    return result;
 }
 
 KernelId KernelComposition::getId() const
@@ -232,6 +342,33 @@ bool KernelComposition::hasParameter(const std::string& parameterName) const
         }
     }
     return false;
+}
+
+void KernelComposition::validateModifierParameters(const std::vector<std::string>& parameterNames) const
+{
+    for (const auto& parameterName : parameterNames)
+    {
+        bool parameterFound = false;
+
+        for (const auto& parameter : parameters)
+        {
+            if (parameter.getName() == parameterName)
+            {
+                if (parameter.hasValuesDouble())
+                {
+                    throw std::runtime_error("Parameters with floating-point values cannot act as thread modifiers");
+                }
+
+                parameterFound = true;
+                break;
+            }
+        }
+
+        if (!parameterFound)
+        {
+            throw std::runtime_error(std::string("Parameter with name ") + parameterName + " does not exist");
+        }
+    }
 }
 
 } // namespace ktt
