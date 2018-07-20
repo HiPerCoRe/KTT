@@ -15,37 +15,8 @@
 #endif
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
-bool IsMultiple(size_t a, size_t b) {
-    return ((a/b)*b == a) ? true : false;
-};
-class tunable: public ktt::TuningManipulator {
-    public:
-
-        tunable(uint32_t kSizeM, uint32_t kSizeN)
-        {
-            this->kSizeM = kSizeM;
-            this->kSizeN = kSizeN;
-        }
-
-        void launchComputation(const ktt::KernelId kernelId) override {
-            std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
-            int mdimc = (int)parameterValues[3].getValue();
-            int ndimc = (int)parameterValues[4].getValue();
-            int mwg = (int)parameterValues[0].getValue();
-            int nwg = (int)parameterValues[1].getValue();
-            // Sets the constraints for local memory size limitations
-            //       auto LocalMemorySize = [] (std::vector<size_t> v) {
-            //         return (((v[0]*v[1]*v[2]/v[3]) + (v[4]*v[5]*v[6]/v[7]))*sizeof(float));
-            //       };
-            //tuner.SetLocalMemoryUsage(id, LocalMemorySize, {"SA", "KWG", "MWG", "VWM", "SB", "KWG", "NWG", "VWN"});
-            // Modifies the thread-sizes (both global and local) based on the parameters
-            const ktt::DimensionVector ndRangeDimensions(kSizeM*mdimc/mwg, kSizeN*ndimc/nwg);
-            const ktt::DimensionVector workGroupDimensions(mdimc, ndimc);
-            runKernel(kernelId, ndRangeDimensions, workGroupDimensions);
-        }
-    private:
-        uint32_t kSizeM;
-        uint32_t kSizeN;
+bool IsMultiple(const size_t a, const size_t b) {
+    return ((a / b) * b == a) ? true : false;
 };
 
 int main(int argc, char** argv)
@@ -73,30 +44,28 @@ int main(int argc, char** argv)
         }
     }
 
-    // Declare kernel parameters
-
     // Declare data variables
     const uint32_t kSizeM = 2048;
     const uint32_t kSizeN = 2048;
     const uint32_t kSizeK = 2048;
 
     const ktt::DimensionVector ndRangeDimensions(kSizeM, kSizeN);
-    const ktt::DimensionVector workGroupDimensions(1,1);
-    const ktt::DimensionVector referenceWorkGroupDimensions(8,8);
+    const ktt::DimensionVector workGroupDimensions;
+    const ktt::DimensionVector referenceWorkGroupDimensions(8, 8);
 
     // Initialize data
     std::random_device device;
     std::default_random_engine engine(device());
     std::uniform_real_distribution<float> distribution(-2.0f, 2.0f);
 
-    auto mat_a = std::vector<float>(kSizeM*kSizeK);
-    auto mat_b = std::vector<float>(kSizeN*kSizeK);
-    auto mat_c = std::vector<float>(kSizeM*kSizeN);
-    for (uint32_t i = 0; i < kSizeM*kSizeK; i++)
+    std::vector<float> mat_a(kSizeM * kSizeK);
+    std::vector<float> mat_b(kSizeN * kSizeK);
+    std::vector<float> mat_c(kSizeM * kSizeN);
+    for (uint32_t i = 0; i < kSizeM * kSizeK; i++)
         mat_a.at(i) = distribution(engine);
-    for (uint32_t i = 0; i < kSizeN*kSizeK; i++)
+    for (uint32_t i = 0; i < kSizeN * kSizeK; i++)
         mat_b.at(i) = distribution(engine);
-    for (uint32_t i = 0; i < kSizeM*kSizeN; i++)
+    for (uint32_t i = 0; i < kSizeM * kSizeN; i++)
         mat_c.at(i) = 0.0f;
 
     // Create tuner object for chosen platform and device
@@ -106,7 +75,6 @@ int main(int argc, char** argv)
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "gemm_fast", ndRangeDimensions, workGroupDimensions);
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "gemm_reference", ndRangeDimensions, referenceWorkGroupDimensions);
 
-    // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
     tuner.addParameter(kernelId, "MWG", {16, 32, 64, 128});
     tuner.addParameter(kernelId, "NWG", {16, 32, 64, 128});
     tuner.addParameter(kernelId, "KWG", {16, 32});
@@ -123,6 +91,13 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "SB", {0, 1});
     tuner.addParameter(kernelId, "PRECISION", {32});
 
+    // Add kernel dimension modifiers based on added tuning parameters
+    auto globalModifier = [](const size_t size, const std::vector<size_t>& vector) {return size * vector.at(0) / vector.at(1);};
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, std::vector<std::string>{"MDIMC", "MWG"}, globalModifier);
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, std::vector<std::string>{"NDIMC", "NWG"}, globalModifier);
+
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "MDIMC", ktt::ModifierAction::Multiply);
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "NDIMC", ktt::ModifierAction::Multiply);
 
     // Add all arguments utilized by kernels
     ktt::ArgumentId kSizeMId = tuner.addArgumentScalar(kSizeM);
@@ -130,7 +105,7 @@ int main(int argc, char** argv)
     ktt::ArgumentId kSizeKId = tuner.addArgumentScalar(kSizeK);
     ktt::ArgumentId matAId = tuner.addArgumentVector(mat_a, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId matBId = tuner.addArgumentVector(mat_b, ktt::ArgumentAccessType::ReadOnly);
-    ktt::ArgumentId matCId = tuner.addArgumentVector(std::vector<float>(mat_c), ktt::ArgumentAccessType::WriteOnly);
+    ktt::ArgumentId matCId = tuner.addArgumentVector(mat_c, ktt::ArgumentAccessType::WriteOnly);
 
     // Add conditions
     // Sets constraints: Set-up the constraints functions to use. The constraints require a function
@@ -138,9 +113,9 @@ int main(int argc, char** argv)
     // a boolean value whether or not the tuning configuration is legal. In this case, the helper
     // function 'IsMultiple' is employed for convenience. In the calls to 'AddConstraint' below, the
     // vector of parameter names (as strings) matches the input integer vector of the lambda's.
-    auto MultipleOfX = [] (std::vector<size_t> v) { return IsMultiple(v[0], v[1]); };
-    auto MultipleOfXMulY = [] (std::vector<size_t> v) { return IsMultiple(v[0], v[1]*v[2]); };
-    auto MultipleOfXMulYDivZ = [] (std::vector<size_t> v) { return IsMultiple(v[0], (v[1]*v[2])/v[3]); };
+    auto MultipleOfX = [](const std::vector<size_t>& v) {return IsMultiple(v[0], v[1]);};
+    auto MultipleOfXMulY = [](const std::vector<size_t>& v) {return IsMultiple(v[0], v[1] * v[2]);};
+    auto MultipleOfXMulYDivZ = [](const std::vector<size_t>& v) {return IsMultiple(v[0], (v[1] * v[2]) / v[3]);};
 
     // Sets constraints: Requirement for unrolling the KWG loop
     tuner.addConstraint(kernelId, {"KWG", "KWI"}, MultipleOfX);
@@ -157,19 +132,15 @@ int main(int argc, char** argv)
     tuner.addConstraint(kernelId, {"KWG", "MDIMC", "NDIMC", "MDIMA"}, MultipleOfXMulYDivZ);
     tuner.addConstraint(kernelId, {"KWG", "MDIMC", "NDIMC", "NDIMB"}, MultipleOfXMulYDivZ);
 
-
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
-    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{kSizeMId, kSizeNId, kSizeKId, matAId, matBId, matCId}); 
-    tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{kSizeMId, kSizeNId, kSizeKId, matAId, matBId, matCId}); 
+    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{kSizeMId, kSizeNId, kSizeKId, matAId, matBId, matCId});
+    tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{kSizeMId, kSizeNId, kSizeKId, matAId, matBId, matCId});
 
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
-    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001);
 
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{matCId});
-
-    tunable* t = new tunable(kSizeM, kSizeN);
-    tuner.setTuningManipulator(kernelId, std::unique_ptr<tunable>(t));  
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);
@@ -180,4 +151,3 @@ int main(int argc, char** argv)
 
     return 0;
 };
-

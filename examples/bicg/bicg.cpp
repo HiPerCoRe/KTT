@@ -5,11 +5,11 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-#define KTT_KERNEL_FILE "../examples/bicg/bicg_kernel.cl"
-#define KTT_REFERENCE_KERNEL_FILE "../examples/bicg/bicg_reference_kernel.cl"
+    #define KTT_KERNEL_FILE "../examples/bicg/bicg_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/bicg/bicg_reference_kernel.cl"
 #else
-#define KTT_KERNEL_FILE "../../examples/bicg/bicg_kernel.cl"
-#define KTT_REFERENCE_KERNEL_FILE "../../examples/bicg/bicg_reference_kernel.cl"
+    #define KTT_KERNEL_FILE "../../examples/bicg/bicg_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/bicg/bicg_reference_kernel.cl"
 #endif
 
 /* Problem size. */
@@ -99,18 +99,7 @@ public:
 		std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
 
 		if (getParameterValue("FUSED", parameterValues) == 2) {
-			ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelFusedId);
-			ktt::DimensionVector localSize = getCurrentLocalSize(kernelFusedId);
-            
-			const size_t rowsProcessed = getParameterValue("ROWS_PROCESSED", parameterValues);
-			const size_t tile = getParameterValue("TILE", parameterValues);
-			const size_t bicgBatch = getParameterValue("BICG_BATCH", parameterValues);
-			globalSize.setSizeX(M);
-			globalSize.setSizeY(N / rowsProcessed * tile / bicgBatch);
-			localSize.setSizeX(tile);
-			localSize.setSizeY(tile / bicgBatch);
-
-			runKernel(kernelFusedId, globalSize, localSize);
+			runKernel(kernelFusedId);
 			if (getParameterValue("ATOMICS", parameterValues) == 0) {
 				runKernel(kernelReduction1Id);
 				runKernel(kernelReduction2Id);
@@ -222,6 +211,20 @@ int main(int argc, char** argv)
 	tuner.addParameter(kernelId, "UNROLL_BICG_STEP", std::vector<size_t>{ 0, 1 });
 	tuner.addParameter(kernelId, "ROWS_PROCESSED", std::vector<size_t>{ 128, 256, 512, 1024 });
 	tuner.addParameter(kernelId, "TILE", std::vector<size_t>{ 16, 32, 64 });
+
+    // Specify thread modifiers
+    auto globalModifierX = [](const size_t, const std::vector<size_t>&) {return M;};
+    auto globalModifierY = [](const size_t, const std::vector<size_t>& vector) {return N / vector.at(0) * vector.at(1) / vector.at(2);};
+    auto localModifierX = [](const size_t, const std::vector<size_t>& vector) {return vector.at(0);};
+    auto localModifierY = [](const size_t, const std::vector<size_t>& vector) {return vector.at(0) / vector.at(1);};
+    tuner.setCompositionKernelThreadModifier(kernelId, kernelFusedId, ktt::ModifierType::Global, ktt::ModifierDimension::X,
+        std::vector<std::string>{}, globalModifierX);
+    tuner.setCompositionKernelThreadModifier(kernelId, kernelFusedId, ktt::ModifierType::Global, ktt::ModifierDimension::Y,
+        std::vector<std::string>{"ROWS_PROCESSED", "TILE", "BICG_BATCH"}, globalModifierY);
+    tuner.setCompositionKernelThreadModifier(kernelId, kernelFusedId, ktt::ModifierType::Local, ktt::ModifierDimension::X,
+        std::vector<std::string>{"TILE"}, localModifierX);
+    tuner.setCompositionKernelThreadModifier(kernelId, kernelFusedId, ktt::ModifierType::Local, ktt::ModifierDimension::Y,
+        std::vector<std::string>{"TILE", "BICG_BATCH"}, localModifierY);
 
 	// Specify contraints
 	// All of the parameters are used only in the fused kernel

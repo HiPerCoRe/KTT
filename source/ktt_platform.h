@@ -18,11 +18,11 @@
 
 /** Major version of KTT framework. First number in KTT version description.
   */
-#define KTT_VERSION_MAJOR 0
+#define KTT_VERSION_MAJOR 1
 
 /** Minor version of KTT framework. Second number in KTT version description.
   */
-#define KTT_VERSION_MINOR 7
+#define KTT_VERSION_MINOR 0
 
 /** Patch version of KTT framework. Third number in KTT version description.
   */
