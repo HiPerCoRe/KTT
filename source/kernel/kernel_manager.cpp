@@ -203,6 +203,22 @@ void KernelManager::addConstraint(const KernelId id, const std::vector<std::stri
     }
 }
 
+void KernelManager::addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string>& parameterNames)
+{
+    if (isKernel(id))
+    {
+        getKernel(id).addParameterPack(KernelParameterPack(packName, parameterNames));
+    }
+    else if (isComposition(id))
+    {
+        getKernelComposition(id).addParameterPack(KernelParameterPack(packName, parameterNames));
+    }
+    else
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+}
+
 void KernelManager::setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
     const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
 {

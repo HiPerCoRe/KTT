@@ -156,6 +156,14 @@ public:
       */
     void addParameterDouble(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
 
+    /* @fn void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string> parameterNames)
+    * Adds a pack containing specified kernel parameters. Todo...
+    * @param id Id of kernel for which the parameter pack will be added.
+    * @param packName Name of a parameter pack. Parameter pack names for a single kernel must be unique.
+    * @param parameterNames Names of parameters which will be added to the parameter pack.
+    */
+    void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string>& parameterNames);
+
     /** @fn void setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
       * const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
       * Sets a thread modifier function for specified kernel. This function receives thread size in specified kernel dimension and values of

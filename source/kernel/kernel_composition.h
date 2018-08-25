@@ -18,6 +18,7 @@ public:
     // Core methods
     void addParameter(const KernelParameter& parameter);
     void addConstraint(const KernelConstraint& constraint);
+    void addParameterPack(const KernelParameterPack& pack);
     void setSharedArguments(const std::vector<ArgumentId>& argumentIds);
     void setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
         const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
@@ -35,6 +36,7 @@ public:
     std::vector<const Kernel*> getKernels() const;
     std::vector<KernelParameter> getParameters() const;
     std::vector<KernelConstraint> getConstraints() const;
+    std::vector<KernelParameterPack> getParameterPacks() const;
     std::vector<ArgumentId> getSharedArgumentIds() const;
     std::vector<ArgumentId> getKernelArgumentIds(const KernelId id) const;
     bool hasParameter(const std::string& parameterName) const;
@@ -46,6 +48,7 @@ private:
     std::vector<const Kernel*> kernels;
     std::vector<KernelParameter> parameters;
     std::vector<KernelConstraint> constraints;
+    std::vector<KernelParameterPack> parameterPacks;
     std::vector<ArgumentId> sharedArgumentIds;
     std::map<KernelId, std::vector<ArgumentId>> kernelArgumentIds;
     std::map<KernelId, std::array<std::vector<std::string>, 3>> globalThreadModifierNames;

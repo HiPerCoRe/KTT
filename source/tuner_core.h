@@ -34,6 +34,7 @@ public:
     void addParameter(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
     void addConstraint(const KernelId id, const std::vector<std::string>& parameterNames,
         const std::function<bool(const std::vector<size_t>&)>& constraintFunction);
+    void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string>& parameterNames);
     void setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
         const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
     void setLocalMemoryModifier(const KernelId id, const ArgumentId argumentId, const std::vector<std::string>& parameterNames,

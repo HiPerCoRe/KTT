@@ -35,6 +35,26 @@ void KernelComposition::addConstraint(const KernelConstraint& constraint)
     constraints.push_back(constraint);
 }
 
+void KernelComposition::addParameterPack(const KernelParameterPack& pack)
+{
+    for (const auto& existingPack : parameterPacks)
+    {
+        if (pack == existingPack)
+        {
+            throw std::runtime_error(std::string("The following parameter pack already exists: ") + pack.getName());
+        }
+    }
+
+    for (const auto& parameterName : pack.getParameterNames())
+    {
+        if (!hasParameter(parameterName))
+        {
+            throw std::runtime_error(std::string("Parameter with given name does not exist: ") + parameterName);
+        }
+    }
+    parameterPacks.push_back(pack);
+}
+
 void KernelComposition::setSharedArguments(const std::vector<ArgumentId>& argumentIds)
 {
     this->sharedArgumentIds = argumentIds;
@@ -315,6 +335,11 @@ std::vector<KernelParameter> KernelComposition::getParameters() const
 std::vector<KernelConstraint> KernelComposition::getConstraints() const
 {
     return constraints;
+}
+
+std::vector<KernelParameterPack> KernelComposition::getParameterPacks() const
+{
+    return parameterPacks;
 }
 
 std::vector<ArgumentId> KernelComposition::getSharedArgumentIds() const

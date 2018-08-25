@@ -71,6 +71,11 @@ void TunerCore::addConstraint(const KernelId id, const std::vector<std::string>&
     kernelManager->addConstraint(id, parameterNames, constraintFunction);
 }
 
+void TunerCore::addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string>& parameterNames)
+{
+    kernelManager->addParameterPack(id, packName, parameterNames);
+}
+
 void TunerCore::setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
     const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
 {

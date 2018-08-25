@@ -40,6 +40,26 @@ void Kernel::addConstraint(const KernelConstraint& constraint)
     constraints.push_back(constraint);
 }
 
+void Kernel::addParameterPack(const KernelParameterPack& pack)
+{
+    for (const auto& existingPack : parameterPacks)
+    {
+        if (pack == existingPack)
+        {
+            throw std::runtime_error(std::string("The following parameter pack already exists: ") + pack.getName());
+        }
+    }
+
+    for (const auto& parameterName : pack.getParameterNames())
+    {
+        if (!hasParameter(parameterName))
+        {
+            throw std::runtime_error(std::string("Parameter with given name does not exist: ") + parameterName);
+        }
+    }
+    parameterPacks.push_back(pack);
+}
+
 void Kernel::setThreadModifier(const ModifierType modifierType, const ModifierDimension modifierDimension,
     const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
 {
@@ -195,6 +215,11 @@ std::vector<KernelParameter> Kernel::getParameters() const
 std::vector<KernelConstraint> Kernel::getConstraints() const
 {
     return constraints;
+}
+
+std::vector<KernelParameterPack> Kernel::getParameterPacks() const
+{
+    return parameterPacks;
 }
 
 size_t Kernel::getArgumentCount() const

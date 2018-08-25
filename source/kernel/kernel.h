@@ -7,6 +7,7 @@
 #include <vector>
 #include "kernel_constraint.h"
 #include "kernel_parameter.h"
+#include "kernel_parameter_pack.h"
 #include "ktt_types.h"
 #include "api/dimension_vector.h"
 #include "api/parameter_pair.h"
@@ -27,6 +28,7 @@ public:
     // Core methods
     void addParameter(const KernelParameter& parameter);
     void addConstraint(const KernelConstraint& constraint);
+    void addParameterPack(const KernelParameterPack& pack);
     void setThreadModifier(const ModifierType modifierType, const ModifierDimension modifierDimension,
         const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
     void setLocalMemoryModifier(const ArgumentId argumentId, const std::vector<std::string>& parameterNames,
@@ -44,6 +46,7 @@ public:
     DimensionVector getModifiedLocalSize(const std::vector<ParameterPair>& parameterPairs) const;
     std::vector<KernelParameter> getParameters() const;
     std::vector<KernelConstraint> getConstraints() const;
+    std::vector<KernelParameterPack> getParameterPacks() const;
     size_t getArgumentCount() const;
     std::vector<ArgumentId> getArgumentIds() const;
     std::vector<LocalMemoryModifier> getLocalMemoryModifiers(const std::vector<ParameterPair>& parameterPairs) const;
@@ -59,6 +62,7 @@ private:
     DimensionVector localSize;
     std::vector<KernelParameter> parameters;
     std::vector<KernelConstraint> constraints;
+    std::vector<KernelParameterPack> parameterPacks;
     std::vector<ArgumentId> argumentIds;
     std::array<std::vector<std::string>, 3> globalThreadModifierNames;
     std::array<std::function<size_t(const size_t, const std::vector<size_t>&)>, 3> globalThreadModifiers;

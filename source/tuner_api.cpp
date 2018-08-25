@@ -78,6 +78,19 @@ void Tuner::addParameterDouble(const KernelId id, const std::string& parameterNa
     }
 }
 
+void Tuner::addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string>& parameterNames)
+{
+    try
+    {
+        tunerCore->addParameterPack(id, packName, parameterNames);
+    }
+    catch (const std::runtime_error& error)
+    {
+        TunerCore::log(LoggingLevel::Error, error.what());
+        throw;
+    }
+}
+
 void Tuner::setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
     const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
 {
