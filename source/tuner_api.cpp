@@ -319,11 +319,11 @@ void Tuner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCon
     }
 }
 
-void Tuner::dryTuneKernel(const KernelId id, const std::string& filePath)
+void Tuner::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
 {
     try
     {
-        tunerCore->dryTuneKernel(id, filePath);
+        tunerCore->dryTuneKernel(id, filePath, iterations);
     }
     catch (const std::runtime_error& error)
     {

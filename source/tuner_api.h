@@ -406,7 +406,7 @@ public:
       */
     void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
 
-    /** @fn void dryTuneKernel(const KernelId id, const std::string& filePath)
+    /** @fn void dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0)
       * Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration
       * space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on
       * specified ::SearchMethod. This method can be used to test behaviour and performance of newly implemented search methods. Note that no checks
@@ -414,8 +414,9 @@ public:
       * a valid file.
       * @param id Id of kernel for which the tuning begins.
       * @param filePath Path to CSV file with tuning parameters.
+      * @param iterations Number of iterations performed, 0 = scan whole tuning space.
       */
-    void dryTuneKernel(const KernelId id, const std::string& filePath);
+    void dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0);
 
     /** @fn ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
       * Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, it creates

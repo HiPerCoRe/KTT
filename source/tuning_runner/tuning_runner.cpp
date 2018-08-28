@@ -96,7 +96,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
     return results;
 }
 
-std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const std::string& filePath)
+std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -117,7 +117,12 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
     configurationManager.setKernelConfigurations(id, configurations, kernel.getParameters());
     std::vector<KernelResult> results;
 
-    for (size_t i = 0; i < configurationCount; i++)
+    size_t tuningIters;
+    if (iterations == 0) 
+        tuningIters = configurationCount;
+    else
+        tuningIters = std::min(configurationCount, iterations);
+    for (size_t i = 0; i < tuningIters; i++)
     {
         KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
         KernelResult result(kernel.getName(), currentConfiguration);

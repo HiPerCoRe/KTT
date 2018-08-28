@@ -222,7 +222,7 @@ void TunerCore::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> sto
     resultPrinter.setResult(id, results);
 }
 
-void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
+void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
 {
     std::vector<KernelResult> results;
     if (kernelManager->isComposition(id))
@@ -231,7 +231,7 @@ void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath)
     }
     else
     {
-        results = tuningRunner->dryTuneKernel(id, filePath);
+        results = tuningRunner->dryTuneKernel(id, filePath, iterations);
     }
     resultPrinter.setResult(id, results);
 }

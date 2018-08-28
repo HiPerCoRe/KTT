@@ -62,7 +62,7 @@ public:
 
     // Kernel tuner methods
     void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
-    void dryTuneKernel(const KernelId id, const std::string& filePath);
+    void dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations);
     ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod method, const double toleranceThreshold);

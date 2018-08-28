@@ -57,6 +57,14 @@ bool ResultLoader::loadResults(const std::string& filePath)
         std::cerr << "Malformed file: " << filePath << std::endl;
         return false;
     }
+
+    // Jump over possible multiple local/global sizes in compositions
+    while (params[paramsBegin].compare(0, 10, "Local size") == 0
+        || params[paramsBegin].compare(0, 11, "Global size") == 0)
+    {
+        paramsBegin++;
+    }
+
     paramsLength = params.size() - paramsBegin;
     
     while (std::getline(inputFile, line)) 
