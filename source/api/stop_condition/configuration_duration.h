@@ -39,7 +39,7 @@ public:
 
     void updateStatus(const double previousConfigurationDuration) override
     {
-        bestDuration = std::min(bestDuration, previousConfigurationDuration / 1'000'000.0);
+        bestDuration = std::min(bestDuration, previousConfigurationDuration / 1000000.0);
     }
     
     size_t getConfigurationCount() const override
