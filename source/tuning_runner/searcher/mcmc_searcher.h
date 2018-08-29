@@ -16,7 +16,7 @@ namespace ktt
 class MCMCSearcher : public Searcher
 {
 public:
-    static const size_t maximumDifferences = 1;
+    static const size_t maximumDifferences = 2;
     static const size_t bootIterations = 10;
 
     MCMCSearcher(const std::vector<KernelConfiguration>& configurations, const std::vector<double>& start) :
