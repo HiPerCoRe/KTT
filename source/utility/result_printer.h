@@ -20,6 +20,7 @@ public:
     void setResult(const KernelId id, const std::vector<KernelResult>& results);
     void setTimeUnit(const TimeUnit unit);
     void setInvalidResultPrinting(const bool flag);
+    void clearResults(const KernelId id);
 
 private:
     std::map<KernelId, std::vector<KernelResult>> kernelResults;

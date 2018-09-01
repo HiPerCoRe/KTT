@@ -261,6 +261,12 @@ ComputationResult TunerCore::tuneKernelByStep(const KernelId id, const std::vect
     }
 }
 
+void TunerCore::clearKernelData(const KernelId id, const bool clearConfigurations)
+{
+    resultPrinter.clearResults(id);
+    tuningRunner->clearKernelData(id, clearConfigurations);
+}
+
 void TunerCore::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     tuningRunner->setSearchMethod(method, arguments);

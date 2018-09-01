@@ -48,7 +48,7 @@ KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguratio
     {
         computeEngine->synchronizeDevice();
         computeEngine->clearEvents();
-        Logger::getLogger().log(LoggingLevel::Warning, std::string("Kernel run failed, reason: ") + error.what() + "\n");
+        Logger::getLogger().log(LoggingLevel::Warning, std::string("Kernel run failed, reason: ") + error.what());
         result = KernelResult(kernel.getName(), configuration, error.what());
     }
 
@@ -84,7 +84,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
     {
         computeEngine->synchronizeDevice();
         computeEngine->clearEvents();
-        Logger::getLogger().log(LoggingLevel::Warning, std::string("Kernel composition run failed, reason: ") + error.what() + "\n");
+        Logger::getLogger().log(LoggingLevel::Warning, std::string("Kernel composition run failed, reason: ") + error.what());
         result = KernelResult(composition.getName(), configuration, error.what());
     }
 

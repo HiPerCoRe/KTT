@@ -39,7 +39,7 @@ public:
     }
 
 private:
-    std::vector<KernelConfiguration> configurations;
+    const std::vector<KernelConfiguration>& configurations;
     size_t index;
 };
 

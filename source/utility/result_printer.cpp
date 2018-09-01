@@ -61,6 +61,14 @@ void ResultPrinter::setInvalidResultPrinting(const bool flag)
     printInvalidResult = flag;
 }
 
+void ResultPrinter::clearResults(const KernelId id)
+{
+    if (kernelResults.find(id) != kernelResults.end())
+    {
+        kernelResults.erase(id);
+    }
+}
+
 void ResultPrinter::printVerbose(const std::vector<KernelResult>& results, std::ostream& outputTarget) const
 {
     for (const auto& result : results)

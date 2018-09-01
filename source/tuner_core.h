@@ -60,10 +60,11 @@ public:
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
     void setTuningManipulatorSynchronization(const KernelId id, const bool flag);
 
-    // Kernel tuner methods
+    // Tuning runner methods
     void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
     void dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations);
     ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
+    void clearKernelData(const KernelId id, const bool clearConfigurations);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void setValidationRange(const ArgumentId id, const size_t range);

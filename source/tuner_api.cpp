@@ -371,6 +371,11 @@ ComputationResult Tuner::runKernel(const KernelId id, const std::vector<Paramete
     }
 }
 
+void Tuner::clearKernelData(const KernelId id, const bool clearConfigurations)
+{
+    tunerCore->clearKernelData(id, clearConfigurations);
+}
+
 void Tuner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     try

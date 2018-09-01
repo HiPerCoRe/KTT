@@ -12,6 +12,7 @@ class RandomSearcher : public Searcher
 public:
     RandomSearcher(const std::vector<KernelConfiguration>& configurations) :
         configurations(configurations),
+        configurationIndices(configurations.size()),
         index(0)
     {
         if (configurations.size() == 0)
@@ -19,9 +20,14 @@ public:
             throw std::runtime_error("Configurations vector provided for searcher is empty");
         }
 
+        for (size_t i = 0; i < configurations.size(); i++)
+        {
+            configurationIndices.at(i) = i;
+        }
+
         std::random_device device;
         std::default_random_engine engine(device());
-        std::shuffle(std::begin(this->configurations), std::end(this->configurations), engine);
+        std::shuffle(std::begin(this->configurationIndices), std::end(this->configurationIndices), engine);
     }
 
     void calculateNextConfiguration(const double) override
@@ -31,7 +37,8 @@ public:
 
     KernelConfiguration getCurrentConfiguration() const override
     {
-        return configurations.at(index);
+        size_t currentIndex = configurationIndices.at(index);
+        return configurations.at(currentIndex);
     }
 
     size_t getUnexploredConfigurationCount() const override
@@ -45,7 +52,8 @@ public:
     }
 
 private:
-    std::vector<KernelConfiguration> configurations;
+    const std::vector<KernelConfiguration>& configurations;
+    std::vector<size_t> configurationIndices;
     size_t index;
 };
 

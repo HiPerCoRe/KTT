@@ -13,11 +13,10 @@ ConfigurationManager::ConfigurationManager() :
     searchMethod(SearchMethod::FullSearch)
 {}
 
-void ConfigurationManager::setKernelConfigurations(const KernelId id, const std::vector<KernelConfiguration>& configurations,
-    const std::vector<KernelParameter>& parameters)
+void ConfigurationManager::setKernelConfigurations(const KernelId id, const std::vector<KernelConfiguration>& configurations)
 {
-    clearData(id);
-    initializeSearcher(id, searchMethod, searchArguments, configurations, parameters);
+    clearKernelData(id, true, true);
+    kernelConfigurations.insert(std::make_pair(id, configurations));
 }
 
 void ConfigurationManager::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
@@ -34,33 +33,42 @@ void ConfigurationManager::setSearchMethod(const SearchMethod method, const std:
 
 bool ConfigurationManager::hasKernelConfigurations(const KernelId id) const
 {
-    return searchers.find(id) != searchers.end();
+    return kernelConfigurations.find(id) != kernelConfigurations.end();
 }
 
-void ConfigurationManager::clearData(const KernelId id)
-{
-    clearSearcher(id);
-
-    if (bestConfigurations.find(id) != bestConfigurations.end())
-    {
-        bestConfigurations.erase(id);
-    }
-}
-
-void ConfigurationManager::clearSearcher(const KernelId id)
+void ConfigurationManager::clearKernelData(const KernelId id, const bool clearConfigurations, const bool clearBestConfiguration)
 {
     if (searchers.find(id) != searchers.end())
     {
         searchers.erase(id);
     }
+
+    if (clearConfigurations && kernelConfigurations.find(id) != kernelConfigurations.end())
+    {
+        kernelConfigurations.erase(id);
+    }
+
+    if (clearBestConfiguration && bestConfigurations.find(id) != bestConfigurations.end())
+    {
+        bestConfigurations.erase(id);
+    }
 }
 
-KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelId id) const
+KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelId id)
 {
     auto searcherPair = searchers.find(id);
     if (searcherPair == searchers.end())
     {
-        throw std::runtime_error(std::string("Configuration for kernel with following id is not present: ") + std::to_string(id));
+        auto configurationPair = kernelConfigurations.find(id);
+        if (configurationPair != kernelConfigurations.end())
+        {
+            initializeSearcher(id, searchMethod, searchArguments, configurationPair->second);
+            searcherPair = searchers.find(id);
+        }
+        else
+        {
+            throw std::runtime_error(std::string("Configuration for kernel with following id is not present: ") + std::to_string(id));
+        }
     }
 
     if (searcherPair->second->getUnexploredConfigurationCount() <= 0)
@@ -77,7 +85,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelId
     return searcherPair->second->getCurrentConfiguration();
 }
 
-KernelConfiguration ConfigurationManager::getBestConfiguration(const KernelId id) const
+KernelConfiguration ConfigurationManager::getBestConfiguration(const KernelId id)
 {
     auto configurationPair = bestConfigurations.find(id);
     if (configurationPair == bestConfigurations.end())
@@ -106,7 +114,16 @@ void ConfigurationManager::calculateNextConfiguration(const KernelId id, const s
     auto searcherPair = searchers.find(id);
     if (searcherPair == searchers.end())
     {
-        throw std::runtime_error(std::string("Configuration for kernel with following id is not present: ") + std::to_string(id));
+        auto configurationPair = kernelConfigurations.find(id);
+        if (configurationPair != kernelConfigurations.end())
+        {
+            initializeSearcher(id, searchMethod, searchArguments, configurationPair->second);
+            searcherPair = searchers.find(id);
+        }
+        else
+        {
+            throw std::runtime_error(std::string("Configuration for kernel with following id is not present: ") + std::to_string(id));
+        }
     }
 
     auto configurationPair = bestConfigurations.find(id);
@@ -124,7 +141,7 @@ void ConfigurationManager::calculateNextConfiguration(const KernelId id, const s
 }
 
 void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,
-    const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters)
+    const std::vector<KernelConfiguration>& configurations)
 {
     switch (method)
     {
@@ -138,8 +155,7 @@ void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMet
         searchers.insert(std::make_pair(id, std::make_unique<AnnealingSearcher>(configurations, arguments.at(0))));
         break;
     case SearchMethod::MCMC:
-        searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, std::vector<double>(arguments.begin(),
-            arguments.end()))));
+        searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, arguments)));
         break;
     default:
         throw std::runtime_error("Specified searcher is not supported");

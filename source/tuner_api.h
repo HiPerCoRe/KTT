@@ -452,6 +452,13 @@ public:
       */
     ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
 
+    /** @fn void clearData(const KernelId id)
+    * Resets tuning process and clears tuning results for specified kernel.
+    * @param id Id of kernel whose data will be cleared.
+    * @param clearConfigurations If true, generated kernel configurations will be cleared as well. Otherwise, they will remain inside tuner.
+    */
+    void clearKernelData(const KernelId id, const bool clearConfigurations);
+
     /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
       * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.
       * Default search method is full search.
