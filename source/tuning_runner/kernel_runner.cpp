@@ -194,7 +194,7 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     manipulatorInterfaceImplementation->clearData();
     manipulator->manipulatorInterface = nullptr;
 
-    size_t manipulatorDuration = timer.getElapsedTime();
+    uint64_t manipulatorDuration = timer.getElapsedTime();
     manipulatorDuration -= result.getOverhead();
     result.setKernelName(kernel.getName());
     result.setComputationDuration(manipulatorDuration);
@@ -258,7 +258,7 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
     manipulatorInterfaceImplementation->clearData();
     manipulator->manipulatorInterface = nullptr;
 
-    size_t manipulatorDuration = timer.getElapsedTime();
+    uint64_t manipulatorDuration = timer.getElapsedTime();
     manipulatorDuration -= result.getOverhead();
     result.setKernelName(composition.getName());
     result.setComputationDuration(manipulatorDuration);

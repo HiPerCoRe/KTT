@@ -43,6 +43,17 @@ void KernelComposition::addParameterPack(const KernelParameterPack& pack)
         {
             throw std::runtime_error(std::string("The following parameter pack already exists: ") + pack.getName());
         }
+
+        for (const auto& existingName : existingPack.getParameterNames())
+        {
+            for (const auto& newName : pack.getParameterNames())
+            {
+                if (existingName == newName)
+                {
+                    throw std::runtime_error(std::string("The following parameter is already part of a different pack: ") + existingName);
+                }
+            }
+        }
     }
 
     for (const auto& parameterName : pack.getParameterNames())
@@ -139,7 +150,7 @@ Kernel KernelComposition::transformToKernel() const
         kernel.addConstraint(constraint);
     }
 
-    std::vector<size_t> argumentIds;
+    std::vector<ArgumentId> argumentIds;
     for (const auto id : sharedArgumentIds)
     {
         argumentIds.push_back(id);

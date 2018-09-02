@@ -101,7 +101,7 @@ KernelResult ResultLoader::readResult(const KernelConfiguration& configuration) 
     for (auto val : values)
     {
         bool match = true;
-        for (int j = 0; j < paramsLength; j++) 
+        for (size_t j = 0; j < paramsLength; j++) 
         {
             if (val[j+1] != paramPairs[j].getValue()) 
             {

@@ -157,10 +157,12 @@ public:
     void addParameterDouble(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
 
     /* @fn void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string> parameterNames)
-    * Adds a pack containing specified kernel parameters. Todo...
+    * Adds a pack containing specified kernel parameters. When parameter packs are used, tuning configurations are generated progressively for each
+    * pack. Once best configuration is found for a specific pack, next pack is then processed. This method is useful when kernels contain groups of
+    * parameters that can be tuned independently. The total number of generated configurations that need to be tested is reduced.
     * @param id Id of kernel for which the parameter pack will be added.
     * @param packName Name of a parameter pack. Parameter pack names for a single kernel must be unique.
-    * @param parameterNames Names of parameters which will be added to the parameter pack.
+    * @param parameterNames Names of parameters which will be added to the parameter pack. A single parameter cannot be included in multiple packs.
     */
     void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string>& parameterNames);
 

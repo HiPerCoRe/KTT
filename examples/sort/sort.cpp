@@ -91,9 +91,9 @@ int main(int argc, char** argv)
   
   ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, size, inId, outId, isumsId, sizeId,
       localMem1Id, localMem2Id, localMem3Id, numberOfGroupsId, shiftId));
-  tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<size_t>{inId, isumsId, sizeId, localMem1Id, shiftId});
-  tuner.setCompositionKernelArguments(compositionId, kernelIds[1], std::vector<size_t>{isumsId, numberOfGroupsId, localMem2Id});
-  tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<size_t>{inId, isumsId, outId, sizeId, localMem3Id, shiftId});
+  tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<ktt::ArgumentId>{inId, isumsId, sizeId, localMem1Id, shiftId});
+  tuner.setCompositionKernelArguments(compositionId, kernelIds[1], std::vector<ktt::ArgumentId>{isumsId, numberOfGroupsId, localMem2Id});
+  tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<ktt::ArgumentId>{inId, isumsId, outId, sizeId, localMem3Id, shiftId});
 
   // Parameter for the length of OpenCL vector data types used in the kernels
   tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
