@@ -54,6 +54,17 @@ void ConfigurationManager::clearKernelData(const KernelId id, const bool clearCo
     }
 }
 
+size_t ConfigurationManager::getConfigurationCount(const KernelId id)
+{
+    auto configurations = kernelConfigurations.find(id);
+    if (configurations != kernelConfigurations.end())
+    {
+        return configurations->second.size();
+    }
+
+    return 0;
+}
+
 KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelId id)
 {
     auto searcherPair = searchers.find(id);

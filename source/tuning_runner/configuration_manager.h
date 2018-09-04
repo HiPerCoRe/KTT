@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
@@ -29,6 +30,7 @@ public:
     void clearKernelData(const KernelId id, const bool clearConfigurations, const bool clearBestConfiguration);
 
     // Configuration search methods
+    size_t getConfigurationCount(const KernelId id);
     KernelConfiguration getCurrentConfiguration(const KernelId id);
     KernelConfiguration getBestConfiguration(const KernelId id);
     ComputationResult getBestComputationResult(const KernelId id) const;

@@ -33,16 +33,18 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
     }
 
     resultValidator->computeReferenceResult(kernel);
-    std::vector<KernelConfiguration> configurations = kernelManager->getKernelConfigurations(id);
-    size_t configurationCount = configurations.size();
+    if (!configurationManager.hasKernelConfigurations(id))
+    {
+        configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id));
+    }
 
+    size_t configurationCount = configurationManager.getConfigurationCount(id);
     if (stopCondition != nullptr)
     {
         stopCondition->initialize(configurationCount);
         configurationCount = std::min(configurationCount, stopCondition->getConfigurationCount());
     }
 
-    configurationManager.setKernelConfigurations(id, configurations);
     std::vector<KernelResult> results;
 
     for (size_t i = 0; i < configurationCount; i++)
@@ -109,12 +111,13 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
     }
 
     const Kernel& kernel = kernelManager->getKernel(id);
-    std::vector<KernelConfiguration> configurations = kernelManager->getKernelConfigurations(id);
-    size_t configurationCount = configurations.size();
+    if (!configurationManager.hasKernelConfigurations(id))
+    {
+        configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id));
+    }
 
-    configurationManager.setKernelConfigurations(id, configurations);
+    size_t configurationCount = configurationManager.getConfigurationCount(id);
     std::vector<KernelResult> results;
-
     size_t tuningIterations;
     if (iterations == 0)
     {
@@ -169,16 +172,18 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
     }
 
     resultValidator->computeReferenceResult(compatibilityKernel);
-    std::vector<KernelConfiguration> configurations = kernelManager->getKernelCompositionConfigurations(id);
-    size_t configurationCount = configurations.size();
+    if (!configurationManager.hasKernelConfigurations(id))
+    {
+        configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id));
+    }
 
+    size_t configurationCount = configurationManager.getConfigurationCount(id);
     if (stopCondition != nullptr)
     {
         stopCondition->initialize(configurationCount);
         configurationCount = std::min(configurationCount, stopCondition->getConfigurationCount());
     }
 
-    configurationManager.setKernelConfigurations(id, configurations);
     std::vector<KernelResult> results;
 
     for (size_t i = 0; i < configurationCount; i++)
