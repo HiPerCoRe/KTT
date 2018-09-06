@@ -93,7 +93,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
 
     kernelRunner->clearBuffers();
     resultValidator->clearReferenceResults();
-    configurationManager.clearKernelData(id, true, false);
+    configurationManager.clearKernelData(id, false, false);
     return results;
 }
 
@@ -153,7 +153,7 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
         results.push_back(result);
     }
 
-    configurationManager.clearKernelData(id, true, false);
+    configurationManager.clearKernelData(id, false, false);
     return results;
 }
 
@@ -226,7 +226,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
     }
 
     resultValidator->clearReferenceResults();
-    configurationManager.clearKernelData(id, true, false);
+    configurationManager.clearKernelData(id, false, false);
     return results;
 }
 
