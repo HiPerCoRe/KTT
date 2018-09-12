@@ -148,11 +148,11 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
     tuner->addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
     tuner->addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
     auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
-    tuner->addConstraint(kernelId, parallelismConstraint, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y"});
+    tuner->addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y"}, parallelismConstraint);
     auto tmpConstraint = [](const std::vector<size_t>& v) {return (v[0] < 3 || v[1] < 2);};
-    tuner->addConstraint(kernelId, tmpConstraint, {"GRANULARITY", "CACHING_STRATEGY"});
+    tuner->addConstraint(kernelId, {"GRANULARITY", "CACHING_STRATEGY"}, tmpConstraint);
     auto smConstraint = [](const std::vector<size_t>& v) {return (v[0] != 2) || (v[1]*v[2] + v[3]*v[1] + v[3]*v[2])*v[4]*sizeof(REAL) < 48*1024;};
-    tuner->addConstraint(kernelId, smConstraint, {"GRANULARITY", "SIZE_A", "SIZE_B", "SIZE_C", "MGCG_GROUP_SIZE_Y"});
+    tuner->addConstraint(kernelId, {"GRANULARITY", "SIZE_A", "SIZE_B", "SIZE_C", "MGCG_GROUP_SIZE_Y"}, smConstraint);
 
     // assign manipulator
     tuner->setTuningManipulator(kernelId, std::make_unique<cTunableGemm>(batch, a, b, c));

@@ -6,11 +6,11 @@
 namespace ktt
 {
 
-Logger::Logger() :
-    level(LoggingLevel::Info),
-    outputTarget(&std::clog),
-    filePathValid(false)
-{}
+Logger& Logger::getLogger()
+{
+    static Logger instance;
+    return instance;
+}
 
 void Logger::setLoggingLevel(const LoggingLevel level)
 {
@@ -52,6 +52,12 @@ void Logger::log(const LoggingLevel level, const std::string& message) const
         *outputTarget << getLoggingLevelString(level) << " " << message << std::endl;
     }
 }
+
+Logger::Logger() :
+    level(LoggingLevel::Info),
+    outputTarget(&std::clog),
+    filePathValid(false)
+{}
 
 std::string Logger::getLoggingLevelString(const LoggingLevel level)
 {

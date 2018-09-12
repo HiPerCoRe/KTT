@@ -26,7 +26,7 @@ class ResultValidator
 {
 public:
     // Constructor
-    explicit ResultValidator(ArgumentManager* argumentManager, KernelRunner* kernelRunner, Logger* logger);
+    explicit ResultValidator(ArgumentManager* argumentManager, KernelRunner* kernelRunner);
 
     // Core methods
     void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
@@ -50,7 +50,6 @@ private:
     // Attributes
     ArgumentManager* argumentManager;
     KernelRunner* kernelRunner;
-    Logger* logger;
     double toleranceThreshold;
     ValidationMethod validationMethod;
     std::map<ArgumentId, size_t> argumentValidationRanges;
@@ -73,8 +72,9 @@ private:
         auto argumentRangePointer = argumentValidationRanges.find(id);
         if (argumentRangePointer == argumentValidationRanges.end() && result.size() != referenceResult.size())
         {
-            logger->log(LoggingLevel::Warning, std::string("Number of elements in results differs for argument with id: ") + std::to_string(id)
-                + ", reference size: " + std::to_string(referenceResult.size()) + ", result size: " + std::to_string(result.size()));
+            Logger::getLogger().log(LoggingLevel::Warning, std::string("Number of elements in results differs for argument with id: ")
+                + std::to_string(id) + ", reference size: " + std::to_string(referenceResult.size()) + ", result size: "
+                + std::to_string(result.size()));
             return false;
         }
         if (argumentRangePointer != argumentValidationRanges.end())
@@ -96,7 +96,7 @@ private:
             }
             if (difference > toleranceThreshold)
             {
-                logger->log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id)
+                Logger::getLogger().log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id)
                     + ", absolute difference is: " + std::to_string(difference));
                 return false;
             }
@@ -108,8 +108,8 @@ private:
             {
                 if (std::fabs(result.at(i) - referenceResult.at(i)) > toleranceThreshold)
                 {
-                    logger->log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: "
-                        + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
+                    Logger::getLogger().log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id)
+                        + ", index: " + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
                         + std::to_string(result.at(i)) + ", difference: " + std::to_string(std::fabs(result.at(i) - referenceResult.at(i))));
                     return false;
                 }
@@ -123,8 +123,8 @@ private:
                 double difference = std::fabs(result.at(i) - referenceResult.at(i));
                 if ((difference > 1e-4) && (difference / referenceResult.at(i) > toleranceThreshold))
                 {
-                    logger->log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: "
-                        + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
+                    Logger::getLogger().log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id)
+                        + ", index: " + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
                         + std::to_string(result.at(i)) + ", relative difference: " + std::to_string(difference / referenceResult.at(i)));
                     return false;
                 }
@@ -144,8 +144,8 @@ private:
         {
             if (result.at(i) != referenceResult.at(i))
             {
-                logger->log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: "
-                    + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
+                Logger::getLogger().log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id)
+                    + ", index: " + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
                     + std::to_string(result.at(i)) + ", difference: "
                     + std::to_string(static_cast<T>(std::fabs(result.at(i) - referenceResult.at(i)))));
                 return false;

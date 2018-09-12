@@ -116,9 +116,9 @@ int main(int argc, char** argv)
     // Set previously defined function as comparator for the kernel argument.
     tuner.setArgumentComparator(dataId, compareData);
 
-    // Add parameter for the kernel. See previous tutorial for more information.
-    tuner.addParameter(kernelId, "multiply_work_group_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ModifierType::Local,
-        ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
+    // Add parameter and thread modifier for the kernel. See previous tutorial for more information.
+    tuner.addParameter(kernelId, "multiply_work_group_size", std::vector<size_t>{32, 64, 128, 256});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_work_group_size", ktt::ModifierAction::Multiply);
 
     // Start kernel tuning and print results.
     tuner.tuneKernel(kernelId);

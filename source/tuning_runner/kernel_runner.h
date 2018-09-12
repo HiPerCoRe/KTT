@@ -9,7 +9,6 @@
 #include "dto/kernel_result.h"
 #include "kernel/kernel_manager.h"
 #include "kernel_argument/argument_manager.h"
-#include "utility/logger.h"
 
 namespace ktt
 {
@@ -18,7 +17,7 @@ class KernelRunner
 {
 public:
     // Constructor
-    explicit KernelRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, Logger* logger, ComputeEngine* computeEngine);
+    explicit KernelRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, ComputeEngine* computeEngine);
 
     // Core methods
     KernelResult runKernel(const KernelId id, const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output);
@@ -38,7 +37,6 @@ private:
     // Attributes
     ArgumentManager* argumentManager;
     KernelManager* kernelManager;
-    Logger* logger;
     ComputeEngine* computeEngine;
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
     std::map<KernelId, std::unique_ptr<TuningManipulator>> tuningManipulators;

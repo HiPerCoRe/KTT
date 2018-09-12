@@ -89,17 +89,17 @@ int main(int argc, char** argv)
 
     // Using vectorized SoA only makes sense when vectors are longer than 1
     auto vectorizedSoA = [](const std::vector<size_t>& vector) {return vector.at(0) > 1 || vector.at(1) != 2;}; 
-    tuner.addConstraint(kernelId, vectorizedSoA, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"});
+    tuner.addConstraint(kernelId, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
 
     // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR
-    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", std::vector<size_t>{1, 2, 4, 8}, ktt::ModifierType::Global, ktt::ModifierAction::Divide,
-        ktt::ModifierDimension::X);
+    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", std::vector<size_t>{1, 2, 4, 8});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR", ktt::ModifierAction::Divide);
 
     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", std::vector<size_t>{4, 8, 16, 32}, ktt::ModifierType::Local, ktt::ModifierAction::Multiply,
-        ktt::ModifierDimension::X);
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", std::vector<size_t>{1, 2, 4, 8, 16, 32}, ktt::ModifierType::Local,
-        ktt::ModifierAction::Multiply, ktt::ModifierDimension::Y);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", std::vector<size_t>{4, 8, 16, 32});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", std::vector<size_t>{1, 2, 4, 8, 16, 32});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
 
     // Add all arguments utilized by kernels
     ktt::ArgumentId atomInfoId = tuner.addArgumentVector(atomInfo, ktt::ArgumentAccessType::ReadOnly);

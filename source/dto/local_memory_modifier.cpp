@@ -5,25 +5,16 @@ namespace ktt
 {
 
 LocalMemoryModifier::LocalMemoryModifier() :
-    LocalMemoryModifier(0, 0, ModifierAction::Add, 0)
+    LocalMemoryModifier(0, 0, std::vector<size_t>{}, nullptr)
 {}
 
-LocalMemoryModifier::LocalMemoryModifier(const KernelId kernel, const ArgumentId argument, const ModifierAction action, const size_t value) :
+LocalMemoryModifier::LocalMemoryModifier(const KernelId kernel, const ArgumentId argument, const std::vector<size_t>& parameterValues,
+    const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction) :
     kernel(kernel),
     argument(argument),
-    action(action),
-    value(value)
+    parameterValues(parameterValues),
+    modifierFunction(modifierFunction)
 {}
-
-void LocalMemoryModifier::setAction(const ModifierAction action)
-{
-    this->action = action;
-}
-
-void LocalMemoryModifier::setValue(const size_t value)
-{
-    this->value = value;
-}
 
 KernelId LocalMemoryModifier::getKernel() const
 {
@@ -35,31 +26,24 @@ ArgumentId LocalMemoryModifier::getArgument() const
     return argument;
 }
 
-ModifierAction LocalMemoryModifier::getAction() const
+std::vector<size_t> LocalMemoryModifier::getParameterValues() const
 {
-    return action;
+    return parameterValues;
 }
 
-size_t LocalMemoryModifier::getValue() const
+std::function<size_t(const size_t, const std::vector<size_t>&)> LocalMemoryModifier::getModifierFunction() const
 {
-    return value;
+    return modifierFunction;
 }
 
-size_t LocalMemoryModifier::getModifiedValue(const size_t value) const
+size_t LocalMemoryModifier::getModifiedSize(const size_t defaultSize) const
 {
-    switch (action)
+    if (modifierFunction == nullptr)
     {
-    case ModifierAction::Add:
-        return value + this->value;
-    case ModifierAction::Subtract:
-        return value - this->value;
-    case ModifierAction::Multiply:
-        return value * this->value;
-    case ModifierAction::Divide:
-        return value / this->value;
-    default:
-        throw std::runtime_error("Unknown modifier action");
+        return defaultSize;
     }
+
+    return modifierFunction(defaultSize, parameterValues);
 }
 
 } // namespace ktt

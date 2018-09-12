@@ -119,11 +119,11 @@ int main(int argc, char** argv)
   tuner.addParameter(kernelId, "LOOP_UNROLL", {0,1});
   // Add conditions
   auto enoughToCompute = [](const std::vector<size_t>& vector) {return vector.at(0)/(vector.at(2)*2) > 1 && vector.at(1)/(vector.at(2)*2) > 1;};
-  tuner.addConstraint(kernelId, enoughToCompute, {"BLOCK_SIZE_COLS", "WORK_GROUP_Y", "PYRAMID_HEIGHT"});
+  tuner.addConstraint(kernelId, {"BLOCK_SIZE_COLS", "WORK_GROUP_Y", "PYRAMID_HEIGHT"}, enoughToCompute);
   auto workGroupSmaller = [](const std::vector<size_t>& vector) {return vector.at(0)<=vector.at(1);};
   auto workGroupDividable = [](const std::vector<size_t>& vector) {return vector.at(1)%vector.at(0) == 0;};
-  tuner.addConstraint(kernelId, workGroupSmaller, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"});
-  tuner.addConstraint(kernelId, workGroupDividable, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"});
+  tuner.addConstraint(kernelId, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"}, workGroupSmaller);
+  tuner.addConstraint(kernelId, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"}, workGroupDividable);
   // Add all arguments utilized by kernels
   ktt::ArgumentId iterationId = tuner.addArgumentScalar(0);
   ktt::ArgumentId powerId = tuner.addArgumentVector(power, ktt::ArgumentAccessType::ReadOnly);

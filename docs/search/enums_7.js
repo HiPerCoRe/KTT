@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['timeunit',['TimeUnit',['../namespacektt.html#a161b9af8714615ef2c1770b020ce1511',1,'ktt']]]
+  ['searchmethod',['SearchMethod',['../namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788b',1,'ktt']]]
 ];

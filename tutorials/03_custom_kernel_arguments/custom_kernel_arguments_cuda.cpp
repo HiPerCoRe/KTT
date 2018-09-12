@@ -111,14 +111,10 @@ int main(int argc, char** argv)
     // Set previously defined function as comparator for the kernel argument.
     tuner.setArgumentComparator(dataId, compareData);
 
-    // Add parameters and constraint for the kernel. See previous tutorial for more information.
-    tuner.addParameter(kernelId, "multiply_block_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ModifierType::Local,
-        ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
-    tuner.addParameter(kernelId, "divide_grid_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ModifierType::Global, ktt::ModifierAction::Divide,
-        ktt::ModifierDimension::X);
-
-    auto multiplyEqualsDivide = [](const std::vector<size_t>& vector) {return vector.at(0) == vector.at(1);}; 
-    tuner.addConstraint(kernelId, multiplyEqualsDivide, std::vector<std::string>{"multiply_block_size", "divide_grid_size"});
+    // Add parameter and thread modifiers for the kernel. See previous tutorial for more information.
+    tuner.addParameter(kernelId, "multiply_block_size", std::vector<size_t>{32, 64, 128, 256});
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_block_size", ktt::ModifierAction::Multiply);
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "multiply_block_size", ktt::ModifierAction::Divide);
 
     // Start kernel tuning and print results.
     tuner.tuneKernel(kernelId);

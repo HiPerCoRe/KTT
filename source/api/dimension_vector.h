@@ -69,6 +69,13 @@ public:
       */
     void setSizeZ(const size_t sizeZ);
 
+    /** @fn void setSize(const ModifierDimension modifierDimension, const size_t size)
+    * Setter for thread size in specified dimension.
+    * @param modifierDimension Specifies which dimension size will be set.
+    * @param size Thread size in specified dimension.
+    */
+    void setSize(const ModifierDimension modifierDimension, const size_t size);
+
     /** @fn void multiply(const DimensionVector& factor)
       * Multiplies thread sizes by values provided by specified dimension vector.
       * @param factor Source of values for thread size multiplication.
@@ -106,6 +113,13 @@ public:
       * @return Thread size in dimension z.
       */
     size_t getSizeZ() const;
+
+    /** @fn size_t getSize(const ModifierDimension modifierDimension) const
+    * Getter for thread size in specified dimension.
+    * @param modifierDimension Specifies which dimension size will be returned.
+    * @return Thread size in specified dimension.
+    */
+    size_t getSize(const ModifierDimension modifierDimension) const;
 
     /** @fn size_t getTotalSize() const
       * Getter for total thread size. Total thread size is calculated by multiplying thread sizes in each dimension.

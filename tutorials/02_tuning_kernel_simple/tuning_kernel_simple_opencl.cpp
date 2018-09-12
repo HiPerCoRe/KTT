@@ -105,13 +105,14 @@ int main(int argc, char** argv)
 
     // Add new parameter for kernel. Specify parameter name and possible values for this parameter. When kernel is tuned, the parameter value
     // is added to kernel source as preprocessor definition, eg. for parameter value 32, it is added as "#define multiply_work_group_size 32".
+    tuner.addParameter(kernelId, "multiply_work_group_size", std::vector<size_t>{32, 64, 128, 256});
+
     // In this case, the parameter also affects work-group size. This is specified with KTT enums, ModifierType specifies that parameter affects
     // work-group size of a kernel, ModifierAction specifies that work-group size is multiplied by value of the parameter, ModifierDimension
     // specifies that dimension X of work-group is affected by the parameter.
     // Previously, the work-group size of kernel was set to one. This simply means that the work-group size of kernel is controlled explicitly by
     // value of this parameter, eg. size of one is multiplied by 32, which means that result size is 32.
-    tuner.addParameter(kernelId, "multiply_work_group_size", std::vector<size_t>{32, 64, 128, 256}, ktt::ModifierType::Local,
-        ktt::ModifierAction::Multiply, ktt::ModifierDimension::X);
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_work_group_size", ktt::ModifierAction::Multiply);
 
     // Start tuning for specified kernel. This generates multiple versions of the kernel based on provided tuning parameters and their values. In
     // this case, only single parameter with 4 values was added, which means that 4 different versions of kernel will be run, each version

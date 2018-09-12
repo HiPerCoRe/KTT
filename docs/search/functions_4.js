@@ -34,6 +34,7 @@ var searchData=
   ['getparametervalue',['getParameterValue',['../classktt_1_1_tuning_manipulator.html#a61f92883b4ea8c735c91081a70a506b2',1,'ktt::TuningManipulator']]],
   ['getparametervaluedouble',['getParameterValueDouble',['../classktt_1_1_tuning_manipulator.html#ac944ad0bc678cd2e7092fd3ad1b5d41d',1,'ktt::TuningManipulator']]],
   ['getplatforminfo',['getPlatformInfo',['../classktt_1_1_tuner.html#a484f25bb0659411c0986ff2344b4da37',1,'ktt::Tuner']]],
+  ['getsize',['getSize',['../classktt_1_1_dimension_vector.html#a328fb33fdf6b94593305211c86a2ed7c',1,'ktt::DimensionVector']]],
   ['getsizex',['getSizeX',['../classktt_1_1_dimension_vector.html#a9007bc302ef2ddc7d99c127857f67294',1,'ktt::DimensionVector']]],
   ['getsizey',['getSizeY',['../classktt_1_1_dimension_vector.html#aac7079399517d98560f3337f886ab1b2',1,'ktt::DimensionVector']]],
   ['getsizez',['getSizeZ',['../classktt_1_1_dimension_vector.html#a063a417c56524f1b1bb4572b59a48e3e',1,'ktt::DimensionVector']]],

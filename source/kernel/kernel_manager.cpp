@@ -80,52 +80,9 @@ KernelConfiguration KernelManager::getKernelConfiguration(const KernelId id, con
     }
 
     const Kernel& kernel = getKernel(id);
-    DimensionVector global = kernel.getGlobalSize();
-    DimensionVector local = kernel.getLocalSize();
-    std::vector<LocalMemoryModifier> modifiers;
-
-    for (const auto& parameterPair : parameterPairs)
-    {
-        bool parameterFound = false;
-
-        for (const auto& parameter : kernel.getParameters())
-        {
-            if (parameter.getName() == parameterPair.getName())
-            {
-                if (parameter.getModifierType() == ModifierType::Global)
-                {
-                    global.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
-                }
-                else if (parameter.getModifierType() == ModifierType::Local)
-                {
-                    local.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
-                }
-                else if (parameter.getModifierType() == ModifierType::Both)
-                {
-                    local.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
-                    global.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(), parameter.getModifierDimension());
-                }
-
-                if (parameter.isLocalMemoryModifier())
-                {
-                    std::vector<std::pair<ArgumentId, ModifierAction>> localArguments = parameter.getLocalMemoryArguments();
-                    for (const auto& argument : localArguments)
-                    {
-                        modifiers.emplace_back(id, argument.first, argument.second, parameterPair.getValue());
-                    }
-                }
-
-                parameterFound = true;
-                break;
-            }
-        }
-
-        if (!parameterFound)
-        {
-            throw std::runtime_error(std::string("Parameter with name ") + parameterPair.getName() + " is not associated with kernel with id: "
-                + std::to_string(id));
-        }
-    }
+    DimensionVector global = kernel.getModifiedGlobalSize(parameterPairs);
+    DimensionVector local = kernel.getModifiedLocalSize(parameterPairs);
+    std::vector<LocalMemoryModifier> modifiers = kernel.getLocalMemoryModifiers(parameterPairs);
 
     return KernelConfiguration(global, local, parameterPairs, modifiers);
 }
@@ -139,77 +96,9 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
     }
 
     const KernelComposition& kernelComposition = getKernelComposition(compositionId);
-    std::vector<std::pair<KernelId, DimensionVector>> globalSizes;
-    std::vector<std::pair<KernelId, DimensionVector>> localSizes;
-    std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>> modifiers;
-
-    for (const auto& kernel : kernelComposition.getKernels())
-    {
-        globalSizes.push_back(std::make_pair(kernel->getId(), kernel->getGlobalSize()));
-        localSizes.push_back(std::make_pair(kernel->getId(), kernel->getLocalSize()));
-    }
-    
-    for (const auto& parameterPair : parameterPairs)
-    {
-        bool parameterFound = false;
-
-        for (const auto& parameter : kernelComposition.getParameters())
-        {
-            if (parameter.getName() == parameterPair.getName())
-            {
-                for (auto& globalSizePair : globalSizes)
-                {
-                    for (const auto kernelId : parameter.getCompositionKernels())
-                    {
-                        if (globalSizePair.first == kernelId && (parameter.getModifierType() == ModifierType::Global
-                            || parameter.getModifierType() == ModifierType::Both))
-                        {
-                            globalSizePair.second.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(),
-                                parameter.getModifierDimension());
-                        }
-                    }
-                }
-                for (auto& localSizePair : localSizes)
-                {
-                    for (const auto kernelId : parameter.getCompositionKernels())
-                    {
-                        if (localSizePair.first == kernelId && (parameter.getModifierType() == ModifierType::Local
-                            || parameter.getModifierType() == ModifierType::Both))
-                        {
-                            localSizePair.second.modifyByValue(parameterPair.getValue(), parameter.getModifierAction(),
-                                parameter.getModifierDimension());
-                        }
-                    }
-                }
-
-                if (parameter.isLocalMemoryModifier())
-                {
-                    std::vector<size_t> kernels = parameter.getLocalMemoryModifierKernels();
-                    for (const auto& kernel : kernels)
-                    {
-                        std::vector<std::pair<ArgumentId, ModifierAction>> localArguments = parameter.getLocalMemoryArguments();
-                        std::vector<LocalMemoryModifier> currentModifiers;
-
-                        for (const auto& argument : localArguments)
-                        {
-                            currentModifiers.emplace_back(kernel, argument.first, argument.second, parameterPair.getValue());
-                        }
-
-                        modifiers.push_back(std::make_pair(kernel, currentModifiers));
-                    }
-                }
-
-                parameterFound = true;
-                break;
-            }
-        }
-
-        if (!parameterFound)
-        {
-            throw std::runtime_error(std::string("Parameter with name ") + parameterPair.getName()
-                + " is not associated with kernel composition with id: " + std::to_string(compositionId));
-        }
-    }
+    std::map<KernelId, DimensionVector> globalSizes = kernelComposition.getModifiedGlobalSizes(parameterPairs);
+    std::map<KernelId, DimensionVector> localSizes = kernelComposition.getModifiedLocalSizes(parameterPairs);
+    std::map<KernelId, std::vector<LocalMemoryModifier>> modifiers = kernelComposition.getLocalMemoryModifiers(parameterPairs);
 
     return KernelConfiguration(globalSizes, localSizes, parameterPairs, modifiers);
 }
@@ -230,8 +119,7 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const Ke
     }
     else
     {
-        computeConfigurations(kernel.getId(), 0, kernel.getParameters(), kernel.getConstraints(), std::vector<ParameterPair>{},
-            kernel.getGlobalSize(), kernel.getLocalSize(), std::vector<LocalMemoryModifier>{}, configurations);
+        computeConfigurations(kernel, 0, std::vector<ParameterPair>{}, configurations);
     }
     return configurations;
 }
@@ -244,13 +132,13 @@ std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfiguratio
     }
 
     const KernelComposition& composition = getKernelComposition(compositionId);
-    std::vector<std::pair<KernelId, DimensionVector>> globalSizes;
-    std::vector<std::pair<KernelId, DimensionVector>> localSizes;
+    std::map<KernelId, DimensionVector> globalSizes;
+    std::map<KernelId, DimensionVector> localSizes;
 
     for (const auto& kernel : composition.getKernels())
     {
-        globalSizes.push_back(std::make_pair(kernel->getId(), kernel->getGlobalSize()));
-        localSizes.push_back(std::make_pair(kernel->getId(), kernel->getLocalSize()));
+        globalSizes.insert(std::make_pair(kernel->getId(), kernel->getGlobalSize()));
+        localSizes.insert(std::make_pair(kernel->getId(), kernel->getLocalSize()));
     }
 
     std::vector<KernelConfiguration> kernelConfigurations;
@@ -260,23 +148,21 @@ std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfiguratio
     }
     else
     {
-        computeCompositionConfigurations(0, composition.getParameters(), composition.getConstraints(), std::vector<ParameterPair>{}, globalSizes,
-            localSizes, std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>>{}, kernelConfigurations);
+        computeCompositionConfigurations(composition, 0, std::vector<ParameterPair>{}, kernelConfigurations);
     }
 
     return kernelConfigurations;
 }
 
-void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values, const ModifierType modifierType,
-    const ModifierAction modifierAction, const ModifierDimension modifierDimension)
+void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values)
 {
     if (isKernel(id))
     {
-        getKernel(id).addParameter(KernelParameter(name, values, modifierType, modifierAction, modifierDimension));
+        getKernel(id).addParameter(KernelParameter(name, values));
     }
     else if (isComposition(id))
     {
-        getKernelComposition(id).addParameter(KernelParameter(name, values, modifierType, modifierAction, modifierDimension));
+        getKernelComposition(id).addParameter(KernelParameter(name, values));
     }
     else
     {
@@ -298,19 +184,18 @@ void KernelManager::addParameter(const KernelId id, const std::string& name, con
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
-    throw std::runtime_error("Unsupported operation");
 }
 
-void KernelManager::addLocalMemoryModifier(const KernelId id, const std::string& parameterName, const ArgumentId argumentId,
-    const ModifierAction modifierAction)
+void KernelManager::addConstraint(const KernelId id, const std::vector<std::string>& parameterNames,
+    const std::function<bool(const std::vector<size_t>&)>& constraintFunction)
 {
     if (isKernel(id))
     {
-        getKernel(id).addLocalMemoryModifier(parameterName, argumentId, modifierAction);
+        getKernel(id).addConstraint(KernelConstraint(parameterNames, constraintFunction));
     }
     else if (isComposition(id))
     {
-        getKernelComposition(id).addLocalMemoryModifier(parameterName, argumentId, modifierAction);
+        getKernelComposition(id).addConstraint(KernelConstraint(parameterNames, constraintFunction));
     }
     else
     {
@@ -318,21 +203,83 @@ void KernelManager::addLocalMemoryModifier(const KernelId id, const std::string&
     }
 }
 
-void KernelManager::addConstraint(const KernelId id, const std::function<bool(const std::vector<size_t>&)>& constraintFunction,
-    const std::vector<std::string>& parameterNames)
+void KernelManager::addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string>& parameterNames)
 {
     if (isKernel(id))
     {
-        getKernel(id).addConstraint(KernelConstraint(constraintFunction, parameterNames));
+        getKernel(id).addParameterPack(KernelParameterPack(packName, parameterNames));
     }
     else if (isComposition(id))
     {
-        getKernelComposition(id).addConstraint(KernelConstraint(constraintFunction, parameterNames));
+        getKernelComposition(id).addParameterPack(KernelParameterPack(packName, parameterNames));
     }
     else
     {
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
+}
+
+void KernelManager::setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
+    const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
+{
+    if (isKernel(id))
+    {
+        getKernel(id).setThreadModifier(modifierType, modifierDimension, parameterNames, modifierFunction);
+    }
+    else if (isComposition(id))
+    {
+        std::vector<const Kernel*> kernels = getKernelComposition(id).getKernels();
+        for (const auto kernel : kernels)
+        {
+            setCompositionKernelThreadModifier(id, kernel->getId(), modifierType, modifierDimension, parameterNames, modifierFunction);
+        }
+    }
+    else
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+}
+
+void KernelManager::setLocalMemoryModifier(const KernelId id, const ArgumentId argumentId, const std::vector<std::string>& parameterNames,
+    const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
+{
+    if (isKernel(id))
+    {
+        getKernel(id).setLocalMemoryModifier(argumentId, parameterNames, modifierFunction);
+    }
+    else if (isComposition(id))
+    {
+        std::vector<const Kernel*> kernels = getKernelComposition(id).getKernels();
+        for (const auto kernel : kernels)
+        {
+            setCompositionKernelLocalMemoryModifier(id, kernel->getId(), argumentId, parameterNames, modifierFunction);
+        }
+    }
+    else
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+}
+
+void KernelManager::setCompositionKernelThreadModifier(const KernelId compositionId, const KernelId kernelId, const ModifierType modifierType,
+    const ModifierDimension modifierDimension, const std::vector<std::string>& parameterNames,
+    const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
+{
+    if (!isComposition(compositionId))
+    {
+        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
+    }
+    getKernelComposition(compositionId).setThreadModifier(kernelId, modifierType, modifierDimension, parameterNames, modifierFunction);
+}
+
+void KernelManager::setCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const ArgumentId argumentId,
+    const std::vector<std::string>& parameterNames, const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction)
+{
+    if (!isComposition(compositionId))
+    {
+        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
+    }
+    getKernelComposition(compositionId).setLocalMemoryModifier(kernelId, argumentId, parameterNames, modifierFunction);
 }
 
 void KernelManager::setArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
@@ -351,39 +298,6 @@ void KernelManager::setArguments(const KernelId id, const std::vector<ArgumentId
     }
 }
 
-void KernelManager::setTuningManipulatorFlag(const KernelId id, const bool flag)
-{
-    if (!isKernel(id))
-    {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
-    }
-    getKernel(id).setTuningManipulatorFlag(flag);
-}
-
-void KernelManager::addCompositionKernelParameter(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-    const std::vector<size_t>& parameterValues, const ModifierType modifierType, const ModifierAction modifierAction,
-    const ModifierDimension modifierDimension)
-{
-    if (!isComposition(compositionId))
-    {
-        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
-    }
-
-    getKernelComposition(compositionId).addKernelParameter(kernelId, KernelParameter(parameterName, parameterValues, modifierType, modifierAction,
-        modifierDimension));
-}
-
-void KernelManager::addCompositionKernelLocalMemoryModifier(const KernelId compositionId, const KernelId kernelId, const std::string& parameterName,
-    const ArgumentId argumentId, const ModifierAction modifierAction)
-{
-    if (!isComposition(compositionId))
-    {
-        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
-    }
-
-    getKernelComposition(compositionId).addKernelLocalMemoryModifier(kernelId, parameterName, argumentId, modifierAction);
-}
-
 void KernelManager::setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds)
 {
     if (!isComposition(compositionId))
@@ -391,7 +305,16 @@ void KernelManager::setCompositionKernelArguments(const KernelId compositionId, 
         throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
     }
 
-    getKernelComposition(compositionId).setKernelArguments(kernelId, argumentIds);
+    getKernelComposition(compositionId).setArguments(kernelId, argumentIds);
+}
+
+void KernelManager::setTuningManipulatorFlag(const KernelId id, const bool flag)
+{
+    if (!isKernel(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+    getKernel(id).setTuningManipulatorFlag(flag);
 }
 
 const Kernel& KernelManager::getKernel(const KernelId id) const
@@ -475,159 +398,80 @@ std::string KernelManager::loadFileToString(const std::string& filePath)
     return stream.str();
 }
 
-void KernelManager::computeConfigurations(const KernelId kernelId, const size_t currentParameterIndex,
-    const std::vector<KernelParameter>& parameters, const std::vector<KernelConstraint>& constraints,
-    const std::vector<ParameterPair>& parameterPairs, const DimensionVector& globalSize, const DimensionVector& localSize,
-    const std::vector<LocalMemoryModifier>& modifiers, std::vector<KernelConfiguration>& finalResult) const
+void KernelManager::computeConfigurations(const Kernel& kernel, const size_t currentParameterIndex, const std::vector<ParameterPair>& parameterPairs,
+    std::vector<KernelConfiguration>& finalResult) const
 {
-    if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
+    if (currentParameterIndex >= kernel.getParameters().size()) // all parameters are now part of the configuration
     {
-        KernelConfiguration configuration(globalSize, localSize, parameterPairs, modifiers);
-        if (configurationIsValid(configuration, constraints))
+        DimensionVector finalGlobalSize = kernel.getModifiedGlobalSize(parameterPairs);
+        DimensionVector finalLocalSize = kernel.getModifiedLocalSize(parameterPairs);
+        std::vector<LocalMemoryModifier> memoryModifiers = kernel.getLocalMemoryModifiers(parameterPairs);
+
+        KernelConfiguration configuration(finalGlobalSize, finalLocalSize, parameterPairs, memoryModifiers);
+        if (configurationIsValid(configuration, kernel.getConstraints()))
         {
             finalResult.push_back(configuration);
         }
         return;
     }
 
-    KernelParameter parameter = parameters.at(currentParameterIndex); // process next parameter
+    KernelParameter parameter = kernel.getParameters().at(currentParameterIndex); // process next parameter
+
     if (!parameter.hasValuesDouble())
     {
         for (const auto& value : parameter.getValues()) // recursively build tree of configurations for each parameter value
         {
-            auto newParameterPairs = parameterPairs;
-            newParameterPairs.push_back(ParameterPair(parameter.getName(), value));
-
-            DimensionVector newGlobalSize = globalSize;
-            DimensionVector newLocalSize = localSize;
-
-            if (parameter.getModifierType() == ModifierType::Global)
-            {
-                newGlobalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
-            }
-            else if (parameter.getModifierType() == ModifierType::Local)
-            {
-                newLocalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
-            }
-            else if (parameter.getModifierType() == ModifierType::Both)
-            {
-                newGlobalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
-                newLocalSize.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
-            }
-
-            std::vector<LocalMemoryModifier> newModifiers = modifiers;
-            if (parameter.isLocalMemoryModifier())
-            {
-                std::vector<std::pair<ArgumentId, ModifierAction>> localArguments = parameter.getLocalMemoryArguments();
-                for (const auto& argument : localArguments)
-                {
-                    newModifiers.emplace_back(kernelId, argument.first, argument.second, value);
-                }
-            }
-
-            computeConfigurations(kernelId, currentParameterIndex + 1, parameters, constraints, newParameterPairs, newGlobalSize, newLocalSize,
-                newModifiers, finalResult);
+            std::vector<ParameterPair> newParameterPairs = parameterPairs;
+            newParameterPairs.emplace_back(parameter.getName(), value);
+            computeConfigurations(kernel, currentParameterIndex + 1, newParameterPairs, finalResult);
         }
     }
     else
     {
         for (const auto& value : parameter.getValuesDouble()) // recursively build tree of configurations for each parameter value
         {
-            auto newParameterPairs = parameterPairs;
-            newParameterPairs.push_back(ParameterPair(parameter.getName(), value));
-
-            DimensionVector newGlobalSize = globalSize;
-            DimensionVector newLocalSize = localSize;
-            std::vector<LocalMemoryModifier> newModifiers = modifiers;
-
-            computeConfigurations(kernelId, currentParameterIndex + 1, parameters, constraints, newParameterPairs, newGlobalSize, newLocalSize,
-                newModifiers, finalResult);
+            std::vector<ParameterPair> newParameterPairs = parameterPairs;
+            newParameterPairs.emplace_back(parameter.getName(), value);
+            computeConfigurations(kernel, currentParameterIndex + 1, newParameterPairs, finalResult);
         }
     }
 }
 
-void KernelManager::computeCompositionConfigurations(const size_t currentParameterIndex, const std::vector<KernelParameter>& parameters,
-    const std::vector<KernelConstraint>& constraints, const std::vector<ParameterPair>& parameterPairs,
-    const std::vector<std::pair<KernelId, DimensionVector>>& globalSizes, const std::vector<std::pair<KernelId, DimensionVector>>& localSizes,
-    const std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>>& modifiers, std::vector<KernelConfiguration>& finalResult) const
+void KernelManager::computeCompositionConfigurations(const KernelComposition& composition, const size_t currentParameterIndex,
+    const std::vector<ParameterPair>& parameterPairs, std::vector<KernelConfiguration>& finalResult) const
 {
-    if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
+    if (currentParameterIndex >= composition.getParameters().size()) // all parameters are now part of the configuration
     {
+        std::map<KernelId, DimensionVector> globalSizes = composition.getModifiedGlobalSizes(parameterPairs);
+        std::map<KernelId, DimensionVector> localSizes = composition.getModifiedLocalSizes(parameterPairs);
+        std::map<KernelId, std::vector<LocalMemoryModifier>> modifiers = composition.getLocalMemoryModifiers(parameterPairs);
+
         KernelConfiguration configuration(globalSizes, localSizes, parameterPairs, modifiers);
-        if (configurationIsValid(configuration, constraints))
+        if (configurationIsValid(configuration, composition.getConstraints()))
         {
             finalResult.push_back(configuration);
         }
         return;
     }
 
-    KernelParameter parameter = parameters.at(currentParameterIndex); // process next parameter
+    KernelParameter parameter = composition.getParameters().at(currentParameterIndex); // process next parameter
+
     if (!parameter.hasValuesDouble())
     {
         for (const auto& value : parameter.getValues()) // recursively build tree of configurations for each parameter value
         {
-            auto newParameterPairs = parameterPairs;
-            newParameterPairs.push_back(ParameterPair(parameter.getName(), value));
-
-            std::vector<std::pair<KernelId, DimensionVector>> newGlobalSizes = globalSizes;
-            std::vector<std::pair<KernelId, DimensionVector>> newLocalSizes = localSizes;
-
-            for (const auto compositionKernelId : parameter.getCompositionKernels())
-            {
-                for (auto& globalSizePair : newGlobalSizes)
-                {
-                    if (compositionKernelId == globalSizePair.first && (parameter.getModifierType() == ModifierType::Global
-                        || parameter.getModifierType() == ModifierType::Both))
-                    {
-                        globalSizePair.second.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
-                    }
-                }
-
-                for (auto& localSizePair : newLocalSizes)
-                {
-                    if (compositionKernelId == localSizePair.first && (parameter.getModifierType() == ModifierType::Local
-                        || parameter.getModifierType() == ModifierType::Both))
-                    {
-                        localSizePair.second.modifyByValue(value, parameter.getModifierAction(), parameter.getModifierDimension());
-                    }
-                }
-            }
-
-            std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>> newModifiers = modifiers;
-            if (parameter.isLocalMemoryModifier())
-            {
-                std::vector<size_t> kernels = parameter.getLocalMemoryModifierKernels();
-                for (const auto& kernel : kernels)
-                {
-                    std::vector<std::pair<ArgumentId, ModifierAction>> localArguments = parameter.getLocalMemoryArguments();
-                    std::vector<LocalMemoryModifier> currentModifiers;
-
-                    for (const auto& argument : localArguments)
-                    {
-                        currentModifiers.emplace_back(kernel, argument.first, argument.second, value);
-                    }
-
-                    newModifiers.push_back(std::make_pair(kernel, currentModifiers));
-                }
-            }
-
-            computeCompositionConfigurations(currentParameterIndex + 1, parameters, constraints, newParameterPairs, newGlobalSizes, newLocalSizes,
-                newModifiers, finalResult);
+            std::vector<ParameterPair> newParameterPairs = parameterPairs;
+            newParameterPairs.emplace_back(parameter.getName(), value);
+            computeCompositionConfigurations(composition, currentParameterIndex + 1, newParameterPairs, finalResult);
         }
     }
     else
     {
         for (const auto& value : parameter.getValuesDouble()) // recursively build tree of configurations for each parameter value
         {
-            auto newParameterPairs = parameterPairs;
-            newParameterPairs.push_back(ParameterPair(parameter.getName(), value));
-
-            std::vector<std::pair<KernelId, DimensionVector>> newGlobalSizes = globalSizes;
-            std::vector<std::pair<KernelId, DimensionVector>> newLocalSizes = localSizes;
-            std::vector<std::pair<KernelId, std::vector<LocalMemoryModifier>>> newModifiers = modifiers;
-
-            computeCompositionConfigurations(currentParameterIndex + 1, parameters, constraints, newParameterPairs, newGlobalSizes, newLocalSizes,
-                newModifiers, finalResult);
+            std::vector<ParameterPair> newParameterPairs = parameterPairs;
+            newParameterPairs.emplace_back(parameter.getName(), value);
+            computeCompositionConfigurations(composition, currentParameterIndex + 1, newParameterPairs, finalResult);
         }
     }
 }

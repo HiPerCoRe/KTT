@@ -15,11 +15,11 @@ public:
     void computeResult() override {
         std::vector<double> resD(src.size());
         size_t resSize = src.size();
-        for (int i = 0; i < resSize; i++)
+        for (size_t i = 0; i < resSize; i++)
             resD[i] = src[i];
 
         while (resSize > 1) {
-            for (int i = 0; i < resSize/2; i++)
+            for (size_t i = 0; i < resSize/2; i++)
                 resD[i] = resD[i*2] + resD[i*2+1];
             if (resSize%2) resD[resSize/2-1] += resD[resSize-1];
             resSize = resSize/2;

@@ -240,6 +240,14 @@ public:
       */
     void copyArgumentVectorAsync(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements, const QueueId queue);
 
+    /** @fn void resizeArgumentVector(const ArgumentId id, const size_t newNumberOfElements, const bool preserveOldData)
+    * Resizes specified vector argument.
+    * @param id Id of vector argument which will be resized.
+    * @param newNumberOfElements Number of elements inside resized vector argument.
+    * @param preserveOldData If true, data from old buffer will be copied into resized buffer. If false, the old data will be discarded.
+    */
+    void resizeArgumentVector(const ArgumentId id, const size_t newNumberOfElements, const bool preserveOldData);
+
     /** @fn void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
       * Changes kernel arguments for specified kernel by providing corresponding argument ids.
       * @param id Id of kernel for which the arguments will be changed.

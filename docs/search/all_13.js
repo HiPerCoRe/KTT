@@ -1,12 +1,7 @@
 var searchData=
 [
-  ['unsignedchar',['UnsignedChar',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7aa93f121640d609f8772397a0f40f40d6',1,'ktt']]],
-  ['unsignedint',['UnsignedInt',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7ac93cff91b6b9a57fa32bbe1863150070',1,'ktt']]],
-  ['unsignedlong',['UnsignedLong',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a0c72cf9e88a9782dbad0fde761ae9352',1,'ktt']]],
-  ['unsignedshort',['UnsignedShort',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7aeb51124277f3ec904a9af74d5de34e7b',1,'ktt']]],
-  ['updateargumentlocal',['updateArgumentLocal',['../classktt_1_1_tuning_manipulator.html#a1e307646f17f2861d8c981308cd2221c',1,'ktt::TuningManipulator']]],
-  ['updateargumentscalar',['updateArgumentScalar',['../classktt_1_1_tuning_manipulator.html#a449df2809792e030439be9d70a8c07e6',1,'ktt::TuningManipulator']]],
-  ['updateargumentvector',['updateArgumentVector',['../classktt_1_1_tuning_manipulator.html#a872a3865330f2a15282facd6392ccdcd',1,'ktt::TuningManipulator::updateArgumentVector(const ArgumentId id, const void *argumentData)'],['../classktt_1_1_tuning_manipulator.html#ae996d65fb5ee74bf5dc71551f678026d',1,'ktt::TuningManipulator::updateArgumentVector(const ArgumentId id, const void *argumentData, const size_t numberOfElements)']]],
-  ['updateargumentvectorasync',['updateArgumentVectorAsync',['../classktt_1_1_tuning_manipulator.html#a89071adbe2f15811935caa5613ea4c14',1,'ktt::TuningManipulator::updateArgumentVectorAsync(const ArgumentId id, const void *argumentData, QueueId queue)'],['../classktt_1_1_tuning_manipulator.html#a8f850b561d79021d1613beb35b786b0b',1,'ktt::TuningManipulator::updateArgumentVectorAsync(const ArgumentId id, const void *argumentData, const size_t numberOfElements, QueueId queue)']]],
-  ['updatestatus',['updateStatus',['../classktt_1_1_configuration_count.html#aa15b17ccc51de193e1e7e4b2af5bdb5b',1,'ktt::ConfigurationCount::updateStatus()'],['../classktt_1_1_configuration_duration.html#a36ec1e54444852d17a2b9dc4a86f9e9a',1,'ktt::ConfigurationDuration::updateStatus()'],['../classktt_1_1_configuration_fraction.html#ab14363a335a7df6c06986592fc51abde',1,'ktt::ConfigurationFraction::updateStatus()'],['../classktt_1_1_stop_condition.html#ab6c9c2da87d060f0e0385655a6ec8348',1,'ktt::StopCondition::updateStatus()'],['../classktt_1_1_tuning_duration.html#aa1b2f1d09e688a76ad618d9b72284226',1,'ktt::TuningDuration::updateStatus()']]]
+  ['validation_5fmethod_2eh',['validation_method.h',['../validation__method_8h.html',1,'']]],
+  ['validationmethod',['ValidationMethod',['../namespacektt.html#a187d4987bb48bc1f78f628c8aa840a20',1,'ktt']]],
+  ['vector',['Vector',['../namespacektt.html#a27feefe5217ccf7232f658cd88143f0fa57dea6f5039281b7fee517fc43bf3110',1,'ktt']]],
+  ['verbose',['Verbose',['../namespacektt.html#a241748d791d84aed146db202c8b68bebad4a9fa383ab700c5bdd6f31cf7df0faf',1,'ktt']]]
 ];

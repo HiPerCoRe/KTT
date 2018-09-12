@@ -26,20 +26,17 @@ class TunableSort : public ktt::TuningManipulator {
 
       const int radix_width = 4;
       std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
-      int localSize = (int)getParameterValue("LOCAL_SIZE", parameterValues);
-      const ktt::DimensionVector workGroupDimensions(localSize, 1, 1);
-      int globalSize = (int)getParameterValue("GLOBAL_SIZE", parameterValues);
-      const ktt::DimensionVector ndRangeDimensions(globalSize, 1, 1);
+      size_t localSize = getParameterValue("LOCAL_SIZE", parameterValues);
+      size_t globalSize = getParameterValue("GLOBAL_SIZE", parameterValues);
       
-      int numberOfGroups = globalSize / localSize;
+      int numberOfGroups = static_cast<int>(globalSize / localSize);
       updateArgumentScalar(numberOfGroupsId, &numberOfGroups);
       updateArgumentLocal(localMem1Id, localSize); // Local, workgroupsize * sizeof(unsigned int)
       updateArgumentLocal(localMem2Id, 2 * localSize);
       updateArgumentLocal(localMem3Id, 2 * localSize); // Local, 2 * workgroupsize * sizeof(unsigned int)
-      int isumsSize = (numberOfGroups * 16 * sizeof(unsigned int));
-      std::vector<unsigned int> is(isumsSize);
+      int isumsSize = 16 * numberOfGroups;
       // Vector, readwrite, must be added after global and local size are determined, as its size depends on the number of groups
-      updateArgumentVector(isumsId, is.data(), isumsSize);
+      resizeArgumentVector(isumsId, isumsSize, false);
 
       bool inOutSwapped = false;
 
@@ -63,15 +60,15 @@ class TunableSort : public ktt::TuningManipulator {
         }
 
         // Each thread block gets an equal portion of the input array, and computes occurrences of each digit.
-        runKernel(kernelIds[0], ndRangeDimensions, workGroupDimensions);
+        runKernel(kernelIds[0]);
 
-        // Next, a top-level exclusive scan is performed on the per block histograms.  This is done by a single work group (note global size here
+        // Next, a top-level exclusive scan is performed on the per block histograms. This is done by a single work group (note global size here
         // is the same as local).
-        runKernel(kernelIds[1], workGroupDimensions, workGroupDimensions);
+        runKernel(kernelIds[1]);
 
         // Finally, a bottom-level scan is performed by each block that is seeded with the scanned histograms which rebins, locally scans, then
         // scatters keys to global memory
-        runKernel(kernelIds[2], ndRangeDimensions, workGroupDimensions);
+        runKernel(kernelIds[2]);
         
         // Also, the sort is not in place, so swap the input and output buffers on each pass.
         swapKernelArguments(kernelIds[2], inId, outId);

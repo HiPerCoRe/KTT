@@ -10,13 +10,17 @@ namespace ktt
 class Logger
 {
 public:
-    Logger();
+    static Logger& getLogger();
 
     void setLoggingLevel(const LoggingLevel level);
     void setLoggingTarget(std::ostream& outputTarget);
     void setLoggingTarget(const std::string& filePath);
-
     void log(const LoggingLevel level, const std::string& message) const;
+
+    Logger(const Logger&) = delete;
+    Logger(const Logger&&) = delete;
+    void operator=(const Logger&) = delete;
+    void operator=(const Logger&&) = delete;
 
 private:
     LoggingLevel level;
@@ -24,6 +28,7 @@ private:
     bool filePathValid;
     std::string filePath;
 
+    Logger();
     static std::string getLoggingLevelString(const LoggingLevel level);
 };
 

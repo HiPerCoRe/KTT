@@ -5,11 +5,11 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-#define KTT_KERNEL_FILE "../examples/bicg/bicg_kernel.cl"
-#define KTT_REFERENCE_KERNEL_FILE "../examples/bicg/bicg_reference_kernel.cl"
+    #define KTT_KERNEL_FILE "../examples/bicg/bicg_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/bicg/bicg_reference_kernel.cl"
 #else
-#define KTT_KERNEL_FILE "../../examples/bicg/bicg_kernel.cl"
-#define KTT_REFERENCE_KERNEL_FILE "../../examples/bicg/bicg_reference_kernel.cl"
+    #define KTT_KERNEL_FILE "../../examples/bicg/bicg_kernel.cl"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/bicg/bicg_reference_kernel.cl"
 #endif
 
 /* Problem size. */
@@ -99,18 +99,7 @@ public:
 		std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
 
 		if (getParameterValue("FUSED", parameterValues) == 2) {
-			ktt::DimensionVector globalSize = getCurrentGlobalSize(kernelFusedId);
-			ktt::DimensionVector localSize = getCurrentLocalSize(kernelFusedId);
-            
-			const size_t rowsProcessed = getParameterValue("ROWS_PROCESSED", parameterValues);
-			const size_t tile = getParameterValue("TILE", parameterValues);
-			const size_t bicgBatch = getParameterValue("BICG_BATCH", parameterValues);
-			globalSize.setSizeX(M);
-			globalSize.setSizeY(N / rowsProcessed * tile / bicgBatch);
-			localSize.setSizeX(tile);
-			localSize.setSizeY(tile / bicgBatch);
-
-			runKernel(kernelFusedId, globalSize, localSize);
+			runKernel(kernelFusedId);
 			if (getParameterValue("ATOMICS", parameterValues) == 0) {
 				runKernel(kernelReduction1Id);
 				runKernel(kernelReduction2Id);
@@ -223,13 +212,27 @@ int main(int argc, char** argv)
 	tuner.addParameter(kernelId, "ROWS_PROCESSED", std::vector<size_t>{ 128, 256, 512, 1024 });
 	tuner.addParameter(kernelId, "TILE", std::vector<size_t>{ 16, 32, 64 });
 
+    // Specify thread modifiers
+    auto globalModifierX = [](const size_t, const std::vector<size_t>&) {return M;};
+    auto globalModifierY = [](const size_t, const std::vector<size_t>& vector) {return N / vector.at(0) * vector.at(1) / vector.at(2);};
+    auto localModifierX = [](const size_t, const std::vector<size_t>& vector) {return vector.at(0);};
+    auto localModifierY = [](const size_t, const std::vector<size_t>& vector) {return vector.at(0) / vector.at(1);};
+    tuner.setCompositionKernelThreadModifier(kernelId, kernelFusedId, ktt::ModifierType::Global, ktt::ModifierDimension::X,
+        std::vector<std::string>{}, globalModifierX);
+    tuner.setCompositionKernelThreadModifier(kernelId, kernelFusedId, ktt::ModifierType::Global, ktt::ModifierDimension::Y,
+        std::vector<std::string>{"ROWS_PROCESSED", "TILE", "BICG_BATCH"}, globalModifierY);
+    tuner.setCompositionKernelThreadModifier(kernelId, kernelFusedId, ktt::ModifierType::Local, ktt::ModifierDimension::X,
+        std::vector<std::string>{"TILE"}, localModifierX);
+    tuner.setCompositionKernelThreadModifier(kernelId, kernelFusedId, ktt::ModifierType::Local, ktt::ModifierDimension::Y,
+        std::vector<std::string>{"TILE", "BICG_BATCH"}, localModifierY);
+
 	// Specify contraints
 	// All of the parameters are used only in the fused kernel
 	auto fused = [](std::vector<size_t> vector) {return vector.at(0) == 2 || ((vector.at(0) == 0 || vector.at(0) == 1) && vector.at(1) == 4 && vector.at(2) == 1 && vector.at(3) == 1 && vector.at(4) == 1 && vector.at(5) == 1 && vector.at(6) == 1 && vector.at(7) == 1 && vector.at(8) == 1 && vector.at(9) == 512 && vector.at(10) == 32); };
-	tuner.addConstraint(kernelId, fused, std::vector<std::string>{"FUSED", "BICG_BATCH", "USE_SHARED_MATRIX", "USE_SHARED_VECTOR_1", "USE_SHARED_VECTOR_2", "USE_SHARED_REDUCTION_1", "USE_SHARED_REDUCTION_2", "ATOMICS", "UNROLL_BICG_STEP", "ROWS_PROCESSED", "TILE"});
+	tuner.addConstraint(kernelId, std::vector<std::string>{"FUSED", "BICG_BATCH", "USE_SHARED_MATRIX", "USE_SHARED_VECTOR_1", "USE_SHARED_VECTOR_2", "USE_SHARED_REDUCTION_1", "USE_SHARED_REDUCTION_2", "ATOMICS", "UNROLL_BICG_STEP", "ROWS_PROCESSED", "TILE"}, fused);
 	// New NVidia GPUs have max. workgroup size of 1024, so   tile_x * tile_y <= 1024   ==>   tile_x * (tile_x / batch) <= 1024
 	auto maxWgSize = [](std::vector<size_t> vector) {return vector.at(0) * vector.at(0) / vector.at(1) <= MAX_WORK_GROUP_SIZE; };
-	tuner.addConstraint(kernelId, maxWgSize, std::vector<std::string>{"TILE", "BICG_BATCH"});
+	tuner.addConstraint(kernelId, std::vector<std::string>{"TILE", "BICG_BATCH"}, maxWgSize);
 
 	// Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
 	tuner.setCompositionKernelArguments(kernelId, kernelFusedId, { AId, x1Id, y1Id, x2Id, y2Id, mRefId, nRefId });

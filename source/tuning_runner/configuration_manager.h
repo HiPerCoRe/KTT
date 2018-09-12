@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
@@ -23,22 +24,22 @@ public:
     ConfigurationManager();
 
     // Core methods
-    void setKernelConfigurations(const KernelId id, const std::vector<KernelConfiguration>& configurations,
-        const std::vector<KernelParameter>& parameters);
+    void setKernelConfigurations(const KernelId id, const std::vector<KernelConfiguration>& configurations);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     bool hasKernelConfigurations(const KernelId id) const;
-    void clearData(const KernelId id);
-    void clearSearcher(const KernelId id);
+    void clearKernelData(const KernelId id, const bool clearConfigurations, const bool clearBestConfiguration);
 
     // Configuration search methods
-    KernelConfiguration getCurrentConfiguration(const KernelId id) const;
-    KernelConfiguration getBestConfiguration(const KernelId id) const;
+    size_t getConfigurationCount(const KernelId id);
+    KernelConfiguration getCurrentConfiguration(const KernelId id);
+    KernelConfiguration getBestConfiguration(const KernelId id);
     ComputationResult getBestComputationResult(const KernelId id) const;
     void calculateNextConfiguration(const KernelId id, const std::string& kernelName, const KernelConfiguration& previous,
         const uint64_t previousDuration);
 
 private:
     // Attributes
+    std::map<KernelId, std::vector<KernelConfiguration>> kernelConfigurations;
     std::map<KernelId, std::unique_ptr<Searcher>> searchers;
     std::map<KernelId, std::tuple<KernelConfiguration, std::string, uint64_t>> bestConfigurations;
     SearchMethod searchMethod;
@@ -46,7 +47,7 @@ private:
 
     // Helper methods
     void initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,
-        const std::vector<KernelConfiguration>& configurations, const std::vector<KernelParameter>& parameters);
+        const std::vector<KernelConfiguration>& configurations);
     static std::string getSearchMethodName(const SearchMethod method);
 };
 

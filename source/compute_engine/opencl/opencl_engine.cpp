@@ -1,5 +1,6 @@
 #include "opencl_engine.h"
 #include "utility/ktt_utility.h"
+#include "utility/logger.h"
 #include "utility/timer.h"
 
 namespace ktt
@@ -32,7 +33,11 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
     }
 
     cl_device_id device = devices.at(deviceIndex).getId();
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Initializing OpenCL context");
     context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id>{device});
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Initializing OpenCL queues");
     for (uint32_t i = 0; i < queueCount; i++)
     {
         auto commandQueue = std::make_unique<OpenCLCommandQueue>(i, context->getContext(), device);
@@ -109,6 +114,8 @@ KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<O
         throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
             + std::to_string(id));
     }
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Performing kernel synchronization for event id: " + std::to_string(id));
 
     checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
     std::string name = eventPointer->second->getKernelName();
@@ -245,6 +252,9 @@ EventId OpenCLEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const 
     std::unique_ptr<OpenCLBuffer> buffer = nullptr;
     EventId eventId = nextEventId;
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
+        + std::to_string(eventId));
+
     if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
     {
         buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
@@ -289,6 +299,8 @@ EventId OpenCLEngine::updateArgumentAsync(const ArgumentId id, const void* data,
     EventId eventId = nextEventId;
     auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
     
+    Logger::getLogger().log(LoggingLevel::Debug, "Updating buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
+
     if (dataSizeInBytes == 0)
     {
         buffer->uploadData(commandQueues.at(queue)->getQueue(), data, buffer->getBufferSize(), profilingEvent->getEvent());
@@ -327,6 +339,8 @@ EventId OpenCLEngine::downloadArgumentAsync(const ArgumentId id, void* destinati
     EventId eventId = nextEventId;
     auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
+
     if (dataSizeInBytes == 0)
     {
         buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, buffer->getBufferSize(), profilingEvent->getEvent());
@@ -356,6 +370,8 @@ KernelArgument OpenCLEngine::downloadArgumentObject(const ArgumentId id, uint64_
 
     EventId eventId = nextEventId;
     auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
     buffer->downloadData(commandQueues.at(getDefaultQueue())->getQueue(), argument.getData(), argument.getDataSizeInBytes(),
         profilingEvent->getEvent());
 
@@ -402,6 +418,9 @@ EventId OpenCLEngine::copyArgumentAsync(const ArgumentId destination, const Argu
     EventId eventId = nextEventId;
     auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Copying buffer for argument " + std::to_string(source) + " into buffer for argument "
+        + std::to_string(destination) + ", event id: " + std::to_string(eventId));
+
     if (dataSizeInBytes == 0)
     {
         destinationBuffer->uploadData(commandQueues.at(queue)->getQueue(), sourceBuffer->getBuffer(), sourceBuffer->getBufferSize(),
@@ -445,6 +464,9 @@ uint64_t OpenCLEngine::persistArgument(KernelArgument& kernelArgument, const boo
         std::unique_ptr<OpenCLBuffer> buffer = nullptr;
         EventId eventId = nextEventId;
 
+        Logger::getLogger().log(LoggingLevel::Debug, "Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId())
+            + ", event id: " + std::to_string(eventId));
+
         if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
         {
             buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
@@ -486,11 +508,26 @@ uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId id) const
         return 0;
     }
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Performing buffer operation synchronization for event id: " + std::to_string(id));
+
     checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
     cl_ulong duration = eventPointer->second->getEventCommandDuration();
     bufferEvents.erase(id);
 
     return static_cast<uint64_t>(duration);
+}
+
+void OpenCLEngine::resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
+{
+    OpenCLBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Resizing buffer for argument " + std::to_string(id));
+    buffer->resize(commandQueues.at(getDefaultQueue())->getQueue(), newSize, preserveData);
 }
 
 void OpenCLEngine::setPersistentBufferUsage(const bool flag)
@@ -623,7 +660,7 @@ void OpenCLEngine::setKernelArgument(OpenCLKernel& kernel, KernelArgument& argum
     {
         if (modifier.getArgument() == argument.getId())
         {
-            numberOfElements = modifier.getModifiedValue(numberOfElements);
+            numberOfElements = modifier.getModifiedSize(numberOfElements);
         }
     }
 
@@ -654,6 +691,7 @@ EventId OpenCLEngine::enqueueKernel(OpenCLKernel& kernel, const std::vector<size
     auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
     nextEventId++;
 
+    Logger::getLogger().log(LoggingLevel::Debug, "Launching kernel " + kernel.getKernelName() + ", event id: " + std::to_string(eventId));
     cl_int result = clEnqueueNDRangeKernel(commandQueues.at(queue)->getQueue(), kernel.getKernel(),
         static_cast<cl_uint>(correctedGlobalSize.size()), nullptr, correctedGlobalSize.data(), localSize.data(), 0, nullptr, profilingEvent->getEvent());
     checkOpenCLError(result, "clEnqueueNDRangeKernel");
@@ -965,6 +1003,11 @@ uint64_t OpenCLEngine::persistArgument(KernelArgument&, const bool)
 }
 
 uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId) const
+{
+    throw std::runtime_error("");
+}
+
+void OpenCLEngine::resizeArgument(const ArgumentId, const size_t, const bool)
 {
     throw std::runtime_error("");
 }

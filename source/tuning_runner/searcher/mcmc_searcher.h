@@ -4,11 +4,11 @@
 #include <chrono>
 #include <limits>
 #include <random>
+#include <sstream>
 #include <stdexcept>
 #include <set>
 #include "searcher.h"
-
-#define MCMC_VERBOSITY 0
+#include "utility/logger.h"
 
 namespace ktt
 {
@@ -16,7 +16,7 @@ namespace ktt
 class MCMCSearcher : public Searcher
 {
 public:
-    static const size_t maximumDifferences = 1;
+    static const size_t maximumDifferences = 2;
     static const size_t bootIterations = 10;
     static const double escapeProbability = 0.02;
 
@@ -47,7 +47,7 @@ public:
         originState = currentState = initialState;
         index = initialState;
 
-        for (int i = 0; i < configurations.size(); i++)
+        for (size_t i = 0; i < configurations.size(); i++)
             unexploredIndices.insert(i);
     }
 
@@ -65,9 +65,10 @@ public:
             if (executionTimes.at(currentState) <= executionTimes.at(originState)) {            
                 originState = currentState;
                 bestTime = executionTimes.at(currentState);
-#if MCMC_VERBOSITY > 0
-                std::cout << "MCMC BOOT step " << visitedStatesCount << ": New best performance (" << bestTime << ")!\n";
-#endif      
+
+                std::stringstream stream;
+                stream << "MCMC BOOT step " << visitedStatesCount << ": New best performance (" << bestTime << ")!";
+                Logger::getLogger().log(LoggingLevel::Debug, stream.str()); 
             }
             boot--;
             while (unexploredIndices.find(index) == unexploredIndices.end() 
@@ -79,24 +80,38 @@ public:
             return;
         }
 
+        std::stringstream stream;
         // acceptation of a new state
         if ((executionTimes.at(currentState) <= executionTimes.at(originState))
         || probabilityDistribution(generator) < escapeProbability)
         {
             originState = currentState;
-#if MCMC_VERBOSITY > 0
+            
             if (executionTimes.at(currentState) < bestTime)
+            {
                 bestTime = executionTimes.at(currentState);
+            }
             if (executionTimes.at(currentState) <= executionTimes.at(originState))
-                std::cout << "MCMC step " << visitedStatesCount << ": Accepting a new state (performance improvement).\n";
+            {
+                stream << "MCMC step " << visitedStatesCount << ": Accepting a new state (performance improvement).";
+                Logger::getLogger().log(LoggingLevel::Debug, stream.str());
                 if (executionTimes.at(currentState) == bestTime)
-                    std::cout << "MCMC step " << visitedStatesCount << ": New best performance (" << bestTime << ")!\n";
+                {
+                    stream.clear();
+                    stream << "MCMC step " << visitedStatesCount << ": New best performance (" << bestTime << ")!";
+                    Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+                }
+            }
             else
-                std::cout << "MCMC step " << visitedStatesCount << ": Accepting a new state (random escape).\n";
+            {
+                stream << "MCMC step " << visitedStatesCount << ": Accepting a new state (random escape).";
+                Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+            }
         }
-        else {
-            std::cout << "MCMC step " << visitedStatesCount << ": Continuing searching neighbours.\n";
-#endif
+        else
+        {
+            stream << "MCMC step " << visitedStatesCount << ": Continuing searching neighbours.";
+            Logger::getLogger().log(LoggingLevel::Debug, stream.str());
         }
 
         if (unexploredIndices.empty()) 
@@ -107,9 +122,10 @@ public:
         // reset origin position when there are no neighbours
         if (neighbours.size() == 0)
         {
-#if MCMC_VERBOSITY > 0
-            std::cout << "MCMC step " << visitedStatesCount << ": No neighbours, reseting position.\n";
-#endif
+            std::stringstream stream;
+            stream << "MCMC step " << visitedStatesCount << ": No neighbours, reseting position.";
+            Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+
             while (unexploredIndices.find(originState) == unexploredIndices.end())
             {
                 originState = static_cast<size_t>(intDistribution(generator));
@@ -118,9 +134,10 @@ public:
             return;
         }
 
-#if MCMC_VERBOSITY > 1
-        std::cout << "MCMC step " << visitedStatesCount << ": Choosing randomly one of " << neighbours.size() << " neighbours.\n"; 
-#endif
+        stream.clear();
+        stream << "MCMC step " << visitedStatesCount << ": Choosing randomly one of " << neighbours.size() << " neighbours.";
+        Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+
         // select a random neighbour state
         currentState = neighbours.at(static_cast<size_t>(intDistribution(generator)) % neighbours.size());
         
@@ -143,7 +160,7 @@ public:
     }
 
 private:
-    std::vector<KernelConfiguration> configurations;
+    const std::vector<KernelConfiguration>& configurations;
     size_t index;
 
     size_t visitedStatesCount;
@@ -242,7 +259,7 @@ private:
         }
 
         if (!match) {
-            std::cerr << "WARNING, MCMC starting point not found." << std::endl;
+            Logger::getLogger().log(LoggingLevel::Warning, "MCMC starting point not found.");
             ret = 0;
         }
 

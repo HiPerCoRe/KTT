@@ -42,10 +42,11 @@ overloaded version of addArgumentVector() method, which allows you to customize 
 by tuner. You may also want to read KTT buffer diagram located in documentation folder to find out
 differences between various buffer configuration options.
 
-**Q: I have a kernel composition for which I want to add a regular tuning parameter which does not
-affect thread sizes. However there is no such version of this method available for kernel compositions.**<br/>
+**Q: How do I specify tuning parameters for specific kernels inside a kernel composition?**<br/>
 A: You can use methods which affect regular kernels for kernel compositions as well. In case you call
 such a method with kernel composition id as an argument, it will simply affect all kernels which are
-part of the composition. This works even if the tuning parameter is supposed to affect only single
+part of the composition. This works even if the tuning parameter is supposed to affect only a single
 kernel inside composition because the parameters which do not affect thread sizes are only added to
-kernel source as preprocessor definitions, which can be ignored by specific kernels.
+kernel source as preprocessor definitions, which can be ignored by specific kernels. Note that for
+thread and local memory modifiers, versions of methods which only affect specific kernels inside
+compositions are available.
