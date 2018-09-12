@@ -18,6 +18,7 @@ class MCMCSearcher : public Searcher
 public:
     static const size_t maximumDifferences = 1;
     static const size_t bootIterations = 10;
+    static const double escapeProbability = 0.02;
 
     MCMCSearcher(const std::vector<KernelConfiguration>& configurations, const std::vector<double>& start) :
         configurations(configurations),
@@ -80,7 +81,7 @@ public:
 
         // acceptation of a new state
         if ((executionTimes.at(currentState) <= executionTimes.at(originState))
-        || probabilityDistribution(generator) < 0.02)
+        || probabilityDistribution(generator) < escapeProbability)
         {
             originState = currentState;
 #if MCMC_VERBOSITY > 0
@@ -158,6 +159,9 @@ private:
     std::uniform_int_distribution<int> intDistribution;
     std::uniform_real_distribution<double> probabilityDistribution;
 
+    std::vector<double> dimRelevance; // relevance of each dimmension regarding to performance
+    std::vector<double> dimIndependence; // independence of each dimmension
+
     double bestTime;
 
     // Helper methods
@@ -185,6 +189,39 @@ private:
         }
 
         return neighbours;
+    }
+
+    size_t getNeighbour(const size_t referenceId) {
+        // get all neighbours
+        std::vector<size_t> neighbours = getNeighbours(referenceId);
+
+        if (neighbours.size() == 0)
+            return MAX_SIZET;
+
+        std::vector<double> probabilityDistrib(neighbours.size());
+        double probabSum = 0.0;
+
+        // iterate over neighbours and assign them probability
+        for (size_t i = 0; i < neighbours.size(); i++) {
+            double actProbab = 0.0;
+            for (int j = 0; j < configurations[i].getParameterPairs()) {
+                if (configurations[referenceId].getParameterPairs().at(j).getValue() != configurations[i].getParameterPairs().at(j).getValue())
+                    actProbab += dimRelevance;
+            }
+            probabilityDistrib[i] = actProbab;
+            probabSum += actProbab;
+        }
+        
+        // select configuration according to probability
+        double random = probabilityDistribution(generator) * probabSum;
+        double lastDistrib = 0.0;
+        for (size_t i = 0; i < neighbours.size(); i++) {
+            if (random > lastDistrib || random <= probabilityDistrib[i])
+                return neighbours[i];
+            lastDistrib = probabilityDistrib[i];
+        }
+        std::cerr << "Something horrible but recoverable happend in MCMC!" << std::endl;
+        return neighbours[0];
     }
 
     size_t searchStateIndex(const std::vector<double> &state) {
