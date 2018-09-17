@@ -112,15 +112,7 @@ std::vector<KernelConfiguration> KernelManager::getKernelConfigurations(const Ke
 
     std::vector<KernelConfiguration> configurations;
     const Kernel& kernel = getKernel(id);
-
-    if (kernel.getParameters().size() == 0)
-    {
-        configurations.emplace_back(kernel.getGlobalSize(), kernel.getLocalSize(), std::vector<ParameterPair>{});
-    }
-    else
-    {
-        computeConfigurations(kernel, 0, std::vector<ParameterPair>{}, configurations);
-    }
+    computeConfigurations(kernel, kernel.getParameters(), 0, std::vector<ParameterPair>{}, configurations);
     return configurations;
 }
 
@@ -131,27 +123,62 @@ std::vector<KernelConfiguration> KernelManager::getKernelCompositionConfiguratio
         throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
     }
 
-    const KernelComposition& composition = getKernelComposition(compositionId);
-    std::map<KernelId, DimensionVector> globalSizes;
-    std::map<KernelId, DimensionVector> localSizes;
-
-    for (const auto& kernel : composition.getKernels())
-    {
-        globalSizes.insert(std::make_pair(kernel->getId(), kernel->getGlobalSize()));
-        localSizes.insert(std::make_pair(kernel->getId(), kernel->getLocalSize()));
-    }
-
     std::vector<KernelConfiguration> kernelConfigurations;
-    if (composition.getParameters().size() == 0)
+    const KernelComposition& composition = getKernelComposition(compositionId);
+    computeCompositionConfigurations(composition, composition.getParameters(), 0, std::vector<ParameterPair>{}, kernelConfigurations);
+    return kernelConfigurations;
+}
+
+std::map<std::string, std::vector<KernelConfiguration>> KernelManager::getKernelConfigurationsByPack(const KernelId id) const
+{
+    if (!isKernel(id))
     {
-        kernelConfigurations.emplace_back(globalSizes, localSizes, std::vector<ParameterPair>{});
-    }
-    else
-    {
-        computeCompositionConfigurations(composition, 0, std::vector<ParameterPair>{}, kernelConfigurations);
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
 
-    return kernelConfigurations;
+    std::map<std::string, std::vector<KernelConfiguration>> result;
+    const Kernel& kernel = getKernel(id);
+
+    std::vector<KernelParameter> standaloneParameters = kernel.getParametersOutsidePacks();
+    std::vector<KernelConfiguration> standaloneParameterConfigurations;
+    computeConfigurations(kernel, standaloneParameters, 0, std::vector<ParameterPair>{}, standaloneParameterConfigurations);
+    result.insert(std::make_pair("KTTStandaloneParameters", standaloneParameterConfigurations));
+
+    for (const auto& parameterPack : kernel.getParameterPacks())
+    {
+        std::vector<KernelParameter> packParameters = kernel.getParametersForPack(parameterPack);
+        std::vector<KernelConfiguration> packConfigurations;
+        computeConfigurations(kernel, packParameters, 0, std::vector<ParameterPair>{}, packConfigurations);
+        result.insert(std::make_pair(parameterPack.getName(), packConfigurations));
+    }
+
+    return result;
+}
+
+std::map<std::string, std::vector<KernelConfiguration>> KernelManager::getKernelCompositionConfigurationsByPack(const KernelId id) const
+{
+    if (!isComposition(id))
+    {
+        throw std::runtime_error(std::string("Invalid composition id: ") + std::to_string(id));
+    }
+
+    std::map<std::string, std::vector<KernelConfiguration>> result;
+    const KernelComposition& composition = getKernelComposition(id);
+
+    std::vector<KernelParameter> standaloneParameters = composition.getParametersOutsidePacks();
+    std::vector<KernelConfiguration> standaloneParameterConfigurations;
+    computeCompositionConfigurations(composition, standaloneParameters, 0, std::vector<ParameterPair>{}, standaloneParameterConfigurations);
+    result.insert(std::make_pair("KTTStandaloneParameters", standaloneParameterConfigurations));
+
+    for (const auto& parameterPack : composition.getParameterPacks())
+    {
+        std::vector<KernelParameter> packParameters = composition.getParametersForPack(parameterPack);
+        std::vector<KernelConfiguration> packConfigurations;
+        computeCompositionConfigurations(composition, packParameters, 0, std::vector<ParameterPair>{}, packConfigurations);
+        result.insert(std::make_pair(parameterPack.getName(), packConfigurations));
+    }
+
+    return result;
 }
 
 void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values)
@@ -398,10 +425,10 @@ std::string KernelManager::loadFileToString(const std::string& filePath)
     return stream.str();
 }
 
-void KernelManager::computeConfigurations(const Kernel& kernel, const size_t currentParameterIndex, const std::vector<ParameterPair>& parameterPairs,
-    std::vector<KernelConfiguration>& finalResult) const
+void KernelManager::computeConfigurations(const Kernel& kernel, const std::vector<KernelParameter>& parameters, const size_t currentParameterIndex,
+    const std::vector<ParameterPair>& parameterPairs, std::vector<KernelConfiguration>& finalResult) const
 {
-    if (currentParameterIndex >= kernel.getParameters().size()) // all parameters are now part of the configuration
+    if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
         DimensionVector finalGlobalSize = kernel.getModifiedGlobalSize(parameterPairs);
         DimensionVector finalLocalSize = kernel.getModifiedLocalSize(parameterPairs);
@@ -415,7 +442,7 @@ void KernelManager::computeConfigurations(const Kernel& kernel, const size_t cur
         return;
     }
 
-    KernelParameter parameter = kernel.getParameters().at(currentParameterIndex); // process next parameter
+    KernelParameter parameter = parameters.at(currentParameterIndex); // process next parameter
 
     if (!parameter.hasValuesDouble())
     {
@@ -423,7 +450,7 @@ void KernelManager::computeConfigurations(const Kernel& kernel, const size_t cur
         {
             std::vector<ParameterPair> newParameterPairs = parameterPairs;
             newParameterPairs.emplace_back(parameter.getName(), value);
-            computeConfigurations(kernel, currentParameterIndex + 1, newParameterPairs, finalResult);
+            computeConfigurations(kernel, parameters, currentParameterIndex + 1, newParameterPairs, finalResult);
         }
     }
     else
@@ -432,15 +459,15 @@ void KernelManager::computeConfigurations(const Kernel& kernel, const size_t cur
         {
             std::vector<ParameterPair> newParameterPairs = parameterPairs;
             newParameterPairs.emplace_back(parameter.getName(), value);
-            computeConfigurations(kernel, currentParameterIndex + 1, newParameterPairs, finalResult);
+            computeConfigurations(kernel, parameters, currentParameterIndex + 1, newParameterPairs, finalResult);
         }
     }
 }
 
-void KernelManager::computeCompositionConfigurations(const KernelComposition& composition, const size_t currentParameterIndex,
-    const std::vector<ParameterPair>& parameterPairs, std::vector<KernelConfiguration>& finalResult) const
+void KernelManager::computeCompositionConfigurations(const KernelComposition& composition, const std::vector<KernelParameter>& parameters,
+    const size_t currentParameterIndex, const std::vector<ParameterPair>& parameterPairs, std::vector<KernelConfiguration>& finalResult) const
 {
-    if (currentParameterIndex >= composition.getParameters().size()) // all parameters are now part of the configuration
+    if (currentParameterIndex >= parameters.size()) // all parameters are now part of the configuration
     {
         std::map<KernelId, DimensionVector> globalSizes = composition.getModifiedGlobalSizes(parameterPairs);
         std::map<KernelId, DimensionVector> localSizes = composition.getModifiedLocalSizes(parameterPairs);
@@ -454,7 +481,7 @@ void KernelManager::computeCompositionConfigurations(const KernelComposition& co
         return;
     }
 
-    KernelParameter parameter = composition.getParameters().at(currentParameterIndex); // process next parameter
+    KernelParameter parameter = parameters.at(currentParameterIndex); // process next parameter
 
     if (!parameter.hasValuesDouble())
     {
@@ -462,7 +489,7 @@ void KernelManager::computeCompositionConfigurations(const KernelComposition& co
         {
             std::vector<ParameterPair> newParameterPairs = parameterPairs;
             newParameterPairs.emplace_back(parameter.getName(), value);
-            computeCompositionConfigurations(composition, currentParameterIndex + 1, newParameterPairs, finalResult);
+            computeCompositionConfigurations(composition, parameters, currentParameterIndex + 1, newParameterPairs, finalResult);
         }
     }
     else
@@ -471,7 +498,7 @@ void KernelManager::computeCompositionConfigurations(const KernelComposition& co
         {
             std::vector<ParameterPair> newParameterPairs = parameterPairs;
             newParameterPairs.emplace_back(parameter.getName(), value);
-            computeCompositionConfigurations(composition, currentParameterIndex + 1, newParameterPairs, finalResult);
+            computeCompositionConfigurations(composition, parameters, currentParameterIndex + 1, newParameterPairs, finalResult);
         }
     }
 }

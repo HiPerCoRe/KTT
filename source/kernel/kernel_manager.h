@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <vector>
 #include "kernel.h"
 #include "kernel_composition.h"
@@ -27,6 +28,8 @@ public:
     KernelConfiguration getKernelCompositionConfiguration(const KernelId compositionId, const std::vector<ParameterPair>& parameterPairs) const;
     std::vector<KernelConfiguration> getKernelConfigurations(const KernelId id) const;
     std::vector<KernelConfiguration> getKernelCompositionConfigurations(const KernelId compositionId) const;
+    std::map<std::string, std::vector<KernelConfiguration>> getKernelConfigurationsByPack(const KernelId id) const;
+    std::map<std::string, std::vector<KernelConfiguration>> getKernelCompositionConfigurationsByPack(const KernelId id) const;
 
     // Kernel modification methods
     void addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values);
@@ -65,10 +68,10 @@ private:
 
     // Helper methods
     static std::string loadFileToString(const std::string& filePath);
-    void computeConfigurations(const Kernel& kernel, const size_t currentParameterIndex, const std::vector<ParameterPair>& parameterPairs,
-        std::vector<KernelConfiguration>& finalResult) const;
-    void computeCompositionConfigurations(const KernelComposition& composition, const size_t currentParameterIndex,
+    void computeConfigurations(const Kernel& kernel, const std::vector<KernelParameter>& parameters, const size_t currentParameterIndex,
         const std::vector<ParameterPair>& parameterPairs, std::vector<KernelConfiguration>& finalResult) const;
+    void computeCompositionConfigurations(const KernelComposition& composition, const std::vector<KernelParameter>& parameters,
+        const size_t currentParameterIndex, const std::vector<ParameterPair>& parameterPairs, std::vector<KernelConfiguration>& finalResult) const;
     bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints) const;
 };
 

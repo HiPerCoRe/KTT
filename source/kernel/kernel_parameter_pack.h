@@ -16,6 +16,8 @@ public:
 
     std::string getName() const;
     std::vector<std::string> getParameterNames() const;
+    size_t getParameterCount() const;
+    bool containsParameter(const std::string& parameterName) const;
 
     bool operator==(const KernelParameterPack& other) const;
     bool operator!=(const KernelParameterPack& other) const;

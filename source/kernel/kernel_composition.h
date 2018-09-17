@@ -37,6 +37,8 @@ public:
     std::vector<KernelParameter> getParameters() const;
     std::vector<KernelConstraint> getConstraints() const;
     std::vector<KernelParameterPack> getParameterPacks() const;
+    std::vector<KernelParameter> getParametersOutsidePacks() const;
+    std::vector<KernelParameter> getParametersForPack(const KernelParameterPack& pack) const;
     std::vector<ArgumentId> getSharedArgumentIds() const;
     std::vector<ArgumentId> getKernelArgumentIds(const KernelId id) const;
     bool hasParameter(const std::string& parameterName) const;
