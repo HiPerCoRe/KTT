@@ -97,20 +97,11 @@ int main(int argc, char **argv)
     tuner.addConstraint(kernelId, { "LOCAL_MEM", "VECTOR_TYPE" }, vlConstraint);
 
     // Configure parallelism
-    /*tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "TILE_SIZE_X", ktt::ModifierAction::Divide);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "TILE_SIZE_Y", ktt::ModifierAction::Divide);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "VECTOR_TYPE", ktt::ModifierAction::Divide);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);*/
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "TILE_SIZE_X", ktt::ModifierAction::Divide);
+    auto xGlobalModifier = [](const size_t size, const std::vector<size_t>& vector) {return size / vector.at(0) / vector.at(1);};
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, std::vector<std::string>{ "TILE_SIZE_X", "VECTOR_TYPE" }, xGlobalModifier);
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "TILE_SIZE_Y", ktt::ModifierAction::Divide);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "VECTOR_TYPE", ktt::ModifierAction::Divide);
-//    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
-//    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
 
     // Assign reference and set error check
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{dstId});
@@ -120,47 +111,6 @@ int main(int argc, char **argv)
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, "mtran_output.csv", ktt::PrintFormat::CSV);
-
-/*    cltune::Tuner tuner(platformIndex, deviceIndex);
-    size_t kernelId = tuner.AddKernel(std::vector<std::string>{ TUNED_KERNEL_NAME }, "mtran", ndRangeDimensions, { 1, 1 });
-    tuner.addParameter(kernelId, "ONE", { 1 });
-    tuner.addParameter(kernelId, "LOCAL_MEM", { 0, 1 });
-    tuner.addParameter(kernelId, "VECTOR_TYPE", { 1, 2, 4, 8 });
-    //tuner.addParameter(kernelId, "VECTOR_TYPE", { 1 });
-    tuner.addParameter(kernelId, "CR", { 0, 1 });
-    tuner.addParameter(kernelId, "PREFETCH", { 0, 1, 2 });
-    tuner.addParameter(kernelId, "PADD_LOCAL", { 0, 1 });
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 1, 2, 4, 8, 16, 32, 64 });
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
-    tuner.addParameter(kernelId, "TILE_SIZE_X", { 1, 2, 4, 8, 16, 32, 64 });
-    tuner.addParameter(kernelId, "TILE_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
-    auto xConstraint = [] (std::vector<size_t> v) { return (v[0] == v[1]); };
-    auto yConstraint = [] (std::vector<size_t> v) { return (v[1] <= v[0]); };
-    auto tConstraint = [] (std::vector<size_t> v) { return (!v[0] || (v[1] <= v[2]*v[3])); };
-    auto pConstraint = [] (std::vector<size_t> v) { return (v[0] || !v[1]); };
-    auto vConstraint = [] (std::vector<size_t> v) { return (v[0]*v[1] <= 64);  };
-    auto vlConstraint = [] (std::vector<size_t> v) { return (!v[0] || v[1] == 1);  };
-    tuner.addConstraint(kernelId, xConstraint, { "TILE_SIZE_X", "WORK_GROUP_SIZE_X" });
-    tuner.addConstraint(kernelId, yConstraint, { "TILE_SIZE_Y", "WORK_GROUP_SIZE_Y" });
-    tuner.addConstraint(kernelId, tConstraint, { "LOCAL_MEM", "TILE_SIZE_Y", "WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y" });
-    tuner.addConstraint(kernelId, pConstraint, { "LOCAL_MEM", "PADD_LOCAL" } );
-    tuner.addConstraint(kernelId, vConstraint, { "TILE_SIZE_X", "VECTOR_TYPE" });
-    tuner.addConstraint(kernelId, vlConstraint, { "LOCAL_MEM", "VECTOR_TYPE" } );
-    tuner.MulLocalSize(kernelId, { "WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y" });
-    tuner.DivGlobalSize(kernelId, { "TILE_SIZE_X", "TILE_SIZE_Y" });
-    tuner.DivGlobalSize(kernelId, { "VECTOR_TYPE", "ONE" });
-    tuner.MulGlobalSize(kernelId, { "WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y" });
-
-    tuner.SetReference(std::vector<std::string>{ REFERENCE_KERNEL_NAME }, "mtranReference", ndRangeDimensions, { 16, 16 });
-
-    tuner.AddArgumentOutput(dst);
-    tuner.AddArgumentInput(src);
-    tuner.AddArgumentScalar(width);
-    tuner.AddArgumentScalar(height);
-
-    tuner.Tune();
-    tuner.PrintToScreen();
-    tuner.PrintToFile("result.csv");*/
 
     return 0;
 }
