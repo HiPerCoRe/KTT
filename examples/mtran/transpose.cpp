@@ -78,9 +78,9 @@ int main(int argc, char **argv)
     tuner.addParameter(kernelId, "PREFETCH", { 0, 1, 2 });
     tuner.addParameter(kernelId, "PADD_LOCAL", { 0, 1 });
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 1, 2, 4, 8, 16, 32, 64 });
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", { 16/*1, 2, 4, 8, 16, 32, 64*/ });
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
     tuner.addParameter(kernelId, "TILE_SIZE_X", { 1, 2, 4, 8, 16, 32, 64 });
-    tuner.addParameter(kernelId, "TILE_SIZE_Y", { 16/*1, 2, 4, 8, 16, 32, 64*/ });
+    tuner.addParameter(kernelId, "TILE_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
     
     // Constraint tuning space
     auto xConstraint = [] (std::vector<size_t> v) { return (v[0] == v[1]); };
@@ -89,12 +89,14 @@ int main(int argc, char **argv)
     auto pConstraint = [] (std::vector<size_t> v) { return (v[0] || !v[1]); };
     auto vConstraint = [] (std::vector<size_t> v) { return (v[0]*v[1] <= 64);  };
     auto vlConstraint = [] (std::vector<size_t> v) { return (!v[0] || v[1] == 1);  };
+    auto minparConstraint = [] (std::vector<size_t> v) {return (v[0] * v[1] >= 32);};
     tuner.addConstraint(kernelId, { "TILE_SIZE_X", "WORK_GROUP_SIZE_X" }, xConstraint);
     tuner.addConstraint(kernelId, { "TILE_SIZE_Y", "WORK_GROUP_SIZE_Y" }, yConstraint);
     tuner.addConstraint(kernelId, { "LOCAL_MEM", "TILE_SIZE_Y", "WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y" }, tConstraint);
     tuner.addConstraint(kernelId, { "LOCAL_MEM", "PADD_LOCAL" }, pConstraint);
     tuner.addConstraint(kernelId, { "TILE_SIZE_X", "VECTOR_TYPE" }, vConstraint);
     tuner.addConstraint(kernelId, { "LOCAL_MEM", "VECTOR_TYPE" }, vlConstraint);
+//    tuner.addConstraint(kernelId, { "TILE_SIZE_X", "TILE_SIZE_Y" }, minparConstraint);
 
     // Configure parallelism
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
