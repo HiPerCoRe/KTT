@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <algorithm>
 #include "kernel_composition.h"
 #include "utility/ktt_utility.h"
 
