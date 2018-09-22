@@ -19,6 +19,12 @@ void ConfigurationManager::setKernelConfigurations(const KernelId id, const std:
     kernelConfigurations.insert(std::make_pair(id, configurations));
 }
 
+void ConfigurationManager::setKernelConfigurations(const KernelId id, const std::map<std::string, std::vector<KernelConfiguration>>& configurations)
+{
+    clearKernelData(id, true, true);
+    packedKernelConfigurations.insert(std::make_pair(id, configurations));
+}
+
 void ConfigurationManager::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     if (method == SearchMethod::Annealing && arguments.size() < 1)
@@ -33,7 +39,12 @@ void ConfigurationManager::setSearchMethod(const SearchMethod method, const std:
 
 bool ConfigurationManager::hasKernelConfigurations(const KernelId id) const
 {
-    return kernelConfigurations.find(id) != kernelConfigurations.end();
+    return kernelConfigurations.find(id) != kernelConfigurations.end() || hasPackedConfigurations(id);
+}
+
+bool ConfigurationManager::hasPackedConfigurations(const KernelId id) const
+{
+    return packedKernelConfigurations.find(id) != packedKernelConfigurations.end();
 }
 
 void ConfigurationManager::clearKernelData(const KernelId id, const bool clearConfigurations, const bool clearBestConfiguration)
@@ -48,6 +59,12 @@ void ConfigurationManager::clearKernelData(const KernelId id, const bool clearCo
         kernelConfigurations.erase(id);
     }
 
+    if (clearConfigurations && packedKernelConfigurations.find(id) != packedKernelConfigurations.end())
+    {
+        packedKernelConfigurations.erase(id);
+        bestConfigurationsPerPack.erase(id);
+    }
+
     if (clearBestConfiguration && bestConfigurations.find(id) != bestConfigurations.end())
     {
         bestConfigurations.erase(id);
@@ -56,10 +73,23 @@ void ConfigurationManager::clearKernelData(const KernelId id, const bool clearCo
 
 size_t ConfigurationManager::getConfigurationCount(const KernelId id)
 {
-    auto configurations = kernelConfigurations.find(id);
-    if (configurations != kernelConfigurations.end())
+    if (!hasPackedConfigurations(id))
     {
-        return configurations->second.size();
+        auto configurations = kernelConfigurations.find(id);
+        if (configurations != kernelConfigurations.end())
+        {
+            return configurations->second.size();
+        }
+    }
+    else
+    {
+        auto packedConfigurations = packedKernelConfigurations.find(id);
+        size_t totalCount = 0;
+        for (const auto& pair : packedConfigurations->second)
+        {
+            totalCount += pair.second.size();
+        }
+        return totalCount;
     }
 
     return 0;
@@ -149,6 +179,12 @@ void ConfigurationManager::calculateNextConfiguration(const KernelId id, const s
     }
 
     searcherPair->second->calculateNextConfiguration(static_cast<double>(previousDuration));
+}
+
+std::vector<KernelConfiguration> ConfigurationManager::fuseConfigurations(const KernelId id, const std::string& mainParameterPack)
+{
+    // todo
+    return {};
 }
 
 void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,

@@ -25,8 +25,10 @@ public:
 
     // Core methods
     void setKernelConfigurations(const KernelId id, const std::vector<KernelConfiguration>& configurations);
+    void setKernelConfigurations(const KernelId id, const std::map<std::string, std::vector<KernelConfiguration>>& configurations);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     bool hasKernelConfigurations(const KernelId id) const;
+    bool hasPackedConfigurations(const KernelId id) const;
     void clearKernelData(const KernelId id, const bool clearConfigurations, const bool clearBestConfiguration);
 
     // Configuration search methods
@@ -40,12 +42,15 @@ public:
 private:
     // Attributes
     std::map<KernelId, std::vector<KernelConfiguration>> kernelConfigurations;
+    std::map<KernelId, std::map<std::string, std::vector<KernelConfiguration>>> packedKernelConfigurations;
     std::map<KernelId, std::unique_ptr<Searcher>> searchers;
     std::map<KernelId, std::tuple<KernelConfiguration, std::string, uint64_t>> bestConfigurations;
+    std::map<KernelId, std::map<std::string, std::tuple<KernelConfiguration, std::string, uint64_t>>> bestConfigurationsPerPack;
     SearchMethod searchMethod;
     std::vector<double> searchArguments;
 
     // Helper methods
+    std::vector<KernelConfiguration> fuseConfigurations(const KernelId id, const std::string& mainParameterPack);
     void initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,
         const std::vector<KernelConfiguration>& configurations);
     static std::string getSearchMethodName(const SearchMethod method);
