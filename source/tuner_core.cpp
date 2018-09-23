@@ -30,9 +30,9 @@ TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, con
     DeviceInfo info = computeEngine->getCurrentDeviceInfo();
     Logger::getLogger().log(LoggingLevel::Info, std::string("Initializing tuner for device ") + info.getName());
 
-    kernelManager = std::make_unique<KernelManager>(info);
+    kernelManager = std::make_unique<KernelManager>();
     kernelRunner = std::make_unique<KernelRunner>(argumentManager.get(), kernelManager.get(), computeEngine.get());
-    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), kernelRunner.get());
+    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), kernelRunner.get(), info);
 }
 
 KernelId TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,

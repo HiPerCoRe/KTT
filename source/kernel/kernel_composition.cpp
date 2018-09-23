@@ -1,5 +1,5 @@
-#include <stdexcept>
 #include <algorithm>
+#include <stdexcept>
 #include "kernel_composition.h"
 #include "utility/ktt_utility.h"
 
@@ -369,6 +369,12 @@ std::vector<KernelParameter> KernelComposition::getParametersOutsidePacks() cons
     }
 
     return result;
+}
+
+std::vector<KernelParameter> KernelComposition::getParametersForPack(const std::string& pack) const
+{
+    KernelParameterPack searchPack(pack, std::vector<std::string>{});
+    return getParametersForPack(searchPack);
 }
 
 std::vector<KernelParameter> KernelComposition::getParametersForPack(const KernelParameterPack& pack) const

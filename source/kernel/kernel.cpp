@@ -250,6 +250,12 @@ std::vector<KernelParameter> Kernel::getParametersOutsidePacks() const
     return result;
 }
 
+std::vector<KernelParameter> Kernel::getParametersForPack(const std::string& pack) const
+{
+    KernelParameterPack searchPack(pack, std::vector<std::string>{});
+    return getParametersForPack(searchPack);
+}
+
 std::vector<KernelParameter> Kernel::getParametersForPack(const KernelParameterPack& pack) const
 {
     auto targetPack = std::find(std::begin(parameterPacks), std::end(parameterPacks), pack);

@@ -38,6 +38,7 @@ public:
     std::vector<KernelConstraint> getConstraints() const;
     std::vector<KernelParameterPack> getParameterPacks() const;
     std::vector<KernelParameter> getParametersOutsidePacks() const;
+    std::vector<KernelParameter> getParametersForPack(const std::string& pack) const;
     std::vector<KernelParameter> getParametersForPack(const KernelParameterPack& pack) const;
     std::vector<ArgumentId> getSharedArgumentIds() const;
     std::vector<ArgumentId> getKernelArgumentIds(const KernelId id) const;

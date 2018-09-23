@@ -12,10 +12,11 @@
 namespace ktt
 {
 
-TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner) :
+TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner, const DeviceInfo& info) :
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     kernelRunner(kernelRunner),
+    configurationManager(info),
     resultValidator(std::make_unique<ResultValidator>(argumentManager, kernelRunner))
 {}
 
@@ -35,14 +36,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
     resultValidator->computeReferenceResult(kernel);
     if (!configurationManager.hasKernelConfigurations(id))
     {
-        if (kernel.getParameterPacks().empty())
-        {
-            configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id));
-        }
-        else
-        {
-            configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurationsByPack(id));
-        }
+        configurationManager.initializeConfigurations(kernel);
     }
 
     size_t configurationCount = configurationManager.getConfigurationCount(id);
@@ -120,14 +114,7 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
     const Kernel& kernel = kernelManager->getKernel(id);
     if (!configurationManager.hasKernelConfigurations(id))
     {
-        if (kernel.getParameterPacks().empty())
-        {
-            configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id));
-        }
-        else
-        {
-            configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurationsByPack(id));
-        }
+        configurationManager.initializeConfigurations(kernel);
     }
 
     size_t configurationCount = configurationManager.getConfigurationCount(id);
@@ -188,14 +175,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
     resultValidator->computeReferenceResult(compatibilityKernel);
     if (!configurationManager.hasKernelConfigurations(id))
     {
-        if (composition.getParameterPacks().empty())
-        {
-            configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id));
-        }
-        else
-        {
-            configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurationsByPack(id));
-        }
+        configurationManager.initializeConfigurations(composition);
     }
 
     size_t configurationCount = configurationManager.getConfigurationCount(id);
@@ -267,14 +247,7 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
 
     if (!configurationManager.hasKernelConfigurations(id))
     {
-        if (kernel.getParameterPacks().empty())
-        {
-            configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id));
-        }
-        else
-        {
-            configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurationsByPack(id));
-        }
+        configurationManager.initializeConfigurations(kernel);
     }
 
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
@@ -312,14 +285,7 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
 
     if (!configurationManager.hasKernelConfigurations(id))
     {
-        if (composition.getParameterPacks().empty())
-        {
-            configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id));
-        }
-        else
-        {
-            configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurationsByPack(id));
-        }
+        configurationManager.initializeConfigurations(composition);
     }
 
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);

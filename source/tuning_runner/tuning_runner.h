@@ -7,6 +7,7 @@
 #include "configuration_manager.h"
 #include "kernel_runner.h"
 #include "result_validator.h"
+#include "api/device_info.h"
 #include "api/stop_condition/stop_condition.h"
 #include "dto/kernel_result.h"
 #include "kernel/kernel_manager.h"
@@ -19,7 +20,7 @@ class TuningRunner
 {
 public:
     // Constructor
-    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner);
+    explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner, const DeviceInfo& info);
 
     // Core methods
     std::vector<KernelResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
