@@ -104,6 +104,11 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
 
 void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values)
 {
+    if (values.empty())
+    {
+        throw std::runtime_error("Tuning parameter must have at least one valid value");
+    }
+
     if (isKernel(id))
     {
         getKernel(id).addParameter(KernelParameter(name, values));
@@ -120,6 +125,11 @@ void KernelManager::addParameter(const KernelId id, const std::string& name, con
 
 void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<double>& values)
 {
+    if (values.empty())
+    {
+        throw std::runtime_error("Tuning parameter must have at least one valid value");
+    }
+
     if (isKernel(id))
     {
         getKernel(id).addParameter(KernelParameter(name, values));

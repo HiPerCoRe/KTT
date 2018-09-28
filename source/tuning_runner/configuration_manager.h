@@ -37,11 +37,13 @@ public:
 
     // Configuration search methods
     size_t getConfigurationCount(const KernelId id);
-    KernelConfiguration getCurrentConfiguration(const KernelId id);
-    KernelConfiguration getBestConfiguration(const KernelId id);
+    KernelConfiguration getCurrentConfiguration(const Kernel& kernel);
+    KernelConfiguration getCurrentConfiguration(const KernelComposition& composition);
+    KernelConfiguration getBestConfiguration(const Kernel& kernel);
+    KernelConfiguration getBestConfiguration(const KernelComposition& composition);
     ComputationResult getBestComputationResult(const KernelId id) const;
-    void calculateNextConfiguration(const KernelId id, const std::string& kernelName, const KernelConfiguration& previous,
-        const uint64_t previousDuration);
+    void calculateNextConfiguration(const Kernel& kernel, const KernelConfiguration& previous, const uint64_t previousDuration);
+    void calculateNextConfiguration(const KernelComposition& composition, const KernelConfiguration& previous, const uint64_t previousDuration);
 
 private:
     // Attributes
@@ -55,6 +57,7 @@ private:
     SearchMethod searchMethod;
     std::vector<double> searchArguments;
     DeviceInfo deviceInfo;
+    static const std::string defaultParameterPackName;
 
     // Configuration generating methods
     std::vector<KernelConfiguration> getKernelConfigurations(const Kernel& kernel) const;

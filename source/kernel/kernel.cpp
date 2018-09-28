@@ -269,7 +269,7 @@ std::vector<KernelParameter> Kernel::getParametersForPack(const KernelParameterP
 
     for (const auto& parameter : parameters)
     {
-        if (pack.containsParameter(parameter.getName()))
+        if (targetPack->containsParameter(parameter.getName()))
         {
             result.push_back(parameter);
         }
