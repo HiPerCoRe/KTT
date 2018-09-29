@@ -1,6 +1,7 @@
 #include "tuner_core.h"
 #include "compute_engine/cuda/cuda_engine.h"
 #include "compute_engine/opencl/opencl_engine.h"
+#include "compute_engine/vulkan/vulkan_engine.h"
 #include "utility/ktt_utility.h"
 
 namespace ktt
@@ -21,6 +22,10 @@ TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, con
     else if (computeAPI == ComputeAPI::CUDA)
     {
         computeEngine = std::make_unique<CUDAEngine>(device, queueCount);
+    }
+    else if (computeAPI == ComputeAPI::Vulkan)
+    {
+        computeEngine = std::make_unique<VulkanEngine>(device, queueCount);
     }
     else
     {
