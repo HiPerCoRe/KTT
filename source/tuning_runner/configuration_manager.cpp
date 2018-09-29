@@ -23,14 +23,14 @@ void ConfigurationManager::initializeConfigurations(const Kernel& kernel)
 
     if (kernel.getParameterPacks().empty())
     {
-        std::vector<KernelConfiguration> configurations = getKernelConfigurations(kernel);
+        std::vector<KernelConfiguration> configurations;
+        computeConfigurations(kernel, kernel.getParameters(), std::vector<ParameterPair>{}, 0, std::vector<ParameterPair>{}, configurations);
         kernelConfigurations.insert(std::make_pair(kernel.getId(), configurations));
     }
     else
     {
         initializeOrderedKernelPacks(kernel);
-        std::pair<std::string, std::vector<KernelConfiguration>> packedConfigurations = getNextPackKernelConfigurations(kernel);
-        packKernelConfigurations.insert(std::make_pair(kernel.getId(), packedConfigurations));
+        prepareNextPackKernelConfigurations(kernel);
     }
 }
 
@@ -40,14 +40,15 @@ void ConfigurationManager::initializeConfigurations(const KernelComposition& com
 
     if (composition.getParameterPacks().empty())
     {
-        std::vector<KernelConfiguration> configurations = getKernelCompositionConfigurations(composition);
+        std::vector<KernelConfiguration> configurations;
+        computeCompositionConfigurations(composition, composition.getParameters(), std::vector<ParameterPair>{}, 0, std::vector<ParameterPair>{},
+            configurations);
         kernelConfigurations.insert(std::make_pair(composition.getId(), configurations));
     }
     else
     {
         initializeOrderedCompositionPacks(composition);
-        std::pair<std::string, std::vector<KernelConfiguration>> packConfigurations = getNextPackKernelCompositionConfigurations(composition);
-        packKernelConfigurations.insert(std::make_pair(composition.getId(), packConfigurations));
+        prepareNextPackKernelCompositionConfigurations(composition);
     }
 }
 
@@ -175,9 +176,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const Kernel& 
         else
         {
             searchers.erase(id);
-            packKernelConfigurations.erase(id);
-            std::pair<std::string, std::vector<KernelConfiguration>> packedConfigurations = getNextPackKernelConfigurations(kernel);
-            packKernelConfigurations.insert(std::make_pair(id, packedConfigurations));
+            prepareNextPackKernelConfigurations(kernel);
             initializeSearcher(id, searchMethod, searchArguments, packKernelConfigurations.find(id)->second.second);
             searcherPair = searchers.find(id);
         }
@@ -235,9 +234,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelCo
         else
         {
             searchers.erase(id);
-            packKernelConfigurations.erase(id);
-            std::pair<std::string, std::vector<KernelConfiguration>> packedConfigurations = getNextPackKernelCompositionConfigurations(composition);
-            packKernelConfigurations.insert(std::make_pair(id, packedConfigurations));
+            prepareNextPackKernelCompositionConfigurations(composition);
             initializeSearcher(id, searchMethod, searchArguments, packKernelConfigurations.find(id)->second.second);
             searcherPair = searchers.find(id);
         }
@@ -311,16 +308,17 @@ void ConfigurationManager::calculateNextConfiguration(const Kernel& kernel, cons
             bestConfigurationsPerPack.insert(std::make_pair(id, std::map<std::string, std::tuple<KernelConfiguration, std::string, uint64_t>>{}));
         }
         configurationPerPackPair = bestConfigurationsPerPack.find(id);
+        auto& packMap = configurationPerPackPair->second;
 
-        auto tagetPackPair = configurationPerPackPair->second.find(targetPack);
-        if (tagetPackPair == configurationPerPackPair->second.end())
+        auto tagetPackPair = packMap.find(targetPack);
+        if (tagetPackPair == packMap.end())
         {
-            configurationPerPackPair->second.insert(std::make_pair(targetPack, std::make_tuple(previous, kernel.getName(), previousDuration)));
+            packMap.insert(std::make_pair(targetPack, std::make_tuple(previous, kernel.getName(), previousDuration)));
         }
         else if (std::get<2>(tagetPackPair->second) > previousDuration)
         {
-            configurationPerPackPair->second.erase(targetPack);
-            configurationPerPackPair->second.insert(std::make_pair(targetPack, std::make_tuple(previous, kernel.getName(), previousDuration)));
+            packMap.erase(targetPack);
+            packMap.insert(std::make_pair(targetPack, std::make_tuple(previous, kernel.getName(), previousDuration)));
         }
     }
 
@@ -360,83 +358,28 @@ void ConfigurationManager::calculateNextConfiguration(const KernelComposition& c
             bestConfigurationsPerPack.insert(std::make_pair(id, std::map<std::string, std::tuple<KernelConfiguration, std::string, uint64_t>>{}));
         }
         configurationPerPackPair = bestConfigurationsPerPack.find(id);
+        auto& packMap = configurationPerPackPair->second;
 
-        auto tagetPackPair = configurationPerPackPair->second.find(targetPack);
-        if (tagetPackPair == configurationPerPackPair->second.end())
+        auto tagetPackPair = packMap.find(targetPack);
+        if (tagetPackPair == packMap.end())
         {
-            configurationPerPackPair->second.insert(std::make_pair(targetPack, std::make_tuple(previous, composition.getName(), previousDuration)));
+            packMap.insert(std::make_pair(targetPack, std::make_tuple(previous, composition.getName(), previousDuration)));
         }
         else if (std::get<2>(tagetPackPair->second) > previousDuration)
         {
-            configurationPerPackPair->second.erase(targetPack);
-            configurationPerPackPair->second.insert(std::make_pair(targetPack, std::make_tuple(previous, composition.getName(), previousDuration)));
+            packMap.erase(targetPack);
+            packMap.insert(std::make_pair(targetPack, std::make_tuple(previous, composition.getName(), previousDuration)));
         }
     }
 
     searcherPair->second->calculateNextConfiguration(static_cast<double>(previousDuration));
 }
 
-std::vector<KernelConfiguration> ConfigurationManager::getKernelConfigurations(const Kernel& kernel) const
-{
-    std::vector<KernelConfiguration> configurations;
-    computeConfigurations(kernel, kernel.getParameters(), std::vector<ParameterPair>{}, 0, std::vector<ParameterPair>{}, configurations);
-    return configurations;
-}
-
-std::vector<KernelConfiguration> ConfigurationManager::getKernelCompositionConfigurations(const KernelComposition& composition) const
-{
-    std::vector<KernelConfiguration> kernelConfigurations;
-    computeCompositionConfigurations(composition, composition.getParameters(), std::vector<ParameterPair>{}, 0, std::vector<ParameterPair>{},
-        kernelConfigurations);
-    return kernelConfigurations;
-}
-
-std::pair<std::string, std::vector<KernelConfiguration>> ConfigurationManager::getNextPackKernelConfigurations(const Kernel& kernel) const
-{
-    std::string nextPack = getNextParameterPack(kernel.getId());
-
-    std::vector<KernelParameter> packParameters;
-    if (nextPack == defaultParameterPackName)
-    {
-        packParameters = kernel.getParametersOutsidePacks();
-    }
-    else
-    {
-        packParameters = kernel.getParametersForPack(nextPack);
-    }
-    std::vector<ParameterPair> extraPairs = getExtraParameterPairs(kernel, nextPack);
-    std::vector<KernelConfiguration> configurations;
-    computeConfigurations(kernel, packParameters, extraPairs, 0, std::vector<ParameterPair>{}, configurations);
-
-    return std::make_pair(nextPack, configurations);
-}
-
-std::pair<std::string, std::vector<KernelConfiguration>> ConfigurationManager::getNextPackKernelCompositionConfigurations(
-    const KernelComposition& composition) const
-{
-    std::string nextPack = getNextParameterPack(composition.getId());
-
-    std::vector<KernelParameter> packParameters;
-    if (nextPack == defaultParameterPackName)
-    {
-        packParameters = composition.getParametersOutsidePacks();
-    }
-    else
-    {
-        packParameters = composition.getParametersForPack(nextPack);
-    }
-    std::vector<ParameterPair> extraPairs = getExtraParameterPairs(composition, nextPack);
-    std::vector<KernelConfiguration> configurations;
-    computeCompositionConfigurations(composition, packParameters, extraPairs, 0, std::vector<ParameterPair>{}, configurations);
-
-    return std::make_pair(nextPack, configurations);
-}
-
 void ConfigurationManager::initializeOrderedKernelPacks(const Kernel& kernel)
 {
     std::vector<std::pair<size_t, std::string>> orderedPacks;
     std::vector<KernelParameterPack> kernelPacks = kernel.getParameterPacks();
-    
+
     std::vector<KernelParameter> defaultParameters = kernel.getParametersOutsidePacks();
     const size_t defaultParametersConfigurationCount = getConfigurationCountForParameters(defaultParameters);
     bool defaultPackProcessed = false;
@@ -548,6 +491,50 @@ void ConfigurationManager::initializeOrderedCompositionPacks(const KernelComposi
 
     currentPackIndices.insert(std::make_pair(composition.getId(), 0));
     orderedKernelPacks.insert(std::make_pair(composition.getId(), orderedPacks));
+}
+
+void ConfigurationManager::prepareNextPackKernelConfigurations(const Kernel& kernel)
+{
+    const size_t id = kernel.getId();
+    packKernelConfigurations.erase(id);
+    const std::string nextPack = getNextParameterPack(id);
+
+    std::vector<KernelParameter> packParameters;
+    if (nextPack == defaultParameterPackName)
+    {
+        packParameters = kernel.getParametersOutsidePacks();
+    }
+    else
+    {
+        packParameters = kernel.getParametersForPack(nextPack);
+    }
+
+    std::vector<ParameterPair> extraPairs = getExtraParameterPairs(kernel, nextPack);
+    std::vector<KernelConfiguration> configurations;
+    computeConfigurations(kernel, packParameters, extraPairs, 0, std::vector<ParameterPair>{}, configurations);
+    packKernelConfigurations.insert(std::make_pair(id, std::make_pair(nextPack, configurations)));
+}
+
+void ConfigurationManager::prepareNextPackKernelCompositionConfigurations(const KernelComposition& composition)
+{
+    const size_t id = composition.getId();
+    packKernelConfigurations.erase(id);
+    const std::string nextPack = getNextParameterPack(id);
+
+    std::vector<KernelParameter> packParameters;
+    if (nextPack == defaultParameterPackName)
+    {
+        packParameters = composition.getParametersOutsidePacks();
+    }
+    else
+    {
+        packParameters = composition.getParametersForPack(nextPack);
+    }
+
+    std::vector<ParameterPair> extraPairs = getExtraParameterPairs(composition, nextPack);
+    std::vector<KernelConfiguration> configurations;
+    computeCompositionConfigurations(composition, packParameters, extraPairs, 0, std::vector<ParameterPair>{}, configurations);
+    packKernelConfigurations.insert(std::make_pair(id, std::make_pair(nextPack, configurations)));
 }
 
 void ConfigurationManager::computeConfigurations(const Kernel& kernel, const std::vector<KernelParameter>& parameters,
@@ -724,22 +711,17 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
     {
         addedParameters = kernel.getParametersForPack(currentPack);
     }
-    std::vector<KernelParameter> allParameters = kernel.getParameters();
+
+    std::vector<KernelParameterPack> packs = kernel.getParameterPacks();
+    std::vector<std::string> defaultParameterNames;
+    std::vector<KernelParameter> defaultParameters = kernel.getParametersOutsidePacks();
+    for (const auto& defaultParameter : defaultParameters)
+    {
+        defaultParameterNames.push_back(defaultParameter.getName());
+    }
+    packs.push_back(KernelParameterPack(defaultParameterPackName, defaultParameterNames));
 
     auto configurationsPerPack = bestConfigurationsPerPack.find(kernel.getId());
-    std::vector<KernelParameterPack> packs = kernel.getParameterPacks();
-    if (currentPack != defaultParameterPackName)
-    {
-        std::vector<std::string> defaultParameterNames;
-        std::vector<KernelParameter> defaultParameters = kernel.getParametersOutsidePacks();
-        for (const auto& defaultParameter : defaultParameters)
-        {
-            defaultParameterNames.push_back(defaultParameter.getName());
-        }
-
-        packs.push_back(KernelParameterPack(defaultParameterPackName, defaultParameterNames));
-    }
-
     if (configurationsPerPack != bestConfigurationsPerPack.end())
     {
         for (const auto& pack : packs)
@@ -749,8 +731,8 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
                 continue;
             }
 
+            // Todo: implement correct handling of parameters which are part of multiple packs
             auto bestPackConfiguration = configurationsPerPack->second.find(pack.getName());
-
             if (bestPackConfiguration != configurationsPerPack->second.end())
             {
                 std::vector<ParameterPair> bestParameterPairs = std::get<0>(bestPackConfiguration->second).getParameterPairs();
@@ -776,7 +758,7 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
         }
     }
 
-    for (const auto& parameter : allParameters)
+    for (const auto& parameter : kernel.getParameters())
     {
         bool alreadyAdded = false;
         for (const auto& addedParameter : addedParameters)
@@ -810,22 +792,17 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
     {
         addedParameters = composition.getParametersForPack(currentPack);
     }
-    std::vector<KernelParameter> allParameters = composition.getParameters();
+
+    std::vector<KernelParameterPack> packs = composition.getParameterPacks();
+    std::vector<std::string> defaultParameterNames;
+    std::vector<KernelParameter> defaultParameters = composition.getParametersOutsidePacks();
+    for (const auto& defaultParameter : defaultParameters)
+    {
+        defaultParameterNames.push_back(defaultParameter.getName());
+    }
+    packs.push_back(KernelParameterPack(defaultParameterPackName, defaultParameterNames));
 
     auto configurationsPerPack = bestConfigurationsPerPack.find(composition.getId());
-    std::vector<KernelParameterPack> packs = composition.getParameterPacks();
-    if (currentPack != defaultParameterPackName)
-    {
-        std::vector<std::string> defaultParameterNames;
-        std::vector<KernelParameter> defaultParameters = composition.getParametersOutsidePacks();
-        for (const auto& defaultParameter : defaultParameters)
-        {
-            defaultParameterNames.push_back(defaultParameter.getName());
-        }
-
-        packs.push_back(KernelParameterPack(defaultParameterPackName, defaultParameterNames));
-    }
-
     if (configurationsPerPack != bestConfigurationsPerPack.end())
     {
         for (const auto& pack : packs)
@@ -835,8 +812,8 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
                 continue;
             }
 
+            // Todo: implement correct handling of parameters which are part of multiple packs
             auto bestPackConfiguration = configurationsPerPack->second.find(pack.getName());
-
             if (bestPackConfiguration != configurationsPerPack->second.end())
             {
                 std::vector<ParameterPair> bestParameterPairs = std::get<0>(bestPackConfiguration->second).getParameterPairs();
@@ -862,7 +839,7 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
         }
     }
 
-    for (const auto& parameter : allParameters)
+    for (const auto& parameter : composition.getParameters())
     {
         bool alreadyAdded = false;
         for (const auto& addedParameter : addedParameters)

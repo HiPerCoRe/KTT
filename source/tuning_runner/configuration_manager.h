@@ -59,15 +59,11 @@ private:
     DeviceInfo deviceInfo;
     static const std::string defaultParameterPackName;
 
-    // Configuration generating methods
-    std::vector<KernelConfiguration> getKernelConfigurations(const Kernel& kernel) const;
-    std::vector<KernelConfiguration> getKernelCompositionConfigurations(const KernelComposition& composition) const;
-    std::pair<std::string, std::vector<KernelConfiguration>> getNextPackKernelConfigurations(const Kernel& kernel) const;
-    std::pair<std::string, std::vector<KernelConfiguration>> getNextPackKernelCompositionConfigurations(const KernelComposition& composition) const;
-
     // Helper methods
     void initializeOrderedKernelPacks(const Kernel& kernel);
     void initializeOrderedCompositionPacks(const KernelComposition& composition);
+    void prepareNextPackKernelConfigurations(const Kernel& kernel);
+    void prepareNextPackKernelCompositionConfigurations(const KernelComposition& composition);
     void computeConfigurations(const Kernel& kernel, const std::vector<KernelParameter>& parameters, const std::vector<ParameterPair>& extraPairs,
         const size_t currentParameterIndex, const std::vector<ParameterPair>& parameterPairs, std::vector<KernelConfiguration>& finalResult) const;
     void computeCompositionConfigurations(const KernelComposition& composition, const std::vector<KernelParameter>& parameters,
