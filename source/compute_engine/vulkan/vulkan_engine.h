@@ -7,7 +7,9 @@
 
 #ifdef PLATFORM_VULKAN
 #include "vulkan/vulkan.h"
+#include "vulkan_device.h"
 #include "vulkan_instance.h"
+#include "vulkan_physical_device.h"
 #include "vulkan_utility.h"
 #endif // PLATFORM_VULKAN
 
@@ -80,11 +82,7 @@ private:
     bool persistentBufferFlag;
     mutable EventId nextEventId;
     std::unique_ptr<VulkanInstance> instance;
-
-    // Helper Methods
-    // DeviceInfo getVulkanDeviceInfo(const DeviceIndex device) const;
-    // std::vector<VulkanPhysicalDevice> getVulkanDevices() const;
-    static DeviceType getDeviceType(const VkPhysicalDeviceType deviceType);
+    std::unique_ptr<VulkanDevice> device;
 };
 
 #else

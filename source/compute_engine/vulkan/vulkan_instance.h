@@ -2,10 +2,10 @@
 
 #include <cstdint>
 #include <iostream>
-#include <ostream>
 #include <string>
 #include <vector>
 #include "vulkan/vulkan.h"
+#include "vulkan_physical_device.h"
 #include "vulkan_utility.h"
 
 namespace ktt
@@ -14,15 +14,21 @@ namespace ktt
 class VulkanInstance
 {
 public:
-    VulkanInstance(const std::string& applicationName) :
+    VulkanInstance() :
+        instance(nullptr),
+        callback(nullptr),
+        debugCallbackLoaded(false)
+    {}
+
+    explicit VulkanInstance(const std::string& applicationName) :
         VulkanInstance(applicationName, std::vector<const char*>{})
     {}
 
-    VulkanInstance(const std::string& applicationName, const std::vector<const char*>& extensions) :
+    explicit VulkanInstance(const std::string& applicationName, const std::vector<const char*>& extensions) :
         VulkanInstance(applicationName, std::vector<const char*>{}, std::vector<const char*>{})
     {}
 
-    VulkanInstance(const std::string& applicationName, const std::vector<const char*>& extensions,
+    explicit VulkanInstance(const std::string& applicationName, const std::vector<const char*>& extensions,
         const std::vector<const char*>& validationLayers) :
         debugCallbackLoaded(false)
     {
@@ -78,7 +84,7 @@ public:
         return instance;
     }
 
-    std::vector<VkPhysicalDevice> getPhysicalDevices() const
+    std::vector<VulkanPhysicalDevice> getPhysicalDevices() const
     {
         uint32_t deviceCount;
         checkVulkanError(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr), "vkEnumeratePhysicalDevices");
@@ -86,10 +92,29 @@ public:
         std::vector<VkPhysicalDevice> devices(deviceCount);
         checkVulkanError(vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data()), "vkEnumeratePhysicalDevices");
 
-        return devices;
+        std::vector<VulkanPhysicalDevice> result;
+        for (uint32_t i = 0; i < deviceCount; ++i)
+        {
+            VkPhysicalDeviceProperties properties;
+            vkGetPhysicalDeviceProperties(devices[i], &properties);
+            result.emplace_back(devices[i], i, properties.deviceName);
+        }
+
+        return result;
     }
 
-    void printExtensions(std::ostream& output) const
+    std::string getAPIVersion() const
+    {
+        uint32_t encodedVersion;
+        vkEnumerateInstanceVersion(&encodedVersion);
+
+        std::string result("");
+        result += std::to_string(VK_VERSION_MAJOR(encodedVersion)) + "." + std::to_string(VK_VERSION_MINOR(encodedVersion)) + "."
+            + std::to_string(VK_VERSION_PATCH(encodedVersion));
+        return result;
+    }
+
+    std::vector<std::string> getExtensions() const
     {
         uint32_t extensionCount;
         checkVulkanError(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr), "vkEnumerateInstanceExtensionProperties");
@@ -98,11 +123,13 @@ public:
         checkVulkanError(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data()),
             "vkEnumerateInstanceExtensionProperties");
 
-        output << "Available Vulkan extensions:" << std::endl;
+        std::vector<std::string> result;
         for (const auto& extension : extensions)
         {
-            output << extension.extensionName << std::endl;
+            result.emplace_back(extension.extensionName);
         }
+
+        return result;
     }
 
 private:

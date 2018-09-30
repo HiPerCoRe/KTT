@@ -20,6 +20,14 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
 {
     Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan instance");
     instance = std::make_unique<VulkanInstance>("KTT");
+
+    std::vector<VulkanPhysicalDevice> devices = instance->getPhysicalDevices();
+    if (deviceIndex >= devices.size())
+    {
+        throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
+    }
+
+    device = std::make_unique<VulkanDevice>(devices.at(deviceIndex), VK_QUEUE_COMPUTE_BIT, std::vector<const char*>{});
 }
 
 KernelResult VulkanEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -195,111 +203,52 @@ void VulkanEngine::clearBuffers(const ArgumentAccessType accessType)
 
 void VulkanEngine::printComputeAPIInfo(std::ostream& outputTarget) const
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
-
-    /* outputTarget << "Platform 0: " << "Vulkan" << std::endl;
-    auto devices = getVulkanDevices();
+    outputTarget << "Platform 0: " << "Vulkan" << std::endl;
+    std::vector<VulkanPhysicalDevice> devices = instance->getPhysicalDevices();
 
     for (size_t i = 0; i < devices.size(); i++)
     {
         outputTarget << "Device " << i << ": " << devices.at(i).getName() << std::endl;
     }
-    outputTarget << std::endl; */
+    outputTarget << std::endl;
 }
 
 std::vector<PlatformInfo> VulkanEngine::getPlatformInfo() const
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
-
-    /* PlatformInfo info(0, "Vulkan");
+    PlatformInfo info(0, "Vulkan");
     info.setVendor("N/A");
-    info.setVersion("1.0.0");
-    info.setExtensions("N/A");
-    return std::vector<PlatformInfo>{info}; */
-}
+    info.setVersion(instance->getAPIVersion());
 
-std::vector<DeviceInfo> VulkanEngine::getDeviceInfo(const PlatformIndex platform) const
-{
-    throw std::runtime_error("Vulkan API is not yet supported");
-
-    /* std::vector<DeviceInfo> result;
-    auto devices = getVulkanDevices();
-
-    for (size_t i = 0; i < devices.size(); i++)
+    std::vector<std::string> extensions = instance->getExtensions();
+    std::string mergedExtensions("");
+    for (size_t i = 0; i < extensions.size(); ++i)
     {
-        result.push_back(getVulkanDeviceInfo(i));
+        mergedExtensions += extensions[i];
+        if (i != extensions.size() - 1)
+        {
+            mergedExtensions += ", ";
+        }
     }
-
-    return result; */
+    info.setExtensions(mergedExtensions);
+    return std::vector<PlatformInfo>{info};
 }
 
-DeviceInfo VulkanEngine::getCurrentDeviceInfo() const
+std::vector<DeviceInfo> VulkanEngine::getDeviceInfo(const PlatformIndex) const
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    std::vector<DeviceInfo> result;
+    std::vector<VulkanPhysicalDevice> devices = instance->getPhysicalDevices();
 
-    /* return getVulkanDeviceInfo(deviceIndex); */
-}
-
-/* DeviceInfo VulkanEngine::getVulkanDeviceInfo(const size_t deviceIndex) const
-{
-    auto devices = getVulkanDevices();
-    DeviceInfo result(deviceIndex, devices.at(deviceIndex).getName());
-
-    VkPhysicalDeviceProperties deviceProperties;
-    vkGetPhysicalDeviceProperties(devices.at(deviceIndex).getPhysicalDevice(), &deviceProperties);
-    VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(devices.at(deviceIndex).getPhysicalDevice(), &deviceMemoryProperties);
-
-    result.setExtensions("N/A");
-    result.setVendor(std::to_string(deviceProperties.vendorID));
-    result.setDeviceType(getDeviceType(deviceProperties.deviceType));
-
-    result.setGlobalMemorySize(deviceMemoryProperties.memoryHeaps[0].size);
-    result.setLocalMemorySize(deviceProperties.limits.maxComputeSharedMemorySize);
-    result.setMaxWorkGroupSize(deviceProperties.limits.maxComputeWorkGroupSize[0] * deviceProperties.limits.maxComputeWorkGroupSize[1]
-        * deviceProperties.limits.maxComputeWorkGroupSize[2]);
-    result.setMaxConstantBufferSize(0); // to do: find this information for Vulkan API
-    result.setMaxComputeUnits(1); // to do: find this information for Vulkan API
+    for (const auto& device : devices)
+    {
+        result.push_back(device.getDeviceInfo());
+    }
 
     return result;
 }
 
-std::vector<VulkanPhysicalDevice> VulkanEngine::getVulkanDevices() const
+DeviceInfo VulkanEngine::getCurrentDeviceInfo() const
 {
-    uint32_t deviceCount;
-    checkVulkanError(vkEnumeratePhysicalDevices(instance.getInstance(), &deviceCount, nullptr), "vkEnumeratePhysicalDevices");
-
-    std::vector<VkPhysicalDevice> vulkanDevices(deviceCount);
-    checkVulkanError(vkEnumeratePhysicalDevices(instance.getInstance(), &deviceCount, vulkanDevices.data()), "vkEnumeratePhysicalDevices");
-
-    std::vector<VulkanPhysicalDevice> devices;
-    for (const auto vulkanDevice : vulkanDevices)
-    {
-        VkPhysicalDeviceProperties deviceProperties;
-        vkGetPhysicalDeviceProperties(vulkanDevice, &deviceProperties);
-        devices.push_back(VulkanPhysicalDevice(vulkanDevice, deviceProperties.deviceName));
-    }
-
-    return devices;
-} */
-
-DeviceType VulkanEngine::getDeviceType(const VkPhysicalDeviceType deviceType)
-{
-    switch (deviceType)
-    {
-    case VK_PHYSICAL_DEVICE_TYPE_OTHER:
-        return DeviceType::Custom;
-    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-        return DeviceType::GPU;
-    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-        return DeviceType::GPU;
-    case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
-        return DeviceType::GPU;
-    case VK_PHYSICAL_DEVICE_TYPE_CPU:
-        return DeviceType::CPU;
-    default:
-        return DeviceType::Custom;
-    }
+    return getDeviceInfo(0).at(deviceIndex);
 }
 
 #else
