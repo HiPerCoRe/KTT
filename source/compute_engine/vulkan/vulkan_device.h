@@ -7,6 +7,7 @@
 #include <vector>
 #include "vulkan/vulkan.h"
 #include "vulkan_physical_device.h"
+#include "vulkan_queue.h"
 #include "vulkan_utility.h"
 
 namespace ktt
@@ -17,18 +18,20 @@ class VulkanDevice
 public:
     VulkanDevice() :
         device(nullptr),
-        queue(nullptr),
+        queueCount(0),
         queueType(VK_QUEUE_COMPUTE_BIT),
         queueFamilyIndex(0)
     {}
 
-    explicit VulkanDevice(const VulkanPhysicalDevice& physicalDevice, const VkQueueFlagBits queueType, const std::vector<const char*>& extensions) :
-        VulkanDevice(physicalDevice, queueType, extensions, std::vector<const char*>{})
+    explicit VulkanDevice(const VulkanPhysicalDevice& physicalDevice, const uint32_t queueCount, const VkQueueFlagBits queueType,
+        const std::vector<const char*>& extensions) :
+        VulkanDevice(physicalDevice, queueCount, queueType, extensions, std::vector<const char*>{})
     {}
 
-    explicit VulkanDevice(const VulkanPhysicalDevice& physicalDevice, const VkQueueFlagBits queueType, const std::vector<const char*>& extensions,
-        const std::vector<const char*>& validationLayers) :
+    explicit VulkanDevice(const VulkanPhysicalDevice& physicalDevice, const uint32_t queueCount, const VkQueueFlagBits queueType,
+        const std::vector<const char*>& extensions, const std::vector<const char*>& validationLayers) :
         physicalDevice(physicalDevice),
+        queueCount(queueCount),
         queueType(queueType)
     {
         if (!checkExtensionSupport(extensions))
@@ -67,7 +70,7 @@ public:
             nullptr,
             0,
             queueFamilyIndex,
-            1,
+            queueCount,
             &queuePriority
         };
 
@@ -86,7 +89,12 @@ public:
         };
 
         checkVulkanError(vkCreateDevice(physicalDevice.getPhysicalDevice(), &deviceCreateInfo, nullptr, &device), "vkCreateDevice");
-        vkGetDeviceQueue(device, queueFamilyIndex, 0, &queue);
+        queues.resize(queueCount);
+
+        for (uint32_t i = 0; i < queueCount; ++i)
+        {
+            vkGetDeviceQueue(device, queueFamilyIndex, i, &queues[i]);
+        }
     }
 
     ~VulkanDevice()
@@ -105,9 +113,9 @@ public:
         return device;
     }
 
-    VkQueue getQueue() const
+    uint32_t getQueueCount() const
     {
-        return queue;
+        return queueCount;
     }
 
     VkQueueFlagBits getQueueType() const
@@ -120,9 +128,21 @@ public:
         return queueFamilyIndex;
     }
 
+    std::vector<VulkanQueue> getQueues() const
+    {
+        std::vector<VulkanQueue> result;
+
+        for (auto queue : queues)
+        {
+            result.emplace_back(queue, queueType);
+        }
+
+        return result;
+    }
+
     void waitIdle() const
     {
-        checkVulkanError(vkDeviceWaitIdle(device), "vkDeviceWaitIdle");
+        vkDeviceWaitIdle(device);
     }
 
     uint32_t getSuitableMemoryTypeIndex(const uint32_t typeFilter, const VkMemoryPropertyFlags properties) const
@@ -140,29 +160,11 @@ public:
         throw std::runtime_error("Current device does not have any suitable memory types available");
     }
 
-    void queueSubmit(VkCommandBuffer commandBuffer)
-    {
-        const VkSubmitInfo submitInfo =
-        {
-            VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            nullptr,
-            0,
-            nullptr,
-            nullptr,
-            1,
-            &commandBuffer,
-            0,
-            nullptr
-        };
-
-        checkVulkanError(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE), "vkQueueSubmit");
-        vkQueueWaitIdle(queue);
-    }
-
 private:
     VulkanPhysicalDevice physicalDevice;
     VkDevice device;
-    VkQueue queue;
+    std::vector<VkQueue> queues;
+    uint32_t queueCount;
     VkQueueFlagBits queueType;
     uint32_t queueFamilyIndex;
 

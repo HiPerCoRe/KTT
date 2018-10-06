@@ -27,7 +27,9 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
         throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
     }
 
-    device = std::make_unique<VulkanDevice>(devices.at(deviceIndex), VK_QUEUE_COMPUTE_BIT, std::vector<const char*>{});
+    Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan device and queues");
+    device = std::make_unique<VulkanDevice>(devices.at(deviceIndex), queueCount, VK_QUEUE_COMPUTE_BIT, std::vector<const char*>{});
+    queues = device->getQueues();
 }
 
 KernelResult VulkanEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -94,17 +96,29 @@ QueueId VulkanEngine::getDefaultQueue() const
 
 std::vector<QueueId> VulkanEngine::getAllQueues() const
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    std::vector<QueueId> result;
+
+    for (size_t i = 0; i < queues.size(); ++i)
+    {
+        result.push_back(static_cast<QueueId>(i));
+    }
+
+    return result;
 }
 
 void VulkanEngine::synchronizeQueue(const QueueId queue)
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    if (queue >= queues.size())
+    {
+        throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
+    }
+
+    queues[queue].waitIdle();
 }
 
 void VulkanEngine::synchronizeDevice()
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    device->waitIdle();
 }
 
 void VulkanEngine::clearEvents()

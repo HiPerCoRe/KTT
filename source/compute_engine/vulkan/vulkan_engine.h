@@ -10,6 +10,8 @@
 #include "vulkan_device.h"
 #include "vulkan_instance.h"
 #include "vulkan_physical_device.h"
+#include "vulkan_queue.h"
+#include "vulkan_shader_module.h"
 #include "vulkan_utility.h"
 #endif // PLATFORM_VULKAN
 
@@ -83,6 +85,7 @@ private:
     mutable EventId nextEventId;
     std::unique_ptr<VulkanInstance> instance;
     std::unique_ptr<VulkanDevice> device;
+    std::vector<VulkanQueue> queues;
 };
 
 #else
