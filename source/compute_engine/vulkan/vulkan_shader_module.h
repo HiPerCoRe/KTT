@@ -2,6 +2,7 @@
 
 #include <string>
 #include "vulkan/vulkan.h"
+#include "glslang_compiler.h"
 #include "vulkan_utility.h"
 
 namespace ktt
@@ -20,13 +21,15 @@ public:
         device(device),
         source(source)
     {
+        spirvSource = GlslangCompiler::getCompiler().compile(source, EShLangCompute);
+
         const VkShaderModuleCreateInfo shaderModuleCreateInfo =
         {
             VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
             nullptr,
             0,
             source.length(),
-            reinterpret_cast<const uint32_t*>(source.data())
+            spirvSource.data()
         };
 
         checkVulkanError(vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &shaderModule), "vkCreateShaderModule");
@@ -52,10 +55,16 @@ public:
         return source;
     }
 
+    const std::vector<uint32_t>& getSpirvSource() const
+    {
+        return spirvSource;
+    }
+
 private:
     VkDevice device;
     VkShaderModule shaderModule;
     std::string source;
+    std::vector<uint32_t> spirvSource;
 };
 
 } // namespace ktt

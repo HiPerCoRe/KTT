@@ -2,6 +2,29 @@
 #include "utility/logger.h"
 #include "utility/timer.h"
 
+/*const std::string testString(std::string("")
+    + "#version 450\n"
+    + "#extension GL_ARB_separate_shader_objects : enable\n"
+    + "layout(local_size_x_id = 0, local_size_y_id = 1) in; // Workgroup size defined with specialization constants, on cpp side there is associated SpecializationInfo entry in PipelineShaderStageCreateInfo\n"
+    + "layout(push_constant) uniform Parameters {           // Specify push constants, on cpp side its layout is fixed at PipelineLayout, and values are provided via vk::CommandBuffer::pushConstants()\n"
+    + "uint Width;\n"
+    + "uint Height;\n"
+    + "float a;\n"
+    + "} params;\n"
+    + "\n"
+    + "layout(std430, binding = 0) buffer lay0 { float arr_y[]; };\n"
+    + "layout(std430, binding = 1) buffer lay1 { float arr_x[]; };\n"
+    + "\n"
+    + "void main() {\n"
+    + "    // Drop threads outside the buffer dimensions\n"
+    + "    if (params.Width <= gl_GlobalInvocationID.x || params.Height <= gl_GlobalInvocationID.y) {\n"
+    + "        return;"
+    + "    }\n"
+    + "    const uint id = params.Width*gl_GlobalInvocationID.y + gl_GlobalInvocationID.x; // current offset\n"
+    + "    \n"
+    + "    arr_y[id] += params.a*arr_x[id]; // saxpy\n"
+    + "}\n");*/
+
 namespace ktt
 {
 
@@ -30,6 +53,8 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
     Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan device and queues");
     device = std::make_unique<VulkanDevice>(devices.at(deviceIndex), queueCount, VK_QUEUE_COMPUTE_BIT, std::vector<const char*>{});
     queues = device->getQueues();
+
+    // VulkanShaderModule(device->getDevice(), testString);
 }
 
 KernelResult VulkanEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
