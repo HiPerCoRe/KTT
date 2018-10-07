@@ -180,6 +180,15 @@ private:
             8,     // maxCullDistances
             8,     // maxCombinedClipAndCullDistances
             4,     // maxSamples
+            256,   // maxMeshOutputVerticesNV
+            512,   // maxMeshOutputPrimitivesNV
+            32,    // maxMeshWorkGroupSizeX_NV
+            1,     // maxMeshWorkGroupSizeY_NV
+            1,     // maxMeshWorkGroupSizeZ_NV
+            32,    // maxTaskWorkGroupSizeX_NV
+            1,     // maxTaskWorkGroupSizeY_NV
+            1,     // maxTaskWorkGroupSizeZ_NV
+            4,     // maxMeshViewCountNV
             {      // TLimits
                 1, // nonInductiveForLoops
                 1, // whileLoops

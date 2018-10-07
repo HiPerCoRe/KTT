@@ -159,7 +159,7 @@ function findVulkan()
     
     vulkan_projects = true
     defines { "PLATFORM_VULKAN" }
-    links { "vulkan-1", "glslang", "SPIRV" }
+    links { "vulkan-1", "glslang", "SPIRV", "SPIRV-Tools", "HLSL", "OSDependent", "OGLCompiler", "SPVRemapper", "SPIRV-Tools-opt" }
     
     return true
 end
