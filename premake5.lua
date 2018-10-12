@@ -2,6 +2,7 @@
 ktt_library_name = "ktt"
 cuda_projects = false
 opencl_projects = false
+vulkan_projects = false
 
 -- Helper functions to find compute API headers and libraries
 function findLibrariesAmd()
@@ -131,6 +132,38 @@ function findLibraries()
     return false
 end
 
+function findVulkan()
+    local path = os.getenv("VULKAN_SDK")
+    
+    if not path then
+        return false
+    end
+    
+    includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
+    
+    filter "platforms:x86"
+        if os.target() == "linux" then
+            libdirs { "$(VULKAN_SDK)/Lib32", "libraries/lib/linux" }
+        else
+            libdirs { "$(VULKAN_SDK)/Lib32", "libraries/lib/windows" }
+        end
+
+    filter "platforms:x86_64"
+        if os.target() == "linux" then
+            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux" }
+        else
+            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows" }
+        end
+    
+    filter {}
+    
+    vulkan_projects = true
+    defines { "PLATFORM_VULKAN" }
+    links { "vulkan-1", "glslang", "SPIRV", "SPIRV-Tools", "HLSL", "OSDependent", "OGLCompiler", "SPVRemapper", "SPIRV-Tools-opt" }
+    
+    return true
+end
+
 -- Command line arguments definition
 newoption
 {
@@ -147,6 +180,12 @@ newoption
 
 newoption
 {
+    trigger = "vulkan",
+    description = "Enables compilation of Vulkan backend"
+}
+
+newoption
+{
     trigger = "outdir",
     value = "path",
     description = "Specifies output directory for generated files"
@@ -155,13 +194,13 @@ newoption
 newoption
 {
     trigger = "no-cuda",
-    description = "Disables compilation of CUDA back-end (Nvidia platform only)"
+    description = "Disables compilation of CUDA backend (Nvidia platform only)"
 }
 
 newoption
 {
     trigger = "no-opencl",
-    description = "Disables compilation of OpenCL back-end"
+    description = "Disables compilation of OpenCL backend"
 }
 
 newoption
@@ -242,8 +281,16 @@ project "ktt"
         libraries = findLibraries()
     end
     
-    if not libraries then
+    if not libraries and not _OPTIONS["vulkan"] then
         error("Compute API libraries were not found. Please ensure that path to your device vendor SDK is correctly set in the environment variables:\nAMDAPPSDKROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
+    end
+    
+    if _OPTIONS["vulkan"] then
+        vulkan = findVulkan()
+        
+        if not vulkan then
+            error("Vulkan SDK was not found")
+        end
     end
     
 -- Examples configuration 
@@ -301,6 +348,12 @@ project "reduction_opencl"
 project "sort_opencl"
     kind "ConsoleApp"
     files { "examples/sort/*.h", "examples/sort/*.cpp", "examples/sort/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "mtran_opencl"
+    kind "ConsoleApp"
+    files { "examples/mtran/*.h", "examples/mtran/*.cpp", "examples/mtran/*.cl" }
     includedirs { "source" }
     links { "ktt" }
 
@@ -384,6 +437,14 @@ project "03_custom_kernel_arguments_cuda"
     links { "ktt" }
 end -- cuda_projects
 
+if vulkan_projects then
+project "00_info_vulkan"
+    kind "ConsoleApp"
+    files { "tutorials/00_compute_api_info/compute_api_info_vulkan.cpp" }
+    includedirs { "source" }
+    links { "ktt" }
+end -- cuda_projects
+
 end -- _OPTIONS["no-tutorials"]
 
 -- Unit tests configuration   
@@ -409,5 +470,9 @@ project "tests"
         end
     else
         findLibraries()
+    end
+    
+    if _OPTIONS["vulkan"] then
+        findVulkan()
     end
 end -- _OPTIONS["tests"]

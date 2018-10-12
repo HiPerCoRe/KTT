@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <stdexcept>
 #include "kernel.h"
 #include "utility/ktt_utility.h"
@@ -48,17 +49,11 @@ void Kernel::addParameterPack(const KernelParameterPack& pack)
         {
             throw std::runtime_error(std::string("The following parameter pack already exists: ") + pack.getName());
         }
+    }
 
-        for (const auto& existingName : existingPack.getParameterNames())
-        {
-            for (const auto& newName : pack.getParameterNames())
-            {
-                if (existingName == newName)
-                {
-                    throw std::runtime_error(std::string("The following parameter is already part of a different pack: ") + existingName);
-                }
-            }
-        }
+    if (!containsUnique(pack.getParameterNames()))
+    {
+        throw std::runtime_error(std::string("The following parameter pack contains duplicit parameter names: ") + pack.getName());
     }
 
     for (const auto& parameterName : pack.getParameterNames())
@@ -231,6 +226,56 @@ std::vector<KernelConstraint> Kernel::getConstraints() const
 std::vector<KernelParameterPack> Kernel::getParameterPacks() const
 {
     return parameterPacks;
+}
+
+std::vector<KernelParameter> Kernel::getParametersOutsidePacks() const
+{
+    std::vector<KernelParameter> result;
+
+    for (const auto& parameter : parameters)
+    {
+        bool isOutsidePack = true;
+
+        for (const auto& pack : parameterPacks)
+        {
+            isOutsidePack &= !pack.containsParameter(parameter.getName());
+        }
+
+        if (isOutsidePack)
+        {
+            result.push_back(parameter);
+        }
+    }
+
+    return result;
+}
+
+std::vector<KernelParameter> Kernel::getParametersForPack(const std::string& pack) const
+{
+    KernelParameterPack searchPack(pack, std::vector<std::string>{});
+    return getParametersForPack(searchPack);
+}
+
+std::vector<KernelParameter> Kernel::getParametersForPack(const KernelParameterPack& pack) const
+{
+    auto targetPack = std::find(std::begin(parameterPacks), std::end(parameterPacks), pack);
+
+    if (targetPack == std::end(parameterPacks))
+    {
+        throw std::runtime_error(std::string("The following parameter pack does not exist: ") + pack.getName());
+    }
+
+    std::vector<KernelParameter> result;
+
+    for (const auto& parameter : parameters)
+    {
+        if (targetPack->containsParameter(parameter.getName()))
+        {
+            result.push_back(parameter);
+        }
+    }
+
+    return result;
 }
 
 size_t Kernel::getArgumentCount() const

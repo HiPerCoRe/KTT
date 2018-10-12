@@ -18,9 +18,9 @@ public:
     void log(const LoggingLevel level, const std::string& message) const;
 
     Logger(const Logger&) = delete;
-    Logger(const Logger&&) = delete;
+    Logger(Logger&&) = delete;
     void operator=(const Logger&) = delete;
-    void operator=(const Logger&&) = delete;
+    void operator=(Logger&&) = delete;
 
 private:
     LoggingLevel level;

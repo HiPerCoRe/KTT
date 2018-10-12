@@ -1,6 +1,7 @@
 #include "tuner_core.h"
 #include "compute_engine/cuda/cuda_engine.h"
 #include "compute_engine/opencl/opencl_engine.h"
+#include "compute_engine/vulkan/vulkan_engine.h"
 #include "utility/ktt_utility.h"
 
 namespace ktt
@@ -22,6 +23,10 @@ TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, con
     {
         computeEngine = std::make_unique<CUDAEngine>(device, queueCount);
     }
+    else if (computeAPI == ComputeAPI::Vulkan)
+    {
+        computeEngine = std::make_unique<VulkanEngine>(device, queueCount);
+    }
     else
     {
         throw std::runtime_error("Specified compute API is not supported");
@@ -30,9 +35,9 @@ TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, con
     DeviceInfo info = computeEngine->getCurrentDeviceInfo();
     Logger::getLogger().log(LoggingLevel::Info, std::string("Initializing tuner for device ") + info.getName());
 
-    kernelManager = std::make_unique<KernelManager>(info);
+    kernelManager = std::make_unique<KernelManager>();
     kernelRunner = std::make_unique<KernelRunner>(argumentManager.get(), kernelManager.get(), computeEngine.get());
-    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), kernelRunner.get());
+    tuningRunner = std::make_unique<TuningRunner>(argumentManager.get(), kernelManager.get(), kernelRunner.get(), info);
 }
 
 KernelId TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,

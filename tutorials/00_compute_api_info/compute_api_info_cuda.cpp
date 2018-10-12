@@ -12,6 +12,7 @@ int main()
 
     // Print detailed information about platforms and devices to standard output.
     std::vector<ktt::PlatformInfo> platformInfo = tuner.getPlatformInfo();
+
     for (size_t i = 0; i < platformInfo.size(); i++)
     {
         std::cout << platformInfo.at(i) << std::endl;

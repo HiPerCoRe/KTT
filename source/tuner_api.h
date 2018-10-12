@@ -162,7 +162,7 @@ public:
     * parameters that can be tuned independently. The total number of generated configurations that need to be tested is reduced.
     * @param id Id of kernel for which the parameter pack will be added.
     * @param packName Name of a parameter pack. Parameter pack names for a single kernel must be unique.
-    * @param parameterNames Names of parameters which will be added to the parameter pack. A single parameter cannot be included in multiple packs.
+    * @param parameterNames Names of parameters which will be added to the parameter pack.
     */
     void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string>& parameterNames);
 

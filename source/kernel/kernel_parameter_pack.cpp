@@ -22,6 +22,24 @@ std::vector<std::string> KernelParameterPack::getParameterNames() const
     return parameterNames;
 }
 
+size_t KernelParameterPack::getParameterCount() const
+{
+    return parameterNames.size();
+}
+
+bool KernelParameterPack::containsParameter(const std::string& parameterName) const
+{
+    for (const auto& name : parameterNames)
+    {
+        if (name == parameterName)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool KernelParameterPack::operator==(const KernelParameterPack& other) const
 {
     return name == other.name;

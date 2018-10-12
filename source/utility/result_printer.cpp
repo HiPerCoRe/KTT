@@ -21,7 +21,7 @@ void ResultPrinter::printResult(const KernelId id, std::ostream& outputTarget, c
     switch (format)
     {
     case PrintFormat::CSV:
-        printCsv(results, outputTarget);
+        printCSV(results, outputTarget);
         break;
     case PrintFormat::Verbose:
         printVerbose(results, outputTarget);
@@ -115,7 +115,7 @@ void ResultPrinter::printVerbose(const std::vector<KernelResult>& results, std::
     }
 }
 
-void ResultPrinter::printCsv(const std::vector<KernelResult>& results, std::ostream& outputTarget) const
+void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostream& outputTarget) const
 {
     // Header
     outputTarget << "Kernel name," << "Computation duration (" << getTimeUnitTag(timeUnit) << ")";
@@ -159,7 +159,7 @@ void ResultPrinter::printCsv(const std::vector<KernelResult>& results, std::ostr
 
         outputTarget << result.getKernelName() << ",";
         outputTarget << convertTime(result.getComputationDuration(), timeUnit) << ",";
-        printConfigurationCsv(outputTarget, result.getConfiguration());
+        printConfigurationCSV(outputTarget, result.getConfiguration(), parameterPairs);
     }
 
     if (printInvalidResult)
@@ -216,7 +216,7 @@ void ResultPrinter::printCsv(const std::vector<KernelResult>& results, std::ostr
             }
 
             outputTarget << statusMessage << ",";
-            printConfigurationCsv(outputTarget, result.getConfiguration());
+            printConfigurationCSV(outputTarget, result.getConfiguration(), parameterPairs);
         }
     }
 }
@@ -255,7 +255,8 @@ void ResultPrinter::printConfigurationVerbose(std::ostream& outputTarget, const 
     outputTarget << std::endl;
 }
 
-void ResultPrinter::printConfigurationCsv(std::ostream& outputTarget, const KernelConfiguration& configuration) const
+void ResultPrinter::printConfigurationCSV(std::ostream& outputTarget, const KernelConfiguration& configuration,
+    const std::vector<ParameterPair>& orderedPairs) const
 {
     std::vector<DimensionVector> globalSizes = configuration.getGlobalSizes();
     std::vector<DimensionVector> localSizes = configuration.getLocalSizes();
@@ -285,13 +286,23 @@ void ResultPrinter::printConfigurationCsv(std::ostream& outputTarget, const Kern
 
     for (size_t i = 0; i < parameterPairs.size(); i++)
     {
-        if (!parameterPairs.at(i).hasValueDouble())
+        size_t pairIndex = 0;
+        for (size_t j = 0; j < parameterPairs.size(); j++)
         {
-            outputTarget << parameterPairs.at(i).getValue();
+            if (parameterPairs.at(j).getName() == orderedPairs.at(i).getName())
+            {
+                pairIndex = j;
+                break;
+            }
+        }
+
+        if (!parameterPairs.at(pairIndex).hasValueDouble())
+        {
+            outputTarget << parameterPairs.at(pairIndex).getValue();
         }
         else
         {
-            outputTarget << parameterPairs.at(i).getValueDouble();
+            outputTarget << parameterPairs.at(pairIndex).getValueDouble();
         }
 
         if (i + 1 != parameterPairs.size())
