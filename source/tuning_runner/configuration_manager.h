@@ -7,6 +7,7 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include "configuration_storage.h"
 #include "ktt_types.h"
 #include "api/computation_result.h"
 #include "api/device_info.h"
@@ -53,7 +54,7 @@ private:
     mutable std::map<KernelId, size_t> currentPackIndices;
     std::map<KernelId, std::unique_ptr<Searcher>> searchers;
     std::map<KernelId, std::tuple<KernelConfiguration, std::string, uint64_t>> bestConfigurations;
-    std::map<KernelId, std::map<std::string, std::tuple<KernelConfiguration, std::string, uint64_t>>> bestConfigurationsPerPack;
+    std::map<KernelId, ConfigurationStorage> configurationStorages;
     SearchMethod searchMethod;
     std::vector<double> searchArguments;
     DeviceInfo deviceInfo;
@@ -64,16 +65,20 @@ private:
     void initializeOrderedCompositionPacks(const KernelComposition& composition);
     void prepareNextPackKernelConfigurations(const Kernel& kernel);
     void prepareNextPackKernelCompositionConfigurations(const KernelComposition& composition);
-    void computeConfigurations(const Kernel& kernel, const std::vector<KernelParameter>& parameters, const std::vector<ParameterPair>& extraPairs,
+    void computeConfigurations(const Kernel& kernel, const std::vector<KernelParameter>& parameters, const bool addExtraPairs,
         const size_t currentParameterIndex, const std::vector<ParameterPair>& parameterPairs, std::vector<KernelConfiguration>& finalResult) const;
     void computeCompositionConfigurations(const KernelComposition& composition, const std::vector<KernelParameter>& parameters,
-        const std::vector<ParameterPair>& extraPairs, const size_t currentParameterIndex, const std::vector<ParameterPair>& parameterPairs,
+        const bool addExtraPairs, const size_t currentParameterIndex, const std::vector<ParameterPair>& parameterPairs,
         std::vector<KernelConfiguration>& finalResult) const;
     bool configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints) const;
     bool hasNextParameterPack(const KernelId id) const;
     std::string getNextParameterPack(const KernelId id) const;
-    std::vector<ParameterPair> getExtraParameterPairs(const Kernel& kernel, const std::string& currentPack) const;
-    std::vector<ParameterPair> getExtraParameterPairs(const KernelComposition& composition, const std::string& currentPack) const;
+    std::vector<ParameterPair> getExtraParameterPairs(const Kernel& kernel, const KernelParameterPack& currentPack,
+        const std::vector<ParameterPair>& generatedPairs) const;
+    std::vector<ParameterPair> getExtraParameterPairs(const KernelComposition& composition, const KernelParameterPack& currentPack,
+        const std::vector<ParameterPair>& generatedPairs) const;
+    KernelParameterPack getCurrentParameterPack(const Kernel& kernel) const;
+    KernelParameterPack getCurrentParameterPack(const KernelComposition& composition) const;
     void initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,
         const std::vector<KernelConfiguration>& configurations);
     static size_t getConfigurationCountForParameters(const std::vector<KernelParameter>& parameters);

@@ -35,6 +35,7 @@ public:
     std::vector<DimensionVector> getLocalSizes() const;
     std::vector<ParameterPair> getParameterPairs() const;
     bool isComposite() const;
+    bool isValid() const;
 
     friend std::ostream& operator<<(std::ostream&, const KernelConfiguration&);
 
@@ -47,6 +48,7 @@ private:
     std::map<KernelId, std::vector<LocalMemoryModifier>> compositionLocalMemoryModifiers;
     std::vector<ParameterPair> parameterPairs;
     bool compositeConfiguration;
+    bool validConfiguration;
 };
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& configuration);

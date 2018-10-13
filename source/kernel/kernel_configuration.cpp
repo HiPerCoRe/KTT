@@ -4,7 +4,8 @@ namespace ktt
 {
 
 KernelConfiguration::KernelConfiguration() :
-    compositeConfiguration(false)
+    compositeConfiguration(false),
+    validConfiguration(false)
 {}
 
 KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
@@ -18,7 +19,8 @@ KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, cons
     localSize(localSize),
     localMemoryModifiers(localMemoryModifiers),
     parameterPairs(parameterPairs),
-    compositeConfiguration(false)
+    compositeConfiguration(false),
+    validConfiguration(true)
 {}
 
 KernelConfiguration::KernelConfiguration(const std::map<KernelId, DimensionVector>& compositionGlobalSizes,
@@ -35,7 +37,8 @@ KernelConfiguration::KernelConfiguration(const std::map<KernelId, DimensionVecto
     compositionLocalSizes(compositionLocalSizes),
     compositionLocalMemoryModifiers(compositionLocalMemoryModifiers),
     parameterPairs(parameterPairs),
-    compositeConfiguration(true)
+    compositeConfiguration(true),
+    validConfiguration(true)
 {}
 
 DimensionVector KernelConfiguration::getGlobalSize() const
@@ -125,6 +128,11 @@ std::vector<ParameterPair> KernelConfiguration::getParameterPairs() const
 bool KernelConfiguration::isComposite() const
 {
     return compositeConfiguration;
+}
+
+bool KernelConfiguration::isValid() const
+{
+    return validConfiguration;
 }
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& configuration)
