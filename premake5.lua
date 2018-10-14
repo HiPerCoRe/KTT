@@ -141,19 +141,17 @@ function findVulkan()
     
     includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
     
-    filter "platforms:x86"
-        if os.target() == "linux" then
-            libdirs { "$(VULKAN_SDK)/Lib32", "libraries/lib/linux" }
-        else
-            libdirs { "$(VULKAN_SDK)/Lib32", "libraries/lib/windows" }
-        end
-
-    filter "platforms:x86_64"
-        if os.target() == "linux" then
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux" }
-        else
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows" }
-        end
+    if os.target() == "linux" then
+        filter "configurations:Release"
+            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux/release" }
+        filter "configurations:Debug"
+            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux/debug" }
+    else
+        filter "configurations:Release"
+            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows/release" }
+        filter "configurations:Debug"
+            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows/debug" }
+    end
     
     filter {}
     
@@ -229,7 +227,14 @@ workspace "ktt"
     end
     
     configurations { "Release", "Debug" }
-    platforms { "x86_64", "x86" }
+    
+    -- Vulkan backend is supported only on 64-bit architectures
+    if not _OPTIONS["vulkan"] then
+        platforms { "x86_64", "x86" }
+    else
+        platforms { "x86_64" }
+    end
+
     location(buildPath)
     language "C++"
     cppdialect "C++14"
@@ -290,6 +295,12 @@ project "ktt"
         
         if not vulkan then
             error("Vulkan SDK was not found")
+        end
+        
+        if os.target() == "linux" then
+            zip.extract("libraries/lib/linux.tar.gz", "libraries/lib/linux")
+        else
+            zip.extract("libraries/lib/windows.zip", "libraries/lib/windows")
         end
     end
     
