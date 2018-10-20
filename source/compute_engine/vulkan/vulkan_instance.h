@@ -76,7 +76,11 @@ public:
                 "vkDestroyDebugReportCallbackEXT");
             destroyDebugReportCallbackEXT(instance, callback, nullptr);
         }
-        vkDestroyInstance(instance, nullptr);
+
+        if (instance != nullptr)
+        {
+            vkDestroyInstance(instance, nullptr);
+        }
     }
 
     VkInstance getInstance() const

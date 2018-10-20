@@ -7,10 +7,12 @@
 
 #ifdef PLATFORM_VULKAN
 #include "vulkan/vulkan.h"
+#include "vulkan_buffer.h"
 #include "vulkan_device.h"
 #include "vulkan_instance.h"
 #include "vulkan_physical_device.h"
 #include "vulkan_queue.h"
+#include "vulkan_semaphore.h"
 #include "vulkan_shader_module.h"
 #include "vulkan_utility.h"
 #endif // PLATFORM_VULKAN

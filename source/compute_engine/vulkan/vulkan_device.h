@@ -99,8 +99,11 @@ public:
 
     ~VulkanDevice()
     {
-        waitIdle();
-        vkDestroyDevice(device, nullptr);
+        if (device != nullptr)
+        {
+            waitIdle();
+            vkDestroyDevice(device, nullptr);
+        }
     }
 
     const VulkanPhysicalDevice& getPhysicalDevice() const

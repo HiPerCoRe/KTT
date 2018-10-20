@@ -78,8 +78,6 @@ public:
     void operator=(GlslangCompiler&&) = delete;
 
 private:
-    bool initialized;
-
     GlslangCompiler()
     {
         if (!glslang::InitializeProcess())

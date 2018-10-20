@@ -37,7 +37,10 @@ public:
 
     ~VulkanShaderModule()
     {
-        vkDestroyShaderModule(device, shaderModule, nullptr);
+        if (shaderModule != nullptr)
+        {
+            vkDestroyShaderModule(device, shaderModule, nullptr);
+        }
     }
 
     VkDevice getDevice() const
