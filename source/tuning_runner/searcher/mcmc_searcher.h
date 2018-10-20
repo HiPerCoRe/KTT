@@ -121,9 +121,9 @@ public:
         // reset origin position when there are no neighbours
         if (neighbours.size() == 0)
         {
-            std::stringstream stream;
-            stream << "MCMC step " << visitedStatesCount << ": No neighbours, reseting position.";
-            Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+            std::stringstream debugStream;
+            debugStream << "MCMC step " << visitedStatesCount << ": No neighbours, reseting position.";
+            Logger::getLogger().log(LoggingLevel::Debug, debugStream.str());
 
             while (unexploredIndices.find(originState) == unexploredIndices.end())
             {

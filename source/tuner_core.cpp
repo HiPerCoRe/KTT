@@ -108,9 +108,9 @@ void TunerCore::setCompositionKernelLocalMemoryModifier(const KernelId compositi
 
 void TunerCore::setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
-    for (const auto id : argumentIds)
+    for (const auto argumentId : argumentIds)
     {
-        if (id >= argumentManager->getArgumentCount())
+        if (argumentId >= argumentManager->getArgumentCount())
         {
             throw std::runtime_error(std::string("Invalid kernel argument id: ") + std::to_string(id));
         }

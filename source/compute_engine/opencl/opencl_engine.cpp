@@ -70,10 +70,10 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
             {
                 clearKernelCache();
             }
-            std::unique_ptr<OpenCLProgram> program = createAndBuildProgram(kernelData.getSource());
-            auto kernel = std::make_unique<OpenCLKernel>(program->getProgram(), kernelData.getName());
-            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::make_pair(std::move(kernel),
-                std::move(program))));
+            std::unique_ptr<OpenCLProgram> cacheProgram = createAndBuildProgram(kernelData.getSource());
+            auto cacheKernel = std::make_unique<OpenCLKernel>(cacheProgram->getProgram(), kernelData.getName());
+            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::make_pair(std::move(cacheKernel),
+                std::move(cacheProgram))));
         }
         auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
         kernel = cachePointer->second.first.get();

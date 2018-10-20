@@ -25,7 +25,7 @@ public:
     {}
 
     explicit VulkanInstance(const std::string& applicationName, const std::vector<const char*>& extensions) :
-        VulkanInstance(applicationName, std::vector<const char*>{}, std::vector<const char*>{})
+        VulkanInstance(applicationName, extensions, std::vector<const char*>{})
     {}
 
     explicit VulkanInstance(const std::string& applicationName, const std::vector<const char*>& extensions,
