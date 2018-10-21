@@ -23,6 +23,10 @@ public:
         queueFamilyIndex(0)
     {}
 
+    explicit VulkanDevice(const VulkanPhysicalDevice& physicalDevice, const uint32_t queueCount, const VkQueueFlagBits queueType) :
+        VulkanDevice(physicalDevice, queueCount, queueType, std::vector<const char*>{}, std::vector<const char*>{})
+    {}
+
     explicit VulkanDevice(const VulkanPhysicalDevice& physicalDevice, const uint32_t queueCount, const VkQueueFlagBits queueType,
         const std::vector<const char*>& extensions) :
         VulkanDevice(physicalDevice, queueCount, queueType, extensions, std::vector<const char*>{})

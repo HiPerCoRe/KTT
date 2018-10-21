@@ -8,6 +8,8 @@
 #ifdef PLATFORM_VULKAN
 #include "vulkan/vulkan.h"
 #include "vulkan_buffer.h"
+#include "vulkan_command_buffer_group.h"
+#include "vulkan_command_pool.h"
 #include "vulkan_device.h"
 #include "vulkan_instance.h"
 #include "vulkan_physical_device.h"

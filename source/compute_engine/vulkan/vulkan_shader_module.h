@@ -28,7 +28,7 @@ public:
             VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
             nullptr,
             0,
-            source.length(),
+            spirvSource.size() * sizeof(uint32_t),
             spirvSource.data()
         };
 

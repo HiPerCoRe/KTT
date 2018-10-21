@@ -18,8 +18,16 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
     persistentBufferFlag(true),
     nextEventId(0)
 {
+    std::vector<const char*> instanceExtensions;
+    std::vector<const char*> validationLayers;
+
+#if DEBUG
+    instanceExtensions.emplace_back("VK_EXT_debug_report");
+    validationLayers.emplace_back("VK_LAYER_LUNARG_standard_validation");
+#endif
+
     Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan instance");
-    instance = std::make_unique<VulkanInstance>("KTT");
+    instance = std::make_unique<VulkanInstance>("KTT", instanceExtensions, validationLayers);
 
     std::vector<VulkanPhysicalDevice> devices = instance->getPhysicalDevices();
     if (deviceIndex >= devices.size())
@@ -28,7 +36,7 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
     }
 
     Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan device and queues");
-    device = std::make_unique<VulkanDevice>(devices.at(deviceIndex), queueCount, VK_QUEUE_COMPUTE_BIT, std::vector<const char*>{});
+    device = std::make_unique<VulkanDevice>(devices.at(deviceIndex), queueCount, VK_QUEUE_COMPUTE_BIT, std::vector<const char*>{}, validationLayers);
     queues = device->getQueues();
 
     VulkanShaderModule shader(device->getDevice(), VulkanShaderModule::getTestSource());
