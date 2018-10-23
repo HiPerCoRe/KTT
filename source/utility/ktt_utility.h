@@ -30,14 +30,14 @@ template <typename T> bool containsUnique(const std::vector<T>& vector)
     return set.size() == vector.size();
 }
 
-template <typename T> bool floatEquals(const T first, const T second)
-{
-    return floatEquals(first, second, std::numeric_limits<T>::epsilon());
-}
-
 template <typename T> bool floatEquals(const T first, const T second, const T epsilon)
 {
     return std::fabs(first - second) <= epsilon;
+}
+
+template <typename T> bool floatEquals(const T first, const T second)
+{
+    return floatEquals(first, second, std::numeric_limits<T>::epsilon());
 }
 
 } // namespace ktt
