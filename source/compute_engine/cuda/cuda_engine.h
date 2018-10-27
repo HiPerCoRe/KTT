@@ -9,7 +9,7 @@
 #include <vector>
 #include "compute_engine/compute_engine.h"
 
-#ifdef PLATFORM_CUDA
+#ifdef KTT_PLATFORM_CUDA
 #include "cuda.h"
 #include "nvrtc.h"
 #include "cuda_buffer.h"
@@ -20,12 +20,12 @@
 #include "cuda_program.h"
 #include "cuda_stream.h"
 #include "cuda_utility.h"
-#endif // PLATFORM_CUDA
+#endif // KTT_PLATFORM_CUDA
 
 namespace ktt
 {
 
-#ifdef PLATFORM_CUDA
+#ifdef KTT_PLATFORM_CUDA
 
 class CUDAEngine : public ComputeEngine
 {
@@ -165,6 +165,6 @@ public:
     DeviceInfo getCurrentDeviceInfo() const override;
 };
 
-#endif // PLATFORM_CUDA
+#endif // KTT_PLATFORM_CUDA
 
 } // namespace ktt

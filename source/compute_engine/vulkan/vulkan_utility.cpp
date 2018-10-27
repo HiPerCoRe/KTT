@@ -1,4 +1,4 @@
-#ifdef PLATFORM_VULKAN
+#ifdef KTT_PLATFORM_VULKAN
 
 #include <stdexcept>
 #include "vulkan_utility.h"
@@ -53,4 +53,4 @@ void checkVulkanError(const VkResult value, const std::string& message)
 
 } // namespace ktt
 
-#endif // PLATFORM_VULKAN
+#endif // KTT_PLATFORM_VULKAN

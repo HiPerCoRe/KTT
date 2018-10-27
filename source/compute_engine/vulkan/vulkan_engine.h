@@ -5,11 +5,13 @@
 #include <vector>
 #include "compute_engine/compute_engine.h"
 
-#ifdef PLATFORM_VULKAN
+#ifdef KTT_PLATFORM_VULKAN
 #include "vulkan/vulkan.h"
 #include "vulkan_buffer.h"
+#include "vulkan_command_buffer.h"
 #include "vulkan_command_buffer_group.h"
 #include "vulkan_command_pool.h"
+#include "vulkan_descriptor_set_layout.h"
 #include "vulkan_device.h"
 #include "vulkan_instance.h"
 #include "vulkan_physical_device.h"
@@ -17,12 +19,12 @@
 #include "vulkan_semaphore.h"
 #include "vulkan_shader_module.h"
 #include "vulkan_utility.h"
-#endif // PLATFORM_VULKAN
+#endif // KTT_PLATFORM_VULKAN
 
 namespace ktt
 {
 
-#ifdef PLATFORM_VULKAN
+#ifdef KTT_PLATFORM_VULKAN
 
 class VulkanEngine : public ComputeEngine
 {
@@ -89,6 +91,7 @@ private:
     mutable EventId nextEventId;
     std::unique_ptr<VulkanInstance> instance;
     std::unique_ptr<VulkanDevice> device;
+    std::unique_ptr<VulkanCommandPool> commandPool;
     std::vector<VulkanQueue> queues;
 };
 
@@ -147,6 +150,6 @@ public:
     DeviceInfo getCurrentDeviceInfo() const override;
 };
 
-#endif // PLATFORM_VULKAN
+#endif // KTT_PLATFORM_VULKAN
 
 } // namespace ktt

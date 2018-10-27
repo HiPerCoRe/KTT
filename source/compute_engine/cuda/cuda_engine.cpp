@@ -7,7 +7,7 @@
 namespace ktt
 {
 
-#ifdef PLATFORM_CUDA
+#ifdef KTT_PLATFORM_CUDA
 
 CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
     deviceIndex(deviceIndex),
@@ -1005,6 +1005,6 @@ DeviceInfo CUDAEngine::getCurrentDeviceInfo() const
     throw std::runtime_error("");
 }
 
-#endif // PLATFORM_CUDA
+#endif // KTT_PLATFORM_CUDA
 
 } // namespace ktt

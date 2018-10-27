@@ -152,21 +152,6 @@ public:
         vkDeviceWaitIdle(device);
     }
 
-    uint32_t getSuitableMemoryTypeIndex(const uint32_t typeFilter, const VkMemoryPropertyFlags properties) const
-    {
-        VkPhysicalDeviceMemoryProperties memoryProperties = physicalDevice.getMemoryProperties();
-
-        for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
-        {
-            if (typeFilter & (1 << i) && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
-            {
-                return i;
-            }
-        }
-
-        throw std::runtime_error("Current device does not have any suitable memory types available");
-    }
-
 private:
     VulkanPhysicalDevice physicalDevice;
     VkDevice device;

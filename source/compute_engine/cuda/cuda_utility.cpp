@@ -1,4 +1,4 @@
-#ifdef PLATFORM_CUDA
+#ifdef KTT_PLATFORM_CUDA
 
 #include <stdexcept>
 #include "cuda_utility.h"
@@ -53,4 +53,4 @@ float getEventCommandDuration(const CUevent start, const CUevent end)
 
 } // namespace ktt
 
-#endif // PLATFORM_CUDA
+#endif // KTT_PLATFORM_CUDA

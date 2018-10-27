@@ -5,7 +5,7 @@
 namespace ktt
 {
 
-#ifdef PLATFORM_VULKAN
+#ifdef KTT_PLATFORM_VULKAN
 
 VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
     deviceIndex(deviceIndex),
@@ -21,7 +21,7 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
     std::vector<const char*> instanceExtensions;
     std::vector<const char*> validationLayers;
 
-#if DEBUG
+#if KTT_CONFIGURATION_DEBUG
     instanceExtensions.emplace_back("VK_EXT_debug_report");
     validationLayers.emplace_back("VK_LAYER_LUNARG_standard_validation");
 #endif
@@ -38,6 +38,9 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
     Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan device and queues");
     device = std::make_unique<VulkanDevice>(devices.at(deviceIndex), queueCount, VK_QUEUE_COMPUTE_BIT, std::vector<const char*>{}, validationLayers);
     queues = device->getQueues();
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan command pool");
+    commandPool = std::make_unique<VulkanCommandPool>(device->getDevice(), device->getQueueFamilyIndex());
 
     VulkanShaderModule shader(device->getDevice(), VulkanShaderModule::getTestSource());
 }
@@ -457,6 +460,6 @@ DeviceInfo VulkanEngine::getCurrentDeviceInfo() const
     throw std::runtime_error("");
 }
 
-#endif // PLATFORM_VULKAN
+#endif // KTT_PLATFORM_VULKAN
 
 } // namespace ktt

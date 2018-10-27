@@ -3,6 +3,7 @@
 #include <cstring>
 #include "vulkan/vulkan.h"
 #include "vulkan_utility.h"
+#include "vulkan_physical_device.h"
 
 namespace ktt
 {
@@ -12,14 +13,17 @@ class VulkanBuffer
 public:
     VulkanBuffer() :
         device(nullptr),
+        physicalDevice(nullptr),
         buffer(nullptr),
         bufferMemory(nullptr),
         bufferSize(0),
         usageFlags(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
     {}
 
-    explicit VulkanBuffer(VkDevice device, const VkDeviceSize bufferSize, const VkBufferUsageFlags usageFlags) :
+    explicit VulkanBuffer(VkDevice device, const VulkanPhysicalDevice& physicalDevice, const VkDeviceSize bufferSize,
+        const VkBufferUsageFlags usageFlags) :
         device(device),
+        physicalDevice(&physicalDevice),
         bufferMemory(nullptr),
         bufferSize(bufferSize),
         usageFlags(usageFlags)
@@ -59,9 +63,10 @@ public:
         return requirements;
     }
 
-    void allocateMemory(const uint32_t memoryTypeIndex)
+    void allocateMemory(const VkMemoryPropertyFlags properties)
     {
         VkMemoryRequirements memoryRequirements = getMemoryRequirements();
+        uint32_t memoryTypeIndex = physicalDevice->getCompatibleMemoryTypeIndex(memoryRequirements.memoryTypeBits, properties);
 
         const VkMemoryAllocateInfo memoryAllocateInfo =
         {
@@ -110,6 +115,11 @@ public:
         return device;
     }
 
+    const VulkanPhysicalDevice& getPhysicalDevice() const
+    {
+        return *physicalDevice;
+    }
+
     VkBuffer getBuffer() const
     {
         return buffer;
@@ -127,6 +137,7 @@ public:
 
 private:
     VkDevice device;
+    const VulkanPhysicalDevice* physicalDevice;
     VkBuffer buffer;
     VkDeviceMemory bufferMemory;
     VkDeviceSize bufferSize;

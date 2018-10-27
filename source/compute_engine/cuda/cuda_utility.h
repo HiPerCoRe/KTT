@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef PLATFORM_CUDA
+#ifdef KTT_PLATFORM_CUDA
 
 #include <string>
 #include "cuda.h"
@@ -18,4 +18,4 @@ float getEventCommandDuration(const CUevent start, const CUevent end);
 
 } // namespace ktt
 
-#endif // PLATFORM_CUDA
+#endif // KTT_PLATFORM_CUDA

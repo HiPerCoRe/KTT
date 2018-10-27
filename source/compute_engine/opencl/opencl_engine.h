@@ -8,7 +8,7 @@
 #include <vector>
 #include "compute_engine/compute_engine.h"
 
-#ifdef PLATFORM_OPENCL
+#ifdef KTT_PLATFORM_OPENCL
 #include "opencl_buffer.h"
 #include "opencl_command_queue.h"
 #include "opencl_context.h"
@@ -17,12 +17,12 @@
 #include "opencl_kernel.h"
 #include "opencl_platform.h"
 #include "opencl_program.h"
-#endif // PLATFORM_OPENCL
+#endif // KTT_PLATFORM_OPENCL
 
 namespace ktt
 {
 
-#ifdef PLATFORM_OPENCL
+#ifdef KTT_PLATFORM_OPENCL
 
 class OpenCLEngine : public ComputeEngine
 {
@@ -170,6 +170,6 @@ public:
     DeviceInfo getCurrentDeviceInfo() const override;
 };
 
-#endif // PLATFORM_OPENCL
+#endif // KTT_PLATFORM_OPENCL
 
 } // namespace ktt

@@ -6,7 +6,7 @@
 namespace ktt
 {
 
-#ifdef PLATFORM_OPENCL
+#ifdef KTT_PLATFORM_OPENCL
 
 OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     platformIndex(platformIndex),
@@ -1052,6 +1052,6 @@ DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
     throw std::runtime_error("");
 }
 
-#endif // PLATFORM_OPENCL
+#endif // KTT_PLATFORM_OPENCL
 
 } // namespace ktt

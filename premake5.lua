@@ -12,7 +12,7 @@ function findLibrariesAmd()
         return false
     end
     
-    defines { "PLATFORM_AMD" }
+    defines { "KTT_PLATFORM_AMD" }
     includedirs { "$(AMDAPPSDKROOT)/include" }
         
     filter "platforms:x86"
@@ -33,7 +33,7 @@ function findLibrariesAmd()
     
     if not _OPTIONS["no-opencl"] then
         opencl_projects = true
-        defines { "PLATFORM_OPENCL" }
+        defines { "KTT_PLATFORM_OPENCL" }
         links { "OpenCL" }
     end
     
@@ -47,7 +47,7 @@ function findLibrariesIntel()
         return false
     end
     
-    defines { "PLATFORM_INTEL" }
+    defines { "KTT_PLATFORM_INTEL" }
     includedirs { "$(INTELOCLSDKROOT)/include" }
         
     filter "platforms:x86"
@@ -68,7 +68,7 @@ function findLibrariesIntel()
     
     if not _OPTIONS["no-opencl"] then
         opencl_projects = true
-        defines { "PLATFORM_OPENCL" }
+        defines { "KTT_PLATFORM_OPENCL" }
         links { "OpenCL" }
     end
     
@@ -82,7 +82,7 @@ function findLibrariesNvidia()
         return false
     end
     
-    defines { "PLATFORM_NVIDIA" }
+    defines { "KTT_PLATFORM_NVIDIA" }
     includedirs { "$(CUDA_PATH)/include" }
         
     filter "platforms:x86"
@@ -103,13 +103,13 @@ function findLibrariesNvidia()
     
     if not _OPTIONS["no-opencl"] then
         opencl_projects = true
-        defines { "PLATFORM_OPENCL" }
+        defines { "KTT_PLATFORM_OPENCL" }
         links { "OpenCL" }
     end
         
     if not _OPTIONS["no-cuda"] then
         cuda_projects = true
-        defines { "PLATFORM_CUDA" }
+        defines { "KTT_PLATFORM_CUDA" }
         links { "cuda", "nvrtc" }
     end
         
@@ -156,7 +156,7 @@ function findVulkan()
     filter {}
     
     vulkan_projects = true
-    defines { "PLATFORM_VULKAN" }
+    defines { "KTT_PLATFORM_VULKAN" }
     links { "vulkan-1", "glslang", "SPIRV", "SPIRV-Tools", "HLSL", "OSDependent", "OGLCompiler", "SPVRemapper", "SPIRV-Tools-opt" }
     
     return true
@@ -252,11 +252,11 @@ workspace "ktt"
         architecture "x86_64"
     
     filter "configurations:Debug"
-        defines { "DEBUG" }
+        defines { "KTT_CONFIGURATION_DEBUG" }
         symbols "On"
     
     filter "configurations:Release"
-        defines { "NDEBUG" }
+        defines { "KTT_CONFIGURATION_RELEASE" }
         optimize "On"
     
     filter {}

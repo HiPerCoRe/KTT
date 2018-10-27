@@ -37,6 +37,7 @@ public:
         EShMessages message = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules);
         const int defaultVersion = 100;
 
+        // Todo: add correct path to shader for includer
         DirStackFileIncluder includer;
         std::string path = "./";
         includer.pushExternalLocalDirectory(path);
@@ -91,9 +92,9 @@ private:
         glslang::FinalizeProcess();
     }
 
-    static TBuiltInResource getDefaultResource()
+    static const TBuiltInResource& getDefaultResource()
     {
-        TBuiltInResource result =
+        static const TBuiltInResource result =
         {
             32,    // maxLights
             6,     // maxClipPlanes
