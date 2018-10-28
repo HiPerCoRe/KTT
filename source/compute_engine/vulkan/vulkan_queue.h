@@ -35,6 +35,11 @@ public:
 
     void submitSingleCommand(VkCommandBuffer commandBuffer)
     {
+        submitSingleCommand(commandBuffer, nullptr);
+    }
+
+    void submitSingleCommand(VkCommandBuffer commandBuffer, VkFence fence)
+    {
         const VkSubmitInfo submitInfo =
         {
             VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -48,7 +53,7 @@ public:
             nullptr
         };
 
-        checkVulkanError(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE), "vkQueueSubmit");
+        checkVulkanError(vkQueueSubmit(queue, 1, &submitInfo, fence), "vkQueueSubmit");
     }
 
 private:

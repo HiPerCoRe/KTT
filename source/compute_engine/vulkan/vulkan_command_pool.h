@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vulkan/vulkan.h"
-#include "vulkan_command_buffer_group.h"
 #include "vulkan_utility.h"
 
 namespace ktt

@@ -35,6 +35,7 @@ public:
             commandBufferCount
         };
 
+        commandBuffers.resize(commandBufferCount);
         checkVulkanError(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, commandBuffers.data()), "vkAllocateCommandBuffers");
     }
 

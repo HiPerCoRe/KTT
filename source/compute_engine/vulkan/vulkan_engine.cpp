@@ -41,8 +41,6 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
 
     Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan command pool");
     commandPool = std::make_unique<VulkanCommandPool>(device->getDevice(), device->getQueueFamilyIndex());
-
-    VulkanShaderModule shader(device->getDevice(), VulkanShaderModule::getTestSource());
 }
 
 KernelResult VulkanEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,

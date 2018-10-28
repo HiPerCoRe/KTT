@@ -88,7 +88,7 @@ public:
         vkUnmapMemory(device, bufferMemory);
     }
 
-    void uploadData(VkBuffer sourceBuffer, const VkDeviceSize dataSize, VkCommandBuffer commandBuffer)
+    void recordUploadDataCommand(VkCommandBuffer commandBuffer, VkBuffer sourceBuffer, const VkDeviceSize dataSize)
     {
         const VkCommandBufferBeginInfo commandBufferBeginInfo =
         {
