@@ -61,7 +61,7 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS float4* atomInfo, MEMORY_TYPE_SOA
         #pragma unroll INNER_UNROLL_FACTOR
         #endif
         for (int j = 0; j < Z_ITERATIONS; j++) {
-            vector partialResult = native_rsqrt(dX * dX + dY * dY + dZ*dZ);
+            vector partialResult = half_rsqrt(dX * dX + dY * dY + dZ*dZ);
             energyValue[j] += w * partialResult;
             dZ += gridSpacing;
         }
