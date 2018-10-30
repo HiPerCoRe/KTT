@@ -18,7 +18,7 @@ __kernel void directCoulombSumReference(__global float4* atomInfo, int numberOfA
         float dX = coordX - atomInfo[i].x;
         float dY = coordY - atomInfo[i].y;
         float dZ = coordZ - atomInfo[i].z;
-        float partialResult = native_rsqrt(dX * dX + dY * dY + dZ*dZ);
+        float partialResult = half_rsqrt(dX * dX + dY * dY + dZ*dZ);
         energyValue += atomInfo[i].w * partialResult;
     }
     
