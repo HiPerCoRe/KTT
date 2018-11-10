@@ -23,14 +23,14 @@ public:
     void setArgumentIndices(const std::vector<ArgumentId>& argumentIds);
 
     KernelId getId() const;
-    std::string getName() const;
-    std::string getSource() const;
-    std::vector<size_t> getGlobalSize() const;
-    std::vector<size_t> getLocalSize() const;
-    DimensionVector getGlobalSizeDimensionVector() const;
-    DimensionVector getLocalSizeDimensionVector() const;
-    std::vector<ArgumentId> getArgumentIds() const;
-    std::vector<LocalMemoryModifier> getLocalMemoryModifiers() const;
+    const std::string& getName() const;
+    const std::string& getSource() const;
+    const std::vector<size_t>& getGlobalSize() const;
+    const std::vector<size_t>& getLocalSize() const;
+    const DimensionVector& getGlobalSizeDimensionVector() const;
+    const DimensionVector& getLocalSizeDimensionVector() const;
+    const std::vector<ArgumentId>& getArgumentIds() const;
+    const std::vector<LocalMemoryModifier>& getLocalMemoryModifiers() const;
 
 private:
     KernelId id;

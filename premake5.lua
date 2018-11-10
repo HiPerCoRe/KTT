@@ -15,21 +15,11 @@ function findLibrariesAmd()
     defines { "KTT_PLATFORM_AMD" }
     includedirs { "$(AMDAPPSDKROOT)/include" }
         
-    filter "platforms:x86"
-        if os.target() == "linux" then
-            libdirs { "$(AMDAPPSDKROOT)/lib" }
-        else
-            libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
-        end
-        
-    filter "platforms:x86_64"
-        if os.target() == "linux" then
-            libdirs { "$(AMDAPPSDKROOT)/lib64" }
-        else
-            libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
-        end
-        
-    filter {}
+    if os.target() == "linux" then
+        libdirs { "$(AMDAPPSDKROOT)/lib64" }
+    else
+        libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
+    end
     
     if not _OPTIONS["no-opencl"] then
         opencl_projects = true
@@ -50,21 +40,11 @@ function findLibrariesIntel()
     defines { "KTT_PLATFORM_INTEL" }
     includedirs { "$(INTELOCLSDKROOT)/include" }
         
-    filter "platforms:x86"
-        if os.target() == "linux" then
-            libdirs { "$(INTELOCLSDKROOT)/lib" }
-        else
-            libdirs { "$(INTELOCLSDKROOT)/lib/x86" }
-        end
-        
-    filter "platforms:x86_64"
-        if os.target() == "linux" then
-            libdirs { "$(INTELOCLSDKROOT)/lib64" }
-        else
-            libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
-        end
-        
-    filter {}
+    if os.target() == "linux" then
+        libdirs { "$(INTELOCLSDKROOT)/lib64" }
+    else
+        libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
+    end
     
     if not _OPTIONS["no-opencl"] then
         opencl_projects = true
@@ -83,23 +63,13 @@ function findLibrariesNvidia()
     end
     
     defines { "KTT_PLATFORM_NVIDIA" }
-    includedirs { "$(CUDA_PATH)/include" }
+    includedirs { "$(CUDA_PATH)/include", "$(CUDA_PATH)/extras/CUPTI/include" }
         
-    filter "platforms:x86"
-        if os.target() == "linux" then
-            libdirs { "$(CUDA_PATH)/lib" }
-        else
-            libdirs { "$(CUDA_PATH)/lib/Win32" }
-        end
-        
-    filter "platforms:x86_64"
-        if os.target() == "linux" then
-            libdirs { "$(CUDA_PATH)/lib64" }
-        else
-            libdirs { "$(CUDA_PATH)/lib/x64" }
-        end
-        
-    filter {}
+    if os.target() == "linux" then
+        libdirs { "$(CUDA_PATH)/lib64", "$(CUDA_PATH)/extras/CUPTI/lib64" }
+    else
+        libdirs { "$(CUDA_PATH)/lib/x64", "$(CUDA_PATH)/extras/CUPTI/libx64" }
+    end
     
     if not _OPTIONS["no-opencl"] then
         opencl_projects = true
@@ -111,6 +81,10 @@ function findLibrariesNvidia()
         cuda_projects = true
         defines { "KTT_PLATFORM_CUDA" }
         links { "cuda", "nvrtc" }
+        
+        if _OPTIONS["profiling"] then
+            links { "cupti" }
+        end
     end
         
     return true
@@ -184,6 +158,12 @@ newoption
 
 newoption
 {
+    trigger = "profiling",
+    description = "Enables compilation of kernel profiling functionality"
+}
+
+newoption
+{
     trigger = "outdir",
     value = "path",
     description = "Specifies output directory for generated files"
@@ -227,29 +207,16 @@ workspace "ktt"
     end
     
     configurations { "Release", "Debug" }
+    platforms { "x86_64" }
+    architecture "x86_64"
     
-    -- Vulkan backend is supported only on 64-bit architectures
-    if not _OPTIONS["vulkan"] then
-        platforms { "x86_64", "x86" }
-    else
-        platforms { "x86_64" }
+    if _OPTIONS["profiling"] then
+        defines { "KTT_PROFILING" }
     end
-
+    
     location(buildPath)
     language "C++"
     cppdialect "C++14"
-
-    if os.is64bit() then
-        defaultplatform "x86_64"
-    else
-        defaultplatform "x86"
-    end
-
-    filter "platforms:x86"
-        architecture "x86"
-    
-    filter "platforms:x86_64"
-        architecture "x86_64"
     
     filter "configurations:Debug"
         defines { "KTT_CONFIGURATION_DEBUG" }

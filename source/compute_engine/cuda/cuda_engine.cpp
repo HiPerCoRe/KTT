@@ -20,6 +20,10 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     persistentBufferFlag(true),
     nextEventId(0)
 {
+    #ifdef KTT_PROFILING
+    checkCUDAError(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL), "cuptiActivityEnable");
+    #endif
+
     Logger::getLogger().log(LoggingLevel::Debug, "Initializing CUDA runtime");
     checkCUDAError(cuInit(0), "cuInit");
 

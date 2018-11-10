@@ -20,6 +20,9 @@
 #include "cuda_program.h"
 #include "cuda_stream.h"
 #include "cuda_utility.h"
+#ifdef KTT_PROFILING
+#include "cupti.h"
+#endif // KTT_PROFILING
 #endif // KTT_PLATFORM_CUDA
 
 namespace ktt

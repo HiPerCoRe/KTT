@@ -17,7 +17,7 @@ public:
 
     KernelId getKernel() const;
     ArgumentId getArgument() const;
-    std::vector<size_t> getParameterValues() const;
+    const std::vector<size_t>& getParameterValues() const;
     std::function<size_t(const size_t, const std::vector<size_t>&)> getModifierFunction() const;
     size_t getModifiedSize(const size_t defaultSize) const;
 

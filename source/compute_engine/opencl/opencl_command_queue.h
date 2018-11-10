@@ -18,12 +18,12 @@ public:
     {
         cl_int result;
         #ifdef CL_VERSION_2_0
-            cl_queue_properties properties[] = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
-            queue = clCreateCommandQueueWithProperties(context, device, properties, &result);
-            checkOpenCLError(result, "clCreateCommandQueueWithProperties");
+        cl_queue_properties properties[] = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
+        queue = clCreateCommandQueueWithProperties(context, device, properties, &result);
+        checkOpenCLError(result, "clCreateCommandQueueWithProperties");
         #else
-            queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &result);
-            checkOpenCLError(result, "clCreateCommandQueue");
+        queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &result);
+        checkOpenCLError(result, "clCreateCommandQueue");
         #endif
     }
 

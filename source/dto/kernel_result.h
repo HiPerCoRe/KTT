@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "kernel/kernel_configuration.h"
+#include "kernel_profiling_data.h"
 
 namespace ktt
 {
@@ -21,13 +22,15 @@ public:
     void setComputationDuration(const uint64_t computationDuration);
     void setOverhead(const uint64_t overhead);
     void setErrorMessage(const std::string& errorMessage);
+    void setProfilingData(const KernelProfilingData& profilingData);
     void setValid(const bool flag);
 
-    std::string getKernelName() const;
-    KernelConfiguration getConfiguration() const;
+    const std::string& getKernelName() const;
+    const KernelConfiguration& getConfiguration() const;
     uint64_t getComputationDuration() const;
     uint64_t getOverhead() const;
-    std::string getErrorMessage() const;
+    const std::string& getErrorMessage() const;
+    const KernelProfilingData& getProfilingData() const;
     bool isValid() const;
 
     void increaseOverhead(const uint64_t overhead);
@@ -38,6 +41,7 @@ private:
     uint64_t computationDuration;
     uint64_t overhead;
     std::string errorMessage;
+    KernelProfilingData profilingData;
     bool valid;
 };
 

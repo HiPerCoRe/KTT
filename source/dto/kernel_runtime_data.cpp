@@ -43,42 +43,42 @@ KernelId KernelRuntimeData::getId() const
     return id;
 }
 
-std::string KernelRuntimeData::getName() const
+const std::string& KernelRuntimeData::getName() const
 {
     return name;
 }
 
-std::string KernelRuntimeData::getSource() const
+const std::string& KernelRuntimeData::getSource() const
 {
     return source;
 }
 
-std::vector<size_t> KernelRuntimeData::getGlobalSize() const
+const std::vector<size_t>& KernelRuntimeData::getGlobalSize() const
 {
     return globalSize;
 }
 
-std::vector<size_t> KernelRuntimeData::getLocalSize() const
+const std::vector<size_t>& KernelRuntimeData::getLocalSize() const
 {
     return localSize;
 }
 
-DimensionVector KernelRuntimeData::getGlobalSizeDimensionVector() const
+const DimensionVector& KernelRuntimeData::getGlobalSizeDimensionVector() const
 {
     return globalSizeDimensionVector;
 }
 
-DimensionVector KernelRuntimeData::getLocalSizeDimensionVector() const
+const DimensionVector& KernelRuntimeData::getLocalSizeDimensionVector() const
 {
     return localSizeDimensionVector;
 }
 
-std::vector<ArgumentId> KernelRuntimeData::getArgumentIds() const
+const std::vector<ArgumentId>& KernelRuntimeData::getArgumentIds() const
 {
     return argumentIds;
 }
 
-std::vector<LocalMemoryModifier> KernelRuntimeData::getLocalMemoryModifiers() const
+const std::vector<LocalMemoryModifier>& KernelRuntimeData::getLocalMemoryModifiers() const
 {
     return localMemoryModifiers;
 }

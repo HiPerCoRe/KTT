@@ -62,17 +62,22 @@ void KernelResult::setErrorMessage(const std::string& errorMessage)
     this->errorMessage = errorMessage;
 }
 
+void KernelResult::setProfilingData(const KernelProfilingData& profilingData)
+{
+    this->profilingData = profilingData;
+}
+
 void KernelResult::setValid(const bool flag)
 {
     this->valid = flag;
 }
 
-std::string KernelResult::getKernelName() const
+const std::string& KernelResult::getKernelName() const
 {
     return kernelName;
 }
 
-KernelConfiguration KernelResult::getConfiguration() const
+const KernelConfiguration& KernelResult::getConfiguration() const
 {
     return configuration;
 }
@@ -87,9 +92,14 @@ uint64_t KernelResult::getOverhead() const
     return overhead;
 }
 
-std::string KernelResult::getErrorMessage() const
+const std::string& KernelResult::getErrorMessage() const
 {
     return errorMessage;
+}
+
+const KernelProfilingData& KernelResult::getProfilingData() const
+{
+    return profilingData;
 }
 
 bool KernelResult::isValid() const
