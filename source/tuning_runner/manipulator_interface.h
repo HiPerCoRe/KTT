@@ -2,9 +2,9 @@
 
 #include <cstddef>
 #include <vector>
-#include "ktt_types.h"
-#include "api/dimension_vector.h"
-#include "api/parameter_pair.h"
+#include <api/dimension_vector.h>
+#include <api/parameter_pair.h>
+#include <ktt_types.h>
 
 namespace ktt
 {

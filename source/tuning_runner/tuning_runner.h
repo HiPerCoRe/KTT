@@ -4,14 +4,14 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "configuration_manager.h"
-#include "kernel_runner.h"
-#include "result_validator.h"
-#include "api/device_info.h"
-#include "api/stop_condition/stop_condition.h"
-#include "dto/kernel_result.h"
-#include "kernel/kernel_manager.h"
-#include "kernel_argument/argument_manager.h"
+#include <api/stop_condition/stop_condition.h>
+#include <api/device_info.h>
+#include <dto/kernel_result.h>
+#include <kernel/kernel_manager.h>
+#include <kernel_argument/argument_manager.h>
+#include <tuning_runner/configuration_manager.h>
+#include <tuning_runner/kernel_runner.h>
+#include <tuning_runner/result_validator.h>
 
 namespace ktt
 {
@@ -44,7 +44,7 @@ private:
     KernelManager* kernelManager;
     KernelRunner* kernelRunner;
     ConfigurationManager configurationManager;
-    std::unique_ptr<ResultValidator> resultValidator;
+    ResultValidator resultValidator;
 
     // Helper methods
     bool validateResult(const Kernel& kernel, const KernelResult& result);

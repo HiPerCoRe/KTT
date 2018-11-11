@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <random>
-#include "searcher.h"
+#include <tuning_runner/searcher/searcher.h>
 
 namespace ktt
 {

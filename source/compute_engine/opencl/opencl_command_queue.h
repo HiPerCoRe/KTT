@@ -1,9 +1,9 @@
 #pragma once
 
 #include <vector>
-#include "CL/cl.h"
-#include "ktt_types.h"
-#include "opencl_utility.h"
+#include <CL/cl.h>
+#include <compute_engine/opencl/opencl_utility.h>
+#include <ktt_types.h>
 
 namespace ktt
 {

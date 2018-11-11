@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
-#include "logger.h"
+#include <utility/logger.h>
 
 namespace ktt
 {

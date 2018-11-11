@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
-#include "glslang/Public/ShaderLang.h"
-#include "Standalone/DirStackFileIncluder.h"
-#include "SPIRV/GlslangToSpv.h"
+#include <glslang/Public/ShaderLang.h>
+#include <Standalone/DirStackFileIncluder.h>
+#include <SPIRV/GlslangToSpv.h>
 
 namespace ktt
 {

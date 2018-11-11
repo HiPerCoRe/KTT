@@ -7,21 +7,21 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "compute_engine/compute_engine.h"
+#include <compute_engine/compute_engine.h>
 
 #ifdef KTT_PLATFORM_CUDA
-#include "cuda.h"
-#include "nvrtc.h"
-#include "cuda_buffer.h"
-#include "cuda_context.h"
-#include "cuda_device.h"
-#include "cuda_event.h"
-#include "cuda_kernel.h"
-#include "cuda_program.h"
-#include "cuda_stream.h"
-#include "cuda_utility.h"
+#include <cuda.h>
+#include <nvrtc.h>
+#include <compute_engine/cuda/cuda_buffer.h>
+#include <compute_engine/cuda/cuda_context.h>
+#include <compute_engine/cuda/cuda_device.h>
+#include <compute_engine/cuda/cuda_event.h>
+#include <compute_engine/cuda/cuda_kernel.h>
+#include <compute_engine/cuda/cuda_program.h>
+#include <compute_engine/cuda/cuda_stream.h>
+#include <compute_engine/cuda/cuda_utility.h>
 #ifdef KTT_PROFILING
-#include "cupti.h"
+#include <cupti.h>
 #endif // KTT_PROFILING
 #endif // KTT_PLATFORM_CUDA
 

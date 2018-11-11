@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <functional>
 #include <vector>
-#include "ktt_types.h"
+#include <ktt_types.h>
 
 namespace ktt
 {

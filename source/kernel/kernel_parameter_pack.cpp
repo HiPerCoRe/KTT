@@ -1,4 +1,4 @@
-#include "kernel_parameter_pack.h"
+#include <kernel/kernel_parameter_pack.h>
 
 namespace ktt
 {
@@ -12,12 +12,12 @@ KernelParameterPack::KernelParameterPack(const std::string& name, const std::vec
     parameterNames(parameterNames)
 {}
 
-std::string KernelParameterPack::getName() const
+const std::string& KernelParameterPack::getName() const
 {
     return name;
 }
 
-std::vector<std::string> KernelParameterPack::getParameterNames() const
+const std::vector<std::string>& KernelParameterPack::getParameterNames() const
 {
     return parameterNames;
 }

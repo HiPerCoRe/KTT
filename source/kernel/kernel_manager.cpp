@@ -1,7 +1,7 @@
 #include <fstream>
 #include <sstream>
-#include "kernel_manager.h"
-#include "utility/ktt_utility.h"
+#include <kernel/kernel_manager.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {

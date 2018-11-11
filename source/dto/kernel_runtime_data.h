@@ -2,10 +2,10 @@
 
 #include <string>
 #include <vector>
-#include "ktt_types.h"
-#include "api/dimension_vector.h"
-#include "dto/local_memory_modifier.h"
-#include "kernel_argument/kernel_argument.h"
+#include <api/dimension_vector.h>
+#include <dto/local_memory_modifier.h>
+#include <kernel_argument/kernel_argument.h>
+#include <ktt_types.h>
 
 namespace ktt
 {

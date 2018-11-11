@@ -1,4 +1,4 @@
-#include "computation_result.h"
+#include <api/computation_result.h>
 
 namespace ktt
 {
@@ -37,17 +37,17 @@ uint64_t ComputationResult::getDuration() const
     return duration;
 }
 
-std::string ComputationResult::getKernelName() const
+const std::string& ComputationResult::getKernelName() const
 {
     return kernelName;
 }
 
-std::string ComputationResult::getErrorMessage() const
+const std::string& ComputationResult::getErrorMessage() const
 {
     return errorMessage;
 }
 
-std::vector<ParameterPair> ComputationResult::getConfiguration() const
+const std::vector<ParameterPair>& ComputationResult::getConfiguration() const
 {
     return configuration;
 }

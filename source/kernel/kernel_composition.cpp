@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <stdexcept>
-#include "kernel_composition.h"
-#include "utility/ktt_utility.h"
+#include <kernel/kernel_composition.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {
@@ -324,27 +324,27 @@ KernelId KernelComposition::getId() const
     return id;
 }
 
-std::string KernelComposition::getName() const
+const std::string& KernelComposition::getName() const
 {
     return name;
 }
 
-std::vector<const Kernel*> KernelComposition::getKernels() const
+const std::vector<const Kernel*>& KernelComposition::getKernels() const
 {
     return kernels;
 }
 
-std::vector<KernelParameter> KernelComposition::getParameters() const
+const std::vector<KernelParameter>& KernelComposition::getParameters() const
 {
     return parameters;
 }
 
-std::vector<KernelConstraint> KernelComposition::getConstraints() const
+const std::vector<KernelConstraint>& KernelComposition::getConstraints() const
 {
     return constraints;
 }
 
-std::vector<KernelParameterPack> KernelComposition::getParameterPacks() const
+const std::vector<KernelParameterPack>& KernelComposition::getParameterPacks() const
 {
     return parameterPacks;
 }
@@ -399,12 +399,12 @@ std::vector<KernelParameter> KernelComposition::getParametersForPack(const Kerne
     return result;
 }
 
-std::vector<ArgumentId> KernelComposition::getSharedArgumentIds() const
+const std::vector<ArgumentId>& KernelComposition::getSharedArgumentIds() const
 {
     return sharedArgumentIds;
 }
 
-std::vector<ArgumentId> KernelComposition::getKernelArgumentIds(const KernelId id) const
+const std::vector<ArgumentId>& KernelComposition::getKernelArgumentIds(const KernelId id) const
 {
     auto pointer = kernelArgumentIds.find(id);
     if (pointer != kernelArgumentIds.end())

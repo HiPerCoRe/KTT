@@ -2,7 +2,7 @@
 
 #include <ostream>
 #include <string>
-#include "enum/logging_level.h"
+#include <enum/logging_level.h>
 
 namespace ktt
 {

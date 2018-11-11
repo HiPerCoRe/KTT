@@ -1,7 +1,7 @@
 #ifdef KTT_PLATFORM_OPENCL
 
 #include <stdexcept>
-#include "opencl_utility.h"
+#include <compute_engine/opencl/opencl_utility.h>
 
 namespace ktt
 {

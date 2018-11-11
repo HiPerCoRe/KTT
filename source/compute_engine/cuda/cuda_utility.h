@@ -3,10 +3,10 @@
 #ifdef KTT_PLATFORM_CUDA
 
 #include <string>
-#include "cuda.h"
-#include "nvrtc.h"
+#include <cuda.h>
+#include <nvrtc.h>
 #ifdef KTT_PROFILING
-#include "cupti.h"
+#include <cupti.h>
 #endif // KTT_PROFILING
 
 namespace ktt

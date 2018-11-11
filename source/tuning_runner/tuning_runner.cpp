@@ -3,11 +3,11 @@
 #include <iterator>
 #include <sstream>
 #include <string>
-#include "tuning_runner.h"
-#include "utility/ktt_utility.h"
-#include "utility/logger.h"
-#include "utility/timer.h"
-#include "utility/result_loader.h"
+#include <tuning_runner/tuning_runner.h>
+#include <utility/ktt_utility.h>
+#include <utility/logger.h>
+#include <utility/timer.h>
+#include <utility/result_loader.h>
 
 namespace ktt
 {
@@ -17,7 +17,7 @@ TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kern
     kernelManager(kernelManager),
     kernelRunner(kernelRunner),
     configurationManager(info),
-    resultValidator(std::make_unique<ResultValidator>(argumentManager, kernelRunner))
+    resultValidator(argumentManager, kernelRunner)
 {}
 
 std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
@@ -33,7 +33,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
         throw std::runtime_error("Kernel tuning cannot be performed with writable zero-copy arguments");
     }
 
-    resultValidator->computeReferenceResult(kernel);
+    resultValidator.computeReferenceResult(kernel);
     if (!configurationManager.hasKernelConfigurations(id))
     {
         configurationManager.initializeConfigurations(kernel);
@@ -93,7 +93,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
     }
 
     kernelRunner->clearBuffers();
-    resultValidator->clearReferenceResults();
+    resultValidator.clearReferenceResults();
     configurationManager.clearKernelData(id, false, false);
     return results;
 }
@@ -172,7 +172,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
         throw std::runtime_error("Kernel composition tuning cannot be performed with writable zero-copy arguments");
     }
 
-    resultValidator->computeReferenceResult(compatibilityKernel);
+    resultValidator.computeReferenceResult(compatibilityKernel);
     if (!configurationManager.hasKernelConfigurations(id))
     {
         configurationManager.initializeConfigurations(composition);
@@ -226,7 +226,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
         }
     }
 
-    resultValidator->clearReferenceResults();
+    resultValidator.clearReferenceResults();
     configurationManager.clearKernelData(id, false, false);
     return results;
 }
@@ -241,8 +241,8 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     const Kernel& kernel = kernelManager->getKernel(id);
     if (recomputeReference)
     {
-        resultValidator->clearReferenceResults(id);
-        resultValidator->computeReferenceResult(kernel);
+        resultValidator.clearReferenceResults(id);
+        resultValidator.computeReferenceResult(kernel);
     }
 
     if (!configurationManager.hasKernelConfigurations(id))
@@ -279,8 +279,8 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     const Kernel compatibilityKernel = composition.transformToKernel();
     if (recomputeReference)
     {
-        resultValidator->clearReferenceResults(id);
-        resultValidator->computeReferenceResult(compatibilityKernel);
+        resultValidator.clearReferenceResults(id);
+        resultValidator.computeReferenceResult(compatibilityKernel);
     }
 
     if (!configurationManager.hasKernelConfigurations(id))
@@ -318,30 +318,30 @@ void TuningRunner::setSearchMethod(const SearchMethod method, const std::vector<
 
 void TuningRunner::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
-    resultValidator->setValidationMethod(method);
-    resultValidator->setToleranceThreshold(toleranceThreshold);
+    resultValidator.setValidationMethod(method);
+    resultValidator.setToleranceThreshold(toleranceThreshold);
 }
 
 void TuningRunner::setValidationRange(const ArgumentId id, const size_t range)
 {
-    resultValidator->setValidationRange(id, range);
+    resultValidator.setValidationRange(id, range);
 }
 
 void TuningRunner::setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
 {
-    resultValidator->setArgumentComparator(id, comparator);
+    resultValidator.setArgumentComparator(id, comparator);
 }
 
 void TuningRunner::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
     const std::vector<ArgumentId>& validatedArgumentIds)
 {
-    resultValidator->setReferenceKernel(id, referenceId, referenceConfiguration, validatedArgumentIds);
+    resultValidator.setReferenceKernel(id, referenceId, referenceConfiguration, validatedArgumentIds);
 }
 
 void TuningRunner::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass,
     const std::vector<ArgumentId>& validatedArgumentIds)
 {
-    resultValidator->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
+    resultValidator.setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
 }
 
 ComputationResult TuningRunner::getBestComputationResult(const KernelId id) const
@@ -356,8 +356,8 @@ bool TuningRunner::validateResult(const Kernel& kernel, const KernelResult& resu
         return false;
     }
 
-    bool resultIsCorrect = resultValidator->validateArgumentsWithClass(kernel);
-    resultIsCorrect &= resultValidator->validateArgumentsWithKernel(kernel);
+    bool resultIsCorrect = resultValidator.validateArgumentsWithClass(kernel);
+    resultIsCorrect &= resultValidator.validateArgumentsWithKernel(kernel);
 
     if (resultIsCorrect)
     {

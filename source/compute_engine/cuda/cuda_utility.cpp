@@ -1,7 +1,7 @@
 #ifdef KTT_PLATFORM_CUDA
 
 #include <stdexcept>
-#include "cuda_utility.h"
+#include <compute_engine/cuda/cuda_utility.h>
 
 namespace ktt
 {

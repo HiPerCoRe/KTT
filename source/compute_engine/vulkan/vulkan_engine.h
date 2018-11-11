@@ -3,26 +3,26 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "compute_engine/compute_engine.h"
+#include <compute_engine/compute_engine.h>
 
 #ifdef KTT_PLATFORM_VULKAN
-#include "vulkan/vulkan.h"
-#include "vulkan_buffer.h"
-#include "vulkan_command_buffer.h"
-#include "vulkan_command_buffer_group.h"
-#include "vulkan_command_pool.h"
-#include "vulkan_compute_pipeline.h"
-#include "vulkan_descriptor_set.h"
-#include "vulkan_descriptor_set_layout.h"
-#include "vulkan_descriptor_pool.h"
-#include "vulkan_device.h"
-#include "vulkan_fence.h"
-#include "vulkan_instance.h"
-#include "vulkan_physical_device.h"
-#include "vulkan_queue.h"
-#include "vulkan_semaphore.h"
-#include "vulkan_shader_module.h"
-#include "vulkan_utility.h"
+#include <vulkan/vulkan.h>
+#include <compute_engine/vulkan/vulkan_buffer.h>
+#include <compute_engine/vulkan/vulkan_command_buffer.h>
+#include <compute_engine/vulkan/vulkan_command_buffer_group.h>
+#include <compute_engine/vulkan/vulkan_command_pool.h>
+#include <compute_engine/vulkan/vulkan_compute_pipeline.h>
+#include <compute_engine/vulkan/vulkan_descriptor_pool.h>
+#include <compute_engine/vulkan/vulkan_descriptor_set.h>
+#include <compute_engine/vulkan/vulkan_descriptor_set_layout.h>
+#include <compute_engine/vulkan/vulkan_device.h>
+#include <compute_engine/vulkan/vulkan_fence.h>
+#include <compute_engine/vulkan/vulkan_instance.h>
+#include <compute_engine/vulkan/vulkan_physical_device.h>
+#include <compute_engine/vulkan/vulkan_queue.h>
+#include <compute_engine/vulkan/vulkan_semaphore.h>
+#include <compute_engine/vulkan/vulkan_shader_module.h>
+#include <compute_engine/vulkan/vulkan_utility.h>
 #endif // KTT_PLATFORM_VULKAN
 
 namespace ktt

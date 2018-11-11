@@ -1,6 +1,6 @@
 #pragma once
 
-#include "searcher.h"
+#include <tuning_runner/searcher/searcher.h>
 
 namespace ktt
 {

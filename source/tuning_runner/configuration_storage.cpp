@@ -1,6 +1,6 @@
 #include <stdexcept>
-#include "configuration_storage.h"
-#include "utility/ktt_utility.h"
+#include <tuning_runner/configuration_storage.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {

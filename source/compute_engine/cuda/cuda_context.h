@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cuda.h"
-#include "cuda_utility.h"
+#include <cuda.h>
+#include <compute_engine/cuda/cuda_utility.h>
 
 namespace ktt
 {

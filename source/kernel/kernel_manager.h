@@ -2,10 +2,10 @@
 
 #include <map>
 #include <vector>
-#include "kernel.h"
-#include "kernel_composition.h"
-#include "kernel_configuration.h"
-#include "enum/dimension_vector_type.h"
+#include <enum/dimension_vector_type.h>
+#include <kernel/kernel.h>
+#include <kernel/kernel_composition.h>
+#include <kernel/kernel_configuration.h>
 
 namespace ktt
 {

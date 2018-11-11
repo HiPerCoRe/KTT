@@ -1,6 +1,6 @@
-#include "catch.hpp"
-#include "api/device_info.h"
-#include "kernel/kernel_manager.h"
+#include <catch.hpp>
+#include <api/device_info.h>
+#include <kernel/kernel_manager.h>
 
 #if defined(_MSC_VER)
     #define KTT_TEST_KERNEL_FILE "../tests/test_kernel.cl"

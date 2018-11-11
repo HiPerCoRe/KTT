@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "kernel.h"
+#include <kernel/kernel.h>
 
 namespace ktt
 {
@@ -32,16 +32,16 @@ public:
 
     // Getters
     KernelId getId() const;
-    std::string getName() const;
-    std::vector<const Kernel*> getKernels() const;
-    std::vector<KernelParameter> getParameters() const;
-    std::vector<KernelConstraint> getConstraints() const;
-    std::vector<KernelParameterPack> getParameterPacks() const;
+    const std::string& getName() const;
+    const std::vector<const Kernel*>& getKernels() const;
+    const std::vector<KernelParameter>& getParameters() const;
+    const std::vector<KernelConstraint>& getConstraints() const;
+    const std::vector<KernelParameterPack>& getParameterPacks() const;
     std::vector<KernelParameter> getParametersOutsidePacks() const;
     std::vector<KernelParameter> getParametersForPack(const std::string& pack) const;
     std::vector<KernelParameter> getParametersForPack(const KernelParameterPack& pack) const;
-    std::vector<ArgumentId> getSharedArgumentIds() const;
-    std::vector<ArgumentId> getKernelArgumentIds(const KernelId id) const;
+    const std::vector<ArgumentId>& getSharedArgumentIds() const;
+    const std::vector<ArgumentId>& getKernelArgumentIds(const KernelId id) const;
     bool hasParameter(const std::string& parameterName) const;
 
 private:

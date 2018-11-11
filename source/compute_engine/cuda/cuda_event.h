@@ -2,9 +2,9 @@
 
 #include <cstdint>
 #include <string>
-#include "cuda.h"
-#include "cuda_utility.h"
-#include "ktt_types.h"
+#include <cuda.h>
+#include <compute_engine/cuda/cuda_utility.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -40,7 +40,7 @@ public:
         return id;
     }
 
-    std::string getKernelName() const
+    const std::string& getKernelName() const
     {
         return kernelName;
     }

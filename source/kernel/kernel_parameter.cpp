@@ -1,5 +1,5 @@
-#include "kernel_parameter.h"
-#include "utility/ktt_utility.h"
+#include <kernel/kernel_parameter.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {
@@ -26,17 +26,17 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<doub
     }
 }
 
-std::string KernelParameter::getName() const
+const std::string& KernelParameter::getName() const
 {
     return name;
 }
 
-std::vector<size_t> KernelParameter::getValues() const
+const std::vector<size_t>& KernelParameter::getValues() const
 {
     return values;
 }
 
-std::vector<double> KernelParameter::getValuesDouble() const
+const std::vector<double>& KernelParameter::getValuesDouble() const
 {
     return valuesDouble;
 }

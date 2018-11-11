@@ -1,6 +1,6 @@
-#include "catch.hpp"
-#include "compute_engine/opencl/opencl_engine.h"
-#include "kernel_argument/kernel_argument.h"
+#include <catch.hpp>
+#include <compute_engine/opencl/opencl_engine.h>
+#include <kernel_argument/kernel_argument.h>
 
 std::string programSource(std::string("")
     + "__kernel void testKernel(float number, __global float* a, __global float* b, __global float* result)\n"

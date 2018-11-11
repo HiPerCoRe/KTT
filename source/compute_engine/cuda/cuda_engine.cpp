@@ -1,8 +1,8 @@
 #include <stdexcept>
-#include "cuda_engine.h"
-#include "utility/ktt_utility.h"
-#include "utility/logger.h"
-#include "utility/timer.h"
+#include <compute_engine/cuda/cuda_engine.h>
+#include <utility/ktt_utility.h>
+#include <utility/logger.h>
+#include <utility/timer.h>
 
 namespace ktt
 {

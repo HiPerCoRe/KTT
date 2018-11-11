@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include "kernel_argument.h"
+#include <kernel_argument/kernel_argument.h>
 
 namespace ktt
 {

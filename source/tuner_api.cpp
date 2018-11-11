@@ -1,6 +1,6 @@
 #include <iostream>
-#include "tuner_api.h"
-#include "tuner_core.h"
+#include <tuner_api.h>
+#include <tuner_core.h>
 
 namespace ktt
 {

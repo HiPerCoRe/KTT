@@ -3,11 +3,11 @@
 #include <map>
 #include <set>
 #include <utility>
-#include "manipulator_interface.h"
-#include "compute_engine/compute_engine.h"
-#include "dto/kernel_runtime_data.h"
-#include "kernel/kernel_configuration.h"
-#include "kernel_argument/kernel_argument.h"
+#include <compute_engine/compute_engine.h>
+#include <dto/kernel_runtime_data.h>
+#include <kernel/kernel_configuration.h>
+#include <kernel_argument/kernel_argument.h>
+#include <tuning_runner/manipulator_interface.h>
 
 namespace ktt
 {

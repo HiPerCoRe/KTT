@@ -6,13 +6,13 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "CL/cl.h"
-#include "opencl_event.h"
-#include "opencl_utility.h"
-#include "kernel_argument/kernel_argument.h"
-#include "enum/argument_access_type.h"
-#include "enum/argument_data_type.h"
-#include "enum/argument_memory_location.h"
+#include <CL/cl.h>
+#include <compute_engine/opencl/opencl_event.h>
+#include <compute_engine/opencl/opencl_utility.h>
+#include <enum/argument_access_type.h>
+#include <enum/argument_data_type.h>
+#include <enum/argument_memory_location.h>
+#include <kernel_argument/kernel_argument.h>
 
 namespace ktt
 {

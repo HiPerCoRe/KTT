@@ -6,17 +6,17 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "compute_engine/compute_engine.h"
+#include <compute_engine/compute_engine.h>
 
 #ifdef KTT_PLATFORM_OPENCL
-#include "opencl_buffer.h"
-#include "opencl_command_queue.h"
-#include "opencl_context.h"
-#include "opencl_device.h"
-#include "opencl_event.h"
-#include "opencl_kernel.h"
-#include "opencl_platform.h"
-#include "opencl_program.h"
+#include <compute_engine/opencl/opencl_buffer.h>
+#include <compute_engine/opencl/opencl_command_queue.h>
+#include <compute_engine/opencl/opencl_context.h>
+#include <compute_engine/opencl/opencl_device.h>
+#include <compute_engine/opencl/opencl_event.h>
+#include <compute_engine/opencl/opencl_kernel.h>
+#include <compute_engine/opencl/opencl_platform.h>
+#include <compute_engine/opencl/opencl_program.h>
 #endif // KTT_PLATFORM_OPENCL
 
 namespace ktt

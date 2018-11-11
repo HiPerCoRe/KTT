@@ -2,8 +2,8 @@
 
 #include <map>
 #include <vector>
-#include "kernel/kernel_configuration.h"
-#include "kernel/kernel_parameter_pack.h"
+#include <kernel/kernel_configuration.h>
+#include <kernel/kernel_parameter_pack.h>
 
 namespace ktt
 {

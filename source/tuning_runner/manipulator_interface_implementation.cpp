@@ -1,8 +1,8 @@
 #include <stdexcept>
 #include <utility>
-#include "manipulator_interface_implementation.h"
-#include "utility/ktt_utility.h"
-#include "utility/timer.h"
+#include <tuning_runner/manipulator_interface_implementation.h>
+#include <utility/ktt_utility.h>
+#include <utility/timer.h>
 
 namespace ktt
 {

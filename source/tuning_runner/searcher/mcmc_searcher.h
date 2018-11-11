@@ -4,11 +4,11 @@
 #include <chrono>
 #include <limits>
 #include <random>
+#include <set>
 #include <sstream>
 #include <stdexcept>
-#include <set>
-#include "searcher.h"
-#include "utility/logger.h"
+#include <tuning_runner/searcher/searcher.h>
+#include <utility/logger.h>
 
 namespace ktt
 {

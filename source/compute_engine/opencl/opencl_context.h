@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "CL/cl.h"
-#include "opencl_utility.h"
+#include <CL/cl.h>
+#include <compute_engine/opencl/opencl_utility.h>
 
 namespace ktt
 {
@@ -30,7 +30,7 @@ public:
         return platform;
     }
 
-    std::vector<cl_device_id> getDevices() const
+    const std::vector<cl_device_id>& getDevices() const
     {
         return devices;
     }

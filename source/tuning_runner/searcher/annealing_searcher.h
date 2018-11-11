@@ -5,7 +5,7 @@
 #include <limits>
 #include <random>
 #include <stdexcept>
-#include "searcher.h"
+#include <tuning_runner/searcher/searcher.h>
 
 namespace ktt
 {

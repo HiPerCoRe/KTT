@@ -1,12 +1,12 @@
 #include <fstream>
 #include <iterator>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include <string>
-#include "kernel_runner.h"
-#include "utility/ktt_utility.h"
-#include "utility/logger.h"
-#include "utility/timer.h"
+#include <tuning_runner/kernel_runner.h>
+#include <utility/ktt_utility.h>
+#include <utility/logger.h>
+#include <utility/timer.h>
 
 namespace ktt
 {

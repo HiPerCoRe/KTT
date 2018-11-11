@@ -1,5 +1,5 @@
-#include "tuning_manipulator.h"
-#include "tuning_runner/manipulator_interface.h"
+#include <api/tuning_manipulator.h>
+#include <tuning_runner/manipulator_interface.h>
 
 namespace ktt
 {

@@ -3,14 +3,14 @@
 #include <ostream>
 #include <string>
 #include <vector>
-#include "ktt_types.h"
-#include "api/device_info.h"
-#include "api/output_descriptor.h"
-#include "api/platform_info.h"
-#include "dto/kernel_result.h"
-#include "dto/kernel_runtime_data.h"
-#include "enum/global_size_type.h"
-#include "kernel_argument/kernel_argument.h"
+#include <api/device_info.h>
+#include <api/output_descriptor.h>
+#include <api/platform_info.h>
+#include <dto/kernel_result.h>
+#include <dto/kernel_runtime_data.h>
+#include <enum/global_size_type.h>
+#include <kernel_argument/kernel_argument.h>
+#include <ktt_types.h>
 
 namespace ktt
 {

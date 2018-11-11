@@ -3,8 +3,8 @@
 #ifdef KTT_PLATFORM_OPENCL
 
 #include <string>
-#include "CL/cl.h"
-#include "enum/argument_access_type.h"
+#include <CL/cl.h>
+#include <enum/argument_access_type.h>
 
 namespace ktt
 {

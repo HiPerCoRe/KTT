@@ -1,12 +1,12 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
-#include "configuration_manager.h"
-#include "searcher/annealing_searcher.h"
-#include "searcher/full_searcher.h"
-#include "searcher/random_searcher.h"
-#include "searcher/mcmc_searcher.h"
-#include "utility/ktt_utility.h"
+#include <tuning_runner/searcher/annealing_searcher.h>
+#include <tuning_runner/searcher/full_searcher.h>
+#include <tuning_runner/searcher/random_searcher.h>
+#include <tuning_runner/searcher/mcmc_searcher.h>
+#include <tuning_runner/configuration_manager.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {

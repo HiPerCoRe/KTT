@@ -1,7 +1,7 @@
 #include <string>
 #include <utility>
-#include "result_validator.h"
-#include "utility/ktt_utility.h"
+#include <tuning_runner/result_validator.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {

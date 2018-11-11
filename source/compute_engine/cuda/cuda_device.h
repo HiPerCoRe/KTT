@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "cuda.h"
+#include <cuda.h>
 
 namespace ktt
 {
@@ -19,7 +19,7 @@ public:
         return device;
     }
 
-    std::string getName() const
+    const std::string& getName() const
     {
         return name;
     }

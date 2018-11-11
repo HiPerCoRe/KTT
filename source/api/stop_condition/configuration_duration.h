@@ -5,7 +5,7 @@
 
 #include <algorithm>
 #include <limits>
-#include "stop_condition.h"
+#include <api/stop_condition/stop_condition.h>
 
 namespace ktt
 {

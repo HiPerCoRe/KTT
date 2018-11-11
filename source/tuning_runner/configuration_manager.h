@@ -7,17 +7,17 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#include "configuration_storage.h"
-#include "ktt_types.h"
-#include "api/computation_result.h"
-#include "api/device_info.h"
-#include "enum/search_method.h"
-#include "kernel/kernel.h"
-#include "kernel/kernel_composition.h"
-#include "kernel/kernel_configuration.h"
-#include "kernel/kernel_constraint.h"
-#include "kernel/kernel_parameter.h"
-#include "searcher/searcher.h"
+#include <api/computation_result.h>
+#include <api/device_info.h>
+#include <enum/search_method.h>
+#include <kernel/kernel.h>
+#include <kernel/kernel_composition.h>
+#include <kernel/kernel_configuration.h>
+#include <kernel/kernel_constraint.h>
+#include <kernel/kernel_parameter.h>
+#include <tuning_runner/searcher/searcher.h>
+#include <tuning_runner/configuration_storage.h>
+#include <ktt_types.h>
 
 namespace ktt
 {

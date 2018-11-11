@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "vulkan/vulkan.h"
-#include "vulkan_utility.h"
+#include <vulkan/vulkan.h>
+#include <compute_engine/vulkan/vulkan_utility.h>
 
 namespace ktt
 {

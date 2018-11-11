@@ -5,8 +5,8 @@
 
 #include <iostream>
 #include <string>
-#include "ktt_platform.h"
-#include "ktt_types.h"
+#include <ktt_platform.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -30,29 +30,29 @@ public:
       */
     PlatformIndex getId() const;
 
-    /** @fn std::string getName() const
+    /** @fn const std::string& getName() const
       * Getter for name of platform retrieved from compute API.
       * @return Name of platform retrieved from compute API.
       */
-    std::string getName() const;
+    const std::string& getName() const;
 
-    /** @fn std::string getVendor() const
+    /** @fn const std::string& getVendor() const
       * Getter for name of platform vendor retrieved from compute API.
       * @return Name of platform vendor retrieved from compute API.
       */
-    std::string getVendor() const;
+    const std::string& getVendor() const;
 
-    /** @fn std::string getVersion() const
+    /** @fn const std::string& getVersion() const
       * Getter for platform version retrieved from compute API.
       * @return Platform version retrieved from compute API.
       */
-    std::string getVersion() const;
+    const std::string& getVersion() const;
 
-    /** @fn std::string getExtensions() const
+    /** @fn const std::string& getExtensions() const
       * Getter for list of supported platform extensions retrieved from compute API.
       * @return List of supported platform extensions retrieved from compute API.
       */
-    std::string getExtensions() const;
+    const std::string& getExtensions() const;
 
     /** @fn void setVendor(const std::string& vendor)
       * Setter for name of platform vendor.

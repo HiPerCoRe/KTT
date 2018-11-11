@@ -6,8 +6,8 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "ktt_platform.h"
-#include "api/parameter_pair.h"
+#include <api/parameter_pair.h>
+#include <ktt_platform.h>
 
 namespace ktt
 {
@@ -52,23 +52,23 @@ public:
       */
     uint64_t getDuration() const;
 
-    /** @fn std::string getKernelName() const
+    /** @fn const std::string& getKernelName() const
       * Getter for kernel name.
       * @return Kernel name.
       */
-    std::string getKernelName() const;
+    const std::string& getKernelName() const;
 
-    /** @fn std::string getErrorMessage() const
+    /** @fn const std::string& getErrorMessage() const
       * Getter for error message.
       * @return If status is true, empty string. If status is false, message containing information about computation failure.
       */
-    std::string getErrorMessage() const;
+    const std::string& getErrorMessage() const;
 
-    /** @fn std::vector<ParameterPair> getConfiguration() const
+    /** @fn const std::vector<ParameterPair>& getConfiguration() const
       * Getter for tuning result configuration.
       * @return Tuning result configuration.
       */
-    std::vector<ParameterPair> getConfiguration() const;
+    const std::vector<ParameterPair>& getConfiguration() const;
 
 private:
     bool status;

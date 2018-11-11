@@ -3,12 +3,12 @@
 #include <map>
 #include <memory>
 #include <utility>
-#include "manipulator_interface_implementation.h"
-#include "api/tuning_manipulator.h"
-#include "compute_engine/compute_engine.h"
-#include "dto/kernel_result.h"
-#include "kernel/kernel_manager.h"
-#include "kernel_argument/argument_manager.h"
+#include <api/tuning_manipulator.h>
+#include <compute_engine/compute_engine.h>
+#include <dto/kernel_result.h>
+#include <kernel/kernel_manager.h>
+#include <kernel_argument/argument_manager.h>
+#include <tuning_runner/manipulator_interface_implementation.h>
 
 namespace ktt
 {

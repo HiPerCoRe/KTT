@@ -3,16 +3,16 @@
 #include <fstream>
 #include <memory>
 #include <vector>
-#include "ktt_types.h"
-#include "compute_engine/compute_engine.h"
-#include "enum/compute_api.h"
-#include "kernel/kernel_manager.h"
-#include "kernel_argument/argument_manager.h"
-#include "tuning_runner/kernel_runner.h"
-#include "tuning_runner/tuning_runner.h"
-#include "utility/logger.h"
-#include "utility/result_printer.h"
-#include "utility/result_loader.h"
+#include <compute_engine/compute_engine.h>
+#include <enum/compute_api.h>
+#include <kernel/kernel_manager.h>
+#include <kernel_argument/argument_manager.h>
+#include <tuning_runner/kernel_runner.h>
+#include <tuning_runner/tuning_runner.h>
+#include <utility/logger.h>
+#include <utility/result_loader.h>
+#include <utility/result_printer.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -100,9 +100,9 @@ public:
 
 private:
     // Attributes
+    ArgumentManager argumentManager;
+    KernelManager kernelManager;
     ResultPrinter resultPrinter;
-    std::unique_ptr<ArgumentManager> argumentManager;
-    std::unique_ptr<KernelManager> kernelManager;
     std::unique_ptr<ComputeEngine> computeEngine;
     std::unique_ptr<KernelRunner> kernelRunner;
     std::unique_ptr<TuningRunner> tuningRunner;

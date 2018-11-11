@@ -3,7 +3,7 @@
 #ifdef KTT_PLATFORM_VULKAN
 
 #include <string>
-#include "vulkan/vulkan.h"
+#include <vulkan/vulkan.h>
 
 namespace ktt
 {

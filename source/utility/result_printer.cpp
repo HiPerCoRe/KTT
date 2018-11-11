@@ -1,5 +1,5 @@
 #include <algorithm>
-#include "result_printer.h"
+#include <utility/result_printer.h>
 
 namespace ktt
 {

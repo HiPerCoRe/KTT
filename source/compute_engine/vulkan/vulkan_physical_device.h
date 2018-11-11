@@ -1,10 +1,10 @@
 #pragma once
 
 #include <string>
-#include "vulkan/vulkan.h"
-#include "ktt_types.h"
-#include "api/device_info.h"
-#include "vulkan_utility.h"
+#include <vulkan/vulkan.h>
+#include <api/device_info.h>
+#include <compute_engine/vulkan/vulkan_utility.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -27,7 +27,7 @@ public:
         return physicalDevice;
     }
 
-    std::string getName() const
+    const std::string& getName() const
     {
         return name;
     }

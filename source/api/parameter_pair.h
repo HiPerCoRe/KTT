@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <iostream>
 #include <string>
-#include "ktt_platform.h"
+#include <ktt_platform.h>
 
 namespace ktt
 {
@@ -42,11 +42,11 @@ public:
       */
     void setValue(const size_t value);
 
-    /** @fn std::string getName() const
+    /** @fn const std::string& getName() const
       * Returns name of a parameter.
       * @return Name of a parameter.
       */
-    std::string getName() const;
+    const std::string& getName() const;
 
     /** @fn size_t getValue() const
       * Returns integer representation of parameter value.

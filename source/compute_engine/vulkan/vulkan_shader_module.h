@@ -1,9 +1,9 @@
 #pragma once
 
 #include <string>
-#include "vulkan/vulkan.h"
-#include "glslang_compiler.h"
-#include "vulkan_utility.h"
+#include <vulkan/vulkan.h>
+#include <compute_engine/vulkan/glslang_compiler.h>
+#include <compute_engine/vulkan/vulkan_utility.h>
 
 namespace ktt
 {

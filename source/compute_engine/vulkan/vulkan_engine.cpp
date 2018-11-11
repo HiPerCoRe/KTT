@@ -1,6 +1,6 @@
-#include "vulkan_engine.h"
-#include "utility/logger.h"
-#include "utility/timer.h"
+#include <compute_engine/vulkan/vulkan_engine.h>
+#include <utility/logger.h>
+#include <utility/timer.h>
 
 namespace ktt
 {

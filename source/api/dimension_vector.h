@@ -5,9 +5,9 @@
 
 #include <iostream>
 #include <vector>
-#include "ktt_platform.h"
-#include "enum/modifier_action.h"
-#include "enum/modifier_dimension.h"
+#include <enum/modifier_action.h>
+#include <enum/modifier_dimension.h>
+#include <ktt_platform.h>
 
 namespace ktt
 {

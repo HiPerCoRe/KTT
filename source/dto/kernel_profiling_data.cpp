@@ -1,4 +1,4 @@
-#include "kernel_profiling_data.h"
+#include <dto/kernel_profiling_data.h>
 
 namespace ktt
 {

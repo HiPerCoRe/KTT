@@ -14,46 +14,46 @@
 #include <vector>
 
 // Compatibility for multiple platforms
-#include "ktt_platform.h"
+#include <ktt_platform.h>
 
 // Data types and enums
-#include "ktt_types.h"
-#include "enum/argument_access_type.h"
-#include "enum/argument_data_type.h"
-#include "enum/argument_memory_location.h"
-#include "enum/argument_upload_type.h"
-#include "enum/compute_api.h"
-#include "enum/global_size_type.h"
-#include "enum/logging_level.h"
-#include "enum/modifier_action.h"
-#include "enum/modifier_dimension.h"
-#include "enum/modifier_type.h"
-#include "enum/print_format.h"
-#include "enum/time_unit.h"
-#include "enum/search_method.h"
-#include "enum/validation_method.h"
+#include <ktt_types.h>
+#include <enum/argument_access_type.h>
+#include <enum/argument_data_type.h>
+#include <enum/argument_memory_location.h>
+#include <enum/argument_upload_type.h>
+#include <enum/compute_api.h>
+#include <enum/global_size_type.h>
+#include <enum/logging_level.h>
+#include <enum/modifier_action.h>
+#include <enum/modifier_dimension.h>
+#include <enum/modifier_type.h>
+#include <enum/print_format.h>
+#include <enum/time_unit.h>
+#include <enum/search_method.h>
+#include <enum/validation_method.h>
 
 // Data holders
-#include "api/computation_result.h"
-#include "api/device_info.h"
-#include "api/dimension_vector.h"
-#include "api/output_descriptor.h"
-#include "api/platform_info.h"
+#include <api/computation_result.h>
+#include <api/device_info.h>
+#include <api/dimension_vector.h>
+#include <api/output_descriptor.h>
+#include <api/platform_info.h>
 
 // Stop conditions
-#include "api/stop_condition/configuration_duration.h"
-#include "api/stop_condition/configuration_count.h"
-#include "api/stop_condition/configuration_fraction.h"
-#include "api/stop_condition/tuning_duration.h"
+#include <api/stop_condition/configuration_duration.h>
+#include <api/stop_condition/configuration_count.h>
+#include <api/stop_condition/configuration_fraction.h>
+#include <api/stop_condition/tuning_duration.h>
 
 // Reference class interface
-#include "api/reference_class.h"
+#include <api/reference_class.h>
 
 // Tuning manipulator interface
-#include "api/tuning_manipulator.h"
+#include <api/tuning_manipulator.h>
 
 // Support for 16-bit floating point data type
-#include "half.hpp"
+#include <half.hpp>
 
 /** @namespace ktt
   * All classes, methods and type aliases related to KTT framework are located inside ktt namespace.

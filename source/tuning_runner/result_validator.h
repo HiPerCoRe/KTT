@@ -9,13 +9,13 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
-#include "half.hpp"
-#include "api/reference_class.h"
-#include "enum/validation_method.h"
-#include "kernel/kernel_manager.h"
-#include "kernel_argument/argument_manager.h"
-#include "tuning_runner/kernel_runner.h"
-#include "utility/logger.h"
+#include <api/reference_class.h>
+#include <enum/validation_method.h>
+#include <kernel/kernel_manager.h>
+#include <kernel_argument/argument_manager.h>
+#include <tuning_runner/kernel_runner.h>
+#include <utility/logger.h>
+#include <half.hpp>
 
 namespace ktt
 {

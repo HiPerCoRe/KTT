@@ -1,4 +1,4 @@
-#include "parameter_pair.h"
+#include <api/parameter_pair.h>
 
 namespace ktt
 {
@@ -30,7 +30,7 @@ void ParameterPair::setValue(const size_t value)
     this->valueDouble = static_cast<double>(value);
 }
 
-std::string ParameterPair::getName() const
+const std::string& ParameterPair::getName() const
 {
     return name;
 }

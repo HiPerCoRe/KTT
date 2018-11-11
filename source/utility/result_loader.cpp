@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <fstream>
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
-#include "result_loader.h"
+#include <utility/result_loader.h>
 
 namespace ktt
 {
@@ -95,7 +95,7 @@ KernelResult ResultLoader::readResult(const KernelConfiguration& configuration) 
     const std::vector<ParameterPair> paramPairs = configuration.getParameterPairs();
     if (paramsLength != paramPairs.size())
     {
-        throw std::runtime_error(std::string("Number of kernel's tuning parameters mismath with number of readed tuning parameters."));
+        throw std::runtime_error("Number of kernel's tuning parameters mismatch with number of read tuning parameters");
     }
 
     for (auto val : values)
@@ -118,8 +118,7 @@ KernelResult ResultLoader::readResult(const KernelConfiguration& configuration) 
     }
 
     /* data not found, suppose kernel failed */
-    throw std::runtime_error(std::string("Kernel measurement missing."));
+    throw std::runtime_error("Kernel measurement not found");
 }
-
 
 } // namespace ktt
