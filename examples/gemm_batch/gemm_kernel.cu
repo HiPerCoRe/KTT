@@ -184,13 +184,16 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     int preloadStartA = blockIdx.x*SIZE_A*SIZE_B;
     int preloadStartB = blockIdx.x*SIZE_C*SIZE_A;
     __shared__ REAL bufA[SIZE_B*SIZE_A];
-    __shared__ REAL bufB[SIZE_A][SIZE_C];
+    //__shared__ REAL bufB[SIZE_A][SIZE_C];
+    __shared__ REAL bufB[SIZE_A*SIZE_C];
     for (int i = ty*blockDim.x+tx; i < SIZE_A*SIZE_B; i+= blockDim.x*MGCG_GROUP_SIZE_Y) // MGCG_GROUP_SIZE_Y = SIZE_B/RTILE
         bufA[i] = A[preloadStartA + i];
-     for (int i = ty; i < SIZE_A; i+=MGCG_GROUP_SIZE_Y)
+     /*for (int i = ty; i < SIZE_A; i+=MGCG_GROUP_SIZE_Y)
         for (int j = tx; j < SIZE_C; j++)
-            bufB[i][j] = B[preloadStartB + i*SIZE_C + j];
-    __syncthreads();
+            bufB[i][j] = B[preloadStartB + i*SIZE_C + j];*/
+    for (int i = ty*blockDim.x+tx; i < SIZE_C*SIZE_A; i+= blockDim.x*MGCG_GROUP_SIZE_Y)
+        bufB[i] = B[preloadStartB + i];
+    __syncthreads(); //XXX
     /*if (tx == 0 && ty == 0)
         for (int i = 0; i < SIZE_A; i++) {
             for (int j = 0; j < SIZE_C; j++)
@@ -227,7 +230,8 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
         for (int i = 0; i < RTILE; i++)
             for (int j = 0; j < RTILE; j++) {
                 rbufA[i][j] = bufA[(ty*RTILE+i)*SIZE_A + block*RTILE + j];
-                rbufB[i][j] = bufB[block*RTILE+i][tx*RTILE+j];
+                //rbufB[i][j] = bufB[block*RTILE+i][tx*RTILE+j];
+                rbufB[i][j] = bufB[(block*RTILE+i)*SIZE_C + tx*RTILE+j];
         }
 #if RTILE == 4
         /*if (tx == 0 && ty == 1) {
