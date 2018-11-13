@@ -9,7 +9,7 @@
     #define STRIDE_BLOCK 32
 #endif
 
-#define USE_CUDA 0
+#define USE_CUDA 1
 
 #if STRIDED == 0
     #if USE_CUDA == 0
@@ -189,7 +189,10 @@ public:
 #else
             globalSize.setSizeX(batch);
 #endif
-            localSize.setSizeX(c);
+            size_t x = c / getParameterValue("RTILE", parameterValues);
+            if (c % getParameterValue("RTILE", parameterValues))
+                x++;
+            localSize.setSizeX(x);
             localSize.setSizeY(y);
         }
 
@@ -280,27 +283,30 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "STRIDE_BLOCK", {(size_t)STRIDE_BLOCK});
 #endif
 #if STRIDED == 0
-    tuner.addParameter(kernelId, "GRANULARITY", {1, 2, 3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
+    tuner.addParameter(kernelId, "GRANULARITY", {/*1, 2, */3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
 #else
     tuner.addParameter(kernelId, "GRANULARITY", {1}); // other granularities not supported
 #endif
 #if STRIDED == 0
-    tuner.addParameter(kernelId, "GROUP_SIZE_X", {1, 32, 64, 128, 256, 512});
+    tuner.addParameter(kernelId, "GROUP_SIZE_X", {1/*, 32, 64, 128, 256, 512*/});
 #else
     tuner.addParameter(kernelId, "GROUP_SIZE_X", {1, STRIDE_BLOCK});
 #endif
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_X", {1, (size_t)c});
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
-    tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
+    tuner.addParameter(kernelId, "CACHING_STRATEGY", {/*0, */1/*, 2*/}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
+    tuner.addParameter(kernelId, "RTILE", {/*1, 2, */4});
 
 #if STRIDED == 0
-    auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
+    auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] < v[4]);};
 #else
-    auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
+    auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] < v[4]);};
 #endif
-    tuner.addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y"}, parallelismConstraint);
+    tuner.addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y", "SIZE_B"}, parallelismConstraint);
     auto tmpConstraint = [](const std::vector<size_t>& v) {return (v[0] < 3 || v[1] < 2);};
     tuner.addConstraint(kernelId, {"GRANULARITY", "CACHING_STRATEGY"}, tmpConstraint);
+    auto blockingConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1) || (v[1]*v[0] >= v[2] && (v[1]-1)*v[0] < v[2]);};
+    tuner.addConstraint(kernelId, {"RTILE", "MGCG_GROUP_SIZE_Y", "SIZE_B"}, blockingConstraint);
 
     tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
