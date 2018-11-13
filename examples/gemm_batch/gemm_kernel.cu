@@ -184,13 +184,9 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     int preloadStartA = blockIdx.x*SIZE_A*SIZE_B;
     int preloadStartB = blockIdx.x*SIZE_C*SIZE_A;
     __shared__ REAL bufA[SIZE_B*SIZE_A];
-    //__shared__ REAL bufB[SIZE_A][SIZE_C];
     __shared__ REAL bufB[SIZE_A*SIZE_C];
     for (int i = ty*blockDim.x+tx; i < SIZE_A*SIZE_B; i+= blockDim.x*MGCG_GROUP_SIZE_Y) // MGCG_GROUP_SIZE_Y = SIZE_B/RTILE
         bufA[i] = A[preloadStartA + i];
-     /*for (int i = ty; i < SIZE_A; i+=MGCG_GROUP_SIZE_Y)
-        for (int j = tx; j < SIZE_C; j++)
-            bufB[i][j] = B[preloadStartB + i*SIZE_C + j];*/
     for (int i = ty*blockDim.x+tx; i < SIZE_C*SIZE_A; i+= blockDim.x*MGCG_GROUP_SIZE_Y)
         bufB[i] = B[preloadStartB + i];
     __syncthreads(); //XXX
@@ -230,7 +226,6 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
         for (int i = 0; i < RTILE; i++)
             for (int j = 0; j < RTILE; j++) {
                 rbufA[i][j] = bufA[(ty*RTILE+i)*SIZE_A + block*RTILE + j];
-                //rbufB[i][j] = bufB[block*RTILE+i][tx*RTILE+j];
                 rbufB[i][j] = bufB[(block*RTILE+i)*SIZE_C + tx*RTILE+j];
         }
 #if RTILE == 4
@@ -248,43 +243,28 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
                     tmp[j][i] += rbufA[j][k]*rbufB[k][i];
 /*      for (int i = 0; i < RTILE; i++) 
             printf("%f %f %f %f\n", tmp[i][0], tmp[i][1], tmp[i][2], tmp[i][3]);*/
+    }
 /* store results*/
 #if RTILE == 2
-        REAL2 storeVec;
-        for (int i = 0; i < RTILE; i++) {
-            storeVec.x = tmp[i][0];
-            storeVec.y = tmp[i][1];
-            REAL2 *out = reinterpret_cast<REAL2*>(C);
-	        out[(startC + (i+ty*RTILE)*SIZE_C + tx*RTILE)/2] = storeVec;
-        }
+    REAL2 storeVec;
+    for (int i = 0; i < RTILE; i++) {
+        storeVec.x = tmp[i][0];
+        storeVec.y = tmp[i][1];
+        REAL2 *out = reinterpret_cast<REAL2*>(C);
+        out[(startC + (i+ty*RTILE)*SIZE_C + tx*RTILE)/2] = storeVec;
+    }
 #endif
 #if RTILE == 4
-        REAL4 storeVec;
-        for (int i = 0; i < RTILE; i++) {
-            storeVec.x = tmp[i][0];
-            storeVec.y = tmp[i][1];
-            storeVec.z = tmp[i][2];
-            storeVec.w = tmp[i][3];
-//          printf("%f %f %f %f\n", storeVec.x, storeVec.y, storeVec.z, storeVec.w);
-            REAL4 *out = reinterpret_cast<REAL4*>(C);
-            out[(startC + (i+ty*RTILE)*SIZE_C + tx*RTILE)/4] = storeVec;
-        }
+    REAL4 storeVec;
+    for (int i = 0; i < RTILE; i++) {
+        storeVec.x = tmp[i][0];
+        storeVec.y = tmp[i][1];
+        storeVec.z = tmp[i][2];
+        storeVec.w = tmp[i][3];
+//      printf("%f %f %f %f\n", storeVec.x, storeVec.y, storeVec.z, storeVec.w);
+        REAL4 *out = reinterpret_cast<REAL4*>(C);
+        out[(startC + (i+ty*RTILE)*SIZE_C + tx*RTILE)/4] = storeVec;
     }
-#endif
-#if 0
-/* compute multiplication */
-    for (int i = ty; i < SIZE_B; i+= MGCG_GROUP_SIZE_Y) {
-        REAL tmp = (REAL)0.0;
-        for (int k = 0; k < SIZE_A; k++)
-#if CACHING_STRATEGY == 0
-            tmp += A[startA + i*SIZE_A + k] * B[startB + k*SIZE_C + tx];
-#endif
-#if CACHING_STRATEGY == 1
-            tmp += bufA[startA + i*SIZE_A + k] * bufB[startB + k*SIZE_C + tx];
-#endif
-        C[startC + i*SIZE_C + tx] = tmp;
-    }
-}
 #endif
 }
 #endif
