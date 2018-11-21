@@ -81,6 +81,7 @@ private:
     KernelParameterPack getCurrentParameterPack(const KernelComposition& composition) const;
     void initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,
         const std::vector<KernelConfiguration>& configurations);
+    static bool checkParameterPairs(const std::vector<ParameterPair>& pairs, const std::vector<KernelConstraint>& constraints);
     static size_t getConfigurationCountForParameters(const std::vector<KernelParameter>& parameters);
     static std::string getSearchMethodName(const SearchMethod method);
 };

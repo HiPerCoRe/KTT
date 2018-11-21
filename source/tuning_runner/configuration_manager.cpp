@@ -530,6 +530,11 @@ void ConfigurationManager::computeConfigurations(const Kernel& kernel, const std
         return;
     }
 
+    if (!checkParameterPairs(parameterPairs, kernel.getConstraints()))
+    {
+        return;
+    }
+
     KernelParameter parameter = parameters.at(currentParameterIndex); // process next parameter
 
     if (!parameter.hasValuesDouble())
@@ -580,6 +585,11 @@ void ConfigurationManager::computeCompositionConfigurations(const KernelComposit
         return;
     }
 
+    if (!checkParameterPairs(parameterPairs, composition.getConstraints()))
+    {
+        return;
+    }
+
     KernelParameter parameter = parameters.at(currentParameterIndex); // process next parameter
 
     if (!parameter.hasValuesDouble())
@@ -604,28 +614,10 @@ void ConfigurationManager::computeCompositionConfigurations(const KernelComposit
 
 bool ConfigurationManager::configurationIsValid(const KernelConfiguration& configuration, const std::vector<KernelConstraint>& constraints) const
 {
-    for (const auto& constraint : constraints)
+    const std::vector<ParameterPair>& pairs = configuration.getParameterPairs();
+    if (!checkParameterPairs(pairs, constraints))
     {
-        std::vector<std::string> constraintNames = constraint.getParameterNames();
-        std::vector<size_t> constraintValues(constraintNames.size());
-
-        for (size_t i = 0; i < constraintNames.size(); i++)
-        {
-            for (const auto& parameterPair : configuration.getParameterPairs())
-            {
-                if (parameterPair.getName() == constraintNames.at(i))
-                {
-                    constraintValues.at(i) = parameterPair.getValue();
-                    break;
-                }
-            }
-        }
-
-        auto constraintFunction = constraint.getConstraintFunction();
-        if (!constraintFunction(constraintValues))
-        {
-            return false;
-        }
+        return false;
     }
 
     std::vector<DimensionVector> localSizes = configuration.getLocalSizes();
@@ -812,6 +804,43 @@ void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMet
     default:
         throw std::runtime_error("Specified searcher is not supported");
     }
+}
+
+bool ConfigurationManager::checkParameterPairs(const std::vector<ParameterPair>& pairs, const std::vector<KernelConstraint>& constraints)
+{
+    for (const auto& constraint : constraints)
+    {
+        const std::vector<std::string>& constraintNames = constraint.getParameterNames();
+        std::vector<size_t> constraintValues(constraintNames.size());
+
+        for (size_t i = 0; i < constraintNames.size(); i++)
+        {
+            bool valueFound = false;
+
+            for (const auto& parameterPair : pairs)
+            {
+                if (parameterPair.getName() == constraintNames.at(i))
+                {
+                    constraintValues.at(i) = parameterPair.getValue();
+                    valueFound = true;
+                    break;
+                }
+            }
+
+            if (!valueFound)
+            {
+                return true;
+            }
+        }
+
+        auto constraintFunction = constraint.getConstraintFunction();
+        if (!constraintFunction(constraintValues))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 size_t ConfigurationManager::getConfigurationCountForParameters(const std::vector<KernelParameter>& parameters)
