@@ -230,7 +230,7 @@ workspace "ktt"
     
     targetdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}")
     objdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}/obj")
-
+    
 -- Library configuration
 project "ktt"
     kind "SharedLib"
@@ -320,6 +320,12 @@ project "conv_opencl"
 project "conv_3d"
     kind "ConsoleApp"
     files { "examples/conv_3d/*.cpp", "examples/conv_3d/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "covariance_opencl"
+    kind "ConsoleApp"
+    files { "examples/covariance/*.cpp", "examples/covariance/*.cl" }
     includedirs { "source" }
     links { "ktt" }
 
