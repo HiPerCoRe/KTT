@@ -129,20 +129,22 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
 
 #if GRANULARITY == 3
 extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int n) {
-    int matrix = blockIdx.x;
+    int matrix = blockIdx.x*CG_GROUP_SIZE_Z + threadIdx.z;
+    int matrixBatch = blockIdx.x*CG_GROUP_SIZE_Z;
     int tx = threadIdx.x;
     int ty = threadIdx.y;
+    int tz = threadIdx.z;
 
 /* preload data */
 #if CACHING_STRATEGY == 1 or CACHING_STRATEGY == 2
-    int preloadStartA = blockIdx.x*SIZE_A*SIZE_B;
-    int preloadStartB = blockIdx.x*SIZE_C*SIZE_A;
-    int myOffset = ty*SIZE_C + tx;
-    __shared__ REAL bufA[SIZE_A*SIZE_B];
-    __shared__ REAL bufB[SIZE_C*SIZE_A];
-    for (int i = myOffset; i < SIZE_A*SIZE_B; i+= SIZE_C*MGCG_GROUP_SIZE_Y)
+    int preloadStartA = matrixBatch*SIZE_A*SIZE_B;
+    int preloadStartB = matrixBatch*SIZE_C*SIZE_A;
+    int myOffset = tz*SIZE_C*MGCG_GROUP_SIZE_Y + ty*SIZE_C + tx;
+    __shared__ REAL bufA[CG_GROUP_SIZE_Z*SIZE_A*SIZE_B];
+    __shared__ REAL bufB[CG_GROUP_SIZE_Z*SIZE_C*SIZE_A];
+    for (int i = myOffset; i < SIZE_A*SIZE_B*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z)
         bufA[i] = A[preloadStartA + i];
-     for (int i = myOffset; i < SIZE_C*SIZE_A; i+= SIZE_C*MGCG_GROUP_SIZE_Y)
+     for (int i = myOffset; i < SIZE_C*SIZE_A*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z)
         bufB[i] = B[preloadStartB + i];
     __syncthreads();
 #endif
@@ -151,8 +153,8 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     int startA = matrix*SIZE_A*SIZE_B;
     int startB = matrix*SIZE_C*SIZE_A;
 #else
-    int startA = 0;
-    int startB = 0;
+    int startA = tz*SIZE_A*SIZE_B;
+    int startB = tz*SIZE_C*SIZE_A;
 #endif
     int startC = matrix*SIZE_C*SIZE_B;
 
@@ -170,17 +172,21 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
         C[startC + i*SIZE_C + tx] = tmp;
     }
 #else /* CACHING_STRATEGY == 2*/
-    const int batch = (SIZE_B+MGCG_GROUP_SIZE_Y-1)/MGCG_GROUP_SIZE_Y;
-    REAL tmp[batch];
-    for (int i = 0; i < batch; i++)
+    const int batch_base = SIZE_B/MGCG_GROUP_SIZE_Y;
+    const int batch_peel = (SIZE_B+MGCG_GROUP_SIZE_Y-1)/MGCG_GROUP_SIZE_Y;
+    REAL tmp[batch_peel];
+    for (int i = 0; i < batch_peel; i++)
         tmp[i] = REAL(0.0);
     for (int k = 0; k < SIZE_A; k++) {
         REAL myB = bufB[startB + k*SIZE_C + tx];
-        for (int i = 0; i < batch; i++) {
-            tmp[i] += bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*SIZE_A + k] * myB; // out-of-bounds read here
+        for (int i = 0; i < batch_base; i++) {
+            tmp[i] +=  bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*SIZE_A + k] * myB;
+        }
+        for (int i = batch_base; i < batch_peel; i++) {
+            tmp[i] += (i*MGCG_GROUP_SIZE_Y+ty < SIZE_B) ? bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*SIZE_A + k] * myB : (REAL)0.0;
         }
     }
-    for (int i = 0; i < batch; i++) {
+    for (int i = 0; i < batch_peel; i++) {
         int index = i*MGCG_GROUP_SIZE_Y+ty;
         if (index < SIZE_B)
             C[startC + index*SIZE_C + tx] = tmp[i];

@@ -183,14 +183,17 @@ public:
         }
         if (gran == 3) {
             size_t y = getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues);
+            size_t z = getParameterValue("CG_GROUP_SIZE_Z", parameterValues);
 #if USE_CUDA == 0
-            globalSize.setSizeX(batch*c);
+            globalSize.setSizeX(batch*c/z);
             globalSize.setSizeY(y);
+            globalSize.setSizeZ(z);
 #else
-            globalSize.setSizeX(batch);
+            globalSize.setSizeX(batch/z);
 #endif
             localSize.setSizeX(c);
             localSize.setSizeY(y);
+            localSize.setSizeZ(z);
         }
 
         runKernel(kernelId, globalSize, localSize);
@@ -291,14 +294,15 @@ int main(int argc, char** argv)
 #endif
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_X", {1, (size_t)c});
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "CG_GROUP_SIZE_Z", {1, 2, 4, 8, 16});
     tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
 
 #if STRIDED == 0
-    auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] < v[4]);};
+    auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1 && v[5] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1 && v[5] == 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] <= v[4]);};
 #else
     auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] < v[4]);};
 #endif
-    tuner.addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y", "SIZE_B"}, parallelismConstraint);
+    tuner.addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y", "SIZE_B", "CG_GROUP_SIZE_Z"}, parallelismConstraint);
 
     tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
