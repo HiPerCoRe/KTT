@@ -107,18 +107,20 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
         for (int j = 0; j < SIZE_B; j++)
             tmp[j] += bufA[startA + j*SIZE_A + i] * myB;
     }
-    for (int i = 0; i < SIZE_B; i++)
+    for (int i = 0; i < SIZE_B; i++) {
         C[startC + i*SIZE_C + tx] = tmp[i];
+    }
 #else
     for (int i = 0; i < SIZE_B; i++) {
         REAL tmp = (REAL)0.0;
-        for (int k = 0; k < SIZE_A; k++)
+        for (int k = 0; k < SIZE_A; k++) {
     #if CACHING_STRATEGY == 0
             tmp += A[startA + i*SIZE_A + k] * B[startB + k*SIZE_C + tx];
     #endif
     #if CACHING_STRATEGY == 1
             tmp += bufA[startA + i*SIZE_A + k] * bufB[startB + k*SIZE_C + tx];
     #endif
+        }
         C[startC + i*SIZE_C + tx] = tmp;
     }
 #endif
@@ -132,7 +134,7 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     int ty = threadIdx.y;
 
 /* preload data */
-#if CACHING_STRATEGY == 1
+#if CACHING_STRATEGY == 1 or CACHING_STRATEGY == 2
     int preloadStartA = blockIdx.x*SIZE_A*SIZE_B;
     int preloadStartB = blockIdx.x*SIZE_C*SIZE_A;
     int myOffset = ty*SIZE_C + tx;
@@ -155,6 +157,7 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     int startC = matrix*SIZE_C*SIZE_B;
 
 /* compute multiplication */
+#if CACHING_STRATEGY < 2
     for (int i = ty; i < SIZE_B; i+= MGCG_GROUP_SIZE_Y) {
         REAL tmp = (REAL)0.0;
         for (int k = 0; k < SIZE_A; k++)
@@ -166,6 +169,23 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
 #endif
         C[startC + i*SIZE_C + tx] = tmp;
     }
+#else /* CACHING_STRATEGY == 2*/
+    const int batch = (SIZE_B+MGCG_GROUP_SIZE_Y-1)/MGCG_GROUP_SIZE_Y;
+    REAL tmp[batch];
+    for (int i = 0; i < batch; i++)
+        tmp[i] = REAL(0.0);
+    for (int k = 0; k < SIZE_A; k++) {
+        REAL myB = bufB[startB + k*SIZE_C + tx];
+        for (int i = 0; i < batch; i++) {
+            tmp[i] += bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*SIZE_A + k] * myB; // out-of-bounds read here
+        }
+    }
+    for (int i = 0; i < batch; i++) {
+        int index = i*MGCG_GROUP_SIZE_Y+ty;
+        if (index < SIZE_B)
+            C[startC + index*SIZE_C + tx] = tmp[i];
+    }
+#endif
 }
 #endif
 

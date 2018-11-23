@@ -9,7 +9,7 @@
     #define STRIDE_BLOCK 32
 #endif
 
-#define USE_CUDA 0
+#define USE_CUDA 1
 
 #if STRIDED == 0
     #if USE_CUDA == 0
@@ -299,8 +299,6 @@ int main(int argc, char** argv)
     auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] < v[4]);};
 #endif
     tuner.addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y", "SIZE_B"}, parallelismConstraint);
-    auto tmpConstraint = [](const std::vector<size_t>& v) {return (v[0] < 3 || v[1] < 2);};
-    tuner.addConstraint(kernelId, {"GRANULARITY", "CACHING_STRATEGY"}, tmpConstraint);
 
     tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
