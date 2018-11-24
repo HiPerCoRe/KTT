@@ -20,11 +20,7 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     persistentBufferFlag(true),
     nextEventId(0)
 {
-    #ifdef KTT_PROFILING
-    checkCUDAError(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL), "cuptiActivityEnable");
-    #endif
-
-    Logger::getLogger().log(LoggingLevel::Debug, "Initializing CUDA runtime");
+    Logger::logDebug("Initializing CUDA runtime");
     checkCUDAError(cuInit(0), "cuInit");
 
     auto devices = getCUDADevices();
@@ -33,15 +29,20 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
         throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
     }
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Initializing CUDA context");
+    Logger::logDebug("Initializing CUDA context");
     context = std::make_unique<CUDAContext>(devices.at(deviceIndex).getDevice());
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Initializing CUDA streams");
+    Logger::logDebug("Initializing CUDA streams");
     for (uint32_t i = 0; i < queueCount; i++)
     {
         auto stream = std::make_unique<CUDAStream>(i, context->getContext(), devices.at(deviceIndex).getDevice());
         streams.push_back(std::move(stream));
     }
+
+#ifdef KTT_PROFILING
+    Logger::logDebug("Initializing CUPTI profiling metric IDs");
+    profilingMetrics = getProfilingMetricsForCurrentDevice();
+#endif // KTT_PROFILING
 }
 
 KernelResult CUDAEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -826,6 +827,56 @@ CUdeviceptr* CUDAEngine::loadBufferFromCache(const ArgumentId id) const
 
     return nullptr;
 }
+
+#ifdef KTT_PROFILING
+
+CUpti_MetricID CUDAEngine::getMetricIdFromName(const std::string& metricName)
+{
+    CUpti_MetricID metricId;
+    const CUptiResult result = cuptiMetricGetIdFromName(context->getDevice(), metricName.c_str(), &metricId);
+
+    switch (result)
+    {
+    case CUPTI_SUCCESS:
+        return metricId;
+    case CUPTI_ERROR_INVALID_METRIC_NAME:
+        return std::numeric_limits<CUpti_MetricID>::max();
+    default:
+        checkCUDAError(result, "cuptiMetricGetIdFromName");
+    }
+
+    return 0;
+}
+
+std::vector<CUpti_MetricID> CUDAEngine::getProfilingMetricsForCurrentDevice()
+{
+    const std::vector<std::string>& metricNames = getProfilingMetricNames();
+    std::vector<CUpti_MetricID> collectedMetrics;
+
+    for (const auto& metricName : metricNames)
+    {
+        CUpti_MetricID id = getMetricIdFromName(metricName);
+        if (id != std::numeric_limits<CUpti_MetricID>::max())
+        {
+            collectedMetrics.push_back(id);
+        }
+    }
+
+    return collectedMetrics;
+}
+
+const std::vector<std::string>& CUDAEngine::getProfilingMetricNames()
+{
+    static const std::vector<std::string> result{"achieved_occupancy", "branch_efficiency", "sm_efficiency", "dram_utilization", "gld_efficiency",
+        "gst_efficiency", "dram_read_transactions", "dram_write_transactions", "shared_utilization", "l1_shared_utilization", "shared_efficiency",
+        "shared_load_transactions", "shared_store_transactions", "tex_fu_utilization", "l2_utilization", "alu_fu_utilization",
+        "half_precision_fu_utilization", "single_precision_fu_utilization", "double_precision_fu_utilization", "ldst_fu_utilization",
+        "special_fu_utilization", "inst_executed", "inst_fp_16", "inst_fp_32", "inst_fp_64", "inst_integer", "inst_inter_thread_communication",
+        "inst_misc", "inst_replay_overhead"};
+    return result;
+}
+
+#endif // KTT_PROFILING
 
 #else
 
