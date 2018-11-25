@@ -106,7 +106,7 @@ private:
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> kernelEvents;
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> bufferEvents;
 #ifdef KTT_PROFILING
-    std::vector<CUpti_MetricID> profilingMetrics;
+    std::vector<std::pair<std::string, CUpti_MetricID>> profilingMetrics;
     std::map<std::pair<std::string, std::string>, CUDAProfilingState> kernelProfilingStates;
 #endif // KTT_PROFILING
 
@@ -118,8 +118,9 @@ private:
     CUdeviceptr* loadBufferFromCache(const ArgumentId id) const;
 
 #ifdef KTT_PROFILING
+    static void CUPTIAPI getMetricValueCallback(void* userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const CUpti_CallbackData* info);
     CUpti_MetricID getMetricIdFromName(const std::string& metricName);
-    std::vector<CUpti_MetricID> getProfilingMetricsForCurrentDevice();
+    std::vector<std::pair<std::string, CUpti_MetricID>> getProfilingMetricsForCurrentDevice();
     static const std::vector<std::string>& getProfilingMetricNames();
 #endif // KTT_PROFILING
 };

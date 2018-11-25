@@ -292,7 +292,7 @@ int main(int argc, char **argv) {
     else if (v[0] == 1)
       return true;
     // Set TBZ to 1, WPTZ to 1, and LOCAL to 1/2 for Sliding plane kernel (ALGORITHM == 2)
-    else if (v[0] == 2)
+    else // v[0] == 2
       return (v[3] == 1 && v[6] == 1 && v[7] != 0);
   };
   tuner.addConstraint(kernelId,
