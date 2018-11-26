@@ -296,6 +296,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "CG_GROUP_SIZE_Z", {1, 2, 4, 8, 16});
     tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
+    tuner.addParameter(kernelId, "PADD", {0, 1});
 
 #if STRIDED == 0
     auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1 && v[5] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1 && v[5] == 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] <= v[4]);};
@@ -303,6 +304,8 @@ int main(int argc, char** argv)
     auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] < v[4]);};
 #endif
     tuner.addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y", "SIZE_B", "CG_GROUP_SIZE_Z"}, parallelismConstraint);
+    auto paddConstraint = [](const std::vector<size_t>& v) {return (v[0] == 0) || (v[1] > 0);};
+    tuner.addConstraint(kernelId, {"PADD", "CACHING_STRATEGY"}, paddConstraint);
 
     tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
