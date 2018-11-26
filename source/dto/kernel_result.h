@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <dto/kernel_profiling_data.h>
+#include <api/kernel_profiling_data.h>
 #include <kernel/kernel_configuration.h>
 
 namespace ktt

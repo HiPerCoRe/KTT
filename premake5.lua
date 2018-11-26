@@ -317,6 +317,12 @@ project "conv_opencl"
     includedirs { "source" }
     links { "ktt" }
 
+project "conv_3d"
+    kind "ConsoleApp"
+    files { "examples/conv_3d/*.cpp", "examples/conv_3d/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
 project "reduction_opencl"
     kind "ConsoleApp"
     files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }

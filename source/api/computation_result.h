@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <api/kernel_profiling_data.h>
 #include <api/parameter_pair.h>
 #include <ktt_platform.h>
 
@@ -30,6 +31,17 @@ public:
       * @param duration Duration of a computation using specified configuration.
       */
     explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration);
+
+    /** @fn explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
+      * const KernelProfilingData& profilingData))
+      * Constructor which initializes tuning result for successful computations. Error message is initialized to empty string.
+      * @param kernelName Name of a kernel.
+      * @param configuration Configuration used for computation.
+      * @param duration Duration of a computation using specified configuration.
+      * @param profilingData Profiling data about kernel run in specified configuration.
+      */
+    explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
+        const KernelProfilingData& profilingData);
 
     /** @fn explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration,
       * const std::string& errorMessage)
@@ -70,12 +82,19 @@ public:
       */
     const std::vector<ParameterPair>& getConfiguration() const;
 
+    /** @fn const KernelProfilingData& getProfilingData() const
+      * Getter for profiling data about kernel run in the current configuration.
+      * @return Profiling data about kernel run in the current configuration.
+      */
+    const KernelProfilingData& getProfilingData() const;
+
 private:
     bool status;
     uint64_t duration;
     std::string kernelName;
     std::string errorMessage;
     std::vector<ParameterPair> configuration;
+    KernelProfilingData profilingData;
 };
 
 } // namespace ktt

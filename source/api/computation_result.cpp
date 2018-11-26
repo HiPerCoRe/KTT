@@ -18,6 +18,16 @@ ComputationResult::ComputationResult(const std::string& kernelName, const std::v
     configuration(configuration)
 {}
 
+ComputationResult::ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
+    const KernelProfilingData& profilingData) :
+    status(true),
+    duration(duration),
+    kernelName(kernelName),
+    errorMessage(""),
+    configuration(configuration),
+    profilingData(profilingData)
+{}
+
 ComputationResult::ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration,
     const std::string& errorMessage) :
     status(false),
@@ -50,6 +60,11 @@ const std::string& ComputationResult::getErrorMessage() const
 const std::vector<ParameterPair>& ComputationResult::getConfiguration() const
 {
     return configuration;
+}
+
+const KernelProfilingData& ComputationResult::getProfilingData() const
+{
+    return profilingData;
 }
 
 } // namespace ktt

@@ -22,6 +22,7 @@
 #include <compute_engine/cuda/cuda_utility.h>
 #ifdef KTT_PROFILING
 #include <cupti.h>
+#include <compute_engine/cuda/cuda_profiling_state.h>
 #endif // KTT_PROFILING
 #endif // KTT_PLATFORM_CUDA
 
@@ -104,6 +105,10 @@ private:
     std::map<std::pair<std::string, std::string>, std::unique_ptr<CUDAKernel>> kernelCache;
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> kernelEvents;
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> bufferEvents;
+#ifdef KTT_PROFILING
+    std::vector<std::pair<std::string, CUpti_MetricID>> profilingMetrics;
+    std::map<std::pair<std::string, std::string>, CUDAProfilingState> kernelProfilingStates;
+#endif // KTT_PROFILING
 
     DeviceInfo getCUDADeviceInfo(const DeviceIndex deviceIndex) const;
     std::vector<CUDADevice> getCUDADevices() const;
@@ -111,6 +116,13 @@ private:
     size_t getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
     CUDABuffer* findBuffer(const ArgumentId id) const;
     CUdeviceptr* loadBufferFromCache(const ArgumentId id) const;
+
+#ifdef KTT_PROFILING
+    static void CUPTIAPI getMetricValueCallback(void* userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const CUpti_CallbackData* info);
+    CUpti_MetricID getMetricIdFromName(const std::string& metricName);
+    std::vector<std::pair<std::string, CUpti_MetricID>> getProfilingMetricsForCurrentDevice();
+    static const std::vector<std::string>& getProfilingMetricNames();
+#endif // KTT_PROFILING
 };
 
 #else
