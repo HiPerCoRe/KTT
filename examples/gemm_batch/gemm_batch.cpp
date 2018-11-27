@@ -296,7 +296,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "CG_GROUP_SIZE_Z", {1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
-    tuner.addParameter(kernelId, "PADD", {0, 1});
+    tuner.addParameter(kernelId, "PADD_A", {0, 1});
     tuner.addParameter(kernelId, "DIRECT_WRITE", {0, 1});
 
 #if STRIDED == 0
@@ -306,7 +306,7 @@ int main(int argc, char** argv)
 #endif
     tuner.addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y", "SIZE_B", "CG_GROUP_SIZE_Z"}, parallelismConstraint);
     auto paddConstraint = [](const std::vector<size_t>& v) {return (v[0] == 0) || (v[1] > 0);};
-    tuner.addConstraint(kernelId, {"PADD", "CACHING_STRATEGY"}, paddConstraint);
+    tuner.addConstraint(kernelId, {"PADD_A", "CACHING_STRATEGY"}, paddConstraint);
     auto dwConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1) || (v[1] > 0);};
     tuner.addConstraint(kernelId, {"DIRECT_WRITE", "CACHING_STRATEGY"}, dwConstraint);
 
