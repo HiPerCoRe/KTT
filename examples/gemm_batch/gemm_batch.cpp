@@ -185,13 +185,19 @@ public:
             size_t y = getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues);
             size_t z = getParameterValue("CG_GROUP_SIZE_Z", parameterValues);
 #if USE_CUDA == 0
-            globalSize.setSizeX(batch*c/z);
+            if (getParameterValue("PADD_WARP", parameterValues) == 0)
+                globalSize.setSizeX(batch*c/z);
+            else
+                globalSize.setSizeX(batch*32/z);
             globalSize.setSizeY(y);
             globalSize.setSizeZ(z);
 #else
             globalSize.setSizeX(batch/z);
 #endif
-            localSize.setSizeX(c);
+            if (getParameterValue("PADD_WARP", parameterValues) == 0)
+                localSize.setSizeX(c);
+            else
+                localSize.setSizeX(32);
             localSize.setSizeY(y);
             localSize.setSizeZ(z);
         }
@@ -298,6 +304,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
     tuner.addParameter(kernelId, "PADD_A", {0, 1});
     tuner.addParameter(kernelId, "DIRECT_WRITE", {0, 1});
+    tuner.addParameter(kernelId, "PADD_WARP", {0, 1});
 
 #if STRIDED == 0
     auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1 && v[5] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1 && v[5] == 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] <= v[4]);};
@@ -309,6 +316,8 @@ int main(int argc, char** argv)
     tuner.addConstraint(kernelId, {"PADD_A", "CACHING_STRATEGY"}, paddConstraint);
     auto dwConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1) || (v[1] > 0);};
     tuner.addConstraint(kernelId, {"DIRECT_WRITE", "CACHING_STRATEGY"}, dwConstraint);
+    auto pwConstraint = [](const std::vector<size_t>& v) {return (v[0] == 0) || (v[1] == 3 && v[2] > 16);};
+    tuner.addConstraint(kernelId, {"PADD_WARP", "GRANULARITY", "SIZE_C"}, pwConstraint);
 
     tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
