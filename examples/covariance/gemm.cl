@@ -414,19 +414,13 @@ inline void MultiplyAccumulate(
 
 // Main entry of the kernel. This function contains the basic skeleton, the functionality is
 // provided by the inlined functions above.
-__attribute__((reqd_work_group_size(MDIMC, NDIMC, 1))) __kernel void gemm_fast(const int kSizeM,
-    const int kSizeK, const __global realM* restrict agm, __global realM* cgm) {
+__attribute__((reqd_work_group_size(MDIMC, NDIMC, 1))) __kernel void gemm_fast(
+    const int kSizeM, const int kSizeK, const __global realM* restrict agm, __global realM* cgm) {
 #if SYMMETRIC == 1
   const int bx = get_group_id(0);
   const int by = get_group_id(1);
-#  if MWG == NWG
-  if (by > bx) return;
-#  elif MWG > NWG
-  if (by > bx * MWG / NWG + MWG / NWG - 1) return;
-#  else
-  if (by * NWG / MWG > bx) return;
-#  endif
-#endif  // SYMMETRIC == 1
+  if (by * NWG > bx * MWG + MWG - 1) return;
+#endif
 // Combined thread identifier
 #if SA == 1 || SB == 1
   volatile int tid = get_local_id(0) + MDIMC * get_local_id(1);
