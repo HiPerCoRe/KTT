@@ -162,15 +162,12 @@ int main(int argc, char** argv) {
   }
 
   // Kernel dimensions
-  const ktt::DimensionVector refMeanNdRangeDim(M, 1);
-  const ktt::DimensionVector refMeanWorkGroupDim(256, 1);
-  const ktt::DimensionVector refReduceNdRangeDim(M, M);
-  const ktt::DimensionVector refReduceWorkGroupDim(32, 8);
-  const ktt::DimensionVector refCovarNdRangeDim(M, 1);
-  const ktt::DimensionVector refCovarWorkGroupDim(256, 1);
+  const ktt::DimensionVector ref1DNdRangeDim(M, 1);
+  const ktt::DimensionVector ref1DWorkGroupDim(256, 1);
+  const ktt::DimensionVector refSymmetricNdRangeDim(M, M);
+  const ktt::DimensionVector ref2DWorkGroupDim(32, 8);
 
   const ktt::DimensionVector ndRangeDim(M, N);
-  const ktt::DimensionVector workGroupDim(32, 16);  // TODO
 
   float float_n = 3214212.01;
 
@@ -191,22 +188,22 @@ int main(int argc, char** argv) {
 
   // Add kernels to tuner, one of the kernels acts as reference kernel
   ktt::KernelId refMeanKId =
-      tuner.addKernelFromFile(refKernelFile, "mean_kernel", refMeanNdRangeDim, refMeanWorkGroupDim);
+      tuner.addKernelFromFile(refKernelFile, "mean_kernel", ref1DNdRangeDim, ref1DWorkGroupDim);
   ktt::KernelId refReduceKId = tuner.addKernelFromFile(
-      refKernelFile, "reduce_kernel", refReduceNdRangeDim, refReduceWorkGroupDim);
-  ktt::KernelId refCovarKId = tuner.addKernelFromFile(
-      refKernelFile, "covar_kernel", refCovarNdRangeDim, refCovarWorkGroupDim);
+      refKernelFile, "reduce_kernel", refSymmetricNdRangeDim, ref2DWorkGroupDim);
+  ktt::KernelId refCovarKId =
+      tuner.addKernelFromFile(refKernelFile, "covar_kernel", ref1DNdRangeDim, ref1DWorkGroupDim);
 
   ktt::KernelId meanKId =
-      tuner.addKernelFromFile(kernelFile, "mean_kernel", refMeanNdRangeDim, refMeanWorkGroupDim);
+      tuner.addKernelFromFile(kernelFile, "mean_kernel", ref1DNdRangeDim, ref1DWorkGroupDim);
   ktt::KernelId reduceKid = tuner.addKernelFromFile(
-      kernelFile, "reduce_kernel", refReduceNdRangeDim, refReduceWorkGroupDim);
+      kernelFile, "reduce_kernel", refSymmetricNdRangeDim, ref2DWorkGroupDim);
   ktt::KernelId covarKId =
-      tuner.addKernelFromFile(kernelFile, "covar_kernel", refCovarNdRangeDim, refCovarWorkGroupDim);
+      tuner.addKernelFromFile(kernelFile, "covar_kernel", ref1DNdRangeDim, ref1DWorkGroupDim);
   ktt::KernelId gemmKId =
-      tuner.addKernelFromFile(gemmFile, "gemm_fast", ndRangeDim, refCovarWorkGroupDim);
+      tuner.addKernelFromFile(gemmFile, "gemm_fast", ndRangeDim, ref1DWorkGroupDim);
   ktt::KernelId triangularToSymmetricKId = tuner.addKernelFromFile(
-      kernelFile, "triangular_to_symmetric", ndRangeDim, refMeanWorkGroupDim);
+      kernelFile, "triangular_to_symmetric", refSymmetricNdRangeDim, ref1DWorkGroupDim);
 
   ktt::KernelId kernelId = tuner.addComposition("Covariance",
       std::vector<ktt::KernelId>{refMeanKId, refReduceKId, refCovarKId, meanKId, reduceKid,
@@ -241,16 +238,13 @@ int main(int argc, char** argv) {
   tuner.addParameter(kernelId, "PRECISION", {32});
 
   // Set kernel sizes
-  auto globalModifierX = [](const size_t size, const std::vector<size_t>& v) {
+  auto globalModifier = [](const size_t size, const std::vector<size_t>& v) {
     return (M * v[0] / v[1]);
   };
   tuner.setCompositionKernelThreadModifier(kernelId, gemmKId, ktt::ModifierType::Global,
-      ktt::ModifierDimension::X, std::vector<std::string>{"MDIMC", "MWG"}, globalModifierX);
-  auto globalModifierY = [](const size_t size, const std::vector<size_t>& v) {
-    return (N * v[0] / v[1]);
-  };
+      ktt::ModifierDimension::X, {"MDIMC", "MWG"}, globalModifier);
   tuner.setCompositionKernelThreadModifier(kernelId, gemmKId, ktt::ModifierType::Global,
-      ktt::ModifierDimension::Y, {"NDIMC", "NWG"}, globalModifierY);
+      ktt::ModifierDimension::Y, {"NDIMC", "NWG"}, globalModifier);
   auto localModifier = [](const size_t size, const std::vector<size_t>& v) { return (v[0]); };
   tuner.setCompositionKernelThreadModifier(kernelId, gemmKId, ktt::ModifierType::Local,
       ktt::ModifierDimension::X, {"MDIMC"}, localModifier);
