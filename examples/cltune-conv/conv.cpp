@@ -67,15 +67,14 @@ int main(int argc, char** argv)
     std::default_random_engine engine(device());
     std::uniform_real_distribution<float> distribution(-2.0f, 2.0f);
 
-    const size_t kExtraSize = 8 * FS;
-    std::vector<float> mat_a((kExtraSize + kSizeX) * (kExtraSize + kSizeY));
-    std::vector<float> mat_b(kSizeX * kSizeY);
+    std::vector<float> mat_a((kSizeX + 2 * HFS) * (kSizeY + 2 * HFS), 0.0f);
+    std::vector<float> mat_b(kSizeX * kSizeY, 0.0f);
     std::vector<float> coeff(FS * FS);
 
-    for (uint32_t i = 0; i < (kExtraSize + kSizeX) * (kExtraSize + kSizeY); i++)
-        mat_a.at(i) = distribution(engine);
-    for (uint32_t i = 0; i < kSizeX * kSizeY; i++)
-        mat_b.at(i) = 0.0f;
+    // Populates input data structure by padded data
+    for (size_t i = 0; i < kSizeY; i++)
+        for (size_t j = 0; j < kSizeX; j++)
+            mat_a[(i + HFS) * (kSizeX + 2 * HFS) + j + HFS] = distribution(engine);
 
     // Creates the filter coefficients (gaussian blur)
     float sigma = 1.0f;
