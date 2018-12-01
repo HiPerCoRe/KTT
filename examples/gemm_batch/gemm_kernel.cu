@@ -178,32 +178,15 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
 
 /* preload data */
 #if CACHING_STRATEGY == 1 or CACHING_STRATEGY == 2
-    const int preloadStartA = matrixBatch*SIZE_A*SIZE_B;
-    const int preloadStartB = matrixBatch*SIZE_C*SIZE_A;
-#if PADD_WARP == 0
-    const int myOffset = tz*SIZE_C*MGCG_GROUP_SIZE_Y + ty*SIZE_C + tx;
-#else /* PADD_WARP */
-    const int myOffset = tz*32*MGCG_GROUP_SIZE_Y + ty*32 + tx;
-#endif /* PADD_WARP */
+    int preloadStartA = matrixBatch*SIZE_A*SIZE_B;
+    int preloadStartB = matrixBatch*SIZE_C*SIZE_A;
+    int myOffset = tz*SIZE_C*MGCG_GROUP_SIZE_Y + ty*SIZE_C + tx;
     __shared__ REAL bufA[CG_GROUP_SIZE_Z*(SIZE_A+PADD_A)*SIZE_B];
-#if PADD_WARP == 0
     __shared__ REAL bufB[CG_GROUP_SIZE_Z*SIZE_C*(SIZE_A+PADD_A)];
-#else
-    __shared__ REAL bufB[CG_GROUP_SIZE_Z*32*(SIZE_A+PADD_A)];
-#endif
 #if DIRECT_WRITE == 0
-#if PADD_WARP == 0
     __shared__ REAL bufC[CG_GROUP_SIZE_Z*SIZE_C*SIZE_B];
-#else /* PADD_WARP */
-    __shared__ REAL bufC[CG_GROUP_SIZE_Z*32*SIZE_B];
-#endif /* PADD_WARP */
-#endif /* DIRECT_WRITE */
-#if PADD_WARP == 0
-    const int parallelIncrement = SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z;
-#else
-    const int parallelIncrement = 32*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z;
 #endif
-    for (int i = myOffset; i < SIZE_A*SIZE_B*CG_GROUP_SIZE_Z; i+= parallelIncrement) {
+    for (int i = myOffset; i < SIZE_A*SIZE_B*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
 #if PADD_A == 0
         bufA[i] = A[preloadStartA + i];
 #else
@@ -211,40 +194,29 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
         bufA[i+padd] = A[preloadStartA + i];
 #endif
     }
-    for (int i = myOffset; i < SIZE_C*SIZE_A*CG_GROUP_SIZE_Z; i+= parallelIncrement) {
-#if PADD_WARP == 0 
-        int padd = 0;
-#if PADD_A == 1
-        padd += SIZE_C*(i/(SIZE_A*SIZE_C));
-#endif /* PADD_A */
-#else /* PADD_WARP */
-        int padd = (32 - SIZE_C)*(i/SIZE_C);
-#if PADD_A == 1
-        padd += 32*(i/(SIZE_A*SIZE_C));
-#endif /* PADD_A */
-#endif /* PADD_WARP */
+     for (int i = myOffset; i < SIZE_C*SIZE_A*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
+#if PADD_A == 0
+        bufB[i] = B[preloadStartB + i];
+#else
+        int padd = SIZE_C*(i/(SIZE_A*SIZE_C));
         bufB[i+padd] = B[preloadStartB + i];
+#endif
     }
     __syncthreads();
 #endif
-
 /* offsets into memory */
 #if CACHING_STRATEGY == 0
     int startA = matrix*SIZE_A*SIZE_B;
     int startB = matrix*SIZE_C*SIZE_A;
-#else /* CACHING_STRATEGY */
+#else
     int startA = tz*(SIZE_A+PADD_A)*SIZE_B;
-#if PADD_WARP == 0
     int startB = tz*SIZE_C*(SIZE_A+PADD_A);
-#else /* PADD_WARP */
-    int startB = tz*32*(SIZE_A+PADD_A);
-#endif /* PADD_WARP */
-#endif  /* CACHING_STRATEGY */
+#endif
 #if DIRECT_WRITE == 0
     int startC = matrixBatch*SIZE_C*SIZE_B;
-#else /* DIRECT_WRITE */
+#else
     int startC = matrix*SIZE_C*SIZE_B;
-#endif /* DIRECT_WRITE */
+#endif
 
 /* compute multiplication */
 #if CACHING_STRATEGY < 2
@@ -253,41 +225,24 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
         for (int k = 0; k < SIZE_A; k++)
 #if CACHING_STRATEGY == 0
             tmp += A[startA + i*SIZE_A + k] * B[startB + k*SIZE_C + tx];
-#endif /* CACHING_STRATEGY */
+#endif
 #if CACHING_STRATEGY == 1
-#if PADD_WARP == 0
             tmp += bufA[startA + i*(SIZE_A+PADD_A) + k] * bufB[startB + k*SIZE_C + tx];
-#else /* PADD_WARP */
-            tmp += bufA[startA + i*(SIZE_A+PADD_A) + k] * bufB[startB + k*32 + tx];
-#endif /* PADD_WARP */
-#endif /* CACHING_STRATEGY */
+#endif
 #if DIRECT_WRITE == 0
-#if PADD_WARP == 0
         bufC[tz*SIZE_C*SIZE_B + i*SIZE_C + tx] = tmp;
-#else /* PADD_WARP */
-        bufC[tz*32*SIZE_B + i*32 + tx] = tmp;
-#endif /* PADD_WARP*/
-#else /* DIRECT_WRITE */
-#if PADD_WARP == 0
+#else
         C[startC + i*SIZE_C + tx] = tmp;
-#else /* PADD_WARP */
-        if (tx < SIZE_C)
-            C[startC + i*SIZE_C + tx] = tmp;
-#endif /* PADD_WARP */
-#endif /* DIRECT_WRITE */
+#endif
     }
-#else /* CACHING_STRATEGY */
+#else /* CACHING_STRATEGY == 2*/
     const int batch_base = SIZE_B/MGCG_GROUP_SIZE_Y;
     const int batch_peel = (SIZE_B+MGCG_GROUP_SIZE_Y-1)/MGCG_GROUP_SIZE_Y;
     REAL tmp[batch_peel];
     for (int i = 0; i < batch_peel; i++)
         tmp[i] = REAL(0.0);
     for (int k = 0; k < SIZE_A; k++) {
-#if PADD_WARP == 0
         REAL myB = bufB[startB + k*SIZE_C + tx];
-#else /* PADD_WARP */
-        REAL myB = bufB[startB + k*32 + tx];
-#endif /* PADD_WARP */
         for (int i = 0; i < batch_base; i++) {
             tmp[i] +=  bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_A) + k] * myB;
         }
@@ -299,30 +254,16 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
         int index = i*MGCG_GROUP_SIZE_Y+ty;
         if (index < SIZE_B)
 #if DIRECT_WRITE == 0
-#if PADD_WARP == 0
             bufC[tz*SIZE_C*SIZE_B + index*SIZE_C + tx] = tmp[i];
-#else /* PADD_WARP */
-            bufC[tz*32*SIZE_B + index*32 + tx] = tmp[i];
-#endif /* PADD_WARP */
-#else /* DIRECT_WRITE */
-#if PADD_WARP == 0
+#else
             C[startC + index*SIZE_C + tx] = tmp[i];
-#else /* PADD_WARP */
-            if (tx < SIZE_C)
-                C[startC + index*SIZE_C + tx] = tmp[i];
-#endif /* PADD_WARP */
-#endif /* DIRECT_WRITE */
+#endif
     }
-#endif /* CACHING_STRATEGY */
+#endif
 #if DIRECT_WRITE == 0
     __syncthreads();
-    for (int i = myOffset; i < SIZE_C*SIZE_B*CG_GROUP_SIZE_Z; i+= parallelIncrement) {
-#if PADD_WARP == 0
+    for (int i = myOffset; i < SIZE_C*SIZE_B*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
         C[startC + i] = bufC[i];
-#else /* PADD_WARP */
-        int padd = (32-SIZE_C)*(i/SIZE_C);
-        C[startC + i] = bufC[i+padd];
-#endif /* PADD_WARP */
     }
 #endif
 }
