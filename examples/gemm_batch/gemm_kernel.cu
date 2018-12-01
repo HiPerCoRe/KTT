@@ -177,72 +177,84 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     int tz = threadIdx.z;
 
 /* preload data */
-#if CACHING_STRATEGY == 1 or CACHING_STRATEGY == 2
+ #if CACHING_STRATEGY == 1 or CACHING_STRATEGY == 2
     int preloadStartA = matrixBatch*SIZE_A*SIZE_B;
     int preloadStartB = matrixBatch*SIZE_C*SIZE_A;
     int myOffset = tz*SIZE_C*MGCG_GROUP_SIZE_Y + ty*SIZE_C + tx;
     __shared__ REAL bufA[CG_GROUP_SIZE_Z*(SIZE_A+PADD_A)*SIZE_B];
+  #if CACHING_STRATEGY == 1 or MGCG_GROUP_SIZE_Y > 1
     __shared__ REAL bufB[CG_GROUP_SIZE_Z*SIZE_C*(SIZE_A+PADD_A)];
-#if DIRECT_WRITE == 0
+  #endif
+  #if DIRECT_WRITE == 0
     __shared__ REAL bufC[CG_GROUP_SIZE_Z*SIZE_C*SIZE_B];
-#endif
+  #endif
     for (int i = myOffset; i < SIZE_A*SIZE_B*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
-#if PADD_A == 0
+  #if PADD_A == 0
         bufA[i] = A[preloadStartA + i];
-#else
+  #else
         int padd = i/SIZE_A;
         bufA[i+padd] = A[preloadStartA + i];
-#endif
+  #endif
     }
-     for (int i = myOffset; i < SIZE_C*SIZE_A*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
-#if PADD_A == 0
+  #if CACHING_STRATEGY == 1 or MGCG_GROUP_SIZE_Y > 1
+    for (int i = myOffset; i < SIZE_C*SIZE_A*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
+   #if PADD_A == 0
         bufB[i] = B[preloadStartB + i];
-#else
+   #else
         int padd = SIZE_C*(i/(SIZE_A*SIZE_C));
         bufB[i+padd] = B[preloadStartB + i];
-#endif
+   #endif
     }
+  #endif
     __syncthreads();
-#endif
+ #endif
 /* offsets into memory */
-#if CACHING_STRATEGY == 0
+ #if CACHING_STRATEGY == 0
     int startA = matrix*SIZE_A*SIZE_B;
     int startB = matrix*SIZE_C*SIZE_A;
-#else
+ #else
     int startA = tz*(SIZE_A+PADD_A)*SIZE_B;
+  #if CACHING_STRATEGY == 2 and MGCG_GROUP_SIZE_Y == 1
+    int startB = matrix*SIZE_C*SIZE_A;
+  #else
     int startB = tz*SIZE_C*(SIZE_A+PADD_A);
-#endif
-#if DIRECT_WRITE == 0
+  #endif
+ #endif
+ #if DIRECT_WRITE == 0
     int startC = matrixBatch*SIZE_C*SIZE_B;
-#else
+ #else
     int startC = matrix*SIZE_C*SIZE_B;
-#endif
+ #endif
 
 /* compute multiplication */
-#if CACHING_STRATEGY < 2
+ #if CACHING_STRATEGY < 2
     for (int i = ty; i < SIZE_B; i+= MGCG_GROUP_SIZE_Y) {
         REAL tmp = (REAL)0.0;
         for (int k = 0; k < SIZE_A; k++)
-#if CACHING_STRATEGY == 0
+  #if CACHING_STRATEGY == 0
             tmp += A[startA + i*SIZE_A + k] * B[startB + k*SIZE_C + tx];
-#endif
-#if CACHING_STRATEGY == 1
+  #endif
+  #if CACHING_STRATEGY == 1
             tmp += bufA[startA + i*(SIZE_A+PADD_A) + k] * bufB[startB + k*SIZE_C + tx];
-#endif
-#if DIRECT_WRITE == 0
+  #endif
+  #if DIRECT_WRITE == 0
         bufC[tz*SIZE_C*SIZE_B + i*SIZE_C + tx] = tmp;
-#else
+  #else
         C[startC + i*SIZE_C + tx] = tmp;
-#endif
+  #endif
     }
-#else /* CACHING_STRATEGY == 2*/
+ #else /* CACHING_STRATEGY == 2*/
     const int batch_base = SIZE_B/MGCG_GROUP_SIZE_Y;
     const int batch_peel = (SIZE_B+MGCG_GROUP_SIZE_Y-1)/MGCG_GROUP_SIZE_Y;
     REAL tmp[batch_peel];
     for (int i = 0; i < batch_peel; i++)
         tmp[i] = REAL(0.0);
     for (int k = 0; k < SIZE_A; k++) {
+  #if MGCG_GROUP_SIZE_Y > 1
         REAL myB = bufB[startB + k*SIZE_C + tx];
+  #else
+        REAL myB = B[startB + k*SIZE_C + tx];
+  #endif
         for (int i = 0; i < batch_base; i++) {
             tmp[i] +=  bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_A) + k] * myB;
         }
@@ -253,19 +265,19 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     for (int i = 0; i < batch_peel; i++) {
         int index = i*MGCG_GROUP_SIZE_Y+ty;
         if (index < SIZE_B)
-#if DIRECT_WRITE == 0
+  #if DIRECT_WRITE == 0
             bufC[tz*SIZE_C*SIZE_B + index*SIZE_C + tx] = tmp[i];
-#else
+  #else
             C[startC + index*SIZE_C + tx] = tmp[i];
-#endif
+  #endif
     }
-#endif
-#if DIRECT_WRITE == 0
+ #endif
+ #if DIRECT_WRITE == 0
     __syncthreads();
     for (int i = myOffset; i < SIZE_C*SIZE_B*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
         C[startC + i] = bufC[i];
     }
-#endif
+ #endif
 }
 #endif
 
