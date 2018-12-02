@@ -108,23 +108,23 @@ class CovarianceManipulator : public ktt::TuningManipulator {
   void launchComputation(const ktt::KernelId kernelId) override {
     std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
 
-    if (getParameterValue("KERNEL", parameterValues) == 1) {
+    if (getParameterValue("KERNEL", parameterValues) == 0) {
       runKernel(refMeanKId);
       runKernel(refReduceKId);
       runKernel(refCovarKId);
-    } else {
+    } else if (getParameterValue("KERNEL", parameterValues) == 1) {
       runKernel(meanKId);
       runKernel(reduceKid);
-      if (getParameterValue("KERNEL", parameterValues) == 2) {
+      runKernel(covarKId);
+    } else if (getParameterValue("KERNEL", parameterValues) == 2) {
+      runKernel(meanKId);
+      runKernel(reduceKid);
         runKernel(gemmKId);
         if (getParameterValue("SYM_STORE", parameterValues) == 0) {
           runKernel(triangularToSymmetricKId);
         }
-      } else {
-        runKernel(covarKId);
       }
     }
-  }
 
  private:
   const ktt::KernelId refMeanKId;
