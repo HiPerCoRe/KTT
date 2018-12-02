@@ -167,9 +167,8 @@ int main(int argc, char** argv) {
   const ktt::DimensionVector ndRangeDim2D(M, M);
   const ktt::DimensionVector workGroupDim2D(32, 8);
 
-  float float_n = 3214212.01;
-
   // Declare data variables
+  const float float_n = (float)N;
   std::vector<float> data(M * N);
   std::vector<float> symmat(M * M, 0.0f);
   std::vector<float> mean(M, 0.0f);
