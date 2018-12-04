@@ -175,15 +175,15 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
  #if CACHING_STRATEGY == 1 or CACHING_STRATEGY == 2
     int preloadStartA = matrixBatch*SIZE_A*SIZE_B;
     int preloadStartB = matrixBatch*SIZE_C*SIZE_A;
-    int myOffset = tz*SIZE_C*MGCG_GROUP_SIZE_Y + ty*SIZE_C + tx;
-    __shared__ REAL bufA[CG_GROUP_SIZE_Z*(SIZE_A+PADD_AA)*SIZE_B];
+    int myOffset = tz*(SIZE_C+PADD_C)*MGCG_GROUP_SIZE_Y + ty*(SIZE_C+PADD_C) + tx;
+    __shared__ REAL bufA[CG_GROUP_SIZE_Z*(SIZE_A+PADD_AA)*(SIZE_B+PADD_AB)];
   #if CACHING_STRATEGY == 1 or MGCG_GROUP_SIZE_Y > 1
     __shared__ REAL bufB[CG_GROUP_SIZE_Z*SIZE_C*SIZE_A];
   #endif
   #if DIRECT_WRITE == 0
     __shared__ REAL bufC[CG_GROUP_SIZE_Z*SIZE_C*SIZE_B];
   #endif
-    for (int i = myOffset; i < SIZE_A*SIZE_B*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
+    for (int i = myOffset; i < SIZE_A*SIZE_B*CG_GROUP_SIZE_Z; i+= (SIZE_C+PADD_C)*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
   #if PADD_AA == 0
         bufA[i] = A[preloadStartA + i];
   #else
@@ -192,7 +192,7 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
   #endif
     }
   #if CACHING_STRATEGY == 1 or MGCG_GROUP_SIZE_Y > 1
-    for (int i = myOffset; i < SIZE_C*SIZE_A*CG_GROUP_SIZE_Z; i+= SIZE_C*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
+    for (int i = myOffset; i < SIZE_C*SIZE_A*CG_GROUP_SIZE_Z; i+= (SIZE_C+PADD_C)*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
         bufB[i] = B[preloadStartB + i];
     }
   #endif
@@ -218,6 +218,9 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
 
 /* compute multiplication */
  #if CACHING_STRATEGY < 2
+  #if PADD_C > 0
+    if (tx < SIZE_C) {
+  #endif
     for (int i = ty; i < SIZE_B; i+= MGCG_GROUP_SIZE_Y) {
         REAL tmp = (REAL)0.0;
         for (int k = 0; k < SIZE_A; k++)
@@ -233,9 +236,15 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
         C[startC + i*SIZE_C + tx] = tmp;
   #endif
     }
+  #if PADD_C > 0
+    }
+  #endif
  #else /* CACHING_STRATEGY == 2*/
-    const int batch_base = SIZE_B/MGCG_GROUP_SIZE_Y;
-    const int batch_peel = (SIZE_B+MGCG_GROUP_SIZE_Y-1)/MGCG_GROUP_SIZE_Y;
+  #if PADD_C > 0
+    if (tx < SIZE_C) {
+  #endif
+    const int batch_base = (SIZE_B+PADD_AB)/MGCG_GROUP_SIZE_Y;
+    const int batch_peel = (SIZE_B+PADD_AB+MGCG_GROUP_SIZE_Y-1)/MGCG_GROUP_SIZE_Y;
     REAL tmp[batch_peel];
     for (int i = 0; i < batch_peel; i++)
         tmp[i] = REAL(0.0);
@@ -261,6 +270,9 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
             C[startC + index*SIZE_C + tx] = tmp[i];
   #endif
     }
+  #if PADD_C > 0
+    }
+  #endif
  #endif
  #if DIRECT_WRITE == 0
     __syncthreads();
