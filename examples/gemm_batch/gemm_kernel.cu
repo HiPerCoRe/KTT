@@ -218,9 +218,6 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
 
 /* compute multiplication */
  #if CACHING_STRATEGY < 2
-  #if PADD_C > 0
-    if (tx < SIZE_C) {
-  #endif
     for (int i = ty; i < SIZE_B; i+= MGCG_GROUP_SIZE_Y) {
         REAL tmp = (REAL)0.0;
         for (int k = 0; k < SIZE_A; k++)
@@ -230,19 +227,19 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
   #if CACHING_STRATEGY == 1
             tmp += bufA[startA + i*(SIZE_A+PADD_AA) + k] * bufB[startB + k*SIZE_C + tx];
   #endif
+  #if PADD_C > 0
+        if (tx < SIZE_C) {
+  #endif
   #if DIRECT_WRITE == 0
         bufC[tz*SIZE_C*SIZE_B + i*SIZE_C + tx] = tmp;
   #else
         C[startC + i*SIZE_C + tx] = tmp;
   #endif
-    }
   #if PADD_C > 0
-    }
+        }
   #endif
+    }
  #else /* CACHING_STRATEGY == 2*/
-  #if PADD_C > 0
-    if (tx < SIZE_C) {
-  #endif
     const int batch_base = (SIZE_B+PADD_AB)/MGCG_GROUP_SIZE_Y;
     const int batch_peel = (SIZE_B+PADD_AB+MGCG_GROUP_SIZE_Y-1)/MGCG_GROUP_SIZE_Y;
     REAL tmp[batch_peel];
@@ -261,6 +258,9 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
             tmp[i] += (i*MGCG_GROUP_SIZE_Y+ty < SIZE_B) ? bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k] * myB : (REAL)0.0;
         }
     }
+  #if PADD_C > 0
+    if (tx < SIZE_C) {
+  #endif
     for (int i = 0; i < batch_peel; i++) {
         int index = i*MGCG_GROUP_SIZE_Y+ty;
         if (index < SIZE_B)
