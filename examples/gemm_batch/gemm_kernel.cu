@@ -73,7 +73,7 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     int myOffset = ty*SIZE_C + tx;
     __shared__ REAL bufA[MGCG_GROUP_SIZE_Y*(SIZE_A+PADD_AA)*SIZE_B];
     #if CACHING_STRATEGY == 1
-    __shared__ REAL bufB[MGCG_GROUP_SIZE_Y*SIZE_C*(SIZE_A+PADD_AA)];
+    __shared__ REAL bufB[MGCG_GROUP_SIZE_Y*SIZE_C*SIZE_A];
     #endif
     #if DIRECT_WRITE == 0
     __shared__ REAL bufC[MGCG_GROUP_SIZE_Y*SIZE_C*SIZE_B];
@@ -88,12 +88,7 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     }
     #if CACHING_STRATEGY == 1
      for (int i = myOffset; i < SIZE_C*SIZE_A*MGCG_GROUP_SIZE_Y; i+= SIZE_C*MGCG_GROUP_SIZE_Y) {
-#if PADD_AA == 0
         bufB[i] = B[preloadStartB + i];
-#else
-        int padd = SIZE_C*(i/(SIZE_A*SIZE_C));
-        bufB[i+padd] = B[preloadStartB + i];
-#endif
     }
     #endif
     __syncthreads();
@@ -105,7 +100,7 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
 #endif
 #if CACHING_STRATEGY == 1
     int startA = ty*(SIZE_A+PADD_AA)*SIZE_B;
-    int startB = ty*SIZE_C*(SIZE_A+PADD_AA);
+    int startB = ty*SIZE_C*SIZE_A;
 #endif
 #if CACHING_STRATEGY == 2
     int startA = ty*(SIZE_A+PADD_AA)*SIZE_B;
