@@ -283,7 +283,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "STRIDE_BLOCK", {(size_t)STRIDE_BLOCK});
 #endif
 #if STRIDED == 0
-    tuner.addParameter(kernelId, "GRANULARITY", {1, 2, 3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
+    tuner.addParameter(kernelId, "GRANULARITY", {/*1, 2,*/ 3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
 #else
     tuner.addParameter(kernelId, "GRANULARITY", {1}); // other granularities not supported
 #endif
@@ -293,11 +293,11 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "GROUP_SIZE_X", {1, STRIDE_BLOCK});
 #endif
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_X", {1, (size_t)c});
-    tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
-    tuner.addParameter(kernelId, "CG_GROUP_SIZE_Z", {1, 2, 4, 8, 16, 32});
-    tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
-    tuner.addParameter(kernelId, "PADD_A", {0, 1});
-    tuner.addParameter(kernelId, "DIRECT_WRITE", {0, 1});
+    tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {/*1, 2,*/ 4/*, 8, 16, 32*/});
+    tuner.addParameter(kernelId, "CG_GROUP_SIZE_Z", {/*1, */2/*, 4, 8, 16, 32*/});
+    tuner.addParameter(kernelId, "CACHING_STRATEGY", {/*0, 1,*/ 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
+    tuner.addParameter(kernelId, "PADD_AA", {0, 1});
+    tuner.addParameter(kernelId, "DIRECT_WRITE", {/*0,*/ 1});
 
 #if STRIDED == 0
     auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1 && v[5] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1 && v[5] == 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1 && v[3] <= v[4]);};
@@ -306,7 +306,7 @@ int main(int argc, char** argv)
 #endif
     tuner.addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y", "SIZE_B", "CG_GROUP_SIZE_Z"}, parallelismConstraint);
     auto paddConstraint = [](const std::vector<size_t>& v) {return (v[0] == 0) || (v[1] > 0);};
-    tuner.addConstraint(kernelId, {"PADD_A", "CACHING_STRATEGY"}, paddConstraint);
+    tuner.addConstraint(kernelId, {"PADD_AA", "CACHING_STRATEGY"}, paddConstraint);
     auto dwConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1) || (v[1] > 0);};
     tuner.addConstraint(kernelId, {"DIRECT_WRITE", "CACHING_STRATEGY"}, dwConstraint);
 
