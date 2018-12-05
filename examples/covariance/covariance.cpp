@@ -119,12 +119,12 @@ class CovarianceManipulator : public ktt::TuningManipulator {
     } else if (getParameterValue("KERNEL", parameterValues) == 2) {
       runKernel(meanKId);
       runKernel(reduceKid);
-        runKernel(gemmKId);
-        if (getParameterValue("SYM_STORE", parameterValues) == 0) {
-          runKernel(triangularToSymmetricKId);
-        }
+      runKernel(gemmKId);
+      if (getParameterValue("SYM_STORE", parameterValues) == 0) {
+        runKernel(triangularToSymmetricKId);
       }
     }
+  }
 
  private:
   const ktt::KernelId refMeanKId;
@@ -209,20 +209,22 @@ int main(int argc, char** argv) {
           reduceKid, covarKId, gemmKId, triangularToSymmetricKId));
 
   // Add parameters to tuned kernel
+  // Some parameters are commented out to cut down the tuned space - it is now the same as the
+  // simpler and commonly tuned space in CLBlast (plus our new parameters).
   // KERNEL: 1 - reference kernels, 0 - edited reference kernels, 2 - use GEMM as third kernel
   tuner.addParameter(kernelId, "KERNEL", {1, 0, 2});
-  tuner.addParameter(kernelId, "MWG", {16, 32, 64, 128});
-  tuner.addParameter(kernelId, "NWG", {16, 32, 64, 128});
-  tuner.addParameter(kernelId, "KWG", {16, 32});
+  tuner.addParameter(kernelId, "MWG", {16, 32, 64 /* , 128 */});
+  tuner.addParameter(kernelId, "NWG", {16, 32, 64 /* , 128 */});
+  tuner.addParameter(kernelId, "KWG", {/* 16,  */ 32});
   tuner.addParameter(kernelId, "MDIMC", {8, 16, 32});
   tuner.addParameter(kernelId, "NDIMC", {8, 16, 32});
   tuner.addParameter(kernelId, "MDIMA", {8, 16, 32});
   tuner.addParameter(kernelId, "NDIMB", {8, 16, 32});
-  tuner.addParameter(kernelId, "KWI", {2, 8});
-  tuner.addParameter(kernelId, "VWM", {1, 2, 4, 8});
-  tuner.addParameter(kernelId, "VWN", {1, 2, 4, 8});
-  tuner.addParameter(kernelId, "STRM", {0, 1});
-  tuner.addParameter(kernelId, "STRN", {0, 1});
+  tuner.addParameter(kernelId, "KWI", {2 /* , 8 */});
+  tuner.addParameter(kernelId, "VWM", {1, 2, 4 /* , 8 */});
+  tuner.addParameter(kernelId, "VWN", {1, 2, 4 /* , 8 */});
+  tuner.addParameter(kernelId, "STRM", {0 /* , 1 */});
+  tuner.addParameter(kernelId, "STRN", {0 /* , 1 */});
   tuner.addParameter(kernelId, "SA", {0, 1});
   tuner.addParameter(kernelId, "SB", {0, 1});
   tuner.addParameter(kernelId, "SYMMETRIC", {0, 1});
