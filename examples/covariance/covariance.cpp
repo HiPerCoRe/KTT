@@ -198,9 +198,9 @@ int main(int argc, char** argv) {
   ktt::KernelId covarKId =
       tuner.addKernelFromFile(kernelFile, "covar_kernel", ndRangeDim1D, workGroupDim1D);
   ktt::KernelId gemmKId =
-      tuner.addKernelFromFile(gemmFile, "gemm_fast", ndRangeDim2D, workGroupDim1D);
+      tuner.addKernelFromFile(gemmFile, "gemm_fast", ndRangeDim2D, ktt::DimensionVector());
   ktt::KernelId triangularToSymmetricKId =
-      tuner.addKernelFromFile(kernelFile, "triangular_to_symmetric", ndRangeDim2D, workGroupDim1D);
+      tuner.addKernelFromFile(kernelFile, "triangular_to_symmetric", ndRangeDim2D, workGroupDim2D);
 
   ktt::KernelId kernelId = tuner.addComposition("Covariance",
       std::vector<ktt::KernelId>{refMeanKId, refReduceKId, refCovarKId, meanKId, reduceKid,
