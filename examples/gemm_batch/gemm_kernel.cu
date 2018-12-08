@@ -82,7 +82,7 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
 #if PADD_AA == 0
         bufA[i] = A[preloadStartA + i];
 #else
-        int padd = i/SIZE_A;
+        int padd = PADD_AA*(i/SIZE_A);
         bufA[i+padd] = A[preloadStartA + i];
 #endif
     }
@@ -178,7 +178,7 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     int myOffset = tz*(SIZE_C+PADD_C)*MGCG_GROUP_SIZE_Y + ty*(SIZE_C+PADD_C) + tx;
     __shared__ REAL bufA[CG_GROUP_SIZE_Z*(SIZE_A+PADD_AA)*(SIZE_B+PADD_AB)];
   #if CACHING_STRATEGY == 1 or MGCG_GROUP_SIZE_Y > 1
-    __shared__ REAL bufB[CG_GROUP_SIZE_Z*SIZE_C*SIZE_A];
+    __shared__ REAL bufB[CG_GROUP_SIZE_Z*SIZE_C*SIZE_A + PADD_C];
   #endif
   #if DIRECT_WRITE == 0
     __shared__ REAL bufC[CG_GROUP_SIZE_Z*SIZE_C*SIZE_B];
@@ -191,6 +191,11 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
         bufA[i+padd] = A[preloadStartA + i];
   #endif
     }
+/*    #if PADD_AA > 0
+    if (myOffset < SIZE_B)
+        for (int i = 0; i < PADD_AA; i++)
+            bufA[tz*(SIZE_A+PADD_AA)*SIZE_B + myOffset*(SIZE_A+PADD_AA) + i] = (REAL)0.0;
+    #endif*/
   #if CACHING_STRATEGY == 1 or MGCG_GROUP_SIZE_Y > 1
     for (int i = myOffset; i < SIZE_C*SIZE_A*CG_GROUP_SIZE_Z; i+= (SIZE_C+PADD_C)*MGCG_GROUP_SIZE_Y*CG_GROUP_SIZE_Z) {
         bufB[i] = B[preloadStartB + i];
@@ -245,14 +250,61 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     REAL tmp[batch_peel];
     for (int i = 0; i < batch_peel; i++)
         tmp[i] = REAL(0.0);
-    for (int k = 0; k < SIZE_A; k++) {
+    int k;
+  #if UNROLL_K == 1
+    for (k = 0; k < SIZE_A-3; k+=4) {
+   #if MGCG_GROUP_SIZE_Y > 1
+        REAL myB0 = bufB[startB + k*SIZE_C + tx];
+        REAL myB1 = bufB[startB + (k+1)*SIZE_C + tx];
+        REAL myB2 = bufB[startB + (k+2)*SIZE_C + tx];
+        REAL myB3 = bufB[startB + (k+3)*SIZE_C + tx];
+   #else
+        REAL myB0 = B[startB + k*SIZE_C + tx];
+        REAL myB1 = B[startB + (k+1)*SIZE_C + tx];
+        REAL myB2 = B[startB + (k+2)*SIZE_C + tx];
+        REAL myB3 = B[startB + (k+3)*SIZE_C + tx];
+   #endif
+        for (int i = 0; i < batch_base; i++) {
+            tmp[i] += bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k] * myB0;
+            tmp[i] += bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k+1] * myB1;
+            tmp[i] += bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k+2] * myB2;
+            tmp[i] += bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k+3] * myB3;
+        }
+        for (int i = batch_base; i < batch_peel; i++) {
+            tmp[i] += (i*MGCG_GROUP_SIZE_Y+ty < SIZE_B) ? bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k] * myB0 : (REAL)0.0;
+            tmp[i] += (i*MGCG_GROUP_SIZE_Y+ty < SIZE_B) ? bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k+1] * myB1 : (REAL)0.0;
+            tmp[i] += (i*MGCG_GROUP_SIZE_Y+ty < SIZE_B) ? bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k+2] * myB2 : (REAL)0.0;
+            tmp[i] += (i*MGCG_GROUP_SIZE_Y+ty < SIZE_B) ? bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k+3] * myB3 : (REAL)0.0;
+        }
+    }
+    for (; k < SIZE_A-1; k+=2) {
+   #if MGCG_GROUP_SIZE_Y > 1
+        REAL myB0 = bufB[startB + k*SIZE_C + tx];
+        REAL myB1 = bufB[startB + (k+1)*SIZE_C + tx];
+   #else
+        REAL myB0 = B[startB + k*SIZE_C + tx];
+        REAL myB1 = B[startB + (k+1)*SIZE_C + tx];
+   #endif
+        for (int i = 0; i < batch_base; i++) {
+            tmp[i] += bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k] * myB0;
+            tmp[i] += bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k+1] * myB1;
+        }
+        for (int i = batch_base; i < batch_peel; i++) {
+            tmp[i] += (i*MGCG_GROUP_SIZE_Y+ty < SIZE_B) ? bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k] * myB0 : (REAL)0.0;
+            tmp[i] += (i*MGCG_GROUP_SIZE_Y+ty < SIZE_B) ? bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k+1] * myB1 : (REAL)0.0;
+        }
+    }
+  #else
+  k = 0;
+  #endif
+    for (; k < SIZE_A; k++) {
   #if MGCG_GROUP_SIZE_Y > 1
         REAL myB = bufB[startB + k*SIZE_C + tx];
   #else
         REAL myB = B[startB + k*SIZE_C + tx];
   #endif
         for (int i = 0; i < batch_base; i++) {
-            tmp[i] +=  bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k] * myB;
+            tmp[i] += bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k] * myB;
         }
         for (int i = batch_base; i < batch_peel; i++) {
             tmp[i] += (i*MGCG_GROUP_SIZE_Y+ty < SIZE_B) ? bufA[startA + (i*MGCG_GROUP_SIZE_Y+ty)*(SIZE_A+PADD_AA) + k] * myB : (REAL)0.0;
