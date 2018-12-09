@@ -16,15 +16,27 @@ TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, con
 
     if (computeAPI == ComputeAPI::OpenCL)
     {
+        #ifdef KTT_PLATFORM_OPENCL
         computeEngine = std::make_unique<OpenCLEngine>(platform, device, queueCount);
+        #else
+        throw std::runtime_error("Support for OpenCL API is not included in this version of KTT framework");
+        #endif // KTT_PLATFORM_OPENCL
     }
     else if (computeAPI == ComputeAPI::CUDA)
     {
+        #ifdef KTT_PLATFORM_CUDA
         computeEngine = std::make_unique<CUDAEngine>(device, queueCount);
+        #else
+        throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+        #endif // KTT_PLATFORM_CUDA
     }
     else if (computeAPI == ComputeAPI::Vulkan)
     {
+        #ifdef KTT_PLATFORM_VULKAN
         computeEngine = std::make_unique<VulkanEngine>(device, queueCount);
+        #else
+        throw std::runtime_error("Support for Vulkan API is not included in this version of KTT framework");
+        #endif // KTT_PLATFORM_VULKAN
     }
     else
     {
@@ -179,7 +191,8 @@ ComputationResult TunerCore::runKernel(const KernelId id, const std::vector<Para
 
     if (result.isValid())
     {
-        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration());
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+            result.getProfilingData());
     }
     else
     {
@@ -256,7 +269,8 @@ ComputationResult TunerCore::tuneKernelByStep(const KernelId id, const std::vect
     
     if (result.isValid())
     {
-        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration());
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+            result.getProfilingData());
     }
     else
     {

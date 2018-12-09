@@ -1,3 +1,5 @@
+#ifdef KTT_PLATFORM_OPENCL
+
 #include <compute_engine/opencl/opencl_engine.h>
 #include <utility/ktt_utility.h>
 #include <utility/logger.h>
@@ -5,8 +7,6 @@
 
 namespace ktt
 {
-
-#ifdef KTT_PLATFORM_OPENCL
 
 OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     platformIndex(platformIndex),
@@ -625,6 +625,31 @@ DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
     return getOpenCLDeviceInfo(platformIndex, deviceIndex);
 }
 
+#ifdef KTT_PROFILING
+
+EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    const QueueId queue)
+{
+    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+}
+
+KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
+{
+    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+}
+
+bool OpenCLEngine::hasProfilingData(const std::string& kernelName, const std::string& kernelSource) const
+{
+    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+}
+
+uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) const
+{
+    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+}
+
+#endif // KTT_PROFILING
+
 std::unique_ptr<OpenCLProgram> OpenCLEngine::createAndBuildProgram(const std::string& source) const
 {
     auto program = std::make_unique<OpenCLProgram>(source, context->getContext(), context->getDevices());
@@ -870,188 +895,6 @@ void OpenCLEngine::checkLocalMemoryModifiers(const std::vector<KernelArgument*>&
     }
 }
 
-#else
-
-OpenCLEngine::OpenCLEngine(const PlatformIndex, const DeviceIndex, const uint32_t)
-{
-    throw std::runtime_error("Support for OpenCL API is not included in this version of KTT framework");
-}
-
-KernelResult OpenCLEngine::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<OutputDescriptor>&)
-{
-    throw std::runtime_error("");
-}
-
-EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-KernelResult OpenCLEngine::getKernelResult(const EventId, const std::vector<OutputDescriptor>&) const
-{
-    throw std::runtime_error("");
-}
-
-uint64_t OpenCLEngine::getKernelOverhead(const EventId) const 
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::setCompilerOptions(const std::string&)
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::setGlobalSizeType(const GlobalSizeType)
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::setAutomaticGlobalSizeCorrection(const bool)
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::setKernelCacheUsage(const bool)
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::setKernelCacheCapacity(const size_t)
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::clearKernelCache()
-{
-    throw std::runtime_error("");
-}
-
-QueueId OpenCLEngine::getDefaultQueue() const
-{
-    throw std::runtime_error("");
-}
-
-std::vector<QueueId> OpenCLEngine::getAllQueues() const
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::synchronizeQueue(const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::synchronizeDevice()
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::clearEvents()
-{
-    throw std::runtime_error("");
-}
-
-uint64_t OpenCLEngine::uploadArgument(KernelArgument&)
-{
-    throw std::runtime_error("");
-}
-
-EventId OpenCLEngine::uploadArgumentAsync(KernelArgument&, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t OpenCLEngine::updateArgument(const ArgumentId, const void*, const size_t)
-{
-    throw std::runtime_error("");
-}
-
-EventId OpenCLEngine::updateArgumentAsync(const ArgumentId, const void*, const size_t, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t OpenCLEngine::downloadArgument(const ArgumentId, void*, const size_t) const
-{
-    throw std::runtime_error("");
-}
-
-EventId OpenCLEngine::downloadArgumentAsync(const ArgumentId, void*, const size_t, const QueueId) const
-{
-    throw std::runtime_error("");
-}
-
-KernelArgument OpenCLEngine::downloadArgumentObject(const ArgumentId, uint64_t*) const
-{
-    throw std::runtime_error("");
-}
-
-uint64_t OpenCLEngine::copyArgument(const ArgumentId, const ArgumentId, const size_t)
-{
-    throw std::runtime_error("");
-}
-
-EventId OpenCLEngine::copyArgumentAsync(const ArgumentId, const ArgumentId, const size_t, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t OpenCLEngine::persistArgument(KernelArgument&, const bool)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId) const
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::resizeArgument(const ArgumentId, const size_t, const bool)
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::setPersistentBufferUsage(const bool)
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::clearBuffer(const ArgumentId)
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::clearBuffers()
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::clearBuffers(const ArgumentAccessType)
-{
-    throw std::runtime_error("");
-}
-
-void OpenCLEngine::printComputeAPIInfo(std::ostream&) const
-{
-    throw std::runtime_error("");
-}
-
-std::vector<PlatformInfo> OpenCLEngine::getPlatformInfo() const
-{
-    throw std::runtime_error("");
-}
-
-std::vector<DeviceInfo> OpenCLEngine::getDeviceInfo(const PlatformIndex) const
-{
-    throw std::runtime_error("");
-}
-
-DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
-{
-    throw std::runtime_error("");
-}
+} // namespace ktt
 
 #endif // KTT_PLATFORM_OPENCL
-
-} // namespace ktt

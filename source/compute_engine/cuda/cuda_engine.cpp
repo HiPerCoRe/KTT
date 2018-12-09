@@ -1,3 +1,5 @@
+#ifdef KTT_PLATFORM_CUDA
+
 #include <stdexcept>
 #include <compute_engine/cuda/cuda_engine.h>
 #include <utility/ktt_utility.h>
@@ -6,8 +8,6 @@
 
 namespace ktt
 {
-
-#ifdef KTT_PLATFORM_CUDA
 
 CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
     deviceIndex(deviceIndex),
@@ -93,30 +93,12 @@ EventId CUDAEngine::runKernelAsync(const KernelRuntimeData& kernelData, const st
 
 KernelResult CUDAEngine::getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
 {
-    auto eventPointer = kernelEvents.find(id);
-
-    if (eventPointer == kernelEvents.end())
-    {
-        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
-            + std::to_string(id));
-    }
-
-    Logger::getLogger().log(LoggingLevel::Debug, "Performing kernel synchronization for event id: " + std::to_string(id));
-
-    // Wait until the second event in pair (the end event) finishes
-    checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
-    std::string name = eventPointer->second.first->getKernelName();
-    float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
-    uint64_t overhead = eventPointer->second.first->getOverhead();
-    kernelEvents.erase(id);
+    KernelResult result = createKernelResult(id);
 
     for (const auto& descriptor : outputDescriptors)
     {
         downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
     }
-
-    KernelResult result(name, static_cast<uint64_t>(duration));
-    result.setOverhead(overhead);
 
     return result;
 }
@@ -606,6 +588,131 @@ DeviceInfo CUDAEngine::getCurrentDeviceInfo() const
     return getCUDADeviceInfo(deviceIndex);
 }
 
+#ifdef KTT_PROFILING
+
+EventId CUDAEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    const QueueId queue)
+{
+    Timer overheadTimer;
+    overheadTimer.start();
+
+    CUDAKernel* kernel;
+    std::unique_ptr<CUDAKernel> kernelUnique;
+
+    if (kernelCacheFlag)
+    {
+        if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
+        {
+            if (kernelCache.size() >= kernelCacheCapacity)
+            {
+                clearKernelCache();
+            }
+            std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
+            auto kernel = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
+            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::move(kernel)));
+        }
+        auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
+        kernel = cachePointer->second.get();
+    }
+    else
+    {
+        std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
+        kernelUnique = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
+        kernel = kernelUnique.get();
+    }
+
+    std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
+
+    overheadTimer.stop();
+
+    auto profilingState = kernelProfilingStates.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
+    bool firstRun = false;
+    CUpti_SubscriberHandle subscriber;
+    if (profilingState == kernelProfilingStates.end())
+    {
+        kernelProfilingStates.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()),
+            CUDAProfilingState(context->getContext(), context->getDevice(), profilingMetrics)));
+        kernelToEventMap.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::vector<EventId>{}));
+        profilingState = kernelProfilingStates.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
+        firstRun = true;
+    }
+    else
+    {
+        std::vector<CUDAProfilingMetric>* metricData = profilingState->second.getProfilingMetrics();
+        checkCUDAError(cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)getMetricValueCallback, metricData), "cuptiSubscribe");
+        checkCUDAError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunch), "cuptiEnableCallback");
+        checkCUDAError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel), "cuptiEnableCallback");
+    }
+
+    EventId id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
+        getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
+    kernelToEventMap[std::make_pair(kernelData.getName(), kernelData.getSource())].push_back(id);
+
+    if (firstRun)
+    {
+        auto eventPointer = kernelEvents.find(id);
+        Logger::logDebug("Performing kernel synchronization for event id: " + std::to_string(id));
+        checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+        float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
+        profilingState->second.updateState(static_cast<uint64_t>(duration));
+    }
+    else
+    {
+        checkCUDAError(cuptiUnsubscribe(subscriber), "cuptiUnsubscribe");
+        profilingState->second.updateState();
+    }
+
+    return id;
+}
+
+KernelResult CUDAEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
+{
+    KernelResult result = createKernelResult(id);
+
+    for (const auto& descriptor : outputDescriptors)
+    {
+        downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+    }
+
+    const std::pair<std::string, std::string>& kernelKey = getKernelFromEvent(id);
+    auto profilingState = kernelProfilingStates.find(kernelKey);
+    if (profilingState == kernelProfilingStates.end())
+    {
+        throw std::runtime_error(std::string("No profiling data exists for the following kernel in current configuration: " + kernelKey.first));
+    }
+
+    KernelProfilingData profilingData = profilingState->second.generateProfilingData();
+    result.setProfilingData(profilingData);
+
+    kernelProfilingStates.erase(kernelKey);
+    const std::vector<EventId>& eventIds = kernelToEventMap.find(kernelKey)->second;
+    for (const auto eventId : eventIds)
+    {
+        kernelEvents.erase(eventId);
+    }
+    kernelToEventMap.erase(kernelKey);
+
+    return result;
+}
+
+bool CUDAEngine::hasProfilingData(const std::string& kernelName, const std::string& kernelSource) const
+{
+    return kernelProfilingStates.find(std::make_pair(kernelName, kernelSource)) != kernelProfilingStates.end();
+}
+
+uint64_t CUDAEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) const
+{
+    auto profilingState = kernelProfilingStates.find(std::make_pair(kernelName, kernelSource));
+    if (profilingState == kernelProfilingStates.end())
+    {
+        throw std::runtime_error(std::string("No profiling data exists for the following kernel in current configuration: " + kernelName));
+    }
+
+    return profilingState->second.getRemainingKernelRuns();
+}
+
+#endif // KTT_PROFILING
+
 std::unique_ptr<CUDAProgram> CUDAEngine::createAndBuildProgram(const std::string& source) const
 {
     auto program = std::make_unique<CUDAProgram>(source);
@@ -655,6 +762,31 @@ EventId CUDAEngine::enqueueKernel(CUDAKernel& kernel, const std::vector<size_t>&
 
     kernelEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
     return eventId;
+}
+
+KernelResult CUDAEngine::createKernelResult(const EventId id) const
+{
+    auto eventPointer = kernelEvents.find(id);
+
+    if (eventPointer == kernelEvents.end())
+    {
+        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
+            + std::to_string(id));
+    }
+
+    Logger::getLogger().log(LoggingLevel::Debug, "Performing kernel synchronization for event id: " + std::to_string(id));
+
+    // Wait until the second event in pair (the end event) finishes
+    checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+    std::string name = eventPointer->second.first->getKernelName();
+    float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
+    uint64_t overhead = eventPointer->second.first->getOverhead();
+    kernelEvents.erase(id);
+
+    KernelResult result(name, static_cast<uint64_t>(duration));
+    result.setOverhead(overhead);
+
+    return result;
 }
 
 DeviceInfo CUDAEngine::getCUDADeviceInfo(const DeviceIndex deviceIndex) const
@@ -830,93 +962,17 @@ CUdeviceptr* CUDAEngine::loadBufferFromCache(const ArgumentId id) const
 
 #ifdef KTT_PROFILING
 
-void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const CUpti_CallbackData* info)
+const std::pair<std::string, std::string>& CUDAEngine::getKernelFromEvent(const EventId id) const
 {
-    if (id != CUPTI_DRIVER_TRACE_CBID_cuLaunch && id != CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel)
+    for (const auto& entry : kernelToEventMap)
     {
-        throw std::runtime_error("Internal CUDA CUPTI error: Unexpected callback id was passed into metric value collection function");
-    }
-
-    std::vector<CUDAProfilingMetric>* metrics = reinterpret_cast<std::vector<CUDAProfilingMetric>*>(userdata);
-    if (info->callbackSite == CUPTI_API_ENTER)
-    {
-        checkCUDAError(cuCtxSynchronize(), "cuCtxSynchronize");
-        checkCUDAError(cuptiSetEventCollectionMode(info->context, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
-
-        for (auto& metric : *metrics)
+        if (elementExists(id, entry.second))
         {
-            for (uint32_t i = 0; i < metric.currentSet->numEventGroups; ++i)
-            {
-                uint32_t profileAll = 1;
-                checkCUDAError(cuptiEventGroupSetAttribute(metric.currentSet->eventGroups[i], CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,
-                    sizeof(profileAll), &profileAll), "cuptiEventGroupSetAttribute");
-                checkCUDAError(cuptiEventGroupEnable(metric.currentSet->eventGroups[i]), "cuptiEventGroupEnable");
-            }
+            return entry.first;
         }
     }
-    else if (info->callbackSite == CUPTI_API_EXIT)
-    {
-        checkCUDAError(cuCtxSynchronize(), "cuCtxSynchronize");
 
-        for (auto& metric : *metrics)
-        {
-            for (uint32_t i = 0; i < metric.currentSet->numEventGroups; ++i)
-            {
-                CUpti_EventGroup group = metric.currentSet->eventGroups[i];
-                CUpti_EventDomainID groupDomain;
-                uint32_t eventCount;
-                uint32_t instanceCount;
-                uint32_t totalInstaceCount;
-                size_t groupDomainSize = sizeof(groupDomain);
-                size_t eventCountSize = sizeof(eventCount);
-                size_t instanceCountSize = sizeof(instanceCount);
-                size_t totalInstaceCountSize = sizeof(totalInstaceCount);
-
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID, &groupDomainSize, &groupDomain),
-                    "cuptiEventGroupGetAttribute");
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_NUM_EVENTS, &eventCountSize, &eventCount),
-                    "cuptiEventGroupGetAttribute");
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT, &instanceCountSize, &instanceCount),
-                    "cuptiEventGroupGetAttribute");
-                checkCUDAError(cuptiDeviceGetEventDomainAttribute(metric.device, groupDomain, CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT,
-                    &totalInstaceCountSize, &totalInstaceCount), "cuptiDeviceGetEventDomainAttribute");
-
-                std::vector<CUpti_EventID> eventIds(eventCount);
-                size_t eventIdsSize = eventCount * sizeof(CUpti_EventID);
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENTS, &eventIdsSize, eventIds.data()),
-                    "cuptiEventGroupGetAttribute");
-
-                std::vector<uint64_t> values(instanceCount);
-                size_t valuesSize = instanceCount * sizeof(uint64_t);
-
-                for (uint32_t j = 0; j < eventCount; ++j)
-                {
-                    checkCUDAError(cuptiEventGroupReadEvent(group, CUPTI_EVENT_READ_FLAG_NONE, eventIds[j], &valuesSize, values.data()),
-                        "cuptiEventGroupReadEvent");
-                    if (metric.currentEventIndex >= metric.eventCount)
-                    {
-                        throw std::runtime_error("Internal CUDA CUPTI error : Too many metric events collected");
-                    }
-
-                    uint64_t sum = 0;
-                    for (uint32_t k = 0; k < instanceCount; ++k)
-                    {
-                        sum += values[k];
-                    }
-
-                    const uint64_t normalized = (sum * totalInstaceCount) / instanceCount;
-                    metric.eventIds[metric.currentEventIndex] = eventIds[j];
-                    metric.eventValues[metric.currentEventIndex] = normalized;
-                    metric.currentEventIndex++;
-                }
-            }
-
-            for (uint32_t i = 0; i < metric.currentSet->numEventGroups; ++i)
-            {
-                checkCUDAError(cuptiEventGroupDisable(metric.currentSet->eventGroups[i]), "cuptiEventGroupDisable");
-            }
-        }
-    }
+    throw std::runtime_error(std::string("Corresponding kernel was not found for event with id: ") + std::to_string(id));
 }
 
 CUpti_MetricID CUDAEngine::getMetricIdFromName(const std::string& metricName)
@@ -954,6 +1010,114 @@ std::vector<std::pair<std::string, CUpti_MetricID>> CUDAEngine::getProfilingMetr
     return collectedMetrics;
 }
 
+void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const CUpti_CallbackData* info)
+{
+    if (id != CUPTI_DRIVER_TRACE_CBID_cuLaunch && id != CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel)
+    {
+        throw std::runtime_error("Internal CUDA CUPTI error: Unexpected callback id was passed into metric value collection function");
+    }
+
+    std::vector<CUDAProfilingMetric>* metrics = reinterpret_cast<std::vector<CUDAProfilingMetric>*>(userdata);
+    if (info->callbackSite == CUPTI_API_ENTER)
+    {
+        checkCUDAError(cuCtxSynchronize(), "cuCtxSynchronize");
+        checkCUDAError(cuptiSetEventCollectionMode(info->context, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
+
+        for (auto& metric : *metrics)
+        {
+            if (metric.currentSetIndex >= metric.eventGroupSets->numSets)
+            {
+                continue;
+            }
+
+            for (uint32_t i = 0; i < metric.eventGroupSets->sets[metric.currentSetIndex].numEventGroups; ++i)
+            {
+                uint32_t profileAll = 1;
+                checkCUDAError(cuptiEventGroupSetAttribute(metric.eventGroupSets->sets[metric.currentSetIndex].eventGroups[i],
+                    CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES, sizeof(profileAll), &profileAll), "cuptiEventGroupSetAttribute");
+                checkCUDAError(cuptiEventGroupEnable(metric.eventGroupSets->sets[metric.currentSetIndex].eventGroups[i]), "cuptiEventGroupEnable");
+            }
+        }
+    }
+    else if (info->callbackSite == CUPTI_API_EXIT)
+    {
+        checkCUDAError(cuCtxSynchronize(), "cuCtxSynchronize");
+
+        for (auto& metric : *metrics)
+        {
+            if (metric.currentSetIndex >= metric.eventGroupSets->numSets)
+            {
+                continue;
+            }
+
+            for (uint32_t i = 0; i < metric.eventGroupSets->sets[metric.currentSetIndex].numEventGroups; ++i)
+            {
+                CUpti_EventGroup group = metric.eventGroupSets->sets[metric.currentSetIndex].eventGroups[i];
+                CUpti_EventDomainID groupDomain;
+                uint32_t eventCount;
+                uint32_t instanceCount;
+                uint32_t totalInstaceCount;
+                size_t groupDomainSize = sizeof(groupDomain);
+                size_t eventCountSize = sizeof(eventCount);
+                size_t instanceCountSize = sizeof(instanceCount);
+                size_t totalInstaceCountSize = sizeof(totalInstaceCount);
+
+                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID, &groupDomainSize, &groupDomain),
+                    "cuptiEventGroupGetAttribute");
+                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_NUM_EVENTS, &eventCountSize, &eventCount),
+                    "cuptiEventGroupGetAttribute");
+                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT, &instanceCountSize, &instanceCount),
+                    "cuptiEventGroupGetAttribute");
+                checkCUDAError(cuptiDeviceGetEventDomainAttribute(metric.device, groupDomain, CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT,
+                    &totalInstaceCountSize, &totalInstaceCount), "cuptiDeviceGetEventDomainAttribute");
+
+                std::vector<CUpti_EventID> eventIds(eventCount);
+                size_t eventIdsSize = eventCount * sizeof(CUpti_EventID);
+                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENTS, &eventIdsSize, eventIds.data()),
+                    "cuptiEventGroupGetAttribute");
+
+                std::vector<uint64_t> values(instanceCount);
+                size_t valuesSize = instanceCount * sizeof(uint64_t);
+
+                for (uint32_t j = 0; j < eventCount; ++j)
+                {
+                    checkCUDAError(cuptiEventGroupReadEvent(group, CUPTI_EVENT_READ_FLAG_NONE, eventIds[j], &valuesSize, values.data()),
+                        "cuptiEventGroupReadEvent");
+
+                    if (metric.currentEventIndex >= metric.eventCount)
+                    {
+                        throw std::runtime_error("Internal CUDA CUPTI error : Too many metric events collected");
+                    }
+
+                    uint64_t sum = 0;
+                    for (uint32_t k = 0; k < instanceCount; ++k)
+                    {
+                        sum += values[k];
+                    }
+
+                    const uint64_t normalized = (sum * totalInstaceCount) / instanceCount;
+                    metric.eventIds[metric.currentEventIndex] = eventIds[j];
+                    metric.eventValues[metric.currentEventIndex] = normalized;
+                    metric.currentEventIndex++;
+                }
+            }
+        }
+
+        for (auto& metric : *metrics)
+        {
+            if (metric.currentSetIndex >= metric.eventGroupSets->numSets)
+            {
+                continue;
+            }
+
+            for (uint32_t i = 0; i < metric.eventGroupSets->sets[metric.currentSetIndex].numEventGroups; ++i)
+            {
+                checkCUDAError(cuptiEventGroupDisable(metric.eventGroupSets->sets[metric.currentSetIndex].eventGroups[i]), "cuptiEventGroupDisable");
+            }
+        }
+    }
+}
+
 const std::vector<std::string>& CUDAEngine::getProfilingMetricNames()
 {
     static const std::vector<std::string> result{"achieved_occupancy", "branch_efficiency", "sm_efficiency", "dram_utilization", "gld_efficiency",
@@ -967,188 +1131,6 @@ const std::vector<std::string>& CUDAEngine::getProfilingMetricNames()
 
 #endif // KTT_PROFILING
 
-#else
-
-CUDAEngine::CUDAEngine(const DeviceIndex, const uint32_t)
-{
-    throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
-}
-
-KernelResult CUDAEngine::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<OutputDescriptor>&)
-{
-    throw std::runtime_error("");
-}
-
-EventId CUDAEngine::runKernelAsync(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-KernelResult CUDAEngine::getKernelResult(const EventId, const std::vector<OutputDescriptor>&) const
-{
-    throw std::runtime_error("");
-}
-
-uint64_t CUDAEngine::getKernelOverhead(const EventId) const
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::setCompilerOptions(const std::string&)
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::setGlobalSizeType(const GlobalSizeType)
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::setAutomaticGlobalSizeCorrection(const bool)
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::setKernelCacheUsage(const bool)
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::setKernelCacheCapacity(const size_t)
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::clearKernelCache()
-{
-    throw std::runtime_error("");
-}
-
-QueueId CUDAEngine::getDefaultQueue() const
-{
-    throw std::runtime_error("");
-}
-
-std::vector<QueueId> CUDAEngine::getAllQueues() const
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::synchronizeQueue(const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::synchronizeDevice()
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::clearEvents()
-{
-    throw std::runtime_error("");
-}
-
-uint64_t CUDAEngine::uploadArgument(KernelArgument&)
-{
-    throw std::runtime_error("");
-}
-
-EventId CUDAEngine::uploadArgumentAsync(KernelArgument&, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t CUDAEngine::updateArgument(const ArgumentId, const void*, const size_t)
-{
-    throw std::runtime_error("");
-}
-
-EventId CUDAEngine::updateArgumentAsync(const ArgumentId, const void*, const size_t, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t CUDAEngine::downloadArgument(const ArgumentId, void*, const size_t) const
-{
-    throw std::runtime_error("");
-}
-
-EventId CUDAEngine::downloadArgumentAsync(const ArgumentId, void*, const size_t, const QueueId) const
-{
-    throw std::runtime_error("");
-}
-
-KernelArgument CUDAEngine::downloadArgumentObject(const ArgumentId, uint64_t*) const
-{
-    throw std::runtime_error("");
-}
-
-uint64_t CUDAEngine::copyArgument(const ArgumentId, const ArgumentId, const size_t)
-{
-    throw std::runtime_error("");
-}
-
-EventId CUDAEngine::copyArgumentAsync(const ArgumentId, const ArgumentId, const size_t, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t CUDAEngine::persistArgument(KernelArgument&, const bool)
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::setPersistentBufferUsage(const bool)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t CUDAEngine::getArgumentOperationDuration(const EventId) const
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::resizeArgument(const ArgumentId, const size_t, const bool)
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::clearBuffer(const ArgumentId)
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::clearBuffers()
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::clearBuffers(const ArgumentAccessType)
-{
-    throw std::runtime_error("");
-}
-
-void CUDAEngine::printComputeAPIInfo(std::ostream&) const
-{
-    throw std::runtime_error("");
-}
-
-std::vector<PlatformInfo> CUDAEngine::getPlatformInfo() const
-{
-    throw std::runtime_error("");
-}
-
-std::vector<DeviceInfo> CUDAEngine::getDeviceInfo(const PlatformIndex) const
-{
-    throw std::runtime_error("");
-}
-
-DeviceInfo CUDAEngine::getCurrentDeviceInfo() const
-{
-    throw std::runtime_error("");
-}
+} // namespace ktt
 
 #endif // KTT_PLATFORM_CUDA
-
-} // namespace ktt

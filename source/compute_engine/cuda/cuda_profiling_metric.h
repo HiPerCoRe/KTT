@@ -16,7 +16,8 @@ public:
         metricId(0),
         metricName(""),
         device(0),
-        currentSet(nullptr),
+        eventGroupSets(nullptr),
+        currentSetIndex(0),
         currentEventIndex(0),
         eventCount(0)
     {}
@@ -24,7 +25,8 @@ public:
     CUpti_MetricID metricId;
     std::string metricName;
     CUdevice device;
-    CUpti_EventGroupSet* currentSet;
+    CUpti_EventGroupSets* eventGroupSets;
+    uint32_t currentSetIndex;
     uint32_t currentEventIndex;
     uint32_t eventCount;
     std::vector<CUpti_EventID> eventIds;

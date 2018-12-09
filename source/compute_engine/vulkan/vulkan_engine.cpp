@@ -1,11 +1,11 @@
+#ifdef KTT_PLATFORM_VULKAN
+
 #include <compute_engine/vulkan/vulkan_engine.h>
 #include <utility/logger.h>
 #include <utility/timer.h>
 
 namespace ktt
 {
-
-#ifdef KTT_PLATFORM_VULKAN
 
 VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
     deviceIndex(deviceIndex),
@@ -276,188 +276,31 @@ DeviceInfo VulkanEngine::getCurrentDeviceInfo() const
     return getDeviceInfo(0).at(deviceIndex);
 }
 
-#else
+#ifdef KTT_PROFILING
 
-VulkanEngine::VulkanEngine(const DeviceIndex, const uint32_t)
+EventId VulkanEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    const QueueId queue)
 {
-    throw std::runtime_error("Support for Vulkan API is not included in this version of KTT framework");
+    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
 
-KernelResult VulkanEngine::runKernel(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const std::vector<OutputDescriptor>&)
+KernelResult VulkanEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
 {
-    throw std::runtime_error("");
+    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
 
-EventId VulkanEngine::runKernelAsync(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
+bool VulkanEngine::hasProfilingData(const std::string& kernelName, const std::string& kernelSource) const
 {
-    throw std::runtime_error("");
+    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
 
-KernelResult VulkanEngine::getKernelResult(const EventId, const std::vector<OutputDescriptor>&) const
+uint64_t VulkanEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) const
 {
-    throw std::runtime_error("");
+    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
 
-uint64_t VulkanEngine::getKernelOverhead(const EventId) const
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::setCompilerOptions(const std::string&)
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::setGlobalSizeType(const GlobalSizeType)
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::setAutomaticGlobalSizeCorrection(const bool)
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::setKernelCacheUsage(const bool)
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::setKernelCacheCapacity(const size_t)
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::clearKernelCache()
-{
-    throw std::runtime_error("");
-}
-
-QueueId VulkanEngine::getDefaultQueue() const
-{
-    throw std::runtime_error("");
-}
-
-std::vector<QueueId> VulkanEngine::getAllQueues() const
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::synchronizeQueue(const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::synchronizeDevice()
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::clearEvents()
-{
-    throw std::runtime_error("");
-}
-
-uint64_t VulkanEngine::uploadArgument(KernelArgument&)
-{
-    throw std::runtime_error("");
-}
-
-EventId VulkanEngine::uploadArgumentAsync(KernelArgument&, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t VulkanEngine::updateArgument(const ArgumentId, const void*, const size_t)
-{
-    throw std::runtime_error("");
-}
-
-EventId VulkanEngine::updateArgumentAsync(const ArgumentId, const void*, const size_t, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t VulkanEngine::downloadArgument(const ArgumentId, void*, const size_t) const
-{
-    throw std::runtime_error("");
-}
-
-EventId VulkanEngine::downloadArgumentAsync(const ArgumentId, void*, const size_t, const QueueId) const
-{
-    throw std::runtime_error("");
-}
-
-KernelArgument VulkanEngine::downloadArgumentObject(const ArgumentId, uint64_t*) const
-{
-    throw std::runtime_error("");
-}
-
-uint64_t VulkanEngine::copyArgument(const ArgumentId, const ArgumentId, const size_t)
-{
-    throw std::runtime_error("");
-}
-
-EventId VulkanEngine::copyArgumentAsync(const ArgumentId, const ArgumentId, const size_t, const QueueId)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t VulkanEngine::persistArgument(KernelArgument&, const bool)
-{
-    throw std::runtime_error("");
-}
-
-uint64_t VulkanEngine::getArgumentOperationDuration(const EventId) const
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::resizeArgument(const ArgumentId, const size_t, const bool)
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::setPersistentBufferUsage(const bool)
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::clearBuffer(const ArgumentId)
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::clearBuffers()
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::clearBuffers(const ArgumentAccessType)
-{
-    throw std::runtime_error("");
-}
-
-void VulkanEngine::printComputeAPIInfo(std::ostream&) const
-{
-    throw std::runtime_error("");
-}
-
-std::vector<PlatformInfo> VulkanEngine::getPlatformInfo() const
-{
-    throw std::runtime_error("");
-}
-
-std::vector<DeviceInfo> VulkanEngine::getDeviceInfo(const PlatformIndex) const
-{
-    throw std::runtime_error("");
-}
-
-DeviceInfo VulkanEngine::getCurrentDeviceInfo() const
-{
-    throw std::runtime_error("");
-}
-
-#endif // KTT_PLATFORM_VULKAN
+#endif // KTT_PROFILING
 
 } // namespace ktt
+
+#endif // KTT_PLATFORM_VULKAN

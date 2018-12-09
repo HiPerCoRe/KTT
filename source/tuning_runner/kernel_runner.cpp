@@ -145,10 +145,20 @@ KernelResult KernelRunner::runKernelSimple(const Kernel& kernel, const KernelCon
     KernelId kernelId = kernel.getId();
     std::string kernelName = kernel.getName();
     std::string source = kernelManager->getKernelSourceWithDefines(kernelId, configuration);
-
     KernelRuntimeData kernelData(kernelId, kernelName, source, configuration.getGlobalSize(), configuration.getLocalSize(), kernel.getArgumentIds(),
         configuration.getLocalMemoryModifiers());
+
+    #ifdef KTT_PROFILING
+    EventId id = computeEngine->runKernelWithProfiling(kernelData, argumentManager->getArguments(kernel.getArgumentIds()), computeEngine->getDefaultQueue());
+    while (computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource()) > 0)
+    {
+        computeEngine->runKernelWithProfiling(kernelData, argumentManager->getArguments(kernel.getArgumentIds()), computeEngine->getDefaultQueue());
+    }
+    KernelResult result = computeEngine->getKernelResultWithProfiling(id, output);
+    #else
     KernelResult result = computeEngine->runKernel(kernelData, argumentManager->getArguments(kernel.getArgumentIds()), output);
+    #endif // KTT_PROFILING
+
     result.setConfiguration(configuration);
     return result;
 }
