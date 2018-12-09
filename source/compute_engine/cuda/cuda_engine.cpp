@@ -638,7 +638,7 @@ EventId CUDAEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, 
     }
     else
     {
-        std::vector<CUDAProfilingMetric>* metricData = profilingState->second.getProfilingMetrics();
+        CUDAProfilingMetric* metricData = profilingState->second.getCurrentProfilingMetric();
         checkCUDAError(cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)getMetricValueCallback, metricData), "cuptiSubscribe");
         checkCUDAError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunch), "cuptiEnableCallback");
         checkCUDAError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel), "cuptiEnableCallback");
@@ -1017,103 +1017,79 @@ void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain dom
         throw std::runtime_error("Internal CUDA CUPTI error: Unexpected callback id was passed into metric value collection function");
     }
 
-    std::vector<CUDAProfilingMetric>* metrics = reinterpret_cast<std::vector<CUDAProfilingMetric>*>(userdata);
+    CUDAProfilingMetric* metric = reinterpret_cast<CUDAProfilingMetric*>(userdata);
     if (info->callbackSite == CUPTI_API_ENTER)
     {
         checkCUDAError(cuCtxSynchronize(), "cuCtxSynchronize");
         checkCUDAError(cuptiSetEventCollectionMode(info->context, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
 
-        for (auto& metric : *metrics)
+        for (uint32_t i = 0; i < metric->eventGroupSets->sets[metric->currentSetIndex].numEventGroups; ++i)
         {
-            if (metric.currentSetIndex >= metric.eventGroupSets->numSets)
-            {
-                continue;
-            }
-
-            for (uint32_t i = 0; i < metric.eventGroupSets->sets[metric.currentSetIndex].numEventGroups; ++i)
-            {
-                uint32_t profileAll = 1;
-                checkCUDAError(cuptiEventGroupSetAttribute(metric.eventGroupSets->sets[metric.currentSetIndex].eventGroups[i],
-                    CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES, sizeof(profileAll), &profileAll), "cuptiEventGroupSetAttribute");
-                checkCUDAError(cuptiEventGroupEnable(metric.eventGroupSets->sets[metric.currentSetIndex].eventGroups[i]), "cuptiEventGroupEnable");
-            }
+            uint32_t profileAll = 1;
+            checkCUDAError(cuptiEventGroupSetAttribute(metric->eventGroupSets->sets[metric->currentSetIndex].eventGroups[i],
+                CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES, sizeof(profileAll), &profileAll), "cuptiEventGroupSetAttribute");
+            checkCUDAError(cuptiEventGroupEnable(metric->eventGroupSets->sets[metric->currentSetIndex].eventGroups[i]), "cuptiEventGroupEnable");
         }
     }
     else if (info->callbackSite == CUPTI_API_EXIT)
     {
         checkCUDAError(cuCtxSynchronize(), "cuCtxSynchronize");
 
-        for (auto& metric : *metrics)
+        for (uint32_t i = 0; i < metric->eventGroupSets->sets[metric->currentSetIndex].numEventGroups; ++i)
         {
-            if (metric.currentSetIndex >= metric.eventGroupSets->numSets)
+            CUpti_EventGroup group = metric->eventGroupSets->sets[metric->currentSetIndex].eventGroups[i];
+            CUpti_EventDomainID groupDomain;
+            uint32_t eventCount;
+            uint32_t instanceCount;
+            uint32_t totalInstaceCount;
+            size_t groupDomainSize = sizeof(groupDomain);
+            size_t eventCountSize = sizeof(eventCount);
+            size_t instanceCountSize = sizeof(instanceCount);
+            size_t totalInstaceCountSize = sizeof(totalInstaceCount);
+
+            checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID, &groupDomainSize, &groupDomain),
+                "cuptiEventGroupGetAttribute");
+            checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_NUM_EVENTS, &eventCountSize, &eventCount),
+                "cuptiEventGroupGetAttribute");
+            checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT, &instanceCountSize, &instanceCount),
+                "cuptiEventGroupGetAttribute");
+            checkCUDAError(cuptiDeviceGetEventDomainAttribute(metric->device, groupDomain, CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT,
+                &totalInstaceCountSize, &totalInstaceCount), "cuptiDeviceGetEventDomainAttribute");
+
+            std::vector<CUpti_EventID> eventIds(eventCount);
+            size_t eventIdsSize = eventCount * sizeof(CUpti_EventID);
+            checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENTS, &eventIdsSize, eventIds.data()),
+                "cuptiEventGroupGetAttribute");
+
+            std::vector<uint64_t> values(instanceCount);
+            size_t valuesSize = instanceCount * sizeof(uint64_t);
+
+            for (uint32_t j = 0; j < eventCount; ++j)
             {
-                continue;
-            }
+                checkCUDAError(cuptiEventGroupReadEvent(group, CUPTI_EVENT_READ_FLAG_NONE, eventIds[j], &valuesSize, values.data()),
+                    "cuptiEventGroupReadEvent");
 
-            for (uint32_t i = 0; i < metric.eventGroupSets->sets[metric.currentSetIndex].numEventGroups; ++i)
-            {
-                CUpti_EventGroup group = metric.eventGroupSets->sets[metric.currentSetIndex].eventGroups[i];
-                CUpti_EventDomainID groupDomain;
-                uint32_t eventCount;
-                uint32_t instanceCount;
-                uint32_t totalInstaceCount;
-                size_t groupDomainSize = sizeof(groupDomain);
-                size_t eventCountSize = sizeof(eventCount);
-                size_t instanceCountSize = sizeof(instanceCount);
-                size_t totalInstaceCountSize = sizeof(totalInstaceCount);
-
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID, &groupDomainSize, &groupDomain),
-                    "cuptiEventGroupGetAttribute");
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_NUM_EVENTS, &eventCountSize, &eventCount),
-                    "cuptiEventGroupGetAttribute");
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT, &instanceCountSize, &instanceCount),
-                    "cuptiEventGroupGetAttribute");
-                checkCUDAError(cuptiDeviceGetEventDomainAttribute(metric.device, groupDomain, CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT,
-                    &totalInstaceCountSize, &totalInstaceCount), "cuptiDeviceGetEventDomainAttribute");
-
-                std::vector<CUpti_EventID> eventIds(eventCount);
-                size_t eventIdsSize = eventCount * sizeof(CUpti_EventID);
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENTS, &eventIdsSize, eventIds.data()),
-                    "cuptiEventGroupGetAttribute");
-
-                std::vector<uint64_t> values(instanceCount);
-                size_t valuesSize = instanceCount * sizeof(uint64_t);
-
-                for (uint32_t j = 0; j < eventCount; ++j)
+                if (metric->currentEventIndex >= metric->eventCount)
                 {
-                    checkCUDAError(cuptiEventGroupReadEvent(group, CUPTI_EVENT_READ_FLAG_NONE, eventIds[j], &valuesSize, values.data()),
-                        "cuptiEventGroupReadEvent");
-
-                    if (metric.currentEventIndex >= metric.eventCount)
-                    {
-                        throw std::runtime_error("Internal CUDA CUPTI error : Too many metric events collected");
-                    }
-
-                    uint64_t sum = 0;
-                    for (uint32_t k = 0; k < instanceCount; ++k)
-                    {
-                        sum += values[k];
-                    }
-
-                    const uint64_t normalized = (sum * totalInstaceCount) / instanceCount;
-                    metric.eventIds[metric.currentEventIndex] = eventIds[j];
-                    metric.eventValues[metric.currentEventIndex] = normalized;
-                    metric.currentEventIndex++;
+                    throw std::runtime_error("Internal CUDA CUPTI error : Too many metric events collected");
                 }
+
+                uint64_t sum = 0;
+                for (uint32_t k = 0; k < instanceCount; ++k)
+                {
+                    sum += values[k];
+                }
+
+                const uint64_t normalized = (sum * totalInstaceCount) / instanceCount;
+                metric->eventIds[metric->currentEventIndex] = eventIds[j];
+                metric->eventValues[metric->currentEventIndex] = normalized;
+                metric->currentEventIndex++;
             }
         }
 
-        for (auto& metric : *metrics)
+        for (uint32_t i = 0; i < metric->eventGroupSets->sets[metric->currentSetIndex].numEventGroups; ++i)
         {
-            if (metric.currentSetIndex >= metric.eventGroupSets->numSets)
-            {
-                continue;
-            }
-
-            for (uint32_t i = 0; i < metric.eventGroupSets->sets[metric.currentSetIndex].numEventGroups; ++i)
-            {
-                checkCUDAError(cuptiEventGroupDisable(metric.eventGroupSets->sets[metric.currentSetIndex].eventGroups[i]), "cuptiEventGroupDisable");
-            }
+            checkCUDAError(cuptiEventGroupDisable(metric->eventGroupSets->sets[metric->currentSetIndex].eventGroups[i]), "cuptiEventGroupDisable");
         }
     }
 }

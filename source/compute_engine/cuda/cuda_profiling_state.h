@@ -18,8 +18,9 @@ public:
     explicit CUDAProfilingState(CUcontext context, const CUdevice device, std::vector<std::pair<std::string, CUpti_MetricID>>& metrics) :
         kernelDuration(std::numeric_limits<uint64_t>::max()),
         kernelDurationValid(false),
-        remainingKernelRuns(0),
-        totalKernelRuns(0)
+        remainingKernelRuns(1),
+        totalKernelRuns(1),
+        currentMetricIndex(0)
     {
         for (auto& metric : metrics)
         {
@@ -34,16 +35,23 @@ public:
             profilingMetric.eventValues.resize(static_cast<size_t>(profilingMetric.eventCount));
             profilingMetrics.push_back(profilingMetric);
 
-            totalKernelRuns = std::max(totalKernelRuns, static_cast<uint64_t>(profilingMetric.eventGroupSets->numSets + 1));
-            remainingKernelRuns = std::max(remainingKernelRuns, static_cast<uint64_t>(profilingMetric.eventGroupSets->numSets + 1));
+            totalKernelRuns += static_cast<uint64_t>(profilingMetric.eventGroupSets->numSets);
+            remainingKernelRuns += static_cast<uint64_t>(profilingMetric.eventGroupSets->numSets);
         }
     }
 
     void updateState()
     {
-        for (auto& metric : profilingMetrics)
+        if (remainingKernelRuns == 0)
         {
-            metric.currentSetIndex = static_cast<uint32_t>(totalKernelRuns - remainingKernelRuns - 1);
+            return;
+        }
+
+        CUDAProfilingMetric& currentMetric = profilingMetrics[currentMetricIndex];
+        ++currentMetric.currentSetIndex;
+        if (currentMetric.currentSetIndex >= currentMetric.eventGroupSets->numSets)
+        {
+            ++currentMetricIndex;
         }
         --remainingKernelRuns;
     }
@@ -80,6 +88,11 @@ public:
         return &profilingMetrics;
     }
 
+    CUDAProfilingMetric* getCurrentProfilingMetric()
+    {
+        return &profilingMetrics[currentMetricIndex];
+    }
+
     const std::vector<CUDAProfilingMetric>& getProfilingMetrics() const
     {
         return profilingMetrics;
@@ -113,6 +126,7 @@ private:
     bool kernelDurationValid;
     uint64_t remainingKernelRuns;
     uint64_t totalKernelRuns;
+    size_t currentMetricIndex;
     std::vector<CUDAProfilingMetric> profilingMetrics;
 
     static KernelProfilingCounter getCounterFromMetric(CUDAProfilingMetric& metric, const uint64_t kernelDuration)
