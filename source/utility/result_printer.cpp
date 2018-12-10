@@ -147,6 +147,25 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
             outputTarget << ",";
         }
     }
+
+    if (results.at(0).getProfilingData().isValid())
+    {
+        const std::vector<KernelProfilingCounter>& counters = results.at(0).getProfilingData().getAllCounters();
+        if (counters.size() > 0)
+        {
+            outputTarget << ",";
+        }
+
+        for (size_t i = 0; i < counters.size(); ++i)
+        {
+            outputTarget << counters.at(i).getName();
+            if (i + 1 != counters.size())
+            {
+                outputTarget << ",";
+            }
+        }
+    }
+
     outputTarget << std::endl;
 
     // Values
@@ -160,6 +179,11 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
         outputTarget << result.getKernelName() << ",";
         outputTarget << convertTime(result.getComputationDuration(), timeUnit) << ",";
         printConfigurationCSV(outputTarget, result.getConfiguration(), parameterPairs);
+        if (result.getProfilingData().isValid())
+        {
+            printProfilingCountersCSV(outputTarget, result.getProfilingData().getAllCounters());
+        }
+        outputTarget << std::endl;
     }
 
     if (printInvalidResult)
@@ -195,6 +219,25 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
                 outputTarget << ",";
             }
         }
+
+        if (results.at(0).getProfilingData().isValid())
+        {
+            const std::vector<KernelProfilingCounter>& counters = results.at(0).getProfilingData().getAllCounters();
+            if (counters.size() > 0)
+            {
+                outputTarget << ",";
+            }
+
+            for (size_t i = 0; i < counters.size(); ++i)
+            {
+                outputTarget << counters.at(i).getName();
+                if (i + 1 != counters.size())
+                {
+                    outputTarget << ",";
+                }
+            }
+        }
+
         outputTarget << std::endl;
 
         // Values
@@ -217,6 +260,11 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
 
             outputTarget << statusMessage << ",";
             printConfigurationCSV(outputTarget, result.getConfiguration(), parameterPairs);
+            if (result.getProfilingData().isValid())
+            {
+                printProfilingCountersCSV(outputTarget, result.getProfilingData().getAllCounters());
+            }
+            outputTarget << std::endl;
         }
     }
 }
@@ -310,7 +358,47 @@ void ResultPrinter::printConfigurationCSV(std::ostream& outputTarget, const Kern
             outputTarget << ",";
         }
     }
-    outputTarget << std::endl;
+}
+
+void ResultPrinter::printProfilingCountersCSV(std::ostream& outputTarget, const std::vector<KernelProfilingCounter>& counters) const
+{
+    if (counters.size() > 0)
+    {
+        outputTarget << ",";
+    }
+
+    for (size_t i = 0; i < counters.size(); ++i)
+    {
+        const KernelProfilingCounter& counter = counters.at(i);
+        switch (counter.getType())
+        {
+        case ProfilingCounterType::Double:
+            outputTarget << counter.getValue().doubleValue;
+            break;
+        case ProfilingCounterType::Int:
+            outputTarget << counter.getValue().intValue;
+            break;
+        case ProfilingCounterType::UnsignedInt:
+            outputTarget << counter.getValue().uintValue;
+            break;
+        case ProfilingCounterType::Percent:
+            outputTarget << counter.getValue().percentValue;
+            break;
+        case ProfilingCounterType::Throughput:
+            outputTarget << counter.getValue().throughputValue;
+            break;
+        case ProfilingCounterType::UtilizationLevel:
+            outputTarget << counter.getValue().utilizationLevelValue;
+            break;
+        default:
+            throw std::runtime_error("Unknown profiling counter type");
+        }
+
+        if (i + 1 != counters.size())
+        {
+            outputTarget << ",";
+        }
+    }
 }
 
 KernelResult ResultPrinter::getBestResult(const std::vector<KernelResult>& results) const
