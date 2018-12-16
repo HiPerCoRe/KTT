@@ -67,14 +67,11 @@ public:
     virtual std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const = 0;
     virtual DeviceInfo getCurrentDeviceInfo() const = 0;
 
-#ifdef KTT_PROFILING
     // Kernel profiling methods
     virtual EventId runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const QueueId queue) = 0;
-    virtual KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const = 0;
-    virtual bool hasProfilingData(const std::string& kernelName, const std::string& kernelSource) const = 0;
-    virtual uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) const = 0;
-#endif // KTT_PROFILING
+    virtual uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) = 0;
+    virtual KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) = 0;
 };
 
 } // namespace ktt

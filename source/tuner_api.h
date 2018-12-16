@@ -380,8 +380,8 @@ public:
       * arguments can be useful during online tuning and regular kernel running, when kernel output is computed over multiple kernel launches in
       * different configurations. Note that persistent arguments are never utilized by reference kernels.
       * @param id Id of a vector argument.
-      * @param flag Specifies whether argument should be persisted or not. If true, specified vector argument is immidiately persisted. If false,
-      * compute API buffer for specified argument is immidiately destroyed.
+      * @param flag Specifies whether argument should be persisted or not. If true, specified vector argument is immediately persisted. If false,
+      * compute API buffer for specified argument is immediately destroyed.
       */
     void persistArgument(const ArgumentId id, const bool flag);
 
@@ -460,6 +460,16 @@ public:
     * @param clearConfigurations If true, generated kernel configurations will be cleared as well. Otherwise, they will remain inside tuner.
     */
     void clearKernelData(const KernelId id, const bool clearConfigurations);
+
+    /** @fn void setKernelProfiling(const bool flag);
+    * Toggles profiling of kernel runs inside the tuner. Profiled kernel runs generate profiling counters which can be used by searchers and stop
+    * conditions for more accurate performance measurement. Profiling counters can also be retrieved through API and printed into CSV file with
+    * tuning results. Note that enabling profiling will result in longer tuning times because profiled kernels have to be launched multiple times
+    * with the same configuration in order to collect all profiling counters. Asynchronous kernel launches are currently not supported when kernel
+    * profiling is enabled.
+    * @param flag If true, kernel profiling is enabled. It is disabled otherwise.
+    */
+    void setKernelProfiling(const bool flag);
 
     /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
       * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.

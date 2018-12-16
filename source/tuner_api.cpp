@@ -376,6 +376,19 @@ void Tuner::clearKernelData(const KernelId id, const bool clearConfigurations)
     tunerCore->clearKernelData(id, clearConfigurations);
 }
 
+void Tuner::setKernelProfiling(const bool flag)
+{
+    try
+    {
+        tunerCore->setKernelProfiling(flag);
+    }
+    catch (const std::runtime_error& error)
+    {
+        TunerCore::log(LoggingLevel::Error, error.what());
+        throw;
+    }
+}
+
 void Tuner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     try

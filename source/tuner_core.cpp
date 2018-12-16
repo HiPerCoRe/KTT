@@ -284,6 +284,11 @@ void TunerCore::clearKernelData(const KernelId id, const bool clearConfiguration
     tuningRunner->clearKernelData(id, clearConfigurations);
 }
 
+void TunerCore::setKernelProfiling(const bool flag)
+{
+    tuningRunner->setKernelProfiling(flag);
+}
+
 void TunerCore::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     tuningRunner->setSearchMethod(method, arguments);

@@ -311,6 +311,11 @@ void TuningRunner::clearKernelData(const KernelId id, const bool clearConfigurat
     configurationManager.clearKernelData(id, clearConfigurations, true);
 }
 
+void TuningRunner::setKernelProfiling(const bool flag)
+{
+    kernelRunner->setKernelProfiling(flag);
+}
+
 void TuningRunner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     configurationManager.setSearchMethod(method, arguments);

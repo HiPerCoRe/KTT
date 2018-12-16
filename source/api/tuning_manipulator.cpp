@@ -31,6 +31,21 @@ void TuningManipulator::runKernelAsync(const KernelId id, const DimensionVector&
     manipulatorInterface->runKernelAsync(id, globalSize, localSize, queue);
 }
 
+void TuningManipulator::runKernelWithProfiling(const KernelId id)
+{
+    manipulatorInterface->runKernelWithProfiling(id);
+}
+
+void TuningManipulator::runKernelWithProfiling(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize)
+{
+    manipulatorInterface->runKernelWithProfiling(id, globalSize, localSize);
+}
+
+uint64_t TuningManipulator::getRemainingKernelProfilingRuns(const KernelId id) const
+{
+    return manipulatorInterface->getRemainingKernelProfilingRuns(id);
+}
+
 QueueId TuningManipulator::getDefaultDeviceQueue() const
 {
     return manipulatorInterface->getDefaultDeviceQueue();

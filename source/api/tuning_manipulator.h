@@ -90,6 +90,32 @@ public:
       */
     void runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize, const QueueId queue);
 
+    /** @fn void runKernelWithProfiling(const KernelId id)
+      * Runs kernel with specified id using thread sizes based on the current configuration. Collection of profiling counters will be enabled for
+      * this kernel run which means the performance will be decreased. Running a kernel with profiling will currently always cause implicit device
+      * synchronization before and after the kernel run has finished.
+      * @param id Id of kernel which will be run. It must either match the id used to launch kernel from tuner API or be included inside composition
+      * which was launched from tuner API.
+    */
+    void runKernelWithProfiling(const KernelId id);
+
+    /** @fn void runKernelWithProfiling(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize)
+      * Runs kernel with specified id using specified thread sizes. Collection of profiling counters will be enabled for this kernel run which means
+      * the performance will be decreased. Running a kernel with profiling will currently always cause implicit device synchronization before and
+      * after the kernel run has finished.
+      * @param id Id of kernel which will be run. It must either match the id used to launch kernel from tuner API or be included inside composition
+      * which was launched from tuner API.
+      * @param globalSize Dimensions for global size with which the kernel will be run.
+      * @param localSize Dimensions for local size with which the kernel will be run.
+      */
+    void runKernelWithProfiling(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize);
+
+    /** @fn uint64_t getRemainingKernelProfilingRuns(const KernelId id) const
+      * Retrieves number of remaining profiling runs that are needed to collect all the profiling counters for specified kernel.
+      * @param id Id of kernel for which the number of remaining profiling runs will be retrieved.
+      */
+    uint64_t getRemainingKernelProfilingRuns(const KernelId id) const;
+
     /** @fn QueueId getDefaultDeviceQueue() const
       * Retrieves id of device queue to which all synchronous commands are submitted.
       * @return Id of device queue to which all synchronous commands are submitted.

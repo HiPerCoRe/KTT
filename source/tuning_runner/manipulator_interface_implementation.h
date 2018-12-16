@@ -23,6 +23,9 @@ public:
     void runKernelAsync(const KernelId id, const QueueId queue) override;
     void runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize) override;
     void runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize, const QueueId queue) override;
+    void runKernelWithProfiling(const KernelId id) override;
+    void runKernelWithProfiling(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize) override;
+    uint64_t getRemainingKernelProfilingRuns(const KernelId id) const override;
     QueueId getDefaultDeviceQueue() const override;
     std::vector<QueueId> getAllDeviceQueues() const override;
     void synchronizeQueue(const QueueId queue) override;
@@ -50,6 +53,7 @@ public:
     void destroyArgumentBuffer(const ArgumentId id) override;
 
     // Core methods
+    void setKernelProfiling(const bool flag);
     void addKernel(const KernelId id, const KernelRuntimeData& data);
     void setConfiguration(const KernelConfiguration& configuration);
     void setKernelArguments(const std::vector<KernelArgument*>& arguments);
@@ -58,6 +62,7 @@ public:
     KernelResult getCurrentResult() const;
     void synchronizeDeviceInternal();
     void clearData();
+    void resetOverhead();
 
 private:
     // Attributes
@@ -69,11 +74,14 @@ private:
     std::map<size_t, KernelArgument> nonVectorArguments;
     mutable std::map<QueueId, std::set<EventId>> enqueuedKernelEvents;
     mutable std::map<QueueId, std::set<std::pair<EventId, bool>>> enqueuedBufferEvents;
+    mutable std::map<KernelId, std::vector<EventId>> kernelProfilingEvents;
+    bool kernelProfilingFlag;
 
     // Helper methods
     std::vector<KernelArgument*> getArgumentPointers(const std::vector<ArgumentId>& argumentIds);
     void updateArgumentSimple(const ArgumentId id, const void* argumentData, const size_t numberOfElements, const ArgumentUploadType uploadType);
     void storeKernelEvent(const QueueId queue, const EventId event) const;
+    void storeKernelProfilingEvent(const KernelId kernel, const EventId event) const;
     void storeBufferEvent(const QueueId queue, const EventId event, const bool increaseOverhead) const;
     void processKernelEvents(const std::set<EventId>& events);
     void processBufferEvents(const std::set<std::pair<EventId, bool>>& events);

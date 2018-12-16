@@ -15,7 +15,8 @@ KernelRunner::KernelRunner(ArgumentManager* argumentManager, KernelManager* kern
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     computeEngine(computeEngine),
-    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine))
+    manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine)),
+    kernelProfilingFlag(false)
 {}
 
 KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output)
@@ -119,6 +120,12 @@ void KernelRunner::setTuningManipulatorSynchronization(const KernelId id, const 
     }
 }
 
+void KernelRunner::setKernelProfiling(const bool flag)
+{
+    kernelProfilingFlag = flag;
+    manipulatorInterfaceImplementation->setKernelProfiling(flag);
+}
+
 KernelArgument KernelRunner::downloadArgument(const ArgumentId id) const
 {
     return computeEngine->downloadArgumentObject(id, nullptr);
@@ -148,16 +155,27 @@ KernelResult KernelRunner::runKernelSimple(const Kernel& kernel, const KernelCon
     KernelRuntimeData kernelData(kernelId, kernelName, source, configuration.getGlobalSize(), configuration.getLocalSize(), kernel.getArgumentIds(),
         configuration.getLocalMemoryModifiers());
 
-    #ifdef KTT_PROFILING
-    EventId id = computeEngine->runKernelWithProfiling(kernelData, argumentManager->getArguments(kernel.getArgumentIds()), computeEngine->getDefaultQueue());
-    while (computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource()) > 0)
+    KernelResult result;
+    if (kernelProfilingFlag)
     {
-        computeEngine->runKernelWithProfiling(kernelData, argumentManager->getArguments(kernel.getArgumentIds()), computeEngine->getDefaultQueue());
+        EventId id = computeEngine->runKernelWithProfiling(kernelData, argumentManager->getArguments(kernel.getArgumentIds()),
+            computeEngine->getDefaultQueue());
+        while (computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource()) > 0)
+        {
+            if (computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource()) > 1)
+            {
+                computeEngine->clearBuffers(ArgumentAccessType::ReadWrite);
+                computeEngine->clearBuffers(ArgumentAccessType::WriteOnly);
+            }
+            computeEngine->runKernelWithProfiling(kernelData, argumentManager->getArguments(kernel.getArgumentIds()),
+                computeEngine->getDefaultQueue());
+        }
+        result = computeEngine->getKernelResultWithProfiling(id, output);
     }
-    KernelResult result = computeEngine->getKernelResultWithProfiling(id, output);
-    #else
-    KernelResult result = computeEngine->runKernel(kernelData, argumentManager->getArguments(kernel.getArgumentIds()), output);
-    #endif // KTT_PROFILING
+    else
+    {
+        result = computeEngine->runKernel(kernelData, argumentManager->getArguments(kernel.getArgumentIds()), output);
+    }
 
     result.setConfiguration(configuration);
     return result;
@@ -175,6 +193,50 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     manipulatorInterfaceImplementation->addKernel(kernelId, kernelData);
     manipulatorInterfaceImplementation->setConfiguration(configuration);
     manipulatorInterfaceImplementation->setKernelArguments(argumentManager->getArguments(kernel.getArgumentIds()));
+    uint64_t manipulatorDuration;
+
+    if (kernelProfilingFlag)
+    {
+        uint64_t remainingCount = computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource());
+        while (remainingCount > 0)
+        {
+            manipulatorDuration = launchManipulator(kernelId, manipulator);
+            uint64_t newCount = computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource());
+
+            if (newCount == remainingCount)
+            {
+                throw std::runtime_error(
+                    std::string("Tuning manipulator does not collect any kernel profiling data for kernel with the following id: ")
+                    + std::to_string(kernelId));
+            }
+
+            if (newCount != 0)
+            {
+                manipulatorInterfaceImplementation->resetOverhead();
+                computeEngine->clearBuffers();
+            }
+
+            remainingCount = newCount;
+        }
+    }
+    else
+    {
+        manipulatorDuration = launchManipulator(kernelId, manipulator);
+    }
+
+    manipulatorInterfaceImplementation->downloadBuffers(output);
+    KernelResult result = manipulatorInterfaceImplementation->getCurrentResult();
+    manipulatorInterfaceImplementation->clearData();
+    manipulator->manipulatorInterface = nullptr;
+
+    manipulatorDuration -= result.getOverhead();
+    result.setKernelName(kernel.getName());
+    result.setComputationDuration(manipulatorDuration);
+    return result;
+}
+
+uint64_t KernelRunner::launchManipulator(const KernelId kernelId, TuningManipulator* manipulator)
+{
     if (manipulator->enableArgumentPreload())
     {
         manipulatorInterfaceImplementation->uploadBuffers();
@@ -185,7 +247,7 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     {
         timer.start();
         manipulator->launchComputation(kernelId);
-        if (disabledSynchronizationManipulators.find(kernel.getId()) == disabledSynchronizationManipulators.end())
+        if (disabledSynchronizationManipulators.find(kernelId) == disabledSynchronizationManipulators.end())
         {
             manipulatorInterfaceImplementation->synchronizeDeviceInternal();
         }
@@ -199,16 +261,7 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
         throw;
     }
 
-    manipulatorInterfaceImplementation->downloadBuffers(output);
-    KernelResult result = manipulatorInterfaceImplementation->getCurrentResult();
-    manipulatorInterfaceImplementation->clearData();
-    manipulator->manipulatorInterface = nullptr;
-
-    uint64_t manipulatorDuration = timer.getElapsedTime();
-    manipulatorDuration -= result.getOverhead();
-    result.setKernelName(kernel.getName());
-    result.setComputationDuration(manipulatorDuration);
-    return result;
+    return timer.getElapsedTime();
 }
 
 KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition& composition, TuningManipulator* manipulator,

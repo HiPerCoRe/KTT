@@ -625,30 +625,21 @@ DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
     return getOpenCLDeviceInfo(platformIndex, deviceIndex);
 }
 
-#ifdef KTT_PROFILING
-
 EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const QueueId queue)
 {
     throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
 }
 
-KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
+uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource)
 {
     throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
 }
 
-bool OpenCLEngine::hasProfilingData(const std::string& kernelName, const std::string& kernelSource) const
+KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
 {
     throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
 }
-
-uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) const
-{
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
-}
-
-#endif // KTT_PROFILING
 
 std::unique_ptr<OpenCLProgram> OpenCLEngine::createAndBuildProgram(const std::string& source) const
 {

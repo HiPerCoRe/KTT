@@ -80,14 +80,11 @@ public:
     std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const override;
     DeviceInfo getCurrentDeviceInfo() const override;
 
-#ifdef KTT_PROFILING
     // Kernel profiling methods
     EventId runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const QueueId queue) override;
-    KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const override;
-    bool hasProfilingData(const std::string& kernelName, const std::string& kernelSource) const override;
-    uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) const override;
-#endif // KTT_PROFILING
+    uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) override;
+    KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) override;
 
 private:
     DeviceIndex deviceIndex;
@@ -108,8 +105,8 @@ private:
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> bufferEvents;
 #ifdef KTT_PROFILING
     std::vector<std::pair<std::string, CUpti_MetricID>> profilingMetrics;
-    mutable std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
-    mutable std::map<std::pair<std::string, std::string>, CUDAProfilingState> kernelProfilingStates;
+    std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
+    std::map<std::pair<std::string, std::string>, CUDAProfilingState> kernelProfilingStates;
 #endif // KTT_PROFILING
 
     std::unique_ptr<CUDAProgram> createAndBuildProgram(const std::string& source) const;
@@ -124,6 +121,7 @@ private:
     CUdeviceptr* loadBufferFromCache(const ArgumentId id) const;
 
 #ifdef KTT_PROFILING
+    void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
     const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
     CUpti_MetricID getMetricIdFromName(const std::string& metricName);
     std::vector<std::pair<std::string, CUpti_MetricID>> getProfilingMetricsForCurrentDevice();

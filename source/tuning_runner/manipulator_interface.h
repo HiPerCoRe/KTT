@@ -21,6 +21,11 @@ public:
     virtual void runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize) = 0;
     virtual void runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize, const QueueId queue) = 0;
 
+    // Kernel profiling methods
+    virtual void runKernelWithProfiling(const KernelId id) = 0;
+    virtual void runKernelWithProfiling(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize) = 0;
+    virtual uint64_t getRemainingKernelProfilingRuns(const KernelId id) const = 0;
+
     // Queue handling methods
     virtual QueueId getDefaultDeviceQueue() const = 0;
     virtual std::vector<QueueId> getAllDeviceQueues() const = 0;

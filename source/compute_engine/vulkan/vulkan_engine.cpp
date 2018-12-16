@@ -276,30 +276,21 @@ DeviceInfo VulkanEngine::getCurrentDeviceInfo() const
     return getDeviceInfo(0).at(deviceIndex);
 }
 
-#ifdef KTT_PROFILING
-
 EventId VulkanEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const QueueId queue)
 {
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
 
-KernelResult VulkanEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
+uint64_t VulkanEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource)
 {
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
 
-bool VulkanEngine::hasProfilingData(const std::string& kernelName, const std::string& kernelSource) const
+KernelResult VulkanEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
 {
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
-
-uint64_t VulkanEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) const
-{
-    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
-}
-
-#endif // KTT_PROFILING
 
 } // namespace ktt
 

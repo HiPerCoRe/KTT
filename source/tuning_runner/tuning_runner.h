@@ -29,6 +29,7 @@ public:
     KernelResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     KernelResult tuneCompositionByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     void clearKernelData(const KernelId id, const bool clearConfigurations);
+    void setKernelProfiling(const bool flag);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     void setValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void setValidationRange(const ArgumentId id, const size_t range);
