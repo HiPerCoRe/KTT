@@ -284,7 +284,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "STRIDE_BLOCK", {(size_t)STRIDE_BLOCK});
 #endif
 #if STRIDED == 0
-    tuner.addParameter(kernelId, "GRANULARITY", {1, 2, 3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
+    tuner.addParameter(kernelId, "GRANULARITY", {/*1, 2, */3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
 #else
     tuner.addParameter(kernelId, "GRANULARITY", {1}); // other granularities not supported
 #endif
@@ -295,11 +295,14 @@ int main(int argc, char** argv)
 #endif
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_X", {1, (size_t)c});
     tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
-    tuner.addParameter(kernelId, "CG_GROUP_SIZE_Z", {1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "CG_GROUP_SIZE_Z", {1, 2, 4, 8, 16, 32, 64});
     tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
-    tuner.addParameter(kernelId, "PADD_AA", {0, 1, 2, 3});
-    tuner.addParameter(kernelId, "PADD_AB", {0, 1, 2, 3});
-    tuner.addParameter(kernelId, "PADD_C", {0, 1, 2, 3});
+    tuner.addParameter(kernelId, "PADD_AA", {0, 1});
+    tuner.addParameter(kernelId, "PADD_AB", {0, 1});
+    if (c % 4 == 0)
+        tuner.addParameter(kernelId, "PADD_C", {0});
+    else
+        tuner.addParameter(kernelId, "PADD_C", {0, c % 4});
     tuner.addParameter(kernelId, "DIRECT_WRITE", {0, 1});
     tuner.addParameter(kernelId, "UNROLL_K", {0, 1});
 
@@ -320,7 +323,7 @@ int main(int argc, char** argv)
     auto memConstraint = [](const std::vector<size_t>& v) {size_t a = v[2]; size_t b = v[3]; size_t c = v[4]; return (v[0] == 1 && v[1] == 1 && (a*b+c*a)*v[5] < SHARED_PER_BLOCK) || (v[0] == 1 && v[1] == 2 && (a*b+c*a)*v[5] < REGS_PER_BLOCK) || (v[0] == 2 && v[1] == 1 && ((a+v[9])*b+c*a+(1-v[6])*(c*b))*v[7] < SHARED_PER_BLOCK) || (v[0] == 2 && v[1] == 2 && ((a+v[9])*b+(1-v[6])*(c*b))*v[7] < SHARED_PER_BLOCK) || (v[0] == 3 && v[1] == 1 && ((a+v[9])*(b+v[10])+c*a+(1-v[6])*(c*b))*v[8] < SHARED_PER_BLOCK) || (v[0] == 3 && v[1] == 2 && v[7] == 1 && ((a+v[9])*(b+v[10])+(1-v[6])*(c*b))*v[8] < SHARED_PER_BLOCK) || (v[0] == 3 && v[1] == 2 && ((a+v[9])*(b+v[10])+c*a+(1-v[6])*(c*b))*v[8] < SHARED_PER_BLOCK);};
     tuner.addConstraint(kernelId, {"GRANULARITY", "CACHING_STRATEGY", "SIZE_A", "SIZE_B", "SIZE_C", "GROUP_SIZE_X", "DIRECT_WRITE", "MGCG_GROUP_SIZE_Y", "CG_GROUP_SIZE_Z", "PADD_AA", "PADD_AB"}, memConstraint);
 #define MAX_BLOCK_SIZE 1024
-    auto blockConstraint = [](const std::vector<size_t>&v) {return (v[0] == 1) || (v[0] == 2 && v[1]*v[2] < MAX_BLOCK_SIZE) || (v[0] == 3 && (v[1]+v[3])*v[2]*v[4] < MAX_BLOCK_SIZE);};
+    auto blockConstraint = [](const std::vector<size_t>&v) {return (v[0] == 1) || (v[0] == 2 && v[1]*v[2] < MAX_BLOCK_SIZE) || (v[0] == 3 && (v[1]+v[3])*v[2]*v[4] < MAX_BLOCK_SIZE && (v[1]+v[3])*v[2]*v[4] >= 32);};
     tuner.addConstraint(kernelId, {"GRANULARITY", "SIZE_C", "MGCG_GROUP_SIZE_Y", "PADD_C", "CG_GROUP_SIZE_Z"}, blockConstraint);
 
     tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});
