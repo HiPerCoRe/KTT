@@ -99,7 +99,7 @@ public:
         size_t y = getParameterValue("GROUP_SIZE_Y", parameterValues);
         size_t z = getParameterValue("GROUP_SIZE_Z", parameterValues);
 #if USE_CUDA == 0
-        globalSize.setSizeX(batch*(c+PADD_C)/z);
+        globalSize.setSizeX(batch*(c+padd_c)/z);
         globalSize.setSizeY(y);
         globalSize.setSizeZ(z);
 #else
