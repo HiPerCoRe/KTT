@@ -96,8 +96,8 @@ public:
         ktt::DimensionVector localSize(1, 1, 1);
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
         size_t padd_c = getParameterValue("PADD_C", parameterValues);
-        size_t y = getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues);
-        size_t z = getParameterValue("CG_GROUP_SIZE_Z", parameterValues);
+        size_t y = getParameterValue("GROUP_SIZE_Y", parameterValues);
+        size_t z = getParameterValue("GROUP_SIZE_Z", parameterValues);
 #if USE_CUDA == 0
         globalSize.setSizeX(batch*(c+PADD_C)/z);
         globalSize.setSizeY(y);
@@ -192,8 +192,8 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "SIZE_A", {(size_t)a});
     tuner.addParameter(kernelId, "SIZE_B", {(size_t)b});
     tuner.addParameter(kernelId, "SIZE_C", {(size_t)c});
-    tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
-    tuner.addParameter(kernelId, "CG_GROUP_SIZE_Z", {1, 2, 4, 8, 16, 32, 64});
+    tuner.addParameter(kernelId, "GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "GROUP_SIZE_Z", {1, 2, 4, 8, 16, 32, 64});
     tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
     tuner.addParameter(kernelId, "PADD_AA", {0, 1});
     tuner.addParameter(kernelId, "PADD_AB", {0, 1});
@@ -205,7 +205,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "UNROLL_K", {0, 1});
 
     auto parallelismConstraint = [](const std::vector<size_t>& v) {return v[0] <= v[1];};
-    tuner.addConstraint(kernelId, {"MGCG_GROUP_SIZE_Y", "SIZE_B"}, parallelismConstraint);
+    tuner.addConstraint(kernelId, {"GROUP_SIZE_Y", "SIZE_B"}, parallelismConstraint);
     auto paddConstraint = [](const std::vector<size_t>& v) {return (v[0] == 0 && v[1] == 0 && v[2] == 0) || (v[3] > 0);};
     tuner.addConstraint(kernelId, {"PADD_AA", "PADD_AB", "PADD_C", "CACHING_STRATEGY"}, paddConstraint);
     auto dwConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1) || (v[1] > 0);};
@@ -214,10 +214,10 @@ int main(int argc, char** argv)
     tuner.addConstraint(kernelId, {"UNROLL_K", "CACHING_STRATEGY"}, unrollkConstraint);
 #define SHARED_PER_BLOCK (49152/4)
     auto memConstraint = [](const std::vector<size_t>& v) {size_t a = v[1]; size_t b = v[2]; size_t c = v[3]; return (v[0] == 1 && ((a+v[7])*(b+v[8])+c*a+(1-v[4])*(c*b))*v[6] < SHARED_PER_BLOCK) || (v[0] == 2 && v[5] == 1 && ((a+v[7])*(b+v[8])+(1-v[4])*(c*b))*v[6] < SHARED_PER_BLOCK) || (v[0] == 2 && ((a+v[7])*(b+v[8])+c*a+(1-v[4])*(c*b))*v[6] < SHARED_PER_BLOCK);};
-    tuner.addConstraint(kernelId, {"CACHING_STRATEGY", "SIZE_A", "SIZE_B", "SIZE_C", "DIRECT_WRITE", "MGCG_GROUP_SIZE_Y", "CG_GROUP_SIZE_Z", "PADD_AA", "PADD_AB"}, memConstraint);
+    tuner.addConstraint(kernelId, {"CACHING_STRATEGY", "SIZE_A", "SIZE_B", "SIZE_C", "DIRECT_WRITE", "GROUP_SIZE_Y", "GROUP_SIZE_Z", "PADD_AA", "PADD_AB"}, memConstraint);
 #define MAX_BLOCK_SIZE 1024
     auto blockConstraint = [](const std::vector<size_t>&v) {return ((v[0]+v[2])*v[1]*v[3] < MAX_BLOCK_SIZE) && ((v[0]+v[2])*v[1]*v[3] >= 32);};
-    tuner.addConstraint(kernelId, {"SIZE_C", "MGCG_GROUP_SIZE_Y", "PADD_C", "CG_GROUP_SIZE_Z"}, blockConstraint);
+    tuner.addConstraint(kernelId, {"SIZE_C", "GROUP_SIZE_Y", "PADD_C", "GROUP_SIZE_Z"}, blockConstraint);
 
     tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
