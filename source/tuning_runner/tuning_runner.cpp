@@ -64,17 +64,19 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
 
             if (stopCondition != nullptr)
             {
-                stopCondition->updateStatus(static_cast<double>(result.getComputationDuration()));
+                stopCondition->updateStatus(true, currentConfiguration.getParameterPairs(), static_cast<double>(result.getComputationDuration()),
+                    result.getProfilingData());
             }
         }
         else
         {
             results.emplace_back(kernel.getName(), currentConfiguration, "Results differ");
-            configurationManager.calculateNextConfiguration(kernel, currentConfiguration, UINT64_MAX);
+            configurationManager.calculateNextConfiguration(kernel, currentConfiguration, std::numeric_limits<uint64_t>::max());
 
             if (stopCondition != nullptr)
             {
-                stopCondition->updateStatus(std::numeric_limits<double>::max());
+                stopCondition->updateStatus(false, currentConfiguration.getParameterPairs(), std::numeric_limits<double>::max(),
+                    result.getProfilingData());
             }
         }
 
@@ -85,7 +87,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
             kernelRunner->clearBuffers(ArgumentAccessType::ReadOnly);
         }
 
-        if (stopCondition != nullptr && stopCondition->isMet())
+        if (stopCondition != nullptr && stopCondition->isSatisfied())
         {
             Logger::getLogger().log(LoggingLevel::Info, stopCondition->getStatusString());
             break;
@@ -203,23 +205,25 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
 
             if (stopCondition != nullptr)
             {
-                stopCondition->updateStatus(static_cast<double>(result.getComputationDuration()));
+                stopCondition->updateStatus(true, currentConfiguration.getParameterPairs(), static_cast<double>(result.getComputationDuration()),
+                    result.getProfilingData());
             }
         }
         else
         {
             results.emplace_back(composition.getName(), currentConfiguration, "Results differ");
-            configurationManager.calculateNextConfiguration(composition, currentConfiguration, UINT64_MAX);
+            configurationManager.calculateNextConfiguration(composition, currentConfiguration, std::numeric_limits<uint64_t>::max());
 
             if (stopCondition != nullptr)
             {
-                stopCondition->updateStatus(std::numeric_limits<double>::max());
+                stopCondition->updateStatus(false, currentConfiguration.getParameterPairs(), std::numeric_limits<double>::max(),
+                    result.getProfilingData());
             }
         }
 
         kernelRunner->clearBuffers();
 
-        if (stopCondition != nullptr && stopCondition->isMet())
+        if (stopCondition != nullptr && stopCondition->isSatisfied())
         {
             Logger::getLogger().log(LoggingLevel::Info, stopCondition->getStatusString());
             break;
@@ -261,7 +265,7 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     {
         result.setValid(false);
         result.setErrorMessage("Results differ");
-        configurationManager.calculateNextConfiguration(kernel, currentConfiguration, UINT64_MAX);
+        configurationManager.calculateNextConfiguration(kernel, currentConfiguration, std::numeric_limits<uint64_t>::max());
     }
 
     kernelRunner->clearBuffers();
@@ -299,7 +303,7 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     {
         result.setValid(false);
         result.setErrorMessage("Results differ");
-        configurationManager.calculateNextConfiguration(composition, currentConfiguration, UINT64_MAX);
+        configurationManager.calculateNextConfiguration(composition, currentConfiguration, std::numeric_limits<uint64_t>::max());
     }
 
     kernelRunner->clearBuffers();

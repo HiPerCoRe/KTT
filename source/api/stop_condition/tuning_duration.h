@@ -27,7 +27,7 @@ public:
         targetTime = std::max(0.0, duration);
     }
 
-    bool isMet() const override
+    bool isSatisfied() const override
     {
         return passedTime > targetTime;
     }
@@ -38,7 +38,7 @@ public:
         initialTime = std::chrono::steady_clock::now();
     }
 
-    void updateStatus(const double) override
+    void updateStatus(const bool, const std::vector<ParameterPair>&, const double, const KernelProfilingData&) override
     {
         std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
         passedTime = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - initialTime).count()) / 1000.0;
@@ -51,7 +51,7 @@ public:
 
     std::string getStatusString() const override
     {
-        if (isMet())
+        if (isSatisfied())
         {
             return std::string("Target tuning time reached: " + std::to_string(targetTime) + " seconds");
         }

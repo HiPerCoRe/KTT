@@ -25,7 +25,7 @@ public:
         targetCount = std::max(static_cast<size_t>(1), count);
     }
 
-    bool isMet() const override
+    bool isSatisfied() const override
     {
         return currentCount >= targetCount;
     }
@@ -33,7 +33,7 @@ public:
     void initialize(const size_t) override
     {}
 
-    void updateStatus(const double) override
+    void updateStatus(const bool, const std::vector<ParameterPair>&, const double, const KernelProfilingData&) override
     {
         currentCount++;
     }
@@ -45,7 +45,7 @@ public:
 
     std::string getStatusString() const override
     {
-        if (isMet())
+        if (isSatisfied())
         {
             return std::string("Target count of explored configurations reached: " + std::to_string(targetCount));
         }
