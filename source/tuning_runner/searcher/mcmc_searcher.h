@@ -50,7 +50,7 @@ public:
             unexploredIndices.insert(i);
     }
 
-    void calculateNextConfiguration(const double previousDuration) override
+    void calculateNextConfiguration(const bool, const KernelConfiguration&, const double previousDuration, const KernelProfilingData&) override
     {
         visitedStatesCount++;
         exploredIndices[index] = true;
@@ -143,7 +143,7 @@ public:
         index = currentState;
     }
 
-    KernelConfiguration getCurrentConfiguration() const override
+    KernelConfiguration getNextConfiguration() const override
     {
         return configurations.at(index);
     }

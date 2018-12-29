@@ -30,12 +30,12 @@ public:
         std::shuffle(std::begin(this->configurationIndices), std::end(this->configurationIndices), engine);
     }
 
-    void calculateNextConfiguration(const double) override
+    void calculateNextConfiguration(const bool, const KernelConfiguration&, const double, const KernelProfilingData&) override
     {
         index++;
     }
 
-    KernelConfiguration getCurrentConfiguration() const override
+    KernelConfiguration getNextConfiguration() const override
     {
         size_t currentIndex = configurationIndices.at(index);
         return configurations.at(currentIndex);

@@ -43,8 +43,10 @@ public:
     KernelConfiguration getBestConfiguration(const Kernel& kernel);
     KernelConfiguration getBestConfiguration(const KernelComposition& composition);
     ComputationResult getBestComputationResult(const KernelId id) const;
-    void calculateNextConfiguration(const Kernel& kernel, const KernelConfiguration& previous, const uint64_t previousDuration);
-    void calculateNextConfiguration(const KernelComposition& composition, const KernelConfiguration& previous, const uint64_t previousDuration);
+    void calculateNextConfiguration(const Kernel& kernel, const bool successFlag, const KernelConfiguration& previousConfiguration,
+        const uint64_t previousDuration, const KernelProfilingData& previousProfilingData);
+    void calculateNextConfiguration(const KernelComposition& composition, const bool successFlag, const KernelConfiguration& previousConfiguration,
+        const uint64_t previousDuration, const KernelProfilingData& previousProfilingData);
 
 private:
     // Attributes

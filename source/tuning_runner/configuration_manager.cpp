@@ -186,7 +186,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const Kernel& 
         }
     }
 
-    return searcherPair->second->getCurrentConfiguration();
+    return searcherPair->second->getNextConfiguration();
 }
 
 KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelComposition& composition)
@@ -245,7 +245,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelCo
         }
     }
 
-    return searcherPair->second->getCurrentConfiguration();
+    return searcherPair->second->getNextConfiguration();
 }
 
 KernelConfiguration ConfigurationManager::getBestConfiguration(const Kernel& kernel)
@@ -282,7 +282,8 @@ ComputationResult ConfigurationManager::getBestComputationResult(const KernelId 
         std::get<2>(configurationPair->second));
 }
 
-void ConfigurationManager::calculateNextConfiguration(const Kernel& kernel, const KernelConfiguration& previous, const uint64_t previousDuration)
+void ConfigurationManager::calculateNextConfiguration(const Kernel& kernel, const bool successFlag, const KernelConfiguration& previousConfiguration,
+    const uint64_t previousDuration, const KernelProfilingData& previousProfilingData)
 {
     const size_t id = kernel.getId();
     auto searcherPair = searchers.find(id);
@@ -294,25 +295,26 @@ void ConfigurationManager::calculateNextConfiguration(const Kernel& kernel, cons
     auto configurationPair = bestConfigurations.find(id);
     if (configurationPair == bestConfigurations.end())
     {
-        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previous, kernel.getName(), previousDuration)));
+        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previousConfiguration, kernel.getName(), previousDuration)));
     }
     else if (std::get<2>(configurationPair->second) > previousDuration)
     {
         bestConfigurations.erase(id);
-        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previous, kernel.getName(), previousDuration)));
+        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previousConfiguration, kernel.getName(), previousDuration)));
     }
 
     if (hasPackConfigurations(id))
     {
         ConfigurationStorage& storage = configurationStorages.find(id)->second;
-        storage.storeConfiguration(std::make_pair(previous, previousDuration));
+        storage.storeConfiguration(std::make_pair(previousConfiguration, previousDuration));
     }
 
-    searcherPair->second->calculateNextConfiguration(static_cast<double>(previousDuration));
+    searcherPair->second->calculateNextConfiguration(successFlag, previousConfiguration, static_cast<double>(previousDuration),
+        previousProfilingData);
 }
 
-void ConfigurationManager::calculateNextConfiguration(const KernelComposition& composition, const KernelConfiguration& previous,
-    const uint64_t previousDuration)
+void ConfigurationManager::calculateNextConfiguration(const KernelComposition& composition, const bool successFlag,
+    const KernelConfiguration& previousConfiguration, const uint64_t previousDuration, const KernelProfilingData& previousProfilingData)
 {
     const size_t id = composition.getId();
     auto searcherPair = searchers.find(id);
@@ -325,21 +327,22 @@ void ConfigurationManager::calculateNextConfiguration(const KernelComposition& c
     auto configurationPair = bestConfigurations.find(id);
     if (configurationPair == bestConfigurations.end())
     {
-        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previous, composition.getName(), previousDuration)));
+        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previousConfiguration, composition.getName(), previousDuration)));
     }
     else if (std::get<2>(configurationPair->second) > previousDuration)
     {
         bestConfigurations.erase(id);
-        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previous, composition.getName(), previousDuration)));
+        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previousConfiguration, composition.getName(), previousDuration)));
     }
 
     if (hasPackConfigurations(id))
     {
         ConfigurationStorage& storage = configurationStorages.find(id)->second;
-        storage.storeConfiguration(std::make_pair(previous, previousDuration));
+        storage.storeConfiguration(std::make_pair(previousConfiguration, previousDuration));
     }
 
-    searcherPair->second->calculateNextConfiguration(static_cast<double>(previousDuration));
+    searcherPair->second->calculateNextConfiguration(successFlag, previousConfiguration, static_cast<double>(previousDuration),
+        previousProfilingData);
 }
 
 void ConfigurationManager::initializeOrderedKernelPacks(const Kernel& kernel)

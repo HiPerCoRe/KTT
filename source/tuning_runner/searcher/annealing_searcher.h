@@ -37,7 +37,8 @@ public:
         index = initialState;
     }
 
-    void calculateNextConfiguration(const double previousDuration) override
+    void calculateNextConfiguration(const bool successFlag, const KernelConfiguration& previousConfiguration, const double previousDuration,
+        const KernelProfilingData& previousProfilingData) override
     {
         if (previousDuration > 0.0) // workaround for recursive calls
         {
@@ -64,7 +65,7 @@ public:
             if (alreadyVisistedStatesCount < maximumAlreadyVisitedStates)
             {
                 alreadyVisistedStatesCount++;
-                calculateNextConfiguration(-1.0);
+                calculateNextConfiguration(successFlag, previousConfiguration, -1.0, previousProfilingData);
                 return;
             }
         }
@@ -72,7 +73,7 @@ public:
         index = neighbourState;
     }
 
-    KernelConfiguration getCurrentConfiguration() const override
+    KernelConfiguration getNextConfiguration() const override
     {
         return configurations.at(index);
     }
