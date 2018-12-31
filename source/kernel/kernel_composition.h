@@ -2,6 +2,7 @@
 
 #include <array>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <kernel/kernel.h>
@@ -29,6 +30,7 @@ public:
     std::map<KernelId, DimensionVector> getModifiedGlobalSizes(const std::vector<ParameterPair>& parameterPairs) const;
     std::map<KernelId, DimensionVector> getModifiedLocalSizes(const std::vector<ParameterPair>& parameterPairs) const;
     std::map<KernelId, std::vector<LocalMemoryModifier>> getLocalMemoryModifiers(const std::vector<ParameterPair>& parameterPairs) const;
+    void setKernelProfiling(const KernelId kernelId, const bool flag);
 
     // Getters
     KernelId getId() const;
@@ -42,6 +44,7 @@ public:
     std::vector<KernelParameter> getParametersForPack(const KernelParameterPack& pack) const;
     const std::vector<ArgumentId>& getSharedArgumentIds() const;
     const std::vector<ArgumentId>& getKernelArgumentIds(const KernelId id) const;
+    const std::set<KernelId>& getProfiledKernels() const;
     bool hasParameter(const std::string& parameterName) const;
 
 private:
@@ -60,6 +63,7 @@ private:
     std::map<KernelId, std::array<std::function<size_t(const size_t, const std::vector<size_t>&)>, 3>> localThreadModifiers;
     std::map<KernelId, std::map<ArgumentId, std::vector<std::string>>> localMemoryModifierNames;
     std::map<KernelId, std::map<ArgumentId, std::function<size_t(const size_t, const std::vector<size_t>&)>>> localMemoryModifiers;
+    std::set<KernelId> profiledKernels;
 
     void validateModifierParameters(const std::vector<std::string>& parameterNames) const;
 };

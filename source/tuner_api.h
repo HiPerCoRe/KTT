@@ -156,14 +156,14 @@ public:
       */
     void addParameterDouble(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
 
-    /* @fn void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string> parameterNames)
-    * Adds a pack containing specified kernel parameters. When parameter packs are used, tuning configurations are generated progressively for each
-    * pack. Once best configuration is found for a specific pack, next pack is then processed. This method is useful when kernels contain groups of
-    * parameters that can be tuned independently. The total number of generated configurations that need to be tested is reduced.
-    * @param id Id of kernel for which the parameter pack will be added.
-    * @param packName Name of a parameter pack. Parameter pack names for a single kernel must be unique.
-    * @param parameterNames Names of parameters which will be added to the parameter pack.
-    */
+    /** @fn void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string> parameterNames)
+      * Adds a pack containing specified kernel parameters. When parameter packs are used, tuning configurations are generated progressively for each
+      * pack. Once best configuration is found for a specific pack, next pack is then processed. This method is useful when kernels contain groups of
+      * parameters that can be tuned independently. The total number of generated configurations that need to be tested is reduced.
+      * @param id Id of kernel for which the parameter pack will be added.
+      * @param packName Name of a parameter pack. Parameter pack names for a single kernel must be unique.
+      * @param parameterNames Names of parameters which will be added to the parameter pack.
+      */
     void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string>& parameterNames);
 
     /** @fn void setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
@@ -276,16 +276,16 @@ public:
         const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
 
     /** @fn void setCompositionKernelThreadModifier(const KernelId compositionId, const KernelId kernelId, const ModifierType modifierType,
-    * const ModifierDimension modifierDimension, const std::string& parameterName, const ModifierAction modifierAction)
-    * Calls simplified version of setThreadModifier() method for a single kernel inside specified kernel composition. Does not affect standalone
-    * kernels or other compositions.
-    * @param compositionId Id of composition which includes the specified kernel.
-    * @param kernelId Id of kernel inside the composition for which the modifier will be set.
-    * @param modifierType Type of the thread modifier. See ::ModifierType for more information.
-    * @param modifierDimension Dimension which will be affected by the thread modifier. See ::ModifierDimension for more information.
-    * @param parameterName Name of a kernel parameter whose value will be utilized by the thread modifier.
-    * @param modifierAction Action of the thread modifier. See ::ModifierAction for more information.
-    */
+      * const ModifierDimension modifierDimension, const std::string& parameterName, const ModifierAction modifierAction)
+      * Calls simplified version of setThreadModifier() method for a single kernel inside specified kernel composition. Does not affect standalone
+      * kernels or other compositions.
+      * @param compositionId Id of composition which includes the specified kernel.
+      * @param kernelId Id of kernel inside the composition for which the modifier will be set.
+      * @param modifierType Type of the thread modifier. See ::ModifierType for more information.
+      * @param modifierDimension Dimension which will be affected by the thread modifier. See ::ModifierDimension for more information.
+      * @param parameterName Name of a kernel parameter whose value will be utilized by the thread modifier.
+      * @param modifierAction Action of the thread modifier. See ::ModifierAction for more information.
+      */
     void setCompositionKernelThreadModifier(const KernelId compositionId, const KernelId kernelId, const ModifierType modifierType,
         const ModifierDimension modifierDimension, const std::string& parameterName, const ModifierAction modifierAction);
 
@@ -455,21 +455,31 @@ public:
     ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
 
     /** @fn void clearData(const KernelId id)
-    * Resets tuning process and clears tuning results for specified kernel.
-    * @param id Id of kernel whose data will be cleared.
-    * @param clearConfigurations If true, generated kernel configurations will be cleared as well. Otherwise, they will remain inside tuner.
-    */
+      * Resets tuning process and clears tuning results for specified kernel.
+      * @param id Id of kernel whose data will be cleared.
+      * @param clearConfigurations If true, generated kernel configurations will be cleared as well. Otherwise, they will remain inside tuner.
+      */
     void clearKernelData(const KernelId id, const bool clearConfigurations);
 
-    /** @fn void setKernelProfiling(const bool flag);
-    * Toggles profiling of kernel runs inside the tuner. Profiled kernel runs generate profiling counters which can be used by searchers and stop
-    * conditions for more accurate performance measurement. Profiling counters can also be retrieved through API and printed into CSV file with
-    * tuning results. Note that enabling profiling will result in longer tuning times because profiled kernels have to be launched multiple times
-    * with the same configuration in order to collect all profiling counters. Asynchronous kernel launches are currently not supported when kernel
-    * profiling is enabled.
-    * @param flag If true, kernel profiling is enabled. It is disabled otherwise.
-    */
+    /** @fn void setKernelProfiling(const bool flag)
+      * Toggles profiling of kernel runs inside the tuner. Profiled kernel runs generate profiling counters which can be used by searchers and stop
+      * conditions for more accurate performance measurement. Profiling counters can also be retrieved through API and printed into CSV file with
+      * tuning results. Note that enabling profiling will result in longer tuning times because profiled kernels have to be launched multiple times
+      * with the same configuration in order to collect all profiling counters. Asynchronous kernel launches are currently not supported when kernel
+      * profiling is enabled.
+      * @param flag If true, kernel profiling is enabled. It is disabled otherwise.
+      */
     void setKernelProfiling(const bool flag);
+
+    /** @fn void setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag)
+      * Toggles profiling of a specific kernel inside kernel composition. This is useful if only some kernels inside the composition need to be
+      * profiled. By default, profiling is enabled for all kernels inside newly added kernel compositions. Note that this method has no effect if
+      * kernel profiling is completely disabled. See setKernelProfiling() method for more information.
+      * @param compositionId Id of composition which includes the specified kernel.
+      * @param kernelId Id of kernel inside the composition for which the profiling flag will be set.
+      * @param flag If true, kernel profiling is enabled for specified kernel inside the composition. It is disabled otherwise.
+      */
+    void setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag);
 
     /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
       * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.

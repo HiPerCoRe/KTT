@@ -63,6 +63,7 @@ public:
     void synchronizeDeviceInternal();
     void clearData();
     void resetOverhead();
+    void setProfiledKernels(const std::set<KernelId>& profiledKernels);
 
 private:
     // Attributes
@@ -76,6 +77,7 @@ private:
     mutable std::map<QueueId, std::set<std::pair<EventId, bool>>> enqueuedBufferEvents;
     mutable std::map<KernelId, std::vector<EventId>> kernelProfilingEvents;
     bool kernelProfilingFlag;
+    std::set<KernelId> profiledKernels;
 
     // Helper methods
     std::vector<KernelArgument*> getArgumentPointers(const std::vector<ArgumentId>& argumentIds);

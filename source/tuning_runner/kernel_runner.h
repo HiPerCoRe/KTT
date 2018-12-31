@@ -48,9 +48,11 @@ private:
     KernelResult runKernelSimple(const Kernel& kernel, const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output);
     KernelResult runKernelWithManipulator(const Kernel& kernel, TuningManipulator* manipulator, const KernelConfiguration& configuration,
         const std::vector<OutputDescriptor>& output);
-    uint64_t launchManipulator(const KernelId kernelId, TuningManipulator* manipulator);
     KernelResult runCompositionWithManipulator(const KernelComposition& composition, TuningManipulator* manipulator,
         const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output);
+    uint64_t launchManipulator(const KernelId kernelId, TuningManipulator* manipulator);
+    uint64_t getRemainingKernelProfilingRunsForComposition(const KernelComposition& composition,
+        const std::vector<KernelRuntimeData>& compositionData);
 };
 
 } // namespace ktt

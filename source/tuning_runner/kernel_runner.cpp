@@ -197,6 +197,7 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
 
     if (kernelProfilingFlag)
     {
+        manipulatorInterfaceImplementation->setProfiledKernels(std::set<KernelId>{kernelId});
         uint64_t remainingCount = computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource());
         while (remainingCount > 0)
         {
@@ -235,6 +236,80 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, Tuning
     return result;
 }
 
+KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition& composition, TuningManipulator* manipulator,
+    const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output)
+{
+    const KernelId compositionId = composition.getId();
+    manipulator->manipulatorInterface = manipulatorInterfaceImplementation.get();
+    std::vector<KernelArgument*> allArguments = argumentManager->getArguments(composition.getSharedArgumentIds());
+    std::vector<KernelRuntimeData> compositionData;
+
+    for (const auto* kernel : composition.getKernels())
+    {
+        KernelId kernelId = kernel->getId();
+        std::vector<ArgumentId> argumentIds = composition.getKernelArgumentIds(kernelId);
+        std::string source = kernelManager->getKernelSourceWithDefines(kernelId, configuration);
+
+        KernelRuntimeData kernelData(kernelId, kernel->getName(), source, configuration.getCompositionKernelGlobalSize(kernelId),
+            configuration.getCompositionKernelLocalSize(kernelId), argumentIds, configuration.getCompositionKernelLocalMemoryModifiers(kernelId));
+        manipulatorInterfaceImplementation->addKernel(kernelId, kernelData);
+        compositionData.push_back(kernelData);
+
+        std::vector<KernelArgument*> newArguments = argumentManager->getArguments(argumentIds);
+        for (const auto newArgument : newArguments)
+        {
+            if (!elementExists(newArgument, allArguments))
+            {
+                allArguments.push_back(newArgument);
+            }
+        }
+    }
+
+    manipulatorInterfaceImplementation->setConfiguration(configuration);
+    manipulatorInterfaceImplementation->setKernelArguments(allArguments);
+    uint64_t manipulatorDuration;
+
+    if (kernelProfilingFlag)
+    {
+        manipulatorInterfaceImplementation->setProfiledKernels(composition.getProfiledKernels());
+        uint64_t remainingCount = getRemainingKernelProfilingRunsForComposition(composition, compositionData);
+        while (remainingCount > 0)
+        {
+            manipulatorDuration = launchManipulator(compositionId, manipulator);
+            uint64_t newCount = getRemainingKernelProfilingRunsForComposition(composition, compositionData);
+
+            if (newCount == remainingCount)
+            {
+                throw std::runtime_error(
+                    std::string("Tuning manipulator does not collect any kernel profiling data for composition with the following id: ")
+                    + std::to_string(compositionId));
+            }
+
+            if (newCount != 0)
+            {
+                manipulatorInterfaceImplementation->resetOverhead();
+                computeEngine->clearBuffers();
+            }
+
+            remainingCount = newCount;
+        }
+    }
+    else
+    {
+        manipulatorDuration = launchManipulator(compositionId, manipulator);
+    }
+
+    manipulatorInterfaceImplementation->downloadBuffers(output);
+    KernelResult result = manipulatorInterfaceImplementation->getCurrentResult();
+    manipulatorInterfaceImplementation->clearData();
+    manipulator->manipulatorInterface = nullptr;
+
+    manipulatorDuration -= result.getOverhead();
+    result.setKernelName(composition.getName());
+    result.setComputationDuration(manipulatorDuration);
+    return result;
+}
+
 uint64_t KernelRunner::launchManipulator(const KernelId kernelId, TuningManipulator* manipulator)
 {
     if (manipulator->enableArgumentPreload())
@@ -264,68 +339,21 @@ uint64_t KernelRunner::launchManipulator(const KernelId kernelId, TuningManipula
     return timer.getElapsedTime();
 }
 
-KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition& composition, TuningManipulator* manipulator,
-    const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output)
+uint64_t KernelRunner::getRemainingKernelProfilingRunsForComposition(const KernelComposition& composition,
+    const std::vector<KernelRuntimeData>& compositionData)
 {
-    manipulator->manipulatorInterface = manipulatorInterfaceImplementation.get();
-    std::vector<KernelArgument*> allArguments = argumentManager->getArguments(composition.getSharedArgumentIds());
+    uint64_t count = 0;
+    const std::set<KernelId>& profilingKernels = composition.getProfiledKernels();
 
-    for (const auto kernel : composition.getKernels())
+    for (const auto& kernelData : compositionData)
     {
-        KernelId kernelId = kernel->getId();
-        std::vector<ArgumentId> argumentIds = composition.getKernelArgumentIds(kernelId);
-        std::string source = kernelManager->getKernelSourceWithDefines(kernelId, configuration);
-
-        KernelRuntimeData kernelData(kernelId, kernel->getName(), source, configuration.getCompositionKernelGlobalSize(kernelId),
-            configuration.getCompositionKernelLocalSize(kernelId), argumentIds, configuration.getCompositionKernelLocalMemoryModifiers(kernelId));
-        manipulatorInterfaceImplementation->addKernel(kernelId, kernelData);
-
-        std::vector<KernelArgument*> newArguments = argumentManager->getArguments(argumentIds);
-        for (const auto newArgument : newArguments)
+        if (profilingKernels.find(kernelData.getId()) != profilingKernels.end())
         {
-            if (!elementExists(newArgument, allArguments))
-            {
-                allArguments.push_back(newArgument);
-            }
+            count += computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource());
         }
     }
 
-    manipulatorInterfaceImplementation->setConfiguration(configuration);
-    manipulatorInterfaceImplementation->setKernelArguments(allArguments);
-    if (manipulator->enableArgumentPreload())
-    {
-        manipulatorInterfaceImplementation->uploadBuffers();
-    }
-
-    Timer timer;
-    try
-    {
-        timer.start();
-        manipulator->launchComputation(composition.getId());
-        if (disabledSynchronizationManipulators.find(composition.getId()) == disabledSynchronizationManipulators.end())
-        {
-            manipulatorInterfaceImplementation->synchronizeDeviceInternal();
-        }
-        timer.stop();
-    }
-    catch (const std::runtime_error&)
-    {
-        manipulatorInterfaceImplementation->synchronizeDeviceInternal();
-        manipulatorInterfaceImplementation->clearData();
-        manipulator->manipulatorInterface = nullptr;
-        throw;
-    }
-
-    manipulatorInterfaceImplementation->downloadBuffers(output);
-    KernelResult result = manipulatorInterfaceImplementation->getCurrentResult();
-    manipulatorInterfaceImplementation->clearData();
-    manipulator->manipulatorInterface = nullptr;
-
-    uint64_t manipulatorDuration = timer.getElapsedTime();
-    manipulatorDuration -= result.getOverhead();
-    result.setKernelName(composition.getName());
-    result.setComputationDuration(manipulatorDuration);
-    return result;
+    return count;
 }
 
 } // namespace ktt

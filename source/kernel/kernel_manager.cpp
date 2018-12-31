@@ -275,6 +275,16 @@ void KernelManager::setTuningManipulatorFlag(const KernelId id, const bool flag)
     getKernel(id).setTuningManipulatorFlag(flag);
 }
 
+void KernelManager::setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag)
+{
+    if (!isComposition(compositionId))
+    {
+        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
+    }
+
+    getKernelComposition(compositionId).setKernelProfiling(kernelId, flag);
+}
+
 const Kernel& KernelManager::getKernel(const KernelId id) const
 {
     for (const auto& kernel : kernels)

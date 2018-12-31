@@ -161,6 +161,11 @@ std::string TunerCore::getKernelSource(const KernelId id, const std::vector<Para
     return kernelManager.getKernelSourceWithDefines(id, configuration);
 }
 
+void TunerCore::setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag)
+{
+    kernelManager.setCompositionKernelProfiling(compositionId, kernelId, flag);
+}
+
 ArgumentId TunerCore::addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType, const bool copyData)
 {

@@ -87,6 +87,11 @@ void ManipulatorInterfaceImplementation::runKernelWithProfiling(const KernelId i
         throw std::runtime_error("Calling kernel profiling methods from tuning manipulator is not allowed when kernel profiling is disabled");
     }
 
+    if (profiledKernels.find(id) == profiledKernels.end())
+    {
+        throw std::runtime_error(std::string("Kernel profiling for kernel with the following id is disabled: ") + std::to_string(id));
+    }
+
     auto dataPointer = kernelData.find(id);
     if (dataPointer == kernelData.end())
     {
@@ -504,11 +509,17 @@ void ManipulatorInterfaceImplementation::clearData()
     vectorArguments.clear();
     nonVectorArguments.clear();
     kernelProfilingEvents.clear();
+    profiledKernels.clear();
 }
 
 void ManipulatorInterfaceImplementation::resetOverhead()
 {
     currentResult.setOverhead(0);
+}
+
+void ManipulatorInterfaceImplementation::setProfiledKernels(const std::set<KernelId>& profiledKernels)
+{
+    this->profiledKernels = profiledKernels;
 }
 
 KernelResult ManipulatorInterfaceImplementation::getCurrentResult() const

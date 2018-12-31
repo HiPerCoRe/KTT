@@ -47,6 +47,7 @@ public:
     void setKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
     std::string getKernelSource(const KernelId id, const std::vector<ParameterPair>& configuration) const;
+    void setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag);
 
     // Argument manager methods
     ArgumentId addArgument(void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType dataType,

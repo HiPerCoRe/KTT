@@ -44,6 +44,7 @@ public:
     void setArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
     void setTuningManipulatorFlag(const KernelId id, const bool flag);
+    void setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag);
 
     // Getters
     const Kernel& getKernel(const KernelId id) const;
