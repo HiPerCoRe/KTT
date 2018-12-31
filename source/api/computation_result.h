@@ -84,7 +84,7 @@ public:
 
     /** @fn const KernelProfilingData& getProfilingData() const
       * Getter for profiling data about kernel run in the current configuration.
-      * @return Profiling data about kernel run in the current configuration.
+      * @return Profiling data about kernel run in the current configuration. See KernelProfilingData for more information.
       */
     const KernelProfilingData& getProfilingData() const;
 

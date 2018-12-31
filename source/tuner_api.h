@@ -466,7 +466,7 @@ public:
       * conditions for more accurate performance measurement. Profiling counters can also be retrieved through API and printed into CSV file with
       * tuning results. Note that enabling profiling will result in longer tuning times because profiled kernels have to be launched multiple times
       * with the same configuration in order to collect all profiling counters. Asynchronous kernel launches are currently not supported when kernel
-      * profiling is enabled.
+      * profiling is enabled. Kernel profiling is disabled by default.
       * @param flag If true, kernel profiling is enabled. It is disabled otherwise.
       */
     void setKernelProfiling(const bool flag);
