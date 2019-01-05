@@ -391,24 +391,28 @@ public:
       */
     void downloadPersistentArgument(const OutputDescriptor& output) const;
 
-    /** @fn void tuneKernel(const KernelId id)
+    /** @fn std::vector<ComputationResult> tuneKernel(const KernelId id)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
       * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all configurations
       * are explored.
       * @param id Id of kernel for which the tuning will start.
+      * @return Vector of object containing information about computation using tested kernel configurations. See ComputationResult for more
+      * information.
       */
-    void tuneKernel(const KernelId id);
+    std::vector<ComputationResult> tuneKernel(const KernelId id);
 
-    /** @fn void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+    /** @fn std::vector<ComputationResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
       * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end either when all
       * configurations are explored or when specified stop condition is met.
       * @param id Id of kernel for which the tuning will start.
       * @param stopCondition Stop condition which decides whether to continue the tuning process. See StopCondition for more information.
+      * @return Vector of object containing information about computation using tested kernel configurations. See ComputationResult for more
+      * information.
       */
-    void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
+    std::vector<ComputationResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
 
-    /** @fn void dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0)
+    /** @fn std::vector<ComputationResult> dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0)
       * Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration
       * space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on
       * specified ::SearchMethod. This method can be used to test behaviour and performance of newly implemented search methods. Note that no checks
@@ -417,8 +421,10 @@ public:
       * @param id Id of kernel for which the tuning begins.
       * @param filePath Path to CSV file with tuning parameters.
       * @param iterations Number of iterations performed, 0 = scan whole tuning space.
+      * @return Vector of object containing information about computation using tested kernel configurations. See ComputationResult for more
+      * information.
       */
-    void dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0);
+    std::vector<ComputationResult> dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0);
 
     /** @fn ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
       * Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, it creates
@@ -446,7 +452,7 @@ public:
 
     /** @fn ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration,
       * const std::vector<OutputDescriptor>& output)
-      * Runs specified kernel using provided configuration. Does not perform result validation.
+      * Runs specified kernel using provided configuration.
       * @param id Id of kernel which will be run.
       * @param configuration Configuration under which the kernel will be launched. See ParameterPair for more information.
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.

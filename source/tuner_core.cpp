@@ -229,7 +229,58 @@ void TunerCore::setTuningManipulatorSynchronization(const KernelId id, const boo
     kernelRunner->setTuningManipulatorSynchronization(id, flag);
 }
 
-void TunerCore::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+void TunerCore::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
+{
+    kernelRunner->setValidationMethod(method, toleranceThreshold);
+}
+
+void TunerCore::setValidationRange(const ArgumentId id, const size_t range)
+{
+    if (id > argumentManager.getArgumentCount())
+    {
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
+    }
+    if (range > argumentManager.getArgument(id).getNumberOfElements())
+    {
+        throw std::runtime_error(std::string("Invalid validation range for argument with id: ") + std::to_string(id));
+    }
+    kernelRunner->setValidationRange(id, range);
+}
+
+void TunerCore::setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
+{
+    if (id > argumentManager.getArgumentCount())
+    {
+        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
+    }
+    kernelRunner->setArgumentComparator(id, comparator);
+}
+
+void TunerCore::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
+    const std::vector<ArgumentId>& validatedArgumentIds)
+{
+    if (!kernelManager.isKernel(id) && !kernelManager.isComposition(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+    if (!kernelManager.isKernel(referenceId))
+    {
+        throw std::runtime_error(std::string("Invalid reference kernel id: ") + std::to_string(referenceId));
+    }
+    kernelRunner->setReferenceKernel(id, referenceId, referenceConfiguration, validatedArgumentIds);
+}
+
+void TunerCore::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass,
+    const std::vector<ArgumentId>& validatedArgumentIds)
+{
+    if (!kernelManager.isKernel(id) && !kernelManager.isComposition(id))
+    {
+        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
+    }
+    kernelRunner->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
+}
+
+std::vector<ComputationResult> TunerCore::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
     std::vector<KernelResult> results;
     if (kernelManager.isComposition(id))
@@ -241,9 +292,24 @@ void TunerCore::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> sto
         results = tuningRunner->tuneKernel(id, std::move(stopCondition));
     }
     resultPrinter.setResult(id, results);
+
+    std::vector<ComputationResult> publicResults;
+    for (const auto& result : results)
+    {
+        if (result.isValid())
+        {
+            publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+                result.getProfilingData());
+        }
+        else
+        {
+            publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
+        }
+    }
+    return publicResults;
 }
 
-void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
+std::vector<ComputationResult> TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
 {
     std::vector<KernelResult> results;
     if (kernelManager.isComposition(id))
@@ -255,6 +321,21 @@ void TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath, co
         results = tuningRunner->dryTuneKernel(id, filePath, iterations);
     }
     resultPrinter.setResult(id, results);
+
+    std::vector<ComputationResult> publicResults;
+    for (const auto& result : results)
+    {
+        if (result.isValid())
+        {
+            publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+                result.getProfilingData());
+        }
+        else
+        {
+            publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
+        }
+    }
+    return publicResults;
 }
 
 ComputationResult TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
@@ -263,11 +344,11 @@ ComputationResult TunerCore::tuneKernelByStep(const KernelId id, const std::vect
 
     if (kernelManager.isComposition(id))
     {
-        result = tuningRunner->tuneCompositionByStep(id, output, recomputeReference);
+        result = tuningRunner->tuneCompositionByStep(id, output, recomputeReference, true);
     }
     else
     {
-        result = tuningRunner->tuneKernelByStep(id, output, recomputeReference);
+        result = tuningRunner->tuneKernelByStep(id, output, recomputeReference, true);
     }
 
     resultPrinter.addResult(id, result);
@@ -297,57 +378,6 @@ void TunerCore::setKernelProfiling(const bool flag)
 void TunerCore::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     tuningRunner->setSearchMethod(method, arguments);
-}
-
-void TunerCore::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
-{
-    tuningRunner->setValidationMethod(method, toleranceThreshold);
-}
-
-void TunerCore::setValidationRange(const ArgumentId id, const size_t range)
-{
-    if (id > argumentManager.getArgumentCount())
-    {
-        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
-    }
-    if (range > argumentManager.getArgument(id).getNumberOfElements())
-    {
-        throw std::runtime_error(std::string("Invalid validation range for argument with id: ") + std::to_string(id));
-    }
-    tuningRunner->setValidationRange(id, range);
-}
-
-void TunerCore::setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
-{
-    if (id > argumentManager.getArgumentCount())
-    {
-        throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
-    }
-    tuningRunner->setArgumentComparator(id, comparator);
-}
-
-void TunerCore::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
-    const std::vector<ArgumentId>& validatedArgumentIds)
-{
-    if (!kernelManager.isKernel(id) && !kernelManager.isComposition(id))
-    {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
-    }
-    if (!kernelManager.isKernel(referenceId))
-    {
-        throw std::runtime_error(std::string("Invalid reference kernel id: ") + std::to_string(referenceId));
-    }
-    tuningRunner->setReferenceKernel(id, referenceId, referenceConfiguration, validatedArgumentIds);
-}
-
-void TunerCore::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass,
-    const std::vector<ArgumentId>& validatedArgumentIds)
-{
-    if (!kernelManager.isKernel(id) && !kernelManager.isComposition(id))
-    {
-        throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
-    }
-    tuningRunner->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
 }
 
 ComputationResult TunerCore::getBestComputationResult(const KernelId id) const

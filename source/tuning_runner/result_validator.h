@@ -13,7 +13,6 @@
 #include <enum/validation_method.h>
 #include <kernel/kernel_manager.h>
 #include <kernel_argument/argument_manager.h>
-#include <tuning_runner/kernel_runner.h>
 #include <utility/logger.h>
 #include <half.hpp>
 
@@ -21,6 +20,8 @@ namespace ktt
 {
 
 using half_float::half;
+
+class KernelRunner; // Forward declaration in order to avoid cyclical header dependency
 
 class ResultValidator
 {
@@ -45,6 +46,7 @@ public:
     // Getters
     double getToleranceThreshold() const;
     ValidationMethod getValidationMethod() const;
+    bool hasReferenceResult(const KernelId id) const;
 
 private:
     // Attributes

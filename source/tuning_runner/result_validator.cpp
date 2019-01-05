@@ -1,5 +1,6 @@
 #include <string>
 #include <utility>
+#include <tuning_runner/kernel_runner.h>
 #include <tuning_runner/result_validator.h>
 #include <utility/ktt_utility.h>
 
@@ -135,6 +136,16 @@ double ResultValidator::getToleranceThreshold() const
 ValidationMethod ResultValidator::getValidationMethod() const
 {
     return validationMethod;
+}
+
+bool ResultValidator::hasReferenceResult(const KernelId id) const
+{
+    if (referenceClassResults.find(id) != referenceClassResults.end() || referenceKernelResults.find(id) != referenceKernelResults.end())
+    {
+        return true;
+    }
+
+    return false;
 }
 
 void ResultValidator::computeReferenceResultWithClass(const Kernel& kernel)

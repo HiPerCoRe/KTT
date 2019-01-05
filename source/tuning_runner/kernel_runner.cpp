@@ -15,6 +15,7 @@ KernelRunner::KernelRunner(ArgumentManager* argumentManager, KernelManager* kern
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     computeEngine(computeEngine),
+    resultValidator(argumentManager, this),
     manipulatorInterfaceImplementation(std::make_unique<ManipulatorInterfaceImplementation>(computeEngine)),
     kernelProfilingFlag(false)
 {}
@@ -27,6 +28,10 @@ KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguratio
     }
 
     const Kernel& kernel = kernelManager->getKernel(id);
+    if (!resultValidator.hasReferenceResult(id))
+    {
+        resultValidator.computeReferenceResult(kernel);
+    }
 
     std::stringstream stream;
     stream << "Running kernel " << kernel.getName() << " with configuration: " << configuration;
@@ -44,6 +49,7 @@ KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguratio
         {
             result = runKernelSimple(kernel, configuration, output);
         }
+        validateResult(kernel, result);
     }
     catch (const std::runtime_error& error)
     {
@@ -70,6 +76,11 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
     }
 
     const KernelComposition& composition = kernelManager->getKernelComposition(id);
+    const Kernel compatibilityKernel = composition.transformToKernel();
+    if (!resultValidator.hasReferenceResult(id))
+    {
+        resultValidator.computeReferenceResult(compatibilityKernel);
+    }
 
     std::stringstream stream;
     stream << "Running kernel composition " << composition.getName() << " with configuration: " << configuration;
@@ -80,6 +91,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
     {
         auto manipulatorPointer = tuningManipulators.find(id);
         result = runCompositionWithManipulator(composition, manipulatorPointer->second.get(), configuration, output);
+        validateResult(compatibilityKernel, result);
     }
     catch (const std::runtime_error& error)
     {
@@ -124,6 +136,39 @@ void KernelRunner::setKernelProfiling(const bool flag)
 {
     kernelProfilingFlag = flag;
     manipulatorInterfaceImplementation->setKernelProfiling(flag);
+}
+
+void KernelRunner::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
+{
+    resultValidator.setValidationMethod(method);
+    resultValidator.setToleranceThreshold(toleranceThreshold);
+}
+
+void KernelRunner::setValidationRange(const ArgumentId id, const size_t range)
+{
+    resultValidator.setValidationRange(id, range);
+}
+
+void KernelRunner::setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
+{
+    resultValidator.setArgumentComparator(id, comparator);
+}
+
+void KernelRunner::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
+    const std::vector<ArgumentId>& validatedArgumentIds)
+{
+    resultValidator.setReferenceKernel(id, referenceId, referenceConfiguration, validatedArgumentIds);
+}
+
+void KernelRunner::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass,
+    const std::vector<ArgumentId>& validatedArgumentIds)
+{
+    resultValidator.setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
+}
+
+void KernelRunner::clearReferenceResult(const KernelId id)
+{
+    resultValidator.clearReferenceResults(id);
 }
 
 KernelArgument KernelRunner::downloadArgument(const ArgumentId id) const
@@ -354,6 +399,30 @@ uint64_t KernelRunner::getRemainingKernelProfilingRunsForComposition(const Kerne
     }
 
     return count;
+}
+
+void KernelRunner::validateResult(const Kernel& kernel, KernelResult& result)
+{
+    if (!result.isValid())
+    {
+        return;
+    }
+
+    bool resultIsCorrect = resultValidator.validateArgumentsWithClass(kernel);
+    resultIsCorrect &= resultValidator.validateArgumentsWithKernel(kernel);
+
+    if (resultIsCorrect)
+    {
+        Logger::logInfo(std::string("Kernel run completed successfully in ") + std::to_string((result.getComputationDuration()) / 1'000'000) + "ms");
+        result.setValid(true);
+    }
+    else
+    {
+        Logger::logWarning(std::string("Kernel run completed in ") + std::to_string((result.getComputationDuration()) / 1'000'000)
+            + "ms, but results differ");
+        result.setErrorMessage("Results differ");
+        result.setValid(false);
+    }
 }
 
 } // namespace ktt

@@ -293,11 +293,11 @@ void Tuner::downloadPersistentArgument(const OutputDescriptor& output) const
     }
 }
 
-void Tuner::tuneKernel(const KernelId id)
+std::vector<ComputationResult> Tuner::tuneKernel(const KernelId id)
 {
     try
     {
-        tunerCore->tuneKernel(id, nullptr);
+        return tunerCore->tuneKernel(id, nullptr);
     }
     catch (const std::runtime_error& error)
     {
@@ -306,11 +306,11 @@ void Tuner::tuneKernel(const KernelId id)
     }
 }
 
-void Tuner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+std::vector<ComputationResult> Tuner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
     try
     {
-        tunerCore->tuneKernel(id, std::move(stopCondition));
+        return tunerCore->tuneKernel(id, std::move(stopCondition));
     }
     catch (const std::runtime_error& error)
     {
@@ -319,11 +319,11 @@ void Tuner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCon
     }
 }
 
-void Tuner::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
+std::vector<ComputationResult> Tuner::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
 {
     try
     {
-        tunerCore->dryTuneKernel(id, filePath, iterations);
+        return tunerCore->dryTuneKernel(id, filePath, iterations);
     }
     catch (const std::runtime_error& error)
     {
