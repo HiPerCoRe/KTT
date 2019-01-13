@@ -20,7 +20,8 @@ KernelRunner::KernelRunner(ArgumentManager* argumentManager, KernelManager* kern
     kernelProfilingFlag(false)
 {}
 
-KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output)
+KernelResult KernelRunner::runKernel(const KernelId id, const KernelRunMode mode, const KernelConfiguration& configuration,
+    const std::vector<OutputDescriptor>& output)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -30,7 +31,7 @@ KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguratio
     const Kernel& kernel = kernelManager->getKernel(id);
     if (!resultValidator.hasReferenceResult(id))
     {
-        resultValidator.computeReferenceResult(kernel);
+        resultValidator.computeReferenceResult(kernel, mode);
     }
 
     std::stringstream stream;
@@ -49,7 +50,7 @@ KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguratio
         {
             result = runKernelSimple(kernel, configuration, output);
         }
-        validateResult(kernel, result);
+        validateResult(kernel, result, mode);
     }
     catch (const std::runtime_error& error)
     {
@@ -62,13 +63,15 @@ KernelResult KernelRunner::runKernel(const KernelId id, const KernelConfiguratio
     return result;
 }
 
-KernelResult KernelRunner::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output)
+KernelResult KernelRunner::runKernel(const KernelId id, const KernelRunMode mode, const std::vector<ParameterPair>& configuration,
+    const std::vector<OutputDescriptor>& output)
 {
     const KernelConfiguration launchConfiguration = kernelManager->getKernelConfiguration(id, configuration);
-    return runKernel(id, launchConfiguration, output);
+    return runKernel(id, mode, launchConfiguration, output);
 }
 
-KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output)
+KernelResult KernelRunner::runComposition(const KernelId id, const KernelRunMode mode, const KernelConfiguration& configuration,
+    const std::vector<OutputDescriptor>& output)
 {
     if (!kernelManager->isComposition(id))
     {
@@ -79,7 +82,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
     const Kernel compatibilityKernel = composition.transformToKernel();
     if (!resultValidator.hasReferenceResult(id))
     {
-        resultValidator.computeReferenceResult(compatibilityKernel);
+        resultValidator.computeReferenceResult(compatibilityKernel, mode);
     }
 
     std::stringstream stream;
@@ -91,7 +94,7 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
     {
         auto manipulatorPointer = tuningManipulators.find(id);
         result = runCompositionWithManipulator(composition, manipulatorPointer->second.get(), configuration, output);
-        validateResult(compatibilityKernel, result);
+        validateResult(compatibilityKernel, result, mode);
     }
     catch (const std::runtime_error& error)
     {
@@ -104,11 +107,11 @@ KernelResult KernelRunner::runComposition(const KernelId id, const KernelConfigu
     return result;
 }
 
-KernelResult KernelRunner::runComposition(const KernelId id, const std::vector<ParameterPair>& configuration,
+KernelResult KernelRunner::runComposition(const KernelId id, const KernelRunMode mode, const std::vector<ParameterPair>& configuration,
     const std::vector<OutputDescriptor>& output)
 {
     const KernelConfiguration launchConfiguration = kernelManager->getKernelCompositionConfiguration(id, configuration);
-    return runComposition(id, launchConfiguration, output);
+    return runComposition(id, mode, launchConfiguration, output);
 }
 
 void KernelRunner::setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
@@ -142,6 +145,11 @@ void KernelRunner::setValidationMethod(const ValidationMethod method, const doub
 {
     resultValidator.setValidationMethod(method);
     resultValidator.setToleranceThreshold(toleranceThreshold);
+}
+
+void KernelRunner::setValidationMode(const ValidationMode mode)
+{
+    resultValidator.setValidationMode(mode);
 }
 
 void KernelRunner::setValidationRange(const ArgumentId id, const size_t range)
@@ -401,15 +409,14 @@ uint64_t KernelRunner::getRemainingKernelProfilingRunsForComposition(const Kerne
     return count;
 }
 
-void KernelRunner::validateResult(const Kernel& kernel, KernelResult& result)
+void KernelRunner::validateResult(const Kernel& kernel, KernelResult& result, const KernelRunMode mode)
 {
     if (!result.isValid())
     {
         return;
     }
 
-    bool resultIsCorrect = resultValidator.validateArgumentsWithClass(kernel);
-    resultIsCorrect &= resultValidator.validateArgumentsWithKernel(kernel);
+    const bool resultIsCorrect = resultValidator.validateArguments(kernel, mode);
 
     if (resultIsCorrect)
     {

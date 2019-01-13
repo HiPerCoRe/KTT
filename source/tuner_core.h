@@ -61,6 +61,7 @@ public:
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
     void setTuningManipulatorSynchronization(const KernelId id, const bool flag);
     void setValidationMethod(const ValidationMethod method, const double toleranceThreshold);
+    void setValidationMode(const ValidationMode mode);
     void setValidationRange(const ArgumentId id, const size_t range);
     void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
     void setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,

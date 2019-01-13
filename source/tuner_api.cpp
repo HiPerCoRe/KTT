@@ -500,6 +500,11 @@ void Tuner::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass>
     }
 }
 
+void Tuner::setValidationMode(const ValidationMode mode)
+{
+    tunerCore->setValidationMode(mode);
+}
+
 void Tuner::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
     try

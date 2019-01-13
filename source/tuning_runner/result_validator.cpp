@@ -11,7 +11,8 @@ ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelRunner*
     argumentManager(argumentManager),
     kernelRunner(kernelRunner),
     toleranceThreshold(1e-4),
-    validationMethod(ValidationMethod::SideBySideComparison)
+    validationMethod(ValidationMethod::SideBySideComparison),
+    validationMode(ValidationMode::All)
 {}
 
 void ResultValidator::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
@@ -48,6 +49,11 @@ void ResultValidator::setValidationMethod(const ValidationMethod method)
     this->validationMethod = method;
 }
 
+void ResultValidator::setValidationMode(const ValidationMode mode)
+{
+    this->validationMode = mode;
+}
+
 void ResultValidator::setValidationRange(const ArgumentId id, const size_t range)
 {
     if (argumentValidationRanges.find(id) != argumentValidationRanges.end())
@@ -66,8 +72,13 @@ void ResultValidator::setArgumentComparator(const ArgumentId id, const std::func
     argumentComparators.insert(std::make_pair(id, comparator));
 }
 
-void ResultValidator::computeReferenceResult(const Kernel& kernel)
+void ResultValidator::computeReferenceResult(const Kernel& kernel, const KernelRunMode runMode)
 {
+    if (!isRunModeValidated(runMode))
+    {
+        return;
+    }
+
     computeReferenceResultWithClass(kernel);
     computeReferenceResultWithKernel(kernel);
 }
@@ -84,10 +95,19 @@ void ResultValidator::clearReferenceResults(const KernelId id)
     referenceKernelResults.erase(id);
 }
 
-bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel)
+bool ResultValidator::validateArguments(const Kernel& kernel, const KernelRunMode runMode)
 {
-    KernelId kernelId = kernel.getId();
+    return validateArgumentsWithClass(kernel, runMode) && validateArgumentsWithKernel(kernel, runMode);
+}
 
+bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const KernelRunMode runMode)
+{
+    if (!isRunModeValidated(runMode))
+    {
+        return true;
+    }
+
+    KernelId kernelId = kernel.getId();
     auto referenceClassPointer = referenceClasses.find(kernelId);
     if (referenceClassPointer == referenceClasses.end())
     {
@@ -106,10 +126,14 @@ bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel)
     return validateArguments(resultArguments, referenceClassResults.find(kernelId)->second, kernel.getName());
 }
 
-bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel)
+bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const KernelRunMode runMode)
 {
-    KernelId kernelId = kernel.getId();
+    if (!isRunModeValidated(runMode))
+    {
+        return true;
+    }
 
+    KernelId kernelId = kernel.getId();
     auto referenceKernelPointer = referenceKernels.find(kernelId);
     if (referenceKernelPointer == referenceKernels.end())
     {
@@ -225,7 +249,7 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
     Logger::getLogger().log(LoggingLevel::Info, std::string("Computing reference kernel result for kernel ") + kernel.getName());
     kernelRunner->setPersistentArgumentUsage(false);
     kernelRunner->setKernelProfiling(false);
-    kernelRunner->runKernel(referenceKernelId, referenceParameters, std::vector<OutputDescriptor>{});
+    kernelRunner->runKernel(referenceKernelId, KernelRunMode::ResultValidation, referenceParameters, std::vector<OutputDescriptor>{});
 
     std::vector<KernelArgument> referenceResult;
     for (const auto argumentId : referenceArgumentIds)
@@ -372,6 +396,23 @@ bool ResultValidator::validateResultCustom(const ArgumentId id, const void* resu
     }
 
     return true;
+}
+
+bool ResultValidator::isRunModeValidated(const KernelRunMode mode)
+{
+    switch (mode)
+    {
+    case KernelRunMode::Running:
+        return hasFlag(validationMode, ValidationMode::Running);
+    case KernelRunMode::OfflineTuning:
+        return hasFlag(validationMode, ValidationMode::OfflineTuning);
+    case KernelRunMode::OnlineTuning:
+        return hasFlag(validationMode, ValidationMode::OnlineTuning);
+    case KernelRunMode::ResultValidation:
+        return false;
+    default:
+        throw std::runtime_error("Unsupported kernel run mode");
+    }
 }
 
 } // namespace ktt

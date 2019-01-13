@@ -185,11 +185,11 @@ ComputationResult TunerCore::runKernel(const KernelId id, const std::vector<Para
 
     if (kernelManager.isComposition(id))
     {
-        result = kernelRunner->runComposition(id, configuration, output);
+        result = kernelRunner->runComposition(id, KernelRunMode::Running, configuration, output);
     }
     else
     {
-        result = kernelRunner->runKernel(id, configuration, output);
+        result = kernelRunner->runKernel(id, KernelRunMode::Running, configuration, output);
     }
 
     kernelRunner->clearBuffers();
@@ -232,6 +232,11 @@ void TunerCore::setTuningManipulatorSynchronization(const KernelId id, const boo
 void TunerCore::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
     kernelRunner->setValidationMethod(method, toleranceThreshold);
+}
+
+void TunerCore::setValidationMode(const ValidationMode mode)
+{
+    kernelRunner->setValidationMode(mode);
 }
 
 void TunerCore::setValidationRange(const ArgumentId id, const size_t range)
@@ -344,11 +349,11 @@ ComputationResult TunerCore::tuneKernelByStep(const KernelId id, const std::vect
 
     if (kernelManager.isComposition(id))
     {
-        result = tuningRunner->tuneCompositionByStep(id, output, recomputeReference, true);
+        result = tuningRunner->tuneCompositionByStep(id, KernelRunMode::OnlineTuning, output, recomputeReference);
     }
     else
     {
-        result = tuningRunner->tuneKernelByStep(id, output, recomputeReference, true);
+        result = tuningRunner->tuneKernelByStep(id, KernelRunMode::OnlineTuning, output, recomputeReference);
     }
 
     resultPrinter.addResult(id, result);

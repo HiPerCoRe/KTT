@@ -51,13 +51,8 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
         std::stringstream stream;
         stream << "Launching configuration " << i + 1 << "/" << configurationCount << " for kernel " << kernel.getName();
         Logger::logInfo(stream.str());
-        bool clearReadOnlyBuffers = false;
-        if (kernel.hasTuningManipulator())
-        {
-            clearReadOnlyBuffers = true;
-        }
 
-        const KernelResult result = tuneKernelByStep(id, std::vector<OutputDescriptor>{}, false, clearReadOnlyBuffers);
+        const KernelResult result = tuneKernelByStep(id, KernelRunMode::OfflineTuning, std::vector<OutputDescriptor>{}, false);
         results.push_back(result);
         if (stopCondition != nullptr)
         {
@@ -173,7 +168,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
         stream << "Launching configuration " << i + 1 << "/" << configurationCount << " for kernel composition " << composition.getName();
         Logger::logInfo(stream.str());
 
-        const KernelResult result = tuneCompositionByStep(id, std::vector<OutputDescriptor>{}, false, true);
+        const KernelResult result = tuneCompositionByStep(id, KernelRunMode::OfflineTuning, std::vector<OutputDescriptor>{}, false);
         results.push_back(result);
         if (stopCondition != nullptr)
         {
@@ -194,8 +189,8 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
     return results;
 }
 
-KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference,
-    const bool clearReadOnlyBuffers)
+KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const KernelRunMode mode, const std::vector<OutputDescriptor>& output,
+    const bool recomputeReference)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -214,11 +209,11 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     }
 
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(kernel);
-    KernelResult result = kernelRunner->runKernel(id, currentConfiguration, output);
+    KernelResult result = kernelRunner->runKernel(id, mode, currentConfiguration, output);
     configurationManager.calculateNextConfiguration(kernel, result.isValid(), currentConfiguration, result.getComputationDuration(),
         result.getProfilingData());
 
-    if (clearReadOnlyBuffers)
+    if (kernel.hasTuningManipulator() || mode != KernelRunMode::OfflineTuning)
     {
         kernelRunner->clearBuffers(ArgumentAccessType::ReadOnly);
     }
@@ -228,8 +223,8 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     return result;
 }
 
-KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference,
-    const bool clearReadOnlyBuffers)
+KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const KernelRunMode mode, const std::vector<OutputDescriptor>& output,
+    const bool recomputeReference)
 {
     if (!kernelManager->isComposition(id))
     {
@@ -248,16 +243,11 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     }
 
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(composition);
-    KernelResult result = kernelRunner->runComposition(id, currentConfiguration, output);
+    KernelResult result = kernelRunner->runComposition(id, mode, currentConfiguration, output);
     configurationManager.calculateNextConfiguration(composition, result.isValid(), currentConfiguration, result.getComputationDuration(),
         result.getProfilingData());
 
-    if (clearReadOnlyBuffers)
-    {
-        kernelRunner->clearBuffers(ArgumentAccessType::ReadOnly);
-    }
-    kernelRunner->clearBuffers(ArgumentAccessType::WriteOnly);
-    kernelRunner->clearBuffers(ArgumentAccessType::ReadWrite);
+    kernelRunner->clearBuffers();
 
     return result;
 }

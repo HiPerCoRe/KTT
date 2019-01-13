@@ -32,6 +32,7 @@
 #include <enum/time_unit.h>
 #include <enum/search_method.h>
 #include <enum/validation_method.h>
+#include <enum/validation_mode.h>
 
 // Data holders
 #include <api/computation_result.h>
@@ -571,6 +572,12 @@ public:
       * read-only.
       */
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
+
+    /** @fn void setValidationMode(const ValidationMode mode)
+      * Sets modes under which kernel output validation is enabled. By default, output validation is enabled during both kernel running and tuning.
+      * @param mode Bitfield of modes under which kernel output validation is enabled. See ::ValidationMode for more information.
+      */
+    void setValidationMode(const ValidationMode mode);
 
     /** @fn void setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
       * Sets validation method and tolerance threshold for floating-point argument validation. Default validation method is side by side comparison.
