@@ -33,6 +33,7 @@ public:
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
     void setTuningManipulatorSynchronization(const KernelId id, const bool flag);
     void setKernelProfiling(const bool flag);
+    bool getKernelProfiling();
 
     // Result validation methods
     void setValidationMethod(const ValidationMethod method, const double toleranceThreshold);

@@ -141,6 +141,11 @@ void KernelRunner::setKernelProfiling(const bool flag)
     manipulatorInterfaceImplementation->setKernelProfiling(flag);
 }
 
+bool KernelRunner::getKernelProfiling()
+{
+    return kernelProfilingFlag;
+}
+
 void KernelRunner::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
     resultValidator.setValidationMethod(method);
