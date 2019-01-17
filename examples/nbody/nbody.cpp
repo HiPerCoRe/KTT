@@ -92,6 +92,7 @@ int main(int argc, char** argv)
 
     // Create tuner object for chosen platform and device
     ktt::Tuner tuner(platformIndex, deviceIndex);
+    tuner.setCompilerOptions("-cl-fast-relaxed-math");
 
     // Add two kernels to tuner, one of the kernels acts as reference kernel
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "nbody_kernel", ndRangeDimensions, workGroupDimensions);

@@ -24,7 +24,7 @@ __kernel void nbody_kernel(float dt1,
 		for(int j=0; j<nt; j++) { /* For ALL cached particle positions ... */
 			float4 p2 = pblock[j]; /* Read a cached particle position */
 			float4 d = p2 - p;
-			float invr = rsqrt(d.x*d.x + d.y*d.y + d.z*d.z + softeningSqr);
+			float invr = half_rsqrt(d.x*d.x + d.y*d.y + d.z*d.z + softeningSqr);
 			float f = p2.w*invr*invr*invr;
 			a += f*d; /* Accumulate acceleration */
 		}

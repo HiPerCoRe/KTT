@@ -16,7 +16,7 @@ float3 bodyBodyInteraction(float3 ai,
     distSqr += softeningSqr;
 
     // invDistCube =1/distSqr^(3/2)  [4 FLOPS (2 mul, 1 sqrt, 1 inv)]
-    float invDist = rsqrt(distSqr);
+    float invDist = half_rsqrt(distSqr);
     float invDistCube =  invDist * invDist * invDist;
 
     // s = m_j * invDistCube [1 FLOP]
