@@ -36,7 +36,7 @@ void updateAcc(vector bodyAcc[3], float bodyPos[3], // position of body I
 		d.z = bufferPosZ - bodyPos[2];
 
 		float distSqr = (d.x * d.x) + (d.y * d.y) + (d.z * d.z) + softeningSqr;
-		float invDist = native_rsqrt(distSqr);
+		float invDist = half_rsqrt(distSqr);
 		float f = bufferMass * invDist * invDist * invDist;
 
 		bodyAcc[0] += d.x * f;
@@ -49,7 +49,7 @@ void updateAcc(vector bodyAcc[3], float bodyPos[3], // position of body I
 		vector distanceY = bufferPosY - bodyPos[1];
 		vector distanceZ = bufferPosZ - bodyPos[2];
 	   
-		vector invDist = native_rsqrt(distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ + softeningSqr);
+		vector invDist = half_rsqrt(distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ + softeningSqr);
 		vector f = bufferMass * invDist * invDist * invDist;
 
 		bodyAcc[0] += distanceX * f;
