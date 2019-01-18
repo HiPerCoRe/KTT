@@ -14,10 +14,20 @@
 #define RAND_MAX UINT_MAX
 #endif
 
-#if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/sort/sort.cl"
+#define USE_CUDA 1
+
+#if USE_CUDA == 0
+    #if defined(_MSC_VER)
+        #define KTT_KERNEL_FILE "../examples/sort/sort.cl"
+    #else
+        #define KTT_KERNEL_FILE "../../examples/sort/sort.cl"
+    #endif
 #else
-    #define KTT_KERNEL_FILE "../../examples/sort/sort.cl"
+    #if defined(_MSC_VER)
+        #define KTT_KERNEL_FILE "../examples/sort/sort.cu"
+    #else
+        #define KTT_KERNEL_FILE "../../examples/sort/sort.cu"
+    #endif
 #endif
 
 int main(int argc, char** argv)
@@ -40,7 +50,7 @@ int main(int argc, char** argv)
     }
   }
 
-  int problemSize = 32; // In MiB
+  int problemSize = 32*4; // In MiB
 
   if (argc >= 5)
   {
@@ -59,7 +69,12 @@ int main(int argc, char** argv)
   }
 
   // Create tuner object for chosen platform and device
+#if USE_CUDA == 0
   ktt::Tuner tuner(platformIndex, deviceIndex);
+#else
+    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+#endif
 
   // Declare kernels and their dimensions
   std::vector<ktt::KernelId> kernelIds(3);
@@ -85,25 +100,25 @@ int main(int argc, char** argv)
 
   // Local memory arguments will be updated in tuning manipulator as their size depends on work-group size
   int localSize = 1;  
-  ktt::ArgumentId localMem1Id = tuner.addArgumentLocal<unsigned int>(localSize);
-  ktt::ArgumentId localMem2Id = tuner.addArgumentLocal<unsigned int>(2 * localSize);
-  ktt::ArgumentId localMem3Id = tuner.addArgumentLocal<unsigned int>(2 * localSize);
+  //ktt::ArgumentId localMem1Id = tuner.addArgumentLocal<unsigned int>(localSize);
+  //ktt::ArgumentId localMem2Id = tuner.addArgumentLocal<unsigned int>(2 * localSize);
+  //ktt::ArgumentId localMem3Id = tuner.addArgumentLocal<unsigned int>(2 * localSize);
   
   ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, size, inId, outId, isumsId, sizeId,
-      localMem1Id, localMem2Id, localMem3Id, numberOfGroupsId, shiftId));
-  tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<ktt::ArgumentId>{inId, isumsId, sizeId, localMem1Id, shiftId});
-  tuner.setCompositionKernelArguments(compositionId, kernelIds[1], std::vector<ktt::ArgumentId>{isumsId, numberOfGroupsId, localMem2Id});
-  tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<ktt::ArgumentId>{inId, isumsId, outId, sizeId, localMem3Id, shiftId});
+      numberOfGroupsId, shiftId));
+  tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<ktt::ArgumentId>{inId, isumsId, sizeId, shiftId});
+  tuner.setCompositionKernelArguments(compositionId, kernelIds[1], std::vector<ktt::ArgumentId>{isumsId, numberOfGroupsId});
+  tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<ktt::ArgumentId>{inId, isumsId, outId, sizeId, shiftId});
 
   // Parameter for the length of OpenCL vector data types used in the kernels
-  tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
+  tuner.addParameter(compositionId, "FPVECTNUM", {4/*, 8, 16*/});
 
   // Local size below 128 does not work correctly, not even with the benchmark code
-  tuner.addParameter(compositionId, "LOCAL_SIZE", {128, 256, 512});
+  tuner.addParameter(compositionId, "LOCAL_SIZE", {/*128,*/ 256/*, 512*/});
   tuner.setThreadModifier(compositionId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "LOCAL_SIZE", ktt::ModifierAction::Multiply);
 
   // Second kernel global size is always equal to local size
-  tuner.addParameter(compositionId, "GLOBAL_SIZE", {512, 1024, 2048, 4096, 8192, 16384, 32768});
+  tuner.addParameter(compositionId, "GLOBAL_SIZE", {/*512, 1024, 2048, 4096, 8192, */16384/*, 32768*/});
   tuner.setCompositionKernelThreadModifier(compositionId, kernelIds[0], ktt::ModifierType::Global, ktt::ModifierDimension::X, "GLOBAL_SIZE",
       ktt::ModifierAction::Multiply);
   tuner.setCompositionKernelThreadModifier(compositionId, kernelIds[1], ktt::ModifierType::Global, ktt::ModifierDimension::X, "LOCAL_SIZE",
