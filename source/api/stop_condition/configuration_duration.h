@@ -37,7 +37,8 @@ public:
         totalCount = totalConfigurationCount;
     }
 
-    void updateStatus(const bool successFlag, const std::vector<ParameterPair>&, const double previousDuration, const KernelProfilingData&) override
+    void updateStatus(const bool successFlag, const std::vector<ParameterPair>&, const double previousDuration, const KernelProfilingData&,
+        const std::map<KernelId, KernelProfilingData>&) override
     {
         if (successFlag)
         {

@@ -28,6 +28,16 @@ ComputationResult::ComputationResult(const std::string& kernelName, const std::v
     profilingData(profilingData)
 {}
 
+ComputationResult::ComputationResult(const std::string& compositionName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
+    const std::map<KernelId, KernelProfilingData>& compositionProfilingData) :
+    status(true),
+    duration(duration),
+    kernelName(compositionName),
+    errorMessage(""),
+    configuration(configuration),
+    compositionProfilingData(compositionProfilingData)
+{}
+
 ComputationResult::ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration,
     const std::string& errorMessage) :
     status(false),
@@ -65,6 +75,11 @@ const std::vector<ParameterPair>& ComputationResult::getConfiguration() const
 const KernelProfilingData& ComputationResult::getProfilingData() const
 {
     return profilingData;
+}
+
+const std::map<KernelId, KernelProfilingData>& ComputationResult::getCompositionProfilingData() const
+{
+    return compositionProfilingData;
 }
 
 } // namespace ktt

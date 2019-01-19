@@ -44,9 +44,11 @@ public:
     KernelConfiguration getBestConfiguration(const KernelComposition& composition);
     ComputationResult getBestComputationResult(const KernelId id) const;
     void calculateNextConfiguration(const Kernel& kernel, const bool successFlag, const KernelConfiguration& previousConfiguration,
-        const uint64_t previousDuration, const KernelProfilingData& previousProfilingData);
+        const uint64_t previousDuration, const KernelProfilingData& previousProfilingData,
+        const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData);
     void calculateNextConfiguration(const KernelComposition& composition, const bool successFlag, const KernelConfiguration& previousConfiguration,
-        const uint64_t previousDuration, const KernelProfilingData& previousProfilingData);
+        const uint64_t previousDuration, const KernelProfilingData& previousProfilingDataconst,
+        const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData);
 
 private:
     // Attributes

@@ -57,7 +57,7 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
         if (stopCondition != nullptr)
         {
             stopCondition->updateStatus(result.isValid(), result.getConfiguration().getParameterPairs(),
-                static_cast<double>(result.getComputationDuration()), result.getProfilingData());
+                static_cast<double>(result.getComputationDuration()), result.getProfilingData(), result.getCompositionProfilingData());
 
             if (stopCondition->isSatisfied())
             {
@@ -126,7 +126,7 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
         }
 
         configurationManager.calculateNextConfiguration(kernel, true, currentConfiguration, result.getComputationDuration(),
-            result.getProfilingData());
+            result.getProfilingData(), result.getCompositionProfilingData());
         results.push_back(result);
     }
 
@@ -173,7 +173,7 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
         if (stopCondition != nullptr)
         {
             stopCondition->updateStatus(result.isValid(), result.getConfiguration().getParameterPairs(),
-                static_cast<double>(result.getComputationDuration()), result.getProfilingData());
+                static_cast<double>(result.getComputationDuration()), result.getProfilingData(), result.getCompositionProfilingData());
 
             if (stopCondition->isSatisfied())
             {
@@ -211,7 +211,7 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const KernelRunMo
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(kernel);
     KernelResult result = kernelRunner->runKernel(id, mode, currentConfiguration, output);
     configurationManager.calculateNextConfiguration(kernel, result.isValid(), currentConfiguration, result.getComputationDuration(),
-        result.getProfilingData());
+        result.getProfilingData(), result.getCompositionProfilingData());
 
     if (kernel.hasTuningManipulator() || mode != KernelRunMode::OfflineTuning)
     {
@@ -245,7 +245,7 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const Kernel
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(composition);
     KernelResult result = kernelRunner->runComposition(id, mode, currentConfiguration, output);
     configurationManager.calculateNextConfiguration(composition, result.isValid(), currentConfiguration, result.getComputationDuration(),
-        result.getProfilingData());
+        result.getProfilingData(), result.getCompositionProfilingData());
 
     kernelRunner->clearBuffers();
 

@@ -574,7 +574,7 @@ public:
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
 
     /** @fn void setValidationMode(const ValidationMode mode)
-      * Sets modes under which kernel output validation is enabled. By default, output validation is enabled during both kernel running and tuning.
+      * Sets modes under which kernel output validation is enabled. By default, output validation is enabled only during kernel tuning.
       * @param mode Bitfield of modes under which kernel output validation is enabled. See ::ValidationMode for more information.
       */
     void setValidationMode(const ValidationMode mode);
