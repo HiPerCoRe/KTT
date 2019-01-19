@@ -14,7 +14,7 @@
 #define RAND_MAX UINT_MAX
 #endif
 
-#define USE_CUDA 1
+#define USE_CUDA 0
 
 #if USE_CUDA == 0
     #if defined(_MSC_VER)
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     }
   }
 
-  int problemSize = 32*4; // In MiB
+  int problemSize = 32; // In MiB
 
   if (argc >= 5)
   {
@@ -100,9 +100,6 @@ int main(int argc, char** argv)
 
   // Local memory arguments will be updated in tuning manipulator as their size depends on work-group size
   int localSize = 1;  
-  //ktt::ArgumentId localMem1Id = tuner.addArgumentLocal<unsigned int>(localSize);
-  //ktt::ArgumentId localMem2Id = tuner.addArgumentLocal<unsigned int>(2 * localSize);
-  //ktt::ArgumentId localMem3Id = tuner.addArgumentLocal<unsigned int>(2 * localSize);
   
   ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, size, inId, outId, isumsId, sizeId,
       numberOfGroupsId, shiftId));
@@ -111,14 +108,18 @@ int main(int argc, char** argv)
   tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<ktt::ArgumentId>{inId, isumsId, outId, sizeId, shiftId});
 
   // Parameter for the length of OpenCL vector data types used in the kernels
-  tuner.addParameter(compositionId, "FPVECTNUM", {4/*, 8, 16*/});
+#if USE_CUDA == 0
+  tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
+#else
+  tuner.addParameter(compositionId, "FPVECTNUM", {4});
+#endif
 
   // Local size below 128 does not work correctly, not even with the benchmark code
-  tuner.addParameter(compositionId, "LOCAL_SIZE", {/*128,*/ 256/*, 512*/});
+  tuner.addParameter(compositionId, "LOCAL_SIZE", {128, 256, 512});
   tuner.setThreadModifier(compositionId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "LOCAL_SIZE", ktt::ModifierAction::Multiply);
 
   // Second kernel global size is always equal to local size
-  tuner.addParameter(compositionId, "GLOBAL_SIZE", {/*512, 1024, 2048, 4096, 8192, */16384/*, 32768*/});
+  tuner.addParameter(compositionId, "GLOBAL_SIZE", {512, 1024, 2048, 4096, 8192, 16384, 32768});
   tuner.setCompositionKernelThreadModifier(compositionId, kernelIds[0], ktt::ModifierType::Global, ktt::ModifierDimension::X, "GLOBAL_SIZE",
       ktt::ModifierAction::Multiply);
   tuner.setCompositionKernelThreadModifier(compositionId, kernelIds[1], ktt::ModifierType::Global, ktt::ModifierDimension::X, "LOCAL_SIZE",
@@ -135,5 +136,12 @@ int main(int argc, char** argv)
   tuner.tuneKernel(compositionId);
   tuner.printResult(compositionId, std::cout, ktt::PrintFormat::Verbose);
   tuner.printResult(compositionId, std::string("sort_result.csv"), ktt::PrintFormat::CSV);
+
+  /*std::vector<unsigned int> firstMatrix(10);
+  ktt::OutputDescriptor output(outId, (void*)firstMatrix.data(), 10*sizeof(unsigned int));
+   ktt::ComputationResult bestConf = tuner.getBestComputationResult(compositionId);
+   tuner.runKernel(compositionId, bestConf.getConfiguration(), {output});*/
+
   return 0;
 }
+
