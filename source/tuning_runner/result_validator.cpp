@@ -12,7 +12,7 @@ ResultValidator::ResultValidator(ArgumentManager* argumentManager, KernelRunner*
     kernelRunner(kernelRunner),
     toleranceThreshold(1e-4),
     validationMethod(ValidationMethod::SideBySideComparison),
-    validationMode(ValidationMode::All)
+    validationMode(ValidationMode::OfflineTuning | ValidationMode::OnlineTuning)
 {}
 
 void ResultValidator::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
@@ -248,7 +248,6 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
 
     Logger::getLogger().log(LoggingLevel::Info, std::string("Computing reference kernel result for kernel ") + kernel.getName());
     kernelRunner->setPersistentArgumentUsage(false);
-    bool profiling =  kernelRunner->getKernelProfiling();
     kernelRunner->setKernelProfiling(false);
     kernelRunner->runKernel(referenceKernelId, KernelRunMode::ResultValidation, referenceParameters, std::vector<OutputDescriptor>{});
 
@@ -260,6 +259,7 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
 
     kernelRunner->clearBuffers();
     kernelRunner->setPersistentArgumentUsage(true);
+    const bool profiling = kernelRunner->getKernelProfiling();
     kernelRunner->setKernelProfiling(profiling);
     referenceKernelResults.insert(std::make_pair(kernelId, referenceResult));
 }

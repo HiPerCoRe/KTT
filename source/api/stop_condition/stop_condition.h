@@ -4,9 +4,11 @@
 #pragma once
 
 #include <cstddef>
+#include <map>
 #include <string>
 #include <api/kernel_profiling_data.h>
 #include <api/parameter_pair.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -42,10 +44,13 @@ public:
       * failed).
       * @param previousConfiguration Last tested kernel configuration.
       * @param previousDuration Duration of last tested kernel configuration in nanoseconds.
-      * @param previousProfilingData Profiling data of last tested kernel configuration. Valid only if kernel profiling is enabled.
+      * @param previousProfilingData Profiling data of last tested kernel configuration. Valid only if kernel profiling is enabled and tuned kernel
+      * is a single kernel.
+      * @param previousCompositionProfilingData Profiling data of last tested kernel configuration. Valid only if kernel profiling is enabled and
+      * tuned kernel is a composition.
       */
     virtual void updateStatus(const bool successFlag, const std::vector<ParameterPair>& previousConfiguration, const double previousDuration,
-        const KernelProfilingData& previousProfilingData) = 0;
+        const KernelProfilingData& previousProfilingData, const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData) = 0;
     
     /** @fn virtual size_t getConfigurationCount() const = 0
       * Returns number of configurations that will be tested before stop condition is satisfied.

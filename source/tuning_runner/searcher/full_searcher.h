@@ -18,7 +18,8 @@ public:
         }
     }
 
-    void calculateNextConfiguration(const bool, const KernelConfiguration&, const double, const KernelProfilingData&) override
+    void calculateNextConfiguration(const bool, const KernelConfiguration&, const double, const KernelProfilingData&,
+        const std::map<KernelId, KernelProfilingData>&) override
     {
         index++;
     }

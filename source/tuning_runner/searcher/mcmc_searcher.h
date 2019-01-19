@@ -50,7 +50,8 @@ public:
             unexploredIndices.insert(i);
     }
 
-    void calculateNextConfiguration(const bool, const KernelConfiguration&, const double previousDuration, const KernelProfilingData&) override
+    void calculateNextConfiguration(const bool, const KernelConfiguration&, const double previousDuration, const KernelProfilingData&,
+        const std::map<KernelId, KernelProfilingData>&) override
     {
         visitedStatesCount++;
         exploredIndices[index] = true;

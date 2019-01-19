@@ -1055,11 +1055,11 @@ void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain dom
             CUpti_EventDomainID groupDomain;
             uint32_t eventCount;
             uint32_t instanceCount;
-            uint32_t totalInstaceCount;
+            uint32_t totalInstanceCount;
             size_t groupDomainSize = sizeof(groupDomain);
             size_t eventCountSize = sizeof(eventCount);
             size_t instanceCountSize = sizeof(instanceCount);
-            size_t totalInstaceCountSize = sizeof(totalInstaceCount);
+            size_t totalInstanceCountSize = sizeof(totalInstanceCount);
 
             checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID, &groupDomainSize, &groupDomain),
                 "cuptiEventGroupGetAttribute");
@@ -1068,7 +1068,7 @@ void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain dom
             checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT, &instanceCountSize, &instanceCount),
                 "cuptiEventGroupGetAttribute");
             checkCUDAError(cuptiDeviceGetEventDomainAttribute(metric->device, groupDomain, CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT,
-                &totalInstaceCountSize, &totalInstaceCount), "cuptiDeviceGetEventDomainAttribute");
+                &totalInstanceCountSize, &totalInstanceCount), "cuptiDeviceGetEventDomainAttribute");
 
             std::vector<CUpti_EventID> eventIds(eventCount);
             size_t eventIdsSize = eventCount * sizeof(CUpti_EventID);
@@ -1094,7 +1094,7 @@ void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain dom
                     sum += values[k];
                 }
 
-                const uint64_t normalized = (sum * totalInstaceCount) / instanceCount;
+                const uint64_t normalized = (sum * totalInstanceCount) / instanceCount;
                 metric->eventIds[metric->currentEventIndex] = eventIds[j];
                 metric->eventValues[metric->currentEventIndex] = normalized;
                 metric->currentEventIndex++;

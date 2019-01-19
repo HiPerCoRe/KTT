@@ -165,6 +165,31 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
             }
         }
     }
+    else if (!results.at(0).getCompositionProfilingData().empty())
+    {
+        for (const auto& pair : results.at(0).getCompositionProfilingData())
+        {
+            if (!pair.second.isValid())
+            {
+                continue;
+            }
+
+            const std::vector<KernelProfilingCounter>& counters = pair.second.getAllCounters();
+            if (counters.size() > 0)
+            {
+                outputTarget << ",";
+            }
+
+            for (size_t i = 0; i < counters.size(); ++i)
+            {
+                outputTarget << counters.at(i).getName() << " " << pair.first;
+                if (i + 1 != counters.size())
+                {
+                    outputTarget << ",";
+                }
+            }
+        }
+    }
 
     outputTarget << std::endl;
 
@@ -182,6 +207,18 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
         if (result.getProfilingData().isValid())
         {
             printProfilingCountersCSV(outputTarget, result.getProfilingData().getAllCounters());
+        }
+        else if (!result.getCompositionProfilingData().empty())
+        {
+            for (const auto& pair : result.getCompositionProfilingData())
+            {
+                if (!pair.second.isValid())
+                {
+                    continue;
+                }
+
+                printProfilingCountersCSV(outputTarget, pair.second.getAllCounters());
+            }
         }
         outputTarget << std::endl;
     }
@@ -237,6 +274,31 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
                 }
             }
         }
+        else if (!results.at(0).getCompositionProfilingData().empty())
+        {
+            for (const auto& pair : results.at(0).getCompositionProfilingData())
+            {
+                if (!pair.second.isValid())
+                {
+                    continue;
+                }
+
+                const std::vector<KernelProfilingCounter>& counters = pair.second.getAllCounters();
+                if (counters.size() > 0)
+                {
+                    outputTarget << ",";
+                }
+
+                for (size_t i = 0; i < counters.size(); ++i)
+                {
+                    outputTarget << counters.at(i).getName() << " " << pair.first;
+                    if (i + 1 != counters.size())
+                    {
+                        outputTarget << ",";
+                    }
+                }
+            }
+        }
 
         outputTarget << std::endl;
 
@@ -263,6 +325,18 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
             if (result.getProfilingData().isValid())
             {
                 printProfilingCountersCSV(outputTarget, result.getProfilingData().getAllCounters());
+            }
+            else if (!result.getCompositionProfilingData().empty())
+            {
+                for (const auto& pair : result.getCompositionProfilingData())
+                {
+                    if (!pair.second.isValid())
+                    {
+                        continue;
+                    }
+
+                    printProfilingCountersCSV(outputTarget, pair.second.getAllCounters());
+                }
             }
             outputTarget << std::endl;
         }

@@ -196,8 +196,16 @@ ComputationResult TunerCore::runKernel(const KernelId id, const std::vector<Para
 
     if (result.isValid())
     {
-        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-            result.getProfilingData());
+        if (kernelManager.isComposition(id))
+        {
+            return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+                result.getCompositionProfilingData());
+        }
+        else
+        {
+            return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+                result.getProfilingData());
+        }
     }
     else
     {
@@ -303,8 +311,16 @@ std::vector<ComputationResult> TunerCore::tuneKernel(const KernelId id, std::uni
     {
         if (result.isValid())
         {
-            publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-                result.getProfilingData());
+            if (kernelManager.isComposition(id))
+            {
+                publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+                    result.getCompositionProfilingData());
+            }
+            else
+            {
+                publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+                    result.getProfilingData());
+            }
         }
         else
         {
@@ -360,8 +376,16 @@ ComputationResult TunerCore::tuneKernelByStep(const KernelId id, const std::vect
     
     if (result.isValid())
     {
-        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-            result.getProfilingData());
+        if (kernelManager.isComposition(id))
+        {
+            return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+                result.getCompositionProfilingData());
+        }
+        else
+        {
+            return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+                result.getProfilingData());
+        }
     }
     else
     {

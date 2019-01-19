@@ -283,7 +283,8 @@ ComputationResult ConfigurationManager::getBestComputationResult(const KernelId 
 }
 
 void ConfigurationManager::calculateNextConfiguration(const Kernel& kernel, const bool successFlag, const KernelConfiguration& previousConfiguration,
-    const uint64_t previousDuration, const KernelProfilingData& previousProfilingData)
+    const uint64_t previousDuration, const KernelProfilingData& previousProfilingData,
+    const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData)
 {
     const size_t id = kernel.getId();
     auto searcherPair = searchers.find(id);
@@ -310,11 +311,12 @@ void ConfigurationManager::calculateNextConfiguration(const Kernel& kernel, cons
     }
 
     searcherPair->second->calculateNextConfiguration(successFlag, previousConfiguration, static_cast<double>(previousDuration),
-        previousProfilingData);
+        previousProfilingData, previousCompositionProfilingData);
 }
 
 void ConfigurationManager::calculateNextConfiguration(const KernelComposition& composition, const bool successFlag,
-    const KernelConfiguration& previousConfiguration, const uint64_t previousDuration, const KernelProfilingData& previousProfilingData)
+    const KernelConfiguration& previousConfiguration, const uint64_t previousDuration, const KernelProfilingData& previousProfilingData,
+    const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData)
 {
     const size_t id = composition.getId();
     auto searcherPair = searchers.find(id);
@@ -342,7 +344,7 @@ void ConfigurationManager::calculateNextConfiguration(const KernelComposition& c
     }
 
     searcherPair->second->calculateNextConfiguration(successFlag, previousConfiguration, static_cast<double>(previousDuration),
-        previousProfilingData);
+        previousProfilingData, previousCompositionProfilingData);
 }
 
 void ConfigurationManager::initializeOrderedKernelPacks(const Kernel& kernel)

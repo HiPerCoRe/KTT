@@ -38,9 +38,9 @@ public:
     }
 
     void calculateNextConfiguration(const bool successFlag, const KernelConfiguration& previousConfiguration, const double previousDuration,
-        const KernelProfilingData& previousProfilingData) override
+        const KernelProfilingData& previousProfilingData, const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData) override
     {
-        if (previousDuration > 0.0) // workaround for recursive calls
+        if (previousDuration >= 0.0) // workaround for recursive calls
         {
             visitedStatesCount++;
             exploredIndices.push_back(currentState);
@@ -65,7 +65,7 @@ public:
             if (alreadyVisistedStatesCount < maximumAlreadyVisitedStates)
             {
                 alreadyVisistedStatesCount++;
-                calculateNextConfiguration(successFlag, previousConfiguration, -1.0, previousProfilingData);
+                calculateNextConfiguration(successFlag, previousConfiguration, -1.0, previousProfilingData, previousCompositionProfilingData);
                 return;
             }
         }

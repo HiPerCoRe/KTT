@@ -531,7 +531,14 @@ KernelResult ManipulatorInterfaceImplementation::getCurrentResult() const
         for (const auto& kernelEvents : kernelProfilingEvents)
         {
             KernelResult profilingResult = computeEngine->getKernelResultWithProfiling(kernelEvents.second[0], std::vector<OutputDescriptor>{});
-            result.setProfilingData(profilingResult.getProfilingData());
+            if (kernelData.size() == 1)
+            {
+                result.setProfilingData(profilingResult.getProfilingData());
+            }
+            else
+            {
+                result.setCompositionKernelProfilingData(kernelEvents.first, profilingResult.getProfilingData());
+            }
         }
 
         kernelProfilingEvents.clear();
