@@ -18,7 +18,6 @@ public:
         device(0),
         eventGroupSets(nullptr),
         currentSetIndex(0),
-        currentEventIndex(0),
         eventCount(0)
     {}
 
@@ -27,10 +26,10 @@ public:
     CUdevice device;
     CUpti_EventGroupSets* eventGroupSets;
     uint32_t currentSetIndex;
-    uint32_t currentEventIndex;
     uint32_t eventCount;
     std::vector<CUpti_EventID> eventIds;
     std::vector<uint64_t> eventValues;
+    std::vector<bool> eventStatuses;
 };
 
 } // namespace ktt

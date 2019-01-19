@@ -638,7 +638,7 @@ EventId CUDAEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, 
     }
     else
     {
-        CUDAProfilingMetric* metricData = profilingState->second.getCurrentProfilingMetric();
+        std::vector<CUDAProfilingMetric>* metricData = profilingState->second.getProfilingMetrics();
         checkCUDAError(cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)getMetricValueCallback, metricData), "cuptiSubscribe");
         checkCUDAError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunch), "cuptiEnableCallback");
         checkCUDAError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel), "cuptiEnableCallback");
@@ -1031,27 +1031,35 @@ void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain dom
         throw std::runtime_error("Internal CUDA CUPTI error: Unexpected callback id was passed into metric value collection function");
     }
 
-    CUDAProfilingMetric* metric = reinterpret_cast<CUDAProfilingMetric*>(userdata);
+    std::vector<CUDAProfilingMetric>* metrics = reinterpret_cast<std::vector<CUDAProfilingMetric>*>(userdata);
+
+    if (metrics->empty())
+    {
+        return;
+    }
+    CUDAProfilingMetric& firstMetric = metrics->at(0);
+
     if (info->callbackSite == CUPTI_API_ENTER)
     {
         checkCUDAError(cuCtxSynchronize(), "cuCtxSynchronize");
         checkCUDAError(cuptiSetEventCollectionMode(info->context, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
 
-        for (uint32_t i = 0; i < metric->eventGroupSets->sets[metric->currentSetIndex].numEventGroups; ++i)
+        for (uint32_t i = 0; i < firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].numEventGroups; ++i)
         {
             uint32_t profileAll = 1;
-            checkCUDAError(cuptiEventGroupSetAttribute(metric->eventGroupSets->sets[metric->currentSetIndex].eventGroups[i],
+            checkCUDAError(cuptiEventGroupSetAttribute(firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].eventGroups[i],
                 CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES, sizeof(profileAll), &profileAll), "cuptiEventGroupSetAttribute");
-            checkCUDAError(cuptiEventGroupEnable(metric->eventGroupSets->sets[metric->currentSetIndex].eventGroups[i]), "cuptiEventGroupEnable");
+            checkCUDAError(cuptiEventGroupEnable(firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].eventGroups[i]),
+                "cuptiEventGroupEnable");
         }
     }
     else if (info->callbackSite == CUPTI_API_EXIT)
     {
         checkCUDAError(cuCtxSynchronize(), "cuCtxSynchronize");
 
-        for (uint32_t i = 0; i < metric->eventGroupSets->sets[metric->currentSetIndex].numEventGroups; ++i)
+        for (uint32_t i = 0; i < firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].numEventGroups; ++i)
         {
-            CUpti_EventGroup group = metric->eventGroupSets->sets[metric->currentSetIndex].eventGroups[i];
+            CUpti_EventGroup group = firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].eventGroups[i];
             CUpti_EventDomainID groupDomain;
             uint32_t eventCount;
             uint32_t instanceCount;
@@ -1067,7 +1075,7 @@ void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain dom
                 "cuptiEventGroupGetAttribute");
             checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT, &instanceCountSize, &instanceCount),
                 "cuptiEventGroupGetAttribute");
-            checkCUDAError(cuptiDeviceGetEventDomainAttribute(metric->device, groupDomain, CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT,
+            checkCUDAError(cuptiDeviceGetEventDomainAttribute(firstMetric.device, groupDomain, CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT,
                 &totalInstanceCountSize, &totalInstanceCount), "cuptiDeviceGetEventDomainAttribute");
 
             std::vector<CUpti_EventID> eventIds(eventCount);
@@ -1083,11 +1091,6 @@ void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain dom
                 checkCUDAError(cuptiEventGroupReadEvent(group, CUPTI_EVENT_READ_FLAG_NONE, eventIds[j], &valuesSize, values.data()),
                     "cuptiEventGroupReadEvent");
 
-                if (metric->currentEventIndex >= metric->eventCount)
-                {
-                    throw std::runtime_error("Internal CUDA CUPTI error : Too many metric events collected");
-                }
-
                 uint64_t sum = 0;
                 for (uint32_t k = 0; k < instanceCount; ++k)
                 {
@@ -1095,15 +1098,24 @@ void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain dom
                 }
 
                 const uint64_t normalized = (sum * totalInstanceCount) / instanceCount;
-                metric->eventIds[metric->currentEventIndex] = eventIds[j];
-                metric->eventValues[metric->currentEventIndex] = normalized;
-                metric->currentEventIndex++;
+                for (auto& metric : *metrics)
+                {
+                    for (size_t k = 0; k < metric.eventIds.size(); ++k)
+                    {
+                        if (metric.eventIds[k] == eventIds[j] && !metric.eventStatuses[k])
+                        {
+                            metric.eventValues[k] = normalized;
+                            metric.eventStatuses[k] = true;
+                        }
+                    }
+                }
             }
         }
 
-        for (uint32_t i = 0; i < metric->eventGroupSets->sets[metric->currentSetIndex].numEventGroups; ++i)
+        for (uint32_t i = 0; i < firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].numEventGroups; ++i)
         {
-            checkCUDAError(cuptiEventGroupDisable(metric->eventGroupSets->sets[metric->currentSetIndex].eventGroups[i]), "cuptiEventGroupDisable");
+            checkCUDAError(cuptiEventGroupDisable(firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].eventGroups[i]),
+                "cuptiEventGroupDisable");
         }
     }
 }
