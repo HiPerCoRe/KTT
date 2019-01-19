@@ -2,13 +2,7 @@ typedef unsigned int uint;
 
 #define FPTYPE uint
 //#define FPVECTNUM 16 -- this will be defined by KTT as it is a tuning parameter
-#if FPVECTNUM == 4
 #define FPVECTYPE uint4
-#elif FPVECTNUM == 8
-#define FPVECTYPE uint8
-#else
-#define FPVECTYPE uint16
-#endif
 
 
 // Compute a per block histogram of the occurrences of each
