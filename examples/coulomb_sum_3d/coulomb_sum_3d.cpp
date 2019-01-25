@@ -4,7 +4,8 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 0
+//#define USE_CUDA 1
+//#define USE_PROFILING 1
 
 #if USE_CUDA == 0
     #if defined(_MSC_VER)
@@ -90,8 +91,12 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
     tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     tuner.setCompilerOptions("-use_fast_math");
+  #ifdef USE_PROFILING 
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+  #endif
 #endif
-    tuner.setLoggingLevel(ktt::LoggingLevel::Debug);
+    //tuner.setLoggingLevel(ktt::LoggingLevel::Debug);
 
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "directCoulombSum", ndRangeDimensions, workGroupDimensions);
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "directCoulombSumReference", ndRangeDimensions,
@@ -111,9 +116,9 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", {1, 2, 4, 8});
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Z", {1});
-    tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "Z_ITERATIONS", {1/*, 2, 4, 8, 16, 32*/});
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS", ktt::ModifierAction::Divide);
-    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0, 1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0/*, 1, 2, 4, 8, 16, 32*/});
 #if USE_CUDA == 0
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
 #else
