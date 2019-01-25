@@ -3,7 +3,8 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 1
+#define USE_CUDA 0
+#define RAPID_TEST 0
 
 #if USE_CUDA == 0
     #if defined(_MSC_VER)
@@ -189,6 +190,12 @@ int main(int argc, char** argv)
     ktt::ArgumentId nId = tuner.addArgumentScalar(batch);
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{srcAId, srcBId, dstId, nId});
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(srcAId, true);
+    tuner.persistArgument(srcBId, true);
+    tuner.persistArgument(dstId, true);
+#endif
+
     tuner.addParameter(kernelId, "SIZE_A", {(size_t)a});
     tuner.addParameter(kernelId, "SIZE_B", {(size_t)b});
     tuner.addParameter(kernelId, "SIZE_C", {(size_t)c});
@@ -219,9 +226,11 @@ int main(int argc, char** argv)
     auto blockConstraint = [](const std::vector<size_t>&v) {return ((v[0]+v[2])*v[1]*v[3] < MAX_BLOCK_SIZE) && ((v[0]+v[2])*v[1]*v[3] >= 32);};
     tuner.addConstraint(kernelId, {"SIZE_C", "GROUP_SIZE_Y", "PADD_C", "GROUP_SIZE_Z"}, blockConstraint);
 
+#if RAPID_TEST == 0
     tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
     tuner.setValidationRange(dstId, c*b*batch);
+#endif
 
     tuner.setTuningManipulator(kernelId, std::make_unique<cTunableGemm>(batch, a, b, c));
     
