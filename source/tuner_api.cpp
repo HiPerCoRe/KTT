@@ -402,6 +402,19 @@ void Tuner::setCompositionKernelProfiling(const KernelId compositionId, const Ke
     }
 }
 
+void Tuner::setKernelProfilingCounters(const std::vector<std::string>& counterNames)
+{
+    try
+    {
+        tunerCore->setKernelProfilingCounters(counterNames);
+    }
+    catch (const std::runtime_error& error)
+    {
+        TunerCore::log(LoggingLevel::Error, error.what());
+        throw;
+    }
+}
+
 void Tuner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
 {
     try

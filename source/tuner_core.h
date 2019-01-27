@@ -94,6 +94,7 @@ public:
     std::vector<PlatformInfo> getPlatformInfo() const;
     std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const;
     DeviceInfo getCurrentDeviceInfo() const;
+    void setKernelProfilingCounters(const std::vector<std::string>& counterNames);
 
     // Logger methods
     static void setLoggingLevel(const LoggingLevel level);
