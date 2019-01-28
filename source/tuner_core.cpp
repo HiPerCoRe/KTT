@@ -501,6 +501,11 @@ DeviceInfo TunerCore::getCurrentDeviceInfo() const
     return computeEngine->getCurrentDeviceInfo();
 }
 
+void TunerCore::setKernelProfilingCounters(const std::vector<std::string>& counterNames)
+{
+    computeEngine->setKernelProfilingCounters(counterNames);
+}
+
 void TunerCore::setLoggingLevel(const LoggingLevel level)
 {
     Logger::getLogger().setLoggingLevel(level);

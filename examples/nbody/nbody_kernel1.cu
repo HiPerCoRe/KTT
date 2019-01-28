@@ -1,5 +1,3 @@
-#include "/home/fila/prace/autotuning/KTT/examples/nbody/helper_math.h"
-
 #if VECTOR_TYPE == 1
     typedef float vector;
 #elif VECTOR_TYPE == 2
@@ -7,6 +5,100 @@
 #elif VECTOR_TYPE == 4
     typedef float4 vector;
 #endif // VECTOR_TYPE
+
+inline __device__ float2 make_float2(float s)
+{
+    return make_float2(s, s);
+}
+
+inline __device__ float4 make_float4(float s)
+{
+    return make_float4(s, s, s, s);
+}
+
+inline __device__ float2 operator+(float2 a, float2 b)
+{
+    return make_float2(a.x + b.x, a.y + b.y);
+}
+
+inline __device__ float4 operator+(float4 a, float4 b)
+{
+    return make_float4(a.x + b.x, a.y + b.y, a.z + b.z,  a.w + b.w);
+}
+
+inline __device__ float2 operator+(float2 a, float b)
+{
+    return make_float2(a.x + b, a.y + b);
+}
+
+inline __device__ float4 operator+(float4 a, float b)
+{
+    return make_float4(a.x + b, a.y + b, a.z + b,  a.w + b);
+}
+
+inline __host__ __device__ void operator+=(float2 &a, float2 b)
+{
+    a.x += b.x;
+    a.y += b.y;
+}
+
+inline __host__ __device__ void operator+=(float4 &a, float4 b)
+{
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+    a.w += b.w;
+}
+
+inline __device__ float2 operator-(float2 a, float2 b)
+{
+    return make_float2(a.x - b.x, a.y - b.y);
+}
+
+inline __device__ float4 operator-(float4 a, float4 b)
+{
+    return make_float4(a.x - b.x, a.y - b.y, a.z - b.z,  a.w - b.w);
+}
+
+inline __device__ float2 operator-(float2 a, float b)
+{
+    return make_float2(a.x - b, a.y - b);
+}
+
+inline __device__ float4 operator-(float4 a, float b)
+{
+    return make_float4(a.x - b, a.y - b, a.z - b,  a.w - b);
+}
+
+inline __device__ float2 operator*(float2 a, float2 b)
+{
+    return make_float2(a.x * b.x, a.y * b.y);
+}
+
+inline __device__ float4 operator*(float4 a, float4 b)
+{
+    return make_float4(a.x * b.x, a.y * b.y, a.z * b.z,  a.w * b.w);
+}
+
+inline __device__ float2 operator*(float2 a, float b)
+{
+    return make_float2(a.x * b, a.y * b);
+}
+
+inline __device__ float4 operator*(float4 a, float b)
+{
+    return make_float4(a.x * b, a.y * b, a.z * b,  a.w * b);
+}
+
+inline __device__ float2 operator*(float b, float2 a)
+{
+    return make_float2(b * a.x, b * a.y);
+}
+
+inline __device__ float4 operator*(float b, float4 a)
+{
+    return make_float4(b * a.x, b * a.y, b * a.z, b * a.w);
+}
 
 inline __device__ float2 rsqrtf(float2 x){
     return make_float2(rsqrtf(x.x), rsqrtf(x.y));

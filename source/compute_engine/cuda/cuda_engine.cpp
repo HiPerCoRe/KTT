@@ -41,7 +41,8 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 
 #ifdef KTT_PROFILING
     Logger::logDebug("Initializing CUPTI profiling metric IDs");
-    profilingMetrics = getProfilingMetricsForCurrentDevice();
+    const std::vector<std::string>& metricNames = getDefaultProfilingMetricNames();
+    profilingMetrics = getProfilingMetricsForCurrentDevice(metricNames);
 #endif // KTT_PROFILING
 }
 
@@ -716,6 +717,16 @@ KernelResult CUDAEngine::getKernelResultWithProfiling(const EventId id, const st
     #endif // KTT_PROFILING
 }
 
+void CUDAEngine::setKernelProfilingCounters(const std::vector<std::string>& counterNames)
+{
+    #ifdef KTT_PROFILING
+    profilingMetrics.clear();
+    profilingMetrics = getProfilingMetricsForCurrentDevice(counterNames);
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING
+}
+
 std::unique_ptr<CUDAProgram> CUDAEngine::createAndBuildProgram(const std::string& source) const
 {
     auto program = std::make_unique<CUDAProgram>(source);
@@ -1007,9 +1018,8 @@ CUpti_MetricID CUDAEngine::getMetricIdFromName(const std::string& metricName)
     return 0;
 }
 
-std::vector<std::pair<std::string, CUpti_MetricID>> CUDAEngine::getProfilingMetricsForCurrentDevice()
+std::vector<std::pair<std::string, CUpti_MetricID>> CUDAEngine::getProfilingMetricsForCurrentDevice(const std::vector<std::string>& metricNames)
 {
-    const std::vector<std::string>& metricNames = getProfilingMetricNames();
     std::vector<std::pair<std::string, CUpti_MetricID>> collectedMetrics;
 
     for (const auto& metricName : metricNames)
@@ -1120,14 +1130,40 @@ void CUDAEngine::getMetricValueCallback(void* userdata, CUpti_CallbackDomain dom
     }
 }
 
-const std::vector<std::string>& CUDAEngine::getProfilingMetricNames()
+const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
 {
-    static const std::vector<std::string> result{"achieved_occupancy", "branch_efficiency", "sm_efficiency", "dram_utilization", "gld_efficiency",
-        "gst_efficiency", "dram_read_transactions", "dram_write_transactions", "shared_utilization", "l1_shared_utilization", "shared_efficiency",
-        "shared_load_transactions", "shared_store_transactions", "tex_fu_utilization", "l2_utilization", "alu_fu_utilization",
-        "half_precision_fu_utilization", "single_precision_fu_utilization", "double_precision_fu_utilization", "ldst_fu_utilization",
-        "special_fu_utilization", "inst_executed", "inst_fp_16", "inst_fp_32", "inst_fp_64", "inst_integer", "inst_inter_thread_communication",
-        "inst_misc", "inst_replay_overhead"};
+    static const std::vector<std::string> result
+    {
+        "achieved_occupancy",
+        "branch_efficiency",
+        "sm_efficiency",
+        "dram_utilization",
+        "gld_efficiency",
+        "gst_efficiency",
+        "dram_read_transactions",
+        "dram_write_transactions",
+        "shared_utilization",
+        "l1_shared_utilization",
+        "shared_efficiency",
+        "shared_load_transactions",
+        "shared_store_transactions",
+        "tex_fu_utilization",
+        "l2_utilization",
+        "alu_fu_utilization",
+        "half_precision_fu_utilization",
+        "single_precision_fu_utilization",
+        "double_precision_fu_utilization",
+        "ldst_fu_utilization",
+        "special_fu_utilization",
+        "inst_executed",
+        "inst_fp_16",
+        "inst_fp_32",
+        "inst_fp_64",
+        "inst_integer",
+        "inst_inter_thread_communication",
+        "inst_misc",
+        "inst_replay_overhead"
+    };
     return result;
 }
 

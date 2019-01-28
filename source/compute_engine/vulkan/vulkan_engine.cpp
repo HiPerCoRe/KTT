@@ -276,18 +276,22 @@ DeviceInfo VulkanEngine::getCurrentDeviceInfo() const
     return getDeviceInfo(0).at(deviceIndex);
 }
 
-EventId VulkanEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-    const QueueId queue)
+EventId VulkanEngine::runKernelWithProfiling(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
 {
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
 
-uint64_t VulkanEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource)
+uint64_t VulkanEngine::getRemainingKernelProfilingRuns(const std::string&, const std::string&)
 {
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
 
-KernelResult VulkanEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
+KernelResult VulkanEngine::getKernelResultWithProfiling(const EventId, const std::vector<OutputDescriptor>&)
+{
+    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
+}
+
+void VulkanEngine::setKernelProfilingCounters(const std::vector<std::string>&)
 {
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }

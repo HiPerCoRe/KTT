@@ -6,6 +6,7 @@
 #include "tuner_api.h"
 
 #define USE_CUDA 0
+#define USE_PROFILING 0
 
 #if USE_CUDA == 0
     #if defined(_MSC_VER)
@@ -110,6 +111,10 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
     tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     tuner.setCompilerOptions("-use_fast_math");
+  #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+  #endif
 #endif
 
     // Add two kernels to tuner, one of the kernels acts as reference kernel

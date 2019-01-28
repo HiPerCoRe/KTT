@@ -85,6 +85,7 @@ public:
         const QueueId queue) override;
     uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) override;
     KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) override;
+    void setKernelProfilingCounters(const std::vector<std::string>& counterNames) override;
 
 private:
     DeviceIndex deviceIndex;
@@ -124,9 +125,9 @@ private:
     void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
     const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
     CUpti_MetricID getMetricIdFromName(const std::string& metricName);
-    std::vector<std::pair<std::string, CUpti_MetricID>> getProfilingMetricsForCurrentDevice();
+    std::vector<std::pair<std::string, CUpti_MetricID>> getProfilingMetricsForCurrentDevice(const std::vector<std::string>& metricNames);
     static void CUPTIAPI getMetricValueCallback(void* userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const CUpti_CallbackData* info);
-    static const std::vector<std::string>& getProfilingMetricNames();
+    static const std::vector<std::string>& getDefaultProfilingMetricNames();
 #endif // KTT_PROFILING
 };
 
