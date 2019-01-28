@@ -78,6 +78,7 @@ public:
         const QueueId queue) override;
     uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) override;
     KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) override;
+    void setKernelProfilingCounters(const std::vector<std::string>& counterNames) override;
 
     std::unique_ptr<OpenCLProgram> createAndBuildProgram(const std::string& source) const;
 

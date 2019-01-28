@@ -488,6 +488,15 @@ public:
       */
     void setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag);
 
+    /** @fn void setKernelProfilingCounters(const std::vector<std::string>& counterNames)
+      * Specifies profiling counters that will be collected during kernel profiling. Note that not all profiling counters are available on all
+      * devices.
+      *
+      * For the list of CUDA CUPTI profiling counters, see: https://docs.nvidia.com/cuda/cupti/index.html#metrics-reference
+      * @param counterNames Names of counters that will be collected during kernel profiling.
+      */
+    void setKernelProfilingCounters(const std::vector<std::string>& counterNames);
+
     /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
       * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.
       * Default search method is full search.
