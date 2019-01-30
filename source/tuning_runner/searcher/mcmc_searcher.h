@@ -18,7 +18,7 @@ class MCMCSearcher : public Searcher
 public:
     static const size_t maximumDifferences = 2;
     static const size_t bootIterations = 10;
-    static const double escapeProbability = 0.02;
+    const double escapeProbability = 0.02;
 
     MCMCSearcher(const std::vector<KernelConfiguration>& configurations, const std::vector<double>& start) :
         configurations(configurations),
@@ -209,7 +209,7 @@ private:
         return neighbours;
     }
 
-    size_t getNeighbour(const size_t referenceId) {
+    /*size_t getNeighbour(const size_t referenceId) {
         // get all neighbours
         std::vector<size_t> neighbours = getNeighbours(referenceId);
 
@@ -240,7 +240,7 @@ private:
         }
         std::cerr << "Something horrible but recoverable happend in MCMC!" << std::endl;
         return neighbours[0];
-    }
+    }*/
 
     size_t searchStateIndex(const std::vector<double> &state) {
         size_t states = state.size();
