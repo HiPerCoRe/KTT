@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include "dimension_vector.h"
+#include <api/dimension_vector.h>
 
 namespace ktt
 {

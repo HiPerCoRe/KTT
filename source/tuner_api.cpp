@@ -1,6 +1,6 @@
 #include <iostream>
-#include "tuner_api.h"
-#include "tuner_core.h"
+#include <tuner_api.h>
+#include <tuner_core.h>
 
 namespace ktt
 {
@@ -293,11 +293,11 @@ void Tuner::downloadPersistentArgument(const OutputDescriptor& output) const
     }
 }
 
-void Tuner::tuneKernel(const KernelId id)
+std::vector<ComputationResult> Tuner::tuneKernel(const KernelId id)
 {
     try
     {
-        tunerCore->tuneKernel(id, nullptr);
+        return tunerCore->tuneKernel(id, nullptr);
     }
     catch (const std::runtime_error& error)
     {
@@ -306,11 +306,11 @@ void Tuner::tuneKernel(const KernelId id)
     }
 }
 
-void Tuner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+std::vector<ComputationResult> Tuner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
     try
     {
-        tunerCore->tuneKernel(id, std::move(stopCondition));
+        return tunerCore->tuneKernel(id, std::move(stopCondition));
     }
     catch (const std::runtime_error& error)
     {
@@ -319,11 +319,11 @@ void Tuner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCon
     }
 }
 
-void Tuner::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
+std::vector<ComputationResult> Tuner::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
 {
     try
     {
-        tunerCore->dryTuneKernel(id, filePath, iterations);
+        return tunerCore->dryTuneKernel(id, filePath, iterations);
     }
     catch (const std::runtime_error& error)
     {
@@ -374,6 +374,45 @@ ComputationResult Tuner::runKernel(const KernelId id, const std::vector<Paramete
 void Tuner::clearKernelData(const KernelId id, const bool clearConfigurations)
 {
     tunerCore->clearKernelData(id, clearConfigurations);
+}
+
+void Tuner::setKernelProfiling(const bool flag)
+{
+    try
+    {
+        tunerCore->setKernelProfiling(flag);
+    }
+    catch (const std::runtime_error& error)
+    {
+        TunerCore::log(LoggingLevel::Error, error.what());
+        throw;
+    }
+}
+
+void Tuner::setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag)
+{
+    try
+    {
+        tunerCore->setCompositionKernelProfiling(compositionId, kernelId, flag);
+    }
+    catch (const std::runtime_error& error)
+    {
+        TunerCore::log(LoggingLevel::Error, error.what());
+        throw;
+    }
+}
+
+void Tuner::setKernelProfilingCounters(const std::vector<std::string>& counterNames)
+{
+    try
+    {
+        tunerCore->setKernelProfilingCounters(counterNames);
+    }
+    catch (const std::runtime_error& error)
+    {
+        TunerCore::log(LoggingLevel::Error, error.what());
+        throw;
+    }
 }
 
 void Tuner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
@@ -472,6 +511,11 @@ void Tuner::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass>
     {
         TunerCore::log(LoggingLevel::Error, error.what());
     }
+}
+
+void Tuner::setValidationMode(const ValidationMode mode)
+{
+    tunerCore->setValidationMode(mode);
 }
 
 void Tuner::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)

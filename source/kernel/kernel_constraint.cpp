@@ -1,4 +1,4 @@
-#include "kernel_constraint.h"
+#include <kernel/kernel_constraint.h>
 
 namespace ktt
 {
@@ -9,7 +9,7 @@ KernelConstraint::KernelConstraint(const std::vector<std::string>& parameterName
     constraintFunction(constraintFunction)
 {}
 
-std::vector<std::string> KernelConstraint::getParameterNames() const
+const std::vector<std::string>& KernelConstraint::getParameterNames() const
 {
     return parameterNames;
 }

@@ -14,46 +14,47 @@
 #include <vector>
 
 // Compatibility for multiple platforms
-#include "ktt_platform.h"
+#include <ktt_platform.h>
 
 // Data types and enums
-#include "ktt_types.h"
-#include "enum/argument_access_type.h"
-#include "enum/argument_data_type.h"
-#include "enum/argument_memory_location.h"
-#include "enum/argument_upload_type.h"
-#include "enum/compute_api.h"
-#include "enum/global_size_type.h"
-#include "enum/logging_level.h"
-#include "enum/modifier_action.h"
-#include "enum/modifier_dimension.h"
-#include "enum/modifier_type.h"
-#include "enum/print_format.h"
-#include "enum/time_unit.h"
-#include "enum/search_method.h"
-#include "enum/validation_method.h"
+#include <ktt_types.h>
+#include <enum/argument_access_type.h>
+#include <enum/argument_data_type.h>
+#include <enum/argument_memory_location.h>
+#include <enum/argument_upload_type.h>
+#include <enum/compute_api.h>
+#include <enum/global_size_type.h>
+#include <enum/logging_level.h>
+#include <enum/modifier_action.h>
+#include <enum/modifier_dimension.h>
+#include <enum/modifier_type.h>
+#include <enum/print_format.h>
+#include <enum/time_unit.h>
+#include <enum/search_method.h>
+#include <enum/validation_method.h>
+#include <enum/validation_mode.h>
 
 // Data holders
-#include "api/computation_result.h"
-#include "api/device_info.h"
-#include "api/dimension_vector.h"
-#include "api/output_descriptor.h"
-#include "api/platform_info.h"
+#include <api/computation_result.h>
+#include <api/device_info.h>
+#include <api/dimension_vector.h>
+#include <api/output_descriptor.h>
+#include <api/platform_info.h>
 
 // Stop conditions
-#include "api/stop_condition/configuration_duration.h"
-#include "api/stop_condition/configuration_count.h"
-#include "api/stop_condition/configuration_fraction.h"
-#include "api/stop_condition/tuning_duration.h"
+#include <api/stop_condition/configuration_duration.h>
+#include <api/stop_condition/configuration_count.h>
+#include <api/stop_condition/configuration_fraction.h>
+#include <api/stop_condition/tuning_duration.h>
 
 // Reference class interface
-#include "api/reference_class.h"
+#include <api/reference_class.h>
 
 // Tuning manipulator interface
-#include "api/tuning_manipulator.h"
+#include <api/tuning_manipulator.h>
 
 // Support for 16-bit floating point data type
-#include "half.hpp"
+#include <half.hpp>
 
 /** @namespace ktt
   * All classes, methods and type aliases related to KTT framework are located inside ktt namespace.
@@ -156,14 +157,14 @@ public:
       */
     void addParameterDouble(const KernelId id, const std::string& parameterName, const std::vector<double>& parameterValues);
 
-    /* @fn void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string> parameterNames)
-    * Adds a pack containing specified kernel parameters. When parameter packs are used, tuning configurations are generated progressively for each
-    * pack. Once best configuration is found for a specific pack, next pack is then processed. This method is useful when kernels contain groups of
-    * parameters that can be tuned independently. The total number of generated configurations that need to be tested is reduced.
-    * @param id Id of kernel for which the parameter pack will be added.
-    * @param packName Name of a parameter pack. Parameter pack names for a single kernel must be unique.
-    * @param parameterNames Names of parameters which will be added to the parameter pack.
-    */
+    /** @fn void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string> parameterNames)
+      * Adds a pack containing specified kernel parameters. When parameter packs are used, tuning configurations are generated progressively for each
+      * pack. Once best configuration is found for a specific pack, next pack is then processed. This method is useful when kernels contain groups of
+      * parameters that can be tuned independently. The total number of generated configurations that need to be tested is reduced.
+      * @param id Id of kernel for which the parameter pack will be added.
+      * @param packName Name of a parameter pack. Parameter pack names for a single kernel must be unique.
+      * @param parameterNames Names of parameters which will be added to the parameter pack.
+      */
     void addParameterPack(const KernelId id, const std::string& packName, const std::vector<std::string>& parameterNames);
 
     /** @fn void setThreadModifier(const KernelId id, const ModifierType modifierType, const ModifierDimension modifierDimension,
@@ -276,16 +277,16 @@ public:
         const std::function<size_t(const size_t, const std::vector<size_t>&)>& modifierFunction);
 
     /** @fn void setCompositionKernelThreadModifier(const KernelId compositionId, const KernelId kernelId, const ModifierType modifierType,
-    * const ModifierDimension modifierDimension, const std::string& parameterName, const ModifierAction modifierAction)
-    * Calls simplified version of setThreadModifier() method for a single kernel inside specified kernel composition. Does not affect standalone
-    * kernels or other compositions.
-    * @param compositionId Id of composition which includes the specified kernel.
-    * @param kernelId Id of kernel inside the composition for which the modifier will be set.
-    * @param modifierType Type of the thread modifier. See ::ModifierType for more information.
-    * @param modifierDimension Dimension which will be affected by the thread modifier. See ::ModifierDimension for more information.
-    * @param parameterName Name of a kernel parameter whose value will be utilized by the thread modifier.
-    * @param modifierAction Action of the thread modifier. See ::ModifierAction for more information.
-    */
+      * const ModifierDimension modifierDimension, const std::string& parameterName, const ModifierAction modifierAction)
+      * Calls simplified version of setThreadModifier() method for a single kernel inside specified kernel composition. Does not affect standalone
+      * kernels or other compositions.
+      * @param compositionId Id of composition which includes the specified kernel.
+      * @param kernelId Id of kernel inside the composition for which the modifier will be set.
+      * @param modifierType Type of the thread modifier. See ::ModifierType for more information.
+      * @param modifierDimension Dimension which will be affected by the thread modifier. See ::ModifierDimension for more information.
+      * @param parameterName Name of a kernel parameter whose value will be utilized by the thread modifier.
+      * @param modifierAction Action of the thread modifier. See ::ModifierAction for more information.
+      */
     void setCompositionKernelThreadModifier(const KernelId compositionId, const KernelId kernelId, const ModifierType modifierType,
         const ModifierDimension modifierDimension, const std::string& parameterName, const ModifierAction modifierAction);
 
@@ -380,8 +381,8 @@ public:
       * arguments can be useful during online tuning and regular kernel running, when kernel output is computed over multiple kernel launches in
       * different configurations. Note that persistent arguments are never utilized by reference kernels.
       * @param id Id of a vector argument.
-      * @param flag Specifies whether argument should be persisted or not. If true, specified vector argument is immidiately persisted. If false,
-      * compute API buffer for specified argument is immidiately destroyed.
+      * @param flag Specifies whether argument should be persisted or not. If true, specified vector argument is immediately persisted. If false,
+      * compute API buffer for specified argument is immediately destroyed.
       */
     void persistArgument(const ArgumentId id, const bool flag);
 
@@ -391,24 +392,28 @@ public:
       */
     void downloadPersistentArgument(const OutputDescriptor& output) const;
 
-    /** @fn void tuneKernel(const KernelId id)
+    /** @fn std::vector<ComputationResult> tuneKernel(const KernelId id)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
       * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all configurations
       * are explored.
       * @param id Id of kernel for which the tuning will start.
+      * @return Vector of object containing information about computation using tested kernel configurations. See ComputationResult for more
+      * information.
       */
-    void tuneKernel(const KernelId id);
+    std::vector<ComputationResult> tuneKernel(const KernelId id);
 
-    /** @fn void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+    /** @fn std::vector<ComputationResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
       * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end either when all
       * configurations are explored or when specified stop condition is met.
       * @param id Id of kernel for which the tuning will start.
       * @param stopCondition Stop condition which decides whether to continue the tuning process. See StopCondition for more information.
+      * @return Vector of object containing information about computation using tested kernel configurations. See ComputationResult for more
+      * information.
       */
-    void tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
+    std::vector<ComputationResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
 
-    /** @fn void dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0)
+    /** @fn std::vector<ComputationResult> dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0)
       * Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration
       * space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on
       * specified ::SearchMethod. This method can be used to test behaviour and performance of newly implemented search methods. Note that no checks
@@ -417,8 +422,10 @@ public:
       * @param id Id of kernel for which the tuning begins.
       * @param filePath Path to CSV file with tuning parameters.
       * @param iterations Number of iterations performed, 0 = scan whole tuning space.
+      * @return Vector of object containing information about computation using tested kernel configurations. See ComputationResult for more
+      * information.
       */
-    void dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0);
+    std::vector<ComputationResult> dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0);
 
     /** @fn ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output)
       * Performs one step of the tuning process for specified kernel. When this method is called inside tuner for the first time, it creates
@@ -446,7 +453,7 @@ public:
 
     /** @fn ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration,
       * const std::vector<OutputDescriptor>& output)
-      * Runs specified kernel using provided configuration. Does not perform result validation.
+      * Runs specified kernel using provided configuration.
       * @param id Id of kernel which will be run.
       * @param configuration Configuration under which the kernel will be launched. See ParameterPair for more information.
       * @param output User-provided memory locations for kernel arguments which should be retrieved. See OutputDescriptor for more information.
@@ -455,11 +462,40 @@ public:
     ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
 
     /** @fn void clearData(const KernelId id)
-    * Resets tuning process and clears tuning results for specified kernel.
-    * @param id Id of kernel whose data will be cleared.
-    * @param clearConfigurations If true, generated kernel configurations will be cleared as well. Otherwise, they will remain inside tuner.
-    */
+      * Resets tuning process and clears tuning results for specified kernel.
+      * @param id Id of kernel whose data will be cleared.
+      * @param clearConfigurations If true, generated kernel configurations will be cleared as well. Otherwise, they will remain inside tuner.
+      */
     void clearKernelData(const KernelId id, const bool clearConfigurations);
+
+    /** @fn void setKernelProfiling(const bool flag)
+      * Toggles profiling of kernel runs inside the tuner. Profiled kernel runs generate profiling counters which can be used by searchers and stop
+      * conditions for more accurate performance measurement. Profiling counters can also be retrieved through API and printed into CSV file with
+      * tuning results. Note that enabling profiling will result in longer tuning times because profiled kernels have to be launched multiple times
+      * with the same configuration in order to collect all profiling counters. Asynchronous kernel launches are currently not supported when kernel
+      * profiling is enabled. Kernel profiling is disabled by default.
+      * @param flag If true, kernel profiling is enabled. It is disabled otherwise.
+      */
+    void setKernelProfiling(const bool flag);
+
+    /** @fn void setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag)
+      * Toggles profiling of a specific kernel inside kernel composition. This is useful if only some kernels inside the composition need to be
+      * profiled. By default, profiling is enabled for all kernels inside newly added kernel compositions. Note that this method has no effect if
+      * kernel profiling is completely disabled. See setKernelProfiling() method for more information.
+      * @param compositionId Id of composition which includes the specified kernel.
+      * @param kernelId Id of kernel inside the composition for which the profiling flag will be set.
+      * @param flag If true, kernel profiling is enabled for specified kernel inside the composition. It is disabled otherwise.
+      */
+    void setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag);
+
+    /** @fn void setKernelProfilingCounters(const std::vector<std::string>& counterNames)
+      * Specifies profiling counters that will be collected during kernel profiling. Note that not all profiling counters are available on all
+      * devices.
+      *
+      * For the list of CUDA CUPTI profiling counters, see: https://docs.nvidia.com/cuda/cupti/index.html#metrics-reference
+      * @param counterNames Names of counters that will be collected during kernel profiling.
+      */
+    void setKernelProfilingCounters(const std::vector<std::string>& counterNames);
 
     /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
       * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.
@@ -545,6 +581,12 @@ public:
       * read-only.
       */
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
+
+    /** @fn void setValidationMode(const ValidationMode mode)
+      * Sets modes under which kernel output validation is enabled. By default, output validation is enabled only during kernel tuning.
+      * @param mode Bitfield of modes under which kernel output validation is enabled. See ::ValidationMode for more information.
+      */
+    void setValidationMode(const ValidationMode mode);
 
     /** @fn void setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
       * Sets validation method and tolerance threshold for floating-point argument validation. Default validation method is side by side comparison.

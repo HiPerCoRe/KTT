@@ -5,10 +5,10 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "vulkan/vulkan.h"
-#include "vulkan_physical_device.h"
-#include "vulkan_queue.h"
-#include "vulkan_utility.h"
+#include <vulkan/vulkan.h>
+#include <compute_engine/vulkan/vulkan_physical_device.h>
+#include <compute_engine/vulkan/vulkan_queue.h>
+#include <compute_engine/vulkan/vulkan_utility.h>
 
 namespace ktt
 {
@@ -21,6 +21,10 @@ public:
         queueCount(0),
         queueType(VK_QUEUE_COMPUTE_BIT),
         queueFamilyIndex(0)
+    {}
+
+    explicit VulkanDevice(const VulkanPhysicalDevice& physicalDevice, const uint32_t queueCount, const VkQueueFlagBits queueType) :
+        VulkanDevice(physicalDevice, queueCount, queueType, std::vector<const char*>{}, std::vector<const char*>{})
     {}
 
     explicit VulkanDevice(const VulkanPhysicalDevice& physicalDevice, const uint32_t queueCount, const VkQueueFlagBits queueType,
@@ -99,8 +103,11 @@ public:
 
     ~VulkanDevice()
     {
-        waitIdle();
-        vkDestroyDevice(device, nullptr);
+        if (device != nullptr)
+        {
+            waitIdle();
+            vkDestroyDevice(device, nullptr);
+        }
     }
 
     const VulkanPhysicalDevice& getPhysicalDevice() const
@@ -143,21 +150,6 @@ public:
     void waitIdle() const
     {
         vkDeviceWaitIdle(device);
-    }
-
-    uint32_t getSuitableMemoryTypeIndex(const uint32_t typeFilter, const VkMemoryPropertyFlags properties) const
-    {
-        VkPhysicalDeviceMemoryProperties memoryProperties = physicalDevice.getMemoryProperties();
-
-        for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
-        {
-            if (typeFilter & (1 << i) && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
-            {
-                return i;
-            }
-        }
-
-        throw std::runtime_error("Current device does not have any suitable memory types available");
     }
 
 private:

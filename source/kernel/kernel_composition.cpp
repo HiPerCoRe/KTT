@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <stdexcept>
-#include "kernel_composition.h"
-#include "utility/ktt_utility.h"
+#include <kernel/kernel_composition.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {
@@ -10,7 +10,12 @@ KernelComposition::KernelComposition(const KernelId id, const std::string& name,
     id(id),
     name(name),
     kernels(kernels)
-{}
+{
+    for (const auto* kernel : kernels)
+    {
+        profiledKernels.insert(kernel->getId());
+    }
+}
 
 void KernelComposition::addParameter(const KernelParameter& parameter)
 {
@@ -319,32 +324,61 @@ std::map<KernelId, std::vector<LocalMemoryModifier>> KernelComposition::getLocal
     return result;
 }
 
+void KernelComposition::setKernelProfiling(const KernelId kernelId, const bool flag)
+{
+    bool kernelFound = false;
+
+    for (const auto* kernel : kernels)
+    {
+        if (kernel->getId() == kernelId)
+        {
+            kernelFound = true;
+            break;
+        }
+    }
+
+    if (!kernelFound)
+    {
+        throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
+            + " is not included in composition with the following id: " + std::to_string(id));
+    }
+
+    if (flag)
+    {
+        profiledKernels.insert(kernelId);
+    }
+    else
+    {
+        profiledKernels.erase(kernelId);
+    }
+}
+
 KernelId KernelComposition::getId() const
 {
     return id;
 }
 
-std::string KernelComposition::getName() const
+const std::string& KernelComposition::getName() const
 {
     return name;
 }
 
-std::vector<const Kernel*> KernelComposition::getKernels() const
+const std::vector<const Kernel*>& KernelComposition::getKernels() const
 {
     return kernels;
 }
 
-std::vector<KernelParameter> KernelComposition::getParameters() const
+const std::vector<KernelParameter>& KernelComposition::getParameters() const
 {
     return parameters;
 }
 
-std::vector<KernelConstraint> KernelComposition::getConstraints() const
+const std::vector<KernelConstraint>& KernelComposition::getConstraints() const
 {
     return constraints;
 }
 
-std::vector<KernelParameterPack> KernelComposition::getParameterPacks() const
+const std::vector<KernelParameterPack>& KernelComposition::getParameterPacks() const
 {
     return parameterPacks;
 }
@@ -399,12 +433,12 @@ std::vector<KernelParameter> KernelComposition::getParametersForPack(const Kerne
     return result;
 }
 
-std::vector<ArgumentId> KernelComposition::getSharedArgumentIds() const
+const std::vector<ArgumentId>& KernelComposition::getSharedArgumentIds() const
 {
     return sharedArgumentIds;
 }
 
-std::vector<ArgumentId> KernelComposition::getKernelArgumentIds(const KernelId id) const
+const std::vector<ArgumentId>& KernelComposition::getKernelArgumentIds(const KernelId id) const
 {
     auto pointer = kernelArgumentIds.find(id);
     if (pointer != kernelArgumentIds.end())
@@ -412,6 +446,11 @@ std::vector<ArgumentId> KernelComposition::getKernelArgumentIds(const KernelId i
         return pointer->second;
     }
     return sharedArgumentIds;
+}
+
+const std::set<KernelId>& KernelComposition::getProfiledKernels() const
+{
+    return profiledKernels;
 }
 
 bool KernelComposition::hasParameter(const std::string& parameterName) const

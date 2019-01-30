@@ -3,10 +3,10 @@
 #include <map>
 #include <ostream>
 #include <vector>
-#include "ktt_types.h"
-#include "api/dimension_vector.h"
-#include "api/parameter_pair.h"
-#include "dto/local_memory_modifier.h"
+#include <api/dimension_vector.h>
+#include <api/parameter_pair.h>
+#include <dto/local_memory_modifier.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -25,16 +25,17 @@ public:
         const std::map<KernelId, DimensionVector>& compositionLocalSizes, const std::vector<ParameterPair>& parameterPairs,
         const std::map<KernelId, std::vector<LocalMemoryModifier>>& compositionLocalMemoryModifiers);
 
-    DimensionVector getGlobalSize() const;
-    DimensionVector getLocalSize() const;
-    std::vector<LocalMemoryModifier> getLocalMemoryModifiers() const;
-    DimensionVector getCompositionKernelGlobalSize(const KernelId id) const;
-    DimensionVector getCompositionKernelLocalSize(const KernelId id) const;
+    const DimensionVector& getGlobalSize() const;
+    const DimensionVector& getLocalSize() const;
+    const std::vector<LocalMemoryModifier>& getLocalMemoryModifiers() const;
+    const DimensionVector& getCompositionKernelGlobalSize(const KernelId id) const;
+    const DimensionVector& getCompositionKernelLocalSize(const KernelId id) const;
     std::vector<LocalMemoryModifier> getCompositionKernelLocalMemoryModifiers(const KernelId id) const;
     std::vector<DimensionVector> getGlobalSizes() const;
     std::vector<DimensionVector> getLocalSizes() const;
-    std::vector<ParameterPair> getParameterPairs() const;
+    const std::vector<ParameterPair>& getParameterPairs() const;
     bool isComposite() const;
+    bool isValid() const;
 
     friend std::ostream& operator<<(std::ostream&, const KernelConfiguration&);
 
@@ -47,6 +48,7 @@ private:
     std::map<KernelId, std::vector<LocalMemoryModifier>> compositionLocalMemoryModifiers;
     std::vector<ParameterPair> parameterPairs;
     bool compositeConfiguration;
+    bool validConfiguration;
 };
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& configuration);

@@ -4,11 +4,11 @@
 #include <chrono>
 #include <limits>
 #include <random>
+#include <set>
 #include <sstream>
 #include <stdexcept>
-#include <set>
-#include "searcher.h"
-#include "utility/logger.h"
+#include <tuning_runner/searcher/searcher.h>
+#include <utility/logger.h>
 
 namespace ktt
 {
@@ -51,7 +51,8 @@ public:
             unexploredIndices.insert(i);
     }
 
-    void calculateNextConfiguration(const double previousDuration) override
+    void calculateNextConfiguration(const bool, const KernelConfiguration&, const double previousDuration, const KernelProfilingData&,
+        const std::map<KernelId, KernelProfilingData>&) override
     {
         visitedStatesCount++;
         exploredIndices[index] = true;
@@ -122,9 +123,9 @@ public:
         // reset origin position when there are no neighbours
         if (neighbours.size() == 0)
         {
-            std::stringstream stream;
-            stream << "MCMC step " << visitedStatesCount << ": No neighbours, reseting position.";
-            Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+            std::stringstream debugStream;
+            debugStream << "MCMC step " << visitedStatesCount << ": No neighbours, reseting position.";
+            Logger::getLogger().log(LoggingLevel::Debug, debugStream.str());
 
             while (unexploredIndices.find(originState) == unexploredIndices.end())
             {
@@ -144,7 +145,7 @@ public:
         index = currentState;
     }
 
-    KernelConfiguration getCurrentConfiguration() const override
+    KernelConfiguration getNextConfiguration() const override
     {
         return configurations.at(index);
     }

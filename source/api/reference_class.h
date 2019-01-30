@@ -3,7 +3,7 @@
   */
 #pragma once
 
-#include "ktt_types.h"
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -29,7 +29,7 @@ public:
 
     /** @fn virtual void* getData(const ArgumentId id) = 0
       * Returns pointer to buffer containing reference output for specified kernel argument. This method will be called only after running
-      * computeResult() method. It can be called multiple times for same kernel argument. Inheriting class must provide implementation for this
+      * computeResult() method. It can be called multiple times for the same kernel argument. Inheriting class must provide implementation for this
       * method.
       * @param id Id of kernel argument for which reference output will be retrieved. This can be used by inheriting class to support validation of
       * multiple kernel arguments.

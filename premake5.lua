@@ -12,28 +12,18 @@ function findLibrariesAmd()
         return false
     end
     
-    defines { "PLATFORM_AMD" }
+    defines { "KTT_PLATFORM_AMD" }
     includedirs { "$(AMDAPPSDKROOT)/include" }
         
-    filter "platforms:x86"
-        if os.target() == "linux" then
-            libdirs { "$(AMDAPPSDKROOT)/lib" }
-        else
-            libdirs { "$(AMDAPPSDKROOT)/lib/x86" }
-        end
-        
-    filter "platforms:x86_64"
-        if os.target() == "linux" then
-            libdirs { "$(AMDAPPSDKROOT)/lib64" }
-        else
-            libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
-        end
-        
-    filter {}
+    if os.target() == "linux" then
+        libdirs { "$(AMDAPPSDKROOT)/lib64" }
+    else
+        libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
+    end
     
     if not _OPTIONS["no-opencl"] then
         opencl_projects = true
-        defines { "PLATFORM_OPENCL" }
+        defines { "KTT_PLATFORM_OPENCL" }
         links { "OpenCL" }
     end
     
@@ -47,28 +37,18 @@ function findLibrariesIntel()
         return false
     end
     
-    defines { "PLATFORM_INTEL" }
+    defines { "KTT_PLATFORM_INTEL" }
     includedirs { "$(INTELOCLSDKROOT)/include" }
         
-    filter "platforms:x86"
-        if os.target() == "linux" then
-            libdirs { "$(INTELOCLSDKROOT)/lib" }
-        else
-            libdirs { "$(INTELOCLSDKROOT)/lib/x86" }
-        end
-        
-    filter "platforms:x86_64"
-        if os.target() == "linux" then
-            libdirs { "$(INTELOCLSDKROOT)/lib64" }
-        else
-            libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
-        end
-        
-    filter {}
+    if os.target() == "linux" then
+        libdirs { "$(INTELOCLSDKROOT)/lib64" }
+    else
+        libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
+    end
     
     if not _OPTIONS["no-opencl"] then
         opencl_projects = true
-        defines { "PLATFORM_OPENCL" }
+        defines { "KTT_PLATFORM_OPENCL" }
         links { "OpenCL" }
     end
     
@@ -82,35 +62,29 @@ function findLibrariesNvidia()
         return false
     end
     
-    defines { "PLATFORM_NVIDIA" }
-    includedirs { "$(CUDA_PATH)/include" }
+    defines { "KTT_PLATFORM_NVIDIA" }
+    includedirs { "$(CUDA_PATH)/include", "$(CUDA_PATH)/extras/CUPTI/include" }
         
-    filter "platforms:x86"
-        if os.target() == "linux" then
-            libdirs { "$(CUDA_PATH)/lib" }
-        else
-            libdirs { "$(CUDA_PATH)/lib/Win32" }
-        end
-        
-    filter "platforms:x86_64"
-        if os.target() == "linux" then
-            libdirs { "$(CUDA_PATH)/lib64" }
-        else
-            libdirs { "$(CUDA_PATH)/lib/x64" }
-        end
-        
-    filter {}
+    if os.target() == "linux" then
+        libdirs { "$(CUDA_PATH)/lib64", "$(CUDA_PATH)/extras/CUPTI/lib64" }
+    else
+        libdirs { "$(CUDA_PATH)/lib/x64", "$(CUDA_PATH)/extras/CUPTI/libx64" }
+    end
     
     if not _OPTIONS["no-opencl"] then
         opencl_projects = true
-        defines { "PLATFORM_OPENCL" }
+        defines { "KTT_PLATFORM_OPENCL" }
         links { "OpenCL" }
     end
         
     if not _OPTIONS["no-cuda"] then
         cuda_projects = true
-        defines { "PLATFORM_CUDA" }
+        defines { "KTT_PLATFORM_CUDA" }
         links { "cuda", "nvrtc" }
+        
+        if _OPTIONS["profiling"] then
+            links { "cupti" }
+        end
     end
         
     return true
@@ -141,24 +115,22 @@ function findVulkan()
     
     includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
     
-    filter "platforms:x86"
-        if os.target() == "linux" then
-            libdirs { "$(VULKAN_SDK)/Lib32", "libraries/lib/linux" }
-        else
-            libdirs { "$(VULKAN_SDK)/Lib32", "libraries/lib/windows" }
-        end
-
-    filter "platforms:x86_64"
-        if os.target() == "linux" then
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux" }
-        else
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows" }
-        end
+    if os.target() == "linux" then
+        filter "configurations:Release"
+            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux/release" }
+        filter "configurations:Debug"
+            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux/debug" }
+    else
+        filter "configurations:Release"
+            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows/release" }
+        filter "configurations:Debug"
+            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows/debug" }
+    end
     
     filter {}
     
     vulkan_projects = true
-    defines { "PLATFORM_VULKAN" }
+    defines { "KTT_PLATFORM_VULKAN" }
     links { "vulkan-1", "glslang", "SPIRV", "SPIRV-Tools", "HLSL", "OSDependent", "OGLCompiler", "SPVRemapper", "SPIRV-Tools-opt" }
     
     return true
@@ -182,6 +154,12 @@ newoption
 {
     trigger = "vulkan",
     description = "Enables compilation of Vulkan backend"
+}
+
+newoption
+{
+    trigger = "profiling",
+    description = "Enables compilation of kernel profiling functionality"
 }
 
 newoption
@@ -229,36 +207,30 @@ workspace "ktt"
     end
     
     configurations { "Release", "Debug" }
-    platforms { "x86_64", "x86" }
+    platforms { "x86_64" }
+    architecture "x86_64"
+    
+    if _OPTIONS["profiling"] then
+        defines { "KTT_PROFILING" }
+    end
+    
     location(buildPath)
     language "C++"
     cppdialect "C++14"
-
-    if os.is64bit() then
-        defaultplatform "x86_64"
-    else
-        defaultplatform "x86"
-    end
-
-    filter "platforms:x86"
-        architecture "x86"
-    
-    filter "platforms:x86_64"
-        architecture "x86_64"
     
     filter "configurations:Debug"
-        defines { "DEBUG" }
+        defines { "KTT_CONFIGURATION_DEBUG" }
         symbols "On"
     
     filter "configurations:Release"
-        defines { "NDEBUG" }
+        defines { "KTT_CONFIGURATION_RELEASE" }
         optimize "On"
     
     filter {}
     
     targetdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}")
     objdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}/obj")
-
+    
 -- Library configuration
 project "ktt"
     kind "SharedLib"
@@ -290,6 +262,12 @@ project "ktt"
         
         if not vulkan then
             error("Vulkan SDK was not found")
+        end
+        
+        if os.target() == "linux" then
+            zip.extract("libraries/lib/linux.tar.gz", "libraries/lib/linux")
+        else
+            zip.extract("libraries/lib/windows.zip", "libraries/lib/windows")
         end
     end
     
@@ -336,6 +314,18 @@ project "gemm_opencl"
 project "conv_opencl"
     kind "ConsoleApp"
     files { "examples/cltune-conv/*.cpp", "examples/cltune-conv/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "conv_3d"
+    kind "ConsoleApp"
+    files { "examples/conv_3d/*.cpp", "examples/conv_3d/*.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+
+project "covariance_opencl"
+    kind "ConsoleApp"
+    files { "examples/covariance/*.cpp", "examples/covariance/*.cl" }
     includedirs { "source" }
     links { "ktt" }
 

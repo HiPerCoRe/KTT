@@ -9,18 +9,21 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
-#include "half.hpp"
-#include "api/reference_class.h"
-#include "enum/validation_method.h"
-#include "kernel/kernel_manager.h"
-#include "kernel_argument/argument_manager.h"
-#include "tuning_runner/kernel_runner.h"
-#include "utility/logger.h"
+#include <api/reference_class.h>
+#include <enum/kernel_run_mode.h>
+#include <enum/validation_method.h>
+#include <enum/validation_mode.h>
+#include <kernel/kernel_manager.h>
+#include <kernel_argument/argument_manager.h>
+#include <utility/logger.h>
+#include <half.hpp>
 
 namespace ktt
 {
 
 using half_float::half;
+
+class KernelRunner; // Forward declaration in order to avoid cyclical header dependency
 
 class ResultValidator
 {
@@ -34,17 +37,20 @@ public:
     void setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
     void setToleranceThreshold(const double threshold);
     void setValidationMethod(const ValidationMethod method);
+    void setValidationMode(const ValidationMode mode);
     void setValidationRange(const ArgumentId id, const size_t range);
     void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
-    void computeReferenceResult(const Kernel& kernel);
+    void computeReferenceResult(const Kernel& kernel, const KernelRunMode runMode);
     void clearReferenceResults();
     void clearReferenceResults(const KernelId id);
-    bool validateArgumentsWithClass(const Kernel& kernel);
-    bool validateArgumentsWithKernel(const Kernel& kernel);
+    bool validateArguments(const Kernel& kernel, const KernelRunMode runMode);
+    bool validateArgumentsWithClass(const Kernel& kernel, const KernelRunMode runMode);
+    bool validateArgumentsWithKernel(const Kernel& kernel, const KernelRunMode runMode);
 
     // Getters
     double getToleranceThreshold() const;
     ValidationMethod getValidationMethod() const;
+    bool hasReferenceResult(const KernelId id) const;
 
 private:
     // Attributes
@@ -52,6 +58,7 @@ private:
     KernelRunner* kernelRunner;
     double toleranceThreshold;
     ValidationMethod validationMethod;
+    ValidationMode validationMode;
     std::map<ArgumentId, size_t> argumentValidationRanges;
     std::map<ArgumentId, std::function<bool(const void*, const void*)>> argumentComparators;
     std::map<KernelId, std::tuple<std::unique_ptr<ReferenceClass>, std::vector<ArgumentId>>> referenceClasses;
@@ -66,6 +73,7 @@ private:
         const std::string kernelName) const;
     bool validateResultCustom(const ArgumentId id, const void* result, const void* referenceResult, const size_t numberOfElements,
         const size_t elementSizeInBytes, const std::function<bool(const void*, const void*)>& comparator) const;
+    bool isRunModeValidated(const KernelRunMode mode);
 
     template <typename T> bool validateResult(const std::vector<T>& result, const std::vector<T>& referenceResult, const ArgumentId id) const
     {

@@ -3,7 +3,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "ktt_types.h"
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -14,8 +14,8 @@ public:
     KernelParameterPack();
     explicit KernelParameterPack(const std::string& name, const std::vector<std::string>& parameterNames);
 
-    std::string getName() const;
-    std::vector<std::string> getParameterNames() const;
+    const std::string& getName() const;
+    const std::vector<std::string>& getParameterNames() const;
     size_t getParameterCount() const;
     bool containsParameter(const std::string& parameterName) const;
 

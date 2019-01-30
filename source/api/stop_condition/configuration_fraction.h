@@ -4,7 +4,7 @@
 #pragma once
 
 #include <algorithm>
-#include "stop_condition.h"
+#include <api/stop_condition/stop_condition.h>
 
 namespace ktt
 {
@@ -26,7 +26,7 @@ public:
         targetFraction = std::max(0.0, std::min(1.0, fraction));
     }
 
-    bool isMet() const override
+    bool isSatisfied() const override
     {
         return currentCount >= getConfigurationCount();
     }
@@ -36,7 +36,8 @@ public:
         totalCount = std::max(static_cast<size_t>(1), totalConfigurationCount);
     }
 
-    void updateStatus(const double) override
+    void updateStatus(const bool, const std::vector<ParameterPair>&, const double, const KernelProfilingData&,
+        const std::map<KernelId, KernelProfilingData>&) override
     {
         currentCount++;
     }
@@ -48,7 +49,7 @@ public:
 
     std::string getStatusString() const override
     {
-        if (isMet())
+        if (isSatisfied())
         {
             return std::string("Target count of explored configurations reached: " + std::to_string(getConfigurationCount()));
         }

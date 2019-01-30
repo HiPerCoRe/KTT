@@ -1,10 +1,11 @@
-#include "kernel_configuration.h"
+#include <kernel/kernel_configuration.h>
 
 namespace ktt
 {
 
 KernelConfiguration::KernelConfiguration() :
-    compositeConfiguration(false)
+    compositeConfiguration(false),
+    validConfiguration(false)
 {}
 
 KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, const DimensionVector& localSize,
@@ -18,7 +19,8 @@ KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, cons
     localSize(localSize),
     localMemoryModifiers(localMemoryModifiers),
     parameterPairs(parameterPairs),
-    compositeConfiguration(false)
+    compositeConfiguration(false),
+    validConfiguration(true)
 {}
 
 KernelConfiguration::KernelConfiguration(const std::map<KernelId, DimensionVector>& compositionGlobalSizes,
@@ -35,25 +37,26 @@ KernelConfiguration::KernelConfiguration(const std::map<KernelId, DimensionVecto
     compositionLocalSizes(compositionLocalSizes),
     compositionLocalMemoryModifiers(compositionLocalMemoryModifiers),
     parameterPairs(parameterPairs),
-    compositeConfiguration(true)
+    compositeConfiguration(true),
+    validConfiguration(true)
 {}
 
-DimensionVector KernelConfiguration::getGlobalSize() const
+const DimensionVector& KernelConfiguration::getGlobalSize() const
 {
     return globalSize;
 }
 
-DimensionVector KernelConfiguration::getLocalSize() const
+const DimensionVector& KernelConfiguration::getLocalSize() const
 {
     return localSize;
 }
 
-std::vector<LocalMemoryModifier> KernelConfiguration::getLocalMemoryModifiers() const
+const std::vector<LocalMemoryModifier>& KernelConfiguration::getLocalMemoryModifiers() const
 {
     return localMemoryModifiers;
 }
 
-DimensionVector KernelConfiguration::getCompositionKernelGlobalSize(const KernelId id) const
+const DimensionVector& KernelConfiguration::getCompositionKernelGlobalSize(const KernelId id) const
 {
     if (compositionGlobalSizes.find(id) == compositionGlobalSizes.end())
     {
@@ -63,7 +66,7 @@ DimensionVector KernelConfiguration::getCompositionKernelGlobalSize(const Kernel
     return compositionGlobalSizes.find(id)->second;
 }
 
-DimensionVector KernelConfiguration::getCompositionKernelLocalSize(const KernelId id) const
+const DimensionVector& KernelConfiguration::getCompositionKernelLocalSize(const KernelId id) const
 {
     if (compositionLocalSizes.find(id) == compositionLocalSizes.end())
     {
@@ -117,7 +120,7 @@ std::vector<DimensionVector> KernelConfiguration::getLocalSizes() const
     return std::vector<DimensionVector>{localSize};
 }
 
-std::vector<ParameterPair> KernelConfiguration::getParameterPairs() const
+const std::vector<ParameterPair>& KernelConfiguration::getParameterPairs() const
 {
     return parameterPairs;
 }
@@ -125,6 +128,11 @@ std::vector<ParameterPair> KernelConfiguration::getParameterPairs() const
 bool KernelConfiguration::isComposite() const
 {
     return compositeConfiguration;
+}
+
+bool KernelConfiguration::isValid() const
+{
+    return validConfiguration;
 }
 
 std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& configuration)

@@ -4,9 +4,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "vulkan/vulkan.h"
-#include "vulkan_physical_device.h"
-#include "vulkan_utility.h"
+#include <vulkan/vulkan.h>
+#include <compute_engine/vulkan/vulkan_physical_device.h>
+#include <compute_engine/vulkan/vulkan_utility.h>
 
 namespace ktt
 {
@@ -25,7 +25,7 @@ public:
     {}
 
     explicit VulkanInstance(const std::string& applicationName, const std::vector<const char*>& extensions) :
-        VulkanInstance(applicationName, std::vector<const char*>{}, std::vector<const char*>{})
+        VulkanInstance(applicationName, extensions, std::vector<const char*>{})
     {}
 
     explicit VulkanInstance(const std::string& applicationName, const std::vector<const char*>& extensions,
@@ -76,7 +76,11 @@ public:
                 "vkDestroyDebugReportCallbackEXT");
             destroyDebugReportCallbackEXT(instance, callback, nullptr);
         }
-        vkDestroyInstance(instance, nullptr);
+
+        if (instance != nullptr)
+        {
+            vkDestroyInstance(instance, nullptr);
+        }
     }
 
     VkInstance getInstance() const

@@ -1,7 +1,7 @@
-#ifdef PLATFORM_OPENCL
+#ifdef KTT_PLATFORM_OPENCL
 
 #include <stdexcept>
-#include "opencl_utility.h"
+#include <compute_engine/opencl/opencl_utility.h>
 
 namespace ktt
 {
@@ -118,4 +118,4 @@ std::string getDeviceInfoString(const cl_device_id id, const cl_device_info info
 
 } // namespace ktt
 
-#endif // PLATFORM_OPENCL
+#endif // KTT_PLATFORM_OPENCL

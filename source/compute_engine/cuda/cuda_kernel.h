@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
-#include "cuda.h"
-#include "cuda_utility.h"
+#include <cuda.h>
+#include <compute_engine/cuda/cuda_utility.h>
 
 namespace ktt
 {
@@ -27,7 +27,7 @@ public:
         return module;
     }
 
-    std::string getKernelName() const
+    const std::string& getKernelName() const
     {
         return kernelName;
     }

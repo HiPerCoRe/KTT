@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
-#include "kernel/kernel_configuration.h"
+#include <api/kernel_profiling_data.h>
+#include <kernel/kernel_configuration.h>
 
 namespace ktt
 {
@@ -21,13 +23,18 @@ public:
     void setComputationDuration(const uint64_t computationDuration);
     void setOverhead(const uint64_t overhead);
     void setErrorMessage(const std::string& errorMessage);
+    void setProfilingData(const KernelProfilingData& profilingData);
+    void setCompositionKernelProfilingData(const KernelId id, const KernelProfilingData& profilingData);
     void setValid(const bool flag);
 
-    std::string getKernelName() const;
-    KernelConfiguration getConfiguration() const;
+    const std::string& getKernelName() const;
+    const KernelConfiguration& getConfiguration() const;
     uint64_t getComputationDuration() const;
     uint64_t getOverhead() const;
-    std::string getErrorMessage() const;
+    const std::string& getErrorMessage() const;
+    const KernelProfilingData& getProfilingData() const;
+    const KernelProfilingData& getCompositionKernelProfilingData(const KernelId id) const;
+    const std::map<KernelId, KernelProfilingData>& getCompositionProfilingData() const;
     bool isValid() const;
 
     void increaseOverhead(const uint64_t overhead);
@@ -38,6 +45,8 @@ private:
     uint64_t computationDuration;
     uint64_t overhead;
     std::string errorMessage;
+    KernelProfilingData profilingData;
+    std::map<KernelId, KernelProfilingData> compositionProfilingData;
     bool valid;
 };
 

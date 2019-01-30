@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <stdexcept>
-#include "kernel.h"
-#include "utility/ktt_utility.h"
+#include <kernel/kernel.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {
@@ -115,17 +115,17 @@ KernelId Kernel::getId() const
     return id;
 }
 
-std::string Kernel::getSource() const
+const std::string& Kernel::getSource() const
 {
     return source;
 }
 
-std::string Kernel::getName() const
+const std::string& Kernel::getName() const
 {
     return name;
 }
 
-DimensionVector Kernel::getGlobalSize() const
+const DimensionVector& Kernel::getGlobalSize() const
 {
     return globalSize;
 }
@@ -169,7 +169,7 @@ DimensionVector Kernel::getModifiedGlobalSize(const std::vector<ParameterPair>& 
     return result;
 }
 
-DimensionVector Kernel::getLocalSize() const
+const DimensionVector& Kernel::getLocalSize() const
 {
     return localSize;
 }
@@ -213,17 +213,17 @@ DimensionVector Kernel::getModifiedLocalSize(const std::vector<ParameterPair>& p
     return result;
 }
 
-std::vector<KernelParameter> Kernel::getParameters() const
+const std::vector<KernelParameter>& Kernel::getParameters() const
 {
     return parameters;
 }
 
-std::vector<KernelConstraint> Kernel::getConstraints() const
+const std::vector<KernelConstraint>& Kernel::getConstraints() const
 {
     return constraints;
 }
 
-std::vector<KernelParameterPack> Kernel::getParameterPacks() const
+const std::vector<KernelParameterPack>& Kernel::getParameterPacks() const
 {
     return parameterPacks;
 }
@@ -283,7 +283,7 @@ size_t Kernel::getArgumentCount() const
     return argumentIds.size();
 }
 
-std::vector<ArgumentId> Kernel::getArgumentIds() const
+const std::vector<ArgumentId>& Kernel::getArgumentIds() const
 {
     return argumentIds;
 }

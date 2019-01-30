@@ -1,10 +1,10 @@
 #pragma once
 
 #include <string>
-#include "vulkan/vulkan.h"
-#include "ktt_types.h"
-#include "api/device_info.h"
-#include "vulkan_utility.h"
+#include <vulkan/vulkan.h>
+#include <api/device_info.h>
+#include <compute_engine/vulkan/vulkan_utility.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -27,7 +27,7 @@ public:
         return physicalDevice;
     }
 
-    std::string getName() const
+    const std::string& getName() const
     {
         return name;
     }
@@ -101,6 +101,21 @@ public:
         }
 
         return result;
+    }
+
+    uint32_t getCompatibleMemoryTypeIndex(const uint32_t memoryTypeBits, const VkMemoryPropertyFlags properties) const
+    {
+        VkPhysicalDeviceMemoryProperties memoryProperties = getMemoryProperties();
+
+        for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
+        {
+            if (memoryTypeBits & (1 << i) && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
+                return i;
+            }
+        }
+
+        throw std::runtime_error("Physical device does not have any suitable memory types available");
     }
 
     static DeviceType getDeviceType(const VkPhysicalDeviceType deviceType)

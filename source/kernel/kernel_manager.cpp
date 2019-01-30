@@ -1,7 +1,7 @@
 #include <fstream>
 #include <sstream>
-#include "kernel_manager.h"
-#include "utility/ktt_utility.h"
+#include <kernel/kernel_manager.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {
@@ -273,6 +273,16 @@ void KernelManager::setTuningManipulatorFlag(const KernelId id, const bool flag)
         throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
     }
     getKernel(id).setTuningManipulatorFlag(flag);
+}
+
+void KernelManager::setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag)
+{
+    if (!isComposition(compositionId))
+    {
+        throw std::runtime_error(std::string("Invalid kernel composition id: ") + std::to_string(compositionId));
+    }
+
+    getKernelComposition(compositionId).setKernelProfiling(kernelId, flag);
 }
 
 const Kernel& KernelManager::getKernel(const KernelId id) const

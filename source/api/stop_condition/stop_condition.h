@@ -4,7 +4,11 @@
 #pragma once
 
 #include <cstddef>
+#include <map>
 #include <string>
+#include <api/kernel_profiling_data.h>
+#include <api/parameter_pair.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -21,11 +25,11 @@ public:
       */
     virtual ~StopCondition() = default;
 
-    /** @fn virtual bool isMet() const = 0
+    /** @fn virtual bool isSatisfied() const = 0
       * Checks whether stop condition is already satisfied.
       * @return True if stop condition is satisfied, false otherwise.
       */
-    virtual bool isMet() const = 0;
+    virtual bool isSatisfied() const = 0;
 
     /** @fn virtual void initialize(const size_t totalConfigurationCount) = 0
       * Performs initialization of stop condition. Called right before the tuning process begins.
@@ -33,11 +37,20 @@ public:
       */
     virtual void initialize(const size_t totalConfigurationCount) = 0;
 
-    /** @fn virtual void updateStatus(const double previousConfigurationDuration) = 0
+    /** @fn virtual void updateStatus(const bool successFlag, const std::vector<ParameterPair>& previousConfiguration, const double previousDuration,
+        const KernelProfilingData& previousProfilingData) = 0
       * Performs update of stop condition. Called after each tested configuration.
-      * @param previousConfigurationDuration Duration of computation using last tested configuration in nanoseconds.
+      * @param successFlag If true, last tested kernel configuration finished successfully. If false, an error occurred (e.g. result validation
+      * failed).
+      * @param previousConfiguration Last tested kernel configuration.
+      * @param previousDuration Duration of last tested kernel configuration in nanoseconds.
+      * @param previousProfilingData Profiling data of last tested kernel configuration. Valid only if kernel profiling is enabled and tuned kernel
+      * is a single kernel.
+      * @param previousCompositionProfilingData Profiling data of last tested kernel configuration. Valid only if kernel profiling is enabled and
+      * tuned kernel is a composition.
       */
-    virtual void updateStatus(const double previousConfigurationDuration) = 0;
+    virtual void updateStatus(const bool successFlag, const std::vector<ParameterPair>& previousConfiguration, const double previousDuration,
+        const KernelProfilingData& previousProfilingData, const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData) = 0;
     
     /** @fn virtual size_t getConfigurationCount() const = 0
       * Returns number of configurations that will be tested before stop condition is satisfied.

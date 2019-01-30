@@ -5,15 +5,15 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "kernel_constraint.h"
-#include "kernel_parameter.h"
-#include "kernel_parameter_pack.h"
-#include "ktt_types.h"
-#include "api/dimension_vector.h"
-#include "api/parameter_pair.h"
-#include "dto/local_memory_modifier.h"
-#include "enum/modifier_dimension.h"
-#include "enum/modifier_type.h"
+#include <api/dimension_vector.h>
+#include <api/parameter_pair.h>
+#include <dto/local_memory_modifier.h>
+#include <enum/modifier_dimension.h>
+#include <enum/modifier_type.h>
+#include <kernel/kernel_constraint.h>
+#include <kernel/kernel_parameter.h>
+#include <kernel/kernel_parameter_pack.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -38,20 +38,20 @@ public:
 
     // Getters
     KernelId getId() const;
-    std::string getSource() const;
-    std::string getName() const;
-    DimensionVector getGlobalSize() const;
+    const std::string& getSource() const;
+    const std::string& getName() const;
+    const DimensionVector& getGlobalSize() const;
     DimensionVector getModifiedGlobalSize(const std::vector<ParameterPair>& parameterPairs) const;
-    DimensionVector getLocalSize() const;
+    const DimensionVector& getLocalSize() const;
     DimensionVector getModifiedLocalSize(const std::vector<ParameterPair>& parameterPairs) const;
-    std::vector<KernelParameter> getParameters() const;
-    std::vector<KernelConstraint> getConstraints() const;
-    std::vector<KernelParameterPack> getParameterPacks() const;
+    const std::vector<KernelParameter>& getParameters() const;
+    const std::vector<KernelConstraint>& getConstraints() const;
+    const std::vector<KernelParameterPack>& getParameterPacks() const;
     std::vector<KernelParameter> getParametersOutsidePacks() const;
     std::vector<KernelParameter> getParametersForPack(const std::string& pack) const;
     std::vector<KernelParameter> getParametersForPack(const KernelParameterPack& pack) const;
     size_t getArgumentCount() const;
-    std::vector<ArgumentId> getArgumentIds() const;
+    const std::vector<ArgumentId>& getArgumentIds() const;
     std::vector<LocalMemoryModifier> getLocalMemoryModifiers(const std::vector<ParameterPair>& parameterPairs) const;
     bool hasParameter(const std::string& parameterName) const;
     bool hasTuningManipulator() const;

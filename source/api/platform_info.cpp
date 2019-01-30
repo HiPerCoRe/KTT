@@ -1,4 +1,4 @@
-#include "platform_info.h"
+#include <api/platform_info.h>
 
 namespace ktt
 {
@@ -13,22 +13,22 @@ PlatformIndex PlatformInfo::getId() const
     return id;
 }
 
-std::string PlatformInfo::getName() const
+const std::string& PlatformInfo::getName() const
 {
     return name;
 }
 
-std::string PlatformInfo::getVendor() const
+const std::string& PlatformInfo::getVendor() const
 {
     return vendor;
 }
 
-std::string PlatformInfo::getVersion() const
+const std::string& PlatformInfo::getVersion() const
 {
     return version;
 }
 
-std::string PlatformInfo::getExtensions() const
+const std::string& PlatformInfo::getExtensions() const
 {
     return extensions;
 }

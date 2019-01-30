@@ -1,9 +1,9 @@
 #pragma once
 
-#ifdef PLATFORM_VULKAN
+#ifdef KTT_PLATFORM_VULKAN
 
 #include <string>
-#include "vulkan/vulkan.h"
+#include <vulkan/vulkan.h>
 
 namespace ktt
 {
@@ -14,4 +14,4 @@ void checkVulkanError(const VkResult value, const std::string& message);
 
 } // namespace ktt
 
-#endif // PLATFORM_VULKAN
+#endif // KTT_PLATFORM_VULKAN

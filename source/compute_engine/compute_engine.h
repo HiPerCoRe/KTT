@@ -3,14 +3,14 @@
 #include <ostream>
 #include <string>
 #include <vector>
-#include "ktt_types.h"
-#include "api/device_info.h"
-#include "api/output_descriptor.h"
-#include "api/platform_info.h"
-#include "dto/kernel_result.h"
-#include "dto/kernel_runtime_data.h"
-#include "enum/global_size_type.h"
-#include "kernel_argument/kernel_argument.h"
+#include <api/device_info.h>
+#include <api/output_descriptor.h>
+#include <api/platform_info.h>
+#include <dto/kernel_result.h>
+#include <dto/kernel_runtime_data.h>
+#include <enum/global_size_type.h>
+#include <kernel_argument/kernel_argument.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -66,6 +66,13 @@ public:
     virtual std::vector<PlatformInfo> getPlatformInfo() const = 0;
     virtual std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const = 0;
     virtual DeviceInfo getCurrentDeviceInfo() const = 0;
+
+    // Kernel profiling methods
+    virtual EventId runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+        const QueueId queue) = 0;
+    virtual uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) = 0;
+    virtual KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) = 0;
+    virtual void setKernelProfilingCounters(const std::vector<std::string>& counterNames) = 0;
 };
 
 } // namespace ktt

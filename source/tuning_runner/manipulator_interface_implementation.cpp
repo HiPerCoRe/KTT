@@ -1,8 +1,8 @@
 #include <stdexcept>
 #include <utility>
-#include "manipulator_interface_implementation.h"
-#include "utility/ktt_utility.h"
-#include "utility/timer.h"
+#include <tuning_runner/manipulator_interface_implementation.h>
+#include <utility/ktt_utility.h>
+#include <utility/timer.h>
 
 namespace ktt
 {
@@ -10,7 +10,8 @@ namespace ktt
 ManipulatorInterfaceImplementation::ManipulatorInterfaceImplementation(ComputeEngine* computeEngine) :
     computeEngine(computeEngine),
     currentConfiguration(KernelConfiguration()),
-    currentResult("", currentConfiguration)
+    currentResult("", currentConfiguration),
+    kernelProfilingFlag(false)
 {}
 
 void ManipulatorInterfaceImplementation::runKernel(const KernelId id)
@@ -66,6 +67,60 @@ void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const
     EventId kernelEvent = computeEngine->runKernelAsync(kernelData, getArgumentPointers(kernelData.getArgumentIds()), queue);
     storeKernelEvent(queue, kernelEvent);
     currentResult.increaseOverhead(computeEngine->getKernelOverhead(kernelEvent));
+}
+
+void ManipulatorInterfaceImplementation::runKernelWithProfiling(const KernelId id)
+{
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
+    {
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+    runKernelWithProfiling(id, dataPointer->second.getGlobalSizeDimensionVector(), dataPointer->second.getLocalSizeDimensionVector());
+}
+
+void ManipulatorInterfaceImplementation::runKernelWithProfiling(const KernelId id, const DimensionVector& globalSize,
+    const DimensionVector& localSize)
+{
+    if (!kernelProfilingFlag)
+    {
+        throw std::runtime_error("Calling kernel profiling methods from tuning manipulator is not allowed when kernel profiling is disabled");
+    }
+
+    if (profiledKernels.find(id) == profiledKernels.end())
+    {
+        throw std::runtime_error(std::string("Kernel profiling for kernel with the following id is disabled: ") + std::to_string(id));
+    }
+
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
+    {
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+
+    KernelRuntimeData kernelData = dataPointer->second;
+    kernelData.setGlobalSize(globalSize);
+    kernelData.setLocalSize(localSize);
+
+    EventId kernelEvent = computeEngine->runKernelWithProfiling(kernelData, getArgumentPointers(kernelData.getArgumentIds()),
+        getDefaultDeviceQueue());
+    storeKernelProfilingEvent(id, kernelEvent);
+    currentResult.increaseOverhead(computeEngine->getKernelOverhead(kernelEvent));
+}
+
+uint64_t ManipulatorInterfaceImplementation::getRemainingKernelProfilingRuns(const KernelId id) const
+{
+    if (!kernelProfilingFlag)
+    {
+        throw std::runtime_error("Calling kernel profiling methods from tuning manipulator is not allowed when kernel profiling is disabled");
+    }
+
+    auto dataPointer = kernelData.find(id);
+    if (dataPointer == kernelData.end())
+    {
+        throw std::runtime_error(std::string("Kernel with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+    return computeEngine->getRemainingKernelProfilingRuns(dataPointer->second.getName(), dataPointer->second.getSource());
 }
 
 QueueId ManipulatorInterfaceImplementation::getDefaultDeviceQueue() const
@@ -386,6 +441,11 @@ void ManipulatorInterfaceImplementation::destroyArgumentBuffer(const ArgumentId 
     currentResult.increaseOverhead(timer.getElapsedTime());
 }
 
+void ManipulatorInterfaceImplementation::setKernelProfiling(const bool flag)
+{
+    kernelProfilingFlag = flag;
+}
+
 void ManipulatorInterfaceImplementation::addKernel(const KernelId id, const KernelRuntimeData& data)
 {
     kernelData.insert(std::make_pair(id, data));
@@ -448,11 +508,43 @@ void ManipulatorInterfaceImplementation::clearData()
     kernelData.clear();
     vectorArguments.clear();
     nonVectorArguments.clear();
+    kernelProfilingEvents.clear();
+    profiledKernels.clear();
+}
+
+void ManipulatorInterfaceImplementation::resetOverhead()
+{
+    currentResult.setOverhead(0);
+}
+
+void ManipulatorInterfaceImplementation::setProfiledKernels(const std::set<KernelId>& profiledKernels)
+{
+    this->profiledKernels = profiledKernels;
 }
 
 KernelResult ManipulatorInterfaceImplementation::getCurrentResult() const
 {
-    return currentResult;
+    KernelResult result = currentResult;
+
+    if (!kernelProfilingEvents.empty())
+    {
+        for (const auto& kernelEvents : kernelProfilingEvents)
+        {
+            KernelResult profilingResult = computeEngine->getKernelResultWithProfiling(kernelEvents.second[0], std::vector<OutputDescriptor>{});
+            if (kernelData.size() == 1)
+            {
+                result.setProfilingData(profilingResult.getProfilingData());
+            }
+            else
+            {
+                result.setCompositionKernelProfilingData(kernelEvents.first, profilingResult.getProfilingData());
+            }
+        }
+
+        kernelProfilingEvents.clear();
+    }
+
+    return result;
 }
 
 std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<ArgumentId>& argumentIds)
@@ -522,6 +614,19 @@ void ManipulatorInterfaceImplementation::storeKernelEvent(const QueueId queue, c
     else
     {
         eventPointer->second.insert(event);
+    }
+}
+
+void ManipulatorInterfaceImplementation::storeKernelProfilingEvent(const KernelId kernel, const EventId event) const
+{
+    auto eventPointer = kernelProfilingEvents.find(kernel);
+    if (eventPointer == kernelProfilingEvents.end())
+    {
+        kernelProfilingEvents.insert(std::make_pair(kernel, std::vector<EventId>{event}));
+    }
+    else
+    {
+        eventPointer->second.push_back(event);
     }
 }
 

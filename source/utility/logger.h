@@ -2,7 +2,7 @@
 
 #include <ostream>
 #include <string>
-#include "enum/logging_level.h"
+#include <enum/logging_level.h>
 
 namespace ktt
 {
@@ -16,6 +16,11 @@ public:
     void setLoggingTarget(std::ostream& outputTarget);
     void setLoggingTarget(const std::string& filePath);
     void log(const LoggingLevel level, const std::string& message) const;
+
+    static void logError(const std::string& message);
+    static void logWarning(const std::string& message);
+    static void logInfo(const std::string& message);
+    static void logDebug(const std::string& message);
 
     Logger(const Logger&) = delete;
     Logger(Logger&&) = delete;

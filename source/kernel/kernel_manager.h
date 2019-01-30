@@ -2,10 +2,10 @@
 
 #include <map>
 #include <vector>
-#include "kernel.h"
-#include "kernel_composition.h"
-#include "kernel_configuration.h"
-#include "enum/dimension_vector_type.h"
+#include <enum/dimension_vector_type.h>
+#include <kernel/kernel.h>
+#include <kernel/kernel_composition.h>
+#include <kernel/kernel_configuration.h>
 
 namespace ktt
 {
@@ -44,6 +44,7 @@ public:
     void setArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds);
     void setCompositionKernelArguments(const KernelId compositionId, const KernelId kernelId, const std::vector<ArgumentId>& argumentIds);
     void setTuningManipulatorFlag(const KernelId id, const bool flag);
+    void setCompositionKernelProfiling(const KernelId compositionId, const KernelId kernelId, const bool flag);
 
     // Getters
     const Kernel& getKernel(const KernelId id) const;

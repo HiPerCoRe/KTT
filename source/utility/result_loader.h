@@ -4,8 +4,8 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "dto/kernel_result.h"
-#include "enum/time_unit.h"
+#include <dto/kernel_result.h>
+#include <enum/time_unit.h>
 
 namespace ktt
 {

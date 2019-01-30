@@ -4,12 +4,12 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "cuda.h"
-#include "cuda_utility.h"
-#include "enum/argument_access_type.h"
-#include "enum/argument_data_type.h"
-#include "enum/argument_memory_location.h"
-#include "kernel_argument/kernel_argument.h"
+#include <cuda.h>
+#include <compute_engine/cuda/cuda_utility.h>
+#include <enum/argument_access_type.h>
+#include <enum/argument_data_type.h>
+#include <enum/argument_memory_location.h>
+#include <kernel_argument/kernel_argument.h>
 
 namespace ktt
 {

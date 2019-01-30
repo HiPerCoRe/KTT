@@ -1,4 +1,4 @@
-#include "device_info.h"
+#include <api/device_info.h>
 
 namespace ktt
 {
@@ -13,17 +13,17 @@ DeviceIndex DeviceInfo::getId() const
     return id;
 }
 
-std::string DeviceInfo::getName() const
+const std::string& DeviceInfo::getName() const
 {
     return name;
 }
 
-std::string DeviceInfo::getVendor() const
+const std::string& DeviceInfo::getVendor() const
 {
     return vendor;
 }
 
-std::string DeviceInfo::getExtensions() const
+const std::string& DeviceInfo::getExtensions() const
 {
     return extensions;
 }

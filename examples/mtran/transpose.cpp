@@ -4,12 +4,25 @@
 #include <vector>
 #include "tuner_api.h"
 
-#if defined(_MSC_VER)
+#define USE_CUDA 0
+#define USE_PROFILING 0
+
+#if USE_CUDA == 0
+  #if defined(_MSC_VER)
     #define KTT_KERNEL_FILE "../examples/mtran/mtran_kernel.cl"
     #define KTT_REFERENCE_KERNEL_FILE "../examples/mtran/mtran_reference_kernel.cl"
-#else
+  #else
     #define KTT_KERNEL_FILE "../../examples/mtran/mtran_kernel.cl"
     #define KTT_REFERENCE_KERNEL_FILE "../../examples/mtran/mtran_reference_kernel.cl"
+  #endif
+#else
+  #if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/mtran/mtran_kernel.cu"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/mtran/mtran_reference_kernel.cu"
+  #else
+    #define KTT_KERNEL_FILE "../../examples/mtran/mtran_kernel.cu"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/mtran/mtran_reference_kernel.cu"
+  #endif
 #endif
 
 int main(int argc, char **argv)
@@ -38,8 +51,13 @@ int main(int argc, char **argv)
     }
 
     // Declare kernel parameters
+#if USE_PROFILING == 0
     const int width = 8192;
     const int height = 8192;
+#else
+    const int width = 4096;
+    const int height = 4096;
+#endif
     const ktt::DimensionVector ndRangeDimensions(width, height);
     const ktt::DimensionVector ndRangeDimensionsReference(width/16, height/16);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
@@ -58,8 +76,16 @@ int main(int argc, char **argv)
     }
 
     // Create tuner
+#if USE_CUDA == 0
     ktt::Tuner tuner(platformIndex, deviceIndex);
     tuner.setGlobalSizeType(ktt::GlobalSizeType::CUDA);
+#else
+     ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+  #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+  #endif
+#endif
 
     // Create kernel and configure input/output
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "mtran", ndRangeDimensions, ktt::DimensionVector(1, 1));
@@ -73,9 +99,15 @@ int main(int argc, char **argv)
 
     // Create tuning space
     tuner.addParameter(kernelId, "LOCAL_MEM", { 0, 1 });
+#if USE_CUDA == 0
     tuner.addParameter(kernelId, "VECTOR_TYPE", { 1, 2, 4, 8 });
+#else
+    tuner.addParameter(kernelId, "VECTOR_TYPE", { 1, 2, 4 });
+#endif
     tuner.addParameter(kernelId, "CR", { 0, 1 });
+#if USE_CUDA == 0
     tuner.addParameter(kernelId, "PREFETCH", { 0, 1, 2 });
+#endif
     tuner.addParameter(kernelId, "PADD_LOCAL", { 0, 1 });
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 1, 2, 4, 8, 16, 32, 64 });
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
@@ -104,6 +136,9 @@ int main(int argc, char **argv)
     auto xGlobalModifier = [](const size_t size, const std::vector<size_t>& vector) {return size / vector.at(0) / vector.at(1);};
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, std::vector<std::string>{ "TILE_SIZE_X", "VECTOR_TYPE" }, xGlobalModifier);
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "TILE_SIZE_Y", ktt::ModifierAction::Divide);
+
+    auto wgSize = [](const std::vector<size_t>& v) {return v[0]*v[1] >= 32;};
+    tuner.addConstraint(kernelId, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, wgSize);
 
     // Assign reference and set error check
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{dstId});

@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <random>
-#include "searcher.h"
+#include <tuning_runner/searcher/searcher.h>
 
 namespace ktt
 {
@@ -30,12 +30,13 @@ public:
         std::shuffle(std::begin(this->configurationIndices), std::end(this->configurationIndices), engine);
     }
 
-    void calculateNextConfiguration(const double) override
+    void calculateNextConfiguration(const bool, const KernelConfiguration&, const double, const KernelProfilingData&,
+        const std::map<KernelId, KernelProfilingData>&) override
     {
         index++;
     }
 
-    KernelConfiguration getCurrentConfiguration() const override
+    KernelConfiguration getNextConfiguration() const override
     {
         size_t currentIndex = configurationIndices.at(index);
         return configurations.at(currentIndex);

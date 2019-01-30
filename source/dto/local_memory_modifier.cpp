@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include "local_memory_modifier.h"
+#include <dto/local_memory_modifier.h>
 
 namespace ktt
 {
@@ -26,7 +26,7 @@ ArgumentId LocalMemoryModifier::getArgument() const
     return argument;
 }
 
-std::vector<size_t> LocalMemoryModifier::getParameterValues() const
+const std::vector<size_t>& LocalMemoryModifier::getParameterValues() const
 {
     return parameterValues;
 }

@@ -4,12 +4,25 @@
 #include <vector>
 #include "tuner_api.h"
 
-#if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl"
+#define USE_CUDA 0
+#define USE_PROFILING 0
+
+#if USE_CUDA == 0
+    #if defined(_MSC_VER)
+        #define KTT_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl"
+        #define KTT_REFERENCE_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl"
+    #else
+        #define KTT_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl"
+        #define KTT_REFERENCE_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl"
+    #endif
 #else
-    #define KTT_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl"
+    #if defined(_MSC_VER)
+        #define KTT_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cu"
+        #define KTT_REFERENCE_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cu"
+    #else
+        #define KTT_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cu"
+        #define KTT_REFERENCE_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cu"
+    #endif
 #endif
 
 int main(int argc, char** argv)
@@ -39,7 +52,11 @@ int main(int argc, char** argv)
 
     // Declare kernel parameters
     const int gridSize = 256;
+#if USE_PROFILING == 0
     const int atoms = 4000;
+#else
+    const int atoms = 400; /* faster execution of slowly profiled kernel */
+#endif
     const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
     const ktt::DimensionVector workGroupDimensions;
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
@@ -71,7 +88,19 @@ int main(int argc, char** argv)
         atomInfo.at(i*4 + 3) = atomInfoW.at(i);
     }
 
-    ktt::Tuner tuner(platformIndex, deviceIndex);
+#if USE_CUDA == 0
+    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::OpenCL);
+    tuner.setCompilerOptions("-cl-fast-relaxed-math");
+#else
+    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+    tuner.setCompilerOptions("-use_fast_math");
+  #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+  #endif
+#endif
+    //tuner.setLoggingLevel(ktt::LoggingLevel::Debug);
 
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "directCoulombSum", ndRangeDimensions, workGroupDimensions);
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "directCoulombSumReference", ndRangeDimensions,
@@ -94,9 +123,17 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 4, 8, 16, 32});
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS", ktt::ModifierAction::Divide);
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0, 1, 2, 4, 8, 16, 32});
+#if USE_CUDA == 0
     tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
+#else
+    tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0}); // not implemented in CUDA
+#endif
     tuner.addParameter(kernelId, "USE_SOA", {0, 1});
+#if USE_CUDA == 0
     tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2 , 4, 8, 16});
+#else
+    tuner.addParameter(kernelId, "VECTOR_SIZE", {1}); // not implemented in CUDA
+#endif
 
     auto lt = [](const std::vector<size_t>& vector) {return vector.at(0) < vector.at(1);};
     tuner.addConstraint(kernelId, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"}, lt);
@@ -108,8 +145,11 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{aiId, aId, gsId, gridId});
 
+#if USE_PROFILING == 0
+    //TODO: this is temporal hack, there should be composition of zeroizing and coulomb kernel, otherwise, multiple profiling runs corrupt results
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{gridId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
+#endif
 
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);

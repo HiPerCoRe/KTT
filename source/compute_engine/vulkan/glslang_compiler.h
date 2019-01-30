@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
-#include "glslang/Public/ShaderLang.h"
-#include "Standalone/DirStackFileIncluder.h"
-#include "SPIRV/GlslangToSpv.h"
+#include <glslang/Public/ShaderLang.h>
+#include <Standalone/DirStackFileIncluder.h>
+#include <SPIRV/GlslangToSpv.h>
 
 namespace ktt
 {
@@ -37,6 +37,7 @@ public:
         EShMessages message = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules);
         const int defaultVersion = 100;
 
+        // Todo: add correct path to shader for includer
         DirStackFileIncluder includer;
         std::string path = "./";
         includer.pushExternalLocalDirectory(path);
@@ -78,8 +79,6 @@ public:
     void operator=(GlslangCompiler&&) = delete;
 
 private:
-    bool initialized;
-
     GlslangCompiler()
     {
         if (!glslang::InitializeProcess())
@@ -93,9 +92,9 @@ private:
         glslang::FinalizeProcess();
     }
 
-    static TBuiltInResource getDefaultResource()
+    static const TBuiltInResource& getDefaultResource()
     {
-        TBuiltInResource result =
+        static const TBuiltInResource result =
         {
             32,    // maxLights
             6,     // maxClipPlanes
@@ -198,7 +197,7 @@ private:
                 1, // generalVaryingIndexing
                 1, // generalSamplerIndexing
                 1, // generalVariableIndexing
-                1 // generalConstantMatrixVectorIndexing
+                1  // generalConstantMatrixVectorIndexing
             }
         };
 
