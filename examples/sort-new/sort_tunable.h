@@ -129,13 +129,6 @@ class TunableSort : public ktt::TuningManipulator {
         }
         runKernel(kernelIds[2], ndRangeDimensionsScan, workGroupDimensionsScan);
       }
-
-      if (!swap) {
-        getArgumentVector(keysInId, keysIn.data());
-        getArgumentVector(valuesInId, valuesIn.data());
-        updateArgumentVector(keysOutId, keysIn.data());
-        updateArgumentVector(valuesOutId, valuesIn.data());
-      }
     }
 
 void scanArrayRecursive(std::vector<uint> &outArray, std::vector<uint> &inArray, unsigned int numElements, int level, std::vector<std::vector<uint>> &blockSums)
