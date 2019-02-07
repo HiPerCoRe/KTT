@@ -54,7 +54,6 @@ int main(int argc, char** argv)
   std::vector<unsigned int> keysOut(size);
   std::vector<unsigned int> valuesIn(size);
   std::vector<unsigned int> valuesOut(size);
-  uint bytes = size * sizeof(uint);
 
   //srand((unsigned int)time(NULL));
   srand(123);
@@ -66,26 +65,25 @@ int main(int argc, char** argv)
   // Create tuner object for chosen platform and device
   ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
   tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-  ktt::DeviceInfo device = tuner.getCurrentDeviceInfo();
   tuner.setCompilerOptions("-G");
   tuner.setLoggingLevel(ktt::LoggingLevel::Debug); 
 
   // Declare kernels and their dimensions
   std::vector<ktt::KernelId> kernelIds(5);
   const ktt::DimensionVector ndRangeDimensions;
-  const ktt::DimensionVector ndRangeDimensions4(size/4, 1, 1);
-  const ktt::DimensionVector ndRangeDimensions2(size/2, 1, 1);
   const ktt::DimensionVector workGroupDimensions;
 
-  kernelIds[0] = tuner.addKernelFromFile(kernelFile, std::string("radixSortBlocks"), ndRangeDimensions4, workGroupDimensions);
-  kernelIds[1] = tuner.addKernelFromFile(kernelFile, std::string("findRadixOffsets"), ndRangeDimensions2, workGroupDimensions);
-  kernelIds[2] = tuner.addKernelFromFile(kernelFile, std::string("reorderData"), ndRangeDimensions2, workGroupDimensions);
+  kernelIds[0] = tuner.addKernelFromFile(kernelFile, std::string("radixSortBlocks"), ndRangeDimensions, workGroupDimensions);
+  kernelIds[1] = tuner.addKernelFromFile(kernelFile, std::string("findRadixOffsets"), ndRangeDimensions, workGroupDimensions);
+  kernelIds[2] = tuner.addKernelFromFile(kernelFile, std::string("reorderData"), ndRangeDimensions, workGroupDimensions);
   kernelIds[3] = tuner.addKernelFromFile(kernelFile, std::string("vectorAddUniform4"), ndRangeDimensions, workGroupDimensions);
   kernelIds[4] = tuner.addKernelFromFile(kernelFile, std::string("scan"), ndRangeDimensions, workGroupDimensions);
 
   // Add arguments for kernels
+  //all parameters with foo values (empty vectors or scalar 1) will be updated in tuning manipulator, as their value depends on tuning parameters
   ktt::ArgumentId nbitsId = tuner.addArgumentScalar(nbits);
   ktt::ArgumentId startBitId = tuner.addArgumentScalar(0);
+  ktt::ArgumentId sizeId = tuner.addArgumentScalar(size);
   
   ktt::ArgumentId keysOutId = tuner.addArgumentVector(keysOut, ktt::ArgumentAccessType::ReadWrite);
   ktt::ArgumentId valuesOutId = tuner.addArgumentVector(valuesOut, ktt::ArgumentAccessType::ReadWrite);
@@ -97,37 +95,39 @@ int main(int argc, char** argv)
   ktt::ArgumentId blockOffsetsId = tuner.addArgumentVector(std::vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
   ktt::ArgumentId scanBlocksSumId = tuner.addArgumentVector(std::vector<unsigned int*>(1), ktt::ArgumentAccessType::ReadWrite);
   
-  ktt::ArgumentId sizeId = tuner.addArgumentScalar(size);
-  ktt::ArgumentId sortBlockSizeId = tuner.addArgumentScalar(1);
-  ktt::ArgumentId scanBlockSizeId = tuner.addArgumentScalar(1);
-  ktt::ArgumentId sortNumBlocksId = tuner.addArgumentScalar(1); //will be updated
-  ktt::ArgumentId scanNumBlocksId = tuner.addArgumentScalar(1); //will be updated
+  ktt::ArgumentId scanNumBlocksId = tuner.addArgumentScalar(1);
   ktt::ArgumentId numElementsId = tuner.addArgumentScalar(1);
 
   ktt::ArgumentId scanOutDataId = tuner.addArgumentVector(std::vector<uint>(1), ktt::ArgumentAccessType::ReadWrite);
   ktt::ArgumentId scanInDataId = tuner.addArgumentVector(std::vector<uint>(1), ktt::ArgumentAccessType::ReadOnly);
   ktt::ArgumentId scanOneBlockSumId = tuner.addArgumentVector(std::vector<uint>(1), ktt::ArgumentAccessType::ReadWrite);
-  ktt::ArgumentId fullBlockId = tuner.addArgumentScalar(0); //will be updated
-  ktt::ArgumentId storeSumId = tuner.addArgumentScalar(0); //will be updated
-  ktt::ArgumentId vectorOutDataId = tuner.addArgumentVector(std::vector<uint>(1), ktt::ArgumentAccessType::ReadWrite);
-  ktt::ArgumentId vectorBlockSumId = tuner.addArgumentVector(std::vector<uint>(1), ktt::ArgumentAccessType::ReadOnly);
-  ktt::ArgumentId vectorNumElementsId = tuner.addArgumentScalar(1);
+  ktt::ArgumentId fullBlockId = tuner.addArgumentScalar(1);
+  ktt::ArgumentId storeSumId = tuner.addArgumentScalar(1);
 
   
-  ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, device, size, keysOutId, valuesOutId, keysInId, valuesInId, keysIn, valuesIn, sortNumBlocksId, sortBlockSizeId, scanNumBlocksId, scanBlockSizeId, countersId, counterSumsId, blockOffsetsId, scanBlocksSumId, startBitId, scanOutDataId, scanInDataId, scanOneBlockSumId, numElementsId, fullBlockId, storeSumId, vectorOutDataId, vectorBlockSumId, vectorNumElementsId));
+  ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, size, keysOutId, valuesOutId, keysInId, valuesInId, scanNumBlocksId, countersId, counterSumsId, blockOffsetsId, scanBlocksSumId, startBitId, scanOutDataId, scanInDataId, scanOneBlockSumId, numElementsId, fullBlockId, storeSumId));
+
+  //radixSortBlocks
   tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<size_t>{nbitsId, startBitId, keysOutId, valuesOutId, keysInId, valuesInId});
+
+  //findRadixOffsets
   tuner.setCompositionKernelArguments(compositionId, kernelIds[1], std::vector<size_t>{keysOutId, countersId, blockOffsetsId, startBitId, sizeId, scanNumBlocksId});
+
+  //reorderData
   tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<size_t>{startBitId, keysOutId, valuesOutId, keysInId, valuesInId, blockOffsetsId, counterSumsId, countersId, scanNumBlocksId});
+
+  //vectorAddUniform
   tuner.setCompositionKernelArguments(compositionId, kernelIds[3], std::vector<size_t>{scanOutDataId, scanOneBlockSumId, numElementsId});
+
+  //scan
   tuner.setCompositionKernelArguments(compositionId, kernelIds[4], std::vector<size_t>{scanOutDataId, scanInDataId, scanOneBlockSumId, numElementsId, fullBlockId, storeSumId});
 
-  // Parameter for the length of OpenCL vector data types used in the kernels
-  //tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
-  // Local size below 128 does not work correctly, not even with the benchmark code
   tuner.addParameter(compositionId, "SORT_BLOCK_SIZE", {32, 64, 128, 256, 512, 1024});
   tuner.addParameter(compositionId, "SCAN_BLOCK_SIZE", {32, 64, 128, 256, 512, 1024});
-  auto workGroupConstraint = [](const std::vector<size_t>& vector) {return vector.at(1) <= vector.at(0)*2;};
-  tuner.addConstraint(compositionId, workGroupConstraint, {"SORT_BLOCK_SIZE", "SCAN_BLOCK_SIZE"});
+  tuner.addParameter(compositionId, "SORT_VECTOR", {2,4,8});
+  tuner.addParameter(compositionId, "SCAN_VECTOR", {2,4,8});
+  auto workGroupConstraint = [](const std::vector<size_t>& vector) {return (float)vector.at(1)/vector.at(0) == (float)vector.at(2)/vector.at(3);};
+  tuner.addConstraint(compositionId, workGroupConstraint, {"SORT_BLOCK_SIZE", "SCAN_BLOCK_SIZE", "SORT_VECTOR", "SCAN_VECTOR"});
 
   tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.9);
   tuner.setReferenceClass(compositionId, std::make_unique<ReferenceSort>(valuesIn), std::vector<ktt::ArgumentId>{valuesOutId});
