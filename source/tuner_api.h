@@ -397,7 +397,7 @@ public:
       * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all configurations
       * are explored.
       * @param id Id of kernel for which the tuning will start.
-      * @return Vector of object containing information about computation using tested kernel configurations. See ComputationResult for more
+      * @return Vector of objects containing information about computation using tested kernel configurations. See ComputationResult for more
       * information.
       */
     std::vector<ComputationResult> tuneKernel(const KernelId id);
@@ -408,7 +408,7 @@ public:
       * configurations are explored or when specified stop condition is met.
       * @param id Id of kernel for which the tuning will start.
       * @param stopCondition Stop condition which decides whether to continue the tuning process. See StopCondition for more information.
-      * @return Vector of object containing information about computation using tested kernel configurations. See ComputationResult for more
+      * @return Vector of objects containing information about computation using tested kernel configurations. See ComputationResult for more
       * information.
       */
     std::vector<ComputationResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
@@ -422,7 +422,7 @@ public:
       * @param id Id of kernel for which the tuning begins.
       * @param filePath Path to CSV file with tuning parameters.
       * @param iterations Number of iterations performed, 0 = scan whole tuning space.
-      * @return Vector of object containing information about computation using tested kernel configurations. See ComputationResult for more
+      * @return Vector of objects containing information about computation using tested kernel configurations. See ComputationResult for more
       * information.
       */
     std::vector<ComputationResult> dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0);

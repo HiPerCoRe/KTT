@@ -625,6 +625,11 @@ DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
     return getOpenCLDeviceInfo(platformIndex, deviceIndex);
 }
 
+void OpenCLEngine::initializeKernelProfiling(const KernelRuntimeData&)
+{
+    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+}
+
 EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
 {
     throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");

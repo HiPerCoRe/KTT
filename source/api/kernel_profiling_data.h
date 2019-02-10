@@ -21,6 +21,12 @@ public:
       */
     KernelProfilingData();
 
+    /** @fn explicit KernelProfilingData(const uint64_t remainingProfilingRuns)
+      * Constructor which sets validity flag to false and initializes number of remaining kernel runs needed to gather valid profiling counters.
+      * @param remainingProfilingRuns Number of remaining kernel runs needed to gather valid profiling counters.
+      */
+    explicit KernelProfilingData(const uint64_t remainingProfilingRuns);
+
     /** @fn explicit KernelProfilingData(const std::vector<KernelProfilingCounter>& profilingCounters)
       * Constructor which sets validity flag to true and fills the structure with provided profiling counters.
       * @param profilingCounters Source vector for profiling counters.
@@ -46,6 +52,12 @@ public:
       */
     const KernelProfilingCounter& getCounter(const std::string& counterName) const;
 
+    /** @fn uint64_t getRemainingProfilingRuns() const
+      * Retrieves number of remaining kernel runs needed to gather valid profiling counters.
+      * @return Number of remaining kernel runs needed to gather valid profiling counters.
+      */
+    uint64_t getRemainingProfilingRuns() const;
+
     /** @fn const std::vector<KernelProfilingCounter>& getAllCounters() const
       * Retrieves vector of all profiling counters.
       * @return Vector of all profiling counters. See KernelProfilingCounter for more information.
@@ -60,6 +72,7 @@ public:
 
 private:
     std::vector<KernelProfilingCounter> profilingCounters;
+    uint64_t remainingProfilingRuns;
     bool validFlag;
 };
 

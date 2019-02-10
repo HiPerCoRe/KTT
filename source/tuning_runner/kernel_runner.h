@@ -63,11 +63,18 @@ private:
     bool kernelProfilingFlag;
 
     // Helper methods
-    KernelResult runKernelSimple(const Kernel& kernel, const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output);
-    KernelResult runKernelWithManipulator(const Kernel& kernel, TuningManipulator* manipulator, const KernelConfiguration& configuration,
+    KernelResult runKernelSimple(const Kernel& kernel, const KernelRunMode mode, const KernelConfiguration& configuration,
         const std::vector<OutputDescriptor>& output);
-    KernelResult runCompositionWithManipulator(const KernelComposition& composition, TuningManipulator* manipulator,
+    KernelResult runSimpleKernelProfiling(const Kernel& kernel, const KernelRunMode mode, const KernelRuntimeData& kernelData,
+        const std::vector<OutputDescriptor>& output);
+    KernelResult runKernelWithManipulator(const Kernel& kernel, const KernelRunMode mode, TuningManipulator* manipulator,
         const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output);
+    uint64_t runManipulatorKernelProfiling(const Kernel& kernel, const KernelRunMode mode, TuningManipulator* manipulator,
+        const KernelRuntimeData& kernelData, const std::vector<OutputDescriptor>& output);
+    KernelResult runCompositionWithManipulator(const KernelComposition& composition, const KernelRunMode mode, TuningManipulator* manipulator,
+        const KernelConfiguration& configuration, const std::vector<OutputDescriptor>& output);
+    uint64_t runCompositionProfiling(const KernelComposition& composition, const KernelRunMode mode, TuningManipulator* manipulator,
+        const std::vector<KernelRuntimeData>& compositionData, const std::vector<OutputDescriptor>& output);
     uint64_t launchManipulator(const KernelId kernelId, TuningManipulator* manipulator);
     uint64_t getRemainingKernelProfilingRunsForComposition(const KernelComposition& composition,
         const std::vector<KernelRuntimeData>& compositionData);

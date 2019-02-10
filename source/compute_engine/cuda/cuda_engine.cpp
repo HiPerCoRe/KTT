@@ -589,6 +589,15 @@ DeviceInfo CUDAEngine::getCurrentDeviceInfo() const
     return getCUDADeviceInfo(deviceIndex);
 }
 
+void CUDAEngine::initializeKernelProfiling(const KernelRuntimeData& kernelData)
+{
+    #ifdef KTT_PROFILING
+    initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING
+}
+
 EventId CUDAEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const QueueId queue)
 {
@@ -674,7 +683,7 @@ uint64_t CUDAEngine::getRemainingKernelProfilingRuns(const std::string& kernelNa
     #ifdef KTT_PROFILING
     if (kernelProfilingStates.find(std::make_pair(kernelName, kernelSource)) == kernelProfilingStates.end())
     {
-        initializeKernelProfiling(kernelName, kernelSource);
+        return 0;
     }
 
     return kernelProfilingStates.find(std::make_pair(kernelName, kernelSource))->second.getRemainingKernelRuns();

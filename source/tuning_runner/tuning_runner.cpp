@@ -210,8 +210,11 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const KernelRunMo
 
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(kernel);
     KernelResult result = kernelRunner->runKernel(id, mode, currentConfiguration, output);
-    configurationManager.calculateNextConfiguration(kernel, result.isValid(), currentConfiguration, result.getComputationDuration(),
-        result.getProfilingData(), result.getCompositionProfilingData());
+    if (!kernelRunner->getKernelProfiling() || result.getProfilingData().getRemainingProfilingRuns() == 0)
+    {
+        configurationManager.calculateNextConfiguration(kernel, result.isValid(), currentConfiguration, result.getComputationDuration(),
+            result.getProfilingData(), result.getCompositionProfilingData());
+    }
 
     if (kernel.hasTuningManipulator() || mode != KernelRunMode::OfflineTuning)
     {
@@ -244,8 +247,11 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const Kernel
 
     KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(composition);
     KernelResult result = kernelRunner->runComposition(id, mode, currentConfiguration, output);
-    configurationManager.calculateNextConfiguration(composition, result.isValid(), currentConfiguration, result.getComputationDuration(),
-        result.getProfilingData(), result.getCompositionProfilingData());
+    if (!kernelRunner->getKernelProfiling() || result.getProfilingData().getRemainingProfilingRuns() == 0)
+    {
+        configurationManager.calculateNextConfiguration(composition, result.isValid(), currentConfiguration, result.getComputationDuration(),
+            result.getProfilingData(), result.getCompositionProfilingData());
+    }
 
     kernelRunner->clearBuffers();
 

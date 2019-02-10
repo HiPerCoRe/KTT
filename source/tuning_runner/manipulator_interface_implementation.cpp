@@ -547,6 +547,18 @@ KernelResult ManipulatorInterfaceImplementation::getCurrentResult() const
     return result;
 }
 
+KernelResult ManipulatorInterfaceImplementation::getCurrentResult(const uint64_t remainingProfilingRuns) const
+{
+    if (remainingProfilingRuns == 0)
+    {
+        return getCurrentResult();
+    }
+
+    KernelResult result = currentResult;
+    result.setProfilingData(KernelProfilingData(remainingProfilingRuns));
+    return result;
+}
+
 std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<ArgumentId>& argumentIds)
 {
     std::vector<KernelArgument*> result;

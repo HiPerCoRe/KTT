@@ -81,6 +81,7 @@ public:
     DeviceInfo getCurrentDeviceInfo() const override;
 
     // Kernel profiling methods
+    void initializeKernelProfiling(const KernelRuntimeData& kernelData) override;
     EventId runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const QueueId queue) override;
     uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) override;

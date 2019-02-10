@@ -60,6 +60,7 @@ public:
     void uploadBuffers();
     void downloadBuffers(const std::vector<OutputDescriptor>& output) const;
     KernelResult getCurrentResult() const;
+    KernelResult getCurrentResult(const uint64_t remainingProfilingRuns) const;
     void synchronizeDeviceInternal();
     void clearData();
     void resetOverhead();
@@ -70,9 +71,9 @@ private:
     ComputeEngine* computeEngine;
     KernelConfiguration currentConfiguration;
     KernelResult currentResult;
-    std::map<size_t, KernelRuntimeData> kernelData;
-    std::map<size_t, KernelArgument*> vectorArguments;
-    std::map<size_t, KernelArgument> nonVectorArguments;
+    std::map<KernelId, KernelRuntimeData> kernelData;
+    std::map<ArgumentId, KernelArgument*> vectorArguments;
+    std::map<ArgumentId, KernelArgument> nonVectorArguments;
     mutable std::map<QueueId, std::set<EventId>> enqueuedKernelEvents;
     mutable std::map<QueueId, std::set<std::pair<EventId, bool>>> enqueuedBufferEvents;
     mutable std::map<KernelId, std::vector<EventId>> kernelProfilingEvents;
