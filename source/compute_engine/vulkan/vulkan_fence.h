@@ -11,11 +11,13 @@ class VulkanFence
 public:
     VulkanFence() :
         device(nullptr),
-        fence(nullptr)
+        fence(nullptr),
+        id(0)
     {}
 
-    explicit VulkanFence(VkDevice device) :
-        device(device)
+    explicit VulkanFence(VkDevice device, const EventId id) :
+        device(device),
+        id(id)
     {
         const VkFenceCreateInfo fenceCreateInfo =
         {
@@ -35,6 +37,11 @@ public:
         }
     }
 
+    void wait()
+    {
+        checkVulkanError(vkWaitForFences(device, 1, &fence, VK_TRUE, fenceTimeout), "vkWaitForFences");
+    }
+
     VkDevice getDevice() const
     {
         return device;
@@ -45,9 +52,16 @@ public:
         return fence;
     }
 
+    EventId getId() const
+    {
+        return id;
+    }
+
 private:
     VkDevice device;
     VkFence fence;
+    EventId id;
+    static const uint64_t fenceTimeout = 3600'000'000'000;
 };
 
 } // namespace ktt

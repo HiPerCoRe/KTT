@@ -17,6 +17,7 @@
 #include <compute_engine/vulkan/vulkan_device.h>
 #include <compute_engine/vulkan/vulkan_fence.h>
 #include <compute_engine/vulkan/vulkan_instance.h>
+#include <compute_engine/vulkan/vulkan_pipeline_cache_entry.h>
 #include <compute_engine/vulkan/vulkan_physical_device.h>
 #include <compute_engine/vulkan/vulkan_queue.h>
 #include <compute_engine/vulkan/vulkan_semaphore.h>
@@ -102,6 +103,14 @@ private:
     std::unique_ptr<VulkanDevice> device;
     std::unique_ptr<VulkanCommandPool> commandPool;
     std::vector<VulkanQueue> queues;
+    std::set<std::unique_ptr<VulkanBuffer>> buffers;
+    std::set<std::unique_ptr<VulkanBuffer>> persistentBuffers;
+    std::map<std::pair<std::string, std::string>, std::unique_ptr<VulkanPipelineCacheEntry>> pipelineCache;
+    mutable std::map<EventId, std::unique_ptr<VulkanFence>> kernelFences;
+    mutable std::map<EventId, std::unique_ptr<VulkanFence>> bufferFences;
+
+    EventId enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+        const QueueId queue, const uint64_t kernelLaunchOverhead);
 };
 
 } // namespace ktt

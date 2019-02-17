@@ -26,7 +26,7 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
     validationLayers.emplace_back("VK_LAYER_LUNARG_standard_validation");
     #endif
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan instance");
+    Logger::logDebug("Initializing Vulkan instance");
     instance = std::make_unique<VulkanInstance>("KTT", instanceExtensions, validationLayers);
 
     std::vector<VulkanPhysicalDevice> devices = instance->getPhysicalDevices();
@@ -35,11 +35,11 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
         throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
     }
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan device and queues");
+    Logger::logDebug("Initializing Vulkan device and queues");
     device = std::make_unique<VulkanDevice>(devices.at(deviceIndex), queueCount, VK_QUEUE_COMPUTE_BIT, std::vector<const char*>{}, validationLayers);
     queues = device->getQueues();
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Initializing Vulkan command pool");
+    Logger::logDebug("Initializing Vulkan command pool");
     commandPool = std::make_unique<VulkanCommandPool>(device->getDevice(), device->getQueueFamilyIndex());
 }
 
@@ -53,7 +53,44 @@ KernelResult VulkanEngine::runKernel(const KernelRuntimeData& kernelData, const 
 
 EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    Timer overheadTimer;
+    overheadTimer.start();
+
+    VulkanComputePipeline* pipeline;
+    std::unique_ptr<VulkanComputePipeline> pipelineUnique;
+    std::unique_ptr<VulkanDescriptorSetLayout> layout;
+    std::unique_ptr<VulkanShaderModule> shader;
+
+    if (kernelCacheFlag)
+    {
+        if (pipelineCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == pipelineCache.end())
+        {
+            if (pipelineCache.size() >= kernelCacheCapacity)
+            {
+                clearKernelCache();
+            }
+            auto cacheLayout = std::make_unique<VulkanDescriptorSetLayout>(device->getDevice(), VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1);
+            auto cacheShader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getSource());
+            auto cachePipeline = std::make_unique<VulkanComputePipeline>(device->getDevice(), cacheLayout->getDescriptorSetLayout(),
+                cacheShader->getShaderModule(), kernelData.getName());
+            auto cacheEntry = std::make_unique<VulkanPipelineCacheEntry>(std::move(cachePipeline), std::move(cacheLayout), std::move(cacheShader));
+            pipelineCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::move(cacheEntry)));
+        }
+        auto cachePointer = pipelineCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
+        pipeline = cachePointer->second->pipeline.get();
+    }
+    else
+    {
+        layout = std::make_unique<VulkanDescriptorSetLayout>(device->getDevice(), VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1);
+        shader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getSource());
+        pipelineUnique = std::make_unique<VulkanComputePipeline>(device->getDevice(), layout->getDescriptorSetLayout(), shader->getShaderModule(),
+            kernelData.getName());
+        pipeline = pipelineUnique.get();
+    }
+
+    overheadTimer.stop();
+
+    return enqueuePipeline(*pipeline, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, overheadTimer.getElapsedTime());
 }
 
 KernelResult VulkanEngine::getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
@@ -97,7 +134,7 @@ void VulkanEngine::setKernelCacheCapacity(const size_t capacity)
 
 void VulkanEngine::clearKernelCache()
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    pipelineCache.clear();
 }
 
 QueueId VulkanEngine::getDefaultQueue() const
@@ -134,7 +171,8 @@ void VulkanEngine::synchronizeDevice()
 
 void VulkanEngine::clearEvents()
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    kernelFences.clear();
+    bufferFences.clear();
 }
 
 uint64_t VulkanEngine::uploadArgument(KernelArgument& kernelArgument)
@@ -213,17 +251,42 @@ void VulkanEngine::setPersistentBufferUsage(const bool flag)
 
 void VulkanEngine::clearBuffer(const ArgumentId id)
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    auto iterator = buffers.cbegin();
+
+    while (iterator != buffers.cend())
+    {
+        if (iterator->get()->getKernelArgumentId() == id)
+        {
+            buffers.erase(iterator);
+            return;
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
 }
 
 void VulkanEngine::clearBuffers()
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    buffers.clear();
 }
 
 void VulkanEngine::clearBuffers(const ArgumentAccessType accessType)
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    auto iterator = buffers.cbegin();
+
+    while (iterator != buffers.cend())
+    {
+        if (iterator->get()->getAccessType() == accessType)
+        {
+            iterator = buffers.erase(iterator);
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
 }
 
 void VulkanEngine::printComputeAPIInfo(std::ostream& outputTarget) const
@@ -299,6 +362,27 @@ KernelResult VulkanEngine::getKernelResultWithProfiling(const EventId, const std
 void VulkanEngine::setKernelProfilingCounters(const std::vector<std::string>&)
 {
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
+}
+
+EventId VulkanEngine::enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+    const QueueId queue, const uint64_t /*kernelLaunchOverhead*/)
+{
+    if (queue >= queues.size())
+    {
+        throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
+    }
+
+    EventId eventId = nextEventId;
+    auto kernelFence = std::make_unique<VulkanFence>(device->getDevice(), eventId);
+    ++nextEventId;
+
+    Logger::logDebug("Launching kernel " + pipeline.getShaderName() + ", event id: " + std::to_string(eventId));
+    auto command = std::make_unique<VulkanCommandBuffer>(device->getDevice(), commandPool->getCommandPool());
+    //pipeline.recordDispatchShaderCommand(command->getCommandBuffer(), /*todo*/, localSize);
+    queues[queue].submitSingleCommand(command->getCommandBuffer(), kernelFence->getFence());
+
+    kernelFences.insert(std::make_pair(eventId, std::move(kernelFence)));
+    return eventId;
 }
 
 } // namespace ktt

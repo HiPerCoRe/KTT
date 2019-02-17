@@ -14,10 +14,6 @@ public:
         descriptorSetLayout(nullptr)
     {}
 
-    explicit VulkanDescriptorSetLayout(VkDevice device) :
-        VulkanDescriptorSetLayout(device, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1)
-    {}
-
     explicit VulkanDescriptorSetLayout(VkDevice device, const VkDescriptorType descriptorType, const uint32_t descriptorCount) :
         device(device),
         descriptorType(descriptorType),

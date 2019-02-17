@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 #include <compute_engine/vulkan/vulkan_physical_device.h>
 #include <compute_engine/vulkan/vulkan_utility.h>
+#include <kernel_argument/kernel_argument.h>
 
 namespace ktt
 {
@@ -54,6 +55,15 @@ public:
         {
             vkFreeMemory(device, bufferMemory, nullptr);
         }
+    }
+
+    void initializeKernelArgumentData(const KernelArgument& argument)
+    {
+        kernelArgumentId = argument.getId();
+        elementSize = argument.getElementSizeInBytes();
+        dataType = argument.getDataType();
+        memoryLocation = argument.getMemoryLocation();
+        accessType = argument.getAccessType();
     }
 
     VkMemoryRequirements getMemoryRequirements() const
@@ -135,6 +145,31 @@ public:
         return usageFlags;
     }
 
+    size_t getElementSize() const
+    {
+        return elementSize;
+    }
+
+    ArgumentId getKernelArgumentId() const
+    {
+        return kernelArgumentId;
+    }
+
+    ArgumentDataType getDataType() const
+    {
+        return dataType;
+    }
+
+    ArgumentMemoryLocation getMemoryLocation() const
+    {
+        return memoryLocation;
+    }
+
+    ArgumentAccessType getAccessType() const
+    {
+        return accessType;
+    }
+
 private:
     VkDevice device;
     const VulkanPhysicalDevice* physicalDevice;
@@ -142,6 +177,11 @@ private:
     VkDeviceMemory bufferMemory;
     VkDeviceSize bufferSize;
     VkBufferUsageFlags usageFlags;
+    size_t elementSize;
+    ArgumentId kernelArgumentId;
+    ArgumentDataType dataType;
+    ArgumentMemoryLocation memoryLocation;
+    ArgumentAccessType accessType;
 };
 
 } // namespace ktt
