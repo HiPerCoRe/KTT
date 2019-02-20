@@ -26,7 +26,7 @@ int main(int argc, char** argv)
   size_t platformIndex = 0;
   size_t deviceIndex = 0;
   std::string kernelFile = KTT_KERNEL_FILE;
-  int problemSize = 1; // In MiB
+  int problemSize = 32; // In MiB
 
   if (argc >= 2)
   {
@@ -65,8 +65,8 @@ int main(int argc, char** argv)
   // Create tuner object for chosen platform and device
   ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
   tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-  tuner.setCompilerOptions("-G");
-  tuner.setLoggingLevel(ktt::LoggingLevel::Debug); 
+  //tuner.setCompilerOptions("-G");
+  //tuner.setLoggingLevel(ktt::LoggingLevel::Debug); 
 
   // Declare kernels and their dimensions
   std::vector<ktt::KernelId> kernelIds(5);
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
   tuner.addParameter(compositionId, "SORT_VECTOR", {2,4,8});
   tuner.addParameter(compositionId, "SCAN_VECTOR", {2,4,8});
   auto workGroupConstraint = [](const std::vector<size_t>& vector) {return (float)vector.at(1)/vector.at(0) == (float)vector.at(2)/vector.at(3);};
-  tuner.addConstraint(compositionId, workGroupConstraint, {"SORT_BLOCK_SIZE", "SCAN_BLOCK_SIZE", "SORT_VECTOR", "SCAN_VECTOR"});
+  tuner.addConstraint(compositionId, {"SORT_BLOCK_SIZE", "SCAN_BLOCK_SIZE", "SORT_VECTOR", "SCAN_VECTOR"}, workGroupConstraint);
 
   tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.9);
   tuner.setReferenceClass(compositionId, std::make_unique<ReferenceSort>(valuesIn), std::vector<ktt::ArgumentId>{valuesOutId});
