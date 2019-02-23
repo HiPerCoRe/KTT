@@ -12,21 +12,17 @@ namespace ktt
 class VulkanBuffer
 {
 public:
-    VulkanBuffer() :
-        device(nullptr),
-        physicalDevice(nullptr),
-        buffer(nullptr),
-        bufferMemory(nullptr),
-        bufferSize(0),
-        usageFlags(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
-    {}
-
-    explicit VulkanBuffer(VkDevice device, const VulkanPhysicalDevice& physicalDevice, const VkDeviceSize bufferSize,
+    explicit VulkanBuffer(KernelArgument& kernelArgument, VkDevice device, const VulkanPhysicalDevice& physicalDevice,
         const VkBufferUsageFlags usageFlags) :
+        kernelArgumentId(kernelArgument.getId()),
+        bufferSize(static_cast<VkDeviceSize>(kernelArgument.getDataSizeInBytes())),
+        elementSize(kernelArgument.getElementSizeInBytes()),
+        dataType(kernelArgument.getDataType()),
+        memoryLocation(kernelArgument.getMemoryLocation()),
+        accessType(kernelArgument.getAccessType()),
         device(device),
         physicalDevice(&physicalDevice),
         bufferMemory(nullptr),
-        bufferSize(bufferSize),
         usageFlags(usageFlags)
     {
         const VkBufferCreateInfo bufferCreateInfo =
@@ -46,24 +42,12 @@ public:
 
     ~VulkanBuffer()
     {
-        if (buffer != nullptr)
-        {
-            vkDestroyBuffer(device, buffer, nullptr);
-        }
-        
+        vkDestroyBuffer(device, buffer, nullptr);
+
         if (bufferMemory != nullptr)
         {
             vkFreeMemory(device, bufferMemory, nullptr);
         }
-    }
-
-    void initializeKernelArgumentData(const KernelArgument& argument)
-    {
-        kernelArgumentId = argument.getId();
-        elementSize = argument.getElementSizeInBytes();
-        dataType = argument.getDataType();
-        memoryLocation = argument.getMemoryLocation();
-        accessType = argument.getAccessType();
     }
 
     VkMemoryRequirements getMemoryRequirements() const

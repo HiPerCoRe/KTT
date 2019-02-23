@@ -9,15 +9,8 @@ namespace ktt
 class VulkanFence
 {
 public:
-    VulkanFence() :
-        device(nullptr),
-        fence(nullptr),
-        id(0)
-    {}
-
-    explicit VulkanFence(VkDevice device, const EventId id) :
-        device(device),
-        id(id)
+    explicit VulkanFence(VkDevice device) :
+        device(device)
     {
         const VkFenceCreateInfo fenceCreateInfo =
         {
@@ -31,10 +24,7 @@ public:
 
     ~VulkanFence()
     {
-        if (fence != nullptr)
-        {
-            vkDestroyFence(device, fence, nullptr);
-        }
+        vkDestroyFence(device, fence, nullptr);
     }
 
     void wait()
@@ -52,16 +42,10 @@ public:
         return fence;
     }
 
-    EventId getId() const
-    {
-        return id;
-    }
-
 private:
     VkDevice device;
     VkFence fence;
-    EventId id;
-    static const uint64_t fenceTimeout = 3600'000'000'000;
+    static const uint64_t fenceTimeout = 3600'000'000'000; // one hour
 };
 
 } // namespace ktt

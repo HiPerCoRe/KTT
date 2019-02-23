@@ -9,12 +9,6 @@ namespace ktt
 class VulkanCommandBuffer
 {
 public:
-    VulkanCommandBuffer() :
-        device(nullptr),
-        commandPool(nullptr),
-        commandBufferLevel(VK_COMMAND_BUFFER_LEVEL_PRIMARY)
-    {}
-
     explicit VulkanCommandBuffer(VkDevice device, VkCommandPool commandPool) :
         VulkanCommandBuffer(device, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
     {}
@@ -38,10 +32,7 @@ public:
 
     ~VulkanCommandBuffer()
     {
-        if (commandPool != nullptr)
-        {
-            vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
-        }
+        vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
     }
 
     VkDevice getDevice() const

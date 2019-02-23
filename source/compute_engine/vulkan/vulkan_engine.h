@@ -15,7 +15,7 @@
 #include <compute_engine/vulkan/vulkan_descriptor_set.h>
 #include <compute_engine/vulkan/vulkan_descriptor_set_layout.h>
 #include <compute_engine/vulkan/vulkan_device.h>
-#include <compute_engine/vulkan/vulkan_fence.h>
+#include <compute_engine/vulkan/vulkan_event.h>
 #include <compute_engine/vulkan/vulkan_instance.h>
 #include <compute_engine/vulkan/vulkan_pipeline_cache_entry.h>
 #include <compute_engine/vulkan/vulkan_physical_device.h>
@@ -106,11 +106,14 @@ private:
     std::set<std::unique_ptr<VulkanBuffer>> buffers;
     std::set<std::unique_ptr<VulkanBuffer>> persistentBuffers;
     std::map<std::pair<std::string, std::string>, std::unique_ptr<VulkanPipelineCacheEntry>> pipelineCache;
-    mutable std::map<EventId, std::unique_ptr<VulkanFence>> kernelFences;
-    mutable std::map<EventId, std::unique_ptr<VulkanFence>> bufferFences;
+    mutable std::map<EventId, std::unique_ptr<VulkanEvent>> kernelEvents;
+    mutable std::map<EventId, std::unique_ptr<VulkanEvent>> bufferEvents;
+    std::map<EventId, std::unique_ptr<VulkanCommandBuffer>> eventCommands;
 
     EventId enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const QueueId queue, const uint64_t kernelLaunchOverhead);
+    VulkanBuffer* findBuffer(const ArgumentId id) const;
+    VkBuffer loadBufferFromCache(const ArgumentId id) const;
 };
 
 } // namespace ktt

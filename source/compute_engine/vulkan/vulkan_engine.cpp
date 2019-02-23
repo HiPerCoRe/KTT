@@ -1,5 +1,6 @@
 #ifdef KTT_PLATFORM_VULKAN
 
+#include <limits>
 #include <compute_engine/vulkan/vulkan_engine.h>
 #include <utility/logger.h>
 #include <utility/timer.h>
@@ -171,8 +172,9 @@ void VulkanEngine::synchronizeDevice()
 
 void VulkanEngine::clearEvents()
 {
-    kernelFences.clear();
-    bufferFences.clear();
+    kernelEvents.clear();
+    bufferEvents.clear();
+    eventCommands.clear();
 }
 
 uint64_t VulkanEngine::uploadArgument(KernelArgument& kernelArgument)
@@ -188,7 +190,62 @@ uint64_t VulkanEngine::uploadArgument(KernelArgument& kernelArgument)
 
 EventId VulkanEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const QueueId queue)
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+    {
+        throw std::runtime_error("Host zero-copy arguments are not supported yet for Vulkan backend");
+    }
+
+    if (queue >= queues.size())
+    {
+        throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
+    }
+
+    if (findBuffer(kernelArgument.getId()) != nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id already exists: ") + std::to_string(kernelArgument.getId()));
+    }
+
+    if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
+    {
+        return 0;
+    }
+
+    EventId eventId = nextEventId;
+    Logger::logDebug("Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: " + std::to_string(eventId));
+
+    VkBufferUsageFlags hostUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::Host)
+    {
+        hostUsage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        auto bufferEvent = std::make_unique<VulkanEvent>(device->getDevice(), eventId, false);
+        bufferEvents.insert(std::make_pair(eventId, std::move(bufferEvent)));
+    }
+
+    auto hostBuffer = std::make_unique<VulkanBuffer>(kernelArgument, device->getDevice(), device->getPhysicalDevice(),
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    hostBuffer->allocateMemory(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    hostBuffer->uploadData(kernelArgument.getData(), kernelArgument.getDataSizeInBytes());
+
+    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::Device)
+    {
+        auto deviceBuffer = std::make_unique<VulkanBuffer>(kernelArgument, device->getDevice(), device->getPhysicalDevice(),
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        deviceBuffer->allocateMemory(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        auto bufferEvent = std::make_unique<VulkanEvent>(device->getDevice(), eventId, true);
+        auto commandBuffer = std::make_unique<VulkanCommandBuffer>(device->getDevice(), commandPool->getCommandPool());
+        deviceBuffer->recordUploadDataCommand(commandBuffer->getCommandBuffer(), hostBuffer->getBuffer(), hostBuffer->getBufferSize());
+        queues[queue].submitSingleCommand(commandBuffer->getCommandBuffer());
+
+        bufferEvents.insert(std::make_pair(eventId, std::move(bufferEvent)));
+        eventCommands.insert(std::make_pair(eventId, std::move(commandBuffer)));
+        buffers.insert(std::move(deviceBuffer));
+    }
+
+    // todo: delete this buffer when upload to device buffer is done
+    buffers.insert(std::move(hostBuffer)); // host buffer needs to be kept alive even when device buffer is used because data is being copied from it
+    ++nextEventId;
+    return eventId;
 }
 
 uint64_t VulkanEngine::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes)
@@ -365,7 +422,7 @@ void VulkanEngine::setKernelProfilingCounters(const std::vector<std::string>&)
 }
 
 EventId VulkanEngine::enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-    const QueueId queue, const uint64_t /*kernelLaunchOverhead*/)
+    const QueueId queue, const uint64_t kernelLaunchOverhead)
 {
     if (queue >= queues.size())
     {
@@ -373,16 +430,52 @@ EventId VulkanEngine::enqueuePipeline(VulkanComputePipeline& pipeline, const std
     }
 
     EventId eventId = nextEventId;
-    auto kernelFence = std::make_unique<VulkanFence>(device->getDevice(), eventId);
+    auto kernelEvent = std::make_unique<VulkanEvent>(device->getDevice(), eventId, pipeline.getShaderName(), kernelLaunchOverhead);
     ++nextEventId;
 
     Logger::logDebug("Launching kernel " + pipeline.getShaderName() + ", event id: " + std::to_string(eventId));
     auto command = std::make_unique<VulkanCommandBuffer>(device->getDevice(), commandPool->getCommandPool());
     //pipeline.recordDispatchShaderCommand(command->getCommandBuffer(), /*todo*/, localSize);
-    queues[queue].submitSingleCommand(command->getCommandBuffer(), kernelFence->getFence());
+    queues[queue].submitSingleCommand(command->getCommandBuffer(), kernelEvent->getFence().getFence());
 
-    kernelFences.insert(std::make_pair(eventId, std::move(kernelFence)));
+    kernelEvents.insert(std::make_pair(eventId, std::move(kernelEvent)));
     return eventId;
+}
+
+VulkanBuffer* VulkanEngine::findBuffer(const ArgumentId id) const
+{
+    if (persistentBufferFlag)
+    {
+        for (const auto& buffer : persistentBuffers)
+        {
+            if (buffer->getKernelArgumentId() == id)
+            {
+                return buffer.get();
+            }
+        }
+    }
+
+    for (const auto& buffer : buffers)
+    {
+        if (buffer->getKernelArgumentId() == id)
+        {
+            return buffer.get();
+        }
+    }
+
+    return nullptr;
+}
+
+VkBuffer VulkanEngine::loadBufferFromCache(const ArgumentId id) const
+{
+    VulkanBuffer* buffer = findBuffer(id);
+
+    if (buffer != nullptr)
+    {
+        return buffer->getBuffer();
+    }
+
+    return nullptr;
 }
 
 } // namespace ktt
