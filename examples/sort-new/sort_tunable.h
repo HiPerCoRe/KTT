@@ -67,7 +67,7 @@ class TunableSort : public ktt::TuningManipulator {
       int scanVectorSize = (int)getParameterValue("SCAN_VECTOR", parameterValues);
       const ktt::DimensionVector workGroupDimensionsScan(scanBlockSize, 1, 1);
       const ktt::DimensionVector ndRangeDimensionsScan(size/scanVectorSize, 1, 1);
-      uint scanNumBlocks = ndRangeDimensionsScan.getSizeX() / scanBlockSize;
+      uint scanNumBlocks = static_cast<uint>(ndRangeDimensionsScan.getSizeX() / scanBlockSize);
       updateArgumentScalar(scanNumBlocksId, &scanNumBlocks);
 
       uint countersSize = 16*scanNumBlocks; 
