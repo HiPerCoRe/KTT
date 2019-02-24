@@ -31,10 +31,10 @@ int main(int argc, char** argv)
 
     // Declare kernel parameters and data variables.
     const size_t numberOfElements = 1024 * 1024;
-    // Dimensions of ND-range and work-group are specified with KTT data structure DimensionVector. Only single dimension is utilized in this
-    // tutorial. In general, DimensionVector supports up to three dimensions.
-    const ktt::DimensionVector ndRangeDimensions(numberOfElements);
+    // Work-group count and dimensions are specified with KTT data structure DimensionVector. Only single dimension is utilized in this tutorial.
+    // In general, DimensionVector supports up to three dimensions.
     const ktt::DimensionVector workGroupDimensions(256);
+    const ktt::DimensionVector workGroupCount(numberOfElements / workGroupDimensions.getSizeX());
     std::vector<float> a(numberOfElements);
     std::vector<float> b(numberOfElements);
     std::vector<float> result(numberOfElements, 0.0f);
@@ -49,9 +49,9 @@ int main(int argc, char** argv)
     // Create new tuner for specified platform and device, tuner uses Vulkan as compute API.
     ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::Vulkan);
 
-    // Add new kernel to tuner, specify path to kernel source, kernel function name, ND-range dimensions and work-group dimensions. KTT returns
-    // handle to the newly added kernel, which can be used to reference this kernel in other API methods.
-    ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "main", ndRangeDimensions, workGroupDimensions);
+    // Add new kernel to tuner, specify path to kernel source, kernel function name, work-group count and dimensions. KTT returns handle to the newly
+    // added kernel, which can be used to reference this kernel in other API methods.
+    ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "main", workGroupCount, workGroupDimensions);
 
     // Add new kernel arguments to tuner, argument data is copied from std::vector containers. Specify whether the arguments are used as input
     // or output. KTT returns handle to the newly added arguemnts, which can be used to reference these arguments in other API methods. 
@@ -59,8 +59,7 @@ int main(int argc, char** argv)
     ktt::ArgumentId bId = tuner.addArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId resultId = tuner.addArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
 
-    // Set arguments for the added kernel by providing their ids. The order of ids needs to match the order of arguments inside Vulkan kernel
-    // function.
+    // Set arguments for the added kernel by providing their ids. The order of ids needs to match the order of bindings inside Vulkan shader.
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aId, bId, resultId});
 
     // Run the specified kernel. Second argument is related to kernel tuning and will be described in further tutorials, here it remains empty. Third

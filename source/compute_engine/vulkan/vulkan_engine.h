@@ -108,10 +108,12 @@ private:
     std::map<std::pair<std::string, std::string>, std::unique_ptr<VulkanPipelineCacheEntry>> pipelineCache;
     mutable std::map<EventId, std::unique_ptr<VulkanEvent>> kernelEvents;
     mutable std::map<EventId, std::unique_ptr<VulkanEvent>> bufferEvents;
-    std::map<EventId, std::unique_ptr<VulkanCommandBuffer>> eventCommands;
+    mutable std::map<EventId, std::unique_ptr<VulkanCommandBuffer>> eventCommands;
+    mutable std::map<EventId, std::unique_ptr<VulkanBuffer>> stagingBuffers;
 
     EventId enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const QueueId queue, const uint64_t kernelLaunchOverhead);
+    KernelResult createKernelResult(const EventId id) const;
     VulkanBuffer* findBuffer(const ArgumentId id) const;
     VkBuffer loadBufferFromCache(const ArgumentId id) const;
 };

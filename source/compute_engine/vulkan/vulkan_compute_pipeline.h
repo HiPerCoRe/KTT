@@ -90,7 +90,7 @@ public:
         return shaderName;
     }
 
-    void recordDispatchShaderCommand(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, const std::vector<size_t>& localSize)
+    void recordDispatchShaderCommand(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, const std::vector<size_t>& globalSize)
     {
         const VkCommandBufferBeginInfo commandBufferBeginInfo =
         {
@@ -104,7 +104,8 @@ public:
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
-        vkCmdDispatch(commandBuffer, static_cast<uint32_t>(localSize[0]), static_cast<uint32_t>(localSize[1]), static_cast<uint32_t>(localSize[2]));
+        vkCmdDispatch(commandBuffer, static_cast<uint32_t>(globalSize[0]), static_cast<uint32_t>(globalSize[1]),
+            static_cast<uint32_t>(globalSize[2]));
 
         checkVulkanError(vkEndCommandBuffer(commandBuffer), "vkEndCommandBuffer");
     }

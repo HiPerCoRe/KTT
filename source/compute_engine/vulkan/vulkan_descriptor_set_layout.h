@@ -14,27 +14,28 @@ public:
         descriptorSetLayout(nullptr)
     {}
 
-    explicit VulkanDescriptorSetLayout(VkDevice device, const VkDescriptorType descriptorType, const uint32_t descriptorCount) :
+    explicit VulkanDescriptorSetLayout(VkDevice device, const VkDescriptorType descriptorType, const uint32_t bindingCount) :
         device(device),
         descriptorType(descriptorType),
-        descriptorCount(descriptorCount)
+        bindingCount(bindingCount)
     {
-        const VkDescriptorSetLayoutBinding descriptorSetLayoutBinding =
+        std::vector<VkDescriptorSetLayoutBinding> bindings(bindingCount);
+        for (uint32_t i = 0; i < bindingCount; ++i)
         {
-            0,
-            descriptorType,
-            descriptorCount,
-            VK_SHADER_STAGE_COMPUTE_BIT,
-            nullptr
-        };
+            bindings[i].binding = i;
+            bindings[i].descriptorType = descriptorType;
+            bindings[i].descriptorCount = 1;
+            bindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            bindings[i].pImmutableSamplers = nullptr;
+        }
 
         const VkDescriptorSetLayoutCreateInfo layoutCreateInfo =
         {
             VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
             nullptr,
             0,
-            1,
-            &descriptorSetLayoutBinding
+            bindingCount,
+            bindings.data()
         };
 
         checkVulkanError(vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &descriptorSetLayout), "vkCreateDescriptorSetLayout");
@@ -63,16 +64,16 @@ public:
         return descriptorType;
     }
 
-    uint32_t getDescriptorCount() const
+    uint32_t getBindingCount() const
     {
-        return descriptorCount;
+        return bindingCount;
     }
 
 private:
     VkDevice device;
     VkDescriptorSetLayout descriptorSetLayout;
     VkDescriptorType descriptorType;
-    uint32_t descriptorCount;
+    uint32_t bindingCount;
 };
 
 } // namespace ktt

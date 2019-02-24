@@ -115,7 +115,7 @@ KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<O
             + std::to_string(id));
     }
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Performing kernel synchronization for event id: " + std::to_string(id));
+    Logger::getLogger().log(LoggingLevel::Debug, std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
 
     checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
     std::string name = eventPointer->second->getKernelName();
@@ -701,7 +701,7 @@ EventId OpenCLEngine::enqueueKernel(OpenCLKernel& kernel, const std::vector<size
     }
 
     std::vector<size_t> correctedGlobalSize = globalSize;
-    if (globalSizeType == GlobalSizeType::CUDA)
+    if (globalSizeType != GlobalSizeType::OpenCL)
     {
         correctedGlobalSize.at(0) *= localSize.at(0);
         correctedGlobalSize.at(1) *= localSize.at(1);

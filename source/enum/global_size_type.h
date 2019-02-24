@@ -19,7 +19,7 @@ enum class GlobalSizeType
       */
     CUDA,
 
-    /** Global thread size uses Vulkan format.
+    /** Global thread size uses Vulkan format. This format is the same as CUDA format.
     */
     Vulkan
 };
