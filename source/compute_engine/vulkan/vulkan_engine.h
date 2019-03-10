@@ -7,12 +7,11 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 #include <compute_engine/vulkan/vulkan_buffer.h>
-#include <compute_engine/vulkan/vulkan_command_buffer.h>
-#include <compute_engine/vulkan/vulkan_command_buffer_group.h>
+#include <compute_engine/vulkan/vulkan_command_buffer_holder.h>
 #include <compute_engine/vulkan/vulkan_command_pool.h>
 #include <compute_engine/vulkan/vulkan_compute_pipeline.h>
 #include <compute_engine/vulkan/vulkan_descriptor_pool.h>
-#include <compute_engine/vulkan/vulkan_descriptor_set.h>
+#include <compute_engine/vulkan/vulkan_descriptor_set_holder.h>
 #include <compute_engine/vulkan/vulkan_descriptor_set_layout.h>
 #include <compute_engine/vulkan/vulkan_device.h>
 #include <compute_engine/vulkan/vulkan_event.h>
@@ -108,14 +107,14 @@ private:
     std::map<std::pair<std::string, std::string>, std::unique_ptr<VulkanPipelineCacheEntry>> pipelineCache;
     mutable std::map<EventId, std::unique_ptr<VulkanEvent>> kernelEvents;
     mutable std::map<EventId, std::unique_ptr<VulkanEvent>> bufferEvents;
-    mutable std::map<EventId, std::unique_ptr<VulkanCommandBuffer>> eventCommands;
+    mutable std::map<EventId, std::unique_ptr<VulkanCommandBufferHolder>> eventCommands;
     mutable std::map<EventId, std::unique_ptr<VulkanBuffer>> stagingBuffers;
 
     EventId enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const QueueId queue, const uint64_t kernelLaunchOverhead);
     KernelResult createKernelResult(const EventId id) const;
+    std::vector<VulkanBuffer*> getPipelineArguments(const std::vector<KernelArgument*>& argumentPointers);
     VulkanBuffer* findBuffer(const ArgumentId id) const;
-    VkBuffer loadBufferFromCache(const ArgumentId id) const;
 };
 
 } // namespace ktt

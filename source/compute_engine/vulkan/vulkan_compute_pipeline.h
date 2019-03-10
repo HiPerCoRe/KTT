@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
+#include <compute_engine/vulkan/vulkan_buffer.h>
+#include <compute_engine/vulkan/vulkan_descriptor_pool.h>
+#include <compute_engine/vulkan/vulkan_descriptor_set_holder.h>
 #include <compute_engine/vulkan/vulkan_utility.h>
 
 namespace ktt
@@ -15,13 +18,19 @@ public:
         device(nullptr),
         pipeline(nullptr),
         pipelineLayout(nullptr),
-        shaderName("")
+        descriptorSetLayout(nullptr),
+        shaderName(""),
+        descriptorPool(nullptr),
+        descriptorSets(nullptr)
     {}
 
     explicit VulkanComputePipeline(VkDevice device, VkDescriptorSetLayout descriptorSetLayout, VkShaderModule shader,
         const std::string& shaderName) :
         device(device),
-        shaderName(shaderName)
+        descriptorSetLayout(descriptorSetLayout),
+        shaderName(shaderName),
+        descriptorPool(nullptr),
+        descriptorSets(nullptr)
     {
         const VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo =
         {
@@ -90,7 +99,26 @@ public:
         return shaderName;
     }
 
-    void recordDispatchShaderCommand(VkCommandBuffer commandBuffer, VkDescriptorSet descriptorSet, const std::vector<size_t>& globalSize)
+    void bindArguments(const std::vector<VulkanBuffer*>& buffers)
+    {
+        const uint32_t descriptorCount = static_cast<uint32_t>(buffers.size());
+
+        if (descriptorPool == nullptr || descriptorPool->getDescriptorCount() != descriptorCount)
+        {
+            descriptorSets.reset(nullptr);
+            descriptorPool.reset(nullptr);
+            descriptorPool = std::make_unique<VulkanDescriptorPool>(device, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptorCount);
+            descriptorSets = std::make_unique<VulkanDescriptorSetHolder>(device, descriptorPool->getDescriptorPool(), descriptorSetLayout,
+                descriptorCount);
+        }
+
+        for (size_t i = 0; i < buffers.size(); ++i)
+        {
+            descriptorSets->bindBuffer(*buffers[i], VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, static_cast<uint32_t>(i));
+        }
+    }
+
+    void recordDispatchShaderCommand(VkCommandBuffer commandBuffer, const std::vector<size_t>& globalSize)
     {
         const VkCommandBufferBeginInfo commandBufferBeginInfo =
         {
@@ -100,10 +128,13 @@ public:
             nullptr
         };
 
+        std::vector<VkDescriptorSet> sets = descriptorSets->getDescriptorSets();
+
         checkVulkanError(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo), "vkBeginCommandBuffer");
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, static_cast<uint32_t>(sets.size()), sets.data(), 0,
+            nullptr);
         vkCmdDispatch(commandBuffer, static_cast<uint32_t>(globalSize[0]), static_cast<uint32_t>(globalSize[1]),
             static_cast<uint32_t>(globalSize[2]));
 
@@ -114,7 +145,10 @@ private:
     VkDevice device;
     VkPipeline pipeline;
     VkPipelineLayout pipelineLayout;
+    VkDescriptorSetLayout descriptorSetLayout;
     std::string shaderName;
+    std::unique_ptr<VulkanDescriptorPool> descriptorPool;
+    std::unique_ptr<VulkanDescriptorSetHolder> descriptorSets;
 };
 
 } // namespace ktt

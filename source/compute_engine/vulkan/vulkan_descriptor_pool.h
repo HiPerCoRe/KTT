@@ -9,17 +9,9 @@ namespace ktt
 class VulkanDescriptorPool
 {
 public:
-    VulkanDescriptorPool() :
-        device(nullptr),
-        descriptorPool(nullptr)
-    {}
-
-    explicit VulkanDescriptorPool(VkDevice device) :
-        VulkanDescriptorPool(device, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1)
-    {}
-
     explicit VulkanDescriptorPool(VkDevice device, const VkDescriptorType descriptorType, const uint32_t descriptorCount) :
-        device(device)
+        device(device),
+        descriptorCount(descriptorCount)
     {
         const VkDescriptorPoolSize poolSize =
         {
@@ -32,7 +24,7 @@ public:
             VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
             nullptr,
             0,
-            1,
+            descriptorCount,
             1,
             &poolSize
         };
@@ -42,10 +34,7 @@ public:
 
     ~VulkanDescriptorPool()
     {
-        if (descriptorPool != nullptr)
-        {
-            vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-        }
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     }
 
     VkDevice getDevice() const
@@ -58,9 +47,15 @@ public:
         return descriptorPool;
     }
 
+    uint32_t getDescriptorCount() const
+    {
+        return descriptorCount;
+    }
+
 private:
     VkDevice device;
     VkDescriptorPool descriptorPool;
+    uint32_t descriptorCount;
 };
 
 } // namespace ktt

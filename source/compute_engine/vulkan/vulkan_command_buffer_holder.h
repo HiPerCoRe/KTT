@@ -7,21 +7,15 @@
 namespace ktt
 {
 
-class VulkanCommandBufferGroup
+class VulkanCommandBufferHolder
 {
 public:
-    VulkanCommandBufferGroup() :
-        device(nullptr),
-        commandPool(nullptr),
-        commandBufferLevel(VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+    explicit VulkanCommandBufferHolder(VkDevice device, VkCommandPool commandPool) :
+        VulkanCommandBufferHolder(device, commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)
     {}
 
-    explicit VulkanCommandBufferGroup(VkDevice device, VkCommandPool commandPool, const uint32_t commandBufferCount) :
-        VulkanCommandBufferGroup(device, commandPool, commandBufferCount, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
-    {}
-
-    explicit VulkanCommandBufferGroup(VkDevice device, VkCommandPool commandPool, const uint32_t commandBufferCount,
-        const VkCommandBufferLevel commandBufferLevel) :
+    explicit VulkanCommandBufferHolder(VkDevice device, VkCommandPool commandPool, const VkCommandBufferLevel commandBufferLevel,
+        const uint32_t commandBufferCount) :
         device(device),
         commandPool(commandPool),
         commandBufferLevel(commandBufferLevel)
@@ -35,16 +29,13 @@ public:
             commandBufferCount
         };
 
-        commandBuffers.resize(commandBufferCount);
+        commandBuffers.resize(static_cast<size_t>(commandBufferCount));
         checkVulkanError(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, commandBuffers.data()), "vkAllocateCommandBuffers");
     }
 
-    ~VulkanCommandBufferGroup()
+    ~VulkanCommandBufferHolder()
     {
-        if (commandPool != nullptr)
-        {
-            vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-        }
+        vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
     }
 
     VkDevice getDevice() const
@@ -57,14 +48,19 @@ public:
         return commandPool;
     }
 
+    VkCommandBuffer getCommandBuffer() const
+    {
+        if (commandBuffers.empty())
+        {
+            throw std::runtime_error("Cannot retrieve command buffer from empty holder");
+        }
+
+        return commandBuffers[0];
+    }
+
     const std::vector<VkCommandBuffer>& getCommandBuffers() const
     {
         return commandBuffers;
-    }
-
-    uint32_t getCommandBufferCount()
-    {
-        return static_cast<uint32_t>(commandBuffers.size());
     }
 
     VkCommandBufferLevel getCommandBufferLevel() const

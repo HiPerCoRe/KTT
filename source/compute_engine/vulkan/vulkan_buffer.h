@@ -12,6 +12,34 @@ namespace ktt
 class VulkanBuffer
 {
 public:
+    explicit VulkanBuffer(const VulkanBuffer& source, VkDevice device, const VulkanPhysicalDevice& physicalDevice,
+        const VkBufferUsageFlags usageFlags, const VkDeviceSize bufferSize) :
+        kernelArgumentId(source.getKernelArgumentId()),
+        bufferSize(bufferSize),
+        elementSize(source.getElementSize()),
+        dataType(source.getDataType()),
+        memoryLocation(ArgumentMemoryLocation::Host),
+        accessType(source.getAccessType()),
+        device(device),
+        physicalDevice(&physicalDevice),
+        bufferMemory(nullptr),
+        usageFlags(usageFlags)
+    {
+        const VkBufferCreateInfo bufferCreateInfo =
+        {
+            VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            nullptr,
+            0,
+            bufferSize,
+            usageFlags,
+            VK_SHARING_MODE_EXCLUSIVE,
+            0,
+            nullptr
+        };
+
+        checkVulkanError(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &buffer), "vkCreateBuffer");
+    }
+
     explicit VulkanBuffer(KernelArgument& kernelArgument, VkDevice device, const VulkanPhysicalDevice& physicalDevice,
         const VkBufferUsageFlags usageFlags) :
         kernelArgumentId(kernelArgument.getId()),
@@ -78,11 +106,19 @@ public:
     {
         void* data;
         checkVulkanError(vkMapMemory(device, bufferMemory, 0, dataSize, 0, &data), "vkMapMemory");
-        std::memcpy(data, source, dataSize);
+        std::memcpy(data, source, static_cast<size_t>(dataSize));
         vkUnmapMemory(device, bufferMemory);
     }
 
-    void recordUploadDataCommand(VkCommandBuffer commandBuffer, VkBuffer sourceBuffer, const VkDeviceSize dataSize)
+    void downloadData(void* target, const VkDeviceSize dataSize)
+    {
+        void* data;
+        checkVulkanError(vkMapMemory(device, bufferMemory, 0, dataSize, 0, &data), "vkMapMemory");
+        std::memcpy(target, data, static_cast<size_t>(dataSize));
+        vkUnmapMemory(device, bufferMemory);
+    }
+
+    void recordCopyDataCommand(VkCommandBuffer commandBuffer, VkBuffer sourceBuffer, const VkDeviceSize dataSize)
     {
         const VkCommandBufferBeginInfo commandBufferBeginInfo =
         {
