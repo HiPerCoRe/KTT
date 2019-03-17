@@ -21,15 +21,13 @@ public:
         device(device),
         pool(descriptorPool)
     {
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts(static_cast<size_t>(descriptorCount), descriptorSetLayout);
-
         const VkDescriptorSetAllocateInfo allocateInfo =
         {
             VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
             nullptr,
             descriptorPool,
-            descriptorCount,
-            descriptorSetLayouts.data()
+            1,
+            &descriptorSetLayout
         };
 
         descriptorSets.resize(static_cast<size_t>(descriptorCount));
@@ -56,16 +54,16 @@ public:
         return descriptorSets;
     }
 
-    void bindBuffer(const VulkanBuffer& buffer, const VkDescriptorType descriptorType)
+    void bindBuffer(const VulkanBuffer& buffer, const VkDescriptorType descriptorType, const size_t descriptorSetIndex)
     {
-        bindBuffer(buffer, descriptorType, 0);
+        bindBuffer(buffer, descriptorType, descriptorSetIndex, 0);
     }
 
-    void bindBuffer(const VulkanBuffer& buffer, const VkDescriptorType descriptorType, const uint32_t binding)
+    void bindBuffer(const VulkanBuffer& buffer, const VkDescriptorType descriptorType, const size_t descriptorSetIndex, const uint32_t binding)
     {
-        if (descriptorSets.size() <= static_cast<size_t>(binding))
+        if (descriptorSets.size() <= static_cast<size_t>(descriptorSetIndex))
         {
-            throw std::runtime_error("Binding point is out of range for this descriptor set holder");
+            throw std::runtime_error("Descriptor set index is out of range for this descriptor set holder");
         }
 
         const VkDescriptorBufferInfo bufferInfo =
@@ -79,7 +77,7 @@ public:
         {
             VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             nullptr,
-            descriptorSets[static_cast<size_t>(binding)],
+            descriptorSets[descriptorSetIndex],
             binding,
             0,
             1,

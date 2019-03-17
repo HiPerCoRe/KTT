@@ -247,8 +247,13 @@ EventId VulkanEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const 
 
     if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::Device)
     {
-        auto deviceBuffer = std::make_unique<VulkanBuffer>(kernelArgument, device->getDevice(), device->getPhysicalDevice(),
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        VkBufferUsageFlags deviceUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        if (kernelArgument.getAccessType() != ArgumentAccessType::ReadOnly)
+        {
+            deviceUsage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        }
+
+        auto deviceBuffer = std::make_unique<VulkanBuffer>(kernelArgument, device->getDevice(), device->getPhysicalDevice(), deviceUsage);
         deviceBuffer->allocateMemory(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         auto bufferEvent = std::make_unique<VulkanEvent>(device->getDevice(), eventId, true);

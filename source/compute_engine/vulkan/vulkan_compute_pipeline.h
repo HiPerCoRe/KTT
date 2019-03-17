@@ -108,13 +108,12 @@ public:
             descriptorSets.reset(nullptr);
             descriptorPool.reset(nullptr);
             descriptorPool = std::make_unique<VulkanDescriptorPool>(device, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptorCount);
-            descriptorSets = std::make_unique<VulkanDescriptorSetHolder>(device, descriptorPool->getDescriptorPool(), descriptorSetLayout,
-                descriptorCount);
+            descriptorSets = std::make_unique<VulkanDescriptorSetHolder>(device, descriptorPool->getDescriptorPool(), descriptorSetLayout);
         }
 
         for (size_t i = 0; i < buffers.size(); ++i)
         {
-            descriptorSets->bindBuffer(*buffers[i], VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, static_cast<uint32_t>(i));
+            descriptorSets->bindBuffer(*buffers[i], VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 0, static_cast<uint32_t>(i));
         }
     }
 
