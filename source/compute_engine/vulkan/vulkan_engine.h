@@ -3,6 +3,7 @@
 #ifdef KTT_PLATFORM_VULKAN
 
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>

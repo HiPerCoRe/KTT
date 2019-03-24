@@ -114,24 +114,11 @@ function findVulkan()
     end
     
     includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
-    
-    if os.target() == "linux" then
-        filter "configurations:Release"
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux/release" }
-        filter "configurations:Debug"
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux/debug" }
-    else
-        filter "configurations:Release"
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows/release" }
-        filter "configurations:Debug"
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows/debug" }
-    end
-    
-    filter {}
+    libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib" }
     
     vulkan_projects = true
     defines { "KTT_PLATFORM_VULKAN" }
-    links { "vulkan-1", "glslang", "SPIRV", "SPIRV-Tools", "HLSL", "OSDependent", "OGLCompiler", "SPVRemapper", "SPIRV-Tools-opt" }
+    links { "vulkan-1", "shaderc_shared" }
     
     return true
 end
@@ -265,9 +252,9 @@ project "ktt"
         end
         
         if os.target() == "linux" then
-            zip.extract("libraries/lib/linux.tar.gz", "libraries/lib/linux")
+            zip.extract("libraries/lib/linux.tar.gz", "libraries/lib")
         else
-            zip.extract("libraries/lib/windows.zip", "libraries/lib/windows")
+            zip.extract("libraries/lib/windows.zip", "libraries/lib")
         end
     end
     

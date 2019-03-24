@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vulkan/vulkan.h>
-#include <compute_engine/vulkan/glslang_compiler.h>
+#include <compute_engine/vulkan/shaderc_compiler.h>
 #include <compute_engine/vulkan/vulkan_utility.h>
 
 namespace ktt
@@ -14,14 +14,16 @@ public:
     VulkanShaderModule() :
         device(nullptr),
         shaderModule(nullptr),
-        source(nullptr)
+        name(""),
+        source("")
     {}
 
-    explicit VulkanShaderModule(VkDevice device, const std::string& source) :
+    explicit VulkanShaderModule(VkDevice device, const std::string& name, const std::string& source) :
         device(device),
+        name(name),
         source(source)
     {
-        spirvSource = GlslangCompiler::getCompiler().compile(source, EShLangCompute);
+        spirvSource = ShadercCompiler::getCompiler().compile(name, source, shaderc_compute_shader);
 
         const VkShaderModuleCreateInfo shaderModuleCreateInfo =
         {
@@ -53,6 +55,11 @@ public:
         return shaderModule;
     }
 
+    const std::string& getName() const
+    {
+        return name;
+    }
+
     const std::string& getSource() const
     {
         return source;
@@ -66,6 +73,7 @@ public:
 private:
     VkDevice device;
     VkShaderModule shaderModule;
+    std::string name;
     std::string source;
     std::vector<uint32_t> spirvSource;
 };

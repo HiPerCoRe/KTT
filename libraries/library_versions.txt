@@ -1,1 +1,1 @@
-glslang - Revision 2904 (Vulkan SDK 1.1.85)
+shaderc - Vulkan SDK 1.1.101
