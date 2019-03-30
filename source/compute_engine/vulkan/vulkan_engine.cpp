@@ -73,7 +73,8 @@ EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
                 clearKernelCache();
             }
             auto cacheLayout = std::make_unique<VulkanDescriptorSetLayout>(device->getDevice(), VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, bindingCount);
-            auto cacheShader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getSource());
+            auto cacheShader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getSource(),
+                kernelData.getLocalSize());
             auto cachePipeline = std::make_unique<VulkanComputePipeline>(device->getDevice(), cacheLayout->getDescriptorSetLayout(),
                 cacheShader->getShaderModule(), kernelData.getName());
             auto cacheEntry = std::make_unique<VulkanPipelineCacheEntry>(std::move(cachePipeline), std::move(cacheLayout), std::move(cacheShader));
@@ -85,7 +86,7 @@ EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
     else
     {
         layout = std::make_unique<VulkanDescriptorSetLayout>(device->getDevice(), VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, bindingCount);
-        shader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getSource());
+        shader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getSource(), kernelData.getLocalSize());
         pipelineUnique = std::make_unique<VulkanComputePipeline>(device->getDevice(), layout->getDescriptorSetLayout(), shader->getShaderModule(),
             kernelData.getName());
         pipeline = pipelineUnique.get();

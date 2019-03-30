@@ -18,12 +18,12 @@ public:
         source("")
     {}
 
-    explicit VulkanShaderModule(VkDevice device, const std::string& name, const std::string& source) :
+    explicit VulkanShaderModule(VkDevice device, const std::string& name, const std::string& source, const std::vector<size_t>& localSize) :
         device(device),
         name(name),
         source(source)
     {
-        spirvSource = ShadercCompiler::getCompiler().compile(name, source, shaderc_compute_shader);
+        spirvSource = ShadercCompiler::getCompiler().compile(name, source, shaderc_compute_shader, localSize);
 
         const VkShaderModuleCreateInfo shaderModuleCreateInfo =
         {

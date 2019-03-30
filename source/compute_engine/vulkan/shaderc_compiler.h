@@ -17,10 +17,16 @@ public:
         return instance;
     }
 
-    std::vector<uint32_t> compile(const std::string& name, const std::string& source, const shaderc_shader_kind kind)
+    std::vector<uint32_t> compile(const std::string& name, const std::string& source, const shaderc_shader_kind kind,
+        const std::vector<size_t>& localSize)
     {
-        std::string preprocessedSource = preprocessShader(name, source, kind);
-        std::vector<uint32_t> compiledSource = compileShader(name, preprocessedSource, kind);
+        shaderc::CompileOptions options(defaultOptions);
+        options.AddMacroDefinition("LOCAL_SIZE_X", std::to_string(localSize[0]));
+        options.AddMacroDefinition("LOCAL_SIZE_Y", std::to_string(localSize[1]));
+        options.AddMacroDefinition("LOCAL_SIZE_Z", std::to_string(localSize[2]));
+
+        std::string preprocessedSource = preprocessShader(name, source, kind, options);
+        std::vector<uint32_t> compiledSource = compileShader(name, preprocessedSource, kind, options);
         return compiledSource;
     }
 
@@ -31,16 +37,17 @@ public:
 
 private:
     shaderc::Compiler compiler;
-    shaderc::CompileOptions compilerOptions;
+    shaderc::CompileOptions defaultOptions;
 
     ShadercCompiler()
     {
-        compilerOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
+        defaultOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
     }
 
-    std::string preprocessShader(const std::string& name, const std::string& source, const shaderc_shader_kind kind)
+    std::string preprocessShader(const std::string& name, const std::string& source, const shaderc_shader_kind kind,
+        const shaderc::CompileOptions& options)
     {
-        shaderc::PreprocessedSourceCompilationResult result = compiler.PreprocessGlsl(source, kind, name.c_str(), compilerOptions);
+        shaderc::PreprocessedSourceCompilationResult result = compiler.PreprocessGlsl(source, kind, name.c_str(), options);
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success)
         {
@@ -50,16 +57,30 @@ private:
         return std::string{result.cbegin(), result.cend()};
     }
 
-    std::vector<uint32_t> compileShader(const std::string& name, const std::string& source, const shaderc_shader_kind kind)
+    std::vector<uint32_t> compileShader(const std::string& name, const std::string& source, const shaderc_shader_kind kind,
+        const shaderc::CompileOptions& options)
     {
-        shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(source, kind, name.c_str(), compilerOptions);
+        shaderc::SpvCompilationResult binaryModule = compiler.CompileGlslToSpv(source, kind, name.c_str(), options);
 
-        if (module.GetCompilationStatus() != shaderc_compilation_status_success)
+        if (binaryModule.GetCompilationStatus() != shaderc_compilation_status_success)
         {
-            throw std::runtime_error(std::string("Vulkan shader compiler error: ") + module.GetErrorMessage());
+            throw std::runtime_error(std::string("Vulkan shader compiler error: ") + binaryModule.GetErrorMessage());
         }
 
-        return std::vector<uint32_t>{module.cbegin(), module.cend()};
+        return std::vector<uint32_t>{binaryModule.cbegin(), binaryModule.cend()};
+    }
+
+    std::string compileShaderToAssembly(const std::string& name, const std::string& source, const shaderc_shader_kind kind,
+        const shaderc::CompileOptions& options)
+    {
+        shaderc::AssemblyCompilationResult assembly = compiler.CompileGlslToSpvAssembly(source, kind, name.c_str(), options);
+
+        if (assembly.GetCompilationStatus() != shaderc_compilation_status_success)
+        {
+            throw std::runtime_error(std::string("Vulkan shader compiler error: ") + assembly.GetErrorMessage());
+        }
+
+        return std::string{assembly.cbegin(), assembly.cend()};
     }
 };
 

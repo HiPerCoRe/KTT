@@ -1,9 +1,7 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-#define WORK_GROUP_SIZE 256
-
-layout(local_size_x = WORK_GROUP_SIZE, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = LOCAL_SIZE_X, local_size_y = LOCAL_SIZE_Y, local_size_z = LOCAL_SIZE_Z) in;
 
 layout(std430, binding = 0) readonly buffer inputA
 {

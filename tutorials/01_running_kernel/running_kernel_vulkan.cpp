@@ -33,6 +33,8 @@ int main(int argc, char** argv)
     const size_t numberOfElements = 1024 * 1024;
     // Work-group count and dimensions are specified with KTT data structure DimensionVector. Only single dimension is utilized in this tutorial.
     // In general, DimensionVector supports up to three dimensions.
+    // Note that, in order for work-group dimensions to work correctly, shader source file must contain the following definition for work-group
+    // sizes: local_size_x = LOCAL_SIZE_X, local_size_y = LOCAL_SIZE_Y, local_size_z = LOCAL_SIZE_Z
     const ktt::DimensionVector workGroupDimensions(256);
     const ktt::DimensionVector workGroupCount(numberOfElements / workGroupDimensions.getSizeX());
     std::vector<float> a(numberOfElements);
