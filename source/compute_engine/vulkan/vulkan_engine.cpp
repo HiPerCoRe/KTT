@@ -73,8 +73,8 @@ EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
                 clearKernelCache();
             }
             auto cacheLayout = std::make_unique<VulkanDescriptorSetLayout>(device->getDevice(), VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, bindingCount);
-            auto cacheShader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getSource(),
-                kernelData.getLocalSize());
+            auto cacheShader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getUnmodifiedSource(),
+                kernelData.getLocalSize(), kernelData.getParameterPairs());
             auto cachePipeline = std::make_unique<VulkanComputePipeline>(device->getDevice(), cacheLayout->getDescriptorSetLayout(),
                 cacheShader->getShaderModule(), kernelData.getName());
             auto cacheEntry = std::make_unique<VulkanPipelineCacheEntry>(std::move(cachePipeline), std::move(cacheLayout), std::move(cacheShader));
@@ -86,7 +86,8 @@ EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
     else
     {
         layout = std::make_unique<VulkanDescriptorSetLayout>(device->getDevice(), VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, bindingCount);
-        shader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getSource(), kernelData.getLocalSize());
+        shader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getUnmodifiedSource(),
+            kernelData.getLocalSize(), kernelData.getParameterPairs());
         pipelineUnique = std::make_unique<VulkanComputePipeline>(device->getDevice(), layout->getDescriptorSetLayout(), shader->getShaderModule(),
             kernelData.getName());
         pipeline = pipelineUnique.get();
@@ -347,7 +348,53 @@ EventId VulkanEngine::downloadArgumentAsync(const ArgumentId id, void* destinati
 
 KernelArgument VulkanEngine::downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const
 {
-    throw std::runtime_error("Vulkan API is not yet supported");
+    VulkanBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getElementSize(),
+        buffer->getDataType(), buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
+
+    EventId eventId = nextEventId;
+    Logger::logDebug("Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
+
+    if (buffer->getMemoryLocation() == ArgumentMemoryLocation::Host)
+    {
+        buffer->downloadData(argument.getData(), argument.getDataSizeInBytes());
+        auto bufferEvent = std::make_unique<VulkanEvent>(device->getDevice(), eventId, false);
+        bufferEvents.insert(std::make_pair(eventId, std::move(bufferEvent)));
+    }
+    else if (buffer->getMemoryLocation() == ArgumentMemoryLocation::Device)
+    {
+        auto hostBuffer = std::make_unique<VulkanBuffer>(*buffer, device->getDevice(), device->getPhysicalDevice(), VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            argument.getDataSizeInBytes());
+        hostBuffer->allocateMemory(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        auto bufferEvent = std::make_unique<VulkanEvent>(device->getDevice(), eventId, true);
+        auto commandBuffer = std::make_unique<VulkanCommandBufferHolder>(device->getDevice(), commandPool->getCommandPool());
+        hostBuffer->recordCopyDataCommand(commandBuffer->getCommandBuffer(), buffer->getBuffer(), argument.getDataSizeInBytes());
+        queues[getDefaultQueue()].submitSingleCommand(commandBuffer->getCommandBuffer(), bufferEvent->getFence().getFence());
+
+        bufferEvent->wait();
+        hostBuffer->downloadData(argument.getData(), argument.getDataSizeInBytes());
+
+        bufferEvents.insert(std::make_pair(eventId, std::move(bufferEvent)));
+        eventCommands.insert(std::make_pair(eventId, std::move(commandBuffer)));
+        stagingBuffers.insert(std::make_pair(eventId, std::move(hostBuffer)));
+    }
+
+    nextEventId++;
+
+    uint64_t duration = getArgumentOperationDuration(eventId);
+    if (downloadDuration != nullptr)
+    {
+        *downloadDuration = duration;
+    }
+
+    return argument;
 }
 
 uint64_t VulkanEngine::copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes)

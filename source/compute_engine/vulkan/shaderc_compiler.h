@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <api/parameter_pair.h>
 #include <shaderc_ktt/shaderc.hpp>
 
 namespace ktt
@@ -18,12 +19,14 @@ public:
     }
 
     std::vector<uint32_t> compile(const std::string& name, const std::string& source, const shaderc_shader_kind kind,
-        const std::vector<size_t>& localSize)
+        const std::vector<size_t>& localSize, const std::vector<ParameterPair>& parameterPairs)
     {
         shaderc::CompileOptions options(defaultOptions);
+
         options.AddMacroDefinition("LOCAL_SIZE_X", std::to_string(localSize[0]));
         options.AddMacroDefinition("LOCAL_SIZE_Y", std::to_string(localSize[1]));
         options.AddMacroDefinition("LOCAL_SIZE_Z", std::to_string(localSize[2]));
+        addParameterDefinitions(options, parameterPairs);
 
         std::string preprocessedSource = preprocessShader(name, source, kind, options);
         std::vector<uint32_t> compiledSource = compileShader(name, preprocessedSource, kind, options);
@@ -81,6 +84,27 @@ private:
         }
 
         return std::string{assembly.cbegin(), assembly.cend()};
+    }
+
+    static void addParameterDefinitions(shaderc::CompileOptions& options, const std::vector<ParameterPair>& parameterPairs)
+    {
+        for (const auto& pair : parameterPairs)
+        {
+            const std::string& name = pair.getName();
+            if (name == "LOCAL_SIZE_X" || name == "LOCAL_SIZE_Y" || name == "LOCAL_SIZE_Z")
+            {
+                throw std::runtime_error(std::string("Vulkan shader compiler error: Shader parameter is using reserved name: ") + name);
+            }
+
+            if (pair.hasValueDouble())
+            {
+                options.AddMacroDefinition(name, std::to_string(pair.getValueDouble()));
+            }
+            else
+            {
+                options.AddMacroDefinition(name, std::to_string(pair.getValue()));
+            }
+        }
     }
 };
 

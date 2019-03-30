@@ -3,20 +3,24 @@
 namespace ktt
 {
 
-KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize, const std::vector<ArgumentId>& argumentIds) :
-    KernelRuntimeData(id, name, source, globalSize, localSize, argumentIds, std::vector<LocalMemoryModifier>{})
+KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const std::string& unmodifiedSource,
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterPair>& parameterPairs,
+    const std::vector<ArgumentId>& argumentIds) :
+    KernelRuntimeData(id, name, source, unmodifiedSource, globalSize, localSize, parameterPairs, argumentIds, std::vector<LocalMemoryModifier>{})
 {}
 
-KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize, const std::vector<ArgumentId>& argumentIds, const std::vector<LocalMemoryModifier>& localMemoryModifiers) :
+KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const std::string& unmodifiedSource,
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterPair>& parameterPairs,
+    const std::vector<ArgumentId>& argumentIds, const std::vector<LocalMemoryModifier>& localMemoryModifiers) :
     id(id),
     name(name),
     source(source),
+    unmodifiedSource(unmodifiedSource),
     globalSize(globalSize.getVector()),
     localSize(localSize.getVector()),
     globalSizeDimensionVector(globalSize),
     localSizeDimensionVector(localSize),
+    parameterPairs(parameterPairs),
     argumentIds(argumentIds),
     localMemoryModifiers(localMemoryModifiers)
 {}
@@ -53,6 +57,11 @@ const std::string& KernelRuntimeData::getSource() const
     return source;
 }
 
+const std::string& KernelRuntimeData::getUnmodifiedSource() const
+{
+    return unmodifiedSource;
+}
+
 const std::vector<size_t>& KernelRuntimeData::getGlobalSize() const
 {
     return globalSize;
@@ -71,6 +80,11 @@ const DimensionVector& KernelRuntimeData::getGlobalSizeDimensionVector() const
 const DimensionVector& KernelRuntimeData::getLocalSizeDimensionVector() const
 {
     return localSizeDimensionVector;
+}
+
+const std::vector<ParameterPair>& KernelRuntimeData::getParameterPairs() const
+{
+    return parameterPairs;
 }
 
 const std::vector<ArgumentId>& KernelRuntimeData::getArgumentIds() const

@@ -433,7 +433,13 @@ project "01_running_kernel_vulkan"
     includedirs { "source" }
     links { "ktt" }
     
-end -- cuda_projects
+project "02_tuning_kernel_simple_vulkan"
+    kind "ConsoleApp"
+    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_vulkan.cpp", "tutorials/02_tuning_kernel_simple/vulkan_kernel.glsl" }
+    includedirs { "source" }
+    links { "ktt" }
+    
+end -- vulkan_projects
 
 end -- _OPTIONS["no-tutorials"]
 
