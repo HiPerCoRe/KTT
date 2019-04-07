@@ -43,6 +43,9 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
 
     Logger::logDebug("Initializing Vulkan command pool");
     commandPool = std::make_unique<VulkanCommandPool>(device->getDevice(), device->getQueueFamilyIndex());
+
+    Logger::logDebug("Initializing Vulkan query pool");
+    queryPool = std::make_unique<VulkanQueryPool>(device->getDevice(), devices.at(deviceIndex).getProperties().limits.timestampPeriod);
 }
 
 KernelResult VulkanEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -590,7 +593,7 @@ EventId VulkanEngine::enqueuePipeline(VulkanComputePipeline& pipeline, const std
 
     Logger::logDebug("Launching kernel " + pipeline.getShaderName() + ", event id: " + std::to_string(eventId));
     auto command = std::make_unique<VulkanCommandBufferHolder>(device->getDevice(), commandPool->getCommandPool());
-    pipeline.recordDispatchShaderCommand(command->getCommandBuffer(), correctedGlobalSize);
+    pipeline.recordDispatchShaderCommand(command->getCommandBuffer(), correctedGlobalSize, queryPool->getQueryPool());
     queues[queue].submitSingleCommand(command->getCommandBuffer(), kernelEvent->getFence().getFence());
 
     kernelEvents.insert(std::make_pair(eventId, std::move(kernelEvent)));
@@ -613,8 +616,7 @@ KernelResult VulkanEngine::createKernelResult(const EventId id) const
     eventPointer->second->wait();
     const std::string& name = eventPointer->second->getKernelName();
     const uint64_t overhead = eventPointer->second->getOverhead();
-    // todo: return correct duration
-    uint64_t duration = 0;
+    uint64_t duration = queryPool->getResult();
 
     KernelResult result(name, duration);
     result.setOverhead(overhead);

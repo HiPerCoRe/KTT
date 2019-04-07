@@ -114,6 +114,10 @@ int main(int argc, char** argv)
     // value of this parameter, eg. size of one is multiplied by 32, which means that result size is 32.
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_work_group_size", ktt::ModifierAction::Multiply);
 
+    // Set time unit used during printing of kernel duration. Default time unit is milliseconds, but since computation in this tutorial does not take
+    // too long, microseconds are used instead.
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
     // Start tuning for specified kernel. This generates multiple versions of the kernel based on provided tuning parameters and their values. In
     // this case, only single parameter with 4 values was added, which means that 4 different versions of kernel will be run, each version
     // corresponding to single parameter value. In case of multiple parameters, version of kernel for each combination of parameter values is

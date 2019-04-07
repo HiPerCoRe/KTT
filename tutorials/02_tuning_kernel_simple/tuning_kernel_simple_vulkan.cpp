@@ -121,6 +121,10 @@ int main(int argc, char** argv)
     // number of work-groups has to be added.
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "multiply_work_group_size", ktt::ModifierAction::Divide);
 
+    // Set time unit used during printing of shader duration. Default time unit is milliseconds, but since computation in this tutorial does not take
+    // too long, microseconds are used instead.
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
     // Start tuning for specified kernel. This generates multiple versions of the kernel based on provided tuning parameters and their values. In
     // this case, 4 different versions of kernel will be run due to provided kernel constraint.
     tuner.tuneKernel(kernelId);

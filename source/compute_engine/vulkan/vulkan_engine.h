@@ -19,6 +19,7 @@
 #include <compute_engine/vulkan/vulkan_instance.h>
 #include <compute_engine/vulkan/vulkan_pipeline_cache_entry.h>
 #include <compute_engine/vulkan/vulkan_physical_device.h>
+#include <compute_engine/vulkan/vulkan_query_pool.h>
 #include <compute_engine/vulkan/vulkan_queue.h>
 #include <compute_engine/vulkan/vulkan_semaphore.h>
 #include <compute_engine/vulkan/vulkan_shader_module.h>
@@ -102,6 +103,7 @@ private:
     std::unique_ptr<VulkanInstance> instance;
     std::unique_ptr<VulkanDevice> device;
     std::unique_ptr<VulkanCommandPool> commandPool;
+    std::unique_ptr<VulkanQueryPool> queryPool;
     std::vector<VulkanQueue> queues;
     std::set<std::unique_ptr<VulkanBuffer>> buffers;
     std::set<std::unique_ptr<VulkanBuffer>> persistentBuffers;

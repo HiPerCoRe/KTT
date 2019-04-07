@@ -36,10 +36,8 @@ public:
     {
         DeviceInfo result(index, name);
 
-        VkPhysicalDeviceProperties deviceProperties;
-        vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-        VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &deviceMemoryProperties);
+        VkPhysicalDeviceProperties deviceProperties = getProperties();
+        VkPhysicalDeviceMemoryProperties deviceMemoryProperties = getMemoryProperties();
 
         std::vector<std::string> extensions = getExtensions();
         std::string mergedExtensions("");
@@ -76,6 +74,13 @@ public:
         result.setMaxComputeUnits(0); // to do: find this information for Vulkan API
 
         return result;
+    }
+
+    VkPhysicalDeviceProperties getProperties() const
+    {
+        VkPhysicalDeviceProperties deviceProperties;
+        vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+        return deviceProperties;
     }
 
     VkPhysicalDeviceMemoryProperties getMemoryProperties() const

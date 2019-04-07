@@ -117,7 +117,7 @@ public:
         }
     }
 
-    void recordDispatchShaderCommand(VkCommandBuffer commandBuffer, const std::vector<size_t>& globalSize)
+    void recordDispatchShaderCommand(VkCommandBuffer commandBuffer, const std::vector<size_t>& globalSize, VkQueryPool queryPool)
     {
         const VkCommandBufferBeginInfo commandBufferBeginInfo =
         {
@@ -134,8 +134,12 @@ public:
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, static_cast<uint32_t>(sets.size()), sets.data(), 0,
             nullptr);
+
+        vkCmdResetQueryPool(commandBuffer, queryPool, 0, 2);
+        vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, queryPool, 0);
         vkCmdDispatch(commandBuffer, static_cast<uint32_t>(globalSize[0]), static_cast<uint32_t>(globalSize[1]),
             static_cast<uint32_t>(globalSize[2]));
+        vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, queryPool, 1);
 
         checkVulkanError(vkEndCommandBuffer(commandBuffer), "vkEndCommandBuffer");
     }
