@@ -6,6 +6,8 @@
 #include <set>
 #include <vector>
 #include <enum/time_unit.h>
+#include <string>
+#include <cstdint> 
 
 namespace ktt
 {
