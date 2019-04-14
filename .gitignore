@@ -1,4 +1,2 @@
 build
-libraries/lib/libshaderc*
-libraries/lib/shaderc*
 premake5.exe

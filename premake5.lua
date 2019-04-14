@@ -115,10 +115,10 @@ function findVulkan()
     
     if os.target() == "linux" then
         includedirs { "$(VULKAN_SDK)/include", "libraries/include" }
-        libdirs { "$(VULKAN_SDK)/lib", "libraries/lib" }
+        libdirs { "$(VULKAN_SDK)/lib", "libraries/lib/linux" }
     else
         includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
-        libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib" }
+        libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows" }
     end
     
     vulkan_projects = true
@@ -259,12 +259,6 @@ project "ktt"
         
         if not vulkan then
             error("Vulkan SDK was not found. Please ensure that path to the SDK is correctly set in the environment variables under VULKAN_SDK.")
-        end
-        
-        if os.target() == "linux" then
-            zip.extract("libraries/lib/linux.tar.gz", "libraries/lib")
-        else
-            zip.extract("libraries/lib/windows.zip", "libraries/lib")
         end
     end
     
