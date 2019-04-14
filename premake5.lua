@@ -113,12 +113,22 @@ function findVulkan()
         return false
     end
     
-    includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
-    libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib" }
+    if os.target() == "linux" then
+        includedirs { "$(VULKAN_SDK)/include", "libraries/include" }
+        libdirs { "$(VULKAN_SDK)/lib", "libraries/lib" }
+    else
+        includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
+        libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib" }
+    end
     
     vulkan_projects = true
     defines { "KTT_PLATFORM_VULKAN" }
-    links { "vulkan-1", "shaderc_shared" }
+    
+    if os.target() == "linux" then
+        links { "vulkan", "shaderc_shared" }
+    else
+        links { "vulkan-1", "shaderc_shared" }
+    end
     
     return true
 end
@@ -248,7 +258,7 @@ project "ktt"
         vulkan = findVulkan()
         
         if not vulkan then
-            error("Vulkan SDK was not found")
+            error("Vulkan SDK was not found. Please ensure that path to the SDK is correctly set in the environment variables under VULKAN_SDK.")
         end
         
         if os.target() == "linux" then
