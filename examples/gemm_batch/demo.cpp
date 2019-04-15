@@ -17,6 +17,7 @@
 
 #define REAL float
 #define STEPS 1000
+#define TESTS 100
 #define MAX_MEM 900000000
 
 class NullBuffer : public std::streambuf
@@ -242,7 +243,7 @@ int main(int argc, char** argv)
     tuner->setLoggingTarget(nullStream);
 
     // tune kernels for different sizes
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < TESTS; i++) {
         // generate input size
         int a = 2+(long long)(rand())*31 / RAND_MAX;
         int b = 2+(long long)(rand())*31 / RAND_MAX;
