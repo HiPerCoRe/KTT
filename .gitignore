@@ -1,4 +1,2 @@
 build
-libraries/lib/linux
-libraries/lib/windows
 premake5.exe

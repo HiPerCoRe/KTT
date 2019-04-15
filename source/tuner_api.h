@@ -511,8 +511,8 @@ public:
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
 
     /** @fn void setPrintingTimeUnit(const TimeUnit unit)
-      * Sets time unit used during printing of results inside printResult() methods. Default time unit is microseconds. 
-      * @param unit Time unit which will be used inside printResult() methods. See ::TimeUnit for more information.
+      * Sets time unit used for printing of results. Default time unit is milliseconds. 
+      * @param unit Time unit which will be used for printing of results. See ::TimeUnit for more information.
       */
     void setPrintingTimeUnit(const TimeUnit unit);
 

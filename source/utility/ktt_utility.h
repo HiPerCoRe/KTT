@@ -5,9 +5,15 @@
 #include <limits>
 #include <set>
 #include <vector>
+#include <enum/time_unit.h>
+#include <string>
+#include <cstdint> 
 
 namespace ktt
 {
+
+uint64_t convertTime(const uint64_t timeInNanoseconds, const TimeUnit targetUnit);
+std::string getTimeUnitTag(const TimeUnit unit);
 
 size_t roundUp(const size_t number, const size_t multiple);
 std::vector<size_t> roundUpGlobalSize(const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize);

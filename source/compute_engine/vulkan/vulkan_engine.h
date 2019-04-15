@@ -3,22 +3,23 @@
 #ifdef KTT_PLATFORM_VULKAN
 
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
 #include <compute_engine/vulkan/vulkan_buffer.h>
-#include <compute_engine/vulkan/vulkan_command_buffer.h>
-#include <compute_engine/vulkan/vulkan_command_buffer_group.h>
+#include <compute_engine/vulkan/vulkan_command_buffer_holder.h>
 #include <compute_engine/vulkan/vulkan_command_pool.h>
 #include <compute_engine/vulkan/vulkan_compute_pipeline.h>
 #include <compute_engine/vulkan/vulkan_descriptor_pool.h>
-#include <compute_engine/vulkan/vulkan_descriptor_set.h>
+#include <compute_engine/vulkan/vulkan_descriptor_set_holder.h>
 #include <compute_engine/vulkan/vulkan_descriptor_set_layout.h>
 #include <compute_engine/vulkan/vulkan_device.h>
-#include <compute_engine/vulkan/vulkan_fence.h>
+#include <compute_engine/vulkan/vulkan_event.h>
 #include <compute_engine/vulkan/vulkan_instance.h>
 #include <compute_engine/vulkan/vulkan_pipeline_cache_entry.h>
 #include <compute_engine/vulkan/vulkan_physical_device.h>
+#include <compute_engine/vulkan/vulkan_query_pool.h>
 #include <compute_engine/vulkan/vulkan_queue.h>
 #include <compute_engine/vulkan/vulkan_semaphore.h>
 #include <compute_engine/vulkan/vulkan_shader_module.h>
@@ -102,15 +103,21 @@ private:
     std::unique_ptr<VulkanInstance> instance;
     std::unique_ptr<VulkanDevice> device;
     std::unique_ptr<VulkanCommandPool> commandPool;
+    std::unique_ptr<VulkanQueryPool> queryPool;
     std::vector<VulkanQueue> queues;
     std::set<std::unique_ptr<VulkanBuffer>> buffers;
     std::set<std::unique_ptr<VulkanBuffer>> persistentBuffers;
     std::map<std::pair<std::string, std::string>, std::unique_ptr<VulkanPipelineCacheEntry>> pipelineCache;
-    mutable std::map<EventId, std::unique_ptr<VulkanFence>> kernelFences;
-    mutable std::map<EventId, std::unique_ptr<VulkanFence>> bufferFences;
+    mutable std::map<EventId, std::unique_ptr<VulkanEvent>> kernelEvents;
+    mutable std::map<EventId, std::unique_ptr<VulkanEvent>> bufferEvents;
+    mutable std::map<EventId, std::unique_ptr<VulkanCommandBufferHolder>> eventCommands;
+    mutable std::map<EventId, std::unique_ptr<VulkanBuffer>> stagingBuffers;
 
     EventId enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const QueueId queue, const uint64_t kernelLaunchOverhead);
+    KernelResult createKernelResult(const EventId id) const;
+    std::vector<VulkanBuffer*> getPipelineArguments(const std::vector<KernelArgument*>& argumentPointers);
+    VulkanBuffer* findBuffer(const ArgumentId id) const;
 };
 
 } // namespace ktt

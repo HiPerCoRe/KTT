@@ -113,25 +113,22 @@ function findVulkan()
         return false
     end
     
-    includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
-    
     if os.target() == "linux" then
-        filter "configurations:Release"
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux/release" }
-        filter "configurations:Debug"
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/linux/debug" }
+        includedirs { "$(VULKAN_SDK)/include", "libraries/include" }
+        libdirs { "$(VULKAN_SDK)/lib", "libraries/lib/linux" }
     else
-        filter "configurations:Release"
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows/release" }
-        filter "configurations:Debug"
-            libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows/debug" }
+        includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
+        libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows" }
     end
-    
-    filter {}
     
     vulkan_projects = true
     defines { "KTT_PLATFORM_VULKAN" }
-    links { "vulkan-1", "glslang", "SPIRV", "SPIRV-Tools", "HLSL", "OSDependent", "OGLCompiler", "SPVRemapper", "SPIRV-Tools-opt" }
+    
+    if os.target() == "linux" then
+        links { "vulkan", "shaderc_shared" }
+    else
+        links { "vulkan-1", "shaderc_shared" }
+    end
     
     return true
 end
@@ -261,13 +258,7 @@ project "ktt"
         vulkan = findVulkan()
         
         if not vulkan then
-            error("Vulkan SDK was not found")
-        end
-        
-        if os.target() == "linux" then
-            zip.extract("libraries/lib/linux.tar.gz", "libraries/lib/linux")
-        else
-            zip.extract("libraries/lib/windows.zip", "libraries/lib/windows")
+            error("Vulkan SDK was not found. Please ensure that path to the SDK is correctly set in the environment variables under VULKAN_SDK.")
         end
     end
     
@@ -446,7 +437,13 @@ project "01_running_kernel_vulkan"
     includedirs { "source" }
     links { "ktt" }
     
-end -- cuda_projects
+project "02_tuning_kernel_simple_vulkan"
+    kind "ConsoleApp"
+    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_vulkan.cpp", "tutorials/02_tuning_kernel_simple/vulkan_kernel.glsl" }
+    includedirs { "source" }
+    links { "ktt" }
+    
+end -- vulkan_projects
 
 end -- _OPTIONS["no-tutorials"]
 

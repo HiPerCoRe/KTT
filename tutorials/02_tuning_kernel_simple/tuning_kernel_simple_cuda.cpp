@@ -113,6 +113,10 @@ int main(int argc, char** argv)
     // so that grid size multiplied by block size remains constant. This means that another modifier which divides grid size has to be added.
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "multiply_block_size", ktt::ModifierAction::Divide);
 
+    // Set time unit used during printing of kernel duration. Default time unit is milliseconds, but since computation in this tutorial does not take
+    // too long, microseconds are used instead.
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
     // Start tuning for specified kernel. This generates multiple versions of the kernel based on provided tuning parameters and their values. In
     // this case, 4 different versions of kernel will be run due to provided kernel constraint.
     tuner.tuneKernel(kernelId);

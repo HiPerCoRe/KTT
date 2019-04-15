@@ -33,12 +33,12 @@ public:
         vkQueueWaitIdle(queue);
     }
 
-    void submitSingleCommand(VkCommandBuffer commandBuffer)
+    void submitSingleCommand(VkCommandBuffer commandBuffer) const
     {
         submitSingleCommand(commandBuffer, nullptr);
     }
 
-    void submitSingleCommand(VkCommandBuffer commandBuffer, VkFence fence)
+    void submitSingleCommand(VkCommandBuffer commandBuffer, VkFence fence) const
     {
         const VkSubmitInfo submitInfo =
         {

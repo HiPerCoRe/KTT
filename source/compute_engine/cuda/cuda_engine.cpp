@@ -762,7 +762,7 @@ EventId CUDAEngine::enqueueKernel(CUDAKernel& kernel, const std::vector<size_t>&
     {
         correctedGlobalSize = roundUpGlobalSize(correctedGlobalSize, localSize);
     }
-    if (globalSizeType != GlobalSizeType::CUDA)
+    if (globalSizeType == GlobalSizeType::OpenCL)
     {
         correctedGlobalSize.at(0) /= localSize.at(0);
         correctedGlobalSize.at(1) /= localSize.at(1);
@@ -797,7 +797,7 @@ KernelResult CUDAEngine::createKernelResult(const EventId id) const
             + std::to_string(id));
     }
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Performing kernel synchronization for event id: " + std::to_string(id));
+    Logger::getLogger().log(LoggingLevel::Debug, std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
 
     // Wait until the second event in pair (the end event) finishes
     checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");

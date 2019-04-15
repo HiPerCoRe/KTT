@@ -416,6 +416,7 @@ ComputationResult TunerCore::getBestComputationResult(const KernelId id) const
 
 void TunerCore::setPrintingTimeUnit(const TimeUnit unit)
 {
+    kernelRunner->setTimeUnit(unit);
     resultPrinter.setTimeUnit(unit);
 }
 

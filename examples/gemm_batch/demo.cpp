@@ -146,7 +146,7 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
     if (c % 4 == 0)
         tuner->addParameter(kernelId, "PADD_C", {0});
     else
-        tuner->addParameter(kernelId, "PADD_C", {0, c % 4});
+        tuner->addParameter(kernelId, "PADD_C", {0, static_cast<size_t>(c % 4)});
     tuner->addParameter(kernelId, "DIRECT_WRITE", {0, 1});
     tuner->addParameter(kernelId, "UNROLL_K", {0, 1});
 

@@ -7,6 +7,7 @@
 #include <compute_engine/compute_engine.h>
 #include <dto/kernel_result.h>
 #include <enum/kernel_run_mode.h>
+#include <enum/time_unit.h>
 #include <kernel/kernel_manager.h>
 #include <kernel_argument/argument_manager.h>
 #include <tuning_runner/manipulator_interface_implementation.h>
@@ -32,6 +33,7 @@ public:
         const std::vector<OutputDescriptor>& output);
     void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator);
     void setTuningManipulatorSynchronization(const KernelId id, const bool flag);
+    void setTimeUnit(const TimeUnit unit);
     void setKernelProfiling(const bool flag);
     bool getKernelProfiling();
 
@@ -60,6 +62,7 @@ private:
     std::unique_ptr<ManipulatorInterfaceImplementation> manipulatorInterfaceImplementation;
     std::map<KernelId, std::unique_ptr<TuningManipulator>> tuningManipulators;
     std::set<KernelId> disabledSynchronizationManipulators;
+    TimeUnit timeUnit;
     bool kernelProfilingFlag;
 
     // Helper methods
