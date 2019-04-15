@@ -100,6 +100,7 @@ int main(int argc, char** argv)
     tuner.setKernelProfiling(true);
   #endif
 #endif
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
     //tuner.setLoggingLevel(ktt::LoggingLevel::Debug);
 
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "directCoulombSum", ndRangeDimensions, workGroupDimensions);

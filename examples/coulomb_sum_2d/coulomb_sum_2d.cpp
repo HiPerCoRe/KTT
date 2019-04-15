@@ -76,6 +76,7 @@ int main(int argc, char** argv)
     // Create tuner object for specified platform and device
     ktt::Tuner tuner(platformIndex, deviceIndex);
     tuner.setCompilerOptions("-cl-fast-relaxed-math");
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     // Add two kernels to tuner, one of the kernels acts as reference kernel
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "directCoulombSum", ndRangeDimensions, workGroupDimensions);

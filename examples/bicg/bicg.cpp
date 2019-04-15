@@ -178,6 +178,7 @@ int main(int argc, char** argv)
 
 	// Create tuner object for specified platform and device
 	ktt::Tuner tuner(platformIndex, deviceIndex);
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
 	// Add all arguments utilized by kernels
 	ktt::ArgumentId AId = tuner.addArgumentVector(A, ktt::ArgumentAccessType::ReadOnly);

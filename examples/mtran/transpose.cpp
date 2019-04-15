@@ -86,6 +86,7 @@ int main(int argc, char **argv)
     tuner.setKernelProfiling(true);
   #endif
 #endif
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     // Create kernel and configure input/output
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "mtran", ndRangeDimensions, ktt::DimensionVector(1, 1));

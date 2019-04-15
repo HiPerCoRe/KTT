@@ -43,6 +43,7 @@ int main(int argc, char** argv)
     }
 
     ktt::Tuner tuner(platformIndex, deviceIndex);
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     // create kernel
     int nUp = ((n+512-1)/512)*512; // maximum WG size used in tuning parameters

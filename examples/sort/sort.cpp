@@ -75,6 +75,7 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
     tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
 #endif
+  tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
   // Declare kernels and their dimensions
   std::vector<ktt::KernelId> kernelIds(3);

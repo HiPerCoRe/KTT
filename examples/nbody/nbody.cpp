@@ -116,7 +116,7 @@ int main(int argc, char** argv)
     tuner.setKernelProfiling(true);
   #endif
 #endif
-
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
     // Add two kernels to tuner, one of the kernels acts as reference kernel
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "nbody_kernel", ndRangeDimensions, workGroupDimensions);
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "nbody_kernel", ndRangeDimensions, referenceWorkGroupDimensions);

@@ -177,6 +177,7 @@ int main(int argc, char** argv)
 #else
     ktt::Tuner tuner(0, deviceIndex, ktt::ComputeAPI::CUDA);
 #endif
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     // create kernel
     ktt::DimensionVector ndRangeDimensions(batch);

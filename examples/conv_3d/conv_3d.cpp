@@ -162,6 +162,7 @@ int main(int argc, char **argv) {
 
   // Create tuner object for chosen platform and device
   ktt::Tuner tuner(platformIndex, deviceIndex);
+  tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
   // Kernel dimensions
   const ktt::DimensionVector ndRangeDimensions(WIDTH, HEIGHT, DEPTH);
