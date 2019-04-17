@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
-    const int n = 32*1024*1024;
+    const int n = 64*1024*1024;
     const int nAlloc = ((n+16-1)/16)*16; // padd to longest vector size
     std::vector<float> src(nAlloc, 0.0f);
     std::vector<float> dst(nAlloc, 0.0f);
