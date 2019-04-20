@@ -461,7 +461,7 @@ public:
       */
     ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
 
-    /** @fn void clearData(const KernelId id)
+    /** @fn void clearKernelData(const KernelId id, const bool clearConfigurations)
       * Resets tuning process and clears tuning results for specified kernel.
       * @param id Id of kernel whose data will be cleared.
       * @param clearConfigurations If true, generated kernel configurations will be cleared as well. Otherwise, they will remain inside tuner.

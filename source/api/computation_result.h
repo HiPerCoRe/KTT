@@ -35,7 +35,7 @@ public:
     explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration);
 
     /** @fn explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-      * const KernelProfilingData& profilingData))
+      * const KernelProfilingData& profilingData)
       * Constructor which initializes tuning result for successful computations. Error message is initialized to empty string.
       * @param kernelName Name of a kernel.
       * @param configuration Configuration used for computation.
@@ -45,7 +45,7 @@ public:
     explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
         const KernelProfilingData& profilingData);
 
-    /** @fn explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
+    /** @fn explicit ComputationResult(const std::string& compositionName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
       * const std::map<KernelId, KernelProfilingData>& compositionProfilingData)
       * Constructor which initializes tuning result for successful computations. Error message is initialized to empty string.
       * @param compositionName Name of a composition.

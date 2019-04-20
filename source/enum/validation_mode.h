@@ -34,9 +34,13 @@ enum class ValidationMode
     All = Running | OfflineTuning | OnlineTuning
 };
 
+/** Validation mode enum supports bitwise operations.
+  */
 template <>
 struct EnableBitfieldOperators<ValidationMode>
 {
+    /** Bitwise operations are enabled.
+      */
     static const bool enable = true;
 };
 

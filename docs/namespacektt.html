@@ -35,7 +35,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.0</span>
+   &#160;<span id="projectnumber">1.1</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -120,11 +120,21 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_dimension_vector.html">DimensionVector</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structktt_1_1_enable_bitfield_operators_3_01_validation_mode_01_4.html">EnableBitfieldOperators&lt; ValidationMode &gt;</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_profiling_counter.html">KernelProfilingCounter</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_profiling_data.html">KernelProfilingData</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_output_descriptor.html">OutputDescriptor</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_parameter_pair.html">ParameterPair</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_platform_info.html">PlatformInfo</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">union &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="unionktt_1_1_profiling_counter_value.html">ProfilingCounterValue</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_reference_class.html">ReferenceClass</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -188,7 +198,8 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="separator:a27feefe5217ccf7232f658cd88143f0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a319c9e3d66dd23fdd4f71b0c467d3b59"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a319c9e3d66dd23fdd4f71b0c467d3b59">ComputeAPI</a> { <a class="el" href="namespacektt.html#a319c9e3d66dd23fdd4f71b0c467d3b59a7982b09a852b37f2afb1227eaf552e47">ComputeAPI::OpenCL</a>, 
-<a class="el" href="namespacektt.html#a319c9e3d66dd23fdd4f71b0c467d3b59aa33b7755e5f9b504d2d038eaca4ff28d">ComputeAPI::CUDA</a>
+<a class="el" href="namespacektt.html#a319c9e3d66dd23fdd4f71b0c467d3b59aa33b7755e5f9b504d2d038eaca4ff28d">ComputeAPI::CUDA</a>, 
+<a class="el" href="namespacektt.html#a319c9e3d66dd23fdd4f71b0c467d3b59a38625270231b647116c80bcbc4f9d1d8">ComputeAPI::Vulkan</a>
  }</td></tr>
 <tr class="separator:a319c9e3d66dd23fdd4f71b0c467d3b59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a615cf89b27d4d1f734af56573e5c2e01"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01">DeviceType</a> { <br />
@@ -206,9 +217,16 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="separator:ac17be234b9c499fc808a40ba1fb17af5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a16e643cd2325370c79affaeee8ef85f0"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a16e643cd2325370c79affaeee8ef85f0">GlobalSizeType</a> { <a class="el" href="namespacektt.html#a16e643cd2325370c79affaeee8ef85f0a7982b09a852b37f2afb1227eaf552e47">GlobalSizeType::OpenCL</a>, 
-<a class="el" href="namespacektt.html#a16e643cd2325370c79affaeee8ef85f0aa33b7755e5f9b504d2d038eaca4ff28d">GlobalSizeType::CUDA</a>
+<a class="el" href="namespacektt.html#a16e643cd2325370c79affaeee8ef85f0aa33b7755e5f9b504d2d038eaca4ff28d">GlobalSizeType::CUDA</a>, 
+<a class="el" href="namespacektt.html#a16e643cd2325370c79affaeee8ef85f0a38625270231b647116c80bcbc4f9d1d8">GlobalSizeType::Vulkan</a>
  }</td></tr>
 <tr class="separator:a16e643cd2325370c79affaeee8ef85f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a405c5e17d3cfbedf3b3eb4e54c7c35ee"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a405c5e17d3cfbedf3b3eb4e54c7c35ee">KernelRunMode</a> { <a class="el" href="namespacektt.html#a405c5e17d3cfbedf3b3eb4e54c7c35eea5bda814c4aedb126839228f1a3d92f09">KernelRunMode::Running</a>, 
+<a class="el" href="namespacektt.html#a405c5e17d3cfbedf3b3eb4e54c7c35eeadd15d361ea740ab5e11145f0fa2f9374">KernelRunMode::OfflineTuning</a>, 
+<a class="el" href="namespacektt.html#a405c5e17d3cfbedf3b3eb4e54c7c35eeabc40db0f46cab2811dede4f5341446fb">KernelRunMode::OnlineTuning</a>, 
+<a class="el" href="namespacektt.html#a405c5e17d3cfbedf3b3eb4e54c7c35eeab2f31c1511a9baf03796731b9fbc2e1b">KernelRunMode::ResultValidation</a>
+ }</td></tr>
+<tr class="separator:a405c5e17d3cfbedf3b3eb4e54c7c35ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17afdb449e82292a32fba46ff7a54781"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a17afdb449e82292a32fba46ff7a54781">LoggingLevel</a> { <br />
 &#160;&#160;<a class="el" href="namespacektt.html#a17afdb449e82292a32fba46ff7a54781ad15305d7a4e34e02489c74a5ef542f36">LoggingLevel::Off</a>, 
 <a class="el" href="namespacektt.html#a17afdb449e82292a32fba46ff7a54781a902b0d55fddef6f8d651fe1035b7d4bd">LoggingLevel::Error</a>, 
@@ -238,6 +256,17 @@ Enumerations</h2></td></tr>
 <a class="el" href="namespacektt.html#a241748d791d84aed146db202c8b68bebacc8d68c551c4a9a6d5313e07de4deafd">PrintFormat::CSV</a>
  }</td></tr>
 <tr class="separator:a241748d791d84aed146db202c8b68beb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae380b017e6b4aee36ed6598aa4a51282"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282">ProfilingCounterType</a> { <br />
+&#160;&#160;<a class="el" href="namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282a1686a6c336b71b36d77354cea19a8b52">ProfilingCounterType::Int</a>, 
+<a class="el" href="namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282ac93cff91b6b9a57fa32bbe1863150070">ProfilingCounterType::UnsignedInt</a>, 
+<a class="el" href="namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282ad909d38d705ce75386dd86e611a82f5b">ProfilingCounterType::Double</a>, 
+<a class="el" href="namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282aadaaee4b22041c27198d410c68d952c9">ProfilingCounterType::Percent</a>, 
+<br />
+&#160;&#160;<a class="el" href="namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282a0b85467ebafa7ca3c47e82dc38184484">ProfilingCounterType::Throughput</a>, 
+<a class="el" href="namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282a71cc11758ce01e73802c7335b1ac426b">ProfilingCounterType::UtilizationLevel</a>
+<br />
+ }</td></tr>
+<tr class="separator:ae380b017e6b4aee36ed6598aa4a51282"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f5b49f1e11331a499aa44fb1fa6788b"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788b">SearchMethod</a> { <a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788ba4774784e057c4bbae83302ed0de38df6">SearchMethod::FullSearch</a>, 
 <a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788ba9df32f1d41ae9ca3b761a36681bf2b51">SearchMethod::RandomSearch</a>, 
 <a class="el" href="namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788ba044e7c937b44387edefa6ffa56f3a5c4">SearchMethod::Annealing</a>, 
@@ -255,6 +284,16 @@ Enumerations</h2></td></tr>
 <a class="el" href="namespacektt.html#a187d4987bb48bc1f78f628c8aa840a20afbd9c2b8d6c9a13483253add7aae125a">ValidationMethod::SideBySideRelativeComparison</a>
  }</td></tr>
 <tr class="separator:a187d4987bb48bc1f78f628c8aa840a20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3baf318a03750f7418a5faa051967c04"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a3baf318a03750f7418a5faa051967c04">ValidationMode</a> { <br />
+&#160;&#160;<a class="el" href="namespacektt.html#a3baf318a03750f7418a5faa051967c04a6adf97f83acf6453d4a6a4b1070f3754">ValidationMode::None</a> = 0, 
+<a class="el" href="namespacektt.html#a3baf318a03750f7418a5faa051967c04a5bda814c4aedb126839228f1a3d92f09">ValidationMode::Running</a> = (1 &lt;&lt; 0), 
+<a class="el" href="namespacektt.html#a3baf318a03750f7418a5faa051967c04add15d361ea740ab5e11145f0fa2f9374">ValidationMode::OfflineTuning</a> = (1 &lt;&lt; 1), 
+<a class="el" href="namespacektt.html#a3baf318a03750f7418a5faa051967c04abc40db0f46cab2811dede4f5341446fb">ValidationMode::OnlineTuning</a> = (1 &lt;&lt; 2), 
+<br />
+&#160;&#160;<a class="el" href="namespacektt.html#a3baf318a03750f7418a5faa051967c04ab1c94ca2fbc3e78fc30069c8d0f01680">ValidationMode::All</a> = Running | OfflineTuning | OnlineTuning
+<br />
+ }</td></tr>
+<tr class="separator:a3baf318a03750f7418a5faa051967c04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -269,6 +308,50 @@ Functions</h2></td></tr>
 <tr class="memitem:a58542a084c7a53c6465e4a82dee8898d"><td class="memItemLeft" align="right" valign="top">KTT_API std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a58542a084c7a53c6465e4a82dee8898d">operator&lt;&lt;</a> (std::ostream &amp;outputTarget, const <a class="el" href="classktt_1_1_platform_info.html">PlatformInfo</a> &amp;platformInfo)</td></tr>
 <tr class="memdesc:a58542a084c7a53c6465e4a82dee8898d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output operator for platform info class.  <a href="#a58542a084c7a53c6465e4a82dee8898d">More...</a><br /></td></tr>
 <tr class="separator:a58542a084c7a53c6465e4a82dee8898d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ef47ce449fae0e4ec1fa0412e437acc"><td class="memTemplParams" colspan="2"><a id="a4ef47ce449fae0e4ec1fa0412e437acc"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:a4ef47ce449fae0e4ec1fa0412e437acc"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, EnumType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator &amp;</b> (EnumType lhs, EnumType rhs)</td></tr>
+<tr class="separator:a4ef47ce449fae0e4ec1fa0412e437acc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96e909a20657b80ad2f9655a4e8998f5"><td class="memTemplParams" colspan="2"><a id="a96e909a20657b80ad2f9655a4e8998f5"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:a96e909a20657b80ad2f9655a4e8998f5"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, EnumType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator|</b> (EnumType lhs, EnumType rhs)</td></tr>
+<tr class="separator:a96e909a20657b80ad2f9655a4e8998f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5237ab81c815a338b4e278ba7db093af"><td class="memTemplParams" colspan="2"><a id="a5237ab81c815a338b4e278ba7db093af"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:a5237ab81c815a338b4e278ba7db093af"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, EnumType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator^</b> (EnumType lhs, EnumType rhs)</td></tr>
+<tr class="separator:a5237ab81c815a338b4e278ba7db093af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb47c6f7932bb1d272eec9de69250721"><td class="memTemplParams" colspan="2"><a id="abb47c6f7932bb1d272eec9de69250721"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:abb47c6f7932bb1d272eec9de69250721"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, EnumType &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator~</b> (EnumType lhs)</td></tr>
+<tr class="separator:abb47c6f7932bb1d272eec9de69250721"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a352990ed9a5944751534c5fbfc6cd0ad"><td class="memTemplParams" colspan="2"><a id="a352990ed9a5944751534c5fbfc6cd0ad"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:a352990ed9a5944751534c5fbfc6cd0ad"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, EnumType &amp; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator &amp;=</b> (EnumType &amp;lhs, EnumType rhs)</td></tr>
+<tr class="separator:a352990ed9a5944751534c5fbfc6cd0ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8952f5e5cbc56dc2f32b87997bc30791"><td class="memTemplParams" colspan="2"><a id="a8952f5e5cbc56dc2f32b87997bc30791"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:a8952f5e5cbc56dc2f32b87997bc30791"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, EnumType &amp; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator|=</b> (EnumType &amp;lhs, EnumType rhs)</td></tr>
+<tr class="separator:a8952f5e5cbc56dc2f32b87997bc30791"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb2f71bb8356f4dc440be1649269f93b"><td class="memTemplParams" colspan="2"><a id="abb2f71bb8356f4dc440be1649269f93b"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:abb2f71bb8356f4dc440be1649269f93b"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, EnumType &amp; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator^=</b> (EnumType &amp;lhs, EnumType rhs)</td></tr>
+<tr class="separator:abb2f71bb8356f4dc440be1649269f93b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a970a757821c77a4ad14ce34c0fb7d3e0"><td class="memTemplParams" colspan="2"><a id="a970a757821c77a4ad14ce34c0fb7d3e0"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:a970a757821c77a4ad14ce34c0fb7d3e0"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, void &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>setFlag</b> (EnumType &amp;bitfield, EnumType flag)</td></tr>
+<tr class="separator:a970a757821c77a4ad14ce34c0fb7d3e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab78f2fd2ccbc455c9e0851199aeef10f"><td class="memTemplParams" colspan="2"><a id="ab78f2fd2ccbc455c9e0851199aeef10f"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:ab78f2fd2ccbc455c9e0851199aeef10f"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, void &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>clearFlag</b> (EnumType &amp;bitfield, EnumType flag)</td></tr>
+<tr class="separator:ab78f2fd2ccbc455c9e0851199aeef10f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade71262e72dba698cfb53cd4554443c8"><td class="memTemplParams" colspan="2"><a id="ade71262e72dba698cfb53cd4554443c8"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:ade71262e72dba698cfb53cd4554443c8"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, void &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>flipFlag</b> (EnumType &amp;bitfield, EnumType flag)</td></tr>
+<tr class="separator:ade71262e72dba698cfb53cd4554443c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adedf7830f12c7c8020cb9a8229700f0a"><td class="memTemplParams" colspan="2"><a id="adedf7830f12c7c8020cb9a8229700f0a"></a>
+template&lt;typename EnumType &gt; </td></tr>
+<tr class="memitem:adedf7830f12c7c8020cb9a8229700f0a"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; <a class="el" href="structktt_1_1_enable_bitfield_operators.html">EnableBitfieldOperators</a>&lt; EnumType &gt;::enable, bool &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hasFlag</b> (EnumType bitfield, EnumType flag)</td></tr>
+<tr class="separator:adedf7830f12c7c8020cb9a8229700f0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>All classes, methods and type aliases related to KTT framework are located inside ktt namespace. </p>
@@ -531,6 +614,8 @@ Functions</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="a319c9e3d66dd23fdd4f71b0c467d3b59aa33b7755e5f9b504d2d038eaca4ff28d"></a>CUDA&#160;</td><td class="fielddoc"><p><a class="el" href="classktt_1_1_tuner.html">Tuner</a> will use CUDA as compute API. </p>
 </td></tr>
+<tr><td class="fieldname"><a id="a319c9e3d66dd23fdd4f71b0c467d3b59a38625270231b647116c80bcbc4f9d1d8"></a>Vulkan&#160;</td><td class="fielddoc"><p><a class="el" href="classktt_1_1_tuner.html">Tuner</a> will use Vulkan as compute API. </p>
+</td></tr>
 </table>
 
 </div>
@@ -623,6 +708,41 @@ Functions</h2></td></tr>
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a16e643cd2325370c79affaeee8ef85f0a7982b09a852b37f2afb1227eaf552e47"></a>OpenCL&#160;</td><td class="fielddoc"><p>Global thread size uses OpenCL format for NDRange dimensions specification. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a16e643cd2325370c79affaeee8ef85f0aa33b7755e5f9b504d2d038eaca4ff28d"></a>CUDA&#160;</td><td class="fielddoc"><p>Global thread size uses CUDA format for grid dimensions specification. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a16e643cd2325370c79affaeee8ef85f0a38625270231b647116c80bcbc4f9d1d8"></a>Vulkan&#160;</td><td class="fielddoc"><p>Global thread size uses Vulkan format. This format is the same as CUDA format. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="a405c5e17d3cfbedf3b3eb4e54c7c35ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a405c5e17d3cfbedf3b3eb4e54c7c35ee">&#9670;&nbsp;</a></span>KernelRunMode</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="namespacektt.html#a405c5e17d3cfbedf3b3eb4e54c7c35ee">ktt::KernelRunMode</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Enum for differentiating between different kernel running scenarios. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a405c5e17d3cfbedf3b3eb4e54c7c35eea5bda814c4aedb126839228f1a3d92f09"></a>Running&#160;</td><td class="fielddoc"><p>Regular kernel running. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a405c5e17d3cfbedf3b3eb4e54c7c35eeadd15d361ea740ab5e11145f0fa2f9374"></a>OfflineTuning&#160;</td><td class="fielddoc"><p>Offline kernel tuning. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a405c5e17d3cfbedf3b3eb4e54c7c35eeabc40db0f46cab2811dede4f5341446fb"></a>OnlineTuning&#160;</td><td class="fielddoc"><p>Online kernel tuning. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a405c5e17d3cfbedf3b3eb4e54c7c35eeab2f31c1511a9baf03796731b9fbc2e1b"></a>ResultValidation&#160;</td><td class="fielddoc"><p>Computation of reference output for result validation. </p>
 </td></tr>
 </table>
 
@@ -785,6 +905,43 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="ae380b017e6b4aee36ed6598aa4a51282"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae380b017e6b4aee36ed6598aa4a51282">&#9670;&nbsp;</a></span>ProfilingCounterType</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282">ktt::ProfilingCounterType</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Enum which specifies data type of a profiling counter. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ae380b017e6b4aee36ed6598aa4a51282a1686a6c336b71b36d77354cea19a8b52"></a>Int&#160;</td><td class="fielddoc"><p>Profiling counter is a signed 64-bit integer. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ae380b017e6b4aee36ed6598aa4a51282ac93cff91b6b9a57fa32bbe1863150070"></a>UnsignedInt&#160;</td><td class="fielddoc"><p>Profiling counter is an unsigned 64-bit integer. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ae380b017e6b4aee36ed6598aa4a51282ad909d38d705ce75386dd86e611a82f5b"></a>Double&#160;</td><td class="fielddoc"><p>Profiling counter is a 64-bit float. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ae380b017e6b4aee36ed6598aa4a51282aadaaee4b22041c27198d410c68d952c9"></a>Percent&#160;</td><td class="fielddoc"><p>Profiling counter is a 64-bit float with a range of values between 0.0 and 100.0 (corresponding to 0% - 100%). </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ae380b017e6b4aee36ed6598aa4a51282a0b85467ebafa7ca3c47e82dc38184484"></a>Throughput&#160;</td><td class="fielddoc"><p>Profiling counter is an unsigned 64-bit integer. The unit for throughput value is bytes/second. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ae380b017e6b4aee36ed6598aa4a51282a71cc11758ce01e73802c7335b1ac426b"></a>UtilizationLevel&#160;</td><td class="fielddoc"><p>Profiling counter is an unsigned 32-bit integer with a range of values between 0 and 10 (0 corresponds to minimum utilization level, 10 to maximum utilization level). </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <a id="a5f5b49f1e11331a499aa44fb1fa6788b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5f5b49f1e11331a499aa44fb1fa6788b">&#9670;&nbsp;</a></span>SearchMethod</h2>
 
@@ -877,6 +1034,41 @@ Functions</h2></td></tr>
 <tr><td class="fieldname"><a id="a187d4987bb48bc1f78f628c8aa840a20a02dc3aadaf5d37fb8def639351068c3b"></a>SideBySideComparison&#160;</td><td class="fielddoc"><p>Calculates difference for each pair of elements, then compares the difference to specified threshold. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a187d4987bb48bc1f78f628c8aa840a20afbd9c2b8d6c9a13483253add7aae125a"></a>SideBySideRelativeComparison&#160;</td><td class="fielddoc"><p>Calculates difference for each pair of elements, then compares the difference divided by reference value to specified threshold. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="a3baf318a03750f7418a5faa051967c04"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3baf318a03750f7418a5faa051967c04">&#9670;&nbsp;</a></span>ValidationMode</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="namespacektt.html#a3baf318a03750f7418a5faa051967c04">ktt::ValidationMode</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Enum for enabling kernel output validation in different scenarios. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a3baf318a03750f7418a5faa051967c04a6adf97f83acf6453d4a6a4b1070f3754"></a>None&#160;</td><td class="fielddoc"><p>Kernel output validation is completely disabled. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a3baf318a03750f7418a5faa051967c04a5bda814c4aedb126839228f1a3d92f09"></a>Running&#160;</td><td class="fielddoc"><p>Kernel output is validated during kernel running. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a3baf318a03750f7418a5faa051967c04add15d361ea740ab5e11145f0fa2f9374"></a>OfflineTuning&#160;</td><td class="fielddoc"><p>Kernel output is validated during offline kernel tuning. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a3baf318a03750f7418a5faa051967c04abc40db0f46cab2811dede4f5341446fb"></a>OnlineTuning&#160;</td><td class="fielddoc"><p>Kernel output is validated during online kernel tuning. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a3baf318a03750f7418a5faa051967c04ab1c94ca2fbc3e78fc30069c8d0f01680"></a>All&#160;</td><td class="fielddoc"><p>Kernel output is always validated. </p>
 </td></tr>
 </table>
 

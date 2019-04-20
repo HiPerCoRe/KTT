@@ -14,7 +14,8 @@ var searchData=
   ['dimensionvector',['DimensionVector',['../classktt_1_1_dimension_vector.html',1,'ktt::DimensionVector'],['../classktt_1_1_dimension_vector.html#a481f83a511def47ab7124ed7461024ce',1,'ktt::DimensionVector::DimensionVector()'],['../classktt_1_1_dimension_vector.html#a1bfbb2a72cff5585a671c5272848b3b1',1,'ktt::DimensionVector::DimensionVector(const size_t sizeX)'],['../classktt_1_1_dimension_vector.html#ac40ec611802bf43b67515c04f7b7775f',1,'ktt::DimensionVector::DimensionVector(const size_t sizeX, const size_t sizeY)'],['../classktt_1_1_dimension_vector.html#a48e9f835e901fcce7f57bf17b1aeb05c',1,'ktt::DimensionVector::DimensionVector(const size_t sizeX, const size_t sizeY, const size_t sizeZ)'],['../classktt_1_1_dimension_vector.html#a548756d91eafa34a429dbc5de0473b74',1,'ktt::DimensionVector::DimensionVector(const std::vector&lt; size_t &gt; &amp;vector)']]],
   ['dimensionvectortype',['DimensionVectorType',['../namespacektt.html#ac17be234b9c499fc808a40ba1fb17af5',1,'ktt']]],
   ['divide',['divide',['../classktt_1_1_dimension_vector.html#adf6988fa56eff4b60142945fc070affc',1,'ktt::DimensionVector::divide()'],['../namespacektt.html#aa22e627ca88d7d508cd228c977bf4dd8a0b914e196182d02615487e9793ecff3d',1,'ktt::Divide()']]],
-  ['double',['Double',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7ad909d38d705ce75386dd86e611a82f5b',1,'ktt']]],
+  ['double',['Double',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7ad909d38d705ce75386dd86e611a82f5b',1,'ktt::Double()'],['../namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282ad909d38d705ce75386dd86e611a82f5b',1,'ktt::Double()']]],
+  ['doublevalue',['doubleValue',['../unionktt_1_1_profiling_counter_value.html#a7b089643069ef63df36b93eb9d05bc0e',1,'ktt::ProfilingCounterValue']]],
   ['downloadpersistentargument',['downloadPersistentArgument',['../classktt_1_1_tuner.html#afc0c877d952683b26bd17e1aa3daa123',1,'ktt::Tuner']]],
-  ['drytunekernel',['dryTuneKernel',['../classktt_1_1_tuner.html#a79903b1b50704fafc43d7bf57ee31ffc',1,'ktt::Tuner']]]
+  ['drytunekernel',['dryTuneKernel',['../classktt_1_1_tuner.html#a572ce9d97c6618e4ccf573210932141b',1,'ktt::Tuner']]]
 ];

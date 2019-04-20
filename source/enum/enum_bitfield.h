@@ -1,3 +1,6 @@
+/** @file enum_bitfield.h
+  * Support for bitwise operations for strongly typed enums.
+  */
 #pragma once
 
 #include <type_traits>
@@ -5,9 +8,14 @@
 namespace ktt
 {
 
+/** @struct EnableBitfieldOperators
+  * Structure which enables bitwise operations support for specified enum.
+  */
 template <typename EnumType>
 struct EnableBitfieldOperators
 {
+    /** Bitwise operations are disabled by default.
+      */
     static const bool enable = false;
 };
 

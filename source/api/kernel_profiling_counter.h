@@ -1,4 +1,4 @@
-/** @file kernel_profiling_data.h
+/** @file kernel_profiling_counter.h
   * Class holding information about single profiling counter.
   */
 #pragma once
@@ -16,11 +16,28 @@ namespace ktt
   */
 union KTT_API ProfilingCounterValue
 {
+    /** Corresponds to ProfilingCounterType::Int.
+      */
     int64_t intValue;
+
+    /** Corresponds to ProfilingCounterType::UnsignedInt.
+      */
     uint64_t uintValue;
+
+    /** Corresponds to ProfilingCounterType::Double.
+      */
     double doubleValue;
+
+    /** Corresponds to ProfilingCounterType::Percent.
+      */
     double percentValue;
+
+    /** Corresponds to ProfilingCounterType::Throughput.
+      */
     uint64_t throughputValue;
+
+    /** Corresponds to ProfilingCounterType::UtilizationLevel.
+      */
     uint32_t utilizationLevelValue;
 };
 

@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['vector',['Vector',['../namespacektt.html#a27feefe5217ccf7232f658cd88143f0fa57dea6f5039281b7fee517fc43bf3110',1,'ktt']]],
-  ['verbose',['Verbose',['../namespacektt.html#a241748d791d84aed146db202c8b68bebad4a9fa383ab700c5bdd6f31cf7df0faf',1,'ktt']]]
+  ['throughput',['Throughput',['../namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282a0b85467ebafa7ca3c47e82dc38184484',1,'ktt']]]
 ];

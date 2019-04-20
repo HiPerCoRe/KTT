@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Kernel Tuning Toolkit: KTT FAQ</title>
+<title>Kernel Tuning Toolkit: Member List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -35,7 +35,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.0</span>
+   &#160;<span id="projectnumber">1.1</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -77,7 +77,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(document).ready(function(){initNavTree('md_docs_faq_faq.html','');});
+$(document).ready(function(){initNavTree('unionktt_1_1_profiling_counter_value.html','');});
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -97,25 +97,19 @@ $(document).ready(function(){initNavTree('md_docs_faq_faq.html','');});
 
 <div class="header">
   <div class="headertitle">
-<div class="title">KTT FAQ </div>  </div>
+<div class="title">ktt::ProfilingCounterValue Member List</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>This file provides answers to common questions that users might have involving the usage of KTT framework.</p>
-<h2>Building KTT </h2>
-<p><b>Q: During project file generation, Premake prints error that compute API libraries were not found.</b><br />
- A: There are two likely reasons for this. First, you need to make sure that compute SDK provided by your device vendor (eg. CUDA Toolkit) is installed correctly on your machine. Second, you need to set path to the SDK in your environment variables (eg. setting path to CUDA Toolkit on Linux: <code>export CUDA_PATH=/path/to/cuda/toolkit</code>). On Windows, the path to SDK is usually set automatically during SDK installation.</p>
-<p><b>Q: I'm getting compilation errors during KTT build.</b><br />
- A: List of compatible compilers can be found in readme on <a href="https://github.com/Fillo7/KTT">main KTT Github page</a>. If you are unable to build KTT with compatible compiler (generally any compiler which supports C++14), you can report a bug <a href="https://github.com/Fillo7/KTT/issues">here</a>.</p>
-<h2>Using KTT </h2>
-<p><b>Q: I've ported my native OpenCL / CUDA application to KTT but it crashes at runtime.</b><br />
- A: KTT checks for correct usage of the API during runtime. If it detects a problem, an exception is thrown. In most cases, the exception also contains an error message which describes the problem. If the exception message is not helpful and you believe that you are using the API correctly, you can report a bug <a href="https://github.com/Fillo7/KTT/issues">here</a>.</p>
-<p><b>Q: I have an application which performs some part of the computation directly in C/C++ code and utilizes iterative kernel launches. Can such application be ported to KTT?</b><br />
- A: Yes, in this case you need to utilize tuning manipulator API, which is fully documented. You can also check out some of the examples which already utilize tuning manipulator (eg. <a href="https://github.com/Fillo7/KTT/tree/master/examples/reduction">reduction</a>, <a href="https://github.com/Fillo7/KTT/tree/master/examples/coulomb_sum_3d_iterative">coulomb_sum_3d_iterative</a>).</p>
-<p><b>Q: Running my application with KTT uses much more memory than running it natively.</b><br />
- A: KTT by default makes a copy of all buffers that are added to tuner with addArgumentVector() method. This makes it safe for user to modify the original buffer without affecting the tuner. However, it also doubles the memory usage. If you are fine with tuner accessing your buffer directly, you can use overloaded version of addArgumentVector() method, which allows you to customize handling of buffers by tuner. You may also want to read KTT buffer diagram located in documentation folder to find out differences between various buffer configuration options.</p>
-<p><b>Q: How do I specify tuning parameters for specific kernels inside a kernel composition?</b><br />
- A: You can use methods which affect regular kernels for kernel compositions as well. In case you call such a method with kernel composition id as an argument, it will simply affect all kernels which are part of the composition. This works even if the tuning parameter is supposed to affect only a single kernel inside composition because the parameters which do not affect thread sizes are only added to kernel source as preprocessor definitions, which can be ignored by specific kernels. Note that for thread and local memory modifiers, versions of methods which only affect specific kernels inside compositions are available. </p>
-</div></div><!-- contents -->
+
+<p>This is the complete list of members for <a class="el" href="unionktt_1_1_profiling_counter_value.html">ktt::ProfilingCounterValue</a>, including all inherited members.</p>
+<table class="directory">
+  <tr class="even"><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html#a7b089643069ef63df36b93eb9d05bc0e">doubleValue</a></td><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html">ktt::ProfilingCounterValue</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html#a0e505b88343c460058449a9b16bc1607">intValue</a></td><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html">ktt::ProfilingCounterValue</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html#ace65da870643d3c1a978e8022c275f8b">percentValue</a></td><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html">ktt::ProfilingCounterValue</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html#ae93d36ca14c1297e8850529cbabfe288">throughputValue</a></td><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html">ktt::ProfilingCounterValue</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html#a4a5b44e67e9c2b3d1e6bf2fb3ad38858">uintValue</a></td><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html">ktt::ProfilingCounterValue</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html#ae4e49176a8945ab9fa525c6fd2cc13bc">utilizationLevelValue</a></td><td class="entry"><a class="el" href="unionktt_1_1_profiling_counter_value.html">ktt::ProfilingCounterValue</a></td><td class="entry"></td></tr>
+</table></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

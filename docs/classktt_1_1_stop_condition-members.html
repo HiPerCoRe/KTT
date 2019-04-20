@@ -35,7 +35,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.0</span>
+   &#160;<span id="projectnumber">1.1</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -106,8 +106,8 @@ $(document).ready(function(){initNavTree('classktt_1_1_stop_condition.html','');
   <tr class="even"><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html#ac47146b9d0f408f4542fd1795c71a9e0">getConfigurationCount</a>() const =0</td><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html">ktt::StopCondition</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
   <tr><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html#a5391664661b1fd718d1718fa7495476e">getStatusString</a>() const =0</td><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html">ktt::StopCondition</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html#a8d9d4011dce7bc3b51770dbba11e516c">initialize</a>(const size_t totalConfigurationCount)=0</td><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html">ktt::StopCondition</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
-  <tr><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html#a66cd8461e1206791885d34e882117bd3">isMet</a>() const =0</td><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html">ktt::StopCondition</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html#ab6c9c2da87d060f0e0385655a6ec8348">updateStatus</a>(const double previousConfigurationDuration)=0</td><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html">ktt::StopCondition</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html#a9ecd583de5d8dd9576dd2a7e1e7bce12">isSatisfied</a>() const =0</td><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html">ktt::StopCondition</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html#ad390c0bd83d81c46264098a517534bf9">updateStatus</a>(const bool successFlag, const std::vector&lt; ParameterPair &gt; &amp;previousConfiguration, const double previousDuration, const KernelProfilingData &amp;previousProfilingData, const std::map&lt; KernelId, KernelProfilingData &gt; &amp;previousCompositionProfilingData)=0</td><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html">ktt::StopCondition</a></td><td class="entry"><span class="mlabel">pure virtual</span></td></tr>
   <tr><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html#a03174c2a6251dc4ee72d02a767d86d79">~StopCondition</a>()=default</td><td class="entry"><a class="el" href="classktt_1_1_stop_condition.html">ktt::StopCondition</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
 </table></div><!-- contents -->
 </div><!-- doc-content -->

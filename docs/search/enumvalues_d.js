@@ -1,9 +1,8 @@
 var searchData=
 [
-  ['scalar',['Scalar',['../namespacektt.html#a27feefe5217ccf7232f658cd88143f0faf60357a8d17e45793298323f1b372a74',1,'ktt']]],
-  ['seconds',['Seconds',['../namespacektt.html#a161b9af8714615ef2c1770b020ce1511a8f19a8c7566af54ea8981029730e5465',1,'ktt']]],
-  ['short',['Short',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a30bb747c98bccdd11b3f89e644c4d0ad',1,'ktt']]],
-  ['sidebysidecomparison',['SideBySideComparison',['../namespacektt.html#a187d4987bb48bc1f78f628c8aa840a20a02dc3aadaf5d37fb8def639351068c3b',1,'ktt']]],
-  ['sidebysiderelativecomparison',['SideBySideRelativeComparison',['../namespacektt.html#a187d4987bb48bc1f78f628c8aa840a20afbd9c2b8d6c9a13483253add7aae125a',1,'ktt']]],
-  ['subtract',['Subtract',['../namespacektt.html#aa22e627ca88d7d508cd228c977bf4dd8a1d9baf077ee87921f57a8fe42d510b65',1,'ktt']]]
+  ['randomsearch',['RandomSearch',['../namespacektt.html#a5f5b49f1e11331a499aa44fb1fa6788ba9df32f1d41ae9ca3b761a36681bf2b51',1,'ktt']]],
+  ['readonly',['ReadOnly',['../namespacektt.html#a42e64b6f9fe9ded7bad6b07cb9c53d35a131fb182a881796e7606ed6da27f1197',1,'ktt']]],
+  ['readwrite',['ReadWrite',['../namespacektt.html#a42e64b6f9fe9ded7bad6b07cb9c53d35a70a2a84088d405a2e3f1e3accaa16723',1,'ktt']]],
+  ['resultvalidation',['ResultValidation',['../namespacektt.html#a405c5e17d3cfbedf3b3eb4e54c7c35eeab2f31c1511a9baf03796731b9fbc2e1b',1,'ktt']]],
+  ['running',['Running',['../namespacektt.html#a405c5e17d3cfbedf3b3eb4e54c7c35eea5bda814c4aedb126839228f1a3d92f09',1,'ktt::Running()'],['../namespacektt.html#a3baf318a03750f7418a5faa051967c04a5bda814c4aedb126839228f1a3d92f09',1,'ktt::Running()']]]
 ];

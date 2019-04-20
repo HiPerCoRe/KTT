@@ -1,7 +1,7 @@
 List of KTT framework contributors:
 
-* Jiří Filipovič - reduction and 3D Coulomb summation examples, proposal of new features and testing of overall
-  KTT framework functionality
-* David Střelák - N-body example, testing of online tuning functionality
-* Jana Pazúriková - radix sort and hotspot examples, testing of kernel composition functionality
-* Richard Trembecký - BICG example
+* Jiří Filipovič - reduction, matrix transposition, matrix multiplication and 3D Coulomb summation examples,
+  MCMC searcher, proposal of new features and feedback on overall KTT framework functionality
+* David Střelák - N-body example, feedback on online tuning functionality
+* Jana Pazúriková - radix sort and hotspot examples, feedback on kernel composition functionality
+* Richard Trembecký - BICG, covariance and convolution examples

@@ -45,7 +45,7 @@ public:
       */
     bool hasCounter(const std::string& counterName);
 
-    /** @fn bool hasCounter(const std::string& counterName)
+    /** @fn const KernelProfilingCounter& getCounter(const std::string& counterName) const
       * Retrieves profiling counter with specified name. Throws an exception if no corresponding counter is found.
       * @param counterName Name of a profiling counter which will be retrieved.
       * @return Profiling counter with specified name. See KernelProfilingCounter for more information.
