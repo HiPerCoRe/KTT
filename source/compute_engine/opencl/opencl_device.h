@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "CL/cl.h"
+#include <CL/cl.h>
 
 namespace ktt
 {
@@ -19,7 +19,7 @@ public:
         return id;
     }
 
-    std::string getName() const
+    const std::string& getName() const
     {
         return name;
     }

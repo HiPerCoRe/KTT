@@ -2,9 +2,9 @@
 
 #include <cstddef>
 #include <vector>
-#include "ktt_types.h"
-#include "api/dimension_vector.h"
-#include "api/parameter_pair.h"
+#include <api/dimension_vector.h>
+#include <api/parameter_pair.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -20,6 +20,11 @@ public:
     virtual void runKernelAsync(const KernelId id, const QueueId queue) = 0;
     virtual void runKernel(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize) = 0;
     virtual void runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize, const QueueId queue) = 0;
+
+    // Kernel profiling methods
+    virtual void runKernelWithProfiling(const KernelId id) = 0;
+    virtual void runKernelWithProfiling(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize) = 0;
+    virtual uint64_t getRemainingKernelProfilingRuns(const KernelId id) const = 0;
 
     // Queue handling methods
     virtual QueueId getDefaultDeviceQueue() const = 0;

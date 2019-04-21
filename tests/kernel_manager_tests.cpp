@@ -1,6 +1,6 @@
-#include "catch.hpp"
-#include "api/device_info.h"
-#include "kernel/kernel_manager.h"
+#include <catch.hpp>
+#include <api/device_info.h>
+#include <kernel/kernel_manager.h>
 
 #if defined(_MSC_VER)
     #define KTT_TEST_KERNEL_FILE "../tests/test_kernel.cl"
@@ -10,8 +10,7 @@
 
 TEST_CASE("Kernel handling operations", "Component: KernelManager")
 {
-    ktt::DeviceInfo deviceInfo(0, "Device");
-    ktt::KernelManager manager(deviceInfo);
+    ktt::KernelManager manager;
     ktt::KernelId id = manager.addKernelFromFile(KTT_TEST_KERNEL_FILE, "testKernel", ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
 
     SECTION("Kernel id is assigned correctly")
@@ -43,11 +42,9 @@ TEST_CASE("Kernel handling operations", "Component: KernelManager")
     }
 }
 
-TEST_CASE("Kernel configuration retrieval", "Component: KernelManager")
+TEST_CASE("Adding defines to kernel source", "Component: KernelManager")
 {
-    ktt::DeviceInfo deviceInfo(0, "Device");
-    deviceInfo.setMaxWorkGroupSize(1024);
-    ktt::KernelManager manager(deviceInfo);
+    ktt::KernelManager manager;
     ktt::KernelId id = manager.addKernelFromFile(KTT_TEST_KERNEL_FILE, "testKernel", ktt::DimensionVector(1024), ktt::DimensionVector(16, 16));
     manager.addParameter(id, "param_one", std::vector<size_t>{1, 2, 3});
     manager.addParameter(id, "param_two", std::vector<size_t>{5, 10});
@@ -63,11 +60,5 @@ TEST_CASE("Kernel configuration retrieval", "Component: KernelManager")
         std::string expectedSource("#define param_one 2\n#define param_two 5\n" + manager.getKernel(id).getSource());
 
         REQUIRE(source == expectedSource);
-    }
-
-    SECTION("Kernel configurations are computed correctly")
-    {
-        std::vector<ktt::KernelConfiguration> configurations = manager.getKernelConfigurations(id);
-        REQUIRE(configurations.size() == 6);
     }
 }

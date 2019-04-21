@@ -5,7 +5,7 @@
 
 #include <algorithm>
 #include <limits>
-#include "stop_condition.h"
+#include <api/stop_condition/stop_condition.h>
 
 namespace ktt
 {
@@ -27,7 +27,7 @@ public:
         targetDuration = std::max(0.0, duration);
     }
 
-    bool isMet() const override
+    bool isSatisfied() const override
     {
         return bestDuration <= targetDuration;
     }
@@ -37,9 +37,13 @@ public:
         totalCount = totalConfigurationCount;
     }
 
-    void updateStatus(const double previousConfigurationDuration) override
+    void updateStatus(const bool successFlag, const std::vector<ParameterPair>&, const double previousDuration, const KernelProfilingData&,
+        const std::map<KernelId, KernelProfilingData>&) override
     {
-        bestDuration = std::min(bestDuration, previousConfigurationDuration / 1'000'000.0);
+        if (successFlag)
+        {
+            bestDuration = std::min(bestDuration, previousDuration / 1000000.0);
+        }
     }
     
     size_t getConfigurationCount() const override
@@ -49,7 +53,7 @@ public:
 
     std::string getStatusString() const override
     {
-        if (isMet())
+        if (isSatisfied())
         {
             return std::string("Target configuration duration reached: " + std::to_string(targetDuration) + "ms");
         }

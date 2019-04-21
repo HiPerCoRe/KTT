@@ -6,17 +6,14 @@ class TunableSort : public ktt::TuningManipulator {
   public:
     // Constructor takes ids of kernel arguments that will be updated or added
     TunableSort(const std::vector<ktt::KernelId>& kernelIds, const int size, const ktt::ArgumentId inId, const ktt::ArgumentId outId,
-      const ktt::ArgumentId isumsId, const ktt::ArgumentId sizeId, const ktt::ArgumentId localMem1Id, const ktt::ArgumentId localMem2Id,
-      const ktt::ArgumentId localMem3Id, const ktt::ArgumentId numberOfGroupsId, const ktt::ArgumentId shiftId) :
+      const ktt::ArgumentId isumsId, const ktt::ArgumentId sizeId,
+      const ktt::ArgumentId numberOfGroupsId, const ktt::ArgumentId shiftId) :
       kernelIds(kernelIds),
       size(size),
       inId(inId),
       outId(outId),
       isumsId(isumsId),
       sizeId(sizeId),
-      localMem1Id(localMem1Id),
-      localMem2Id(localMem2Id),
-      localMem3Id(localMem3Id),
       numberOfGroupsId(numberOfGroupsId),
       shiftId(shiftId)
     {}
@@ -31,9 +28,6 @@ class TunableSort : public ktt::TuningManipulator {
       
       int numberOfGroups = static_cast<int>(globalSize / localSize);
       updateArgumentScalar(numberOfGroupsId, &numberOfGroups);
-      updateArgumentLocal(localMem1Id, localSize); // Local, workgroupsize * sizeof(unsigned int)
-      updateArgumentLocal(localMem2Id, 2 * localSize);
-      updateArgumentLocal(localMem3Id, 2 * localSize); // Local, 2 * workgroupsize * sizeof(unsigned int)
       int isumsSize = 16 * numberOfGroups;
       // Vector, readwrite, must be added after global and local size are determined, as its size depends on the number of groups
       resizeArgumentVector(isumsId, isumsSize, false);
@@ -52,11 +46,11 @@ class TunableSort : public ktt::TuningManipulator {
 
         if (even)
         {
-          changeKernelArguments(kernelIds[0], {inId, isumsId, sizeId, localMem1Id, shiftId});
+          changeKernelArguments(kernelIds[0], {inId, isumsId, sizeId, shiftId});
         }
         else
         {
-          changeKernelArguments(kernelIds[0], {outId, isumsId, sizeId, localMem1Id, shiftId});
+          changeKernelArguments(kernelIds[0], {outId, isumsId, sizeId, shiftId});
         }
 
         // Each thread block gets an equal portion of the input array, and computes occurrences of each digit.
@@ -88,9 +82,6 @@ class TunableSort : public ktt::TuningManipulator {
     ktt::ArgumentId outId;
     ktt::ArgumentId isumsId;
     ktt::ArgumentId sizeId;
-    ktt::ArgumentId localMem1Id;
-    ktt::ArgumentId localMem2Id;
-    ktt::ArgumentId localMem3Id;
     ktt::ArgumentId numberOfGroupsId;
     ktt::ArgumentId shiftId;
 };

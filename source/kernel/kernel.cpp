@@ -1,6 +1,7 @@
+#include <algorithm>
 #include <stdexcept>
-#include "kernel.h"
-#include "utility/ktt_utility.h"
+#include <kernel/kernel.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {
@@ -38,6 +39,31 @@ void Kernel::addConstraint(const KernelConstraint& constraint)
         }
     }
     constraints.push_back(constraint);
+}
+
+void Kernel::addParameterPack(const KernelParameterPack& pack)
+{
+    for (const auto& existingPack : parameterPacks)
+    {
+        if (pack == existingPack)
+        {
+            throw std::runtime_error(std::string("The following parameter pack already exists: ") + pack.getName());
+        }
+    }
+
+    if (!containsUnique(pack.getParameterNames()))
+    {
+        throw std::runtime_error(std::string("The following parameter pack contains duplicit parameter names: ") + pack.getName());
+    }
+
+    for (const auto& parameterName : pack.getParameterNames())
+    {
+        if (!hasParameter(parameterName))
+        {
+            throw std::runtime_error(std::string("Parameter with given name does not exist: ") + parameterName);
+        }
+    }
+    parameterPacks.push_back(pack);
 }
 
 void Kernel::setThreadModifier(const ModifierType modifierType, const ModifierDimension modifierDimension,
@@ -89,17 +115,17 @@ KernelId Kernel::getId() const
     return id;
 }
 
-std::string Kernel::getSource() const
+const std::string& Kernel::getSource() const
 {
     return source;
 }
 
-std::string Kernel::getName() const
+const std::string& Kernel::getName() const
 {
     return name;
 }
 
-DimensionVector Kernel::getGlobalSize() const
+const DimensionVector& Kernel::getGlobalSize() const
 {
     return globalSize;
 }
@@ -143,7 +169,7 @@ DimensionVector Kernel::getModifiedGlobalSize(const std::vector<ParameterPair>& 
     return result;
 }
 
-DimensionVector Kernel::getLocalSize() const
+const DimensionVector& Kernel::getLocalSize() const
 {
     return localSize;
 }
@@ -187,14 +213,69 @@ DimensionVector Kernel::getModifiedLocalSize(const std::vector<ParameterPair>& p
     return result;
 }
 
-std::vector<KernelParameter> Kernel::getParameters() const
+const std::vector<KernelParameter>& Kernel::getParameters() const
 {
     return parameters;
 }
 
-std::vector<KernelConstraint> Kernel::getConstraints() const
+const std::vector<KernelConstraint>& Kernel::getConstraints() const
 {
     return constraints;
+}
+
+const std::vector<KernelParameterPack>& Kernel::getParameterPacks() const
+{
+    return parameterPacks;
+}
+
+std::vector<KernelParameter> Kernel::getParametersOutsidePacks() const
+{
+    std::vector<KernelParameter> result;
+
+    for (const auto& parameter : parameters)
+    {
+        bool isOutsidePack = true;
+
+        for (const auto& pack : parameterPacks)
+        {
+            isOutsidePack &= !pack.containsParameter(parameter.getName());
+        }
+
+        if (isOutsidePack)
+        {
+            result.push_back(parameter);
+        }
+    }
+
+    return result;
+}
+
+std::vector<KernelParameter> Kernel::getParametersForPack(const std::string& pack) const
+{
+    KernelParameterPack searchPack(pack, std::vector<std::string>{});
+    return getParametersForPack(searchPack);
+}
+
+std::vector<KernelParameter> Kernel::getParametersForPack(const KernelParameterPack& pack) const
+{
+    auto targetPack = std::find(std::begin(parameterPacks), std::end(parameterPacks), pack);
+
+    if (targetPack == std::end(parameterPacks))
+    {
+        throw std::runtime_error(std::string("The following parameter pack does not exist: ") + pack.getName());
+    }
+
+    std::vector<KernelParameter> result;
+
+    for (const auto& parameter : parameters)
+    {
+        if (targetPack->containsParameter(parameter.getName()))
+        {
+            result.push_back(parameter);
+        }
+    }
+
+    return result;
 }
 
 size_t Kernel::getArgumentCount() const
@@ -202,7 +283,7 @@ size_t Kernel::getArgumentCount() const
     return argumentIds.size();
 }
 
-std::vector<ArgumentId> Kernel::getArgumentIds() const
+const std::vector<ArgumentId>& Kernel::getArgumentIds() const
 {
     return argumentIds;
 }

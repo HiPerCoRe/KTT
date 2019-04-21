@@ -1,7 +1,7 @@
-#ifdef PLATFORM_CUDA
+#ifdef KTT_PLATFORM_CUDA
 
 #include <stdexcept>
-#include "cuda_utility.h"
+#include <compute_engine/cuda/cuda_utility.h>
 
 namespace ktt
 {
@@ -51,6 +51,23 @@ float getEventCommandDuration(const CUevent start, const CUevent end)
     return result * 1'000'000.0f; // return duration in nanoseconds
 }
 
+#ifdef KTT_PROFILING
+std::string getCUPTIEnumName(const CUptiResult value)
+{
+    const char* name;
+    cuptiGetResultString(value, &name);
+    return name;
+}
+
+void checkCUDAError(const CUptiResult value, const std::string& message)
+{
+    if (value != CUPTI_SUCCESS)
+    {
+        throw std::runtime_error(std::string("Internal CUDA CUPTI error: ") + getCUPTIEnumName(value) + "\nAdditional info: " + message);
+    }
+}
+#endif // KTT_PROFILING
+
 } // namespace ktt
 
-#endif // PLATFORM_CUDA
+#endif // KTT_PLATFORM_CUDA

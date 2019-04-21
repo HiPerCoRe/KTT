@@ -2,9 +2,9 @@
 
 #include <cstdint>
 #include <string>
-#include "CL/cl.h"
-#include "ktt_types.h"
-#include "opencl_utility.h"
+#include <CL/cl.h>
+#include <compute_engine/opencl/opencl_utility.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -41,7 +41,7 @@ public:
         return id;
     }
 
-    std::string getKernelName() const
+    const std::string& getKernelName() const
     {
         return kernelName;
     }

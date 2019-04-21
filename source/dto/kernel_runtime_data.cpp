@@ -1,22 +1,26 @@
-#include "kernel_runtime_data.h"
+#include <dto/kernel_runtime_data.h>
 
 namespace ktt
 {
 
-KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize, const std::vector<ArgumentId>& argumentIds) :
-    KernelRuntimeData(id, name, source, globalSize, localSize, argumentIds, std::vector<LocalMemoryModifier>{})
+KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const std::string& unmodifiedSource,
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterPair>& parameterPairs,
+    const std::vector<ArgumentId>& argumentIds) :
+    KernelRuntimeData(id, name, source, unmodifiedSource, globalSize, localSize, parameterPairs, argumentIds, std::vector<LocalMemoryModifier>{})
 {}
 
-KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize, const std::vector<ArgumentId>& argumentIds, const std::vector<LocalMemoryModifier>& localMemoryModifiers) :
+KernelRuntimeData::KernelRuntimeData(const KernelId id, const std::string& name, const std::string& source, const std::string& unmodifiedSource,
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterPair>& parameterPairs,
+    const std::vector<ArgumentId>& argumentIds, const std::vector<LocalMemoryModifier>& localMemoryModifiers) :
     id(id),
     name(name),
     source(source),
+    unmodifiedSource(unmodifiedSource),
     globalSize(globalSize.getVector()),
     localSize(localSize.getVector()),
     globalSizeDimensionVector(globalSize),
     localSizeDimensionVector(localSize),
+    parameterPairs(parameterPairs),
     argumentIds(argumentIds),
     localMemoryModifiers(localMemoryModifiers)
 {}
@@ -43,42 +47,52 @@ KernelId KernelRuntimeData::getId() const
     return id;
 }
 
-std::string KernelRuntimeData::getName() const
+const std::string& KernelRuntimeData::getName() const
 {
     return name;
 }
 
-std::string KernelRuntimeData::getSource() const
+const std::string& KernelRuntimeData::getSource() const
 {
     return source;
 }
 
-std::vector<size_t> KernelRuntimeData::getGlobalSize() const
+const std::string& KernelRuntimeData::getUnmodifiedSource() const
+{
+    return unmodifiedSource;
+}
+
+const std::vector<size_t>& KernelRuntimeData::getGlobalSize() const
 {
     return globalSize;
 }
 
-std::vector<size_t> KernelRuntimeData::getLocalSize() const
+const std::vector<size_t>& KernelRuntimeData::getLocalSize() const
 {
     return localSize;
 }
 
-DimensionVector KernelRuntimeData::getGlobalSizeDimensionVector() const
+const DimensionVector& KernelRuntimeData::getGlobalSizeDimensionVector() const
 {
     return globalSizeDimensionVector;
 }
 
-DimensionVector KernelRuntimeData::getLocalSizeDimensionVector() const
+const DimensionVector& KernelRuntimeData::getLocalSizeDimensionVector() const
 {
     return localSizeDimensionVector;
 }
 
-std::vector<ArgumentId> KernelRuntimeData::getArgumentIds() const
+const std::vector<ParameterPair>& KernelRuntimeData::getParameterPairs() const
+{
+    return parameterPairs;
+}
+
+const std::vector<ArgumentId>& KernelRuntimeData::getArgumentIds() const
 {
     return argumentIds;
 }
 
-std::vector<LocalMemoryModifier> KernelRuntimeData::getLocalMemoryModifiers() const
+const std::vector<LocalMemoryModifier>& KernelRuntimeData::getLocalMemoryModifiers() const
 {
     return localMemoryModifiers;
 }

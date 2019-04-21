@@ -17,7 +17,11 @@ enum class ComputeAPI
 
     /** Tuner will use CUDA as compute API.
       */
-    CUDA
+    CUDA,
+
+    /** Tuner will use Vulkan as compute API.
+    */
+    Vulkan
 };
 
 } // namespace ktt

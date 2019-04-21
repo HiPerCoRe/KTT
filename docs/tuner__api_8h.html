@@ -35,7 +35,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.0</span>
+   &#160;<span id="projectnumber">1.1</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -112,34 +112,35 @@ $(document).ready(function(){initNavTree('tuner__api_8h.html','');});
 <code>#include &lt;type_traits&gt;</code><br />
 <code>#include &lt;utility&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
-<code>#include &quot;<a class="el" href="ktt__platform_8h_source.html">ktt_platform.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="ktt__types_8h_source.html">ktt_types.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="argument__access__type_8h_source.html">enum/argument_access_type.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="argument__data__type_8h_source.html">enum/argument_data_type.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="argument__memory__location_8h_source.html">enum/argument_memory_location.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="argument__upload__type_8h_source.html">enum/argument_upload_type.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="compute__api_8h_source.html">enum/compute_api.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="global__size__type_8h_source.html">enum/global_size_type.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="logging__level_8h_source.html">enum/logging_level.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="modifier__action_8h_source.html">enum/modifier_action.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="modifier__dimension_8h_source.html">enum/modifier_dimension.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="modifier__type_8h_source.html">enum/modifier_type.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="print__format_8h_source.html">enum/print_format.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="time__unit_8h_source.html">enum/time_unit.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="search__method_8h_source.html">enum/search_method.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="validation__method_8h_source.html">enum/validation_method.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="computation__result_8h_source.html">api/computation_result.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="device__info_8h_source.html">api/device_info.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="dimension__vector_8h_source.html">api/dimension_vector.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="output__descriptor_8h_source.html">api/output_descriptor.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="platform__info_8h_source.html">api/platform_info.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="configuration__duration_8h_source.html">api/stop_condition/configuration_duration.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="configuration__count_8h_source.html">api/stop_condition/configuration_count.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="configuration__fraction_8h_source.html">api/stop_condition/configuration_fraction.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="tuning__duration_8h_source.html">api/stop_condition/tuning_duration.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="reference__class_8h_source.html">api/reference_class.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="tuning__manipulator_8h_source.html">api/tuning_manipulator.h</a>&quot;</code><br />
-<code>#include &quot;half.hpp&quot;</code><br />
+<code>#include &lt;<a class="el" href="ktt__platform_8h_source.html">ktt_platform.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="ktt__types_8h_source.html">ktt_types.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="argument__access__type_8h_source.html">enum/argument_access_type.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="argument__data__type_8h_source.html">enum/argument_data_type.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="argument__memory__location_8h_source.html">enum/argument_memory_location.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="argument__upload__type_8h_source.html">enum/argument_upload_type.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="compute__api_8h_source.html">enum/compute_api.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="global__size__type_8h_source.html">enum/global_size_type.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="logging__level_8h_source.html">enum/logging_level.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="modifier__action_8h_source.html">enum/modifier_action.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="modifier__dimension_8h_source.html">enum/modifier_dimension.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="modifier__type_8h_source.html">enum/modifier_type.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="print__format_8h_source.html">enum/print_format.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="time__unit_8h_source.html">enum/time_unit.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="search__method_8h_source.html">enum/search_method.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="validation__method_8h_source.html">enum/validation_method.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="validation__mode_8h_source.html">enum/validation_mode.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="computation__result_8h_source.html">api/computation_result.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="device__info_8h_source.html">api/device_info.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="dimension__vector_8h_source.html">api/dimension_vector.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="output__descriptor_8h_source.html">api/output_descriptor.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="platform__info_8h_source.html">api/platform_info.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="configuration__duration_8h_source.html">api/stop_condition/configuration_duration.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="configuration__count_8h_source.html">api/stop_condition/configuration_count.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="configuration__fraction_8h_source.html">api/stop_condition/configuration_fraction.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="tuning__duration_8h_source.html">api/stop_condition/tuning_duration.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="reference__class_8h_source.html">api/reference_class.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="tuning__manipulator_8h_source.html">api/tuning_manipulator.h</a>&gt;</code><br />
+<code>#include &lt;half.hpp&gt;</code><br />
 </div>
 <p><a href="tuner__api_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">

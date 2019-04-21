@@ -3,43 +3,22 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define STRIDED 0
-
-#if STRIDED == 1
-    #define STRIDE_BLOCK 32
-#endif
-
 #define USE_CUDA 0
+#define RAPID_TEST 0
 
-#if STRIDED == 0
-    #if USE_CUDA == 0
-        #if defined(_MSC_VER)
-            #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cl"
-        #else
-            #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cl"
-        #endif
-    #else /* USE_CUDA */
-        #if defined(_MSC_VER)
-            #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cu"
-        #else
-            #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cu"
-        #endif
-    #endif /* USE_CUDA */
-#else /* STRIDED */
-    #if USE_CUDA == 0
-        #if defined(_MSC_VER)
-            #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel_strided.cl"
-        #else
-            #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel_strided.cl"
-        #endif
-    #else /* USE_CUDA */
-        #if defined(_MSC_VER)
-            #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel_strided.cu"
-        #else
-            #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel_strided.cu"
-        #endif
-    #endif /* USE_CUDA */
-#endif /* STRIDED */
+#if USE_CUDA == 0
+    #if defined(_MSC_VER)
+        #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cl"
+    #else
+        #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cl"
+    #endif
+#else /* USE_CUDA */
+    #if defined(_MSC_VER)
+        #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cu"
+    #else
+        #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cu"
+    #endif
+#endif /* USE_CUDA */
 
 #define REAL float
 
@@ -58,7 +37,6 @@ public:
 
     void computeResult() override {
         res.resize(n*c*b);
-#if STRIDED == 0
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < c; j++)
                 for (int k = 0; k < b; k++) {
@@ -85,36 +63,6 @@ public:
                 }
             }*/
 	    }
-#else
-        for (int i = 0; i < n; i++) {
-            int startBlock = (i / STRIDE_BLOCK) * STRIDE_BLOCK;
-            int startLocal = i % STRIDE_BLOCK;
-            for (int j = 0; j < c; j++)
-                for (int k = 0; k < b; k++) {
-                    REAL tmp = 0.0f;
-                    for (int l = 0; l < a; l++)
-                        tmp += srcA[startBlock*a*b + (k*a + l)*STRIDE_BLOCK + startLocal] * srcB[startBlock*c*a + (l*c + j)*STRIDE_BLOCK + startLocal];
-                    res[startBlock*c*b + (k*c + j)*STRIDE_BLOCK + startLocal] = tmp;
-                }
-            if (i == 1) {
-                for (int bl = 0; bl < b; bl++){
-                    for (int al = 0; al < a; al++)
-                        std::cout << srcA[startBlock*a*b + (bl*a + al)*STRIDE_BLOCK + startLocal] << " ";
-                    std::cout << "\n";
-                }
-                for (int al = 0; al < a; al++){
-                    for (int cl = 0; cl < c; cl++)
-                        std::cout << srcB[startBlock*c*b + (al*c + cl)*STRIDE_BLOCK + startLocal] << " ";
-                    std::cout << "\n";
-                }
-                for (int bl = 0; bl < b; bl++){
-                    for (int cl = 0; cl < c; cl++)
-                        std::cout << res[startBlock*c*b + (bl*c + cl)*STRIDE_BLOCK + startLocal] << " ";
-                    std::cout << "\n";
-                }
-            }
-        }
-#endif
     }
 
     void* getData(const ktt::ArgumentId id) override {
@@ -148,50 +96,19 @@ public:
         ktt::DimensionVector globalSize(1, 1, 1);
         ktt::DimensionVector localSize(1, 1, 1);
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
-        size_t gran = getParameterValue("GRANULARITY", parameterValues);
-        size_t myBatch = batch / getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues); // is always 1 when STRIDED == 0
-        if (gran == 1) {
+        size_t padd_c = getParameterValue("PADD_C", parameterValues);
+        size_t y = getParameterValue("GROUP_SIZE_Y", parameterValues);
+        size_t z = getParameterValue("GROUP_SIZE_Z", parameterValues);
 #if USE_CUDA == 0
-            globalSize.setSizeX(myBatch);
-    #if STRIDED == 1
-            globalSize.setSizeY(getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues));
-    #endif
-#else /* USE_CUDA */
-    #if STRIDED == 0
-            globalSize.setSizeX(myBatch/getParameterValue("GROUP_SIZE_X", parameterValues));
-    #else
-            globalSize.setSizeX(myBatch/STRIDE_BLOCK);
-    #endif
-#endif /* USE_CUDA */
-#if STRIDED == 0
-            localSize.setSizeX(getParameterValue("GROUP_SIZE_X", parameterValues));
+        globalSize.setSizeX(batch*(c+padd_c)/z);
+        globalSize.setSizeY(y);
+        globalSize.setSizeZ(z);
 #else
-            localSize.setSizeX(STRIDE_BLOCK);
-            localSize.setSizeY(getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues));
+        globalSize.setSizeX(batch/z);
 #endif
-        }
-        if (gran == 2) {
-            size_t y = getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues);
-#if USE_CUDA == 0
-            globalSize.setSizeX(batch*c / y);
-            globalSize.setSizeY(y);
-#else
-            globalSize.setSizeX(batch / y);
-#endif
-            localSize.setSizeX(c);
-            localSize.setSizeY(y);
-        }
-        if (gran == 3) {
-            size_t y = getParameterValue("MGCG_GROUP_SIZE_Y", parameterValues);
-#if USE_CUDA == 0
-            globalSize.setSizeX(batch*c);
-            globalSize.setSizeY(y);
-#else
-            globalSize.setSizeX(batch);
-#endif
-            localSize.setSizeX(c);
-            localSize.setSizeY(y);
-        }
+        localSize.setSizeX(c+padd_c);
+        localSize.setSizeY(y);
+        localSize.setSizeZ(z);
 
         runKernel(kernelId, globalSize, localSize);
     }
@@ -260,6 +177,7 @@ int main(int argc, char** argv)
 #else
     ktt::Tuner tuner(0, deviceIndex, ktt::ComputeAPI::CUDA);
 #endif
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     // create kernel
     ktt::DimensionVector ndRangeDimensions(batch);
@@ -273,38 +191,47 @@ int main(int argc, char** argv)
     ktt::ArgumentId nId = tuner.addArgumentScalar(batch);
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{srcAId, srcBId, dstId, nId});
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(srcAId, true);
+    tuner.persistArgument(srcBId, true);
+    tuner.persistArgument(dstId, true);
+#endif
+
     tuner.addParameter(kernelId, "SIZE_A", {(size_t)a});
     tuner.addParameter(kernelId, "SIZE_B", {(size_t)b});
     tuner.addParameter(kernelId, "SIZE_C", {(size_t)c});
-#if STRIDED == 1
-    tuner.addParameter(kernelId, "STRIDE_BLOCK", {(size_t)STRIDE_BLOCK});
-#endif
-#if STRIDED == 0
-    tuner.addParameter(kernelId, "GRANULARITY", {1, 2, 3}); // 1 = fine (matrix per thread), 2 = medium (block of a), 3 = coarse (block of a*b)
-#else
-    tuner.addParameter(kernelId, "GRANULARITY", {1}); // other granularities not supported
-#endif
-#if STRIDED == 0
-    tuner.addParameter(kernelId, "GROUP_SIZE_X", {1, 32, 64, 128, 256, 512});
-#else
-    tuner.addParameter(kernelId, "GROUP_SIZE_X", {1, STRIDE_BLOCK});
-#endif
-    tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_X", {1, (size_t)c});
-    tuner.addParameter(kernelId, "MGCG_GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "GROUP_SIZE_Z", {1, 2, 4, 8, 16, 32, 64});
     tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
+    tuner.addParameter(kernelId, "PADD_AA", {0, 1});
+    tuner.addParameter(kernelId, "PADD_AB", {0, 1});
+    if (c % 4 == 0)
+        tuner.addParameter(kernelId, "PADD_C", {0});
+    else
+        tuner.addParameter(kernelId, "PADD_C", {0, c % 4});
+    tuner.addParameter(kernelId, "DIRECT_WRITE", {0, 1});
+    tuner.addParameter(kernelId, "UNROLL_K", {0, 1});
 
-#if STRIDED == 0
-    auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1 && v[3] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
-#else
-    auto parallelismConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1 && v[1] > 1 && v[2] == 1) || (v[0] == 2 && v[1] == 1 && v[2] > 1) || (v[0] == 3 && v[1] == 1 && v[2] > 1);};
-#endif
-    tuner.addConstraint(kernelId, {"GRANULARITY", "GROUP_SIZE_X", "MGCG_GROUP_SIZE_X", "MGCG_GROUP_SIZE_Y"}, parallelismConstraint);
-    auto tmpConstraint = [](const std::vector<size_t>& v) {return (v[0] < 3 || v[1] < 2);};
-    tuner.addConstraint(kernelId, {"GRANULARITY", "CACHING_STRATEGY"}, tmpConstraint);
+    auto parallelismConstraint = [](const std::vector<size_t>& v) {return v[0] <= v[1];};
+    tuner.addConstraint(kernelId, {"GROUP_SIZE_Y", "SIZE_B"}, parallelismConstraint);
+    auto paddConstraint = [](const std::vector<size_t>& v) {return (v[0] == 0 && v[1] == 0 && v[2] == 0) || (v[3] > 0);};
+    tuner.addConstraint(kernelId, {"PADD_AA", "PADD_AB", "PADD_C", "CACHING_STRATEGY"}, paddConstraint);
+    auto dwConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1) || (v[1] > 0);};
+    tuner.addConstraint(kernelId, {"DIRECT_WRITE", "CACHING_STRATEGY"}, dwConstraint);
+    auto unrollkConstraint = [](const std::vector<size_t>& v) {return (v[0] == 0) || (v[1] == 2);};
+    tuner.addConstraint(kernelId, {"UNROLL_K", "CACHING_STRATEGY"}, unrollkConstraint);
+#define SHARED_PER_BLOCK (49152/4)
+    auto memConstraint = [](const std::vector<size_t>& v) {size_t a = v[1]; size_t b = v[2]; size_t c = v[3]; return (v[0] == 1 && ((a+v[7])*(b+v[8])+c*a+(1-v[4])*(c*b))*v[6] < SHARED_PER_BLOCK) || (v[0] == 2 && v[5] == 1 && ((a+v[7])*(b+v[8])+(1-v[4])*(c*b))*v[6] < SHARED_PER_BLOCK) || (v[0] == 2 && ((a+v[7])*(b+v[8])+c*a+(1-v[4])*(c*b))*v[6] < SHARED_PER_BLOCK);};
+    tuner.addConstraint(kernelId, {"CACHING_STRATEGY", "SIZE_A", "SIZE_B", "SIZE_C", "DIRECT_WRITE", "GROUP_SIZE_Y", "GROUP_SIZE_Z", "PADD_AA", "PADD_AB"}, memConstraint);
+#define MAX_BLOCK_SIZE 1024
+    auto blockConstraint = [](const std::vector<size_t>&v) {return ((v[0]+v[2])*v[1]*v[3] < MAX_BLOCK_SIZE) && ((v[0]+v[2])*v[1]*v[3] >= 32);};
+    tuner.addConstraint(kernelId, {"SIZE_C", "GROUP_SIZE_Y", "PADD_C", "GROUP_SIZE_Z"}, blockConstraint);
 
+#if RAPID_TEST == 0
     tuner.setReferenceClass(kernelId, std::make_unique<referenceGemm>(srcA, srcB, a, b, c, batch, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
     tuner.setValidationRange(dstId, c*b*batch);
+#endif
 
     tuner.setTuningManipulator(kernelId, std::make_unique<cTunableGemm>(batch, a, b, c));
     

@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
-    const int n = 32*1024*1024;
+    const int n = 64*1024*1024;
     const int nAlloc = ((n+16-1)/16)*16; // padd to longest vector size
     std::vector<float> src(nAlloc, 0.0f);
     std::vector<float> dst(nAlloc, 0.0f);
@@ -43,6 +43,7 @@ int main(int argc, char** argv)
     }
 
     ktt::Tuner tuner(platformIndex, deviceIndex);
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     // create kernel
     int nUp = ((n+512-1)/512)*512; // maximum WG size used in tuning parameters
@@ -80,7 +81,7 @@ int main(int argc, char** argv)
     tuner.addConstraint(kernelId, {"UNBOUNDED_WG", "WORK_GROUP_SIZE_X"}, unboundedWG);
 
     tuner.setReferenceClass(kernelId, std::make_unique<ReferenceReduction>(src, dstId), std::vector<ktt::ArgumentId>{dstId});
-    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (float)n*500.0f/10'000'000.0f);
+    tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (double)n*10000.0/10'000'000.0);
     tuner.setValidationRange(dstId, 1);
 
     tuner.setTuningManipulator(kernelId, std::make_unique<TunableReduction>(srcId, dstId, nId, inOffsetId, outOffsetId));

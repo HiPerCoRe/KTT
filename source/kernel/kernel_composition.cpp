@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <stdexcept>
-#include "kernel_composition.h"
+#include <kernel/kernel_composition.h>
+#include <utility/ktt_utility.h>
 
 namespace ktt
 {
@@ -8,7 +10,12 @@ KernelComposition::KernelComposition(const KernelId id, const std::string& name,
     id(id),
     name(name),
     kernels(kernels)
-{}
+{
+    for (const auto* kernel : kernels)
+    {
+        profiledKernels.insert(kernel->getId());
+    }
+}
 
 void KernelComposition::addParameter(const KernelParameter& parameter)
 {
@@ -33,6 +40,31 @@ void KernelComposition::addConstraint(const KernelConstraint& constraint)
     }
 
     constraints.push_back(constraint);
+}
+
+void KernelComposition::addParameterPack(const KernelParameterPack& pack)
+{
+    for (const auto& existingPack : parameterPacks)
+    {
+        if (pack == existingPack)
+        {
+            throw std::runtime_error(std::string("The following parameter pack already exists: ") + pack.getName());
+        }
+    }
+
+    if (!containsUnique(pack.getParameterNames()))
+    {
+        throw std::runtime_error(std::string("The following parameter pack contains duplicit parameter names: ") + pack.getName());
+    }
+
+    for (const auto& parameterName : pack.getParameterNames())
+    {
+        if (!hasParameter(parameterName))
+        {
+            throw std::runtime_error(std::string("Parameter with given name does not exist: ") + parameterName);
+        }
+    }
+    parameterPacks.push_back(pack);
 }
 
 void KernelComposition::setSharedArguments(const std::vector<ArgumentId>& argumentIds)
@@ -119,7 +151,7 @@ Kernel KernelComposition::transformToKernel() const
         kernel.addConstraint(constraint);
     }
 
-    std::vector<size_t> argumentIds;
+    std::vector<ArgumentId> argumentIds;
     for (const auto id : sharedArgumentIds)
     {
         argumentIds.push_back(id);
@@ -292,37 +324,121 @@ std::map<KernelId, std::vector<LocalMemoryModifier>> KernelComposition::getLocal
     return result;
 }
 
+void KernelComposition::setKernelProfiling(const KernelId kernelId, const bool flag)
+{
+    bool kernelFound = false;
+
+    for (const auto* kernel : kernels)
+    {
+        if (kernel->getId() == kernelId)
+        {
+            kernelFound = true;
+            break;
+        }
+    }
+
+    if (!kernelFound)
+    {
+        throw std::runtime_error(std::string("Kernel with id: ") + std::to_string(kernelId)
+            + " is not included in composition with the following id: " + std::to_string(id));
+    }
+
+    if (flag)
+    {
+        profiledKernels.insert(kernelId);
+    }
+    else
+    {
+        profiledKernels.erase(kernelId);
+    }
+}
+
 KernelId KernelComposition::getId() const
 {
     return id;
 }
 
-std::string KernelComposition::getName() const
+const std::string& KernelComposition::getName() const
 {
     return name;
 }
 
-std::vector<const Kernel*> KernelComposition::getKernels() const
+const std::vector<const Kernel*>& KernelComposition::getKernels() const
 {
     return kernels;
 }
 
-std::vector<KernelParameter> KernelComposition::getParameters() const
+const std::vector<KernelParameter>& KernelComposition::getParameters() const
 {
     return parameters;
 }
 
-std::vector<KernelConstraint> KernelComposition::getConstraints() const
+const std::vector<KernelConstraint>& KernelComposition::getConstraints() const
 {
     return constraints;
 }
 
-std::vector<ArgumentId> KernelComposition::getSharedArgumentIds() const
+const std::vector<KernelParameterPack>& KernelComposition::getParameterPacks() const
+{
+    return parameterPacks;
+}
+
+std::vector<KernelParameter> KernelComposition::getParametersOutsidePacks() const
+{
+    std::vector<KernelParameter> result;
+
+    for (const auto& parameter : parameters)
+    {
+        bool isOutsidePack = true;
+
+        for (const auto& pack : parameterPacks)
+        {
+            isOutsidePack &= !pack.containsParameter(parameter.getName());
+        }
+
+        if (isOutsidePack)
+        {
+            result.push_back(parameter);
+        }
+    }
+
+    return result;
+}
+
+std::vector<KernelParameter> KernelComposition::getParametersForPack(const std::string& pack) const
+{
+    KernelParameterPack searchPack(pack, std::vector<std::string>{});
+    return getParametersForPack(searchPack);
+}
+
+std::vector<KernelParameter> KernelComposition::getParametersForPack(const KernelParameterPack& pack) const
+{
+    auto targetPack = std::find(std::begin(parameterPacks), std::end(parameterPacks), pack);
+
+    if (targetPack == std::end(parameterPacks))
+    {
+        throw std::runtime_error(std::string("The following parameter pack does not exist: ") + pack.getName());
+    }
+
+    std::vector<KernelParameter> result;
+
+    for (const auto& parameter : parameters)
+    {
+        if (targetPack->containsParameter(parameter.getName()))
+        {
+            result.push_back(parameter);
+        }
+    }
+
+    return result;
+}
+
+const std::vector<ArgumentId>& KernelComposition::getSharedArgumentIds() const
 {
     return sharedArgumentIds;
 }
 
-std::vector<ArgumentId> KernelComposition::getKernelArgumentIds(const KernelId id) const
+const std::vector<ArgumentId>& KernelComposition::getKernelArgumentIds(const KernelId id) const
 {
     auto pointer = kernelArgumentIds.find(id);
     if (pointer != kernelArgumentIds.end())
@@ -330,6 +446,11 @@ std::vector<ArgumentId> KernelComposition::getKernelArgumentIds(const KernelId i
         return pointer->second;
     }
     return sharedArgumentIds;
+}
+
+const std::set<KernelId>& KernelComposition::getProfiledKernels() const
+{
+    return profiledKernels;
 }
 
 bool KernelComposition::hasParameter(const std::string& parameterName) const

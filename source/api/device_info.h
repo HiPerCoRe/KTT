@@ -6,9 +6,9 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
-#include "ktt_platform.h"
-#include "ktt_types.h"
-#include "enum/device_type.h"
+#include <enum/device_type.h>
+#include <ktt_platform.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -32,23 +32,23 @@ public:
       */
     DeviceIndex getId() const;
 
-    /** @fn std::string getName() const
+    /** @fn const std::string& getName() const
       * Getter for name of device retrieved from compute API.
       * @return Name of device retrieved from compute API.
       */
-    std::string getName() const;
+    const std::string& getName() const;
 
-    /** @fn std::string getVendor() const
+    /** @fn const std::string& getVendor() const
       * Getter for name of device vendor retrieved from compute API.
       * @return Name of device vendor retrieved from compute API.
       */
-    std::string getVendor() const;
+    const std::string& getVendor() const;
 
-    /** @fn std::string getExtensions() const
+    /** @fn const std::string& getExtensions() const
       * Getter for list of supported device extensions retrieved from compute API.
       * @return List of supported device extensions retrieved from compute API.
       */
-    std::string getExtensions() const;
+    const std::string& getExtensions() const;
 
     /** @fn DeviceType getDeviceType() const
       * Getter for type of device. See ::DeviceType for more information.

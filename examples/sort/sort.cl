@@ -18,9 +18,10 @@ __kernel void
 reduce(__global const FPTYPE * in, //input vector of unsorted number
        __global FPTYPE * isums, //vector of all group histograms, global memory, size n_groups*n_digits
        const int n, //size of the input vector
-       __local FPTYPE * lmem, //per group histogram, shared memory, size n_digits
        const int shift) //which 'digit' are we tackling now?
 {
+    __local unsigned int lmem[LOCAL_SIZE];
+
     // First, calculate the bounds of the region of the array
     // that this block will sum.  We need these regions to match
     // perfectly with those in the bottom-level scan, so we index
@@ -108,9 +109,9 @@ inline FPTYPE scanLocalMem(FPTYPE val, __local FPTYPE* lmem, int exclusive)
 // from the reduction and performs an exclusive scan on them.
 __kernel void
 top_scan(__global FPTYPE * isums, //vector of histograms of all groups, global memory, size n_groups*n_digits
-         const int n, //number of groups
-         __local FPTYPE * lmem) //helper variable for scnLocalMem method, size 2*n_threads
+         const int n) //number of groups
 {
+    __local unsigned int lmem[LOCAL_SIZE*2];
     __local int s_seed;
     s_seed = 0; barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -151,9 +152,9 @@ bottom_scan(__global const FPTYPE * in, //numbers to be sorted
             __global const FPTYPE * isums, //vector of indices used for sorting
             __global FPTYPE * out, //(partially) sorted vector
             const int n, //size of the in and out vector
-            __local FPTYPE * lmem, //helper variable for scanLocalMem
             const int shift)
 {
+    __local unsigned int lmem[LOCAL_SIZE*2];
     // Use local memory to cache the scanned seeds from the global isums
     __local FPTYPE l_scanned_seeds[16];
 

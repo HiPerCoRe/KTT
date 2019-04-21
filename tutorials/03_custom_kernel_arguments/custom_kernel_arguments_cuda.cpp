@@ -116,6 +116,9 @@ int main(int argc, char** argv)
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_block_size", ktt::ModifierAction::Multiply);
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "multiply_block_size", ktt::ModifierAction::Divide);
 
+    // Set time unit used during printing of kernel duration to microseconds.
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
     // Start kernel tuning and print results.
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);

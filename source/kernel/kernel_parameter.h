@@ -3,7 +3,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "ktt_types.h"
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -14,9 +14,9 @@ public:
     explicit KernelParameter(const std::string& name, const std::vector<size_t>& values);
     explicit KernelParameter(const std::string& name, const std::vector<double>& values);
 
-    std::string getName() const;
-    std::vector<size_t> getValues() const;
-    std::vector<double> getValuesDouble() const;
+    const std::string& getName() const;
+    const std::vector<size_t>& getValues() const;
+    const std::vector<double>& getValuesDouble() const;
     bool hasValuesDouble() const;
 
     bool operator==(const KernelParameter& other) const;

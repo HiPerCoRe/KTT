@@ -5,9 +5,9 @@
 #include <regex>
 #include <string>
 #include <vector>
-#include "cuda.h"
-#include "nvrtc.h"
-#include "cuda_utility.h"
+#include <cuda.h>
+#include <nvrtc.h>
+#include <compute_engine/cuda/cuda_utility.h>
 
 namespace ktt
 {
@@ -88,7 +88,7 @@ public:
         return infoString;
     }
 
-    std::string getSource() const
+    const std::string& getSource() const
     {
         return source;
     }

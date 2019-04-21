@@ -1,6 +1,6 @@
 #include <cmath>
-#include "catch.hpp"
-#include "kernel_argument/argument_manager.h"
+#include <catch.hpp>
+#include <kernel_argument/argument_manager.h>
 
 template <typename T> bool around(const T value, const T other, const T tolerance)
 {

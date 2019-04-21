@@ -3,20 +3,20 @@
 #include <iterator>
 #include <sstream>
 #include <string>
-#include "tuning_runner.h"
-#include "utility/ktt_utility.h"
-#include "utility/logger.h"
-#include "utility/timer.h"
-#include "utility/result_loader.h"
+#include <tuning_runner/tuning_runner.h>
+#include <utility/ktt_utility.h>
+#include <utility/logger.h>
+#include <utility/timer.h>
+#include <utility/result_loader.h>
 
 namespace ktt
 {
 
-TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner) :
+TuningRunner::TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner, const DeviceInfo& info) :
     argumentManager(argumentManager),
     kernelManager(kernelManager),
     kernelRunner(kernelRunner),
-    resultValidator(std::make_unique<ResultValidator>(argumentManager, kernelRunner))
+    configurationManager(info)
 {}
 
 std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
@@ -32,71 +32,48 @@ std::vector<KernelResult> TuningRunner::tuneKernel(const KernelId id, std::uniqu
         throw std::runtime_error("Kernel tuning cannot be performed with writable zero-copy arguments");
     }
 
-    resultValidator->computeReferenceResult(kernel);
-    std::vector<KernelConfiguration> configurations = kernelManager->getKernelConfigurations(id);
-    size_t configurationCount = configurations.size();
+    if (!configurationManager.hasKernelConfigurations(id))
+    {
+        configurationManager.initializeConfigurations(kernel);
+    }
 
+    size_t configurationCount = configurationManager.getConfigurationCount(id);
     if (stopCondition != nullptr)
     {
         stopCondition->initialize(configurationCount);
         configurationCount = std::min(configurationCount, stopCondition->getConfigurationCount());
     }
 
-    configurationManager.clearData(id);
-    configurationManager.setKernelConfigurations(id, configurations, kernel.getParameters());
     std::vector<KernelResult> results;
 
-    for (size_t i = 0; i < configurationCount; i++)
+    for (size_t i = 0; i < configurationCount; ++i)
     {
         std::stringstream stream;
         stream << "Launching configuration " << i + 1 << "/" << configurationCount << " for kernel " << kernel.getName();
-        Logger::getLogger().log(LoggingLevel::Info, stream.str());
+        Logger::logInfo(stream.str());
 
-        KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
-        KernelResult result = kernelRunner->runKernel(id, currentConfiguration, std::vector<OutputDescriptor>{});
-
-        if (validateResult(kernel, result))
+        const KernelResult result = tuneKernelByStep(id, KernelRunMode::OfflineTuning, std::vector<OutputDescriptor>{}, false);
+        results.push_back(result);
+        if (stopCondition != nullptr)
         {
-            results.push_back(result);
-            configurationManager.calculateNextConfiguration(id, kernel.getName(), currentConfiguration, result.getComputationDuration());
+            stopCondition->updateStatus(result.isValid(), result.getConfiguration().getParameterPairs(),
+                static_cast<double>(result.getComputationDuration()), result.getProfilingData(), result.getCompositionProfilingData());
 
-            if (stopCondition != nullptr)
+            if (stopCondition->isSatisfied())
             {
-                stopCondition->updateStatus(static_cast<double>(result.getComputationDuration()));
+                Logger::logInfo(stopCondition->getStatusString());
+                break;
             }
-        }
-        else
-        {
-            results.emplace_back(kernel.getName(), currentConfiguration, "Results differ");
-            configurationManager.calculateNextConfiguration(id, kernel.getName(), currentConfiguration, UINT64_MAX);
-
-            if (stopCondition != nullptr)
-            {
-                stopCondition->updateStatus(std::numeric_limits<double>::max());
-            }
-        }
-
-        kernelRunner->clearBuffers(ArgumentAccessType::ReadWrite);
-        kernelRunner->clearBuffers(ArgumentAccessType::WriteOnly);
-        if (kernel.hasTuningManipulator())
-        {
-            kernelRunner->clearBuffers(ArgumentAccessType::ReadOnly);
-        }
-
-        if (stopCondition != nullptr && stopCondition->isMet())
-        {
-            Logger::getLogger().log(LoggingLevel::Info, stopCondition->getStatusString());
-            break;
         }
     }
 
     kernelRunner->clearBuffers();
-    resultValidator->clearReferenceResults();
-    configurationManager.clearSearcher(id);
+    kernelRunner->clearReferenceResult(id);
+    configurationManager.clearKernelData(id, false, false);
     return results;
 }
 
-std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const std::string& filePath)
+std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -110,16 +87,26 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
     }
 
     const Kernel& kernel = kernelManager->getKernel(id);
-    std::vector<KernelConfiguration> configurations = kernelManager->getKernelConfigurations(id);
-    size_t configurationCount = configurations.size();
-
-    configurationManager.clearData(id);
-    configurationManager.setKernelConfigurations(id, configurations, kernel.getParameters());
-    std::vector<KernelResult> results;
-
-    for (size_t i = 0; i < configurationCount; i++)
+    if (!configurationManager.hasKernelConfigurations(id))
     {
-        KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
+        configurationManager.initializeConfigurations(kernel);
+    }
+
+    size_t configurationCount = configurationManager.getConfigurationCount(id);
+    std::vector<KernelResult> results;
+    size_t tuningIterations;
+    if (iterations == 0)
+    {
+        tuningIterations = configurationCount;
+    }
+    else
+    {
+        tuningIterations = std::min(configurationCount, iterations);
+    }
+
+    for (size_t i = 0; i < tuningIterations; i++)
+    {
+        KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(kernel);
         KernelResult result(kernel.getName(), currentConfiguration);
 
         try
@@ -127,22 +114,23 @@ std::vector<KernelResult> TuningRunner::dryTuneKernel(const KernelId id, const s
             std::stringstream stream;
             stream << "Launching configuration " << i + 1 << "/" << configurationCount << " for kernel " << kernel.getName() << ": "
                 << currentConfiguration;
-            Logger::getLogger().log(LoggingLevel::Info, stream.str());
+            Logger::logInfo(stream.str());
 
             result = resultLoader.readResult(currentConfiguration);
             result.setConfiguration(currentConfiguration);
         }
         catch (const std::runtime_error& error)
         {
-            Logger::getLogger().log(LoggingLevel::Warning, std::string("Kernel run failed, reason: ") + error.what() + "\n");
+            Logger::logWarning(std::string("Kernel run failed, reason: ") + error.what());
             results.emplace_back(kernel.getName(), currentConfiguration, std::string("Failed kernel run: ") + error.what());
         }
 
-        configurationManager.calculateNextConfiguration(id, kernel.getName(), currentConfiguration, result.getComputationDuration());
+        configurationManager.calculateNextConfiguration(kernel, true, currentConfiguration, result.getComputationDuration(),
+            result.getProfilingData(), result.getCompositionProfilingData());
         results.push_back(result);
     }
 
-    configurationManager.clearSearcher(id);
+    configurationManager.clearKernelData(id, false, false);
     return results;
 }
 
@@ -160,65 +148,49 @@ std::vector<KernelResult> TuningRunner::tuneComposition(const KernelId id, std::
         throw std::runtime_error("Kernel composition tuning cannot be performed with writable zero-copy arguments");
     }
 
-    resultValidator->computeReferenceResult(compatibilityKernel);
-    std::vector<KernelConfiguration> configurations = kernelManager->getKernelCompositionConfigurations(id);
-    size_t configurationCount = configurations.size();
+    if (!configurationManager.hasKernelConfigurations(id))
+    {
+        configurationManager.initializeConfigurations(composition);
+    }
 
+    size_t configurationCount = configurationManager.getConfigurationCount(id);
     if (stopCondition != nullptr)
     {
         stopCondition->initialize(configurationCount);
         configurationCount = std::min(configurationCount, stopCondition->getConfigurationCount());
     }
 
-    configurationManager.clearData(id);
-    configurationManager.setKernelConfigurations(id, configurations, composition.getParameters());
     std::vector<KernelResult> results;
 
-    for (size_t i = 0; i < configurationCount; i++)
+    for (size_t i = 0; i < configurationCount; ++i)
     {
         std::stringstream stream;
         stream << "Launching configuration " << i + 1 << "/" << configurationCount << " for kernel composition " << composition.getName();
-        Logger::getLogger().log(LoggingLevel::Info, stream.str());
+        Logger::logInfo(stream.str());
 
-        KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
-        KernelResult result = kernelRunner->runComposition(id, currentConfiguration, std::vector<OutputDescriptor>{});
-
-        if (validateResult(compatibilityKernel, result))
+        const KernelResult result = tuneCompositionByStep(id, KernelRunMode::OfflineTuning, std::vector<OutputDescriptor>{}, false);
+        results.push_back(result);
+        if (stopCondition != nullptr)
         {
-            results.push_back(result);
-            configurationManager.calculateNextConfiguration(id, composition.getName(), currentConfiguration, result.getComputationDuration());
+            stopCondition->updateStatus(result.isValid(), result.getConfiguration().getParameterPairs(),
+                static_cast<double>(result.getComputationDuration()), result.getProfilingData(), result.getCompositionProfilingData());
 
-            if (stopCondition != nullptr)
+            if (stopCondition->isSatisfied())
             {
-                stopCondition->updateStatus(static_cast<double>(result.getComputationDuration()));
+                Logger::logInfo(stopCondition->getStatusString());
+                break;
             }
-        }
-        else
-        {
-            results.emplace_back(composition.getName(), currentConfiguration, "Results differ");
-            configurationManager.calculateNextConfiguration(id, composition.getName(), currentConfiguration, UINT64_MAX);
-
-            if (stopCondition != nullptr)
-            {
-                stopCondition->updateStatus(std::numeric_limits<double>::max());
-            }
-        }
-
-        kernelRunner->clearBuffers();
-
-        if (stopCondition != nullptr && stopCondition->isMet())
-        {
-            Logger::getLogger().log(LoggingLevel::Info, stopCondition->getStatusString());
-            break;
         }
     }
 
-    resultValidator->clearReferenceResults();
-    configurationManager.clearSearcher(id);
+    kernelRunner->clearBuffers();
+    kernelRunner->clearReferenceResult(id);
+    configurationManager.clearKernelData(id, false, false);
     return results;
 }
 
-KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const KernelRunMode mode, const std::vector<OutputDescriptor>& output,
+    const bool recomputeReference)
 {
     if (!kernelManager->isKernel(id))
     {
@@ -228,34 +200,34 @@ KernelResult TuningRunner::tuneKernelByStep(const KernelId id, const std::vector
     const Kernel& kernel = kernelManager->getKernel(id);
     if (recomputeReference)
     {
-        resultValidator->clearReferenceResults(id);
-        resultValidator->computeReferenceResult(kernel);
+        kernelRunner->clearReferenceResult(id);
     }
 
     if (!configurationManager.hasKernelConfigurations(id))
     {
-        configurationManager.setKernelConfigurations(id, kernelManager->getKernelConfigurations(id), kernel.getParameters());
+        configurationManager.initializeConfigurations(kernel);
     }
 
-    KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
-    KernelResult result = kernelRunner->runKernel(id, currentConfiguration, output);
-
-    if (validateResult(kernel, result))
+    KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(kernel);
+    KernelResult result = kernelRunner->runKernel(id, mode, currentConfiguration, output);
+    if (!kernelRunner->getKernelProfiling() || result.getProfilingData().getRemainingProfilingRuns() == 0)
     {
-        configurationManager.calculateNextConfiguration(id, kernel.getName(), currentConfiguration, result.getComputationDuration());
-    }
-    else
-    {
-        result.setValid(false);
-        result.setErrorMessage("Results differ");
-        configurationManager.calculateNextConfiguration(id, kernel.getName(), currentConfiguration, UINT64_MAX);
+        configurationManager.calculateNextConfiguration(kernel, result.isValid(), currentConfiguration, result.getComputationDuration(),
+            result.getProfilingData(), result.getCompositionProfilingData());
     }
 
-    kernelRunner->clearBuffers();
+    if (kernel.hasTuningManipulator() || mode != KernelRunMode::OfflineTuning)
+    {
+        kernelRunner->clearBuffers(ArgumentAccessType::ReadOnly);
+    }
+    kernelRunner->clearBuffers(ArgumentAccessType::WriteOnly);
+    kernelRunner->clearBuffers(ArgumentAccessType::ReadWrite);
+
     return result;
 }
 
-KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
+KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const KernelRunMode mode, const std::vector<OutputDescriptor>& output,
+    const bool recomputeReference)
 {
     if (!kernelManager->isComposition(id))
     {
@@ -263,34 +235,37 @@ KernelResult TuningRunner::tuneCompositionByStep(const KernelId id, const std::v
     }
 
     const KernelComposition& composition = kernelManager->getKernelComposition(id);
-    const Kernel compatibilityKernel = composition.transformToKernel();
     if (recomputeReference)
     {
-        resultValidator->clearReferenceResults(id);
-        resultValidator->computeReferenceResult(compatibilityKernel);
+        kernelRunner->clearReferenceResult(id);
     }
 
     if (!configurationManager.hasKernelConfigurations(id))
     {
-        configurationManager.setKernelConfigurations(id, kernelManager->getKernelCompositionConfigurations(id), composition.getParameters());
+        configurationManager.initializeConfigurations(composition);
     }
 
-    KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(id);
-    KernelResult result = kernelRunner->runComposition(id, currentConfiguration, output);
-
-    if (validateResult(compatibilityKernel, result))
+    KernelConfiguration currentConfiguration = configurationManager.getCurrentConfiguration(composition);
+    KernelResult result = kernelRunner->runComposition(id, mode, currentConfiguration, output);
+    if (!kernelRunner->getKernelProfiling() || result.getProfilingData().getRemainingProfilingRuns() == 0)
     {
-        configurationManager.calculateNextConfiguration(id, composition.getName(), currentConfiguration, result.getComputationDuration());
-    }
-    else
-    {
-        result.setValid(false);
-        result.setErrorMessage("Results differ");
-        configurationManager.calculateNextConfiguration(id, composition.getName(), currentConfiguration, UINT64_MAX);
+        configurationManager.calculateNextConfiguration(composition, result.isValid(), currentConfiguration, result.getComputationDuration(),
+            result.getProfilingData(), result.getCompositionProfilingData());
     }
 
     kernelRunner->clearBuffers();
+
     return result;
+}
+
+void TuningRunner::clearKernelData(const KernelId id, const bool clearConfigurations)
+{
+    configurationManager.clearKernelData(id, clearConfigurations, true);
+}
+
+void TuningRunner::setKernelProfiling(const bool flag)
+{
+    kernelRunner->setKernelProfiling(flag);
 }
 
 void TuningRunner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
@@ -298,60 +273,9 @@ void TuningRunner::setSearchMethod(const SearchMethod method, const std::vector<
     configurationManager.setSearchMethod(method, arguments);
 }
 
-void TuningRunner::setValidationMethod(const ValidationMethod method, const double toleranceThreshold)
-{
-    resultValidator->setValidationMethod(method);
-    resultValidator->setToleranceThreshold(toleranceThreshold);
-}
-
-void TuningRunner::setValidationRange(const ArgumentId id, const size_t range)
-{
-    resultValidator->setValidationRange(id, range);
-}
-
-void TuningRunner::setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
-{
-    resultValidator->setArgumentComparator(id, comparator);
-}
-
-void TuningRunner::setReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
-    const std::vector<ArgumentId>& validatedArgumentIds)
-{
-    resultValidator->setReferenceKernel(id, referenceId, referenceConfiguration, validatedArgumentIds);
-}
-
-void TuningRunner::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass,
-    const std::vector<ArgumentId>& validatedArgumentIds)
-{
-    resultValidator->setReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
-}
-
 ComputationResult TuningRunner::getBestComputationResult(const KernelId id) const
 {
     return configurationManager.getBestComputationResult(id);
-}
-
-bool TuningRunner::validateResult(const Kernel& kernel, const KernelResult& result)
-{
-    if (!result.isValid())
-    {
-        return false;
-    }
-
-    bool resultIsCorrect = resultValidator->validateArgumentsWithClass(kernel);
-    resultIsCorrect &= resultValidator->validateArgumentsWithKernel(kernel);
-
-    if (resultIsCorrect)
-    {
-        Logger::getLogger().log(LoggingLevel::Info, std::string("Kernel run completed successfully in ")
-            + std::to_string((result.getComputationDuration()) / 1'000'000) + "ms");
-    }
-    else
-    {
-        Logger::getLogger().log(LoggingLevel::Warning, "Kernel run completed successfully, but results differ");
-    }
-
-    return resultIsCorrect;
 }
 
 bool TuningRunner::hasWritableZeroCopyArguments(const Kernel& kernel)

@@ -14,10 +14,20 @@
 #define RAND_MAX UINT_MAX
 #endif
 
-#if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/sort/sort.cl"
+#define USE_CUDA 0
+
+#if USE_CUDA == 0
+    #if defined(_MSC_VER)
+        #define KTT_KERNEL_FILE "../examples/sort/sort.cl"
+    #else
+        #define KTT_KERNEL_FILE "../../examples/sort/sort.cl"
+    #endif
 #else
-    #define KTT_KERNEL_FILE "../../examples/sort/sort.cl"
+    #if defined(_MSC_VER)
+        #define KTT_KERNEL_FILE "../examples/sort/sort.cu"
+    #else
+        #define KTT_KERNEL_FILE "../../examples/sort/sort.cu"
+    #endif
 #endif
 
 int main(int argc, char** argv)
@@ -59,7 +69,13 @@ int main(int argc, char** argv)
   }
 
   // Create tuner object for chosen platform and device
+#if USE_CUDA == 0
   ktt::Tuner tuner(platformIndex, deviceIndex);
+#else
+    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+#endif
+  tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
   // Declare kernels and their dimensions
   std::vector<ktt::KernelId> kernelIds(3);
@@ -85,18 +101,19 @@ int main(int argc, char** argv)
 
   // Local memory arguments will be updated in tuning manipulator as their size depends on work-group size
   int localSize = 1;  
-  ktt::ArgumentId localMem1Id = tuner.addArgumentLocal<unsigned int>(localSize);
-  ktt::ArgumentId localMem2Id = tuner.addArgumentLocal<unsigned int>(2 * localSize);
-  ktt::ArgumentId localMem3Id = tuner.addArgumentLocal<unsigned int>(2 * localSize);
   
   ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, size, inId, outId, isumsId, sizeId,
-      localMem1Id, localMem2Id, localMem3Id, numberOfGroupsId, shiftId));
-  tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<size_t>{inId, isumsId, sizeId, localMem1Id, shiftId});
-  tuner.setCompositionKernelArguments(compositionId, kernelIds[1], std::vector<size_t>{isumsId, numberOfGroupsId, localMem2Id});
-  tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<size_t>{inId, isumsId, outId, sizeId, localMem3Id, shiftId});
+      numberOfGroupsId, shiftId));
+  tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<ktt::ArgumentId>{inId, isumsId, sizeId, shiftId});
+  tuner.setCompositionKernelArguments(compositionId, kernelIds[1], std::vector<ktt::ArgumentId>{isumsId, numberOfGroupsId});
+  tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<ktt::ArgumentId>{inId, isumsId, outId, sizeId, shiftId});
 
   // Parameter for the length of OpenCL vector data types used in the kernels
+#if USE_CUDA == 0
   tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
+#else
+  tuner.addParameter(compositionId, "FPVECTNUM", {4});
+#endif
 
   // Local size below 128 does not work correctly, not even with the benchmark code
   tuner.addParameter(compositionId, "LOCAL_SIZE", {128, 256, 512});
@@ -120,5 +137,12 @@ int main(int argc, char** argv)
   tuner.tuneKernel(compositionId);
   tuner.printResult(compositionId, std::cout, ktt::PrintFormat::Verbose);
   tuner.printResult(compositionId, std::string("sort_result.csv"), ktt::PrintFormat::CSV);
+
+  /*std::vector<unsigned int> firstMatrix(10);
+  ktt::OutputDescriptor output(outId, (void*)firstMatrix.data(), 10*sizeof(unsigned int));
+   ktt::ComputationResult bestConf = tuner.getBestComputationResult(compositionId);
+   tuner.runKernel(compositionId, bestConf.getConfiguration(), {output});*/
+
   return 0;
 }
+

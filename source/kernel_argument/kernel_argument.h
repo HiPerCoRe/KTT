@@ -3,11 +3,11 @@
 #include <cstdint>
 #include <cstring>
 #include <vector>
-#include "ktt_types.h"
-#include "enum/argument_access_type.h"
-#include "enum/argument_data_type.h"
-#include "enum/argument_memory_location.h"
-#include "enum/argument_upload_type.h"
+#include <enum/argument_access_type.h>
+#include <enum/argument_data_type.h>
+#include <enum/argument_memory_location.h>
+#include <enum/argument_upload_type.h>
+#include <ktt_types.h>
 
 namespace ktt
 {

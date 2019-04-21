@@ -35,7 +35,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.0</span>
+   &#160;<span id="projectnumber">1.1</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -100,7 +100,10 @@ $(document).ready(function(){initNavTree('index.html','');});
 <div class="title">KTT - Kernel Tuning Toolkit </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>KTT is a tuning framework for OpenCL and CUDA kernels. Official 1.0 version with stable API and all of the planned functionality is now released.</p>
+<div class="textblock"><div class="image">
+<img src="resources/ktt_logo.png" width="425" height="150"/>
+</div>
+<p>KTT is a tuning framework for OpenCL and CUDA kernels. Version 1.1 which includes experimental support for Vulkan and support for kernel profiling on Nvidia GPUs is now available.</p>
 <h2>Main features </h2>
 <ul>
 <li>Ability to define kernel tuning parameters such as kernel thread sizes, vector data types and loop unroll factors in order to optimize computation for a particular device</li>
@@ -108,7 +111,7 @@ $(document).ready(function(){initNavTree('index.html','');});
 <li>Support for multiple compute queues and asynchronous operations</li>
 <li>Support for online auto-tuning - kernel tuning combined with regular kernel running</li>
 <li>Ability to automatically ensure correctness of tuned computation with reference kernel or C++ function</li>
-<li>Support for multiple compute APIs, switching between CUDA and OpenCL requires only minor changes in C++ code (eg. changing the kernel source file), no library recompilation is needed</li>
+<li>Support for multiple compute APIs, switching between CUDA, OpenCL and Vulkan requires only minor changes in C++ code (e.g. changing the kernel source file), no library recompilation is needed</li>
 <li>Large number of customization options, including support for kernel arguments with user-defined data types, ability to change kernel compiler flags and more</li>
 </ul>
 <h2>Getting started </h2>
@@ -116,10 +119,10 @@ $(document).ready(function(){initNavTree('index.html','');});
 <li>Documentation for KTT API can be found <a href="https://fillo7.github.io/KTT/">here</a>.</li>
 <li>Newest version of KTT framework can be found <a href="https://github.com/Fillo7/KTT/releases">here</a>.</li>
 <li>Prebuilt binaries are available only for some platforms. Other platforms require manual build.</li>
-<li>Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support.</li>
+<li>Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support. Binaries for Vulkan include only Vulkan support.</li>
 </ul>
 <h2>Tutorials </h2>
-<p>Tutorials are short examples aimed at introducing people to KTT framework. Each tutorial focuses on explaining specific part of the API. All tutorials are available for both OpenCL and CUDA backends. Tutorials assume that reader has some knowledge about C++ and GPU programming. List of currently available tutorials:</p>
+<p>Tutorials are short examples aimed at introducing people to KTT framework. Each tutorial focuses on explaining specific part of the API. All tutorials are available for both OpenCL and CUDA backends. Most of the tutorials are also available for Vulkan. Tutorials assume that reader has some knowledge about C++ and GPU programming. List of currently available tutorials:</p>
 <ul>
 <li><code>compute_api_info</code>: Tutorial covers retrieving information about compute API platforms and devices through KTT API.</li>
 <li><code>running_kernel</code>: Tutorial covers running simple kernel with KTT framework and retrieving output.</li>
@@ -127,7 +130,7 @@ $(document).ready(function(){initNavTree('index.html','');});
 <li><code>custom_kernel_arguments</code>: Tutorial covers using kernel arguments with custom data types and validating the output with argument comparator.</li>
 </ul>
 <h2>Examples </h2>
-<p>Examples showcase how KTT framework could be utilized in real-world scenarios. Examples are more complex than tutorials and assume that reader is familiar with KTT API. List of currently available examples:</p>
+<p>Examples showcase how KTT framework could be utilized in real-world scenarios. Examples are more complex than tutorials and assume that reader is familiar with KTT API. List of some of the currently available examples:</p>
 <ul>
 <li><code>coulomb_sum_2d</code>: Example which showcases tuning of electrostatic potential map computation, it focuses on a single slice.</li>
 <li><code>coulomb_sum_3d_iterative</code>: 3D version of previous example, utilizes kernel from 2D version and launches it iteratively.</li>
@@ -142,7 +145,7 @@ $(document).ready(function(){initNavTree('index.html','');});
 <li>KTT can be built as a dynamic (shared) library using command line build tool Premake. Currently supported operating systems are Linux and Windows.</li>
 <li>The prerequisites to build KTT are:<ul>
 <li>C++14 compiler, for example Clang 3.5, GCC 5.0, MSVC 19.0 (Visual Studio 2015) or newer</li>
-<li>OpenCL or CUDA library, supported SDKs are AMD APP SDK 3.0, Intel SDK for OpenCL and NVIDIA CUDA Toolkit 7.5 or newer</li>
+<li>OpenCL, CUDA or Vulkan library, supported SDKs are AMD APP SDK 3.0, Intel SDK for OpenCL, NVIDIA CUDA Toolkit 7.5 and Vulkan SDK 1.1.101 or newer</li>
 <li><a href="https://premake.github.io/download.html">Premake 5</a> (alpha 12 or newer)</li>
 </ul>
 </li>
@@ -150,7 +153,7 @@ $(document).ready(function(){initNavTree('index.html','');});
 <li>ensure that path to vendor SDK is correctly set in the environment variables</li>
 <li>run <code>./premake5 gmake</code> to generate makefile</li>
 <li>run <code>cd build</code> to get inside build directory</li>
-<li>afterwards run <code>make config={configuration}_{architecture}</code> to build the project (eg. <code>make config=release_x86_64</code>)</li>
+<li>afterwards run <code>make config={configuration}_{architecture}</code> to build the project (e.g. <code>make config=release_x86_64</code>)</li>
 </ul>
 </li>
 <li>Build under Windows (inside KTT root folder):<ul>
@@ -162,11 +165,22 @@ $(document).ready(function(){initNavTree('index.html','');});
 <li>Following build options are available:<ul>
 <li><code>--outdir=path</code> specifies custom build directory, default build directory is <code>build</code></li>
 <li><code>--platform=vendor</code> specifies SDK used for building KTT, useful when multiple SDKs are installed</li>
+<li><code>--profiling</code> enables compilation of kernel profiling functionality for CUDA</li>
+<li><code>--vulkan</code> enables compilation of experimental Vulkan backend</li>
 <li><code>--no-examples</code> disables compilation of examples</li>
 <li><code>--no-tutorials</code> disables compilation of tutorials</li>
 <li><code>--tests</code> enables compilation of unit tests</li>
 <li><code>--no-cuda</code> disables inclusion of CUDA API during compilation, only affects Nvidia platform</li>
 <li><code>--no-opencl</code> disables inclusion of OpenCL API during compilation</li>
+</ul>
+</li>
+<li>KTT and applications utilizing it rely on external dynamic (shared) libraries in order to work correctly. There are multiple ways to provide access to these libraries, e.g. copying given library inside application folder or adding the containing folder to library path (example for Linux: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/shared/library). Libraries which are bundled with device drivers are usually visible by default. List of the libraries currently utilized by KTT:<ul>
+<li><code>OpenCL</code> distributed with specific device drivers (OpenCL only)</li>
+<li><code>cuda</code> distributed with specific device drivers (CUDA only)</li>
+<li><code>nvrtc</code> distributed with specific device drivers (CUDA only)</li>
+<li><code>cupti</code> bundled with Nvidia CUDA Toolkit (CUDA profiling only)</li>
+<li><code>vulkan</code> distributed with specific device drivers (Vulkan only)</li>
+<li><code>shaderc_shared</code> bundled with KTT distribution (Vulkan only)</li>
 </ul>
 </li>
 </ul>

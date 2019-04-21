@@ -6,6 +6,13 @@ var dir_ec7d085ec77f69a826fd0e2fbdff6456 =
     ] ],
     [ "device_info.h", "device__info_8h.html", "device__info_8h" ],
     [ "dimension_vector.h", "dimension__vector_8h.html", "dimension__vector_8h" ],
+    [ "kernel_profiling_counter.h", "kernel__profiling__counter_8h.html", [
+      [ "ProfilingCounterValue", "unionktt_1_1_profiling_counter_value.html", "unionktt_1_1_profiling_counter_value" ],
+      [ "KernelProfilingCounter", "classktt_1_1_kernel_profiling_counter.html", "classktt_1_1_kernel_profiling_counter" ]
+    ] ],
+    [ "kernel_profiling_data.h", "kernel__profiling__data_8h.html", [
+      [ "KernelProfilingData", "classktt_1_1_kernel_profiling_data.html", "classktt_1_1_kernel_profiling_data" ]
+    ] ],
     [ "output_descriptor.h", "output__descriptor_8h.html", [
       [ "OutputDescriptor", "classktt_1_1_output_descriptor.html", "classktt_1_1_output_descriptor" ]
     ] ],

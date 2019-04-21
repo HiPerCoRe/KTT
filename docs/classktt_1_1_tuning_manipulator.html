@@ -35,7 +35,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.0</span>
+   &#160;<span id="projectnumber">1.1</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -124,6 +124,12 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a62d04a12e5001112ba611b6fe44ea61c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a095e5d558ba3b1871c3a7ef4d816279c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html#a095e5d558ba3b1871c3a7ef4d816279c">runKernelAsync</a> (const <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a> id, const <a class="el" href="classktt_1_1_dimension_vector.html">DimensionVector</a> &amp;globalSize, const <a class="el" href="classktt_1_1_dimension_vector.html">DimensionVector</a> &amp;localSize, const <a class="el" href="namespacektt.html#a42a11ff66d2e2aef76699a88f6602b0b">QueueId</a> queue)</td></tr>
 <tr class="separator:a095e5d558ba3b1871c3a7ef4d816279c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3da38c2570ff8daacf443869e0ca4515"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html#a3da38c2570ff8daacf443869e0ca4515">runKernelWithProfiling</a> (const <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a> id)</td></tr>
+<tr class="separator:a3da38c2570ff8daacf443869e0ca4515"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75fb08be4b0aa70cff3112df24a9c097"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html#a75fb08be4b0aa70cff3112df24a9c097">runKernelWithProfiling</a> (const <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a> id, const <a class="el" href="classktt_1_1_dimension_vector.html">DimensionVector</a> &amp;globalSize, const <a class="el" href="classktt_1_1_dimension_vector.html">DimensionVector</a> &amp;localSize)</td></tr>
+<tr class="separator:a75fb08be4b0aa70cff3112df24a9c097"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d5d0dc24d00450a0c7558b588e2e57e"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html#a4d5d0dc24d00450a0c7558b588e2e57e">getRemainingKernelProfilingRuns</a> (const <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a> id) const</td></tr>
+<tr class="separator:a4d5d0dc24d00450a0c7558b588e2e57e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a04a20b1dd6056d5a3937c92b07ec6c13"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a42a11ff66d2e2aef76699a88f6602b0b">QueueId</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html#a04a20b1dd6056d5a3937c92b07ec6c13">getDefaultDeviceQueue</a> () const</td></tr>
 <tr class="separator:a04a20b1dd6056d5a3937c92b07ec6c13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9e796aed2c163e56de10ac10e000538"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="namespacektt.html#a42a11ff66d2e2aef76699a88f6602b0b">QueueId</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html#ab9e796aed2c163e56de10ac10e000538">getAllDeviceQueues</a> () const</td></tr>
@@ -800,6 +806,30 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>KernelRunner</b></td
 
 </div>
 </div>
+<a id="a4d5d0dc24d00450a0c7558b588e2e57e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d5d0dc24d00450a0c7558b588e2e57e">&#9670;&nbsp;</a></span>getRemainingKernelProfilingRuns()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t ktt::TuningManipulator::getRemainingKernelProfilingRuns </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a>&#160;</td>
+          <td class="paramname"><em>id</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Retrieves number of remaining profiling runs that are needed to collect all the profiling counters for specified kernel. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id</td><td>Id of kernel for which the number of remaining profiling runs will be retrieved. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="aa5c993600def90f0e5e67c7a03fcdd0d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa5c993600def90f0e5e67c7a03fcdd0d">&#9670;&nbsp;</a></span>launchComputation()</h2>
 
@@ -1019,6 +1049,72 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>KernelRunner</b></td
     <tr><td class="paramname">globalSize</td><td>Dimensions for global size with which the kernel will be run. </td></tr>
     <tr><td class="paramname">localSize</td><td>Dimensions for local size with which the kernel will be run. </td></tr>
     <tr><td class="paramname">queue</td><td>Id of queue in which the command to run kernel will be submitted. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a3da38c2570ff8daacf443869e0ca4515"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3da38c2570ff8daacf443869e0ca4515">&#9670;&nbsp;</a></span>runKernelWithProfiling() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ktt::TuningManipulator::runKernelWithProfiling </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a>&#160;</td>
+          <td class="paramname"><em>id</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Runs kernel with specified id using thread sizes based on the current configuration. Collection of profiling counters will be enabled for this kernel run which means the performance will be decreased. Running a kernel with profiling will currently always cause implicit device synchronization before and after the kernel run has finished. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id</td><td>Id of kernel which will be run. It must either match the id used to launch kernel from tuner API or be included inside composition which was launched from tuner API. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a75fb08be4b0aa70cff3112df24a9c097"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a75fb08be4b0aa70cff3112df24a9c097">&#9670;&nbsp;</a></span>runKernelWithProfiling() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ktt::TuningManipulator::runKernelWithProfiling </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a>&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classktt_1_1_dimension_vector.html">DimensionVector</a> &amp;&#160;</td>
+          <td class="paramname"><em>globalSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classktt_1_1_dimension_vector.html">DimensionVector</a> &amp;&#160;</td>
+          <td class="paramname"><em>localSize</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Runs kernel with specified id using specified thread sizes. Collection of profiling counters will be enabled for this kernel run which means the performance will be decreased. Running a kernel with profiling will currently always cause implicit device synchronization before and after the kernel run has finished. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id</td><td>Id of kernel which will be run. It must either match the id used to launch kernel from tuner API or be included inside composition which was launched from tuner API. </td></tr>
+    <tr><td class="paramname">globalSize</td><td>Dimensions for global size with which the kernel will be run. </td></tr>
+    <tr><td class="paramname">localSize</td><td>Dimensions for local size with which the kernel will be run. </td></tr>
   </table>
   </dd>
 </dl>

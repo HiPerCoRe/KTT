@@ -5,7 +5,7 @@
 #include <limits>
 #include <random>
 #include <stdexcept>
-#include "searcher.h"
+#include <tuning_runner/searcher/searcher.h>
 
 namespace ktt
 {
@@ -37,9 +37,10 @@ public:
         index = initialState;
     }
 
-    void calculateNextConfiguration(const double previousDuration) override
+    void calculateNextConfiguration(const bool successFlag, const KernelConfiguration& previousConfiguration, const double previousDuration,
+        const KernelProfilingData& previousProfilingData, const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData) override
     {
-        if (previousDuration > 0.0) // workaround for recursive calls
+        if (previousDuration >= 0.0) // workaround for recursive calls
         {
             visitedStatesCount++;
             exploredIndices.push_back(currentState);
@@ -64,7 +65,7 @@ public:
             if (alreadyVisistedStatesCount < maximumAlreadyVisitedStates)
             {
                 alreadyVisistedStatesCount++;
-                calculateNextConfiguration(-1.0);
+                calculateNextConfiguration(successFlag, previousConfiguration, -1.0, previousProfilingData, previousCompositionProfilingData);
                 return;
             }
         }
@@ -72,7 +73,7 @@ public:
         index = neighbourState;
     }
 
-    KernelConfiguration getCurrentConfiguration() const override
+    KernelConfiguration getNextConfiguration() const override
     {
         return configurations.at(index);
     }
@@ -88,7 +89,7 @@ public:
     }
 
 private:
-    std::vector<KernelConfiguration> configurations;
+    const std::vector<KernelConfiguration>& configurations;
     size_t index;
     double maximumTemperature;
     size_t visitedStatesCount;

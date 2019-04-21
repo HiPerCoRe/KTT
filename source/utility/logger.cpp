@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
-#include "logger.h"
+#include <utility/logger.h>
 
 namespace ktt
 {
@@ -51,6 +51,26 @@ void Logger::log(const LoggingLevel level, const std::string& message) const
     {
         *outputTarget << getLoggingLevelString(level) << " " << message << std::endl;
     }
+}
+
+void Logger::logError(const std::string& message)
+{
+    getLogger().log(LoggingLevel::Error, message);
+}
+
+void Logger::logWarning(const std::string& message)
+{
+    getLogger().log(LoggingLevel::Warning, message);
+}
+
+void Logger::logInfo(const std::string& message)
+{
+    getLogger().log(LoggingLevel::Info, message);
+}
+
+void Logger::logDebug(const std::string& message)
+{
+    getLogger().log(LoggingLevel::Debug, message);
 }
 
 Logger::Logger() :

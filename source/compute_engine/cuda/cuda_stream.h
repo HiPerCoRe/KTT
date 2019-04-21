@@ -1,9 +1,9 @@
 #pragma once
 
 #include <string>
-#include "cuda.h"
-#include "cuda_utility.h"
-#include "ktt_types.h"
+#include <cuda.h>
+#include <compute_engine/cuda/cuda_utility.h>
+#include <ktt_types.h>
 
 namespace ktt
 {

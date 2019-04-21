@@ -35,7 +35,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.0</span>
+   &#160;<span id="projectnumber">1.1</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -122,12 +122,12 @@ Inheritance diagram for ktt::StopCondition:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a03174c2a6251dc4ee72d02a767d86d79"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_stop_condition.html#a03174c2a6251dc4ee72d02a767d86d79">~StopCondition</a> ()=default</td></tr>
 <tr class="separator:a03174c2a6251dc4ee72d02a767d86d79"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66cd8461e1206791885d34e882117bd3"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_stop_condition.html#a66cd8461e1206791885d34e882117bd3">isMet</a> () const =0</td></tr>
-<tr class="separator:a66cd8461e1206791885d34e882117bd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ecd583de5d8dd9576dd2a7e1e7bce12"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_stop_condition.html#a9ecd583de5d8dd9576dd2a7e1e7bce12">isSatisfied</a> () const =0</td></tr>
+<tr class="separator:a9ecd583de5d8dd9576dd2a7e1e7bce12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d9d4011dce7bc3b51770dbba11e516c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_stop_condition.html#a8d9d4011dce7bc3b51770dbba11e516c">initialize</a> (const size_t totalConfigurationCount)=0</td></tr>
 <tr class="separator:a8d9d4011dce7bc3b51770dbba11e516c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6c9c2da87d060f0e0385655a6ec8348"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_stop_condition.html#ab6c9c2da87d060f0e0385655a6ec8348">updateStatus</a> (const double previousConfigurationDuration)=0</td></tr>
-<tr class="separator:ab6c9c2da87d060f0e0385655a6ec8348"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad390c0bd83d81c46264098a517534bf9"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_stop_condition.html#ad390c0bd83d81c46264098a517534bf9">updateStatus</a> (const bool successFlag, const std::vector&lt; <a class="el" href="classktt_1_1_parameter_pair.html">ParameterPair</a> &gt; &amp;previousConfiguration, const double previousDuration, const <a class="el" href="classktt_1_1_kernel_profiling_data.html">KernelProfilingData</a> &amp;previousProfilingData, const std::map&lt; <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a>, <a class="el" href="classktt_1_1_kernel_profiling_data.html">KernelProfilingData</a> &gt; &amp;previousCompositionProfilingData)=0</td></tr>
+<tr class="separator:ad390c0bd83d81c46264098a517534bf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac47146b9d0f408f4542fd1795c71a9e0"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_stop_condition.html#ac47146b9d0f408f4542fd1795c71a9e0">getConfigurationCount</a> () const =0</td></tr>
 <tr class="separator:ac47146b9d0f408f4542fd1795c71a9e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5391664661b1fd718d1718fa7495476e"><td class="memItemLeft" align="right" valign="top">virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_stop_condition.html#a5391664661b1fd718d1718fa7495476e">getStatusString</a> () const =0</td></tr>
@@ -187,7 +187,7 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Returns number of configurations that will be tested before stop condition is satisfied. </p><dl class="section return"><dt>Returns</dt><dd>Number of configurations that will be tested before stop condition is satisfied. If unknown, returns total number of generated configurations received in initialization method. </dd></dl>
 
-<p>Implemented in <a class="el" href="classktt_1_1_tuning_duration.html#a8ca7beb211d79c15903fc4f9ab18eb5f">ktt::TuningDuration</a>, <a class="el" href="classktt_1_1_configuration_duration.html#ae447233d9f6717a194b8fbfedd5a3435">ktt::ConfigurationDuration</a>, <a class="el" href="classktt_1_1_configuration_fraction.html#a1cac357c46bd11ef7245eed7267a86ce">ktt::ConfigurationFraction</a>, and <a class="el" href="classktt_1_1_configuration_count.html#a1a4c3048aa56a43cefc9b3f7b31c0918">ktt::ConfigurationCount</a>.</p>
+<p>Implemented in <a class="el" href="classktt_1_1_configuration_duration.html#ae447233d9f6717a194b8fbfedd5a3435">ktt::ConfigurationDuration</a>, <a class="el" href="classktt_1_1_tuning_duration.html#a8ca7beb211d79c15903fc4f9ab18eb5f">ktt::TuningDuration</a>, <a class="el" href="classktt_1_1_configuration_fraction.html#a1cac357c46bd11ef7245eed7267a86ce">ktt::ConfigurationFraction</a>, and <a class="el" href="classktt_1_1_configuration_count.html#a1a4c3048aa56a43cefc9b3f7b31c0918">ktt::ConfigurationCount</a>.</p>
 
 </div>
 </div>
@@ -215,7 +215,7 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Returns stop condition status string. Used for logging. </p><dl class="section return"><dt>Returns</dt><dd>Stop condition status string. </dd></dl>
 
-<p>Implemented in <a class="el" href="classktt_1_1_tuning_duration.html#ae954fa16adc8a2a29a37afbf4e96f300">ktt::TuningDuration</a>, <a class="el" href="classktt_1_1_configuration_duration.html#ab2b2d386c82a0c16a240f22153616b9a">ktt::ConfigurationDuration</a>, <a class="el" href="classktt_1_1_configuration_fraction.html#aa9356bcb3008f0c8b0ba5aeb56b7d2f7">ktt::ConfigurationFraction</a>, and <a class="el" href="classktt_1_1_configuration_count.html#ae246a649708074388675051ac0a9b5d5">ktt::ConfigurationCount</a>.</p>
+<p>Implemented in <a class="el" href="classktt_1_1_configuration_duration.html#ab2b2d386c82a0c16a240f22153616b9a">ktt::ConfigurationDuration</a>, <a class="el" href="classktt_1_1_tuning_duration.html#ae954fa16adc8a2a29a37afbf4e96f300">ktt::TuningDuration</a>, <a class="el" href="classktt_1_1_configuration_fraction.html#aa9356bcb3008f0c8b0ba5aeb56b7d2f7">ktt::ConfigurationFraction</a>, and <a class="el" href="classktt_1_1_configuration_count.html#ae246a649708074388675051ac0a9b5d5">ktt::ConfigurationCount</a>.</p>
 
 </div>
 </div>
@@ -253,8 +253,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a66cd8461e1206791885d34e882117bd3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a66cd8461e1206791885d34e882117bd3">&#9670;&nbsp;</a></span>isMet()</h2>
+<a id="a9ecd583de5d8dd9576dd2a7e1e7bce12"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9ecd583de5d8dd9576dd2a7e1e7bce12">&#9670;&nbsp;</a></span>isSatisfied()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -263,7 +263,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool ktt::StopCondition::isMet </td>
+          <td class="memname">bool ktt::StopCondition::isSatisfied </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -277,12 +277,12 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Checks whether stop condition is already satisfied. </p><dl class="section return"><dt>Returns</dt><dd>True if stop condition is satisfied, false otherwise. </dd></dl>
 
-<p>Implemented in <a class="el" href="classktt_1_1_configuration_duration.html#a13e6dad923bd06fb2de3fe3ad01bec30">ktt::ConfigurationDuration</a>, <a class="el" href="classktt_1_1_tuning_duration.html#ad11c9c3d6d787dcd1191a9bfed8bf845">ktt::TuningDuration</a>, <a class="el" href="classktt_1_1_configuration_fraction.html#abece4312d6a0a4782262035f10f00eb2">ktt::ConfigurationFraction</a>, and <a class="el" href="classktt_1_1_configuration_count.html#a3cdf7e91265540732b813c43cde3f7ef">ktt::ConfigurationCount</a>.</p>
+<p>Implemented in <a class="el" href="classktt_1_1_configuration_duration.html#a525531c8271f7e87adf406f31ef897a9">ktt::ConfigurationDuration</a>, <a class="el" href="classktt_1_1_tuning_duration.html#aef9c63d6c45d91c8f433648f1437d381">ktt::TuningDuration</a>, <a class="el" href="classktt_1_1_configuration_fraction.html#aeb4f13b25cb9ed6b8fdedb1102fec849">ktt::ConfigurationFraction</a>, and <a class="el" href="classktt_1_1_configuration_count.html#aa563641bbabb9170db87d917a942503e">ktt::ConfigurationCount</a>.</p>
 
 </div>
 </div>
-<a id="ab6c9c2da87d060f0e0385655a6ec8348"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab6c9c2da87d060f0e0385655a6ec8348">&#9670;&nbsp;</a></span>updateStatus()</h2>
+<a id="ad390c0bd83d81c46264098a517534bf9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad390c0bd83d81c46264098a517534bf9">&#9670;&nbsp;</a></span>updateStatus()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -293,9 +293,37 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">void ktt::StopCondition::updateStatus </td>
           <td>(</td>
-          <td class="paramtype">const double&#160;</td>
-          <td class="paramname"><em>previousConfigurationDuration</em></td><td>)</td>
+          <td class="paramtype">const bool&#160;</td>
+          <td class="paramname"><em>successFlag</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="classktt_1_1_parameter_pair.html">ParameterPair</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>previousConfiguration</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double&#160;</td>
+          <td class="paramname"><em>previousDuration</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classktt_1_1_kernel_profiling_data.html">KernelProfilingData</a> &amp;&#160;</td>
+          <td class="paramname"><em>previousProfilingData</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::map&lt; <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a>, <a class="el" href="classktt_1_1_kernel_profiling_data.html">KernelProfilingData</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>previousCompositionProfilingData</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -306,12 +334,16 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Performs update of stop condition. Called after each tested configuration. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">previousConfigurationDuration</td><td>Duration of computation using last tested configuration in nanoseconds. </td></tr>
+    <tr><td class="paramname">successFlag</td><td>If true, last tested kernel configuration finished successfully. If false, an error occurred (e.g. result validation failed). </td></tr>
+    <tr><td class="paramname">previousConfiguration</td><td>Last tested kernel configuration. </td></tr>
+    <tr><td class="paramname">previousDuration</td><td>Duration of last tested kernel configuration in nanoseconds. </td></tr>
+    <tr><td class="paramname">previousProfilingData</td><td>Profiling data of last tested kernel configuration. Valid only if kernel profiling is enabled and tuned kernel is a single kernel. </td></tr>
+    <tr><td class="paramname">previousCompositionProfilingData</td><td>Profiling data of last tested kernel configuration. Valid only if kernel profiling is enabled and tuned kernel is a composition. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classktt_1_1_tuning_duration.html#aa1b2f1d09e688a76ad618d9b72284226">ktt::TuningDuration</a>, <a class="el" href="classktt_1_1_configuration_duration.html#a36ec1e54444852d17a2b9dc4a86f9e9a">ktt::ConfigurationDuration</a>, <a class="el" href="classktt_1_1_configuration_fraction.html#ab14363a335a7df6c06986592fc51abde">ktt::ConfigurationFraction</a>, and <a class="el" href="classktt_1_1_configuration_count.html#aa15b17ccc51de193e1e7e4b2af5bdb5b">ktt::ConfigurationCount</a>.</p>
+<p>Implemented in <a class="el" href="classktt_1_1_tuning_duration.html#a11ee61d274a9a6fb257569b9b748e8a1">ktt::TuningDuration</a>, <a class="el" href="classktt_1_1_configuration_duration.html#a950b4d21f960d6167e29a0cb8cf3b830">ktt::ConfigurationDuration</a>, <a class="el" href="classktt_1_1_configuration_fraction.html#a2f4f20b50558d666baed2e0bc6b48510">ktt::ConfigurationFraction</a>, and <a class="el" href="classktt_1_1_configuration_count.html#a840215dbc8a6d57ccc9bf95aefa3389c">ktt::ConfigurationCount</a>.</p>
 
 </div>
 </div>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['logginglevel',['LoggingLevel',['../namespacektt.html#a17afdb449e82292a32fba46ff7a54781',1,'ktt']]]
+  ['kernelrunmode',['KernelRunMode',['../namespacektt.html#a405c5e17d3cfbedf3b3eb4e54c7c35ee',1,'ktt']]]
 ];

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
-#include "CL/cl.h"
-#include "opencl_utility.h"
+#include <CL/cl.h>
+#include <compute_engine/opencl/opencl_utility.h>
 
 namespace ktt
 {
@@ -53,7 +53,7 @@ public:
         return program;
     }
 
-    std::string getKernelName() const
+    const std::string& getKernelName() const
     {
         return kernelName;
     }

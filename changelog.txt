@@ -1,3 +1,21 @@
+Version 1.1 (21/4/2019)
+* Introduced support for kernel profiling on Nvidia GPUs (currently for generations up to and including Volta),
+  kernel profiling allows collection of performance counters which can be utilized by searchers and stop conditions
+  to better predict performance of kernel configurations
+* Introduced experimental Vulkan support, tuning of GLSL compute shaders is supported
+* Added support for tuning parameter packs - sets of tuning parameters which can be tuned independently and thus reduce
+  the total number of tuning configurations
+* Stop conditions can now utilize additional information about specific kernel runs such as values of tuning parameters
+* Added an option to clear kernel tuning data (configurations, results, etc.)
+* Computation results for offline tuning methods can now be retrieved through API
+* Added API method for enabling output validation for specific workloads (offline tuning, online tuning, regular computation)
+* Improvements to MCMC searcher
+* API method for setting time unit now also affects tuner status messages
+* Improved performance of generating configurations when many constraints are utilized
+* Minor performance improvements by utilizing return by reference rather than by value in more getter methods
+* Additions and improvements to examples
+* Removed 32-bit library support
+
 Version 1.0 (20/7/2018)
 * First official release
 * Significantly improved logging system - added support for multiple logging levels and enhanced configuration possibilities

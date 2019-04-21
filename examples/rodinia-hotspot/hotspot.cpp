@@ -66,6 +66,7 @@ int main(int argc, char** argv)
   // Create tuner object for chosen platform and device
   ktt::Tuner tuner(platformIndex, deviceIndex);
   tuner.setCompilerOptions("-I./");
+  tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
   std::vector<float> tempSrc; 
   std::vector<float> tempDst; 

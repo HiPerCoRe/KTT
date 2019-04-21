@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['parameterpair',['ParameterPair',['../classktt_1_1_parameter_pair.html',1,'ktt']]],
-  ['platforminfo',['PlatformInfo',['../classktt_1_1_platform_info.html',1,'ktt']]]
+  ['kernelprofilingcounter',['KernelProfilingCounter',['../classktt_1_1_kernel_profiling_counter.html',1,'ktt']]],
+  ['kernelprofilingdata',['KernelProfilingData',['../classktt_1_1_kernel_profiling_data.html',1,'ktt']]]
 ];
