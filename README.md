@@ -1,6 +1,6 @@
 KTT - Kernel Tuning Toolkit
 ===========================
-<img src="https://github.com/Fillo7/KTT/tree/master/docs/resources/ktt_logo.png" width="425" height="150"/>
+<img src="https://github.com/Fillo7/KTT/blob/master/docs/resources/ktt_logo.png" width="425" height="150"/>
 
 KTT is a tuning framework for OpenCL and CUDA kernels. Version 1.1 which includes experimental support for Vulkan and
 support for kernel profiling on Nvidia GPUs is now available.
