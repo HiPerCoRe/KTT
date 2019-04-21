@@ -24,7 +24,7 @@ Getting started
 * Newest version of KTT framework can be found [here](https://github.com/Fillo7/KTT/releases).
 * Prebuilt binaries are available only for some platforms. Other platforms require manual build.
 * Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support.
-  Binaries for Vulkan include only Vulkan support.
+  Binaries for Vulkan include only Vulkan support. All binaries are built for 64-bit platforms.
 
 Tutorials
 ---------
@@ -98,7 +98,6 @@ systems are Linux and Windows.
     - `cupti` bundled with Nvidia CUDA Toolkit (CUDA profiling only)
     - `vulkan` distributed with specific device drivers (Vulkan only)
     - `shaderc_shared` bundled with KTT distribution (Vulkan only)
-
     
 Original project
 ----------------

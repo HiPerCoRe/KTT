@@ -1,4 +1,4 @@
-Version 1.1 (20/4/2019)
+Version 1.1 (21/4/2019)
 * Introduced support for kernel profiling on Nvidia GPUs (currently for generations up to and including Volta),
   kernel profiling allows collection of performance counters which can be utilized by searchers and stop conditions
   to better predict performance of kernel configurations

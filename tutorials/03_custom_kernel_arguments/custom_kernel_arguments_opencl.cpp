@@ -120,6 +120,9 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "multiply_work_group_size", std::vector<size_t>{32, 64, 128, 256});
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_work_group_size", ktt::ModifierAction::Multiply);
 
+    // Set time unit used during printing of kernel duration to microseconds.
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
     // Start kernel tuning and print results.
     tuner.tuneKernel(kernelId);
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
