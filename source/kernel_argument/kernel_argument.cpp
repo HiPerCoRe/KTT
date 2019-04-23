@@ -13,7 +13,7 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElement
     argumentMemoryLocation(memoryLocation),
     argumentAccessType(accessType),
     argumentUploadType(uploadType),
-    dataCopied(true),
+    dataOwned(true),
     referencedData(nullptr),
     persistentFlag(false)
 {
@@ -26,7 +26,7 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElement
 
 KernelArgument::KernelArgument(const ArgumentId id, void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
     const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType,
-    const ArgumentUploadType uploadType, const bool dataCopied) :
+    const ArgumentUploadType uploadType, const bool dataOwned) :
     id(id),
     numberOfElements(numberOfElements),
     elementSizeInBytes(elementSizeInBytes),
@@ -34,7 +34,7 @@ KernelArgument::KernelArgument(const ArgumentId id, void* data, const size_t num
     argumentMemoryLocation(memoryLocation),
     argumentAccessType(accessType),
     argumentUploadType(uploadType),
-    dataCopied(dataCopied),
+    dataOwned(dataOwned),
     referencedData(nullptr),
     persistentFlag(false)
 {
@@ -43,7 +43,7 @@ KernelArgument::KernelArgument(const ArgumentId id, void* data, const size_t num
         throw std::runtime_error("Size of kernel argument must be greater than zero");
     }
 
-    if (dataCopied)
+    if (dataOwned)
     {
         initializeData(data);
     }
@@ -63,7 +63,7 @@ KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size
     argumentMemoryLocation(memoryLocation),
     argumentAccessType(accessType),
     argumentUploadType(uploadType),
-    dataCopied(true),
+    dataOwned(true),
     referencedData(nullptr),
     persistentFlag(false)
 {
@@ -86,7 +86,7 @@ void KernelArgument::updateData(void* data, const size_t numberOfElements)
     }
 
     this->numberOfElements = numberOfElements;
-    if (dataCopied)
+    if (dataOwned)
     {
         initializeData(data);
     }
@@ -157,12 +157,12 @@ ArgumentUploadType KernelArgument::getUploadType() const
 
 const void* KernelArgument::getData() const
 {
-    if (!dataCopied)
+    if (!dataOwned)
     {
         return referencedData;
     }
 
-    return copiedData.data();
+    return ownedData.data();
 }
 
 void* KernelArgument::getData()
@@ -170,9 +170,9 @@ void* KernelArgument::getData()
     return const_cast<void*>(static_cast<const KernelArgument*>(this)->getData());
 }
 
-bool KernelArgument::hasCopiedData() const
+bool KernelArgument::hasOwnedData() const
 {
-    return dataCopied;
+    return dataOwned;
 }
 
 bool KernelArgument::isPersistent() const
@@ -198,7 +198,7 @@ void KernelArgument::initializeData(const void* data)
 
 void KernelArgument::prepareData()
 {
-    copiedData.resize(getDataSizeInBytes());
+    ownedData.resize(getDataSizeInBytes());
 }
 
 } // namespace ktt

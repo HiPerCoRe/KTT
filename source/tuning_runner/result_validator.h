@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <iostream>
@@ -75,50 +76,70 @@ private:
         const size_t elementSizeInBytes, const std::function<bool(const void*, const void*)>& comparator) const;
     bool isRunModeValidated(const KernelRunMode mode);
 
-    template <typename T> bool validateResult(const std::vector<T>& result, const std::vector<T>& referenceResult, const ArgumentId id) const
+    template <typename T>
+    bool validateResult(const KernelArgument& resultArgument, const KernelArgument& referenceArgument, const ArgumentId id) const
     {
         auto argumentRangePointer = argumentValidationRanges.find(id);
-        if (argumentRangePointer == argumentValidationRanges.end() && result.size() != referenceResult.size())
+        const size_t resultSize = resultArgument.getNumberOfElementsWithType<T>();
+        const size_t referenceSize = referenceArgument.getNumberOfElementsWithType<T>();
+
+        if (argumentRangePointer == argumentValidationRanges.end() && resultSize != referenceSize)
         {
-            Logger::getLogger().log(LoggingLevel::Warning, std::string("Number of elements in results differs for argument with id: ")
-                + std::to_string(id) + ", reference size: " + std::to_string(referenceResult.size()) + ", result size: "
-                + std::to_string(result.size()));
+            Logger::logWarning(std::string("Number of elements in results differs for argument with id: ") + std::to_string(id)
+                + ", reference size: " + std::to_string(referenceSize) + ", result size: " + std::to_string(resultSize));
             return false;
         }
+
+        const T* result = resultArgument.getDataWithType<T>();
+        const T* reference = referenceArgument.getDataWithType<T>();
+        size_t validationRange = referenceSize;
+
         if (argumentRangePointer != argumentValidationRanges.end())
         {
-            return validateResultInner(result, referenceResult, argumentRangePointer->second, id, std::is_floating_point<T>());
+            validationRange = argumentRangePointer->second;
+
+            if (validationRange > referenceSize || validationRange > resultSize)
+            {
+                validationRange = std::min(referenceSize, resultSize);
+                Logger::logWarning(std::string("Specified validation range (") + std::to_string(argumentRangePointer->second)
+                    + ") for argument with id: " + std::to_string(id) + " is larger than argument size. It was clamped to "
+                    + std::to_string(validationRange));
+            }
         }
-        return validateResultInner(result, referenceResult, referenceResult.size(), id, std::is_floating_point<T>());
+
+        return validateResultInner(result, reference, validationRange, id, std::is_floating_point<T>());
     }
 
-    template <typename T> bool validateResultInner(const std::vector<T>& result, const std::vector<T>& referenceResult, const size_t range,
-        const ArgumentId id, std::true_type) const
+    template <typename T>
+    bool validateResultInner(const T* result, const T* reference, const size_t range, const ArgumentId id, std::true_type) const
     {
         if (validationMethod == ValidationMethod::AbsoluteDifference)
         {
             double difference = 0.0;
-            for (size_t i = 0; i < range; i++)
+
+            for (size_t i = 0; i < range; ++i)
             {
-                difference += std::fabs(result.at(i) - referenceResult.at(i));
+                difference += std::fabs(result[i] - reference[i]);
             }
+
             if (difference > toleranceThreshold)
             {
-                Logger::getLogger().log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id)
-                    + ", absolute difference is: " + std::to_string(difference));
+                Logger::logWarning(std::string("Results differ for argument with id: ") + std::to_string(id) + ", absolute difference is: "
+                    + std::to_string(difference));
                 return false;
             }
+
             return true;
         }
         else if (validationMethod == ValidationMethod::SideBySideComparison)
         {
-            for (size_t i = 0; i < range; i++)
+            for (size_t i = 0; i < range; ++i)
             {
-                if (std::fabs(result.at(i) - referenceResult.at(i)) > toleranceThreshold)
+                if (std::fabs(result[i] - reference[i]) > toleranceThreshold)
                 {
-                    Logger::getLogger().log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id)
-                        + ", index: " + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
-                        + std::to_string(result.at(i)) + ", difference: " + std::to_string(std::fabs(result.at(i) - referenceResult.at(i))));
+                    Logger::logWarning(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
+                        + ", reference value: " + std::to_string(reference[i]) + ", result value: " + std::to_string(result[i]) + ", difference: "
+                        + std::to_string(std::fabs(result[i] - reference[i])));
                     return false;
                 }
             }
@@ -126,14 +147,15 @@ private:
         }
         else if (validationMethod == ValidationMethod::SideBySideRelativeComparison)
         {
-            for (size_t i = 0; i < range; i++)
+            for (size_t i = 0; i < range; ++i)
             {
-                double difference = std::fabs(result.at(i) - referenceResult.at(i));
-                if ((difference > 1e-4) && (difference / referenceResult.at(i) > toleranceThreshold))
+                double difference = std::fabs(result[i] - reference[i]);
+
+                if ((difference > 1e-4) && (difference / reference[i] > toleranceThreshold))
                 {
-                    Logger::getLogger().log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id)
-                        + ", index: " + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
-                        + std::to_string(result.at(i)) + ", relative difference: " + std::to_string(difference / referenceResult.at(i)));
+                    Logger::logWarning(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
+                        + ", reference value: " + std::to_string(reference[i]) + ", result value: " + std::to_string(result[i])
+                        + ", relative difference: " + std::to_string(difference / reference[i]));
                     return false;
                 }
             }
@@ -145,17 +167,16 @@ private:
         }
     }
 
-    template <typename T> bool validateResultInner(const std::vector<T>& result, const std::vector<T>& referenceResult, const size_t range,
-        const ArgumentId id, std::false_type) const
+    template <typename T>
+    bool validateResultInner(const T* result, const T* reference, const size_t range, const ArgumentId id, std::false_type) const
     {
-        for (size_t i = 0; i < range; i++)
+        for (size_t i = 0; i < range; ++i)
         {
-            if (result.at(i) != referenceResult.at(i))
+            if (result[i] != reference[i])
             {
-                Logger::getLogger().log(LoggingLevel::Warning, std::string("Results differ for argument with id: ") + std::to_string(id)
-                    + ", index: " + std::to_string(i) + ", reference value: " + std::to_string(referenceResult.at(i)) + ", result value: "
-                    + std::to_string(result.at(i)) + ", difference: "
-                    + std::to_string(static_cast<T>(std::fabs(result.at(i) - referenceResult.at(i)))));
+                Logger::logWarning(std::string("Results differ for argument with id: ") + std::to_string(id) + ", index: " + std::to_string(i)
+                    + ", reference value: " + std::to_string(reference[i]) + ", result value: " + std::to_string(result[i]) + ", difference: "
+                    + std::to_string(static_cast<T>(std::fabs(result[i] - reference[i]))));
                 return false;
             }
         }

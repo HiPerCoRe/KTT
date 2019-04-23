@@ -53,10 +53,12 @@ TEST_CASE("Working with OpenCL buffer", "Component: OpenCLEngine")
         REQUIRE(resultArgument.getAccessType() == argument.getAccessType());
         REQUIRE(resultArgument.getUploadType() == argument.getUploadType());
         REQUIRE(resultArgument.getDataSizeInBytes() == argument.getDataSizeInBytes());
-        std::vector<float> result = resultArgument.getDataWithType<float>();
-        for (size_t i = 0; i < data.size(); i++)
+        
+        const float* result = argument.getDataWithType<float>();
+
+        for (size_t i = 0; i < data.size(); ++i)
         {
-            REQUIRE(result.at(i) == data.at(i));
+            REQUIRE(result[i] == data[i]);
         }
     }
 }

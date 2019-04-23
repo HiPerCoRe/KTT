@@ -253,10 +253,7 @@ void TunerCore::setValidationRange(const ArgumentId id, const size_t range)
     {
         throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
     }
-    if (range > argumentManager.getArgument(id).getNumberOfElements())
-    {
-        throw std::runtime_error(std::string("Invalid validation range for argument with id: ") + std::to_string(id));
-    }
+
     kernelRunner->setValidationRange(id, range);
 }
 

@@ -294,19 +294,29 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
 
             if (comparatorPointer != argumentComparators.end())
             {
-                size_t resultSize = resultArgument.getNumberOfElements();
-                size_t referenceSize = referenceArgument.getNumberOfElements();
+                const size_t resultSize = resultArgument.getNumberOfElements();
+                const size_t referenceSize = referenceArgument.getNumberOfElements();
                 auto argumentRangePointer = argumentValidationRanges.find(id);
+
                 if (argumentRangePointer == argumentValidationRanges.end() && resultSize != referenceSize)
                 {
-                    Logger::getLogger().log(LoggingLevel::Warning, std::string("Number of elements in results differs for argument with id: ")
-                        + std::to_string(id) + ", reference size: " + std::to_string(referenceSize) + ", result size: "
-                        + std::to_string(resultSize));
+                    Logger::logWarning(std::string("Number of elements in results differs for argument with id: ") + std::to_string(id)
+                        + ", reference size: " + std::to_string(referenceSize) + ", result size: " + std::to_string(resultSize));
                     currentResult = false;
                 }
                 else if (argumentRangePointer != argumentValidationRanges.end())
                 {
-                    currentResult = validateResultCustom(id, resultArgument.getData(), referenceArgument.getData(), argumentRangePointer->second,
+                    size_t validationRange = argumentRangePointer->second;
+
+                    if (validationRange > referenceSize || validationRange > resultSize)
+                    {
+                        validationRange = std::min(referenceSize, resultSize);
+                        Logger::logWarning(std::string("Specified validation range (") + std::to_string(argumentRangePointer->second)
+                            + ") for argument with id: " + std::to_string(id) + " is larger than argument size. It was clamped to "
+                            + std::to_string(validationRange));
+                    }
+
+                    currentResult = validateResultCustom(id, resultArgument.getData(), referenceArgument.getData(), validationRange,
                         resultArgument.getElementSizeInBytes(), comparatorPointer->second);
                 }
                 else
@@ -317,47 +327,47 @@ bool ResultValidator::validateArguments(const std::vector<KernelArgument>& resul
             }
             else if (referenceDataType == ArgumentDataType::Char)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<int8_t>(), referenceArgument.getDataWithType<int8_t>(), id);
+                currentResult = validateResult<int8_t>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedChar)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<uint8_t>(), referenceArgument.getDataWithType<uint8_t>(), id);
+                currentResult = validateResult<uint8_t>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::Short)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<int16_t>(), referenceArgument.getDataWithType<int16_t>(), id);
+                currentResult = validateResult<int16_t>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedShort)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<uint16_t>(), referenceArgument.getDataWithType<uint16_t>(), id);
+                currentResult = validateResult<uint16_t>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::Int)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<int32_t>(), referenceArgument.getDataWithType<int32_t>(), id);
+                currentResult = validateResult<int32_t>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedInt)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<uint32_t>(), referenceArgument.getDataWithType<uint32_t>(), id);
+                currentResult = validateResult<uint32_t>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::Long)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<int64_t>(), referenceArgument.getDataWithType<int64_t>(), id);
+                currentResult = validateResult<int64_t>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::UnsignedLong)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<uint64_t>(), referenceArgument.getDataWithType<uint64_t>(), id);
+                currentResult = validateResult<uint64_t>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::Half)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<half>(), referenceArgument.getDataWithType<half>(), id);
+                currentResult = validateResult<half>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::Float)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<float>(), referenceArgument.getDataWithType<float>(), id);
+                currentResult = validateResult<float>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::Double)
             {
-                currentResult = validateResult(resultArgument.getDataWithType<double>(), referenceArgument.getDataWithType<double>(), id);
+                currentResult = validateResult<double>(resultArgument, referenceArgument, id);
             }
             else if (referenceDataType == ArgumentDataType::Custom)
             {
