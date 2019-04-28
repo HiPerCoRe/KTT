@@ -4,6 +4,7 @@
 #pragma once
 
 #include <vector>
+#include <api/kernel_compilation_data.h>
 #include <api/kernel_profiling_counter.h>
 #include <ktt_platform.h>
 
@@ -64,6 +65,12 @@ public:
       */
     const std::vector<KernelProfilingCounter>& getAllCounters() const;
 
+    /** @fn const KernelCompilationData& getCompilationData() const
+      * ...
+      * @return ...
+      */
+    const KernelCompilationData& getCompilationData() const;
+
     /** @fn bool isValid() const
       * Checks whether the profiling information is valid.
       * @return True if profiling information is valid. False otherwise.
@@ -72,6 +79,7 @@ public:
 
 private:
     std::vector<KernelProfilingCounter> profilingCounters;
+    KernelCompilationData compilationData;
     uint64_t remainingProfilingRuns;
     bool validFlag;
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <vector>
 #include <CL/cl.h>
 #include <compute_engine/opencl/opencl_utility.h>
@@ -14,6 +15,11 @@ public:
         platform(platform),
         devices(devices)
     {
+        if (devices.empty())
+        {
+            throw std::runtime_error("Cannot create OpenCL context without any device");
+        }
+
         cl_context_properties properties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0 };
         cl_int result;
         context = clCreateContext(properties, static_cast<cl_uint>(devices.size()), devices.data(), nullptr, nullptr, &result);
@@ -28,6 +34,11 @@ public:
     cl_platform_id getPlatform() const
     {
         return platform;
+    }
+
+    cl_device_id getDevice() const
+    {
+        return devices[0];
     }
 
     const std::vector<cl_device_id>& getDevices() const

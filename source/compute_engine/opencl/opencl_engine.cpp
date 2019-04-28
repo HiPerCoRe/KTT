@@ -71,7 +71,7 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
                 clearKernelCache();
             }
             std::unique_ptr<OpenCLProgram> cacheProgram = createAndBuildProgram(kernelData.getSource());
-            auto cacheKernel = std::make_unique<OpenCLKernel>(cacheProgram->getProgram(), kernelData.getName());
+            auto cacheKernel = std::make_unique<OpenCLKernel>(context->getDevice(), cacheProgram->getProgram(), kernelData.getName());
             kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::make_pair(std::move(cacheKernel),
                 std::move(cacheProgram))));
         }
@@ -81,7 +81,7 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
     else
     {
         program = createAndBuildProgram(kernelData.getSource());
-        kernelUnique = std::make_unique<OpenCLKernel>(program->getProgram(), kernelData.getName());
+        kernelUnique = std::make_unique<OpenCLKernel>(context->getDevice(), program->getProgram(), kernelData.getName());
         kernel = kernelUnique.get();
     }
 
