@@ -49,6 +49,7 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
 
     KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()), std::vector<OutputDescriptor>{});
     currentResult.increaseOverhead(result.getOverhead());
+    currentResult.increaseKernelTime(result.getComputationDuration());
 }
 
 void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize,
@@ -659,7 +660,8 @@ void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<Even
 {
     for (const auto& currentEvent : events)
     {
-        computeEngine->getKernelResult(currentEvent, std::vector<OutputDescriptor>{});
+        KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<OutputDescriptor>{});
+        currentResult.increaseKernelTime(result.getComputationDuration());
     }
 }
 

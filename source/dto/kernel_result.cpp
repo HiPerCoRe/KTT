@@ -8,6 +8,7 @@ KernelResult::KernelResult() :
     kernelName(""),
     computationDuration(std::numeric_limits<uint64_t>::max()),
     overhead(0),
+    kernelTime(0),
     errorMessage(""),
     valid(false)
 {}
@@ -17,6 +18,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     configuration(configuration),
     computationDuration(std::numeric_limits<uint64_t>::max()),
     overhead(0),
+    kernelTime(0),
     errorMessage(""),
     valid(true)
 {}
@@ -25,6 +27,7 @@ KernelResult::KernelResult(const std::string& kernelName, uint64_t computationDu
     kernelName(kernelName),
     computationDuration(computationDuration),
     overhead(0),
+    kernelTime(0),
     errorMessage(""),
     valid(true)
 {}
@@ -34,6 +37,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     configuration(configuration),
     computationDuration(std::numeric_limits<uint64_t>::max()),
     overhead(0),
+    kernelTime(0),
     errorMessage(errorMessage),
     valid(false)
 {}
@@ -132,6 +136,12 @@ bool KernelResult::isValid() const
 void KernelResult::increaseOverhead(const uint64_t overhead)
 {
     this->overhead += overhead;
+}
+
+void KernelResult::increaseKernelTime(const uint64_t kernelTime)
+{
+    this->kernelTime += kernelTime;
+    std::cout << "Kernel Time " << this->kernelTime << "\n";
 }
 
 } // namespace ktt

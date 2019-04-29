@@ -38,12 +38,14 @@ public:
     bool isValid() const;
 
     void increaseOverhead(const uint64_t overhead);
+    void increaseKernelTime(const uint64_t kernelTime);
 
 private:
     std::string kernelName;
     KernelConfiguration configuration;
     uint64_t computationDuration;
     uint64_t overhead;
+    uint64_t kernelTime;
     std::string errorMessage;
     KernelProfilingData profilingData;
     std::map<KernelId, KernelProfilingData> compositionProfilingData;
