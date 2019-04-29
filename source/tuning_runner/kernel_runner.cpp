@@ -231,6 +231,7 @@ KernelResult KernelRunner::runKernelSimple(const Kernel& kernel, const KernelRun
     }
 
     result.setConfiguration(configuration);
+    result.setKernelTime(result.getComputationDuration());
     return result;
 }
 
@@ -524,14 +525,18 @@ void KernelRunner::validateResult(const Kernel& kernel, KernelResult& result, co
 
     if (resultIsCorrect)
     {
-        Logger::logInfo(std::string("Kernel run completed successfully in ") + std::to_string(convertTime(result.getComputationDuration(), timeUnit))
-            + getTimeUnitTag(timeUnit));
+        Logger::logInfo(std::string("Kernel run completed successfully in ") + std::to_string(convertTime(result.getComputationDuration(), timeUnit)) 
+            + getTimeUnitTag(timeUnit)
+            + std::string(" (kernel time ") + std::to_string(convertTime(result.getKernelTime(), timeUnit))
+            + getTimeUnitTag(timeUnit) + std::string(")"));
         result.setValid(true);
     }
     else
     {
         Logger::logWarning(std::string("Kernel run completed in ") + std::to_string(convertTime(result.getComputationDuration(), timeUnit))
-            + getTimeUnitTag(timeUnit) + ", but results differ");
+            + getTimeUnitTag(timeUnit) 
+            + std::string(" (kernel time ") + std::to_string(convertTime(result.getKernelTime(), timeUnit))
+            + getTimeUnitTag(timeUnit) + "), but results differ");
         result.setErrorMessage("Results differ");
         result.setValid(false);
     }

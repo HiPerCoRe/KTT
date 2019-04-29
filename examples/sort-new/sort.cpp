@@ -123,10 +123,10 @@ int main(int argc, char** argv)
   //scan
   tuner.setCompositionKernelArguments(compositionId, kernelIds[4], std::vector<size_t>{scanOutDataId, scanInDataId, scanOneBlockSumId, numElementsId, fullBlockId, storeSumId});
 
-  tuner.addParameter(compositionId, "SORT_BLOCK_SIZE", {/*32, 64, 128,*/ 256/*, 512, 1024*/});
-  tuner.addParameter(compositionId, "SCAN_BLOCK_SIZE", {/*32, 64, 128,*/ 256/*, 512, 1024*/});
-  tuner.addParameter(compositionId, "SORT_VECTOR", {/*2,4,*/8});
-  tuner.addParameter(compositionId, "SCAN_VECTOR", {/*2,4,*/8});
+  tuner.addParameter(compositionId, "SORT_BLOCK_SIZE", {32, 64, 128, 256, 512, 1024});
+  tuner.addParameter(compositionId, "SCAN_BLOCK_SIZE", {32, 64, 128, 256, 512, 1024});
+  tuner.addParameter(compositionId, "SORT_VECTOR", {2,4,8});
+  tuner.addParameter(compositionId, "SCAN_VECTOR", {2,4,8});
   auto workGroupConstraint = [](const std::vector<size_t>& vector) {return (float)vector.at(1)/vector.at(0) == (float)vector.at(2)/vector.at(3);};
   tuner.addConstraint(compositionId, {"SORT_BLOCK_SIZE", "SCAN_BLOCK_SIZE", "SORT_VECTOR", "SCAN_VECTOR"}, workGroupConstraint);
 

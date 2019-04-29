@@ -22,6 +22,7 @@ public:
     void setConfiguration(const KernelConfiguration& configuration);
     void setComputationDuration(const uint64_t computationDuration);
     void setOverhead(const uint64_t overhead);
+    void setKernelTime(const uint64_t kernelTime);
     void setErrorMessage(const std::string& errorMessage);
     void setProfilingData(const KernelProfilingData& profilingData);
     void setCompositionKernelProfilingData(const KernelId id, const KernelProfilingData& profilingData);
@@ -31,6 +32,7 @@ public:
     const KernelConfiguration& getConfiguration() const;
     uint64_t getComputationDuration() const;
     uint64_t getOverhead() const;
+    uint64_t getKernelTime() const;
     const std::string& getErrorMessage() const;
     const KernelProfilingData& getProfilingData() const;
     const KernelProfilingData& getCompositionKernelProfilingData(const KernelId id) const;

@@ -62,6 +62,11 @@ void KernelResult::setOverhead(const uint64_t overhead)
     this->overhead = overhead;
 }
 
+void KernelResult::setKernelTime(const uint64_t kernelTime)
+{
+    this->kernelTime = kernelTime;
+}
+
 void KernelResult::setErrorMessage(const std::string& errorMessage)
 {
     this->errorMessage = errorMessage;
@@ -100,6 +105,11 @@ uint64_t KernelResult::getComputationDuration() const
 uint64_t KernelResult::getOverhead() const
 {
     return overhead;
+}
+
+uint64_t KernelResult::getKernelTime() const
+{
+    return kernelTime;
 }
 
 const std::string& KernelResult::getErrorMessage() const
@@ -141,7 +151,6 @@ void KernelResult::increaseOverhead(const uint64_t overhead)
 void KernelResult::increaseKernelTime(const uint64_t kernelTime)
 {
     this->kernelTime += kernelTime;
-    std::cout << "Kernel Time " << this->kernelTime << "\n";
 }
 
 } // namespace ktt
