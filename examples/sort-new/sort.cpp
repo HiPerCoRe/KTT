@@ -14,10 +14,20 @@
 #define RAND_MAX UINT_MAX
 #endif
 
-#if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/sort-new/sort_kernel.cu"
+#define USE_CUDA 0
+
+#if USE_CUDA == 0
+    #if defined(_MSC_VER)
+        #define KTT_KERNEL_FILE "../examples/sort-new/sort_kernel.cl"
+    #else
+        #define KTT_KERNEL_FILE "../../examples/sort-new/sort_kernel.cl"
+    #endif
 #else
-    #define KTT_KERNEL_FILE "../../examples/sort-new/sort_kernel.cu"
+    #if defined(_MSC_VER)
+        #define KTT_KERNEL_FILE "../examples/sort-new/sort_kernel.cu"
+    #else
+        #define KTT_KERNEL_FILE "../../examples/sort-new/sort_kernel.cu"
+    #endif
 #endif
 
 int main(int argc, char** argv)
@@ -63,8 +73,12 @@ int main(int argc, char** argv)
   }
 
   // Create tuner object for chosen platform and device
+#if USE_CUDA == 0
+  ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::OpenCL);
+#else
   ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
   tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+#endif
   tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
   //tuner.setCompilerOptions("-G");
   //tuner.setLoggingLevel(ktt::LoggingLevel::Debug); 
