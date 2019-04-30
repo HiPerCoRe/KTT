@@ -4,7 +4,7 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 0
+#define USE_CUDA 1
 #define USE_PROFILING 0
 
 #if USE_CUDA == 0
@@ -114,6 +114,7 @@ int main(int argc, char **argv)
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
     tuner.addParameter(kernelId, "TILE_SIZE_X", { 1, 2, 4, 8, 16, 32, 64 });
     tuner.addParameter(kernelId, "TILE_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
+    tuner.addParameter(kernelId, "DIAGONAL_MAP", {0, 1});
     
     // Constraint tuning space
     auto xConstraint = [] (std::vector<size_t> v) { return (v[0] == v[1]); };

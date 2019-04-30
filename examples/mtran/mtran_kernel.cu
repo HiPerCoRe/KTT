@@ -14,24 +14,29 @@ extern "C" __global__ void mtran(
     const int height)
 {
 	__shared__ float tile[TILE_SIZE_Y][TILE_SIZE_X+PADD_LOCAL];
-	int lx = threadIdx.x;
-        int ly = threadIdx.y;
-	int gx = blockIdx.x;
-	int gy = blockIdx.y;
-        int x = gx*TILE_SIZE_X + lx;
-        int yy = gy*TILE_SIZE_Y;
-        for (int y = ly; y <  TILE_SIZE_Y; y += WORK_GROUP_SIZE_Y)
-        {
-                tile[y][lx] = input[(yy+y)*width + x];
-        }
-	__syncthreads();
-	int id = ly*WORK_GROUP_SIZE_X+lx;
-	int tlx = id%TILE_SIZE_Y;
-	int tly = id/TILE_SIZE_Y;
-	for (int i = tly; i < TILE_SIZE_X; i += (WORK_GROUP_SIZE_X*WORK_GROUP_SIZE_Y)/TILE_SIZE_Y)
-	{
-		output[(blockIdx.x*TILE_SIZE_X+i)*width + blockIdx.y*TILE_SIZE_Y + tlx] = tile[tlx][i];
-	}
+    int lx = threadIdx.x;
+    int ly = threadIdx.y;
+#if DIAGONAL_MAP == 0
+    int gx = blockIdx.x;
+    int gy = blockIdx.y;
+#else
+    int gx = blockIdx.x;
+    int gy = (blockIdx.x + blockIdx.y) % gridDim.y;
+#endif
+    int x = gx*TILE_SIZE_X + lx;
+    int yy = gy*TILE_SIZE_Y;
+    for (int y = ly; y <  TILE_SIZE_Y; y += WORK_GROUP_SIZE_Y)
+    {
+        tile[y][lx] = input[(yy+y)*width + x];
+    }
+    __syncthreads();
+    int id = ly*WORK_GROUP_SIZE_X+lx;
+    int tlx = id%TILE_SIZE_Y;
+    int tly = id/TILE_SIZE_Y;
+    for (int i = tly; i < TILE_SIZE_X; i += (WORK_GROUP_SIZE_X*WORK_GROUP_SIZE_Y)/TILE_SIZE_Y)
+    {
+	    output[(gx*TILE_SIZE_X+i)*width + gy*TILE_SIZE_Y + tlx] = tile[tlx][i];
+    }
 }
 #else
 extern "C" __global__ void mtran(
@@ -45,9 +50,16 @@ extern "C" __global__ void mtran(
     const int width,
     const int height)
 {
-	int x = blockIdx.x*TILE_SIZE_X + threadIdx.x;
+#if DIAGONAL_MAP == 0
+    int gx = blockIdx.x;
+    int gy = blockIdx.y;
+#else
+    int gx = blockIdx.x;
+    int gy = (blockIdx.x + blockIdx.y) % gridDim.y;
+#endif
+	int x = gx*TILE_SIZE_X + threadIdx.x;
 	int xt = x*VECTOR_TYPE;
-    int yy = blockIdx.y*TILE_SIZE_Y + threadIdx.y;
+    int yy = gy*TILE_SIZE_Y + threadIdx.y;
     int lx = threadIdx.x;
     for (int y = yy; y <  yy+TILE_SIZE_Y; y += WORK_GROUP_SIZE_Y)
 	{
