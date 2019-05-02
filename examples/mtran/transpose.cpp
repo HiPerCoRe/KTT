@@ -4,7 +4,7 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 1
+#define USE_CUDA 0
 #define USE_PROFILING 0
 
 #if USE_CUDA == 0
