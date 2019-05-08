@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
-    const int numberOfBodies = 32 * 1024;
+    const int numberOfBodies = 128 * 1024;
     // Total NDRange size matches number of grid points
     const ktt::DimensionVector ndRangeDimensions(numberOfBodies);
     const ktt::DimensionVector workGroupDimensions;
