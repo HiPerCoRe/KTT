@@ -770,8 +770,8 @@ EventId CUDAEngine::enqueueKernel(CUDAKernel& kernel, const std::vector<size_t>&
     }
 
     EventId eventId = nextEventId;
-    auto startEvent = std::make_unique<CUDAEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
-    auto endEvent = std::make_unique<CUDAEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
+    auto startEvent = std::make_unique<CUDAEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead, kernel.getCompilationData());
+    auto endEvent = std::make_unique<CUDAEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead, kernel.getCompilationData());
     nextEventId++;
 
     Logger::getLogger().log(LoggingLevel::Debug, "Launching kernel " + kernel.getKernelName() + ", event id: " + std::to_string(eventId));
@@ -804,10 +804,12 @@ KernelResult CUDAEngine::createKernelResult(const EventId id) const
     std::string name = eventPointer->second.first->getKernelName();
     float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
     uint64_t overhead = eventPointer->second.first->getOverhead();
+    KernelCompilationData compilationData = eventPointer->second.first->getCompilationData();
     kernelEvents.erase(id);
 
     KernelResult result(name, static_cast<uint64_t>(duration));
     result.setOverhead(overhead);
+    result.setCompilationData(compilationData);
 
     return result;
 }

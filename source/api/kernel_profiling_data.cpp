@@ -62,11 +62,6 @@ const std::vector<KernelProfilingCounter>& KernelProfilingData::getAllCounters()
     return profilingCounters;
 }
 
-const KernelCompilationData& KernelProfilingData::getCompilationData() const
-{
-    return compilationData;
-}
-
 bool KernelProfilingData::isValid() const
 {
     return validFlag;

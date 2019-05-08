@@ -37,14 +37,13 @@ public:
         index = initialState;
     }
 
-    void calculateNextConfiguration(const bool successFlag, const KernelConfiguration& previousConfiguration, const double previousDuration,
-        const KernelProfilingData& previousProfilingData, const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData) override
+    void calculateNextConfiguration(const KernelResult& previousResult) override
     {
-        if (previousDuration >= 0.0) // workaround for recursive calls
+        if (previousResult.getComputationDuration() > 0) // workaround for recursive calls
         {
             visitedStatesCount++;
             exploredIndices.push_back(currentState);
-            executionTimes.at(index) = previousDuration;
+            executionTimes.at(index) = static_cast<double>(previousResult.getComputationDuration());
         }
         
         double progress = visitedStatesCount / static_cast<double>(configurations.size());
@@ -65,7 +64,9 @@ public:
             if (alreadyVisistedStatesCount < maximumAlreadyVisitedStates)
             {
                 alreadyVisistedStatesCount++;
-                calculateNextConfiguration(successFlag, previousConfiguration, -1.0, previousProfilingData, previousCompositionProfilingData);
+                KernelResult result = previousResult;
+                result.setComputationDuration(0);
+                calculateNextConfiguration(result);
                 return;
             }
         }

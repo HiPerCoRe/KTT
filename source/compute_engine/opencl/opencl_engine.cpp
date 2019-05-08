@@ -121,6 +121,7 @@ KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<O
     std::string name = eventPointer->second->getKernelName();
     cl_ulong duration = eventPointer->second->getEventCommandDuration();
     uint64_t overhead = eventPointer->second->getOverhead();
+    KernelCompilationData compilationData = eventPointer->second->getCompilationData();
     kernelEvents.erase(id);
 
     for (const auto& descriptor : outputDescriptors)
@@ -130,6 +131,7 @@ KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<O
 
     KernelResult result(name, static_cast<uint64_t>(duration));
     result.setOverhead(overhead);
+    result.setCompilationData(compilationData);
     return result;
 }
 
@@ -713,7 +715,7 @@ EventId OpenCLEngine::enqueueKernel(OpenCLKernel& kernel, const std::vector<size
     }
 
     EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
+    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead, kernel.getCompilationData());
     nextEventId++;
 
     Logger::getLogger().log(LoggingLevel::Debug, "Launching kernel " + kernel.getKernelName() + ", event id: " + std::to_string(eventId));

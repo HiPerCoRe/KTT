@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <api/kernel_compilation_data.h>
 #include <api/kernel_profiling_data.h>
 #include <kernel/kernel_configuration.h>
 
@@ -23,6 +24,8 @@ public:
     void setComputationDuration(const uint64_t computationDuration);
     void setOverhead(const uint64_t overhead);
     void setErrorMessage(const std::string& errorMessage);
+    void setCompilationData(const KernelCompilationData& compilationData);
+    void setCompositionKernelCompilationData(const KernelId id, const KernelCompilationData& compilationData);
     void setProfilingData(const KernelProfilingData& profilingData);
     void setCompositionKernelProfilingData(const KernelId id, const KernelProfilingData& profilingData);
     void setValid(const bool flag);
@@ -32,6 +35,9 @@ public:
     uint64_t getComputationDuration() const;
     uint64_t getOverhead() const;
     const std::string& getErrorMessage() const;
+    const KernelCompilationData& getCompilationData() const;
+    const KernelCompilationData& getCompositionKernelCompilationData(const KernelId id) const;
+    const std::map<KernelId, KernelCompilationData>& getCompositionCompilationData() const;
     const KernelProfilingData& getProfilingData() const;
     const KernelProfilingData& getCompositionKernelProfilingData(const KernelId id) const;
     const std::map<KernelId, KernelProfilingData>& getCompositionProfilingData() const;
@@ -45,6 +51,8 @@ private:
     uint64_t computationDuration;
     uint64_t overhead;
     std::string errorMessage;
+    KernelCompilationData compilationData;
+    std::map<KernelId, KernelCompilationData> compositionCompilationData;
     KernelProfilingData profilingData;
     std::map<KernelId, KernelProfilingData> compositionProfilingData;
     bool valid;

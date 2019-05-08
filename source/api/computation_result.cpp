@@ -1,3 +1,4 @@
+#include <limits>
 #include <api/computation_result.h>
 
 namespace ktt
@@ -5,43 +6,37 @@ namespace ktt
 
 ComputationResult::ComputationResult() :
     status(false),
-    duration(UINT64_MAX),
+    duration(std::numeric_limits<uint64_t>::max()),
     kernelName(""),
     errorMessage("")
 {}
 
-ComputationResult::ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration) :
-    status(true),
-    duration(duration),
-    kernelName(kernelName),
-    errorMessage(""),
-    configuration(configuration)
-{}
-
 ComputationResult::ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-    const KernelProfilingData& profilingData) :
+    const KernelCompilationData& compilationData, const KernelProfilingData& profilingData) :
     status(true),
     duration(duration),
     kernelName(kernelName),
     errorMessage(""),
     configuration(configuration),
+    compilationData(compilationData),
     profilingData(profilingData)
 {}
 
 ComputationResult::ComputationResult(const std::string& compositionName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-    const std::map<KernelId, KernelProfilingData>& compositionProfilingData) :
+    const std::map<KernelId, KernelCompilationData>& compilationData, const std::map<KernelId, KernelProfilingData>& profilingData) :
     status(true),
     duration(duration),
     kernelName(compositionName),
     errorMessage(""),
     configuration(configuration),
-    compositionProfilingData(compositionProfilingData)
+    compositionCompilationData(compilationData),
+    compositionProfilingData(profilingData)
 {}
 
 ComputationResult::ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration,
     const std::string& errorMessage) :
     status(false),
-    duration(UINT64_MAX),
+    duration(std::numeric_limits<uint64_t>::max()),
     kernelName(kernelName),
     errorMessage(errorMessage),
     configuration(configuration)
@@ -70,6 +65,16 @@ const std::string& ComputationResult::getErrorMessage() const
 const std::vector<ParameterPair>& ComputationResult::getConfiguration() const
 {
     return configuration;
+}
+
+const KernelCompilationData& ComputationResult::getCompilationData() const
+{
+    return compilationData;
+}
+
+const std::map<KernelId, KernelCompilationData>& ComputationResult::getCompositionCompilationData() const
+{
+    return compositionCompilationData;
 }
 
 const KernelProfilingData& ComputationResult::getProfilingData() const
