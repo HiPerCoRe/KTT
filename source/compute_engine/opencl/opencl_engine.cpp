@@ -1,9 +1,15 @@
 #ifdef KTT_PLATFORM_OPENCL
 
+#include <stdexcept>
 #include <compute_engine/opencl/opencl_engine.h>
 #include <utility/ktt_utility.h>
 #include <utility/logger.h>
 #include <utility/timer.h>
+
+#ifdef KTT_PROFILING_AMD
+GPAApiManager* GPAApiManager::m_pGpaApiManager = nullptr;
+GPAFuncTableInfo* g_pFuncTableInfo = nullptr;
+#endif // KTT_PROFILING_AMD
 
 namespace ktt
 {
@@ -20,6 +26,27 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
     persistentBufferFlag(true),
     nextEventId(0)
 {
+    #ifdef KTT_PROFILING_AMD
+    Logger::logDebug("Initializing GPA profiling API");
+
+    if (GPAApiManager::Instance()->LoadApi(GPA_API_OPENCL) != GPA_STATUS_OK)
+    {
+        throw std::runtime_error("Failed to initialize GPA profiling API");
+    }
+
+    gpaFunctionTable = GPAApiManager::Instance()->GetFunctionTable(GPA_API_OPENCL);
+
+    if (gpaFunctionTable == nullptr)
+    {
+        throw std::runtime_error("Failed to retrieve GPA function table");
+    }
+
+    if (gpaFunctionTable->GPA_Initialize(GPA_INITIALIZE_DEFAULT_BIT) != GPA_STATUS_OK)
+    {
+        throw std::runtime_error("Failed to initialize GPA function table");
+    }
+    #endif // KTT_PROFILING_AMD
+
     auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
     {

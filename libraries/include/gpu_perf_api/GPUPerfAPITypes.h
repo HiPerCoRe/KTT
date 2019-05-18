@@ -15,6 +15,10 @@
 // Platform specific definitions
 #ifdef _WIN32
 #include <Windows.h>
+
+#undef max
+#undef min
+
 typedef HMODULE LibHandle; ///< typedef for HMODULE for loading the library on windows
 typedef GUID GPA_UUID;     ///< typedef for Windows GUID definition
 #else

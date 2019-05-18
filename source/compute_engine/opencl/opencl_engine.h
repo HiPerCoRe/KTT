@@ -18,6 +18,11 @@
 #include <compute_engine/opencl/opencl_program.h>
 #include <compute_engine/compute_engine.h>
 
+#ifdef KTT_PROFILING_AMD
+#include <gpu_perf_api/GPAInterfaceLoader.h>
+#include <gpu_perf_api/GPUPerfAPI.h>
+#endif // KTT_PROFILING_AMD
+
 namespace ktt
 {
 
@@ -102,6 +107,10 @@ private:
     std::map<std::pair<std::string, std::string>, std::pair<std::unique_ptr<OpenCLKernel>, std::unique_ptr<OpenCLProgram>>> kernelCache;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> kernelEvents;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> bufferEvents;
+
+    #ifdef KTT_PROFILING_AMD
+    GPAFunctionTable* gpaFunctionTable;
+    #endif // KTT_PROFILING_AMD
 
     // Helper methods
     void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument);

@@ -25,6 +25,11 @@ function findLibrariesAmd()
         opencl_projects = true
         defines { "KTT_PLATFORM_OPENCL" }
         links { "OpenCL" }
+        
+        if _OPTIONS["profiling"] then
+            defines { "KTT_PROFILING_AMD" }
+            includedirs { "libraries/include" }
+        end
     end
     
     return true
@@ -63,12 +68,12 @@ function findLibrariesNvidia()
     end
     
     defines { "KTT_PLATFORM_NVIDIA" }
-    includedirs { "$(CUDA_PATH)/include", "$(CUDA_PATH)/extras/CUPTI/include" }
+    includedirs { "$(CUDA_PATH)/include" }
         
     if os.target() == "linux" then
-        libdirs { "$(CUDA_PATH)/lib64", "$(CUDA_PATH)/extras/CUPTI/lib64" }
+        libdirs { "$(CUDA_PATH)/lib64" }
     else
-        libdirs { "$(CUDA_PATH)/lib/x64", "$(CUDA_PATH)/extras/CUPTI/libx64" }
+        libdirs { "$(CUDA_PATH)/lib/x64" }
     end
     
     if not _OPTIONS["no-opencl"] then
@@ -83,6 +88,15 @@ function findLibrariesNvidia()
         links { "cuda", "nvrtc" }
         
         if _OPTIONS["profiling"] then
+            defines { "KTT_PROFILING_CUDA" }
+            includedirs { "$(CUDA_PATH)/extras/CUPTI/include" }
+            
+            if os.target() == "linux" then
+                libdirs { "$(CUDA_PATH)/extras/CUPTI/lib64" }
+            else
+                libdirs { "$(CUDA_PATH)/extras/CUPTI/libx64" }
+            end
+            
             links { "cupti" }
         end
     end
@@ -206,10 +220,6 @@ workspace "ktt"
     configurations { "Release", "Debug" }
     platforms { "x86_64" }
     architecture "x86_64"
-    
-    if _OPTIONS["profiling"] then
-        defines { "KTT_PROFILING" }
-    end
     
     location(buildPath)
     language "C++"

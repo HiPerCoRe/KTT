@@ -51,7 +51,7 @@ float getEventCommandDuration(const CUevent start, const CUevent end)
     return result * 1'000'000.0f; // return duration in nanoseconds
 }
 
-#ifdef KTT_PROFILING
+#ifdef KTT_PROFILING_CUDA
 std::string getCUPTIEnumName(const CUptiResult value)
 {
     const char* name;
@@ -66,7 +66,7 @@ void checkCUDAError(const CUptiResult value, const std::string& message)
         throw std::runtime_error(std::string("Internal CUDA CUPTI error: ") + getCUPTIEnumName(value) + "\nAdditional info: " + message);
     }
 }
-#endif // KTT_PROFILING
+#endif // KTT_PROFILING_CUDA
 
 } // namespace ktt
 
