@@ -191,6 +191,7 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
             }
         }
     }
+    outputTarget << ",maxWorkGroupSize,localMemorySize,privateMemorySize,constantMemorySize,registersCount";
 
     outputTarget << std::endl;
 
@@ -221,6 +222,8 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
                 printProfilingCountersCSV(outputTarget, pair.second.getAllCounters());
             }
         }
+        outputTarget << ",";
+        printCompilationResultCSV(outputTarget, result.getCompilationData());
         outputTarget << std::endl;
     }
 
@@ -300,6 +303,7 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
                 }
             }
         }
+        outputTarget << ",maxWorkGroupSize,localMemorySize,privateMemorySize,constantMemorySize,registersCount";
 
         outputTarget << std::endl;
 
@@ -339,6 +343,8 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
                     printProfilingCountersCSV(outputTarget, pair.second.getAllCounters());
                 }
             }
+            outputTarget << ",";
+            printCompilationResultCSV(outputTarget, result.getCompilationData());
             outputTarget << std::endl;
         }
     }
@@ -474,6 +480,15 @@ void ResultPrinter::printProfilingCountersCSV(std::ostream& outputTarget, const 
             outputTarget << ",";
         }
     }
+}
+
+void ResultPrinter::printCompilationResultCSV(std::ostream& outputTarget, const KernelCompilationData& compResult) const
+{
+    outputTarget    << compResult.maxWorkGroupSize << ","
+                    << compResult.localMemorySize << ","
+                    << compResult.privateMemorySize << ","
+                    << compResult.constantMemorySize << ","
+                    << compResult.registersCount;
 }
 
 KernelResult ResultPrinter::getBestResult(const std::vector<KernelResult>& results) const
