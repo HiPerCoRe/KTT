@@ -3,9 +3,9 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 0
+#define USE_CUDA 1
 #define RAPID_TEST 0
-#define USE_PROFILING 0
+#define USE_PROFILING 1
 
 #if USE_CUDA == 0
     #if defined(_MSC_VER)
@@ -98,6 +98,7 @@ public:
         ktt::DimensionVector localSize(1, 1, 1);
         std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
         size_t padd_c = getParameterValue("PADD_C", parameterValues);
+	std::cout << "CPU: PADD_C " << padd_c << std::endl;
         size_t y = getParameterValue("GROUP_SIZE_Y", parameterValues);
         size_t z = getParameterValue("GROUP_SIZE_Z", parameterValues);
 #if USE_CUDA == 0
@@ -206,7 +207,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "SIZE_B", {(size_t)b});
     tuner.addParameter(kernelId, "SIZE_C", {(size_t)c});
     tuner.addParameter(kernelId, "GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
-    tuner.addParameter(kernelId, "GROUP_SIZE_Z", {1, 2, 4, 8, 16, 32, 64});
+    tuner.addParameter(kernelId, "GROUP_SIZE_Z", {/*1, 2, 4, 8,*/ 16/*, 32, 64*/});
     tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
     tuner.addParameter(kernelId, "PADD_AA", {0, 1});
     tuner.addParameter(kernelId, "PADD_AB", {0, 1});

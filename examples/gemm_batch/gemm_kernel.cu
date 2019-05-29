@@ -19,7 +19,7 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     __shared__ REAL bufB[GROUP_SIZE_Z*SIZE_C*SIZE_A + PADD_C];
   #endif
   #if DIRECT_WRITE == 0
-    __shared__ REAL bufC[GROUP_SIZE_Z*SIZE_C*SIZE_B];
+    __shared__ REAL bufC[GROUP_SIZE_Z*SIZE_C*SIZE_B + PADD_C];
   #endif
     for (int i = myOffset; i < SIZE_A*SIZE_B*GROUP_SIZE_Z; i+= (SIZE_C+PADD_C)*GROUP_SIZE_Y*GROUP_SIZE_Z) {
   #if PADD_AA == 0
@@ -59,6 +59,9 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
     int startC = matrix*SIZE_C*SIZE_B;
  #endif
 
+  if (tx == 0 && ty == 0 && tz == 0 && matrix == 0)
+    printf("PADD_C %i\n", PADD_C);
+
 /* compute multiplication */
  #if CACHING_STRATEGY < 2
   #if PADD_C > 0
@@ -74,7 +77,10 @@ extern "C" __global__ void gemm_batch(const REAL* A, const REAL* B, REAL* C, int
             tmp += bufA[startA + i*(SIZE_A+PADD_AA) + k] * bufB[startB + k*SIZE_C + tx];
   #endif
   #if DIRECT_WRITE == 0
-        bufC[tz*SIZE_C*SIZE_B + i*SIZE_C + tx] = tmp;
+        //printf("%i (%f) ", tz*SIZE_C*SIZE_B + i*SIZE_C + tx, tmp);
+        if ((tz*SIZE_C*SIZE_B) + (i*SIZE_C) + tx > (GROUP_SIZE_Z*SIZE_C*SIZE_B + PADD_C))
+            printf("Oh shit (%i > %i, tz=%i, i=%i, tx=%i %i).\n", (tz*SIZE_C*SIZE_B) + (i*SIZE_C) + tx, GROUP_SIZE_Z*SIZE_C*SIZE_B + PADD_C, tz, i, tx, PADD_C);
+        bufC[(tz*SIZE_C*SIZE_B) + (i*SIZE_C) + tx] = tmp;
   #else
         C[startC + i*SIZE_C + tx] = tmp;
   #endif
