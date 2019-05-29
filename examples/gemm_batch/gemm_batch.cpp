@@ -5,6 +5,7 @@
 
 #define USE_CUDA 0
 #define RAPID_TEST 0
+#define USE_PROFILING 0
 
 #if USE_CUDA == 0
     #if defined(_MSC_VER)
@@ -176,6 +177,10 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex);
 #else
     ktt::Tuner tuner(0, deviceIndex, ktt::ComputeAPI::CUDA);
+  #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+  #endif
 #endif
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
