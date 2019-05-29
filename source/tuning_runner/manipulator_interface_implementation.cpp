@@ -670,11 +670,8 @@ void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<std:
 {
     for (const auto& currentEvent : events)
     {
-<<<<<<< HEAD
-        KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<OutputDescriptor>{});
-        currentResult.increaseKernelTime(result.getComputationDuration());
-=======
         const KernelResult result = computeEngine->getKernelResult(currentEvent.second, std::vector<OutputDescriptor>{});
+	currentResult.increaseKernelTime(result.getComputationDuration());
 
         if (isComposition())
         {
@@ -684,7 +681,6 @@ void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<std:
         {
             currentResult.setCompilationData(result.getCompilationData());
         }
->>>>>>> development
     }
 }
 
