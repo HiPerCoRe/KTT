@@ -6,8 +6,7 @@
 #include <cstddef>
 #include <map>
 #include <string>
-#include <api/kernel_profiling_data.h>
-#include <api/parameter_pair.h>
+#include <api/computation_result.h>
 #include <ktt_types.h>
 
 namespace ktt
@@ -37,20 +36,11 @@ public:
       */
     virtual void initialize(const size_t totalConfigurationCount) = 0;
 
-    /** @fn virtual void updateStatus(const bool successFlag, const std::vector<ParameterPair>& previousConfiguration, const double previousDuration,
-        const KernelProfilingData& previousProfilingData) = 0
+    /** @fn virtual void updateStatus(const ComputationResult& result) = 0
       * Performs update of stop condition. Called after each tested configuration.
-      * @param successFlag If true, last tested kernel configuration finished successfully. If false, an error occurred (e.g. result validation
-      * failed).
-      * @param previousConfiguration Last tested kernel configuration.
-      * @param previousDuration Duration of last tested kernel configuration in nanoseconds.
-      * @param previousProfilingData Profiling data of last tested kernel configuration. Valid only if kernel profiling is enabled and tuned kernel
-      * is a single kernel.
-      * @param previousCompositionProfilingData Profiling data of last tested kernel configuration. Valid only if kernel profiling is enabled and
-      * tuned kernel is a composition.
+      * @param result Computation result from last tested configuration. See ComputationResult for more information.
       */
-    virtual void updateStatus(const bool successFlag, const std::vector<ParameterPair>& previousConfiguration, const double previousDuration,
-        const KernelProfilingData& previousProfilingData, const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData) = 0;
+    virtual void updateStatus(const ComputationResult& result) = 0;
     
     /** @fn virtual size_t getConfigurationCount() const = 0
       * Returns number of configurations that will be tested before stop condition is satisfied.

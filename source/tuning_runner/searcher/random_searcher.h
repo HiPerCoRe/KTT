@@ -30,8 +30,7 @@ public:
         std::shuffle(std::begin(this->configurationIndices), std::end(this->configurationIndices), engine);
     }
 
-    void calculateNextConfiguration(const bool, const KernelConfiguration&, const double, const KernelProfilingData&,
-        const std::map<KernelId, KernelProfilingData>&) override
+    void calculateNextConfiguration(const KernelResult&) override
     {
         index++;
     }

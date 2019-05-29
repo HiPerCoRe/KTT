@@ -119,8 +119,7 @@ bool ResultValidator::validateArgumentsWithClass(const Kernel& kernel, const Ker
 
     for (const auto argumentId : argumentIds)
     {
-        KernelArgument resultArgument = kernelRunner->downloadArgument(argumentId);
-        resultArguments.push_back(resultArgument);
+        resultArguments.emplace_back(kernelRunner->downloadArgument(argumentId));
     }
 
     return validateArguments(resultArguments, referenceClassResults.find(kernelId)->second, kernel.getName());
@@ -145,8 +144,7 @@ bool ResultValidator::validateArgumentsWithKernel(const Kernel& kernel, const Ke
 
     for (const auto argumentId : argumentIds)
     {
-        KernelArgument resultArgument = kernelRunner->downloadArgument(argumentId);
-        resultArguments.push_back(resultArgument);
+        resultArguments.emplace_back(kernelRunner->downloadArgument(argumentId));
     }
 
     return validateArguments(resultArguments, referenceKernelResults.find(kernelId)->second, kernel.getName());
@@ -255,7 +253,7 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
     std::vector<KernelArgument> referenceResult;
     for (const auto argumentId : referenceArgumentIds)
     {
-        referenceResult.push_back(kernelRunner->downloadArgument(argumentId));
+        referenceResult.emplace_back(kernelRunner->downloadArgument(argumentId));
     }
 
     kernelRunner->clearBuffers();

@@ -51,13 +51,12 @@ public:
             unexploredIndices.insert(i);
     }
 
-    void calculateNextConfiguration(const bool, const KernelConfiguration&, const double previousDuration, const KernelProfilingData&,
-        const std::map<KernelId, KernelProfilingData>&) override
+    void calculateNextConfiguration(const KernelResult& previousResult) override
     {
         visitedStatesCount++;
         exploredIndices[index] = true;
         unexploredIndices.erase(index);
-        executionTimes.at(index) = previousDuration;
+        executionTimes.at(index) = static_cast<double>(previousResult.getComputationDuration());
 
         // boot-up, sweeps randomly across bootIterations states and sets
         // origin of MCMC to the best state

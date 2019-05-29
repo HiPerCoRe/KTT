@@ -50,6 +50,14 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
     KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()), std::vector<OutputDescriptor>{});
     currentResult.increaseOverhead(result.getOverhead());
     currentResult.increaseKernelTime(result.getComputationDuration());
+    if (isComposition())
+    {
+        currentResult.setCompositionKernelCompilationData(id, result.getCompilationData());
+    }
+    else
+    {
+        currentResult.setCompilationData(result.getCompilationData());
+    }
 }
 
 void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize,
@@ -66,7 +74,7 @@ void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const
     kernelData.setLocalSize(localSize);
 
     EventId kernelEvent = computeEngine->runKernelAsync(kernelData, getArgumentPointers(kernelData.getArgumentIds()), queue);
-    storeKernelEvent(queue, kernelEvent);
+    storeKernelEvent(queue, id, kernelEvent);
     currentResult.increaseOverhead(computeEngine->getKernelOverhead(kernelEvent));
 }
 
@@ -532,7 +540,7 @@ KernelResult ManipulatorInterfaceImplementation::getCurrentResult() const
         for (const auto& kernelEvents : kernelProfilingEvents)
         {
             KernelResult profilingResult = computeEngine->getKernelResultWithProfiling(kernelEvents.second[0], std::vector<OutputDescriptor>{});
-            if (kernelData.size() == 1)
+            if (!isComposition())
             {
                 result.setProfilingData(profilingResult.getProfilingData());
             }
@@ -558,6 +566,11 @@ KernelResult ManipulatorInterfaceImplementation::getCurrentResult(const uint64_t
     KernelResult result = currentResult;
     result.setProfilingData(KernelProfilingData(remainingProfilingRuns));
     return result;
+}
+
+bool ManipulatorInterfaceImplementation::isComposition() const
+{
+    return kernelData.size() != 1;
 }
 
 std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<ArgumentId>& argumentIds)
@@ -617,17 +630,14 @@ void ManipulatorInterfaceImplementation::updateArgumentSimple(const ArgumentId i
     nonVectorArguments.insert(std::make_pair(id, updatedArgument));
 }
 
-void ManipulatorInterfaceImplementation::storeKernelEvent(const QueueId queue, const EventId event) const
+void ManipulatorInterfaceImplementation::storeKernelEvent(const QueueId queue, const KernelId kernel, const EventId event) const
 {
-    auto eventPointer = enqueuedKernelEvents.find(queue);
-    if (eventPointer == enqueuedKernelEvents.end())
+    if (enqueuedKernelEvents.find(queue) == enqueuedKernelEvents.cend())
     {
-        enqueuedKernelEvents.insert(std::make_pair(queue, std::set<EventId>{event}));
+        enqueuedKernelEvents.insert(std::make_pair(queue, std::set<std::pair<KernelId, EventId>>{}));
     }
-    else
-    {
-        eventPointer->second.insert(event);
-    }
+
+    enqueuedKernelEvents[queue].insert({kernel, event});
 }
 
 void ManipulatorInterfaceImplementation::storeKernelProfilingEvent(const KernelId kernel, const EventId event) const
@@ -656,12 +666,25 @@ void ManipulatorInterfaceImplementation::storeBufferEvent(const QueueId queue, c
     }
 }
 
-void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<EventId>& events)
+void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<std::pair<KernelId, EventId>>& events)
 {
     for (const auto& currentEvent : events)
     {
+<<<<<<< HEAD
         KernelResult result = computeEngine->getKernelResult(currentEvent, std::vector<OutputDescriptor>{});
         currentResult.increaseKernelTime(result.getComputationDuration());
+=======
+        const KernelResult result = computeEngine->getKernelResult(currentEvent.second, std::vector<OutputDescriptor>{});
+
+        if (isComposition())
+        {
+            currentResult.setCompositionKernelCompilationData(currentEvent.first, result.getCompilationData());
+        }
+        else
+        {
+            currentResult.setCompilationData(result.getCompilationData());
+        }
+>>>>>>> development
     }
 }
 

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <CL/cl.h>
+#include <api/kernel_compilation_data.h>
 #include <compute_engine/opencl/opencl_utility.h>
 #include <ktt_types.h>
 
@@ -20,10 +21,11 @@ public:
         releaseFlag(false)
     {}
 
-    OpenCLEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead) :
+    OpenCLEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead, const KernelCompilationData& compilationData) :
         id(id),
         kernelName(kernelName),
         overhead(kernelLaunchOverhead),
+        compilationData(compilationData),
         validFlag(true),
         releaseFlag(false)
     {}
@@ -49,6 +51,11 @@ public:
     uint64_t getOverhead() const
     {
         return overhead;
+    }
+
+    const KernelCompilationData& getCompilationData() const
+    {
+        return compilationData;
     }
 
     bool isValid() const
@@ -80,6 +87,7 @@ private:
     EventId id;
     std::string kernelName;
     uint64_t overhead;
+    KernelCompilationData compilationData;
     bool validFlag;
     bool releaseFlag;
     cl_event event;
