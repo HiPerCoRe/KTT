@@ -18,8 +18,10 @@ layout(std430, binding = 2) writeonly buffer outputResult
     float result[];
 };
 
+layout(constant_id = 0) const float scalar = 0.0f;
+
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
-    result[index] = a[index] + b[index];
+    result[index] = a[index] + b[index] + scalar;
 }

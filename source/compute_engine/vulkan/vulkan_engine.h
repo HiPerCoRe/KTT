@@ -118,6 +118,7 @@ private:
     KernelResult createKernelResult(const EventId id) const;
     std::vector<VulkanBuffer*> getPipelineArguments(const std::vector<KernelArgument*>& argumentPointers);
     VulkanBuffer* findBuffer(const ArgumentId id) const;
+    static std::vector<KernelArgument*> getScalarArguments(const std::vector<KernelArgument*>& arguments);
 };
 
 } // namespace ktt
