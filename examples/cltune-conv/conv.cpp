@@ -7,6 +7,8 @@
 #include <vector>
 #include "tuner_api.h"
 
+#define RAPID_TEST 0
+
 #if defined(_MSC_VER)
     #define KTT_KERNEL_FILE "../examples/cltune-conv/conv.cl"
     #define KTT_REFERENCE_KERNEL_FILE "../examples/cltune-conv/conv_reference.cl"
@@ -159,15 +161,23 @@ int main(int argc, char** argv)
     ktt::ArgumentId coeffId = tuner.addArgumentVector(coeff, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId matBId = tuner.addArgumentVector(mat_b, ktt::ArgumentAccessType::WriteOnly);
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(matAId, true);
+    tuner.persistArgument(coeffId, true);
+    tuner.persistArgument(matBId, true);
+#endif
+
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{kSizeXId, kSizeYId, matAId, coeffId, matBId}); 
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{kSizeXId, kSizeYId, matAId, coeffId, matBId}); 
 
+#if RAPID_TEST == 0
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
 
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{matBId});
+#endif
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);

@@ -6,6 +6,8 @@
 #include <vector>
 #include "tuner_api.h"
 
+#define RAPID_TEST 0
+
 #if defined(_MSC_VER)
     #define KTT_KERNEL_FILE "../examples/cltune-gemm/gemm.cl"
     #define KTT_REFERENCE_KERNEL_FILE "../examples/cltune-gemm/gemm_reference.cl"
@@ -108,6 +110,12 @@ int main(int argc, char** argv)
     ktt::ArgumentId matBId = tuner.addArgumentVector(mat_b, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId matCId = tuner.addArgumentVector(mat_c, ktt::ArgumentAccessType::WriteOnly);
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(matAId, true);
+    tuner.persistArgument(matBId, true);
+    tuner.persistArgument(matCId, true);
+#endif
+
     // Add conditions
     // Sets constraints: Set-up the constraints functions to use. The constraints require a function
     // object (in this case a lambda) which takes a vector of tuning parameter values and returns
@@ -137,11 +145,13 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{kSizeMId, kSizeNId, kSizeKId, matAId, matBId, matCId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{kSizeMId, kSizeNId, kSizeKId, matAId, matBId, matCId});
 
+#if RAPID_TEST == 0
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001);
 
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{matCId});
+#endif
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);

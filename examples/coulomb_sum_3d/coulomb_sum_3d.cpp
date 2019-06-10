@@ -5,6 +5,7 @@
 #include "tuner_api.h"
 
 #define USE_CUDA 0
+#define RAPID_TEST 0
 #define USE_PROFILING 0
 
 #if USE_CUDA == 0
@@ -116,6 +117,15 @@ int main(int argc, char** argv)
     ktt::ArgumentId gsId = tuner.addArgumentScalar(gridSpacing);
     ktt::ArgumentId gridId = tuner.addArgumentVector(energyGrid, ktt::ArgumentAccessType::WriteOnly);
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(aiId, true);
+    tuner.persistArgument(aixId, true);
+    tuner.persistArgument(aiyId, true);
+    tuner.persistArgument(aizId, true);
+    tuner.persistArgument(aiwId, true);
+    tuner.persistArgument(gridId, true);
+#endif
+
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {16, 32});
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", {1, 2, 4, 8});
@@ -146,7 +156,7 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{aiId, aId, gsId, gridId});
 
-#if USE_PROFILING == 0
+#if USE_PROFILING == 0 and RAPID_TEST == 0
     //TODO: this is temporal hack, there should be composition of zeroizing and coulomb kernel, otherwise, multiple profiling runs corrupt results
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{gridId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);

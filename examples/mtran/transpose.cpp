@@ -5,6 +5,7 @@
 #include "tuner_api.h"
 
 #define USE_CUDA 0
+#define RAPID_TEST 0
 #define USE_PROFILING 0
 
 #if USE_CUDA == 0
@@ -98,6 +99,11 @@ int main(int argc, char **argv)
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{dstId, srcId, widthId, heightId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{dstId, srcId, widthId, heightId});
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(srcId, true);
+    tuner.persistArgument(dstId, true);
+#endif
+
     // Create tuning space
     tuner.addParameter(kernelId, "LOCAL_MEM", { 0, 1 });
 #if USE_CUDA == 0
@@ -142,9 +148,11 @@ int main(int argc, char **argv)
     auto wgSize = [](const std::vector<size_t>& v) {return v[0]*v[1] >= 32;};
     tuner.addConstraint(kernelId, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, wgSize);
 
+#if RAPID_TEST == 0
     // Assign reference and set error check
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001);
+#endif
 
     // Perform tuning
     tuner.tuneKernel(kernelId);

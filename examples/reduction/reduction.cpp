@@ -5,6 +5,8 @@
 #include "reduction_reference.h"
 #include "reduction_tunable.h"
 
+#define RAPID_TEST 0
+
 #if defined(_MSC_VER)
     #define KTT_KERNEL_FILE "../examples/reduction/reduction_kernel.cl"
 #else
@@ -60,6 +62,11 @@ int main(int argc, char** argv)
     ktt::ArgumentId outOffsetId = tuner.addArgumentScalar(offset);
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{srcId, dstId, nId, inOffsetId, outOffsetId});
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(srcId, true);
+    tuner.persistArgument(dstId, true);
+#endif
+
     // get number of compute units
     const ktt::DeviceInfo di = tuner.getCurrentDeviceInfo();
     std::cout << "Number of compute units: " << di.getMaxComputeUnits() << std::endl;
@@ -80,9 +87,11 @@ int main(int argc, char** argv)
     auto unboundedWG = [](const std::vector<size_t>& v) {return (!v[0] || v[1] >= 32);};
     tuner.addConstraint(kernelId, {"UNBOUNDED_WG", "WORK_GROUP_SIZE_X"}, unboundedWG);
 
+#if RAPID_TEST == 0
     tuner.setReferenceClass(kernelId, std::make_unique<ReferenceReduction>(src, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (double)n*10000.0/10'000'000.0);
     tuner.setValidationRange(dstId, 1);
+#endif
 
     tuner.setTuningManipulator(kernelId, std::make_unique<TunableReduction>(srcId, dstId, nId, inOffsetId, outOffsetId));
     

@@ -9,6 +9,8 @@
 #include "hotspot_tunable.h"
 #include "hotspot_reference.h"
 
+#define RAPID_TEST 0
+
 #if defined(_MSC_VER)
     #define KTT_KERNEL_FILE "../examples/rodinia-hotspot/hotspot_kernel.cl"
     #define KTT_REFERENCE_KERNEL_FILE "../examples/rodinia-hotspot/hotspot_reference_kernel.cl"
@@ -133,6 +135,12 @@ int main(int argc, char** argv)
   ktt::ArgumentId grid_colsId = tuner.addArgumentScalar(grid_cols);
   ktt::ArgumentId grid_rowsId = tuner.addArgumentScalar(grid_rows);
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(powerId, true);
+    tuner.persistArgument(tempSrcId, true);
+    tuner.persistArgument(tempDstId, true);
+#endif
+
   ktt::ArgumentId borderColsId = tuner.addArgumentScalar(borderCols);
   ktt::ArgumentId borderRowsId = tuner.addArgumentScalar(borderRows);
   ktt::ArgumentId CapId = tuner.addArgumentScalar(Cap);
@@ -161,11 +169,13 @@ int main(int argc, char** argv)
   tuner.setTuningManipulator(hotspot->getKernelId(), std::unique_ptr<tunableHotspot>(hotspot));
   tuner.setTuningManipulator(referenceHotspot->getKernelId(), std::unique_ptr<referenceManipulator>(referenceHotspot));
 
+#if RAPID_TEST == 0
   // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
   tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01f);
 
   // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
   tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<ktt::ArgumentId>{tempDstId});
+#endif
 
   hotspot->tune();
 

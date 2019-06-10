@@ -4,6 +4,8 @@
 #include <vector>
 #include "tuner_api.h"
 
+#define RAPID_TEST 0
+
 #if defined(_MSC_VER)
     #define KTT_KERNEL_FILE "../examples/bicg/bicg_kernel.cl"
     #define KTT_REFERENCE_KERNEL_FILE "../examples/bicg/bicg_reference_kernel.cl"
@@ -191,6 +193,14 @@ int main(int argc, char** argv)
 	ktt::ArgumentId mRefId = tuner.addArgumentScalar(M);
 	ktt::ArgumentId nRefId = tuner.addArgumentScalar(N);
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(AId, true);
+    tuner.persistArgument(x1Id, true);
+    tuner.persistArgument(x2Id, true);
+    tuner.persistArgument(y1Id, true);
+    tuner.persistArgument(y2Id, true);
+#endif
+
 	// Add kernels to tuner, create a kernel composition
 	ktt::KernelId kernelFusedId = tuner.addKernelFromFile(kernelFile, "bicgFused", ndRangeDimensions, workGroupDimensions);
 	ktt::KernelId kernelReduction1Id = tuner.addKernelFromFile(kernelFile, "bicgReduction1", referenceNdRangeDimensions1, referenceWorkGroupDimensions);
@@ -243,16 +253,18 @@ int main(int argc, char** argv)
 	tuner.setCompositionKernelArguments(kernelId, kernel1Id, std::vector<ktt::ArgumentId>{AId, x1Id, y1Id, mRefId, nRefId});
 	tuner.setCompositionKernelArguments(kernelId, kernel2Id, std::vector<ktt::ArgumentId>{AId, x2Id, y2Id, mRefId, nRefId});
 
+#if RAPID_TEST == 0
 	// Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
 	tuner.setValidationMethod(ktt::ValidationMethod::SideBySideRelativeComparison, 0.001);
 	tuner.setValidationRange(y1Id, N);
 	tuner.setValidationRange(y2Id, M);
 
+    // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
+    tuner.setReferenceClass(kernelId, std::make_unique<BicgCpu>(y1Id, y2Id, A, x1, x2, y1, y2), std::vector<ktt::ArgumentId>{y1Id, y2Id});
+#endif
+
 	// Set tuning manipulator, which implements custom method for launching the kernel
 	tuner.setTuningManipulator(kernelId, std::make_unique<BicgManipulator>(kernel1Id, kernel2Id, kernelFusedId, kernelFusedRefId, kernelReduction1Id, kernelReduction2Id));
-
-	// Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
-	tuner.setReferenceClass(kernelId, std::make_unique<BicgCpu>(y1Id, y2Id, A, x1, x2, y1, y2), std::vector<ktt::ArgumentId>{y1Id, y2Id});
 
 	// Launch kernel tuning
 	tuner.tuneKernel(kernelId);

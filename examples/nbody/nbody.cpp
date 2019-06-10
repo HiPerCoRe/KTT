@@ -6,6 +6,7 @@
 #include "tuner_api.h"
 
 #define USE_CUDA 0
+#define RAPID_TEST 0
 #define USE_PROFILING 0
 
 #if USE_CUDA == 0
@@ -160,6 +161,23 @@ int main(int argc, char** argv)
     ktt::ArgumentId softeningSqrId = tuner.addArgumentScalar(softeningSqr);
     ktt::ArgumentId numberOfBodiesId = tuner.addArgumentScalar(numberOfBodies);
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(oldBodyInfoId, true);
+    tuner.persistArgument(oldPosXId, true);
+    tuner.persistArgument(oldPosYId, true);
+    tuner.persistArgument(oldPosZId, true);
+    tuner.persistArgument(massId, true);
+    tuner.persistArgument(newBodyInfoId, true);
+    tuner.persistArgument(oldVelId, true);
+    tuner.persistArgument(oldVelXId, true);
+    tuner.persistArgument(oldVelYId, true);
+    tuner.persistArgument(oldVelZId, true);
+    tuner.persistArgument(newBodyVelId, true);
+    tuner.persistArgument(newBodyInfoId, true);
+
+
+#endif
+
     // Add conditions
     auto lteq = [](const std::vector<size_t>& vector) {return vector.at(0) <= vector.at(1);};
     tuner.addConstraint(kernelId, {"INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR"}, lteq);
@@ -176,12 +194,14 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{deltaTimeId, oldBodyInfoId, newBodyInfoId, oldVelId, newBodyVelId,
         dampingId, softeningSqrId});
 
+#if RAPID_TEST == 0
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001);
 
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{newBodyVelId,
         newBodyInfoId});
+#endif
   
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);

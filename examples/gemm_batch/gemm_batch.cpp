@@ -112,7 +112,11 @@ public:
         localSize.setSizeY(y);
         localSize.setSizeZ(z);
 
+#if PROFILING == 1
+        runKernelWithProfiling(kernelId, globalSize, localSize);
+#else
         runKernel(kernelId, globalSize, localSize);
+#endif
     }
 private:
     int batch, a, b, c;
