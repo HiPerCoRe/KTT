@@ -16,8 +16,8 @@
     #endif
 
 #define REAL float
-#define MAX_STEPS 100000
-#define CHANGE_TIME 10
+#define MAX_STEPS 20
+#define CHANGE_TIME 30
 #define TESTS 100
 #define MAX_MEM 900000000
 
@@ -181,7 +181,7 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
     double effActual;
     double perfOverall;
     double bwOverall;
-    for (int i = 0; i < MAX_STEPS; i++) {
+    for (int i = 0; true; i++) {
         if (tune)
             res = tuner->tuneKernelByStep(kernelId, {output});
         else {
@@ -202,7 +202,7 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
             << "actual BW " << effActual << "GB/s, "
             << "perf. with overhead " << perfOverall << "GFlops, " 
             << "BW with overhead " << bwOverall << "GB/s" << std::endl;
-        if (effActual > (double)stopBW)
+        if (effActual > (double)stopBW || i > MAX_STEPS)
             tune = false;
     }
 
