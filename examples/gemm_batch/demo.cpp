@@ -16,7 +16,8 @@
     #endif
 
 #define REAL float
-#define STEPS 1000
+#define MAX_STEPS 100000
+#define CHANGE_TIME 10
 #define TESTS 100
 #define MAX_MEM 900000000
 
@@ -175,7 +176,12 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
     ktt::ComputationResult res;
     ktt::OutputDescriptor output(dstID, (void*)firstMatrix.data(), 32*32*sizeof(REAL));
     bool tune = true;
-    for (int i = 0; i < STEPS; i++) {
+    double overallSec;
+    double perfActual;
+    double effActual;
+    double perfOverall;
+    double bwOverall;
+    for (int i = 0; i < MAX_STEPS; i++) {
         if (tune)
             res = tuner->tuneKernelByStep(kernelId, {output});
         else {
@@ -183,23 +189,28 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
             res = tuner->runKernel(kernelId, bestConf.getConfiguration(), {output});
         }
         clock_t now = clock();
-        double overallSec = double(now - beginOverallTime) / CLOCKS_PER_SEC;
-        double perfActual = (double)(a*b*c*2)*(double)batch / res.getDuration();
-        double effActual = (double)(a*b+c*a+c*b) * (double)batch * (double)sizeof(REAL) / res.getDuration();
-        double perfOverall = (double)((i+1)*a*b*c*2)*(double)batch / overallSec / 1000000000.0;
-        double bwOverall = (double)(i+1)*(double)((a*b+c*a+c*b)*sizeof(REAL))*(double)batch / overallSec / 1000000000.0;
+        overallSec = double(now - beginOverallTime) / CLOCKS_PER_SEC;
+        perfActual = (double)(a*b*c*2)*(double)batch / res.getDuration();
+        effActual = (double)(a*b+c*a+c*b) * (double)batch * (double)sizeof(REAL) / res.getDuration();
+        perfOverall = (double)((i+1)*a*b*c*2)*(double)batch / overallSec / 1000000000.0;
+        bwOverall = (double)(i+1)*(double)((a*b+c*a+c*b)*sizeof(REAL))*(double)batch / overallSec / 1000000000.0;
         std::cout << "Actual perf. " << perfActual << "GFlops, "
             << "actual BW " << effActual << "GB/s, "
             << "perf. with overhead " << perfOverall << "GFlops, " 
             << "BW with overhead " << bwOverall << "GB/s" << std::endl;
         if (effActual > (double)stopBW)
             tune = false;
+        if (double(now - beginOverallTime) / CLOCKS_PER_SEC > double(CHANGE_TIME))
+            break;
     }
 
     // print best
     ktt::ComputationResult bestConf = tuner->getBestComputationResult(kernelId);
-    std::cout << "Performance: " << (double)(a*b*c*2)*(double)batch / (double)bestConf.getDuration() << " GFlops" << std::endl;
-    std::cout << "Memory BW: " << (double)(a*b+c*a+c*b)*(double)(batch)*(double)sizeof(REAL) / (double)bestConf.getDuration() << " GB/s" << std::endl;
+    /*std::cout << "Performance: " << (double)(a*b*c*2)*(double)batch / (double)bestConf.getDuration() << " GFlops" << std::endl;
+    std::cout << "Memory BW: " << (double)(a*b+c*a+c*b)*(double)(batch)*(double)sizeof(REAL) / (double)bestConf.getDuration() << " GB/s" << std::endl;*/
+    std::cout << "Final results: peak performance: " << (double)(a*b*c*2)*(double)batch / (double)bestConf.getDuration() << ", including overhead: " << perfOverall << " GFlops"
+        << ", peak BW " <<   (double)(a*b+c*a+c*b)*(double)(batch)*(double)sizeof(REAL) / (double)bestConf.getDuration() << ", including overhead: " << bwOverall << " GB/s" 
+        << std::endl;
 }
 
 int main(int argc, char** argv)
