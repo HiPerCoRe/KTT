@@ -124,7 +124,7 @@ private:
     int batch, a, b, c;
 };
 
-void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID, ktt::ArgumentId& bID, ktt::ArgumentId &dstID, ktt::ArgumentId& nID, int a, int b, int c, int batch, int stopBW) {
+void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID, ktt::ArgumentId& bID, ktt::ArgumentId &dstID, ktt::ArgumentId& nID, int a, int b, int c, int batch, int stopBW, int test) {
     clock_t beginOverallTime = clock();
 
     // create kernel
@@ -189,19 +189,21 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
             res = tuner->runKernel(kernelId, bestConf.getConfiguration(), {output});
         }
         clock_t now = clock();
+        if (double(now - beginOverallTime) / CLOCKS_PER_SEC > double(CHANGE_TIME))
+            break;
+
         overallSec = double(now - beginOverallTime) / CLOCKS_PER_SEC;
         perfActual = (double)(a*b*c*2)*(double)batch / res.getDuration();
         effActual = (double)(a*b+c*a+c*b) * (double)batch * (double)sizeof(REAL) / res.getDuration();
         perfOverall = (double)((i+1)*a*b*c*2)*(double)batch / overallSec / 1000000000.0;
         bwOverall = (double)(i+1)*(double)((a*b+c*a+c*b)*sizeof(REAL))*(double)batch / overallSec / 1000000000.0;
-        std::cout << "Actual perf. " << perfActual << "GFlops, "
+        std::cout << "Time: " << double(test*CHANGE_TIME) + double(now - beginOverallTime) / CLOCKS_PER_SEC << "s, "
+            << "Actual perf. " << perfActual << "GFlops, "
             << "actual BW " << effActual << "GB/s, "
             << "perf. with overhead " << perfOverall << "GFlops, " 
             << "BW with overhead " << bwOverall << "GB/s" << std::endl;
         if (effActual > (double)stopBW)
             tune = false;
-        if (double(now - beginOverallTime) / CLOCKS_PER_SEC > double(CHANGE_TIME))
-            break;
     }
 
     // print best
@@ -287,7 +289,7 @@ int main(int argc, char** argv)
         tuner->persistArgument(dstId, true);
         ktt::ArgumentId nId = tuner->addArgumentScalar(batch);
 
-        tuneKernel(tuner, kernelFile, srcAId, srcBId, dstId, nId, a, b, c, batch, stopBW);
+        tuneKernel(tuner, kernelFile, srcAId, srcBId, dstId, nId, a, b, c, batch, stopBW, i);
 
         tuner->persistArgument(srcAId, false);
         tuner->persistArgument(srcBId, false);
