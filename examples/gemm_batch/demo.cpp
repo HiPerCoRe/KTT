@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <ctime>
+#include <chrono>
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
@@ -125,7 +125,7 @@ private:
 };
 
 void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID, ktt::ArgumentId& bID, ktt::ArgumentId &dstID, ktt::ArgumentId& nID, int a, int b, int c, int batch, int stopBW, int test) {
-    clock_t beginOverallTime = clock();
+    auto beginOverallTime = std::chrono::high_resolution_clock::now();
 
     // create kernel
     ktt::DimensionVector ndRangeDimensions(batch);
@@ -188,16 +188,17 @@ void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID
             ktt::ComputationResult bestConf = tuner->getBestComputationResult(kernelId);
             res = tuner->runKernel(kernelId, bestConf.getConfiguration(), {output});
         }
-        clock_t now = clock();
-        if (double(now - beginOverallTime) / CLOCKS_PER_SEC > double(CHANGE_TIME))
+        auto now = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = now - beginOverallTime;
+        if (elapsed.count() > double(CHANGE_TIME))
             break;
 
-        overallSec = double(now - beginOverallTime) / CLOCKS_PER_SEC;
+        overallSec = double(elapsed.count());
         perfActual = (double)(a*b*c*2)*(double)batch / res.getDuration();
         effActual = (double)(a*b+c*a+c*b) * (double)batch * (double)sizeof(REAL) / res.getDuration();
         perfOverall = (double)((i+1)*a*b*c*2)*(double)batch / overallSec / 1000000000.0;
         bwOverall = (double)(i+1)*(double)((a*b+c*a+c*b)*sizeof(REAL))*(double)batch / overallSec / 1000000000.0;
-        std::cout << "Time: " << double(test*CHANGE_TIME) + double(now - beginOverallTime) / CLOCKS_PER_SEC << "s, "
+        std::cout << "Time: " << double(test*CHANGE_TIME) + double(elapsed.count()) << "s, "
             << "Actual perf. " << perfActual << "GFlops, "
             << "actual BW " << effActual << "GB/s, "
             << "perf. with overhead " << perfOverall << "GFlops, " 
