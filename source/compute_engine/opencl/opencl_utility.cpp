@@ -116,6 +116,17 @@ std::string getDeviceInfoString(const cl_device_id id, const cl_device_info info
     return infoString;
 }
 
+#ifdef KTT_PROFILING_AMD
+void checkGPAError(const GPA_Status value, const std::string& message)
+{
+    if (value != GPA_STATUS_OK)
+    {
+        throw std::runtime_error(std::string("Internal GPA profiling API error: ") + std::to_string(static_cast<int>(value)) + "\nAdditional info: "
+            + message);
+    }
+}
+#endif // KTT_PROFILING_AMD
+
 } // namespace ktt
 
 #endif // KTT_PLATFORM_OPENCL

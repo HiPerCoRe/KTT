@@ -29,11 +29,7 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
     #ifdef KTT_PROFILING_AMD
     Logger::logDebug("Initializing GPA profiling API");
 
-    if (GPAApiManager::Instance()->LoadApi(GPA_API_OPENCL) != GPA_STATUS_OK)
-    {
-        throw std::runtime_error("Failed to initialize GPA profiling API");
-    }
-
+    checkGPAError(GPAApiManager::Instance()->LoadApi(GPA_API_OPENCL), "LoadApi");
     gpaFunctionTable = GPAApiManager::Instance()->GetFunctionTable(GPA_API_OPENCL);
 
     if (gpaFunctionTable == nullptr)
@@ -41,12 +37,11 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
         throw std::runtime_error("Failed to retrieve GPA function table");
     }
 
-    if (gpaFunctionTable->GPA_Initialize(GPA_INITIALIZE_DEFAULT_BIT) != GPA_STATUS_OK)
-    {
-        throw std::runtime_error("Failed to initialize GPA function table");
-    }
+    checkGPAError(gpaFunctionTable->GPA_Initialize(GPA_INITIALIZE_DEFAULT_BIT), "GPA_Initialize");
+    checkGPAError(gpaFunctionTable->GPA_RegisterLoggingCallback(GPA_LOGGING_ERROR_MESSAGE_AND_TRACE, gpaLoggingCallback),
+        "GPA_RegisterLoggingCallback");
     #endif // KTT_PROFILING_AMD
-
+    
     auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
     {
@@ -923,6 +918,26 @@ void OpenCLEngine::checkLocalMemoryModifiers(const std::vector<KernelArgument*>&
         }
     }
 }
+
+#ifdef KTT_PROFILING_AMD
+void OpenCLEngine::gpaLoggingCallback(GPA_Logging_Type messageType, const char* message)
+{
+    switch (messageType)
+    {
+    case GPA_LOGGING_ERROR:
+        Logger::logError(message);
+        break;
+    case GPA_LOGGING_DEBUG_MESSAGE:
+        Logger::logInfo(message);
+        break;
+    case GPA_LOGGING_DEBUG_TRACE:
+        Logger::logDebug(message);
+        break;
+    default:
+        Logger::logDebug(message);
+    }
+}
+#endif // KTT_PROFILING_AMD
 
 } // namespace ktt
 

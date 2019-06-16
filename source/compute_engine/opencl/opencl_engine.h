@@ -126,6 +126,10 @@ private:
     void setKernelArgumentVector(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const;
     bool loadBufferFromCache(const ArgumentId id, OpenCLKernel& kernel) const;
     void checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
+
+    #ifdef KTT_PROFILING_AMD
+    static void gpaLoggingCallback(GPA_Logging_Type messageType, const char* message);
+    #endif // KTT_PROFILING_AMD
 };
 
 } // namespace ktt
