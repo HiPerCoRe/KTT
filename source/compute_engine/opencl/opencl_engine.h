@@ -19,8 +19,9 @@
 #include <compute_engine/compute_engine.h>
 
 #ifdef KTT_PROFILING_AMD
-#include <gpu_perf_api/GPAInterfaceLoader.h>
-#include <gpu_perf_api/GPUPerfAPI.h>
+#include <compute_engine/opencl/gpa_interface.h>
+#include <compute_engine/opencl/gpa_profiling_context.h>
+#include <compute_engine/opencl/gpa_profiling_instance.h>
 #endif // KTT_PROFILING_AMD
 
 namespace ktt
@@ -109,7 +110,10 @@ private:
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> bufferEvents;
 
     #ifdef KTT_PROFILING_AMD
-    GPAFunctionTable* gpaFunctionTable;
+    std::unique_ptr<GPAInterface> gpaInterface;
+    std::unique_ptr<GPAProfilingContext> gpaProfilingContext;
+    std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
+    std::map<std::pair<std::string, std::string>, GPAProfilingInstance> kernelProfilingInstances;
     #endif // KTT_PROFILING_AMD
 
     // Helper methods
@@ -128,7 +132,7 @@ private:
     void checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
 
     #ifdef KTT_PROFILING_AMD
-    static void gpaLoggingCallback(GPA_Logging_Type messageType, const char* message);
+    static const std::vector<std::string>& getDefaultGPAProfilingCounters();
     #endif // KTT_PROFILING_AMD
 };
 

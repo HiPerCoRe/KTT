@@ -6,11 +6,6 @@
 #include <utility/logger.h>
 #include <utility/timer.h>
 
-#ifdef KTT_PROFILING_AMD
-GPAApiManager* GPAApiManager::m_pGpaApiManager = nullptr;
-GPAFuncTableInfo* g_pFuncTableInfo = nullptr;
-#endif // KTT_PROFILING_AMD
-
 namespace ktt
 {
 
@@ -28,18 +23,7 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
 {
     #ifdef KTT_PROFILING_AMD
     Logger::logDebug("Initializing GPA profiling API");
-
-    checkGPAError(GPAApiManager::Instance()->LoadApi(GPA_API_OPENCL), "LoadApi");
-    gpaFunctionTable = GPAApiManager::Instance()->GetFunctionTable(GPA_API_OPENCL);
-
-    if (gpaFunctionTable == nullptr)
-    {
-        throw std::runtime_error("Failed to retrieve GPA function table");
-    }
-
-    checkGPAError(gpaFunctionTable->GPA_Initialize(GPA_INITIALIZE_DEFAULT_BIT), "GPA_Initialize");
-    checkGPAError(gpaFunctionTable->GPA_RegisterLoggingCallback(GPA_LOGGING_ERROR_MESSAGE_AND_TRACE, gpaLoggingCallback),
-        "GPA_RegisterLoggingCallback");
+    gpaInterface = std::make_unique<GPAInterface>();
     #endif // KTT_PROFILING_AMD
     
     auto platforms = getOpenCLPlatforms();
@@ -65,6 +49,14 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
         auto commandQueue = std::make_unique<OpenCLCommandQueue>(i, context->getContext(), device);
         commandQueues.push_back(std::move(commandQueue));
     }
+
+    #ifdef KTT_PROFILING_AMD
+    Logger::logDebug("Initializing GPA profiling context");
+    gpaProfilingContext = std::make_unique<GPAProfilingContext>(gpaInterface->getFunctionTable(), *commandQueues[getDefaultQueue()].get());
+
+    Logger::logDebug("Initializing default GPA profiling counters");
+    gpaProfilingContext->setCounters(getDefaultGPAProfilingCounters());
+    #endif // KTT_PROFILING_AMD
 }
 
 KernelResult OpenCLEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -669,9 +661,13 @@ KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId, const std
     throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
 }
 
-void OpenCLEngine::setKernelProfilingCounters(const std::vector<std::string>&)
+void OpenCLEngine::setKernelProfilingCounters(const std::vector<std::string>& counterNames)
 {
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+    #ifdef KTT_PROFILING_AMD
+    gpaProfilingContext->setCounters(counterNames);
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING_AMD
 }
 
 std::unique_ptr<OpenCLProgram> OpenCLEngine::createAndBuildProgram(const std::string& source) const
@@ -920,22 +916,16 @@ void OpenCLEngine::checkLocalMemoryModifiers(const std::vector<KernelArgument*>&
 }
 
 #ifdef KTT_PROFILING_AMD
-void OpenCLEngine::gpaLoggingCallback(GPA_Logging_Type messageType, const char* message)
+const std::vector<std::string>& OpenCLEngine::getDefaultGPAProfilingCounters()
 {
-    switch (messageType)
+    static const std::vector<std::string> result
     {
-    case GPA_LOGGING_ERROR:
-        Logger::logError(message);
-        break;
-    case GPA_LOGGING_DEBUG_MESSAGE:
-        Logger::logInfo(message);
-        break;
-    case GPA_LOGGING_DEBUG_TRACE:
-        Logger::logDebug(message);
-        break;
-    default:
-        Logger::logDebug(message);
-    }
+        "Wavefronts",
+        "VALUInsts",
+        "WriteSize"
+    };
+
+    return result;
 }
 #endif // KTT_PROFILING_AMD
 
