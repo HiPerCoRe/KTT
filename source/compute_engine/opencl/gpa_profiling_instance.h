@@ -12,11 +12,11 @@ namespace ktt
 class GPAProfilingInstance
 {
 public:
-    explicit GPAProfilingInstance(GPAFunctionTable& gpaFunctions, GPAProfilingContext& context, const gpa_uint32 instanceSampleId) :
+    explicit GPAProfilingInstance(GPAFunctionTable& gpaFunctions, GPAProfilingContext& context) :
         gpaFunctions(gpaFunctions),
         context(context.getContext()),
         counters(context.getCounters()),
-        sampleId(instanceSampleId),
+        sampleId(context.generateNewSampleId()),
         currentPassIndex(0)
     {
         checkGPAError(gpaFunctions.GPA_CreateSession(this->context, GPA_SESSION_SAMPLE_TYPE_DISCRETE_COUNTER, &session), "GPA_CreateSession");
@@ -37,9 +37,19 @@ public:
         ++currentPassIndex;
     }
 
+    GPA_SessionId getSession() const
+    {
+        return session;
+    }
+
     gpa_uint32 getSampleId() const
     {
         return sampleId;
+    }
+
+    gpa_uint32 getCurrentPassIndex() const
+    {
+        return currentPassIndex;
     }
 
     gpa_uint32 getRemainingPassCount() const

@@ -6,6 +6,10 @@
 #include <utility/logger.h>
 #include <utility/timer.h>
 
+#ifdef KTT_PROFILING_AMD
+#include <compute_engine/opencl/gpa_profiling_pass.h>
+#endif // KTT_PROFILING_AMD
+
 namespace ktt
 {
 
@@ -121,31 +125,13 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
 
 KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
 {
-    auto eventPointer = kernelEvents.find(id);
-
-    if (eventPointer == kernelEvents.end())
-    {
-        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
-            + std::to_string(id));
-    }
-
-    Logger::getLogger().log(LoggingLevel::Debug, std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
-
-    checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
-    std::string name = eventPointer->second->getKernelName();
-    cl_ulong duration = eventPointer->second->getEventCommandDuration();
-    uint64_t overhead = eventPointer->second->getOverhead();
-    KernelCompilationData compilationData = eventPointer->second->getCompilationData();
-    kernelEvents.erase(id);
+    KernelResult result = createKernelResult(id);
 
     for (const auto& descriptor : outputDescriptors)
     {
         downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
     }
 
-    KernelResult result(name, static_cast<uint64_t>(duration));
-    result.setOverhead(overhead);
-    result.setCompilationData(compilationData);
     return result;
 }
 
@@ -641,24 +627,135 @@ DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
     return getOpenCLDeviceInfo(platformIndex, deviceIndex);
 }
 
-void OpenCLEngine::initializeKernelProfiling(const KernelRuntimeData&)
+void OpenCLEngine::initializeKernelProfiling(const KernelRuntimeData& kernelData)
 {
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+    #ifdef KTT_PROFILING_AMD
+    initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING_AMD
 }
 
-EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
+EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    const QueueId queue)
 {
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+    #ifdef KTT_PROFILING_AMD
+    Timer overheadTimer;
+    overheadTimer.start();
+
+    OpenCLKernel* kernel;
+    std::unique_ptr<OpenCLKernel> kernelUnique;
+    std::unique_ptr<OpenCLProgram> program;
+
+    if (kernelCacheFlag)
+    {
+        if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
+        {
+            if (kernelCache.size() >= kernelCacheCapacity)
+            {
+                clearKernelCache();
+            }
+            std::unique_ptr<OpenCLProgram> cacheProgram = createAndBuildProgram(kernelData.getSource());
+            auto cacheKernel = std::make_unique<OpenCLKernel>(context->getDevice(), cacheProgram->getProgram(), kernelData.getName());
+            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::make_pair(std::move(cacheKernel),
+                std::move(cacheProgram))));
+        }
+        auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
+        kernel = cachePointer->second.first.get();
+    }
+    else
+    {
+        program = createAndBuildProgram(kernelData.getSource());
+        kernelUnique = std::make_unique<OpenCLKernel>(context->getDevice(), program->getProgram(), kernelData.getName());
+        kernel = kernelUnique.get();
+    }
+
+    checkLocalMemoryModifiers(argumentPointers, kernelData.getLocalMemoryModifiers());
+    kernel->resetKernelArguments();
+
+    for (const auto argument : argumentPointers)
+    {
+        if (argument->getUploadType() == ArgumentUploadType::Local)
+        {
+            setKernelArgument(*kernel, *argument, kernelData.getLocalMemoryModifiers());
+        }
+        else
+        {
+            setKernelArgument(*kernel, *argument);
+        }
+    }
+
+    overheadTimer.stop();
+
+    if (kernelProfilingInstances.find({kernelData.getName(), kernelData.getSource()}) == kernelProfilingInstances.end())
+    {
+        initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
+    }
+
+    auto profilingInstance = kernelProfilingInstances.find({kernelData.getName(), kernelData.getSource()});
+    auto profilingPass = std::make_unique<GPAProfilingPass>(gpaInterface->getFunctionTable(), *profilingInstance->second.get());
+    EventId id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, overheadTimer.getElapsedTime());
+    kernelToEventMap[std::make_pair(kernelData.getName(), kernelData.getSource())].push_back(id);
+    
+    auto eventPointer = kernelEvents.find(id);
+    Logger::logDebug(std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
+    checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
+    profilingInstance->second->updateState();
+
+    return id;
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING_AMD
 }
 
-uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string&, const std::string&)
+uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource)
 {
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+    #ifdef KTT_PROFILING_AMD
+    auto profilingInstance = kernelProfilingInstances.find({kernelName, kernelSource});
+
+    if (profilingInstance == kernelProfilingInstances.end())
+    {
+        return 0;
+    }
+
+    return static_cast<uint64_t>(profilingInstance->second->getRemainingPassCount());
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING_AMD
 }
 
-KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId, const std::vector<OutputDescriptor>&)
+KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
 {
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+    #ifdef KTT_PROFILING_AMD
+    KernelResult result = createKernelResult(id);
+
+    for (const auto& descriptor : outputDescriptors)
+    {
+        downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+    }
+
+    const std::pair<std::string, std::string>& kernelKey = getKernelFromEvent(id);
+    auto profilingInstance = kernelProfilingInstances.find(kernelKey);
+    if (profilingInstance == kernelProfilingInstances.end())
+    {
+        throw std::runtime_error(std::string("No profiling data exists for the following kernel in current configuration: " + kernelKey.first));
+    }
+
+    KernelProfilingData profilingData = profilingInstance->second->generateProfilingData();
+    result.setProfilingData(profilingData);
+
+    kernelProfilingInstances.erase(kernelKey);
+    const std::vector<EventId>& eventIds = kernelToEventMap.find(kernelKey)->second;
+    for (const auto eventId : eventIds)
+    {
+        kernelEvents.erase(eventId);
+    }
+    kernelToEventMap.erase(kernelKey);
+
+    return result;
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING_AMD
 }
 
 void OpenCLEngine::setKernelProfilingCounters(const std::vector<std::string>& counterNames)
@@ -744,6 +841,32 @@ EventId OpenCLEngine::enqueueKernel(OpenCLKernel& kernel, const std::vector<size
     profilingEvent->setReleaseFlag();
     kernelEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     return eventId;
+}
+
+KernelResult OpenCLEngine::createKernelResult(const EventId id) const
+{
+    auto eventPointer = kernelEvents.find(id);
+
+    if (eventPointer == kernelEvents.end())
+    {
+        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
+            + std::to_string(id));
+    }
+
+    Logger::getLogger().log(LoggingLevel::Debug, std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
+
+    checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
+    std::string name = eventPointer->second->getKernelName();
+    cl_ulong duration = eventPointer->second->getEventCommandDuration();
+    uint64_t overhead = eventPointer->second->getOverhead();
+    KernelCompilationData compilationData = eventPointer->second->getCompilationData();
+    kernelEvents.erase(id);
+
+    KernelResult result(name, static_cast<uint64_t>(duration));
+    result.setOverhead(overhead);
+    result.setCompilationData(compilationData);
+
+    return result;
 }
 
 PlatformInfo OpenCLEngine::getOpenCLPlatformInfo(const PlatformIndex platform)
@@ -916,6 +1039,31 @@ void OpenCLEngine::checkLocalMemoryModifiers(const std::vector<KernelArgument*>&
 }
 
 #ifdef KTT_PROFILING_AMD
+
+void OpenCLEngine::initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource)
+{
+    auto profilingInstance = kernelProfilingInstances.find(std::make_pair(kernelName, kernelSource));
+    if (profilingInstance == kernelProfilingInstances.end())
+    {
+        kernelProfilingInstances.insert({std::make_pair(kernelName, kernelSource),
+            std::make_unique<GPAProfilingInstance>(gpaInterface->getFunctionTable(), *gpaProfilingContext.get())});
+        kernelToEventMap.insert({std::make_pair(kernelName, kernelSource), std::vector<EventId>{}});
+    }
+}
+
+const std::pair<std::string, std::string>& OpenCLEngine::getKernelFromEvent(const EventId id) const
+{
+    for (const auto& entry : kernelToEventMap)
+    {
+        if (elementExists(id, entry.second))
+        {
+            return entry.first;
+        }
+    }
+
+    throw std::runtime_error(std::string("Corresponding kernel was not found for event with id: ") + std::to_string(id));
+}
+
 const std::vector<std::string>& OpenCLEngine::getDefaultGPAProfilingCounters()
 {
     static const std::vector<std::string> result
@@ -927,6 +1075,7 @@ const std::vector<std::string>& OpenCLEngine::getDefaultGPAProfilingCounters()
 
     return result;
 }
+
 #endif // KTT_PROFILING_AMD
 
 } // namespace ktt

@@ -113,7 +113,7 @@ private:
     std::unique_ptr<GPAInterface> gpaInterface;
     std::unique_ptr<GPAProfilingContext> gpaProfilingContext;
     std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
-    std::map<std::pair<std::string, std::string>, GPAProfilingInstance> kernelProfilingInstances;
+    std::map<std::pair<std::string, std::string>, std::unique_ptr<GPAProfilingInstance>> kernelProfilingInstances;
     #endif // KTT_PROFILING_AMD
 
     // Helper methods
@@ -121,6 +121,7 @@ private:
     void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers);
     EventId enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const QueueId queue, const uint64_t kernelLaunchOverhead) const;
+    KernelResult createKernelResult(const EventId id) const;
     static PlatformInfo getOpenCLPlatformInfo(const PlatformIndex platform);
     static DeviceInfo getOpenCLDeviceInfo(const PlatformIndex platform, const DeviceIndex device);
     static std::vector<OpenCLPlatform> getOpenCLPlatforms();
@@ -132,6 +133,8 @@ private:
     void checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
 
     #ifdef KTT_PROFILING_AMD
+    void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
+    const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
     static const std::vector<std::string>& getDefaultGPAProfilingCounters();
     #endif // KTT_PROFILING_AMD
 };

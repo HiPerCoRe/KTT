@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <gpu_perf_api/GPUPerfAPI.h>
 #include <compute_engine/opencl/opencl_command_queue.h>
 #include <compute_engine/opencl/opencl_utility.h>
