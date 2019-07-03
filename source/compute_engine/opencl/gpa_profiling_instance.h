@@ -28,7 +28,6 @@ public:
 
     ~GPAProfilingInstance()
     {
-        checkGPAError(gpaFunctions.GPA_EndSession(session), "GPA_EndSession");
         checkGPAError(gpaFunctions.GPA_DeleteSession(session), "GPA_DeleteSession");
     }
 
@@ -68,6 +67,8 @@ public:
         {
             throw std::runtime_error("GPA profiling API error: Insufficient number of completed kernel runs for profiling counter collection");
         }
+
+        checkGPAError(gpaFunctions.GPA_EndSession(session), "GPA_EndSession");
 
         KernelProfilingData result;
         size_t sampleSizeInBytes;
