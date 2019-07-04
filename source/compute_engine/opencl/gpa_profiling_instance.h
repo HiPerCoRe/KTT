@@ -69,6 +69,7 @@ public:
         }
 
         checkGPAError(gpaFunctions.GPA_EndSession(session), "GPA_EndSession");
+        checkGPAError(gpaFunctions.GPA_IsSessionComplete(session), "GPA_IsSessionComplete");
 
         KernelProfilingData result;
         size_t sampleSizeInBytes;
@@ -97,7 +98,7 @@ public:
             switch (counterType)
             {
             case GPA_DATA_TYPE_FLOAT64:
-                value.doubleValue = static_cast<double>(sampleData[i]);
+                value.doubleValue = *(reinterpret_cast<double*>(&sampleData[i]));
                 type = ProfilingCounterType::Double;
                 break;
             case GPA_DATA_TYPE_UINT64:
