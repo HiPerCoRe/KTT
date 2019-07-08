@@ -354,6 +354,12 @@ project "sort-new"
     includedirs { "source" }
     links { "ktt" }
 
+project "gemm_demo_openclcuda"
+    kind "ConsoleApp"
+    files { "examples/gemm_batch/*.h", "examples/gemm_batch/demo.cpp", "examples/gemm_batch/*.cl", "examples/gemm_batch/*.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+
 if os.target() == "linux" then
 project "hotspot_opencl"
     kind "ConsoleApp"
