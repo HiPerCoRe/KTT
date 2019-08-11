@@ -90,13 +90,7 @@ function findLibrariesNvidia()
         if _OPTIONS["profiling"] then
             defines { "KTT_PROFILING_CUDA" }
             includedirs { "$(CUDA_PATH)/extras/CUPTI/include" }
-            
-            if os.target() == "linux" then
-                libdirs { "$(CUDA_PATH)/extras/CUPTI/lib64" }
-            else
-                libdirs { "$(CUDA_PATH)/extras/CUPTI/libx64" }
-            end
-            
+            libdirs { "$(CUDA_PATH)/extras/CUPTI/lib64" }
             links { "cupti" }
         end
     end
