@@ -1070,7 +1070,19 @@ const std::vector<std::string>& OpenCLEngine::getDefaultGPAProfilingCounters()
     {
         "Wavefronts",
         "VALUInsts",
-        "WriteSize"
+        "SALUInsts",
+        "VFetchInsts",
+        "SFetchInsts",
+        "VWriteInsts",
+        "VALUUtilization",
+        "VALUBusy",
+        "SALUBusy",
+        "FetchSize",
+        "WriteSize",
+        "CacheHit",
+        "MemUnitBusy",
+        "MemUnitStalled",
+        "WriteUnitStalled"
     };
 
     return result;
