@@ -6,9 +6,9 @@
 #include <utility/logger.h>
 #include <utility/timer.h>
 
-#ifdef KTT_PROFILING_CUDA
-#include <compute_engine/cuda/cuda_profiling_subscription.h>
-#endif // KTT_PROFILING_CUDA
+#ifdef KTT_PROFILING_CUPTI_LEGACY
+#include <compute_engine/cuda/cupti_legacy/cupti_profiling_subscription.h>
+#endif // KTT_PROFILING_CUPTI_LEGACY
 
 namespace ktt
 {
@@ -43,11 +43,11 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
         streams.push_back(std::move(stream));
     }
 
-    #ifdef KTT_PROFILING_CUDA
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
     Logger::logDebug("Initializing CUPTI profiling metric IDs");
     const std::vector<std::string>& metricNames = getDefaultProfilingMetricNames();
     profilingMetrics = getProfilingMetricsForCurrentDevice(metricNames);
-    #endif // KTT_PROFILING_CUDA
+    #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
 KernelResult CUDAEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -595,17 +595,17 @@ DeviceInfo CUDAEngine::getCurrentDeviceInfo() const
 
 void CUDAEngine::initializeKernelProfiling(const KernelRuntimeData& kernelData)
 {
-    #ifdef KTT_PROFILING_CUDA
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
     initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-    #endif // KTT_PROFILING_CUDA
+    #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
 EventId CUDAEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const QueueId queue)
 {
-    #ifdef KTT_PROFILING_CUDA
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
     Timer overheadTimer;
     overheadTimer.start();
 
@@ -638,15 +638,15 @@ EventId CUDAEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, 
 
     overheadTimer.stop();
 
-    if (kernelProfilingStates.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelProfilingStates.end())
+    if (kernelProfilingInstances.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelProfilingInstances.end())
     {
         initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
     }
 
-    auto profilingState = kernelProfilingStates.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
+    auto profilingInstance = kernelProfilingInstances.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
     EventId id;
 
-    if (!profilingState->second.hasValidKernelDuration()) // The first profiling run only captures kernel duration
+    if (!profilingInstance->second.hasValidKernelDuration()) // The first profiling run only captures kernel duration
     {
         id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
             getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
@@ -656,43 +656,43 @@ EventId CUDAEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, 
         auto eventPointer = kernelEvents.find(id);
         checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
         float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
-        profilingState->second.updateState(static_cast<uint64_t>(duration));
+        profilingInstance->second.updateState(static_cast<uint64_t>(duration));
     }
     else
     {
-        std::vector<CUDAProfilingMetric>& metricData = profilingState->second.getProfilingMetrics();
-        auto subscription = std::make_unique<CUDAProfilingSubscription>(metricData);
+        std::vector<CUPTIProfilingMetric>& metricData = profilingInstance->second.getProfilingMetrics();
+        auto subscription = std::make_unique<CUPTIProfilingSubscription>(metricData);
 
         id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
             getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
         kernelToEventMap[std::make_pair(kernelData.getName(), kernelData.getSource())].push_back(id);
 
-        profilingState->second.updateState();
+        profilingInstance->second.updateState();
     }
 
     return id;
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-    #endif // KTT_PROFILING_CUDA
+    #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
 uint64_t CUDAEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource)
 {
-    #ifdef KTT_PROFILING_CUDA
-    if (kernelProfilingStates.find(std::make_pair(kernelName, kernelSource)) == kernelProfilingStates.end())
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
+    if (kernelProfilingInstances.find(std::make_pair(kernelName, kernelSource)) == kernelProfilingInstances.end())
     {
         return 0;
     }
 
-    return kernelProfilingStates.find(std::make_pair(kernelName, kernelSource))->second.getRemainingKernelRuns();
+    return kernelProfilingInstances.find(std::make_pair(kernelName, kernelSource))->second.getRemainingKernelRuns();
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-    #endif // KTT_PROFILING_CUDA
+    #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
 KernelResult CUDAEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
 {
-    #ifdef KTT_PROFILING_CUDA
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
     KernelResult result = createKernelResult(id);
 
     for (const auto& descriptor : outputDescriptors)
@@ -701,16 +701,16 @@ KernelResult CUDAEngine::getKernelResultWithProfiling(const EventId id, const st
     }
 
     const std::pair<std::string, std::string>& kernelKey = getKernelFromEvent(id);
-    auto profilingState = kernelProfilingStates.find(kernelKey);
-    if (profilingState == kernelProfilingStates.end())
+    auto profilingInstance = kernelProfilingInstances.find(kernelKey);
+    if (profilingInstance == kernelProfilingInstances.end())
     {
         throw std::runtime_error(std::string("No profiling data exists for the following kernel in current configuration: " + kernelKey.first));
     }
 
-    KernelProfilingData profilingData = profilingState->second.generateProfilingData();
+    KernelProfilingData profilingData = profilingInstance->second.generateProfilingData();
     result.setProfilingData(profilingData);
 
-    kernelProfilingStates.erase(kernelKey);
+    kernelProfilingInstances.erase(kernelKey);
     const std::vector<EventId>& eventIds = kernelToEventMap.find(kernelKey)->second;
     for (const auto eventId : eventIds)
     {
@@ -721,17 +721,17 @@ KernelResult CUDAEngine::getKernelResultWithProfiling(const EventId id, const st
     return result;
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-    #endif // KTT_PROFILING_CUDA
+    #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
 void CUDAEngine::setKernelProfilingCounters(const std::vector<std::string>& counterNames)
 {
-    #ifdef KTT_PROFILING_CUDA
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
     profilingMetrics.clear();
     profilingMetrics = getProfilingMetricsForCurrentDevice(counterNames);
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-    #endif // KTT_PROFILING_CUDA
+    #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
 std::unique_ptr<CUDAProgram> CUDAEngine::createAndBuildProgram(const std::string& source) const
@@ -983,14 +983,14 @@ CUdeviceptr* CUDAEngine::loadBufferFromCache(const ArgumentId id) const
     return nullptr;
 }
 
-#ifdef KTT_PROFILING_CUDA
+#ifdef KTT_PROFILING_CUPTI_LEGACY
 
 void CUDAEngine::initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource)
 {
-    auto profilingState = kernelProfilingStates.find(std::make_pair(kernelName, kernelSource));
-    if (profilingState == kernelProfilingStates.end())
+    auto profilingInstance = kernelProfilingInstances.find(std::make_pair(kernelName, kernelSource));
+    if (profilingInstance == kernelProfilingInstances.end())
     {
-        kernelProfilingStates.insert(std::make_pair(std::make_pair(kernelName, kernelSource), CUDAProfilingState(context->getContext(),
+        kernelProfilingInstances.insert(std::make_pair(std::make_pair(kernelName, kernelSource), CUPTIProfilingInstance(context->getContext(),
             context->getDevice(), profilingMetrics)));
         kernelToEventMap.insert(std::make_pair(std::make_pair(kernelName, kernelSource), std::vector<EventId>{}));
     }
@@ -1080,7 +1080,7 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
     return result;
 }
 
-#endif // KTT_PROFILING_CUDA
+#endif // KTT_PROFILING_CUPTI_LEGACY
 
 } // namespace ktt
 

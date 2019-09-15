@@ -4,23 +4,23 @@
 #include <vector>
 #include <cuda.h>
 #include <cupti.h>
-#include <compute_engine/cuda/cuda_profiling_metric.h>
+#include <compute_engine/cuda/cupti_legacy/cupti_profiling_metric.h>
 #include <compute_engine/cuda/cuda_utility.h>
 
 namespace ktt
 {
 
-class CUDAProfilingSubscription
+class CUPTIProfilingSubscription
 {
 public:
-    explicit CUDAProfilingSubscription(std::vector<CUDAProfilingMetric>& profilingMetrics)
+    explicit CUPTIProfilingSubscription(std::vector<CUPTIProfilingMetric>& profilingMetrics)
     {
         checkCUDAError(cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)getMetricValueCallback, &profilingMetrics), "cuptiSubscribe");
         checkCUDAError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunch), "cuptiEnableCallback");
         checkCUDAError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel), "cuptiEnableCallback");
     }
 
-    ~CUDAProfilingSubscription()
+    ~CUPTIProfilingSubscription()
     {
         checkCUDAError(cuptiUnsubscribe(subscriber), "cuptiUnsubscribe");
     }
@@ -35,14 +35,14 @@ private:
             throw std::runtime_error("Internal CUDA CUPTI error: Unexpected callback id was passed into metric value collection function");
         }
 
-        std::vector<CUDAProfilingMetric>* metrics = reinterpret_cast<std::vector<CUDAProfilingMetric>*>(userdata);
+        auto* metrics = reinterpret_cast<std::vector<CUPTIProfilingMetric>*>(userdata);
 
         if (metrics->empty())
         {
             return;
         }
 
-        CUDAProfilingMetric& firstMetric = metrics->at(0);
+        CUPTIProfilingMetric& firstMetric = metrics->at(0);
 
         if (info->callbackSite == CUPTI_API_ENTER)
         {
