@@ -9,14 +9,26 @@
 #include "hotspot_tunable.h"
 #include "hotspot_reference.h"
 
+#define USE_CUDA 0
 #define RAPID_TEST 0
+#define USE_PROFILING 0
 
-#if defined(_MSC_VER)
+#if USE_CUDA == 0
+  #if defined(_MSC_VER)
     #define KTT_KERNEL_FILE "../examples/rodinia-hotspot/hotspot_kernel.cl"
     #define KTT_REFERENCE_KERNEL_FILE "../examples/rodinia-hotspot/hotspot_reference_kernel.cl"
-#else
+  #else
     #define KTT_KERNEL_FILE "../../examples/rodinia-hotspot/hotspot_kernel.cl"
     #define KTT_REFERENCE_KERNEL_FILE "../../examples/rodinia-hotspot/hotspot_reference_kernel.cl"
+  #endif
+#else
+  #if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/rodinia-hotspot/hotspot_kernel.cu"
+    #define KTT_REFERENCE_KERNEL_FILE "../examples/rodinia-hotspot/hotspot_reference_kernel.cu"
+  #else
+    #define KTT_KERNEL_FILE "../../examples/rodinia-hotspot/hotspot_kernel.cu"
+    #define KTT_REFERENCE_KERNEL_FILE "../../examples/rodinia-hotspot/hotspot_reference_kernel.cu"
+  #endif
 #endif
 
 int main(int argc, char** argv)
@@ -66,7 +78,16 @@ int main(int argc, char** argv)
   char refofile[] = "reference_output.txt";
 
   // Create tuner object for chosen platform and device
+#if USE_CUDA == 0
   ktt::Tuner tuner(platformIndex, deviceIndex);
+#else
+  ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+  tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+  #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+  #endif
+#endif
   tuner.setCompilerOptions("-I./");
   tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
