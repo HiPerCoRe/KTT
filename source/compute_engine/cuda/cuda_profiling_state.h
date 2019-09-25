@@ -93,9 +93,9 @@ public:
         return totalKernelRuns;
     }
 
-    std::vector<CUDAProfilingMetric>* getProfilingMetrics()
+    std::vector<CUDAProfilingMetric>& getProfilingMetrics()
     {
-        return &profilingMetrics;
+        return profilingMetrics;
     }
 
     const std::vector<CUDAProfilingMetric>& getProfilingMetrics() const

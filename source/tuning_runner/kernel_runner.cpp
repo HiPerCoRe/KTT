@@ -290,16 +290,26 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, const 
     uint64_t manipulatorDuration;
     KernelResult result;
 
-    if (kernelProfilingFlag)
+    try
     {
-        manipulatorDuration = runManipulatorKernelProfiling(kernel, mode, manipulator, kernelData, output);
-        const uint64_t remainingRuns = computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource());
-        result = manipulatorInterfaceImplementation->getCurrentResult(remainingRuns);
+        if (kernelProfilingFlag)
+        {
+            manipulatorDuration = runManipulatorKernelProfiling(kernel, mode, manipulator, kernelData, output);
+            const uint64_t remainingRuns = computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource());
+            result = manipulatorInterfaceImplementation->getCurrentResult(remainingRuns);
+        }
+        else
+        {
+            manipulatorDuration = launchManipulator(kernelId, manipulator);
+            result = manipulatorInterfaceImplementation->getCurrentResult();
+        }
     }
-    else
+    catch (const std::runtime_error&)
     {
-        manipulatorDuration = launchManipulator(kernelId, manipulator);
-        result = manipulatorInterfaceImplementation->getCurrentResult();
+        manipulatorInterfaceImplementation->synchronizeDeviceInternal();
+        manipulatorInterfaceImplementation->clearData();
+        manipulator->manipulatorInterface = nullptr;
+        throw;
     }
 
     manipulatorInterfaceImplementation->downloadBuffers(output);
@@ -395,16 +405,26 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
     uint64_t manipulatorDuration;
     KernelResult result;
 
-    if (kernelProfilingFlag)
+    try
     {
-        manipulatorDuration = runCompositionProfiling(composition, mode, manipulator, compositionData, output);
-        uint64_t remainingRuns = getRemainingKernelProfilingRunsForComposition(composition, compositionData);
-        result = manipulatorInterfaceImplementation->getCurrentResult(remainingRuns);
+        if (kernelProfilingFlag)
+        {
+            manipulatorDuration = runCompositionProfiling(composition, mode, manipulator, compositionData, output);
+            uint64_t remainingRuns = getRemainingKernelProfilingRunsForComposition(composition, compositionData);
+            result = manipulatorInterfaceImplementation->getCurrentResult(remainingRuns);
+        }
+        else
+        {
+            manipulatorDuration = launchManipulator(compositionId, manipulator);
+            result = manipulatorInterfaceImplementation->getCurrentResult();
+        }
     }
-    else
+    catch (const std::runtime_error&)
     {
-        manipulatorDuration = launchManipulator(compositionId, manipulator);
-        result = manipulatorInterfaceImplementation->getCurrentResult();
+        manipulatorInterfaceImplementation->synchronizeDeviceInternal();
+        manipulatorInterfaceImplementation->clearData();
+        manipulator->manipulatorInterface = nullptr;
+        throw;
     }
 
     manipulatorInterfaceImplementation->downloadBuffers(output);

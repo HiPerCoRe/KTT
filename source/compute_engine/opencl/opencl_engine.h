@@ -19,8 +19,9 @@
 #include <compute_engine/compute_engine.h>
 
 #ifdef KTT_PROFILING_AMD
-#include <gpu_perf_api/GPAInterfaceLoader.h>
-#include <gpu_perf_api/GPUPerfAPI.h>
+#include <compute_engine/opencl/gpa_interface.h>
+#include <compute_engine/opencl/gpa_profiling_context.h>
+#include <compute_engine/opencl/gpa_profiling_instance.h>
 #endif // KTT_PROFILING_AMD
 
 namespace ktt
@@ -109,7 +110,10 @@ private:
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> bufferEvents;
 
     #ifdef KTT_PROFILING_AMD
-    GPAFunctionTable* gpaFunctionTable;
+    std::unique_ptr<GPAInterface> gpaInterface;
+    std::unique_ptr<GPAProfilingContext> gpaProfilingContext;
+    std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
+    std::map<std::pair<std::string, std::string>, std::unique_ptr<GPAProfilingInstance>> kernelProfilingInstances;
     #endif // KTT_PROFILING_AMD
 
     // Helper methods
@@ -117,6 +121,7 @@ private:
     void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers);
     EventId enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const QueueId queue, const uint64_t kernelLaunchOverhead) const;
+    KernelResult createKernelResult(const EventId id) const;
     static PlatformInfo getOpenCLPlatformInfo(const PlatformIndex platform);
     static DeviceInfo getOpenCLDeviceInfo(const PlatformIndex platform, const DeviceIndex device);
     static std::vector<OpenCLPlatform> getOpenCLPlatforms();
@@ -126,6 +131,12 @@ private:
     void setKernelArgumentVector(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const;
     bool loadBufferFromCache(const ArgumentId id, OpenCLKernel& kernel) const;
     void checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
+
+    #ifdef KTT_PROFILING_AMD
+    void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
+    const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
+    static const std::vector<std::string>& getDefaultGPAProfilingCounters();
+    #endif // KTT_PROFILING_AMD
 };
 
 } // namespace ktt

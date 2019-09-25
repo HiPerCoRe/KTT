@@ -6,6 +6,7 @@
 #include <compute_engine/vulkan/vulkan_buffer.h>
 #include <compute_engine/vulkan/vulkan_descriptor_pool.h>
 #include <compute_engine/vulkan/vulkan_descriptor_set_holder.h>
+#include <compute_engine/vulkan/vulkan_specialization_info.h>
 #include <compute_engine/vulkan/vulkan_utility.h>
 
 namespace ktt
@@ -25,7 +26,7 @@ public:
     {}
 
     explicit VulkanComputePipeline(VkDevice device, VkDescriptorSetLayout descriptorSetLayout, VkShaderModule shader,
-        const std::string& shaderName) :
+        const std::string& shaderName, const std::vector<KernelArgument*>& scalarArguments) :
         device(device),
         descriptorSetLayout(descriptorSetLayout),
         shaderName(shaderName),
@@ -44,6 +45,7 @@ public:
         };
 
         checkVulkanError(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout), "vkCreatePipelineLayout");
+        VulkanSpecializationInfo specializationInfo(scalarArguments);
 
         const VkPipelineShaderStageCreateInfo shaderStageCreateInfo =
         {
@@ -53,7 +55,7 @@ public:
             VK_SHADER_STAGE_COMPUTE_BIT,
             shader,
             shaderName.c_str(),
-            nullptr
+            &specializationInfo.specializationInfo
         };
 
         const VkComputePipelineCreateInfo pipelineCreateInfo =
