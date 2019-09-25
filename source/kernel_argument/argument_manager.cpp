@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <string>
 #include <kernel_argument/argument_manager.h>
 

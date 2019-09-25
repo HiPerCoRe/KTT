@@ -26,7 +26,7 @@ function findLibrariesAmd()
         defines { "KTT_PLATFORM_OPENCL" }
         links { "OpenCL" }
         
-        if _OPTIONS["profiling"] then
+        if _OPTIONS["profiling"] == "gpa" then
             defines { "KTT_PROFILING_AMD" }
             includedirs { "libraries/include" }
         end
@@ -87,17 +87,22 @@ function findLibrariesNvidia()
         defines { "KTT_PLATFORM_CUDA" }
         links { "cuda", "nvrtc" }
         
-        if _OPTIONS["profiling"] then
-            defines { "KTT_PROFILING_CUDA" }
+        if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" then
             includedirs { "$(CUDA_PATH)/extras/CUPTI/include" }
+            libdirs { "$(CUDA_PATH)/extras/CUPTI/lib64" }
+            links { "cupti" }
+        end
+        
+        if _OPTIONS["profiling"] == "cupti-legacy" then
+            defines { "KTT_PROFILING_CUPTI_LEGACY" }
             
-            if os.target() == "linux" then
-                libdirs { "$(CUDA_PATH)/extras/CUPTI/lib64" }
-            else
+            if os.target() == "windows" then
                 libdirs { "$(CUDA_PATH)/extras/CUPTI/libx64" }
             end
-            
-            links { "cupti" }
+        end
+        
+        if _OPTIONS["profiling"] == "cupti" then
+            defines { "KTT_PROFILING_CUPTI" }
         end
     end
         
@@ -170,7 +175,14 @@ newoption
 newoption
 {
     trigger = "profiling",
-    description = "Enables compilation of kernel profiling functionality"
+    value = "library",
+    description = "Enables compilation of kernel profiling functionality using specified library",
+    allowed =
+    {
+        { "cupti", "Nvidia CUPTI for Volta and Turing" },
+        { "cupti-legacy", "Nvidia CUPTI for legacy GPUs (Volta and older)" },
+        { "gpa", "AMD GPA" }
+    }
 }
 
 newoption

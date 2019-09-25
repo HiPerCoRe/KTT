@@ -493,6 +493,7 @@ public:
       * devices.
       *
       * For the list of CUDA CUPTI profiling counters, see: https://docs.nvidia.com/cuda/cupti/index.html#metrics-reference
+      * For the list of AMD GPA profiling counters, see: https://gpuperfapi.readthedocs.io/en/latest/counters.html
       * @param counterNames Names of counters that will be collected during kernel profiling.
       */
     void setKernelProfilingCounters(const std::vector<std::string>& counterNames);

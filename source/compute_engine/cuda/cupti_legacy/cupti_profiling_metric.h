@@ -9,10 +9,10 @@
 namespace ktt
 {
 
-struct CUDAProfilingMetric
+struct CUPTIProfilingMetric
 {
 public:
-    CUDAProfilingMetric() :
+	CUPTIProfilingMetric() :
         metricId(0),
         metricName(""),
         device(0),

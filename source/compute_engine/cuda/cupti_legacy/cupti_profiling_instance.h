@@ -6,16 +6,16 @@
 #include <vector>
 #include <cuda.h>
 #include <api/kernel_profiling_data.h>
-#include <compute_engine/cuda/cuda_profiling_metric.h>
+#include <compute_engine/cuda/cupti_legacy/cupti_profiling_metric.h>
 #include <compute_engine/cuda/cuda_utility.h>
 
 namespace ktt
 {
 
-class CUDAProfilingState
+class CUPTIProfilingInstance
 {
 public:
-    explicit CUDAProfilingState(CUcontext context, const CUdevice device, std::vector<std::pair<std::string, CUpti_MetricID>>& metrics) :
+    explicit CUPTIProfilingInstance(CUcontext context, const CUdevice device, std::vector<std::pair<std::string, CUpti_MetricID>>& metrics) :
         kernelDuration(std::numeric_limits<uint64_t>::max()),
         kernelDurationValid(false),
         remainingKernelRuns(1),
@@ -36,7 +36,7 @@ public:
 
         for (auto& metric : metrics)
         {
-            CUDAProfilingMetric profilingMetric;
+            CUPTIProfilingMetric profilingMetric;
             profilingMetric.metricId = metric.second;
             profilingMetric.metricName = metric.first;
             profilingMetric.device = device;
@@ -93,12 +93,12 @@ public:
         return totalKernelRuns;
     }
 
-    std::vector<CUDAProfilingMetric>* getProfilingMetrics()
+    std::vector<CUPTIProfilingMetric>& getProfilingMetrics()
     {
-        return &profilingMetrics;
+        return profilingMetrics;
     }
 
-    const std::vector<CUDAProfilingMetric>& getProfilingMetrics() const
+    const std::vector<CUPTIProfilingMetric>& getProfilingMetrics() const
     {
         return profilingMetrics;
     }
@@ -133,9 +133,9 @@ private:
     uint64_t totalKernelRuns;
     CUpti_EventGroupSets* eventGroupSets;
     uint32_t currentSetIndex;
-    std::vector<CUDAProfilingMetric> profilingMetrics;
+    std::vector<CUPTIProfilingMetric> profilingMetrics;
 
-    static KernelProfilingCounter getCounterFromMetric(CUDAProfilingMetric& metric, const uint64_t kernelDuration)
+    static KernelProfilingCounter getCounterFromMetric(CUPTIProfilingMetric& metric, const uint64_t kernelDuration)
     {
         for (const auto eventStatus : metric.eventStatuses)
         {

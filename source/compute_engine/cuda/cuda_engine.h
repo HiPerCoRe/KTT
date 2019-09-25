@@ -21,10 +21,10 @@
 #include <compute_engine/cuda/cuda_utility.h>
 #include <compute_engine/compute_engine.h>
 
-#ifdef KTT_PROFILING_CUDA
+#ifdef KTT_PROFILING_CUPTI_LEGACY
 #include <cupti.h>
-#include <compute_engine/cuda/cuda_profiling_state.h>
-#endif // KTT_PROFILING_CUDA
+#include <compute_engine/cuda/cupti_legacy/cupti_profiling_instance.h>
+#endif // KTT_PROFILING_CUPTI_LEGACY
 
 namespace ktt
 {
@@ -107,11 +107,11 @@ private:
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> kernelEvents;
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> bufferEvents;
 
-    #ifdef KTT_PROFILING_CUDA
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
     std::vector<std::pair<std::string, CUpti_MetricID>> profilingMetrics;
     std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
-    std::map<std::pair<std::string, std::string>, CUDAProfilingState> kernelProfilingStates;
-    #endif // KTT_PROFILING_CUDA
+    std::map<std::pair<std::string, std::string>, CUPTIProfilingInstance> kernelProfilingInstances;
+    #endif // KTT_PROFILING_CUPTI_LEGACY
 
     std::unique_ptr<CUDAProgram> createAndBuildProgram(const std::string& source) const;
     EventId enqueueKernel(CUDAKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
@@ -124,14 +124,13 @@ private:
     CUDABuffer* findBuffer(const ArgumentId id) const;
     CUdeviceptr* loadBufferFromCache(const ArgumentId id) const;
 
-#ifdef KTT_PROFILING_CUDA
+#ifdef KTT_PROFILING_CUPTI_LEGACY
     void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
     const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
     CUpti_MetricID getMetricIdFromName(const std::string& metricName);
     std::vector<std::pair<std::string, CUpti_MetricID>> getProfilingMetricsForCurrentDevice(const std::vector<std::string>& metricNames);
-    static void CUPTIAPI getMetricValueCallback(void* userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const CUpti_CallbackData* info);
     static const std::vector<std::string>& getDefaultProfilingMetricNames();
-#endif // KTT_PROFILING_CUDA
+#endif // KTT_PROFILING_CUPTI_LEGACY
 };
 
 } // namespace ktt
