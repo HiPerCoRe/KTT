@@ -49,6 +49,7 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
 
     KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()), std::vector<OutputDescriptor>{});
     currentResult.increaseOverhead(result.getOverhead());
+    currentResult.increaseKernelTime(result.getComputationDuration());
     if (isComposition())
     {
         currentResult.setCompositionKernelCompilationData(id, result.getCompilationData());
@@ -670,6 +671,7 @@ void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<std:
     for (const auto& currentEvent : events)
     {
         const KernelResult result = computeEngine->getKernelResult(currentEvent.second, std::vector<OutputDescriptor>{});
+	currentResult.increaseKernelTime(result.getComputationDuration());
 
         if (isComposition())
         {

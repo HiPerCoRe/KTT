@@ -360,6 +360,12 @@ project "mtran_opencl"
     includedirs { "source" }
     links { "ktt" }
 
+project "sort-new"
+    kind "ConsoleApp"
+    files {"examples/sort-new/*.h", "examples/sort-new/*.cpp", "examples/sort-new/*.cl"}
+    includedirs { "source" }
+    links { "ktt" }
+
 if os.target() == "linux" then
 project "hotspot_opencl"
     kind "ConsoleApp"

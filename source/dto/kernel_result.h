@@ -23,6 +23,7 @@ public:
     void setConfiguration(const KernelConfiguration& configuration);
     void setComputationDuration(const uint64_t computationDuration);
     void setOverhead(const uint64_t overhead);
+    void setKernelTime(const uint64_t kernelTime);
     void setErrorMessage(const std::string& errorMessage);
     void setCompilationData(const KernelCompilationData& compilationData);
     void setCompositionKernelCompilationData(const KernelId id, const KernelCompilationData& compilationData);
@@ -34,6 +35,7 @@ public:
     const KernelConfiguration& getConfiguration() const;
     uint64_t getComputationDuration() const;
     uint64_t getOverhead() const;
+    uint64_t getKernelTime() const;
     const std::string& getErrorMessage() const;
     const KernelCompilationData& getCompilationData() const;
     const KernelCompilationData& getCompositionKernelCompilationData(const KernelId id) const;
@@ -44,12 +46,14 @@ public:
     bool isValid() const;
 
     void increaseOverhead(const uint64_t overhead);
+    void increaseKernelTime(const uint64_t kernelTime);
 
 private:
     std::string kernelName;
     KernelConfiguration configuration;
     uint64_t computationDuration;
     uint64_t overhead;
+    uint64_t kernelTime;
     std::string errorMessage;
     KernelCompilationData compilationData;
     std::map<KernelId, KernelCompilationData> compositionCompilationData;

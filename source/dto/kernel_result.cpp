@@ -8,6 +8,7 @@ KernelResult::KernelResult() :
     kernelName(""),
     computationDuration(std::numeric_limits<uint64_t>::max()),
     overhead(0),
+    kernelTime(0),
     errorMessage(""),
     valid(false)
 {}
@@ -17,6 +18,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     configuration(configuration),
     computationDuration(std::numeric_limits<uint64_t>::max()),
     overhead(0),
+    kernelTime(0),
     errorMessage(""),
     valid(true)
 {}
@@ -25,6 +27,7 @@ KernelResult::KernelResult(const std::string& kernelName, uint64_t computationDu
     kernelName(kernelName),
     computationDuration(computationDuration),
     overhead(0),
+    kernelTime(0),
     errorMessage(""),
     valid(true)
 {}
@@ -34,6 +37,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     configuration(configuration),
     computationDuration(std::numeric_limits<uint64_t>::max()),
     overhead(0),
+    kernelTime(0),
     errorMessage(errorMessage),
     valid(false)
 {}
@@ -56,6 +60,11 @@ void KernelResult::setComputationDuration(const uint64_t computationDuration)
 void KernelResult::setOverhead(const uint64_t overhead)
 {
     this->overhead = overhead;
+}
+
+void KernelResult::setKernelTime(const uint64_t kernelTime)
+{
+    this->kernelTime = kernelTime;
 }
 
 void KernelResult::setErrorMessage(const std::string& errorMessage)
@@ -106,6 +115,11 @@ uint64_t KernelResult::getComputationDuration() const
 uint64_t KernelResult::getOverhead() const
 {
     return overhead;
+}
+
+uint64_t KernelResult::getKernelTime() const
+{
+    return kernelTime;
 }
 
 const std::string& KernelResult::getErrorMessage() const
@@ -164,6 +178,11 @@ bool KernelResult::isValid() const
 void KernelResult::increaseOverhead(const uint64_t overhead)
 {
     this->overhead += overhead;
+}
+
+void KernelResult::increaseKernelTime(const uint64_t kernelTime)
+{
+    this->kernelTime += kernelTime;
 }
 
 } // namespace ktt
