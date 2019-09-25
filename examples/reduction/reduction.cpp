@@ -5,12 +5,22 @@
 #include "reduction_reference.h"
 #include "reduction_tunable.h"
 
+#define USE_CUDA 1
 #define RAPID_TEST 0
+#define USE_PROFILING 0
 
-#if defined(_MSC_VER)
+#if USE_CUDA == 0
+  #if defined(_MSC_VER)
     #define KTT_KERNEL_FILE "../examples/reduction/reduction_kernel.cl"
-#else
+  #else
     #define KTT_KERNEL_FILE "../../examples/reduction/reduction_kernel.cl"
+  #endif
+#else
+  #if defined(_MSC_VER)
+    #define KTT_KERNEL_FILE "../examples/reduction/reduction_kernel.cu"
+  #else
+    #define KTT_KERNEL_FILE "../../examples/reduction/reduction_kernel.cu"
+  #endif
 #endif
 
 int main(int argc, char** argv)
@@ -44,7 +54,12 @@ int main(int argc, char** argv)
         src[i] = 1000.0f*((float)rand()) / ((float)RAND_MAX);
     }
 
+#if USE_CUDA == 0
     ktt::Tuner tuner(platformIndex, deviceIndex);
+#else
+    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+#endif
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     // create kernel
@@ -76,7 +91,11 @@ int main(int argc, char** argv)
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
     tuner.addParameter(kernelId, "UNBOUNDED_WG", {0, 1});
     tuner.addParameter(kernelId, "WG_NUM", {0, cus, cus * 2, cus * 4, cus * 8, cus * 16});
+#if USE_CUDA == 0
     tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2, 4, 8, 16});
+#else
+    tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2, 4});
+#endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "VECTOR_SIZE", ktt::ModifierAction::Divide);
     tuner.addParameter(kernelId, "USE_ATOMICS", {0, 1});
 
