@@ -113,18 +113,36 @@ public:
 		std::vector<ktt::ParameterPair> parameterValues = getCurrentConfiguration();
 
 		if (getParameterValue("FUSED", parameterValues) == 2) {
+            #if USE_PROFILING == 0
 			runKernel(kernelFusedId);
+            #else
+            runKernelWithProfiling(kernelFusedId);
+            #endif
 			if (getParameterValue("ATOMICS", parameterValues) == 0) {
+                #if USE_PROFILING == 0
 				runKernel(kernelReduction1Id);
 				runKernel(kernelReduction2Id);
+                #else
+                runKernelWithProfiling(kernelReduction1Id);
+                runKernelWithProfiling(kernelReduction2Id);
+                #endif
 			}
 		}
 		else if (getParameterValue("FUSED", parameterValues) == 1) {
+            #if USE_PROFILING == 0
 			runKernel(kernelFusedRefId);
+            #else
+            runKernelWithProfiling(kernelFusedRefId);
+            #endif
 		}
 		else {
+            #if USE_PROFILING == 0
 			runKernel(kernel1Id);
 			runKernel(kernel2Id);
+            #else
+            runKernelWithProfiling(kernel1Id);
+            runKernelWithProfiling(kernel2Id);
+            #endif
 		}
 	}
 
