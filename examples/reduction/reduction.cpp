@@ -5,7 +5,7 @@
 #include "reduction_reference.h"
 #include "reduction_tunable.h"
 
-#define USE_CUDA 1
+#define USE_CUDA 0
 #define RAPID_TEST 0
 #define USE_PROFILING 0
 
