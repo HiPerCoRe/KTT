@@ -28,7 +28,11 @@ public:
         }
 
         // execute reduction kernel
+        #if USE_PROFILING == 0
         runKernel(kernelId, myGlobalSize, localSize);
+        #else
+        runKernelWithProfiling(kernelId, myGlobalSize, localSize);
+        #endif
 
         // execute kernel log n times, when atomics are not used 
         if (getParameterValue("USE_ATOMICS", parameterValues) == 0) {
@@ -49,7 +53,11 @@ public:
                 updateArgumentScalar(outOffsetId, &outOffset);
                 updateArgumentScalar(inOffsetId, &inOffset);
 
+                #if USE_PROFILING == 0
                 runKernel(kernelId, myGlobalSize, localSize);
+                #else
+                runKernelWithProfiling(kernelId, myGlobalSize, localSize);
+                #endif
                 n = (n+wgSize*vectorSize-1)/(wgSize*vectorSize);
                 inOffset = outOffset/vectorSize; // input is vectorized, output is scalar
                 outOffset += n;

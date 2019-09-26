@@ -3,11 +3,12 @@
 #include <vector>
 #include "tuner_api.h"
 #include "reduction_reference.h"
-#include "reduction_tunable.h"
 
-#define USE_CUDA 1
+#define USE_CUDA 0
 #define RAPID_TEST 0
 #define USE_PROFILING 0
+
+#include "reduction_tunable.h"
 
 #if USE_CUDA == 0
   #if defined(_MSC_VER)
@@ -59,6 +60,11 @@ int main(int argc, char** argv)
 #else
     ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
     tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+  #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+    //tuner.setLoggingLevel(ktt::LoggingLevel::Debug);
+  #endif
 #endif
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
