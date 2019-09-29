@@ -2,6 +2,7 @@
 #include <utility>
 #include <tuning_runner/manipulator_interface_implementation.h>
 #include <utility/ktt_utility.h>
+#include <utility/logger.h>
 #include <utility/timer.h>
 
 namespace ktt
@@ -99,6 +100,14 @@ void ManipulatorInterfaceImplementation::runKernelWithProfiling(const KernelId i
     if (profiledKernels.find(id) == profiledKernels.end())
     {
         throw std::runtime_error(std::string("Kernel profiling for kernel with the following id is disabled: ") + std::to_string(id));
+    }
+
+    if (getRemainingKernelProfilingRuns(id) == 0)
+    {
+        Logger::logWarning(std::string("Attempting to profile kernel with id ") + std::to_string(id) +
+            " which has zero profiling runs remaining, performing regular kernel run instead");
+        runKernel(id, globalSize, localSize);
+        return;
     }
 
     auto dataPointer = kernelData.find(id);
@@ -671,7 +680,7 @@ void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<std:
     for (const auto& currentEvent : events)
     {
         const KernelResult result = computeEngine->getKernelResult(currentEvent.second, std::vector<OutputDescriptor>{});
-	currentResult.increaseKernelTime(result.getComputationDuration());
+        currentResult.increaseKernelTime(result.getComputationDuration());
 
         if (isComposition())
         {

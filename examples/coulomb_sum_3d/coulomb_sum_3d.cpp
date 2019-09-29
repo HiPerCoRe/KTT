@@ -156,7 +156,7 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{aiId, aId, gsId, gridId});
 
-#if USE_PROFILING == 0 and RAPID_TEST == 0
+#if USE_PROFILING == 0 && RAPID_TEST == 0
     //TODO: this is temporal hack, there should be composition of zeroizing and coulomb kernel, otherwise, multiple profiling runs corrupt results
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{gridId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
