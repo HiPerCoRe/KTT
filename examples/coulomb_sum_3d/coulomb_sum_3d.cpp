@@ -4,35 +4,32 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 0
+#if defined(_MSC_VER)
+    const std::string kernelFilePrefix = "";
+#else
+    const std::string kernelFilePrefix = "../";
+#endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cu";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
+
 #define RAPID_TEST 0
 #define USE_PROFILING 0
-
-#if USE_CUDA == 0
-    #if defined(_MSC_VER)
-        #define KTT_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl"
-        #define KTT_REFERENCE_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl"
-    #else
-        #define KTT_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cl"
-        #define KTT_REFERENCE_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cl"
-    #endif
-#else
-    #if defined(_MSC_VER)
-        #define KTT_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cu"
-        #define KTT_REFERENCE_KERNEL_FILE "../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cu"
-    #else
-        #define KTT_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_kernel.cu"
-        #define KTT_REFERENCE_KERNEL_FILE "../../examples/coulomb_sum_3d/coulomb_sum_3d_reference_kernel.cu"
-    #endif
-#endif
 
 int main(int argc, char** argv)
 {
     // Initialize platform index, device index and paths to kernels
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
-    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
+    std::string kernelFile = defaultKernelFile;
+    std::string referenceKernelFile = defaultReferenceKernelFile;
 
     if (argc >= 2)
     {
@@ -89,20 +86,22 @@ int main(int argc, char** argv)
         atomInfo.at(i*4 + 3) = atomInfoW.at(i);
     }
 
-#if USE_CUDA == 0
-    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::OpenCL);
-    tuner.setCompilerOptions("-cl-fast-relaxed-math");
-#else
-    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
     tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-    tuner.setCompilerOptions("-use_fast_math");
-  #if USE_PROFILING == 1
-    printf("Executing with profiling switched ON.\n");
-    tuner.setKernelProfiling(true);
-  #endif
-#endif
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
-    //tuner.setLoggingLevel(ktt::LoggingLevel::Debug);
+
+    if (computeAPI == ktt::ComputeAPI::OpenCL)
+    {
+        tuner.setCompilerOptions("-cl-fast-relaxed-math");
+    }
+    else
+    {
+        tuner.setCompilerOptions("-use_fast_math");
+        #if USE_PROFILING == 1
+        printf("Executing with profiling switched ON.\n");
+        tuner.setKernelProfiling(true);
+        #endif
+    }
 
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "directCoulombSum", ndRangeDimensions, workGroupDimensions);
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "directCoulombSumReference", ndRangeDimensions,
@@ -134,17 +133,18 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 4, 8, 16, 32});
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS", ktt::ModifierAction::Divide);
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0, 1, 2, 4, 8, 16, 32});
-#if USE_CUDA == 0
-    tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
-#else
-    tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0}); // not implemented in CUDA
-#endif
-    tuner.addParameter(kernelId, "USE_SOA", {0, 1});
-#if USE_CUDA == 0
-    tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2 , 4, 8, 16});
-#else
-    tuner.addParameter(kernelId, "VECTOR_SIZE", {1}); // not implemented in CUDA
-#endif
+
+    if (computeAPI == ktt::ComputeAPI::OpenCL)
+    {
+        tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
+        tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2 , 4, 8, 16});
+    }
+    else
+    {
+        // not implemented in CUDA
+        tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0});
+        tuner.addParameter(kernelId, "VECTOR_SIZE", {1});
+    }
 
     auto lt = [](const std::vector<size_t>& vector) {return vector.at(0) < vector.at(1);};
     tuner.addConstraint(kernelId, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"}, lt);

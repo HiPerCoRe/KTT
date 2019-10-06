@@ -8,11 +8,9 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-#  define KTT_KERNEL_FILE "../examples/conv_3d/conv_3d.cl"
-#  define KTT_REFERENCE_KERNEL_FILE "../examples/conv_3d/conv_3d_reference.cl"
+    const std::string kernelFilePrefix = "";
 #else
-#  define KTT_KERNEL_FILE "../../examples/conv_3d/conv_3d.cl"
-#  define KTT_REFERENCE_KERNEL_FILE "../../examples/conv_3d/conv_3d_reference.cl"
+    const std::string kernelFilePrefix = "../";
 #endif
 
 // Problem size
@@ -106,8 +104,8 @@ int main(int argc, char **argv) {
   // Initialize platform and device index
   ktt::PlatformIndex platformIndex = 0;
   ktt::DeviceIndex deviceIndex = 0;
-  std::string kernelFile = KTT_KERNEL_FILE;
-  std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
+  std::string kernelFile = kernelFilePrefix + "../examples/conv_3d/conv_3d.cl";
+  std::string referenceKernelFile = kernelFilePrefix + "../examples/conv_3d/conv_3d_reference.cl";
 
   if (argc >= 2) {
     platformIndex = std::stoul(std::string(argv[1]));

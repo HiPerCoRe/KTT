@@ -6,27 +6,24 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 0
+#if defined(_MSC_VER)
+    const std::string kernelFilePrefix = "";
+#else
+    const std::string kernelFilePrefix = "../";
+#endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/cltune-gemm/gemm.cu";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/cltune-gemm/gemm_reference.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/cltune-gemm/gemm.cl";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/cltune-gemm/gemm_reference.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
+
 #define RAPID_TEST 0
 #define USE_PROFILING 0
-
-#if USE_CUDA == 0
-  #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/cltune-gemm/gemm.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../examples/cltune-gemm/gemm_reference.cl"
-  #else
-    #define KTT_KERNEL_FILE "../../examples/cltune-gemm/gemm.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../../examples/cltune-gemm/gemm_reference.cl"
-  #endif
-#else
-  #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/cltune-gemm/gemm.cu"
-    #define KTT_REFERENCE_KERNEL_FILE "../examples/cltune-gemm/gemm_reference.cu"
-  #else
-    #define KTT_KERNEL_FILE "../../examples/cltune-gemm/gemm.cu"
-    #define KTT_REFERENCE_KERNEL_FILE "../../examples/cltune-gemm/gemm_reference.cu"
-  #endif
-#endif
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
 bool IsMultiple(const size_t a, const size_t b) {
@@ -38,8 +35,8 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
-    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
+    std::string kernelFile = defaultKernelFile;
+    std::string referenceKernelFile = defaultReferenceKernelFile;
 
     if (argc >= 2)
     {
@@ -83,17 +80,17 @@ int main(int argc, char** argv)
         mat_c.at(i) = 0.0f;
 
     // Create tuner object for chosen platform and device
-#if USE_CUDA == 0
-    ktt::Tuner tuner(platformIndex, deviceIndex);
-#else
-    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
     tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-  #if USE_PROFILING == 1
-    printf("Executing with profiling switched ON.\n");
-    tuner.setKernelProfiling(true);
-  #endif
-#endif
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
+    #if USE_PROFILING == 1
+    if (computeAPI == ktt::ComputeAPI::CUDA)
+    {
+        printf("Executing with profiling switched ON.\n");
+        tuner.setKernelProfiling(true);
+    }
+    #endif
 
     // Add two kernels to tuner, one of the kernels acts as reference kernel
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "gemm_fast", ndRangeDimensions, workGroupDimensions);
@@ -107,13 +104,18 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "MDIMA", {8, 16, 32});
     tuner.addParameter(kernelId, "NDIMB", {8, 16, 32});
     tuner.addParameter(kernelId, "KWI", {2, 8});
-#if USE_CUDA == 0
-    tuner.addParameter(kernelId, "VWM", {1, 2, 4, 8});
-    tuner.addParameter(kernelId, "VWN", {1, 2, 4, 8});
-#else
-    tuner.addParameter(kernelId, "VWM", {1, 2, 4});
-    tuner.addParameter(kernelId, "VWN", {1, 2, 4});
-#endif
+
+    if (computeAPI == ktt::ComputeAPI::OpenCL)
+    {
+        tuner.addParameter(kernelId, "VWM", {1, 2, 4, 8});
+        tuner.addParameter(kernelId, "VWN", {1, 2, 4, 8});
+    }
+    else
+    {
+        tuner.addParameter(kernelId, "VWM", {1, 2, 4});
+        tuner.addParameter(kernelId, "VWN", {1, 2, 4});
+    }
+
     tuner.addParameter(kernelId, "STRM", {0, 1});
     tuner.addParameter(kernelId, "STRN", {0, 1});
     tuner.addParameter(kernelId, "SA", {0, 1});

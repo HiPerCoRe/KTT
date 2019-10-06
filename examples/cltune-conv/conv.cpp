@@ -7,27 +7,24 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 0
+#if defined(_MSC_VER)
+    const std::string kernelFilePrefix = "";
+#else
+    const std::string kernelFilePrefix = "../";
+#endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/cltune-conv/conv.cu";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/cltune-conv/conv_reference.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/cltune-conv/conv.cl";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/cltune-conv/conv_reference.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
+
 #define RAPID_TEST 0
 #define USE_PROFILING 0
-
-#if USE_CUDA == 0
-  #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/cltune-conv/conv.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../examples/cltune-conv/conv_reference.cl"
-  #else
-    #define KTT_KERNEL_FILE "../../examples/cltune-conv/conv.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../../examples/cltune-conv/conv_reference.cl"
-  #endif
-#else
-  #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/cltune-conv/conv.cu"
-    #define KTT_REFERENCE_KERNEL_FILE "../examples/cltune-conv/conv_reference.cu"
-  #else
-    #define KTT_KERNEL_FILE "../../examples/cltune-conv/conv.cu"
-    #define KTT_REFERENCE_KERNEL_FILE "../../examples/cltune-conv/conv_reference.cu"
-  #endif
-#endif
 
 // Settings (synchronise these with "conv.cpp", "conv.cl" and "conv_reference.cl")
 #define HFS (3)        // Half filter size
@@ -48,8 +45,8 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
-    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
+    std::string kernelFile = defaultKernelFile;
+    std::string referenceKernelFile = defaultReferenceKernelFile;
 
     if (argc >= 2)
     {
@@ -104,16 +101,17 @@ int main(int argc, char** argv)
     for (auto& item : coeff) {item = item / sum;}
 
     // Create tuner object for chosen platform and device
-#if USE_CUDA == 0
-    ktt::Tuner tuner(platformIndex, deviceIndex);
-#else
-    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
     tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-  #if USE_PROFILING == 1
-    printf("Executing with profiling switched ON.\n");
-    tuner.setKernelProfiling(true);
-  #endif
-#endif
+
+    #if USE_PROFILING == 1
+    if (computeAPI == ktt::ComputeAPI::CUDA)
+    {
+        printf("Executing with profiling switched ON.\n");
+        tuner.setKernelProfiling(true);
+    }
+    #endif
+
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     // Add two kernels to tuner, one of the kernels acts as reference kernel

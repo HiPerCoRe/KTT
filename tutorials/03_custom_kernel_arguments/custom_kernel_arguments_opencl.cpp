@@ -4,9 +4,9 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../tutorials/03_custom_kernel_arguments/opencl_kernel.cl"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_KERNEL_FILE "../../tutorials/03_custom_kernel_arguments/opencl_kernel.cl"
+    const std::string kernelFilePrefix = "../";
 #endif
 
 // Definition of our custom data type, it needs to be defined / visible in kernel source code as well.
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     // Initialize platform index, device index and path to kernel.
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string kernelFile = kernelFilePrefix + "../tutorials/03_custom_kernel_arguments/opencl_kernel.cl";
 
     if (argc >= 2)
     {
