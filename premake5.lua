@@ -27,8 +27,28 @@ function findLibrariesAmd()
         links { "OpenCL" }
         
         if _OPTIONS["profiling"] == "gpa" then
-            defines { "KTT_PROFILING_AMD" }
+            defines { "KTT_PROFILING_GPA" }
             includedirs { "libraries/include" }
+            
+            if os.target() == "linux" then
+                libdirs { "libraries/lib/linux/gpu_perf_api" }
+            else
+                -- One of the GPA headers includes Windows.h with evil min/max macros
+                defines { "NOMINMAX" }
+                libdirs { "libraries/lib/windows/gpu_perf_api" }
+            end  
+        end
+        
+        if _OPTIONS["profiling"] == "gpa-legacy" then
+            defines { "KTT_PROFILING_GPA_LEGACY" }
+            includedirs { "libraries/include" }
+            
+            if os.target() == "linux" then
+                libdirs { "libraries/lib/linux/gpu_perf_api_legacy" }
+            else
+                defines { "NOMINMAX" }
+                libdirs { "libraries/lib/windows/gpu_perf_api_legacy" }
+            end  
         end
     end
     
@@ -134,10 +154,10 @@ function findVulkan()
     
     if os.target() == "linux" then
         includedirs { "$(VULKAN_SDK)/include", "libraries/include" }
-        libdirs { "$(VULKAN_SDK)/lib", "libraries/lib/linux" }
+        libdirs { "$(VULKAN_SDK)/lib", "libraries/lib/linux/shaderc_ktt" }
     else
         includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
-        libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows" }
+        libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows/shaderc_ktt" }
     end
     
     vulkan_projects = true
@@ -181,7 +201,8 @@ newoption
     {
         { "cupti", "Nvidia CUPTI for Volta and Turing" },
         { "cupti-legacy", "Nvidia CUPTI for legacy GPUs (Volta and older)" },
-        { "gpa", "AMD GPA" }
+        { "gpa", "AMD GPA for GCN 3.0 GPUs and newer" },
+        { "gpa-legacy", "AMD GPA for GCN 5.0 GPUs and older" }
     }
 }
 

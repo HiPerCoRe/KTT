@@ -6,9 +6,9 @@
 #include <utility/logger.h>
 #include <utility/timer.h>
 
-#ifdef KTT_PROFILING_AMD
-#include <compute_engine/opencl/gpa_profiling_pass.h>
-#endif // KTT_PROFILING_AMD
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+#include <compute_engine/opencl/gpa/gpa_profiling_pass.h>
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
 namespace ktt
 {
@@ -25,10 +25,10 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
     persistentBufferFlag(true),
     nextEventId(0)
 {
-    #ifdef KTT_PROFILING_AMD
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     Logger::logDebug("Initializing GPA profiling API");
     gpaInterface = std::make_unique<GPAInterface>();
-    #endif // KTT_PROFILING_AMD
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
     
     auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
@@ -54,13 +54,13 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
         commandQueues.push_back(std::move(commandQueue));
     }
 
-    #ifdef KTT_PROFILING_AMD
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     Logger::logDebug("Initializing GPA profiling context");
     gpaProfilingContext = std::make_unique<GPAProfilingContext>(gpaInterface->getFunctionTable(), *commandQueues[getDefaultQueue()].get());
 
     Logger::logDebug("Initializing default GPA profiling counters");
     gpaProfilingContext->setCounters(getDefaultGPAProfilingCounters());
-    #endif // KTT_PROFILING_AMD
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 KernelResult OpenCLEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -629,17 +629,17 @@ DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
 
 void OpenCLEngine::initializeKernelProfiling(const KernelRuntimeData& kernelData)
 {
-    #ifdef KTT_PROFILING_AMD
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-    #endif // KTT_PROFILING_AMD
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
     const QueueId queue)
 {
-    #ifdef KTT_PROFILING_AMD
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     Timer overheadTimer;
     overheadTimer.start();
 
@@ -705,12 +705,12 @@ EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData
     return id;
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-    #endif // KTT_PROFILING_AMD
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource)
 {
-    #ifdef KTT_PROFILING_AMD
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     auto profilingInstance = kernelProfilingInstances.find({kernelName, kernelSource});
 
     if (profilingInstance == kernelProfilingInstances.end())
@@ -721,12 +721,12 @@ uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string& kernel
     return static_cast<uint64_t>(profilingInstance->second->getRemainingPassCount());
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-    #endif // KTT_PROFILING_AMD
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
 {
-    #ifdef KTT_PROFILING_AMD
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     KernelResult result = createKernelResult(id);
 
     for (const auto& descriptor : outputDescriptors)
@@ -755,16 +755,16 @@ KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId id, const 
     return result;
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-    #endif // KTT_PROFILING_AMD
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 void OpenCLEngine::setKernelProfilingCounters(const std::vector<std::string>& counterNames)
 {
-    #ifdef KTT_PROFILING_AMD
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     gpaProfilingContext->setCounters(counterNames);
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-    #endif // KTT_PROFILING_AMD
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 std::unique_ptr<OpenCLProgram> OpenCLEngine::createAndBuildProgram(const std::string& source) const
@@ -1038,7 +1038,7 @@ void OpenCLEngine::checkLocalMemoryModifiers(const std::vector<KernelArgument*>&
     }
 }
 
-#ifdef KTT_PROFILING_AMD
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 
 void OpenCLEngine::initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource)
 {
@@ -1088,7 +1088,7 @@ const std::vector<std::string>& OpenCLEngine::getDefaultGPAProfilingCounters()
     return result;
 }
 
-#endif // KTT_PROFILING_AMD
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
 } // namespace ktt
 

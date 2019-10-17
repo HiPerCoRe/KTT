@@ -1,2 +1,3 @@
 shaderc - Vulkan SDK 1.1.101
-GPUPerfAPI - 3.3
+GPUPerfAPI - 3.4.1
+GPUPerfAPI legacy - 3.3

@@ -116,7 +116,7 @@ std::string getDeviceInfoString(const cl_device_id id, const cl_device_info info
     return infoString;
 }
 
-#ifdef KTT_PROFILING_AMD
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 void checkGPAError(const GPA_Status value, const std::string& message)
 {
     if (value != GPA_STATUS_OK)
@@ -125,7 +125,7 @@ void checkGPAError(const GPA_Status value, const std::string& message)
             + message);
     }
 }
-#endif // KTT_PROFILING_AMD
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
 } // namespace ktt
 
