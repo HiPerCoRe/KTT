@@ -48,6 +48,11 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     const std::vector<std::string>& metricNames = getDefaultProfilingMetricNames();
     profilingMetrics = getProfilingMetricsForCurrentDevice(metricNames);
     #endif // KTT_PROFILING_CUPTI_LEGACY
+
+    #ifdef KTT_PROFILING_CUPTI
+    Logger::logDebug("Initializing CUPTI profiler");
+    profiler = std::make_unique<CUPTIProfiler>();
+    #endif // KTT_PROFILING_CUPTI
 }
 
 KernelResult CUDAEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -1021,7 +1026,7 @@ CUpti_MetricID CUDAEngine::getMetricIdFromName(const std::string& metricName)
     case CUPTI_ERROR_INVALID_METRIC_NAME:
         return std::numeric_limits<CUpti_MetricID>::max();
     default:
-        checkCUDAError(result, "cuptiMetricGetIdFromName");
+        checkCUPTIError(result, "cuptiMetricGetIdFromName");
     }
 
     return 0;

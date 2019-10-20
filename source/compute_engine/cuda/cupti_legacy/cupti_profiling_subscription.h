@@ -15,14 +15,14 @@ class CUPTIProfilingSubscription
 public:
     explicit CUPTIProfilingSubscription(std::vector<CUPTIProfilingMetric>& profilingMetrics)
     {
-        checkCUDAError(cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)getMetricValueCallback, &profilingMetrics), "cuptiSubscribe");
-        checkCUDAError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunch), "cuptiEnableCallback");
-        checkCUDAError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel), "cuptiEnableCallback");
+		checkCUPTIError(cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)getMetricValueCallback, &profilingMetrics), "cuptiSubscribe");
+		checkCUPTIError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunch), "cuptiEnableCallback");
+		checkCUPTIError(cuptiEnableCallback(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API, CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel), "cuptiEnableCallback");
     }
 
     ~CUPTIProfilingSubscription()
     {
-        checkCUDAError(cuptiUnsubscribe(subscriber), "cuptiUnsubscribe");
+		checkCUPTIError(cuptiUnsubscribe(subscriber), "cuptiUnsubscribe");
     }
 
 private:
@@ -47,14 +47,14 @@ private:
         if (info->callbackSite == CUPTI_API_ENTER)
         {
             checkCUDAError(cuCtxSynchronize(), "cuCtxSynchronize");
-            checkCUDAError(cuptiSetEventCollectionMode(info->context, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
+			checkCUPTIError(cuptiSetEventCollectionMode(info->context, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
 
             for (uint32_t i = 0; i < firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].numEventGroups; ++i)
             {
                 uint32_t profileAll = 1;
-                checkCUDAError(cuptiEventGroupSetAttribute(firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].eventGroups[i],
+				checkCUPTIError(cuptiEventGroupSetAttribute(firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].eventGroups[i],
                     CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES, sizeof(profileAll), &profileAll), "cuptiEventGroupSetAttribute");
-                checkCUDAError(cuptiEventGroupEnable(firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].eventGroups[i]),
+				checkCUPTIError(cuptiEventGroupEnable(firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].eventGroups[i]),
                     "cuptiEventGroupEnable");
             }
         }
@@ -74,18 +74,18 @@ private:
                 size_t instanceCountSize = sizeof(instanceCount);
                 size_t totalInstanceCountSize = sizeof(totalInstanceCount);
 
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID, &groupDomainSize, &groupDomain),
+				checkCUPTIError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID, &groupDomainSize, &groupDomain),
                     "cuptiEventGroupGetAttribute");
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_NUM_EVENTS, &eventCountSize, &eventCount),
+				checkCUPTIError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_NUM_EVENTS, &eventCountSize, &eventCount),
                     "cuptiEventGroupGetAttribute");
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT, &instanceCountSize, &instanceCount),
+				checkCUPTIError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT, &instanceCountSize, &instanceCount),
                     "cuptiEventGroupGetAttribute");
-                checkCUDAError(cuptiDeviceGetEventDomainAttribute(firstMetric.device, groupDomain, CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT,
+				checkCUPTIError(cuptiDeviceGetEventDomainAttribute(firstMetric.device, groupDomain, CUPTI_EVENT_DOMAIN_ATTR_TOTAL_INSTANCE_COUNT,
                     &totalInstanceCountSize, &totalInstanceCount), "cuptiDeviceGetEventDomainAttribute");
 
                 std::vector<CUpti_EventID> eventIds(eventCount);
                 size_t eventIdsSize = eventCount * sizeof(CUpti_EventID);
-                checkCUDAError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENTS, &eventIdsSize, eventIds.data()),
+				checkCUPTIError(cuptiEventGroupGetAttribute(group, CUPTI_EVENT_GROUP_ATTR_EVENTS, &eventIdsSize, eventIds.data()),
                     "cuptiEventGroupGetAttribute");
 
                 std::vector<uint64_t> values(instanceCount);
@@ -93,7 +93,7 @@ private:
 
                 for (uint32_t j = 0; j < eventCount; ++j)
                 {
-                    checkCUDAError(cuptiEventGroupReadEvent(group, CUPTI_EVENT_READ_FLAG_NONE, eventIds[j], &valuesSize, values.data()),
+					checkCUPTIError(cuptiEventGroupReadEvent(group, CUPTI_EVENT_READ_FLAG_NONE, eventIds[j], &valuesSize, values.data()),
                         "cuptiEventGroupReadEvent");
 
                     uint64_t sum = 0;
@@ -119,7 +119,7 @@ private:
 
             for (uint32_t i = 0; i < firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].numEventGroups; ++i)
             {
-                checkCUDAError(cuptiEventGroupDisable(firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].eventGroups[i]),
+				checkCUPTIError(cuptiEventGroupDisable(firstMetric.eventGroupSets->sets[firstMetric.currentSetIndex].eventGroups[i]),
                     "cuptiEventGroupDisable");
             }
         }

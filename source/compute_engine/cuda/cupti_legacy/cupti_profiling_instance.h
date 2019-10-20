@@ -29,7 +29,7 @@ public:
             metricIds.push_back(metric.second);
         }
 
-        checkCUDAError(cuptiMetricCreateEventGroupSets(context, sizeof(CUpti_MetricID) * metricIds.size(), metricIds.data(), &eventGroupSets),
+        checkCUPTIError(cuptiMetricCreateEventGroupSets(context, sizeof(CUpti_MetricID) * metricIds.size(), metricIds.data(), &eventGroupSets),
             "cuptiMetricCreateEventGroupSets");
         totalKernelRuns += static_cast<uint64_t>(eventGroupSets->numSets);
         remainingKernelRuns += static_cast<uint64_t>(eventGroupSets->numSets);
@@ -41,10 +41,10 @@ public:
             profilingMetric.metricName = metric.first;
             profilingMetric.device = device;
             profilingMetric.eventGroupSets = eventGroupSets;
-            checkCUDAError(cuptiMetricGetNumEvents(metric.second, &profilingMetric.eventCount), "cuptiMetricGetNumEvents");
+			checkCUPTIError(cuptiMetricGetNumEvents(metric.second, &profilingMetric.eventCount), "cuptiMetricGetNumEvents");
             profilingMetric.eventIds.resize(static_cast<size_t>(profilingMetric.eventCount));
             size_t eventIdsSize = sizeof(CUpti_EventID) * profilingMetric.eventIds.size();
-            checkCUDAError(cuptiMetricEnumEvents(metric.second, &eventIdsSize, profilingMetric.eventIds.data()), "cuptiMetricEnumEvents");
+			checkCUPTIError(cuptiMetricEnumEvents(metric.second, &eventIdsSize, profilingMetric.eventIds.data()), "cuptiMetricEnumEvents");
             profilingMetric.eventValues.resize(static_cast<size_t>(profilingMetric.eventCount));
             profilingMetric.eventStatuses.resize(static_cast<size_t>(profilingMetric.eventCount), false);
             profilingMetrics.push_back(profilingMetric);
@@ -146,12 +146,12 @@ private:
         }
 
         CUpti_MetricValue metricValue;
-        checkCUDAError(cuptiMetricGetValue(metric.device, metric.metricId, metric.eventCount * sizeof(CUpti_EventID), metric.eventIds.data(),
+		checkCUPTIError(cuptiMetricGetValue(metric.device, metric.metricId, metric.eventCount * sizeof(CUpti_EventID), metric.eventIds.data(),
             metric.eventCount * sizeof(uint64_t), metric.eventValues.data(), kernelDuration, &metricValue), "cuptiMetricGetValue");
 
         CUpti_MetricValueKind valueKind;
         size_t valueKindSize = sizeof(valueKind);
-        checkCUDAError(cuptiMetricGetAttribute(metric.metricId, CUPTI_METRIC_ATTR_VALUE_KIND, &valueKindSize, &valueKind),
+		checkCUPTIError(cuptiMetricGetAttribute(metric.metricId, CUPTI_METRIC_ATTR_VALUE_KIND, &valueKindSize, &valueKind),
             "cuptiMetricGetAttribute");
 
         ProfilingCounterValue value;

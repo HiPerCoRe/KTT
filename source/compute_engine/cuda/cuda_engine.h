@@ -26,6 +26,10 @@
 #include <compute_engine/cuda/cupti_legacy/cupti_profiling_instance.h>
 #endif // KTT_PROFILING_CUPTI_LEGACY
 
+#ifdef KTT_PROFILING_CUPTI
+#include <compute_engine/cuda/cupti/cupti_profiler.h>
+#endif // KTT_PROFILING_CUPTI
+
 namespace ktt
 {
 
@@ -112,6 +116,10 @@ private:
     std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
     std::map<std::pair<std::string, std::string>, CUPTIProfilingInstance> kernelProfilingInstances;
     #endif // KTT_PROFILING_CUPTI_LEGACY
+
+    #ifdef KTT_PROFILING_CUPTI
+    std::unique_ptr<CUPTIProfiler> profiler;
+    #endif // KTT_PROFILING_CUPTI
 
     std::unique_ptr<CUDAProgram> createAndBuildProgram(const std::string& source) const;
     EventId enqueueKernel(CUDAKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,

@@ -6,9 +6,9 @@
 #include <cuda.h>
 #include <nvrtc.h>
 
-#ifdef KTT_PROFILING_CUPTI_LEGACY
+#if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
 #include <cupti.h>
-#endif // KTT_PROFILING_CUPTI_LEGACY
+#endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 
 namespace ktt
 {
@@ -20,10 +20,10 @@ void checkCUDAError(const CUresult value, const std::string& message);
 void checkCUDAError(const nvrtcResult value, const std::string& message);
 float getEventCommandDuration(const CUevent start, const CUevent end);
 
-#ifdef KTT_PROFILING_CUPTI_LEGACY
+#if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
 std::string getCUPTIEnumName(const CUptiResult value);
-void checkCUDAError(const CUptiResult value, const std::string& message);
-#endif // KTT_PROFILING_CUPTI_LEGACY
+void checkCUPTIError(const CUptiResult value, const std::string& message);
+#endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 
 } // namespace ktt
 
