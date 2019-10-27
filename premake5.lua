@@ -123,6 +123,7 @@ function findLibrariesNvidia()
         
         if _OPTIONS["profiling"] == "cupti" then
             defines { "KTT_PROFILING_CUPTI" }
+            links { "nvperf_host", "nvperf_target" }
         end
     end
         

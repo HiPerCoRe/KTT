@@ -13,25 +13,25 @@ class CUPTIProfiler
 public:
     explicit CUPTIProfiler()
     {
-		CUpti_Profiler_Initialize_Params params =
-		{
-			CUpti_Profiler_Initialize_Params_STRUCT_SIZE,
-			nullptr
-		};
+        CUpti_Profiler_Initialize_Params params =
+        {
+            CUpti_Profiler_Initialize_Params_STRUCT_SIZE,
+            nullptr
+        };
 
-		checkCUPTIError(cuptiProfilerInitialize(&params), "cuptiProfilerInitialize");
-	}
+        checkCUPTIError(cuptiProfilerInitialize(&params), "cuptiProfilerInitialize");
+    }
 
-	~CUPTIProfiler()
-	{
-		CUpti_Profiler_DeInitialize_Params params =
-		{
-			CUpti_Profiler_DeInitialize_Params_STRUCT_SIZE,
-			nullptr
-		};
+    ~CUPTIProfiler()
+    {
+        CUpti_Profiler_DeInitialize_Params params =
+        {
+            CUpti_Profiler_DeInitialize_Params_STRUCT_SIZE,
+            nullptr
+        };
 
-		checkCUPTIError(cuptiProfilerDeInitialize(&params), "cuptiProfilerDeInitialize");
-	}
+        checkCUPTIError(cuptiProfilerDeInitialize(&params), "cuptiProfilerDeInitialize");
+    }
 };
 
 } // namespace ktt

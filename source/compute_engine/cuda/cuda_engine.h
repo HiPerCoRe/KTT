@@ -28,6 +28,7 @@
 
 #ifdef KTT_PROFILING_CUPTI
 #include <compute_engine/cuda/cupti/cupti_profiler.h>
+#include <compute_engine/cuda/cupti/cupti_profiling_instance.h>
 #endif // KTT_PROFILING_CUPTI
 
 namespace ktt
@@ -119,6 +120,7 @@ private:
 
     #ifdef KTT_PROFILING_CUPTI
     std::unique_ptr<CUPTIProfiler> profiler;
+    std::map<std::pair<std::string, std::string>, CUPTIProfilingInstance> kernelProfilingInstances;
     #endif // KTT_PROFILING_CUPTI
 
     std::unique_ptr<CUDAProgram> createAndBuildProgram(const std::string& source) const;
