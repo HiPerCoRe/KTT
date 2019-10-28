@@ -27,6 +27,7 @@
 #endif // KTT_PROFILING_CUPTI_LEGACY
 
 #ifdef KTT_PROFILING_CUPTI
+#include <compute_engine/cuda/cupti/cupti_metric_interface.h>
 #include <compute_engine/cuda/cupti/cupti_profiler.h>
 #include <compute_engine/cuda/cupti/cupti_profiling_instance.h>
 #endif // KTT_PROFILING_CUPTI
@@ -120,6 +121,7 @@ private:
 
     #ifdef KTT_PROFILING_CUPTI
     std::unique_ptr<CUPTIProfiler> profiler;
+    std::unique_ptr<CUPTIMetricInterface> metricInterface;
     std::map<std::pair<std::string, std::string>, CUPTIProfilingInstance> kernelProfilingInstances;
     #endif // KTT_PROFILING_CUPTI
 

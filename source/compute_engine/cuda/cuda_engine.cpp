@@ -52,6 +52,8 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     #ifdef KTT_PROFILING_CUPTI
     Logger::logDebug("Initializing CUPTI profiler");
     profiler = std::make_unique<CUPTIProfiler>();
+    const std::string deviceName = profiler->getDeviceName(deviceIndex);
+    metricInterface = std::make_unique<CUPTIMetricInterface>(deviceName);
     #endif // KTT_PROFILING_CUPTI
 }
 
