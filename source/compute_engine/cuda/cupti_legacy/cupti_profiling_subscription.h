@@ -32,7 +32,7 @@ private:
     {
         if (id != CUPTI_DRIVER_TRACE_CBID_cuLaunch && id != CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel)
         {
-            throw std::runtime_error("Internal CUDA CUPTI error: Unexpected callback id was passed into metric value collection function");
+            throw std::runtime_error("CUPTI error: Unexpected callback id was passed into metric value collection function");
         }
 
         auto* metrics = reinterpret_cast<std::vector<CUPTIProfilingMetric>*>(userdata);

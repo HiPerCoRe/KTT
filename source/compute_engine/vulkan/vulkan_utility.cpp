@@ -35,19 +35,11 @@ std::string getVulkanEnumName(const VkResult value)
     }
 }
 
-void checkVulkanError(const VkResult value)
-{
-    if (value != VK_SUCCESS)
-    {
-        throw std::runtime_error(std::string("Internal Vulkan error: ") + getVulkanEnumName(value));
-    }
-}
-
 void checkVulkanError(const VkResult value, const std::string& message)
 {
     if (value != VK_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal Vulkan error: ") + getVulkanEnumName(value) + "\nAdditional info: " + message);
+        throw std::runtime_error(std::string("Vulkan error: ") + getVulkanEnumName(value) + "\nAdditional info: " + message);
     }
 }
 

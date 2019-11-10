@@ -402,7 +402,7 @@ void CUPTIMetricInterface::checkNVPAError(const NVPA_Status value, const std::st
 {
     if (value != NVPA_STATUS_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal CUPTI error: ") + std::to_string(static_cast<int>(value)) + "\nAdditional info: " + message);
+        throw std::runtime_error(std::string("CUPTI error: ") + std::to_string(static_cast<int>(value)) + "\nAdditional info: " + message);
     }
 }
 

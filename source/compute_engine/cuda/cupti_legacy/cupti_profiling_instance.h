@@ -107,12 +107,12 @@ public:
     {
         if (remainingKernelRuns > 0)
         {
-            throw std::runtime_error("Internal CUDA CUPTI error : Insufficient number of completed kernel runs for profiling counter collection");
+            throw std::runtime_error("CUPTI error : Insufficient number of completed kernel runs for profiling counter collection");
         }
 
         if (!kernelDurationValid)
         {
-            throw std::runtime_error("Internal CUDA CUPTI error : Kernel duration must be known before profiling information can be generated");
+            throw std::runtime_error("CUPTI error : Kernel duration must be known before profiling information can be generated");
         }
 
         KernelProfilingData result;
@@ -141,7 +141,7 @@ private:
         {
             if (!eventStatus)
             {
-                throw std::runtime_error("Internal CUDA CUPTI error : Failed to collect some metric events for profiling counter calculation");
+                throw std::runtime_error("CUPTI error : Failed to collect some metric events for profiling counter calculation");
             }
         }
 
@@ -184,7 +184,7 @@ private:
             type = ProfilingCounterType::UtilizationLevel;
             break;
         default:
-            throw std::runtime_error("Internal CUDA CUPTI error : Unknown metric value type");
+            throw std::runtime_error("CUPTI error : Unknown metric value type");
         }
 
         return KernelProfilingCounter(metric.metricName, value, type);

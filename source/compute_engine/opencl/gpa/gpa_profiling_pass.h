@@ -23,14 +23,14 @@ public:
         passIndex(instance.getCurrentPassIndex())
     {
         checkGPAError(gpaFunctions.GPA_BeginCommandList(instance.getSession(), passIndex, GPA_NULL_COMMAND_LIST, GPA_COMMAND_LIST_NONE, &commandList),
-            "GPA_BeginCommandList");
-        checkGPAError(gpaFunctions.GPA_BeginSample(instance.getSampleId(), commandList), "GPA_BeginSample");
+            "GPA_BeginCommandList", gpaFunctions);
+        checkGPAError(gpaFunctions.GPA_BeginSample(instance.getSampleId(), commandList), "GPA_BeginSample", gpaFunctions);
     }
 
     ~GPAProfilingPass()
     {
-        checkGPAError(gpaFunctions.GPA_EndSample(commandList), "GPA_EndSample");
-        checkGPAError(gpaFunctions.GPA_EndCommandList(commandList), "GPA_EndCommandList");
+        checkGPAError(gpaFunctions.GPA_EndSample(commandList), "GPA_EndSample", gpaFunctions);
+        checkGPAError(gpaFunctions.GPA_EndCommandList(commandList), "GPA_EndCommandList", gpaFunctions);
     }
 
 private:

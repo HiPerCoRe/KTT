@@ -23,12 +23,12 @@ public:
         queue(queue),
         currentSampleId(0)
     {
-        checkGPAError(gpaFunctions.GPA_OpenContext(queue.getQueue(), GPA_OPENCONTEXT_DEFAULT_BIT, &context), "GPA_OpenContext");
+        checkGPAError(gpaFunctions.GPA_OpenContext(queue.getQueue(), GPA_OPENCONTEXT_DEFAULT_BIT, &context), "GPA_OpenContext", gpaFunctions);
     }
 
     ~GPAProfilingContext()
     {
-        checkGPAError(gpaFunctions.GPA_CloseContext(context), "GPA_CloseContext");
+        checkGPAError(gpaFunctions.GPA_CloseContext(context), "GPA_CloseContext", gpaFunctions);
     }
 
     gpa_uint32 generateNewSampleId()

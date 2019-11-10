@@ -57,19 +57,11 @@ std::string getOpenCLEnumName(const cl_int value)
     }
 }
 
-void checkOpenCLError(const cl_int value)
-{
-    if (value != CL_SUCCESS)
-    {
-        throw std::runtime_error(std::string("Internal OpenCL error: ") + getOpenCLEnumName(value));
-    }
-}
-
 void checkOpenCLError(const cl_int value, const std::string& message)
 {
     if (value != CL_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal OpenCL error: ") + getOpenCLEnumName(value) + "\nAdditional info: " + message);
+        throw std::runtime_error(std::string("OpenCL error: ") + getOpenCLEnumName(value) + "\nAdditional info: " + message);
     }
 }
 
@@ -117,11 +109,11 @@ std::string getDeviceInfoString(const cl_device_id id, const cl_device_info info
 }
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-void checkGPAError(const GPA_Status value, const std::string& message)
+void checkGPAError(const GPA_Status value, const std::string& message, GPAFunctionTable& gpaFunctions)
 {
     if (value != GPA_STATUS_OK)
     {
-        throw std::runtime_error(std::string("Internal GPA profiling API error: ") + std::to_string(static_cast<int>(value)) + "\nAdditional info: "
+        throw std::runtime_error(std::string("GPA profiling API error: ") + gpaFunctions.GPA_GetStatusAsStr(value) + "\nAdditional info: "
             + message);
     }
 }

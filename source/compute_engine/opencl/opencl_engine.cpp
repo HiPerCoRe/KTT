@@ -893,27 +893,27 @@ DeviceInfo OpenCLEngine::getOpenCLDeviceInfo(const PlatformIndex platform, const
     result.setVendor(getDeviceInfoString(id, CL_DEVICE_VENDOR));
         
     uint64_t globalMemorySize;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(uint64_t), &globalMemorySize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(uint64_t), &globalMemorySize, nullptr), "clGetDeviceInfo");
     result.setGlobalMemorySize(globalMemorySize);
 
     uint64_t localMemorySize;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(uint64_t), &localMemorySize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(uint64_t), &localMemorySize, nullptr), "clGetDeviceInfo");
     result.setLocalMemorySize(localMemorySize);
 
     uint64_t maxConstantBufferSize;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(uint64_t), &maxConstantBufferSize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(uint64_t), &maxConstantBufferSize, nullptr), "clGetDeviceInfo");
     result.setMaxConstantBufferSize(maxConstantBufferSize);
 
     uint32_t maxComputeUnits;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(uint32_t), &maxComputeUnits, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(uint32_t), &maxComputeUnits, nullptr), "clGetDeviceInfo");
     result.setMaxComputeUnits(maxComputeUnits);
 
     size_t maxWorkGroupSize;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroupSize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroupSize, nullptr), "clGetDeviceInfo");
     result.setMaxWorkGroupSize(maxWorkGroupSize);
 
     cl_device_type deviceType;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr), "clGetDeviceInfo");
     result.setDeviceType(getDeviceType(deviceType));
 
     return result;
@@ -922,10 +922,10 @@ DeviceInfo OpenCLEngine::getOpenCLDeviceInfo(const PlatformIndex platform, const
 std::vector<OpenCLPlatform> OpenCLEngine::getOpenCLPlatforms()
 {
     cl_uint platformCount;
-    checkOpenCLError(clGetPlatformIDs(0, nullptr, &platformCount));
+    checkOpenCLError(clGetPlatformIDs(0, nullptr, &platformCount), "clGetPlatformIDs");
 
     std::vector<cl_platform_id> platformIds(platformCount);
-    checkOpenCLError(clGetPlatformIDs(platformCount, platformIds.data(), nullptr));
+    checkOpenCLError(clGetPlatformIDs(platformCount, platformIds.data(), nullptr), "clGetPlatformIDs");
 
     std::vector<OpenCLPlatform> platforms;
     for (const auto platformId : platformIds)
@@ -940,10 +940,10 @@ std::vector<OpenCLPlatform> OpenCLEngine::getOpenCLPlatforms()
 std::vector<OpenCLDevice> OpenCLEngine::getOpenCLDevices(const OpenCLPlatform& platform)
 {
     cl_uint deviceCount;
-    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount));
+    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount), "clGetDeviceIDs");
 
     std::vector<cl_device_id> deviceIds(deviceCount);
-    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, deviceCount, deviceIds.data(), nullptr));
+    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, deviceCount, deviceIds.data(), nullptr), "clGetDeviceIDs");
 
     std::vector<OpenCLDevice> devices;
     for (const auto deviceId : deviceIds)

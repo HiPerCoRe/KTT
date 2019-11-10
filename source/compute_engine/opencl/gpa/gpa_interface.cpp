@@ -13,7 +13,11 @@ namespace ktt
 
 GPAInterface::GPAInterface()
 {
-    checkGPAError(GPAApiManager::Instance()->LoadApi(GPA_API_OPENCL), "LoadApi");
+    if (GPAApiManager::Instance()->LoadApi(GPA_API_OPENCL) != GPA_STATUS_OK)
+    {
+        throw std::runtime_error("GPA profiling API error: Failed to load GPA .dll (.so) library");
+    }
+
     gpaFunctionTable = GPAApiManager::Instance()->GetFunctionTable(GPA_API_OPENCL);
 
     if (gpaFunctionTable == nullptr)
@@ -21,9 +25,9 @@ GPAInterface::GPAInterface()
         throw std::runtime_error("GPA profiling API error: Failed to retrieve GPA function table");
     }
 
-    checkGPAError(gpaFunctionTable->GPA_Initialize(GPA_INITIALIZE_DEFAULT_BIT), "GPA_Initialize");
+    checkGPAError(gpaFunctionTable->GPA_Initialize(GPA_INITIALIZE_DEFAULT_BIT), "GPA_Initialize", *gpaFunctionTable);
     checkGPAError(gpaFunctionTable->GPA_RegisterLoggingCallback(GPA_LOGGING_ERROR_MESSAGE_AND_TRACE, gpaLoggingCallback),
-        "GPA_RegisterLoggingCallback");
+        "GPA_RegisterLoggingCallback", *gpaFunctionTable);
 }
 
 GPAInterface::~GPAInterface()

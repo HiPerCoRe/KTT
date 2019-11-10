@@ -26,16 +26,17 @@ public:
         sampleId(context.generateNewSampleId()),
         currentPassIndex(0)
     {
-        checkGPAError(gpaFunctions.GPA_CreateSession(this->context, GPA_SESSION_SAMPLE_TYPE_DISCRETE_COUNTER, &session), "GPA_CreateSession");
+        checkGPAError(gpaFunctions.GPA_CreateSession(this->context, GPA_SESSION_SAMPLE_TYPE_DISCRETE_COUNTER, &session), "GPA_CreateSession",
+            gpaFunctions);
         activateCounters();
 
-        checkGPAError(gpaFunctions.GPA_BeginSession(session), "GPA_BeginSession");
-        checkGPAError(gpaFunctions.GPA_GetPassCount(session, &totalPassCount), "GPA_GetPassCount");
+        checkGPAError(gpaFunctions.GPA_BeginSession(session), "GPA_BeginSession", gpaFunctions);
+        checkGPAError(gpaFunctions.GPA_GetPassCount(session, &totalPassCount), "GPA_GetPassCount", gpaFunctions);
     }
 
     ~GPAProfilingInstance()
     {
-        checkGPAError(gpaFunctions.GPA_DeleteSession(session), "GPA_DeleteSession");
+        checkGPAError(gpaFunctions.GPA_DeleteSession(session), "GPA_DeleteSession", gpaFunctions);
     }
 
     void updateState()
@@ -75,29 +76,29 @@ public:
             throw std::runtime_error("GPA profiling API error: Insufficient number of completed kernel runs for profiling counter collection");
         }
 
-        checkGPAError(gpaFunctions.GPA_EndSession(session), "GPA_EndSession");
-        checkGPAError(gpaFunctions.GPA_IsSessionComplete(session), "GPA_IsSessionComplete");
+        checkGPAError(gpaFunctions.GPA_EndSession(session), "GPA_EndSession", gpaFunctions);
+        checkGPAError(gpaFunctions.GPA_IsSessionComplete(session), "GPA_IsSessionComplete", gpaFunctions);
 
         KernelProfilingData result;
         size_t sampleSizeInBytes;
-        checkGPAError(gpaFunctions.GPA_GetSampleResultSize(session, sampleId, &sampleSizeInBytes), "GPA_GetSampleResultSize");
+        checkGPAError(gpaFunctions.GPA_GetSampleResultSize(session, sampleId, &sampleSizeInBytes), "GPA_GetSampleResultSize", gpaFunctions);
 
         std::vector<uint64_t> sampleData(sampleSizeInBytes / sizeof(uint64_t));
-        checkGPAError(gpaFunctions.GPA_GetSampleResult(session, sampleId, sampleSizeInBytes, sampleData.data()), "GPA_GetSampleResult");
+        checkGPAError(gpaFunctions.GPA_GetSampleResult(session, sampleId, sampleSizeInBytes, sampleData.data()), "GPA_GetSampleResult", gpaFunctions);
 
         gpa_uint32 enabledCount;
-        checkGPAError(gpaFunctions.GPA_GetNumEnabledCounters(session, &enabledCount), "GPA_GetNumEnabledCounters");
+        checkGPAError(gpaFunctions.GPA_GetNumEnabledCounters(session, &enabledCount), "GPA_GetNumEnabledCounters", gpaFunctions);
 
         for (gpa_uint32 i = 0; i < enabledCount; ++i)
         {
             gpa_uint32 counterIndex;
-            checkGPAError(gpaFunctions.GPA_GetEnabledIndex(session, i, &counterIndex), "GPA_GetEnabledIndex");
+            checkGPAError(gpaFunctions.GPA_GetEnabledIndex(session, i, &counterIndex), "GPA_GetEnabledIndex", gpaFunctions);
 
             GPA_Data_Type counterType;
-            checkGPAError(gpaFunctions.GPA_GetCounterDataType(context, counterIndex, &counterType), "GPA_GetCounterDataType");
+            checkGPAError(gpaFunctions.GPA_GetCounterDataType(context, counterIndex, &counterType), "GPA_GetCounterDataType", gpaFunctions);
 
             const char* counterName;
-            checkGPAError(gpaFunctions.GPA_GetCounterName(context, counterIndex, &counterName), "GPA_GetCounterName");
+            checkGPAError(gpaFunctions.GPA_GetCounterName(context, counterIndex, &counterName), "GPA_GetCounterName", gpaFunctions);
 
             ProfilingCounterValue value;
             ProfilingCounterType type;
@@ -135,7 +136,7 @@ private:
     {
         for (const auto& counter : counters)
         {
-            checkGPAError(gpaFunctions.GPA_EnableCounterByName(session, counter.c_str()), "GPA_EnableCounterByName");
+            checkGPAError(gpaFunctions.GPA_EnableCounterByName(session, counter.c_str()), "GPA_EnableCounterByName", gpaFunctions);
         }
     }
 };
