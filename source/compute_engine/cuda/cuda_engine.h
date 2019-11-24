@@ -122,7 +122,8 @@ private:
     #ifdef KTT_PROFILING_CUPTI
     std::unique_ptr<CUPTIProfiler> profiler;
     std::unique_ptr<CUPTIMetricInterface> metricInterface;
-    std::map<std::pair<std::string, std::string>, CUPTIProfilingInstance> kernelProfilingInstances;
+    std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
+    std::map<std::pair<std::string, std::string>, std::unique_ptr<CUPTIProfilingInstance>> kernelProfilingInstances;
     #endif // KTT_PROFILING_CUPTI
 
     std::unique_ptr<CUDAProgram> createAndBuildProgram(const std::string& source) const;
@@ -143,6 +144,12 @@ private:
     std::vector<std::pair<std::string, CUpti_MetricID>> getProfilingMetricsForCurrentDevice(const std::vector<std::string>& metricNames);
     static const std::vector<std::string>& getDefaultProfilingMetricNames();
 #endif // KTT_PROFILING_CUPTI_LEGACY
+
+#ifdef KTT_PROFILING_CUPTI
+    void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
+    const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
+    static const std::vector<std::string>& getDefaultProfilingMetrics();
+#endif // KTT_PROFILING_CUPTI
 };
 
 } // namespace ktt

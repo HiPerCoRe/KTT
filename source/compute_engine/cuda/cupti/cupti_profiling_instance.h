@@ -2,6 +2,9 @@
 
 #include <stdexcept>
 #include <vector>
+#include <cupti_profiler_target.h>
+#include <compute_engine/cuda/cuda_utility.h>
+#include <compute_engine/cuda/cupti/cupti_metric_configuration.h>
 
 namespace ktt
 {
@@ -9,24 +12,90 @@ namespace ktt
 class CUPTIProfilingInstance
 {
 public:
-    explicit CUPTIProfilingInstance() :
-        remainingKernelRuns(1),
-        totalKernelRuns(1)
-    {}
-
-    uint64_t getRemainingKernelRuns() const
+    explicit CUPTIProfilingInstance(CUcontext context, const CUPTIMetricConfiguration& configuration) :
+        context(context),
+        configuration(configuration),
+        allPassesSubmitted(false)
     {
-        return remainingKernelRuns;
+        CUpti_Profiler_BeginSession_Params beginParams =
+        {
+            CUpti_Profiler_BeginSession_Params_STRUCT_SIZE,
+            nullptr,
+            context,
+            configuration.counterDataImage.size(),
+            this->configuration.counterDataImage.data(),
+            configuration.scratchBuffer.size(),
+            this->configuration.scratchBuffer.data(),
+            0,
+            nullptr,
+            CUpti_ProfilerRange::CUPTI_AutoRange,
+            CUpti_ProfilerReplayMode::CUPTI_UserReplay,
+            configuration.maxProfiledRanges,
+            configuration.maxProfiledRanges
+        };
+
+        checkCUPTIError(cuptiProfilerBeginSession(&beginParams), "cuptiProfilerBeginSession");
+
+        CUpti_Profiler_SetConfig_Params setParams =
+        {
+            CUpti_Profiler_SetConfig_Params_STRUCT_SIZE,
+            nullptr,
+            context,
+            this->configuration.configImage.data(),
+            configuration.configImage.size()
+        };
+
+        setParams.passIndex = 0;
+        checkCUPTIError(cuptiProfilerSetConfig(&setParams), "cuptiProfilerSetConfig");
     }
 
-    uint64_t getTotalKernelRuns() const
+    ~CUPTIProfilingInstance()
     {
-        return totalKernelRuns;
+        CUpti_Profiler_UnsetConfig_Params unsetParams =
+        {
+            CUpti_Profiler_UnsetConfig_Params_STRUCT_SIZE,
+            nullptr,
+            context
+        };
+
+        checkCUPTIError(cuptiProfilerUnsetConfig(&unsetParams), "cuptiProfilerUnsetConfig");
+
+        CUpti_Profiler_EndSession_Params endParams =
+        {
+            CUpti_Profiler_EndSession_Params_STRUCT_SIZE,
+            nullptr,
+            context
+        };
+
+        checkCUPTIError(cuptiProfilerEndSession(&endParams), "cuptiProfilerEndSession");
+    }
+
+    void collectData() const
+    {
+        CUpti_Profiler_FlushCounterData_Params flushParams =
+        {
+            CUpti_Profiler_FlushCounterData_Params_STRUCT_SIZE,
+            nullptr,
+            context
+        };
+
+        checkCUPTIError(cuptiProfilerFlushCounterData(&flushParams), "cuptiProfilerFlushCounterData");
+    }
+
+    bool isDataReady() const
+    {
+        return allPassesSubmitted;
+    }
+
+    const CUPTIMetricConfiguration& getMetricConfiguration()
+    {
+        return configuration;
     }
 
 private:
-    uint64_t remainingKernelRuns;
-    uint64_t totalKernelRuns;
+    CUcontext context;
+    CUPTIMetricConfiguration configuration;
+    bool allPassesSubmitted;
 };
 
 } // namespace ktt

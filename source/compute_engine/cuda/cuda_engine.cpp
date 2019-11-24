@@ -1089,6 +1089,48 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
 
 #endif // KTT_PROFILING_CUPTI_LEGACY
 
+#ifdef KTT_PROFILING_CUPTI
+
+void CUDAEngine::initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource)
+{
+    auto key = std::make_pair(kernelName, kernelSource);
+    auto profilingInstance = kernelProfilingInstances.find(key);
+
+    if (profilingInstance == kernelProfilingInstances.end())
+    {
+        const CUPTIMetricConfiguration configuration = metricInterface->createMetricConfiguration(getDefaultProfilingMetrics());
+        kernelProfilingInstances.insert(std::make_pair(key, std::make_unique<CUPTIProfilingInstance>(context->getContext(), configuration)));
+        kernelToEventMap.insert(std::make_pair(key, std::vector<EventId>{}));
+    }
+}
+
+const std::pair<std::string, std::string>& CUDAEngine::getKernelFromEvent(const EventId id) const
+{
+    for (const auto& entry : kernelToEventMap)
+    {
+        if (elementExists(id, entry.second))
+        {
+            return entry.first;
+        }
+    }
+
+    throw std::runtime_error(std::string("Corresponding kernel was not found for event with id: ") + std::to_string(id));
+}
+
+const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetrics()
+{
+    static const std::vector<std::string> result
+    {
+        "sm__warps_active.avg.pct_of_peak_sustained_active",
+        "smsp__inst_executed.sum",
+        "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum"
+    };
+
+    return result;
+}
+
+#endif // KTT_PROFILING_CUPTI
+
 } // namespace ktt
 
 #endif // KTT_PLATFORM_CUDA
