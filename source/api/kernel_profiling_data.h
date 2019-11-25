@@ -52,8 +52,15 @@ public:
       */
     const KernelProfilingCounter& getCounter(const std::string& counterName) const;
 
+    /** @fn bool hasRemainingProfilingRuns() const
+      * Checks whether there are more kernel runs needed to gather valid profiling counters.
+      * @return Information whether there are more kernel runs needed to gather valid profiling counters.
+      */
+    bool hasRemainingProfilingRuns() const;
+
     /** @fn uint64_t getRemainingProfilingRuns() const
       * Retrieves number of remaining kernel runs needed to gather valid profiling counters.
+      * Note that this method currently returns incorrect information when using new CUPTI profiling API.
       * @return Number of remaining kernel runs needed to gather valid profiling counters.
       */
     uint64_t getRemainingProfilingRuns() const;

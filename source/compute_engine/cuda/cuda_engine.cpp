@@ -1098,6 +1098,11 @@ void CUDAEngine::initializeKernelProfiling(const std::string& kernelName, const 
 
     if (profilingInstance == kernelProfilingInstances.end())
     {
+        if (!kernelProfilingInstances.empty())
+        {
+            throw std::runtime_error("Profiling of multiple kernel instances is not supported for new CUPTI API");
+        }
+
         const CUPTIMetricConfiguration configuration = metricInterface->createMetricConfiguration(getDefaultProfilingMetrics());
         kernelProfilingInstances.insert(std::make_pair(key, std::make_unique<CUPTIProfilingInstance>(context->getContext(), configuration)));
         kernelToEventMap.insert(std::make_pair(key, std::vector<EventId>{}));

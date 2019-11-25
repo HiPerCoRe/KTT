@@ -2,7 +2,9 @@
 
 #include <cstddef>
 #include <map>
+#include <stdexcept>
 #include <string>
+#include <api/kernel_profiling_counter.h>
 
 namespace ktt
 {
@@ -15,9 +17,22 @@ public:
         rangeCount(0)
     {}
 
-    std::string getHWUnit() const
+    KernelProfilingCounter getCounter() const
     {
-        return name.substr(0, name.find("__"));
+        if (rangeToMetricValue.empty())
+        {
+            throw std::runtime_error("Unable to retrieve profiling counter for uninitialized metric");
+        }
+
+        ProfilingCounterValue value;
+
+        for (const auto& pair : rangeToMetricValue)
+        {
+            value.doubleValue = pair.second;
+            break;
+        }
+
+        return KernelProfilingCounter(name, value, ProfilingCounterType::Double);
     }
 
     std::string name;

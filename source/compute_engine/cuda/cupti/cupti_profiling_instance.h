@@ -1,10 +1,8 @@
 #pragma once
 
-#include <stdexcept>
-#include <vector>
 #include <cupti_profiler_target.h>
-#include <compute_engine/cuda/cuda_utility.h>
 #include <compute_engine/cuda/cupti/cupti_metric_configuration.h>
+#include <compute_engine/cuda/cuda_utility.h>
 
 namespace ktt
 {
@@ -70,7 +68,7 @@ public:
         checkCUPTIError(cuptiProfilerEndSession(&endParams), "cuptiProfilerEndSession");
     }
 
-    void collectData() const
+    void collectData()
     {
         CUpti_Profiler_FlushCounterData_Params flushParams =
         {
@@ -80,14 +78,20 @@ public:
         };
 
         checkCUPTIError(cuptiProfilerFlushCounterData(&flushParams), "cuptiProfilerFlushCounterData");
+        configuration.dataCollected = true;
     }
 
     bool isDataReady() const
     {
-        return allPassesSubmitted;
+        return configuration.dataCollected;
     }
 
-    const CUPTIMetricConfiguration& getMetricConfiguration()
+    CUcontext getContext() const
+    {
+        return context;
+    }
+
+    const CUPTIMetricConfiguration& getMetricConfiguration() const
     {
         return configuration;
     }

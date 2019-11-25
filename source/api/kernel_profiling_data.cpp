@@ -52,6 +52,11 @@ const KernelProfilingCounter& KernelProfilingData::getCounter(const std::string&
     throw std::runtime_error(std::string("Profiling counter with the following name does not exist: ") + counterName);
 }
 
+bool KernelProfilingData::hasRemainingProfilingRuns() const
+{
+    return remainingProfilingRuns > 0;
+}
+
 uint64_t KernelProfilingData::getRemainingProfilingRuns() const
 {
     return remainingProfilingRuns;
