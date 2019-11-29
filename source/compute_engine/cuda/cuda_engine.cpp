@@ -1165,26 +1165,15 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
     static const std::vector<std::string> result
     {
         "achieved_occupancy",
+        "alu_fu_utilization",
         "branch_efficiency",
-        "sm_efficiency",
+        "double_precision_fu_utilization",
+        "dram_read_transactions",
         "dram_utilization",
+        "dram_write_transactions",
         "gld_efficiency",
         "gst_efficiency",
-        "dram_read_transactions",
-        "dram_write_transactions",
-        "shared_utilization",
-        "l1_shared_utilization",
-        "shared_efficiency",
-        "shared_load_transactions",
-        "shared_store_transactions",
-        "tex_fu_utilization",
-        "l2_utilization",
-        "alu_fu_utilization",
         "half_precision_fu_utilization",
-        "single_precision_fu_utilization",
-        "double_precision_fu_utilization",
-        "ldst_fu_utilization",
-        "special_fu_utilization",
         "inst_executed",
         "inst_fp_16",
         "inst_fp_32",
@@ -1192,7 +1181,18 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
         "inst_integer",
         "inst_inter_thread_communication",
         "inst_misc",
-        "inst_replay_overhead"
+        "inst_replay_overhead",
+        "l1_shared_utilization",
+        "l2_utilization",
+        "ldst_fu_utilization",
+        "shared_efficiency",
+        "shared_load_transactions",
+        "shared_store_transactions",
+        "shared_utilization",
+        "single_precision_fu_utilization",
+        "sm_efficiency",
+        "special_fu_utilization",
+        "tex_fu_utilization"
     };
     return result;
 }
@@ -1234,9 +1234,28 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingCounters()
 {
     static const std::vector<std::string> result
     {
-        "sm__warps_active.avg.pct_of_peak_sustained_active",
-        "smsp__inst_executed.sum",
-        "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum"
+        "dram__sectors_read.sum", // dram_read_transactions
+        "dram__sectors_write.sum", // dram_write_transactions
+        "dram__throughput.avg.pct_of_peak_sustained_elapsed", // dram_utilization
+        "l1tex__data_pipe_lsu_wavefronts_mem_shared.avg.pct_of_peak_sustained_elapsed", // shared_utilization
+        "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum", // shared_load_transactions
+        "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_st.sum", // shared_store_transactions
+        "lts__t_sectors.avg.pct_of_peak_sustained_elapsed", // l2_utilization
+        "sm__warps_active.avg.pct_of_peak_sustained_active", // achieved_occupancy
+        "smsp__cycles_active.avg.pct_of_peak_sustained_elapsed", // sm_efficiency
+        "smsp__inst_executed_pipe_fp16.sum", // half_precision_fu_utilization
+        "smsp__inst_executed_pipe_fp64.avg.pct_of_peak_sustained_active", // double_precision_fu_utilization
+        "smsp__inst_executed_pipe_lsu.avg.pct_of_peak_sustained_active", // ldst_fu_utilization
+        "smsp__inst_executed_pipe_tex.avg.pct_of_peak_sustained_active", // tex_fu_utilization
+        "smsp__inst_executed_pipe_xu.avg.pct_of_peak_sustained_active", // special_fu_utilization
+        "smsp__inst_executed.sum", // inst_executed
+        "smsp__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active", // single_precision_fu_utilization
+        "smsp__sass_thread_inst_executed_op_fp16_pred_on.sum", // inst_fp_16
+        "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum", // inst_fp_32
+        "smsp__sass_thread_inst_executed_op_fp64_pred_on.sum", // inst_fp_64
+        "smsp__sass_thread_inst_executed_op_integer_pred_on.sum", // inst_integer
+        "smsp__sass_thread_inst_executed_op_inter_thread_communication_pred_on.sum", // inst_inter_thread_communication
+        "smsp__sass_thread_inst_executed_op_misc_pred_on.sum" // inst_misc
     };
 
     return result;
