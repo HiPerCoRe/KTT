@@ -706,10 +706,12 @@ private:
 
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {
-        if (!std::is_trivially_copyable<T>() || typeid(T) == typeid(bool))
+        static_assert(std::is_trivially_copyable<T>(), "Unsupported argument data type");
+        
+        if (typeid(T) == typeid(bool))
         {
-            std::cerr << "Unsupported argument data type" << std::endl;
-            throw std::runtime_error("Unsupported argument data type");
+            std::cerr << "Bool argument data type is not supported" << std::endl;
+            throw std::runtime_error("Bool argument data type is not supported");
         }
 
         if (!std::is_arithmetic<T>())

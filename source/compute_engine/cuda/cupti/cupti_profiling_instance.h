@@ -12,8 +12,7 @@ class CUPTIProfilingInstance
 public:
     explicit CUPTIProfilingInstance(CUcontext context, const CUPTIMetricConfiguration& configuration) :
         context(context),
-        configuration(configuration),
-        allPassesSubmitted(false)
+        configuration(configuration)
     {
         CUpti_Profiler_BeginSession_Params beginParams =
         {
@@ -86,6 +85,17 @@ public:
         return configuration.dataCollected;
     }
 
+    uint64_t getRemainingPasses() const
+    {
+        if (isDataReady())
+        {
+            return 0;
+        }
+
+        // Currently there is no way to retrieve total number of passes needed in new CUPTI API
+        return 1;
+    }
+
     CUcontext getContext() const
     {
         return context;
@@ -99,7 +109,6 @@ public:
 private:
     CUcontext context;
     CUPTIMetricConfiguration configuration;
-    bool allPassesSubmitted;
 };
 
 } // namespace ktt

@@ -143,7 +143,13 @@ std::vector<CUPTIMetric> CUPTIMetricInterface::getMetricData(const CUPTIMetricCo
 
     for (size_t metricIndex = 0; metricIndex < metricNames.size(); ++metricIndex)
     {
-        parseMetricNameString(metricNames[metricIndex], parsedNames[metricIndex], isolated, keepInstances);
+        const bool success = parseMetricNameString(metricNames[metricIndex], parsedNames[metricIndex], isolated, keepInstances);
+
+        if (!success)
+        {
+            throw std::runtime_error(std::string("Unable to parse metric name ") + metricNames[metricIndex]);
+        }
+
         metricNamePtrs.push_back(parsedNames[metricIndex].c_str());
         result[metricIndex].name = metricNames[metricIndex];
         result[metricIndex].rangeCount = params.numRanges;
@@ -436,7 +442,13 @@ void CUPTIMetricInterface::getRawMetricRequests(const std::vector<std::string>& 
 
     for (const auto& metricName : metricNames)
     {
-        parseMetricNameString(metricName, parsedName, isolated, keepInstances);
+        const bool success = parseMetricNameString(metricName, parsedName, isolated, keepInstances);
+
+        if (!success)
+        {
+            throw std::runtime_error(std::string("Unable to parse metric name ") + metricName);
+        }
+
         keepInstances = true; // Bug in collection with collection of metrics without instances, keep it to true
 
         NVPW_MetricsContext_GetMetricProperties_Begin_Params params =
