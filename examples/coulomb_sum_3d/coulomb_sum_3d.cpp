@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 #if USE_PROFILING == 0
     const int atoms = 4000;
 #else
-    const int atoms = 400; /* faster execution of slowly profiled kernel */
+    const int atoms = 40; /* faster execution of slowly profiled kernel */
 #endif
     const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
     const ktt::DimensionVector workGroupDimensions;

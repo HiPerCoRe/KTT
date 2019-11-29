@@ -66,8 +66,13 @@ int main(int argc, char** argv)
     }
 
     // Declare data variables
-    const uint32_t kSizeX = 8192; // Matrix dimension X
+    #if USE_PROFILING == 0
+    const uint32_t kSizeX = 4096; // Matrix dimension X
     const uint32_t kSizeY = 4096; // Matrix dimension Y
+    #else
+    const uint32_t kSizeX = 2048; // Matrix dimension X
+    const uint32_t kSizeY = 2048; // Matrix dimension Y
+    #endif
 
     const ktt::DimensionVector ndRangeDimensions(kSizeX, kSizeY);
     const ktt::DimensionVector workGroupDimensions;
@@ -105,11 +110,8 @@ int main(int argc, char** argv)
     tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
 
     #if USE_PROFILING == 1
-    if (computeAPI == ktt::ComputeAPI::CUDA)
-    {
-        printf("Executing with profiling switched ON.\n");
-        tuner.setKernelProfiling(true);
-    }
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
     #endif
 
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);

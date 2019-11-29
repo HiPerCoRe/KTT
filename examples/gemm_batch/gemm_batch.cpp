@@ -115,7 +115,7 @@ public:
         localSize.setSizeY(y);
         localSize.setSizeZ(z);
 
-#if PROFILING == 1
+#if USE_PROFILING == 1
         runKernelWithProfiling(kernelId, globalSize, localSize);
 #else
         runKernel(kernelId, globalSize, localSize);
@@ -185,11 +185,8 @@ int main(int argc, char** argv)
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     #if USE_PROFILING == 1
-    if (computeAPI == ktt::ComputeAPI::CUDA)
-    {
-        printf("Executing with profiling switched ON.\n");
-        tuner.setKernelProfiling(true);
-    }
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
     #endif
 
     // create kernel

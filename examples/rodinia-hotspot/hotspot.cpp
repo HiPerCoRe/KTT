@@ -6,7 +6,6 @@
 
 #include "tuner_api.h"
 #include "hotspot.h"
-#include "hotspot_tunable.h"
 #include "hotspot_reference.h"
 
 #if defined(_MSC_VER)
@@ -27,6 +26,8 @@
 
 #define RAPID_TEST 0
 #define USE_PROFILING 0
+
+#include "hotspot_tunable.h"
 
 int main(int argc, char** argv)
 {
@@ -79,11 +80,8 @@ int main(int argc, char** argv)
   tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
 
   #if USE_PROFILING == 1
-  if (computeAPI == ktt:ComputeAPI::CUDA)
-  {
-    printf("Executing with profiling switched ON.\n");
-    tuner.setKernelProfiling(true);
-  }
+  printf("Executing with profiling switched ON.\n");
+  tuner.setKernelProfiling(true);
   #endif
 
   tuner.setCompilerOptions("-I./");

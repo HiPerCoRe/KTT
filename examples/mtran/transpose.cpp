@@ -79,11 +79,8 @@ int main(int argc, char **argv)
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     #if USE_PROFILING == 1
-    if (computeAPI == ktt::ComputeAPI::CUDA)
-    {
-        printf("Executing with profiling switched ON.\n");
-        tuner.setKernelProfiling(true);
-    }
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
     #endif
 
     // Create kernel and configure input/output

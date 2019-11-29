@@ -50,7 +50,11 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
+    #if USE_PROFILING == 0
     const int numberOfBodies = 128 * 1024;
+    #else
+    const int numberOfBodies = 128 * 1024 / 8;
+    #endif
     // Total NDRange size matches number of grid points
     const ktt::DimensionVector ndRangeDimensions(numberOfBodies);
     const ktt::DimensionVector workGroupDimensions;
@@ -113,11 +117,11 @@ int main(int argc, char** argv)
     else
     {
         tuner.setCompilerOptions("-use_fast_math");
-        #if USE_PROFILING == 1
-        printf("Executing with profiling switched ON.\n");
-        tuner.setKernelProfiling(true);
-        #endif
     }
+    #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+    #endif
 
     // Add two kernels to tuner, one of the kernels acts as reference kernel
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "nbody_kernel", ndRangeDimensions, workGroupDimensions);

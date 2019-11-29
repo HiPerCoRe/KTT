@@ -84,8 +84,6 @@ class tunableHotspot : public ktt::TuningManipulator {
 
     void tune() {
         tuner->tuneKernel(kernelId);
-        tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-        tuner->printResult(kernelId, std::string("reduction_output.csv"), ktt::PrintFormat::CSV);
     }
 
     ktt::KernelId getKernelId() const {

@@ -24,8 +24,13 @@
 #define USE_PROFILING 0
 
 /* Problem size. */
-#define N 16384
-#define M 16384
+#if USE_PROFILING == 0
+    #define N 16384
+    #define M 16384
+#else
+    #define N 4096
+    #define M 4096
+#endif
 
 /* Thread block dimensions */
 #define WORK_GROUP_X 256
@@ -196,11 +201,8 @@ int main(int argc, char** argv)
     tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
 
     #if USE_PROFILING == 1
-    if (computeAPI == ktt::ComputeAPI::CUDA)
-    {
-        printf("Executing with profiling switched ON.\n");
-        tuner.setKernelProfiling(true);
-    }
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
     #endif
 
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
@@ -234,7 +236,11 @@ int main(int argc, char** argv)
 	ktt::KernelId kernelId = tuner.addComposition("BicgPolyBenchAndFused", std::vector<ktt::KernelId>{kernel1Id, kernel2Id, kernelFusedId, kernelFusedRefId, kernelReduction1Id, kernelReduction2Id}, std::make_unique<BicgManipulator>(kernel1Id, kernel2Id, kernelFusedId, kernelFusedRefId, kernelReduction1Id, kernelReduction2Id));
 	
 	// Add parameters to tuned kernel
-	tuner.addParameter(kernelId, "FUSED", std::vector<size_t>{ 0, 1, 2 });
+#if USE_PROFILING == 1
+	tuner.addParameter(kernelId, "FUSED", std::vector<size_t>{ /*0, 1,*/ 2 }); // non-optimized kernels are not profiled
+#else
+    tuner.addParameter(kernelId, "FUSED", std::vector<size_t>{ 0, 1, 2 });
+#endif
 	tuner.addParameter(kernelId, "BICG_BATCH", std::vector<size_t>{ 1, 2, 4, 8, 16, 32, 64 });
 	tuner.addParameter(kernelId, "USE_SHARED_MATRIX", std::vector<size_t>{ 0, 1 });
 	tuner.addParameter(kernelId, "USE_SHARED_VECTOR_1", std::vector<size_t>{ 0, 1 });
@@ -275,6 +281,15 @@ int main(int argc, char** argv)
 	tuner.setCompositionKernelArguments(kernelId, kernelFusedRefId, { AId, x2Id, y2Id, x1Id, y1Id, nFusedRefId, mFusedRefId }); // reference fused kernel uses swapped M and N. same for x1/x2 and y1/y2
 	tuner.setCompositionKernelArguments(kernelId, kernel1Id, std::vector<ktt::ArgumentId>{AId, x1Id, y1Id, mRefId, nRefId});
 	tuner.setCompositionKernelArguments(kernelId, kernel2Id, std::vector<ktt::ArgumentId>{AId, x2Id, y2Id, mRefId, nRefId});
+
+#if USE_PROFILING == 1
+    tuner.setCompositionKernelProfiling(kernelId, kernelFusedId, true);
+    tuner.setCompositionKernelProfiling(kernelId, kernelReduction1Id, false);
+    tuner.setCompositionKernelProfiling(kernelId, kernelReduction2Id, false);
+    tuner.setCompositionKernelProfiling(kernelId, kernelFusedRefId, false);
+    tuner.setCompositionKernelProfiling(kernelId, kernel1Id, false);
+    tuner.setCompositionKernelProfiling(kernelId, kernel2Id, false);
+#endif
 
 #if RAPID_TEST == 0
 	// Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.

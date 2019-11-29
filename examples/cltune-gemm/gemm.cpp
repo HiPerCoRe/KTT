@@ -56,9 +56,15 @@ int main(int argc, char** argv)
     }
 
     // Declare data variables
+    #if USE_PROFILING == 0
     const uint32_t kSizeM = 2048;
     const uint32_t kSizeN = 2048;
     const uint32_t kSizeK = 2048;
+    #else
+    const uint32_t kSizeM = 2048/2;
+    const uint32_t kSizeN = 2048/2;
+    const uint32_t kSizeK = 2048/2;
+    #endif
 
     const ktt::DimensionVector ndRangeDimensions(kSizeM, kSizeN);
     const ktt::DimensionVector workGroupDimensions;
@@ -85,11 +91,8 @@ int main(int argc, char** argv)
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     #if USE_PROFILING == 1
-    if (computeAPI == ktt::ComputeAPI::CUDA)
-    {
-        printf("Executing with profiling switched ON.\n");
-        tuner.setKernelProfiling(true);
-    }
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
     #endif
 
     // Add two kernels to tuner, one of the kernels acts as reference kernel

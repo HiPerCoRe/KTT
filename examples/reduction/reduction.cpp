@@ -44,7 +44,11 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
+    #if USE_PROFILING == 0
     const int n = 64*1024*1024;
+    #else
+    const int n = 64*1024*1024/4;
+    #endif
     const int nAlloc = ((n+16-1)/16)*16; // padd to longest vector size
     std::vector<float> src(nAlloc, 0.0f);
     std::vector<float> dst(nAlloc, 0.0f);
@@ -59,11 +63,8 @@ int main(int argc, char** argv)
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     #if USE_PROFILING == 1
-    if (computeAPI == ktt::ComputeAPI::CUDA)
-    {
-        printf("Executing with profiling switched ON.\n");
-        tuner.setKernelProfiling(true);
-    }
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
     #endif
 
     // create kernel
