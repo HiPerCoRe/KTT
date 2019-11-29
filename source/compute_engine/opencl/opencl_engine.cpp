@@ -1079,7 +1079,6 @@ const std::vector<std::string>& OpenCLEngine::getDefaultGPAProfilingCounters()
         "SALUBusy",
         "FetchSize",
         "WriteSize",
-        "CacheHit",
         "MemUnitBusy",
         "MemUnitStalled",
         "WriteUnitStalled"
