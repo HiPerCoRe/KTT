@@ -390,7 +390,7 @@ void ManipulatorInterfaceImplementation::swapKernelArguments(const KernelId id, 
 
     std::vector<ArgumentId> argumentIds = dataPointer->second.getArgumentIds();
     
-    if (!elementExists(argumentIdFirst, argumentIds) || !elementExists(argumentIdSecond, argumentIds))
+    if (!containsElement(argumentIds, argumentIdFirst) || !containsElement(argumentIds, argumentIdSecond))
     {
         throw std::runtime_error(std::string("One of the following argument ids is not associated with this kernel: ")
             + std::to_string(argumentIdFirst) + ", " + std::to_string(argumentIdSecond) + ", kernel id: " + std::to_string(id));

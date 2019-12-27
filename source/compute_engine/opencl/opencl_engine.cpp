@@ -1055,7 +1055,7 @@ const std::pair<std::string, std::string>& OpenCLEngine::getKernelFromEvent(cons
 {
     for (const auto& entry : kernelToEventMap)
     {
-        if (elementExists(id, entry.second))
+        if (containsElement(entry.second, id))
         {
             return entry.first;
         }

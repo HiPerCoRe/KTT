@@ -36,7 +36,7 @@ bool ConfigurationStorage::isConfigurationCompatible(const KernelConfiguration& 
 
     for (const auto& pair : generatedPairs)
     {
-        if (!elementExists(pair.getName(), currentPack.getParameterNames()))
+        if (!containsElement(currentPack.getParameterNames(), pair.getName()))
         {
             continue;
         }
@@ -45,7 +45,7 @@ bool ConfigurationStorage::isConfigurationCompatible(const KernelConfiguration& 
 
         for (const auto& processedPack : processedPacks)
         {
-            if (elementExists(pair.getName(), processedPack.getParameterNames()))
+            if (containsElement(processedPack.getParameterNames(), pair.getName()))
             {
                 sharedPair = true;
                 break;

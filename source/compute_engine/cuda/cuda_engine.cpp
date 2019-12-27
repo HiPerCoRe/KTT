@@ -1117,7 +1117,7 @@ const std::pair<std::string, std::string>& CUDAEngine::getKernelFromEvent(const 
 {
     for (const auto& entry : kernelToEventMap)
     {
-        if (elementExists(id, entry.second))
+        if (containsElement(entry.second, id))
         {
             return entry.first;
         }
@@ -1221,7 +1221,7 @@ const std::pair<std::string, std::string>& CUDAEngine::getKernelFromEvent(const 
 {
     for (const auto& entry : kernelToEventMap)
     {
-        if (elementExists(id, entry.second))
+        if (containsElement(entry.second, id))
         {
             return entry.first;
         }

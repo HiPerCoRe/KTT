@@ -282,7 +282,7 @@ ComputationResult ConfigurationManager::getBestComputationResult(const KernelId 
 
     if (!result.getCompositionCompilationData().empty())
     {
-        ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
             result.getCompositionCompilationData(), result.getCompositionProfilingData());
     }
 
@@ -686,7 +686,7 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
     {
         for (const auto& bestPair : bestConfiguration.getParameterPairs())
         {
-            if (!elementExists(bestPair.getName(), addedParameters))
+            if (!containsElement(addedParameters, bestPair.getName()))
             {
                 result.push_back(bestPair);
                 addedParameters.push_back(bestPair.getName());
@@ -696,7 +696,7 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
 
     for (const auto& parameter : kernel.getParameters())
     {
-        if (!elementExists(parameter.getName(), addedParameters))
+        if (!containsElement(addedParameters, parameter.getName()))
         {
             result.push_back(ParameterPair(parameter.getName(), parameter.getValues().at(0)));
             addedParameters.push_back(parameter.getName());
@@ -719,7 +719,7 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
     {
         for (const auto& bestPair : bestConfiguration.getParameterPairs())
         {
-            if (!elementExists(bestPair.getName(), addedParameters))
+            if (!containsElement(addedParameters, bestPair.getName()))
             {
                 result.push_back(bestPair);
                 addedParameters.push_back(bestPair.getName());
@@ -729,7 +729,7 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
 
     for (const auto& parameter : composition.getParameters())
     {
-        if (!elementExists(parameter.getName(), addedParameters))
+        if (!containsElement(addedParameters, parameter.getName()))
         {
             result.push_back(ParameterPair(parameter.getName(), parameter.getValues().at(0)));
             addedParameters.push_back(parameter.getName());

@@ -329,7 +329,7 @@ uint64_t KernelRunner::runManipulatorKernelProfiling(const Kernel& kernel, const
     manipulatorInterfaceImplementation->setProfiledKernels(std::set<KernelId>{kernelId});
     computeEngine->initializeKernelProfiling(kernelData);
     uint64_t remainingCount = computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource());
-    uint64_t manipulatorDuration;
+    uint64_t manipulatorDuration = 0;
 
     if (mode == KernelRunMode::OfflineTuning)
     {
@@ -393,7 +393,7 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
         std::vector<KernelArgument*> newArguments = argumentManager->getArguments(argumentIds);
         for (const auto newArgument : newArguments)
         {
-            if (!elementExists(newArgument, allArguments))
+            if (!containsElement(allArguments, newArgument))
             {
                 allArguments.push_back(newArgument);
             }
@@ -447,7 +447,7 @@ uint64_t KernelRunner::runCompositionProfiling(const KernelComposition& composit
         computeEngine->initializeKernelProfiling(kernelData);
     }
     uint64_t remainingCount = getRemainingKernelProfilingRunsForComposition(composition, compositionData);
-    uint64_t manipulatorDuration;
+    uint64_t manipulatorDuration = 0;
 
     if (mode == KernelRunMode::OfflineTuning)
     {

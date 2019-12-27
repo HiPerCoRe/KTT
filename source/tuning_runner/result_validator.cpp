@@ -185,10 +185,10 @@ void ResultValidator::computeReferenceResultWithClass(const Kernel& kernel)
 
     for (const auto argumentId : referenceArgumentIds)
     {
-        if (!elementExists(argumentId, kernel.getArgumentIds()))
+        if (!containsElement(kernel.getArgumentIds(), argumentId))
         {
             throw std::runtime_error(std::string("Reference argument with id: ") + std::to_string(argumentId)
-                + " is not assciated with kernel with id: " + std::to_string(kernel.getId()));
+                + " is not associated with kernel with id: " + std::to_string(kernel.getId()));
         }
         if (argumentManager->getArgument(argumentId).getAccessType() == ArgumentAccessType::ReadOnly)
         {
@@ -233,10 +233,10 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
 
     for (const auto argumentId : referenceArgumentIds)
     {
-        if (!elementExists(argumentId, kernel.getArgumentIds()))
+        if (!containsElement(kernel.getArgumentIds(), argumentId))
         {
             throw std::runtime_error(std::string("Reference argument with id: ") + std::to_string(argumentId)
-                + " is not assciated with kernel with id: " + std::to_string(kernel.getId()));
+                + " is not associated with kernel with id: " + std::to_string(kernel.getId()));
         }
         if (argumentManager->getArgument(argumentId).getAccessType() == ArgumentAccessType::ReadOnly)
         {
@@ -248,7 +248,9 @@ void ResultValidator::computeReferenceResultWithKernel(const Kernel& kernel)
     kernelRunner->setPersistentArgumentUsage(false);
     const bool profiling = kernelRunner->getKernelProfiling();
     kernelRunner->setKernelProfiling(false);
-    kernelRunner->runKernel(referenceKernelId, KernelRunMode::ResultValidation, referenceParameters, std::vector<OutputDescriptor>{});
+
+    std::vector<OutputDescriptor> dummyOutput;
+    kernelRunner->runKernel(referenceKernelId, KernelRunMode::ResultValidation, referenceParameters, dummyOutput);
 
     std::vector<KernelArgument> referenceResult;
     for (const auto argumentId : referenceArgumentIds)
