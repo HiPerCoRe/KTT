@@ -14,16 +14,16 @@ class VulkanBuffer
 public:
     explicit VulkanBuffer(const VulkanBuffer& source, VkDevice device, const VulkanPhysicalDevice& physicalDevice,
         const VkBufferUsageFlags usageFlags, const VkDeviceSize bufferSize) :
-        kernelArgumentId(source.getKernelArgumentId()),
-        bufferSize(bufferSize),
-        elementSize(source.getElementSize()),
-        dataType(source.getDataType()),
-        memoryLocation(ArgumentMemoryLocation::Host),
-        accessType(source.getAccessType()),
         device(device),
         physicalDevice(&physicalDevice),
         bufferMemory(nullptr),
-        usageFlags(usageFlags)
+        bufferSize(bufferSize),
+        usageFlags(usageFlags),
+        elementSize(source.getElementSize()),
+        kernelArgumentId(source.getKernelArgumentId()),
+        dataType(source.getDataType()),
+        memoryLocation(ArgumentMemoryLocation::Host),
+        accessType(source.getAccessType())
     {
         const VkBufferCreateInfo bufferCreateInfo =
         {
@@ -42,16 +42,16 @@ public:
 
     explicit VulkanBuffer(KernelArgument& kernelArgument, VkDevice device, const VulkanPhysicalDevice& physicalDevice,
         const VkBufferUsageFlags usageFlags) :
-        kernelArgumentId(kernelArgument.getId()),
-        bufferSize(static_cast<VkDeviceSize>(kernelArgument.getDataSizeInBytes())),
-        elementSize(kernelArgument.getElementSizeInBytes()),
-        dataType(kernelArgument.getDataType()),
-        memoryLocation(kernelArgument.getMemoryLocation()),
-        accessType(kernelArgument.getAccessType()),
         device(device),
         physicalDevice(&physicalDevice),
         bufferMemory(nullptr),
-        usageFlags(usageFlags)
+        bufferSize(static_cast<VkDeviceSize>(kernelArgument.getDataSizeInBytes())),
+        usageFlags(usageFlags),
+        elementSize(kernelArgument.getElementSizeInBytes()),
+        kernelArgumentId(kernelArgument.getId()),
+        dataType(kernelArgument.getDataType()),
+        memoryLocation(kernelArgument.getMemoryLocation()),
+        accessType(kernelArgument.getAccessType())
     {
         const VkBufferCreateInfo bufferCreateInfo =
         {

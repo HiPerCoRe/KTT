@@ -13,8 +13,8 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElement
     argumentMemoryLocation(memoryLocation),
     argumentAccessType(accessType),
     argumentUploadType(uploadType),
-    dataOwned(true),
     referencedData(nullptr),
+    dataOwned(true),
     persistentFlag(false)
 {
     if (numberOfElements == 0)
@@ -34,8 +34,8 @@ KernelArgument::KernelArgument(const ArgumentId id, void* data, const size_t num
     argumentMemoryLocation(memoryLocation),
     argumentAccessType(accessType),
     argumentUploadType(uploadType),
-    dataOwned(dataOwned),
     referencedData(nullptr),
+    dataOwned(dataOwned),
     persistentFlag(false)
 {
     if (numberOfElements == 0)
@@ -63,8 +63,8 @@ KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size
     argumentMemoryLocation(memoryLocation),
     argumentAccessType(accessType),
     argumentUploadType(uploadType),
-    dataOwned(true),
     referencedData(nullptr),
+    dataOwned(true),
     persistentFlag(false)
 {
     if (numberOfElements == 0 && data != nullptr)

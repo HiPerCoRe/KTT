@@ -92,7 +92,6 @@ public:
 private:
     // Attributes
     DeviceIndex deviceIndex;
-    uint32_t queueCount;
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;

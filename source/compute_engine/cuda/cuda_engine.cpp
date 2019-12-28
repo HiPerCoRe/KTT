@@ -17,7 +17,6 @@ namespace ktt
 
 CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
     deviceIndex(deviceIndex),
-    queueCount(queueCount),
     compilerOptions(std::string("--gpu-architecture=compute_30")),
     globalSizeType(GlobalSizeType::CUDA),
     globalSizeCorrection(false),

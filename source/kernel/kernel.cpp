@@ -173,8 +173,8 @@ uint64_t Kernel::getIndexForConfiguration(const std::vector<ParameterPair>& conf
 
         for (size_t i = 0; i < valuesCount; ++i)
         {
-            if (parameter.hasValuesDouble() && floatEquals(parameter.getValuesDouble()[i], currentPair->getValueDouble())
-                || !parameter.hasValuesDouble() && parameter.getValues()[i] == currentPair->getValue())
+            if ((parameter.hasValuesDouble() && floatEquals(parameter.getValuesDouble()[i], currentPair->getValueDouble()))
+                || (!parameter.hasValuesDouble() && parameter.getValues()[i] == currentPair->getValue()))
             {
                 result += multiplier * i;
                 break;

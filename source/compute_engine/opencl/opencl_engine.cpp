@@ -16,7 +16,6 @@ namespace ktt
 OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     platformIndex(platformIndex),
     deviceIndex(deviceIndex),
-    queueCount(queueCount),
     compilerOptions(std::string("")),
     globalSizeType(GlobalSizeType::OpenCL),
     globalSizeCorrection(false),

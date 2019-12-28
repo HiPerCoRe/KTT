@@ -11,7 +11,6 @@ namespace ktt
 
 VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
     deviceIndex(deviceIndex),
-    queueCount(queueCount),
     compilerOptions(std::string("")),
     globalSizeType(GlobalSizeType::Vulkan),
     globalSizeCorrection(false),
