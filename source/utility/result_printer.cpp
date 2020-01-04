@@ -17,7 +17,7 @@ void ResultPrinter::printResult(const KernelId id, std::ostream& outputTarget, c
         throw std::runtime_error(std::string("No tuning results found for kernel with id: ") + std::to_string(id));
     }
 
-    std::vector<KernelResult> results = kernelResults.find(id)->second;
+    const std::vector<KernelResult>& results = kernelResults.find(id)->second;
 
     switch (format)
     {
@@ -34,22 +34,17 @@ void ResultPrinter::printResult(const KernelId id, std::ostream& outputTarget, c
 
 void ResultPrinter::addResult(const KernelId id, const KernelResult& result)
 {
-    if (kernelResults.find(id) == kernelResults.end())
+    if (!containsKey(kernelResults, id))
     {
         kernelResults.insert(std::make_pair(id, std::vector<KernelResult>{}));
     }
 
-    kernelResults.find(id)->second.push_back(result);
+    kernelResults[id].push_back(result);
 }
 
 void ResultPrinter::setResult(const KernelId id, const std::vector<KernelResult>& results)
 {
-    if (kernelResults.find(id) != kernelResults.end())
-    {
-        kernelResults.erase(id);
-    }
-
-    kernelResults.insert(std::make_pair(id, results));
+    kernelResults[id] = results;
 }
 
 void ResultPrinter::setTimeUnit(const TimeUnit unit)
@@ -64,10 +59,7 @@ void ResultPrinter::setInvalidResultPrinting(const bool flag)
 
 void ResultPrinter::clearResults(const KernelId id)
 {
-    if (kernelResults.find(id) != kernelResults.end())
-    {
-        kernelResults.erase(id);
-    }
+    kernelResults.erase(id);
 }
 
 void ResultPrinter::printVerbose(const std::vector<KernelResult>& results, std::ostream& outputTarget) const
@@ -121,7 +113,8 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
     // Header
     outputTarget << "Kernel name," << "Computation duration (" << getTimeUnitTag(timeUnit) << ")";
 
-    size_t kernelCount = results.at(0).getConfiguration().getGlobalSizes().size();
+    const size_t kernelCount = results.at(0).getConfiguration().getGlobalSizes().size();
+
     if (kernelCount == 1)
     {
         outputTarget << ",Global size,Local size";
@@ -191,7 +184,22 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
             }
         }
     }
-    outputTarget << ",maxWorkGroupSize,localMemorySize,privateMemorySize,constantMemorySize,registersCount";
+
+    if (!results.at(0).getCompositionCompilationData().empty())
+    {
+        for (const auto& pair : results.at(0).getCompositionCompilationData())
+        {
+            outputTarget << ",Maximum work-group size " << pair.first
+                << ",Local memory size " << pair.first
+                << ",Private memory size " << pair.first
+                << ",Constant memory size " << pair.first
+                << ",Registers count " << pair.first;
+        }
+    }
+    else
+    {
+        outputTarget << ",Maximum work-group size,Local memory size,Private memory size,Constant memory size,Registers count";
+    }
 
     outputTarget << std::endl;
 
@@ -222,8 +230,19 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
                 printProfilingCountersCSV(outputTarget, pair.second.getAllCounters());
             }
         }
-        outputTarget << ",";
-        printCompilationResultCSV(outputTarget, result.getCompilationData());
+
+        if (!result.getCompositionCompilationData().empty())
+        {
+            for (const auto& pair : result.getCompositionCompilationData())
+            {
+                printCompilationDataCSV(outputTarget, pair.second);
+            }
+        }
+        else
+        {
+            printCompilationDataCSV(outputTarget, result.getCompilationData());
+        }
+        
         outputTarget << std::endl;
     }
 
@@ -303,7 +322,22 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
                 }
             }
         }
-        outputTarget << ",maxWorkGroupSize,localMemorySize,privateMemorySize,constantMemorySize,registersCount";
+        
+        if (!results.at(0).getCompositionCompilationData().empty())
+        {
+            for (const auto& pair : results.at(0).getCompositionCompilationData())
+            {
+                outputTarget << ",Maximum work-group size " << pair.first
+                    << ",Local memory size " << pair.first
+                    << ",Private memory size " << pair.first
+                    << ",Constant memory size " << pair.first
+                    << ",Registers count " << pair.first;
+            }
+        }
+        else
+        {
+            outputTarget << ",Maximum work-group size,Local memory size,Private memory size,Constant memory size,Registers count";
+        }
 
         outputTarget << std::endl;
 
@@ -343,8 +377,19 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
                     printProfilingCountersCSV(outputTarget, pair.second.getAllCounters());
                 }
             }
-            outputTarget << ",";
-            printCompilationResultCSV(outputTarget, result.getCompilationData());
+
+            if (!result.getCompositionCompilationData().empty())
+            {
+                for (const auto& pair : result.getCompositionCompilationData())
+                {
+                    printCompilationDataCSV(outputTarget, pair.second);
+                }
+            }
+            else
+            {
+                printCompilationDataCSV(outputTarget, result.getCompilationData());
+            }
+
             outputTarget << std::endl;
         }
     }
@@ -482,13 +527,14 @@ void ResultPrinter::printProfilingCountersCSV(std::ostream& outputTarget, const 
     }
 }
 
-void ResultPrinter::printCompilationResultCSV(std::ostream& outputTarget, const KernelCompilationData& compResult) const
+void ResultPrinter::printCompilationDataCSV(std::ostream& outputTarget, const KernelCompilationData& data) const
 {
-    outputTarget    << compResult.maxWorkGroupSize << ","
-                    << compResult.localMemorySize << ","
-                    << compResult.privateMemorySize << ","
-                    << compResult.constantMemorySize << ","
-                    << compResult.registersCount;
+    outputTarget << ","
+        << data.maxWorkGroupSize << ","
+        << data.localMemorySize << ","
+        << data.privateMemorySize << ","
+        << data.constantMemorySize << ","
+        << data.registersCount;
 }
 
 KernelResult ResultPrinter::getBestResult(const std::vector<KernelResult>& results) const

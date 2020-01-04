@@ -33,7 +33,7 @@ private:
     void printConfigurationCSV(std::ostream& outputTarget, const KernelConfiguration& configuration,
         const std::vector<ParameterPair>& orderedPairs) const;
     void printProfilingCountersCSV(std::ostream& outputTarget, const std::vector<KernelProfilingCounter>& counters) const;
-    void printCompilationResultCSV(std::ostream& outputTarget, const KernelCompilationData& compResult) const;
+    void printCompilationDataCSV(std::ostream& outputTarget, const KernelCompilationData& data) const;
     KernelResult getBestResult(const std::vector<KernelResult>& results) const;
 };
 
