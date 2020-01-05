@@ -46,6 +46,20 @@ bool containsKey(const std::map<Key, Value>& map, const Key& key)
     return map.find(key) != map.cend();
 }
 
+template <typename Key, typename Value>
+bool containsValue(const std::map<Key, Value>& map, const Value& value)
+{
+    for (const auto& pair : map)
+    {
+        if (pair.second == value)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 template <typename T>
 bool floatEquals(const T first, const T second, const T epsilon)
 {

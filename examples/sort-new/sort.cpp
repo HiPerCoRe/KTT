@@ -100,7 +100,6 @@ int main(int argc, char** argv)
   ktt::ArgumentId countersId = tuner.addArgumentVector(std::vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
   ktt::ArgumentId counterSumsId = tuner.addArgumentVector(std::vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
   ktt::ArgumentId blockOffsetsId = tuner.addArgumentVector(std::vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
-  ktt::ArgumentId scanBlocksSumId = tuner.addArgumentVector(std::vector<unsigned int*>(1), ktt::ArgumentAccessType::ReadWrite);
   
   ktt::ArgumentId scanNumBlocksId = tuner.addArgumentScalar(1);
   ktt::ArgumentId numElementsId = tuner.addArgumentScalar(1);
@@ -112,7 +111,7 @@ int main(int argc, char** argv)
   ktt::ArgumentId storeSumId = tuner.addArgumentScalar(1);
 
   
-  ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, size, keysOutId, valuesOutId, keysInId, valuesInId, scanNumBlocksId, countersId, counterSumsId, blockOffsetsId, scanBlocksSumId, startBitId, scanOutDataId, scanInDataId, scanOneBlockSumId, numElementsId, fullBlockId, storeSumId));
+  ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, size, keysOutId, valuesOutId, keysInId, valuesInId, scanNumBlocksId, countersId, counterSumsId, blockOffsetsId, startBitId, scanOutDataId, scanInDataId, scanOneBlockSumId, numElementsId, fullBlockId, storeSumId));
 
   //radixSortBlocks
   tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<size_t>{nbitsId, startBitId, keysOutId, valuesOutId, keysInId, valuesInId});

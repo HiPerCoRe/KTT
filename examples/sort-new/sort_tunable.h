@@ -20,7 +20,6 @@ class TunableSort : public ktt::TuningManipulator {
         const ktt::ArgumentId countersId,
         const ktt::ArgumentId counterSumsId,
         const ktt::ArgumentId blockOffsetsId,
-        const ktt::ArgumentId scanBlocksSumId,
         const ktt::ArgumentId startBitId,
         const ktt::ArgumentId scanOutDataId,
         const ktt::ArgumentId scanInDataId,
@@ -38,7 +37,6 @@ class TunableSort : public ktt::TuningManipulator {
       countersId(countersId),
       counterSumsId(counterSumsId),
       blockOffsetsId(blockOffsetsId),
-      scanBlockSumsId(scanBlocksSumId),
       startBitId(startBitId),
       scanOutDataId(scanOutDataId),
       scanInDataId(scanInDataId),
@@ -195,7 +193,6 @@ void scanArrayRecursive(std::vector<uint> &outArray, std::vector<uint> &inArray,
     ktt::ArgumentId countersId;
     ktt::ArgumentId counterSumsId;
     ktt::ArgumentId blockOffsetsId;
-    ktt::ArgumentId scanBlockSumsId;
     ktt::ArgumentId startBitId;
     ktt::ArgumentId scanOutDataId;
     std::vector<uint> scanOutData;
