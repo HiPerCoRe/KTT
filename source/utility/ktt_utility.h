@@ -60,6 +60,12 @@ bool containsValue(const std::map<Key, Value>& map, const Value& value)
     return false;
 }
 
+template <typename Key>
+bool containsKey(const std::set<Key>& set, const Key& key)
+{
+    return set.find(key) != set.cend();
+}
+
 template <typename T>
 bool floatEquals(const T first, const T second, const T epsilon)
 {

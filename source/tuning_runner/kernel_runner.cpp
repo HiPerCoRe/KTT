@@ -441,10 +441,15 @@ uint64_t KernelRunner::runCompositionProfiling(const KernelComposition& composit
     const std::vector<KernelRuntimeData>& compositionData, const std::vector<OutputDescriptor>& output)
 {
     const KernelId compositionId = composition.getId();
-    manipulatorInterfaceImplementation->setProfiledKernels(composition.getProfiledKernels());
+    const std::set<KernelId>& profiledKernels = composition.getProfiledKernels();
+    manipulatorInterfaceImplementation->setProfiledKernels(profiledKernels);
+
     for (const auto& kernelData : compositionData)
     {
-        computeEngine->initializeKernelProfiling(kernelData);
+        if (containsKey(profiledKernels, kernelData.getId()))
+        {
+            computeEngine->initializeKernelProfiling(kernelData);
+        }
     }
     uint64_t remainingCount = getRemainingKernelProfilingRunsForComposition(composition, compositionData);
     uint64_t manipulatorDuration = 0;
