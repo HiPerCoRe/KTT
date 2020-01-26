@@ -18,10 +18,13 @@ layout(std430, binding = 2) writeonly buffer outputResult
     float result[];
 };
 
-layout(constant_id = 0) const float scalar = 0.0f;
+layout(push_constant) uniform PushConstants
+{
+    float scalar;
+} pushConstants;
 
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
-    result[index] = a[index] + b[index] + scalar;
+    result[index] = a[index] + b[index] + pushConstants.scalar;
 }

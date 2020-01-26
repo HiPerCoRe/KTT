@@ -68,6 +68,7 @@ EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
     std::vector<VulkanBuffer*> pipelineArguments = getPipelineArguments(argumentPointers);
     const uint32_t bindingCount = static_cast<uint32_t>(pipelineArguments.size());
     std::vector<KernelArgument*> scalarArguments = getScalarArguments(argumentPointers);
+    VulkanPushConstant pushConstant(scalarArguments);
 
     if (kernelCacheFlag)
     {
@@ -81,7 +82,7 @@ EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
             auto cacheShader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getUnmodifiedSource(),
                 kernelData.getLocalSize(), kernelData.getParameterPairs());
             auto cachePipeline = std::make_unique<VulkanComputePipeline>(device->getDevice(), cacheLayout->getDescriptorSetLayout(),
-                cacheShader->getShaderModule(), kernelData.getName(), scalarArguments);
+                cacheShader->getShaderModule(), kernelData.getName(), pushConstant);
             auto cacheEntry = std::make_unique<VulkanPipelineCacheEntry>(std::move(cachePipeline), std::move(cacheLayout), std::move(cacheShader));
             pipelineCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::move(cacheEntry)));
         }
@@ -94,14 +95,14 @@ EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
         shader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getUnmodifiedSource(),
             kernelData.getLocalSize(), kernelData.getParameterPairs());
         pipelineUnique = std::make_unique<VulkanComputePipeline>(device->getDevice(), layout->getDescriptorSetLayout(), shader->getShaderModule(),
-            kernelData.getName(), scalarArguments);
+            kernelData.getName(), pushConstant);
         pipeline = pipelineUnique.get();
     }
 
     pipeline->bindArguments(pipelineArguments);
     overheadTimer.stop();
 
-    return enqueuePipeline(*pipeline, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, overheadTimer.getElapsedTime());
+    return enqueuePipeline(*pipeline, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, overheadTimer.getElapsedTime(), pushConstant);
 }
 
 KernelResult VulkanEngine::getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
@@ -569,7 +570,7 @@ void VulkanEngine::setKernelProfilingCounters(const std::vector<std::string>&)
 }
 
 EventId VulkanEngine::enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-    const QueueId queue, const uint64_t kernelLaunchOverhead)
+    const QueueId queue, const uint64_t kernelLaunchOverhead, const VulkanPushConstant& pushConstant)
 {
     if (queue >= queues.size())
     {
@@ -594,7 +595,7 @@ EventId VulkanEngine::enqueuePipeline(VulkanComputePipeline& pipeline, const std
 
     Logger::logDebug("Launching kernel " + pipeline.getShaderName() + ", event id: " + std::to_string(eventId));
     auto command = std::make_unique<VulkanCommandBufferHolder>(device->getDevice(), commandPool->getCommandPool());
-    pipeline.recordDispatchShaderCommand(command->getCommandBuffer(), correctedGlobalSize, queryPool->getQueryPool());
+    pipeline.recordDispatchShaderCommand(command->getCommandBuffer(), correctedGlobalSize, pushConstant, queryPool->getQueryPool());
     queues[queue].submitSingleCommand(command->getCommandBuffer(), kernelEvent->getFence().getFence());
 
     kernelEvents.insert(std::make_pair(eventId, std::move(kernelEvent)));

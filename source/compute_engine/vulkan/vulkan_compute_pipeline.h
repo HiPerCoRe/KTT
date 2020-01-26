@@ -6,6 +6,7 @@
 #include <compute_engine/vulkan/vulkan_buffer.h>
 #include <compute_engine/vulkan/vulkan_descriptor_pool.h>
 #include <compute_engine/vulkan/vulkan_descriptor_set_holder.h>
+#include <compute_engine/vulkan/vulkan_push_constant.h>
 #include <compute_engine/vulkan/vulkan_specialization_info.h>
 #include <compute_engine/vulkan/vulkan_utility.h>
 
@@ -26,7 +27,7 @@ public:
     {}
 
     explicit VulkanComputePipeline(VkDevice device, VkDescriptorSetLayout descriptorSetLayout, VkShaderModule shader,
-        const std::string& shaderName, const std::vector<KernelArgument*>& scalarArguments) :
+        const std::string& shaderName, const VulkanPushConstant& pushConstant) :
         device(device),
         descriptorSetLayout(descriptorSetLayout),
         shaderName(shaderName),
@@ -40,12 +41,11 @@ public:
             0,
             1,
             &descriptorSetLayout,
-            0,
-            nullptr
+            1,
+            &pushConstant.getRange()
         };
 
         checkVulkanError(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout), "vkCreatePipelineLayout");
-        VulkanSpecializationInfo specializationInfo(scalarArguments);
 
         const VkPipelineShaderStageCreateInfo shaderStageCreateInfo =
         {
@@ -55,7 +55,7 @@ public:
             VK_SHADER_STAGE_COMPUTE_BIT,
             shader,
             shaderName.c_str(),
-            &specializationInfo.specializationInfo
+            nullptr
         };
 
         const VkComputePipelineCreateInfo pipelineCreateInfo =
@@ -119,7 +119,8 @@ public:
         }
     }
 
-    void recordDispatchShaderCommand(VkCommandBuffer commandBuffer, const std::vector<size_t>& globalSize, VkQueryPool queryPool)
+    void recordDispatchShaderCommand(VkCommandBuffer commandBuffer, const std::vector<size_t>& globalSize, const VulkanPushConstant& pushConstant,
+        VkQueryPool queryPool)
     {
         const VkCommandBufferBeginInfo commandBufferBeginInfo =
         {
@@ -136,6 +137,12 @@ public:
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, static_cast<uint32_t>(sets.size()), sets.data(), 0,
             nullptr);
+
+        if (pushConstant.getRange().size > 0)
+        {
+            vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, pushConstant.getRange().size,
+                pushConstant.getData().data());
+        }
 
         vkCmdResetQueryPool(commandBuffer, queryPool, 0, 2);
         vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, queryPool, 0);

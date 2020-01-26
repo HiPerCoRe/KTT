@@ -19,6 +19,7 @@
 #include <compute_engine/vulkan/vulkan_instance.h>
 #include <compute_engine/vulkan/vulkan_pipeline_cache_entry.h>
 #include <compute_engine/vulkan/vulkan_physical_device.h>
+#include <compute_engine/vulkan/vulkan_push_constant.h>
 #include <compute_engine/vulkan/vulkan_query_pool.h>
 #include <compute_engine/vulkan/vulkan_queue.h>
 #include <compute_engine/vulkan/vulkan_semaphore.h>
@@ -113,7 +114,7 @@ private:
     mutable std::map<EventId, std::unique_ptr<VulkanBuffer>> stagingBuffers;
 
     EventId enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-        const QueueId queue, const uint64_t kernelLaunchOverhead);
+        const QueueId queue, const uint64_t kernelLaunchOverhead, const VulkanPushConstant& pushConstant);
     KernelResult createKernelResult(const EventId id) const;
     std::vector<VulkanBuffer*> getPipelineArguments(const std::vector<KernelArgument*>& argumentPointers);
     VulkanBuffer* findBuffer(const ArgumentId id) const;
