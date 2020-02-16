@@ -220,6 +220,23 @@ void OpenCLEngine::clearEvents()
 {
     kernelEvents.clear();
     bufferEvents.clear();
+
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    kernelToEventMap.clear();
+
+    for (const auto& profilingInstance : kernelProfilingInstances)
+    {
+        // There is currently no way to abort active profiling session without performing all passes, so dummy passes are launched
+        while (profilingInstance.second->getRemainingPassCount() > 0)
+        {
+            launchDummyPass(profilingInstance.first.first, profilingInstance.first.second);
+        }
+
+        profilingInstance.second->generateProfilingData();
+    }
+
+    kernelProfilingInstances.clear();
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 uint64_t OpenCLEngine::uploadArgument(KernelArgument& kernelArgument)
@@ -699,7 +716,6 @@ EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData
     auto eventPointer = kernelEvents.find(id);
     Logger::logDebug(std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
     checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
-    profilingInstance->second->updateState();
 
     return id;
     #else
@@ -1093,6 +1109,12 @@ const std::vector<std::string>& OpenCLEngine::getDefaultGPAProfilingCounters()
     };
 
     return result;
+}
+
+void OpenCLEngine::launchDummyPass(const std::string& kernelName, const std::string& kernelSource)
+{
+    auto profilingInstance = kernelProfilingInstances.find({kernelName, kernelSource});
+    auto profilingPass = std::make_unique<GPAProfilingPass>(gpaInterface->getFunctionTable(), *profilingInstance->second);
 }
 
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY

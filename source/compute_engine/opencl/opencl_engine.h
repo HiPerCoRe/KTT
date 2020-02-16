@@ -136,6 +136,7 @@ private:
     void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
     const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
     static const std::vector<std::string>& getDefaultGPAProfilingCounters();
+    void launchDummyPass(const std::string& kernelName, const std::string& kernelSource);
     #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 };
 

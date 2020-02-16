@@ -31,6 +31,7 @@ public:
     {
         checkGPAError(gpaFunctions.GPA_EndSample(commandList), "GPA_EndSample", gpaFunctions);
         checkGPAError(gpaFunctions.GPA_EndCommandList(commandList), "GPA_EndCommandList", gpaFunctions);
+        instance.updateState();
     }
 
 private:
