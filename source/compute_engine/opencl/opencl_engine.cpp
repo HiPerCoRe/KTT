@@ -723,6 +723,15 @@ uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string& kernel
     #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
+bool OpenCLEngine::hasAccurateRemainingKernelProfilingRuns() const
+{
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    return true;
+#else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+}
+
 KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
 {
     #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)

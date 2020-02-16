@@ -559,6 +559,11 @@ uint64_t VulkanEngine::getRemainingKernelProfilingRuns(const std::string&, const
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
 
+bool VulkanEngine::hasAccurateRemainingKernelProfilingRuns() const
+{
+    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
+}
+
 KernelResult VulkanEngine::getKernelResultWithProfiling(const EventId, const std::vector<OutputDescriptor>&)
 {
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");

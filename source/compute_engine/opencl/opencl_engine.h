@@ -84,6 +84,7 @@ public:
     EventId runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const QueueId queue) override;
     uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) override;
+    bool hasAccurateRemainingKernelProfilingRuns() const override;
     KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) override;
     void setKernelProfilingCounters(const std::vector<std::string>& counterNames) override;
 

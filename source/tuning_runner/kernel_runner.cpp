@@ -338,10 +338,9 @@ uint64_t KernelRunner::runManipulatorKernelProfiling(const Kernel& kernel, const
             manipulatorDuration = launchManipulator(kernelId, manipulator);
             uint64_t newCount = computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource());
 
-            if (newCount == remainingCount)
+            if (computeEngine->hasAccurateRemainingKernelProfilingRuns() && newCount == remainingCount)
             {
-                throw std::runtime_error(
-                    std::string("Tuning manipulator does not collect any kernel profiling data for kernel with the following id: ")
+                throw std::runtime_error(std::string("Tuning manipulator does not collect any kernel profiling data for kernel with the following id: ")
                     + std::to_string(kernelId));
             }
 
@@ -359,10 +358,9 @@ uint64_t KernelRunner::runManipulatorKernelProfiling(const Kernel& kernel, const
         manipulatorDuration = launchManipulator(kernelId, manipulator);
         uint64_t newCount = computeEngine->getRemainingKernelProfilingRuns(kernelData.getName(), kernelData.getSource());
 
-        if (newCount == remainingCount)
+        if (computeEngine->hasAccurateRemainingKernelProfilingRuns() && newCount == remainingCount)
         {
-            throw std::runtime_error(
-                std::string("Tuning manipulator does not collect any kernel profiling data for kernel with the following id: ")
+            throw std::runtime_error(std::string("Tuning manipulator does not collect any kernel profiling data for kernel with the following id: ")
                 + std::to_string(kernelId));
         }
     }
@@ -461,10 +459,9 @@ uint64_t KernelRunner::runCompositionProfiling(const KernelComposition& composit
             manipulatorDuration = launchManipulator(compositionId, manipulator);
             uint64_t newCount = getRemainingKernelProfilingRunsForComposition(composition, compositionData);
 
-            if (newCount == remainingCount)
+            if (computeEngine->hasAccurateRemainingKernelProfilingRuns() && newCount == remainingCount)
             {
-                throw std::runtime_error(
-                    std::string("Tuning manipulator does not collect any kernel profiling data for composition with the following id: ")
+                throw std::runtime_error(std::string("Tuning manipulator does not collect any kernel profiling data for composition with the following id: ")
                     + std::to_string(compositionId));
             }
 
@@ -482,10 +479,9 @@ uint64_t KernelRunner::runCompositionProfiling(const KernelComposition& composit
         manipulatorDuration = launchManipulator(compositionId, manipulator);
         uint64_t newCount = getRemainingKernelProfilingRunsForComposition(composition, compositionData);
 
-        if (newCount == remainingCount)
+        if (computeEngine->hasAccurateRemainingKernelProfilingRuns() && newCount == remainingCount)
         {
-            throw std::runtime_error(
-                std::string("Tuning manipulator does not collect any kernel profiling data for composition with the following id: ")
+            throw std::runtime_error(std::string("Tuning manipulator does not collect any kernel profiling data for composition with the following id: ")
                 + std::to_string(compositionId));
         }
     }

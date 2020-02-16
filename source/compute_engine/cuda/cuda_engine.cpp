@@ -765,6 +765,17 @@ uint64_t CUDAEngine::getRemainingKernelProfilingRuns(const std::string& kernelNa
     #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
+bool CUDAEngine::hasAccurateRemainingKernelProfilingRuns() const
+{
+#ifdef KTT_PROFILING_CUPTI_LEGACY
+    return true;
+#elif KTT_PROFILING_CUPTI
+    return false;
+#else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_CUPTI_LEGACY
+}
+
 KernelResult CUDAEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
 {
     #ifdef KTT_PROFILING_CUPTI_LEGACY
