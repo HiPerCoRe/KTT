@@ -51,6 +51,11 @@ public:
         }
     }
 
+    ~CUPTIProfilingInstance()
+    {
+        checkCUPTIError(cuptiEventGroupSetsDestroy(eventGroupSets), "cuptiEventGroupSetsDestroy");
+    }
+
     void updateState()
     {
         if (remainingKernelRuns == 0)
