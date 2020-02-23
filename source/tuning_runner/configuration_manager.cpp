@@ -174,7 +174,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const Kernel& 
                 throw std::runtime_error(std::string("No configurations left to explore and no best configuration recorded for kernel with id: ")
                     + std::to_string(id));
             }
-            return std::get<0>(configurationPair->second);
+            return configurationPair->second.getConfiguration();
         }
         else
         {
@@ -233,7 +233,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelCo
                 throw std::runtime_error(std::string("No configurations left to explore and no best configuration recorded for kernel with id: ")
                     + std::to_string(id));
             }
-            return std::get<0>(configurationPair->second);
+            return configurationPair->second.getConfiguration();
         }
         else
         {
@@ -256,7 +256,7 @@ KernelConfiguration ConfigurationManager::getBestConfiguration(const Kernel& ker
         return getCurrentConfiguration(kernel);
     }
 
-    return std::get<0>(configurationPair->second);
+    return configurationPair->second.getConfiguration();
 }
 
 KernelConfiguration ConfigurationManager::getBestConfiguration(const KernelComposition& composition)
@@ -267,7 +267,7 @@ KernelConfiguration ConfigurationManager::getBestConfiguration(const KernelCompo
         return getCurrentConfiguration(composition);
     }
 
-    return std::get<0>(configurationPair->second);
+    return configurationPair->second.getConfiguration();
 }
 
 ComputationResult ConfigurationManager::getBestComputationResult(const KernelId id) const
@@ -278,13 +278,19 @@ ComputationResult ConfigurationManager::getBestComputationResult(const KernelId 
         return ComputationResult("", std::vector<ParameterPair>{}, "Valid result does not exist");
     }
 
-    return ComputationResult(std::get<1>(configurationPair->second), std::get<0>(configurationPair->second).getParameterPairs(),
-        std::get<2>(configurationPair->second));
+    const KernelResult& result = configurationPair->second;
+
+    if (!result.getCompositionCompilationData().empty())
+    {
+        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+            result.getCompositionCompilationData(), result.getCompositionProfilingData());
+    }
+
+    return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
+        result.getCompilationData(), result.getProfilingData());
 }
 
-void ConfigurationManager::calculateNextConfiguration(const Kernel& kernel, const bool successFlag, const KernelConfiguration& previousConfiguration,
-    const uint64_t previousDuration, const KernelProfilingData& previousProfilingData,
-    const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData)
+void ConfigurationManager::calculateNextConfiguration(const Kernel& kernel, const KernelResult& previousResult)
 {
     const size_t id = kernel.getId();
     auto searcherPair = searchers.find(id);
@@ -296,27 +302,24 @@ void ConfigurationManager::calculateNextConfiguration(const Kernel& kernel, cons
     auto configurationPair = bestConfigurations.find(id);
     if (configurationPair == bestConfigurations.end())
     {
-        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previousConfiguration, kernel.getName(), previousDuration)));
+        bestConfigurations.insert(std::make_pair(id, previousResult));
     }
-    else if (std::get<2>(configurationPair->second) > previousDuration)
+    else if (configurationPair->second.getComputationDuration() > previousResult.getComputationDuration())
     {
         bestConfigurations.erase(id);
-        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previousConfiguration, kernel.getName(), previousDuration)));
+        bestConfigurations.insert(std::make_pair(id, previousResult));
     }
 
     if (hasPackConfigurations(id))
     {
         ConfigurationStorage& storage = configurationStorages.find(id)->second;
-        storage.storeConfiguration(std::make_pair(previousConfiguration, previousDuration));
+        storage.storeConfiguration(std::make_pair(previousResult.getConfiguration(), previousResult.getComputationDuration()));
     }
 
-    searcherPair->second->calculateNextConfiguration(successFlag, previousConfiguration, static_cast<double>(previousDuration),
-        previousProfilingData, previousCompositionProfilingData);
+    searcherPair->second->calculateNextConfiguration(previousResult);
 }
 
-void ConfigurationManager::calculateNextConfiguration(const KernelComposition& composition, const bool successFlag,
-    const KernelConfiguration& previousConfiguration, const uint64_t previousDuration, const KernelProfilingData& previousProfilingData,
-    const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData)
+void ConfigurationManager::calculateNextConfiguration(const KernelComposition& composition, const KernelResult& previousResult)
 {
     const size_t id = composition.getId();
     auto searcherPair = searchers.find(id);
@@ -329,22 +332,21 @@ void ConfigurationManager::calculateNextConfiguration(const KernelComposition& c
     auto configurationPair = bestConfigurations.find(id);
     if (configurationPair == bestConfigurations.end())
     {
-        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previousConfiguration, composition.getName(), previousDuration)));
+        bestConfigurations.insert(std::make_pair(id, previousResult));
     }
-    else if (std::get<2>(configurationPair->second) > previousDuration)
+    else if (configurationPair->second.getComputationDuration() > previousResult.getComputationDuration())
     {
         bestConfigurations.erase(id);
-        bestConfigurations.insert(std::make_pair(id, std::make_tuple(previousConfiguration, composition.getName(), previousDuration)));
+        bestConfigurations.insert(std::make_pair(id, previousResult));
     }
 
     if (hasPackConfigurations(id))
     {
         ConfigurationStorage& storage = configurationStorages.find(id)->second;
-        storage.storeConfiguration(std::make_pair(previousConfiguration, previousDuration));
+        storage.storeConfiguration(std::make_pair(previousResult.getConfiguration(), previousResult.getComputationDuration()));
     }
 
-    searcherPair->second->calculateNextConfiguration(successFlag, previousConfiguration, static_cast<double>(previousDuration),
-        previousProfilingData, previousCompositionProfilingData);
+    searcherPair->second->calculateNextConfiguration(previousResult);
 }
 
 void ConfigurationManager::initializeOrderedKernelPacks(const Kernel& kernel)
@@ -684,7 +686,7 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
     {
         for (const auto& bestPair : bestConfiguration.getParameterPairs())
         {
-            if (!elementExists(bestPair.getName(), addedParameters))
+            if (!containsElement(addedParameters, bestPair.getName()))
             {
                 result.push_back(bestPair);
                 addedParameters.push_back(bestPair.getName());
@@ -694,7 +696,7 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
 
     for (const auto& parameter : kernel.getParameters())
     {
-        if (!elementExists(parameter.getName(), addedParameters))
+        if (!containsElement(addedParameters, parameter.getName()))
         {
             result.push_back(ParameterPair(parameter.getName(), parameter.getValues().at(0)));
             addedParameters.push_back(parameter.getName());
@@ -717,7 +719,7 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
     {
         for (const auto& bestPair : bestConfiguration.getParameterPairs())
         {
-            if (!elementExists(bestPair.getName(), addedParameters))
+            if (!containsElement(addedParameters, bestPair.getName()))
             {
                 result.push_back(bestPair);
                 addedParameters.push_back(bestPair.getName());
@@ -727,7 +729,7 @@ std::vector<ParameterPair> ConfigurationManager::getExtraParameterPairs(const Ke
 
     for (const auto& parameter : composition.getParameters())
     {
-        if (!elementExists(parameter.getName(), addedParameters))
+        if (!containsElement(addedParameters, parameter.getName()))
         {
             result.push_back(ParameterPair(parameter.getName(), parameter.getValues().at(0)));
             addedParameters.push_back(parameter.getName());

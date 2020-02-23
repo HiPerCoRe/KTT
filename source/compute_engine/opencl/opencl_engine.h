@@ -18,6 +18,12 @@
 #include <compute_engine/opencl/opencl_program.h>
 #include <compute_engine/compute_engine.h>
 
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+#include <compute_engine/opencl/gpa/gpa_interface.h>
+#include <compute_engine/opencl/gpa/gpa_profiling_context.h>
+#include <compute_engine/opencl/gpa/gpa_profiling_instance.h>
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+
 namespace ktt
 {
 
@@ -78,6 +84,7 @@ public:
     EventId runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const QueueId queue) override;
     uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) override;
+    bool hasAccurateRemainingKernelProfilingRuns() const override;
     KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) override;
     void setKernelProfilingCounters(const std::vector<std::string>& counterNames) override;
 
@@ -87,7 +94,6 @@ private:
     // Attributes
     PlatformIndex platformIndex;
     DeviceIndex deviceIndex;
-    uint32_t queueCount;
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
@@ -103,11 +109,19 @@ private:
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> kernelEvents;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> bufferEvents;
 
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    std::unique_ptr<GPAInterface> gpaInterface;
+    std::unique_ptr<GPAProfilingContext> gpaProfilingContext;
+    std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
+    std::map<std::pair<std::string, std::string>, std::unique_ptr<GPAProfilingInstance>> kernelProfilingInstances;
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+
     // Helper methods
     void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument);
     void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers);
     EventId enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const QueueId queue, const uint64_t kernelLaunchOverhead) const;
+    KernelResult createKernelResult(const EventId id) const;
     static PlatformInfo getOpenCLPlatformInfo(const PlatformIndex platform);
     static DeviceInfo getOpenCLDeviceInfo(const PlatformIndex platform, const DeviceIndex device);
     static std::vector<OpenCLPlatform> getOpenCLPlatforms();
@@ -117,6 +131,13 @@ private:
     void setKernelArgumentVector(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const;
     bool loadBufferFromCache(const ArgumentId id, OpenCLKernel& kernel) const;
     void checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
+
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
+    const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
+    static const std::vector<std::string>& getDefaultGPAProfilingCounters();
+    void launchDummyPass(const std::string& kernelName, const std::string& kernelSource);
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 };
 
 } // namespace ktt

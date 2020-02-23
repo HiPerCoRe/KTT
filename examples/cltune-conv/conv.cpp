@@ -8,12 +8,23 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/cltune-conv/conv.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../examples/cltune-conv/conv_reference.cl"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_KERNEL_FILE "../../examples/cltune-conv/conv.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../../examples/cltune-conv/conv_reference.cl"
+    const std::string kernelFilePrefix = "../";
 #endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/cltune-conv/conv.cu";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/cltune-conv/conv_reference.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/cltune-conv/conv.cl";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/cltune-conv/conv_reference.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
+
+#define RAPID_TEST 0
+#define USE_PROFILING 0
 
 // Settings (synchronise these with "conv.cpp", "conv.cl" and "conv_reference.cl")
 #define HFS (3)        // Half filter size
@@ -34,8 +45,8 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
-    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
+    std::string kernelFile = defaultKernelFile;
+    std::string referenceKernelFile = defaultReferenceKernelFile;
 
     if (argc >= 2)
     {
@@ -55,8 +66,13 @@ int main(int argc, char** argv)
     }
 
     // Declare data variables
-    const uint32_t kSizeX = 8192; // Matrix dimension X
+    #if USE_PROFILING == 0
+    const uint32_t kSizeX = 4096; // Matrix dimension X
     const uint32_t kSizeY = 4096; // Matrix dimension Y
+    #else
+    const uint32_t kSizeX = 2048; // Matrix dimension X
+    const uint32_t kSizeY = 2048; // Matrix dimension Y
+    #endif
 
     const ktt::DimensionVector ndRangeDimensions(kSizeX, kSizeY);
     const ktt::DimensionVector workGroupDimensions;
@@ -90,7 +106,14 @@ int main(int argc, char** argv)
     for (auto& item : coeff) {item = item / sum;}
 
     // Create tuner object for chosen platform and device
-    ktt::Tuner tuner(platformIndex, deviceIndex);
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+
+    #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+    #endif
+
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     // Add two kernels to tuner, one of the kernels acts as reference kernel
@@ -159,15 +182,23 @@ int main(int argc, char** argv)
     ktt::ArgumentId coeffId = tuner.addArgumentVector(coeff, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId matBId = tuner.addArgumentVector(mat_b, ktt::ArgumentAccessType::WriteOnly);
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(matAId, true);
+    tuner.persistArgument(coeffId, true);
+    tuner.persistArgument(matBId, true);
+#endif
+
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{kSizeXId, kSizeYId, matAId, coeffId, matBId}); 
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{kSizeXId, kSizeYId, matAId, coeffId, matBId}); 
 
+#if RAPID_TEST == 0
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
 
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{matBId});
+#endif
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);

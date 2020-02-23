@@ -8,6 +8,7 @@ KernelResult::KernelResult() :
     kernelName(""),
     computationDuration(std::numeric_limits<uint64_t>::max()),
     overhead(0),
+    kernelTime(0),
     errorMessage(""),
     valid(false)
 {}
@@ -17,6 +18,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     configuration(configuration),
     computationDuration(std::numeric_limits<uint64_t>::max()),
     overhead(0),
+    kernelTime(0),
     errorMessage(""),
     valid(true)
 {}
@@ -25,6 +27,7 @@ KernelResult::KernelResult(const std::string& kernelName, uint64_t computationDu
     kernelName(kernelName),
     computationDuration(computationDuration),
     overhead(0),
+    kernelTime(0),
     errorMessage(""),
     valid(true)
 {}
@@ -34,6 +37,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     configuration(configuration),
     computationDuration(std::numeric_limits<uint64_t>::max()),
     overhead(0),
+    kernelTime(0),
     errorMessage(errorMessage),
     valid(false)
 {}
@@ -58,9 +62,24 @@ void KernelResult::setOverhead(const uint64_t overhead)
     this->overhead = overhead;
 }
 
+void KernelResult::setKernelTime(const uint64_t kernelTime)
+{
+    this->kernelTime = kernelTime;
+}
+
 void KernelResult::setErrorMessage(const std::string& errorMessage)
 {
     this->errorMessage = errorMessage;
+}
+
+void KernelResult::setCompilationData(const KernelCompilationData& compilationData)
+{
+    this->compilationData = compilationData;
+}
+
+void KernelResult::setCompositionKernelCompilationData(const KernelId id, const KernelCompilationData& compilationData)
+{
+    this->compositionCompilationData[id] = compilationData;
 }
 
 void KernelResult::setProfilingData(const KernelProfilingData& profilingData)
@@ -98,9 +117,36 @@ uint64_t KernelResult::getOverhead() const
     return overhead;
 }
 
+uint64_t KernelResult::getKernelTime() const
+{
+    return kernelTime;
+}
+
 const std::string& KernelResult::getErrorMessage() const
 {
     return errorMessage;
+}
+
+const KernelCompilationData& KernelResult::getCompilationData() const
+{
+    return compilationData;
+}
+
+const KernelCompilationData& KernelResult::getCompositionKernelCompilationData(const KernelId id) const
+{
+    const auto kernelCompilationData = compositionCompilationData.find(id);
+
+    if (kernelCompilationData == compositionCompilationData.cend())
+    {
+        throw std::runtime_error(std::string("Compilation data for composition kernel with the following id is not present: ") + std::to_string(id));
+    }
+
+    return kernelCompilationData->second;
+}
+
+const std::map<KernelId, KernelCompilationData>& KernelResult::getCompositionCompilationData() const
+{
+    return compositionCompilationData;
 }
 
 const KernelProfilingData& KernelResult::getProfilingData() const
@@ -132,6 +178,11 @@ bool KernelResult::isValid() const
 void KernelResult::increaseOverhead(const uint64_t overhead)
 {
     this->overhead += overhead;
+}
+
+void KernelResult::increaseKernelTime(const uint64_t kernelTime)
+{
+    this->kernelTime += kernelTime;
 }
 
 } // namespace ktt

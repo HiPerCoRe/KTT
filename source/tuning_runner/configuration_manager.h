@@ -4,11 +4,11 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 #include <api/computation_result.h>
 #include <api/device_info.h>
+#include <dto/kernel_result.h>
 #include <enum/search_method.h>
 #include <kernel/kernel.h>
 #include <kernel/kernel_composition.h>
@@ -43,12 +43,8 @@ public:
     KernelConfiguration getBestConfiguration(const Kernel& kernel);
     KernelConfiguration getBestConfiguration(const KernelComposition& composition);
     ComputationResult getBestComputationResult(const KernelId id) const;
-    void calculateNextConfiguration(const Kernel& kernel, const bool successFlag, const KernelConfiguration& previousConfiguration,
-        const uint64_t previousDuration, const KernelProfilingData& previousProfilingData,
-        const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData);
-    void calculateNextConfiguration(const KernelComposition& composition, const bool successFlag, const KernelConfiguration& previousConfiguration,
-        const uint64_t previousDuration, const KernelProfilingData& previousProfilingDataconst,
-        const std::map<KernelId, KernelProfilingData>& previousCompositionProfilingData);
+    void calculateNextConfiguration(const Kernel& kernel, const KernelResult& previousResult);
+    void calculateNextConfiguration(const KernelComposition& composition, const KernelResult& previousResult);
 
 private:
     // Attributes
@@ -57,7 +53,7 @@ private:
     std::map<KernelId, std::vector<std::pair<size_t, std::string>>> orderedKernelPacks;
     mutable std::map<KernelId, size_t> currentPackIndices;
     std::map<KernelId, std::unique_ptr<Searcher>> searchers;
-    std::map<KernelId, std::tuple<KernelConfiguration, std::string, uint64_t>> bestConfigurations;
+    std::map<KernelId, KernelResult> bestConfigurations;
     std::map<KernelId, ConfigurationStorage> configurationStorages;
     SearchMethod searchMethod;
     std::vector<double> searchArguments;

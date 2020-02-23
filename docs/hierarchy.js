@@ -5,6 +5,7 @@ var hierarchy =
     [ "ktt::DimensionVector", "classktt_1_1_dimension_vector.html", null ],
     [ "ktt::EnableBitfieldOperators< EnumType >", "structktt_1_1_enable_bitfield_operators.html", null ],
     [ "ktt::EnableBitfieldOperators< ValidationMode >", "structktt_1_1_enable_bitfield_operators_3_01_validation_mode_01_4.html", null ],
+    [ "ktt::KernelCompilationData", "structktt_1_1_kernel_compilation_data.html", null ],
     [ "ktt::KernelProfilingCounter", "classktt_1_1_kernel_profiling_counter.html", null ],
     [ "ktt::KernelProfilingData", "classktt_1_1_kernel_profiling_data.html", null ],
     [ "ktt::OutputDescriptor", "classktt_1_1_output_descriptor.html", null ],

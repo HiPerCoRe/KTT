@@ -4,34 +4,32 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 0
-#define USE_PROFILING 0
-
-#if USE_CUDA == 0
-  #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/mtran/mtran_kernel.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../examples/mtran/mtran_reference_kernel.cl"
-  #else
-    #define KTT_KERNEL_FILE "../../examples/mtran/mtran_kernel.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../../examples/mtran/mtran_reference_kernel.cl"
-  #endif
+#if defined(_MSC_VER)
+    const std::string kernelFilePrefix = "";
 #else
-  #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/mtran/mtran_kernel.cu"
-    #define KTT_REFERENCE_KERNEL_FILE "../examples/mtran/mtran_reference_kernel.cu"
-  #else
-    #define KTT_KERNEL_FILE "../../examples/mtran/mtran_kernel.cu"
-    #define KTT_REFERENCE_KERNEL_FILE "../../examples/mtran/mtran_reference_kernel.cu"
-  #endif
+    const std::string kernelFilePrefix = "../";
 #endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/mtran/mtran_kernel.cu";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/mtran/mtran_reference_kernel.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/mtran/mtran_kernel.cl";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/mtran/mtran_reference_kernel.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
+
+#define RAPID_TEST 0
+#define USE_PROFILING 0
 
 int main(int argc, char **argv)
 {
     // Initialize platform index, device index and paths to kernels
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
-    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
+    std::string kernelFile = defaultKernelFile;
+    std::string referenceKernelFile = defaultReferenceKernelFile;
 
     if (argc >= 2)
     {
@@ -76,17 +74,14 @@ int main(int argc, char **argv)
     }
 
     // Create tuner
-#if USE_CUDA == 0
-    ktt::Tuner tuner(platformIndex, deviceIndex);
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
     tuner.setGlobalSizeType(ktt::GlobalSizeType::CUDA);
-#else
-     ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
-  #if USE_PROFILING == 1
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
+    #if USE_PROFILING == 1
     printf("Executing with profiling switched ON.\n");
     tuner.setKernelProfiling(true);
-  #endif
-#endif
-    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+    #endif
 
     // Create kernel and configure input/output
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "mtran", ndRangeDimensions, ktt::DimensionVector(1, 1));
@@ -98,22 +93,30 @@ int main(int argc, char **argv)
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{dstId, srcId, widthId, heightId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{dstId, srcId, widthId, heightId});
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(srcId, true);
+    tuner.persistArgument(dstId, true);
+#endif
+
     // Create tuning space
-    tuner.addParameter(kernelId, "LOCAL_MEM", { 0, 1 });
-#if USE_CUDA == 0
-    tuner.addParameter(kernelId, "VECTOR_TYPE", { 1, 2, 4, 8 });
-#else
-    tuner.addParameter(kernelId, "VECTOR_TYPE", { 1, 2, 4 });
-#endif
-    tuner.addParameter(kernelId, "CR", { 0, 1 });
-#if USE_CUDA == 0
-    tuner.addParameter(kernelId, "PREFETCH", { 0, 1, 2 });
-#endif
+    if (computeAPI == ktt::ComputeAPI::OpenCL)
+    {
+        tuner.addParameter(kernelId, "VECTOR_TYPE", {1, 2, 4, 8});
+        tuner.addParameter(kernelId, "PREFETCH", {0, 1, 2});
+    }
+    else
+    {
+        tuner.addParameter(kernelId, "VECTOR_TYPE", {1, 2, 4});
+    }
+
+    tuner.addParameter(kernelId, "CR", {0, 1});
+    tuner.addParameter(kernelId, "LOCAL_MEM", {0, 1});
     tuner.addParameter(kernelId, "PADD_LOCAL", { 0, 1 });
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 1, 2, 4, 8, 16, 32, 64 });
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
     tuner.addParameter(kernelId, "TILE_SIZE_X", { 1, 2, 4, 8, 16, 32, 64 });
     tuner.addParameter(kernelId, "TILE_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
+    tuner.addParameter(kernelId, "DIAGONAL_MAP", {0, 1});
     
     // Constraint tuning space
     auto xConstraint = [] (std::vector<size_t> v) { return (v[0] == v[1]); };
@@ -141,9 +144,11 @@ int main(int argc, char **argv)
     auto wgSize = [](const std::vector<size_t>& v) {return v[0]*v[1] >= 32;};
     tuner.addConstraint(kernelId, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, wgSize);
 
+#if RAPID_TEST == 0
     // Assign reference and set error check
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001);
+#endif
 
     // Perform tuning
     tuner.tuneKernel(kernelId);

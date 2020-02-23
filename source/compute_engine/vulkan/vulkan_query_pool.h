@@ -12,7 +12,7 @@ class VulkanQueryPool
 public:
     explicit VulkanQueryPool(VkDevice device, const float timestampPeriod) :
         device(device),
-        timestampPeriod(timestampPeriod)
+        timestampPeriod(static_cast<double>(timestampPeriod))
     {
         const VkQueryPoolCreateInfo queryPoolInfo =
         {
@@ -53,7 +53,7 @@ public:
         return queryPool;
     }
 
-    float getTimestampPeriod() const
+    double getTimestampPeriod() const
     {
         return timestampPeriod;
     }
@@ -61,7 +61,7 @@ public:
 private:
     VkDevice device;
     VkQueryPool queryPool;
-    float timestampPeriod;
+    double timestampPeriod;
 };
 
 } // namespace ktt

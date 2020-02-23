@@ -15,9 +15,17 @@
 #endif
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/sort-new/sort_kernel.cu"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_KERNEL_FILE "../../examples/sort-new/sort_kernel.cu"
+    const std::string kernelFilePrefix = "../";
+#endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/sort-new/sort_kernel.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/sort-new/sort_kernel.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
 #endif
 
 int main(int argc, char** argv)
@@ -25,7 +33,7 @@ int main(int argc, char** argv)
   // Initialize platform and device index
   ktt::PlatformIndex platformIndex = 0;
   ktt::DeviceIndex deviceIndex = 0;
-  std::string kernelFile = KTT_KERNEL_FILE;
+  std::string kernelFile = defaultKernelFile;
   int problemSize = 32; // In MiB
 
   if (argc >= 2)
@@ -63,11 +71,9 @@ int main(int argc, char** argv)
   }
 
   // Create tuner object for chosen platform and device
-  ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+  ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
   tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
   tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
-  //tuner.setCompilerOptions("-G");
-  //tuner.setLoggingLevel(ktt::LoggingLevel::Debug); 
 
   // Declare kernels and their dimensions
   std::vector<ktt::KernelId> kernelIds(5);
@@ -94,7 +100,6 @@ int main(int argc, char** argv)
   ktt::ArgumentId countersId = tuner.addArgumentVector(std::vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
   ktt::ArgumentId counterSumsId = tuner.addArgumentVector(std::vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
   ktt::ArgumentId blockOffsetsId = tuner.addArgumentVector(std::vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
-  ktt::ArgumentId scanBlocksSumId = tuner.addArgumentVector(std::vector<unsigned int*>(1), ktt::ArgumentAccessType::ReadWrite);
   
   ktt::ArgumentId scanNumBlocksId = tuner.addArgumentScalar(1);
   ktt::ArgumentId numElementsId = tuner.addArgumentScalar(1);
@@ -106,7 +111,7 @@ int main(int argc, char** argv)
   ktt::ArgumentId storeSumId = tuner.addArgumentScalar(1);
 
   
-  ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, size, keysOutId, valuesOutId, keysInId, valuesInId, scanNumBlocksId, countersId, counterSumsId, blockOffsetsId, scanBlocksSumId, startBitId, scanOutDataId, scanInDataId, scanOneBlockSumId, numElementsId, fullBlockId, storeSumId));
+  ktt::KernelId compositionId = tuner.addComposition("sort", kernelIds, std::make_unique<TunableSort>(kernelIds, size, keysOutId, valuesOutId, keysInId, valuesInId, scanNumBlocksId, countersId, counterSumsId, blockOffsetsId, startBitId, scanOutDataId, scanInDataId, scanOneBlockSumId, numElementsId, fullBlockId, storeSumId));
 
   //radixSortBlocks
   tuner.setCompositionKernelArguments(compositionId, kernelIds[0], std::vector<size_t>{nbitsId, startBitId, keysOutId, valuesOutId, keysInId, valuesInId});

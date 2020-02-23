@@ -7,12 +7,23 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/cltune-gemm/gemm.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../examples/cltune-gemm/gemm_reference.cl"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_KERNEL_FILE "../../examples/cltune-gemm/gemm.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../../examples/cltune-gemm/gemm_reference.cl"
+    const std::string kernelFilePrefix = "../";
 #endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/cltune-gemm/gemm.cu";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/cltune-gemm/gemm_reference.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/cltune-gemm/gemm.cl";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/cltune-gemm/gemm_reference.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
+
+#define RAPID_TEST 0
+#define USE_PROFILING 0
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
 bool IsMultiple(const size_t a, const size_t b) {
@@ -24,8 +35,8 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
-    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
+    std::string kernelFile = defaultKernelFile;
+    std::string referenceKernelFile = defaultReferenceKernelFile;
 
     if (argc >= 2)
     {
@@ -45,9 +56,15 @@ int main(int argc, char** argv)
     }
 
     // Declare data variables
+    #if USE_PROFILING == 0
     const uint32_t kSizeM = 2048;
     const uint32_t kSizeN = 2048;
     const uint32_t kSizeK = 2048;
+    #else
+    const uint32_t kSizeM = 2048/2;
+    const uint32_t kSizeN = 2048/2;
+    const uint32_t kSizeK = 2048/2;
+    #endif
 
     const ktt::DimensionVector ndRangeDimensions(kSizeM, kSizeN);
     const ktt::DimensionVector workGroupDimensions;
@@ -69,8 +86,14 @@ int main(int argc, char** argv)
         mat_c.at(i) = 0.0f;
 
     // Create tuner object for chosen platform and device
-    ktt::Tuner tuner(platformIndex, deviceIndex);
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
+    #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+    #endif
 
     // Add two kernels to tuner, one of the kernels acts as reference kernel
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "gemm_fast", ndRangeDimensions, workGroupDimensions);
@@ -84,8 +107,18 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "MDIMA", {8, 16, 32});
     tuner.addParameter(kernelId, "NDIMB", {8, 16, 32});
     tuner.addParameter(kernelId, "KWI", {2, 8});
-    tuner.addParameter(kernelId, "VWM", {1, 2, 4, 8});
-    tuner.addParameter(kernelId, "VWN", {1, 2, 4, 8});
+
+    if (computeAPI == ktt::ComputeAPI::OpenCL)
+    {
+        tuner.addParameter(kernelId, "VWM", {1, 2, 4, 8});
+        tuner.addParameter(kernelId, "VWN", {1, 2, 4, 8});
+    }
+    else
+    {
+        tuner.addParameter(kernelId, "VWM", {1, 2, 4});
+        tuner.addParameter(kernelId, "VWN", {1, 2, 4});
+    }
+
     tuner.addParameter(kernelId, "STRM", {0, 1});
     tuner.addParameter(kernelId, "STRN", {0, 1});
     tuner.addParameter(kernelId, "SA", {0, 1});
@@ -107,6 +140,12 @@ int main(int argc, char** argv)
     ktt::ArgumentId matAId = tuner.addArgumentVector(mat_a, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId matBId = tuner.addArgumentVector(mat_b, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId matCId = tuner.addArgumentVector(mat_c, ktt::ArgumentAccessType::WriteOnly);
+
+#if RAPID_TEST == 1
+    tuner.persistArgument(matAId, true);
+    tuner.persistArgument(matBId, true);
+    tuner.persistArgument(matCId, true);
+#endif
 
     // Add conditions
     // Sets constraints: Set-up the constraints functions to use. The constraints require a function
@@ -137,11 +176,13 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{kSizeMId, kSizeNId, kSizeKId, matAId, matBId, matCId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{kSizeMId, kSizeNId, kSizeKId, matAId, matBId, matCId});
 
+#if RAPID_TEST == 0
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001);
 
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{matCId});
+#endif
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);

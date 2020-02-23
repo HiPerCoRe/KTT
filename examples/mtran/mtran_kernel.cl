@@ -20,22 +20,27 @@ __kernel void mtran(
 {
 	__local float tile[TILE_SIZE_Y][TILE_SIZE_X+PADD_LOCAL];
 	int lx = get_local_id(0);
-        int ly = get_local_id(1);
+    int ly = get_local_id(1);
+#if DIAGONAL_MAP == 0
 	int gx = get_group_id(0);
 	int gy = get_group_id(1);
-        int x = gx*TILE_SIZE_X + lx;
-        int yy = gy*TILE_SIZE_Y;
-        for (int y = ly; y <  TILE_SIZE_Y; y += WORK_GROUP_SIZE_Y)
-        {
-                tile[y][lx] = input[(yy+y)*width + x];
-        }
+#else
+    int gx = get_group_id(0);
+    int gy = (get_group_id(0) + get_group_id(1)) % get_num_groups(1);
+#endif
+    int x = gx*TILE_SIZE_X + lx;
+    int yy = gy*TILE_SIZE_Y;
+    for (int y = ly; y <  TILE_SIZE_Y; y += WORK_GROUP_SIZE_Y)
+    {
+        tile[y][lx] = input[(yy+y)*width + x];
+    }
 	barrier(CLK_LOCAL_MEM_FENCE);
 	int id = ly*WORK_GROUP_SIZE_X+lx;
 	int tlx = id%TILE_SIZE_Y;
 	int tly = id/TILE_SIZE_Y;
 	for (int i = tly; i < TILE_SIZE_X; i += (WORK_GROUP_SIZE_X*WORK_GROUP_SIZE_Y)/TILE_SIZE_Y)
 	{
-		output[(get_group_id(0)*TILE_SIZE_X+i)*width + get_group_id(1)*TILE_SIZE_Y + tlx] = tile[tlx][i];
+		output[(gx*TILE_SIZE_X+i)*width + gy*TILE_SIZE_Y + tlx] = tile[tlx][i];
 	}
 }
 #else
@@ -50,9 +55,16 @@ __kernel void mtran(
     const int width,
     const int height)
 {
-	int x = get_group_id(0)*TILE_SIZE_X + get_local_id(0);
+#if DIAGONAL_MAP == 0
+    int gx = get_group_id(0);
+    int gy = get_group_id(1);
+#else
+    int gx = get_group_id(0);
+    int gy = (get_group_id(0) + get_group_id(1)) % get_num_groups(1);
+#endif
+	int x = gx*TILE_SIZE_X + get_local_id(0);
 	int xt = x*VECTOR_TYPE;
-        int yy = get_group_id(1)*TILE_SIZE_Y + get_local_id(1);
+        int yy = gy*TILE_SIZE_Y + get_local_id(1);
         int lx = get_local_id(0);
 #if PREFETCH == 1
 	//XXX fix vectorization + prefetching

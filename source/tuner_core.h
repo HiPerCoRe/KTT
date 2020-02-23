@@ -10,8 +10,6 @@
 #include <tuning_runner/kernel_runner.h>
 #include <tuning_runner/tuning_runner.h>
 #include <utility/logger.h>
-#include <utility/result_loader.h>
-#include <utility/result_printer.h>
 #include <ktt_types.h>
 
 namespace ktt
@@ -76,8 +74,6 @@ public:
     void setKernelProfiling(const bool flag);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     ComputationResult getBestComputationResult(const KernelId id) const;
-
-    // Result printer methods
     void setPrintingTimeUnit(const TimeUnit unit);
     void setInvalidResultPrinting(const bool flag);
     void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat format) const;
@@ -106,7 +102,6 @@ private:
     // Attributes
     ArgumentManager argumentManager;
     KernelManager kernelManager;
-    ResultPrinter resultPrinter;
     std::unique_ptr<ComputeEngine> computeEngine;
     std::unique_ptr<KernelRunner> kernelRunner;
     std::unique_ptr<TuningRunner> tuningRunner;

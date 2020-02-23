@@ -1,9 +1,14 @@
 #ifdef KTT_PLATFORM_OPENCL
 
+#include <stdexcept>
 #include <compute_engine/opencl/opencl_engine.h>
 #include <utility/ktt_utility.h>
 #include <utility/logger.h>
 #include <utility/timer.h>
+
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+#include <compute_engine/opencl/gpa/gpa_profiling_pass.h>
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
 namespace ktt
 {
@@ -11,7 +16,6 @@ namespace ktt
 OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     platformIndex(platformIndex),
     deviceIndex(deviceIndex),
-    queueCount(queueCount),
     compilerOptions(std::string("")),
     globalSizeType(GlobalSizeType::OpenCL),
     globalSizeCorrection(false),
@@ -20,6 +24,11 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
     persistentBufferFlag(true),
     nextEventId(0)
 {
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    Logger::logDebug("Initializing GPA profiling API");
+    gpaInterface = std::make_unique<GPAInterface>();
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+    
     auto platforms = getOpenCLPlatforms();
     if (platformIndex >= platforms.size())
     {
@@ -43,6 +52,14 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
         auto commandQueue = std::make_unique<OpenCLCommandQueue>(i, context->getContext(), device);
         commandQueues.push_back(std::move(commandQueue));
     }
+
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    Logger::logDebug("Initializing GPA profiling context");
+    gpaProfilingContext = std::make_unique<GPAProfilingContext>(gpaInterface->getFunctionTable(), *commandQueues[getDefaultQueue()].get());
+
+    Logger::logDebug("Initializing default GPA profiling counters");
+    gpaProfilingContext->setCounters(getDefaultGPAProfilingCounters());
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 KernelResult OpenCLEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -71,7 +88,7 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
                 clearKernelCache();
             }
             std::unique_ptr<OpenCLProgram> cacheProgram = createAndBuildProgram(kernelData.getSource());
-            auto cacheKernel = std::make_unique<OpenCLKernel>(cacheProgram->getProgram(), kernelData.getName());
+            auto cacheKernel = std::make_unique<OpenCLKernel>(context->getDevice(), cacheProgram->getProgram(), kernelData.getName());
             kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::make_pair(std::move(cacheKernel),
                 std::move(cacheProgram))));
         }
@@ -81,7 +98,7 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
     else
     {
         program = createAndBuildProgram(kernelData.getSource());
-        kernelUnique = std::make_unique<OpenCLKernel>(program->getProgram(), kernelData.getName());
+        kernelUnique = std::make_unique<OpenCLKernel>(context->getDevice(), program->getProgram(), kernelData.getName());
         kernel = kernelUnique.get();
     }
 
@@ -107,29 +124,13 @@ EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
 
 KernelResult OpenCLEngine::getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
 {
-    auto eventPointer = kernelEvents.find(id);
-
-    if (eventPointer == kernelEvents.end())
-    {
-        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
-            + std::to_string(id));
-    }
-
-    Logger::getLogger().log(LoggingLevel::Debug, std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
-
-    checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
-    std::string name = eventPointer->second->getKernelName();
-    cl_ulong duration = eventPointer->second->getEventCommandDuration();
-    uint64_t overhead = eventPointer->second->getOverhead();
-    kernelEvents.erase(id);
+    KernelResult result = createKernelResult(id);
 
     for (const auto& descriptor : outputDescriptors)
     {
         downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
     }
 
-    KernelResult result(name, static_cast<uint64_t>(duration));
-    result.setOverhead(overhead);
     return result;
 }
 
@@ -219,6 +220,23 @@ void OpenCLEngine::clearEvents()
 {
     kernelEvents.clear();
     bufferEvents.clear();
+
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    kernelToEventMap.clear();
+
+    for (const auto& profilingInstance : kernelProfilingInstances)
+    {
+        // There is currently no way to abort active profiling session without performing all passes, so dummy passes are launched
+        while (profilingInstance.second->getRemainingPassCount() > 0)
+        {
+            launchDummyPass(profilingInstance.first.first, profilingInstance.first.second);
+        }
+
+        profilingInstance.second->generateProfilingData();
+    }
+
+    kernelProfilingInstances.clear();
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 uint64_t OpenCLEngine::uploadArgument(KernelArgument& kernelArgument)
@@ -625,29 +643,152 @@ DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
     return getOpenCLDeviceInfo(platformIndex, deviceIndex);
 }
 
-void OpenCLEngine::initializeKernelProfiling(const KernelRuntimeData&)
+void OpenCLEngine::initializeKernelProfiling(const KernelRuntimeData& kernelData)
 {
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
+EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
+    const QueueId queue)
 {
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    Timer overheadTimer;
+    overheadTimer.start();
+
+    OpenCLKernel* kernel;
+    std::unique_ptr<OpenCLKernel> kernelUnique;
+    std::unique_ptr<OpenCLProgram> program;
+
+    if (kernelCacheFlag)
+    {
+        if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
+        {
+            if (kernelCache.size() >= kernelCacheCapacity)
+            {
+                clearKernelCache();
+            }
+            std::unique_ptr<OpenCLProgram> cacheProgram = createAndBuildProgram(kernelData.getSource());
+            auto cacheKernel = std::make_unique<OpenCLKernel>(context->getDevice(), cacheProgram->getProgram(), kernelData.getName());
+            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::make_pair(std::move(cacheKernel),
+                std::move(cacheProgram))));
+        }
+        auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
+        kernel = cachePointer->second.first.get();
+    }
+    else
+    {
+        program = createAndBuildProgram(kernelData.getSource());
+        kernelUnique = std::make_unique<OpenCLKernel>(context->getDevice(), program->getProgram(), kernelData.getName());
+        kernel = kernelUnique.get();
+    }
+
+    checkLocalMemoryModifiers(argumentPointers, kernelData.getLocalMemoryModifiers());
+    kernel->resetKernelArguments();
+
+    for (const auto argument : argumentPointers)
+    {
+        if (argument->getUploadType() == ArgumentUploadType::Local)
+        {
+            setKernelArgument(*kernel, *argument, kernelData.getLocalMemoryModifiers());
+        }
+        else
+        {
+            setKernelArgument(*kernel, *argument);
+        }
+    }
+
+    overheadTimer.stop();
+
+    if (kernelProfilingInstances.find({kernelData.getName(), kernelData.getSource()}) == kernelProfilingInstances.end())
+    {
+        initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
+    }
+
+    auto profilingInstance = kernelProfilingInstances.find({kernelData.getName(), kernelData.getSource()});
+    auto profilingPass = std::make_unique<GPAProfilingPass>(gpaInterface->getFunctionTable(), *profilingInstance->second.get());
+    EventId id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, overheadTimer.getElapsedTime());
+    kernelToEventMap[std::make_pair(kernelData.getName(), kernelData.getSource())].push_back(id);
+    
+    auto eventPointer = kernelEvents.find(id);
+    Logger::logDebug(std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
+    checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
+
+    return id;
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string&, const std::string&)
+uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource)
 {
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    auto profilingInstance = kernelProfilingInstances.find({kernelName, kernelSource});
+
+    if (profilingInstance == kernelProfilingInstances.end())
+    {
+        return 0;
+    }
+
+    return static_cast<uint64_t>(profilingInstance->second->getRemainingPassCount());
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId, const std::vector<OutputDescriptor>&)
+bool OpenCLEngine::hasAccurateRemainingKernelProfilingRuns() const
 {
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    return true;
+#else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-void OpenCLEngine::setKernelProfilingCounters(const std::vector<std::string>&)
+KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
 {
-    throw std::runtime_error("Kernel profiling is not supported for OpenCL backend");
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    KernelResult result = createKernelResult(id);
+
+    for (const auto& descriptor : outputDescriptors)
+    {
+        downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
+    }
+
+    const std::pair<std::string, std::string>& kernelKey = getKernelFromEvent(id);
+    auto profilingInstance = kernelProfilingInstances.find(kernelKey);
+    if (profilingInstance == kernelProfilingInstances.end())
+    {
+        throw std::runtime_error(std::string("No profiling data exists for the following kernel in current configuration: " + kernelKey.first));
+    }
+
+    KernelProfilingData profilingData = profilingInstance->second->generateProfilingData();
+    result.setProfilingData(profilingData);
+
+    kernelProfilingInstances.erase(kernelKey);
+    const std::vector<EventId>& eventIds = kernelToEventMap.find(kernelKey)->second;
+    for (const auto eventId : eventIds)
+    {
+        kernelEvents.erase(eventId);
+    }
+    kernelToEventMap.erase(kernelKey);
+
+    return result;
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+}
+
+void OpenCLEngine::setKernelProfilingCounters(const std::vector<std::string>& counterNames)
+{
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    gpaProfilingContext->setCounters(counterNames);
+    #else
+    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 std::unique_ptr<OpenCLProgram> OpenCLEngine::createAndBuildProgram(const std::string& source) const
@@ -713,7 +854,7 @@ EventId OpenCLEngine::enqueueKernel(OpenCLKernel& kernel, const std::vector<size
     }
 
     EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead);
+    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, kernel.getKernelName(), kernelLaunchOverhead, kernel.getCompilationData());
     nextEventId++;
 
     Logger::getLogger().log(LoggingLevel::Debug, "Launching kernel " + kernel.getKernelName() + ", event id: " + std::to_string(eventId));
@@ -724,6 +865,32 @@ EventId OpenCLEngine::enqueueKernel(OpenCLKernel& kernel, const std::vector<size
     profilingEvent->setReleaseFlag();
     kernelEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     return eventId;
+}
+
+KernelResult OpenCLEngine::createKernelResult(const EventId id) const
+{
+    auto eventPointer = kernelEvents.find(id);
+
+    if (eventPointer == kernelEvents.end())
+    {
+        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
+            + std::to_string(id));
+    }
+
+    Logger::getLogger().log(LoggingLevel::Debug, std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
+
+    checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
+    std::string name = eventPointer->second->getKernelName();
+    cl_ulong duration = eventPointer->second->getEventCommandDuration();
+    uint64_t overhead = eventPointer->second->getOverhead();
+    KernelCompilationData compilationData = eventPointer->second->getCompilationData();
+    kernelEvents.erase(id);
+
+    KernelResult result(name, static_cast<uint64_t>(duration));
+    result.setOverhead(overhead);
+    result.setCompilationData(compilationData);
+
+    return result;
 }
 
 PlatformInfo OpenCLEngine::getOpenCLPlatformInfo(const PlatformIndex platform)
@@ -750,27 +917,27 @@ DeviceInfo OpenCLEngine::getOpenCLDeviceInfo(const PlatformIndex platform, const
     result.setVendor(getDeviceInfoString(id, CL_DEVICE_VENDOR));
         
     uint64_t globalMemorySize;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(uint64_t), &globalMemorySize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(uint64_t), &globalMemorySize, nullptr), "clGetDeviceInfo");
     result.setGlobalMemorySize(globalMemorySize);
 
     uint64_t localMemorySize;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(uint64_t), &localMemorySize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(uint64_t), &localMemorySize, nullptr), "clGetDeviceInfo");
     result.setLocalMemorySize(localMemorySize);
 
     uint64_t maxConstantBufferSize;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(uint64_t), &maxConstantBufferSize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(uint64_t), &maxConstantBufferSize, nullptr), "clGetDeviceInfo");
     result.setMaxConstantBufferSize(maxConstantBufferSize);
 
     uint32_t maxComputeUnits;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(uint32_t), &maxComputeUnits, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(uint32_t), &maxComputeUnits, nullptr), "clGetDeviceInfo");
     result.setMaxComputeUnits(maxComputeUnits);
 
     size_t maxWorkGroupSize;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroupSize, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroupSize, nullptr), "clGetDeviceInfo");
     result.setMaxWorkGroupSize(maxWorkGroupSize);
 
     cl_device_type deviceType;
-    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr));
+    checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr), "clGetDeviceInfo");
     result.setDeviceType(getDeviceType(deviceType));
 
     return result;
@@ -779,10 +946,10 @@ DeviceInfo OpenCLEngine::getOpenCLDeviceInfo(const PlatformIndex platform, const
 std::vector<OpenCLPlatform> OpenCLEngine::getOpenCLPlatforms()
 {
     cl_uint platformCount;
-    checkOpenCLError(clGetPlatformIDs(0, nullptr, &platformCount));
+    checkOpenCLError(clGetPlatformIDs(0, nullptr, &platformCount), "clGetPlatformIDs");
 
     std::vector<cl_platform_id> platformIds(platformCount);
-    checkOpenCLError(clGetPlatformIDs(platformCount, platformIds.data(), nullptr));
+    checkOpenCLError(clGetPlatformIDs(platformCount, platformIds.data(), nullptr), "clGetPlatformIDs");
 
     std::vector<OpenCLPlatform> platforms;
     for (const auto platformId : platformIds)
@@ -797,10 +964,10 @@ std::vector<OpenCLPlatform> OpenCLEngine::getOpenCLPlatforms()
 std::vector<OpenCLDevice> OpenCLEngine::getOpenCLDevices(const OpenCLPlatform& platform)
 {
     cl_uint deviceCount;
-    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount));
+    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount), "clGetDeviceIDs");
 
     std::vector<cl_device_id> deviceIds(deviceCount);
-    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, deviceCount, deviceIds.data(), nullptr));
+    checkOpenCLError(clGetDeviceIDs(platform.getId(), CL_DEVICE_TYPE_ALL, deviceCount, deviceIds.data(), nullptr), "clGetDeviceIDs");
 
     std::vector<OpenCLDevice> devices;
     for (const auto deviceId : deviceIds)
@@ -894,6 +1061,63 @@ void OpenCLEngine::checkLocalMemoryModifiers(const std::vector<KernelArgument*>&
         }
     }
 }
+
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+
+void OpenCLEngine::initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource)
+{
+    auto profilingInstance = kernelProfilingInstances.find(std::make_pair(kernelName, kernelSource));
+    if (profilingInstance == kernelProfilingInstances.end())
+    {
+        kernelProfilingInstances.insert({std::make_pair(kernelName, kernelSource),
+            std::make_unique<GPAProfilingInstance>(gpaInterface->getFunctionTable(), *gpaProfilingContext.get())});
+        kernelToEventMap.insert({std::make_pair(kernelName, kernelSource), std::vector<EventId>{}});
+    }
+}
+
+const std::pair<std::string, std::string>& OpenCLEngine::getKernelFromEvent(const EventId id) const
+{
+    for (const auto& entry : kernelToEventMap)
+    {
+        if (containsElement(entry.second, id))
+        {
+            return entry.first;
+        }
+    }
+
+    throw std::runtime_error(std::string("Corresponding kernel was not found for event with id: ") + std::to_string(id));
+}
+
+const std::vector<std::string>& OpenCLEngine::getDefaultGPAProfilingCounters()
+{
+    static const std::vector<std::string> result
+    {
+        "Wavefronts",
+        "VALUInsts",
+        "SALUInsts",
+        "VFetchInsts",
+        "SFetchInsts",
+        "VWriteInsts",
+        "VALUUtilization",
+        "VALUBusy",
+        "SALUBusy",
+        "FetchSize",
+        "WriteSize",
+        "MemUnitBusy",
+        "MemUnitStalled",
+        "WriteUnitStalled"
+    };
+
+    return result;
+}
+
+void OpenCLEngine::launchDummyPass(const std::string& kernelName, const std::string& kernelSource)
+{
+    auto profilingInstance = kernelProfilingInstances.find({kernelName, kernelSource});
+    auto profilingPass = std::make_unique<GPAProfilingPass>(gpaInterface->getFunctionTable(), *profilingInstance->second);
+}
+
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
 } // namespace ktt
 

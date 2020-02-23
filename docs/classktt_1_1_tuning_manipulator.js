@@ -11,8 +11,8 @@ var classktt_1_1_tuning_manipulator =
     [ "getAllDeviceQueues", "classktt_1_1_tuning_manipulator.html#ab9e796aed2c163e56de10ac10e000538", null ],
     [ "getArgumentVector", "classktt_1_1_tuning_manipulator.html#ad7aa79df2a16b5d5fafa5e0576871e9c", null ],
     [ "getArgumentVector", "classktt_1_1_tuning_manipulator.html#abde17d134f818894449dab865776eff5", null ],
-    [ "getArgumentVectorAsync", "classktt_1_1_tuning_manipulator.html#a2209f1bd5dafde789250faa5d2bd8436", null ],
     [ "getArgumentVectorAsync", "classktt_1_1_tuning_manipulator.html#a7c86deb31ca9c666a2ed8c0c719937e0", null ],
+    [ "getArgumentVectorAsync", "classktt_1_1_tuning_manipulator.html#a2209f1bd5dafde789250faa5d2bd8436", null ],
     [ "getCurrentConfiguration", "classktt_1_1_tuning_manipulator.html#ac45cfd0518582e9e7c289e0e8d414d5c", null ],
     [ "getCurrentGlobalSize", "classktt_1_1_tuning_manipulator.html#a3751db1d4f8cf1c00925dfefa57aaa27", null ],
     [ "getCurrentLocalSize", "classktt_1_1_tuning_manipulator.html#aae57cd60a640856f881af97ee998b0e7", null ],
@@ -24,8 +24,8 @@ var classktt_1_1_tuning_manipulator =
     [ "resizeArgumentVector", "classktt_1_1_tuning_manipulator.html#ab88cabca2a372c0366d9b077ad812f02", null ],
     [ "runKernel", "classktt_1_1_tuning_manipulator.html#a0991ebd21b3261d60146528e12725f80", null ],
     [ "runKernel", "classktt_1_1_tuning_manipulator.html#a62d04a12e5001112ba611b6fe44ea61c", null ],
-    [ "runKernelAsync", "classktt_1_1_tuning_manipulator.html#a777ea45abef954f2b1fe02f5bac3a619", null ],
     [ "runKernelAsync", "classktt_1_1_tuning_manipulator.html#a095e5d558ba3b1871c3a7ef4d816279c", null ],
+    [ "runKernelAsync", "classktt_1_1_tuning_manipulator.html#a777ea45abef954f2b1fe02f5bac3a619", null ],
     [ "runKernelWithProfiling", "classktt_1_1_tuning_manipulator.html#a3da38c2570ff8daacf443869e0ca4515", null ],
     [ "runKernelWithProfiling", "classktt_1_1_tuning_manipulator.html#a75fb08be4b0aa70cff3112df24a9c097", null ],
     [ "swapKernelArguments", "classktt_1_1_tuning_manipulator.html#a3435ca6b5420a370a0de4c324feb9903", null ],
@@ -35,7 +35,7 @@ var classktt_1_1_tuning_manipulator =
     [ "updateArgumentScalar", "classktt_1_1_tuning_manipulator.html#a449df2809792e030439be9d70a8c07e6", null ],
     [ "updateArgumentVector", "classktt_1_1_tuning_manipulator.html#a872a3865330f2a15282facd6392ccdcd", null ],
     [ "updateArgumentVector", "classktt_1_1_tuning_manipulator.html#ae996d65fb5ee74bf5dc71551f678026d", null ],
-    [ "updateArgumentVectorAsync", "classktt_1_1_tuning_manipulator.html#a89071adbe2f15811935caa5613ea4c14", null ],
     [ "updateArgumentVectorAsync", "classktt_1_1_tuning_manipulator.html#a8f850b561d79021d1613beb35b786b0b", null ],
+    [ "updateArgumentVectorAsync", "classktt_1_1_tuning_manipulator.html#a89071adbe2f15811935caa5613ea4c14", null ],
     [ "KernelRunner", "classktt_1_1_tuning_manipulator.html#a5fd9e42d3b3fa0e8432fd9814695fb3a", null ]
 ];

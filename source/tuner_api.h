@@ -8,7 +8,6 @@
 #include <memory>
 #include <ostream>
 #include <string>
-#include <typeinfo>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -493,6 +492,7 @@ public:
       * devices.
       *
       * For the list of CUDA CUPTI profiling counters, see: https://docs.nvidia.com/cuda/cupti/index.html#metrics-reference
+      * For the list of AMD GPA profiling counters, see: https://gpuperfapi.readthedocs.io/en/latest/counters.html
       * @param counterNames Names of counters that will be collected during kernel profiling.
       */
     void setKernelProfilingCounters(const std::vector<std::string>& counterNames);
@@ -705,10 +705,12 @@ private:
 
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {
-        if (!std::is_trivially_copyable<T>() || typeid(T) == typeid(bool))
+        static_assert(std::is_trivially_copyable<T>() && !std::is_reference<T>() && !std::is_pointer<T>(), "Unsupported argument data type");
+        static_assert(!std::is_same<std::remove_cv_t<T>, bool>(), "Bool argument data type is not supported");
+
+        if (std::is_same<std::remove_cv_t<T>, half>())
         {
-            std::cerr << "Unsupported argument data type" << std::endl;
-            throw std::runtime_error("Unsupported argument data type");
+            return ArgumentDataType::Half;
         }
 
         if (!std::is_arithmetic<T>())
@@ -724,10 +726,6 @@ private:
         {
             return ArgumentDataType::Char;
         }
-        else if (typeid(T) == typeid(half))
-        {
-            return ArgumentDataType::Half;
-        }
         else if (sizeof(T) == 2 && std::is_unsigned<T>())
         {
             return ArgumentDataType::UnsignedShort;
@@ -736,7 +734,7 @@ private:
         {
             return ArgumentDataType::Short;
         }
-        else if (typeid(T) == typeid(float))
+        else if (std::is_same<std::remove_cv_t<T>, float>())
         {
             return ArgumentDataType::Float;
         }
@@ -748,7 +746,7 @@ private:
         {
             return ArgumentDataType::Int;
         }
-        else if (typeid(T) == typeid(double))
+        else if (std::is_same<std::remove_cv_t<T>, double>())
         {
             return ArgumentDataType::Double;
         }
@@ -761,8 +759,8 @@ private:
             return ArgumentDataType::Long;
         }
 
-        std::cerr << "Unsupported argument data type" << std::endl;
-        throw std::runtime_error("Unsupported argument data type");
+        // Unknown arithmetic type
+        return ArgumentDataType::Custom;
     }
 };
 

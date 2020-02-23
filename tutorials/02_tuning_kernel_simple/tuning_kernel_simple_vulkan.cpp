@@ -4,10 +4,12 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../tutorials/02_tuning_kernel_simple/vulkan_kernel.glsl"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_KERNEL_FILE "../../tutorials/02_tuning_kernel_simple/vulkan_kernel.glsl"
+    const std::string kernelFilePrefix = "../";
 #endif
+
+static const float scalarValue = 3.0f;
 
 // Definition of class which will be used by tuner to automatically validate kernel output. It needs to publicly inherit from abstract class which is
 // declared in KTT API.
@@ -28,7 +30,7 @@ public:
     {
         for (size_t i = 0; i < result.size(); i++)
         {
-            result.at(i) = a.at(i) + b.at(i);
+            result.at(i) = a.at(i) + b.at(i) + scalarValue;
         }
     }
 
@@ -54,7 +56,7 @@ int main(int argc, char** argv)
     // Initialize platform index, device index and path to kernel.
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string kernelFile = kernelFilePrefix + "../tutorials/02_tuning_kernel_simple/vulkan_kernel.glsl";
 
     if (argc >= 2)
     {
@@ -98,8 +100,12 @@ int main(int argc, char** argv)
     ktt::ArgumentId bId = tuner.addArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId resultId = tuner.addArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
 
+    // Add a scalar argument.
+    ktt::ArgumentId scalarId = tuner.addArgumentScalar(scalarValue);
+
     // Set arguments for the added kernel by providing their ids. The order of ids needs to match the order of bindings inside Vulkan shader.
-    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aId, bId, resultId});
+    // Bindings for vector and scalar arguments are handled separately.
+    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aId, bId, resultId, scalarId});
 
     // Set previously defined reference class to the kernel. Provide ids of kernel arguments which will be validated by this class. Each time
     // the kernel is run, output for all specified kernel arguments is compared to reference output computed inside the class.

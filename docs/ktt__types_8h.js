@@ -5,5 +5,7 @@ var ktt__types_8h =
     [ "EventId", "ktt__types_8h.html#a5a81bde9a6b65b7f11a2862fb7bbdcab", null ],
     [ "KernelId", "ktt__types_8h.html#a47b4d6f1468a13007692b8bd5dbe42ba", null ],
     [ "PlatformIndex", "ktt__types_8h.html#ace6bcecdbf444cc8adffa172168f8a47", null ],
-    [ "QueueId", "ktt__types_8h.html#a42a11ff66d2e2aef76699a88f6602b0b", null ]
+    [ "QueueId", "ktt__types_8h.html#a42a11ff66d2e2aef76699a88f6602b0b", null ],
+    [ "InvalidArgumentId", "ktt__types_8h.html#a06314e7380eb0baeb140510fcae36003", null ],
+    [ "InvalidKernelId", "ktt__types_8h.html#af007a5e422c999a5a8f4fd1d875cc7bf", null ]
 ];

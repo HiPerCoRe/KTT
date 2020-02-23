@@ -2,6 +2,7 @@
 #include <utility>
 #include <tuning_runner/manipulator_interface_implementation.h>
 #include <utility/ktt_utility.h>
+#include <utility/logger.h>
 #include <utility/timer.h>
 
 namespace ktt
@@ -49,6 +50,15 @@ void ManipulatorInterfaceImplementation::runKernel(const KernelId id, const Dime
 
     KernelResult result = computeEngine->runKernel(kernelData, getArgumentPointers(kernelData.getArgumentIds()), std::vector<OutputDescriptor>{});
     currentResult.increaseOverhead(result.getOverhead());
+    currentResult.increaseKernelTime(result.getComputationDuration());
+    if (isComposition())
+    {
+        currentResult.setCompositionKernelCompilationData(id, result.getCompilationData());
+    }
+    else
+    {
+        currentResult.setCompilationData(result.getCompilationData());
+    }
 }
 
 void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const DimensionVector& globalSize, const DimensionVector& localSize,
@@ -65,7 +75,7 @@ void ManipulatorInterfaceImplementation::runKernelAsync(const KernelId id, const
     kernelData.setLocalSize(localSize);
 
     EventId kernelEvent = computeEngine->runKernelAsync(kernelData, getArgumentPointers(kernelData.getArgumentIds()), queue);
-    storeKernelEvent(queue, kernelEvent);
+    storeKernelEvent(queue, id, kernelEvent);
     currentResult.increaseOverhead(computeEngine->getKernelOverhead(kernelEvent));
 }
 
@@ -90,6 +100,14 @@ void ManipulatorInterfaceImplementation::runKernelWithProfiling(const KernelId i
     if (profiledKernels.find(id) == profiledKernels.end())
     {
         throw std::runtime_error(std::string("Kernel profiling for kernel with the following id is disabled: ") + std::to_string(id));
+    }
+
+    if (getRemainingKernelProfilingRuns(id) == 0)
+    {
+        Logger::logWarning(std::string("Attempting to profile kernel with id ") + std::to_string(id) +
+            " which has zero profiling runs remaining, performing regular kernel run instead");
+        runKernel(id, globalSize, localSize);
+        return;
     }
 
     auto dataPointer = kernelData.find(id);
@@ -372,7 +390,7 @@ void ManipulatorInterfaceImplementation::swapKernelArguments(const KernelId id, 
 
     std::vector<ArgumentId> argumentIds = dataPointer->second.getArgumentIds();
     
-    if (!elementExists(argumentIdFirst, argumentIds) || !elementExists(argumentIdSecond, argumentIds))
+    if (!containsElement(argumentIds, argumentIdFirst) || !containsElement(argumentIds, argumentIdSecond))
     {
         throw std::runtime_error(std::string("One of the following argument ids is not associated with this kernel: ")
             + std::to_string(argumentIdFirst) + ", " + std::to_string(argumentIdSecond) + ", kernel id: " + std::to_string(id));
@@ -531,7 +549,7 @@ KernelResult ManipulatorInterfaceImplementation::getCurrentResult() const
         for (const auto& kernelEvents : kernelProfilingEvents)
         {
             KernelResult profilingResult = computeEngine->getKernelResultWithProfiling(kernelEvents.second[0], std::vector<OutputDescriptor>{});
-            if (kernelData.size() == 1)
+            if (!isComposition())
             {
                 result.setProfilingData(profilingResult.getProfilingData());
             }
@@ -557,6 +575,11 @@ KernelResult ManipulatorInterfaceImplementation::getCurrentResult(const uint64_t
     KernelResult result = currentResult;
     result.setProfilingData(KernelProfilingData(remainingProfilingRuns));
     return result;
+}
+
+bool ManipulatorInterfaceImplementation::isComposition() const
+{
+    return kernelData.size() != 1;
 }
 
 std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPointers(const std::vector<ArgumentId>& argumentIds)
@@ -616,17 +639,14 @@ void ManipulatorInterfaceImplementation::updateArgumentSimple(const ArgumentId i
     nonVectorArguments.insert(std::make_pair(id, updatedArgument));
 }
 
-void ManipulatorInterfaceImplementation::storeKernelEvent(const QueueId queue, const EventId event) const
+void ManipulatorInterfaceImplementation::storeKernelEvent(const QueueId queue, const KernelId kernel, const EventId event) const
 {
-    auto eventPointer = enqueuedKernelEvents.find(queue);
-    if (eventPointer == enqueuedKernelEvents.end())
+    if (enqueuedKernelEvents.find(queue) == enqueuedKernelEvents.cend())
     {
-        enqueuedKernelEvents.insert(std::make_pair(queue, std::set<EventId>{event}));
+        enqueuedKernelEvents.insert(std::make_pair(queue, std::set<std::pair<KernelId, EventId>>{}));
     }
-    else
-    {
-        eventPointer->second.insert(event);
-    }
+
+    enqueuedKernelEvents[queue].insert({kernel, event});
 }
 
 void ManipulatorInterfaceImplementation::storeKernelProfilingEvent(const KernelId kernel, const EventId event) const
@@ -655,11 +675,21 @@ void ManipulatorInterfaceImplementation::storeBufferEvent(const QueueId queue, c
     }
 }
 
-void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<EventId>& events)
+void ManipulatorInterfaceImplementation::processKernelEvents(const std::set<std::pair<KernelId, EventId>>& events)
 {
     for (const auto& currentEvent : events)
     {
-        computeEngine->getKernelResult(currentEvent, std::vector<OutputDescriptor>{});
+        const KernelResult result = computeEngine->getKernelResult(currentEvent.second, std::vector<OutputDescriptor>{});
+        currentResult.increaseKernelTime(result.getComputationDuration());
+
+        if (isComposition())
+        {
+            currentResult.setCompositionKernelCompilationData(currentEvent.first, result.getCompilationData());
+        }
+        else
+        {
+            currentResult.setCompilationData(result.getCompilationData());
+        }
     }
 }
 

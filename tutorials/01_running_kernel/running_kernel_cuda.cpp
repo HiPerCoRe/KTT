@@ -4,16 +4,16 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../tutorials/01_running_kernel/cuda_kernel.cu"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_KERNEL_FILE "../../tutorials/01_running_kernel/cuda_kernel.cu"
+    const std::string kernelFilePrefix = "../";
 #endif
 
 int main(int argc, char** argv)
 {
     // Initialize device index and path to kernel.
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string kernelFile = kernelFilePrefix + "../tutorials/01_running_kernel/cuda_kernel.cu";
 
     if (argc >= 2)
     {

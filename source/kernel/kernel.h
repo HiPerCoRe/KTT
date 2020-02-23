@@ -36,6 +36,11 @@ public:
     void setArguments(const std::vector<ArgumentId>& argumentIds);
     void setTuningManipulatorFlag(const bool flag);
 
+    // Configurations
+    uint64_t getConfigurationsCount() const;
+    std::vector<ParameterPair> getConfigurationForIndex(const uint64_t index) const;
+    uint64_t getIndexForConfiguration(const std::vector<ParameterPair>& configuration) const;
+
     // Getters
     KernelId getId() const;
     const std::string& getSource() const;

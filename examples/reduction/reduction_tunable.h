@@ -28,7 +28,11 @@ public:
         }
 
         // execute reduction kernel
+        #if USE_PROFILING == 0
         runKernel(kernelId, myGlobalSize, localSize);
+        #else
+        runKernelWithProfiling(kernelId, myGlobalSize, localSize);
+        #endif
 
         // execute kernel log n times, when atomics are not used 
         if (getParameterValue("USE_ATOMICS", parameterValues) == 0) {

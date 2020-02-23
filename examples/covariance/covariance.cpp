@@ -5,13 +5,9 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-#  define KTT_KERNEL_FILE "../examples/covariance/covariance.cl"
-#  define KTT_REFERENCE_KERNEL_FILE "../examples/covariance/covariance_ref.cl"
-#  define KTT_GEMM_KERNEL_FILE "../examples/covariance/gemm.cl";
+    const std::string kernelFilePrefix = "";
 #else
-#  define KTT_KERNEL_FILE "../../examples/covariance/covariance.cl"
-#  define KTT_REFERENCE_KERNEL_FILE "../../examples/covariance/covariance_ref.cl"
-#  define KTT_GEMM_KERNEL_FILE "../../examples/covariance/gemm.cl";
+    const std::string kernelFilePrefix = "../";
 #endif
 
 /* Problem size. */
@@ -144,9 +140,9 @@ int main(int argc, char** argv) {
   // Initialize platform index, device index and paths to kernels
   ktt::PlatformIndex platformIndex = 0;
   ktt::DeviceIndex deviceIndex = 0;
-  std::string kernelFile = KTT_KERNEL_FILE;
-  std::string refKernelFile = KTT_REFERENCE_KERNEL_FILE;
-  std::string gemmFile = KTT_GEMM_KERNEL_FILE;
+  std::string kernelFile = kernelFilePrefix + "../examples/covariance/covariance.cl";
+  std::string refKernelFile = kernelFilePrefix + "../examples/covariance/covariance_ref.cl";
+  std::string gemmFile = kernelFilePrefix + "../examples/covariance/gemm.cl";
 
   if (argc >= 2) {
     platformIndex = std::stoul(std::string(argv[1]));

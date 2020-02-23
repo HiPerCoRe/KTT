@@ -17,7 +17,7 @@ TEST_CASE("Working with OpenCL program and kernel", "Component: OpenCLEngine")
     auto program = engine.createAndBuildProgram(programSource);
     REQUIRE(program->getSource() == programSource);
 
-    auto kernel = std::make_unique<ktt::OpenCLKernel>(program->getProgram(), "testKernel");
+    auto kernel = std::make_unique<ktt::OpenCLKernel>(program->getDevices()[0], program->getProgram(), "testKernel");
     REQUIRE(kernel->getArgumentsCount() == 0);
     REQUIRE(kernel->getKernelName() == "testKernel");
 
@@ -53,10 +53,12 @@ TEST_CASE("Working with OpenCL buffer", "Component: OpenCLEngine")
         REQUIRE(resultArgument.getAccessType() == argument.getAccessType());
         REQUIRE(resultArgument.getUploadType() == argument.getUploadType());
         REQUIRE(resultArgument.getDataSizeInBytes() == argument.getDataSizeInBytes());
-        std::vector<float> result = resultArgument.getDataWithType<float>();
-        for (size_t i = 0; i < data.size(); i++)
+        
+        const float* result = argument.getDataWithType<float>();
+
+        for (size_t i = 0; i < data.size(); ++i)
         {
-            REQUIRE(result.at(i) == data.at(i));
+            REQUIRE(result[i] == data[i]);
         }
     }
 }

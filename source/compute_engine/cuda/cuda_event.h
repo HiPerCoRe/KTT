@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <cuda.h>
+#include <api/kernel_compilation_data.h>
 #include <compute_engine/cuda/cuda_utility.h>
 #include <ktt_types.h>
 
@@ -21,11 +22,12 @@ public:
         checkCUDAError(cuEventCreate(&event, CU_EVENT_DEFAULT), "cuEventCreate");
     }
 
-    CUDAEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead) :
+    CUDAEvent(const EventId id, const std::string& kernelName, const uint64_t kernelLaunchOverhead, const KernelCompilationData& compilationData) :
         id(id),
         kernelName(kernelName),
         validFlag(true),
-        overhead(kernelLaunchOverhead)
+        overhead(kernelLaunchOverhead),
+        compilationData(compilationData)
     {
         checkCUDAError(cuEventCreate(&event, CU_EVENT_DEFAULT), "cuEventCreate");
     }
@@ -60,12 +62,18 @@ public:
         return overhead;
     }
 
+    const KernelCompilationData& getCompilationData() const
+    {
+        return compilationData;
+    }
+
 private:
     EventId id;
     std::string kernelName;
     CUevent event;
     bool validFlag;
     uint64_t overhead;
+    KernelCompilationData compilationData;
 };
 
 } // namespace ktt

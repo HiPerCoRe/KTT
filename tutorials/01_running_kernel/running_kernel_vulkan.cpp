@@ -4,9 +4,9 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../tutorials/01_running_kernel/vulkan_kernel.glsl"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_KERNEL_FILE "../../tutorials/01_running_kernel/vulkan_kernel.glsl"
+    const std::string kernelFilePrefix = "../";
 #endif
 
 int main(int argc, char** argv)
@@ -14,7 +14,7 @@ int main(int argc, char** argv)
     // Initialize platform index, device index and path to kernel.
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string kernelFile = kernelFilePrefix + "../tutorials/01_running_kernel/vulkan_kernel.glsl";
 
     if (argc >= 2)
     {

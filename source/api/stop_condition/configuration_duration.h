@@ -37,12 +37,11 @@ public:
         totalCount = totalConfigurationCount;
     }
 
-    void updateStatus(const bool successFlag, const std::vector<ParameterPair>&, const double previousDuration, const KernelProfilingData&,
-        const std::map<KernelId, KernelProfilingData>&) override
+    void updateStatus(const ComputationResult& result) override
     {
-        if (successFlag)
+        if (result.getStatus())
         {
-            bestDuration = std::min(bestDuration, previousDuration / 1000000.0);
+            bestDuration = std::min(bestDuration, static_cast<double>(result.getDuration()) / 1'000'000.0);
         }
     }
     

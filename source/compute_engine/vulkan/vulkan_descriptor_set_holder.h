@@ -18,8 +18,7 @@ public:
 
     explicit VulkanDescriptorSetHolder(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout,
         const uint32_t descriptorCount) :
-        device(device),
-        pool(descriptorPool)
+        device(device)
     {
         const VkDescriptorSetAllocateInfo allocateInfo =
         {
@@ -92,7 +91,6 @@ public:
 
 private:
     VkDevice device;
-    VkDescriptorPool pool;
     std::vector<VkDescriptorSet> descriptorSets;
 };
 

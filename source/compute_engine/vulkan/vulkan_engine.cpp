@@ -11,7 +11,6 @@ namespace ktt
 
 VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
     deviceIndex(deviceIndex),
-    queueCount(queueCount),
     compilerOptions(std::string("")),
     globalSizeType(GlobalSizeType::Vulkan),
     globalSizeCorrection(false),
@@ -65,7 +64,11 @@ EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
     std::unique_ptr<VulkanComputePipeline> pipelineUnique;
     std::unique_ptr<VulkanDescriptorSetLayout> layout;
     std::unique_ptr<VulkanShaderModule> shader;
-    const uint32_t bindingCount = static_cast<uint32_t>(kernelData.getArgumentIds().size());
+
+    std::vector<VulkanBuffer*> pipelineArguments = getPipelineArguments(argumentPointers);
+    const uint32_t bindingCount = static_cast<uint32_t>(pipelineArguments.size());
+    std::vector<KernelArgument*> scalarArguments = getScalarArguments(argumentPointers);
+    VulkanPushConstant pushConstant(scalarArguments);
 
     if (kernelCacheFlag)
     {
@@ -79,7 +82,7 @@ EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
             auto cacheShader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getUnmodifiedSource(),
                 kernelData.getLocalSize(), kernelData.getParameterPairs());
             auto cachePipeline = std::make_unique<VulkanComputePipeline>(device->getDevice(), cacheLayout->getDescriptorSetLayout(),
-                cacheShader->getShaderModule(), kernelData.getName());
+                cacheShader->getShaderModule(), kernelData.getName(), pushConstant);
             auto cacheEntry = std::make_unique<VulkanPipelineCacheEntry>(std::move(cachePipeline), std::move(cacheLayout), std::move(cacheShader));
             pipelineCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::move(cacheEntry)));
         }
@@ -92,15 +95,14 @@ EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const 
         shader = std::make_unique<VulkanShaderModule>(device->getDevice(), kernelData.getName(), kernelData.getUnmodifiedSource(),
             kernelData.getLocalSize(), kernelData.getParameterPairs());
         pipelineUnique = std::make_unique<VulkanComputePipeline>(device->getDevice(), layout->getDescriptorSetLayout(), shader->getShaderModule(),
-            kernelData.getName());
+            kernelData.getName(), pushConstant);
         pipeline = pipelineUnique.get();
     }
 
-    std::vector<VulkanBuffer*> pipelineArguments = getPipelineArguments(argumentPointers);
     pipeline->bindArguments(pipelineArguments);
     overheadTimer.stop();
 
-    return enqueuePipeline(*pipeline, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, overheadTimer.getElapsedTime());
+    return enqueuePipeline(*pipeline, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, overheadTimer.getElapsedTime(), pushConstant);
 }
 
 KernelResult VulkanEngine::getKernelResult(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) const
@@ -557,6 +559,11 @@ uint64_t VulkanEngine::getRemainingKernelProfilingRuns(const std::string&, const
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
 }
 
+bool VulkanEngine::hasAccurateRemainingKernelProfilingRuns() const
+{
+    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
+}
+
 KernelResult VulkanEngine::getKernelResultWithProfiling(const EventId, const std::vector<OutputDescriptor>&)
 {
     throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
@@ -568,7 +575,7 @@ void VulkanEngine::setKernelProfilingCounters(const std::vector<std::string>&)
 }
 
 EventId VulkanEngine::enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-    const QueueId queue, const uint64_t kernelLaunchOverhead)
+    const QueueId queue, const uint64_t kernelLaunchOverhead, const VulkanPushConstant& pushConstant)
 {
     if (queue >= queues.size())
     {
@@ -593,7 +600,7 @@ EventId VulkanEngine::enqueuePipeline(VulkanComputePipeline& pipeline, const std
 
     Logger::logDebug("Launching kernel " + pipeline.getShaderName() + ", event id: " + std::to_string(eventId));
     auto command = std::make_unique<VulkanCommandBufferHolder>(device->getDevice(), commandPool->getCommandPool());
-    pipeline.recordDispatchShaderCommand(command->getCommandBuffer(), correctedGlobalSize, queryPool->getQueryPool());
+    pipeline.recordDispatchShaderCommand(command->getCommandBuffer(), correctedGlobalSize, pushConstant, queryPool->getQueryPool());
     queues[queue].submitSingleCommand(command->getCommandBuffer(), kernelEvent->getFence().getFence());
 
     kernelEvents.insert(std::make_pair(eventId, std::move(kernelEvent)));
@@ -633,21 +640,24 @@ std::vector<VulkanBuffer*> VulkanEngine::getPipelineArguments(const std::vector<
 
     for (auto* argument : argumentPointers)
     {
-        if (argument->getUploadType() == ArgumentUploadType::Local || argument->getUploadType() == ArgumentUploadType::Scalar)
+        if (argument->getUploadType() == ArgumentUploadType::Scalar)
         {
-            throw std::runtime_error("Only vector arguments are currently supported for Vulkan backend");
+            continue;
         }
-        else if (argument->getUploadType() == ArgumentUploadType::Vector)
-        {
-            VulkanBuffer* existingBuffer = findBuffer(argument->getId());
-            if (existingBuffer == nullptr)
-            {
-                uploadArgument(*argument);
-                existingBuffer = findBuffer(argument->getId());
-            }
 
-            result.push_back(existingBuffer);
+        if (argument->getUploadType() == ArgumentUploadType::Local)
+        {
+            throw std::runtime_error("Local memory arguments are currently not supported for Vulkan backend");
         }
+
+        VulkanBuffer* existingBuffer = findBuffer(argument->getId());
+        if (existingBuffer == nullptr)
+        {
+            uploadArgument(*argument);
+            existingBuffer = findBuffer(argument->getId());
+        }
+
+        result.push_back(existingBuffer);
     }
 
     return result;
@@ -675,6 +685,21 @@ VulkanBuffer* VulkanEngine::findBuffer(const ArgumentId id) const
     }
 
     return nullptr;
+}
+
+std::vector<KernelArgument*> VulkanEngine::getScalarArguments(const std::vector<KernelArgument*>& arguments)
+{
+    std::vector<KernelArgument*> result;
+
+    for (auto* argument : arguments)
+    {
+        if (argument->getUploadType() == ArgumentUploadType::Scalar)
+        {
+            result.push_back(argument);
+        }
+    }
+
+    return result;
 }
 
 } // namespace ktt

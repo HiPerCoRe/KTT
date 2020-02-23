@@ -20,10 +20,15 @@
 #include <compute_engine/cuda/cuda_stream.h>
 #include <compute_engine/cuda/cuda_utility.h>
 #include <compute_engine/compute_engine.h>
-#ifdef KTT_PROFILING
+
+#ifdef KTT_PROFILING_CUPTI_LEGACY
 #include <cupti.h>
-#include <compute_engine/cuda/cuda_profiling_state.h>
-#endif // KTT_PROFILING
+#include <compute_engine/cuda/cupti_legacy/cupti_profiling_instance.h>
+#elif KTT_PROFILING_CUPTI
+#include <compute_engine/cuda/cupti/cupti_metric_interface.h>
+#include <compute_engine/cuda/cupti/cupti_profiler.h>
+#include <compute_engine/cuda/cupti/cupti_profiling_instance.h>
+#endif // KTT_PROFILING_CUPTI
 
 namespace ktt
 {
@@ -85,12 +90,12 @@ public:
     EventId runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const QueueId queue) override;
     uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) override;
+    bool hasAccurateRemainingKernelProfilingRuns() const override;
     KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) override;
     void setKernelProfilingCounters(const std::vector<std::string>& counterNames) override;
 
 private:
     DeviceIndex deviceIndex;
-    uint32_t queueCount;
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
@@ -105,11 +110,18 @@ private:
     std::map<std::pair<std::string, std::string>, std::unique_ptr<CUDAKernel>> kernelCache;
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> kernelEvents;
     mutable std::map<EventId, std::pair<std::unique_ptr<CUDAEvent>, std::unique_ptr<CUDAEvent>>> bufferEvents;
-#ifdef KTT_PROFILING
+
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
     std::vector<std::pair<std::string, CUpti_MetricID>> profilingMetrics;
     std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
-    std::map<std::pair<std::string, std::string>, CUDAProfilingState> kernelProfilingStates;
-#endif // KTT_PROFILING
+    std::map<std::pair<std::string, std::string>, std::unique_ptr<CUPTIProfilingInstance>> kernelProfilingInstances;
+    #elif KTT_PROFILING_CUPTI
+    std::unique_ptr<CUPTIProfiler> profiler;
+    std::unique_ptr<CUPTIMetricInterface> metricInterface;
+    std::vector<std::string> profilingCounters;
+    std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
+    std::map<std::pair<std::string, std::string>, std::unique_ptr<CUPTIProfilingInstance>> kernelProfilingInstances;
+    #endif // KTT_PROFILING_CUPTI
 
     std::unique_ptr<CUDAProgram> createAndBuildProgram(const std::string& source) const;
     EventId enqueueKernel(CUDAKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
@@ -122,14 +134,17 @@ private:
     CUDABuffer* findBuffer(const ArgumentId id) const;
     CUdeviceptr* loadBufferFromCache(const ArgumentId id) const;
 
-#ifdef KTT_PROFILING
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
     void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
     const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
     CUpti_MetricID getMetricIdFromName(const std::string& metricName);
     std::vector<std::pair<std::string, CUpti_MetricID>> getProfilingMetricsForCurrentDevice(const std::vector<std::string>& metricNames);
-    static void CUPTIAPI getMetricValueCallback(void* userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const CUpti_CallbackData* info);
     static const std::vector<std::string>& getDefaultProfilingMetricNames();
-#endif // KTT_PROFILING
+    #elif KTT_PROFILING_CUPTI
+    void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
+    const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
+    static const std::vector<std::string>& getDefaultProfilingCounters();
+    #endif // KTT_PROFILING_CUPTI
 };
 
 } // namespace ktt

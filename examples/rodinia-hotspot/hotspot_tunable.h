@@ -59,7 +59,14 @@ class tunableHotspot : public ktt::TuningManipulator {
           int iter = MIN(pyramid_height, total_iterations - t);
           updateArgumentScalar(iterationId, &iter);
           // run the kernel
+          #if USE_PROFILING == 0
           runKernel(kernelId, ndRangeDimensions, workGroupDimensions);
+          #else
+          if (t == 0)
+            runKernelWithProfiling(kernelId, ndRangeDimensions, workGroupDimensions);
+          else
+            runKernel(kernelId, ndRangeDimensions, workGroupDimensions);
+          #endif
 
           if (t + pyramid_height < total_iterations) //if there will be another iteration
           {
@@ -77,8 +84,6 @@ class tunableHotspot : public ktt::TuningManipulator {
 
     void tune() {
         tuner->tuneKernel(kernelId);
-        tuner->printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
-        tuner->printResult(kernelId, std::string("reduction_output.csv"), ktt::PrintFormat::CSV);
     }
 
     ktt::KernelId getKernelId() const {

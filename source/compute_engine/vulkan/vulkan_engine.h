@@ -19,6 +19,7 @@
 #include <compute_engine/vulkan/vulkan_instance.h>
 #include <compute_engine/vulkan/vulkan_pipeline_cache_entry.h>
 #include <compute_engine/vulkan/vulkan_physical_device.h>
+#include <compute_engine/vulkan/vulkan_push_constant.h>
 #include <compute_engine/vulkan/vulkan_query_pool.h>
 #include <compute_engine/vulkan/vulkan_queue.h>
 #include <compute_engine/vulkan/vulkan_semaphore.h>
@@ -86,13 +87,13 @@ public:
     EventId runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
         const QueueId queue) override;
     uint64_t getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource) override;
+    bool hasAccurateRemainingKernelProfilingRuns() const override;
     KernelResult getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors) override;
     void setKernelProfilingCounters(const std::vector<std::string>& counterNames) override;
 
 private:
     // Attributes
     DeviceIndex deviceIndex;
-    uint32_t queueCount;
     std::string compilerOptions;
     GlobalSizeType globalSizeType;
     bool globalSizeCorrection;
@@ -114,10 +115,11 @@ private:
     mutable std::map<EventId, std::unique_ptr<VulkanBuffer>> stagingBuffers;
 
     EventId enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-        const QueueId queue, const uint64_t kernelLaunchOverhead);
+        const QueueId queue, const uint64_t kernelLaunchOverhead, const VulkanPushConstant& pushConstant);
     KernelResult createKernelResult(const EventId id) const;
     std::vector<VulkanBuffer*> getPipelineArguments(const std::vector<KernelArgument*>& argumentPointers);
     VulkanBuffer* findBuffer(const ArgumentId id) const;
+    static std::vector<KernelArgument*> getScalarArguments(const std::vector<KernelArgument*>& arguments);
 };
 
 } // namespace ktt

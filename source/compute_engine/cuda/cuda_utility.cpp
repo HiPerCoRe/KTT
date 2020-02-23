@@ -19,19 +19,11 @@ std::string getNvrtcEnumName(const nvrtcResult value)
     return name;
 }
 
-void checkCUDAError(const CUresult value)
-{
-    if (value != CUDA_SUCCESS)
-    {
-        throw std::runtime_error(std::string("Internal CUDA error: ") + getCUDAEnumName(value));
-    }
-}
-
 void checkCUDAError(const CUresult value, const std::string& message)
 {
     if (value != CUDA_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal CUDA error: ") + getCUDAEnumName(value) + "\nAdditional info: " + message);
+        throw std::runtime_error(std::string("CUDA error: ") + getCUDAEnumName(value) + "\nAdditional info: " + message);
     }
 }
 
@@ -39,7 +31,7 @@ void checkCUDAError(const nvrtcResult value, const std::string& message)
 {
     if (value != NVRTC_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal CUDA NVRTC error: ") + getNvrtcEnumName(value) + "\nAdditional info: " + message);
+        throw std::runtime_error(std::string("CUDA NVRTC error: ") + getNvrtcEnumName(value) + "\nAdditional info: " + message);
     }
 }
 
@@ -51,7 +43,7 @@ float getEventCommandDuration(const CUevent start, const CUevent end)
     return result * 1'000'000.0f; // return duration in nanoseconds
 }
 
-#ifdef KTT_PROFILING
+#if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
 std::string getCUPTIEnumName(const CUptiResult value)
 {
     const char* name;
@@ -59,14 +51,14 @@ std::string getCUPTIEnumName(const CUptiResult value)
     return name;
 }
 
-void checkCUDAError(const CUptiResult value, const std::string& message)
+void checkCUPTIError(const CUptiResult value, const std::string& message)
 {
     if (value != CUPTI_SUCCESS)
     {
-        throw std::runtime_error(std::string("Internal CUDA CUPTI error: ") + getCUPTIEnumName(value) + "\nAdditional info: " + message);
+        throw std::runtime_error(std::string("CUPTI error: ") + getCUPTIEnumName(value) + "\nAdditional info: " + message);
     }
 }
-#endif // KTT_PROFILING
+#endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 
 } // namespace ktt
 

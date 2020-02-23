@@ -5,34 +5,32 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 0
-#define USE_PROFILING 0
-
-#if USE_CUDA == 0
-    #if defined(_MSC_VER)
-        #define KTT_KERNEL_FILE "../examples/nbody/nbody_kernel1.cl"
-        #define KTT_REFERENCE_KERNEL_FILE "../examples/nbody/nbody_reference_kernel.cl"
-    #else
-        #define KTT_KERNEL_FILE "../../examples/nbody/nbody_kernel1.cl"
-        #define KTT_REFERENCE_KERNEL_FILE "../../examples/nbody/nbody_reference_kernel.cl"
-    #endif
+#if defined(_MSC_VER)
+    const std::string kernelFilePrefix = "";
 #else
-    #if defined(_MSC_VER)
-        #define KTT_KERNEL_FILE "../examples/nbody/nbody_kernel1.cu"
-        #define KTT_REFERENCE_KERNEL_FILE "../examples/nbody/nbody_reference_kernel.cu"
-    #else
-        #define KTT_KERNEL_FILE "../../examples/nbody/nbody_kernel1.cu"
-        #define KTT_REFERENCE_KERNEL_FILE "../../examples/nbody/nbody_reference_kernel.cu"
-    #endif
+    const std::string kernelFilePrefix = "../";
 #endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/nbody/nbody_kernel1.cu";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/nbody/nbody_reference_kernel.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/nbody/nbody_kernel1.cl";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/nbody/nbody_reference_kernel.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
+
+#define RAPID_TEST 0
+#define USE_PROFILING 0
 
 int main(int argc, char** argv)
 {
     // Initialize platform and device index
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
-    std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
+    std::string kernelFile = defaultKernelFile;
+    std::string referenceKernelFile = defaultReferenceKernelFile;
 
     if (argc >= 2)
     {
@@ -52,7 +50,11 @@ int main(int argc, char** argv)
     }
 
     // Declare kernel parameters
-    const int numberOfBodies = 32 * 1024;
+    #if USE_PROFILING == 0
+    const int numberOfBodies = 128 * 1024;
+    #else
+    const int numberOfBodies = 128 * 1024 / 8;
+    #endif
     // Total NDRange size matches number of grid points
     const ktt::DimensionVector ndRangeDimensions(numberOfBodies);
     const ktt::DimensionVector workGroupDimensions;
@@ -104,19 +106,23 @@ int main(int argc, char** argv)
     }
 
     // Create tuner object for chosen platform and device
-#if USE_CUDA == 0
-    ktt::Tuner tuner(platformIndex, deviceIndex);
-    tuner.setCompilerOptions("-cl-fast-relaxed-math");
-#else
-    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
     tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-    tuner.setCompilerOptions("-use_fast_math");
-  #if USE_PROFILING == 1
+    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
+    if (computeAPI == ktt::ComputeAPI::OpenCL)
+    {
+        tuner.setCompilerOptions("-cl-fast-relaxed-math");
+    }
+    else
+    {
+        tuner.setCompilerOptions("-use_fast_math");
+    }
+    #if USE_PROFILING == 1
     printf("Executing with profiling switched ON.\n");
     tuner.setKernelProfiling(true);
-  #endif
-#endif
-    tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+    #endif
+
     // Add two kernels to tuner, one of the kernels acts as reference kernel
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "nbody_kernel", ndRangeDimensions, workGroupDimensions);
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "nbody_kernel", ndRangeDimensions, referenceWorkGroupDimensions);
@@ -128,18 +134,19 @@ int main(int argc, char** argv)
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR", ktt::ModifierAction::Divide);
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", {0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", {0, 1, 2, 4, 8, 16, 32});
-#if USE_CUDA == 0
-    tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
-#else
-    tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0});
-#endif
     tuner.addParameter(kernelId, "USE_SOA", {0, 1});
     tuner.addParameter(kernelId, "LOCAL_MEM", {0, 1});
-#if USE_CUDA == 0
-    tuner.addParameter(kernelId, "VECTOR_TYPE", {1, 2, 4, 8, 16});
-#else
-    tuner.addParameter(kernelId, "VECTOR_TYPE", {1, 2, 4});
-#endif
+
+    if (computeAPI == ktt::ComputeAPI::OpenCL)
+    {
+        tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
+        tuner.addParameter(kernelId, "VECTOR_TYPE", {1, 2, 4, 8, 16});
+    }
+    else
+    {
+        tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0});
+        tuner.addParameter(kernelId, "VECTOR_TYPE", {1, 2, 4});
+    }
 
     // Add all arguments utilized by kernels
     ktt::ArgumentId oldBodyInfoId = tuner.addArgumentVector(oldBodyInfo, ktt::ArgumentAccessType::ReadOnly);
@@ -160,6 +167,21 @@ int main(int argc, char** argv)
     ktt::ArgumentId softeningSqrId = tuner.addArgumentScalar(softeningSqr);
     ktt::ArgumentId numberOfBodiesId = tuner.addArgumentScalar(numberOfBodies);
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(oldBodyInfoId, true);
+    tuner.persistArgument(oldPosXId, true);
+    tuner.persistArgument(oldPosYId, true);
+    tuner.persistArgument(oldPosZId, true);
+    tuner.persistArgument(massId, true);
+    tuner.persistArgument(newBodyInfoId, true);
+    tuner.persistArgument(oldVelId, true);
+    tuner.persistArgument(oldVelXId, true);
+    tuner.persistArgument(oldVelYId, true);
+    tuner.persistArgument(oldVelZId, true);
+    tuner.persistArgument(newBodyVelId, true);
+    tuner.persistArgument(newBodyInfoId, true);
+#endif
+
     // Add conditions
     auto lteq = [](const std::vector<size_t>& vector) {return vector.at(0) <= vector.at(1);};
     tuner.addConstraint(kernelId, {"INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR"}, lteq);
@@ -176,12 +198,14 @@ int main(int argc, char** argv)
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{deltaTimeId, oldBodyInfoId, newBodyInfoId, oldVelId, newBodyVelId,
         dampingId, softeningSqrId});
 
+#if RAPID_TEST == 0
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001);
 
     // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{newBodyVelId,
         newBodyInfoId});
+#endif
   
     // Launch kernel tuning
     tuner.tuneKernel(kernelId);

@@ -20,7 +20,7 @@ Kernel::Kernel(const KernelId id, const std::string& source, const std::string& 
 
 void Kernel::addParameter(const KernelParameter& parameter)
 {
-    if (elementExists(parameter, parameters))
+    if (containsElement(parameters, parameter))
     {
         throw std::runtime_error(std::string("Parameter with given name already exists: ") + parameter.getName());
     }
@@ -108,6 +108,83 @@ void Kernel::setArguments(const std::vector<ArgumentId>& argumentIds)
 void Kernel::setTuningManipulatorFlag(const bool flag)
 {
     this->tuningManipulatorFlag = flag;
+}
+
+uint64_t Kernel::getConfigurationsCount() const
+{
+    uint64_t result = 1;
+
+    for (const auto& parameter : parameters)
+    {
+        result *= parameter.getValues().size();
+    }
+
+    return result;
+}
+
+std::vector<ParameterPair> Kernel::getConfigurationForIndex(const uint64_t index) const
+{
+    std::vector<ParameterPair> result;
+    uint64_t currentIndex = index;
+
+    for (const auto& parameter : parameters)
+    {
+        const size_t valuesCount = parameter.getValues().size();
+        const size_t parameterIndex = currentIndex % valuesCount;
+
+        if (parameter.hasValuesDouble())
+        {
+            result.emplace_back(parameter.getName(), parameter.getValuesDouble()[parameterIndex]);
+        }
+        else
+        {
+            result.emplace_back(parameter.getName(), parameter.getValues()[parameterIndex]);
+        }
+
+        currentIndex /= valuesCount;
+    }
+
+    return result;
+}
+
+uint64_t Kernel::getIndexForConfiguration(const std::vector<ParameterPair>& configuration) const
+{
+    uint64_t result = 0;
+    uint64_t multiplier = 1;
+
+    for (const auto& parameter : parameters)
+    {
+        const ParameterPair* currentPair = nullptr;
+
+        for (const auto& pair : configuration)
+        {
+            if (parameter.getName() == pair.getName())
+            {
+                currentPair = &pair;
+            }
+        }
+
+        if (currentPair == nullptr)
+        {
+            throw std::runtime_error(std::string("Parameter ") + parameter.getName() + " was not found in provided kernel configuration");
+        }
+
+        const size_t valuesCount = parameter.getValues().size();
+
+        for (size_t i = 0; i < valuesCount; ++i)
+        {
+            if ((parameter.hasValuesDouble() && floatEquals(parameter.getValuesDouble()[i], currentPair->getValueDouble()))
+                || (!parameter.hasValuesDouble() && parameter.getValues()[i] == currentPair->getValue()))
+            {
+                result += multiplier * i;
+                break;
+            }
+        }
+
+        multiplier *= valuesCount;
+    }
+
+    return result;
 }
 
 KernelId Kernel::getId() const

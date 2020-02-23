@@ -36,8 +36,7 @@ public:
         totalCount = std::max(static_cast<size_t>(1), totalConfigurationCount);
     }
 
-    void updateStatus(const bool, const std::vector<ParameterPair>&, const double, const KernelProfilingData&,
-        const std::map<KernelId, KernelProfilingData>&) override
+    void updateStatus(const ComputationResult&) override
     {
         currentCount++;
     }

@@ -25,12 +25,13 @@ TEST_CASE("Argument addition and retrieval", "Component: ArgumentManager")
     REQUIRE(argument.getDataSizeInBytes() == 4 * sizeof(float));
     REQUIRE(argument.getElementSizeInBytes() == sizeof(float));
 
-    std::vector<float> floats = argument.getDataWithType<float>();
-    REQUIRE(floats.size() == 4);
+    const float* floats = argument.getDataWithType<float>();
+    const size_t floatsSize = argument.getNumberOfElementsWithType<float>();
+    REQUIRE(floatsSize == 4);
 
-    for (size_t i = 0; i < floats.size(); i++)
+    for (size_t i = 0; i < floatsSize; ++i)
     {
-        REQUIRE(around(floats.at(i), data.at(i), 0.001f));
+        REQUIRE(around(floats[i], data[i], 0.001f));
     }
 
     SECTION("Adding empty argument is not allowed")
@@ -54,12 +55,13 @@ TEST_CASE("Argument update", "Component: ArgumentManager")
         manager.updateArgument(id, newData.data(), 2);
 
         ktt::KernelArgument argument = manager.getArgument(id);
-        std::vector<float> floats = argument.getDataWithType<float>();
-        REQUIRE(floats.size() == 2);
+        const float* floats = argument.getDataWithType<float>();
+        const size_t floatsSize = argument.getNumberOfElementsWithType<float>();
+        REQUIRE(floatsSize == 2);
 
-        for (size_t i = 0; i < floats.size(); i++)
+        for (size_t i = 0; i < floatsSize; ++i)
         {
-            REQUIRE(around(floats.at(i), newData.at(i), 0.001f));
+            REQUIRE(around(floats[i], newData[i], 0.001f));
         }
 
         SECTION("Original data remains unchanged")

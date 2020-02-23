@@ -11,6 +11,7 @@
 #include <kernel_argument/argument_manager.h>
 #include <tuning_runner/configuration_manager.h>
 #include <tuning_runner/kernel_runner.h>
+#include <utility/result_printer.h>
 
 namespace ktt
 {
@@ -22,17 +23,23 @@ public:
     explicit TuningRunner(ArgumentManager* argumentManager, KernelManager* kernelManager, KernelRunner* kernelRunner, const DeviceInfo& info);
 
     // Core methods
-    std::vector<KernelResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
-    std::vector<KernelResult> dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations);
-    std::vector<KernelResult> tuneComposition(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
-    KernelResult tuneKernelByStep(const KernelId id, const KernelRunMode mode, const std::vector<OutputDescriptor>& output,
+    std::vector<ComputationResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
+    std::vector<ComputationResult> dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations);
+    std::vector<ComputationResult> tuneComposition(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
+    ComputationResult tuneKernelByStep(const KernelId id, const KernelRunMode mode, const std::vector<OutputDescriptor>& output,
         const bool recomputeReference);
-    KernelResult tuneCompositionByStep(const KernelId id, const KernelRunMode mode, const std::vector<OutputDescriptor>& output,
+    ComputationResult tuneCompositionByStep(const KernelId id, const KernelRunMode mode, const std::vector<OutputDescriptor>& output,
         const bool recomputeReference);
     void clearKernelData(const KernelId id, const bool clearConfigurations);
     void setKernelProfiling(const bool flag);
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
     ComputationResult getBestComputationResult(const KernelId id) const;
+
+    // Result printer methods
+    void setTimeUnit(const TimeUnit unit);
+    void setInvalidResultPrinting(const bool flag);
+    void printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat format) const;
+    void printResult(const KernelId id, const std::string& filePath, const PrintFormat format) const;
 
 private:
     // Attributes
@@ -40,9 +47,10 @@ private:
     KernelManager* kernelManager;
     KernelRunner* kernelRunner;
     ConfigurationManager configurationManager;
+    ResultPrinter resultPrinter;
 
     // Helper methods
-    bool hasWritableZeroCopyArguments(const Kernel& kernel);
+    bool hasWritableZeroCopyArguments(const Kernel& kernel) const;
 };
 
 } // namespace ktt

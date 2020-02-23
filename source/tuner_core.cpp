@@ -199,12 +199,12 @@ ComputationResult TunerCore::runKernel(const KernelId id, const std::vector<Para
         if (kernelManager.isComposition(id))
         {
             return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-                result.getCompositionProfilingData());
+                result.getCompositionCompilationData(), result.getCompositionProfilingData());
         }
         else
         {
             return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-                result.getProfilingData());
+                result.getCompilationData(), result.getProfilingData());
         }
     }
     else
@@ -253,10 +253,7 @@ void TunerCore::setValidationRange(const ArgumentId id, const size_t range)
     {
         throw std::runtime_error(std::string("Invalid argument id: ") + std::to_string(id));
     }
-    if (range > argumentManager.getArgument(id).getNumberOfElements())
-    {
-        throw std::runtime_error(std::string("Invalid validation range for argument with id: ") + std::to_string(id));
-    }
+
     kernelRunner->setValidationRange(id, range);
 }
 
@@ -295,107 +292,36 @@ void TunerCore::setReferenceClass(const KernelId id, std::unique_ptr<ReferenceCl
 
 std::vector<ComputationResult> TunerCore::tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
-    std::vector<KernelResult> results;
     if (kernelManager.isComposition(id))
     {
-        results = tuningRunner->tuneComposition(id, std::move(stopCondition));
+        return tuningRunner->tuneComposition(id, std::move(stopCondition));
     }
-    else
-    {
-        results = tuningRunner->tuneKernel(id, std::move(stopCondition));
-    }
-    resultPrinter.setResult(id, results);
 
-    std::vector<ComputationResult> publicResults;
-    for (const auto& result : results)
-    {
-        if (result.isValid())
-        {
-            if (kernelManager.isComposition(id))
-            {
-                publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-                    result.getCompositionProfilingData());
-            }
-            else
-            {
-                publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-                    result.getProfilingData());
-            }
-        }
-        else
-        {
-            publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
-        }
-    }
-    return publicResults;
+    return tuningRunner->tuneKernel(id, std::move(stopCondition));
 }
 
 std::vector<ComputationResult> TunerCore::dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations)
 {
-    std::vector<KernelResult> results;
     if (kernelManager.isComposition(id))
     {
         throw std::runtime_error("Dry run is not implemented for compositions");
     }
-    else
-    {
-        results = tuningRunner->dryTuneKernel(id, filePath, iterations);
-    }
-    resultPrinter.setResult(id, results);
 
-    std::vector<ComputationResult> publicResults;
-    for (const auto& result : results)
-    {
-        if (result.isValid())
-        {
-            publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-                result.getProfilingData());
-        }
-        else
-        {
-            publicResults.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
-        }
-    }
-    return publicResults;
+    return tuningRunner->dryTuneKernel(id, filePath, iterations);
 }
 
 ComputationResult TunerCore::tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference)
 {
-    KernelResult result;
-
     if (kernelManager.isComposition(id))
     {
-        result = tuningRunner->tuneCompositionByStep(id, KernelRunMode::OnlineTuning, output, recomputeReference);
-    }
-    else
-    {
-        result = tuningRunner->tuneKernelByStep(id, KernelRunMode::OnlineTuning, output, recomputeReference);
+        return tuningRunner->tuneCompositionByStep(id, KernelRunMode::OnlineTuning, output, recomputeReference);
     }
 
-    resultPrinter.addResult(id, result);
-    
-    if (result.isValid())
-    {
-        if (kernelManager.isComposition(id))
-        {
-            return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-                result.getCompositionProfilingData());
-        }
-        else
-        {
-            return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-                result.getProfilingData());
-        }
-    }
-    else
-    {
-        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
-    }
+    return tuningRunner->tuneKernelByStep(id, KernelRunMode::OnlineTuning, output, recomputeReference);
 }
 
 void TunerCore::clearKernelData(const KernelId id, const bool clearConfigurations)
 {
-    resultPrinter.clearResults(id);
     tuningRunner->clearKernelData(id, clearConfigurations);
 }
 
@@ -417,29 +343,22 @@ ComputationResult TunerCore::getBestComputationResult(const KernelId id) const
 void TunerCore::setPrintingTimeUnit(const TimeUnit unit)
 {
     kernelRunner->setTimeUnit(unit);
-    resultPrinter.setTimeUnit(unit);
+    tuningRunner->setTimeUnit(unit);
 }
 
 void TunerCore::setInvalidResultPrinting(const bool flag)
 {
-    resultPrinter.setInvalidResultPrinting(flag);
+    tuningRunner->setInvalidResultPrinting(flag);
 }
 
 void TunerCore::printResult(const KernelId id, std::ostream& outputTarget, const PrintFormat format) const
 {
-    resultPrinter.printResult(id, outputTarget, format);
+    tuningRunner->printResult(id, outputTarget, format);
 }
 
 void TunerCore::printResult(const KernelId id, const std::string& filePath, const PrintFormat format) const
 {
-    std::ofstream outputFile(filePath);
-
-    if (!outputFile.is_open())
-    {
-        throw std::runtime_error(std::string("Unable to open file: ") + filePath);
-    }
-
-    resultPrinter.printResult(id, outputFile, format);
+    tuningRunner->printResult(id, filePath, format);
 }
 
 void TunerCore::setCompilerOptions(const std::string& options)

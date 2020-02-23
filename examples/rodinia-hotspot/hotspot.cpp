@@ -6,24 +6,36 @@
 
 #include "tuner_api.h"
 #include "hotspot.h"
-#include "hotspot_tunable.h"
 #include "hotspot_reference.h"
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/rodinia-hotspot/hotspot_kernel.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../examples/rodinia-hotspot/hotspot_reference_kernel.cl"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_KERNEL_FILE "../../examples/rodinia-hotspot/hotspot_kernel.cl"
-    #define KTT_REFERENCE_KERNEL_FILE "../../examples/rodinia-hotspot/hotspot_reference_kernel.cl"
+    const std::string kernelFilePrefix = "../";
 #endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/rodinia-hotspot/hotspot_kernel.cu";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/rodinia-hotspot/hotspot_reference_kernel.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/rodinia-hotspot/hotspot_kernel.cl";
+    const std::string defaultReferenceKernelFile = kernelFilePrefix + "../examples/rodinia-hotspot/hotspot_reference_kernel.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
+
+#define RAPID_TEST 0
+#define USE_PROFILING 0
+
+#include "hotspot_tunable.h"
 
 int main(int argc, char** argv)
 {
   // Initialize platform and device index
   ktt::PlatformIndex platformIndex = 0;
   ktt::DeviceIndex deviceIndex = 0;
-  std::string kernelFile = KTT_KERNEL_FILE;
-  std::string referenceKernelFile = KTT_REFERENCE_KERNEL_FILE;
+  std::string kernelFile = defaultKernelFile;
+  std::string referenceKernelFile = defaultReferenceKernelFile;
 
   if (argc >= 2)
   {
@@ -64,7 +76,14 @@ int main(int argc, char** argv)
   char refofile[] = "reference_output.txt";
 
   // Create tuner object for chosen platform and device
-  ktt::Tuner tuner(platformIndex, deviceIndex);
+  ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
+  tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+
+  #if USE_PROFILING == 1
+  printf("Executing with profiling switched ON.\n");
+  tuner.setKernelProfiling(true);
+  #endif
+
   tuner.setCompilerOptions("-I./");
   tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
@@ -133,6 +152,12 @@ int main(int argc, char** argv)
   ktt::ArgumentId grid_colsId = tuner.addArgumentScalar(grid_cols);
   ktt::ArgumentId grid_rowsId = tuner.addArgumentScalar(grid_rows);
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(powerId, true);
+    tuner.persistArgument(tempSrcId, true);
+    tuner.persistArgument(tempDstId, true);
+#endif
+
   ktt::ArgumentId borderColsId = tuner.addArgumentScalar(borderCols);
   ktt::ArgumentId borderRowsId = tuner.addArgumentScalar(borderRows);
   ktt::ArgumentId CapId = tuner.addArgumentScalar(Cap);
@@ -161,11 +186,13 @@ int main(int argc, char** argv)
   tuner.setTuningManipulator(hotspot->getKernelId(), std::unique_ptr<tunableHotspot>(hotspot));
   tuner.setTuningManipulator(referenceHotspot->getKernelId(), std::unique_ptr<referenceManipulator>(referenceHotspot));
 
+#if RAPID_TEST == 0
   // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
   tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01f);
 
   // Set reference kernel which validates results provided by tuned kernel, provide list of arguments which will be validated
   tuner.setReferenceKernel(kernelId, referenceKernelId, {}, std::vector<ktt::ArgumentId>{tempDstId});
+#endif
 
   hotspot->tune();
 

@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <api/kernel_compilation_data.h>
 #include <api/kernel_profiling_data.h>
 #include <api/parameter_pair.h>
 #include <ktt_platform.h>
@@ -26,35 +27,29 @@ public:
       */
     ComputationResult();
 
-    /** @fn explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration)
-      * Constructor which initializes tuning result for successful computations. Error message is initialized to empty string.
-      * @param kernelName Name of a kernel.
-      * @param configuration Configuration used for computation.
-      * @param duration Duration of a computation using specified configuration.
-      */
-    explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration);
-
     /** @fn explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-      * const KernelProfilingData& profilingData)
+      * const KernelCompilationData& compilationData, const KernelProfilingData& profilingData)
       * Constructor which initializes tuning result for successful computations. Error message is initialized to empty string.
       * @param kernelName Name of a kernel.
       * @param configuration Configuration used for computation.
       * @param duration Duration of a computation using specified configuration.
+      * @param compilationData Compilation data for kernel run in specified configuration.
       * @param profilingData Profiling data for kernel run in specified configuration.
       */
     explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-        const KernelProfilingData& profilingData);
+        const KernelCompilationData& compilationData, const KernelProfilingData& profilingData);
 
     /** @fn explicit ComputationResult(const std::string& compositionName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-      * const std::map<KernelId, KernelProfilingData>& compositionProfilingData)
+      * const std::map<KernelId, KernelCompilationData>& compilationData, const std::map<KernelId, KernelProfilingData>& profilingData)
       * Constructor which initializes tuning result for successful computations. Error message is initialized to empty string.
       * @param compositionName Name of a composition.
       * @param configuration Configuration used for computation.
       * @param duration Duration of a computation using specified configuration.
-      * @param compositionProfilingData Profiling data for composition run in specified configuration.
+      * @param compilationData Compilation data for composition run in specified configuration.
+      * @param profilingData Profiling data for composition run in specified configuration.
       */
     explicit ComputationResult(const std::string& compositionName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-        const std::map<KernelId, KernelProfilingData>& compositionProfilingData);
+        const std::map<KernelId, KernelCompilationData>& compilationData, const std::map<KernelId, KernelProfilingData>& profilingData);
 
     /** @fn explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration,
       * const std::string& errorMessage)
@@ -95,6 +90,18 @@ public:
       */
     const std::vector<ParameterPair>& getConfiguration() const;
 
+    /** @fn const KernelCompilationData& getCompilationData() const
+      * Getter for compilation data for kernel run in the current configuration. Returned data is valid only if tuned kernel is a single kernel.
+      * @return Compilation data for kernel run in the current configuration. See KernelCompilationData for more information.
+      */
+    const KernelCompilationData& getCompilationData() const;
+
+    /** @fn const std::map<KernelId, KernelCompilationData>& getCompositionCompilationData() const
+      * Getter for compilation data for composition run in the current configuration. Returned data is valid only if tuned kernel is a composition.
+      * @return Compilation data for composition run in the current configuration. See KernelCompilationData for more information.
+      */
+    const std::map<KernelId, KernelCompilationData>& getCompositionCompilationData() const;
+
     /** @fn const KernelProfilingData& getProfilingData() const
       * Getter for profiling data for kernel run in the current configuration. Returned profiling data is valid only if kernel profiling is enabled
       * and tuned kernel is a single kernel.
@@ -115,6 +122,8 @@ private:
     std::string kernelName;
     std::string errorMessage;
     std::vector<ParameterPair> configuration;
+    KernelCompilationData compilationData;
+    std::map<KernelId, KernelCompilationData> compositionCompilationData;
     KernelProfilingData profilingData;
     std::map<KernelId, KernelProfilingData> compositionProfilingData;
 };

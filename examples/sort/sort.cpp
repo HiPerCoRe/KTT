@@ -14,20 +14,18 @@
 #define RAND_MAX UINT_MAX
 #endif
 
-#define USE_CUDA 0
-
-#if USE_CUDA == 0
-    #if defined(_MSC_VER)
-        #define KTT_KERNEL_FILE "../examples/sort/sort.cl"
-    #else
-        #define KTT_KERNEL_FILE "../../examples/sort/sort.cl"
-    #endif
+#if defined(_MSC_VER)
+    const std::string kernelFilePrefix = "";
 #else
-    #if defined(_MSC_VER)
-        #define KTT_KERNEL_FILE "../examples/sort/sort.cu"
-    #else
-        #define KTT_KERNEL_FILE "../../examples/sort/sort.cu"
-    #endif
+    const std::string kernelFilePrefix = "../";
+#endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/sort/sort.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/sort/sort.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
 #endif
 
 int main(int argc, char** argv)
@@ -35,7 +33,7 @@ int main(int argc, char** argv)
   // Initialize platform and device index
   ktt::PlatformIndex platformIndex = 0;
   ktt::DeviceIndex deviceIndex = 0;
-  std::string kernelFile = KTT_KERNEL_FILE;
+  std::string kernelFile = defaultKernelFile;
 
   if (argc >= 2)
   {
@@ -69,12 +67,8 @@ int main(int argc, char** argv)
   }
 
   // Create tuner object for chosen platform and device
-#if USE_CUDA == 0
-  ktt::Tuner tuner(platformIndex, deviceIndex);
-#else
-    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeAPI::CUDA);
-    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-#endif
+  ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
+  tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
   tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
   // Declare kernels and their dimensions
@@ -109,11 +103,14 @@ int main(int argc, char** argv)
   tuner.setCompositionKernelArguments(compositionId, kernelIds[2], std::vector<ktt::ArgumentId>{inId, isumsId, outId, sizeId, shiftId});
 
   // Parameter for the length of OpenCL vector data types used in the kernels
-#if USE_CUDA == 0
-  tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
-#else
-  tuner.addParameter(compositionId, "FPVECTNUM", {4});
-#endif
+  if (computeAPI == ktt::ComputeAPI::OpenCL)
+  {
+      tuner.addParameter(compositionId, "FPVECTNUM", {4, 8, 16});
+  }
+  else
+  {
+      tuner.addParameter(compositionId, "FPVECTNUM", {4});
+  }
 
   // Local size below 128 does not work correctly, not even with the benchmark code
   tuner.addParameter(compositionId, "LOCAL_SIZE", {128, 256, 512});
@@ -145,4 +142,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-

@@ -20,7 +20,7 @@ public:
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType);
     explicit KernelArgument(const ArgumentId id, void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
         const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType,
-        const ArgumentUploadType uploadType, const bool dataCopied);
+        const ArgumentUploadType uploadType, const bool dataOwned);
     explicit KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
         const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType,
         const ArgumentUploadType uploadType);
@@ -41,25 +41,25 @@ public:
     ArgumentUploadType getUploadType() const;
     const void* getData() const;
     void* getData();
-    template <typename T> std::vector<T> getDataWithType() const
-    {
-        std::vector<T> result;
-        size_t dataSize = getDataSizeInBytes();
-        result.resize(dataSize / sizeof(T));
-
-        if (dataCopied)
-        {
-            std::memcpy(result.data(), copiedData.data(), dataSize);
-        }
-        else
-        {
-            std::memcpy(result.data(), referencedData, dataSize);
-        }
-
-        return result;
-    }
-    bool hasCopiedData() const;
+    bool hasOwnedData() const;
     bool isPersistent() const;
+
+    template <typename T>
+    const T* getDataWithType() const
+    {
+        if (dataOwned)
+        {
+            return reinterpret_cast<const T*>(ownedData.data());
+        }
+
+        return reinterpret_cast<const T*>(referencedData);
+    }
+
+    template <typename T>
+    const size_t getNumberOfElementsWithType() const
+    {
+        return getDataSizeInBytes() / sizeof(T);
+    }
 
     // Operators
     bool operator==(const KernelArgument& other) const;
@@ -74,9 +74,9 @@ private:
     ArgumentMemoryLocation argumentMemoryLocation;
     ArgumentAccessType argumentAccessType;
     ArgumentUploadType argumentUploadType;
-    std::vector<uint8_t> copiedData;
+    std::vector<uint8_t> ownedData;
     void* referencedData;
-    bool dataCopied;
+    bool dataOwned;
     bool persistentFlag;
 
     // Helper methods

@@ -74,19 +74,20 @@ private:
     std::map<KernelId, KernelRuntimeData> kernelData;
     std::map<ArgumentId, KernelArgument*> vectorArguments;
     std::map<ArgumentId, KernelArgument> nonVectorArguments;
-    mutable std::map<QueueId, std::set<EventId>> enqueuedKernelEvents;
+    mutable std::map<QueueId, std::set<std::pair<KernelId, EventId>>> enqueuedKernelEvents;
     mutable std::map<QueueId, std::set<std::pair<EventId, bool>>> enqueuedBufferEvents;
     mutable std::map<KernelId, std::vector<EventId>> kernelProfilingEvents;
     bool kernelProfilingFlag;
     std::set<KernelId> profiledKernels;
 
     // Helper methods
+    bool isComposition() const;
     std::vector<KernelArgument*> getArgumentPointers(const std::vector<ArgumentId>& argumentIds);
     void updateArgumentSimple(const ArgumentId id, const void* argumentData, const size_t numberOfElements, const ArgumentUploadType uploadType);
-    void storeKernelEvent(const QueueId queue, const EventId event) const;
+    void storeKernelEvent(const QueueId queue, const KernelId kernel, const EventId event) const;
     void storeKernelProfilingEvent(const KernelId kernel, const EventId event) const;
     void storeBufferEvent(const QueueId queue, const EventId event, const bool increaseOverhead) const;
-    void processKernelEvents(const std::set<EventId>& events);
+    void processKernelEvents(const std::set<std::pair<KernelId, EventId>>& events);
     void processBufferEvents(const std::set<std::pair<EventId, bool>>& events);
 };
 

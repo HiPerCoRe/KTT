@@ -4,9 +4,9 @@
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../tutorials/02_tuning_kernel_simple/opencl_kernel.cl"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_KERNEL_FILE "../../tutorials/02_tuning_kernel_simple/opencl_kernel.cl"
+    const std::string kernelFilePrefix = "../";
 #endif
 
 // Definition of class which will be used by tuner to automatically validate kernel output. It needs to publicly inherit from abstract class which is
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     // Initialize platform index, device index and path to kernel.
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string kernelFile = kernelFilePrefix + "../tutorials/02_tuning_kernel_simple/opencl_kernel.cl";
 
     if (argc >= 2)
     {

@@ -8,5 +8,6 @@ var classktt_1_1_kernel_profiling_data =
     [ "getCounter", "classktt_1_1_kernel_profiling_data.html#a8017b443b36fad356e64e94df3e65dd7", null ],
     [ "getRemainingProfilingRuns", "classktt_1_1_kernel_profiling_data.html#aae536600fc5a3fa06a99c104bf4e0c63", null ],
     [ "hasCounter", "classktt_1_1_kernel_profiling_data.html#a23b133db817c7b1247972ab0e9362976", null ],
+    [ "hasRemainingProfilingRuns", "classktt_1_1_kernel_profiling_data.html#a155046dac5d0e77058ab7a90507afca3", null ],
     [ "isValid", "classktt_1_1_kernel_profiling_data.html#ae3b55189e71e3b6f7686acdec4d053c3", null ]
 ];

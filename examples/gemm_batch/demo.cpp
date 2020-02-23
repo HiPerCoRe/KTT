@@ -1,22 +1,26 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <ctime>
+#include <chrono>
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
-    #define KTT_CL_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cl"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_CL_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cl"
+    const std::string kernelFilePrefix = "../";
 #endif
-    #if defined(_MSC_VER)
-        #define KTT_CU_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cu"
-    #else
-        #define KTT_CU_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cu"
-    #endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/gemm_batch/gemm_kernel.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/gemm_batch/gemm_kernel.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
 
 #define REAL float
-#define STEPS 1000
+#define MAX_STEPS 20
+#define CHANGE_TIME 30
 #define TESTS 100
 #define MAX_MEM 900000000
 
@@ -106,13 +110,9 @@ public:
         size_t padd_c = getParameterValue("PADD_C", parameterValues);
         size_t y = getParameterValue("GROUP_SIZE_Y", parameterValues);
         size_t z = getParameterValue("GROUP_SIZE_Z", parameterValues);
-/*#if USE_CUDA == 0
-        globalSize.setSizeX(batch*(c+padd_c)/z);
-        globalSize.setSizeY(y);
-        globalSize.setSizeZ(z);
-#else*/
+        
         globalSize.setSizeX(batch/z);
-//#endif
+
         localSize.setSizeX(c+padd_c);
         localSize.setSizeY(y);
         localSize.setSizeZ(z);
@@ -123,83 +123,96 @@ private:
     int batch, a, b, c;
 };
 
-void tuneKernel(ktt::Tuner* tuner, std::string& kernelFile, ktt::ArgumentId& aID, ktt::ArgumentId& bID, ktt::ArgumentId &dstID, ktt::ArgumentId& nID, int a, int b, int c, int batch, int stopBW) {
-    clock_t beginOverallTime = clock();
+void tuneKernel(ktt::Tuner& tuner, std::string& kernelFile, ktt::ArgumentId& aID, ktt::ArgumentId& bID, ktt::ArgumentId &dstID, ktt::ArgumentId& nID, int a, int b, int c, int batch, int stopBW, int test) {
+    auto beginOverallTime = std::chrono::high_resolution_clock::now();
 
     // create kernel
     ktt::DimensionVector ndRangeDimensions(batch);
     ktt::DimensionVector workGroupDimensions;
-    ktt::KernelId kernelId = tuner->addKernelFromFile(kernelFile, "gemm_batch", ndRangeDimensions, workGroupDimensions);
+    ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "gemm_batch", ndRangeDimensions, workGroupDimensions);
 
     // assign arguments
-    tuner->setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aID, bID, dstID, nID});
+    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aID, bID, dstID, nID});
 
     // create tuning space
-    tuner->addParameter(kernelId, "SIZE_A", {(size_t)a});
-    tuner->addParameter(kernelId, "SIZE_B", {(size_t)b});
-    tuner->addParameter(kernelId, "SIZE_C", {(size_t)c});
-    tuner->addParameter(kernelId, "GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
-    tuner->addParameter(kernelId, "GROUP_SIZE_Z", {1, 2, 4, 8, 16, 32, 64});
-    tuner->addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
-    tuner->addParameter(kernelId, "PADD_AA", {0, 1});
-    tuner->addParameter(kernelId, "PADD_AB", {0, 1});
+    tuner.addParameter(kernelId, "SIZE_A", {(size_t)a});
+    tuner.addParameter(kernelId, "SIZE_B", {(size_t)b});
+    tuner.addParameter(kernelId, "SIZE_C", {(size_t)c});
+    tuner.addParameter(kernelId, "GROUP_SIZE_Y", {1, 2, 4, 8, 16, 32});
+    tuner.addParameter(kernelId, "GROUP_SIZE_Z", {1, 2, 4, 8, 16, 32, 64});
+    tuner.addParameter(kernelId, "CACHING_STRATEGY", {0, 1, 2}); /* 0 = implicit caching, 1 = local memory, 2 = private memory */
+    tuner.addParameter(kernelId, "PADD_AA", {0, 1});
+    tuner.addParameter(kernelId, "PADD_AB", {0, 1});
     if (c % 4 == 0)
-        tuner->addParameter(kernelId, "PADD_C", {0});
+        tuner.addParameter(kernelId, "PADD_C", {0});
     else
-        tuner->addParameter(kernelId, "PADD_C", {0, static_cast<size_t>(c % 4)});
-    tuner->addParameter(kernelId, "DIRECT_WRITE", {0, 1});
-    tuner->addParameter(kernelId, "UNROLL_K", {0, 1});
+        tuner.addParameter(kernelId, "PADD_C", {0, static_cast<size_t>(c % 4)});
+    tuner.addParameter(kernelId, "DIRECT_WRITE", {0, 1});
+    tuner.addParameter(kernelId, "UNROLL_K", {0, 1});
 
     auto parallelismConstraint = [](const std::vector<size_t>& v) {return v[0] <= v[1];};
-    tuner->addConstraint(kernelId, {"GROUP_SIZE_Y", "SIZE_B"}, parallelismConstraint);
+    tuner.addConstraint(kernelId, {"GROUP_SIZE_Y", "SIZE_B"}, parallelismConstraint);
     auto paddConstraint = [](const std::vector<size_t>& v) {return (v[0] == 0 && v[1] == 0 && v[2] == 0) || (v[3] > 0);};
-    tuner->addConstraint(kernelId, {"PADD_AA", "PADD_AB", "PADD_C", "CACHING_STRATEGY"}, paddConstraint);
+    tuner.addConstraint(kernelId, {"PADD_AA", "PADD_AB", "PADD_C", "CACHING_STRATEGY"}, paddConstraint);
     auto dwConstraint = [](const std::vector<size_t>& v) {return (v[0] == 1) || (v[1] > 0);};
-    tuner->addConstraint(kernelId, {"DIRECT_WRITE", "CACHING_STRATEGY"}, dwConstraint);
+    tuner.addConstraint(kernelId, {"DIRECT_WRITE", "CACHING_STRATEGY"}, dwConstraint);
     auto unrollkConstraint = [](const std::vector<size_t>& v) {return (v[0] == 0) || (v[1] == 2);};
-    tuner->addConstraint(kernelId, {"UNROLL_K", "CACHING_STRATEGY"}, unrollkConstraint);
+    tuner.addConstraint(kernelId, {"UNROLL_K", "CACHING_STRATEGY"}, unrollkConstraint);
 #define SHARED_PER_BLOCK (49152/4)
     auto memConstraint = [](const std::vector<size_t>& v) {size_t a = v[1]; size_t b = v[2]; size_t c = v[3]; return (v[0] == 1 && ((a+v[7])*(b+v[8])+c*a+(1-v[4])*(c*b))*v[6] < SHARED_PER_BLOCK) || (v[0] == 2 && v[5] == 1 && ((a+v[7])*(b+v[8])+(1-v[4])*(c*b))*v[6] < SHARED_PER_BLOCK) || (v[0] == 2 && ((a+v[7])*(b+v[8])+c*a+(1-v[4])*(c*b))*v[6] < SHARED_PER_BLOCK);};
-    tuner->addConstraint(kernelId, {"CACHING_STRATEGY", "SIZE_A", "SIZE_B", "SIZE_C", "DIRECT_WRITE", "GROUP_SIZE_Y", "GROUP_SIZE_Z", "PADD_AA", "PADD_AB"}, memConstraint);
+    tuner.addConstraint(kernelId, {"CACHING_STRATEGY", "SIZE_A", "SIZE_B", "SIZE_C", "DIRECT_WRITE", "GROUP_SIZE_Y", "GROUP_SIZE_Z", "PADD_AA", "PADD_AB"}, memConstraint);
 #define MAX_BLOCK_SIZE 1024
     auto blockConstraint = [](const std::vector<size_t>&v) {return ((v[0]+v[2])*v[1]*v[3] < MAX_BLOCK_SIZE) && ((v[0]+v[2])*v[1]*v[3] >= 32);};
-    tuner->addConstraint(kernelId, {"SIZE_C", "GROUP_SIZE_Y", "PADD_C", "GROUP_SIZE_Z"}, blockConstraint);
+    tuner.addConstraint(kernelId, {"SIZE_C", "GROUP_SIZE_Y", "PADD_C", "GROUP_SIZE_Z"}, blockConstraint);
 
     // assign manipulator
-    tuner->setTuningManipulator(kernelId, std::make_unique<cTunableGemm>(batch, a, b, c));
+    tuner.setTuningManipulator(kernelId, std::make_unique<cTunableGemm>(batch, a, b, c));
 
-    tuner->setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{});
+    tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{});
 
     // tune kernel   
     std::vector<REAL> firstMatrix(32*32);
     ktt::ComputationResult res;
     ktt::OutputDescriptor output(dstID, (void*)firstMatrix.data(), 32*32*sizeof(REAL));
     bool tune = true;
-    for (int i = 0; i < STEPS; i++) {
+    double overallSec;
+    double perfActual;
+    double effActual;
+    double perfOverall;
+    double bwOverall;
+    for (int i = 0; true; i++) {
         if (tune)
-            res = tuner->tuneKernelByStep(kernelId, {output});
+            res = tuner.tuneKernelByStep(kernelId, {output});
         else {
-            ktt::ComputationResult bestConf = tuner->getBestComputationResult(kernelId);
-            res = tuner->runKernel(kernelId, bestConf.getConfiguration(), {output});
+            ktt::ComputationResult bestConf = tuner.getBestComputationResult(kernelId);
+            res = tuner.runKernel(kernelId, bestConf.getConfiguration(), {output});
         }
-        clock_t now = clock();
-        double overallSec = double(now - beginOverallTime) / CLOCKS_PER_SEC;
-        double perfActual = (double)(a*b*c*2)*(double)batch / res.getDuration();
-        double effActual = (double)(a*b+c*a+c*b) * (double)batch * (double)sizeof(REAL) / res.getDuration();
-        double perfOverall = (double)((i+1)*a*b*c*2)*(double)batch / overallSec / 1000000000.0;
-        double bwOverall = (double)(i+1)*(double)((a*b+c*a+c*b)*sizeof(REAL))*(double)batch / overallSec / 1000000000.0;
-        std::cout << "Actual perf. " << perfActual << "GFlops, "
+        auto now = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = now - beginOverallTime;
+        if (elapsed.count() > double(CHANGE_TIME))
+            break;
+
+        overallSec = double(elapsed.count());
+        perfActual = (double)(a*b*c*2)*(double)batch / res.getDuration();
+        effActual = (double)(a*b+c*a+c*b) * (double)batch * (double)sizeof(REAL) / res.getDuration();
+        perfOverall = (double)((i+1)*a*b*c*2)*(double)batch / overallSec / 1000000000.0;
+        bwOverall = (double)(i+1)*(double)((a*b+c*a+c*b)*sizeof(REAL))*(double)batch / overallSec / 1000000000.0;
+        std::cout << "Time: " << double(test*CHANGE_TIME) + double(elapsed.count()) << "s, "
+            << "Actual perf. " << perfActual << "GFlops, "
             << "actual BW " << effActual << "GB/s, "
             << "perf. with overhead " << perfOverall << "GFlops, " 
             << "BW with overhead " << bwOverall << "GB/s" << std::endl;
-        if (effActual > (double)stopBW)
+        if (effActual > (double)stopBW || i > MAX_STEPS)
             tune = false;
     }
 
     // print best
-    ktt::ComputationResult bestConf = tuner->getBestComputationResult(kernelId);
-    std::cout << "Performance: " << (double)(a*b*c*2)*(double)batch / (double)bestConf.getDuration() << " GFlops" << std::endl;
-    std::cout << "Memory BW: " << (double)(a*b+c*a+c*b)*(double)(batch)*(double)sizeof(REAL) / (double)bestConf.getDuration() << " GB/s" << std::endl;
+    ktt::ComputationResult bestConf = tuner.getBestComputationResult(kernelId);
+    /*std::cout << "Performance: " << (double)(a*b*c*2)*(double)batch / (double)bestConf.getDuration() << " GFlops" << std::endl;
+    std::cout << "Memory BW: " << (double)(a*b+c*a+c*b)*(double)(batch)*(double)sizeof(REAL) / (double)bestConf.getDuration() << " GB/s" << std::endl;*/
+    std::cout << "Final results: peak performance: " << (double)(a*b*c*2)*(double)batch / (double)bestConf.getDuration() << ", including overhead: " << perfOverall << " GFlops"
+        << ", peak BW " <<   (double)(a*b+c*a+c*b)*(double)(batch)*(double)sizeof(REAL) / (double)bestConf.getDuration() << ", including overhead: " << bwOverall << " GB/s" 
+        << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -207,7 +220,7 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile;
+    std::string kernelFile = defaultKernelFile;
 
     if (argc >= 2)
     {
@@ -218,29 +231,16 @@ int main(int argc, char** argv)
         }
     }
 
-    int interface = 0;
-    std::cout << "Which interface to use (0 = CUDA, 1 = OpenCL)? ";
-    std::cin >> interface;
-
     int stopBW = 0;
     std::cout << "Enter bandwidth (GB/s) sufficient to stop tuning ";
     std::cin >> stopBW;
 
-    // create and configure tunner
-    ktt::Tuner* tuner = NULL; 
-    if (interface == 1) {
-        tuner = new ktt::Tuner(platformIndex, deviceIndex);
-        kernelFile = KTT_CL_KERNEL_FILE;
-    }
-    else {
-        tuner = new ktt::Tuner(0, deviceIndex, ktt::ComputeAPI::CUDA);
-        kernelFile = KTT_CU_KERNEL_FILE;
-    }
-    tuner->setGlobalSizeType(ktt::GlobalSizeType::CUDA);
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::CUDA);
 
     NullBuffer nullBuffer;
     std::ostream nullStream(&nullBuffer);
-    tuner->setLoggingTarget(nullStream);
+    tuner.setLoggingTarget(nullStream);
 
     // tune kernels for different sizes
     for (int i = 0; i < TESTS; i++) {
@@ -268,22 +268,20 @@ int main(int argc, char** argv)
             srcB[i] = 10.0f*((REAL)rand()) / ((REAL) RAND_MAX);
 
         // create input/output
-        ktt::ArgumentId srcAId = tuner->addArgumentVector(srcA, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryLocation::Device, false);
-        tuner->persistArgument(srcAId, true);
-        ktt::ArgumentId srcBId = tuner->addArgumentVector(srcB, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryLocation::Device, false);
-        tuner->persistArgument(srcBId, true);
-        ktt::ArgumentId dstId = tuner->addArgumentVector(dst, ktt::ArgumentAccessType::WriteOnly, ktt::ArgumentMemoryLocation::Device, false);
-        tuner->persistArgument(dstId, true);
-        ktt::ArgumentId nId = tuner->addArgumentScalar(batch);
+        ktt::ArgumentId srcAId = tuner.addArgumentVector(srcA, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryLocation::Device, false);
+        tuner.persistArgument(srcAId, true);
+        ktt::ArgumentId srcBId = tuner.addArgumentVector(srcB, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryLocation::Device, false);
+        tuner.persistArgument(srcBId, true);
+        ktt::ArgumentId dstId = tuner.addArgumentVector(dst, ktt::ArgumentAccessType::WriteOnly, ktt::ArgumentMemoryLocation::Device, false);
+        tuner.persistArgument(dstId, true);
+        ktt::ArgumentId nId = tuner.addArgumentScalar(batch);
 
-        tuneKernel(tuner, kernelFile, srcAId, srcBId, dstId, nId, a, b, c, batch, stopBW);
+        tuneKernel(tuner, kernelFile, srcAId, srcBId, dstId, nId, a, b, c, batch, stopBW, i);
 
-        tuner->persistArgument(srcAId, false);
-        tuner->persistArgument(srcBId, false);
-        tuner->persistArgument(dstId, false);
+        tuner.persistArgument(srcAId, false);
+        tuner.persistArgument(srcBId, false);
+        tuner.persistArgument(dstId, false);
     }
-
-    delete tuner;
 
     return 0;
 }

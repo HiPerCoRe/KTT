@@ -3,22 +3,22 @@
 #include <vector>
 #include "tuner_api.h"
 
-#define USE_CUDA 0
-#define RAPID_TEST 0
+#if defined(_MSC_VER)
+    const std::string kernelFilePrefix = "";
+#else
+    const std::string kernelFilePrefix = "../";
+#endif
 
-#if USE_CUDA == 0
-    #if defined(_MSC_VER)
-        #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cl"
-    #else
-        #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cl"
-    #endif
-#else /* USE_CUDA */
-    #if defined(_MSC_VER)
-        #define KTT_KERNEL_FILE "../examples/gemm_batch/gemm_kernel.cu"
-    #else
-        #define KTT_KERNEL_FILE "../../examples/gemm_batch/gemm_kernel.cu"
-    #endif
-#endif /* USE_CUDA */
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/gemm_batch/gemm_kernel.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/gemm_batch/gemm_kernel.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
+
+#define RAPID_TEST 0
+#define USE_PROFILING 0
 
 #define REAL float
 
@@ -99,18 +99,27 @@ public:
         size_t padd_c = getParameterValue("PADD_C", parameterValues);
         size_t y = getParameterValue("GROUP_SIZE_Y", parameterValues);
         size_t z = getParameterValue("GROUP_SIZE_Z", parameterValues);
-#if USE_CUDA == 0
-        globalSize.setSizeX(batch*(c+padd_c)/z);
-        globalSize.setSizeY(y);
-        globalSize.setSizeZ(z);
-#else
-        globalSize.setSizeX(batch/z);
-#endif
+
+        if (computeAPI == ktt::ComputeAPI::OpenCL)
+        {
+            globalSize.setSizeX(batch*(c + padd_c) / z);
+            globalSize.setSizeY(y);
+            globalSize.setSizeZ(z);
+        }
+        else
+        {
+            globalSize.setSizeX(batch / z);
+        }
+
         localSize.setSizeX(c+padd_c);
         localSize.setSizeY(y);
         localSize.setSizeZ(z);
 
+#if USE_PROFILING == 1
+        runKernelWithProfiling(kernelId, globalSize, localSize);
+#else
         runKernel(kernelId, globalSize, localSize);
+#endif
     }
 private:
     int batch, a, b, c;
@@ -121,7 +130,7 @@ int main(int argc, char** argv)
     // Initialize platform and device index
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string kernelFile = defaultKernelFile;
 
     if (argc >= 2)
     {
@@ -172,12 +181,13 @@ int main(int argc, char** argv)
                 srcBT[i*a*c + j*a + k] = srcB[i*a*c + k*c + j];
             }*/
 
-#if USE_CUDA == 0
-    ktt::Tuner tuner(platformIndex, deviceIndex);
-#else
-    ktt::Tuner tuner(0, deviceIndex, ktt::ComputeAPI::CUDA);
-#endif
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
+    #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+    #endif
 
     // create kernel
     ktt::DimensionVector ndRangeDimensions(batch);

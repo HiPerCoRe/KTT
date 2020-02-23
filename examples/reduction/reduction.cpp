@@ -3,20 +3,32 @@
 #include <vector>
 #include "tuner_api.h"
 #include "reduction_reference.h"
-#include "reduction_tunable.h"
 
 #if defined(_MSC_VER)
-    #define KTT_KERNEL_FILE "../examples/reduction/reduction_kernel.cl"
+    const std::string kernelFilePrefix = "";
 #else
-    #define KTT_KERNEL_FILE "../../examples/reduction/reduction_kernel.cl"
+    const std::string kernelFilePrefix = "../";
 #endif
+
+#if KTT_CUDA_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/reduction/reduction_kernel.cu";
+    const auto computeAPI = ktt::ComputeAPI::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const std::string defaultKernelFile = kernelFilePrefix + "../examples/reduction/reduction_kernel.cl";
+    const auto computeAPI = ktt::ComputeAPI::OpenCL;
+#endif
+
+#define RAPID_TEST 0
+#define USE_PROFILING 0
+
+#include "reduction_tunable.h"
 
 int main(int argc, char** argv)
 {
     // Initialize platform and device index
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = KTT_KERNEL_FILE;
+    std::string kernelFile = defaultKernelFile;
 
     if (argc >= 2)
     {
@@ -32,7 +44,11 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
+    #if USE_PROFILING == 0
     const int n = 64*1024*1024;
+    #else
+    const int n = 64*1024*1024/4;
+    #endif
     const int nAlloc = ((n+16-1)/16)*16; // padd to longest vector size
     std::vector<float> src(nAlloc, 0.0f);
     std::vector<float> dst(nAlloc, 0.0f);
@@ -42,8 +58,14 @@ int main(int argc, char** argv)
         src[i] = 1000.0f*((float)rand()) / ((float)RAND_MAX);
     }
 
-    ktt::Tuner tuner(platformIndex, deviceIndex);
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
+
+    #if USE_PROFILING == 1
+    printf("Executing with profiling switched ON.\n");
+    tuner.setKernelProfiling(true);
+    #endif
 
     // create kernel
     int nUp = ((n+512-1)/512)*512; // maximum WG size used in tuning parameters
@@ -60,6 +82,11 @@ int main(int argc, char** argv)
     ktt::ArgumentId outOffsetId = tuner.addArgumentScalar(offset);
     tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{srcId, dstId, nId, inOffsetId, outOffsetId});
 
+#if RAPID_TEST == 1
+    tuner.persistArgument(srcId, true);
+    tuner.persistArgument(dstId, true);
+#endif
+
     // get number of compute units
     const ktt::DeviceInfo di = tuner.getCurrentDeviceInfo();
     std::cout << "Number of compute units: " << di.getMaxComputeUnits() << std::endl;
@@ -69,7 +96,16 @@ int main(int argc, char** argv)
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
     tuner.addParameter(kernelId, "UNBOUNDED_WG", {0, 1});
     tuner.addParameter(kernelId, "WG_NUM", {0, cus, cus * 2, cus * 4, cus * 8, cus * 16});
-    tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2, 4, 8, 16});
+
+    if (computeAPI == ktt::ComputeAPI::OpenCL)
+    {
+        tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2, 4, 8, 16});
+    }
+    else
+    {
+        tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2, 4});
+    }
+
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "VECTOR_SIZE", ktt::ModifierAction::Divide);
     tuner.addParameter(kernelId, "USE_ATOMICS", {0, 1});
 
@@ -80,9 +116,11 @@ int main(int argc, char** argv)
     auto unboundedWG = [](const std::vector<size_t>& v) {return (!v[0] || v[1] >= 32);};
     tuner.addConstraint(kernelId, {"UNBOUNDED_WG", "WORK_GROUP_SIZE_X"}, unboundedWG);
 
+#if RAPID_TEST == 0
     tuner.setReferenceClass(kernelId, std::make_unique<ReferenceReduction>(src, dstId), std::vector<ktt::ArgumentId>{dstId});
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, (double)n*10000.0/10'000'000.0);
     tuner.setValidationRange(dstId, 1);
+#endif
 
     tuner.setTuningManipulator(kernelId, std::make_unique<TunableReduction>(srcId, dstId, nId, inOffsetId, outOffsetId));
     

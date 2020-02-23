@@ -35,7 +35,7 @@ KernelId Tuner::addKernelFromFile(const std::string& filePath, const std::string
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return InvalidKernelId;
     }
 }
 
@@ -48,7 +48,6 @@ void Tuner::setKernelArguments(const KernelId id, const std::vector<ArgumentId>&
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -61,7 +60,6 @@ void Tuner::addParameter(const KernelId id, const std::string& parameterName, co
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -74,7 +72,6 @@ void Tuner::addParameterDouble(const KernelId id, const std::string& parameterNa
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -87,7 +84,6 @@ void Tuner::addParameterPack(const KernelId id, const std::string& packName, con
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -101,7 +97,6 @@ void Tuner::setThreadModifier(const KernelId id, const ModifierType modifierType
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -141,7 +136,6 @@ void Tuner::setLocalMemoryModifier(const KernelId id, const ArgumentId argumentI
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -155,7 +149,6 @@ void Tuner::addConstraint(const KernelId id, const std::vector<std::string>& par
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -168,7 +161,6 @@ void Tuner::setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipu
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -181,7 +173,6 @@ void Tuner::setTuningManipulatorSynchronization(const KernelId id, const bool fl
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -195,7 +186,7 @@ KernelId Tuner::addComposition(const std::string& compositionName, const std::ve
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return InvalidKernelId;
     }
 }
 
@@ -210,7 +201,6 @@ void Tuner::setCompositionKernelThreadModifier(const KernelId compositionId, con
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -250,7 +240,6 @@ void Tuner::setCompositionKernelLocalMemoryModifier(const KernelId compositionId
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -263,7 +252,6 @@ void Tuner::setCompositionKernelArguments(const KernelId compositionId, const Ke
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -276,7 +264,6 @@ void Tuner::persistArgument(const ArgumentId id, const bool flag)
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -289,7 +276,6 @@ void Tuner::downloadPersistentArgument(const OutputDescriptor& output) const
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -302,7 +288,7 @@ std::vector<ComputationResult> Tuner::tuneKernel(const KernelId id)
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return std::vector<ComputationResult>{};
     }
 }
 
@@ -315,7 +301,7 @@ std::vector<ComputationResult> Tuner::tuneKernel(const KernelId id, std::unique_
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return std::vector<ComputationResult>{};
     }
 }
 
@@ -328,7 +314,7 @@ std::vector<ComputationResult> Tuner::dryTuneKernel(const KernelId id, const std
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return std::vector<ComputationResult>{};
     }
 }
 
@@ -341,7 +327,7 @@ ComputationResult Tuner::tuneKernelByStep(const KernelId id, const std::vector<O
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return ComputationResult();
     }
 }
 
@@ -354,7 +340,7 @@ ComputationResult Tuner::tuneKernelByStep(const KernelId id, const std::vector<O
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return ComputationResult();
     }
 }
 
@@ -367,7 +353,7 @@ ComputationResult Tuner::runKernel(const KernelId id, const std::vector<Paramete
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return ComputationResult();
     }
 }
 
@@ -385,7 +371,6 @@ void Tuner::setKernelProfiling(const bool flag)
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -398,7 +383,6 @@ void Tuner::setCompositionKernelProfiling(const KernelId compositionId, const Ke
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -411,7 +395,6 @@ void Tuner::setKernelProfilingCounters(const std::vector<std::string>& counterNa
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -424,7 +407,6 @@ void Tuner::setSearchMethod(const SearchMethod method, const std::vector<double>
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
     }
 }
 
@@ -471,7 +453,7 @@ ComputationResult Tuner::getBestComputationResult(const KernelId id) const
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return ComputationResult();
     }
 }
 
@@ -484,7 +466,7 @@ std::string Tuner::getKernelSource(const KernelId id, const std::vector<Paramete
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return "";
     }
 }
 
@@ -585,7 +567,7 @@ std::vector<PlatformInfo> Tuner::getPlatformInfo() const
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return std::vector<PlatformInfo>{};
     }
 }
 
@@ -598,7 +580,7 @@ std::vector<DeviceInfo> Tuner::getDeviceInfo(const PlatformIndex platform) const
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return std::vector<DeviceInfo>{};
     }
 }
 
@@ -611,7 +593,7 @@ DeviceInfo Tuner::getCurrentDeviceInfo() const
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return DeviceInfo(0, "");
     }
 }
 
@@ -651,7 +633,7 @@ ArgumentId Tuner::addArgument(void* vectorData, const size_t numberOfElements, c
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return InvalidArgumentId;
     }
 }
 
@@ -665,7 +647,7 @@ ArgumentId Tuner::addArgument(const void* data, const size_t numberOfElements, c
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return InvalidArgumentId;
     }
 }
 
@@ -679,7 +661,7 @@ ArgumentId Tuner::addArgument(const size_t localMemoryElementsCount, const size_
     catch (const std::runtime_error& error)
     {
         TunerCore::log(LoggingLevel::Error, error.what());
-        throw;
+        return InvalidArgumentId;
     }
 }
 

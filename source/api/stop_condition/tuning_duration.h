@@ -38,11 +38,10 @@ public:
         initialTime = std::chrono::steady_clock::now();
     }
 
-    void updateStatus(const bool, const std::vector<ParameterPair>&, const double, const KernelProfilingData&,
-        const std::map<KernelId, KernelProfilingData>&) override
+    void updateStatus(const ComputationResult&) override
     {
         std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
-        passedTime = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - initialTime).count()) / 1000.0;
+        passedTime = static_cast<double>(std::chrono::duration_cast<std::chrono::seconds>(currentTime - initialTime).count());
     }
     
     size_t getConfigurationCount() const override
