@@ -4,6 +4,7 @@ KTT - Kernel Tuning Toolkit
 
 KTT is a tuning framework for OpenCL and CUDA kernels. Version 1.2 which includes support for kernel profiling on AMD
 GPUs and newer Nvidia GPUs is now available.
+
 Main features
 -------------
 * Ability to define kernel tuning parameters such as kernel thread sizes, vector data types and loop unroll factors
