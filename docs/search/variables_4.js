@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['throughputvalue',['throughputValue',['../unionktt_1_1_profiling_counter_value.html#ae93d36ca14c1297e8850529cbabfe288',1,'ktt::ProfilingCounterValue']]]
+  ['localmemorysize_547',['localMemorySize',['../structktt_1_1_kernel_compilation_data.html#adcf41fd6f30a0abcb41ce74d3878557e',1,'ktt::KernelCompilationData']]]
 ];

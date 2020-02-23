@@ -2,9 +2,8 @@ KTT - Kernel Tuning Toolkit
 ===========================
 <img src="https://github.com/Fillo7/KTT/blob/master/docs/resources/ktt_logo.png" width="425" height="150"/>
 
-KTT is a tuning framework for OpenCL and CUDA kernels. Version 1.1 which includes experimental support for Vulkan and
-support for kernel profiling on Nvidia GPUs is now available.
-
+KTT is a tuning framework for OpenCL and CUDA kernels. Version 1.2 which includes support for kernel profiling on AMD
+GPUs and newer Nvidia GPUs is now available.
 Main features
 -------------
 * Ability to define kernel tuning parameters such as kernel thread sizes, vector data types and loop unroll factors
@@ -79,7 +78,7 @@ systems are Linux and Windows.
 * Following build options are available:
     - `--outdir=path` specifies custom build directory, default build directory is `build`
     - `--platform=vendor` specifies SDK used for building KTT, useful when multiple SDKs are installed
-    - `--profiling` enables compilation of kernel profiling functionality for CUDA
+    - `--profiling=library` enables compilation of kernel profiling functionality using specified library
     - `--vulkan` enables compilation of experimental Vulkan backend
     - `--no-examples` disables compilation of examples
     - `--no-tutorials` disables compilation of tutorials

@@ -8,6 +8,7 @@ var namespacektt =
     [ "DimensionVector", "classktt_1_1_dimension_vector.html", "classktt_1_1_dimension_vector" ],
     [ "EnableBitfieldOperators", "structktt_1_1_enable_bitfield_operators.html", "structktt_1_1_enable_bitfield_operators" ],
     [ "EnableBitfieldOperators< ValidationMode >", "structktt_1_1_enable_bitfield_operators_3_01_validation_mode_01_4.html", "structktt_1_1_enable_bitfield_operators_3_01_validation_mode_01_4" ],
+    [ "KernelCompilationData", "structktt_1_1_kernel_compilation_data.html", "structktt_1_1_kernel_compilation_data" ],
     [ "KernelProfilingCounter", "classktt_1_1_kernel_profiling_counter.html", "classktt_1_1_kernel_profiling_counter" ],
     [ "KernelProfilingData", "classktt_1_1_kernel_profiling_data.html", "classktt_1_1_kernel_profiling_data" ],
     [ "OutputDescriptor", "classktt_1_1_output_descriptor.html", "classktt_1_1_output_descriptor" ],

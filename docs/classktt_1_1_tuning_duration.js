@@ -5,5 +5,5 @@ var classktt_1_1_tuning_duration =
     [ "getStatusString", "classktt_1_1_tuning_duration.html#ae954fa16adc8a2a29a37afbf4e96f300", null ],
     [ "initialize", "classktt_1_1_tuning_duration.html#a537695bd73c59b960448183eeec2e23e", null ],
     [ "isSatisfied", "classktt_1_1_tuning_duration.html#aef9c63d6c45d91c8f433648f1437d381", null ],
-    [ "updateStatus", "classktt_1_1_tuning_duration.html#a11ee61d274a9a6fb257569b9b748e8a1", null ]
+    [ "updateStatus", "classktt_1_1_tuning_duration.html#ad2f61cae3a1dda7d12c090b1cac2e520", null ]
 ];

@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['uintvalue',['uintValue',['../unionktt_1_1_profiling_counter_value.html#a4a5b44e67e9c2b3d1e6bf2fb3ad38858',1,'ktt::ProfilingCounterValue']]],
-  ['utilizationlevelvalue',['utilizationLevelValue',['../unionktt_1_1_profiling_counter_value.html#ae4e49176a8945ab9fa525c6fd2cc13bc',1,'ktt::ProfilingCounterValue']]]
+  ['maxworkgroupsize_548',['maxWorkGroupSize',['../structktt_1_1_kernel_compilation_data.html#ad41e5fb649589373c6984df262f03cfb',1,'ktt::KernelCompilationData']]]
 ];

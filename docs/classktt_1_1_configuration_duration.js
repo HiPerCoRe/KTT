@@ -5,5 +5,5 @@ var classktt_1_1_configuration_duration =
     [ "getStatusString", "classktt_1_1_configuration_duration.html#ab2b2d386c82a0c16a240f22153616b9a", null ],
     [ "initialize", "classktt_1_1_configuration_duration.html#a03617f962e37ea36ce2d8b4e516e6faa", null ],
     [ "isSatisfied", "classktt_1_1_configuration_duration.html#a525531c8271f7e87adf406f31ef897a9", null ],
-    [ "updateStatus", "classktt_1_1_configuration_duration.html#a950b4d21f960d6167e29a0cb8cf3b830", null ]
+    [ "updateStatus", "classktt_1_1_configuration_duration.html#af437e6809ee850daabfbb3bd2e8614ca", null ]
 ];

@@ -1,3 +1,17 @@
+Version 1.2 (23/2/2020)
+* Added support for AMD GPA profiling API, kernel profiling on AMD GPUs is now supported
+* Added support for new CUPTI profiling API, kernel profiling on newer Nvidia GPUs is now supported
+* Profiling API version can now be specified in premake
+* Added support for kernel compilation data retrieval
+* Significantly improved performance of kernel output validation for large buffers
+* Added support for scalar kernel arguments in Vulkan backend
+* Improved stop condition API
+* Fixed bug where retrieving best computation result could return invalid result
+* Duplicit results are no longer printed when kernel profiling is enabled
+* Fixed memory leak in old CUPTI profiling API
+* Fixed incorrect tuner behavior after failing to launch a kernel when kernel profiling is enabled
+* Added more examples that support kernel profiling
+
 Version 1.1 (21/4/2019)
 * Introduced support for kernel profiling on Nvidia GPUs (currently for generations up to and including Volta),
   kernel profiling allows collection of performance counters which can be utilized by searchers and stop conditions

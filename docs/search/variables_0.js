@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['doublevalue',['doubleValue',['../unionktt_1_1_profiling_counter_value.html#a7b089643069ef63df36b93eb9d05bc0e',1,'ktt::ProfilingCounterValue']]]
+  ['constantmemorysize_541',['constantMemorySize',['../structktt_1_1_kernel_compilation_data.html#a0dd540e95088922884216dc1161e8ac5',1,'ktt::KernelCompilationData']]]
 ];
