@@ -96,8 +96,9 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <div class="title">KTT - Kernel Tuning Toolkit </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><img src="https://github.com/Fillo7/KTT/blob/master/docs/resources/ktt_logo.png" alt="" width="425" height="150" class="inline"/></p>
-<p>KTT is a tuning framework for OpenCL and CUDA kernels. Version 1.2 which includes support for kernel profiling on AMD GPUs and newer Nvidia GPUs is now available. </p><h1>Main features </h1>
+<div class="textblock"><p><img src="resources/ktt_logo.png" alt="" width="425" height="150" class="inline"/></p>
+<p>KTT is a tuning framework for OpenCL and CUDA kernels. Version 1.2 which includes support for kernel profiling on AMD GPUs and newer Nvidia GPUs is now available.</p>
+<h1>Main features </h1>
 <ul>
 <li>Ability to define kernel tuning parameters such as kernel thread sizes, vector data types and loop unroll factors in order to optimize computation for a particular device</li>
 <li>Support for iterative kernel launches and composite kernels</li>
@@ -110,9 +111,8 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <h1>Getting started </h1>
 <ul>
 <li>Documentation for KTT API can be found <a href="https://fillo7.github.io/KTT/">here</a>.</li>
-<li>Newest version of KTT framework can be found <a href="https://github.com/Fillo7/KTT/releases">here</a>.</li>
-<li>Prebuilt binaries are available only for some platforms. Other platforms require manual build.</li>
-<li>Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support. Binaries for Vulkan include only Vulkan support. All binaries are built for 64-bit platforms.</li>
+<li>The newest version of KTT framework can be found <a href="https://github.com/Fillo7/KTT/releases">here</a>.</li>
+<li>Prebuilt binaries are no longer provided due to many different combinations of compute APIs and build options available. Please check the <code>Building KTT</code> section for detailed instructions on how to perform local build.</li>
 </ul>
 <h1>Tutorials </h1>
 <p>Tutorials are short examples aimed at introducing people to KTT framework. Each tutorial focuses on explaining specific part of the API. All tutorials are available for both OpenCL and CUDA backends. Most of the tutorials are also available for Vulkan. Tutorials assume that reader has some knowledge about C++ and GPU programming. List of currently available tutorials:</p>
@@ -138,8 +138,8 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <li>KTT can be built as a dynamic (shared) library using command line build tool Premake. Currently supported operating systems are Linux and Windows.</li>
 <li>The prerequisites to build KTT are:<ul>
 <li>C++14 compiler, for example Clang 3.5, GCC 5.0, MSVC 19.0 (Visual Studio 2015) or newer</li>
-<li>OpenCL, CUDA or Vulkan library, supported SDKs are AMD APP SDK 3.0, Intel SDK for OpenCL, NVIDIA CUDA Toolkit 7.5 and Vulkan SDK 1.1.101 or newer</li>
-<li><a href="https://premake.github.io/download.html">Premake 5</a> (alpha 12 or newer)</li>
+<li>OpenCL, CUDA or Vulkan library, supported SDKs are AMD APP SDK, Intel SDK for OpenCL, NVIDIA CUDA Toolkit and Vulkan SDK</li>
+<li><a href="https://premake.github.io/download.html">Premake 5</a></li>
 </ul>
 </li>
 <li>Build under Linux (inside KTT root folder):<ul>
@@ -151,7 +151,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </li>
 <li>Build under Windows (inside KTT root folder):<ul>
 <li>ensure that path to vendor SDK is correctly set in the environment variables, this should be done automatically during SDK installation</li>
-<li>run <code>premake5.exe vs2015</code> (or <code>premake5.exe vs2017</code>) to generate Visual Studio project files</li>
+<li>run <code>premake5.exe vs20xx</code> (e.g. <code>premake5.exe vs2019</code>) to generate Visual Studio project files</li>
 <li>open generated solution file and build the project inside Visual Studio</li>
 </ul>
 </li>

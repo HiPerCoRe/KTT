@@ -21,10 +21,9 @@ ability to change kernel compiler flags and more
 Getting started
 ---------------
 * Documentation for KTT API can be found [here](https://fillo7.github.io/KTT/).
-* Newest version of KTT framework can be found [here](https://github.com/Fillo7/KTT/releases).
-* Prebuilt binaries are available only for some platforms. Other platforms require manual build.
-* Prebuilt binaries for Nvidia include both CUDA and OpenCL support, binaries for AMD and Intel include only OpenCL support.
-  Binaries for Vulkan include only Vulkan support. All binaries are built for 64-bit platforms.
+* The newest version of KTT framework can be found [here](https://github.com/Fillo7/KTT/releases).
+* Prebuilt binaries are no longer provided due to many different combinations of compute APIs and build options available.
+Please check the `Building KTT` section for detailed instructions on how to perform local build.
 
 Tutorials
 ---------
@@ -60,9 +59,9 @@ systems are Linux and Windows.
 
 * The prerequisites to build KTT are:
     - C++14 compiler, for example Clang 3.5, GCC 5.0, MSVC 19.0 (Visual Studio 2015) or newer
-    - OpenCL, CUDA or Vulkan library, supported SDKs are AMD APP SDK 3.0, Intel SDK for OpenCL, NVIDIA CUDA Toolkit 7.5
-      and Vulkan SDK 1.1.101 or newer
-    - [Premake 5](https://premake.github.io/download.html) (alpha 12 or newer)
+    - OpenCL, CUDA or Vulkan library, supported SDKs are AMD APP SDK, Intel SDK for OpenCL, NVIDIA CUDA Toolkit
+      and Vulkan SDK
+    - [Premake 5](https://premake.github.io/download.html)
     
 * Build under Linux (inside KTT root folder):
     - ensure that path to vendor SDK is correctly set in the environment variables
@@ -73,7 +72,7 @@ systems are Linux and Windows.
 * Build under Windows (inside KTT root folder):
     - ensure that path to vendor SDK is correctly set in the environment variables, this should be done automatically
     during SDK installation
-    - run `premake5.exe vs2015` (or `premake5.exe vs2017`) to generate Visual Studio project files
+    - run `premake5.exe vs20xx` (e.g. `premake5.exe vs2019`) to generate Visual Studio project files
     - open generated solution file and build the project inside Visual Studio
 
 * Following build options are available:
