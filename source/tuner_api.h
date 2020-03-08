@@ -109,8 +109,8 @@ public:
       * Adds new kernel to tuner from source code inside string. Requires specification of kernel name and default global and local thread sizes.
       * @param source Kernel source code written in corresponding compute API language.
       * @param kernelName Name of kernel function inside kernel source code.
-      * @param globalSize Dimensions for base kernel global size (eg. grid size in CUDA).
-      * @param localSize Dimensions for base kernel local size (eg. block size in CUDA).
+      * @param globalSize Dimensions for base kernel global size (e.g. grid size in CUDA).
+      * @param localSize Dimensions for base kernel local size (e.g. block size in CUDA).
       * @return Id assigned to kernel by tuner. The id can be used in other API methods.
       */
     KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -121,8 +121,8 @@ public:
       * Adds new kernel to tuner from source code inside file. Requires specification of kernel name and default global and local thread sizes.
       * @param filePath Path to file with kernel source code written in corresponding compute API language.
       * @param kernelName Name of kernel function inside kernel source code.
-      * @param globalSize Dimensions for base kernel global size (eg. grid size in CUDA).
-      * @param localSize Dimensions for base kernel local size (eg. block size in CUDA).
+      * @param globalSize Dimensions for base kernel global size (e.g. grid size in CUDA).
+      * @param localSize Dimensions for base kernel local size (e.g. block size in CUDA).
       * @return Id assigned to kernel by tuner. The id can be used in other API methods.
       */
     KernelId addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
@@ -212,7 +212,7 @@ public:
 
     /** @fn void addConstraint(const KernelId id, const std::vector<std::string>& parameterNames,
       * const std::function<bool(const std::vector<size_t>&)>& constraintFunction)
-      * Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter
+      * Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (e.g. conflicting parameter
       * values).
       * @param id Id of kernel for which the constraint will be added.
       * @param parameterNames Names of kernel parameters which will be affected by the constraint function. The order of parameter names corresponds
@@ -224,7 +224,7 @@ public:
 
     /** @fn void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
       * Sets tuning manipulator for specified kernel. Tuning manipulator enables customization of kernel execution. This is useful in several cases,
-      * eg. running part of the computation in C++ code, utilizing iterative kernel launches or composite kernels. See TuningManipulator for more
+      * e.g. running part of the computation in C++ code, utilizing iterative kernel launches or composite kernels. See TuningManipulator for more
       * information.
       * @param id Id of kernel for which the tuning manipulator will be set.
       * @param manipulator Tuning manipulator for specified kernel.
@@ -491,7 +491,8 @@ public:
       * Specifies profiling counters that will be collected during kernel profiling. Note that not all profiling counters are available on all
       * devices.
       *
-      * For the list of CUDA CUPTI profiling counters, see: https://docs.nvidia.com/cuda/cupti/index.html#metrics-reference
+      * For the list of old CUDA CUPTI profiling counters, see: https://docs.nvidia.com/cupti/Cupti/r_main.html#metrics-reference
+      * For the list of new CUDA CUPTI profiling counters, see: https://docs.nvidia.com/cupti/Cupti/r_main.html#r_host_raw_metrics_api
       * For the list of AMD GPA profiling counters, see: https://gpuperfapi.readthedocs.io/en/latest/counters.html
       * @param counterNames Names of counters that will be collected during kernel profiling.
       */
@@ -625,7 +626,7 @@ public:
     void setCompilerOptions(const std::string& options);
 
     /** @fn void setKernelCacheCapacity(const size_t capacity)
-      * Sets capacity of kernel cache inside the tuner. The cache contains recently compiled kernels which are prepared to be launched immidiately,
+      * Sets capacity of kernel cache inside the tuner. The cache contains recently compiled kernels which are prepared to be launched immediately,
       * eliminating compilation overhead. Using the cache can significantly improve tuner performance during online tuning or iterative kernel
       * running with TuningManipulator. Default cache size is 10.
       * @param capacity Controls kernel cache capacity. If zero, kernel cache is completely disabled.
@@ -640,13 +641,13 @@ public:
     void printComputeAPIInfo(std::ostream& outputTarget) const;
 
     /** @fn std::vector<PlatformInfo> getPlatformInfo() const
-      * Retrieves detailed information about all available platforms (eg. platform name, vendor). See PlatformInfo for more information.
+      * Retrieves detailed information about all available platforms (e.g. platform name, vendor). See PlatformInfo for more information.
       * @return Information about all available platforms.
       */
     std::vector<PlatformInfo> getPlatformInfo() const;
 
     /** @fn std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const
-      * Retrieves detailed information about all available devices (eg. device name, memory capacity) on specified platform. See DeviceInfo
+      * Retrieves detailed information about all available devices (e.g. device name, memory capacity) on specified platform. See DeviceInfo
       * for more information.
       * @param platform Index of platform for which the device information will be retrieved.
       * @return Information about all available devices on specified platform.
@@ -654,7 +655,7 @@ public:
     std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const;
 
     /** @fn DeviceInfo getCurrentDeviceInfo() const
-      * Retrieves detailed information about device (eg. device name, memory capacity) used by the tuner. See DeviceInfo for more information.
+      * Retrieves detailed information about device (e.g. device name, memory capacity) used by the tuner. See DeviceInfo for more information.
       * @return Information about device used by the tuner.
       */
     DeviceInfo getCurrentDeviceInfo() const;
