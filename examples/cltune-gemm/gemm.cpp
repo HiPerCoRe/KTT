@@ -24,6 +24,7 @@
 
 #define RAPID_TEST 0
 #define USE_PROFILING 0
+#define USE_REDUCED_SET 0 /* reduced tuning parameters set, taken from CLTune */
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
 bool IsMultiple(const size_t a, const size_t b) {
@@ -99,6 +100,23 @@ int main(int argc, char** argv)
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "gemm_fast", ndRangeDimensions, workGroupDimensions);
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "gemm_reference", ndRangeDimensions, referenceWorkGroupDimensions);
 
+    #if USE_REDUCED_SET == 1
+    tuner.addParameter(kernelId, "MWG", {16, 32, 64});
+    tuner.addParameter(kernelId, "NWG", {16, 32, 64});
+    tuner.addParameter(kernelId, "KWG", {32});
+    tuner.addParameter(kernelId, "MDIMC", {8, 16, 32});
+    tuner.addParameter(kernelId, "NDIMC", {8, 16, 32});
+    tuner.addParameter(kernelId, "MDIMA", {8, 16, 32});
+    tuner.addParameter(kernelId, "NDIMB", {8, 16, 32});
+    tuner.addParameter(kernelId, "KWI", {2});
+    tuner.addParameter(kernelId, "VWM", {1, 2, 4});
+    tuner.addParameter(kernelId, "VWN", {1, 2, 4});
+    tuner.addParameter(kernelId, "STRM", {0});
+    tuner.addParameter(kernelId, "STRN", {0});
+    tuner.addParameter(kernelId, "SA", {0, 1});
+    tuner.addParameter(kernelId, "SB", {0, 1});
+    tuner.addParameter(kernelId, "PRECISION", {32});
+    #else
     tuner.addParameter(kernelId, "MWG", {16, 32, 64, 128});
     tuner.addParameter(kernelId, "NWG", {16, 32, 64, 128});
     tuner.addParameter(kernelId, "KWG", {16, 32});
@@ -124,6 +142,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "SA", {0, 1});
     tuner.addParameter(kernelId, "SB", {0, 1});
     tuner.addParameter(kernelId, "PRECISION", {32});
+    #endif
 
     // Add kernel dimension modifiers based on added tuning parameters
     auto globalModifier = [](const size_t size, const std::vector<size_t>& vector) {return size * vector.at(0) / vector.at(1);};
