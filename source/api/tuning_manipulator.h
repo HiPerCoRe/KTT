@@ -274,6 +274,17 @@ public:
     */
     void resizeArgumentVector(const ArgumentId id, const size_t newNumberOfElements, const bool preserveOldData);
 
+    /** @fn void getUnifiedMemoryArgument(const ArgumentId id, BufferMemory& memoryHandle)
+    * Retrieves memory handle for specified unified memory argument. The handle can be used to manipulate argument memory on host side.
+    * Example usage:
+    *   ktt::BufferMemory memory;
+    *   getUnifiedMemoryArgument(..., memory);
+    *   float* floatArray = static_cast<float*>(memory);
+    * @param Id of vector argument whose memory handle will be retrieved.
+    * @param memoryHandle Memory handle for specified argument.
+    */
+    void getUnifiedMemoryArgument(const ArgumentId id, BufferMemory& memoryHandle);
+
     /** @fn void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
       * Changes kernel arguments for specified kernel by providing corresponding argument ids.
       * @param id Id of kernel for which the arguments will be changed.

@@ -539,6 +539,18 @@ void CUDAEngine::clearBuffer(const ArgumentId id)
     }
 }
 
+void CUDAEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
+{
+    CUDABuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    handle = reinterpret_cast<BufferMemory>(*buffer->getBuffer());
+}
+
 void CUDAEngine::setPersistentBufferUsage(const bool flag)
 {
     persistentBufferFlag = flag;

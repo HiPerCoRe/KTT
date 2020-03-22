@@ -39,6 +39,11 @@ using ArgumentId = uint64_t;
   */
 using EventId = uint64_t;
 
+/** @typedef BufferMemory
+  * Data type for accessing compute API buffers in KTT.
+  */
+using BufferMemory = void*;
+
 /** Kernel id returned by kernel addition methods in case of an error.
   */
 const KernelId InvalidKernelId = std::numeric_limits<KernelId>::max();

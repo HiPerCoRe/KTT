@@ -46,6 +46,7 @@ public:
     void copyArgumentVector(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements) override;
     void copyArgumentVectorAsync(const ArgumentId destination, const ArgumentId source, const size_t numberOfElements, const QueueId queue) override;
     void resizeArgumentVector(const ArgumentId id, const size_t newNumberOfElements, const bool preserveOldData) override;
+    void getUnifiedMemoryArgument(const ArgumentId id, BufferMemory& memoryHandle) override;
     void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds) override;
     void swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond) override;
     void createArgumentBuffer(const ArgumentId id) override;

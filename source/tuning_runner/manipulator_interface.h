@@ -54,6 +54,7 @@ public:
     virtual void resizeArgumentVector(const ArgumentId id, const size_t newNumberOfElements, const bool preserveOldData) = 0;
 
     // Kernel argument handling methods
+    virtual void getUnifiedMemoryArgument(const ArgumentId id, BufferMemory& memoryHandle) = 0;
     virtual void changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds) = 0;
     virtual void swapKernelArguments(const KernelId id, const ArgumentId argumentIdFirst, const ArgumentId argumentIdSecond) = 0;
 

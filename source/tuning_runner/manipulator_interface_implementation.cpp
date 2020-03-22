@@ -364,6 +364,23 @@ void ManipulatorInterfaceImplementation::resizeArgumentVector(const ArgumentId i
     computeEngine->resizeArgument(id, argumentPointer->second->getElementSizeInBytes() * newNumberOfElements, preserveOldData);
 }
 
+void ManipulatorInterfaceImplementation::getUnifiedMemoryArgument(const ArgumentId id, BufferMemory& memoryHandle)
+{
+    if (!containsKey(vectorArguments, id))
+    {
+        throw std::runtime_error(std::string("Argument with following id is not present in tuning manipulator: ") + std::to_string(id));
+    }
+
+    auto& argument = *vectorArguments.find(id)->second;
+    
+    if (argument.getMemoryLocation() != ArgumentMemoryLocation::Unified)
+    {
+        throw std::runtime_error(std::string("Argument with following id is not a unified memory argument: ") + std::to_string(id));
+    }
+
+    computeEngine->getArgumentHandle(id, memoryHandle);
+}
+
 void ManipulatorInterfaceImplementation::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
     auto dataPointer = kernelData.find(id);

@@ -548,6 +548,19 @@ void OpenCLEngine::resizeArgument(const ArgumentId id, const size_t newSize, con
     buffer->resize(commandQueues.at(getDefaultQueue())->getQueue(), newSize, preserveData);
 }
 
+void OpenCLEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
+{
+    OpenCLBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    // Todo: this was not tested yet and might be wrong
+    handle = buffer->getBuffer();
+}
+
 void OpenCLEngine::setPersistentBufferUsage(const bool flag)
 {
     persistentBufferFlag = flag;

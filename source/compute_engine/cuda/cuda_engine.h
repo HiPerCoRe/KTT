@@ -74,6 +74,7 @@ public:
     uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
     void resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) override;
+    void getArgumentHandle(const ArgumentId id, BufferMemory& handle) override;
     void setPersistentBufferUsage(const bool flag) override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
