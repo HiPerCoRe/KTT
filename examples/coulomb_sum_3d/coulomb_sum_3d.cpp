@@ -23,6 +23,9 @@
 #define RAPID_TEST 0
 #define USE_PROFILING 0
 
+#define USE_DENSE_TUNPAR 0
+#define USE_WIDE_TUNPAR 0
+
 int main(int argc, char** argv)
 {
     // Initialize platform index, device index and paths to kernels
@@ -125,14 +128,34 @@ int main(int argc, char** argv)
     tuner.persistArgument(gridId, true);
 #endif
 
+    #if USE_DENSE_TUNPAR == 0
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {16, 32});
+    #else
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {8, 16, 24, 32});
+    #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
+    #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", {1, 2, 4, 8});
+    #else
+        #if USE_WIDE_TUNPAR == 0
+        tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", {1, 2, 3, 4, 5, 6, 7, 8});
+        #else
+        tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
+        #endif
+    #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Z", {1});
+    #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 4, 8, 16, 32});
+    #else
+        tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
+    #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS", ktt::ModifierAction::Divide);
+    #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0, 1, 2, 4, 8, 16, 32});
+    #else
+    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
+    #endif
 
     if (computeAPI == ktt::ComputeAPI::OpenCL)
     {
