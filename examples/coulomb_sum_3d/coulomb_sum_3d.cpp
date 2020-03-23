@@ -23,6 +23,9 @@
 #define RAPID_TEST 0
 #define USE_PROFILING 0
 
+// Those macros enlarge tuning space by adding denser values to tuning 
+// parameters (USE_DENSE_TUNPAR == 1), and also adding wider ranges of tuning
+// parameters (USE_WIDE_TUNPAR  == 1)
 #define USE_DENSE_TUNPAR 0
 #define USE_WIDE_TUNPAR 0
 
