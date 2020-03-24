@@ -1,8 +1,11 @@
-__kernel void directCoulombSumReference(__global float4* atomInfo, int numberOfAtoms, float gridSpacing, __global float* energyGrid)
+__kernel void directCoulombSumReference(__global float4* atomInfo, int numberOfAtoms, float gridSpacing, int gridSize, __global float* energyGrid)
 {
     int xIndex = get_global_id(0);
     int yIndex = get_global_id(1);
     int zIndex = get_global_id(2);
+
+    if ((xIndex >= gridSize) || (yIndex >= gridSize) || (xIndex >= gridSize))
+        return;
     
 	int outIndex = get_global_size(1) * get_global_size(0) * zIndex + get_global_size(0) * yIndex + xIndex;
 

@@ -26,7 +26,7 @@
 // Those macros enlarge tuning space by adding denser values to tuning 
 // parameters (USE_DENSE_TUNPAR == 1), and also adding wider ranges of tuning
 // parameters (USE_WIDE_TUNPAR  == 1)
-#define USE_DENSE_TUNPAR 0
+#define USE_DENSE_TUNPAR 1
 #define USE_WIDE_TUNPAR 0
 
 int main(int argc, char** argv)
@@ -59,11 +59,12 @@ int main(int argc, char** argv)
 #if USE_PROFILING == 0
     const int atoms = 4000;
 #else
-    const int atoms = 40; /* faster execution of slowly profiled kernel */
+    const int atoms = 64; /* faster execution of slowly profiled kernel */
 #endif
-    const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
-    const ktt::DimensionVector workGroupDimensions;
+    const ktt::DimensionVector referenceNdRangeDimensions(gridSize/16, gridSize/16, gridSize);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
+    const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
+    const ktt::DimensionVector workGroupDimensions(1, 1);
 
     // Declare data variables
     float gridSpacing;
@@ -93,7 +94,7 @@ int main(int argc, char** argv)
     }
 
     ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
-    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::CUDA);
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     if (computeAPI == ktt::ComputeAPI::OpenCL)
@@ -110,7 +111,7 @@ int main(int argc, char** argv)
     }
 
     ktt::KernelId kernelId = tuner.addKernelFromFile(kernelFile, "directCoulombSum", ndRangeDimensions, workGroupDimensions);
-    ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "directCoulombSumReference", ndRangeDimensions,
+    ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "directCoulombSumReference", referenceNdRangeDimensions,
         referenceWorkGroupDimensions);
 
     ktt::ArgumentId aiId = tuner.addArgumentVector(atomInfo, ktt::ArgumentAccessType::ReadOnly);
@@ -120,6 +121,7 @@ int main(int argc, char** argv)
     ktt::ArgumentId aiwId = tuner.addArgumentVector(atomInfoW, ktt::ArgumentAccessType::ReadOnly);
     ktt::ArgumentId aId = tuner.addArgumentScalar(atoms);
     ktt::ArgumentId gsId = tuner.addArgumentScalar(gridSpacing);
+    ktt::ArgumentId gridDim = tuner.addArgumentScalar(gridSize);
     ktt::ArgumentId gridId = tuner.addArgumentVector(energyGrid, ktt::ArgumentAccessType::WriteOnly);
 
 #if RAPID_TEST == 1
@@ -128,6 +130,7 @@ int main(int argc, char** argv)
     tuner.persistArgument(aiyId, true);
     tuner.persistArgument(aizId, true);
     tuner.persistArgument(aiwId, true);
+    tuner.persistArgument(gridDim, true);
     tuner.persistArgument(gridId, true);
 #endif
 
@@ -137,6 +140,7 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {8, 16, 24, 32});
     #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::DivideCeil);
     #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", {1, 2, 4, 8});
     #else
@@ -147,13 +151,14 @@ int main(int argc, char** argv)
         #endif
     #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::DivideCeil);
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Z", {1});
     #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 4, 8, 16, 32});
     #else
         tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
     #endif
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS", ktt::ModifierAction::Divide);
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS", ktt::ModifierAction::DivideCeil);
     #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0, 1, 2, 4, 8, 16, 32});
     #else
@@ -179,8 +184,8 @@ int main(int argc, char** argv)
     auto par = [](const std::vector<size_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
     tuner.addConstraint(kernelId, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, par);
 
-    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridId});
-    tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{aiId, aId, gsId, gridId});
+    tuner.setKernelArguments(kernelId, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridDim, gridId});
+    tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{aiId, aId, gsId, gridDim, gridId});
 
 #if USE_PROFILING == 0 && RAPID_TEST == 0
     //TODO: this is temporal hack, there should be composition of zeroizing and coulomb kernel, otherwise, multiple profiling runs corrupt results

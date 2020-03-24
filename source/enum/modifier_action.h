@@ -25,7 +25,11 @@ enum class ModifierAction
 
     /** Corresponding kernel thread size or local memory size will be divided by kernel parameter value.
       */
-    Divide
+    Divide,
+
+    /** Corresponding kernel thread size or local memory size will be divided and rounded up by kernel parameter value.
+      */
+    DivideCeil
 };
 
 } // namespace ktt

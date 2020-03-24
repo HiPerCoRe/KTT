@@ -154,6 +154,7 @@ private:
     void subtractValue(const size_t value, const ModifierDimension modifierDimension);
     void multiplyByValue(const size_t value, const ModifierDimension modifierDimension);
     void divideByValue(const size_t value, const ModifierDimension modifierDimension);
+    void divideCeilByValue(const size_t value, const ModifierDimension modifierDimension);
 };
 
 /** @fn std::ostream& operator<<(std::ostream& outputTarget, const DimensionVector& dimensionVector)
