@@ -294,7 +294,7 @@ project "ktt"
         libraries = findLibraries()
     end
     
-    if not libraries and not _OPTIONS["vulkan"] then
+    if not libraries and (not _OPTIONS["vulkan"] or _OPTIONS["platform"]) then
         error("Compute API libraries were not found. Please ensure that path to your device vendor SDK is correctly set in the environment variables:\nAMDAPPSDKROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
     end
     
