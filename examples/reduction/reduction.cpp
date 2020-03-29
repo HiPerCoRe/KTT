@@ -21,6 +21,12 @@
 #define RAPID_TEST 0
 #define USE_PROFILING 0
 
+// Those macros enlarge tuning space by adding denser values to tuning 
+// parameters (USE_DENSE_TUNPAR == 1), and also adding wider ranges of tuning
+// parameters (USE_WIDE_TUNPAR  == 1)
+#define USE_DENSE_TUNPAR 0
+#define USE_WIDE_TUNPAR 0
+
 #include "reduction_tunable.h"
 
 int main(int argc, char** argv)
@@ -92,10 +98,26 @@ int main(int argc, char** argv)
     std::cout << "Number of compute units: " << di.getMaxComputeUnits() << std::endl;
     size_t cus = di.getMaxComputeUnits();
 
+#if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {32, 64, 128, 256, 512});
+#else
+    #if USE_WIDE_TUNPAR == 0
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {32, 64, 96, 128, 160, 196, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512});
+    #else
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {32, 64, 96, 128, 160, 196, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512, 576, 640, 704, 768, 832, 896, 960, 1024});
+    #endif
+#endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
     tuner.addParameter(kernelId, "UNBOUNDED_WG", {0, 1});
+#if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "WG_NUM", {0, cus, cus * 2, cus * 4, cus * 8, cus * 16});
+#else
+    #if USE_WIDE_TUNPAR == 0
+    tuner.addParameter(kernelId, "WG_NUM", {0, cus, cus * 2, cus * 3, cus * 4, cus * 5, cus * 6, cus * 7, cus * 8, cus * 10, cus * 12, cus * 14, cus * 16});
+    #else
+    tuner.addParameter(kernelId, "WG_NUM", {0, cus, cus * 2, cus * 3, cus * 4, cus * 5, cus * 6, cus * 7, cus * 8, cus * 10, cus * 12, cus * 14, cus * 16, cus * 20, cus * 24, cus * 28, cus * 32, cus * 40, cus * 48, cus * 56, cus * 64});
+    #endif
+#endif
 
     if (computeAPI == ktt::ComputeAPI::OpenCL)
     {

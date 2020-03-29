@@ -1,9 +1,12 @@
-extern "C" __global__ void directCoulombSumReference(float4* atomInfo, int numberOfAtoms, float gridSpacing, float* energyGrid)
+extern "C" __global__ void directCoulombSumReference(float4* atomInfo, int numberOfAtoms, float gridSpacing, int gridSize, float* energyGrid)
 {
     int xIndex = blockIdx.x*blockDim.x + threadIdx.x;
     int yIndex = blockIdx.y*blockDim.y + threadIdx.y;
     int zIndex = blockIdx.z*blockDim.z + threadIdx.z;
     
+    if ((xIndex >= gridSize) || (yIndex >= gridSize) || (xIndex >= gridSize))
+        return;
+
 	int outIndex = blockDim.y*gridDim.y * blockDim.x*gridDim.x * zIndex + blockDim.x*gridDim.x * yIndex + xIndex;
 
     float coordX = gridSpacing * xIndex;

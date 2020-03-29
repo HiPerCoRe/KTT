@@ -1,15 +1,18 @@
-extern "C" __global__ void directCoulombSum(const float4* atomInfo, const float* atomInfoX, const float* atomInfoY, const float* atomInfoZ, const float* atomInfoW, int numberOfAtoms, float gridSpacing, float* energyGrid)
+extern "C" __global__ void directCoulombSum(const float4* atomInfo, const float* atomInfoX, const float* atomInfoY, const float* atomInfoZ, const float* atomInfoW, int numberOfAtoms, float gridSpacing, int gridSize, float* energyGrid)
 {
     int xIndex = blockIdx.x*blockDim.x + threadIdx.x;
     int yIndex = blockIdx.y*blockDim.y + threadIdx.y;
-    int zIndex = blockIdx.z*blockDim.z + threadIdx.z;
+    int zIndex = (blockIdx.z*blockDim.z + threadIdx.z) * Z_ITERATIONS;
+
+    if ((xIndex >= gridSize) || (yIndex >= gridSize) || (xIndex >= gridSize))
+        return;
         
-    int sliceOffset = blockDim.y*gridDim.y * blockDim.x*gridDim.x;
-	int outIndex = sliceOffset*Z_ITERATIONS*zIndex + blockDim.x*gridDim.x*yIndex + xIndex;
+    int sliceOffset = gridSize * gridSize;
+	int outIndex = sliceOffset*zIndex + gridSize*yIndex + xIndex;
 
     float coordX = gridSpacing * xIndex;
     float coordY = gridSpacing * yIndex;
-    float coordZ = gridSpacing * zIndex*(float)Z_ITERATIONS;
+    float coordZ = gridSpacing * zIndex;
 
     float energyValue[Z_ITERATIONS];
     for (int i = 0; i < Z_ITERATIONS; i++) 
@@ -39,5 +42,6 @@ extern "C" __global__ void directCoulombSum(const float4* atomInfo, const float*
     }
 
     for (int i = 0; i < Z_ITERATIONS; i++)
-        energyGrid[outIndex + sliceOffset*i] += energyValue[i];
+        if (zIndex + i < gridSize)
+            energyGrid[outIndex + sliceOffset*i] += energyValue[i];
 }

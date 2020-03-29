@@ -26,6 +26,12 @@
 #define RAPID_TEST 0
 #define USE_PROFILING 0
 
+// Those macros enlarge tuning space by adding denser values to tuning 
+// parameters (USE_DENSE_TUNPAR == 1), and also adding wider ranges of tuning
+// parameters (USE_WIDE_TUNPAR  == 1)
+#define USE_DENSE_TUNPAR 0
+#define USE_WIDE_TUNPAR 0
+
 // Settings (synchronise these with "conv.cpp", "conv.cl" and "conv_reference.cl")
 #define HFS (3)        // Half filter size
 #define FS (HFS+HFS+1) // Filter size
@@ -121,11 +127,22 @@ int main(int argc, char** argv)
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "conv_reference", ndRangeDimensions, referenceWorkGroupDimensions);
 
     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    tuner.addParameter(kernelId, "TBX", {8, 16, 32, 64});
-    tuner.addParameter(kernelId, "TBY", {8, 16, 32, 64});
+#if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
+    std::vector<size_t> blockRange = {8, 16, 32, 64};
+    std::vector<size_t> wptRange = {1, 2, 4, 8};
+#else
+    std::vector<size_t> blockRange = {8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64};
+    #if USE_WIDE_TUNPAR == 0
+    std::vector<size_t> wptRange = {1, 2, 3, 4, 5, 6, 7, 8};
+    #else
+    std::vector<size_t> wptRange = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16};
+    #endif
+#endif
+    tuner.addParameter(kernelId, "TBX", blockRange);
+    tuner.addParameter(kernelId, "TBY", blockRange);
     tuner.addParameter(kernelId, "LOCAL", {0, 1, 2});
-    tuner.addParameter(kernelId, "WPTX", {1, 2, 4, 8});
-    tuner.addParameter(kernelId, "WPTY", {1, 2, 4, 8});
+    tuner.addParameter(kernelId, "WPTX", wptRange);
+    tuner.addParameter(kernelId, "WPTY", wptRange);
     tuner.addParameter(kernelId, "VECTOR", {1, 2, 4});
     tuner.addParameter(kernelId, "UNROLL_FACTOR", {1, FS});
     tuner.addParameter(kernelId, "PADDING", {0, 1});
@@ -174,6 +191,11 @@ int main(int argc, char** argv)
     // Sets padding to zero in case local memory is not used
     auto PaddingConstraint = [](const std::vector<size_t>& v) {return (v[1] == 0 || v[0] != 0);};
     tuner.addConstraint(kernelId, {"LOCAL", "PADDING"}, PaddingConstraint);
+
+    // Ensure divisibility
+    auto DivConstraint = [](const std::vector<size_t>& v) {return v[0] % v[1] == 0;};
+    tuner.addConstraint(kernelId, {"TBX", "WPTX"}, DivConstraint);
+    tuner.addConstraint(kernelId, {"TBY", "WPTY"}, DivConstraint);
 
     // Add all arguments utilized by kernels
     ktt::ArgumentId kSizeXId = tuner.addArgumentScalar(kSizeX);

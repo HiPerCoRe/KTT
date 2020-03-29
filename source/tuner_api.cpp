@@ -121,6 +121,10 @@ void Tuner::setThreadModifier(const KernelId id, const ModifierType modifierType
         setThreadModifier(id, modifierType, modifierDimension, std::vector<std::string>{parameterName},
             [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize / parameters.at(0);});
         break;
+    case ModifierAction::DivideCeil:
+        setThreadModifier(id, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return (threadSize + parameters.at(0) - 1) / parameters.at(0);});
+        break;
     default:
         throw std::runtime_error("Unknown modifier action");
     }
@@ -224,6 +228,10 @@ void Tuner::setCompositionKernelThreadModifier(const KernelId compositionId, con
     case ModifierAction::Divide:
         setCompositionKernelThreadModifier(compositionId, kernelId, modifierType, modifierDimension, std::vector<std::string>{parameterName},
             [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize / parameters.at(0);});
+        break;
+    case ModifierAction::DivideCeil:
+        setCompositionKernelThreadModifier(compositionId, kernelId, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return (threadSize + parameters.at(0) - 1) / parameters.at(0);});
         break;
     default:
         throw std::runtime_error("Unknown modifier action");
