@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     std::cout << "Number of compute units: " << di.getMaxComputeUnits() << std::endl;
     size_t cus = di.getMaxComputeUnits();
 
-#if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
+#if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {32, 64, 128, 256, 512});
 #else
     #if USE_WIDE_TUNPAR == 0
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
 #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
     tuner.addParameter(kernelId, "UNBOUNDED_WG", {0, 1});
-#if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
+#if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "WG_NUM", {0, cus, cus * 2, cus * 4, cus * 8, cus * 16});
 #else
     #if USE_WIDE_TUNPAR == 0

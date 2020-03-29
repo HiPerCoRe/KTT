@@ -127,7 +127,7 @@ int main(int argc, char** argv)
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "conv_reference", ndRangeDimensions, referenceWorkGroupDimensions);
 
     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-#if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
+#if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     std::vector<size_t> blockRange = {8, 16, 32, 64};
     std::vector<size_t> wptRange = {1, 2, 4, 8};
 #else

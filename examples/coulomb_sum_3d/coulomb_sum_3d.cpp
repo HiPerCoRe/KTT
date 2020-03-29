@@ -141,7 +141,7 @@ int main(int argc, char** argv)
     #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::DivideCeil);
-    #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
+    #if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", {1, 2, 4, 8});
     #else
         #if USE_WIDE_TUNPAR == 0
@@ -153,13 +153,13 @@ int main(int argc, char** argv)
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::DivideCeil);
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Z", {1});
-    #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
+    #if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 4, 8, 16, 32});
     #else
         tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
     #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS", ktt::ModifierAction::DivideCeil);
-    #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
+    #if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0, 1, 2, 4, 8, 16, 32});
     #else
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
