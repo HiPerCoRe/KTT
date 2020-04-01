@@ -5,6 +5,7 @@
 #include <tuning_runner/searcher/full_searcher.h>
 #include <tuning_runner/searcher/random_searcher.h>
 #include <tuning_runner/searcher/mcmc_searcher.h>
+#include <tuning_runner/searcher/profile_searcher.h>
 #include <tuning_runner/configuration_manager.h>
 #include <utility/ktt_utility.h>
 
@@ -808,6 +809,9 @@ void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMet
     case SearchMethod::MCMC:
         searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, arguments)));
         break;
+    case SearchMethod::ProfileSearch:
+        searchers.insert(std::make_pair(id, std::make_unique<ProfileSearcher>(configurations)));
+        break;
     default:
         throw std::runtime_error("Specified searcher is not supported");
     }
@@ -874,6 +878,8 @@ std::string ConfigurationManager::getSearchMethodName(const SearchMethod method)
         return std::string("Annealing");
     case SearchMethod::MCMC:
         return std::string("Markov chain Monte Carlo");
+    case SearchMethod::ProfileSearch:
+        return std::string("Profiler-based searcher");
     default:
         return std::string("Unknown search method");
     }

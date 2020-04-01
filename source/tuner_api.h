@@ -508,6 +508,7 @@ public:
       * - RandomSearch - none
       * - Annealing - maximum temperature
       * - MCMC - none
+      * - ProfileSearch - none
       */
     void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
 

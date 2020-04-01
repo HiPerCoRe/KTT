@@ -23,7 +23,7 @@
 #endif
 
 #define RAPID_TEST 0
-#define USE_PROFILING 0
+#define USE_PROFILING 1
 #define USE_REDUCED_SET 0 /* reduced tuning parameters set, taken from CLTune */
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
@@ -58,9 +58,9 @@ int main(int argc, char** argv)
 
     // Declare data variables
     #if USE_PROFILING == 0
-    const uint32_t kSizeM = 2048;
-    const uint32_t kSizeN = 2048;
-    const uint32_t kSizeK = 2048;
+    const uint32_t kSizeM = 2048/2;
+    const uint32_t kSizeN = 2048/2;
+    const uint32_t kSizeK = 2048/2;
     #else
     const uint32_t kSizeM = 2048/2;
     const uint32_t kSizeN = 2048/2;
@@ -203,8 +203,11 @@ int main(int argc, char** argv)
     tuner.setReferenceKernel(kernelId, referenceKernelId, std::vector<ktt::ParameterPair>{}, std::vector<ktt::ArgumentId>{matCId});
 #endif
 
+    // Set and configure searcher
+    tuner.setSearchMethod(ktt::SearchMethod::ProfileSearch, std::vector< double > {});
+
     // Launch kernel tuning
-    tuner.tuneKernel(kernelId);
+    tuner.tuneKernel(kernelId, std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20)));
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);

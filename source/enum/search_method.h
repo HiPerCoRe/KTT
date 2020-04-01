@@ -25,7 +25,11 @@ enum class SearchMethod
 
     /** Explores kernel configurations using Markov chain Monte Carlo method. No additional search parameters are needed.
       */
-    MCMC
+    MCMC,
+
+    /** Explores kernel configurations using profiler counters and weighted random searcher. No additional search parameters are needed.
+      */
+    ProfileSearch,
 };
 
 } // namespace ktt
