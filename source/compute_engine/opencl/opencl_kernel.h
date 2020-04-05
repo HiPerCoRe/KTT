@@ -33,6 +33,16 @@ public:
         argumentsCount++;
     }
 
+    void setKernelArgumentVectorSVM(const void* buffer)
+    {
+        #ifdef CL_VERSION_2_0
+        checkOpenCLError(clSetKernelArgSVMPointer(kernel, argumentsCount, buffer), "clSetKernelArgSVMPointer");
+        argumentsCount++;
+        #else
+        throw std::runtime_error("Unified memory buffers are not supported on this platform");
+        #endif
+    }
+
     void setKernelArgumentScalar(const void* scalarValue, const size_t valueSize)
     {
         checkOpenCLError(clSetKernelArg(kernel, argumentsCount, valueSize, scalarValue), "clSetKernelArg");
