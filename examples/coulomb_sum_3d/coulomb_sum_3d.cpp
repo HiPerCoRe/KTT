@@ -164,16 +164,17 @@ int main(int argc, char** argv)
     #else
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR", {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
     #endif
-    tuner.addParameter(kernelId, "USE_SOA", {0, 1});
     if (computeAPI == ktt::ComputeAPI::OpenCL)
     {
         tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0, 1});
+        tuner.addParameter(kernelId, "USE_SOA", {0, 1});
         tuner.addParameter(kernelId, "VECTOR_SIZE", {1, 2 , 4, 8, 16});
     }
     else
     {
         // not implemented in CUDA
         tuner.addParameter(kernelId, "USE_CONSTANT_MEMORY", {0});
+        tuner.addParameter(kernelId, "USE_SOA", {0, 1});
         tuner.addParameter(kernelId, "VECTOR_SIZE", {1});
     }
 
