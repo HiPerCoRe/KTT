@@ -21,7 +21,7 @@
 #endif
 
 #define RAPID_TEST 0
-#define USE_PROFILING 0
+#define USE_PROFILING 1
 
 // Those macros enlarge tuning space by adding denser values to tuning 
 // parameters (USE_DENSE_TUNPAR == 1), and also adding wider ranges of tuning
@@ -55,13 +55,8 @@ int main(int argc, char **argv)
     }
 
     // Declare kernel parameters
-#if USE_PROFILING == 0
     const int width = 8192;
     const int height = 8192;
-#else
-    const int width = 4096;
-    const int height = 4096;
-#endif
     const ktt::DimensionVector ndRangeDimensions(width, height);
     const ktt::DimensionVector ndRangeDimensionsReference(width/16, height/16);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);

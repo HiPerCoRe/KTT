@@ -21,15 +21,15 @@
 #endif
 
 #define RAPID_TEST 0
-#define USE_PROFILING 0
+#define USE_PROFILING 1
 
 /* Problem size. */
 #if USE_PROFILING == 0
     #define N 16384
     #define M 16384
 #else
-    #define N 4096
-    #define M 4096
+    #define N 8196
+    #define M 8196
 #endif
 
 /* Thread block dimensions */
