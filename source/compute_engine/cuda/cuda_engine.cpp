@@ -1223,7 +1223,7 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
         "shared_store_transactions",
         "achieved_occupancy",
         "sm_efficiency",
-    	"inst_fp_16"
+    	"inst_fp_16",
         "inst_fp_32",
         "inst_fp_64",
         "inst_integer",
@@ -1457,7 +1457,6 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingCounters()
         "smsp__sass_thread_inst_executed_op_memory_pred_on.sum",
         "smsp__sass_thread_inst_executed_op_misc_pred_on.sum",
         "smsp__sass_thread_inst_executed_op_conversion_pred_on.sum",
-        "smsp__issue_active.avg.pct_of_peak_sustained_active",
         "smsp__inst_executed.sum",
         "smsp__inst_executed_pipe_fp16.sum",
         "smsp__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active",
@@ -1468,10 +1467,6 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingCounters()
         "smsp__issue_active.avg.pct_of_peak_sustained_active",
         "smsp__thread_inst_executed_per_inst_executed.ratio",
         "smsp__thread_inst_executed_per_inst_executed.pct",
-        "smsp__thread_inst_executed_per_inst_executed.pct",
-        "smsp__thread_inst_executed_per_inst_executed.pct",
-        "l1tex__t_sectors_pipe_lsu_mem_local_op_ld.sum",
-        "l1tex__t_sectors_pipe_lsu_mem_local_op_st.sum"
 #endif
 #if 0
         /* nearly-full list of counters, for experiments */
