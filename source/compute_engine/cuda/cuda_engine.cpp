@@ -1218,11 +1218,12 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
         "tex_cache_transactions",
         "local_memory_overhead",
         "shared_utilization",
+        "shared_efficiency",         /* shared_utilization equivalent for cc 3.x */
         "shared_load_transactions",
         "shared_store_transactions",
         "achieved_occupancy",
         "sm_efficiency",
-	"inst_fp_16"
+    	"inst_fp_16"
         "inst_fp_32",
         "inst_fp_64",
         "inst_integer",
@@ -1233,7 +1234,9 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
         "inst_executed",
         "half_precision_fu_utilization",
         "single_precision_fu_utilization",
+        "flop_sp_efficiency",       /* single_precision_fu_utilization equivalent for cc 3.x */
         "double_precision_fu_utilization",
+        "flop_dp_efficiency",       /* double_precision_fu_utilization equivalent for cc 3.x */
         "special_fu_utilization",
         "cf_fu_utilization",
         "ldst_fu_utilization",
@@ -1253,6 +1256,8 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
         "cf_executed",
         "cf_fu_utilization",
         "cf_issued",
+        "double_precision_fu_utilization",
+        "flop_dp_efficiency",       /* double_precision_fu_utilization equivalent for cc 3.x */
         "dram_read_bytes",
         "dram_read_throughput",
         "dram_read_transactions",
@@ -1357,7 +1362,9 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
         "shared_store_transactions",
         "shared_store_transactions_per_request",
         "shared_utilization",
+        "shared_efficiency",         /* shared_utilization equivalent for cc 3.x */
         "single_precision_fu_utilization",
+        "flop_sp_efficiency",       /* single_precision_fu_utilization equivalent for cc 3.x */
         "sm_efficiency",
         "special_fu_utilization",
         "stall_constant_memory_dependency",
