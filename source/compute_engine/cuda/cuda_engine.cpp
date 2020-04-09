@@ -1221,6 +1221,8 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
         "shared_efficiency",         /* shared_utilization equivalent for cc 3.x */
         "shared_load_transactions",
         "shared_store_transactions",
+	"local_load_transactions",
+        "local_store_transactions",
         "achieved_occupancy",
         "sm_efficiency",
     	"inst_fp_16",
@@ -1243,9 +1245,7 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
         "tex_fu_utilization",
         "issue_slot_utilization",
         "warp_execution_efficiency",
-        "warp_nonpred_execution_efficiency",
-        "local_load_transactions",
-        "local_store_transactions"
+        "warp_nonpred_execution_efficiency"
 #endif
 #if 0
 	/* nearly-full list of counters, for experiments */
