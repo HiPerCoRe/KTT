@@ -24,7 +24,7 @@
 
 #define RAPID_TEST 0
 #define USE_PROFILING 1
-#define USE_REDUCED_SET 0 /* reduced tuning parameters set, taken from CLTune */
+#define USE_REDUCED_SET 1 /* reduced tuning parameters set, taken from CLTune */
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
 bool IsMultiple(const size_t a, const size_t b) {
@@ -204,12 +204,12 @@ int main(int argc, char** argv)
 #endif
 
     // Set and configure searcher
-    unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
+    /*unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
-    tuner.setSearchMethod(ktt::SearchMethod::ProfileSearch, std::vector< double > {ccMajor + 0.1*(double)ccMinor});
+    tuner.setSearchMethod(ktt::SearchMethod::ProfileSearch, std::vector< double > {ccMajor + 0.1*(double)ccMinor});*/
 
     // Launch kernel tuning
-    tuner.tuneKernel(kernelId, std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20)));
+    tuner.tuneKernel(kernelId/*, std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20))*/);
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
