@@ -990,6 +990,15 @@ DeviceInfo CUDAEngine::getCUDADeviceInfo(const DeviceIndex deviceIndex) const
     int workGroupSize;
     checkCUDAError(cuDeviceGetAttribute(&workGroupSize, CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK, id), "cuDeviceGetAttribute");
     result.setMaxWorkGroupSize(workGroupSize);
+
+    int computeCapabilityMajor;
+    checkCUDAError(cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, id), "cuDeviceGetAttribute");
+    result.setCUDAComputeCapabilityMajor(computeCapabilityMajor);
+
+    int computeCapabilityMinor;
+    checkCUDAError(cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, id), "cuDeviceGetAttribute");
+    result.setCUDAComputeCapabilityMinor(computeCapabilityMinor);
+
     result.setDeviceType(DeviceType::GPU);
 
     return result;

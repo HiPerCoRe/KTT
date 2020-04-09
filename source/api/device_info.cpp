@@ -75,6 +75,16 @@ size_t DeviceInfo::getMaxWorkGroupSize() const
     return maxWorkGroupSize;
 }
 
+unsigned int DeviceInfo::getCUDAComputeCapabilityMajor() const
+{
+    return cudaComputeCapabilityMajor;
+}
+
+unsigned int DeviceInfo::getCUDAComputeCapabilityMinor() const
+{
+    return cudaComputeCapabilityMinor;
+}
+
 void DeviceInfo::setVendor(const std::string& vendor)
 {
     this->vendor = vendor;
@@ -115,6 +125,16 @@ void DeviceInfo::setMaxWorkGroupSize(const size_t maxWorkGroupSize)
     this->maxWorkGroupSize = maxWorkGroupSize;
 }
 
+void DeviceInfo::setCUDAComputeCapabilityMajor(const unsigned int cudaComputeCapabilityMajor)
+{
+    this->cudaComputeCapabilityMajor = cudaComputeCapabilityMajor;
+}
+
+void DeviceInfo::setCUDAComputeCapabilityMinor(const unsigned int cudaComputeCapabilityMinor)
+{
+    this->cudaComputeCapabilityMinor = cudaComputeCapabilityMinor;
+}
+
 std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo)
 {
     outputTarget << "Printing detailed info for device with index: " << deviceInfo.getId() << std::endl;
@@ -127,6 +147,7 @@ std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInf
     outputTarget << "Maximum parallel compute units: " << deviceInfo.getMaxComputeUnits() << std::endl;
     outputTarget << "Maximum work-group size: " << deviceInfo.getMaxWorkGroupSize() << std::endl;
     outputTarget << "Extensions: " << deviceInfo.getExtensions() << std::endl;
+    outputTarget << "CUDA compute capability: " << deviceInfo.getCUDAComputeCapabilityMajor() << "." << deviceInfo.getCUDAComputeCapabilityMinor() << std::endl;
     return outputTarget;
 }
 

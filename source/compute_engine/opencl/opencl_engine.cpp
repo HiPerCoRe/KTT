@@ -949,6 +949,9 @@ DeviceInfo OpenCLEngine::getOpenCLDeviceInfo(const PlatformIndex platform, const
     checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &maxWorkGroupSize, nullptr), "clGetDeviceInfo");
     result.setMaxWorkGroupSize(maxWorkGroupSize);
 
+    result.setCUDAComputeCapabilityMajor(0);
+    result.setCUDAComputeCapabilityMinor(0);
+
     cl_device_type deviceType;
     checkOpenCLError(clGetDeviceInfo(id, CL_DEVICE_TYPE, sizeof(cl_device_type), &deviceType, nullptr), "clGetDeviceInfo");
     result.setDeviceType(getDeviceType(deviceType));

@@ -810,7 +810,7 @@ void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMet
         searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, arguments)));
         break;
     case SearchMethod::ProfileSearch:
-        searchers.insert(std::make_pair(id, std::make_unique<ProfileSearcher>(configurations)));
+        searchers.insert(std::make_pair(id, std::make_unique<ProfileSearcher>(configurations, arguments.at(0))));
         break;
     default:
         throw std::runtime_error("Specified searcher is not supported");

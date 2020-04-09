@@ -204,7 +204,9 @@ int main(int argc, char** argv)
 #endif
 
     // Set and configure searcher
-    tuner.setSearchMethod(ktt::SearchMethod::ProfileSearch, std::vector< double > {});
+    unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
+    unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
+    tuner.setSearchMethod(ktt::SearchMethod::ProfileSearch, std::vector< double > {ccMajor + 0.1*(double)ccMinor});
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId, std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20)));

@@ -92,6 +92,18 @@ public:
       */
     size_t getMaxWorkGroupSize() const;
 
+    /** @fn size_t getCUDAComputeCapabilityMajor() const
+      * Getter for CUDA compute capability.
+      * @return Compute capability (major) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+      */
+    unsigned int getCUDAComputeCapabilityMajor() const;
+
+    /** @fn size_t getCUDAComputeCapabilityMajor() const
+      * Getter for CUDA compute capability.
+      * @return Compute capability (minor) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+      */
+    unsigned int getCUDAComputeCapabilityMinor() const;
+
     /** @fn void setVendor(const std::string& vendor)
       * Setter for name of device vendor.
       * @param vendor Name of device vendor.
@@ -140,6 +152,19 @@ public:
       */
     void setMaxWorkGroupSize(const size_t maxWorkGroupSize);
 
+    /** @fn void setCUDAComputeCapabilityMajor(const unsigned int cudaComputeCapabilityMajor) const
+      * Setter for CUDA compute capability.
+      * @param Compute capability (major) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+      */
+    void setCUDAComputeCapabilityMajor(const unsigned int cudaComputeCapabilityMajor);
+
+    /** @fn void setCUDAComputeCapabilityMinor(const unsigned int cudaComputeCapabilityMajor) const
+      * Setter for CUDA compute capability.
+      * @param Compute capability (minor) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+      */
+    void setCUDAComputeCapabilityMinor(const unsigned int cudaComputeCapabilityMinor);
+
+
 private:
     DeviceIndex id;
     std::string name;
@@ -151,6 +176,8 @@ private:
     uint64_t maxConstantBufferSize;
     uint32_t maxComputeUnits;
     size_t maxWorkGroupSize;
+    unsigned int cudaComputeCapabilityMajor;
+    unsigned int cudaComputeCapabilityMinor;
 };
 
 /** @fn std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo)

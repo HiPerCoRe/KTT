@@ -12,7 +12,7 @@ namespace ktt
 class ProfileSearcher : public Searcher
 {
 public:
-    ProfileSearcher(const std::vector<KernelConfiguration>& configurations) :
+    ProfileSearcher(const std::vector<KernelConfiguration>& configurations, const double computeCapability) :
         configurations(configurations)
     {
         if (configurations.size() == 0)
@@ -36,6 +36,8 @@ public:
             profilingFile << std::endl;
         }
         profilingFile.close();
+
+        this->computeCapability = computeCapability;
     }
 
     void calculateNextConfiguration(const KernelResult& kernelResult) override
@@ -79,12 +81,13 @@ public:
             if (i < cnt-1) profilingFile << ",";
         }
         profilingFile.close();
-        std::string command = "./ktt-profiling-searcher-01.py -o ktt-tempfile-conf.csv -s ../../../profilbased-searcher/750-gemm-reduced -i " + std::to_string(index) + " -p ktt-tempfile-pc.csv";
+        std::string command = "./ktt-profiling-searcher.py -o ktt-tempfile-conf.csv --oc " + std::to_string(computeCapability) + " -s ../../../profilbased-searcher/data-reducedcounters/750-gemm-reduced --sc 5.0 -i " + std::to_string(index) + " -p ktt-tempfile-pc.csv";
+        //std::cout << command << std::endl;
         system(command.c_str());
         std::fstream indexFile("ktt-tempfile-idx.dat", std::fstream::in);
         indexFile >> index;
         indexFile.close();
-        std::cout << "Index: " << index << std::endl;
+        //std::cout << "Index: " << index << std::endl;
     }
 
     KernelConfiguration getNextConfiguration() const override
@@ -105,6 +108,7 @@ public:
 private:
     const std::vector<KernelConfiguration>& configurations;
     size_t index;
+    double computeCapability;
 };
 
 } // namespace ktt

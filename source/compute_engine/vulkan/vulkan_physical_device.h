@@ -73,6 +73,10 @@ public:
         result.setMaxConstantBufferSize(deviceProperties.limits.maxUniformBufferRange);
         result.setMaxComputeUnits(0); // to do: find this information for Vulkan API
 
+        result.setCUDAComputeCapabilityMajor(0);
+
+        result.setCUDAComputeCapabilityMinor(0);
+
         return result;
     }
 
