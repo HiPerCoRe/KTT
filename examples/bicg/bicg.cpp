@@ -28,8 +28,8 @@
     #define N 16384
     #define M 16384
 #else
-    #define N 8196
-    #define M 8196
+    #define N 8192
+    #define M 8192
 #endif
 
 /* Thread block dimensions */
