@@ -134,7 +134,7 @@ int main(int argc, char** argv)
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "nbody_kernel", ndRangeDimensions, referenceWorkGroupDimensions);
 
     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
+    #if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {64, 128, 256, 512});
     #else
         #if USE_WIDE_TUNPAR == 0

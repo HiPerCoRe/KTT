@@ -73,8 +73,6 @@ public:
         {
             #ifdef CL_VERSION_2_0
             clSVMFree(context, rawBuffer);
-            #else
-            throw std::runtime_error("Unified memory buffers are not supported on this platform");
             #endif
         }
         else
