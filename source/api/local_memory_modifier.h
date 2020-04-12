@@ -1,14 +1,21 @@
+/** @file local_memory_modifier.h
+  * Class which describes modifier of a local memory argument.
+  */
 #pragma once
 
 #include <cstddef>
 #include <functional>
 #include <vector>
+#include <ktt_platform.h>
 #include <ktt_types.h>
 
 namespace ktt
 {
 
-class LocalMemoryModifier
+/** @class LocalMemoryModifier
+  * Class which describes modifier of a local memory argument.
+  */
+class KTT_API LocalMemoryModifier
 {
 public:
     LocalMemoryModifier();

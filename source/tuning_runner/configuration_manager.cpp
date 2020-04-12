@@ -1,10 +1,7 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
-#include <tuning_runner/searcher/annealing_searcher.h>
-#include <tuning_runner/searcher/full_searcher.h>
-#include <tuning_runner/searcher/random_searcher.h>
-#include <tuning_runner/searcher/mcmc_searcher.h>
+#include <api/searcher/full_searcher.h>
 #include <tuning_runner/configuration_manager.h>
 #include <utility/ktt_utility.h>
 
@@ -14,7 +11,6 @@ namespace ktt
 const std::string ConfigurationManager::defaultParameterPackName = "KTTStandaloneParameters";
 
 ConfigurationManager::ConfigurationManager(const DeviceInfo& info) :
-    searchMethod(SearchMethod::FullSearch),
     deviceInfo(info)
 {}
 
@@ -55,16 +51,9 @@ void ConfigurationManager::initializeConfigurations(const KernelComposition& com
     }
 }
 
-void ConfigurationManager::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
+void ConfigurationManager::setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
 {
-    if (method == SearchMethod::Annealing && arguments.size() < 1)
-    {
-        throw std::runtime_error(std::string("Insufficient number of arguments given for specified search method: ")
-            + getSearchMethodName(method));
-    }
-    
-    this->searchArguments = arguments;
-    this->searchMethod = method;
+    searchers[id] = std::move(searcher);
 }
 
 bool ConfigurationManager::hasKernelConfigurations(const KernelId id) const
@@ -79,9 +68,9 @@ bool ConfigurationManager::hasPackConfigurations(const KernelId id) const
 
 void ConfigurationManager::clearKernelData(const KernelId id, const bool clearConfigurations, const bool clearBestConfiguration)
 {
-    if (searchers.find(id) != searchers.end())
+    if (containsKey(searchers, id))
     {
-        searchers.erase(id);
+        searchers[id]->reset();
     }
 
     if (clearConfigurations && kernelConfigurations.find(id) != kernelConfigurations.end())
@@ -134,14 +123,14 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const Kernel& 
 {
     const size_t id = kernel.getId();
     auto searcherPair = searchers.find(id);
-    if (searcherPair == searchers.end())
+    if (searcherPair == searchers.end() || !searcherPair->second->isInitialized())
     {
         if (!hasPackConfigurations(id))
         {
             auto configurationPair = kernelConfigurations.find(id);
             if (configurationPair != kernelConfigurations.end())
             {
-                initializeSearcher(id, searchMethod, searchArguments, configurationPair->second);
+                initializeSearcher(id, configurationPair->second);
                 searcherPair = searchers.find(id);
             }
             else
@@ -154,7 +143,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const Kernel& 
             auto configurationPair = packKernelConfigurations.find(id);
             if (configurationPair != packKernelConfigurations.end())
             {
-                initializeSearcher(id, searchMethod, searchArguments, configurationPair->second.second);
+                initializeSearcher(id, configurationPair->second.second);
                 searcherPair = searchers.find(id);
             }
             else
@@ -178,10 +167,10 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const Kernel& 
         }
         else
         {
-            searchers.erase(id);
+            searcherPair->second->reset();
             configurationStorages.find(id)->second.storeProcessedPack(getCurrentParameterPack(kernel));
             prepareNextPackKernelConfigurations(kernel);
-            initializeSearcher(id, searchMethod, searchArguments, packKernelConfigurations.find(id)->second.second);
+            initializeSearcher(id, packKernelConfigurations.find(id)->second.second);
             searcherPair = searchers.find(id);
         }
     }
@@ -193,14 +182,14 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelCo
 {
     const size_t id = composition.getId();
     auto searcherPair = searchers.find(id);
-    if (searcherPair == searchers.end())
+    if (searcherPair == searchers.end() || !searcherPair->second->isInitialized())
     {
         if (!hasPackConfigurations(id))
         {
             auto configurationPair = kernelConfigurations.find(id);
             if (configurationPair != kernelConfigurations.end())
             {
-                initializeSearcher(id, searchMethod, searchArguments, configurationPair->second);
+                initializeSearcher(id, configurationPair->second);
                 searcherPair = searchers.find(id);
             }
             else
@@ -213,7 +202,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelCo
             auto configurationPair = packKernelConfigurations.find(id);
             if (configurationPair != packKernelConfigurations.end())
             {
-                initializeSearcher(id, searchMethod, searchArguments, configurationPair->second.second);
+                initializeSearcher(id, configurationPair->second.second);
                 searcherPair = searchers.find(id);
             }
             else
@@ -240,7 +229,7 @@ KernelConfiguration ConfigurationManager::getCurrentConfiguration(const KernelCo
             searchers.erase(id);
             configurationStorages.find(id)->second.storeProcessedPack(getCurrentParameterPack(composition));
             prepareNextPackKernelCompositionConfigurations(composition);
-            initializeSearcher(id, searchMethod, searchArguments, packKernelConfigurations.find(id)->second.second);
+            initializeSearcher(id, packKernelConfigurations.find(id)->second.second);
             searcherPair = searchers.find(id);
         }
     }
@@ -316,7 +305,8 @@ void ConfigurationManager::calculateNextConfiguration(const Kernel& kernel, cons
         storage.storeConfiguration(std::make_pair(previousResult.getConfiguration(), previousResult.getComputationDuration()));
     }
 
-    searcherPair->second->calculateNextConfiguration(previousResult);
+    ComputationResult publicResult = previousResult.getComputationResult();
+    searcherPair->second->calculateNextConfiguration(publicResult);
 }
 
 void ConfigurationManager::calculateNextConfiguration(const KernelComposition& composition, const KernelResult& previousResult)
@@ -346,7 +336,8 @@ void ConfigurationManager::calculateNextConfiguration(const KernelComposition& c
         storage.storeConfiguration(std::make_pair(previousResult.getConfiguration(), previousResult.getComputationDuration()));
     }
 
-    searcherPair->second->calculateNextConfiguration(previousResult);
+    ComputationResult publicResult = previousResult.getComputationResult();
+    searcherPair->second->calculateNextConfiguration(publicResult);
 }
 
 void ConfigurationManager::initializeOrderedKernelPacks(const Kernel& kernel)
@@ -791,26 +782,14 @@ KernelParameterPack ConfigurationManager::getCurrentParameterPack(const KernelCo
     throw std::runtime_error("Internal configuration manager error.");
 }
 
-void ConfigurationManager::initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,
-    const std::vector<KernelConfiguration>& configurations)
+void ConfigurationManager::initializeSearcher(const KernelId id, const std::vector<KernelConfiguration>& configurations)
 {
-    switch (method)
+    if (!containsKey(searchers, id))
     {
-    case SearchMethod::FullSearch:
-        searchers.insert(std::make_pair(id, std::make_unique<FullSearcher>(configurations)));
-        break;
-    case SearchMethod::RandomSearch:
-        searchers.insert(std::make_pair(id, std::make_unique<RandomSearcher>(configurations)));
-        break;
-    case SearchMethod::Annealing:
-        searchers.insert(std::make_pair(id, std::make_unique<AnnealingSearcher>(configurations, arguments.at(0))));
-        break;
-    case SearchMethod::MCMC:
-        searchers.insert(std::make_pair(id, std::make_unique<MCMCSearcher>(configurations, arguments)));
-        break;
-    default:
-        throw std::runtime_error("Specified searcher is not supported");
+        searchers[id] = std::make_unique<FullSearcher>();
     }
+
+    searchers[id]->initializeConfigurations(configurations);
 }
 
 bool ConfigurationManager::checkParameterPairs(const std::vector<ParameterPair>& pairs, const std::vector<KernelConstraint>& constraints)
@@ -860,23 +839,6 @@ size_t ConfigurationManager::getConfigurationCountForParameters(const std::vecto
     }
 
     return result;
-}
-
-std::string ConfigurationManager::getSearchMethodName(const SearchMethod method)
-{
-    switch (method)
-    {
-    case SearchMethod::FullSearch:
-        return std::string("FullSearch");
-    case SearchMethod::RandomSearch:
-        return std::string("RandomSearch");
-    case SearchMethod::Annealing:
-        return std::string("Annealing");
-    case SearchMethod::MCMC:
-        return std::string("Markov chain Monte Carlo");
-    default:
-        return std::string("Unknown search method");
-    }
 }
 
 } // namespace ktt

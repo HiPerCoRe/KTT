@@ -185,4 +185,20 @@ void KernelResult::increaseKernelTime(const uint64_t kernelTime)
     this->kernelTime += kernelTime;
 }
 
+ComputationResult KernelResult::getComputationResult() const
+{
+    if (!isValid())
+    {
+        return ComputationResult(kernelName, configuration.getParameterPairs(), errorMessage);
+    }
+
+    if (compositionCompilationData.empty() && compositionProfilingData.empty())
+    {
+        return ComputationResult(kernelName, configuration.getParameterPairs(), computationDuration, compilationData, profilingData);
+    }
+
+    return ComputationResult(kernelName, configuration.getParameterPairs(), computationDuration, compositionCompilationData,
+        compositionProfilingData);
+}
+
 } // namespace ktt

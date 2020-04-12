@@ -1,17 +1,24 @@
+/** @file kernel_configuration.h
+  * Class which describes single kernel tuning configuration.
+  */
 #pragma once
 
 #include <map>
 #include <ostream>
 #include <vector>
 #include <api/dimension_vector.h>
+#include <api/local_memory_modifier.h>
 #include <api/parameter_pair.h>
-#include <dto/local_memory_modifier.h>
+#include <ktt_platform.h>
 #include <ktt_types.h>
 
 namespace ktt
 {
 
-class KernelConfiguration
+/** @class KernelConfiguration
+  * Class which describes single kernel tuning configuration.
+  */
+class KTT_API KernelConfiguration
 {
 public:
     KernelConfiguration();

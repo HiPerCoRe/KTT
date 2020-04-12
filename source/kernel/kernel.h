@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 #include <api/dimension_vector.h>
+#include <api/local_memory_modifier.h>
 #include <api/parameter_pair.h>
-#include <dto/local_memory_modifier.h>
 #include <enum/modifier_dimension.h>
 #include <enum/modifier_type.h>
 #include <kernel/kernel_constraint.h>

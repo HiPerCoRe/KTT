@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 #include <api/dimension_vector.h>
+#include <api/local_memory_modifier.h>
 #include <api/parameter_pair.h>
-#include <dto/local_memory_modifier.h>
 #include <kernel_argument/kernel_argument.h>
 #include <ktt_types.h>
 

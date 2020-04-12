@@ -1,4 +1,4 @@
-#include <kernel/kernel_configuration.h>
+#include <api/kernel_configuration.h>
 
 namespace ktt
 {

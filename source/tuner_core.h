@@ -72,7 +72,7 @@ public:
     ComputationResult tuneKernelByStep(const KernelId id, const std::vector<OutputDescriptor>& output, const bool recomputeReference);
     void clearKernelData(const KernelId id, const bool clearConfigurations);
     void setKernelProfiling(const bool flag);
-    void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
+    void setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     ComputationResult getBestComputationResult(const KernelId id) const;
     void setPrintingTimeUnit(const TimeUnit unit);
     void setInvalidResultPrinting(const bool flag);
