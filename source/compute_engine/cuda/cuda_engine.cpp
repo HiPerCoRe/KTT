@@ -1439,7 +1439,7 @@ const std::vector<std::string>& CUDAEngine::getDefaultProfilingCounters()
         "lts__t_sectors.avg.pct_of_peak_sustained_elapsed",
         "lts__t_sectors_op_read.sum",
         "lts__t_sectors_op_write.sum",
-	"l1tex__t_requests_pipe_lsu.avg.pct_of_peak_sustained_elapsed",
+	"l1tex__t_requests_pipe_lsu_mem_global_op_ld.avg.pct_of_peak_sustained_active",
 	"l1tex__t_requests_pipe_lsu_mem_global_op_ld.sum",
         "l1tex__data_pipe_lsu_wavefronts_mem_shared.avg.pct_of_peak_sustained_elapsed",
         "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum",
