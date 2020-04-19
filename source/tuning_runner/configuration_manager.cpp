@@ -518,9 +518,8 @@ void ConfigurationManager::computeConfigurations(const Kernel& kernel, const std
 
         DimensionVector finalGlobalSize = kernel.getModifiedGlobalSize(allPairs);
         DimensionVector finalLocalSize = kernel.getModifiedLocalSize(allPairs);
-        std::vector<LocalMemoryModifier> memoryModifiers = kernel.getLocalMemoryModifiers(allPairs);
 
-        KernelConfiguration configuration(finalGlobalSize, finalLocalSize, allPairs, memoryModifiers);
+        KernelConfiguration configuration(finalGlobalSize, finalLocalSize, allPairs);
         if (configurationIsValid(configuration, kernel.getConstraints()))
         {
             finalResult.push_back(configuration);
@@ -573,9 +572,8 @@ void ConfigurationManager::computeCompositionConfigurations(const KernelComposit
 
         std::map<KernelId, DimensionVector> globalSizes = composition.getModifiedGlobalSizes(allPairs);
         std::map<KernelId, DimensionVector> localSizes = composition.getModifiedLocalSizes(allPairs);
-        std::map<KernelId, std::vector<LocalMemoryModifier>> modifiers = composition.getLocalMemoryModifiers(allPairs);
 
-        KernelConfiguration configuration(globalSizes, localSizes, allPairs, modifiers);
+        KernelConfiguration configuration(globalSizes, localSizes, allPairs);
         if (configurationIsValid(configuration, composition.getConstraints()))
         {
             finalResult.push_back(configuration);
