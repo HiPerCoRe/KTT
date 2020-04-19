@@ -27,7 +27,7 @@ public:
       * @param maximumTemperature Maximum temperature parameter for simulated annealing.
       */
     AnnealingSearcher(const double maximumTemperature) :
-        configurations(nullptr),
+        Searcher(),
         index(0),
         maximumTemperature(maximumTemperature),
         visitedStatesCount(0),
@@ -38,20 +38,25 @@ public:
         probabilityDistribution(0.0, 1.0)
     {}
 
-    void initializeConfigurations(const std::vector<KernelConfiguration>& configurations) override
+    void onInitialize() override
     {
-        if (configurations.empty())
-        {
-            throw std::runtime_error("No configurations provided for annealing searcher");
-        }
-
-        this->configurations = &configurations;
-        intDistribution = std::uniform_int_distribution<size_t>(0, configurations.size() - 1),
-        executionTimes.resize(configurations.size(), std::numeric_limits<double>::max());
+        intDistribution = std::uniform_int_distribution<size_t>(0, getConfigurations().size() - 1),
+        executionTimes.resize(getConfigurations().size(), std::numeric_limits<double>::max());
 
         const size_t initialState = intDistribution(generator);
         currentState = initialState;
         index = initialState;
+    }
+
+    void onReset() override
+    {
+        index = 0;
+        visitedStatesCount = 0;
+        currentState = 0;
+        neighbourState = 0;
+        alreadyVisistedStatesCount = 0;
+        executionTimes.clear();
+        exploredIndices.clear();
     }
 
     void calculateNextConfiguration(const ComputationResult& previousResult) override
@@ -63,7 +68,7 @@ public:
             executionTimes.at(index) = static_cast<double>(previousResult.getDuration());
         }
         
-        double progress = visitedStatesCount / static_cast<double>(configurations->size());
+        double progress = visitedStatesCount / static_cast<double>(getConfigurations().size());
         double temperature = maximumTemperature * (1.0 - progress);
 
         double acceptanceProbability = getAcceptanceProbability(executionTimes.at(currentState), executionTimes.at(neighbourState), temperature);
@@ -94,38 +99,20 @@ public:
 
     const KernelConfiguration& getNextConfiguration() const override
     {
-        return configurations->at(index);
+        return getConfigurations().at(index);
     }
 
     size_t getUnexploredConfigurationCount() const override
     {
-        if (visitedStatesCount >= configurations->size())
+        if (visitedStatesCount >= getConfigurations().size())
         {
             return 0;
         }
 
-        return configurations->size() - visitedStatesCount;
-    }
-
-    bool isInitialized() const override
-    {
-        return configurations != nullptr;
-    }
-
-    void reset() override
-    {
-        configurations = nullptr;
-        index = 0;
-        visitedStatesCount = 0;
-        currentState = 0;
-        neighbourState = 0;
-        alreadyVisistedStatesCount = 0;
-        executionTimes.clear();
-        exploredIndices.clear();
+        return getConfigurations().size() - visitedStatesCount;
     }
 
 private:
-    const std::vector<KernelConfiguration>* configurations;
     size_t index;
     double maximumTemperature;
     size_t visitedStatesCount;
@@ -145,13 +132,13 @@ private:
     {
         std::vector<size_t> neighbours;
         size_t otherId = 0;
-        for (const auto& configuration : *configurations)
+        for (const auto& configuration : getConfigurations())
         {
             size_t differences = 0;
             size_t settingId = 0;
             for (const auto& parameter : configuration.getParameterPairs())
             {
-                if (parameter.getValue() != configurations->at(referenceId).getParameterPairs().at(settingId).getValue())
+                if (parameter.getValue() != getConfigurations().at(referenceId).getParameterPairs().at(settingId).getValue())
                 {
                     differences++;
                 }

@@ -30,7 +30,7 @@ public:
       * @param start Optional parameter which specifies starting point for MCMC searcher.
       */
     MCMCSearcher(const std::vector<double>& start) :
-        configurations(nullptr),
+        Searcher(),
         index(0),
         visitedStatesCount(0),
         originState(0),
@@ -42,17 +42,11 @@ public:
         bestTime(std::numeric_limits<double>::max())
     {}
 
-    void initializeConfigurations(const std::vector<KernelConfiguration>& configurations) override
+    void onInitialize() override
     {
-        if (configurations.empty())
-        {
-            throw std::runtime_error("No configurations provided for MCMC searcher");
-        }
-
-        this->configurations = &configurations;
-        intDistribution = std::uniform_int_distribution<size_t>(0, configurations.size() - 1),
-        executionTimes.resize(configurations.size(), std::numeric_limits<double>::max());
-        exploredIndices.resize(configurations.size(), false);
+        intDistribution = std::uniform_int_distribution<size_t>(0, getConfigurations().size() - 1),
+        executionTimes.resize(getConfigurations().size(), std::numeric_limits<double>::max());
+        exploredIndices.resize(getConfigurations().size(), false);
 
         size_t initialState = 0;
 
@@ -70,10 +64,22 @@ public:
         currentState = initialState;
         index = initialState;
 
-        for (size_t i = 0; i < configurations.size(); ++i)
+        for (size_t i = 0; i < getConfigurations().size(); ++i)
         {
             unexploredIndices.insert(i);
         } 
+    }
+
+    void onReset() override
+    {
+        index = 0;
+        visitedStatesCount = 0;
+        originState = 0;
+        currentState = 0;
+        bestTime = std::numeric_limits<double>::max();
+        executionTimes.clear();
+        exploredIndices.clear();
+        unexploredIndices.clear();
     }
 
     void calculateNextConfiguration(const ComputationResult& previousResult) override
@@ -160,39 +166,20 @@ public:
 
     const KernelConfiguration& getNextConfiguration() const override
     {
-        return configurations->at(index);
+        return getConfigurations().at(index);
     }
 
     size_t getUnexploredConfigurationCount() const override
     {
-        if (visitedStatesCount >= configurations->size())
+        if (visitedStatesCount >= getConfigurations().size())
         {
             return 0;
         }
 
-        return configurations->size() - visitedStatesCount;
-    }
-
-    bool isInitialized() const override
-    {
-        return configurations != nullptr;
-    }
-
-    void reset() override
-    {
-        configurations = nullptr;
-        index = 0;
-        visitedStatesCount = 0;
-        originState = 0;
-        currentState = 0;
-        bestTime = std::numeric_limits<double>::max();
-        executionTimes.clear();
-        exploredIndices.clear();
-        unexploredIndices.clear();
+        return getConfigurations().size() - visitedStatesCount;
     }
 
 private:
-    const std::vector<KernelConfiguration>* configurations;
     size_t index;
 
     size_t visitedStatesCount;
@@ -223,9 +210,9 @@ private:
         {
             size_t differences = 0;
             size_t settingId = 0;
-            for (const auto& parameter : configurations->at(i).getParameterPairs())
+            for (const auto& parameter : getConfigurations().at(i).getParameterPairs())
             {
-                if (parameter.getValue() != configurations->at(referenceId).getParameterPairs().at(settingId).getValue())
+                if (parameter.getValue() != getConfigurations().at(referenceId).getParameterPairs().at(settingId).getValue())
                 {
                     differences++;
                 }
@@ -254,8 +241,8 @@ private:
         // iterate over neighbours and assign them probability
         for (size_t i = 0; i < neighbours.size(); i++) {
             double actProbab = 0.0;
-            for (int j = 0; j < configurations[i].getParameterPairs()) {
-                if (configurations[referenceId].getParameterPairs().at(j).getValue() != configurations[i].getParameterPairs().at(j).getValue())
+            for (int j = 0; j < getConfigurations()[i].getParameterPairs()) {
+                if (getConfigurations()[referenceId].getParameterPairs().at(j).getValue() != getConfigurations()[i].getParameterPairs().at(j).getValue())
                     actProbab += dimRelevance;
             }
             probabilityDistrib[i] = actProbab;
@@ -279,7 +266,7 @@ private:
         size_t states = state.size();
         size_t ret = 0;
         bool match = true;
-        for (const auto& configuration : *configurations) {
+        for (const auto& configuration : getConfigurations()) {
             match = true;
             for (size_t i = 0; i < states; i++) {
                 if (configuration.getParameterPairs().at(i).getValue() != state[i]) {

@@ -787,7 +787,7 @@ void ConfigurationManager::initializeSearcher(const KernelId id, const std::vect
         searchers[id] = std::make_unique<FullSearcher>();
     }
 
-    searchers[id]->initializeConfigurations(configurations);
+    searchers[id]->initialize(configurations);
 }
 
 bool ConfigurationManager::checkParameterPairs(const std::vector<ParameterPair>& pairs, const std::vector<KernelConstraint>& constraints)

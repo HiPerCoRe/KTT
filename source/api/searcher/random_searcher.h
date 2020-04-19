@@ -5,7 +5,6 @@
 
 #include <algorithm>
 #include <random>
-#include <stdexcept>
 #include <api/searcher/searcher.h>
 
 namespace ktt
@@ -21,19 +20,13 @@ public:
       * Initializes random searcher.
        */
     RandomSearcher() :
-        configurations(nullptr),
+        Searcher(),
         index(0)
     {}
 
-    void initializeConfigurations(const std::vector<KernelConfiguration>& configurations) override
+    void onInitialize() override
     {
-        if (configurations.empty())
-        {
-            throw std::runtime_error("No configurations provided for random searcher");
-        }
-
-        this->configurations = &configurations;
-        configurationIndices.resize(configurations.size());
+        configurationIndices.resize(getConfigurations().size());
 
         for (size_t i = 0; i < configurationIndices.size(); ++i)
         {
@@ -45,6 +38,12 @@ public:
         std::shuffle(std::begin(configurationIndices), std::end(configurationIndices), engine);
     }
 
+    void onReset() override
+    {
+        index = 0;
+        configurationIndices.clear();
+    }
+
     void calculateNextConfiguration(const ComputationResult&) override
     {
         ++index;
@@ -53,35 +52,22 @@ public:
     const KernelConfiguration& getNextConfiguration() const override
     {
         const size_t currentIndex = configurationIndices.at(index);
-        return configurations->at(currentIndex);
+        return getConfigurations().at(currentIndex);
     }
 
     size_t getUnexploredConfigurationCount() const override
     {
-        if (index >= configurations->size())
+        if (index >= getConfigurations().size())
         {
             return 0;
         }
 
-        return configurations->size() - index;
-    }
-
-    bool isInitialized() const override
-    {
-        return configurations != nullptr;
-    }
-
-    void reset() override
-    {
-        configurations = nullptr;
-        configurationIndices.clear();
-        index = 0;
+        return getConfigurations().size() - index;
     }
 
 private:
-    const std::vector<KernelConfiguration>* configurations;
-    std::vector<size_t> configurationIndices;
     size_t index;
+    std::vector<size_t> configurationIndices;
 };
 
 } // namespace ktt

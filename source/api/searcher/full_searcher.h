@@ -18,18 +18,13 @@ public:
       * Initializes full searcher.
       */
     FullSearcher() :
-        configurations(nullptr),
+        Searcher(),
         index(0)
     {}
 
-    void initializeConfigurations(const std::vector<KernelConfiguration>& configurations) override
+    void onReset() override
     {
-        if (configurations.empty())
-        {
-            throw std::runtime_error("No configurations provided for full searcher");
-        }
-
-        this->configurations = &configurations;
+        index = 0;
     }
 
     void calculateNextConfiguration(const ComputationResult&) override
@@ -39,32 +34,20 @@ public:
 
     const KernelConfiguration& getNextConfiguration() const override
     {
-        return configurations->at(index);
+        return getConfigurations().at(index);
     }
 
     size_t getUnexploredConfigurationCount() const override
     {
-        if (index >= configurations->size())
+        if (index >= getConfigurations().size())
         {
             return 0;
         }
 
-        return configurations->size() - index;
-    }
-
-    bool isInitialized() const override
-    {
-        return configurations != nullptr;
-    }
-
-    void reset() override
-    {
-        configurations = nullptr;
-        index = 0;
+        return getConfigurations().size() - index;
     }
 
 private:
-    const std::vector<KernelConfiguration>* configurations;
     size_t index;
 };
 
