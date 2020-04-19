@@ -4,7 +4,6 @@ namespace ktt
 {
 
 KernelConfiguration::KernelConfiguration() :
-    compositeConfiguration(false),
     validConfiguration(false)
 {}
 
@@ -13,7 +12,6 @@ KernelConfiguration::KernelConfiguration(const DimensionVector& globalSize, cons
     globalSize(globalSize),
     localSize(localSize),
     parameterPairs(parameterPairs),
-    compositeConfiguration(false),
     validConfiguration(true)
 {}
 
@@ -24,7 +22,6 @@ KernelConfiguration::KernelConfiguration(const std::map<KernelId, DimensionVecto
     compositionGlobalSizes(compositionGlobalSizes),
     compositionLocalSizes(compositionLocalSizes),
     parameterPairs(parameterPairs),
-    compositeConfiguration(true),
     validConfiguration(true)
 {}
 
@@ -97,11 +94,6 @@ const std::vector<ParameterPair>& KernelConfiguration::getParameterPairs() const
     return parameterPairs;
 }
 
-bool KernelConfiguration::isComposite() const
-{
-    return compositeConfiguration;
-}
-
 bool KernelConfiguration::isValid() const
 {
     return validConfiguration;
@@ -130,12 +122,12 @@ std::ostream& operator<<(std::ostream& outputTarget, const KernelConfiguration& 
     }
 
     outputTarget << "parameters: ";
-    if (configuration.parameterPairs.size() == 0)
+    if (configuration.getParameterPairs().empty())
     {
         outputTarget << "none";
     }
 
-    std::vector<ParameterPair> parameterPairs = configuration.parameterPairs;
+    const std::vector<ParameterPair>& parameterPairs = configuration.getParameterPairs();
     for (size_t i = 0; i < parameterPairs.size(); i++)
     {
         outputTarget << parameterPairs.at(i);
