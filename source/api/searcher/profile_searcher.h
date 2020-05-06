@@ -44,34 +44,13 @@ public:
             profilingFile << std::endl;
         }
         profilingFile.close();
+
+        // set random beginning
+        std::random_device rd;
+        std::mt19937 generator(rd());
+        std::uniform_int_distribution<> distribution(0, getConfigurations().size()-1);
+        index = static_cast<size_t>(distribution(generator));
     }
-    /*ProfileSearcher(const std::vector<KernelConfiguration>& getConfigurations(), const double computeCapability) :
-        getConfigurations()(getConfigurations())
-    {
-        if (getConfigurations().size() == 0)
-        {
-            throw std::runtime_error("Configurations vector provided for searcher is empty");
-        }
-
-        std::ofstream profilingFile;
-        profilingFile.open ("ktt-tempfile-conf.csv");
-        const int pars = getConfigurations()[0].getParameterPairs().size();
-        for (int i = 0; i < pars; i++) {
-            profilingFile << getConfigurations()[0].getParameterPairs()[i].getName();
-            if (i < pars-1) profilingFile << ",";
-        }
-        profilingFile << std::endl;
-        for (auto conf : getConfigurations()) {
-            for (int i = 0; i < pars; i++) {
-                profilingFile << conf.getParameterPairs()[i].getValue();
-                if (i < pars-1) profilingFile << ",";
-            }
-            profilingFile << std::endl;
-        }
-        profilingFile.close();
-
-        this->computeCapability = computeCapability;
-    }*/
 
     void onReset() override
     {
