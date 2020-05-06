@@ -6,16 +6,15 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <api/searcher/searcher.h>
 #include <api/computation_result.h>
 #include <api/device_info.h>
+#include <api/kernel_configuration.h>
 #include <dto/kernel_result.h>
-#include <enum/search_method.h>
 #include <kernel/kernel.h>
 #include <kernel/kernel_composition.h>
-#include <kernel/kernel_configuration.h>
 #include <kernel/kernel_constraint.h>
 #include <kernel/kernel_parameter.h>
-#include <tuning_runner/searcher/searcher.h>
 #include <tuning_runner/configuration_storage.h>
 #include <ktt_types.h>
 
@@ -31,7 +30,7 @@ public:
     // Core methods
     void initializeConfigurations(const Kernel& kernel);
     void initializeConfigurations(const KernelComposition& composition);
-    void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
+    void setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     bool hasKernelConfigurations(const KernelId id) const;
     bool hasPackConfigurations(const KernelId id) const;
     void clearKernelData(const KernelId id, const bool clearConfigurations, const bool clearBestConfiguration);
@@ -55,8 +54,6 @@ private:
     std::map<KernelId, std::unique_ptr<Searcher>> searchers;
     std::map<KernelId, KernelResult> bestConfigurations;
     std::map<KernelId, ConfigurationStorage> configurationStorages;
-    SearchMethod searchMethod;
-    std::vector<double> searchArguments;
     DeviceInfo deviceInfo;
     static const std::string defaultParameterPackName;
 
@@ -79,11 +76,9 @@ private:
         const std::vector<ParameterPair>& generatedPairs) const;
     KernelParameterPack getCurrentParameterPack(const Kernel& kernel) const;
     KernelParameterPack getCurrentParameterPack(const KernelComposition& composition) const;
-    void initializeSearcher(const KernelId id, const SearchMethod method, const std::vector<double>& arguments,
-        const std::vector<KernelConfiguration>& configurations);
+    void initializeSearcher(const KernelId id, const std::vector<KernelConfiguration>& configurations);
     static bool checkParameterPairs(const std::vector<ParameterPair>& pairs, const std::vector<KernelConstraint>& constraints);
     static size_t getConfigurationCountForParameters(const std::vector<KernelParameter>& parameters);
-    static std::string getSearchMethodName(const SearchMethod method);
 };
 
 } // namespace ktt

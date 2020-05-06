@@ -216,9 +216,10 @@ KernelResult KernelRunner::runKernelSimple(const Kernel& kernel, const KernelRun
     KernelId kernelId = kernel.getId();
     const std::string& kernelName = kernel.getName();
     std::string source = kernelManager->getKernelSourceWithDefines(kernelId, configuration);
-    
+    std::vector<LocalMemoryModifier> modifiers = kernel.getLocalMemoryModifiers(configuration.getParameterPairs());
+
     KernelRuntimeData kernelData(kernelId, kernelName, source, kernel.getSource(), configuration.getGlobalSize(), configuration.getLocalSize(),
-        configuration.getParameterPairs(), kernel.getArgumentIds(), configuration.getLocalMemoryModifiers());
+        configuration.getParameterPairs(), kernel.getArgumentIds(), modifiers);
 
     KernelResult result;
     if (kernelProfilingFlag)
@@ -278,9 +279,10 @@ KernelResult KernelRunner::runKernelWithManipulator(const Kernel& kernel, const 
 {
     KernelId kernelId = kernel.getId();
     std::string source = kernelManager->getKernelSourceWithDefines(kernelId, configuration);
+    std::vector<LocalMemoryModifier> modifiers = kernel.getLocalMemoryModifiers(configuration.getParameterPairs());
 
     KernelRuntimeData kernelData(kernelId, kernel.getName(), source, kernel.getSource(), configuration.getGlobalSize(), configuration.getLocalSize(),
-        configuration.getParameterPairs(), kernel.getArgumentIds(), configuration.getLocalMemoryModifiers());
+        configuration.getParameterPairs(), kernel.getArgumentIds(), modifiers);
 
     manipulator->manipulatorInterface = manipulatorInterfaceImplementation.get();
     manipulatorInterfaceImplementation->addKernel(kernelId, kernelData);
@@ -375,6 +377,7 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
     manipulator->manipulatorInterface = manipulatorInterfaceImplementation.get();
     std::vector<KernelArgument*> allArguments = argumentManager->getArguments(composition.getSharedArgumentIds());
     std::vector<KernelRuntimeData> compositionData;
+    std::map<KernelId, std::vector<LocalMemoryModifier>> modifiers = composition.getLocalMemoryModifiers(configuration.getParameterPairs());
 
     for (const auto* kernel : composition.getKernels())
     {
@@ -384,7 +387,7 @@ KernelResult KernelRunner::runCompositionWithManipulator(const KernelComposition
 
         KernelRuntimeData kernelData(kernelId, kernel->getName(), source, kernel->getSource(),
             configuration.getCompositionKernelGlobalSize(kernelId), configuration.getCompositionKernelLocalSize(kernelId),
-            configuration.getParameterPairs(), argumentIds, configuration.getCompositionKernelLocalMemoryModifiers(kernelId));
+            configuration.getParameterPairs(), argumentIds, modifiers[kernelId]);
         manipulatorInterfaceImplementation->addKernel(kernelId, kernelData);
         compositionData.push_back(kernelData);
 

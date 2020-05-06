@@ -81,9 +81,8 @@ KernelConfiguration KernelManager::getKernelConfiguration(const KernelId id, con
     const Kernel& kernel = getKernel(id);
     DimensionVector global = kernel.getModifiedGlobalSize(parameterPairs);
     DimensionVector local = kernel.getModifiedLocalSize(parameterPairs);
-    std::vector<LocalMemoryModifier> modifiers = kernel.getLocalMemoryModifiers(parameterPairs);
 
-    return KernelConfiguration(global, local, parameterPairs, modifiers);
+    return KernelConfiguration(global, local, parameterPairs);
 }
 
 KernelConfiguration KernelManager::getKernelCompositionConfiguration(const KernelId compositionId,
@@ -97,9 +96,8 @@ KernelConfiguration KernelManager::getKernelCompositionConfiguration(const Kerne
     const KernelComposition& kernelComposition = getKernelComposition(compositionId);
     std::map<KernelId, DimensionVector> globalSizes = kernelComposition.getModifiedGlobalSizes(parameterPairs);
     std::map<KernelId, DimensionVector> localSizes = kernelComposition.getModifiedLocalSizes(parameterPairs);
-    std::map<KernelId, std::vector<LocalMemoryModifier>> modifiers = kernelComposition.getLocalMemoryModifiers(parameterPairs);
 
-    return KernelConfiguration(globalSizes, localSizes, parameterPairs, modifiers);
+    return KernelConfiguration(globalSizes, localSizes, parameterPairs);
 }
 
 void KernelManager::addParameter(const KernelId id, const std::string& name, const std::vector<size_t>& values)

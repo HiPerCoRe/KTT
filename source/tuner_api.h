@@ -29,7 +29,6 @@
 #include <enum/modifier_type.h>
 #include <enum/print_format.h>
 #include <enum/time_unit.h>
-#include <enum/search_method.h>
 #include <enum/validation_method.h>
 #include <enum/validation_mode.h>
 
@@ -39,6 +38,13 @@
 #include <api/dimension_vector.h>
 #include <api/output_descriptor.h>
 #include <api/platform_info.h>
+
+// Searchers
+#include <api/searcher/annealing_searcher.h>
+#include <api/searcher/full_searcher.h>
+#include <api/searcher/mcmc_searcher.h>
+#include <api/searcher/random_searcher.h>
+#include <api/searcher/profile_searcher.h>
 
 // Stop conditions
 #include <api/stop_condition/configuration_duration.h>
@@ -498,19 +504,12 @@ public:
       */
     void setKernelProfilingCounters(const std::vector<std::string>& counterNames);
 
-    /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
-      * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.
-      * Default search method is full search.
-      * @param method Search method which will be used during kernel tuning. See SearchMethod for more information.
-      * @param arguments Arguments necessary for specified search method to work. Following arguments are required for corresponding search method,
-      * the order of arguments is important:
-      * - FullSearch - none
-      * - RandomSearch - none
-      * - Annealing - maximum temperature
-      * - MCMC - none
-      * - ProfileSearch - none
+    /** @fn void void setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
+      * Specifies searcher which will be used during kernel tuning. If no searcher is specified, full searcher will be used.
+      * @param id Id of kernel for which searcher will be specified.
+      * @param searcher Searcher which decides which kernel configuration will be launched next. See Searcher for more information.
       */
-    void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
+    void setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
 
     /** @fn void setPrintingTimeUnit(const TimeUnit unit)
       * Sets time unit used for printing of results. Default time unit is milliseconds. 

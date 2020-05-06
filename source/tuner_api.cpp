@@ -406,11 +406,11 @@ void Tuner::setKernelProfilingCounters(const std::vector<std::string>& counterNa
     }
 }
 
-void Tuner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
+void Tuner::setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
 {
     try
     {
-        tunerCore->setSearchMethod(method, arguments);
+        tunerCore->setSearcher(id, std::move(searcher));
     }
     catch (const std::runtime_error& error)
     {

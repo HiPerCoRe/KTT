@@ -204,9 +204,10 @@ int main(int argc, char** argv)
 #endif
 
     // Set and configure searcher
-    /*unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
+    unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
-    tuner.setSearchMethod(ktt::SearchMethod::ProfileSearch, std::vector< double > {ccMajor + 0.1*(double)ccMinor});*/
+    //tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
+    //tuner.setSearcher(kernelId, std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/750-gemm-reduced", 5.0));
 
     // Launch kernel tuning
     tuner.tuneKernel(kernelId/*, std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20))*/);

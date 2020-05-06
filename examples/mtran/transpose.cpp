@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     tuner.addParameter(kernelId, "CR", {0, 1});
     tuner.addParameter(kernelId, "LOCAL_MEM", {0, 1});
     tuner.addParameter(kernelId, "PADD_LOCAL", { 0, 1 });
-    #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
+    #if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     std::vector<size_t> sizeRanges = { 1, 2, 4, 8, 16, 32, 64 };
     #else 
         #if USE_WIDE_TUNPAR == 0

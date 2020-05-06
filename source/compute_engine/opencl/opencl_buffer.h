@@ -29,30 +29,56 @@ public:
         memoryLocation(kernelArgument.getMemoryLocation()),
         accessType(kernelArgument.getAccessType()),
         openclMemoryFlag(getOpenCLMemoryType(accessType)),
-        hostPointer(nullptr),
+        rawBuffer(nullptr),
         zeroCopy(zeroCopy)
     {
-        if (memoryLocation == ArgumentMemoryLocation::Host)
+        if (memoryLocation == ArgumentMemoryLocation::Unified)
         {
-            if (!zeroCopy)
+            #ifdef CL_VERSION_2_0
+            rawBuffer = clSVMAlloc(context, openclMemoryFlag | CL_MEM_SVM_FINE_GRAIN_BUFFER, bufferSize, 0);
+            
+            if (rawBuffer == nullptr)
             {
-                openclMemoryFlag = openclMemoryFlag | CL_MEM_ALLOC_HOST_PTR;
+                throw std::runtime_error("Failed to allocate unified memory buffer");
             }
-            else
-            {
-                openclMemoryFlag = openclMemoryFlag | CL_MEM_USE_HOST_PTR;
-                hostPointer = kernelArgument.getData();
-            }
-        }
 
-        cl_int result;
-        buffer = clCreateBuffer(context, openclMemoryFlag, bufferSize, hostPointer, &result);
-        checkOpenCLError(result, "clCreateBuffer");
+            #else
+            throw std::runtime_error("Unified memory buffers are not supported on this platform");
+            #endif
+        }
+        else
+        {
+            if (memoryLocation == ArgumentMemoryLocation::Host)
+            {
+                if (!zeroCopy)
+                {
+                    openclMemoryFlag = openclMemoryFlag | CL_MEM_ALLOC_HOST_PTR;
+                }
+                else
+                {
+                    openclMemoryFlag = openclMemoryFlag | CL_MEM_USE_HOST_PTR;
+                    rawBuffer = kernelArgument.getData();
+                }
+            }
+
+            cl_int result;
+            buffer = clCreateBuffer(context, openclMemoryFlag, bufferSize, rawBuffer, &result);
+            checkOpenCLError(result, "clCreateBuffer");
+        }
     }
 
     ~OpenCLBuffer()
     {
-        checkOpenCLError(clReleaseMemObject(buffer), "clReleaseMemObject");
+        if (memoryLocation == ArgumentMemoryLocation::Unified)
+        {
+            #ifdef CL_VERSION_2_0
+            clSVMFree(context, rawBuffer);
+            #endif
+        }
+        else
+        {
+            checkOpenCLError(clReleaseMemObject(buffer), "clReleaseMemObject");
+        }
     }
 
     void resize(cl_command_queue queue, const size_t newBufferSize, const bool preserveData)
@@ -60,6 +86,11 @@ public:
         if (zeroCopy)
         {
             throw std::runtime_error("Cannot resize buffer with CL_MEM_USE_HOST_PTR flag");
+        }
+
+        if (memoryLocation == ArgumentMemoryLocation::Unified)
+        {
+            throw std::runtime_error("Unsupported SVM buffer operation");
         }
 
         if (bufferSize == newBufferSize)
@@ -71,7 +102,7 @@ public:
         {
             checkOpenCLError(clReleaseMemObject(buffer), "clReleaseMemObject");
             cl_int result;
-            buffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, hostPointer, &result);
+            buffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, rawBuffer, &result);
             checkOpenCLError(result, "clCreateBuffer");
         }
         else
@@ -80,7 +111,7 @@ public:
             cl_int result;
             auto event = std::make_unique<OpenCLEvent>(0, true);
 
-            newBuffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, hostPointer, &result);
+            newBuffer = clCreateBuffer(context, openclMemoryFlag, newBufferSize, rawBuffer, &result);
             checkOpenCLError(result, "clCreateBuffer");
             result = clEnqueueCopyBuffer(queue, buffer, newBuffer, 0, 0, std::min(bufferSize, newBufferSize), 0, nullptr, event->getEvent());
             checkOpenCLError(result, "clEnqueueCopyBuffer");
@@ -102,7 +133,11 @@ public:
             resize(queue, dataSize, false);
         }
 
-        if (memoryLocation == ArgumentMemoryLocation::Device)
+        if (memoryLocation == ArgumentMemoryLocation::Unified)
+        {
+            std::memcpy(rawBuffer, source, dataSize);
+        }
+        else if (memoryLocation == ArgumentMemoryLocation::Device)
         {
             if (recordingEvent == nullptr)
             {
@@ -139,6 +174,11 @@ public:
             throw std::runtime_error("Recording event for buffer copying operation cannot be null");
         }
 
+        if (memoryLocation == ArgumentMemoryLocation::Unified)
+        {
+            throw std::runtime_error("Unsupported SVM buffer operation");
+        }
+
         cl_int result = clEnqueueCopyBuffer(queue, source, buffer, 0, 0, dataSize, 0, nullptr, recordingEvent);
         checkOpenCLError(result, "clEnqueueCopyBuffer");
     }
@@ -150,7 +190,11 @@ public:
             throw std::runtime_error("Size of data to download is larger than size of buffer");
         }
 
-        if (memoryLocation == ArgumentMemoryLocation::Device)
+        if (memoryLocation == ArgumentMemoryLocation::Unified)
+        {
+            std::memcpy(destination, rawBuffer, dataSize);
+        }
+        else if (memoryLocation == ArgumentMemoryLocation::Device)
         {
             if (recordingEvent == nullptr)
             {
@@ -220,6 +264,11 @@ public:
         return buffer;
     }
 
+    void* getRawBuffer() const
+    {
+        return rawBuffer;
+    }
+
 private:
     cl_context context;
     ArgumentId kernelArgumentId;
@@ -230,7 +279,7 @@ private:
     ArgumentAccessType accessType;
     cl_mem_flags openclMemoryFlag;
     cl_mem buffer;
-    void* hostPointer;
+    void* rawBuffer;
     bool zeroCopy;
 };
 

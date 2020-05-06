@@ -2,7 +2,7 @@
 
 #include <map>
 #include <vector>
-#include <kernel/kernel_configuration.h>
+#include <api/kernel_configuration.h>
 #include <kernel/kernel_parameter_pack.h>
 
 namespace ktt

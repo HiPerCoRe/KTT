@@ -330,9 +330,9 @@ void TunerCore::setKernelProfiling(const bool flag)
     tuningRunner->setKernelProfiling(flag);
 }
 
-void TunerCore::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
+void TunerCore::setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
 {
-    tuningRunner->setSearchMethod(method, arguments);
+    tuningRunner->setSearcher(id, std::move(searcher));
 }
 
 ComputationResult TunerCore::getBestComputationResult(const KernelId id) const

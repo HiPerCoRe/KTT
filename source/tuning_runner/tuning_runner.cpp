@@ -119,16 +119,7 @@ std::vector<ComputationResult> TuningRunner::dryTuneKernel(const KernelId id, co
 
             result = resultLoader.readResult(currentConfiguration);
             result.setConfiguration(currentConfiguration);
-
-            if (result.isValid())
-            {
-                results.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-                    result.getCompilationData(), result.getProfilingData());
-            }
-            else
-            {
-                results.emplace_back(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
-            }
+            results.emplace_back(result.getComputationResult());
         }
         catch (const std::runtime_error& error)
         {
@@ -239,13 +230,7 @@ ComputationResult TuningRunner::tuneKernelByStep(const KernelId id, const Kernel
     kernelRunner->clearBuffers(ArgumentAccessType::WriteOnly);
     kernelRunner->clearBuffers(ArgumentAccessType::ReadWrite);
 
-    if (!result.isValid())
-    {
-        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
-    }
-
-    return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-        result.getCompilationData(), result.getProfilingData());
+    return result.getComputationResult();
 }
 
 ComputationResult TuningRunner::tuneCompositionByStep(const KernelId id, const KernelRunMode mode, const std::vector<OutputDescriptor>& output,
@@ -278,13 +263,7 @@ ComputationResult TuningRunner::tuneCompositionByStep(const KernelId id, const K
     
     kernelRunner->clearBuffers();
 
-    if (!result.isValid())
-    {
-        return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getErrorMessage());
-    }
-
-    return ComputationResult(result.getKernelName(), result.getConfiguration().getParameterPairs(), result.getComputationDuration(),
-        result.getCompositionCompilationData(), result.getCompositionProfilingData());
+    return result.getComputationResult();
 }
 
 void TuningRunner::clearKernelData(const KernelId id, const bool clearConfigurations)
@@ -298,9 +277,9 @@ void TuningRunner::setKernelProfiling(const bool flag)
     kernelRunner->setKernelProfiling(flag);
 }
 
-void TuningRunner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
+void TuningRunner::setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
 {
-    configurationManager.setSearchMethod(method, arguments);
+    configurationManager.setSearcher(id, std::move(searcher));
 }
 
 ComputationResult TuningRunner::getBestComputationResult(const KernelId id) const

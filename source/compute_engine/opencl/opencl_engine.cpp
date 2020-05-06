@@ -273,7 +273,12 @@ EventId OpenCLEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const 
     Logger::getLogger().log(LoggingLevel::Debug, "Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
         + std::to_string(eventId));
 
-    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::Unified)
+    {
+        buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
+        bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
+    }
+    else if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
     {
         buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
         bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
@@ -386,14 +391,25 @@ KernelArgument OpenCLEngine::downloadArgumentObject(const ArgumentId id, uint64_
     KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getElementSize(),
         buffer->getDataType(), buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
 
+    bool validEvent = true;
+
+    if (buffer->getMemoryLocation() == ArgumentMemoryLocation::Unified)
+    {
+        validEvent = false;
+    }
+
     EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
+    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, validEvent);
 
     Logger::getLogger().log(LoggingLevel::Debug, "Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
     buffer->downloadData(commandQueues.at(getDefaultQueue())->getQueue(), argument.getData(), argument.getDataSizeInBytes(),
         profilingEvent->getEvent());
 
-    profilingEvent->setReleaseFlag();
+    if (validEvent)
+    {
+        profilingEvent->setReleaseFlag();
+    }
+    
     bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     nextEventId++;
 
@@ -485,7 +501,12 @@ uint64_t OpenCLEngine::persistArgument(KernelArgument& kernelArgument, const boo
         Logger::getLogger().log(LoggingLevel::Debug, "Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId())
             + ", event id: " + std::to_string(eventId));
 
-        if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+        if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::Unified)
+        {
+            buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
+            bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
+        }
+        else if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
         {
             buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
             bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
@@ -557,8 +578,7 @@ void OpenCLEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
         throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
     }
 
-    // Todo: this was not tested yet and might be wrong
-    handle = buffer->getBuffer();
+    handle = buffer->getRawBuffer();
 }
 
 void OpenCLEngine::setPersistentBufferUsage(const bool flag)
@@ -1038,8 +1058,15 @@ OpenCLBuffer* OpenCLEngine::findBuffer(const ArgumentId id) const
 
 void OpenCLEngine::setKernelArgumentVector(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const
 {
-    cl_mem clBuffer = buffer.getBuffer();
-    kernel.setKernelArgumentVector((void*)&clBuffer);
+    if (buffer.getMemoryLocation() == ArgumentMemoryLocation::Unified)
+    {
+        kernel.setKernelArgumentVectorSVM(buffer.getRawBuffer());
+    }
+    else
+    {
+        cl_mem clBuffer = buffer.getBuffer();
+        kernel.setKernelArgumentVector((void*)&clBuffer);
+    }
 }
 
 bool OpenCLEngine::loadBufferFromCache(const ArgumentId id, OpenCLKernel& kernel) const

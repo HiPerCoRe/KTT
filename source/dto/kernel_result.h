@@ -4,9 +4,10 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <api/computation_result.h>
 #include <api/kernel_compilation_data.h>
+#include <api/kernel_configuration.h>
 #include <api/kernel_profiling_data.h>
-#include <kernel/kernel_configuration.h>
 
 namespace ktt
 {
@@ -47,6 +48,8 @@ public:
 
     void increaseOverhead(const uint64_t overhead);
     void increaseKernelTime(const uint64_t kernelTime);
+
+    ComputationResult getComputationResult() const;
 
 private:
     std::string kernelName;

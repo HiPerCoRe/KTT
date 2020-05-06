@@ -1,18 +1,23 @@
+/** @file mcmc_searcher.h
+  * Searcher which explores configurations using Markov chain Monte Carlo method.
+  */
 #pragma once
 
 #include <algorithm>
 #include <chrono>
+#include <iostream>
 #include <limits>
 #include <random>
 #include <set>
-#include <sstream>
 #include <stdexcept>
-#include <tuning_runner/searcher/searcher.h>
-#include <utility/logger.h>
+#include <api/searcher/searcher.h>
 
 namespace ktt
 {
 
+/** @class MCMCSearcher
+  * Searcher which explores configurations using Markov chain Monte Carlo method.
+  */
 class MCMCSearcher : public Searcher
 {
 public:
@@ -20,43 +25,69 @@ public:
     static const size_t bootIterations = 10;
     const double escapeProbability = 0.02;
 
-    MCMCSearcher(const std::vector<KernelConfiguration>& configurations, const std::vector<double>& start) :
-        configurations(configurations),
+    /** @fn MCMCSearcher(const std::vector<double>& start)
+      * Initializes MCMC searcher.
+      * @param start Optional parameter which specifies starting point for MCMC searcher.
+      */
+    MCMCSearcher(const std::vector<double>& start) :
+        Searcher(),
+        index(0),
         visitedStatesCount(0),
         originState(0),
         currentState(0),
-        executionTimes(configurations.size(), std::numeric_limits<double>::max()),
-        exploredIndices(configurations.size(), false),
+        boot(0),
+        start(start),
         generator(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count())),
-        intDistribution(0, static_cast<int>(configurations.size()-1)),
         probabilityDistribution(0.0, 1.0),
         bestTime(std::numeric_limits<double>::max())
-    {
-        if (configurations.size() == 0)
-        {
-            throw std::runtime_error("Configurations vector provided for searcher is empty");
-        }
+    {}
 
-        size_t initialState;
-        if (start.size() > 0) 
+    void onInitialize() override
+    {
+        intDistribution = std::uniform_int_distribution<size_t>(0, getConfigurations().size() - 1),
+        executionTimes.resize(getConfigurations().size(), std::numeric_limits<double>::max());
+        exploredIndices.resize(getConfigurations().size(), false);
+
+        size_t initialState = 0;
+
+        if (!start.empty())
+        {
             initialState = searchStateIndex(start);
-        else {
-            initialState = static_cast<size_t>(intDistribution(generator));
+        } 
+        else
+        {
+            initialState = intDistribution(generator);
             boot = bootIterations;
         }
-        originState = currentState = initialState;
+
+        originState = initialState;
+        currentState = initialState;
         index = initialState;
 
-        for (size_t i = 0; i < configurations.size(); i++)
+        for (size_t i = 0; i < getConfigurations().size(); ++i)
+        {
             unexploredIndices.insert(i);
+        } 
     }
 
-    void calculateNextConfiguration(const KernelResult& previousResult) override
+    void onReset() override
+    {
+        index = 0;
+        visitedStatesCount = 0;
+        originState = 0;
+        currentState = 0;
+        bestTime = std::numeric_limits<double>::max();
+        executionTimes.clear();
+        exploredIndices.clear();
+        unexploredIndices.clear();
+    }
+
+    void calculateNextConfiguration(const ComputationResult& previousResult) override
     {
         visitedStatesCount++;
         exploredIndices[index] = true;
         unexploredIndices.erase(index);
-        executionTimes.at(index) = static_cast<double>(previousResult.getComputationDuration());
+        executionTimes.at(index) = static_cast<double>(previousResult.getDuration());
 
         // boot-up, sweeps randomly across bootIterations states and sets
         // origin of MCMC to the best state
@@ -66,21 +97,18 @@ public:
                 originState = currentState;
                 bestTime = executionTimes.at(currentState);
 
-                std::stringstream stream;
-                stream << "MCMC BOOT step " << visitedStatesCount << ": New best performance (" << bestTime << ")!";
-                Logger::getLogger().log(LoggingLevel::Debug, stream.str()); 
+                std::cout << "MCMC BOOT step " << visitedStatesCount << ": New best performance (" << bestTime << ")!";
             }
             boot--;
             while (unexploredIndices.find(index) == unexploredIndices.end() 
                 || unexploredIndices.empty()) 
             {
-                index = static_cast<size_t>(intDistribution(generator));
+                index = intDistribution(generator);
             }
             currentState = index;
             return;
         }
 
-        std::stringstream stream;
         // acceptation of a new state
         if ((executionTimes.at(currentState) <= executionTimes.at(originState))
         || probabilityDistribution(generator) < escapeProbability)
@@ -93,25 +121,21 @@ public:
             }
             if (executionTimes.at(currentState) <= executionTimes.at(originState))
             {
-                stream << "MCMC step " << visitedStatesCount << ": Accepting a new state (performance improvement).";
-                Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+                std::cout << "MCMC step " << visitedStatesCount << ": Accepting a new state (performance improvement).";
+
                 if (executionTimes.at(currentState) == bestTime)
                 {
-                    stream.clear();
-                    stream << "MCMC step " << visitedStatesCount << ": New best performance (" << bestTime << ")!";
-                    Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+                    std::cout << "MCMC step " << visitedStatesCount << ": New best performance (" << bestTime << ")!";
                 }
             }
             else
             {
-                stream << "MCMC step " << visitedStatesCount << ": Accepting a new state (random escape).";
-                Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+                std::cout << "MCMC step " << visitedStatesCount << ": Accepting a new state (random escape).";
             }
         }
         else
         {
-            stream << "MCMC step " << visitedStatesCount << ": Continuing searching neighbours.";
-            Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+            std::cout << "MCMC step " << visitedStatesCount << ": Continuing searching neighbours.";
         }
 
         if (unexploredIndices.empty()) 
@@ -122,45 +146,40 @@ public:
         // reset origin position when there are no neighbours
         if (neighbours.size() == 0)
         {
-            std::stringstream debugStream;
-            debugStream << "MCMC step " << visitedStatesCount << ": No neighbours, reseting position.";
-            Logger::getLogger().log(LoggingLevel::Debug, debugStream.str());
+            std::cout << "MCMC step " << visitedStatesCount << ": No neighbours, reseting position.";
 
             while (unexploredIndices.find(originState) == unexploredIndices.end())
             {
-                originState = static_cast<size_t>(intDistribution(generator));
+                originState = intDistribution(generator);
             }
             index = currentState = originState;
             return;
         }
 
-        stream.clear();
-        stream << "MCMC step " << visitedStatesCount << ": Choosing randomly one of " << neighbours.size() << " neighbours.";
-        Logger::getLogger().log(LoggingLevel::Debug, stream.str());
+        std::cout << "MCMC step " << visitedStatesCount << ": Choosing randomly one of " << neighbours.size() << " neighbours.";
 
         // select a random neighbour state
-        currentState = neighbours.at(static_cast<size_t>(intDistribution(generator)) % neighbours.size());
+        currentState = neighbours.at(intDistribution(generator) % neighbours.size());
         
         index = currentState;
     }
 
-    KernelConfiguration getNextConfiguration() const override
+    const KernelConfiguration& getNextConfiguration() const override
     {
-        return configurations.at(index);
+        return getConfigurations().at(index);
     }
 
     size_t getUnexploredConfigurationCount() const override
     {
-        if (visitedStatesCount >= configurations.size())
+        if (visitedStatesCount >= getConfigurations().size())
         {
             return 0;
         }
 
-        return configurations.size() - visitedStatesCount;
+        return getConfigurations().size() - visitedStatesCount;
     }
 
 private:
-    const std::vector<KernelConfiguration>& configurations;
     size_t index;
 
     size_t visitedStatesCount;
@@ -168,16 +187,17 @@ private:
     size_t currentState;
     size_t boot;
 
+    std::vector<double> start;
     std::vector<double> executionTimes;
     std::vector<bool> exploredIndices;
     std::set<size_t> unexploredIndices;
 
     std::default_random_engine generator;
-    std::uniform_int_distribution<int> intDistribution;
+    std::uniform_int_distribution<size_t> intDistribution;
     std::uniform_real_distribution<double> probabilityDistribution;
 
-    std::vector<double> dimRelevance; // relevance of each dimmension regarding to performance
-    std::vector<double> dimIndependence; // independence of each dimmension
+    std::vector<double> dimRelevance; // relevance of each dimension regarding to performance
+    std::vector<double> dimIndependence; // independence of each dimension
 
     double bestTime;
 
@@ -190,9 +210,9 @@ private:
         {
             size_t differences = 0;
             size_t settingId = 0;
-            for (const auto& parameter : configurations[i].getParameterPairs())
+            for (const auto& parameter : getConfigurations().at(i).getParameterPairs())
             {
-                if (parameter.getValue() != configurations.at(referenceId).getParameterPairs().at(settingId).getValue())
+                if (parameter.getValue() != getConfigurations().at(referenceId).getParameterPairs().at(settingId).getValue())
                 {
                     differences++;
                 }
@@ -221,8 +241,8 @@ private:
         // iterate over neighbours and assign them probability
         for (size_t i = 0; i < neighbours.size(); i++) {
             double actProbab = 0.0;
-            for (int j = 0; j < configurations[i].getParameterPairs()) {
-                if (configurations[referenceId].getParameterPairs().at(j).getValue() != configurations[i].getParameterPairs().at(j).getValue())
+            for (int j = 0; j < getConfigurations()[i].getParameterPairs()) {
+                if (getConfigurations()[referenceId].getParameterPairs().at(j).getValue() != getConfigurations()[i].getParameterPairs().at(j).getValue())
                     actProbab += dimRelevance;
             }
             probabilityDistrib[i] = actProbab;
@@ -241,11 +261,12 @@ private:
         return neighbours[0];
     }*/
 
-    size_t searchStateIndex(const std::vector<double> &state) {
+    size_t searchStateIndex(const std::vector<double>& state)
+    {
         size_t states = state.size();
         size_t ret = 0;
-        bool match;
-        for (const auto& configuration : configurations) {
+        bool match = true;
+        for (const auto& configuration : getConfigurations()) {
             match = true;
             for (size_t i = 0; i < states; i++) {
                 if (configuration.getParameterPairs().at(i).getValue() != state[i]) {
@@ -259,7 +280,7 @@ private:
         }
 
         if (!match) {
-            Logger::getLogger().log(LoggingLevel::Warning, "MCMC starting point not found.");
+            std::cout << "MCMC starting point not found.";
             ret = 0;
         }
 

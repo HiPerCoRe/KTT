@@ -168,7 +168,7 @@ void tuneKernel(ktt::Tuner& tuner, std::string& kernelFile, ktt::ArgumentId& aID
     // assign manipulator
     tuner.setTuningManipulator(kernelId, std::make_unique<cTunableGemm>(batch, a, b, c));
 
-    tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{});
+    tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
 
     // tune kernel   
     std::vector<REAL> firstMatrix(32*32);
