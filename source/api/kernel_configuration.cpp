@@ -89,6 +89,23 @@ std::vector<DimensionVector> KernelConfiguration::getLocalSizes() const
     return std::vector<DimensionVector>{localSize};
 }
 
+std::vector<KernelId> KernelConfiguration::getCompositionKernelIds() const
+{
+    if (compositionGlobalSizes.empty())
+    {
+        return std::vector<KernelId>{InvalidKernelId};
+    }
+
+    std::vector<KernelId> ids;
+
+    for (const auto& globalSizePair : compositionGlobalSizes)
+    {
+        ids.push_back(globalSizePair.first);
+    }
+
+    return ids;
+}
+
 const std::vector<ParameterPair>& KernelConfiguration::getParameterPairs() const
 {
     return parameterPairs;

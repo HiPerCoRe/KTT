@@ -568,10 +568,12 @@ KernelResult ManipulatorInterfaceImplementation::getCurrentResult() const
             KernelResult profilingResult = computeEngine->getKernelResultWithProfiling(kernelEvents.second[0], std::vector<OutputDescriptor>{});
             if (!isComposition())
             {
+                result.setCompilationData(profilingResult.getCompilationData());
                 result.setProfilingData(profilingResult.getProfilingData());
             }
             else
             {
+                result.setCompositionKernelCompilationData(kernelEvents.first, profilingResult.getCompilationData());
                 result.setCompositionKernelProfilingData(kernelEvents.first, profilingResult.getProfilingData());
             }
         }
