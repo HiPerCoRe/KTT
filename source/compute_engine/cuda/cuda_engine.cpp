@@ -741,15 +741,33 @@ EventId CUDAEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, 
         initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
     }
 
+    EventId id;
     auto profilingInstance = kernelProfilingInstances.find(key);
-    auto subscription = std::make_unique<CUPTIProfilingPass>(*profilingInstance->second);
-    EventId id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
-        getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
-    kernelToEventMap[key].push_back(id);
 
-    auto eventPointer = kernelEvents.find(id);
-    Logger::logDebug(std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
-    checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+    if (!profilingInstance->second->hasValidKernelDuration()) // The first profiling run only captures kernel duration
+    {
+        id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
+            getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
+        kernelToEventMap[std::make_pair(kernelData.getName(), kernelData.getSource())].push_back(id);
+
+        Logger::logDebug("Performing kernel synchronization for event id: " + std::to_string(id));
+        auto eventPointer = kernelEvents.find(id);
+        checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+        float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
+        profilingInstance->second->setKernelDuration(static_cast<uint64_t>(duration));
+    }
+    else
+    {
+        auto subscription = std::make_unique<CUPTIProfilingPass>(*profilingInstance->second);
+        id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
+            getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
+        kernelToEventMap[key].push_back(id);
+
+        auto eventPointer = kernelEvents.find(id);
+        Logger::logDebug(std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
+        checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+    }
+
     return id;
 
     #else
@@ -845,6 +863,8 @@ KernelResult CUDAEngine::getKernelResultWithProfiling(const EventId id, const st
     {
         throw std::runtime_error(std::string("No profiling data exists for the following kernel in current configuration: " + kernelKey.first));
     }
+
+    result.setComputationDuration(profilingInstance->second->getKernelDuration());
 
     const CUPTIMetricConfiguration& configuration = profilingInstance->second->getMetricConfiguration();
     std::vector<CUPTIMetric> metricData = metricInterface->getMetricData(configuration);

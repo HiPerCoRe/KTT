@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <cupti_profiler_target.h>
 #include <compute_engine/cuda/cupti/cupti_metric_configuration.h>
 #include <compute_engine/cuda/cuda_utility.h>
@@ -12,6 +13,7 @@ class CUPTIProfilingInstance
 public:
     explicit CUPTIProfilingInstance(CUcontext context, const CUPTIMetricConfiguration& configuration) :
         context(context),
+        kernelDuration(std::numeric_limits<uint64_t>::max()),
         configuration(configuration)
     {
         CUpti_Profiler_BeginSession_Params beginParams =
@@ -80,6 +82,11 @@ public:
         configuration.dataCollected = true;
     }
 
+    void setKernelDuration(const uint64_t duration)
+    {
+        kernelDuration = duration;
+    }
+
     bool isDataReady() const
     {
         return configuration.dataCollected;
@@ -101,6 +108,16 @@ public:
         return context;
     }
 
+    bool hasValidKernelDuration() const
+    {
+        return kernelDuration != std::numeric_limits<uint64_t>::max();
+    }
+
+    uint64_t getKernelDuration() const
+    {
+        return kernelDuration;
+    }
+
     const CUPTIMetricConfiguration& getMetricConfiguration() const
     {
         return configuration;
@@ -108,6 +125,7 @@ public:
 
 private:
     CUcontext context;
+    uint64_t kernelDuration;
     CUPTIMetricConfiguration configuration;
 };
 
