@@ -100,8 +100,8 @@ public:
         profilingFile.close();
 
         // call external python script
-        std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " -s " + statPrefix + " --sc " + std::to_string(statComputeCapability) + " -i " + std::to_string(index) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
-        //std::cout << command << std::endl;
+        std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --cm " + statPrefix + " --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(index) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
+        std::cout << command << std::endl;
         system(command.c_str());
 
         // read result of the script

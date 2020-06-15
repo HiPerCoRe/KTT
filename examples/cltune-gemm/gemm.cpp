@@ -58,13 +58,13 @@ int main(int argc, char** argv)
 
     // Declare data variables
     #if USE_PROFILING == 0
-    const uint32_t kSizeM = 2048/2;
-    const uint32_t kSizeN = 2048/2;
-    const uint32_t kSizeK = 2048/2;
+    const uint32_t kSizeM = 2048;
+    const uint32_t kSizeN = 2048;
+    const uint32_t kSizeK = 2048;
     #else
-    const uint32_t kSizeM = 2048/2;
-    const uint32_t kSizeN = 2048/2;
-    const uint32_t kSizeK = 2048/2;
+    const uint32_t kSizeM = 2048;
+    const uint32_t kSizeN = 2048;
+    const uint32_t kSizeK = 2048;
     #endif
 
     const ktt::DimensionVector ndRangeDimensions(kSizeM, kSizeN);
@@ -207,10 +207,10 @@ int main(int argc, char** argv)
     unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
     //tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
-    //tuner.setSearcher(kernelId, std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/750-gemm-reduced", 5.0));
+    tuner.setSearcher(kernelId, std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/TitanX-gemm-reduced_output.csv", 5.2));
 
     // Launch kernel tuning
-    tuner.tuneKernel(kernelId/*, std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20))*/);
+    tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(60)));
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
