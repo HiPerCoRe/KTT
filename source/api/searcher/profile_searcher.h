@@ -21,8 +21,7 @@ public:
         myComputeCapability(myCC),
         statPrefix(stat),
         statComputeCapability(statCC),
-        scratchPrefix(scratch),
-        index(0)
+        scratchPrefix(scratch)
     {}
 
     void onInitialize() override
@@ -49,7 +48,8 @@ public:
         std::random_device rd;
         std::mt19937 generator(rd());
         std::uniform_int_distribution<> distribution(0, getConfigurations().size()-1);
-        index = static_cast<size_t>(distribution(generator));
+        bestIdxInBatch = static_cast<size_t>(distribution(generator));
+        indices.push_back(bestIdxInBatch);
     }
 
     void onReset() override
@@ -58,76 +58,106 @@ public:
 
     void calculateNextConfiguration(const ComputationResult& computationResult) override
     {
-        std::vector<KernelProfilingCounter> counters = computationResult.getProfilingData().getAllCounters(); //getCounter("name")
-        //KernelResult.getCompilationData();
-
-        // create CSV with actual profiling counters
-        std::ofstream profilingFile;
-        profilingFile.open(scratchPrefix + PROFILESEARCHER_TEMPFILE_PC);
-
-        const int cnt = counters.size();
-        for (int i = 0; i < cnt; i++) {
-            profilingFile << counters[i].getName();
-            if (i < cnt-1) profilingFile << ",";
+        if (computationResult.getDuration() < bestBatchDuration) {
+            bestBatchDuration = computationResult.getDuration();
+            bestIdxInBatch = indices.back();
+            std::cout << "Index " << bestIdxInBatch << " has best duration " << bestBatchDuration << "\n";
         }
-        profilingFile << std::endl;
-        for (int i = 0; i < cnt; i++) {
-            switch(counters[i].getType()) {
-            case ktt::ProfilingCounterType::Int:
-                profilingFile << counters[i].getValue().intValue;
-                break;
-            case ktt::ProfilingCounterType::UnsignedInt:
-                profilingFile << counters[i].getValue().uintValue;
-                break;
-            case ktt::ProfilingCounterType::Percent:
-                profilingFile << counters[i].getValue().percentValue;
-                break;
-            case ktt::ProfilingCounterType::Throughput:
-                profilingFile << counters[i].getValue().throughputValue;
-                break;
-            case ktt::ProfilingCounterType::UtilizationLevel:
-                profilingFile << counters[i].getValue().utilizationLevelValue;
-                break;
-            case ktt::ProfilingCounterType::Double:
-                profilingFile << counters[i].getValue().doubleValue;
-                break;
-            default:
-                throw std::runtime_error("Unknown type of profiling counter.");
-                break;
+
+        indices.pop_back();
+
+        if (indices.size() == 0) {
+            std::vector<KernelProfilingCounter> counters = computationResult.getProfilingData().getAllCounters(); //getCounter("name")
+            //KernelResult.getCompilationData();
+
+            // create CSV with actual profiling counters
+            std::ofstream profilingFile;
+            profilingFile.open(scratchPrefix + PROFILESEARCHER_TEMPFILE_PC);
+
+            const int cnt = counters.size();
+            for (int i = 0; i < cnt; i++) {
+                profilingFile << counters[i].getName();
+                if (i < cnt-1) profilingFile << ",";
             }
-            if (i < cnt-1) profilingFile << ",";
+            profilingFile << std::endl;
+            for (int i = 0; i < cnt; i++) {
+                switch(counters[i].getType()) {
+                case ktt::ProfilingCounterType::Int:
+                    profilingFile << counters[i].getValue().intValue;
+                    break;
+                case ktt::ProfilingCounterType::UnsignedInt:
+                    profilingFile << counters[i].getValue().uintValue;
+                    break;
+                case ktt::ProfilingCounterType::Percent:
+                    profilingFile << counters[i].getValue().percentValue;
+                    break;
+                case ktt::ProfilingCounterType::Throughput:
+                    profilingFile << counters[i].getValue().throughputValue;
+                    break;
+                case ktt::ProfilingCounterType::UtilizationLevel:
+                    profilingFile << counters[i].getValue().utilizationLevelValue;
+                    break;
+                case ktt::ProfilingCounterType::Double:
+                    profilingFile << counters[i].getValue().doubleValue;
+                    break;
+                default:
+                    throw std::runtime_error("Unknown type of profiling counter.");
+                    break;
+                }
+                if (i < cnt-1) profilingFile << ",";
+            }
+            profilingFile.close();
+
+            // call external python script
+            std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --cm " + statPrefix + " --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
+            std::cout << command << std::endl;
+            system(command.c_str());
+
+            // read result of the script
+            std::fstream indexFile(PROFILESEARCHER_TEMPFILE_IDX, std::fstream::in);
+            while (!indexFile.eof()) {
+                size_t idx;
+                indexFile >> idx;
+                std::cout << "loaded idx = " << idx << std::endl;
+                indices.push_back(idx);
+            }
+            indexFile.close();
+            indices.pop_back(); // the last element is readed twice from some weird reason
+
+            bestIdxInBatch = indices[0];
+            std::numeric_limits<uint64_t>::max();
+            //std::cout << "Index: " << index << std::endl;
         }
-        profilingFile.close();
-
-        // call external python script
-        std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --cm " + statPrefix + " --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(index) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
-        std::cout << command << std::endl;
-        system(command.c_str());
-
-        // read result of the script
-        std::fstream indexFile(PROFILESEARCHER_TEMPFILE_IDX, std::fstream::in);
-        indexFile >> index;
-        indexFile.close();
-        //std::cout << "Index: " << index << std::endl;
     }
 
     const KernelConfiguration& getNextConfiguration() const override
     {
-        return getConfigurations().at(index);
+        if (indices.size() > 1) {
+            std::cout << "getNextConfiguration: index " << indices.back() << " (" << indices.size() << ")\n";
+            return getConfigurations().at(indices.back());
+        }
+        else {
+            std::cout << "getNextConfiguration: best index " << bestIdxInBatch << " (" << indices.size() << ")\n";
+            return getConfigurations().at(bestIdxInBatch);
+        }
     }
 
     size_t getUnexploredConfigurationCount() const override
     {
-        if (index >= getConfigurations().size())
+        /*if (index >= getConfigurations().size())
         {
             return 0;
         }
 
-        return getConfigurations().size() - index;
+        return getConfigurations().size() - index;*/
+        //TODO implement it
+        return 1;
     }
 
 private:
-    size_t index;
+    std::vector<size_t> indices;
+    size_t bestIdxInBatch;
+    uint64_t bestBatchDuration;
     double myComputeCapability;
     std::string statPrefix;
     double statComputeCapability;

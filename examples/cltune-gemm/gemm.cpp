@@ -210,7 +210,11 @@ int main(int argc, char** argv)
     tuner.setSearcher(kernelId, std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/TitanX-gemm-reduced_output.csv", 5.2));
 
     // Launch kernel tuning
-    tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(60)));
+    tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(120)));
+    /*std::vector<float> oneElement(1);
+    ktt::OutputDescriptor output(matCId, (void*)oneElement.data(), 1*sizeof(float));
+    for (int i = 0; i < 50; i++)
+        tuner.tuneKernelByStep(kernelId, {output});*/
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
