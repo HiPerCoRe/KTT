@@ -39,8 +39,8 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     // Set the GPU architecture for the CUDA device
     int computeCapabilityMajor = 0;
     int computeCapabilityMinor = 0;
-    cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, deviceIndex);
-    cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, deviceIndex);
+    checkCUDAError(cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, context->getDevice()), "cuDeviceGetAttribute");
+    checkCUDAError(cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, context->getDevice()), "cuDeviceGetAttribute");
     std::string gpuArchitecture = std::string("--gpu-architecture=compute_") + std::to_string(computeCapabilityMajor) + std::to_string(computeCapabilityMinor);
     setCompilerOptions(gpuArchitecture);
 
