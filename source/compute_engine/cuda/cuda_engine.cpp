@@ -5,6 +5,7 @@
 #include <utility/ktt_utility.h>
 #include <utility/logger.h>
 #include <utility/timer.h>
+#include <cuda_runtime_api.h>
 
 #ifdef KTT_PROFILING_CUPTI_LEGACY
 #include <compute_engine/cuda/cupti_legacy/cupti_profiling_subscription.h>
@@ -17,7 +18,6 @@ namespace ktt
 
 CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
     deviceIndex(deviceIndex),
-    compilerOptions(std::string("--gpu-architecture=compute_30")),
     globalSizeType(GlobalSizeType::CUDA),
     globalSizeCorrection(false),
     kernelCacheFlag(true),
@@ -36,6 +36,14 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 
     Logger::logDebug("Initializing CUDA context");
     context = std::make_unique<CUDAContext>(devices.at(deviceIndex).getDevice());
+
+    // Set the GPU architecture for the CUDA device
+    int computeCapabilityMajor = 0;
+    int computeCapabilityMinor = 0;
+    cudaDeviceGetAttribute(&computeCapabilityMajor, cudaDevAttrComputeCapabilityMajor, deviceIndex);
+    cudaDeviceGetAttribute(&computeCapabilityMinor, cudaDevAttrComputeCapabilityMinor, deviceIndex);
+    std::string gpuArchitecture = std::string("--gpu-architecture=compute_") + std::to_string(computeCapabilityMajor) + std::to_string(computeCapabilityMinor);
+    setCompilerOptions(gpuArchitecture);
 
     Logger::logDebug("Initializing CUDA streams");
     for (uint32_t i = 0; i < queueCount; i++)

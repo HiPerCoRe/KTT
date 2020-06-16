@@ -615,8 +615,8 @@ public:
     void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
 
     /** @fn void setCompilerOptions(const std::string& options)
-      * Sets compute API compiler options to specified options. There are no default options for OpenCL back-end. Default option for CUDA
-      * back-end is "--gpu-architecture=compute_30".
+      * Sets compute API compiler options to specified options. There are no default options for OpenCL back-end. By default for CUDA back-end it adds the
+      * compiler option "--gpu-architecture=compute_xx", where `xx` is the compute capability retrieved from the device.
       * 
       * For list of OpenCL compiler options, see: https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clBuildProgram.html
       * For list of CUDA compiler options, see: http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-command-options

@@ -279,6 +279,7 @@ project "ktt"
     includedirs { "source" }
     defines { "KTT_LIBRARY" }
     targetname(ktt_library_name)
+    links { "cudart" }
 
     local libraries = false
     
@@ -604,6 +605,7 @@ project "tests"
     files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl", "source/**.h", "source/**.hpp", "source/**.cpp" }
     includedirs { "tests", "source" }
     defines { "KTT_TESTS", "DO_NOT_USE_WMAIN" }
+    links { "cudart" }
     
     if _OPTIONS["no-opencl"] then
         removefiles { "tests/opencl_engine_tests.cpp" }
