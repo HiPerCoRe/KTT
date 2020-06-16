@@ -65,7 +65,7 @@ systems are Linux and Windows.
     
 * Build under Linux (inside KTT root folder):
     - ensure that path to vendor SDK is correctly set in the environment variables
-    - run `./premake5 gmake` to generate makefile
+    - run `premake5 gmake` to generate makefile
     - run `cd build` to get inside build directory
     - afterwards run `make config={configuration}_{architecture}` to build the project (e.g. `make config=release_x86_64`)
     
