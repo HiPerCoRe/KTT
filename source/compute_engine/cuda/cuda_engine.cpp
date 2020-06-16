@@ -5,7 +5,6 @@
 #include <utility/ktt_utility.h>
 #include <utility/logger.h>
 #include <utility/timer.h>
-#include <cuda_runtime_api.h>
 
 #ifdef KTT_PROFILING_CUPTI_LEGACY
 #include <compute_engine/cuda/cupti_legacy/cupti_profiling_subscription.h>
@@ -40,8 +39,8 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     // Set the GPU architecture for the CUDA device
     int computeCapabilityMajor = 0;
     int computeCapabilityMinor = 0;
-    cudaDeviceGetAttribute(&computeCapabilityMajor, cudaDevAttrComputeCapabilityMajor, deviceIndex);
-    cudaDeviceGetAttribute(&computeCapabilityMinor, cudaDevAttrComputeCapabilityMinor, deviceIndex);
+    cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, deviceIndex);
+    cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, deviceIndex);
     std::string gpuArchitecture = std::string("--gpu-architecture=compute_") + std::to_string(computeCapabilityMajor) + std::to_string(computeCapabilityMinor);
     setCompilerOptions(gpuArchitecture);
 
