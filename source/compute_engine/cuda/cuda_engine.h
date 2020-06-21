@@ -11,6 +11,7 @@
 #include <vector>
 #include <cuda.h>
 #include <nvrtc.h>
+#include <api/user_initializer.h>
 #include <compute_engine/cuda/cuda_buffer.h>
 #include <compute_engine/cuda/cuda_context.h>
 #include <compute_engine/cuda/cuda_device.h>
@@ -36,8 +37,8 @@ namespace ktt
 class CUDAEngine : public ComputeEngine
 {
 public:
-    // Constructor
     explicit CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount);
+    explicit CUDAEngine(const UserInitializer& initializer);
 
     // Kernel handling methods
     KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -124,6 +125,8 @@ private:
     std::map<std::pair<std::string, std::string>, std::unique_ptr<CUPTIProfilingInstance>> kernelProfilingInstances;
     #endif // KTT_PROFILING_CUPTI
 
+    void initializeCompilerOptions();
+    void initializeProfiler();
     std::unique_ptr<CUDAProgram> createAndBuildProgram(const std::string& source) const;
     EventId enqueueKernel(CUDAKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
         const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue, const uint64_t kernelLaunchOverhead);

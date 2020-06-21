@@ -9,45 +9,14 @@ namespace ktt
 
 TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t queueCount)
 {
-    if (queueCount == 0)
-    {
-        throw std::runtime_error("Number of compute queues must be greater than zero");
-    }
+    initializeComputeEngine(platform, device, computeAPI, queueCount);
+    initializeRunners();
+}
 
-    if (computeAPI == ComputeAPI::OpenCL)
-    {
-        #ifdef KTT_PLATFORM_OPENCL
-        computeEngine = std::make_unique<OpenCLEngine>(platform, device, queueCount);
-        #else
-        throw std::runtime_error("Support for OpenCL API is not included in this version of KTT framework");
-        #endif // KTT_PLATFORM_OPENCL
-    }
-    else if (computeAPI == ComputeAPI::CUDA)
-    {
-        #ifdef KTT_PLATFORM_CUDA
-        computeEngine = std::make_unique<CUDAEngine>(device, queueCount);
-        #else
-        throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
-        #endif // KTT_PLATFORM_CUDA
-    }
-    else if (computeAPI == ComputeAPI::Vulkan)
-    {
-        #ifdef KTT_PLATFORM_VULKAN
-        computeEngine = std::make_unique<VulkanEngine>(device, queueCount);
-        #else
-        throw std::runtime_error("Support for Vulkan API is not included in this version of KTT framework");
-        #endif // KTT_PLATFORM_VULKAN
-    }
-    else
-    {
-        throw std::runtime_error("Specified compute API is not supported");
-    }
-
-    DeviceInfo info = computeEngine->getCurrentDeviceInfo();
-    Logger::getLogger().log(LoggingLevel::Info, std::string("Initializing tuner for device ") + info.getName());
-
-    kernelRunner = std::make_unique<KernelRunner>(&argumentManager, &kernelManager, computeEngine.get());
-    tuningRunner = std::make_unique<TuningRunner>(&argumentManager, &kernelManager, kernelRunner.get(), info);
+TunerCore::TunerCore(const ComputeAPI computeAPI, const UserInitializer& initializer)
+{
+    initializeComputeEngine(computeAPI, initializer);
+    initializeRunners();
 }
 
 KernelId TunerCore::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -444,6 +413,80 @@ void TunerCore::setLoggingTarget(const std::string& filePath)
 void TunerCore::log(const LoggingLevel level, const std::string& message)
 {
     Logger::getLogger().log(level, message);
+}
+
+void TunerCore::initializeComputeEngine(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t queueCount)
+{
+    if (queueCount == 0)
+    {
+        throw std::runtime_error("Number of compute queues must be greater than zero");
+    }
+
+    switch (computeAPI)
+    {
+    case ComputeAPI::OpenCL:
+        #ifdef KTT_PLATFORM_OPENCL
+        computeEngine = std::make_unique<OpenCLEngine>(platform, device, queueCount);
+        #else
+        throw std::runtime_error("Support for OpenCL API is not included in this version of KTT framework");
+        #endif // KTT_PLATFORM_OPENCL
+        break;
+    case ComputeAPI::CUDA:
+        #ifdef KTT_PLATFORM_CUDA
+        computeEngine = std::make_unique<CUDAEngine>(device, queueCount);
+        #else
+        throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+        #endif // KTT_PLATFORM_CUDA
+        break;
+    case ComputeAPI::Vulkan:
+        #ifdef KTT_PLATFORM_VULKAN
+        computeEngine = std::make_unique<VulkanEngine>(device, queueCount);
+        #else
+        throw std::runtime_error("Support for Vulkan API is not included in this version of KTT framework");
+        #endif // KTT_PLATFORM_VULKAN
+        break;
+    default:
+        throw std::runtime_error("Specified compute API is not supported");
+    }
+}
+
+void TunerCore::initializeComputeEngine(const ComputeAPI computeAPI, const UserInitializer& initializer)
+{
+    switch (computeAPI)
+    {
+    case ComputeAPI::OpenCL:
+        #ifdef KTT_PLATFORM_OPENCL
+        throw std::runtime_error("Support for user initializers is not yet available for OpenCL API");
+        #else
+        throw std::runtime_error("Support for OpenCL API is not included in this version of KTT framework");
+        #endif // KTT_PLATFORM_OPENCL
+        break;
+    case ComputeAPI::CUDA:
+        #ifdef KTT_PLATFORM_CUDA
+        computeEngine = std::make_unique<CUDAEngine>(initializer);
+        #else
+        throw std::runtime_error("Support for CUDA API is not included in this version of KTT framework");
+        #endif // KTT_PLATFORM_CUDA
+        break;
+    case ComputeAPI::Vulkan:
+        #ifdef KTT_PLATFORM_VULKAN
+        throw std::runtime_error("Support for user initializers is not yet available for Vulkan API");
+        #else
+        throw std::runtime_error("Support for Vulkan API is not included in this version of KTT framework");
+        #endif // KTT_PLATFORM_VULKAN
+        break;
+    default:
+        throw std::runtime_error("Specified compute API is not supported");
+    }
+}
+
+void TunerCore::initializeRunners()
+{
+    DeviceInfo info = computeEngine->getCurrentDeviceInfo();
+    Logger::logInfo(std::string("Initializing tuner for device ") + info.getName());
+
+    kernelRunner = std::make_unique<KernelRunner>(&argumentManager, &kernelManager, computeEngine.get());
+    tuningRunner = std::make_unique<TuningRunner>(&argumentManager, &kernelManager, kernelRunner.get(), info);
 }
 
 } // namespace ktt

@@ -44,6 +44,16 @@ using EventId = uint64_t;
   */
 using BufferMemory = void*;
 
+/** @typedef UserContext
+  * Data type for providing user-created compute device context.
+  */
+using UserContext = void*;
+
+/** @typedef UserQueue
+  * Data type for providing user-created compute device queue.
+  */
+using UserQueue = void*;
+
 /** Kernel id returned by kernel addition methods in case of an error.
   */
 const KernelId InvalidKernelId = std::numeric_limits<KernelId>::max();

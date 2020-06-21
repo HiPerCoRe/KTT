@@ -38,6 +38,7 @@
 #include <api/dimension_vector.h>
 #include <api/output_descriptor.h>
 #include <api/platform_info.h>
+#include <api/user_initializer.h>
 
 // Searchers
 #include <api/searcher/annealing_searcher.h>
@@ -103,6 +104,14 @@ public:
       * @param computeQueueCount Number of compute queues created inside the tuner. Has to be greater than zero.
       */
     explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t computeQueueCount);
+
+    /** @fn explicit Tuner(const ComputeAPI computeAPI, const UserInitializer& initializer)
+      * Constructor which creates new tuner object for specified compute API using custom initializer. The initializer contains user-provided compute
+      * device context and queues.
+      * @param computeAPI Compute API used by the tuner.
+      * @param initializer Custom user initializer. See UserInitializer for more information.
+      */
+    explicit Tuner(const ComputeAPI computeAPI, const UserInitializer& initializer);
 
     /** @fn ~Tuner()
       * Tuner destructor.
@@ -615,8 +624,8 @@ public:
     void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
 
     /** @fn void setCompilerOptions(const std::string& options)
-      * Sets compute API compiler options to specified options. There are no default options for OpenCL back-end. By default for CUDA back-end it adds the
-      * compiler option "--gpu-architecture=compute_xx", where `xx` is the compute capability retrieved from the device.
+      * Sets compute API compiler options to specified options. There are no default options for OpenCL backend. By default for CUDA backend
+      * it adds the compiler option "--gpu-architecture=compute_xx", where `xx` is the compute capability retrieved from the device.
       * 
       * For list of OpenCL compiler options, see: https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clBuildProgram.html
       * For list of CUDA compiler options, see: http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-command-options

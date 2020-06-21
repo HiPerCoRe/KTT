@@ -17,6 +17,10 @@ Tuner::Tuner(const PlatformIndex platform, const DeviceIndex device, const Compu
     tunerCore(std::make_unique<TunerCore>(platform, device, computeAPI, computeQueueCount))
 {}
 
+Tuner::Tuner(const ComputeAPI computeAPI, const UserInitializer& initializer) :
+    tunerCore(std::make_unique<TunerCore>(computeAPI, initializer))
+{}
+
 Tuner::~Tuner() = default;
 
 KernelId Tuner::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
