@@ -22,7 +22,7 @@
     const auto computeAPI = ktt::ComputeAPI::OpenCL;
 #endif
 
-#define RAPID_TEST 0
+#define RAPID_TEST 1
 #define USE_PROFILING 1
 #define USE_REDUCED_SET 1 /* reduced tuning parameters set, taken from CLTune */
 
@@ -207,14 +207,23 @@ int main(int argc, char** argv)
     unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
     //tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
-    tuner.setSearcher(kernelId, std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/TitanX-gemm-reduced_output.csv", 5.2));
+    tuner.setSearcher(kernelId, std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/1070-gemm-reduced", 5.2));
 
     // Launch kernel tuning
-    tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(120)));
-    /*std::vector<float> oneElement(1);
+    //tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(45)));
+    std::vector<float> oneElement(1);
     ktt::OutputDescriptor output(matCId, (void*)oneElement.data(), 1*sizeof(float));
-    for (int i = 0; i < 50; i++)
-        tuner.tuneKernelByStep(kernelId, {output});*/
+    for (int i = 0; i < 10; i++) {
+        // profiling steps
+        tuner.setKernelProfiling(true);
+        // 680: 29
+        for (int j = 0; j < 29; j++)
+            tuner.tuneKernelByStep(kernelId, {output});
+        // observing steps
+        tuner.setKernelProfiling(false);
+        for (int j = 0; j < 5; j++)
+            tuner.tuneKernelByStep(kernelId, {output});
+    }
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);

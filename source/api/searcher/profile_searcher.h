@@ -49,7 +49,7 @@ public:
         std::mt19937 generator(rd());
         std::uniform_int_distribution<> distribution(0, getConfigurations().size()-1);
         bestIdxInBatch = static_cast<size_t>(distribution(generator));
-        indices.push_back(bestIdxInBatch);
+        //indices.push_back(bestIdxInBatch);
     }
 
     void onReset() override
@@ -63,8 +63,6 @@ public:
             bestIdxInBatch = indices.back();
             std::cout << "Index " << bestIdxInBatch << " has best duration " << bestBatchDuration << "\n";
         }
-
-        indices.pop_back();
 
         if (indices.size() == 0) {
             std::vector<KernelProfilingCounter> counters = computationResult.getProfilingData().getAllCounters(); //getCounter("name")
@@ -109,7 +107,7 @@ public:
             profilingFile.close();
 
             // call external python script
-            std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --cm " + statPrefix + " --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
+            std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " -s " + statPrefix + " --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
             std::cout << command << std::endl;
             system(command.c_str());
 
@@ -128,11 +126,13 @@ public:
             std::numeric_limits<uint64_t>::max();
             //std::cout << "Index: " << index << std::endl;
         }
+        else
+            indices.pop_back();
     }
 
     const KernelConfiguration& getNextConfiguration() const override
     {
-        if (indices.size() > 1) {
+        if (indices.size() > 0) {
             std::cout << "getNextConfiguration: index " << indices.back() << " (" << indices.size() << ")\n";
             return getConfigurations().at(indices.back());
         }
