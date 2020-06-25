@@ -58,7 +58,7 @@ public:
 
     void calculateNextConfiguration(const ComputationResult& computationResult) override
     {
-        if (computationResult.getDuration() < bestBatchDuration) {
+        if ((indices.size() > 0) && (computationResult.getDuration() < bestBatchDuration)) {
             bestBatchDuration = computationResult.getDuration();
             bestIdxInBatch = indices.back();
             std::cout << "Index " << bestIdxInBatch << " has best duration " << bestBatchDuration << "\n";

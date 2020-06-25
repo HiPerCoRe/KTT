@@ -210,14 +210,15 @@ int main(int argc, char** argv)
     tuner.setSearcher(kernelId, std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/1070-gemm-reduced", 5.2));
 
     // Launch kernel tuning
-    //tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(20))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(45)));
+    //tuner.tuneKernel(kernelId, std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(160))/*std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(15))*/);
     std::vector<float> oneElement(1);
     ktt::OutputDescriptor output(matCId, (void*)oneElement.data(), 1*sizeof(float));
     for (int i = 0; i < 10; i++) {
         // profiling steps
         tuner.setKernelProfiling(true);
         // 680: 29
-        for (int j = 0; j < 29; j++)
+	// 1070: 14
+        for (int j = 0; j < 14; j++)
             tuner.tuneKernelByStep(kernelId, {output});
         // observing steps
         tuner.setKernelProfiling(false);
