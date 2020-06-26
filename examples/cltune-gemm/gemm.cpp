@@ -206,25 +206,30 @@ int main(int argc, char** argv)
     // Set and configure searcher
     unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
+    auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/1070-gemm-reduced", 5.2);
+    auto searcherRaw = searcher.get();
     //tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
-    tuner.setSearcher(kernelId, std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/1070-gemm-reduced", 5.2));
+    tuner.setSearcher(kernelId, std::move(searcher));
 
     // Launch kernel tuning
-    //tuner.tuneKernel(kernelId, std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(160))/*std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(15))*/);
+    //tuner.tuneKernel(kernelId, std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(10))/*std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(15))*/);
     std::vector<float> oneElement(1);
     ktt::OutputDescriptor output(matCId, (void*)oneElement.data(), 1*sizeof(float));
     for (int i = 0; i < 10; i++) {
         // profiling steps
         tuner.setKernelProfiling(true);
-        // 680: 29
-	// 1070: 14
-        for (int j = 0; j < 14; j++)
+        while (searcherRaw->shouldProfile())
             tuner.tuneKernelByStep(kernelId, {output});
         // observing steps
         tuner.setKernelProfiling(false);
-        for (int j = 0; j < 5; j++)
+        while (! searcherRaw->shouldProfile())
             tuner.tuneKernelByStep(kernelId, {output});
     }
+    //XXX the simpler code, but may end in the middle of profiling
+    /*for (int i = 0; i < 190; i++) {
+        tuner.setKernelProfiling(searcherRaw->shouldProfile());
+        tuner.tuneKernelByStep(kernelId, {output});
+    }*/
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);

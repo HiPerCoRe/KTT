@@ -49,7 +49,7 @@ public:
         std::mt19937 generator(rd());
         std::uniform_int_distribution<> distribution(0, getConfigurations().size()-1);
         bestIdxInBatch = static_cast<size_t>(distribution(generator));
-        //indices.push_back(bestIdxInBatch);
+	profileRequired = true;
     }
 
     void onReset() override
@@ -58,6 +58,7 @@ public:
 
     void calculateNextConfiguration(const ComputationResult& computationResult) override
     {
+        std::cout << "calculateNextConfiguration\n";
         if ((indices.size() > 0) && (computationResult.getDuration() < bestBatchDuration)) {
             bestBatchDuration = computationResult.getDuration();
             bestIdxInBatch = indices.back();
@@ -125,9 +126,14 @@ public:
             bestIdxInBatch = indices[0];
             std::numeric_limits<uint64_t>::max();
             //std::cout << "Index: " << index << std::endl;
+	    //
+            profileRequired = false;
         }
-        else
+        else {
             indices.pop_back();
+            if (indices.size() == 0)
+                profileRequired = true;
+	}
     }
 
     const KernelConfiguration& getNextConfiguration() const override
@@ -154,6 +160,10 @@ public:
         return 1;
     }
 
+    bool shouldProfile() {
+        return profileRequired;
+    }
+
 private:
     std::vector<size_t> indices;
     size_t bestIdxInBatch;
@@ -162,6 +172,7 @@ private:
     std::string statPrefix;
     double statComputeCapability;
     std::string scratchPrefix;
+    bool profileRequired;
 };
 
 } // namespace ktt
