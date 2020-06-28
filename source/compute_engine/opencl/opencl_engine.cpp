@@ -16,7 +16,7 @@ namespace ktt
 OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     platformIndex(platformIndex),
     deviceIndex(deviceIndex),
-    compilerOptions(std::string("")),
+    compilerOptions(""),
     globalSizeType(GlobalSizeType::OpenCL),
     globalSizeCorrection(false),
     kernelCacheFlag(true),
@@ -43,23 +43,63 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
 
     cl_device_id device = devices.at(deviceIndex).getId();
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Initializing OpenCL context");
-    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id>{device});
+    Logger::logDebug("Initializing OpenCL context");
+    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), device);
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Initializing OpenCL queues");
+    Logger::logDebug("Initializing OpenCL queues");
     for (uint32_t i = 0; i < queueCount; i++)
     {
         auto commandQueue = std::make_unique<OpenCLCommandQueue>(i, context->getContext(), device);
         commandQueues.push_back(std::move(commandQueue));
     }
 
-    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-    Logger::logDebug("Initializing GPA profiling context");
-    gpaProfilingContext = std::make_unique<GPAProfilingContext>(gpaInterface->getFunctionTable(), *commandQueues[getDefaultQueue()].get());
+    initializeProfiler();
+}
 
-    Logger::logDebug("Initializing default GPA profiling counters");
-    gpaProfilingContext->setCounters(getDefaultGPAProfilingCounters());
-    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+OpenCLEngine::OpenCLEngine(const UserInitializer& initializer) :
+    compilerOptions(""),
+    globalSizeType(GlobalSizeType::OpenCL),
+    globalSizeCorrection(false),
+    kernelCacheFlag(true),
+    kernelCacheCapacity(10),
+    persistentBufferFlag(true),
+    nextEventId(0)
+{
+    Logger::logDebug("Initializing OpenCL context");
+    context = std::make_unique<OpenCLContext>(initializer.getContext());
+
+    auto platforms = getOpenCLPlatforms();
+
+    for (size_t i = 0; i < platforms.size(); ++i)
+    {
+        if (context->getPlatform() == platforms[i].getId())
+        {
+            platformIndex = static_cast<PlatformIndex>(i);
+            break;
+        }
+    }
+
+    auto devices = getOpenCLDevices(platforms[platformIndex]);
+
+    for (size_t i = 0; i < devices.size(); ++i)
+    {
+        if (context->getDevice() == devices[i].getId())
+        {
+            deviceIndex = static_cast<DeviceIndex>(i);
+            break;
+        }
+    }
+
+    Logger::logDebug("Initializing OpenCL queues");
+    const auto& userQueues = initializer.getQueues();
+
+    for (size_t i = 0; i < userQueues.size(); ++i)
+    {
+        auto commandQueue = std::make_unique<OpenCLCommandQueue>(static_cast<QueueId>(i), context->getContext(), context->getDevice(), userQueues[i]);
+        commandQueues.push_back(std::move(commandQueue));
+    }
+
+    initializeProfiler();
 }
 
 KernelResult OpenCLEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -826,9 +866,20 @@ void OpenCLEngine::setKernelProfilingCounters(const std::vector<std::string>& co
 
 std::unique_ptr<OpenCLProgram> OpenCLEngine::createAndBuildProgram(const std::string& source) const
 {
-    auto program = std::make_unique<OpenCLProgram>(source, context->getContext(), context->getDevices());
+    auto program = std::make_unique<OpenCLProgram>(source, context->getContext(), std::vector<cl_device_id>{context->getDevice()});
     program->build(compilerOptions);
     return program;
+}
+
+void OpenCLEngine::initializeProfiler()
+{
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    Logger::logDebug("Initializing GPA profiling context");
+    gpaProfilingContext = std::make_unique<GPAProfilingContext>(gpaInterface->getFunctionTable(), *commandQueues[getDefaultQueue()].get());
+
+    Logger::logDebug("Initializing default GPA profiling counters");
+    gpaProfilingContext->setCounters(getDefaultGPAProfilingCounters());
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 void OpenCLEngine::setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument)

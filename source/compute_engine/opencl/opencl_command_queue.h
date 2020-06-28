@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
+#ifdef KTT_PLATFORM_OPENCL
+
 #include <CL/cl.h>
-#include <compute_engine/opencl/opencl_utility.h>
 #include <ktt_types.h>
 
 namespace ktt
@@ -11,52 +11,23 @@ namespace ktt
 class OpenCLCommandQueue
 {
 public:
-    explicit OpenCLCommandQueue(const QueueId id, const cl_context context, const cl_device_id device) :
-        id(id),
-        context(context),
-        device(device)
-    {
-        cl_int result;
-        #ifdef CL_VERSION_2_0
-        cl_queue_properties properties[] = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
-        queue = clCreateCommandQueueWithProperties(context, device, properties, &result);
-        checkOpenCLError(result, "clCreateCommandQueueWithProperties");
-        #else
-        queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &result);
-        checkOpenCLError(result, "clCreateCommandQueue");
-        #endif
-    }
+    explicit OpenCLCommandQueue(const QueueId id, const cl_context context, const cl_device_id device);
+    explicit OpenCLCommandQueue(const QueueId id, const cl_context context, const cl_device_id device, UserQueue queue);
+    ~OpenCLCommandQueue();
 
-    ~OpenCLCommandQueue()
-    {
-        checkOpenCLError(clReleaseCommandQueue(queue), "clReleaseCommandQueue");
-    }
-
-    QueueId getId() const
-    {
-        return id;
-    }
-
-    cl_context getContext() const
-    {
-        return context;
-    }
-
-    cl_device_id getDevice() const
-    {
-        return device;
-    }
-
-    cl_command_queue getQueue() const
-    {
-        return queue;
-    }
+    cl_command_queue getQueue() const;
+    cl_context getContext() const;
+    cl_device_id getDevice() const;
+    QueueId getId() const;
 
 private:
-    QueueId id;
+    cl_command_queue queue;
     cl_context context;
     cl_device_id device;
-    cl_command_queue queue;
+    QueueId id;
+    bool owningQueue;
 };
 
 } // namespace ktt
+
+#endif // KTT_PLATFORM_OPENCL

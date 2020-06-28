@@ -456,7 +456,7 @@ void TunerCore::initializeComputeEngine(const ComputeAPI computeAPI, const UserI
     {
     case ComputeAPI::OpenCL:
         #ifdef KTT_PLATFORM_OPENCL
-        throw std::runtime_error("Support for user initializers is not yet available for OpenCL API");
+        computeEngine = std::make_unique<OpenCLEngine>(initializer);
         #else
         throw std::runtime_error("Support for OpenCL API is not included in this version of KTT framework");
         #endif // KTT_PLATFORM_OPENCL

@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <api/user_initializer.h>
 #include <compute_engine/opencl/opencl_buffer.h>
 #include <compute_engine/opencl/opencl_command_queue.h>
 #include <compute_engine/opencl/opencl_context.h>
@@ -30,8 +31,8 @@ namespace ktt
 class OpenCLEngine : public ComputeEngine
 {
 public:
-    // Constructor
     explicit OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount);
+    explicit OpenCLEngine(const UserInitializer& initializer);
 
     // Kernel handling methods
     KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -118,6 +119,7 @@ private:
     #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
     // Helper methods
+    void initializeProfiler();
     void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument);
     void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers);
     EventId enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
