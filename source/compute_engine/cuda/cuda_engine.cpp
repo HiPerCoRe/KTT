@@ -578,6 +578,11 @@ void CUDAEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
     handle = reinterpret_cast<BufferMemory>(*buffer->getBuffer());
 }
 
+void CUDAEngine::addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument)
+{
+    throw std::runtime_error("Support for user buffers is not implemented yet");
+}
+
 void CUDAEngine::setPersistentBufferUsage(const bool flag)
 {
     persistentBufferFlag = flag;

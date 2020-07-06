@@ -621,6 +621,11 @@ void OpenCLEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
     handle = buffer->getRawBuffer();
 }
 
+void OpenCLEngine::addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument)
+{
+    throw std::runtime_error("Support for user buffers is not implemented yet");
+}
+
 void OpenCLEngine::setPersistentBufferUsage(const bool flag)
 {
     persistentBufferFlag = flag;

@@ -677,4 +677,18 @@ ArgumentId Tuner::addArgument(const size_t localMemoryElementsCount, const size_
     }
 }
 
+ArgumentId Tuner::addUserArgument(UserBuffer buffer, const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType)
+{
+    try
+    {
+        return tunerCore->addUserArgument(buffer, bufferSize, elementSize, dataType, memoryLocation, accessType);
+    }
+    catch (const std::runtime_error& error)
+    {
+        TunerCore::log(LoggingLevel::Error, error.what());
+        return InvalidArgumentId;
+    }
+}
+
 } // namespace ktt

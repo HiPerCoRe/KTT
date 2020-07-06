@@ -54,6 +54,11 @@ using UserContext = void*;
   */
 using UserQueue = void*;
 
+/** @typedef UserBuffer
+  * Data type for providing user-created compute device buffer.
+  */
+using UserBuffer = void*;
+
 /** Kernel id returned by kernel addition methods in case of an error.
   */
 const KernelId InvalidKernelId = std::numeric_limits<KernelId>::max();

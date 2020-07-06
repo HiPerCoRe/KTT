@@ -147,6 +147,15 @@ ArgumentId TunerCore::addArgument(const void* data, const size_t numberOfElement
     return argumentManager.addArgument(data, numberOfElements, elementSizeInBytes, dataType, memoryLocation, accessType, uploadType);
 }
 
+ArgumentId TunerCore::addUserArgument(UserBuffer buffer, const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType)
+{
+    const ArgumentId id = argumentManager.addUserArgument(bufferSize, elementSize, dataType, memoryLocation, accessType);
+    KernelArgument& argument = argumentManager.getArgument(id);
+    computeEngine->addUserBuffer(buffer, argument);
+    return id;
+}
+
 ComputationResult TunerCore::runKernel(const KernelId id, const std::vector<ParameterPair>& configuration,
     const std::vector<OutputDescriptor>& output)
 {

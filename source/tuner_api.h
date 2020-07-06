@@ -362,6 +362,26 @@ public:
         return addArgument(data.data(), data.size(), sizeof(T), dataType, memoryLocation, accessType, copyData);
     }
 
+    /** @fn template <typename T> ArgumentId addArgumentVector(UserBuffer buffer, const ArgumentAccessType accessType,
+      * const ArgumentMemoryLocation memoryLocation)
+      * Adds new vector argument to the tuner. The argument buffer is managed by user and depending on the compute API, can be either CUdeviceptr
+      * or cl_mem handle. The tuner will work with the argument in the same way as with persistent arguments and will not destroy it.
+      * @param buffer User-provided memory buffer.
+      * @param bufferSize Size of the provided user buffer in bytes.
+      * @param accessType Access type of argument specifies whether argument is used for input or output. See ::ArgumentAccessType for more
+      * information.
+      * @param memoryLocation Memory location of argument specifies whether argument will be accessed from device or host memory during its usage
+      * by compute API. See ::ArgumentMemoryLocation for more information.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
+    template <typename T> ArgumentId addArgumentVector(UserBuffer buffer, const size_t bufferSize, const ArgumentAccessType accessType,
+        const ArgumentMemoryLocation memoryLocation)
+    {
+        const size_t elementSize = sizeof(T);
+        const ArgumentDataType dataType = getMatchingArgumentDataType<T>();
+        return addUserArgument(buffer, bufferSize, elementSize, dataType, memoryLocation, accessType);
+    }
+
     /** @fn template <typename T> ArgumentId addArgumentScalar(const T& data)
       * Adds new scalar argument to tuner. All scalar arguments are read-only.
       * @param data Argument data provided as single scalar value. The data type must be trivially copyable. Bool data type is currently not
@@ -711,6 +731,8 @@ private:
     ArgumentId addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType);
     ArgumentId addArgument(const size_t localMemoryElementsCount, const size_t elementSizeInBytes, const ArgumentDataType dataType);
+    ArgumentId addUserArgument(UserBuffer buffer, const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType);
 
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {

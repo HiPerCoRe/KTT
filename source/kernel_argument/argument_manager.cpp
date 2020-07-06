@@ -24,6 +24,13 @@ ArgumentId ArgumentManager::addArgument(const void* data, const size_t numberOfE
     return nextArgumentId++;
 }
 
+ArgumentId ArgumentManager::addUserArgument(const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType)
+{
+    arguments.emplace_back(nextArgumentId, bufferSize, elementSize, dataType, memoryLocation, accessType);
+    return nextArgumentId++;
+}
+
 void ArgumentManager::updateArgument(const ArgumentId id, void* data, const size_t numberOfElements)
 {
     if (id >= nextArgumentId)

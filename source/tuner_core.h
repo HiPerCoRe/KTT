@@ -55,6 +55,8 @@ public:
         const bool copyData);
     ArgumentId addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType);
+    ArgumentId addUserArgument(UserBuffer buffer, const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType);
 
     // Kernel runner methods
     ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);

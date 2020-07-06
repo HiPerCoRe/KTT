@@ -58,6 +58,7 @@ public:
     virtual void resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) = 0;
     virtual void getArgumentHandle(const ArgumentId id, BufferMemory& handle) = 0;
     virtual void setPersistentBufferUsage(const bool flag) = 0;
+    virtual void addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument) = 0;
     virtual void clearBuffer(const ArgumentId id) = 0;
     virtual void clearBuffers() = 0;
     virtual void clearBuffers(const ArgumentAccessType accessType) = 0;
