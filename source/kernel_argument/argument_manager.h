@@ -33,7 +33,7 @@ public:
 private:
     // Attributes
     ArgumentId nextArgumentId;
-    std::vector<KernelArgument> arguments;
+    std::vector<std::unique_ptr<KernelArgument>> arguments;
 };
 
 } // namespace ktt

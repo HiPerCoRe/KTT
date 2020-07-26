@@ -580,7 +580,13 @@ void CUDAEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
 
 void CUDAEngine::addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument)
 {
-    throw std::runtime_error("Support for user buffers is not implemented yet");
+    if (findBuffer(kernelArgument.getId()) != nullptr)
+    {
+        throw std::runtime_error(std::string("User buffer with the following id already exists: ") + std::to_string(kernelArgument.getId()));
+    }
+
+    auto cudaBuffer = std::make_unique<CUDABuffer>(buffer, kernelArgument);
+    userBuffers.insert(std::move(cudaBuffer));
 }
 
 void CUDAEngine::setPersistentBufferUsage(const bool flag)
@@ -1178,6 +1184,14 @@ size_t CUDAEngine::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>
 
 CUDABuffer* CUDAEngine::findBuffer(const ArgumentId id) const
 {
+    for (const auto& buffer : userBuffers)
+    {
+        if (buffer->getKernelArgumentId() == id)
+        {
+            return buffer.get();
+        }
+    }
+
     if (persistentBufferFlag)
     {
         for (const auto& buffer : persistentBuffers)
