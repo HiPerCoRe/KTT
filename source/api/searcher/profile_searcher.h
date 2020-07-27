@@ -66,12 +66,15 @@ public:
         }
 
         if (indices.size() == 0) {
+            //std::vector<DimensionVector> globalSizes = computationResult.getConfiguration().getGlobalSizes();
             std::vector<KernelProfilingCounter> counters = computationResult.getProfilingData().getAllCounters(); //getCounter("name")
             //KernelResult.getCompilationData();
 
             // create CSV with actual profiling counters
             std::ofstream profilingFile;
             profilingFile.open(scratchPrefix + PROFILESEARCHER_TEMPFILE_PC);
+
+            //TODO add global and local size into the CSV file
 
             const int cnt = counters.size();
             for (int i = 0; i < cnt; i++) {
@@ -108,7 +111,7 @@ public:
             profilingFile.close();
 
             // call external python script
-            std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " -s " + statPrefix + " --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
+            std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --mp 15 --co 1920" + " --kb " + statPrefix + "_output_Proposed.sav --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
             std::cout << command << std::endl;
             system(command.c_str());
 
@@ -117,7 +120,7 @@ public:
             while (!indexFile.eof()) {
                 size_t idx;
                 indexFile >> idx;
-                std::cout << "loaded idx = " << idx << std::endl;
+                //std::cout << "loaded idx = " << idx << std::endl;
                 indices.push_back(idx);
             }
             indexFile.close();

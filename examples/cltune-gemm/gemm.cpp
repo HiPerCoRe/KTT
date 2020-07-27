@@ -23,7 +23,7 @@
 #endif
 
 #define RAPID_TEST 1
-#define USE_PROFILING 1
+#define USE_PROFILING 0
 #define USE_REDUCED_SET 1 /* reduced tuning parameters set, taken from CLTune */
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
@@ -212,10 +212,10 @@ int main(int argc, char** argv)
     tuner.setSearcher(kernelId, std::move(searcher));
 
     // Launch kernel tuning
-    //tuner.tuneKernel(kernelId, std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(10))/*std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(15))*/);
+    //tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(10))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(60)));
     std::vector<float> oneElement(1);
     ktt::OutputDescriptor output(matCId, (void*)oneElement.data(), 1*sizeof(float));
-    for (int i = 0; i < 10; i++) {
+    /*for (int i = 0; i < 10; i++) {
         // profiling steps
         tuner.setKernelProfiling(true);
         while (searcherRaw->shouldProfile())
@@ -224,12 +224,12 @@ int main(int argc, char** argv)
         tuner.setKernelProfiling(false);
         while (! searcherRaw->shouldProfile())
             tuner.tuneKernelByStep(kernelId, {output});
-    }
+    }*/
     //XXX the simpler code, but may end in the middle of profiling
-    /*for (int i = 0; i < 190; i++) {
+    for (int i = 0; i < 190; i++) {
         tuner.setKernelProfiling(searcherRaw->shouldProfile());
         tuner.tuneKernelByStep(kernelId, {output});
-    }*/
+    }
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
