@@ -21,7 +21,8 @@ public:
         myComputeCapability(myCC),
         statPrefix(stat),
         statComputeCapability(statCC),
-        scratchPrefix(scratch)
+        scratchPrefix(scratch),
+        profileRequired(true)
     {}
 
     void onInitialize() override
@@ -43,6 +44,12 @@ public:
             profilingFile << std::endl;
         }
         profilingFile.close();
+
+        // store local and global sizes
+        for (auto conf : getConfigurations()) {
+            globalSizes.push_back(conf.getGlobalSize());
+	    localSizes.push_back(conf.getLocalSize());
+        }
 
         // set random beginning
         std::random_device rd;
@@ -74,14 +81,15 @@ public:
             std::ofstream profilingFile;
             profilingFile.open(scratchPrefix + PROFILESEARCHER_TEMPFILE_PC);
 
-            //TODO add global and local size into the CSV file
-
-            const int cnt = counters.size();
+            profilingFile << "Global size,Local size,";
+	    const int cnt = counters.size();
             for (int i = 0; i < cnt; i++) {
                 profilingFile << counters[i].getName();
                 if (i < cnt-1) profilingFile << ",";
             }
             profilingFile << std::endl;
+	    profilingFile << globalSizes[bestIdxInBatch].getTotalSize() << ",";
+	    profilingFile << localSizes[bestIdxInBatch].getTotalSize() << ",";
             for (int i = 0; i < cnt; i++) {
                 switch(counters[i].getType()) {
                 case ktt::ProfilingCounterType::Int:
@@ -169,6 +177,8 @@ public:
 
 private:
     std::vector<size_t> indices;
+    std::vector<DimensionVector> globalSizes;
+    std::vector<DimensionVector> localSizes;
     size_t bestIdxInBatch;
     uint64_t bestBatchDuration;
     double myComputeCapability;

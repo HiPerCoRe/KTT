@@ -227,7 +227,9 @@ int main(int argc, char** argv)
     }*/
     //XXX the simpler code, but may end in the middle of profiling
     for (int i = 0; i < 190; i++) {
+        std::cout << "Profiling: " << searcherRaw->shouldProfile() << "\n";
         tuner.setKernelProfiling(searcherRaw->shouldProfile());
+	std::cout << "tuneKernelByStep\n";
         tuner.tuneKernelByStep(kernelId, {output});
     }
 
