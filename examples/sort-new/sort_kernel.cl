@@ -1,6 +1,10 @@
 // This kernel code based on CUDPP.  Please see the notice in
 // LICENSE_CUDPP.txt.
 
+//This kernel segfaults when run on CPU. The segfault occurrs in findRadixOffsets and it looks like a serious memory corruption. Incredibly frustrating to debug, even adding printf can trigger segfault. Maybe a bug we have unknowingly adopted from SHOC?
+
+//Works just fine when run on GPU.
+
 #if SORT_VECTOR == 2
 #define SORTVECTYPE uint2
 #elif SORT_VECTOR == 4
