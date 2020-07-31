@@ -4,6 +4,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <time.h>
 #include "tuner_api.h"
 
 #if defined(_MSC_VER)
@@ -25,6 +26,9 @@
 #define RAPID_TEST 1
 #define USE_PROFILING 0
 #define USE_REDUCED_SET 1 /* reduced tuning parameters set, taken from CLTune */
+
+#define USE_PROFILE_SEARCHER 0
+#define TUNE_SEC 30
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
 bool IsMultiple(const size_t a, const size_t b) {
@@ -204,38 +208,54 @@ int main(int argc, char** argv)
 #endif
 
     // Set and configure searcher
+#if USE_PROFILE_SEARCHER == 1
     unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
     auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/1070-gemm-reduced", 5.2);
     auto searcherRaw = searcher.get();
-    //tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
     tuner.setSearcher(kernelId, std::move(searcher));
+#else
+    tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
+#endif
 
     // Launch kernel tuning
-    //tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(10))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(60)));
+    //tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(10))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(30)));
     std::vector<float> oneElement(1);
     ktt::OutputDescriptor output(matCId, (void*)oneElement.data(), 1*sizeof(float));
-    /*for (int i = 0; i < 10; i++) {
-        // profiling steps
-        tuner.setKernelProfiling(true);
-        while (searcherRaw->shouldProfile())
-            tuner.tuneKernelByStep(kernelId, {output});
-        // observing steps
-        tuner.setKernelProfiling(false);
-        while (! searcherRaw->shouldProfile())
-            tuner.tuneKernelByStep(kernelId, {output});
-    }*/
-    //XXX the simpler code, but may end in the middle of profiling
-    for (int i = 0; i < 190; i++) {
-        std::cout << "Profiling: " << searcherRaw->shouldProfile() << "\n";
-        tuner.setKernelProfiling(searcherRaw->shouldProfile());
-	std::cout << "tuneKernelByStep\n";
+    int confTested = 0;
+    int kernTested = 0;
+
+    // loop for desired amount of time
+    clock_t start = time(NULL);
+    while (time(NULL) - start < TUNE_SEC) {
+        // turn on/off profiling and gather statistics
+#if USE_PROFILE_SEARCHER == 1
+        if (searcherRaw->shouldProfile()) {
+            tuner.setKernelProfiling(true);
+            kernTested++;
+        }
+        else {
+            tuner.setKernelProfiling(false);
+            confTested++;
+            kernTested++;
+        }
+#else
+        confTested++;
+        kernTested++;
+#endif
+        // tune kernel
         tuner.tuneKernelByStep(kernelId, {output});
+
+        // dump time and best kernel
+        ktt::ComputationResult bestConf = tuner.getBestComputationResult(kernelId);
+        std::cout << "Execution after " << time(NULL) - start << " second(s), best kernel " << bestConf.getDuration() << " ns" << std::endl;
     }
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, "gemm_output.csv", ktt::PrintFormat::CSV);
+
+    std::cout << "Number of configurations tested: " << confTested << ", required kernel tests: " << kernTested << std::endl;
 
     return 0;
 };
