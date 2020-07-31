@@ -27,8 +27,8 @@
 #define USE_PROFILING 0
 #define USE_REDUCED_SET 1 /* reduced tuning parameters set, taken from CLTune */
 
-#define USE_PROFILE_SEARCHER 0
-#define TUNE_SEC 30
+#define USE_PROFILE_SEARCHER 1
+#define TUNE_SEC 300
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
 bool IsMultiple(const size_t a, const size_t b) {

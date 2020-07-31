@@ -56,7 +56,7 @@ public:
         std::mt19937 generator(rd());
         std::uniform_int_distribution<> distribution(0, getConfigurations().size()-1);
         bestIdxInBatch = static_cast<size_t>(distribution(generator));
-	profileRequired = true;
+        profileRequired = true;
     }
 
     void onReset() override
@@ -119,7 +119,7 @@ public:
             profilingFile.close();
 
             // call external python script
-            std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --mp 15 --co 1920" + " --kb " + statPrefix + "_output_Proposed.sav --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
+            std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --mp 46 --co 2944" + " --kb " + statPrefix + "_output_Proposed.sav --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
             std::cout << command << std::endl;
             system(command.c_str());
 
@@ -129,7 +129,7 @@ public:
                 size_t idx;
                 indexFile >> idx;
                 //std::cout << "loaded idx = " << idx << std::endl;
-                indices.push_back(idx);
+                indices.push_back(idx); 
             }
             indexFile.close();
             indices.pop_back(); // the last element is readed twice from some weird reason
