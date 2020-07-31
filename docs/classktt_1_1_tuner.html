@@ -1379,7 +1379,7 @@ template&lt;typename T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Sets compute API compiler options to specified options. There are no default options for OpenCL back-end. Default option for CUDA back-end is "--gpu-architecture=compute_30".</p>
+<p>Sets compute API compiler options to specified options. There are no default options for OpenCL back-end. By default for CUDA back-end it adds the compiler option "--gpu-architecture=compute_xx" where `xx` is the compute capability retrieved from the device.</p>
 <p>For list of OpenCL compiler options, see: <a href="https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clBuildProgram.html">https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clBuildProgram.html</a> For list of CUDA compiler options, see: <a href="http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-command-options">http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-command-options</a> </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">options</td><td>Compute API compiler options. If multiple options are used, they need to be separated by a single space character. </td></tr>

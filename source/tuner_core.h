@@ -3,6 +3,7 @@
 #include <fstream>
 #include <memory>
 #include <vector>
+#include <api/user_initializer.h>
 #include <compute_engine/compute_engine.h>
 #include <enum/compute_api.h>
 #include <kernel/kernel_manager.h>
@@ -20,6 +21,7 @@ class TunerCore
 public:
     // Constructor
     explicit TunerCore(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t queueCount);
+    explicit TunerCore(const ComputeAPI computeAPI, const UserInitializer& initializer);
 
     // Kernel manager methods
     KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -53,6 +55,8 @@ public:
         const bool copyData);
     ArgumentId addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType);
+    ArgumentId addUserArgument(UserBuffer buffer, const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType);
 
     // Kernel runner methods
     ComputationResult runKernel(const KernelId id, const std::vector<ParameterPair>& configuration, const std::vector<OutputDescriptor>& output);
@@ -105,6 +109,10 @@ private:
     std::unique_ptr<ComputeEngine> computeEngine;
     std::unique_ptr<KernelRunner> kernelRunner;
     std::unique_ptr<TuningRunner> tuningRunner;
+
+    void initializeComputeEngine(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t queueCount);
+    void initializeComputeEngine(const ComputeAPI computeAPI, const UserInitializer& initializer);
+    void initializeRunners();
 };
 
 } // namespace ktt

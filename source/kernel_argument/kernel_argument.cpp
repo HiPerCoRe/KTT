@@ -15,7 +15,8 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t numberOfElement
     argumentUploadType(uploadType),
     referencedData(nullptr),
     dataOwned(true),
-    persistentFlag(false)
+    persistentFlag(false),
+    userBuffer(false)
 {
     if (numberOfElements == 0)
     {
@@ -36,7 +37,8 @@ KernelArgument::KernelArgument(const ArgumentId id, void* data, const size_t num
     argumentUploadType(uploadType),
     referencedData(nullptr),
     dataOwned(dataOwned),
-    persistentFlag(false)
+    persistentFlag(false),
+    userBuffer(false)
 {
     if (numberOfElements == 0)
     {
@@ -65,7 +67,8 @@ KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size
     argumentUploadType(uploadType),
     referencedData(nullptr),
     dataOwned(true),
-    persistentFlag(false)
+    persistentFlag(false),
+    userBuffer(false)
 {
     if (numberOfElements == 0 && data != nullptr)
     {
@@ -76,6 +79,22 @@ KernelArgument::KernelArgument(const ArgumentId id, const void* data, const size
     {
         initializeData(data);
     }
+}
+
+KernelArgument::KernelArgument(const ArgumentId id, const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType) :
+    id(id),
+    elementSizeInBytes(elementSize),
+    argumentDataType(dataType),
+    argumentMemoryLocation(memoryLocation),
+    argumentAccessType(accessType),
+    argumentUploadType(ArgumentUploadType::Vector),
+    referencedData(nullptr),
+    dataOwned(false),
+    persistentFlag(false),
+    userBuffer(true)
+{
+    numberOfElements = bufferSize / elementSize;
 }
 
 void KernelArgument::updateData(void* data, const size_t numberOfElements)
@@ -112,6 +131,11 @@ void KernelArgument::updateData(const void* data, const size_t numberOfElements)
 
 void KernelArgument::setPersistentFlag(const bool flag)
 {
+    if (hasUserBuffer())
+    {
+        throw std::runtime_error("Persistent flag cannot be changed for kernel argument with user buffer");
+    }
+
     persistentFlag = flag;
 }
 
@@ -178,6 +202,11 @@ bool KernelArgument::hasOwnedData() const
 bool KernelArgument::isPersistent() const
 {
     return persistentFlag;
+}
+
+bool KernelArgument::hasUserBuffer() const
+{
+    return userBuffer;
 }
 
 bool KernelArgument::operator==(const KernelArgument& other) const

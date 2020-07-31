@@ -17,7 +17,6 @@ namespace ktt
 
 CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
     deviceIndex(deviceIndex),
-    compilerOptions(std::string("--gpu-architecture=compute_30")),
     globalSizeType(GlobalSizeType::CUDA),
     globalSizeCorrection(false),
     kernelCacheFlag(true),
@@ -37,24 +36,52 @@ CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     Logger::logDebug("Initializing CUDA context");
     context = std::make_unique<CUDAContext>(devices.at(deviceIndex).getDevice());
 
+    initializeCompilerOptions();
+
     Logger::logDebug("Initializing CUDA streams");
     for (uint32_t i = 0; i < queueCount; i++)
     {
-        auto stream = std::make_unique<CUDAStream>(i, context->getContext(), devices.at(deviceIndex).getDevice());
+        auto stream = std::make_unique<CUDAStream>(i);
         streams.push_back(std::move(stream));
     }
 
-    #ifdef KTT_PROFILING_CUPTI_LEGACY
-    Logger::logDebug("Initializing CUPTI profiling metric IDs");
-    const std::vector<std::string>& metricNames = getDefaultProfilingMetricNames();
-    profilingMetrics = getProfilingMetricsForCurrentDevice(metricNames);
-    #elif KTT_PROFILING_CUPTI
-    Logger::logDebug("Initializing CUPTI profiler");
-    profiler = std::make_unique<CUPTIProfiler>();
-    const std::string deviceName = profiler->getDeviceName(deviceIndex);
-    metricInterface = std::make_unique<CUPTIMetricInterface>(deviceName);
-    profilingCounters = getDefaultProfilingCounters();
-    #endif // KTT_PROFILING_CUPTI
+    initializeProfiler();
+}
+
+CUDAEngine::CUDAEngine(const UserInitializer& initializer) :
+    globalSizeType(GlobalSizeType::CUDA),
+    globalSizeCorrection(false),
+    kernelCacheFlag(true),
+    kernelCacheCapacity(10),
+    persistentBufferFlag(true),
+    nextEventId(0)
+{
+    Logger::logDebug("Initializing CUDA context");
+    context = std::make_unique<CUDAContext>(initializer.getContext());
+
+    auto devices = getCUDADevices();
+
+    for (size_t i = 0; i < devices.size(); ++i)
+    {
+        if (context->getDevice() == devices[i].getDevice())
+        {
+            deviceIndex = static_cast<DeviceIndex>(i);
+            break;
+        }
+    }
+
+    initializeCompilerOptions();
+
+    Logger::logDebug("Initializing CUDA streams");
+    const auto& userStreams = initializer.getQueues();
+
+    for (size_t i = 0; i < userStreams.size(); ++i)
+    {
+        auto stream = std::make_unique<CUDAStream>(static_cast<QueueId>(i), userStreams[i]);
+        streams.push_back(std::move(stream));
+    }
+
+    initializeProfiler();
 }
 
 KernelResult CUDAEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -551,6 +578,17 @@ void CUDAEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
     handle = reinterpret_cast<BufferMemory>(*buffer->getBuffer());
 }
 
+void CUDAEngine::addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument)
+{
+    if (findBuffer(kernelArgument.getId()) != nullptr)
+    {
+        throw std::runtime_error(std::string("User buffer with the following id already exists: ") + std::to_string(kernelArgument.getId()));
+    }
+
+    auto cudaBuffer = std::make_unique<CUDABuffer>(buffer, kernelArgument);
+    userBuffers.insert(std::move(cudaBuffer));
+}
+
 void CUDAEngine::setPersistentBufferUsage(const bool flag)
 {
     persistentBufferFlag = flag;
@@ -741,15 +779,33 @@ EventId CUDAEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, 
         initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
     }
 
+    EventId id;
     auto profilingInstance = kernelProfilingInstances.find(key);
-    auto subscription = std::make_unique<CUPTIProfilingPass>(*profilingInstance->second);
-    EventId id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
-        getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
-    kernelToEventMap[key].push_back(id);
 
-    auto eventPointer = kernelEvents.find(id);
-    Logger::logDebug(std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
-    checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+    if (!profilingInstance->second->hasValidKernelDuration()) // The first profiling run only captures kernel duration
+    {
+        id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
+            getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
+        kernelToEventMap[std::make_pair(kernelData.getName(), kernelData.getSource())].push_back(id);
+
+        Logger::logDebug("Performing kernel synchronization for event id: " + std::to_string(id));
+        auto eventPointer = kernelEvents.find(id);
+        checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+        float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
+        profilingInstance->second->setKernelDuration(static_cast<uint64_t>(duration));
+    }
+    else
+    {
+        auto subscription = std::make_unique<CUPTIProfilingPass>(*profilingInstance->second);
+        id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
+            getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
+        kernelToEventMap[key].push_back(id);
+
+        auto eventPointer = kernelEvents.find(id);
+        Logger::logDebug(std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
+        checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
+    }
+
     return id;
 
     #else
@@ -846,6 +902,8 @@ KernelResult CUDAEngine::getKernelResultWithProfiling(const EventId id, const st
         throw std::runtime_error(std::string("No profiling data exists for the following kernel in current configuration: " + kernelKey.first));
     }
 
+    result.setComputationDuration(profilingInstance->second->getKernelDuration());
+
     const CUPTIMetricConfiguration& configuration = profilingInstance->second->getMetricConfiguration();
     std::vector<CUPTIMetric> metricData = metricInterface->getMetricData(configuration);
     KernelProfilingData profilingData;
@@ -882,6 +940,33 @@ void CUDAEngine::setKernelProfilingCounters(const std::vector<std::string>& coun
     #else
     throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
     #endif // KTT_PROFILING_CUPTI_LEGACY
+}
+
+void CUDAEngine::initializeCompilerOptions()
+{
+    Logger::logDebug("Initializing compiler options");
+
+    int computeCapabilityMajor = 0;
+    int computeCapabilityMinor = 0;
+    checkCUDAError(cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, context->getDevice()), "cuDeviceGetAttribute");
+    checkCUDAError(cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, context->getDevice()), "cuDeviceGetAttribute");
+    const std::string gpuArchitecture = std::string("--gpu-architecture=compute_") + std::to_string(computeCapabilityMajor) + std::to_string(computeCapabilityMinor);
+    setCompilerOptions(gpuArchitecture);
+}
+
+void CUDAEngine::initializeProfiler()
+{
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
+    Logger::logDebug("Initializing CUPTI profiling metric IDs");
+    const std::vector<std::string>& metricNames = getDefaultProfilingMetricNames();
+    profilingMetrics = getProfilingMetricsForCurrentDevice(metricNames);
+    #elif KTT_PROFILING_CUPTI
+    Logger::logDebug("Initializing CUPTI profiler");
+    profiler = std::make_unique<CUPTIProfiler>();
+    const std::string deviceName = profiler->getDeviceName(deviceIndex);
+    metricInterface = std::make_unique<CUPTIMetricInterface>(deviceName);
+    profilingCounters = getDefaultProfilingCounters();
+    #endif // KTT_PROFILING_CUPTI
 }
 
 std::unique_ptr<CUDAProgram> CUDAEngine::createAndBuildProgram(const std::string& source) const
@@ -1108,6 +1193,14 @@ size_t CUDAEngine::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>
 
 CUDABuffer* CUDAEngine::findBuffer(const ArgumentId id) const
 {
+    for (const auto& buffer : userBuffers)
+    {
+        if (buffer->getKernelArgumentId() == id)
+        {
+            return buffer.get();
+        }
+    }
+
     if (persistentBufferFlag)
     {
         for (const auto& buffer : persistentBuffers)

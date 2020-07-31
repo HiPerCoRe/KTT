@@ -17,6 +17,10 @@ Tuner::Tuner(const PlatformIndex platform, const DeviceIndex device, const Compu
     tunerCore(std::make_unique<TunerCore>(platform, device, computeAPI, computeQueueCount))
 {}
 
+Tuner::Tuner(const ComputeAPI computeAPI, const UserInitializer& initializer) :
+    tunerCore(std::make_unique<TunerCore>(computeAPI, initializer))
+{}
+
 Tuner::~Tuner() = default;
 
 KernelId Tuner::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -665,6 +669,20 @@ ArgumentId Tuner::addArgument(const size_t localMemoryElementsCount, const size_
     {
         return tunerCore->addArgument(nullptr, localMemoryElementsCount, elementSizeInBytes, dataType, ArgumentMemoryLocation::Device,
             ArgumentAccessType::ReadOnly, ArgumentUploadType::Local);
+    }
+    catch (const std::runtime_error& error)
+    {
+        TunerCore::log(LoggingLevel::Error, error.what());
+        return InvalidArgumentId;
+    }
+}
+
+ArgumentId Tuner::addUserArgument(UserBuffer buffer, const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType)
+{
+    try
+    {
+        return tunerCore->addUserArgument(buffer, bufferSize, elementSize, dataType, memoryLocation, accessType);
     }
     catch (const std::runtime_error& error)
     {
