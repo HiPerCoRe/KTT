@@ -248,7 +248,7 @@ int main(int argc, char** argv)
 
         // dump time and best kernel
         ktt::ComputationResult bestConf = tuner.getBestComputationResult(kernelId);
-        std::cout << "Execution after " << time(NULL) - start << " second(s), best kernel " << bestConf.getDuration() << " ns" << std::endl;
+        std::cout << "Execution after " << time(NULL) - start << " second(s), tested " << confTested << " configurations, best kernel " << bestConf.getDuration() << " ns" << std::endl;
     }
 
     // Print tuning results to standard output and to output.csv file
