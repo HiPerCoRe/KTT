@@ -307,25 +307,18 @@ EventId OpenCLEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const 
         return UINT64_MAX;
     }
 
-    std::unique_ptr<OpenCLBuffer> buffer = nullptr;
-    EventId eventId = nextEventId;
+    Logger::logDebug("Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: " + std::to_string(nextEventId));
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
-        + std::to_string(eventId));
+    const EventId eventId = nextEventId;
+    const ArgumentMemoryLocation location = kernelArgument.getMemoryLocation();
+    auto buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument);
 
-    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::Unified)
+    if (location == ArgumentMemoryLocation::Unified || location == ArgumentMemoryLocation::HostZeroCopy)
     {
-        buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
-        bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
-    }
-    else if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
-    {
-        buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
         bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
     }
     else
     {
-        buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
         auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
         buffer->uploadData(commandQueues.at(queue)->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
             profilingEvent->getEvent());
@@ -535,25 +528,19 @@ uint64_t OpenCLEngine::persistArgument(KernelArgument& kernelArgument, const boo
     
     if (flag && !bufferFound)
     {
-        std::unique_ptr<OpenCLBuffer> buffer = nullptr;
-        EventId eventId = nextEventId;
+        Logger::logDebug("Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
+            + std::to_string(nextEventId));
+        
+        const EventId eventId = nextEventId;
+        const ArgumentMemoryLocation location = kernelArgument.getMemoryLocation();
+        auto buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument);
 
-        Logger::getLogger().log(LoggingLevel::Debug, "Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId())
-            + ", event id: " + std::to_string(eventId));
-
-        if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::Unified)
+        if (location == ArgumentMemoryLocation::Unified || location == ArgumentMemoryLocation::HostZeroCopy)
         {
-            buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
-            bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
-        }
-        else if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
-        {
-            buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
             bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
         }
         else
         {
-            buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
             auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
             buffer->uploadData(commandQueues.at(getDefaultQueue())->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
                 profilingEvent->getEvent());

@@ -20,7 +20,7 @@ namespace ktt
 class OpenCLBuffer
 {
 public:
-    explicit OpenCLBuffer(const cl_context context, KernelArgument& kernelArgument, const bool zeroCopy) :
+    explicit OpenCLBuffer(const cl_context context, KernelArgument& kernelArgument) :
         context(context),
         kernelArgumentId(kernelArgument.getId()),
         bufferSize(kernelArgument.getDataSizeInBytes()),
@@ -29,8 +29,7 @@ public:
         memoryLocation(kernelArgument.getMemoryLocation()),
         accessType(kernelArgument.getAccessType()),
         openclMemoryFlag(getOpenCLMemoryType(accessType)),
-        rawBuffer(nullptr),
-        zeroCopy(zeroCopy)
+        rawBuffer(nullptr)
     {
         if (memoryLocation == ArgumentMemoryLocation::Unified)
         {
@@ -50,15 +49,12 @@ public:
         {
             if (memoryLocation == ArgumentMemoryLocation::Host)
             {
-                if (!zeroCopy)
-                {
-                    openclMemoryFlag = openclMemoryFlag | CL_MEM_ALLOC_HOST_PTR;
-                }
-                else
-                {
-                    openclMemoryFlag = openclMemoryFlag | CL_MEM_USE_HOST_PTR;
-                    rawBuffer = kernelArgument.getData();
-                }
+                openclMemoryFlag = openclMemoryFlag | CL_MEM_ALLOC_HOST_PTR;
+            }
+            else if (memoryLocation == ArgumentMemoryLocation::HostZeroCopy)
+            {
+                openclMemoryFlag = openclMemoryFlag | CL_MEM_USE_HOST_PTR;
+                rawBuffer = kernelArgument.getData();
             }
 
             cl_int result;
@@ -83,7 +79,7 @@ public:
 
     void resize(cl_command_queue queue, const size_t newBufferSize, const bool preserveData)
     {
-        if (zeroCopy)
+        if (isZeroCopy())
         {
             throw std::runtime_error("Cannot resize buffer with CL_MEM_USE_HOST_PTR flag");
         }
@@ -269,6 +265,11 @@ public:
         return rawBuffer;
     }
 
+    bool isZeroCopy() const
+    {
+        return static_cast<bool>(openclMemoryFlag & CL_MEM_USE_HOST_PTR);
+    }
+
 private:
     cl_context context;
     ArgumentId kernelArgumentId;
@@ -280,7 +281,6 @@ private:
     cl_mem_flags openclMemoryFlag;
     cl_mem buffer;
     void* rawBuffer;
-    bool zeroCopy;
 };
 
 } // namespace ktt
