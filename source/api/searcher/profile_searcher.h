@@ -82,14 +82,14 @@ public:
             profilingFile.open(scratchPrefix + PROFILESEARCHER_TEMPFILE_PC);
 
             profilingFile << "Global size,Local size,";
-	    const int cnt = counters.size();
+	        const int cnt = counters.size();
             for (int i = 0; i < cnt; i++) {
                 profilingFile << counters[i].getName();
                 if (i < cnt-1) profilingFile << ",";
             }
             profilingFile << std::endl;
-	    profilingFile << globalSizes[bestIdxInBatch].getTotalSize() << ",";
-	    profilingFile << localSizes[bestIdxInBatch].getTotalSize() << ",";
+    	    profilingFile << globalSizes[bestIdxInBatch].getTotalSize() << ",";
+	        profilingFile << localSizes[bestIdxInBatch].getTotalSize() << ",";
             for (int i = 0; i < cnt; i++) {
                 switch(counters[i].getType()) {
                 case ktt::ProfilingCounterType::Int:
@@ -119,7 +119,7 @@ public:
             profilingFile.close();
 
             // call external python script
-            std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --mp 46 --co 2944" + " --kb " + statPrefix + "_output_Proposed.sav --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC;
+            std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --mp 46 --co 2944" + " --kb " + statPrefix + "_output_Proposed.sav --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC + " --compute_bound";
             std::cout << command << std::endl;
             system(command.c_str());
 
@@ -135,7 +135,7 @@ public:
             indices.pop_back(); // the last element is readed twice from some weird reason
 
             bestIdxInBatch = indices[0];
-            std::numeric_limits<uint64_t>::max();
+            bestBatchDuration = std::numeric_limits<uint64_t>::max();
             //std::cout << "Index: " << index << std::endl;
 	    //
             profileRequired = false;

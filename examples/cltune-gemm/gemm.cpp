@@ -27,7 +27,7 @@
 #define USE_PROFILING 0
 #define USE_REDUCED_SET 1 /* reduced tuning parameters set, taken from CLTune */
 
-#define USE_PROFILE_SEARCHER 1
+#define USE_PROFILE_SEARCHER 0
 #define TUNE_SEC 300
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
@@ -211,7 +211,7 @@ int main(int argc, char** argv)
 #if USE_PROFILE_SEARCHER == 1
     unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
-    auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/1070-gemm-reduced", 5.2);
+    auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/1070-gemm-reduced", 6.1);
     auto searcherRaw = searcher.get();
     tuner.setSearcher(kernelId, std::move(searcher));
 #else
