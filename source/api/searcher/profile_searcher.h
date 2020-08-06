@@ -116,7 +116,7 @@ public:
     {
       //we are done, send message "quit" to python script
       std::string messageToBeSent = "quit";
-      std::cout << "Writing message for python " <<  messageToBeSent << std::endl;
+      std::cout << "Writing message for python from onReset " <<  messageToBeSent << std::endl;
       ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
       //close the pipes
       ::close(pipe_py_to_cpp[0]);
@@ -127,7 +127,7 @@ public:
     {
       //we are done, send message "quit" to python script
       std::string messageToBeSent = "quit";
-      std::cout << "Writing message for python " <<  messageToBeSent << std::endl;
+      std::cout << "Writing message for python from destructor " <<  messageToBeSent << std::endl;
       ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
       //close the pipes
       ::close(pipe_py_to_cpp[0]);
@@ -191,7 +191,7 @@ public:
 
             //file is ready, send message "read <bestIdxInBatch>" to python script
             std::string messageToBeSent = "read " + std::to_string(bestIdxInBatch);
-            std::cout << "-------------------- Writing message for python " <<  messageToBeSent << std::endl;
+            std::cout << "Writing message for python from calculateNextConfiguration " <<  messageToBeSent << std::endl;
             ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
 
             // read result of the script
