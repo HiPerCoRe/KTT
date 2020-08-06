@@ -4,6 +4,8 @@
 #include <random>
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <unistd.h>
 #include <api/searcher/searcher.h>
 
 #define PROFILESEARCHER_TEMPFILE_CONF   "ktt-tempfile-conf.csv"
@@ -57,10 +59,79 @@ public:
         std::uniform_int_distribution<> distribution(0, getConfigurations().size()-1);
         bestIdxInBatch = static_cast<size_t>(distribution(generator));
         profileRequired = true;
+
+        // create pipes to communicate with python script
+
+        if (::pipe(pipe_cpp_to_py) || ::pipe(pipe_py_to_cpp))
+        {
+          std::cout << "Couldn't open pipes" << std::endl;
+          ::exit(1);
+        }
+
+        pid_t pid = fork();
+
+        if ( pid == 0 )
+        {
+          //child process, i.e. python script
+          // close unnecessary file descriptors
+          ::close(pipe_py_to_cpp[0]);
+          ::close(pipe_cpp_to_py[1]);
+          std::ostringstream oss;
+
+          // start the python script and let it load the tuning space
+          std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --mp 46 --co 2944" + " --kb " + statPrefix + "_output_Proposed.sav --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC + " --compute_bound";
+          std::cout << command << std::endl;
+
+          oss << "export PY_READ_FD=" << pipe_cpp_to_py[0] << " && "
+            << "export PY_WRITE_FD=" << pipe_py_to_cpp[1] << " && "
+            << "export PYTHONUNBUFFERED=true && " // Force stdin, stdout and stderr to be totally unbuffered.
+            << command;
+
+
+          ::system(oss.str().c_str());
+
+          //after the script finishes (which happens when it receives a message "quit")
+          //close the descriptors and exit the child process
+          ::close(pipe_py_to_cpp[1]);
+          ::close(pipe_cpp_to_py[0]);
+          ::exit(0);
+
+        }
+        else if ( pid < 0 )
+        {
+          //error
+          std::cout << "Fork failed." << std::endl;
+          ::exit(1);
+        }
+        else
+        {
+          //parent process
+          // close unnecessary file descriptors
+          ::close(pipe_py_to_cpp[1]);
+          ::close(pipe_cpp_to_py[0]);
+        }
     }
 
     void onReset() override
     {
+      //we are done, send message "quit" to python script
+      std::string messageToBeSent = "quit";
+      std::cout << "Writing message for python " <<  messageToBeSent << std::endl;
+      ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
+      //close the pipes
+      ::close(pipe_py_to_cpp[0]);
+      ::close(pipe_cpp_to_py[1]);
+    }
+
+    ~ProfileSearcher()
+    {
+      //we are done, send message "quit" to python script
+      std::string messageToBeSent = "quit";
+      std::cout << "Writing message for python " <<  messageToBeSent << std::endl;
+      ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
+      //close the pipes
+      ::close(pipe_py_to_cpp[0]);
+      ::close(pipe_cpp_to_py[1]);
     }
 
     void calculateNextConfiguration(const ComputationResult& computationResult) override
@@ -118,10 +189,10 @@ public:
             }
             profilingFile.close();
 
-            // call external python script
-            std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --mp 46 --co 2944" + " --kb " + statPrefix + "_output_Proposed.sav --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC + " --compute_bound";
-            std::cout << command << std::endl;
-            system(command.c_str());
+            //file is ready, send message "read <bestIdxInBatch>" to python script
+            std::string messageToBeSent = "read " + std::to_string(bestIdxInBatch);
+            std::cout << "-------------------- Writing message for python " <<  messageToBeSent << std::endl;
+            ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
 
             // read result of the script
             std::fstream indexFile(PROFILESEARCHER_TEMPFILE_IDX, std::fstream::in);
@@ -186,6 +257,8 @@ private:
     double statComputeCapability;
     std::string scratchPrefix;
     bool profileRequired;
+    int pipe_cpp_to_py[2];
+    int pipe_py_to_cpp[2];
 };
 
 } // namespace ktt
