@@ -195,15 +195,24 @@ public:
             ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
 
             // read result of the script
-            std::fstream indexFile(PROFILESEARCHER_TEMPFILE_IDX, std::fstream::in);
-            while (!indexFile.eof()) {
-                size_t idx;
-                indexFile >> idx;
-                //std::cout << "loaded idx = " << idx << std::endl;
-                indices.push_back(idx); 
+            //create the buffer. the size ultimately depends on NONPROFILEBATCH from ktt-profiling-searcher.py
+            int bufferSize = 200;
+            std::vector<char> buffer(bufferSize);
+            buffer[bufferSize-1] = '\0';
+            ::read(pipe_py_to_cpp[0], &(buffer[0]), bufferSize-1);
+            std::string bufferString = std::string(&(buffer[0]));
+
+            std::cout << "Received message from python: " << bufferString <<std::endl;
+            //parsing the indices from the message
+            size_t pos = 0;
+            std::string token;
+            std::string delimiter = ",";
+            while ((pos=bufferString.find(delimiter)) != std::string::npos) {
+              token = bufferString.substr(0, pos);
+              indices.push_back(std::atoi(token.c_str()));
+              bufferString.erase(0, pos+delimiter.length());
             }
-            indexFile.close();
-            indices.pop_back(); // the last element is readed twice from some weird reason
+
 
             bestIdxInBatch = indices[0];
             bestBatchDuration = std::numeric_limits<uint64_t>::max();
