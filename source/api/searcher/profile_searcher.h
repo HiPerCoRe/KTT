@@ -7,6 +7,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <api/searcher/searcher.h>
+#include <utility/logger.h>
 
 #define PROFILESEARCHER_TEMPFILE_CONF   "ktt-tempfile-conf.csv"
 #define PROFILESEARCHER_TEMPFILE_PC     "ktt-tempfile-pc.csv"
@@ -64,7 +65,7 @@ public:
 
         if (::pipe(pipe_cpp_to_py) || ::pipe(pipe_py_to_cpp))
         {
-          std::cout << "Couldn't open pipes" << std::endl;
+          Logger::getLogger().log(LoggingLevel::Error, "Profile searcher: Pipes to communicate with Python scripts could not be opened. Quitting.");
           ::exit(1);
         }
 
@@ -100,7 +101,7 @@ public:
         else if ( pid < 0 )
         {
           //error
-          std::cout << "Fork failed." << std::endl;
+          Logger::getLogger().log(LoggingLevel::Error, "Profile searcher: Fork of the process to start Python script failed. Quitting.");
           ::exit(1);
         }
         else
@@ -116,7 +117,7 @@ public:
     {
       //we are done, send message "quit" to python script
       std::string messageToBeSent = "quit";
-      std::cout << "Writing message for python from onReset " <<  messageToBeSent << std::endl;
+      Logger::getLogger().log(LoggingLevel::Debug, "Profile searcher writing message to Python script from onReset " + messageToBeSent);
       ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
       //close the pipes
       ::close(pipe_py_to_cpp[0]);
@@ -127,7 +128,7 @@ public:
     {
       //we are done, send message "quit" to python script
       std::string messageToBeSent = "quit";
-      std::cout << "Writing message for python from destructor " <<  messageToBeSent << std::endl;
+      Logger::getLogger().log(LoggingLevel::Debug, "Profile searcher writing message to Python script from destructor " + messageToBeSent);
       ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
       //close the pipes
       ::close(pipe_py_to_cpp[0]);
@@ -191,7 +192,7 @@ public:
 
             //file is ready, send message "read <bestIdxInBatch>" to python script
             std::string messageToBeSent = "read " + std::to_string(bestIdxInBatch);
-            std::cout << "Writing message for python from calculateNextConfiguration " <<  messageToBeSent << std::endl;
+            Logger::getLogger().log(LoggingLevel::Debug, "Profile searcher writing message to Python script from calculateNextConfiguration " +  messageToBeSent);
             ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
 
             // read result of the script
@@ -202,16 +203,20 @@ public:
             ::read(pipe_py_to_cpp[0], &(buffer[0]), bufferSize-1);
             std::string bufferString = std::string(&(buffer[0]));
 
-            std::cout << "Received message from python: " << bufferString <<std::endl;
+            Logger::getLogger().log(LoggingLevel::Debug, "Profile searcher received message from Python script " + messageToBeSent);
             //parsing the indices from the message
             size_t pos = 0;
             std::string token;
             std::string delimiter = ",";
+            std::stringstream ss;
             while ((pos=bufferString.find(delimiter)) != std::string::npos) {
               token = bufferString.substr(0, pos);
-              indices.push_back(std::atoi(token.c_str()));
+              int n = std::atoi(token.c_str());
+              ss << n << " ";
+              indices.push_back(n);
               bufferString.erase(0, pos+delimiter.length());
             }
+            Logger::getLogger().log(LoggingLevel::Debug, "Profile searcher parsed message from Python script " + ss.str());
 
 
             bestIdxInBatch = indices[0];
