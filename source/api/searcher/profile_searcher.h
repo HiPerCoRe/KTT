@@ -12,6 +12,7 @@
 #define PROFILESEARCHER_TEMPFILE_CONF   "ktt-tempfile-conf.csv"
 #define PROFILESEARCHER_TEMPFILE_PC     "ktt-tempfile-pc.csv"
 #define PROFILESEARCHER_TEMPFILE_IDX    "ktt-tempfile-idx.dat"
+#define NONPROFILE_BATCH 5
 
 namespace ktt
 {
@@ -80,7 +81,7 @@ public:
           std::ostringstream oss;
 
           // start the python script and let it load the tuning space
-          std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --mp 46 --co 2944" + " --kb " + statPrefix + "_output_Proposed.sav --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -p " + PROFILESEARCHER_TEMPFILE_PC + " --compute_bound";
+          std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --mp 46 --co 2944" + " --kb " + statPrefix + "_output_Proposed.sav --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -b " + std::to_string(NONPROFILE_BATCH) + " -p " + PROFILESEARCHER_TEMPFILE_PC + " --compute_bound";
           std::cout << command << std::endl;
 
           oss << "export PY_READ_FD=" << pipe_cpp_to_py[0] << " && "
@@ -196,8 +197,8 @@ public:
             ::write(pipe_cpp_to_py[1], messageToBeSent.c_str(), messageToBeSent.size());
 
             // read result of the script
-            //create the buffer. the size ultimately depends on NONPROFILEBATCH from ktt-profiling-searcher.py
-            int bufferSize = 200;
+            //create the buffer. the size depends on NONPROFILEBATCH from ktt-profiling-searcher.pyi and some space to breathe is added
+            int bufferSize = NONPROFILE_BATCH*sizeof(int)*2;
             std::vector<char> buffer(bufferSize);
             buffer[bufferSize-1] = '\0';
             ::read(pipe_py_to_cpp[0], &(buffer[0]), bufferSize-1);
