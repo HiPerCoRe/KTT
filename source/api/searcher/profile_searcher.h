@@ -211,9 +211,15 @@ public:
             std::stringstream ss;
             while ((pos=bufferString.find(delimiter)) != std::string::npos) {
               token = bufferString.substr(0, pos);
-              int n = std::atoi(token.c_str());
-              ss << n << " ";
-              indices.push_back(n);
+              int n;
+              try {
+                n = std::stoi(token);
+                ss << n << " ";
+                indices.push_back(n);
+              }
+              catch (std::invalid_argument) {
+                Logger::getLogger().log(LoggingLevel::Error, "Profile searcher is not able to parse message from Python script: " + token);
+              }
               bufferString.erase(0, pos+delimiter.length());
             }
             Logger::getLogger().log(LoggingLevel::Debug, "Profile searcher parsed message from Python script " + ss.str());
