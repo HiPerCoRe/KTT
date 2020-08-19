@@ -58,8 +58,8 @@ public:
 private:
     // Attributes
     KernelId nextId;
-    std::vector<Kernel> kernels;
-    std::vector<KernelComposition> kernelCompositions;
+    std::vector<std::unique_ptr<Kernel>> kernels;
+    std::vector<std::unique_ptr<KernelComposition>> kernelCompositions;
 
     // Helper methods
     static std::string loadFileToString(const std::string& filePath);

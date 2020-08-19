@@ -13,7 +13,7 @@ KernelManager::KernelManager() :
 KernelId KernelManager::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
     const DimensionVector& localSize)
 {
-    kernels.emplace_back(nextId, source, kernelName, globalSize, localSize);
+    kernels.push_back(std::make_unique<Kernel>(nextId, source, kernelName, globalSize, localSize));
     return nextId++;
 }
 
@@ -38,10 +38,10 @@ KernelId KernelManager::addKernelComposition(const std::string& compositionName,
         {
             throw std::runtime_error(std::string("Invalid kernel id: ") + std::to_string(id));
         }
-        compositionKernels.push_back(&kernels.at(id));
+        compositionKernels.push_back(kernels.at(id).get());
     }
 
-    kernelCompositions.emplace_back(nextId, compositionName, compositionKernels);
+    kernelCompositions.push_back(std::make_unique<KernelComposition>(nextId, compositionName, compositionKernels));
     return nextId++;
 }
 
@@ -287,9 +287,9 @@ const Kernel& KernelManager::getKernel(const KernelId id) const
 {
     for (const auto& kernel : kernels)
     {
-        if (kernel.getId() == id)
+        if (kernel->getId() == id)
         {
-            return kernel;
+            return *kernel;
         }
     }
 
@@ -310,9 +310,9 @@ const KernelComposition& KernelManager::getKernelComposition(const KernelId id) 
 {
     for (const auto& kernelComposition : kernelCompositions)
     {
-        if (kernelComposition.getId() == id)
+        if (kernelComposition->getId() == id)
         {
-            return kernelComposition;
+            return *kernelComposition;
         }
     }
 
@@ -328,7 +328,7 @@ bool KernelManager::isKernel(const KernelId id) const
 {
     for (const auto& kernel : kernels)
     {
-        if (kernel.getId() == id)
+        if (kernel->getId() == id)
         {
             return true;
         }
@@ -341,7 +341,7 @@ bool KernelManager::isComposition(const KernelId id) const
 {
     for (const auto& kernelComposition : kernelCompositions)
     {
-        if (kernelComposition.getId() == id)
+        if (kernelComposition->getId() == id)
         {
             return true;
         }
