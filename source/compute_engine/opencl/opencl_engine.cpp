@@ -610,7 +610,13 @@ void OpenCLEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
 
 void OpenCLEngine::addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument)
 {
-    throw std::runtime_error("Support for user buffers is not implemented yet");
+    if (findBuffer(kernelArgument.getId()) != nullptr)
+    {
+        throw std::runtime_error(std::string("User buffer with the following id already exists: ") + std::to_string(kernelArgument.getId()));
+    }
+
+    auto openclBuffer = std::make_unique<OpenCLBuffer>(buffer, kernelArgument);
+    userBuffers.insert(std::move(openclBuffer));
 }
 
 void OpenCLEngine::setPersistentBufferUsage(const bool flag)
@@ -1074,6 +1080,14 @@ DeviceType OpenCLEngine::getDeviceType(const cl_device_type deviceType)
 
 OpenCLBuffer* OpenCLEngine::findBuffer(const ArgumentId id) const
 {
+    for (const auto& buffer : userBuffers)
+    {
+        if (buffer->getKernelArgumentId() == id)
+        {
+            return buffer.get();
+        }
+    }
+
     if (persistentBufferFlag)
     {
         for (const auto& buffer : persistentBuffers)

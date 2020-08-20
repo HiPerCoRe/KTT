@@ -265,22 +265,18 @@ EventId CUDAEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const Qu
     {
         return UINT64_MAX;
     }
-    
-    std::unique_ptr<CUDABuffer> buffer = nullptr;
-    EventId eventId = nextEventId;
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
-        + std::to_string(eventId));
+    EventId eventId = nextEventId;
+    Logger::logDebug("Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: " + std::to_string(eventId));
+    auto buffer = std::make_unique<CUDABuffer>(kernelArgument);
 
     if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
     {
-        buffer = std::make_unique<CUDABuffer>(kernelArgument, true);
         bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::make_unique<CUDAEvent>(eventId, false),
             std::make_unique<CUDAEvent>(eventId, false))));
     }
     else
     {
-        buffer = std::make_unique<CUDABuffer>(kernelArgument, false);
         auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
         auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
         buffer->uploadData(streams.at(queue)->getStream(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(), startEvent->getEvent(),
@@ -478,21 +474,18 @@ uint64_t CUDAEngine::persistArgument(KernelArgument& kernelArgument, const bool 
     
     if (flag && !bufferFound)
     {
-        std::unique_ptr<CUDABuffer> buffer = nullptr;
         EventId eventId = nextEventId;
-
-        Logger::getLogger().log(LoggingLevel::Debug, "Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId())
-            + ", event id: " + std::to_string(eventId));
+        Logger::logDebug("Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
+            + std::to_string(eventId));
+        auto buffer = std::make_unique<CUDABuffer>(kernelArgument);
 
         if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
         {
-            buffer = std::make_unique<CUDABuffer>(kernelArgument, true);
             bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::make_unique<CUDAEvent>(eventId, false),
                 std::make_unique<CUDAEvent>(eventId, false))));
         }
         else
         {
-            buffer = std::make_unique<CUDABuffer>(kernelArgument, false);
             auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
             auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
             buffer->uploadData(streams.at(getDefaultQueue())->getStream(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),

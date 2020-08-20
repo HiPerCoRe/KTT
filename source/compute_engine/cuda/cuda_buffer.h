@@ -12,7 +12,7 @@ namespace ktt
 class CUDABuffer
 {
 public:
-    explicit CUDABuffer(KernelArgument& kernelArgument, const bool zeroCopy);
+    explicit CUDABuffer(KernelArgument& kernelArgument);
     explicit CUDABuffer(UserBuffer userBuffer, KernelArgument& kernelArgument);
     ~CUDABuffer();
 
@@ -39,7 +39,6 @@ private:
     size_t bufferSize;
     CUdeviceptr buffer;
     void* hostBufferRaw;
-    bool zeroCopy;
     bool userOwned;
 };
 

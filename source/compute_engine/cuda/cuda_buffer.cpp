@@ -8,12 +8,11 @@
 namespace ktt
 {
 
-CUDABuffer::CUDABuffer(KernelArgument& kernelArgument, const bool zeroCopy) :
+CUDABuffer::CUDABuffer(KernelArgument& kernelArgument) :
     kernelArgument(kernelArgument),
     bufferSize(kernelArgument.getDataSizeInBytes()),
     buffer(0),
     hostBufferRaw(nullptr),
-    zeroCopy(zeroCopy),
     userOwned(false)
 {
     if (getMemoryLocation() == ArgumentMemoryLocation::Unified)
@@ -26,7 +25,7 @@ CUDABuffer::CUDABuffer(KernelArgument& kernelArgument, const bool zeroCopy) :
     }
     else
     {
-        if (zeroCopy)
+        if (getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
         {
             hostBufferRaw = kernelArgument.getData();
             checkCUDAError(cuMemHostRegister(hostBufferRaw, bufferSize, CU_MEMHOSTREGISTER_DEVICEMAP), "cuMemHostRegister");
@@ -43,7 +42,6 @@ CUDABuffer::CUDABuffer(UserBuffer userBuffer, KernelArgument& kernelArgument) :
     kernelArgument(kernelArgument),
     bufferSize(kernelArgument.getDataSizeInBytes()),
     hostBufferRaw(nullptr),
-    zeroCopy(false),
     userOwned(true)
 {
     if (userBuffer == nullptr)
@@ -67,7 +65,7 @@ CUDABuffer::~CUDABuffer()
     }
     else
     {
-        if (zeroCopy)
+        if (getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
         {
             checkCUDAError(cuMemHostUnregister(hostBufferRaw), "cuMemHostUnregister");
         }
@@ -80,7 +78,7 @@ CUDABuffer::~CUDABuffer()
 
 void CUDABuffer::resize(const size_t newBufferSize, const bool preserveData)
 {
-    if (zeroCopy)
+    if (getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
     {
         throw std::runtime_error("Cannot resize registered host buffer");
     }
