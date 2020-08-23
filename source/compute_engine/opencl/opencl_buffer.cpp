@@ -52,6 +52,7 @@ OpenCLBuffer::OpenCLBuffer(const cl_context context, KernelArgument& kernelArgum
 }
 
 OpenCLBuffer::OpenCLBuffer(UserBuffer userBuffer, KernelArgument& kernelArgument) :
+    context(nullptr),
     kernelArgument(kernelArgument),
     bufferSize(kernelArgument.getDataSizeInBytes()),
     openclMemoryFlag(getOpenCLMemoryType(kernelArgument.getAccessType())),
@@ -64,7 +65,7 @@ OpenCLBuffer::OpenCLBuffer(UserBuffer userBuffer, KernelArgument& kernelArgument
     }
 
     buffer = static_cast<cl_mem>(userBuffer);
-    checkOpenCLError(clGetMemObjectInfo(buffer, CL_MEM_CONTEXT, sizeof(cl_context), context, nullptr), "clGetMemObjectInfo");
+    checkOpenCLError(clGetMemObjectInfo(buffer, CL_MEM_CONTEXT, sizeof(cl_context), &context, nullptr), "clGetMemObjectInfo");
 
     if (getMemoryLocation() == ArgumentMemoryLocation::Unified)
     {
