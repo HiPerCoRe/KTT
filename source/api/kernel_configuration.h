@@ -87,7 +87,7 @@ public:
       */
     std::vector<DimensionVector> getLocalSizes() const;
 
-    /** @fn std::vector<KernelId> getKernelIds() const
+    /** @fn std::vector<KernelId> getCompositionKernelIds() const
       * Returns ids of all composition kernels inside the configuration. Returns invalid result if called on a single kernel configuration.
       * @return Ids of all composition kernels inside the configuration.
       */

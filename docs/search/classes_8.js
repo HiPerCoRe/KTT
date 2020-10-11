@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['tuner_333',['Tuner',['../classktt_1_1_tuner.html',1,'ktt']]],
-  ['tuningduration_334',['TuningDuration',['../classktt_1_1_tuning_duration.html',1,'ktt']]],
-  ['tuningmanipulator_335',['TuningManipulator',['../classktt_1_1_tuning_manipulator.html',1,'ktt']]]
+  ['parameterpair_365',['ParameterPair',['../classktt_1_1_parameter_pair.html',1,'ktt']]],
+  ['platforminfo_366',['PlatformInfo',['../classktt_1_1_platform_info.html',1,'ktt']]],
+  ['profilingcountervalue_367',['ProfilingCounterValue',['../unionktt_1_1_profiling_counter_value.html',1,'ktt']]]
 ];

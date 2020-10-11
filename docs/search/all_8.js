@@ -1,20 +1,12 @@
 var searchData=
 [
-  ['ktt_20_2d_20kernel_20tuning_20toolkit_148',['KTT - Kernel Tuning Toolkit',['../index.html',1,'']]],
-  ['kernel_5fcompilation_5fdata_2eh_149',['kernel_compilation_data.h',['../kernel__compilation__data_8h.html',1,'']]],
-  ['kernel_5fprofiling_5fcounter_2eh_150',['kernel_profiling_counter.h',['../kernel__profiling__counter_8h.html',1,'']]],
-  ['kernel_5fprofiling_5fdata_2eh_151',['kernel_profiling_data.h',['../kernel__profiling__data_8h.html',1,'']]],
-  ['kernel_5frun_5fmode_2eh_152',['kernel_run_mode.h',['../kernel__run__mode_8h.html',1,'']]],
-  ['kernelcompilationdata_153',['KernelCompilationData',['../structktt_1_1_kernel_compilation_data.html',1,'ktt::KernelCompilationData'],['../structktt_1_1_kernel_compilation_data.html#a4338861a5206bbda070872aa03f9553e',1,'ktt::KernelCompilationData::KernelCompilationData()']]],
-  ['kernelid_154',['KernelId',['../namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba',1,'ktt']]],
-  ['kernelprofilingcounter_155',['KernelProfilingCounter',['../classktt_1_1_kernel_profiling_counter.html',1,'ktt::KernelProfilingCounter'],['../classktt_1_1_kernel_profiling_counter.html#a19fb9b174de4c7a3a58d69cde57c3506',1,'ktt::KernelProfilingCounter::KernelProfilingCounter()']]],
-  ['kernelprofilingdata_156',['KernelProfilingData',['../classktt_1_1_kernel_profiling_data.html',1,'ktt::KernelProfilingData'],['../classktt_1_1_kernel_profiling_data.html#ac8aee318d81285e126f98a67d9f4168f',1,'ktt::KernelProfilingData::KernelProfilingData()'],['../classktt_1_1_kernel_profiling_data.html#ac599932292389758c624204bea87fbd6',1,'ktt::KernelProfilingData::KernelProfilingData(const uint64_t remainingProfilingRuns)'],['../classktt_1_1_kernel_profiling_data.html#a3cb7a205e99a50b077d8d8b07addc65f',1,'ktt::KernelProfilingData::KernelProfilingData(const std::vector&lt; KernelProfilingCounter &gt; &amp;profilingCounters)']]],
-  ['kernelrunmode_157',['KernelRunMode',['../namespacektt.html#a405c5e17d3cfbedf3b3eb4e54c7c35ee',1,'ktt']]],
-  ['ktt_158',['ktt',['../namespacektt.html',1,'']]],
-  ['ktt_5fplatform_2eh_159',['ktt_platform.h',['../ktt__platform_8h.html',1,'']]],
-  ['ktt_5ftypes_2eh_160',['ktt_types.h',['../ktt__types_8h.html',1,'']]],
-  ['ktt_5fversion_5fmajor_161',['KTT_VERSION_MAJOR',['../ktt__platform_8h.html#ad2cfb9fcbae19b1303040b0e2e8584b3',1,'ktt_platform.h']]],
-  ['ktt_5fversion_5fminor_162',['KTT_VERSION_MINOR',['../ktt__platform_8h.html#ae5ff38ea2d15f4dbba741735cc2c5959',1,'ktt_platform.h']]],
-  ['ktt_5fversion_5fpatch_163',['KTT_VERSION_PATCH',['../ktt__platform_8h.html#ac72a954d39b9511660df6fd96f698c2e',1,'ktt_platform.h']]],
-  ['ktt_20faq_164',['KTT FAQ',['../md_docs_resources_faq.html',1,'']]]
+  ['info_159',['Info',['../namespacektt.html#a17afdb449e82292a32fba46ff7a54781a4059b0251f66a18cb56f544728796875',1,'ktt']]],
+  ['initialize_160',['initialize',['../classktt_1_1_searcher.html#a4ab1618ce7b643122978cc96cd28c381',1,'ktt::Searcher::initialize()'],['../classktt_1_1_configuration_count.html#a6f4526d34555b695ff311f2a63e25e29',1,'ktt::ConfigurationCount::initialize()'],['../classktt_1_1_configuration_duration.html#a03617f962e37ea36ce2d8b4e516e6faa',1,'ktt::ConfigurationDuration::initialize()'],['../classktt_1_1_configuration_fraction.html#a6190eadf1bc697e116bc05bac80fe347',1,'ktt::ConfigurationFraction::initialize()'],['../classktt_1_1_stop_condition.html#a8d9d4011dce7bc3b51770dbba11e516c',1,'ktt::StopCondition::initialize()'],['../classktt_1_1_tuning_duration.html#a537695bd73c59b960448183eeec2e23e',1,'ktt::TuningDuration::initialize()']]],
+  ['int_161',['Int',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a1686a6c336b71b36d77354cea19a8b52',1,'ktt::Int()'],['../namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282a1686a6c336b71b36d77354cea19a8b52',1,'ktt::Int()']]],
+  ['intvalue_162',['intValue',['../unionktt_1_1_profiling_counter_value.html#a0e505b88343c460058449a9b16bc1607',1,'ktt::ProfilingCounterValue']]],
+  ['invalidargumentid_163',['InvalidArgumentId',['../namespacektt.html#a06314e7380eb0baeb140510fcae36003',1,'ktt']]],
+  ['invalidkernelid_164',['InvalidKernelId',['../namespacektt.html#af007a5e422c999a5a8f4fd1d875cc7bf',1,'ktt']]],
+  ['isinitialized_165',['isInitialized',['../classktt_1_1_searcher.html#aa465682eba27a074066e81b26e7ee20d',1,'ktt::Searcher']]],
+  ['issatisfied_166',['isSatisfied',['../classktt_1_1_configuration_count.html#aa563641bbabb9170db87d917a942503e',1,'ktt::ConfigurationCount::isSatisfied()'],['../classktt_1_1_configuration_duration.html#a525531c8271f7e87adf406f31ef897a9',1,'ktt::ConfigurationDuration::isSatisfied()'],['../classktt_1_1_configuration_fraction.html#aeb4f13b25cb9ed6b8fdedb1102fec849',1,'ktt::ConfigurationFraction::isSatisfied()'],['../classktt_1_1_stop_condition.html#a9ecd583de5d8dd9576dd2a7e1e7bce12',1,'ktt::StopCondition::isSatisfied()'],['../classktt_1_1_tuning_duration.html#aef9c63d6c45d91c8f433648f1437d381',1,'ktt::TuningDuration::isSatisfied()']]],
+  ['isvalid_167',['isValid',['../classktt_1_1_kernel_configuration.html#ad610c2b3837bd8a20c1f4958442e3edc',1,'ktt::KernelConfiguration::isValid()'],['../classktt_1_1_kernel_profiling_data.html#ae3b55189e71e3b6f7686acdec4d053c3',1,'ktt::KernelProfilingData::isValid()']]]
 ];

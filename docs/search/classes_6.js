@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['referenceclass_331',['ReferenceClass',['../classktt_1_1_reference_class.html',1,'ktt']]]
+  ['mcmcsearcher_363',['MCMCSearcher',['../classktt_1_1_m_c_m_c_searcher.html',1,'ktt']]]
 ];

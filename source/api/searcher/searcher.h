@@ -11,7 +11,7 @@ namespace ktt
 {
 
 /** @class Searcher
-  * Class which is used to decide which kernel configuration will be run next during the the tuning process.
+  * Class which is used to decide which kernel configuration will be run next during the kernel tuning process.
   */
 class KTT_API Searcher
 {

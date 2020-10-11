@@ -236,11 +236,10 @@ void DimensionVector::divideCeilByValue(const size_t value, const ModifierDimens
     }
     else if (modifierDimension == ModifierDimension::Y)
     {
-        sizeY = (sizeX + value - 1) / value;
+        sizeY = (sizeY + value - 1) / value;
     }
     else
     {
-        std::cout << sizeZ << "->" << (sizeZ + value - 1) / value << std::endl;
         sizeZ = (sizeZ + value - 1) / value;
     }
 }

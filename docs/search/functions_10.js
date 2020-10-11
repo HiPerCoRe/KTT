@@ -1,7 +1,9 @@
 var searchData=
 [
-  ['_7ereferenceclass_537',['~ReferenceClass',['../classktt_1_1_reference_class.html#ae8381dc2afcd9dece412d0c67f2ed77f',1,'ktt::ReferenceClass']]],
-  ['_7estopcondition_538',['~StopCondition',['../classktt_1_1_stop_condition.html#a03174c2a6251dc4ee72d02a767d86d79',1,'ktt::StopCondition']]],
-  ['_7etuner_539',['~Tuner',['../classktt_1_1_tuner.html#a09198b07768176d263dbee8a6c54b377',1,'ktt::Tuner']]],
-  ['_7etuningmanipulator_540',['~TuningManipulator',['../classktt_1_1_tuning_manipulator.html#a9399d7fee67bf85ee73aedd3e8ba6201',1,'ktt::TuningManipulator']]]
+  ['updateargumentlocal_603',['updateArgumentLocal',['../classktt_1_1_tuning_manipulator.html#a1e307646f17f2861d8c981308cd2221c',1,'ktt::TuningManipulator']]],
+  ['updateargumentscalar_604',['updateArgumentScalar',['../classktt_1_1_tuning_manipulator.html#a449df2809792e030439be9d70a8c07e6',1,'ktt::TuningManipulator']]],
+  ['updateargumentvector_605',['updateArgumentVector',['../classktt_1_1_tuning_manipulator.html#a872a3865330f2a15282facd6392ccdcd',1,'ktt::TuningManipulator::updateArgumentVector(const ArgumentId id, const void *argumentData)'],['../classktt_1_1_tuning_manipulator.html#ae996d65fb5ee74bf5dc71551f678026d',1,'ktt::TuningManipulator::updateArgumentVector(const ArgumentId id, const void *argumentData, const size_t numberOfElements)']]],
+  ['updateargumentvectorasync_606',['updateArgumentVectorAsync',['../classktt_1_1_tuning_manipulator.html#a89071adbe2f15811935caa5613ea4c14',1,'ktt::TuningManipulator::updateArgumentVectorAsync(const ArgumentId id, const void *argumentData, QueueId queue)'],['../classktt_1_1_tuning_manipulator.html#a8f850b561d79021d1613beb35b786b0b',1,'ktt::TuningManipulator::updateArgumentVectorAsync(const ArgumentId id, const void *argumentData, const size_t numberOfElements, QueueId queue)']]],
+  ['updatestatus_607',['updateStatus',['../classktt_1_1_configuration_count.html#a477007031a19aa4a993e7930a6a5e658',1,'ktt::ConfigurationCount::updateStatus()'],['../classktt_1_1_configuration_duration.html#af437e6809ee850daabfbb3bd2e8614ca',1,'ktt::ConfigurationDuration::updateStatus()'],['../classktt_1_1_configuration_fraction.html#af7f09555fba0d6b444a865e15f533ccf',1,'ktt::ConfigurationFraction::updateStatus()'],['../classktt_1_1_stop_condition.html#aeeeb369c6b1f0139a85999828284a648',1,'ktt::StopCondition::updateStatus()'],['../classktt_1_1_tuning_duration.html#ad2f61cae3a1dda7d12c090b1cac2e520',1,'ktt::TuningDuration::updateStatus()']]],
+  ['userinitializer_608',['UserInitializer',['../classktt_1_1_user_initializer.html#adcd39edc9886ef6e51a79ff0b9f4ca54',1,'ktt::UserInitializer']]]
 ];

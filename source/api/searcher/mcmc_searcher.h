@@ -21,10 +21,6 @@ namespace ktt
 class MCMCSearcher : public Searcher
 {
 public:
-    static const size_t maximumDifferences = 2;
-    static const size_t bootIterations = 10;
-    const double escapeProbability = 0.02;
-
     /** @fn MCMCSearcher(const std::vector<double>& start)
       * Initializes MCMC searcher.
       * @param start Optional parameter which specifies starting point for MCMC searcher.
@@ -180,6 +176,10 @@ public:
     }
 
 private:
+    static const size_t maximumDifferences = 2;
+    static const size_t bootIterations = 10;
+    const double escapeProbability = 0.02;
+
     size_t index;
 
     size_t visitedStatesCount;

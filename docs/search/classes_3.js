@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['kernelcompilationdata_324',['KernelCompilationData',['../structktt_1_1_kernel_compilation_data.html',1,'ktt']]],
-  ['kernelprofilingcounter_325',['KernelProfilingCounter',['../classktt_1_1_kernel_profiling_counter.html',1,'ktt']]],
-  ['kernelprofilingdata_326',['KernelProfilingData',['../classktt_1_1_kernel_profiling_data.html',1,'ktt']]]
+  ['enablebitfieldoperators_356',['EnableBitfieldOperators',['../structktt_1_1_enable_bitfield_operators.html',1,'ktt']]],
+  ['enablebitfieldoperators_3c_20validationmode_20_3e_357',['EnableBitfieldOperators&lt; ValidationMode &gt;',['../structktt_1_1_enable_bitfield_operators_3_01_validation_mode_01_4.html',1,'ktt']]]
 ];

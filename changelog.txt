@@ -1,3 +1,15 @@
+Version 1.3 (11/10/2020)
+* Added public API for configuration searchers
+* Added support for user-provided compute context, queues and buffers
+* Added support for unified memory buffers
+* Added divide ceil thread modifier
+* CUDA kernel GPU architecture version is now set based on utilized device
+* Fixed incorrect handling of zero-copy kernel arguments in OpenCL backend
+* Fixed incorrectly reported kernel duration with kernel profiling enabled on newer Nvidia GPUs
+* Fixed missing kernel compilation data when kernel profiling is enabled
+* Fixed CSV printing of kernel compilation data for certain kernel compositions
+* Added new examples for user-provided structures
+
 Version 1.2 (23/2/2020)
 * Added support for AMD GPA profiling API, kernel profiling on AMD GPUs is now supported
 * Added support for new CUPTI profiling API, kernel profiling on newer Nvidia GPUs is now supported

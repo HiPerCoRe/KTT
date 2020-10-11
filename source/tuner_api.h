@@ -362,7 +362,7 @@ public:
         return addArgument(data.data(), data.size(), sizeof(T), dataType, memoryLocation, accessType, copyData);
     }
 
-    /** @fn template <typename T> ArgumentId addArgumentVector(UserBuffer buffer, const ArgumentAccessType accessType,
+    /** @fn template <typename T> ArgumentId addArgumentVector(UserBuffer buffer, const size_t bufferSize, const ArgumentAccessType accessType,
       * const ArgumentMemoryLocation memoryLocation)
       * Adds new vector argument to the tuner. The argument buffer is managed by user and depending on the compute API, can be either CUdeviceptr
       * or cl_mem handle. The tuner will work with the argument in the same way as with persistent arguments and will not destroy it.
@@ -427,7 +427,7 @@ public:
 
     /** @fn std::vector<ComputationResult> tuneKernel(const KernelId id)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
-      * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all configurations
+      * constraints. The configurations will be launched in order that depends on specified Searcher. Tuning will end when all configurations
       * are explored.
       * @param id Id of kernel for which the tuning will start.
       * @return Vector of objects containing information about computation using tested kernel configurations. See ComputationResult for more
@@ -437,7 +437,7 @@ public:
 
     /** @fn std::vector<ComputationResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
-      * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end either when all
+      * constraints. The configurations will be launched in order that depends on specified Searcher. Tuning will end either when all
       * configurations are explored or when specified stop condition is met.
       * @param id Id of kernel for which the tuning will start.
       * @param stopCondition Stop condition which decides whether to continue the tuning process. See StopCondition for more information.
@@ -449,7 +449,7 @@ public:
     /** @fn std::vector<ComputationResult> dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0)
       * Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration
       * space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on
-      * specified ::SearchMethod. This method can be used to test behaviour and performance of newly implemented search methods. Note that no checks
+      * specified Searcher. This method can be used to test behaviour and performance of newly implemented search methods. Note that no checks
       * are performed whether the tuning data relates to kernel, tuning parameters or hardware. It is up to user to ensure that dryTuneKernel() reads
       * a valid file.
       * @param id Id of kernel for which the tuning begins.

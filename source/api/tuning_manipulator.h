@@ -280,7 +280,7 @@ public:
     *   ktt::BufferMemory memory;
     *   getUnifiedMemoryArgument(..., memory);
     *   float* floatArray = static_cast<float*>(memory);
-    * @param Id of vector argument whose memory handle will be retrieved.
+    * @param id Id of vector argument whose memory handle will be retrieved.
     * @param memoryHandle Memory handle for specified argument.
     */
     void getUnifiedMemoryArgument(const ArgumentId id, BufferMemory& memoryHandle);

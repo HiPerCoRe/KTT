@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['parameterpair_328',['ParameterPair',['../classktt_1_1_parameter_pair.html',1,'ktt']]],
-  ['platforminfo_329',['PlatformInfo',['../classktt_1_1_platform_info.html',1,'ktt']]],
-  ['profilingcountervalue_330',['ProfilingCounterValue',['../unionktt_1_1_profiling_counter_value.html',1,'ktt']]]
+  ['kernelcompilationdata_359',['KernelCompilationData',['../structktt_1_1_kernel_compilation_data.html',1,'ktt']]],
+  ['kernelconfiguration_360',['KernelConfiguration',['../classktt_1_1_kernel_configuration.html',1,'ktt']]],
+  ['kernelprofilingcounter_361',['KernelProfilingCounter',['../classktt_1_1_kernel_profiling_counter.html',1,'ktt']]],
+  ['kernelprofilingdata_362',['KernelProfilingData',['../classktt_1_1_kernel_profiling_data.html',1,'ktt']]]
 ];

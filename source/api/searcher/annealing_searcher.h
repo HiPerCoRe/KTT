@@ -19,9 +19,6 @@ namespace ktt
 class AnnealingSearcher : public Searcher
 {
 public:
-    static const size_t maximumAlreadyVisitedStates = 10;
-    static const size_t maximumDifferences = 3;
-
     /** @fn AnnealingSearcher(const double maximumTemperature)
       * Initializes annealing searcher.
       * @param maximumTemperature Maximum temperature parameter for simulated annealing.
@@ -113,6 +110,9 @@ public:
     }
 
 private:
+    static const size_t maximumAlreadyVisitedStates = 10;
+    static const size_t maximumDifferences = 3;
+
     size_t index;
     double maximumTemperature;
     size_t visitedStatesCount;

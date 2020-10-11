@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.2</span>
+   &#160;<span id="projectnumber">1.3</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><img src="resources/ktt_logo.png" alt="" width="425" height="150" class="inline"/></p>
-<p>KTT is a tuning framework for OpenCL and CUDA kernels. Version 1.2 which includes support for kernel profiling on AMD GPUs and newer Nvidia GPUs is now available.</p>
+<p>KTT is a tuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 1.3 which introduces public searcher API and user-provided compute queues and buffers is now available.</p>
 <h1>Main features </h1>
 <ul>
 <li>Ability to define kernel tuning parameters such as kernel thread sizes, vector data types and loop unroll factors in order to optimize computation for a particular device</li>
@@ -111,25 +111,26 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <h1>Getting started </h1>
 <ul>
 <li>Documentation for KTT API can be found <a href="https://fillo7.github.io/KTT/">here</a>.</li>
-<li>The newest version of KTT framework can be found <a href="https://github.com/Fillo7/KTT/releases">here</a>.</li>
-<li>Prebuilt binaries are no longer provided due to many different combinations of compute APIs and build options available. Please check the <code>Building KTT</code> section for detailed instructions on how to perform local build.</li>
+<li>The newest release of KTT framework can be found <a href="https://github.com/Fillo7/KTT/releases">here</a>.</li>
+<li>Prebuilt binaries are not provided due to many different combinations of compute APIs and build options available. Please check the <code>Building KTT</code> section for detailed instructions on how to perform a build.</li>
 </ul>
 <h1>Tutorials </h1>
-<p>Tutorials are short examples aimed at introducing people to KTT framework. Each tutorial focuses on explaining specific part of the API. All tutorials are available for both OpenCL and CUDA backends. Most of the tutorials are also available for Vulkan. Tutorials assume that reader has some knowledge about C++ and GPU programming. List of currently available tutorials:</p>
+<p>Tutorials are short examples which serve as an introduction to KTT framework. Each tutorial covers a specific part of the API. All tutorials are available for both OpenCL and CUDA backends. Most of the tutorials are also available for Vulkan. Tutorials assume that reader has some knowledge about C++ and GPU programming. List of the currently available tutorials:</p>
 <ul>
-<li><code>compute_api_info</code>: Tutorial covers retrieving information about compute API platforms and devices through KTT API.</li>
-<li><code>running_kernel</code>: Tutorial covers running simple kernel with KTT framework and retrieving output.</li>
-<li><code>tuning_kernel_simple</code>: Tutorial covers simple kernel tuning using small number of tuning parameters and reference class to ensure correctness of computation.</li>
-<li><code>custom_kernel_arguments</code>: Tutorial covers using kernel arguments with custom data types and validating the output with argument comparator.</li>
+<li><code>compute_api_info</code>: Retrieving information about compute API platforms and devices through KTT API.</li>
+<li><code>running_kernel</code>: Running simple kernel with KTT framework and retrieving output.</li>
+<li><code>tuning_kernel_simple</code>: Simple kernel tuning using small number of tuning parameters and reference class to ensure correctness of computation.</li>
+<li><code>custom_kernel_arguments</code>: Usage of kernel arguments with custom data types and validating the output with argument comparator.</li>
+<li><code>user_tuner_initializer</code>: Providing tuner with custom compute context, queues and buffers.</li>
 </ul>
 <h1>Examples </h1>
-<p>Examples showcase how KTT framework could be utilized in real-world scenarios. Examples are more complex than tutorials and assume that reader is familiar with KTT API. List of some of the currently available examples:</p>
+<p>Examples showcase how KTT framework could be utilized in real-world scenarios. They are more complex than tutorials and assume that reader is familiar with KTT API. List of some of the currently available examples:</p>
 <ul>
-<li><code>coulomb_sum_2d</code>: Example which showcases tuning of electrostatic potential map computation, it focuses on a single slice.</li>
+<li><code>coulomb_sum_2d</code>: Tuning of electrostatic potential map computation, focuses on a single slice.</li>
 <li><code>coulomb_sum_3d_iterative</code>: 3D version of previous example, utilizes kernel from 2D version and launches it iteratively.</li>
 <li><code>coulomb_sum_3d</code>: Alternative to iterative version, utilizes kernel which computes entire map in single invocation.</li>
-<li><code>nbody</code>: Example which showcases tuning of N-body simulation.</li>
-<li><code>reduction</code>: Example which showcases tuning of vector reduction, launches a kernel iteratively.</li>
+<li><code>nbody</code>: Tuning of N-body simulation.</li>
+<li><code>reduction</code>: Tuning of vector reduction, launches a kernel iteratively.</li>
 <li><code>sort</code>: Radix sort example, combines multiple kernels into kernel composition.</li>
 <li><code>bicg</code>: Biconjugate gradients method example, features reference class, kernel compositions and constraints.</li>
 </ul>
@@ -144,7 +145,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </li>
 <li>Build under Linux (inside KTT root folder):<ul>
 <li>ensure that path to vendor SDK is correctly set in the environment variables</li>
-<li>run <code>./premake5 gmake</code> to generate makefile</li>
+<li>run <code>premake5 gmake</code> to generate makefile</li>
 <li>run <code>cd build</code> to get inside build directory</li>
 <li>afterwards run <code>make config={configuration}_{architecture}</code> to build the project (e.g. <code>make config=release_x86_64</code>)</li>
 </ul>
@@ -155,7 +156,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <li>open generated solution file and build the project inside Visual Studio</li>
 </ul>
 </li>
-<li>Following build options are available:<ul>
+<li>The following build options are available:<ul>
 <li><code>--outdir=path</code> specifies custom build directory, default build directory is <code>build</code></li>
 <li><code>--platform=vendor</code> specifies SDK used for building KTT, useful when multiple SDKs are installed</li>
 <li><code>--profiling=library</code> enables compilation of kernel profiling functionality using specified library</li>

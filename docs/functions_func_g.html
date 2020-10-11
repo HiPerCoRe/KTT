@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.2</span>
+   &#160;<span id="projectnumber">1.3</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -119,6 +119,15 @@ $(document).ready(function(){initNavTree('functions_func_g.html',''); initResiza
 <li>getCompositionCompilationData()
 : <a class="el" href="classktt_1_1_computation_result.html#a0862ba3a99cb25b80604f7f869db36fd">ktt::ComputationResult</a>
 </li>
+<li>getCompositionKernelGlobalSize()
+: <a class="el" href="classktt_1_1_kernel_configuration.html#a1a9aa254d4d163cf209f709142f2069f">ktt::KernelConfiguration</a>
+</li>
+<li>getCompositionKernelIds()
+: <a class="el" href="classktt_1_1_kernel_configuration.html#ae19b1fd5fb0c9d5752778997568048a0">ktt::KernelConfiguration</a>
+</li>
+<li>getCompositionKernelLocalSize()
+: <a class="el" href="classktt_1_1_kernel_configuration.html#a71473fe39fd1fc75248fcab1ca2126d2">ktt::KernelConfiguration</a>
+</li>
 <li>getCompositionProfilingData()
 : <a class="el" href="classktt_1_1_computation_result.html#acb53ba1a975d1c43f9a4f935327ac2a5">ktt::ComputationResult</a>
 </li>
@@ -131,6 +140,12 @@ $(document).ready(function(){initNavTree('functions_func_g.html',''); initResiza
 , <a class="el" href="classktt_1_1_configuration_fraction.html#a1cac357c46bd11ef7245eed7267a86ce">ktt::ConfigurationFraction</a>
 , <a class="el" href="classktt_1_1_stop_condition.html#ac47146b9d0f408f4542fd1795c71a9e0">ktt::StopCondition</a>
 , <a class="el" href="classktt_1_1_tuning_duration.html#a8ca7beb211d79c15903fc4f9ab18eb5f">ktt::TuningDuration</a>
+</li>
+<li>getConfigurations()
+: <a class="el" href="classktt_1_1_searcher.html#a44e0e2995ea7bf0c7f955e953210e203">ktt::Searcher</a>
+</li>
+<li>getContext()
+: <a class="el" href="classktt_1_1_user_initializer.html#a2dd59c1f4d27e2b3c5a459855e84e070">ktt::UserInitializer</a>
 </li>
 <li>getCounter()
 : <a class="el" href="classktt_1_1_kernel_profiling_data.html#a8017b443b36fad356e64e94df3e65dd7">ktt::KernelProfilingData</a>
@@ -175,6 +190,12 @@ $(document).ready(function(){initNavTree('functions_func_g.html',''); initResiza
 <li>getGlobalMemorySize()
 : <a class="el" href="classktt_1_1_device_info.html#ab34acf1b06e20e3aaf703b919682156e">ktt::DeviceInfo</a>
 </li>
+<li>getGlobalSize()
+: <a class="el" href="classktt_1_1_kernel_configuration.html#a7ea0ce2cbdf3614052713d6ebfac433a">ktt::KernelConfiguration</a>
+</li>
+<li>getGlobalSizes()
+: <a class="el" href="classktt_1_1_kernel_configuration.html#aec361fe716a68548cf34ab1c9e47ba71">ktt::KernelConfiguration</a>
+</li>
 <li>getId()
 : <a class="el" href="classktt_1_1_device_info.html#a03db462fdd9a5589d03d6a06ff3b470e">ktt::DeviceInfo</a>
 , <a class="el" href="classktt_1_1_platform_info.html#a2265c6b546961dcac6fdf6549d5d9d08">ktt::PlatformInfo</a>
@@ -187,6 +208,12 @@ $(document).ready(function(){initNavTree('functions_func_g.html',''); initResiza
 </li>
 <li>getLocalMemorySize()
 : <a class="el" href="classktt_1_1_device_info.html#a70ee156aa33ee39be032dfaad1dd7c28">ktt::DeviceInfo</a>
+</li>
+<li>getLocalSize()
+: <a class="el" href="classktt_1_1_kernel_configuration.html#a95c7cbeda8a09c400ee830074791f7f7">ktt::KernelConfiguration</a>
+</li>
+<li>getLocalSizes()
+: <a class="el" href="classktt_1_1_kernel_configuration.html#abc356cadb462c2634ba9cccd8b9c5712">ktt::KernelConfiguration</a>
 </li>
 <li>getMaxComputeUnits()
 : <a class="el" href="classktt_1_1_device_info.html#a6f297d9274bd54761f2f24fe4d70dcb1">ktt::DeviceInfo</a>
@@ -203,6 +230,13 @@ $(document).ready(function(){initNavTree('functions_func_g.html',''); initResiza
 , <a class="el" href="classktt_1_1_parameter_pair.html#a330e6a703f523d4d8654b0baf9f55542">ktt::ParameterPair</a>
 , <a class="el" href="classktt_1_1_platform_info.html#a33e9854568b0c3ec545609f85072650b">ktt::PlatformInfo</a>
 </li>
+<li>getNextConfiguration()
+: <a class="el" href="classktt_1_1_annealing_searcher.html#a6cd184d2f61240476b9cbc60db9d7a52">ktt::AnnealingSearcher</a>
+, <a class="el" href="classktt_1_1_full_searcher.html#a1e0e038fa025840daedd873be5526c50">ktt::FullSearcher</a>
+, <a class="el" href="classktt_1_1_m_c_m_c_searcher.html#aee9586d33c6c0f7aeb9803e2b9a29119">ktt::MCMCSearcher</a>
+, <a class="el" href="classktt_1_1_random_searcher.html#ae622d6686938f5bfd40e209fc32dd5bc">ktt::RandomSearcher</a>
+, <a class="el" href="classktt_1_1_searcher.html#a749aacb5c4545ab1723c547082a680e6">ktt::Searcher</a>
+</li>
 <li>getNumberOfElements()
 : <a class="el" href="classktt_1_1_reference_class.html#a2605cda8167b6fd31fe6a8dc6f13f70c">ktt::ReferenceClass</a>
 </li>
@@ -211,6 +245,9 @@ $(document).ready(function(){initNavTree('functions_func_g.html',''); initResiza
 </li>
 <li>getOutputSizeInBytes()
 : <a class="el" href="classktt_1_1_output_descriptor.html#afe9e5e12dcc87c80d7c32fad49dd4208">ktt::OutputDescriptor</a>
+</li>
+<li>getParameterPairs()
+: <a class="el" href="classktt_1_1_kernel_configuration.html#af5005dd2f2d8ee032a61704d01fd7809">ktt::KernelConfiguration</a>
 </li>
 <li>getParameterValue()
 : <a class="el" href="classktt_1_1_tuning_manipulator.html#a61f92883b4ea8c735c91081a70a506b2">ktt::TuningManipulator</a>
@@ -223,6 +260,9 @@ $(document).ready(function(){initNavTree('functions_func_g.html',''); initResiza
 </li>
 <li>getProfilingData()
 : <a class="el" href="classktt_1_1_computation_result.html#a4d4a733f590a74ed140612478a396e28">ktt::ComputationResult</a>
+</li>
+<li>getQueues()
+: <a class="el" href="classktt_1_1_user_initializer.html#a7a34f6a65545e4694501af8e2279832b">ktt::UserInitializer</a>
 </li>
 <li>getRemainingKernelProfilingRuns()
 : <a class="el" href="classktt_1_1_tuning_manipulator.html#a4d5d0dc24d00450a0c7558b588e2e57e">ktt::TuningManipulator</a>
@@ -257,6 +297,16 @@ $(document).ready(function(){initNavTree('functions_func_g.html',''); initResiza
 </li>
 <li>getType()
 : <a class="el" href="classktt_1_1_kernel_profiling_counter.html#a44e951323d713f0f8c5fb496c62b918a">ktt::KernelProfilingCounter</a>
+</li>
+<li>getUnexploredConfigurationCount()
+: <a class="el" href="classktt_1_1_annealing_searcher.html#a92e7ffaca58600c53faf6a3de11dd256">ktt::AnnealingSearcher</a>
+, <a class="el" href="classktt_1_1_full_searcher.html#ac4f259dbc0589f70f2cb8d8cc86e5c81">ktt::FullSearcher</a>
+, <a class="el" href="classktt_1_1_m_c_m_c_searcher.html#a69c3147ea19d69f79330a9a0803c0007">ktt::MCMCSearcher</a>
+, <a class="el" href="classktt_1_1_random_searcher.html#a12c6be5ab4a9c2171594c8fbe8191c5e">ktt::RandomSearcher</a>
+, <a class="el" href="classktt_1_1_searcher.html#a546717c361d3362d5d21a570a947eb6b">ktt::Searcher</a>
+</li>
+<li>getUnifiedMemoryArgument()
+: <a class="el" href="classktt_1_1_tuning_manipulator.html#ac82659aee2017abf4350dbfbb93fc699">ktt::TuningManipulator</a>
 </li>
 <li>getValue()
 : <a class="el" href="classktt_1_1_kernel_profiling_counter.html#a9ad41bdd829f1c97dbcf99507b76af47">ktt::KernelProfilingCounter</a>

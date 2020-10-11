@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['deviceindex_556',['DeviceIndex',['../namespacektt.html#a19087697a405aa9def6c058d335c21ad',1,'ktt']]]
+  ['buffermemory_629',['BufferMemory',['../namespacektt.html#af6d62b1dfe9fe1d7eb6e272e5ae29118',1,'ktt']]]
 ];
