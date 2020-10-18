@@ -1,4 +1,4 @@
-Version 1.3 (11/10/2020)
+Version 1.3 (18/10/2020)
 * Added public API for configuration searchers
 * Added support for user-provided compute context, queues and buffers
 * Added support for unified memory buffers

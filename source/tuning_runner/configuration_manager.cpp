@@ -381,7 +381,7 @@ void ConfigurationManager::initializeOrderedKernelPacks(const Kernel& kernel)
             std::vector<KernelParameter> currentParameters = kernel.getParametersForPack(pack);
             const size_t currentConfigurationCount = getConfigurationCountForParameters(currentParameters);
 
-            if (bestConfigurationCount > currentConfigurationCount || bestPack == defaultParameterPackName && defaultPackProcessed)
+            if (bestConfigurationCount > currentConfigurationCount || (bestPack == defaultParameterPackName && defaultPackProcessed))
             {
                 bestConfigurationCount = currentConfigurationCount;
                 bestPack = pack.getName();
@@ -440,7 +440,7 @@ void ConfigurationManager::initializeOrderedCompositionPacks(const KernelComposi
             std::vector<KernelParameter> currentParameters = composition.getParametersForPack(pack);
             const size_t currentConfigurationCount = getConfigurationCountForParameters(currentParameters);
 
-            if (bestConfigurationCount > currentConfigurationCount || bestPack == defaultParameterPackName && defaultPackProcessed)
+            if (bestConfigurationCount > currentConfigurationCount || (bestPack == defaultParameterPackName && defaultPackProcessed))
             {
                 bestConfigurationCount = currentConfigurationCount;
                 bestPack = pack.getName();

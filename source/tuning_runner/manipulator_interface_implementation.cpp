@@ -609,7 +609,7 @@ std::vector<KernelArgument*> ManipulatorInterfaceImplementation::getArgumentPoin
     {
         bool argumentAdded = false;
 
-        for (const auto argument : vectorArguments)
+        for (const auto& argument : vectorArguments)
         {
             if (id == argument.second->getId())
             {
