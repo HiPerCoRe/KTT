@@ -173,6 +173,34 @@ function findVulkan()
     return true
 end
 
+function linkLibraries()
+    local librariesFound = false
+    
+    if _OPTIONS["platform"] then
+        if _OPTIONS["platform"] == "amd" then
+            librariesFound = findLibrariesAmd()
+        elseif _OPTIONS["platform"] == "intel" then
+            librariesFound = findLibrariesIntel()
+        else
+            librariesFound = findLibrariesNvidia()
+        end
+    else
+        librariesFound = findLibraries()
+    end
+    
+    if not librariesFound and (not _OPTIONS["vulkan"] or _OPTIONS["platform"]) then
+        error("Compute API libraries were not found. Please ensure that path to your device vendor SDK is correctly set in the environment variables:\nAMDAPPSDKROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
+    end
+    
+    if _OPTIONS["vulkan"] then
+        vulkanFound = findVulkan()
+        
+        if not vulkanFound then
+            error("Vulkan SDK was not found. Please ensure that path to the SDK is correctly set in the environment variables under VULKAN_SDK.")
+        end
+    end
+end
+
 -- Command line arguments definition
 newoption
 {
@@ -279,32 +307,7 @@ project "ktt"
     includedirs { "source" }
     defines { "KTT_LIBRARY" }
     targetname(ktt_library_name)
-
-    local libraries = false
-    
-    if _OPTIONS["platform"] then
-        if _OPTIONS["platform"] == "amd" then
-            libraries = findLibrariesAmd()
-        elseif _OPTIONS["platform"] == "intel" then
-            libraries = findLibrariesIntel()
-        else
-            libraries = findLibrariesNvidia()
-        end
-    else
-        libraries = findLibraries()
-    end
-    
-    if not libraries and not _OPTIONS["vulkan"] then
-        error("Compute API libraries were not found. Please ensure that path to your device vendor SDK is correctly set in the environment variables:\nAMDAPPSDKROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
-    end
-    
-    if _OPTIONS["vulkan"] then
-        vulkan = findVulkan()
-        
-        if not vulkan then
-            error("Vulkan SDK was not found. Please ensure that path to the SDK is correctly set in the environment variables under VULKAN_SDK.")
-        end
-    end
+    linkLibraries()
     
 -- Examples configuration 
 if not _OPTIONS["no-examples"] then
@@ -545,6 +548,13 @@ project "03_custom_kernel_arguments_opencl"
     files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_opencl.cpp", "tutorials/03_custom_kernel_arguments/opencl_kernel.cl" }
     includedirs { "source" }
     links { "ktt" }
+    
+project "04_user_tuner_initializer_opencl"
+    kind "ConsoleApp"
+    files { "tutorials/04_user_tuner_initializer/user_tuner_initializer_opencl.cpp", "tutorials/04_user_tuner_initializer/kernel.cl" }
+    includedirs { "source" }
+    links { "ktt" }
+    linkLibraries()
 end -- opencl_projects
     
 if cuda_projects then
@@ -571,6 +581,14 @@ project "03_custom_kernel_arguments_cuda"
     files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_cuda.cpp", "tutorials/03_custom_kernel_arguments/cuda_kernel.cu" }
     includedirs { "source" }
     links { "ktt" }
+    
+project "04_user_tuner_initializer_cuda"
+    kind "ConsoleApp"
+    files { "tutorials/04_user_tuner_initializer/user_tuner_initializer_cuda.cpp", "tutorials/04_user_tuner_initializer/kernel.cu" }
+    includedirs { "source" }
+    links { "ktt" }
+    linkLibraries()
+    
 end -- cuda_projects
 
 if vulkan_projects then
@@ -609,19 +627,5 @@ project "tests"
         removefiles { "tests/opencl_engine_tests.cpp" }
     end
     
-    if _OPTIONS["platform"] then
-        if _OPTIONS["platform"] == "amd" then
-            findLibrariesAmd()
-        elseif _OPTIONS["platform"] == "intel" then
-            findLibrariesIntel()
-        else
-            findLibrariesNvidia()
-        end
-    else
-        findLibraries()
-    end
-    
-    if _OPTIONS["vulkan"] then
-        findVulkan()
-    end
+    linkLibraries()
 end -- _OPTIONS["tests"]

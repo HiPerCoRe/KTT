@@ -1,7 +1,9 @@
 #pragma once
 
+#ifdef KTT_PLATFORM_CUDA
+
 #include <cuda.h>
-#include <compute_engine/cuda/cuda_utility.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -9,30 +11,19 @@ namespace ktt
 class CUDAContext
 {
 public:
-    explicit CUDAContext(const CUdevice device) :
-        device(device)
-    {
-        checkCUDAError(cuCtxCreate(&context, CU_CTX_SCHED_AUTO | CU_CTX_MAP_HOST, device), "cuCtxCreate");
-    }
+    explicit CUDAContext(const CUdevice device);
+    explicit CUDAContext(UserContext context);
+    ~CUDAContext();
 
-    ~CUDAContext()
-    {
-        checkCUDAError(cuCtxDestroy(context), "cuCtxDestroy");
-    }
-
-    CUdevice getDevice() const
-    {
-        return device;
-    }
-
-    CUcontext getContext() const
-    {
-        return context;
-    }
+    CUcontext getContext() const;
+    CUdevice getDevice() const;
 
 private:
-    CUdevice device;
     CUcontext context;
+    CUdevice device;
+    bool owningContext;
 };
 
 } // namespace ktt
+
+#endif // KTT_PLATFORM_CUDA

@@ -113,7 +113,9 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
     // Header
     outputTarget << "Kernel name," << "Computation duration (" << getTimeUnitTag(timeUnit) << ")";
 
-    const size_t kernelCount = results.at(0).getConfiguration().getGlobalSizes().size();
+    const auto& configuration = results[0].getConfiguration();
+    const size_t kernelCount = configuration.getGlobalSizes().size();
+    std::vector<KernelId> kernelIds = configuration.getCompositionKernelIds();
 
     if (kernelCount == 1)
     {
@@ -127,7 +129,8 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
         }
     }
 
-    std::vector<ParameterPair> parameterPairs = results.at(0).getConfiguration().getParameterPairs();
+    const std::vector<ParameterPair>& parameterPairs = configuration.getParameterPairs();
+    
     if (parameterPairs.size() > 0)
     {
         outputTarget << ",";
@@ -187,13 +190,13 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
 
     if (!results.at(0).getCompositionCompilationData().empty())
     {
-        for (const auto& pair : results.at(0).getCompositionCompilationData())
+        for (const auto id : kernelIds)
         {
-            outputTarget << ",Maximum work-group size " << pair.first
-                << ",Local memory size " << pair.first
-                << ",Private memory size " << pair.first
-                << ",Constant memory size " << pair.first
-                << ",Registers count " << pair.first;
+            outputTarget << ",Maximum work-group size " << id
+                << ",Local memory size " << id
+                << ",Private memory size " << id
+                << ",Constant memory size " << id
+                << ",Registers count " << id;
         }
     }
     else
@@ -233,9 +236,18 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
 
         if (!result.getCompositionCompilationData().empty())
         {
-            for (const auto& pair : result.getCompositionCompilationData())
+            const auto& compilationData = result.getCompositionCompilationData();
+
+            for (const auto id : kernelIds)
             {
-                printCompilationDataCSV(outputTarget, pair.second);
+                if (containsKey(compilationData, id))
+                {
+                    printCompilationDataCSV(outputTarget, compilationData.find(id)->second);
+                }
+                else
+                {
+                    printDummyCompilationDataCSV(outputTarget);
+                }
             }
         }
         else
@@ -325,13 +337,13 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
         
         if (!results.at(0).getCompositionCompilationData().empty())
         {
-            for (const auto& pair : results.at(0).getCompositionCompilationData())
+            for (const auto id : kernelIds)
             {
-                outputTarget << ",Maximum work-group size " << pair.first
-                    << ",Local memory size " << pair.first
-                    << ",Private memory size " << pair.first
-                    << ",Constant memory size " << pair.first
-                    << ",Registers count " << pair.first;
+                outputTarget << ",Maximum work-group size " << id
+                    << ",Local memory size " << id
+                    << ",Private memory size " << id
+                    << ",Constant memory size " << id
+                    << ",Registers count " << id;
             }
         }
         else
@@ -380,9 +392,18 @@ void ResultPrinter::printCSV(const std::vector<KernelResult>& results, std::ostr
 
             if (!result.getCompositionCompilationData().empty())
             {
-                for (const auto& pair : result.getCompositionCompilationData())
+                const auto& compilationData = result.getCompositionCompilationData();
+
+                for (const auto id : kernelIds)
                 {
-                    printCompilationDataCSV(outputTarget, pair.second);
+                    if (containsKey(compilationData, id))
+                    {
+                        printCompilationDataCSV(outputTarget, compilationData.find(id)->second);
+                    }
+                    else
+                    {
+                        printDummyCompilationDataCSV(outputTarget);
+                    }
                 }
             }
             else
@@ -535,6 +556,11 @@ void ResultPrinter::printCompilationDataCSV(std::ostream& outputTarget, const Ke
         << data.privateMemorySize << ","
         << data.constantMemorySize << ","
         << data.registersCount;
+}
+
+void ResultPrinter::printDummyCompilationDataCSV(std::ostream& outputTarget) const
+{
+    outputTarget << ",N/A,N/A,N/A,N/A,N/A";
 }
 
 KernelResult ResultPrinter::getBestResult(const std::vector<KernelResult>& results) const

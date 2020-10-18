@@ -24,6 +24,8 @@ public:
     explicit KernelArgument(const ArgumentId id, const void* data, const size_t numberOfElements, const size_t elementSizeInBytes,
         const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType,
         const ArgumentUploadType uploadType);
+    explicit KernelArgument(const ArgumentId id, const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType);
 
     // Core methods
     void updateData(void* data, const size_t numberOfElements);
@@ -43,6 +45,7 @@ public:
     void* getData();
     bool hasOwnedData() const;
     bool isPersistent() const;
+    bool hasUserBuffer() const;
 
     template <typename T>
     const T* getDataWithType() const
@@ -78,6 +81,7 @@ private:
     void* referencedData;
     bool dataOwned;
     bool persistentFlag;
+    bool userBuffer;
 
     // Helper methods
     void initializeData(const void* data);

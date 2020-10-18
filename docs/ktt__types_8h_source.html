@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.2</span>
+   &#160;<span id="projectnumber">1.3</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -117,22 +117,34 @@ $(document).ready(function(){initNavTree('ktt__types_8h_source.html',''); initRe
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
 <div class="line"><a name="l00040"></a><span class="lineno"><a class="line" href="namespacektt.html#a5a81bde9a6b65b7f11a2862fb7bbdcab">   40</a></span>&#160;<span class="keyword">using</span> <a class="code" href="namespacektt.html#a5a81bde9a6b65b7f11a2862fb7bbdcab">EventId</a> = uint64_t;</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
-<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="namespacektt.html#af007a5e422c999a5a8f4fd1d875cc7bf">   44</a></span>&#160;<span class="keyword">const</span> <a class="code" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a> <a class="code" href="namespacektt.html#af007a5e422c999a5a8f4fd1d875cc7bf">InvalidKernelId</a> = std::numeric_limits&lt;KernelId&gt;::max();</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="namespacektt.html#a06314e7380eb0baeb140510fcae36003">   48</a></span>&#160;<span class="keyword">const</span> <a class="code" href="namespacektt.html#aea210ff848d810aa544c225033ac26cb">ArgumentId</a> <a class="code" href="namespacektt.html#a06314e7380eb0baeb140510fcae36003">InvalidArgumentId</a> = std::numeric_limits&lt;ArgumentId&gt;::max();</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;} <span class="comment">// namespace ktt</span></div>
+<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="namespacektt.html#af6d62b1dfe9fe1d7eb6e272e5ae29118">   45</a></span>&#160;<span class="keyword">using</span> <a class="code" href="namespacektt.html#af6d62b1dfe9fe1d7eb6e272e5ae29118">BufferMemory</a> = <span class="keywordtype">void</span>*;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
+<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="namespacektt.html#ae3bbbaca1f7656f2a421f9ea6cde0ccb">   50</a></span>&#160;<span class="keyword">using</span> <a class="code" href="namespacektt.html#ae3bbbaca1f7656f2a421f9ea6cde0ccb">UserContext</a> = <span class="keywordtype">void</span>*;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="namespacektt.html#a139b95ffa79e051643ad8e9078c5cc6c">   55</a></span>&#160;<span class="keyword">using</span> <a class="code" href="namespacektt.html#a139b95ffa79e051643ad8e9078c5cc6c">UserQueue</a> = <span class="keywordtype">void</span>*;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
+<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="namespacektt.html#a3b8c8910b4af9600f7e6cbccbfd7f6e1">   60</a></span>&#160;<span class="keyword">using</span> <a class="code" href="namespacektt.html#a3b8c8910b4af9600f7e6cbccbfd7f6e1">UserBuffer</a> = <span class="keywordtype">void</span>*;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
+<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="namespacektt.html#af007a5e422c999a5a8f4fd1d875cc7bf">   64</a></span>&#160;<span class="keyword">const</span> <a class="code" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a> <a class="code" href="namespacektt.html#af007a5e422c999a5a8f4fd1d875cc7bf">InvalidKernelId</a> = std::numeric_limits&lt;KernelId&gt;::max();</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
+<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="namespacektt.html#a06314e7380eb0baeb140510fcae36003">   68</a></span>&#160;<span class="keyword">const</span> <a class="code" href="namespacektt.html#aea210ff848d810aa544c225033ac26cb">ArgumentId</a> <a class="code" href="namespacektt.html#a06314e7380eb0baeb140510fcae36003">InvalidArgumentId</a> = std::numeric_limits&lt;ArgumentId&gt;::max();</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;} <span class="comment">// namespace ktt</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="anamespacektt_html_a3b8c8910b4af9600f7e6cbccbfd7f6e1"><div class="ttname"><a href="namespacektt.html#a3b8c8910b4af9600f7e6cbccbfd7f6e1">ktt::UserBuffer</a></div><div class="ttdeci">void * UserBuffer</div><div class="ttdef"><b>Definition:</b> ktt_types.h:60</div></div>
 <div class="ttc" id="anamespacektt_html_ace6bcecdbf444cc8adffa172168f8a47"><div class="ttname"><a href="namespacektt.html#ace6bcecdbf444cc8adffa172168f8a47">ktt::PlatformIndex</a></div><div class="ttdeci">uint32_t PlatformIndex</div><div class="ttdef"><b>Definition:</b> ktt_types.h:15</div></div>
-<div class="ttc" id="anamespacektt_html_a06314e7380eb0baeb140510fcae36003"><div class="ttname"><a href="namespacektt.html#a06314e7380eb0baeb140510fcae36003">ktt::InvalidArgumentId</a></div><div class="ttdeci">const ArgumentId InvalidArgumentId</div><div class="ttdef"><b>Definition:</b> ktt_types.h:48</div></div>
+<div class="ttc" id="anamespacektt_html_a06314e7380eb0baeb140510fcae36003"><div class="ttname"><a href="namespacektt.html#a06314e7380eb0baeb140510fcae36003">ktt::InvalidArgumentId</a></div><div class="ttdeci">const ArgumentId InvalidArgumentId</div><div class="ttdef"><b>Definition:</b> ktt_types.h:68</div></div>
+<div class="ttc" id="anamespacektt_html_ae3bbbaca1f7656f2a421f9ea6cde0ccb"><div class="ttname"><a href="namespacektt.html#ae3bbbaca1f7656f2a421f9ea6cde0ccb">ktt::UserContext</a></div><div class="ttdeci">void * UserContext</div><div class="ttdef"><b>Definition:</b> ktt_types.h:50</div></div>
 <div class="ttc" id="anamespacektt_html"><div class="ttname"><a href="namespacektt.html">ktt</a></div><div class="ttdef"><b>Definition:</b> ktt_types.h:9</div></div>
+<div class="ttc" id="anamespacektt_html_af6d62b1dfe9fe1d7eb6e272e5ae29118"><div class="ttname"><a href="namespacektt.html#af6d62b1dfe9fe1d7eb6e272e5ae29118">ktt::BufferMemory</a></div><div class="ttdeci">void * BufferMemory</div><div class="ttdef"><b>Definition:</b> ktt_types.h:45</div></div>
 <div class="ttc" id="anamespacektt_html_a42a11ff66d2e2aef76699a88f6602b0b"><div class="ttname"><a href="namespacektt.html#a42a11ff66d2e2aef76699a88f6602b0b">ktt::QueueId</a></div><div class="ttdeci">uint32_t QueueId</div><div class="ttdef"><b>Definition:</b> ktt_types.h:25</div></div>
 <div class="ttc" id="anamespacektt_html_a5a81bde9a6b65b7f11a2862fb7bbdcab"><div class="ttname"><a href="namespacektt.html#a5a81bde9a6b65b7f11a2862fb7bbdcab">ktt::EventId</a></div><div class="ttdeci">uint64_t EventId</div><div class="ttdef"><b>Definition:</b> ktt_types.h:40</div></div>
+<div class="ttc" id="anamespacektt_html_a139b95ffa79e051643ad8e9078c5cc6c"><div class="ttname"><a href="namespacektt.html#a139b95ffa79e051643ad8e9078c5cc6c">ktt::UserQueue</a></div><div class="ttdeci">void * UserQueue</div><div class="ttdef"><b>Definition:</b> ktt_types.h:55</div></div>
 <div class="ttc" id="anamespacektt_html_a19087697a405aa9def6c058d335c21ad"><div class="ttname"><a href="namespacektt.html#a19087697a405aa9def6c058d335c21ad">ktt::DeviceIndex</a></div><div class="ttdeci">uint32_t DeviceIndex</div><div class="ttdef"><b>Definition:</b> ktt_types.h:20</div></div>
 <div class="ttc" id="anamespacektt_html_aea210ff848d810aa544c225033ac26cb"><div class="ttname"><a href="namespacektt.html#aea210ff848d810aa544c225033ac26cb">ktt::ArgumentId</a></div><div class="ttdeci">uint64_t ArgumentId</div><div class="ttdef"><b>Definition:</b> ktt_types.h:35</div></div>
 <div class="ttc" id="anamespacektt_html_a47b4d6f1468a13007692b8bd5dbe42ba"><div class="ttname"><a href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">ktt::KernelId</a></div><div class="ttdeci">uint64_t KernelId</div><div class="ttdef"><b>Definition:</b> ktt_types.h:30</div></div>
-<div class="ttc" id="anamespacektt_html_af007a5e422c999a5a8f4fd1d875cc7bf"><div class="ttname"><a href="namespacektt.html#af007a5e422c999a5a8f4fd1d875cc7bf">ktt::InvalidKernelId</a></div><div class="ttdeci">const KernelId InvalidKernelId</div><div class="ttdef"><b>Definition:</b> ktt_types.h:44</div></div>
+<div class="ttc" id="anamespacektt_html_af007a5e422c999a5a8f4fd1d875cc7bf"><div class="ttname"><a href="namespacektt.html#af007a5e422c999a5a8f4fd1d875cc7bf">ktt::InvalidKernelId</a></div><div class="ttdeci">const KernelId InvalidKernelId</div><div class="ttdef"><b>Definition:</b> ktt_types.h:64</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['initialize_463',['initialize',['../classktt_1_1_configuration_count.html#a6f4526d34555b695ff311f2a63e25e29',1,'ktt::ConfigurationCount::initialize()'],['../classktt_1_1_configuration_duration.html#a03617f962e37ea36ce2d8b4e516e6faa',1,'ktt::ConfigurationDuration::initialize()'],['../classktt_1_1_configuration_fraction.html#a6190eadf1bc697e116bc05bac80fe347',1,'ktt::ConfigurationFraction::initialize()'],['../classktt_1_1_stop_condition.html#a8d9d4011dce7bc3b51770dbba11e516c',1,'ktt::StopCondition::initialize()'],['../classktt_1_1_tuning_duration.html#a537695bd73c59b960448183eeec2e23e',1,'ktt::TuningDuration::initialize()']]],
-  ['issatisfied_464',['isSatisfied',['../classktt_1_1_configuration_count.html#aa563641bbabb9170db87d917a942503e',1,'ktt::ConfigurationCount::isSatisfied()'],['../classktt_1_1_configuration_duration.html#a525531c8271f7e87adf406f31ef897a9',1,'ktt::ConfigurationDuration::isSatisfied()'],['../classktt_1_1_configuration_fraction.html#aeb4f13b25cb9ed6b8fdedb1102fec849',1,'ktt::ConfigurationFraction::isSatisfied()'],['../classktt_1_1_stop_condition.html#a9ecd583de5d8dd9576dd2a7e1e7bce12',1,'ktt::StopCondition::isSatisfied()'],['../classktt_1_1_tuning_duration.html#aef9c63d6c45d91c8f433648f1437d381',1,'ktt::TuningDuration::isSatisfied()']]],
-  ['isvalid_465',['isValid',['../classktt_1_1_kernel_profiling_data.html#ae3b55189e71e3b6f7686acdec4d053c3',1,'ktt::KernelProfilingData']]]
+  ['hascounter_523',['hasCounter',['../classktt_1_1_kernel_profiling_data.html#a23b133db817c7b1247972ab0e9362976',1,'ktt::KernelProfilingData']]],
+  ['hasremainingprofilingruns_524',['hasRemainingProfilingRuns',['../classktt_1_1_kernel_profiling_data.html#a155046dac5d0e77058ab7a90507afca3',1,'ktt::KernelProfilingData']]],
+  ['hasvaluedouble_525',['hasValueDouble',['../classktt_1_1_parameter_pair.html#a0222cbe77642692479552ac73391be3a',1,'ktt::ParameterPair']]]
 ];

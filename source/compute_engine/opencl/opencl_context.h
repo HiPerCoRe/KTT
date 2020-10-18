@@ -1,9 +1,9 @@
 #pragma once
 
-#include <stdexcept>
-#include <vector>
+#ifdef KTT_PLATFORM_OPENCL
+
 #include <CL/cl.h>
-#include <compute_engine/opencl/opencl_utility.h>
+#include <ktt_types.h>
 
 namespace ktt
 {
@@ -11,50 +11,21 @@ namespace ktt
 class OpenCLContext
 {
 public:
-    explicit OpenCLContext(const cl_platform_id platform, const std::vector<cl_device_id>& devices) :
-        platform(platform),
-        devices(devices)
-    {
-        if (devices.empty())
-        {
-            throw std::runtime_error("Cannot create OpenCL context without any device");
-        }
+    explicit OpenCLContext(const cl_platform_id platform, const cl_device_id device);
+    explicit OpenCLContext(UserContext context);
+    ~OpenCLContext();
 
-        cl_context_properties properties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0 };
-        cl_int result;
-        context = clCreateContext(properties, static_cast<cl_uint>(devices.size()), devices.data(), nullptr, nullptr, &result);
-        checkOpenCLError(result, "clCreateContext");
-    }
-
-    ~OpenCLContext()
-    {
-        checkOpenCLError(clReleaseContext(context), "clReleaseContext");
-    }
-
-    cl_platform_id getPlatform() const
-    {
-        return platform;
-    }
-
-    cl_device_id getDevice() const
-    {
-        return devices[0];
-    }
-
-    const std::vector<cl_device_id>& getDevices() const
-    {
-        return devices;
-    }
-
-    cl_context getContext() const
-    {
-        return context;
-    }
+    cl_context getContext() const;
+    cl_platform_id getPlatform() const;
+    cl_device_id getDevice() const;
 
 private:
-    cl_platform_id platform;
-    std::vector<cl_device_id> devices;
     cl_context context;
+    cl_platform_id platform;
+    cl_device_id device;
+    bool owningContext;
 };
 
 } // namespace ktt
+
+#endif // KTT_PLATFORM_OPENCL

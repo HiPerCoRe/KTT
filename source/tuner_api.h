@@ -29,7 +29,6 @@
 #include <enum/modifier_type.h>
 #include <enum/print_format.h>
 #include <enum/time_unit.h>
-#include <enum/search_method.h>
 #include <enum/validation_method.h>
 #include <enum/validation_mode.h>
 
@@ -39,6 +38,13 @@
 #include <api/dimension_vector.h>
 #include <api/output_descriptor.h>
 #include <api/platform_info.h>
+#include <api/user_initializer.h>
+
+// Searchers
+#include <api/searcher/annealing_searcher.h>
+#include <api/searcher/full_searcher.h>
+#include <api/searcher/mcmc_searcher.h>
+#include <api/searcher/random_searcher.h>
 
 // Stop conditions
 #include <api/stop_condition/configuration_duration.h>
@@ -99,6 +105,14 @@ public:
       */
     explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeAPI computeAPI, const uint32_t computeQueueCount);
 
+    /** @fn explicit Tuner(const ComputeAPI computeAPI, const UserInitializer& initializer)
+      * Constructor which creates new tuner object for specified compute API using custom initializer. The initializer contains user-provided compute
+      * device context and queues.
+      * @param computeAPI Compute API used by the tuner.
+      * @param initializer Custom user initializer. See UserInitializer for more information.
+      */
+    explicit Tuner(const ComputeAPI computeAPI, const UserInitializer& initializer);
+
     /** @fn ~Tuner()
       * Tuner destructor.
       */
@@ -109,8 +123,8 @@ public:
       * Adds new kernel to tuner from source code inside string. Requires specification of kernel name and default global and local thread sizes.
       * @param source Kernel source code written in corresponding compute API language.
       * @param kernelName Name of kernel function inside kernel source code.
-      * @param globalSize Dimensions for base kernel global size (eg. grid size in CUDA).
-      * @param localSize Dimensions for base kernel local size (eg. block size in CUDA).
+      * @param globalSize Dimensions for base kernel global size (e.g. grid size in CUDA).
+      * @param localSize Dimensions for base kernel local size (e.g. block size in CUDA).
       * @return Id assigned to kernel by tuner. The id can be used in other API methods.
       */
     KernelId addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -121,8 +135,8 @@ public:
       * Adds new kernel to tuner from source code inside file. Requires specification of kernel name and default global and local thread sizes.
       * @param filePath Path to file with kernel source code written in corresponding compute API language.
       * @param kernelName Name of kernel function inside kernel source code.
-      * @param globalSize Dimensions for base kernel global size (eg. grid size in CUDA).
-      * @param localSize Dimensions for base kernel local size (eg. block size in CUDA).
+      * @param globalSize Dimensions for base kernel global size (e.g. grid size in CUDA).
+      * @param localSize Dimensions for base kernel local size (e.g. block size in CUDA).
       * @return Id assigned to kernel by tuner. The id can be used in other API methods.
       */
     KernelId addKernelFromFile(const std::string& filePath, const std::string& kernelName, const DimensionVector& globalSize,
@@ -212,7 +226,7 @@ public:
 
     /** @fn void addConstraint(const KernelId id, const std::vector<std::string>& parameterNames,
       * const std::function<bool(const std::vector<size_t>&)>& constraintFunction)
-      * Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (eg. conflicting parameter
+      * Adds new constraint for specified kernel. Constraints are used to prevent generating of invalid configurations (e.g. conflicting parameter
       * values).
       * @param id Id of kernel for which the constraint will be added.
       * @param parameterNames Names of kernel parameters which will be affected by the constraint function. The order of parameter names corresponds
@@ -224,7 +238,7 @@ public:
 
     /** @fn void setTuningManipulator(const KernelId id, std::unique_ptr<TuningManipulator> manipulator)
       * Sets tuning manipulator for specified kernel. Tuning manipulator enables customization of kernel execution. This is useful in several cases,
-      * eg. running part of the computation in C++ code, utilizing iterative kernel launches or composite kernels. See TuningManipulator for more
+      * e.g. running part of the computation in C++ code, utilizing iterative kernel launches or composite kernels. See TuningManipulator for more
       * information.
       * @param id Id of kernel for which the tuning manipulator will be set.
       * @param manipulator Tuning manipulator for specified kernel.
@@ -348,6 +362,26 @@ public:
         return addArgument(data.data(), data.size(), sizeof(T), dataType, memoryLocation, accessType, copyData);
     }
 
+    /** @fn template <typename T> ArgumentId addArgumentVector(UserBuffer buffer, const size_t bufferSize, const ArgumentAccessType accessType,
+      * const ArgumentMemoryLocation memoryLocation)
+      * Adds new vector argument to the tuner. The argument buffer is managed by user and depending on the compute API, can be either CUdeviceptr
+      * or cl_mem handle. The tuner will work with the argument in the same way as with persistent arguments and will not destroy it.
+      * @param buffer User-provided memory buffer.
+      * @param bufferSize Size of the provided user buffer in bytes.
+      * @param accessType Access type of argument specifies whether argument is used for input or output. See ::ArgumentAccessType for more
+      * information.
+      * @param memoryLocation Memory location of argument specifies whether argument will be accessed from device or host memory during its usage
+      * by compute API. See ::ArgumentMemoryLocation for more information.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
+    template <typename T> ArgumentId addArgumentVector(UserBuffer buffer, const size_t bufferSize, const ArgumentAccessType accessType,
+        const ArgumentMemoryLocation memoryLocation)
+    {
+        const size_t elementSize = sizeof(T);
+        const ArgumentDataType dataType = getMatchingArgumentDataType<T>();
+        return addUserArgument(buffer, bufferSize, elementSize, dataType, memoryLocation, accessType);
+    }
+
     /** @fn template <typename T> ArgumentId addArgumentScalar(const T& data)
       * Adds new scalar argument to tuner. All scalar arguments are read-only.
       * @param data Argument data provided as single scalar value. The data type must be trivially copyable. Bool data type is currently not
@@ -393,7 +427,7 @@ public:
 
     /** @fn std::vector<ComputationResult> tuneKernel(const KernelId id)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
-      * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end when all configurations
+      * constraints. The configurations will be launched in order that depends on specified Searcher. Tuning will end when all configurations
       * are explored.
       * @param id Id of kernel for which the tuning will start.
       * @return Vector of objects containing information about computation using tested kernel configurations. See ComputationResult for more
@@ -403,7 +437,7 @@ public:
 
     /** @fn std::vector<ComputationResult> tuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
       * Starts the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel parameters and
-      * constraints. The configurations will be launched in order that depends on specified ::SearchMethod. Tuning will end either when all
+      * constraints. The configurations will be launched in order that depends on specified Searcher. Tuning will end either when all
       * configurations are explored or when specified stop condition is met.
       * @param id Id of kernel for which the tuning will start.
       * @param stopCondition Stop condition which decides whether to continue the tuning process. See StopCondition for more information.
@@ -415,7 +449,7 @@ public:
     /** @fn std::vector<ComputationResult> dryTuneKernel(const KernelId id, const std::string& filePath, const size_t iterations = 0)
       * Starts the simulated tuning process for specified kernel (kernel is not tuned, execution times are read from CSV). Creates configuration
       * space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on
-      * specified ::SearchMethod. This method can be used to test behaviour and performance of newly implemented search methods. Note that no checks
+      * specified Searcher. This method can be used to test behaviour and performance of newly implemented search methods. Note that no checks
       * are performed whether the tuning data relates to kernel, tuning parameters or hardware. It is up to user to ensure that dryTuneKernel() reads
       * a valid file.
       * @param id Id of kernel for which the tuning begins.
@@ -491,24 +525,19 @@ public:
       * Specifies profiling counters that will be collected during kernel profiling. Note that not all profiling counters are available on all
       * devices.
       *
-      * For the list of CUDA CUPTI profiling counters, see: https://docs.nvidia.com/cuda/cupti/index.html#metrics-reference
+      * For the list of old CUDA CUPTI profiling counters, see: https://docs.nvidia.com/cupti/Cupti/r_main.html#metrics-reference
+      * For the list of new CUDA CUPTI profiling counters, see: https://docs.nvidia.com/cupti/Cupti/r_main.html#r_host_raw_metrics_api
       * For the list of AMD GPA profiling counters, see: https://gpuperfapi.readthedocs.io/en/latest/counters.html
       * @param counterNames Names of counters that will be collected during kernel profiling.
       */
     void setKernelProfilingCounters(const std::vector<std::string>& counterNames);
 
-    /** @fn void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
-      * Specifies search method which will be used during kernel tuning. Number of required search arguments depends on the search method.
-      * Default search method is full search.
-      * @param method Search method which will be used during kernel tuning. See SearchMethod for more information.
-      * @param arguments Arguments necessary for specified search method to work. Following arguments are required for corresponding search method,
-      * the order of arguments is important:
-      * - FullSearch - none
-      * - RandomSearch - none
-      * - Annealing - maximum temperature
-      * - MCMC - none
+    /** @fn void void setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
+      * Specifies searcher which will be used during kernel tuning. If no searcher is specified, full searcher will be used.
+      * @param id Id of kernel for which searcher will be specified.
+      * @param searcher Searcher which decides which kernel configuration will be launched next. See Searcher for more information.
       */
-    void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
+    void setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
 
     /** @fn void setPrintingTimeUnit(const TimeUnit unit)
       * Sets time unit used for printing of results. Default time unit is milliseconds. 
@@ -615,8 +644,8 @@ public:
     void setArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
 
     /** @fn void setCompilerOptions(const std::string& options)
-      * Sets compute API compiler options to specified options. There are no default options for OpenCL back-end. By default for CUDA back-end it adds the
-      * compiler option "--gpu-architecture=compute_xx", where `xx` is the compute capability retrieved from the device.
+      * Sets compute API compiler options to specified options. There are no default options for OpenCL backend. By default for CUDA backend
+      * it adds the compiler option "--gpu-architecture=compute_xx", where `xx` is the compute capability retrieved from the device.
       * 
       * For list of OpenCL compiler options, see: https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clBuildProgram.html
       * For list of CUDA compiler options, see: http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-command-options
@@ -625,7 +654,7 @@ public:
     void setCompilerOptions(const std::string& options);
 
     /** @fn void setKernelCacheCapacity(const size_t capacity)
-      * Sets capacity of kernel cache inside the tuner. The cache contains recently compiled kernels which are prepared to be launched immidiately,
+      * Sets capacity of kernel cache inside the tuner. The cache contains recently compiled kernels which are prepared to be launched immediately,
       * eliminating compilation overhead. Using the cache can significantly improve tuner performance during online tuning or iterative kernel
       * running with TuningManipulator. Default cache size is 10.
       * @param capacity Controls kernel cache capacity. If zero, kernel cache is completely disabled.
@@ -640,13 +669,13 @@ public:
     void printComputeAPIInfo(std::ostream& outputTarget) const;
 
     /** @fn std::vector<PlatformInfo> getPlatformInfo() const
-      * Retrieves detailed information about all available platforms (eg. platform name, vendor). See PlatformInfo for more information.
+      * Retrieves detailed information about all available platforms (e.g. platform name, vendor). See PlatformInfo for more information.
       * @return Information about all available platforms.
       */
     std::vector<PlatformInfo> getPlatformInfo() const;
 
     /** @fn std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const
-      * Retrieves detailed information about all available devices (eg. device name, memory capacity) on specified platform. See DeviceInfo
+      * Retrieves detailed information about all available devices (e.g. device name, memory capacity) on specified platform. See DeviceInfo
       * for more information.
       * @param platform Index of platform for which the device information will be retrieved.
       * @return Information about all available devices on specified platform.
@@ -654,7 +683,7 @@ public:
     std::vector<DeviceInfo> getDeviceInfo(const PlatformIndex platform) const;
 
     /** @fn DeviceInfo getCurrentDeviceInfo() const
-      * Retrieves detailed information about device (eg. device name, memory capacity) used by the tuner. See DeviceInfo for more information.
+      * Retrieves detailed information about device (e.g. device name, memory capacity) used by the tuner. See DeviceInfo for more information.
       * @return Information about device used by the tuner.
       */
     DeviceInfo getCurrentDeviceInfo() const;
@@ -702,6 +731,8 @@ private:
     ArgumentId addArgument(const void* data, const size_t numberOfElements, const size_t elementSizeInBytes, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentUploadType uploadType);
     ArgumentId addArgument(const size_t localMemoryElementsCount, const size_t elementSizeInBytes, const ArgumentDataType dataType);
+    ArgumentId addUserArgument(UserBuffer buffer, const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType);
 
     template <typename T> ArgumentDataType getMatchingArgumentDataType() const
     {

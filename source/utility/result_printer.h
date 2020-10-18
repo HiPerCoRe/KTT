@@ -34,6 +34,7 @@ private:
         const std::vector<ParameterPair>& orderedPairs) const;
     void printProfilingCountersCSV(std::ostream& outputTarget, const std::vector<KernelProfilingCounter>& counters) const;
     void printCompilationDataCSV(std::ostream& outputTarget, const KernelCompilationData& data) const;
+    void printDummyCompilationDataCSV(std::ostream& outputTarget) const;
     KernelResult getBestResult(const std::vector<KernelResult>& results) const;
 };
 

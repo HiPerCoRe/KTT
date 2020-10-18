@@ -2,10 +2,10 @@
 
 #include <map>
 #include <vector>
+#include <api/kernel_configuration.h>
 #include <enum/dimension_vector_type.h>
 #include <kernel/kernel.h>
 #include <kernel/kernel_composition.h>
-#include <kernel/kernel_configuration.h>
 
 namespace ktt
 {
@@ -58,8 +58,8 @@ public:
 private:
     // Attributes
     KernelId nextId;
-    std::vector<Kernel> kernels;
-    std::vector<KernelComposition> kernelCompositions;
+    std::vector<std::unique_ptr<Kernel>> kernels;
+    std::vector<std::unique_ptr<KernelComposition>> kernelCompositions;
 
     // Helper methods
     static std::string loadFileToString(const std::string& filePath);

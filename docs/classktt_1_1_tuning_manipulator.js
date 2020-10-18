@@ -20,6 +20,7 @@ var classktt_1_1_tuning_manipulator =
     [ "getParameterValue", "classktt_1_1_tuning_manipulator.html#a61f92883b4ea8c735c91081a70a506b2", null ],
     [ "getParameterValueDouble", "classktt_1_1_tuning_manipulator.html#ac944ad0bc678cd2e7092fd3ad1b5d41d", null ],
     [ "getRemainingKernelProfilingRuns", "classktt_1_1_tuning_manipulator.html#a4d5d0dc24d00450a0c7558b588e2e57e", null ],
+    [ "getUnifiedMemoryArgument", "classktt_1_1_tuning_manipulator.html#ac82659aee2017abf4350dbfbb93fc699", null ],
     [ "launchComputation", "classktt_1_1_tuning_manipulator.html#aa5c993600def90f0e5e67c7a03fcdd0d", null ],
     [ "resizeArgumentVector", "classktt_1_1_tuning_manipulator.html#ab88cabca2a372c0366d9b077ad812f02", null ],
     [ "runKernel", "classktt_1_1_tuning_manipulator.html#a0991ebd21b3261d60146528e12725f80", null ],

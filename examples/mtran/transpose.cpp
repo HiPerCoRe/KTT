@@ -23,6 +23,12 @@
 #define RAPID_TEST 0
 #define USE_PROFILING 0
 
+// Those macros enlarge tuning space by adding denser values to tuning 
+// parameters (USE_DENSE_TUNPAR == 1), and also adding wider ranges of tuning
+// parameters (USE_WIDE_TUNPAR  == 1)
+#define USE_DENSE_TUNPAR 0
+#define USE_WIDE_TUNPAR 0
+
 int main(int argc, char **argv)
 {
     // Initialize platform index, device index and paths to kernels
@@ -112,10 +118,19 @@ int main(int argc, char **argv)
     tuner.addParameter(kernelId, "CR", {0, 1});
     tuner.addParameter(kernelId, "LOCAL_MEM", {0, 1});
     tuner.addParameter(kernelId, "PADD_LOCAL", { 0, 1 });
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", { 1, 2, 4, 8, 16, 32, 64 });
-    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
-    tuner.addParameter(kernelId, "TILE_SIZE_X", { 1, 2, 4, 8, 16, 32, 64 });
-    tuner.addParameter(kernelId, "TILE_SIZE_Y", { 1, 2, 4, 8, 16, 32, 64 });
+    #if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
+    std::vector<size_t> sizeRanges = { 1, 2, 4, 8, 16, 32, 64 };
+    #else 
+        #if USE_WIDE_TUNPAR == 0
+        std::vector<size_t> sizeRanges = { 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64 };
+        #else
+         std::vector<size_t> sizeRanges = { 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128};
+        #endif
+    #endif
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", sizeRanges);
+    tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", sizeRanges);
+    tuner.addParameter(kernelId, "TILE_SIZE_X", sizeRanges);
+    tuner.addParameter(kernelId, "TILE_SIZE_Y", sizeRanges);
     tuner.addParameter(kernelId, "DIAGONAL_MAP", {0, 1});
     
     // Constraint tuning space
@@ -123,7 +138,11 @@ int main(int argc, char **argv)
     auto yConstraint = [] (std::vector<size_t> v) { return (v[1] <= v[0]); };
     auto tConstraint = [] (std::vector<size_t> v) { return (!v[0] || (v[1] <= v[2]*v[3])); };
     auto pConstraint = [] (std::vector<size_t> v) { return (v[0] || !v[1]); };
+    #if USE_WIDE_TUNPAR == 0
     auto vConstraint = [] (std::vector<size_t> v) { return (v[0]*v[1] <= 64);  };
+    #else
+    auto vConstraint = [] (std::vector<size_t> v) { return (v[0]*v[1] <= 128);  };
+    #endif
     auto vlConstraint = [] (std::vector<size_t> v) { return (!v[0] || v[1] == 1);  };
     auto minparConstraint = [] (std::vector<size_t> v) {return (v[0] * v[1] >= 32);};
     tuner.addConstraint(kernelId, { "TILE_SIZE_X", "WORK_GROUP_SIZE_X" }, xConstraint);

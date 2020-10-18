@@ -12,12 +12,12 @@ namespace ktt
   */
 enum class ArgumentMemoryLocation
 {
-    /** Argument data will be accessed from device memory. This is recommended setting for devices with dedicated memory, eg. discrete GPUs.
+    /** Argument data will be accessed from device memory. This is recommended setting for devices with dedicated memory, e.g. discrete GPUs.
       */
     Device,
 
     /** Argument data will be accessed from host memory. This is recommended setting for CPUs and devices without dedicated memory,
-      * eg. integrated GPUs.
+      * e.g. integrated GPUs.
       */
     Host,
 
@@ -26,7 +26,11 @@ enum class ArgumentMemoryLocation
       * that even when this flag is used, extra buffer copy is still sometimes created internally by compute API. This behaviour depends on particular
       * API and device.
       */
-    HostZeroCopy
+    HostZeroCopy,
+
+    /* Argument data will be stored using compute API's unified memory system. It can be directly accessed from both host and device.
+     */
+    Unified
 };
 
 } // namespace ktt

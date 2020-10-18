@@ -239,7 +239,7 @@ int main(int argc, char** argv)
 #if USE_PROFILING == 1
 	tuner.addParameter(kernelId, "FUSED", std::vector<size_t>{ /*0, 1,*/ 2 }); // non-optimized kernels are not profiled
 #else
-    tuner.addParameter(kernelId, "FUSED", std::vector<size_t>{ 0, 1, 2 });
+    tuner.addParameter(kernelId, "FUSED", std::vector<size_t>{ /*0, 1,*/ 2 });
 #endif
 	tuner.addParameter(kernelId, "BICG_BATCH", std::vector<size_t>{ 1, 2, 4, 8, 16, 32, 64 });
 	tuner.addParameter(kernelId, "USE_SHARED_MATRIX", std::vector<size_t>{ 0, 1 });

@@ -116,8 +116,8 @@ int main(int argc, char** argv)
         gridSpacingId, energyGridId});
     tuner.setKernelArguments(referenceKernelId, std::vector<ktt::ArgumentId>{atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId});
 
-    // Set search method to random search
-    tuner.setSearchMethod(ktt::SearchMethod::RandomSearch, std::vector<double>{});
+    // Set searcher to random
+    tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
 
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);

@@ -27,6 +27,12 @@
 #define RAPID_TEST 0
 #define USE_PROFILING 0
 
+// Those macros enlarge tuning space by adding denser values to tuning 
+// parameters (USE_DENSE_TUNPAR == 1), and also adding wider ranges of tuning
+// parameters (USE_WIDE_TUNPAR  == 1)
+#define USE_DENSE_TUNPAR 0
+#define USE_WIDE_TUNPAR 0
+
 #include "hotspot_tunable.h"
 
 int main(int argc, char** argv)
@@ -131,10 +137,27 @@ int main(int argc, char** argv)
   kernelId = tuner.addKernelFromFile(kernelFile, std::string("hotspot"), ndRangeDimensions, workGroupDimensions);
   referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, std::string("hotspot"), ndRangeDimensions, workGroupDimensions);
   // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
+  #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
   tuner.addParameter(kernelId, "BLOCK_SIZE_ROWS", {8, 16, 32, 64});
   tuner.addParameter(kernelId, "BLOCK_SIZE_COLS", {8, 16, 32, 64});
-  tuner.addParameter(kernelId, "PYRAMID_HEIGHT", {1, 2, 4, 8}); //, 2, 4});
+  #else
+  tuner.addParameter(kernelId, "BLOCK_SIZE_ROWS", {8, 10, 12, 16,  20, 24, 28, 32, 40, 48, 56, 64});
+  tuner.addParameter(kernelId, "BLOCK_SIZE_COLS", {8, 10, 12, 16,  20, 24, 28, 32, 40, 48, 56, 64});
+  #endif
+  #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
+  tuner.addParameter(kernelId, "PYRAMID_HEIGHT", {1, 2, 4, 8});
+  #else
+    #if USE_WIDE_TUNPAR == 0
+  tuner.addParameter(kernelId, "PYRAMID_HEIGHT", {1, 2, 3, 4, 5, 6, 7, 8});
+    #else
+  tuner.addParameter(kernelId, "PYRAMID_HEIGHT", {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16});
+    #endif
+  #endif
+  #if USE_DENSE_TUNPAR == 0 and USE_WIDE_TUNPAR == 0
   tuner.addParameter(kernelId, "WORK_GROUP_Y", {4, 8, 16, 32, 64});
+  #else
+  tuner.addParameter(kernelId, "WORK_GROUP_Y", {4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64});
+  #endif
   tuner.addParameter(kernelId, "LOCAL_MEMORY", {0, 1});
   tuner.addParameter(kernelId, "LOOP_UNROLL", {0,1});
   // Add conditions

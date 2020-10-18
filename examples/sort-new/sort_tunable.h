@@ -45,10 +45,6 @@ class TunableSort : public ktt::TuningManipulator {
       fullBlockId(fullBlockId),
       storeSumId(storeSumId)
     {
-      keysOut = std::vector<uint>(size);
-      valuesOut = std::vector<uint>(size);
-      keysIn = std::vector<uint>(size);
-      valuesIn = std::vector<uint>(size);
     }
 
     // Run the code with kernels
@@ -183,12 +179,8 @@ void scanArrayRecursive(std::vector<uint> &outArray, std::vector<uint> &inArray,
     int size;
     ktt::ArgumentId keysOutId;
     ktt::ArgumentId valuesOutId;
-    std::vector<uint> keysOut;
-    std::vector<uint> valuesOut;
     ktt::ArgumentId keysInId;
     ktt::ArgumentId valuesInId;
-    std::vector<uint> keysIn;
-    std::vector<uint> valuesIn;
     ktt::ArgumentId scanNumBlocksId;
     ktt::ArgumentId countersId;
     ktt::ArgumentId counterSumsId;

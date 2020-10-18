@@ -449,9 +449,19 @@ void VulkanEngine::resizeArgument(const ArgumentId id, const size_t newSize, con
     throw std::runtime_error("Vulkan API is not yet supported");
 }
 
+void VulkanEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
+{
+    throw std::runtime_error("Vulkan API is not yet supported");
+}
+
 void VulkanEngine::setPersistentBufferUsage(const bool flag)
 {
     persistentBufferFlag = flag;
+}
+
+void VulkanEngine::addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument)
+{
+    throw std::runtime_error("Vulkan API is not yet supported");
 }
 
 void VulkanEngine::clearBuffer(const ArgumentId id)

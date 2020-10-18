@@ -32,7 +32,7 @@ public:
         const bool recomputeReference);
     void clearKernelData(const KernelId id, const bool clearConfigurations);
     void setKernelProfiling(const bool flag);
-    void setSearchMethod(const SearchMethod method, const std::vector<double>& arguments);
+    void setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     ComputationResult getBestComputationResult(const KernelId id) const;
 
     // Result printer methods

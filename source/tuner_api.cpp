@@ -17,6 +17,10 @@ Tuner::Tuner(const PlatformIndex platform, const DeviceIndex device, const Compu
     tunerCore(std::make_unique<TunerCore>(platform, device, computeAPI, computeQueueCount))
 {}
 
+Tuner::Tuner(const ComputeAPI computeAPI, const UserInitializer& initializer) :
+    tunerCore(std::make_unique<TunerCore>(computeAPI, initializer))
+{}
+
 Tuner::~Tuner() = default;
 
 KernelId Tuner::addKernel(const std::string& source, const std::string& kernelName, const DimensionVector& globalSize,
@@ -121,6 +125,10 @@ void Tuner::setThreadModifier(const KernelId id, const ModifierType modifierType
         setThreadModifier(id, modifierType, modifierDimension, std::vector<std::string>{parameterName},
             [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize / parameters.at(0);});
         break;
+    case ModifierAction::DivideCeil:
+        setThreadModifier(id, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return (threadSize + parameters.at(0) - 1) / parameters.at(0);});
+        break;
     default:
         throw std::runtime_error("Unknown modifier action");
     }
@@ -224,6 +232,10 @@ void Tuner::setCompositionKernelThreadModifier(const KernelId compositionId, con
     case ModifierAction::Divide:
         setCompositionKernelThreadModifier(compositionId, kernelId, modifierType, modifierDimension, std::vector<std::string>{parameterName},
             [](const size_t threadSize, const std::vector<size_t>& parameters) {return threadSize / parameters.at(0);});
+        break;
+    case ModifierAction::DivideCeil:
+        setCompositionKernelThreadModifier(compositionId, kernelId, modifierType, modifierDimension, std::vector<std::string>{parameterName},
+            [](const size_t threadSize, const std::vector<size_t>& parameters) {return (threadSize + parameters.at(0) - 1) / parameters.at(0);});
         break;
     default:
         throw std::runtime_error("Unknown modifier action");
@@ -398,11 +410,11 @@ void Tuner::setKernelProfilingCounters(const std::vector<std::string>& counterNa
     }
 }
 
-void Tuner::setSearchMethod(const SearchMethod method, const std::vector<double>& arguments)
+void Tuner::setSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
 {
     try
     {
-        tunerCore->setSearchMethod(method, arguments);
+        tunerCore->setSearcher(id, std::move(searcher));
     }
     catch (const std::runtime_error& error)
     {
@@ -657,6 +669,20 @@ ArgumentId Tuner::addArgument(const size_t localMemoryElementsCount, const size_
     {
         return tunerCore->addArgument(nullptr, localMemoryElementsCount, elementSizeInBytes, dataType, ArgumentMemoryLocation::Device,
             ArgumentAccessType::ReadOnly, ArgumentUploadType::Local);
+    }
+    catch (const std::runtime_error& error)
+    {
+        TunerCore::log(LoggingLevel::Error, error.what());
+        return InvalidArgumentId;
+    }
+}
+
+ArgumentId Tuner::addUserArgument(UserBuffer buffer, const size_t bufferSize, const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType)
+{
+    try
+    {
+        return tunerCore->addUserArgument(buffer, bufferSize, elementSize, dataType, memoryLocation, accessType);
     }
     catch (const std::runtime_error& error)
     {

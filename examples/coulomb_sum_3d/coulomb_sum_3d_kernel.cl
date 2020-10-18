@@ -27,18 +27,21 @@
 __kernel __attribute__((vec_type_hint(vector))) 
 #endif
 __kernel void directCoulombSum(MEMORY_TYPE_AOS float4* atomInfo, MEMORY_TYPE_SOA vector* atomInfoX, MEMORY_TYPE_SOA vector* atomInfoY,
-    MEMORY_TYPE_SOA vector* atomInfoZ, MEMORY_TYPE_SOA vector* atomInfoW, int numberOfAtoms, float gridSpacing, __global float* energyGrid)
+    MEMORY_TYPE_SOA vector* atomInfoZ, MEMORY_TYPE_SOA vector* atomInfoW, int numberOfAtoms, float gridSpacing, int gridSize, __global float* energyGrid)
 {
     int xIndex = get_global_id(0);
     int yIndex = get_global_id(1);
-    int zIndex = get_global_id(2);
+    int zIndex = get_global_id(2)*Z_ITERATIONS;
+
+    if ((xIndex >= gridSize) || (yIndex >= gridSize) || (xIndex >= gridSize))
+        return;
         
-    int sliceOffset = get_global_size(1) * get_global_size(0);
-	int outIndex = sliceOffset*Z_ITERATIONS*zIndex + get_global_size(0)*yIndex + xIndex;
+    int sliceOffset = gridSize * gridSize;
+	int outIndex = sliceOffset*zIndex + gridSize*yIndex + xIndex;
 
     float coordX = gridSpacing * xIndex;
     float coordY = gridSpacing * yIndex;
-    float coordZ = gridSpacing * zIndex*(float)Z_ITERATIONS;
+    float coordZ = gridSpacing * zIndex;
 
     vector energyValue[Z_ITERATIONS];
     for (int i = 0; i < Z_ITERATIONS; i++) 
@@ -68,15 +71,17 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS float4* atomInfo, MEMORY_TYPE_SOA
     }
 
     for (int i = 0; i < Z_ITERATIONS; i++)
-        #if VECTOR_SIZE == 1
-        energyGrid[outIndex + sliceOffset*i] += energyValue[i];
-        #elif VECTOR_SIZE == 2
-        energyGrid[outIndex + sliceOffset*i] += energyValue[i].x + energyValue[i].y;
-        #elif VECTOR_SIZE == 4
-        energyGrid[outIndex + sliceOffset*i] += energyValue[i].x + energyValue[i].y + energyValue[i].z + energyValue[i].w;
-        #elif VECTOR_SIZE == 8
-        energyGrid[outIndex + sliceOffset*i] += energyValue[i].s0 + energyValue[i].s1 + energyValue[i].s2 + energyValue[i].s3 + energyValue[i].s4 + energyValue[i].s5 + energyValue[i].s6 + energyValue[i].s7;
-        #elif VECTOR_SIZE == 16
-        energyGrid[outIndex + sliceOffset*i] += energyValue[i].s0 + energyValue[i].s1 + energyValue[i].s2 + energyValue[i].s3 + energyValue[i].s4 + energyValue[i].s5 + energyValue[i].s6 + energyValue[i].s7 + energyValue[i].s8 + energyValue[i].s9 + energyValue[i].sa + energyValue[i].sb + energyValue[i].sc + energyValue[i].sd + energyValue[i].se + energyValue[i].sf;
-        #endif
+        if (zIndex + i < gridSize) {
+            #if VECTOR_SIZE == 1
+            energyGrid[outIndex + sliceOffset*i] += energyValue[i];
+            #elif VECTOR_SIZE == 2
+            energyGrid[outIndex + sliceOffset*i] += energyValue[i].x + energyValue[i].y;
+            #elif VECTOR_SIZE == 4
+            energyGrid[outIndex + sliceOffset*i] += energyValue[i].x + energyValue[i].y + energyValue[i].z + energyValue[i].w;
+            #elif VECTOR_SIZE == 8
+            energyGrid[outIndex + sliceOffset*i] += energyValue[i].s0 + energyValue[i].s1 + energyValue[i].s2 + energyValue[i].s3 + energyValue[i].s4 + energyValue[i].s5 + energyValue[i].s6 + energyValue[i].s7;
+            #elif VECTOR_SIZE == 16
+            energyGrid[outIndex + sliceOffset*i] += energyValue[i].s0 + energyValue[i].s1 + energyValue[i].s2 + energyValue[i].s3 + energyValue[i].s4 + energyValue[i].s5 + energyValue[i].s6 + energyValue[i].s7 + energyValue[i].s8 + energyValue[i].s9 + energyValue[i].sa + energyValue[i].sb + energyValue[i].sc + energyValue[i].sd + energyValue[i].se + energyValue[i].sf;
+            #endif
+        }
 }

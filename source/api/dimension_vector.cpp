@@ -102,6 +102,9 @@ void DimensionVector::modifyByValue(const size_t value, const ModifierAction mod
     case ModifierAction::Divide:
         divideByValue(value, modifierDimension);
         break;
+    case ModifierAction::DivideCeil:
+        divideCeilByValue(value, modifierDimension);
+        break;
     default:
         throw std::runtime_error("Unknown modifier action");
     }
@@ -222,6 +225,22 @@ void DimensionVector::divideByValue(const size_t value, const ModifierDimension 
     else
     {
         sizeZ /= value;
+    }
+}
+
+void DimensionVector::divideCeilByValue(const size_t value, const ModifierDimension modifierDimension)
+{
+    if (modifierDimension == ModifierDimension::X)
+    {
+        sizeX = (sizeX + value - 1) / value;
+    }
+    else if (modifierDimension == ModifierDimension::Y)
+    {
+        sizeY = (sizeY + value - 1) / value;
+    }
+    else
+    {
+        sizeZ = (sizeZ + value - 1) / value;
     }
 }
 

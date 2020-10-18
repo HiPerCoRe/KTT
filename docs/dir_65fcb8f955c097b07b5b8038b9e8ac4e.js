@@ -16,7 +16,6 @@ var dir_65fcb8f955c097b07b5b8038b9e8ac4e =
     [ "modifier_type.h", "modifier__type_8h.html", "modifier__type_8h" ],
     [ "print_format.h", "print__format_8h.html", "print__format_8h" ],
     [ "profiling_counter_type.h", "profiling__counter__type_8h.html", "profiling__counter__type_8h" ],
-    [ "search_method.h", "search__method_8h.html", "search__method_8h" ],
     [ "time_unit.h", "time__unit_8h.html", "time__unit_8h" ],
     [ "validation_method.h", "validation__method_8h.html", "validation__method_8h" ],
     [ "validation_mode.h", "validation__mode_8h.html", "validation__mode_8h" ]

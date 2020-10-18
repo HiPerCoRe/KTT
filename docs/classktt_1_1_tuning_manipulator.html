@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">1.2</span>
+   &#160;<span id="projectnumber">1.3</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -166,6 +166,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a76d26b9fde986eaed59dfb89fd94f9a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab88cabca2a372c0366d9b077ad812f02"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html#ab88cabca2a372c0366d9b077ad812f02">resizeArgumentVector</a> (const <a class="el" href="namespacektt.html#aea210ff848d810aa544c225033ac26cb">ArgumentId</a> id, const size_t newNumberOfElements, const bool preserveOldData)</td></tr>
 <tr class="separator:ab88cabca2a372c0366d9b077ad812f02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac82659aee2017abf4350dbfbb93fc699"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html#ac82659aee2017abf4350dbfbb93fc699">getUnifiedMemoryArgument</a> (const <a class="el" href="namespacektt.html#aea210ff848d810aa544c225033ac26cb">ArgumentId</a> id, <a class="el" href="namespacektt.html#af6d62b1dfe9fe1d7eb6e272e5ae29118">BufferMemory</a> &amp;memoryHandle)</td></tr>
+<tr class="separator:ac82659aee2017abf4350dbfbb93fc699"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8fddd6526a875a337193ab0d6b465567"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html#a8fddd6526a875a337193ab0d6b465567">changeKernelArguments</a> (const <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a> id, const std::vector&lt; <a class="el" href="namespacektt.html#aea210ff848d810aa544c225033ac26cb">ArgumentId</a> &gt; &amp;argumentIds)</td></tr>
 <tr class="separator:a8fddd6526a875a337193ab0d6b465567"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3435ca6b5420a370a0de4c324feb9903"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_tuning_manipulator.html#a3435ca6b5420a370a0de4c324feb9903">swapKernelArguments</a> (const <a class="el" href="namespacektt.html#a47b4d6f1468a13007692b8bd5dbe42ba">KernelId</a> id, const <a class="el" href="namespacektt.html#aea210ff848d810aa544c225033ac26cb">ArgumentId</a> argumentIdFirst, const <a class="el" href="namespacektt.html#aea210ff848d810aa544c225033ac26cb">ArgumentId</a> argumentIdSecond)</td></tr>
@@ -820,6 +822,41 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>KernelRunner</b></td
 <p>Retrieves number of remaining profiling runs that are needed to collect all the profiling counters for specified kernel. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">id</td><td>Id of kernel for which the number of remaining profiling runs will be retrieved. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac82659aee2017abf4350dbfbb93fc699"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac82659aee2017abf4350dbfbb93fc699">&#9670;&nbsp;</a></span>getUnifiedMemoryArgument()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ktt::TuningManipulator::getUnifiedMemoryArgument </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="namespacektt.html#aea210ff848d810aa544c225033ac26cb">ArgumentId</a>&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacektt.html#af6d62b1dfe9fe1d7eb6e272e5ae29118">BufferMemory</a> &amp;&#160;</td>
+          <td class="paramname"><em>memoryHandle</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Retrieves memory handle for specified unified memory argument. The handle can be used to manipulate argument memory on host side. Example usage: <a class="el" href="namespacektt.html#af6d62b1dfe9fe1d7eb6e272e5ae29118">ktt::BufferMemory</a> memory; getUnifiedMemoryArgument(..., memory); float* floatArray = static_cast&lt;float*&gt;(memory); </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">id</td><td>Id of vector argument whose memory handle will be retrieved. </td></tr>
+    <tr><td class="paramname">memoryHandle</td><td>Memory handle for specified argument. </td></tr>
   </table>
   </dd>
 </dl>

@@ -147,6 +147,11 @@ void TuningManipulator::resizeArgumentVector(const ArgumentId id, const size_t n
     manipulatorInterface->resizeArgumentVector(id, newNumberOfElements, preserveOldData);
 }
 
+void TuningManipulator::getUnifiedMemoryArgument(const ArgumentId id, BufferMemory& memoryHandle)
+{
+    manipulatorInterface->getUnifiedMemoryArgument(id, memoryHandle);
+}
+
 void TuningManipulator::changeKernelArguments(const KernelId id, const std::vector<ArgumentId>& argumentIds)
 {
     manipulatorInterface->changeKernelArguments(id, argumentIds);

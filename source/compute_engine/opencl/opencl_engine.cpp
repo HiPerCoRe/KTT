@@ -16,7 +16,7 @@ namespace ktt
 OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     platformIndex(platformIndex),
     deviceIndex(deviceIndex),
-    compilerOptions(std::string("")),
+    compilerOptions(""),
     globalSizeType(GlobalSizeType::OpenCL),
     globalSizeCorrection(false),
     kernelCacheFlag(true),
@@ -43,23 +43,63 @@ OpenCLEngine::OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex 
 
     cl_device_id device = devices.at(deviceIndex).getId();
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Initializing OpenCL context");
-    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), std::vector<cl_device_id>{device});
+    Logger::logDebug("Initializing OpenCL context");
+    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), device);
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Initializing OpenCL queues");
+    Logger::logDebug("Initializing OpenCL queues");
     for (uint32_t i = 0; i < queueCount; i++)
     {
         auto commandQueue = std::make_unique<OpenCLCommandQueue>(i, context->getContext(), device);
         commandQueues.push_back(std::move(commandQueue));
     }
 
-    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-    Logger::logDebug("Initializing GPA profiling context");
-    gpaProfilingContext = std::make_unique<GPAProfilingContext>(gpaInterface->getFunctionTable(), *commandQueues[getDefaultQueue()].get());
+    initializeProfiler();
+}
 
-    Logger::logDebug("Initializing default GPA profiling counters");
-    gpaProfilingContext->setCounters(getDefaultGPAProfilingCounters());
-    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+OpenCLEngine::OpenCLEngine(const UserInitializer& initializer) :
+    compilerOptions(""),
+    globalSizeType(GlobalSizeType::OpenCL),
+    globalSizeCorrection(false),
+    kernelCacheFlag(true),
+    kernelCacheCapacity(10),
+    persistentBufferFlag(true),
+    nextEventId(0)
+{
+    Logger::logDebug("Initializing OpenCL context");
+    context = std::make_unique<OpenCLContext>(initializer.getContext());
+
+    auto platforms = getOpenCLPlatforms();
+
+    for (size_t i = 0; i < platforms.size(); ++i)
+    {
+        if (context->getPlatform() == platforms[i].getId())
+        {
+            platformIndex = static_cast<PlatformIndex>(i);
+            break;
+        }
+    }
+
+    auto devices = getOpenCLDevices(platforms[platformIndex]);
+
+    for (size_t i = 0; i < devices.size(); ++i)
+    {
+        if (context->getDevice() == devices[i].getId())
+        {
+            deviceIndex = static_cast<DeviceIndex>(i);
+            break;
+        }
+    }
+
+    Logger::logDebug("Initializing OpenCL queues");
+    const auto& userQueues = initializer.getQueues();
+
+    for (size_t i = 0; i < userQueues.size(); ++i)
+    {
+        auto commandQueue = std::make_unique<OpenCLCommandQueue>(static_cast<QueueId>(i), context->getContext(), context->getDevice(), userQueues[i]);
+        commandQueues.push_back(std::move(commandQueue));
+    }
+
+    initializeProfiler();
 }
 
 KernelResult OpenCLEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -267,20 +307,18 @@ EventId OpenCLEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const 
         return UINT64_MAX;
     }
 
-    std::unique_ptr<OpenCLBuffer> buffer = nullptr;
-    EventId eventId = nextEventId;
+    Logger::logDebug("Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: " + std::to_string(nextEventId));
 
-    Logger::getLogger().log(LoggingLevel::Debug, "Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
-        + std::to_string(eventId));
+    const EventId eventId = nextEventId;
+    const ArgumentMemoryLocation location = kernelArgument.getMemoryLocation();
+    auto buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument);
 
-    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+    if (location == ArgumentMemoryLocation::Unified || location == ArgumentMemoryLocation::HostZeroCopy)
     {
-        buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
         bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
     }
     else
     {
-        buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
         auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
         buffer->uploadData(commandQueues.at(queue)->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
             profilingEvent->getEvent());
@@ -386,14 +424,25 @@ KernelArgument OpenCLEngine::downloadArgumentObject(const ArgumentId id, uint64_
     KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getElementSize(),
         buffer->getDataType(), buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
 
+    bool validEvent = true;
+
+    if (buffer->getMemoryLocation() == ArgumentMemoryLocation::Unified)
+    {
+        validEvent = false;
+    }
+
     EventId eventId = nextEventId;
-    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
+    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, validEvent);
 
     Logger::getLogger().log(LoggingLevel::Debug, "Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
     buffer->downloadData(commandQueues.at(getDefaultQueue())->getQueue(), argument.getData(), argument.getDataSizeInBytes(),
         profilingEvent->getEvent());
 
-    profilingEvent->setReleaseFlag();
+    if (validEvent)
+    {
+        profilingEvent->setReleaseFlag();
+    }
+    
     bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
     nextEventId++;
 
@@ -479,20 +528,19 @@ uint64_t OpenCLEngine::persistArgument(KernelArgument& kernelArgument, const boo
     
     if (flag && !bufferFound)
     {
-        std::unique_ptr<OpenCLBuffer> buffer = nullptr;
-        EventId eventId = nextEventId;
+        Logger::logDebug("Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
+            + std::to_string(nextEventId));
+        
+        const EventId eventId = nextEventId;
+        const ArgumentMemoryLocation location = kernelArgument.getMemoryLocation();
+        auto buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument);
 
-        Logger::getLogger().log(LoggingLevel::Debug, "Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId())
-            + ", event id: " + std::to_string(eventId));
-
-        if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
+        if (location == ArgumentMemoryLocation::Unified || location == ArgumentMemoryLocation::HostZeroCopy)
         {
-            buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, true);
             bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
         }
         else
         {
-            buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument, false);
             auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
             buffer->uploadData(commandQueues.at(getDefaultQueue())->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
                 profilingEvent->getEvent());
@@ -546,6 +594,29 @@ void OpenCLEngine::resizeArgument(const ArgumentId id, const size_t newSize, con
 
     Logger::getLogger().log(LoggingLevel::Debug, "Resizing buffer for argument " + std::to_string(id));
     buffer->resize(commandQueues.at(getDefaultQueue())->getQueue(), newSize, preserveData);
+}
+
+void OpenCLEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
+{
+    OpenCLBuffer* buffer = findBuffer(id);
+
+    if (buffer == nullptr)
+    {
+        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
+    }
+
+    handle = buffer->getRawBuffer();
+}
+
+void OpenCLEngine::addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument)
+{
+    if (findBuffer(kernelArgument.getId()) != nullptr)
+    {
+        throw std::runtime_error(std::string("User buffer with the following id already exists: ") + std::to_string(kernelArgument.getId()));
+    }
+
+    auto openclBuffer = std::make_unique<OpenCLBuffer>(buffer, kernelArgument);
+    userBuffers.insert(std::move(openclBuffer));
 }
 
 void OpenCLEngine::setPersistentBufferUsage(const bool flag)
@@ -793,9 +864,20 @@ void OpenCLEngine::setKernelProfilingCounters(const std::vector<std::string>& co
 
 std::unique_ptr<OpenCLProgram> OpenCLEngine::createAndBuildProgram(const std::string& source) const
 {
-    auto program = std::make_unique<OpenCLProgram>(source, context->getContext(), context->getDevices());
+    auto program = std::make_unique<OpenCLProgram>(source, context->getContext(), std::vector<cl_device_id>{context->getDevice()});
     program->build(compilerOptions);
     return program;
+}
+
+void OpenCLEngine::initializeProfiler()
+{
+    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    Logger::logDebug("Initializing GPA profiling context");
+    gpaProfilingContext = std::make_unique<GPAProfilingContext>(gpaInterface->getFunctionTable(), *commandQueues[getDefaultQueue()].get());
+
+    Logger::logDebug("Initializing default GPA profiling counters");
+    gpaProfilingContext->setCounters(getDefaultGPAProfilingCounters());
+    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 void OpenCLEngine::setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument)
@@ -998,6 +1080,14 @@ DeviceType OpenCLEngine::getDeviceType(const cl_device_type deviceType)
 
 OpenCLBuffer* OpenCLEngine::findBuffer(const ArgumentId id) const
 {
+    for (const auto& buffer : userBuffers)
+    {
+        if (buffer->getKernelArgumentId() == id)
+        {
+            return buffer.get();
+        }
+    }
+
     if (persistentBufferFlag)
     {
         for (const auto& buffer : persistentBuffers)
@@ -1022,8 +1112,15 @@ OpenCLBuffer* OpenCLEngine::findBuffer(const ArgumentId id) const
 
 void OpenCLEngine::setKernelArgumentVector(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const
 {
-    cl_mem clBuffer = buffer.getBuffer();
-    kernel.setKernelArgumentVector((void*)&clBuffer);
+    if (buffer.getMemoryLocation() == ArgumentMemoryLocation::Unified)
+    {
+        kernel.setKernelArgumentVectorSVM(buffer.getRawBuffer());
+    }
+    else
+    {
+        cl_mem clBuffer = buffer.getBuffer();
+        kernel.setKernelArgumentVector((void*)&clBuffer);
+    }
 }
 
 bool OpenCLEngine::loadBufferFromCache(const ArgumentId id, OpenCLKernel& kernel) const

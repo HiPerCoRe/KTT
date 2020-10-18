@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <api/user_initializer.h>
 #include <compute_engine/opencl/opencl_buffer.h>
 #include <compute_engine/opencl/opencl_command_queue.h>
 #include <compute_engine/opencl/opencl_context.h>
@@ -30,8 +31,8 @@ namespace ktt
 class OpenCLEngine : public ComputeEngine
 {
 public:
-    // Constructor
     explicit OpenCLEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount);
+    explicit OpenCLEngine(const UserInitializer& initializer);
 
     // Kernel handling methods
     KernelResult runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
@@ -68,6 +69,8 @@ public:
     uint64_t persistArgument(KernelArgument& kernelArgument, const bool flag) override;
     uint64_t getArgumentOperationDuration(const EventId id) const override;
     void resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) override;
+    void getArgumentHandle(const ArgumentId id, BufferMemory& handle) override;
+    void addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument) override;
     void setPersistentBufferUsage(const bool flag) override;
     void clearBuffer(const ArgumentId id) override;
     void clearBuffers() override;
@@ -105,6 +108,7 @@ private:
     std::vector<std::unique_ptr<OpenCLCommandQueue>> commandQueues;
     std::set<std::unique_ptr<OpenCLBuffer>> buffers;
     std::set<std::unique_ptr<OpenCLBuffer>> persistentBuffers;
+    std::set<std::unique_ptr<OpenCLBuffer>> userBuffers;
     std::map<std::pair<std::string, std::string>, std::pair<std::unique_ptr<OpenCLKernel>, std::unique_ptr<OpenCLProgram>>> kernelCache;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> kernelEvents;
     mutable std::map<EventId, std::unique_ptr<OpenCLEvent>> bufferEvents;
@@ -117,6 +121,7 @@ private:
     #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
     // Helper methods
+    void initializeProfiler();
     void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument);
     void setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers);
     EventId enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,

@@ -24,6 +24,12 @@
 #define RAPID_TEST 0
 #define USE_PROFILING 0
 
+// Those macros enlarge tuning space by adding denser values to tuning 
+// parameters (USE_DENSE_TUNPAR == 1), and also adding wider ranges of tuning
+// parameters (USE_WIDE_TUNPAR  == 1)
+#define USE_DENSE_TUNPAR 0
+#define USE_WIDE_TUNPAR 0
+
 int main(int argc, char** argv)
 {
     // Initialize platform and device index
@@ -128,12 +134,29 @@ int main(int argc, char** argv)
     ktt::KernelId referenceKernelId = tuner.addKernelFromFile(referenceKernelFile, "nbody_kernel", ndRangeDimensions, referenceWorkGroupDimensions);
 
     // Multiply workgroup size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
+    #if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {64, 128, 256, 512});
+    #else
+        #if USE_WIDE_TUNPAR == 0
+        tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {64, 80, 96, 112, 128,160, 192, 224, 256, 320, 384, 448, 512});
+        #else
+        tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {32, 64, 80, 96, 112, 128,160, 192, 224, 256, 320, 384, 448, 512, 640, 768, 894, 1024});
+        #endif
+    #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
+    #if USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", {1, 2, 4, 8});
+    #else
+    tuner.addParameter(kernelId, "OUTER_UNROLL_FACTOR", {1, 2, 4, 8, 16, 32});
+    #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR", ktt::ModifierAction::Divide);
+    #if USE_DENSE_TUNPAR == 0
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", {0, 1, 2, 4, 8, 16, 32});
     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", {0, 1, 2, 4, 8, 16, 32});
+    #else
+     tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR1", {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
+    tuner.addParameter(kernelId, "INNER_UNROLL_FACTOR2", {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
+    #endif
     tuner.addParameter(kernelId, "USE_SOA", {0, 1});
     tuner.addParameter(kernelId, "LOCAL_MEM", {0, 1});
 
