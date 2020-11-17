@@ -794,31 +794,7 @@ bool ConfigurationManager::checkParameterPairs(const std::vector<ParameterPair>&
 {
     for (const auto& constraint : constraints)
     {
-        const std::vector<std::string>& constraintNames = constraint.getParameterNames();
-        std::vector<size_t> constraintValues(constraintNames.size());
-
-        for (size_t i = 0; i < constraintNames.size(); i++)
-        {
-            bool valueFound = false;
-
-            for (const auto& parameterPair : pairs)
-            {
-                if (parameterPair.getName() == constraintNames.at(i))
-                {
-                    constraintValues.at(i) = parameterPair.getValue();
-                    valueFound = true;
-                    break;
-                }
-            }
-
-            if (!valueFound)
-            {
-                return true;
-            }
-        }
-
-        auto constraintFunction = constraint.getConstraintFunction();
-        if (!constraintFunction(constraintValues))
+        if (!constraint.isConfigurationValid(pairs))
         {
             return false;
         }
