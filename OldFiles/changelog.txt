@@ -1,0 +1,157 @@
+Version 1.3 (18/10/2020)
+* Added public API for configuration searchers
+* Added support for user-provided compute context, queues and buffers
+* Added support for unified memory buffers
+* Added divide ceil thread modifier
+* CUDA kernel GPU architecture version is now set based on utilized device
+* Fixed incorrect handling of zero-copy kernel arguments in OpenCL backend
+* Fixed incorrectly reported kernel duration with kernel profiling enabled on newer Nvidia GPUs
+* Fixed missing kernel compilation data when kernel profiling is enabled
+* Fixed CSV printing of kernel compilation data for certain kernel compositions
+* Added new examples for user-provided structures
+
+Version 1.2 (23/2/2020)
+* Added support for AMD GPA profiling API, kernel profiling on AMD GPUs is now supported
+* Added support for new CUPTI profiling API, kernel profiling on newer Nvidia GPUs is now supported
+* Profiling API version can now be specified in premake
+* Added support for kernel compilation data retrieval
+* Significantly improved performance of kernel output validation for large buffers
+* Added support for scalar kernel arguments in Vulkan backend
+* Improved stop condition API
+* Fixed bug where retrieving best computation result could return invalid result
+* Duplicit results are no longer printed when kernel profiling is enabled
+* Fixed memory leak in old CUPTI profiling API
+* Fixed incorrect tuner behavior after failing to launch a kernel when kernel profiling is enabled
+* Added more examples that support kernel profiling
+
+Version 1.1 (21/4/2019)
+* Introduced support for kernel profiling on Nvidia GPUs (currently for generations up to and including Volta),
+  kernel profiling allows collection of performance counters which can be utilized by searchers and stop conditions
+  to better predict performance of kernel configurations
+* Introduced experimental Vulkan support, tuning of GLSL compute shaders is supported
+* Added support for tuning parameter packs - sets of tuning parameters which can be tuned independently and thus reduce
+  the total number of tuning configurations
+* Stop conditions can now utilize additional information about specific kernel runs such as values of tuning parameters
+* Added an option to clear kernel tuning data (configurations, results, etc.)
+* Computation results for offline tuning methods can now be retrieved through API
+* Added API method for enabling output validation for specific workloads (offline tuning, online tuning, regular computation)
+* Improvements to MCMC searcher
+* API method for setting time unit now also affects tuner status messages
+* Improved performance of generating configurations when many constraints are utilized
+* Minor performance improvements by utilizing return by reference rather than by value in more getter methods
+* Additions and improvements to examples
+* Removed 32-bit library support
+
+Version 1.0 (20/7/2018)
+* First official release
+* Significantly improved logging system - added support for multiple logging levels and enhanced configuration possibilities
+* Added new debug level logging messages
+* Separated tuning parameter and thread modifier definition, a single modifier can now utilize multiple parameters
+* Thread modifiers and local memory modifiers can now be specified with a function, similar to constraints
+* Added buffer resize method to tuning manipulator API
+* Added new examples, updated old examples to utilize recently introduced KTT features
+
+Version 0.7 (19/5/2018)
+* Introduced stop condition API for offline tuning
+* Added support for persistent kernel arguments
+* Added global kernel cache, its capacity can be controlled through API
+* Significant improvements to online tuning capabilities and performance
+* Improvements to asynchronous functionality in tuning manipulator
+* Online tuning and kernel running methods now return information about computation status and duration
+* Fixed bug in device synchronization method in tuning manipulator
+* Fixed memory leak in CUDA backend
+* Fixed incorrect handling of invalid kernel results in some situations
+* Added new examples
+* Improvements to sort and reduction examples
+
+Version 0.6 (19/2/2018)
+* Added support for multiple compute queues and asynchronous operations
+* Added support for online autotuning - kernel tuning combined with regular kernel running
+* Added support for kernel arguments with user-defined data types
+* Users now have greater control over kernel argument handling, tuner run modes were deprecated as a result
+* Validated kernel arguments can now have user-defined comparator
+* Added MCMC searcher
+* Added local memory argument modifiers which work similarly to kernel thread size modifiers
+* Added new buffer handling methods to tuning manipulator API
+* Added support for floating-point kernel parameters
+* Added method for retrieving kernel source code for specified kernel configuration
+* Implemented caching of compiled kernels when using tuning manipulator
+* Fixed several bugs in kernel composition methods
+* Fixed several rare bugs which could occur while using tuning manipulator
+* Added tutorials and several new examples
+* Fixed paths to kernel files in examples on Linux
+* Significantly improved documentation and added FAQ
+* Added macro definitions for KTT version
+
+Version 0.5 (27/10/2017)
+* Added support for kernel compositions
+* Added two different tuner modes - tuning mode and low overhead computation mode
+* Added support for storing buffers in host memory, including support for zero-copy buffers when computation mode is used
+* Kernel arguments can now be retrieved through API by utilizing new method for running kernels
+* Added an option to automatically ensure that global size is multiple of local size
+* Best kernel configuration can now be retrieved through API
+* Added an option to switch between CUDA and OpenCL global size notation
+* Improvements to tuning manipulator API
+* Usability improvements to dimension vector
+* Tweaks to CUDA backend
+* Minor improvements to result printer
+* Improved examples and documentation
+
+Version 0.4 (19/6/2017)
+* Added support for CUDA API
+* Significantly improved tuning manipulator API
+* Simplified baseline tuning manipulator and reference class usage
+* Improved overall tuner performance
+* Added support for uploading arguments into local (shared) memory
+* Configurations with local size larger than maximum of the current device are now automatically excluded from computation
+* Fixed memory leak in OpenCL back-end
+* Fixed several bugs in tuning manipulator API
+* Fixed crash in annealing searcher
+* Added an option to print results from failed kernel runs
+* Improved tuner info messages
+* Improved CSV printing method
+* KTT is now compiled as dynamic (shared) library
+* Added build customization options to premake script
+* Additions and improvements to examples
+* Improved documentation
+
+Version 0.3.1 (15/5/2017)
+* Added support for new argument data types (8, 16, 32 and 64 bits long)
+* Added support for time unit specification for result printing
+* Added new utility methods to tuning manipulator API
+* Improvements to tuning manipulator
+* Fixed bugs in tuning manipulator API
+* Read-only arguments are now cached in OpenCL backend
+* Improved documentation
+
+Version 0.3 (8/5/2017)
+* Added tuning manipulator interface
+* Added support for validating multiple arguments with reference class
+* Added support for short argument data type
+* Added method for printing content of kernel arguments to file
+* Added method for specifying location for info messages printing
+* Additions and improvements to documentation
+* Improvements to samples
+* Fixed bug in CSV printing method
+* Other minor bug fixes and improvements
+
+Version 0.2 (10/4/2017)
+* Added methods for result printing
+* Added methods for kernel output validation
+* Implemented annealing searcher
+* Fixed build under Linux
+* Additions and improvements to samples
+* Added API documentation
+
+Version 0.1 (2/4/2017)
+* First beta release
+* Kernel tuning method is now available in API
+
+Version 0.0.3 (13/3/2017)
+* OpenCL platform and device information retrieval methods are now available in API
+
+Version 0.0.2 (2/2/2017)
+* Kernel handling methods are now available in API
+
+Version 0.0.1 (18/1/2017)
+* Initial project release on Github
