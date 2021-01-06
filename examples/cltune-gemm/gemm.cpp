@@ -25,7 +25,7 @@
 
 #define RAPID_TEST 1
 #define USE_PROFILING 0
-#define USE_REDUCED_SET 1 /* reduced tuning parameters set, taken from CLTune */
+#define USE_REDUCED_SET 0 /* reduced tuning parameters set, taken from CLTune */
 
 #define USE_PROFILE_SEARCHER 0
 #define TUNE_SEC 300
@@ -219,7 +219,8 @@ int main(int argc, char** argv)
 #endif
 
     // Launch kernel tuning
-    //tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(10))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(30)));
+    //tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(10))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(30))); //XXX tuneKernel does not work with current implementation of profile-based searcher
+    //XXX in current implementation of profile-based searcher, the iterative profiling has to be performed
     std::vector<float> oneElement(1);
     ktt::OutputDescriptor output(matCId, (void*)oneElement.data(), 1*sizeof(float));
     int confTested = 0;

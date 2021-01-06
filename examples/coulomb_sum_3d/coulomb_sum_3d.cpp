@@ -20,14 +20,17 @@
     const auto computeAPI = ktt::ComputeAPI::OpenCL;
 #endif
 
-#define RAPID_TEST 0
-#define USE_PROFILING 1
+#define RAPID_TEST 1
+#define USE_PROFILING 0
 
 // Those macros enlarge tuning space by adding denser values to tuning 
 // parameters (USE_DENSE_TUNPAR == 1), and also adding wider ranges of tuning
 // parameters (USE_WIDE_TUNPAR  == 1)
 #define USE_DENSE_TUNPAR 0
 #define USE_WIDE_TUNPAR 0
+
+#define USE_PROFILE_SEARCHER 0
+#define TUNE_SEC 30
 
 int main(int argc, char** argv)
 {
@@ -56,11 +59,7 @@ int main(int argc, char** argv)
 
     // Declare kernel parameters
     const int gridSize = 256;
-#if USE_PROFILING == 0
-    const int atoms = 4000;
-#else
-    const int atoms = 64; /* faster execution of slowly profiled kernel */
-#endif
+    const int atoms = /*4096*/256;
     const ktt::DimensionVector referenceNdRangeDimensions(gridSize/16, gridSize/16, gridSize);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
     const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
@@ -194,9 +193,55 @@ int main(int argc, char** argv)
     tuner.setValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
 #endif
 
-    tuner.tuneKernel(kernelId);
+#if USE_PROFILE_SEARCHER == 1
+    unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
+    unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
+    auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/1070-coulomb", 6.1);
+    auto searcherRaw = searcher.get();
+    tuner.setSearcher(kernelId, std::move(searcher));
+#else
+    tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
+#endif
+
+    // Launch kernel tuning
+    //tuner.tuneKernel(kernelId); //XXX tuneKernel does not work with current implementation of profile-based searcher
+    //XXX in current implementation of profile-based searcher, the iterative profiling has to be performed
+    std::vector<float> oneElement(1);
+    ktt::OutputDescriptor output(gridId, (void*)oneElement.data(), 1*sizeof(float));
+    int confTested = 0;
+    int kernTested = 0;
+
+    // loop for desired amount of time
+    clock_t start = time(NULL);
+    while (time(NULL) - start < TUNE_SEC) {
+        // turn on/off profiling and gather statistics
+#if USE_PROFILE_SEARCHER == 1
+        if (searcherRaw->shouldProfile()) {
+            tuner.setKernelProfiling(true);
+            kernTested++;
+        }
+        else {
+            tuner.setKernelProfiling(false);
+            confTested++;
+            kernTested++;
+        }
+#else
+        confTested++;
+        kernTested++;
+#endif
+        // tune kernel
+        tuner.tuneKernelByStep(kernelId, {output});
+
+        // dump time and best kernel
+        ktt::ComputationResult bestConf = tuner.getBestComputationResult(kernelId);
+        std::cout << "Execution after " << time(NULL) - start << " second(s), tested " << confTested << " configurations, best kernel " << bestConf.getDuration() << " ns" << std::endl;
+    }
+
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, "coulomb_sum_3d_output.csv", ktt::PrintFormat::CSV);
 
+    std::cout << "Number of configurations tested: " << confTested << ", required kernel tests: " << kernTested << std::endl;
+
     return 0;
 }
+

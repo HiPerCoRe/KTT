@@ -32,7 +32,7 @@
 #define USE_DENSE_TUNPAR 0
 #define USE_WIDE_TUNPAR 0
 
-#define USE_PROFILE_SEARCHER 1
+#define USE_PROFILE_SEARCHER 0
 #define TUNE_SEC 300
 
 // Settings (synchronise these with "conv.cpp", "conv.cl" and "conv_reference.cl")
@@ -75,13 +75,8 @@ int main(int argc, char** argv)
     }
 
     // Declare data variables
-    #if USE_PROFILING == 0
     const uint32_t kSizeX = 4096; // Matrix dimension X
     const uint32_t kSizeY = 4096; // Matrix dimension Y
-    #else
-    const uint32_t kSizeX = 2048; // Matrix dimension X
-    const uint32_t kSizeY = 2048; // Matrix dimension Y
-    #endif
 
     const ktt::DimensionVector ndRangeDimensions(kSizeX, kSizeY);
     const ktt::DimensionVector workGroupDimensions;
@@ -233,11 +228,12 @@ int main(int argc, char** argv)
     auto searcherRaw = searcher.get();
     tuner.setSearcher(kernelId, std::move(searcher));
 #else
-    tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
+    //tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
 #endif
 
     // Launch kernel tuning
-    //tuner.tuneKernel(kernelId);
+    //tuner.tuneKernel(kernelId); //XXX tuneKernel does not work with current implementation of profile-based searcher
+    //XXX in current implementation of profile-based searcher, the iterative profiling has to be performed
     std::vector<float> oneElement(1);
     ktt::OutputDescriptor output(matBId, (void*)oneElement.data(), 1*sizeof(float));
     int confTested = 0;
