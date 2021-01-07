@@ -177,7 +177,7 @@ int main(int argc, char** argv)
         tuner.addParameter(kernelId, "VECTOR_SIZE", {1});
     }
 
-    auto lt = [](const std::vector<size_t>& vector) {return vector.at(0) < vector.at(1);};
+    auto lt = [](const std::vector<size_t>& vector) {return vector.at(0) <= vector.at(1);};
     tuner.addConstraint(kernelId, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"}, lt);
     auto vec = [](const std::vector<size_t>& vector) {return vector.at(0) || vector.at(1) == 1;};
     tuner.addConstraint(kernelId, {"USE_SOA", "VECTOR_SIZE"}, vec);
