@@ -4,39 +4,45 @@
 namespace ktt
 {
 
-DeviceInfo::DeviceInfo(const DeviceIndex device, const std::string& name) :
-    id(device),
-    name(name)
+DeviceInfo::DeviceInfo(const DeviceIndex index, const std::string& name) :
+    m_Index(index),
+    m_Name(name),
+    m_DeviceType(DeviceType::CPU),
+    m_GlobalMemorySize(0),
+    m_LocalMemorySize(0),
+    m_MaxConstantBufferSize(0),
+    m_MaxWorkGroupSize(0),
+    m_MaxComputeUnits(0)
 {}
 
-DeviceIndex DeviceInfo::getId() const
+DeviceIndex DeviceInfo::GetIndex() const
 {
-    return id;
+    return m_Index;
 }
 
-const std::string& DeviceInfo::getName() const
+const std::string& DeviceInfo::GetName() const
 {
-    return name;
+    return m_Name;
 }
 
-const std::string& DeviceInfo::getVendor() const
+const std::string& DeviceInfo::GetVendor() const
 {
-    return vendor;
+    return m_Vendor;
 }
 
-const std::string& DeviceInfo::getExtensions() const
+const std::string& DeviceInfo::GetExtensions() const
 {
-    return extensions;
+    return m_Extensions;
 }
 
-DeviceType DeviceInfo::getDeviceType() const
+DeviceType DeviceInfo::GetDeviceType() const
 {
-    return deviceType;
+    return m_DeviceType;
 }
 
-std::string DeviceInfo::getDeviceTypeAsString() const
+std::string DeviceInfo::GetDeviceTypeString() const
 {
-    switch (deviceType)
+    switch (m_DeviceType)
     {
     case ktt::DeviceType::CPU:
         return "CPU";
@@ -50,84 +56,87 @@ std::string DeviceInfo::getDeviceTypeAsString() const
     }
 }
 
-uint64_t DeviceInfo::getGlobalMemorySize() const
+uint64_t DeviceInfo::GetGlobalMemorySize() const
 {
-    return globalMemorySize;
+    return m_GlobalMemorySize;
 }
 
-uint64_t DeviceInfo::getLocalMemorySize() const
+uint64_t DeviceInfo::GetLocalMemorySize() const
 {
-    return localMemorySize;
+    return m_LocalMemorySize;
 }
 
-uint64_t DeviceInfo::getMaxConstantBufferSize() const
+uint64_t DeviceInfo::GetMaxConstantBufferSize() const
 {
-    return maxConstantBufferSize;
+    return m_MaxConstantBufferSize;
 }
 
-uint32_t DeviceInfo::getMaxComputeUnits() const
+uint64_t DeviceInfo::GetMaxWorkGroupSize() const
 {
-    return maxComputeUnits;
+    return m_MaxWorkGroupSize;
 }
 
-size_t DeviceInfo::getMaxWorkGroupSize() const
+uint32_t DeviceInfo::GetMaxComputeUnits() const
 {
-    return maxWorkGroupSize;
+    return m_MaxComputeUnits;
 }
 
-void DeviceInfo::setVendor(const std::string& vendor)
+std::string DeviceInfo::GetString() const
 {
-    this->vendor = vendor;
+    std::string result;
+
+    result += "Information about device with index: " + std::to_string(m_Index) + "\n";
+    result += "Name: " + m_Name + "\n";
+    result += "Vendor: " + m_Vendor + "\n";
+    result += "Device type: " + GetDeviceTypeString() + "\n";
+    result += "Global memory size: " + std::to_string(m_GlobalMemorySize) + "\n";
+    result += "Local memory size: " + std::to_string(m_LocalMemorySize) + "\n";
+    result += "Maximum constant buffer size: " + std::to_string(m_MaxConstantBufferSize) + "\n";
+    result += "Maximum work-group size: " + std::to_string(m_MaxWorkGroupSize) + "\n";
+    result += "Maximum parallel compute units: " + std::to_string(m_MaxComputeUnits) + "\n";
+    result += "Extensions: " + m_Extensions + "\n";
+
+    return result;
 }
 
-void DeviceInfo::setExtensions(const std::string& extensions)
+void DeviceInfo::SetVendor(const std::string& vendor)
 {
-    this->extensions = extensions;
+    m_Vendor = vendor;
 }
 
-void DeviceInfo::setDeviceType(const DeviceType deviceType)
+void DeviceInfo::SetExtensions(const std::string& extensions)
 {
-    this->deviceType = deviceType;
+    m_Extensions = extensions;
 }
 
-void DeviceInfo::setGlobalMemorySize(const uint64_t globalMemorySize)
+void DeviceInfo::SetDeviceType(const DeviceType deviceType)
 {
-    this->globalMemorySize = globalMemorySize;
+    m_DeviceType = deviceType;
 }
 
-void DeviceInfo::setLocalMemorySize(const uint64_t localMemorySize)
+void DeviceInfo::SetGlobalMemorySize(const uint64_t globalMemorySize)
 {
-    this->localMemorySize = localMemorySize;
+    m_GlobalMemorySize = globalMemorySize;
 }
 
-void DeviceInfo::setMaxConstantBufferSize(const uint64_t maxConstantBufferSize)
+void DeviceInfo::SetLocalMemorySize(const uint64_t localMemorySize)
 {
-    this->maxConstantBufferSize = maxConstantBufferSize;
+    m_LocalMemorySize = localMemorySize;
 }
 
-void DeviceInfo::setMaxComputeUnits(const uint32_t maxComputeUnits)
+void DeviceInfo::SetMaxConstantBufferSize(const uint64_t maxConstantBufferSize)
 {
-    this->maxComputeUnits = maxComputeUnits;
+    m_MaxConstantBufferSize = maxConstantBufferSize;
 }
 
-void DeviceInfo::setMaxWorkGroupSize(const size_t maxWorkGroupSize)
+void DeviceInfo::SetMaxWorkGroupSize(const uint64_t maxWorkGroupSize)
 {
-    this->maxWorkGroupSize = maxWorkGroupSize;
+    m_MaxWorkGroupSize = maxWorkGroupSize;
 }
 
-std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo)
+void DeviceInfo::SetMaxComputeUnits(const uint32_t maxComputeUnits)
 {
-    outputTarget << "Printing detailed info for device with index: " << deviceInfo.getId() << std::endl;
-    outputTarget << "Name: " << deviceInfo.getName() << std::endl;
-    outputTarget << "Vendor: " << deviceInfo.getVendor() << std::endl;
-    outputTarget << "Device type: " << deviceInfo.getDeviceTypeAsString() << std::endl;
-    outputTarget << "Global memory size: " << deviceInfo.getGlobalMemorySize() << std::endl;
-    outputTarget << "Local memory size: " << deviceInfo.getLocalMemorySize() << std::endl;
-    outputTarget << "Maximum constant buffer size: " << deviceInfo.getMaxConstantBufferSize() << std::endl;
-    outputTarget << "Maximum parallel compute units: " << deviceInfo.getMaxComputeUnits() << std::endl;
-    outputTarget << "Maximum work-group size: " << deviceInfo.getMaxWorkGroupSize() << std::endl;
-    outputTarget << "Extensions: " << deviceInfo.getExtensions() << std::endl;
-    return outputTarget;
+    m_MaxComputeUnits = maxComputeUnits;
 }
 
 } // namespace ktt

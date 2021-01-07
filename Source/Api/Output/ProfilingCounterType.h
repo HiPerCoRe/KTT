@@ -1,4 +1,4 @@
-/** @file profiling_counter_type.h
+/** @file ProfilingCounterType.h
   * Definition of enum which specifies data type of a profiling counter.
   */
 #pragma once
@@ -31,8 +31,8 @@ enum class ProfilingCounterType
       */
     Throughput,
 
-    /** Profiling counter is an unsigned 32-bit integer with a range of values between 0 and 10 (0 corresponds to minimum utilization level,
-      * 10 to maximum utilization level).
+    /** Profiling counter is an unsigned 64-bit integer with a range of values between 0 and 10 (0 corresponds to minimum
+      * utilization level, 10 to maximum utilization level).
       */
     UtilizationLevel
 };

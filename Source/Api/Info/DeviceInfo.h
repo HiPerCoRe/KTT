@@ -4,7 +4,6 @@
 #pragma once
 
 #include <cstdint>
-#include <iostream>
 #include <string>
 
 #include <Api/Info/DeviceType.h>
@@ -20,146 +19,144 @@ namespace ktt
 class KTT_API DeviceInfo
 {
 public:
-    /** @fn explicit DeviceInfo(const DeviceIndex device, const std::string& name)
+    /** @fn explicit DeviceInfo(const DeviceIndex index, const std::string& name)
       * Constructor which creates new device info object.
       * @param device Index of device assigned by KTT framework.
       * @param name Name of device retrieved from compute API.
       */
-    explicit DeviceInfo(const DeviceIndex device, const std::string& name);
+    explicit DeviceInfo(const DeviceIndex index, const std::string& name);
 
-    /** @fn DeviceIndex getId() const
+    /** @fn DeviceIndex GetIndex() const
       * Getter for index of device assigned by KTT framework.
       * @return Index of device assigned by KTT framework.
       */
-    DeviceIndex getId() const;
+    DeviceIndex GetIndex() const;
 
-    /** @fn const std::string& getName() const
+    /** @fn const std::string& GetName() const
       * Getter for name of device retrieved from compute API.
       * @return Name of device retrieved from compute API.
       */
-    const std::string& getName() const;
+    const std::string& GetName() const;
 
-    /** @fn const std::string& getVendor() const
+    /** @fn const std::string& GetVendor() const
       * Getter for name of device vendor retrieved from compute API.
       * @return Name of device vendor retrieved from compute API.
       */
-    const std::string& getVendor() const;
+    const std::string& GetVendor() const;
 
-    /** @fn const std::string& getExtensions() const
+    /** @fn const std::string& GetExtensions() const
       * Getter for list of supported device extensions retrieved from compute API.
       * @return List of supported device extensions retrieved from compute API.
       */
-    const std::string& getExtensions() const;
+    const std::string& GetExtensions() const;
 
-    /** @fn DeviceType getDeviceType() const
+    /** @fn DeviceType GetDeviceType() const
       * Getter for type of device. See ::DeviceType for more information.
       * @return Type of device.
       */
-    DeviceType getDeviceType() const;
+    DeviceType GetDeviceType() const;
 
-    /** @fn std::string getDeviceTypeAsString() const
+    /** @fn std::string GetDeviceTypeString() const
       * Getter for type of device converted to string. See ::DeviceType for more information.
       * @return Type of device converted to string.
       */
-    std::string getDeviceTypeAsString() const;
+    std::string GetDeviceTypeString() const;
 
-    /** @fn uint64_t getGlobalMemorySize() const
+    /** @fn uint64_t GetGlobalMemorySize() const
       * Getter for global memory size of device retrieved from compute API.
       * @return Global memory size of device retrieved from compute API.
       */
-    uint64_t getGlobalMemorySize() const;
+    uint64_t GetGlobalMemorySize() const;
 
-    /** @fn uint64_t getLocalMemorySize() const
+    /** @fn uint64_t GetLocalMemorySize() const
       * Getter for local memory (shared memory in CUDA) size of device retrieved from compute API.
       * @return Local memory size of device retrieved from compute API.
       */
-    uint64_t getLocalMemorySize() const;
+    uint64_t GetLocalMemorySize() const;
 
-    /** @fn uint64_t getMaxConstantBufferSize() const
+    /** @fn uint64_t GetMaxConstantBufferSize() const
       * Getter for constant memory size of device retrieved from compute API.
       * @return Constant memory size of device retrieved from compute API.
       */
-    uint64_t getMaxConstantBufferSize() const;
+    uint64_t GetMaxConstantBufferSize() const;
 
-    /** @fn uint32_t getMaxComputeUnits() const
-      * Getter for maximum parallel compute units (multiprocessors in CUDA) count of device retrieved from compute API.
-      * @return Maximum parallel compute units count of device retrieved from compute API.
-      */
-    uint32_t getMaxComputeUnits() const;
-
-    /** @fn size_t getMaxWorkGroupSize() const
+    /** @fn uint64_t GetMaxWorkGroupSize() const
       * Getter for maximum work-group (thread block in CUDA) size of device retrieved from compute API.
       * @return Maximum work-group size of device retrieved from compute API.
       */
-    size_t getMaxWorkGroupSize() const;
+    uint64_t GetMaxWorkGroupSize() const;
 
-    /** @fn void setVendor(const std::string& vendor)
+    /** @fn uint32_t GetMaxComputeUnits() const
+      * Getter for maximum parallel compute units (multiprocessors in CUDA) count of device retrieved from compute API.
+      * @return Maximum parallel compute units count of device retrieved from compute API.
+      */
+    uint32_t GetMaxComputeUnits() const;
+
+    /** @fn std::string GetString() const
+      * Converts device info to string.
+      * @return String containing information about the device.
+      */
+    std::string GetString() const;
+
+    /** @fn void SetVendor(const std::string& vendor)
       * Setter for name of device vendor.
       * @param vendor Name of device vendor.
       */
-    void setVendor(const std::string& vendor);
+    void SetVendor(const std::string& vendor);
 
-    /** @fn void setExtensions(const std::string& extensions)
+    /** @fn void SetExtensions(const std::string& extensions)
       * Setter for list of supported device extensions.
       * @param extensions List of supported device extensions.
       */
-    void setExtensions(const std::string& extensions);
+    void SetExtensions(const std::string& extensions);
 
-    /** @fn void setDeviceType(const DeviceType deviceType)
+    /** @fn void SetDeviceType(const DeviceType deviceType)
       * Setter for type of device.
       * @param deviceType Type of device.
       */
-    void setDeviceType(const DeviceType deviceType);
+    void SetDeviceType(const DeviceType deviceType);
 
-    /** @fn void setGlobalMemorySize(const uint64_t globalMemorySize)
+    /** @fn void SetGlobalMemorySize(const uint64_t globalMemorySize)
       * Setter for global memory size of device.
       * @param globalMemorySize Global memory size of device.
       */
-    void setGlobalMemorySize(const uint64_t globalMemorySize);
+    void SetGlobalMemorySize(const uint64_t globalMemorySize);
 
-    /** @fn void setLocalMemorySize(const uint64_t localMemorySize)
+    /** @fn void SetLocalMemorySize(const uint64_t localMemorySize)
       * Setter for local memory size of device.
       * @param localMemorySize Local memory size of device.
       */
-    void setLocalMemorySize(const uint64_t localMemorySize);
+    void SetLocalMemorySize(const uint64_t localMemorySize);
 
-    /** @fn void setMaxConstantBufferSize(const uint64_t maxConstantBufferSize)
+    /** @fn void SetMaxConstantBufferSize(const uint64_t maxConstantBufferSize)
       * Setter for constant memory size of device.
       * @param maxConstantBufferSize Constant memory size of device.
       */
-    void setMaxConstantBufferSize(const uint64_t maxConstantBufferSize);
+    void SetMaxConstantBufferSize(const uint64_t maxConstantBufferSize);
 
-    /** @fn void setMaxComputeUnits(const uint32_t maxComputeUnits)
-      * Setter for maximum compute units count of device.
-      * @param maxComputeUnits Maximum compute units count of device.
-      */
-    void setMaxComputeUnits(const uint32_t maxComputeUnits);
-
-    /** @fn void setMaxWorkGroupSize(const size_t maxWorkGroupSize)
+    /** @fn void SetMaxWorkGroupSize(const uint64_t maxWorkGroupSize)
       * Setter for maximum work-group size of device.
       * @param maxWorkGroupSize Maximum work-group size of device.
       */
-    void setMaxWorkGroupSize(const size_t maxWorkGroupSize);
+    void SetMaxWorkGroupSize(const uint64_t maxWorkGroupSize);
+
+    /** @fn void SetMaxComputeUnits(const uint32_t maxComputeUnits)
+      * Setter for maximum compute units count of device.
+      * @param maxComputeUnits Maximum compute units count of device.
+      */
+    void SetMaxComputeUnits(const uint32_t maxComputeUnits);
 
 private:
-    DeviceIndex id;
-    std::string name;
-    std::string vendor;
-    std::string extensions;
-    DeviceType deviceType;
-    uint64_t globalMemorySize;
-    uint64_t localMemorySize;
-    uint64_t maxConstantBufferSize;
-    uint32_t maxComputeUnits;
-    size_t maxWorkGroupSize;
+    DeviceIndex m_Index;
+    std::string m_Name;
+    std::string m_Vendor;
+    std::string m_Extensions;
+    DeviceType m_DeviceType;
+    uint64_t m_GlobalMemorySize;
+    uint64_t m_LocalMemorySize;
+    uint64_t m_MaxConstantBufferSize;
+    uint64_t m_MaxWorkGroupSize;
+    uint32_t m_MaxComputeUnits;
 };
-
-/** @fn std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo)
-  * Output operator for device info class.
-  * @param outputTarget Location where information about device will be printed.
-  * @param deviceInfo Device info object that will be printed.
-  * @return Output target to support chaining of output operations.
-  */
-KTT_API std::ostream& operator<<(std::ostream& outputTarget, const DeviceInfo& deviceInfo);
 
 } // namespace ktt

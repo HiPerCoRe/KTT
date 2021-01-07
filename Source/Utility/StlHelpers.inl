@@ -7,18 +7,27 @@
 namespace ktt
 {
 
-template <typename T>
-bool ContainsElement(const std::vector<T>& vector, const T& element)
+template <typename T, typename Filter>
+bool ContainsElementIf(const std::vector<T>& vector, const Filter& filter)
 {
     for (const auto& currentElement : vector)
     {
-        if (currentElement == element)
+        if (filter(currentElement))
         {
             return true;
         }
     }
 
     return false;
+}
+
+template <typename T>
+bool ContainsElement(const std::vector<T>& vector, const T& element)
+{
+    return ContainsElementIf(vector, [&element](const auto& currentElement)
+    {
+        return currentElement == element;
+    });
 }
 
 template <typename T>

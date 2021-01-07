@@ -3,59 +3,62 @@
 namespace ktt
 {
 
-PlatformInfo::PlatformInfo(const PlatformIndex platform, const std::string& name) :
-    id(platform),
-    name(name)
+PlatformInfo::PlatformInfo(const PlatformIndex index, const std::string& name) :
+    m_Index(index),
+    m_Name(name)
 {}
 
-PlatformIndex PlatformInfo::getId() const
+PlatformIndex PlatformInfo::GetIndex() const
 {
-    return id;
+    return m_Index;
 }
 
-const std::string& PlatformInfo::getName() const
+const std::string& PlatformInfo::GetName() const
 {
-    return name;
+    return m_Name;
 }
 
-const std::string& PlatformInfo::getVendor() const
+const std::string& PlatformInfo::GetVendor() const
 {
-    return vendor;
+    return m_Vendor;
 }
 
-const std::string& PlatformInfo::getVersion() const
+const std::string& PlatformInfo::GetVersion() const
 {
-    return version;
+    return m_Version;
 }
 
-const std::string& PlatformInfo::getExtensions() const
+const std::string& PlatformInfo::GetExtensions() const
 {
-    return extensions;
+    return m_Extensions;
 }
 
-void PlatformInfo::setVendor(const std::string& vendor)
+std::string PlatformInfo::GetString() const
 {
-    this->vendor = vendor;
+    std::string result;
+
+    result += "Information about platform with index: " + std::to_string(m_Index) + "\n";
+    result += "Name: " + m_Name + "\n";
+    result += "Vendor: " + m_Vendor + "\n";
+    result += "Compute API version: " + m_Version + "\n";
+    result += "Extensions: " + m_Extensions + "\n";
+
+    return result;
 }
 
-void PlatformInfo::setVersion(const std::string& version)
+void PlatformInfo::SetVendor(const std::string& vendor)
 {
-    this->version = version;
+    m_Vendor = vendor;
 }
 
-void PlatformInfo::setExtensions(const std::string& extensions)
+void PlatformInfo::SetVersion(const std::string& version)
 {
-    this->extensions = extensions;
+    m_Version = version;
 }
 
-std::ostream& operator<<(std::ostream& outputTarget, const PlatformInfo& platformInfo)
+void PlatformInfo::SetExtensions(const std::string& extensions)
 {
-    outputTarget << "Printing detailed info for platform with index: " << platformInfo.getId() << std::endl;
-    outputTarget << "Name: " << platformInfo.getName() << std::endl;
-    outputTarget << "Vendor: " << platformInfo.getVendor() << std::endl;
-    outputTarget << "Compute API version: " << platformInfo.getVersion() << std::endl;
-    outputTarget << "Extensions: " << platformInfo.getExtensions() << std::endl;
-    return outputTarget;
+    m_Extensions = extensions;
 }
 
 } // namespace ktt

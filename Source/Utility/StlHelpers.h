@@ -7,6 +7,9 @@
 namespace ktt
 {
 
+template <typename T, typename Filter>
+bool ContainsElementIf(const std::vector<T>& vector, const Filter& filter);
+
 template <typename T>
 bool ContainsElement(const std::vector<T>& vector, const T& element);
 

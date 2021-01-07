@@ -41,7 +41,7 @@ public:
     const T* GetDataWithType() const;
 
     template <typename T>
-    const uint64_t GetNumberOfElementsWithType() const;
+    uint64_t GetNumberOfElementsWithType() const;
 
 private:
     ArgumentId m_Id;

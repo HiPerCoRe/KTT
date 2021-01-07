@@ -3,7 +3,6 @@
   */
 #pragma once
 
-#include <iostream>
 #include <string>
 
 #include <KttPlatform.h>
@@ -18,75 +17,73 @@ namespace ktt
 class KTT_API PlatformInfo
 {
 public:
-    /** @fn explicit PlatformInfo(const PlatformIndex platform, const std::string& name)
+    /** @fn explicit PlatformInfo(const PlatformIndex index, const std::string& name)
       * Constructor, which creates new platform info object.
-      * @param platform Index of platform assigned by KTT framework.
+      * @param index Index of platform assigned by KTT framework.
       * @param name Name of platform retrieved from compute API.
       */
-    explicit PlatformInfo(const PlatformIndex platform, const std::string& name);
+    explicit PlatformInfo(const PlatformIndex index, const std::string& name);
 
-    /** @fn PlatformIndex getId() const
+    /** @fn PlatformIndex GetIndex() const
       * Getter for index of platform assigned by KTT framework.
       * @return Index of platform assigned by KTT framework.
       */
-    PlatformIndex getId() const;
+    PlatformIndex GetIndex() const;
 
-    /** @fn const std::string& getName() const
+    /** @fn const std::string& GetName() const
       * Getter for name of platform retrieved from compute API.
       * @return Name of platform retrieved from compute API.
       */
-    const std::string& getName() const;
+    const std::string& GetName() const;
 
-    /** @fn const std::string& getVendor() const
+    /** @fn const std::string& GetVendor() const
       * Getter for name of platform vendor retrieved from compute API.
       * @return Name of platform vendor retrieved from compute API.
       */
-    const std::string& getVendor() const;
+    const std::string& GetVendor() const;
 
-    /** @fn const std::string& getVersion() const
+    /** @fn const std::string& GetVersion() const
       * Getter for platform version retrieved from compute API.
       * @return Platform version retrieved from compute API.
       */
-    const std::string& getVersion() const;
+    const std::string& GetVersion() const;
 
-    /** @fn const std::string& getExtensions() const
+    /** @fn const std::string& GetExtensions() const
       * Getter for list of supported platform extensions retrieved from compute API.
       * @return List of supported platform extensions retrieved from compute API.
       */
-    const std::string& getExtensions() const;
+    const std::string& GetExtensions() const;
 
-    /** @fn void setVendor(const std::string& vendor)
+    /** @fn std::string GetString() const
+      * Converts platform info to string.
+      * @return String containing information about the platform.
+      */
+    std::string GetString() const;
+
+    /** @fn void SetVendor(const std::string& vendor)
       * Setter for name of platform vendor.
       * @param vendor Name of platform vendor.
       */
-    void setVendor(const std::string& vendor);
+    void SetVendor(const std::string& vendor);
 
-    /** @fn void setVersion(const std::string& version)
+    /** @fn void SetVersion(const std::string& version)
       * Setter for platform version.
       * @param version Platform version.
       */
-    void setVersion(const std::string& version);
+    void SetVersion(const std::string& version);
 
-    /** @fn void setExtensions(const std::string& extensions)
+    /** @fn void SetExtensions(const std::string& extensions)
       * Setter for list of supported platform extensions.
       * @param extensions List of supported platform extensions.
       */
-    void setExtensions(const std::string& extensions);
+    void SetExtensions(const std::string& extensions);
 
 private:
-    PlatformIndex id;
-    std::string name;
-    std::string vendor;
-    std::string version;
-    std::string extensions;
+    PlatformIndex m_Index;
+    std::string m_Name;
+    std::string m_Vendor;
+    std::string m_Version;
+    std::string m_Extensions;
 };
-
-/** @fn std::ostream& operator<<(std::ostream& outputTarget, const PlatformInfo& platformInfo)
-  * @brief Output operator for platform info class.
-  * @param outputTarget Location where information about platform will be printed.
-  * @param platformInfo Platform info object that will be printed.
-  * @return Output target to support chaining of output operations.
-  */
-KTT_API std::ostream& operator<<(std::ostream& outputTarget, const PlatformInfo& platformInfo);
 
 } // namespace ktt

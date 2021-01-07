@@ -13,7 +13,7 @@ const T* KernelArgument::GetDataWithType() const
 }
 
 template <typename T>
-const uint64_t KernelArgument::GetNumberOfElementsWithType() const
+uint64_t KernelArgument::GetNumberOfElementsWithType() const
 {
     return GetDataSize() / sizeof(T);
 }

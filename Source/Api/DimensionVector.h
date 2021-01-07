@@ -3,7 +3,7 @@
   */
 #pragma once
 
-#include <iostream>
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -137,7 +137,7 @@ public:
 
     /** @fn std::string GetString() const
       * Converts dimension vector to string.
-      * @return String in format (x, y, z).
+      * @return String in format "(x, y, z)".
       */
     std::string GetString() const;
 
