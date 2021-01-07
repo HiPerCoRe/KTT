@@ -9,6 +9,9 @@
 #include <api/searcher/searcher.h>
 #include <utility/logger.h>
 
+#define PROFILESEARCHER_SCRIPTS_DIR     "scripts-KTT/"
+#define PROFILESEARCHER_HISTORY_DIR     "historical/"
+#define PROFILESEARCHER_SCRATCH_DIR     "scratch/"
 #define PROFILESEARCHER_TEMPFILE_CONF   "ktt-tempfile-conf.csv"
 #define PROFILESEARCHER_TEMPFILE_PC     "ktt-tempfile-pc.csv"
 #define PROFILESEARCHER_TEMPFILE_IDX    "ktt-tempfile-idx.dat"
@@ -20,12 +23,14 @@ namespace ktt
 class ProfileSearcher : public Searcher
 {
 public:
-    ProfileSearcher(const double myCC, const std::string stat, const double statCC, const std::string scratch = "") :
+    ProfileSearcher(const unsigned int myCC, const unsigned int myMP, const std::string stat, const unsigned int statCC, const std::string searcherDir = "") :
         Searcher(),
         myComputeCapability(myCC),
+        myMultiProcessors(myMP),
+        myScalarProcessors(myMP * _ConvertSMVer2CoresDRV(myCC/10, myCC%10)),
         statPrefix(stat),
         statComputeCapability(statCC),
-        scratchPrefix(scratch),
+        searcherDir(searcherDir),
         profileRequired(true)
     {}
 
@@ -33,7 +38,7 @@ public:
     {
         // Create CSV with all configurations in the tuning space
         std::ofstream profilingFile;
-        profilingFile.open (scratchPrefix + PROFILESEARCHER_TEMPFILE_CONF);
+        profilingFile.open (searcherDir + PROFILESEARCHER_SCRATCH_DIR + PROFILESEARCHER_TEMPFILE_CONF);
         const int pars = getConfigurations()[0].getParameterPairs().size();
         for (int i = 0; i < pars; i++) {
             profilingFile << getConfigurations()[0].getParameterPairs()[i].getName();
@@ -81,7 +86,20 @@ public:
           std::ostringstream oss;
 
           // start the python script and let it load the tuning space
-          std::string command = "python " + scratchPrefix + " ktt-profiling-searcher.py -o " + PROFILESEARCHER_TEMPFILE_CONF + " --oc " + std::to_string(myComputeCapability) + " --mp 46 --co 2944" + " --kb " + statPrefix + "_output_Proposed.sav --ic " + std::to_string(statComputeCapability) + " -i " + std::to_string(bestIdxInBatch) + " -b " + std::to_string(NONPROFILE_BATCH) + " -p " + PROFILESEARCHER_TEMPFILE_PC + " --compute_bound";
+          std::string command = "python "
+            + searcherDir + PROFILESEARCHER_SCRIPTS_DIR + "ktt-profiling-searcher.py"
+            + " -o " + searcherDir + PROFILESEARCHER_SCRATCH_DIR + PROFILESEARCHER_TEMPFILE_CONF 
+            + " --oc " + std::to_string(myComputeCapability/10) 
+                + "." + std::to_string(myComputeCapability%10)
+            + " --mp " + std::to_string(myMultiProcessors)
+            + " --co " + std::to_string(myScalarProcessors)
+            + " --kb " + searcherDir + PROFILESEARCHER_HISTORY_DIR + statPrefix + "_output_Proposed.sav"
+            + " --ic " + std::to_string(statComputeCapability/10) 
+                + "." + std::to_string(statComputeCapability%10)
+            + " -i " + std::to_string(bestIdxInBatch) 
+            + " -b " + std::to_string(NONPROFILE_BATCH) 
+            + " -p " + searcherDir + PROFILESEARCHER_SCRATCH_DIR + PROFILESEARCHER_TEMPFILE_PC 
+            + " --compute_bound";
           std::cout << command << std::endl;
 
           oss << "export PY_READ_FD=" << pipe_cpp_to_py[0] << " && "
@@ -152,7 +170,7 @@ public:
 
             // create CSV with actual profiling counters
             std::ofstream profilingFile;
-            profilingFile.open(scratchPrefix + PROFILESEARCHER_TEMPFILE_PC);
+            profilingFile.open(searcherDir + PROFILESEARCHER_SCRATCH_DIR + PROFILESEARCHER_TEMPFILE_PC);
 
             profilingFile << "Global size,Local size,";
 	        const int cnt = counters.size();
@@ -268,15 +286,65 @@ public:
     }
 
 private:
+    // The code taken from NVIDIA CUDA SDK
+    int _ConvertSMVer2CoresDRV(int major, int minor) {
+    // Defines for GPU Architecture types (using the SM version to determine the # of cores per SM
+    typedef struct
+    {
+        int SM; // 0xMm (hexidecimal notation), M = SM Major version, and m = SM minor version
+        int Cores;
+    } sSMtoCores;
+
+    sSMtoCores nGpuArchCoresPerSM[] =
+    {
+        { 0x30, 192}, // Kepler Generation (SM 3.0) GK10x class
+        { 0x32, 192}, // Kepler Generation (SM 3.2) GK10x class
+        { 0x35, 192}, // Kepler Generation (SM 3.5) GK11x class
+        { 0x37, 192}, // Kepler Generation (SM 3.7) GK21x class
+        { 0x50, 128}, // Maxwell Generation (SM 5.0) GM10x class
+        { 0x52, 128}, // Maxwell Generation (SM 5.2) GM20x class
+        { 0x53, 128}, // Maxwell Generation (SM 5.3) GM20x class
+        { 0x60, 64 }, // Pascal Generation (SM 6.0) GP100 class
+        { 0x61, 128}, // Pascal Generation (SM 6.1) GP10x class
+        { 0x62, 128}, // Pascal Generation (SM 6.2) GP10x class
+        { 0x70, 64 }, // Volta Generation (SM 7.0) GV100 class
+        { 0x72, 64},  // Volta Generation (SM 7.2) Tegra class
+        { 0x75, 64},  // Turing generation (SM 7.5) TU100 class
+        { 0x80, 64},  // Ampere generation (SM 8.0), GA100 class
+        { 0x86, 64},  // Ampere generation (SM 8.6), GA102 class
+        {   -1, -1 }
+    };
+
+    int index = 0;
+
+    while (nGpuArchCoresPerSM[index].SM != -1)
+    {
+        if (nGpuArchCoresPerSM[index].SM == ((major << 4) + minor))
+        {
+            return nGpuArchCoresPerSM[index].Cores;
+        }
+
+        index++;
+    }
+
+    // If we don't find the values, we default use the previous one to run properly
+    printf("Profile-based searcher warning: SM %d.%d is undefined. Default to use %d Cores/SM\n", major, minor, nGpuArchCoresPerSM[index-1].Cores);
+    return nGpuArchCoresPerSM[index-1].Cores;
+}
+// end of GPU Architecture definitions
+
+
     std::vector<size_t> indices;
     std::vector<DimensionVector> globalSizes;
     std::vector<DimensionVector> localSizes;
     size_t bestIdxInBatch;
     uint64_t bestBatchDuration;
-    double myComputeCapability;
+    unsigned int myComputeCapability;
+    unsigned int myMultiProcessors;
+    unsigned int myScalarProcessors;
     std::string statPrefix;
-    double statComputeCapability;
-    std::string scratchPrefix;
+    unsigned int statComputeCapability;
+    std::string searcherDir;
     bool profileRequired;
     int pipe_cpp_to_py[2];
     int pipe_py_to_cpp[2];

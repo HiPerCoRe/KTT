@@ -9,8 +9,10 @@
 
 #if defined(_MSC_VER)
     const std::string kernelFilePrefix = "";
+    const std::string profileSearcherDir = "../profile-searcher/";
 #else
     const std::string kernelFilePrefix = "../";
+    const std::string profileSearcherDir = "../../profile-searcher/";
 #endif
 
 #if KTT_CUDA_EXAMPLE
@@ -27,7 +29,9 @@
 #define USE_PROFILING 0
 #define USE_REDUCED_SET 0 /* reduced tuning parameters set, taken from CLTune */
 
+//XXX profile-searcher works with CUDA only
 #define USE_PROFILE_SEARCHER 0
+
 #define TUNE_SEC 300
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
@@ -208,10 +212,11 @@ int main(int argc, char** argv)
 #endif
 
     // Set and configure searcher
-#if USE_PROFILE_SEARCHER == 1
+#if USE_PROFILE_SEARCHER == 1 and KTT_CUDA_EXAMPLE
     unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
-    auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/1070-gemm-reduced", 6.1);
+    unsigned int myMP = tuner.getCurrentDeviceInfo().getMaxComputeUnits();
+    auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor*10 + ccMinor,myMP,  "1070-gemm-reduced", 61, profileSearcherDir);
     auto searcherRaw = searcher.get();
     tuner.setSearcher(kernelId, std::move(searcher));
 #else
@@ -230,7 +235,7 @@ int main(int argc, char** argv)
     clock_t start = time(NULL);
     while (time(NULL) - start < TUNE_SEC) {
         // turn on/off profiling and gather statistics
-#if USE_PROFILE_SEARCHER == 1
+#if USE_PROFILE_SEARCHER == 1 and KTT_CUDA_EXAMPLE
         if (searcherRaw->shouldProfile()) {
             tuner.setKernelProfiling(true);
             kernTested++;

@@ -6,8 +6,10 @@
 
 #if defined(_MSC_VER)
     const std::string kernelFilePrefix = "";
+    const std::string profileSearcherDir = "../profile-searcher/";
 #else
     const std::string kernelFilePrefix = "../";
+    const std::string profileSearcherDir = "../../profile-searcher/";
 #endif
 
 #if KTT_CUDA_EXAMPLE
@@ -29,7 +31,9 @@
 #define USE_DENSE_TUNPAR 0
 #define USE_WIDE_TUNPAR 0
 
+//XXX profile-searcher works with CUDA only
 #define USE_PROFILE_SEARCHER 0
+
 #define TUNE_SEC 60
 
 int main(int argc, char **argv)
@@ -168,10 +172,11 @@ int main(int argc, char **argv)
 #endif
 
     // Set and configure searcher
-#if USE_PROFILE_SEARCHER == 1
+#if USE_PROFILE_SEARCHER == 1 and KTT_CUDA_EXAMPLE
     unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
-    auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor + 0.1*(double)ccMinor, "../../../profilbased-searcher/data-reducedcounters/1070-mtran", 6.1);
+    unsigned int myMP = tuner.getCurrentDeviceInfo().getMaxComputeUnits();
+    auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor*10 + ccMinor, myMP, "1070-mtran", 61, profileSearcherDir);
     auto searcherRaw = searcher.get();
     tuner.setSearcher(kernelId, std::move(searcher));
 #else
@@ -190,7 +195,7 @@ int main(int argc, char **argv)
     clock_t start = time(NULL);
     while (time(NULL) - start < TUNE_SEC) {
         // turn on/off profiling and gather statistics
-#if USE_PROFILE_SEARCHER == 1
+#if USE_PROFILE_SEARCHER == 1 and KTT_CUDA_EXAMPLE
         if (searcherRaw->shouldProfile()) {
             tuner.setKernelProfiling(true);
             kernTested++;
