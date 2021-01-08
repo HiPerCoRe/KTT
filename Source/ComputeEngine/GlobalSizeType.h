@@ -1,5 +1,5 @@
-/** @file global_size_type.h
-  * Definition of enum for format of global thread size.
+/** @file GlobalSizeType.h
+  * Format of global thread size.
   */
 #pragma once
 

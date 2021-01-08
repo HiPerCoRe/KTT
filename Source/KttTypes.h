@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <string>
 
 namespace ktt
 {
@@ -34,15 +35,20 @@ using KernelId = uint64_t;
   */
 using ArgumentId = uint64_t;
 
-/** @typedef EventId
-  * Data type for referencing compute API events in KTT.
+/** @typedef KernelComputeId
+  * Data type for referencing unique kernel configurations in compute engine.
   */
-using EventId = uint64_t;
+using KernelComputeId = std::string;
 
 /** @typedef ComputeActionId
-  * Data type for referencing compute API actions in KTT.
+  * Data type for referencing kernel compute actions in KTT.
   */
 using ComputeActionId = uint64_t;
+
+/** @typedef TransferActionId
+  * Data type for referencing buffer transfer actions in KTT.
+  */
+using TransferActionId = uint64_t;
 
 /** @typedef UnifiedBufferMemory
   * Data type for accessing unified memory buffers in KTT.
