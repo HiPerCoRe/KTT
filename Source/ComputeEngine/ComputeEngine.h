@@ -31,9 +31,12 @@ public:
 
     // Buffer methods
     virtual TransferActionId UploadArgumentAsync(const KernelArgument& kernelArgument, const QueueId queue) = 0;
-    virtual TransferActionId UpdateArgumentAsync(const ArgumentId id, const QueueId queue, const void* data, const size_t dataSize) = 0;
-    virtual TransferActionId DownloadArgumentAsync(const ArgumentId id, const QueueId queue, void* destination, const size_t dataSize) const = 0;
-    virtual TransferActionId CopyArgumentAsync(const ArgumentId destination, const QueueId queue, const ArgumentId source, const size_t dataSize) = 0;
+    virtual TransferActionId UpdateArgumentAsync(const ArgumentId id, const QueueId queue, const void* data,
+        const size_t dataSize) = 0;
+    virtual TransferActionId DownloadArgumentAsync(const ArgumentId id, const QueueId queue, void* destination,
+        const size_t dataSize) const = 0;
+    virtual TransferActionId CopyArgumentAsync(const ArgumentId destination, const QueueId queue, const ArgumentId source,
+        const size_t dataSize) = 0;
     virtual uint64_t WaitForTransferAction(const TransferActionId id) const = 0;
     virtual void ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) = 0;
     virtual void GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle) = 0;
