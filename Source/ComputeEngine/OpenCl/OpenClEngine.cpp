@@ -17,9 +17,9 @@ namespace ktt
 //    m_DeviceIndex(deviceIndex),
 //    m_GlobalSizeType(GlobalSizeType::OpenCL),
 //    m_GlobalSizeCorrection(false),
-//    m_KernelCacheCapacity(10),
 //    m_ComputeIdGenerator(0),
-//    m_TransferIdGenerator(0)
+//    m_TransferIdGenerator(0),
+//    m_KernelCache(10)
 //{
 //    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 //    Logger::logDebug("Initializing GPA profiling API");

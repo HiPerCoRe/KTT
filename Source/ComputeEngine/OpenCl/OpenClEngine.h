@@ -4,16 +4,16 @@
 
 #include <map>
 #include <memory>
-#include <ostream>
 #include <set>
 #include <string>
 #include <vector>
 
 #include <Api/ComputeApiInitializer.h>
-//#include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
+#include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
 #include <ComputeEngine/OpenCl/OpenClContext.h>
-#include <ComputeEngine/OpenCl/OpenClDevice.h>
+#include <ComputeEngine/OpenCl/OpenClKernel.h>
 #include <ComputeEngine/ComputeEngine.h>
+#include <Utility/LruCache.h>
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 #include <ComputeEngine/OpenCl/Gpa/GpaInterface.h>
@@ -70,7 +70,7 @@ public:
     void SetCompilerOptions(const std::string& options) override;
     void SetGlobalSizeType(const GlobalSizeType type) override;
     void SetAutomaticGlobalSizeCorrection(const bool flag) override;
-    void SetKernelCacheCapacity(const size_t capacity) override;
+    void SetKernelCacheCapacity(const uint64_t capacity) override;
     void ClearKernelCache() override;
 
 private:
@@ -79,14 +79,13 @@ private:
     std::string m_CompilerOptions;
     GlobalSizeType m_GlobalSizeType;
     bool m_GlobalSizeCorrection;
-    size_t m_KernelCacheCapacity;
     ComputeActionId m_ComputeIdGenerator;
     TransferActionId m_TransferIdGenerator;
 
     std::unique_ptr<OpenClContext> m_Context;
-    //std::vector<std::unique_ptr<OpenClCommandQueue>> m_Queues;
+    std::vector<std::unique_ptr<OpenClCommandQueue>> m_Queues;
     //std::set<std::unique_ptr<OpenClBuffer>> m_Buffers;
-    //std::map<KernelComputeId, std::pair<std::unique_ptr<OpenClKernel>, std::unique_ptr<OpenClProgram>>> m_KernelCache;
+    LruCache<KernelComputeId, std::unique_ptr<OpenClKernel>> m_KernelCache;
     //std::map<ComputeActionId, std::unique_ptr<OpenClEvent>> m_ComputeActions;
     //std::map<TransferActionId, std::unique_ptr<OpenClEvent>> m_TransferActions;
 

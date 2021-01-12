@@ -59,7 +59,7 @@ public:
     virtual void SetCompilerOptions(const std::string& options) = 0;
     virtual void SetGlobalSizeType(const GlobalSizeType type) = 0;
     virtual void SetAutomaticGlobalSizeCorrection(const bool flag) = 0;
-    virtual void SetKernelCacheCapacity(const size_t capacity) = 0;
+    virtual void SetKernelCacheCapacity(const uint64_t capacity) = 0;
     virtual void ClearKernelCache() = 0;
 };
 
