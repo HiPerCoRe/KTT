@@ -4,14 +4,17 @@
 
 #include <map>
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 
 #include <Api/ComputeApiInitializer.h>
+#include <ComputeEngine/OpenCl/Actions/OpenClComputeAction.h>
+#include <ComputeEngine/OpenCl/Actions/OpenClTransferAction.h>
+#include <ComputeEngine/OpenCl/OpenClBuffer.h>
 #include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
 #include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <ComputeEngine/OpenCl/OpenClKernel.h>
+#include <ComputeEngine/ActionIdGenerator.h>
 #include <ComputeEngine/ComputeEngine.h>
 #include <Utility/LruCache.h>
 
@@ -31,10 +34,11 @@ public:
     explicit OpenClEngine(const ComputeApiInitializer& initializer);
 
     // Kernel methods
-    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queue, const bool runWithProfiling) override;
+    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queue) override;
     KernelResult WaitForComputeAction(const ComputeActionId id) const override;
 
     // Profiling methods
+    KernelResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queue) override;
     void SetProfilingCounters(const std::vector<std::string>& counters) override;
     bool IsProfilingSessionActive(const KernelComputeId& id) override;
     uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) override;
@@ -78,21 +82,20 @@ private:
     DeviceIndex m_DeviceIndex;
     std::string m_CompilerOptions;
     GlobalSizeType m_GlobalSizeType;
+    ActionIdGenerator m_Generator;
     bool m_GlobalSizeCorrection;
-    ComputeActionId m_ComputeIdGenerator;
-    TransferActionId m_TransferIdGenerator;
 
     std::unique_ptr<OpenClContext> m_Context;
     std::vector<std::unique_ptr<OpenClCommandQueue>> m_Queues;
-    //std::set<std::unique_ptr<OpenClBuffer>> m_Buffers;
-    LruCache<KernelComputeId, std::unique_ptr<OpenClKernel>> m_KernelCache;
-    //std::map<ComputeActionId, std::unique_ptr<OpenClEvent>> m_ComputeActions;
-    //std::map<TransferActionId, std::unique_ptr<OpenClEvent>> m_TransferActions;
+    std::map<ArgumentId, std::unique_ptr<OpenClBuffer>> m_Buffers;
+    LruCache<KernelComputeId, std::shared_ptr<OpenClKernel>> m_KernelCache;
+    std::map<ComputeActionId, std::unique_ptr<OpenClComputeAction>> m_ComputeActions;
+    std::map<TransferActionId, std::unique_ptr<OpenClTransferAction>> m_TransferActions;
 
     //#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     //std::unique_ptr<GpaInterface> m_GpaInterface;
     //std::unique_ptr<GpaProfilingContext> m_ProfilingContext;
-    //std::map<KernelComputeId, std::vector<EventId>> m_KernelToEventMap;
+    //std::map<KernelComputeId, std::vector<ComputeActionId>> m_KernelToActionMap;
     //std::map<KernelComputeId, std::unique_ptr<GpaProfilingInstance>> m_ProfilingInstances;
     //#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 

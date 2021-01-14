@@ -22,10 +22,10 @@ void Timer::Stop()
     m_Running = false;
 }
 
-uint64_t Timer::GetElapsedTime() const
+Nanoseconds Timer::GetElapsedTime() const
 {
     KttAssert(!m_Running, "Elapsed time should only be retrieved when timer is stopped");
-    return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(m_EndTime - m_InitialTime).count());
+    return static_cast<Nanoseconds>(std::chrono::duration_cast<std::chrono::nanoseconds>(m_EndTime - m_InitialTime).count());
 }
 
 } // namespace ktt

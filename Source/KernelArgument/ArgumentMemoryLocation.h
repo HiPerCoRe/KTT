@@ -12,6 +12,10 @@ namespace ktt
   */
 enum class ArgumentMemoryLocation
 {
+    /** Default memory location for non-vector kernel arguments.
+      */
+    Undefined,
+
     /** Argument data will be accessed from device memory. This is recommended setting for devices with dedicated memory,
       * e.g. discrete GPUs.
       */
@@ -21,6 +25,13 @@ enum class ArgumentMemoryLocation
       * memory, e.g. integrated GPUs.
       */
     Host,
+
+    /** Argument data will be accessed from host memory without explicitly creating additional compute API buffer. This flag
+      * cannot be used for writable arguments during regular kernel tuning. It can be used for any arguments during step kernel tuning
+      * and kernel running. Note that even when this flag is used, extra buffer copy is still sometimes created internally by compute API.
+      * This behaviour depends on particular API and device.
+      */
+    HostZeroCopy,
 
     /* Argument data will be stored using compute API's unified memory system. It can be directly accessed from both
      * host and device.

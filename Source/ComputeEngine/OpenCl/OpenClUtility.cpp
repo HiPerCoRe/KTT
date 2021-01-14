@@ -1,7 +1,6 @@
 #ifdef KTT_API_OPENCL
 
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
-#include <Utility/ErrorHandling/Assert.h>
 #include <Utility/ErrorHandling/KttException.h>
 
 namespace ktt
@@ -64,22 +63,6 @@ void CheckError(const cl_int value, const std::string& function, const std::stri
     {
         throw KttException(std::string("OpenCL engine encountered error ") + GetEnumName(value) + " in function " + function
             + ", additional info: " + info);
-    }
-}
-
-cl_mem_flags GetMemoryFlags(const ArgumentAccessType accessType)
-{
-    switch (accessType)
-    {
-    case ArgumentAccessType::ReadWrite:
-        return CL_MEM_READ_WRITE;
-    case ArgumentAccessType::Read:
-        return CL_MEM_READ_ONLY;
-    case ArgumentAccessType::Write:
-        return CL_MEM_WRITE_ONLY;
-    default:
-        KttError("Unhandled argument access type value");
-        return 0;
     }
 }
 

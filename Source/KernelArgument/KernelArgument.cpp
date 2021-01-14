@@ -18,7 +18,12 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t elementSize, co
     m_Type(ArgumentType::Copy),
     m_NumberOfElements(0),
     m_ReferencedData(nullptr)
-{}
+{
+    KttAssert(m_MemoryType == ArgumentMemoryType::Vector || m_MemoryLocation == ArgumentMemoryLocation::Undefined,
+        "Non-vector arguments must have undefined memory location");
+    KttAssert(m_MemoryType != ArgumentMemoryType::Vector || m_MemoryLocation != ArgumentMemoryLocation::Undefined,
+        "Vector arguments must have defined memory location");
+}
 
 void KernelArgument::SetReferencedData(void* data, const uint64_t numberOfElements)
 {

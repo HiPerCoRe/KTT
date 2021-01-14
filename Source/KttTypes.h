@@ -35,6 +35,11 @@ using KernelId = uint64_t;
   */
 using ArgumentId = uint64_t;
 
+/** @typedef Nanoseconds
+  * Data type for retrieving elapsed time in KTT.
+  */
+using Nanoseconds = uint64_t;
+
 /** @typedef KernelComputeId
   * Data type for referencing unique kernel configurations in compute engine.
   */

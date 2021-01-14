@@ -20,10 +20,11 @@ public:
     virtual ~ComputeEngine() = default;
 
     // Kernel methods
-    virtual ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queue, const bool runWithProfiling) = 0;
+    virtual ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queue) = 0;
     virtual KernelResult WaitForComputeAction(const ComputeActionId id) const = 0;
 
     // Profiling methods
+    virtual KernelResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queue) = 0;
     virtual void SetProfilingCounters(const std::vector<std::string>& counters) = 0;
     virtual bool IsProfilingSessionActive(const KernelComputeId& id) = 0;
     virtual uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) = 0;
