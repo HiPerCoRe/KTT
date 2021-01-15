@@ -6,7 +6,7 @@
 #include <Utility/Timer.h>
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-#include <ComputeEngine/OpenCl/Gpa/GpaProfilingPass.h>
+#include <ComputeEngine/OpenCl/Gpa/GpaPass.h>
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
 namespace ktt
@@ -1077,29 +1077,6 @@ namespace ktt
 //    }
 //
 //    throw std::runtime_error(std::string("Corresponding kernel was not found for event with id: ") + std::to_string(id));
-//}
-//
-//const std::vector<std::string>& OpenCLEngine::getDefaultGPAProfilingCounters()
-//{
-//    static const std::vector<std::string> result
-//    {
-//        "Wavefronts",
-//        "VALUInsts",
-//        "SALUInsts",
-//        "VFetchInsts",
-//        "SFetchInsts",
-//        "VWriteInsts",
-//        "VALUUtilization",
-//        "VALUBusy",
-//        "SALUBusy",
-//        "FetchSize",
-//        "WriteSize",
-//        "MemUnitBusy",
-//        "MemUnitStalled",
-//        "WriteUnitStalled"
-//    };
-//
-//    return result;
 //}
 //
 //void OpenCLEngine::launchDummyPass(const std::string& kernelName, const std::string& kernelSource)

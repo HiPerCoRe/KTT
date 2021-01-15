@@ -67,11 +67,11 @@ void CheckError(const cl_int value, const std::string& function, const std::stri
 }
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-void CheckError(const GPA_Status value, GPAFunctionTable& gpaFunctions, const std::string& function, const std::string& info)
+void CheckError(const GPA_Status value, GPAFunctionTable& functions, const std::string& function, const std::string& info)
 {
     if (value != GPA_STATUS_OK)
     {
-        throw KttException(std::string("OpenCL GPA profiling engine encountered error ") + gpaFunctions.GPA_GetStatusAsStr(value)
+        throw KttException(std::string("OpenCL GPA profiling engine encountered error ") + functions.GPA_GetStatusAsStr(value)
             + " in function " + function + ", additional info: " + info);
     }
 }

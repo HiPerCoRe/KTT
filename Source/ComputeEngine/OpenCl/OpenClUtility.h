@@ -18,7 +18,7 @@ std::string GetEnumName(const cl_int value);
 void CheckError(const cl_int value, const std::string& function, const std::string& info = "");
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-void CheckError(const GPA_Status value, GPAFunctionTable& gpaFunctions, const std::string& function, const std::string& info = "");
+void CheckError(const GPA_Status value, GPAFunctionTable& functions, const std::string& function, const std::string& info = "");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
 } // namespace ktt

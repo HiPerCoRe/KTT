@@ -31,12 +31,12 @@ public:
     virtual bool HasAccurateRemainingProfilingRuns() const = 0;
 
     // Buffer methods
-    virtual TransferActionId UploadArgumentAsync(const KernelArgument& kernelArgument, const QueueId queue) = 0;
-    virtual TransferActionId UpdateArgumentAsync(const ArgumentId id, const QueueId queue, const void* data,
+    virtual TransferActionId UploadArgument(const KernelArgument& kernelArgument, const QueueId queue) = 0;
+    virtual TransferActionId UpdateArgument(const ArgumentId id, const QueueId queue, const void* data,
         const size_t dataSize) = 0;
-    virtual TransferActionId DownloadArgumentAsync(const ArgumentId id, const QueueId queue, void* destination,
+    virtual TransferActionId DownloadArgument(const ArgumentId id, const QueueId queue, void* destination,
         const size_t dataSize) const = 0;
-    virtual TransferActionId CopyArgumentAsync(const ArgumentId destination, const QueueId queue, const ArgumentId source,
+    virtual TransferActionId CopyArgument(const ArgumentId destination, const QueueId queue, const ArgumentId source,
         const size_t dataSize) = 0;
     virtual uint64_t WaitForTransferAction(const TransferActionId id) const = 0;
     virtual void ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) = 0;

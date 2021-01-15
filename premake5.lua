@@ -38,7 +38,7 @@ function findLibrariesAmd()
             -- One of the GPA headers includes Windows.h with evil min/max macros
             defines {"NOMINMAX"}
             libdirs {"Libraries/GpuPerfApi3.6/Lib/Windows"}
-        end  
+        end
     elseif _OPTIONS["profiling"] == "gpa-legacy" then
         defines {"KTT_PROFILING_GPA_LEGACY"}
         includedirs {"Libraries/GpuPerfApi3.3/Include"}
@@ -48,7 +48,7 @@ function findLibrariesAmd()
         else
             defines {"NOMINMAX"}
             libdirs {"Libraries/GpuPerfApi3.3/Lib/Windows"}
-        end  
+        end
     end
     
     return true
