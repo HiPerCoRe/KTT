@@ -83,4 +83,8 @@ inline const KernelId InvalidKernelId = std::numeric_limits<KernelId>::max();
   */
 inline const ArgumentId InvalidArgumentId = std::numeric_limits<ArgumentId>::max();
 
+/** Invalid duration used during initialization and in case of an error.
+  */
+inline const Nanoseconds InvalidDuration = std::numeric_limits<Nanoseconds>::max();
+
 } // namespace ktt

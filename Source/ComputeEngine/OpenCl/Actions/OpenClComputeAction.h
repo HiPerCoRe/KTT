@@ -14,16 +14,17 @@ namespace ktt
 class OpenClComputeAction
 {
 public:
-    OpenClComputeAction(const ComputeActionId id);
     OpenClComputeAction(const ComputeActionId id, std::shared_ptr<OpenClKernel> kernel);
 
     void SetOverhead(const Nanoseconds overhead);
+    void SetReleaseFlag();
+    void WaitForFinish();
 
     ComputeActionId GetId() const;
     OpenClKernel& GetKernel();
-    OpenClEvent& GetEvent();
+    cl_event* GetEvent();
+    Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
-    bool IsValid() const;
 
 private:
     ComputeActionId m_Id;

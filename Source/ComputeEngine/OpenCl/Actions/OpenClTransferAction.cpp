@@ -6,11 +6,21 @@
 namespace ktt
 {
 
-OpenClTransferAction::OpenClTransferAction(const TransferActionId id) :
+OpenClTransferAction::OpenClTransferAction(const TransferActionId id, const bool isAsync) :
     m_Id(id),
-    m_Overhead(std::numeric_limits<Nanoseconds>::max())
+    m_Duration(InvalidDuration),
+    m_Overhead(InvalidDuration)
 {
-    m_Event = std::make_unique<OpenClEvent>();
+    if (isAsync)
+    {
+        m_Event = std::make_unique<OpenClEvent>();
+    }
+}
+
+void OpenClTransferAction::SetDuration(const Nanoseconds duration)
+{
+    KttAssert(!IsAsync(), "Duration for async actions is handled by events");
+    m_Duration = duration;
 }
 
 void OpenClTransferAction::SetOverhead(const Nanoseconds overhead)
@@ -18,15 +28,39 @@ void OpenClTransferAction::SetOverhead(const Nanoseconds overhead)
     m_Overhead = overhead;
 }
 
+void OpenClTransferAction::SetReleaseFlag()
+{
+    KttAssert(IsAsync(), "Only async actions contain valid event");
+    m_Event->SetReleaseFlag();
+}
+
+void OpenClTransferAction::WaitForFinish()
+{
+    if (IsAsync())
+    {
+        m_Event->WaitForFinish();
+    }
+}
+
 TransferActionId OpenClTransferAction::GetId() const
 {
     return m_Id;
 }
 
-OpenClEvent& OpenClTransferAction::GetEvent()
+cl_event* OpenClTransferAction::GetEvent()
 {
-    KttAssert(IsValid(), "Only valid transfer actions contain valid event");
-    return *m_Event;
+    KttAssert(IsAsync(), "Only async actions contain valid event");
+    return m_Event->GetEvent();
+}
+
+Nanoseconds OpenClTransferAction::GetDuration() const
+{
+    if (IsAsync())
+    {
+        return m_Event->GetDuration();
+    }
+
+    return m_Duration;
 }
 
 Nanoseconds OpenClTransferAction::GetOverhead() const
@@ -34,7 +68,7 @@ Nanoseconds OpenClTransferAction::GetOverhead() const
     return m_Overhead;
 }
 
-bool OpenClTransferAction::IsValid() const
+bool OpenClTransferAction::IsAsync() const
 {
     return m_Event != nullptr;
 }

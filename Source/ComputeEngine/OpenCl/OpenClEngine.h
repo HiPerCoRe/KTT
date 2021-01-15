@@ -10,7 +10,7 @@
 #include <Api/ComputeApiInitializer.h>
 #include <ComputeEngine/OpenCl/Actions/OpenClComputeAction.h>
 #include <ComputeEngine/OpenCl/Actions/OpenClTransferAction.h>
-#include <ComputeEngine/OpenCl/OpenClBuffer.h>
+#include <ComputeEngine/OpenCl/Buffers/OpenClBuffer.h>
 #include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
 #include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <ComputeEngine/OpenCl/OpenClKernel.h>

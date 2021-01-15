@@ -8,16 +8,16 @@ namespace ktt
 {
 
 KernelResult::KernelResult() :
-    m_Duration(std::numeric_limits<Nanoseconds>::max()),
-    m_Overhead(std::numeric_limits<Nanoseconds>::max()),
+    m_Duration(InvalidDuration),
+    m_Overhead(InvalidDuration),
     m_Status(KernelResultStatus::Failed)
 {}
 
 KernelResult::KernelResult(const std::string& kernelName, const std::string& configurationPrefix) :
     m_KernelName(kernelName),
     m_ConfigurationPrefix(configurationPrefix),
-    m_Duration(std::numeric_limits<Nanoseconds>::max()),
-    m_Overhead(std::numeric_limits<Nanoseconds>::max()),
+    m_Duration(InvalidDuration),
+    m_Overhead(InvalidDuration),
     m_Status(KernelResultStatus::Failed)
 {}
 
@@ -25,8 +25,8 @@ void KernelResult::SetStatus(const KernelResultStatus status)
 {
     KttAssert(status != KernelResultStatus::Ok, "Status Ok should be set only by filling valid duration data");
     m_Status = status;
-    m_Duration = std::numeric_limits<Nanoseconds>::max();
-    m_Overhead = std::numeric_limits<Nanoseconds>::max();
+    m_Duration = InvalidDuration;
+    m_Overhead = InvalidDuration;
 }
 
 void KernelResult::SetDurationData(const Nanoseconds duration, const Nanoseconds overhead)

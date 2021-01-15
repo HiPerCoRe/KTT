@@ -43,6 +43,23 @@ void OpenClKernel::SetArgument(const KernelArgument& argument)
     }
 }
 
+void OpenClKernel::SetArgument(OpenClBuffer& buffer)
+{
+    switch (buffer.GetMemoryLocation())
+    {
+    case ArgumentMemoryLocation::Device:
+    case ArgumentMemoryLocation::Host:
+    case ArgumentMemoryLocation::HostZeroCopy:
+        SetKernelArgumentVector(buffer.GetRawBuffer());
+        break;
+    case ArgumentMemoryLocation::Unified:
+        SetKernelArgumentVectorSvm(buffer.GetRawBuffer());
+        break;
+    default:
+        KttError("Unhandled argument memory location value");
+    }
+}
+
 void OpenClKernel::ResetArguments()
 {
     m_NextArgumentIndex = 0;
@@ -76,7 +93,7 @@ void OpenClKernel::SetKernelArgumentVector(const void* buffer)
     ++m_NextArgumentIndex;
 }
 
-void OpenClKernel::SetKernelArgumentVectorSVM([[maybe_unused]] const void* buffer)
+void OpenClKernel::SetKernelArgumentVectorSvm([[maybe_unused]] const void* buffer)
 {
 #ifdef CL_VERSION_2_0
     CheckError(clSetKernelArgSVMPointer(m_Kernel, m_NextArgumentIndex, buffer), "clSetKernelArgSVMPointer");

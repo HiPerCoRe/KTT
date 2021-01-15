@@ -7,6 +7,7 @@
 #include <CL/cl.h>
 
 #include <Api/Output/KernelCompilationData.h>
+#include <ComputeEngine/OpenCl/Buffers/OpenClBuffer.h>
 #include <ComputeEngine/OpenCl/OpenClProgram.h>
 #include <KernelArgument/KernelArgument.h>
 
@@ -20,6 +21,7 @@ public:
     ~OpenClKernel();
 
     void SetArgument(const KernelArgument& argument);
+    void SetArgument(OpenClBuffer& buffer);
     void ResetArguments();
     KernelCompilationData GenerateCompilationData() const;
 
@@ -33,7 +35,7 @@ private:
     cl_uint m_NextArgumentIndex;
 
     void SetKernelArgumentVector(const void* buffer);
-    void SetKernelArgumentVectorSVM(const void* buffer);
+    void SetKernelArgumentVectorSvm(const void* buffer);
     void SetKernelArgumentScalar(const void* value, const size_t size);
     void SetKernelArgumentLocal(const size_t size);
     uint64_t GetAttribute(const cl_kernel_work_group_info attribute) const;
