@@ -39,7 +39,7 @@ const KernelProfilingCounter& KernelProfilingData::GetCounter(const std::string&
         }
     }
 
-    throw KttException(std::string("Profiling counter with the following name was not found: ") + name);
+    throw KttException("Profiling counter with the following name was not found: " + name);
 }
 
 const std::vector<KernelProfilingCounter>& KernelProfilingData::GetCounters() const

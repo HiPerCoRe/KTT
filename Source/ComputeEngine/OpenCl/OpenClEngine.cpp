@@ -23,17 +23,17 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
 {    
     const auto platforms = OpenClPlatform::GetAllPlatforms();
 
-    if (platformIndex >= platforms.size())
+    if (platformIndex >= static_cast<PlatformIndex>(platforms.size()))
     {
-        throw KttException(std::string("Invalid platform index: ") + std::to_string(platformIndex));
+        throw KttException("Invalid platform index: " + std::to_string(platformIndex));
     }
 
     const auto& platform = platforms[static_cast<size_t>(platformIndex)];
     const auto devices = platform.GetDevices();
 
-    if (deviceIndex >= devices.size())
+    if (deviceIndex >= static_cast<DeviceIndex>(devices.size()))
     {
-        throw KttException(std::string("Invalid device index: ") + std::to_string(deviceIndex));
+        throw KttException("Invalid device index: " + std::to_string(deviceIndex));
     }
 
     const auto& device = devices[static_cast<size_t>(deviceIndex)];
@@ -87,6 +87,256 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
     }
 
     InitializeGpa();
+}
+
+ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queue)
+{
+    return m_Generator.GenerateComputeId();
+}
+
+KernelResult OpenClEngine::WaitForComputeAction(const ComputeActionId id) const
+{
+    return KernelResult();
+}
+
+KernelResult OpenClEngine::RunKernelWithProfiling(const KernelComputeData& data, const QueueId queue)
+{
+    return KernelResult();
+}
+
+void OpenClEngine::SetProfilingCounters(const std::vector<std::string>& counters)
+{
+
+}
+
+bool OpenClEngine::IsProfilingSessionActive(const KernelComputeId& id)
+{
+    return false;
+}
+
+uint64_t OpenClEngine::GetRemainingProfilingRuns(const KernelComputeId& id)
+{
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    if (!ContainsKey(m_GpaInstances, id))
+    {
+        return 0;
+    }
+
+    return static_cast<uint64_t>(m_GpaInstances[id]->GetRemainingPassCount());
+#else
+    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+}
+
+bool OpenClEngine::HasAccurateRemainingProfilingRuns() const
+{
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    return true;
+#else
+    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+}
+
+TransferActionId OpenClEngine::UploadArgument(const KernelArgument& kernelArgument, const QueueId queue)
+{
+    return m_Generator.GenerateTransferId();
+}
+
+TransferActionId OpenClEngine::UpdateArgument(const ArgumentId id, const QueueId queue, const void* data,
+    const size_t dataSize)
+{
+    return m_Generator.GenerateTransferId();
+}
+
+TransferActionId OpenClEngine::DownloadArgument(const ArgumentId id, const QueueId queue, void* destination,
+    const size_t dataSize)
+{
+    return m_Generator.GenerateTransferId();
+}
+
+TransferActionId OpenClEngine::CopyArgument(const ArgumentId destination, const QueueId queue, const ArgumentId source,
+    const size_t dataSize)
+{
+    return m_Generator.GenerateTransferId();
+}
+
+uint64_t OpenClEngine::WaitForTransferAction(const TransferActionId id) const
+{
+    return 0;
+}
+
+void OpenClEngine::ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
+{
+
+}
+
+void OpenClEngine::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle)
+{
+
+}
+
+void OpenClEngine::AddCustomBuffer(const KernelArgument& kernelArgument, ComputeBuffer buffer)
+{
+
+}
+
+void OpenClEngine::ClearBuffer(const ArgumentId id)
+{
+    m_Buffers.erase(id);
+}
+
+void OpenClEngine::ClearBuffers()
+{
+    m_Buffers.clear();
+}
+
+QueueId OpenClEngine::GetDefaultQueue() const
+{
+    return static_cast<QueueId>(0);
+}
+
+std::vector<QueueId> OpenClEngine::GetAllQueues() const
+{
+    std::vector<QueueId> result;
+
+    for (const auto& queue : m_Queues)
+    {
+        result.push_back(queue->GetId());
+    }
+
+    return result;
+}
+
+void OpenClEngine::SynchronizeQueue(const QueueId queue)
+{
+    if (queue >= m_Queues.size())
+    {
+        throw KttException("Invalid OpenCL command queue index: " + std::to_string(queue));
+    }
+
+    m_Queues[static_cast<size_t>(queue)]->Synchronize();
+}
+
+void OpenClEngine::SynchronizeDevice()
+{
+    for (auto& queue : m_Queues)
+    {
+        queue->Synchronize();
+    }
+}
+
+std::vector<PlatformInfo> OpenClEngine::GetPlatformInfo() const
+{
+    const auto platforms = OpenClPlatform::GetAllPlatforms();
+    std::vector<PlatformInfo> result;
+
+    for (const auto& platform : platforms)
+    {
+        result.push_back(platform.GetInfo());
+    }
+
+    return result;
+}
+
+std::vector<DeviceInfo> OpenClEngine::GetDeviceInfo(const PlatformIndex platformIndex) const
+{
+    const auto platforms = OpenClPlatform::GetAllPlatforms();
+
+    if (platformIndex >= static_cast<PlatformIndex>(platforms.size()))
+    {
+        throw KttException("Invalid platform index: " + std::to_string(platformIndex));
+    }
+
+    std::vector<DeviceInfo> result;
+    const auto& platform = platforms[static_cast<size_t>(platformIndex)];
+
+    for (const auto& device : platform.GetDevices())
+    {
+        result.push_back(device.GetInfo());
+    }
+
+    return result;
+}
+
+DeviceInfo OpenClEngine::GetCurrentDeviceInfo() const
+{
+    const auto& deviceInfo = GetDeviceInfo(m_PlatformIndex);
+    return deviceInfo[static_cast<size_t>(m_DeviceIndex)];
+}
+
+void OpenClEngine::SetCompilerOptions(const std::string& options)
+{
+    OpenClProgram::SetCompilerOptions(options);
+}
+
+void OpenClEngine::SetGlobalSizeType(const GlobalSizeType type)
+{
+    m_GlobalSizeType = type;
+}
+
+void OpenClEngine::SetAutomaticGlobalSizeCorrection(const bool flag)
+{
+    m_GlobalSizeCorrection = flag;
+}
+
+void OpenClEngine::SetKernelCacheCapacity(const uint64_t capacity)
+{
+    m_KernelCache.SetMaxSize(static_cast<size_t>(capacity));
+}
+
+void OpenClEngine::ClearKernelCache()
+{
+    m_KernelCache.Clear();
+}
+
+std::shared_ptr<OpenClKernel> OpenClEngine::LoadKernel(const KernelComputeData& data)
+{
+    const auto id = data.GetUniqueIdentifier();
+
+    if (m_KernelCache.GetMaxSize() > 0 && m_KernelCache.Exists(id))
+    {
+        return m_KernelCache.Get(id)->second;
+    }
+
+    auto program = std::make_unique<OpenClProgram>(*m_Context, data.GetSource());
+    program->Build();
+    auto kernel = std::make_shared<OpenClKernel>(std::move(program), data.GetName());
+
+    if (m_KernelCache.GetMaxSize() > 0)
+    {
+        m_KernelCache.Put(id, kernel);
+    }
+
+    return kernel;
+}
+
+void OpenClEngine::SetKernelArguments(OpenClKernel& kernel, const KernelComputeData& data)
+{
+    const auto& arguments = data.GetArguments();
+    kernel.ResetArguments();
+
+    for (const auto* argument : arguments)
+    {
+        SetKernelArgument(kernel, *argument);
+    }
+}
+
+void OpenClEngine::SetKernelArgument(OpenClKernel& kernel, const KernelArgument& argument)
+{
+    if (argument.GetMemoryLocation() == ArgumentMemoryLocation::Undefined)
+    {
+        kernel.SetArgument(argument);
+        return;
+    }
+
+    const auto id = argument.GetId();
+
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer corresponding to kernel argument with id " + std::to_string(id) + " was not found");
+    }
+
+    kernel.SetArgument(*m_Buffers[id]);
 }
 
 //EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
@@ -164,75 +414,6 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
 //    }
 //
 //    return eventPointer->second->getOverhead();
-//}
-//
-//void OpenCLEngine::setCompilerOptions(const std::string& options)
-//{
-//    compilerOptions = options;
-//}
-//
-//void OpenCLEngine::setGlobalSizeType(const GlobalSizeType type)
-//{
-//    globalSizeType = type;
-//}
-//
-//void OpenCLEngine::setAutomaticGlobalSizeCorrection(const bool flag)
-//{
-//    globalSizeCorrection = flag;
-//}
-//
-//void OpenCLEngine::setKernelCacheUsage(const bool flag)
-//{
-//    if (!flag)
-//    {
-//        clearKernelCache();
-//    }
-//    kernelCacheFlag = flag;
-//}
-//
-//void OpenCLEngine::setKernelCacheCapacity(const size_t capacity)
-//{
-//    kernelCacheCapacity = capacity;
-//}
-//
-//void OpenCLEngine::clearKernelCache()
-//{
-//    kernelCache.clear();
-//}
-//
-//QueueId OpenCLEngine::getDefaultQueue() const
-//{
-//    return 0;
-//}
-//
-//std::vector<QueueId> OpenCLEngine::getAllQueues() const
-//{
-//    std::vector<QueueId> result;
-//
-//    for (size_t i = 0; i < commandQueues.size(); i++)
-//    {
-//        result.push_back(static_cast<QueueId>(i));
-//    }
-//
-//    return result;
-//}
-//
-//void OpenCLEngine::synchronizeQueue(const QueueId queue)
-//{
-//    if (queue >= commandQueues.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid command queue index: ") + std::to_string(queue));
-//    }
-//
-//    checkOpenCLError(clFinish(commandQueues.at(queue)->getQueue()), "clFinish");
-//}
-//
-//void OpenCLEngine::synchronizeDevice()
-//{
-//    for (auto& commandQueue : commandQueues)
-//    {
-//        checkOpenCLError(clFinish(commandQueue->getQueue()), "clFinish");
-//    }
 //}
 //
 //void OpenCLEngine::clearEvents()
@@ -598,101 +779,6 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
 //    userBuffers.insert(std::move(openclBuffer));
 //}
 //
-//void OpenCLEngine::setPersistentBufferUsage(const bool flag)
-//{
-//    persistentBufferFlag = flag;
-//}
-//
-//void OpenCLEngine::clearBuffer(const ArgumentId id)
-//{
-//    auto iterator = buffers.cbegin();
-//
-//    while (iterator != buffers.cend())
-//    {
-//        if (iterator->get()->getKernelArgumentId() == id)
-//        {
-//            buffers.erase(iterator);
-//            return;
-//        }
-//        else
-//        {
-//            ++iterator;
-//        }
-//    }
-//}
-//
-//void OpenCLEngine::clearBuffers()
-//{
-//    buffers.clear();
-//}
-//
-//void OpenCLEngine::clearBuffers(const ArgumentAccessType accessType)
-//{
-//    auto iterator = buffers.cbegin();
-//
-//    while (iterator != buffers.cend())
-//    {
-//        if (iterator->get()->getOpenclMemoryFlag() == getOpenCLMemoryType(accessType))
-//        {
-//            iterator = buffers.erase(iterator);
-//        }
-//        else
-//        {
-//            ++iterator;
-//        }
-//    }
-//}
-//
-//void OpenCLEngine::printComputeAPIInfo(std::ostream& outputTarget) const
-//{
-//    auto platforms = getOpenCLPlatforms();
-//
-//    for (size_t i = 0; i < platforms.size(); i++)
-//    {
-//        outputTarget << "Platform " << i << ": " << platforms.at(i).getName() << std::endl;
-//        auto devices = getOpenCLDevices(platforms.at(i));
-//
-//        outputTarget << "Devices for platform " << i << ":" << std::endl;
-//        for (size_t j = 0; j < devices.size(); j++)
-//        {
-//            outputTarget << "Device " << j << ": " << devices.at(j).getName() << std::endl;
-//        }
-//        outputTarget << std::endl;
-//    }
-//}
-//
-//std::vector<PlatformInfo> OpenCLEngine::getPlatformInfo() const
-//{
-//    std::vector<PlatformInfo> result;
-//    auto platforms = getOpenCLPlatforms();
-//
-//    for (size_t i = 0; i < platforms.size(); i++)
-//    {
-//        result.push_back(getOpenCLPlatformInfo(static_cast<PlatformIndex>(i)));
-//    }
-//
-//    return result;
-//}
-//
-//std::vector<DeviceInfo> OpenCLEngine::getDeviceInfo(const PlatformIndex platform) const
-//{
-//    std::vector<DeviceInfo> result;
-//    auto platforms = getOpenCLPlatforms();
-//    auto devices = getOpenCLDevices(platforms.at(platform));
-//
-//    for (size_t i = 0; i < devices.size(); i++)
-//    {
-//        result.push_back(getOpenCLDeviceInfo(platform, static_cast<DeviceIndex>(i)));
-//    }
-//
-//    return result;
-//}
-//
-//DeviceInfo OpenCLEngine::getCurrentDeviceInfo() const
-//{
-//    return getOpenCLDeviceInfo(platformIndex, deviceIndex);
-//}
-//
 //void OpenCLEngine::initializeKernelProfiling(const KernelRuntimeData& kernelData)
 //{
 //    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
@@ -773,31 +859,6 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
 //    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 //}
 //
-//uint64_t OpenCLEngine::getRemainingKernelProfilingRuns(const std::string& kernelName, const std::string& kernelSource)
-//{
-//    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-//    auto profilingInstance = kernelProfilingInstances.find({kernelName, kernelSource});
-//
-//    if (profilingInstance == kernelProfilingInstances.end())
-//    {
-//        return 0;
-//    }
-//
-//    return static_cast<uint64_t>(profilingInstance->second->getRemainingPassCount());
-//    #else
-//    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-//    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
-//}
-//
-//bool OpenCLEngine::hasAccurateRemainingKernelProfilingRuns() const
-//{
-//#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-//    return true;
-//#else
-//    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-//#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
-//}
-//
 //KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
 //{
 //    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
@@ -840,13 +901,6 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
 //    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
 //    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 //}
-//
-//std::unique_ptr<OpenCLProgram> OpenCLEngine::createAndBuildProgram(const std::string& source) const
-//{
-//    auto program = std::make_unique<OpenCLProgram>(source, context->getContext(), std::vector<cl_device_id>{context->getDevice()});
-//    program->build(compilerOptions);
-//    return program;
-//}
 
 void OpenClEngine::InitializeGpa()
 {
@@ -856,41 +910,6 @@ void OpenClEngine::InitializeGpa()
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-//void OpenCLEngine::setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument)
-//{
-//    if (argument.getUploadType() == ArgumentUploadType::Vector)
-//    {
-//        if (!loadBufferFromCache(argument.getId(), kernel))
-//        {
-//            uploadArgument(argument);
-//            loadBufferFromCache(argument.getId(), kernel);
-//        }
-//    }
-//    else if (argument.getUploadType() == ArgumentUploadType::Scalar)
-//    {
-//        kernel.setKernelArgumentScalar(argument.getData(), argument.getElementSizeInBytes());
-//    }
-//    else
-//    {
-//        kernel.setKernelArgumentLocal(argument.getElementSizeInBytes() * argument.getNumberOfElements());
-//    }
-//}
-//
-//void OpenCLEngine::setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers)
-//{
-//    size_t numberOfElements = argument.getNumberOfElements();
-//
-//    for (const auto& modifier : modifiers)
-//    {
-//        if (modifier.getArgument() == argument.getId())
-//        {
-//            numberOfElements = modifier.getModifiedSize(numberOfElements);
-//        }
-//    }
-//
-//    kernel.setKernelArgumentLocal(argument.getElementSizeInBytes() * numberOfElements);
-//}
-//
 //EventId OpenCLEngine::enqueueKernel(OpenCLKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
 //    const QueueId queue, const uint64_t kernelLaunchOverhead) const
 //{
@@ -949,87 +968,6 @@ void OpenClEngine::InitializeGpa()
 //    result.setCompilationData(compilationData);
 //
 //    return result;
-//}
-//
-//OpenCLBuffer* OpenCLEngine::findBuffer(const ArgumentId id) const
-//{
-//    for (const auto& buffer : userBuffers)
-//    {
-//        if (buffer->getKernelArgumentId() == id)
-//        {
-//            return buffer.get();
-//        }
-//    }
-//
-//    if (persistentBufferFlag)
-//    {
-//        for (const auto& buffer : persistentBuffers)
-//        {
-//            if (buffer->getKernelArgumentId() == id)
-//            {
-//                return buffer.get();
-//            }
-//        }
-//    }
-//
-//    for (const auto& buffer : buffers)
-//    {
-//        if (buffer->getKernelArgumentId() == id)
-//        {
-//            return buffer.get();
-//        }
-//    }
-//
-//    return nullptr;
-//}
-//
-//void OpenCLEngine::setKernelArgumentVector(OpenCLKernel& kernel, const OpenCLBuffer& buffer) const
-//{
-//    if (buffer.getMemoryLocation() == ArgumentMemoryLocation::Unified)
-//    {
-//        kernel.setKernelArgumentVectorSVM(buffer.getRawBuffer());
-//    }
-//    else
-//    {
-//        cl_mem clBuffer = buffer.getBuffer();
-//        kernel.setKernelArgumentVector((void*)&clBuffer);
-//    }
-//}
-//
-//bool OpenCLEngine::loadBufferFromCache(const ArgumentId id, OpenCLKernel& kernel) const
-//{
-//    OpenCLBuffer* buffer = findBuffer(id);
-//
-//    if (buffer != nullptr)
-//    {
-//        setKernelArgumentVector(kernel, *buffer);
-//        return true;
-//    }
-//
-//    return false;
-//}
-//
-//void OpenCLEngine::checkLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers,
-//    const std::vector<LocalMemoryModifier>& modifiers) const
-//{
-//    for (const auto& modifier : modifiers)
-//    {
-//        bool modifierArgumentFound = false;
-//
-//        for (const auto argument : argumentPointers)
-//        {
-//            if (modifier.getArgument() == argument->getId() && argument->getUploadType() == ArgumentUploadType::Local)
-//            {
-//                modifierArgumentFound = true;
-//            }
-//        }
-//
-//        if (!modifierArgumentFound)
-//        {
-//            throw std::runtime_error(std::string("No matching local memory argument found for modifier, argument id in modifier: ")
-//                + std::to_string(modifier.getArgument()));
-//        }
-//    }
 //}
 //
 //#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)

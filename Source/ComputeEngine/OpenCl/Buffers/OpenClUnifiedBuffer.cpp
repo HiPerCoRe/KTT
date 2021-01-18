@@ -23,7 +23,7 @@ OpenClUnifiedBuffer::OpenClUnifiedBuffer(const KernelArgument& argument, ActionI
     m_MemoryFlags(GetMemoryFlags()),
     m_UserOwned(false)
 {
-    Logger::LogDebug(std::string("Initializing OpenCL unified buffer with id ") + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing OpenCL unified buffer with id " + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Unified, "Argument memory location mismatch");
 
 #ifdef CL_VERSION_2_0
@@ -49,7 +49,7 @@ OpenClUnifiedBuffer::OpenClUnifiedBuffer(const KernelArgument& argument, ActionI
     m_MemoryFlags(GetMemoryFlags()),
     m_UserOwned(true)
 {
-    Logger::LogDebug(std::string("Initializing OpenCL unified buffer with id ") + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing OpenCL unified buffer with id " + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Unified, "Argument memory location mismatch");
 
     if (userBuffer == nullptr)
@@ -67,7 +67,7 @@ OpenClUnifiedBuffer::OpenClUnifiedBuffer(const KernelArgument& argument, ActionI
 
 OpenClUnifiedBuffer::~OpenClUnifiedBuffer()
 {
-    Logger::LogDebug(std::string("Releasing OpenCL unified buffer with id ") + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Releasing OpenCL unified buffer with id " + std::to_string(m_Argument.GetId()));
 
     if (m_UserOwned)
     {
@@ -82,7 +82,7 @@ OpenClUnifiedBuffer::~OpenClUnifiedBuffer()
 std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::UploadData([[maybe_unused]] const OpenClCommandQueue& queue,
     const void* source, const size_t dataSize)
 {
-    Logger::LogDebug(std::string("Uploading data into OpenCL unified buffer with id ") + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Uploading data into OpenCL unified buffer with id " + std::to_string(m_Argument.GetId()));
 
     if (m_BufferSize < dataSize)
     {
@@ -105,7 +105,7 @@ std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::UploadData([[maybe_un
 std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::DownloadData([[maybe_unused]] const OpenClCommandQueue& queue,
     void* destination, const size_t dataSize) const
 {
-    Logger::LogDebug(std::string("Downloading data from OpenCL unified buffer with id ") + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Downloading data from OpenCL unified buffer with id " + std::to_string(m_Argument.GetId()));
 
     if (m_BufferSize < dataSize)
     {

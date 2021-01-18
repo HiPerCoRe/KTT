@@ -60,12 +60,17 @@ public:
 
     bool Exists(const KeyType& key) const
     {
-        return m_ItemsMap(key) != m_ItemsMap.cend();
+        return m_ItemsMap.find(key) != m_ItemsMap.cend();
     }
     
     size_t Size() const noexcept
     {
         return m_ItemsMap.size();
+    }
+
+    size_t GetMaxSize() const noexcept
+    {
+        return m_MaxSize;
     }
 
     ListIterator Begin()

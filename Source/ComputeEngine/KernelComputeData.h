@@ -5,6 +5,7 @@
 
 #include <Api/DimensionVector.h>
 #include <Api/ParameterPair.h>
+#include <KernelArgument/KernelArgument.h>
 #include <KttTypes.h>
 
 namespace ktt
@@ -15,7 +16,7 @@ class KernelComputeData
 public:
     explicit KernelComputeData(const std::string& name, const std::string& defaultSource, const std::string& configurationPrefix,
         const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterPair>& parameterPairs,
-        const std::vector<ArgumentId>& arguments);
+        const std::vector<const KernelArgument*>& arguments);
 
     void SetGlobalSize(const DimensionVector& globalSize);
     void SetLocalSize(const DimensionVector& localSize);
@@ -29,7 +30,7 @@ public:
     std::vector<size_t> GetGlobalSizeVector() const;
     std::vector<size_t> GetLocalSizeVector() const;
     const std::vector<ParameterPair>& GetParameterPairs() const;
-    const std::vector<ArgumentId>& GetArguments() const;
+    const std::vector<const KernelArgument*>& GetArguments() const;
 
 private:
     std::string m_Name;
@@ -38,7 +39,7 @@ private:
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;
     std::vector<ParameterPair> m_ParameterPairs;
-    std::vector<ArgumentId> m_Arguments;
+    std::vector<const KernelArgument*> m_Arguments;
 };
 
 } // namespace ktt

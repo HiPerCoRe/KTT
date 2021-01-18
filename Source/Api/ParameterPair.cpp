@@ -1,5 +1,5 @@
 #include <Api/ParameterPair.h>
-#include <Utility/ErrorHandling/Assert.h>
+#include <Utility/ErrorHandling/KttException.h>
 
 namespace ktt
 {
@@ -54,13 +54,21 @@ std::string ParameterPair::GetString() const
 
 uint64_t ParameterPair::GetValue() const
 {
-    KttAssert(!HasValueDouble(), "Attempting to retrieve integer value from floating-point parameter pair");
+    if (HasValueDouble())
+    {
+        throw KttException("Attempting to retrieve integer value from floating-point parameter pair");
+    }
+
     return std::get<uint64_t>(m_Value);
 }
 
 double ParameterPair::GetValueDouble() const
 {
-    KttAssert(HasValueDouble(), "Attempting to retrieve floating-point value from integer parameter pair");
+    if (!HasValueDouble())
+    {
+        throw KttException("Attempting to retrieve floating-point value from integer parameter pair");
+    }
+
     return std::get<double>(m_Value);
 }
 

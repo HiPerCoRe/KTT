@@ -14,7 +14,7 @@ OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, std::shared_p
     m_Kernel(kernel),
     m_Overhead(InvalidDuration)
 {
-    Logger::LogDebug(std::string("Initializing OpenCL compute action with id ") + std::to_string(id)
+    Logger::LogDebug("Initializing OpenCL compute action with id " + std::to_string(id)
         + " for kernel with name " + kernel->GetName());
     KttAssert(m_Kernel != nullptr, "Invalid kernel was used during OpenCL compute action initialization");
 
@@ -33,7 +33,7 @@ void OpenClComputeAction::SetReleaseFlag()
 
 void OpenClComputeAction::WaitForFinish()
 {
-    Logger::LogDebug(std::string("Waiting for OpenCL kernel compute action with id ") + std::to_string(m_Id));
+    Logger::LogDebug("Waiting for OpenCL kernel compute action with id " + std::to_string(m_Id));
     m_Event->WaitForFinish();
 }
 

@@ -14,7 +14,7 @@ GpaPass::GpaPass(GPAFunctionTable& functions, GpaInstance& instance) :
     m_Instance(instance),
     m_PassIndex(instance.GetPassIndex())
 {
-    Logger::LogDebug(std::string("Beginning GPA pass with index ") + std::to_string(m_PassIndex)
+    Logger::LogDebug("Beginning GPA pass with index " + std::to_string(m_PassIndex)
         + " for GPA instance with sample id " + std::to_string(m_Instance.GetSampleId()));
     CheckError(functions.GPA_BeginCommandList(instance.GetSession(), m_PassIndex, GPA_NULL_COMMAND_LIST, GPA_COMMAND_LIST_NONE,
         &m_CommandList), functions, "GPA_BeginCommandList");
@@ -23,7 +23,7 @@ GpaPass::GpaPass(GPAFunctionTable& functions, GpaInstance& instance) :
 
 GpaPass::~GpaPass()
 {
-    Logger::LogDebug(std::string("Ending GPA pass with index ") + std::to_string(m_PassIndex)
+    Logger::LogDebug("Ending GPA pass with index " + std::to_string(m_PassIndex)
         + " for GPA instance with sample id " + std::to_string(m_Instance.GetSampleId()));
     CheckError(m_Functions.GPA_EndSample(m_CommandList), m_Functions, "GPA_EndSample");
     CheckError(m_Functions.GPA_EndCommandList(m_CommandList), m_Functions, "GPA_EndCommandList");

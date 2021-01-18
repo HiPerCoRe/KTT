@@ -15,7 +15,7 @@ OpenClCommandQueue::OpenClCommandQueue(const QueueId id, const OpenClContext& co
     m_Id(id),
     m_OwningQueue(true)
 {
-    Logger::LogDebug(std::string("Initializing OpenCL queue with id ") + std::to_string(id));
+    Logger::LogDebug("Initializing OpenCL queue with id " + std::to_string(id));
     cl_int result;
 
 #ifdef CL_VERSION_2_0
@@ -33,7 +33,7 @@ OpenClCommandQueue::OpenClCommandQueue(const QueueId id, const OpenClContext& co
     m_Id(id),
     m_OwningQueue(false)
 {
-    Logger::LogDebug(std::string("Initializing OpenCL queue with id ") + std::to_string(id));
+    Logger::LogDebug("Initializing OpenCL queue with id " + std::to_string(id));
     m_Queue = static_cast<cl_command_queue>(queue);
 
     if (m_Queue == nullptr)
@@ -53,12 +53,18 @@ OpenClCommandQueue::OpenClCommandQueue(const QueueId id, const OpenClContext& co
 
 OpenClCommandQueue::~OpenClCommandQueue()
 {
-    Logger::LogDebug(std::string("Releasing OpenCL queue with id ") + std::to_string(m_Id));
+    Logger::LogDebug("Releasing OpenCL queue with id " + std::to_string(m_Id));
 
     if (m_OwningQueue)
     {
         CheckError(clReleaseCommandQueue(m_Queue), "clReleaseCommandQueue");
     }
+}
+
+void OpenClCommandQueue::Synchronize()
+{
+    Logger::LogDebug("Synchronizing OpenCL queue with id " + std::to_string(m_Id));
+    CheckError(clFinish(m_Queue), "clFinish");
 }
 
 cl_command_queue OpenClCommandQueue::GetQueue() const

@@ -49,7 +49,7 @@ public:
     TransferActionId UpdateArgument(const ArgumentId id, const QueueId queue, const void* data,
         const size_t dataSize) override;
     TransferActionId DownloadArgument(const ArgumentId id, const QueueId queue, void* destination,
-        const size_t dataSize) const override;
+        const size_t dataSize) override;
     TransferActionId CopyArgument(const ArgumentId destination, const QueueId queue, const ArgumentId source,
         const size_t dataSize) override;
     uint64_t WaitForTransferAction(const TransferActionId id) const override;
@@ -67,7 +67,7 @@ public:
 
     // Information retrieval methods
     std::vector<PlatformInfo> GetPlatformInfo() const override;
-    std::vector<DeviceInfo> GetDeviceInfo(const PlatformIndex platform) const override;
+    std::vector<DeviceInfo> GetDeviceInfo(const PlatformIndex platformIndex) const override;
     DeviceInfo GetCurrentDeviceInfo() const override;
 
     // Utility methods
@@ -80,7 +80,6 @@ public:
 private:
     PlatformIndex m_PlatformIndex;
     DeviceIndex m_DeviceIndex;
-    std::string m_CompilerOptions;
     GlobalSizeType m_GlobalSizeType;
     bool m_GlobalSizeCorrection;
     ActionIdGenerator m_Generator;
@@ -98,19 +97,15 @@ private:
     std::map<KernelComputeId, std::unique_ptr<GpaInstance>> m_GpaInstances;
     #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
-    //std::unique_ptr<OpenClProgram> CreateAndBuildProgram(const std::string& source) const;
-    void InitializeGpa();
-    //void SetKernelArgument(OpenClKernel& kernel, KernelArgument& argument);
-    //void SetKernelArgument(OpenClKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers);
+    std::shared_ptr<OpenClKernel> LoadKernel(const KernelComputeData& data);
+    void SetKernelArguments(OpenClKernel& kernel, const KernelComputeData& data);
+    void SetKernelArgument(OpenClKernel& kernel, const KernelArgument& argument);
     //ComputeActionId EnqueueKernel(OpenClKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
     //    const QueueId queue, const uint64_t kernelLaunchOverhead) const;
     //KernelResult CreateKernelResult(const EventId id) const;
-    //OpenClBuffer* FindBuffer(const ArgumentId id) const;
-    //void SetKernelArgumentVector(OpenClKernel& kernel, const OpenClBuffer& buffer) const;
-    //bool LoadBufferFromCache(const ArgumentId id, OpenClKernel& kernel) const;
-    //void CheckLocalMemoryModifiers(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
 
     //#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    void InitializeGpa();
     //void InitializeProfiling(const KernelComputeId& id);
     //const KernelComputeId& GetKernelFromEvent(const EventId id) const;
     //void LaunchDummyPass(const KernelComputeId& id);

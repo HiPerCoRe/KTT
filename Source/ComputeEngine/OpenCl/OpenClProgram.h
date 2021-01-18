@@ -17,13 +17,16 @@ public:
     explicit OpenClProgram(const OpenClContext& context, const std::string& source);
     ~OpenClProgram();
 
-    void Build(const std::string& compilerOptions);
+    void Build();
 
     const std::string& GetSource() const;
     cl_program GetProgram() const;
     cl_device_id GetDevice() const;
 
+    static void SetCompilerOptions(const std::string& options);
+
 private:
+    inline static std::string m_CompilerOptions;
     std::string m_Source;
     cl_program m_Program;
     cl_device_id m_Device;

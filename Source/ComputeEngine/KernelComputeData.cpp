@@ -5,7 +5,7 @@ namespace ktt
 
 KernelComputeData::KernelComputeData(const std::string& name, const std::string& defaultSource, const std::string& configurationPrefix,
     const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterPair>& parameterPairs,
-    const std::vector<ArgumentId>& arguments) :
+    const std::vector<const KernelArgument*>& arguments) :
     m_Name(name),
     m_DefaultSource(defaultSource),
     m_ConfigurationPrefix(configurationPrefix),
@@ -70,7 +70,7 @@ const std::vector<ParameterPair>& KernelComputeData::GetParameterPairs() const
     return m_ParameterPairs;
 }
 
-const std::vector<ArgumentId>& KernelComputeData::GetArguments() const
+const std::vector<const KernelArgument*>& KernelComputeData::GetArguments() const
 {
     return m_Arguments;
 }

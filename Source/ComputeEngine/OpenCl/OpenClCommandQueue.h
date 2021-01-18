@@ -17,6 +17,8 @@ public:
     explicit OpenClCommandQueue(const QueueId id, const OpenClContext& context, ComputeQueue queue);
     ~OpenClCommandQueue();
 
+    void Synchronize();
+
     cl_command_queue GetQueue() const;
     cl_context GetContext() const;
     QueueId GetId() const;

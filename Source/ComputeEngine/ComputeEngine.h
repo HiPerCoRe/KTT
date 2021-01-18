@@ -35,7 +35,7 @@ public:
     virtual TransferActionId UpdateArgument(const ArgumentId id, const QueueId queue, const void* data,
         const size_t dataSize) = 0;
     virtual TransferActionId DownloadArgument(const ArgumentId id, const QueueId queue, void* destination,
-        const size_t dataSize) const = 0;
+        const size_t dataSize) = 0;
     virtual TransferActionId CopyArgument(const ArgumentId destination, const QueueId queue, const ArgumentId source,
         const size_t dataSize) = 0;
     virtual uint64_t WaitForTransferAction(const TransferActionId id) const = 0;
@@ -53,7 +53,7 @@ public:
 
     // Information retrieval methods
     virtual std::vector<PlatformInfo> GetPlatformInfo() const = 0;
-    virtual std::vector<DeviceInfo> GetDeviceInfo(const PlatformIndex platform) const = 0;
+    virtual std::vector<DeviceInfo> GetDeviceInfo(const PlatformIndex platformIndex) const = 0;
     virtual DeviceInfo GetCurrentDeviceInfo() const = 0;
 
     // Utility methods

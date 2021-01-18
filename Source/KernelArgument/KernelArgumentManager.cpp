@@ -44,7 +44,7 @@ const KernelArgument& KernelArgumentManager::GetArgument(const ArgumentId id) co
 {
     if (id >= m_IdGenerator)
     {
-        throw KttException(std::string("Attempting to retrieve argument with invalid id: ") + std::to_string(id));
+        throw KttException("Attempting to retrieve argument with invalid id: " + std::to_string(id));
     }
 
     return *m_Arguments[id];

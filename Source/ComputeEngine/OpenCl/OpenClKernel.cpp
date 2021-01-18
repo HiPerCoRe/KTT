@@ -14,7 +14,7 @@ OpenClKernel::OpenClKernel(std::unique_ptr<OpenClProgram> program, const std::st
     m_Program(std::move(program)),
     m_NextArgumentIndex(0)
 {
-    Logger::LogDebug(std::string("Initializing OpenCL kernel with name ") + name);
+    Logger::LogDebug("Initializing OpenCL kernel with name " + name);
     KttAssert(m_Program != nullptr, "Invalid program was used during OpenCL kernel initialization");
 
     cl_int result;
@@ -24,7 +24,7 @@ OpenClKernel::OpenClKernel(std::unique_ptr<OpenClProgram> program, const std::st
 
 OpenClKernel::~OpenClKernel()
 {
-    Logger::LogDebug(std::string("Releasing OpenCL kernel with name ") + m_Name);
+    Logger::LogDebug("Releasing OpenCL kernel with name " + m_Name);
     CheckError(clReleaseKernel(m_Kernel), "clReleaseKernel");
 }
 
@@ -50,6 +50,9 @@ void OpenClKernel::SetArgument(OpenClBuffer& buffer)
 {
     switch (buffer.GetMemoryLocation())
     {
+    case ArgumentMemoryLocation::Undefined:
+        KttError("Non-vector arguments should be set through other argument setter method");
+        break;
     case ArgumentMemoryLocation::Device:
     case ArgumentMemoryLocation::Host:
     case ArgumentMemoryLocation::HostZeroCopy:
@@ -65,7 +68,7 @@ void OpenClKernel::SetArgument(OpenClBuffer& buffer)
 
 void OpenClKernel::ResetArguments()
 {
-    Logger::LogDebug(std::string("Resetting arguments for OpenCL kernel with name ") + m_Name);
+    Logger::LogDebug("Resetting arguments for OpenCL kernel with name " + m_Name);
     m_NextArgumentIndex = 0;
 }
 
@@ -93,7 +96,7 @@ cl_kernel OpenClKernel::GetKernel() const
 
 void OpenClKernel::SetKernelArgumentVector(const void* buffer)
 {
-    Logger::LogDebug(std::string("Setting vector argument on index ") + std::to_string(m_NextArgumentIndex)
+    Logger::LogDebug("Setting vector argument on index " + std::to_string(m_NextArgumentIndex)
         + " for OpenCL kernel with name " + m_Name);
     CheckError(clSetKernelArg(m_Kernel, m_NextArgumentIndex, sizeof(cl_mem), buffer), "clSetKernelArg");
     ++m_NextArgumentIndex;
@@ -102,7 +105,7 @@ void OpenClKernel::SetKernelArgumentVector(const void* buffer)
 void OpenClKernel::SetKernelArgumentVectorSvm([[maybe_unused]] const void* buffer)
 {
 #ifdef CL_VERSION_2_0
-    Logger::LogDebug(std::string("Setting SVM vector argument on index ") + std::to_string(m_NextArgumentIndex)
+    Logger::LogDebug("Setting SVM vector argument on index " + std::to_string(m_NextArgumentIndex)
         + " for OpenCL kernel with name " + m_Name);
     CheckError(clSetKernelArgSVMPointer(m_Kernel, m_NextArgumentIndex, buffer), "clSetKernelArgSVMPointer");
     ++m_NextArgumentIndex;
@@ -113,7 +116,7 @@ void OpenClKernel::SetKernelArgumentVectorSvm([[maybe_unused]] const void* buffe
 
 void OpenClKernel::SetKernelArgumentScalar(const void* value, const size_t size)
 {
-    Logger::LogDebug(std::string("Setting scalar argument on index ") + std::to_string(m_NextArgumentIndex)
+    Logger::LogDebug("Setting scalar argument on index " + std::to_string(m_NextArgumentIndex)
         + " for OpenCL kernel with name " + m_Name);
     CheckError(clSetKernelArg(m_Kernel, m_NextArgumentIndex, size, value), "clSetKernelArg");
     ++m_NextArgumentIndex;
@@ -121,7 +124,7 @@ void OpenClKernel::SetKernelArgumentScalar(const void* value, const size_t size)
 
 void OpenClKernel::SetKernelArgumentLocal(const size_t size)
 {
-    Logger::LogDebug(std::string("Setting local memory argument on index ") + std::to_string(m_NextArgumentIndex)
+    Logger::LogDebug("Setting local memory argument on index " + std::to_string(m_NextArgumentIndex)
         + " for OpenCL kernel with name " + m_Name);
     CheckError(clSetKernelArg(m_Kernel, m_NextArgumentIndex, size, nullptr), "clSetKernelArg");
     ++m_NextArgumentIndex;

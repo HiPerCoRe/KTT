@@ -14,7 +14,7 @@ OpenClTransferAction::OpenClTransferAction(const TransferActionId id, const bool
     m_Duration(InvalidDuration),
     m_Overhead(InvalidDuration)
 {
-    Logger::LogDebug(std::string("Initializing OpenCL transfer action with id ") + std::to_string(id));
+    Logger::LogDebug("Initializing OpenCL transfer action with id " + std::to_string(id));
 
     if (isAsync)
     {
@@ -41,7 +41,7 @@ void OpenClTransferAction::SetReleaseFlag()
 
 void OpenClTransferAction::WaitForFinish()
 {
-    Logger::LogDebug(std::string("Waiting for OpenCL transfer action with id ") + std::to_string(m_Id));
+    Logger::LogDebug("Waiting for OpenCL transfer action with id " + std::to_string(m_Id));
 
     if (IsAsync())
     {
