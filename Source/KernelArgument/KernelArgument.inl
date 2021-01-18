@@ -1,6 +1,3 @@
-#include <cstdint>
-#include <vector>
-
 #include <KernelArgument/KernelArgument.h>
 
 namespace ktt

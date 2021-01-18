@@ -35,6 +35,11 @@ const std::string& KernelComputeData::GetDefaultSource() const
     return m_DefaultSource;
 }
 
+const std::string& KernelComputeData::GetConfigurationPrefix() const
+{
+    return m_ConfigurationPrefix;
+}
+
 std::string KernelComputeData::GetSource() const
 {
     return m_ConfigurationPrefix + m_DefaultSource;
@@ -53,16 +58,6 @@ const DimensionVector& KernelComputeData::GetGlobalSize() const
 const DimensionVector& KernelComputeData::GetLocalSize() const
 {
     return m_LocalSize;
-}
-
-std::vector<size_t> KernelComputeData::GetGlobalSizeVector() const
-{
-    return m_GlobalSize.GetVector();
-}
-
-std::vector<size_t> KernelComputeData::GetLocalSizeVector() const
-{
-    return m_LocalSize.GetVector();
 }
 
 const std::vector<ParameterPair>& KernelComputeData::GetParameterPairs() const

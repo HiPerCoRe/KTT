@@ -90,6 +90,12 @@ public:
       */
     void Divide(const DimensionVector& divisor);
 
+    /** @fn void RoundUp(const DimensionVector& multiple)
+      * Rounds up thread sizes to be multiple of values provided by specified dimension vector.
+      * @param multiple Source of values for thread size round up.
+      */
+    void RoundUp(const DimensionVector& multiple);
+
     /** @fn void ModifyByValue(const size_t value, const ModifierAction modifierAction, const ModifierDimension modifierDimension)
       * Modifies thread size in single dimension based on provided value and action.
       * @param value Value which will be used to modify thread size in single dimension based on specified action.

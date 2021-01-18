@@ -1,5 +1,9 @@
 #ifdef KTT_API_OPENCL
 
+#include <cstddef>
+#include <vector>
+
+#include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <ComputeEngine/OpenCl/OpenClProgram.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 

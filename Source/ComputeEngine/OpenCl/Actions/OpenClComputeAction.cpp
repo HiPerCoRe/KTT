@@ -26,6 +26,11 @@ void OpenClComputeAction::SetOverhead(const Nanoseconds overhead)
     m_Overhead = overhead;
 }
 
+void OpenClComputeAction::SetConfigurationPrefix(const std::string& prefix)
+{
+    m_Prefix = prefix;
+}
+
 void OpenClComputeAction::SetReleaseFlag()
 {
     m_Event->SetReleaseFlag();
@@ -60,6 +65,11 @@ Nanoseconds OpenClComputeAction::GetDuration() const
 Nanoseconds OpenClComputeAction::GetOverhead() const
 {
     return m_Overhead;
+}
+
+const std::string& OpenClComputeAction::GetConfigurationPrefix() const
+{
+    return m_Prefix;
 }
 
 } // namespace ktt

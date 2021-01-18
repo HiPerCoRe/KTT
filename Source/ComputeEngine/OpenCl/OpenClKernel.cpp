@@ -1,7 +1,12 @@
 #ifdef KTT_API_OPENCL
 
+#include <Api/Output/KernelCompilationData.h>
+#include <ComputeEngine/OpenCl/Actions/OpenClComputeAction.h>
+#include <ComputeEngine/OpenCl/Buffers/OpenClBuffer.h>
+#include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
 #include <ComputeEngine/OpenCl/OpenClKernel.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
+#include <KernelArgument/KernelArgument.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
@@ -9,9 +14,10 @@
 namespace ktt
 {
 
-OpenClKernel::OpenClKernel(std::unique_ptr<OpenClProgram> program, const std::string& name) :
+OpenClKernel::OpenClKernel(std::unique_ptr<OpenClProgram> program, const std::string& name, ActionIdGenerator& generator) :
     m_Name(name),
     m_Program(std::move(program)),
+    m_Generator(generator),
     m_NextArgumentIndex(0)
 {
     Logger::LogDebug("Initializing OpenCL kernel with name " + name);
@@ -26,6 +32,24 @@ OpenClKernel::~OpenClKernel()
 {
     Logger::LogDebug("Releasing OpenCL kernel with name " + m_Name);
     CheckError(clReleaseKernel(m_Kernel), "clReleaseKernel");
+}
+
+std::unique_ptr<OpenClComputeAction> OpenClKernel::Launch(const OpenClCommandQueue& queue, const DimensionVector& globalSize,
+    const DimensionVector& localSize)
+{
+    const DimensionVector adjustedSize = AdjustGlobalSize(globalSize, localSize);
+    const auto id = m_Generator.GenerateComputeId();
+    auto action = std::make_unique<OpenClComputeAction>(id, shared_from_this());
+
+    Logger::LogDebug("Launching kernel " + m_Name + " with compute action id " + std::to_string(id));
+    const auto globalVector = adjustedSize.GetVector();
+    const auto localVector = localSize.GetVector();
+    cl_int result = clEnqueueNDRangeKernel(queue.GetQueue(), m_Kernel, static_cast<cl_uint>(globalVector.size()), nullptr,
+        globalVector.data(), localVector.data(), 0, nullptr, action->GetEvent());
+    CheckError(result, "clEnqueueNDRangeKernel");
+
+    action->SetReleaseFlag();
+    return action;
 }
 
 void OpenClKernel::SetArgument(const KernelArgument& argument)
@@ -72,13 +96,13 @@ void OpenClKernel::ResetArguments()
     m_NextArgumentIndex = 0;
 }
 
-KernelCompilationData OpenClKernel::GenerateCompilationData() const
+std::unique_ptr<KernelCompilationData> OpenClKernel::GenerateCompilationData() const
 {
-    KernelCompilationData result;
+    auto result = std::make_unique<KernelCompilationData>();
 
-    result.m_MaxWorkGroupSize = GetAttribute(CL_KERNEL_WORK_GROUP_SIZE);
-    result.m_LocalMemorySize = GetAttribute(CL_KERNEL_LOCAL_MEM_SIZE);
-    result.m_PrivateMemorySize = GetAttribute(CL_KERNEL_PRIVATE_MEM_SIZE);
+    result->m_MaxWorkGroupSize = GetAttribute(CL_KERNEL_WORK_GROUP_SIZE);
+    result->m_LocalMemorySize = GetAttribute(CL_KERNEL_LOCAL_MEM_SIZE);
+    result->m_PrivateMemorySize = GetAttribute(CL_KERNEL_PRIVATE_MEM_SIZE);
     // It is currently not possible to retrieve kernel constant memory size and registers count in OpenCL
 
     return result;
@@ -92,6 +116,16 @@ const std::string& OpenClKernel::GetName() const
 cl_kernel OpenClKernel::GetKernel() const
 {
     return m_Kernel;
+}
+
+void OpenClKernel::SetGlobalSizeType(const GlobalSizeType type)
+{
+    m_GlobalSizeType = type;
+}
+
+void OpenClKernel::SetGlobalSizeCorrection(const bool flag)
+{
+    m_GlobalSizeCorrection = flag;
 }
 
 void OpenClKernel::SetKernelArgumentVector(const void* buffer)
@@ -135,6 +169,32 @@ uint64_t OpenClKernel::GetAttribute(const cl_kernel_work_group_info attribute) c
     uint64_t result;
     CheckError(clGetKernelWorkGroupInfo(m_Kernel, m_Program->GetDevice(), attribute, sizeof(result), &result, nullptr),
         "clGetKernelWorkGroupInfo");
+    return result;
+}
+
+DimensionVector OpenClKernel::AdjustGlobalSize(const DimensionVector& globalSize, const DimensionVector& localSize)
+{
+    DimensionVector result = globalSize;
+
+    switch (m_GlobalSizeType)
+    {
+    case GlobalSizeType::OpenCL:
+        // Do nothing
+        break;
+    case GlobalSizeType::CUDA:
+    case GlobalSizeType::Vulkan:
+        result.Multiply(localSize);
+        break;
+    default:
+        KttError("Unhandled global size type value");
+        break;
+    }
+
+    if (m_GlobalSizeCorrection)
+    {
+        result.RoundUp(localSize);
+    }
+
     return result;
 }
 

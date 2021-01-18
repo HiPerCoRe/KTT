@@ -4,7 +4,6 @@
 
 #include <map>
 #include <memory>
-#include <string>
 #include <vector>
 
 #include <Api/ComputeApiInitializer.h>
@@ -34,25 +33,25 @@ public:
     explicit OpenClEngine(const ComputeApiInitializer& initializer);
 
     // Kernel methods
-    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queue) override;
-    KernelResult WaitForComputeAction(const ComputeActionId id) const override;
+    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) override;
+    KernelResult WaitForComputeAction(const ComputeActionId id) override;
 
     // Profiling methods
-    KernelResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queue) override;
+    KernelResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId) override;
     void SetProfilingCounters(const std::vector<std::string>& counters) override;
     bool IsProfilingSessionActive(const KernelComputeId& id) override;
     uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) override;
     bool HasAccurateRemainingProfilingRuns() const override;
 
     // Buffer methods
-    TransferActionId UploadArgument(const KernelArgument& kernelArgument, const QueueId queue) override;
-    TransferActionId UpdateArgument(const ArgumentId id, const QueueId queue, const void* data,
+    TransferActionId UploadArgument(const KernelArgument& kernelArgument, const QueueId queueId) override;
+    TransferActionId UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
         const size_t dataSize) override;
-    TransferActionId DownloadArgument(const ArgumentId id, const QueueId queue, void* destination,
+    TransferActionId DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
         const size_t dataSize) override;
-    TransferActionId CopyArgument(const ArgumentId destination, const QueueId queue, const ArgumentId source,
+    TransferActionId CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
         const size_t dataSize) override;
-    uint64_t WaitForTransferAction(const TransferActionId id) const override;
+    uint64_t WaitForTransferAction(const TransferActionId id) override;
     void ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) override;
     void GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle) override;
     void AddCustomBuffer(const KernelArgument& kernelArgument, ComputeBuffer buffer) override;
@@ -62,7 +61,7 @@ public:
     // Queue methods
     QueueId GetDefaultQueue() const override;
     std::vector<QueueId> GetAllQueues() const override;
-    void SynchronizeQueue(const QueueId queue) override;
+    void SynchronizeQueue(const QueueId queueId) override;
     void SynchronizeDevice() override;
 
     // Information retrieval methods
@@ -80,8 +79,6 @@ public:
 private:
     PlatformIndex m_PlatformIndex;
     DeviceIndex m_DeviceIndex;
-    GlobalSizeType m_GlobalSizeType;
-    bool m_GlobalSizeCorrection;
     ActionIdGenerator m_Generator;
 
     std::unique_ptr<OpenClContext> m_Context;
@@ -98,11 +95,8 @@ private:
     #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
     std::shared_ptr<OpenClKernel> LoadKernel(const KernelComputeData& data);
-    void SetKernelArguments(OpenClKernel& kernel, const KernelComputeData& data);
+    void SetKernelArguments(OpenClKernel& kernel, const std::vector<const KernelArgument*> arguments);
     void SetKernelArgument(OpenClKernel& kernel, const KernelArgument& argument);
-    //ComputeActionId EnqueueKernel(OpenClKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-    //    const QueueId queue, const uint64_t kernelLaunchOverhead) const;
-    //KernelResult CreateKernelResult(const EventId id) const;
 
     //#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     void InitializeGpa();

@@ -2,7 +2,6 @@
 
 #ifdef KTT_API_OPENCL
 
-#include <cstdint>
 #include <CL/cl.h>
 
 #include <KttTypes.h>

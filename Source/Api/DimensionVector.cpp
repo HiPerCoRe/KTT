@@ -1,5 +1,6 @@
 #include <Api/DimensionVector.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/NumericalUtilities.h>
 
 namespace ktt
 {
@@ -84,6 +85,13 @@ void DimensionVector::Divide(const DimensionVector& divisor)
     m_SizeX /= divisor.m_SizeX;
     m_SizeY /= divisor.m_SizeY;
     m_SizeZ /= divisor.m_SizeZ;
+}
+
+void DimensionVector::RoundUp(const DimensionVector& multiple)
+{
+    m_SizeX = ktt::RoundUp(m_SizeX, multiple.GetSizeX());
+    m_SizeY = ktt::RoundUp(m_SizeY, multiple.GetSizeY());
+    m_SizeZ = ktt::RoundUp(m_SizeZ, multiple.GetSizeZ());
 }
 
 void DimensionVector::ModifyByValue(const size_t value, const ModifierAction modifierAction, const ModifierDimension modifierDimension)

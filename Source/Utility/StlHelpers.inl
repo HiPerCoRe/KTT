@@ -1,7 +1,3 @@
-#include <map>
-#include <set>
-#include <vector>
-
 #include <Utility/StlHelpers.h>
 
 namespace ktt

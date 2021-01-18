@@ -5,13 +5,15 @@
 #include <memory>
 #include <CL/cl.h>
 
-#include <ComputeEngine/OpenCl/Actions/OpenClTransferAction.h>
-#include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
+#include <KernelArgument/ArgumentAccessType.h>
 #include <KernelArgument/ArgumentMemoryLocation.h>
 #include <KttTypes.h>
 
 namespace ktt
 {
+
+class OpenClCommandQueue;
+class OpenClTransferAction;
 
 class OpenClBuffer
 {

@@ -3,6 +3,7 @@
 #include <string>
 
 #include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
+#include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 #include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>

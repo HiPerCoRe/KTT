@@ -3,7 +3,10 @@
 #include <cstring>
 #include <string>
 
+#include <ComputeEngine/OpenCl/Actions/OpenClTransferAction.h>
 #include <ComputeEngine/OpenCl/Buffers/OpenClUnifiedBuffer.h>
+#include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
+#include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/ErrorHandling/KttException.h>

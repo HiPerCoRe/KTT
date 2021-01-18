@@ -23,12 +23,11 @@ public:
 
     const std::string& GetName() const;
     const std::string& GetDefaultSource() const;
+    const std::string& GetConfigurationPrefix() const;
     std::string GetSource() const;
     KernelComputeId GetUniqueIdentifier() const;
     const DimensionVector& GetGlobalSize() const;
     const DimensionVector& GetLocalSize() const;
-    std::vector<size_t> GetGlobalSizeVector() const;
-    std::vector<size_t> GetLocalSizeVector() const;
     const std::vector<ParameterPair>& GetParameterPairs() const;
     const std::vector<const KernelArgument*>& GetArguments() const;
 

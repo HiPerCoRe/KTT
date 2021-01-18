@@ -9,8 +9,6 @@
 #include <GPUPerfAPI.h>
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
-#include <KernelArgument/ArgumentAccessType.h>
-
 namespace ktt
 {
 

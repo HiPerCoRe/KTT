@@ -3,13 +3,12 @@
 #ifdef KTT_API_OPENCL
 
 #include <string>
-#include <vector>
 #include <CL/cl.h>
-
-#include <ComputeEngine/OpenCl/OpenClContext.h>
 
 namespace ktt
 {
+
+class OpenClContext;
 
 class OpenClProgram
 {
@@ -26,11 +25,12 @@ public:
     static void SetCompilerOptions(const std::string& options);
 
 private:
-    inline static std::string m_CompilerOptions;
     std::string m_Source;
     cl_program m_Program;
     cl_device_id m_Device;
     
+    inline static std::string m_CompilerOptions;
+
     std::string GetBuildLog() const;
 };
 

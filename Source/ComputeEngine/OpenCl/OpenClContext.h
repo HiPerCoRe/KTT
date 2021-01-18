@@ -4,12 +4,13 @@
 
 #include <CL/cl.h>
 
-#include <ComputeEngine/OpenCl/OpenClDevice.h>
-#include <ComputeEngine/OpenCl/OpenClPlatform.h>
 #include <KttTypes.h>
 
 namespace ktt
 {
+
+class OpenClDevice;
+class OpenClPlatform;
 
 class OpenClContext
 {

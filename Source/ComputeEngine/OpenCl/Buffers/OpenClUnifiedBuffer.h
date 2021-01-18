@@ -11,6 +11,8 @@
 namespace ktt
 {
 
+class OpenClContext;
+
 class OpenClUnifiedBuffer : public OpenClBuffer
 {
 public:

@@ -4,11 +4,12 @@
 
 #include <CL/cl.h>
 
-#include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <KttTypes.h>
 
 namespace ktt
 {
+
+class OpenClContext;
 
 class OpenClCommandQueue
 {
