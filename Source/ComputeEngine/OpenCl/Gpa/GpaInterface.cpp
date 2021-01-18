@@ -13,6 +13,8 @@ namespace ktt
 
 GpaInterface::GpaInterface()
 {
+    Logger::LogDebug("Initializing GPA API");
+
     if (GPAApiManager::Instance()->LoadApi(GPA_API_OPENCL) != GPA_STATUS_OK)
     {
         throw KttException("GPA profiling API error: Failed to load GPA .dll (.so) library");
@@ -32,6 +34,7 @@ GpaInterface::GpaInterface()
 
 GpaInterface::~GpaInterface()
 {
+    Logger::LogDebug("Releasing GPA API");
     GPAApiManager::Instance()->UnloadApi(GPA_API_OPENCL);
 }
 

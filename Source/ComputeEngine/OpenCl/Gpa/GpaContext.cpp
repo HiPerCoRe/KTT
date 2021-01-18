@@ -2,6 +2,7 @@
 
 #include <ComputeEngine/OpenCl/Gpa/GpaContext.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
@@ -12,12 +13,14 @@ GpaContext::GpaContext(GPAFunctionTable& functions, OpenClCommandQueue& queue) :
     m_Counters(GetDefaultCounters()),
     m_SampleIdGenerator(0)
 {
+    Logger::LogDebug("Initializing GPA context");
     CheckError(functions.GPA_OpenContext(queue.GetQueue(), GPA_OPENCONTEXT_DEFAULT_BIT, &m_Context), functions,
         "GPA_OpenContext");
 }
 
 GpaContext::~GpaContext()
 {
+    Logger::LogDebug("Releasing GPA context");
     CheckError(m_Functions.GPA_CloseContext(m_Context), m_Functions, "GPA_CloseContext");
 }
 

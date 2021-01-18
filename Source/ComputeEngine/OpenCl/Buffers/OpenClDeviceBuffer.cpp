@@ -1,11 +1,13 @@
 #ifdef KTT_API_OPENCL
 
 #include <algorithm>
+#include <string>
 
 #include <ComputeEngine/OpenCl/Buffers/OpenClDeviceBuffer.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/ErrorHandling/KttException.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
@@ -18,6 +20,7 @@ OpenClDeviceBuffer::OpenClDeviceBuffer(const KernelArgument& argument, ActionIdG
     m_MemoryFlags(GetMemoryFlags()),
     m_UserOwned(false)
 {
+    Logger::LogDebug(std::string("Initializing OpenCL device buffer with id ") + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Device, "Argument memory location mismatch");
 
     cl_int result;
@@ -33,6 +36,7 @@ OpenClDeviceBuffer::OpenClDeviceBuffer(const KernelArgument& argument, ActionIdG
     m_MemoryFlags(GetMemoryFlags()),
     m_UserOwned(true)
 {
+    Logger::LogDebug(std::string("Initializing OpenCL device buffer with id ") + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Device, "Argument memory location mismatch");
 
     if (userBuffer == nullptr)
@@ -46,6 +50,8 @@ OpenClDeviceBuffer::OpenClDeviceBuffer(const KernelArgument& argument, ActionIdG
 
 OpenClDeviceBuffer::~OpenClDeviceBuffer()
 {
+    Logger::LogDebug(std::string("Releasing OpenCL device buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (m_UserOwned)
     {
         return;
@@ -57,6 +63,8 @@ OpenClDeviceBuffer::~OpenClDeviceBuffer()
 std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::UploadData(const OpenClCommandQueue& queue, const void* source,
     const size_t dataSize)
 {
+    Logger::LogDebug(std::string("Uploading data into OpenCL device buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to upload is larger than size of buffer");
@@ -76,6 +84,8 @@ std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::UploadData(const OpenC
 std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::DownloadData(const OpenClCommandQueue& queue, void* destination,
     const size_t dataSize) const
 {
+    Logger::LogDebug(std::string("Downloading data from OpenCL device buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to download is larger than size of buffer");
@@ -95,6 +105,9 @@ std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::DownloadData(const Ope
 std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::CopyData(const OpenClCommandQueue& queue, const OpenClBuffer& source,
     const size_t dataSize)
 {
+    Logger::LogDebug(std::string("Copying data into OpenCL device buffer with id ") + std::to_string(m_Argument.GetId())
+        + " from buffer with id " + std::to_string(source.GetArgumentId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to copy is larger than size of target buffer");
@@ -118,6 +131,8 @@ std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::CopyData(const OpenClC
 
 void OpenClDeviceBuffer::Resize(const OpenClCommandQueue& queue, const size_t newSize, const bool preserveData)
 {
+    Logger::LogDebug(std::string("Resizing OpenCL device buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (m_BufferSize == newSize)
     {
         return;

@@ -82,8 +82,8 @@ private:
     DeviceIndex m_DeviceIndex;
     std::string m_CompilerOptions;
     GlobalSizeType m_GlobalSizeType;
-    ActionIdGenerator m_Generator;
     bool m_GlobalSizeCorrection;
+    ActionIdGenerator m_Generator;
 
     std::unique_ptr<OpenClContext> m_Context;
     std::vector<std::unique_ptr<OpenClCommandQueue>> m_Queues;
@@ -99,7 +99,7 @@ private:
     #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
     //std::unique_ptr<OpenClProgram> CreateAndBuildProgram(const std::string& source) const;
-    //void InitializeProfiler();
+    void InitializeGpa();
     //void SetKernelArgument(OpenClKernel& kernel, KernelArgument& argument);
     //void SetKernelArgument(OpenClKernel& kernel, KernelArgument& argument, const std::vector<LocalMemoryModifier>& modifiers);
     //ComputeActionId EnqueueKernel(OpenClKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,

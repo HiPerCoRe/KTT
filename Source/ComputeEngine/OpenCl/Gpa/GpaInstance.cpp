@@ -1,8 +1,11 @@
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 
+#include <string>
+
 #include <ComputeEngine/OpenCl/Gpa/GpaInstance.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
@@ -13,6 +16,7 @@ GpaInstance::GpaInstance(GPAFunctionTable& functions, GpaContext& context) :
     m_SampleId(context.GenerateSampleId()),
     m_CurrentPassIndex(0)
 {
+    Logger::LogDebug(std::string("Initializing GPA instance with sample id ") + std::to_string(m_SampleId));
     CheckError(functions.GPA_CreateSession(context.GetContext(), GPA_SESSION_SAMPLE_TYPE_DISCRETE_COUNTER, &m_Session),
         functions, "GPA_CreateSession");
 
@@ -27,6 +31,7 @@ GpaInstance::GpaInstance(GPAFunctionTable& functions, GpaContext& context) :
 
 GpaInstance::~GpaInstance()
 {
+    Logger::LogDebug(std::string("Releasing GPA instance with sample id ") + std::to_string(m_SampleId));
     CheckError(m_Functions.GPA_DeleteSession(m_Session), m_Functions, "GPA_DeleteSession");
 }
 
@@ -62,7 +67,9 @@ gpa_uint32 GpaInstance::GetRemainingPassCount() const
 
 KernelProfilingData GpaInstance::GenerateProfilingData() const
 {
+    Logger::LogDebug(std::string("Generating profiling data for GPA instance with sample id ") + std::to_string(m_SampleId));
     KttAssert(GetRemainingPassCount() == 0, "Profiling data can be generated only when all profiling passes are completed");
+
     CheckError(m_Functions.GPA_EndSession(m_Session), m_Functions, "GPA_EndSession");
     KttAssert(m_Functions.GPA_IsSessionComplete(m_Session) == GPA_STATUS_OK, "Incorrect handling of GPA profiling session");
 

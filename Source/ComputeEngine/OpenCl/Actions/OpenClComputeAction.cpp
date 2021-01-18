@@ -1,7 +1,10 @@
 #ifdef KTT_API_OPENCL
 
+#include <string>
+
 #include <ComputeEngine/OpenCl/Actions/OpenClComputeAction.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
@@ -11,6 +14,10 @@ OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, std::shared_p
     m_Kernel(kernel),
     m_Overhead(InvalidDuration)
 {
+    Logger::LogDebug(std::string("Initializing OpenCL compute action with id ") + std::to_string(id)
+        + " for kernel with name " + kernel->GetName());
+    KttAssert(m_Kernel != nullptr, "Invalid kernel was used during OpenCL compute action initialization");
+
     m_Event = std::make_unique<OpenClEvent>();
 }
 
@@ -26,6 +33,7 @@ void OpenClComputeAction::SetReleaseFlag()
 
 void OpenClComputeAction::WaitForFinish()
 {
+    Logger::LogDebug(std::string("Waiting for OpenCL kernel compute action with id ") + std::to_string(m_Id));
     m_Event->WaitForFinish();
 }
 

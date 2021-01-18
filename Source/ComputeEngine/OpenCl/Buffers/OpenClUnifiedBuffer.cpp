@@ -1,11 +1,13 @@
 #ifdef KTT_API_OPENCL
 
 #include <cstring>
+#include <string>
 
 #include <ComputeEngine/OpenCl/Buffers/OpenClUnifiedBuffer.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/ErrorHandling/KttException.h>
+#include <Utility/Logger/Logger.h>
 #include <Utility/Timer.h>
 
 namespace ktt
@@ -21,6 +23,7 @@ OpenClUnifiedBuffer::OpenClUnifiedBuffer(const KernelArgument& argument, ActionI
     m_MemoryFlags(GetMemoryFlags()),
     m_UserOwned(false)
 {
+    Logger::LogDebug(std::string("Initializing OpenCL unified buffer with id ") + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Unified, "Argument memory location mismatch");
 
 #ifdef CL_VERSION_2_0
@@ -46,6 +49,7 @@ OpenClUnifiedBuffer::OpenClUnifiedBuffer(const KernelArgument& argument, ActionI
     m_MemoryFlags(GetMemoryFlags()),
     m_UserOwned(true)
 {
+    Logger::LogDebug(std::string("Initializing OpenCL unified buffer with id ") + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Unified, "Argument memory location mismatch");
 
     if (userBuffer == nullptr)
@@ -63,6 +67,8 @@ OpenClUnifiedBuffer::OpenClUnifiedBuffer(const KernelArgument& argument, ActionI
 
 OpenClUnifiedBuffer::~OpenClUnifiedBuffer()
 {
+    Logger::LogDebug(std::string("Releasing OpenCL unified buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (m_UserOwned)
     {
         return;
@@ -76,6 +82,8 @@ OpenClUnifiedBuffer::~OpenClUnifiedBuffer()
 std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::UploadData([[maybe_unused]] const OpenClCommandQueue& queue,
     const void* source, const size_t dataSize)
 {
+    Logger::LogDebug(std::string("Uploading data into OpenCL unified buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to upload is larger than size of buffer");
@@ -97,6 +105,8 @@ std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::UploadData([[maybe_un
 std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::DownloadData([[maybe_unused]] const OpenClCommandQueue& queue,
     void* destination, const size_t dataSize) const
 {
+    Logger::LogDebug(std::string("Downloading data from OpenCL unified buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to download is larger than size of buffer");

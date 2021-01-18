@@ -19,10 +19,12 @@ public:
     ~OpenClContext();
 
     cl_context GetContext() const;
+    cl_platform_id GetPlatform() const;
     cl_device_id GetDevice() const;
 
 private:
     cl_context m_Context;
+    cl_platform_id m_Platform;
     cl_device_id m_Device;
     bool m_OwningContext;
 };

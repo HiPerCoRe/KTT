@@ -2,11 +2,13 @@
 
 #include <algorithm>
 #include <cstring>
+#include <string>
 
 #include <ComputeEngine/OpenCl/Buffers/OpenClHostBuffer.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/ErrorHandling/KttException.h>
+#include <Utility/Logger/Logger.h>
 #include <Utility/Timer.h>
 
 namespace ktt
@@ -21,6 +23,7 @@ OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& 
     m_MemoryFlags(GetMemoryFlags()),
     m_UserOwned(false)
 {
+    Logger::LogDebug(std::string("Initializing OpenCL host buffer with id ") + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Host
         || argument.GetMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy, "Argument memory location mismatch");
 
@@ -48,6 +51,7 @@ OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& 
     m_MemoryFlags(GetMemoryFlags()),
     m_UserOwned(true)
 {
+    Logger::LogDebug(std::string("Initializing OpenCL host buffer with id ") + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Host
         || argument.GetMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy, "Argument memory location mismatch");
 
@@ -72,6 +76,8 @@ OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& 
 
 OpenClHostBuffer::~OpenClHostBuffer()
 {
+    Logger::LogDebug(std::string("Releasing OpenCL host buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (m_UserOwned)
     {
         return;
@@ -83,6 +89,8 @@ OpenClHostBuffer::~OpenClHostBuffer()
 std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::UploadData(const OpenClCommandQueue& queue, const void* source,
     const size_t dataSize)
 {
+    Logger::LogDebug(std::string("Uploading data into OpenCL host buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to upload is larger than size of buffer");
@@ -116,6 +124,8 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::UploadData(const OpenClC
 std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::DownloadData(const OpenClCommandQueue& queue, void* destination,
     const size_t dataSize) const
 {
+    Logger::LogDebug(std::string("Downloading data from OpenCL host buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to download is larger than size of buffer");
@@ -149,6 +159,9 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::DownloadData(const OpenC
 std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::CopyData(const OpenClCommandQueue& queue, const OpenClBuffer& source,
     const size_t dataSize)
 {
+    Logger::LogDebug(std::string("Copying data into OpenCL host buffer with id ") + std::to_string(m_Argument.GetId())
+        + " from buffer with id " + std::to_string(source.GetArgumentId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to copy is larger than size of target buffer");
@@ -172,6 +185,8 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::CopyData(const OpenClCom
 
 void OpenClHostBuffer::Resize(const OpenClCommandQueue& queue, const size_t newSize, const bool preserveData)
 {
+    Logger::LogDebug(std::string("Resizing OpenCL host buffer with id ") + std::to_string(m_Argument.GetId()));
+
     if (IsZeroCopy())
     {
         throw KttException("Resize operation on buffer with CL_MEM_USE_HOST_PTR flag is not supported");

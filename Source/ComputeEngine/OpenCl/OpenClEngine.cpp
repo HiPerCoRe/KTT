@@ -1,6 +1,8 @@
 #ifdef KTT_API_OPENCL
 
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
+#include <ComputeEngine/OpenCl/OpenClPlatform.h>
+#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 #include <Utility/StlHelpers.h>
 #include <Utility/Timer.h>
@@ -12,101 +14,81 @@
 namespace ktt
 {
 
-//OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
-//    m_PlatformIndex(platformIndex),
-//    m_DeviceIndex(deviceIndex),
-//    m_GlobalSizeType(GlobalSizeType::OpenCL),
-//    m_GlobalSizeCorrection(false),
-//    m_ComputeIdGenerator(0),
-//    m_TransferIdGenerator(0),
-//    m_KernelCache(10)
-//{
-//    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-//    Logger::logDebug("Initializing GPA profiling API");
-//    gpaInterface = std::make_unique<GPAInterface>();
-//    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
-//    
-//    auto platforms = getOpenCLPlatforms();
-//    if (platformIndex >= platforms.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid platform index: ") + std::to_string(platformIndex));
-//    }
-//
-//    auto devices = getOpenCLDevices(platforms.at(platformIndex));
-//    if (deviceIndex >= devices.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
-//    }
-//
-//    cl_device_id device = devices.at(deviceIndex).getId();
-//
-//    Logger::logDebug("Initializing OpenCL context");
-//    context = std::make_unique<OpenCLContext>(platforms.at(platformIndex).getId(), device);
-//
-//    Logger::logDebug("Initializing OpenCL queues");
-//    for (uint32_t i = 0; i < queueCount; i++)
-//    {
-//        auto commandQueue = std::make_unique<OpenCLCommandQueue>(i, context->getContext(), device);
-//        commandQueues.push_back(std::move(commandQueue));
-//    }
-//
-//    initializeProfiler();
-//}
-//
-//OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
-//    compilerOptions(""),
-//    globalSizeType(GlobalSizeType::OpenCL),
-//    globalSizeCorrection(false),
-//    kernelCacheFlag(true),
-//    kernelCacheCapacity(10),
-//    persistentBufferFlag(true),
-//    nextEventId(0)
-//{
-//    Logger::logDebug("Initializing OpenCL context");
-//    context = std::make_unique<OpenCLContext>(initializer.getContext());
-//
-//    auto platforms = getOpenCLPlatforms();
-//
-//    for (size_t i = 0; i < platforms.size(); ++i)
-//    {
-//        if (context->getPlatform() == platforms[i].getId())
-//        {
-//            platformIndex = static_cast<PlatformIndex>(i);
-//            break;
-//        }
-//    }
-//
-//    auto devices = getOpenCLDevices(platforms[platformIndex]);
-//
-//    for (size_t i = 0; i < devices.size(); ++i)
-//    {
-//        if (context->getDevice() == devices[i].getId())
-//        {
-//            deviceIndex = static_cast<DeviceIndex>(i);
-//            break;
-//        }
-//    }
-//
-//    Logger::logDebug("Initializing OpenCL queues");
-//    const auto& userQueues = initializer.getQueues();
-//
-//    for (size_t i = 0; i < userQueues.size(); ++i)
-//    {
-//        auto commandQueue = std::make_unique<OpenCLCommandQueue>(static_cast<QueueId>(i), context->getContext(), context->getDevice(), userQueues[i]);
-//        commandQueues.push_back(std::move(commandQueue));
-//    }
-//
-//    initializeProfiler();
-//}
-//
-//KernelResult OpenCLEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-//    const std::vector<OutputDescriptor>& outputDescriptors)
-//{
-//    EventId eventId = runKernelAsync(kernelData, argumentPointers, getDefaultQueue());
-//    KernelResult result = getKernelResult(eventId, outputDescriptors);
-//    return result;
-//}
-//
+OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
+    m_PlatformIndex(platformIndex),
+    m_DeviceIndex(deviceIndex),
+    m_GlobalSizeType(GlobalSizeType::OpenCL),
+    m_GlobalSizeCorrection(false),
+    m_KernelCache(10)
+{    
+    const auto platforms = OpenClPlatform::GetAllPlatforms();
+
+    if (platformIndex >= platforms.size())
+    {
+        throw KttException(std::string("Invalid platform index: ") + std::to_string(platformIndex));
+    }
+
+    const auto& platform = platforms[static_cast<size_t>(platformIndex)];
+    const auto devices = platform.GetDevices();
+
+    if (deviceIndex >= devices.size())
+    {
+        throw KttException(std::string("Invalid device index: ") + std::to_string(deviceIndex));
+    }
+
+    const auto& device = devices[static_cast<size_t>(deviceIndex)];
+    m_Context = std::make_unique<OpenClContext>(platform, device);
+
+    for (uint32_t i = 0; i < queueCount; i++)
+    {
+        auto commandQueue = std::make_unique<OpenClCommandQueue>(i, *m_Context);
+        m_Queues.push_back(std::move(commandQueue));
+    }
+
+    InitializeGpa();
+}
+
+OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
+    m_GlobalSizeType(GlobalSizeType::OpenCL),
+    m_GlobalSizeCorrection(false),
+    m_KernelCache(10)
+{
+    m_Context = std::make_unique<OpenClContext>(initializer.GetContext());
+
+    const auto platforms = OpenClPlatform::GetAllPlatforms();
+
+    for (size_t i = 0; i < platforms.size(); ++i)
+    {
+        if (m_Context->GetPlatform() == platforms[i].GetId())
+        {
+            m_PlatformIndex = static_cast<PlatformIndex>(i);
+            break;
+        }
+    }
+
+    const auto& platform = platforms[static_cast<size_t>(m_PlatformIndex)];
+    const auto devices = platform.GetDevices();
+
+    for (size_t i = 0; i < devices.size(); ++i)
+    {
+        if (m_Context->GetDevice() == devices[i].GetId())
+        {
+            m_DeviceIndex = static_cast<DeviceIndex>(i);
+            break;
+        }
+    }
+
+    const auto& queues = initializer.GetQueues();
+
+    for (size_t i = 0; i < queues.size(); ++i)
+    {
+        auto commandQueue = std::make_unique<OpenClCommandQueue>(static_cast<QueueId>(i), *m_Context, queues[i]);
+        m_Queues.push_back(std::move(commandQueue));
+    }
+
+    InitializeGpa();
+}
+
 //EventId OpenCLEngine::runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
 //{
 //    Timer overheadTimer;
@@ -865,18 +847,15 @@ namespace ktt
 //    program->build(compilerOptions);
 //    return program;
 //}
-//
-//void OpenCLEngine::initializeProfiler()
-//{
-//    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-//    Logger::logDebug("Initializing GPA profiling context");
-//    gpaProfilingContext = std::make_unique<GPAProfilingContext>(gpaInterface->getFunctionTable(), *commandQueues[getDefaultQueue()].get());
-//
-//    Logger::logDebug("Initializing default GPA profiling counters");
-//    gpaProfilingContext->setCounters(getDefaultGPAProfilingCounters());
-//    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
-//}
-//
+
+void OpenClEngine::InitializeGpa()
+{
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    m_GpaInterface = std::make_unique<GpaInterface>();
+    m_GpaContext = std::make_unique<GpaContext>(m_GpaInterface->GetFunctions(), *m_Queues[GetDefaultQueue()]);
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+}
+
 //void OpenCLEngine::setKernelArgument(OpenCLKernel& kernel, KernelArgument& argument)
 //{
 //    if (argument.getUploadType() == ArgumentUploadType::Vector)

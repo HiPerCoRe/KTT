@@ -1,7 +1,10 @@
 #ifdef KTT_API_OPENCL
 
+#include <string>
+
 #include <ComputeEngine/OpenCl/Actions/OpenClTransferAction.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
@@ -11,6 +14,8 @@ OpenClTransferAction::OpenClTransferAction(const TransferActionId id, const bool
     m_Duration(InvalidDuration),
     m_Overhead(InvalidDuration)
 {
+    Logger::LogDebug(std::string("Initializing OpenCL transfer action with id ") + std::to_string(id));
+
     if (isAsync)
     {
         m_Event = std::make_unique<OpenClEvent>();
@@ -36,6 +41,8 @@ void OpenClTransferAction::SetReleaseFlag()
 
 void OpenClTransferAction::WaitForFinish()
 {
+    Logger::LogDebug(std::string("Waiting for OpenCL transfer action with id ") + std::to_string(m_Id));
+
     if (IsAsync())
     {
         m_Event->WaitForFinish();

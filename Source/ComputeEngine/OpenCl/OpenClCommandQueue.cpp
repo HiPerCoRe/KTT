@@ -1,8 +1,11 @@
 #ifdef KTT_API_OPENCL
 
+#include <string>
+
 #include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 #include <Utility/ErrorHandling/KttException.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
@@ -12,7 +15,9 @@ OpenClCommandQueue::OpenClCommandQueue(const QueueId id, const OpenClContext& co
     m_Id(id),
     m_OwningQueue(true)
 {
+    Logger::LogDebug(std::string("Initializing OpenCL queue with id ") + std::to_string(id));
     cl_int result;
+
 #ifdef CL_VERSION_2_0
     cl_queue_properties properties[] = {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0};
     m_Queue = clCreateCommandQueueWithProperties(m_Context, context.GetDevice(), properties, &result);
@@ -28,6 +33,7 @@ OpenClCommandQueue::OpenClCommandQueue(const QueueId id, const OpenClContext& co
     m_Id(id),
     m_OwningQueue(false)
 {
+    Logger::LogDebug(std::string("Initializing OpenCL queue with id ") + std::to_string(id));
     m_Queue = static_cast<cl_command_queue>(queue);
 
     if (m_Queue == nullptr)
@@ -47,6 +53,8 @@ OpenClCommandQueue::OpenClCommandQueue(const QueueId id, const OpenClContext& co
 
 OpenClCommandQueue::~OpenClCommandQueue()
 {
+    Logger::LogDebug(std::string("Releasing OpenCL queue with id ") + std::to_string(m_Id));
+
     if (m_OwningQueue)
     {
         CheckError(clReleaseCommandQueue(m_Queue), "clReleaseCommandQueue");
