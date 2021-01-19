@@ -5,6 +5,7 @@
 #include <memory>
 
 #include <ComputeEngine/OpenCl/OpenClEvent.h>
+#include <ComputeEngine/TransferResult.h>
 #include <KttTypes.h>
 
 namespace ktt
@@ -16,7 +17,7 @@ public:
     OpenClTransferAction(const TransferActionId id, const bool isAsync);
 
     void SetDuration(const Nanoseconds duration);
-    void SetOverhead(const Nanoseconds overhead);
+    void IncreaseOverhead(const Nanoseconds overhead);
     void SetReleaseFlag();
     void WaitForFinish();
 
@@ -25,6 +26,7 @@ public:
     Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
     bool IsAsync() const;
+    TransferResult GenerateResult() const;
 
 private:
     TransferActionId m_Id;

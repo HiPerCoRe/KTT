@@ -44,17 +44,17 @@ public:
     bool HasAccurateRemainingProfilingRuns() const override;
 
     // Buffer methods
-    TransferActionId UploadArgument(const KernelArgument& kernelArgument, const QueueId queueId) override;
+    TransferActionId UploadArgument(KernelArgument& kernelArgument, const QueueId queueId) override;
     TransferActionId UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
         const size_t dataSize) override;
     TransferActionId DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
         const size_t dataSize) override;
     TransferActionId CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
         const size_t dataSize) override;
-    uint64_t WaitForTransferAction(const TransferActionId id) override;
+    TransferResult WaitForTransferAction(const TransferActionId id) override;
     void ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) override;
     void GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle) override;
-    void AddCustomBuffer(const KernelArgument& kernelArgument, ComputeBuffer buffer) override;
+    void AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer buffer) override;
     void ClearBuffer(const ArgumentId id) override;
     void ClearBuffers() override;
 
@@ -80,7 +80,6 @@ private:
     PlatformIndex m_PlatformIndex;
     DeviceIndex m_DeviceIndex;
     ActionIdGenerator m_Generator;
-
     std::unique_ptr<OpenClContext> m_Context;
     std::vector<std::unique_ptr<OpenClCommandQueue>> m_Queues;
     std::map<ArgumentId, std::unique_ptr<OpenClBuffer>> m_Buffers;
@@ -88,22 +87,23 @@ private:
     std::map<ComputeActionId, std::unique_ptr<OpenClComputeAction>> m_ComputeActions;
     std::map<TransferActionId, std::unique_ptr<OpenClTransferAction>> m_TransferActions;
 
-    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     std::unique_ptr<GpaInterface> m_GpaInterface;
     std::unique_ptr<GpaContext> m_GpaContext;
     std::map<KernelComputeId, std::unique_ptr<GpaInstance>> m_GpaInstances;
-    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
     std::shared_ptr<OpenClKernel> LoadKernel(const KernelComputeData& data);
     void SetKernelArguments(OpenClKernel& kernel, const std::vector<const KernelArgument*> arguments);
     void SetKernelArgument(OpenClKernel& kernel, const KernelArgument& argument);
+    std::unique_ptr<OpenClBuffer> CreateBuffer(KernelArgument& argument);
+    std::unique_ptr<OpenClBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
 
-    //#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     void InitializeGpa();
-    //void InitializeProfiling(const KernelComputeId& id);
-    //const KernelComputeId& GetKernelFromEvent(const EventId id) const;
-    //void LaunchDummyPass(const KernelComputeId& id);
-    //#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+    void InitializeProfiling(const KernelComputeId& id);
+    void FillProfilingData(const KernelComputeId& id, KernelResult& result);
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 };
 
 } // namespace ktt

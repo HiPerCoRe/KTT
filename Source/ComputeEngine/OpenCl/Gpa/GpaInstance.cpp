@@ -2,7 +2,9 @@
 
 #include <string>
 
+#include <Api/Output/KernelProfilingData.h>
 #include <ComputeEngine/OpenCl/Gpa/GpaInstance.h>
+#include <ComputeEngine/OpenCl/Gpa/GpaPass.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
@@ -32,6 +34,18 @@ GpaInstance::GpaInstance(GPAFunctionTable& functions, GpaContext& context) :
 GpaInstance::~GpaInstance()
 {
     Logger::LogDebug("Releasing GPA instance with sample id " + std::to_string(m_SampleId));
+
+    // There is currently no way to abort active profiling session without performing all passes, so dummy passes are launched
+    if (GetRemainingPassCount() > 0)
+    {
+        while (GetRemainingPassCount() > 0)
+        {
+            [[maybe_unused]] auto pass = std::make_unique<GpaPass>(m_Functions, *this);
+        }
+
+        CheckError(m_Functions.GPA_EndSession(m_Session), m_Functions, "GPA_EndSession");
+    }
+
     CheckError(m_Functions.GPA_DeleteSession(m_Session), m_Functions, "GPA_DeleteSession");
 }
 
@@ -65,10 +79,16 @@ gpa_uint32 GpaInstance::GetRemainingPassCount() const
     return m_TotalPassCount - m_CurrentPassIndex;
 }
 
-KernelProfilingData GpaInstance::GenerateProfilingData() const
+std::unique_ptr<KernelProfilingData> GpaInstance::GenerateProfilingData() const
 {
+    const auto remainingCount = static_cast<uint64_t>(GetRemainingPassCount());
+
+    if (remainingCount > 0)
+    {
+        return std::make_unique<KernelProfilingData>(remainingCount);
+    }
+
     Logger::LogDebug("Generating profiling data for GPA instance with sample id " + std::to_string(m_SampleId));
-    KttAssert(GetRemainingPassCount() == 0, "Profiling data can be generated only when all profiling passes are completed");
 
     CheckError(m_Functions.GPA_EndSession(m_Session), m_Functions, "GPA_EndSession");
     KttAssert(m_Functions.GPA_IsSessionComplete(m_Session) == GPA_STATUS_OK, "Incorrect handling of GPA profiling session");
@@ -91,7 +111,7 @@ KernelProfilingData GpaInstance::GenerateProfilingData() const
         counters.push_back(counter);
     }
 
-    return KernelProfilingData(counters);
+    return std::make_unique<KernelProfilingData>(counters);
 }
 
 KernelProfilingCounter GpaInstance::GenerateCounterForIndex(const gpa_uint32 index, uint64_t sampleData) const

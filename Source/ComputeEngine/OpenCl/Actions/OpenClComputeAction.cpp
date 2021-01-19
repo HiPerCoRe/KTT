@@ -12,7 +12,7 @@ namespace ktt
 OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, std::shared_ptr<OpenClKernel> kernel) :
     m_Id(id),
     m_Kernel(kernel),
-    m_Overhead(InvalidDuration)
+    m_Overhead(0)
 {
     Logger::LogDebug("Initializing OpenCL compute action with id " + std::to_string(id)
         + " for kernel with name " + kernel->GetName());
@@ -21,9 +21,9 @@ OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, std::shared_p
     m_Event = std::make_unique<OpenClEvent>();
 }
 
-void OpenClComputeAction::SetOverhead(const Nanoseconds overhead)
+void OpenClComputeAction::IncreaseOverhead(const Nanoseconds overhead)
 {
-    m_Overhead = overhead;
+    m_Overhead += overhead;
 }
 
 void OpenClComputeAction::SetConfigurationPrefix(const std::string& prefix)
@@ -70,6 +70,19 @@ Nanoseconds OpenClComputeAction::GetOverhead() const
 const std::string& OpenClComputeAction::GetConfigurationPrefix() const
 {
     return m_Prefix;
+}
+
+KernelResult OpenClComputeAction::GenerateResult() const
+{
+    KernelResult result(m_Kernel->GetName(), GetConfigurationPrefix());
+    const Nanoseconds duration = GetDuration();
+    const Nanoseconds overhead = GetOverhead();
+    std::unique_ptr<KernelCompilationData> compilationData = m_Kernel->GenerateCompilationData();
+
+    result.SetDurationData(duration, overhead);
+    result.SetCompilationData(std::move(compilationData));
+
+    return result;
 }
 
 } // namespace ktt

@@ -1,7 +1,11 @@
 #ifdef KTT_API_OPENCL
 
+#include <ComputeEngine/OpenCl/Buffers/OpenClDeviceBuffer.h>
+#include <ComputeEngine/OpenCl/Buffers/OpenClHostBuffer.h>
+#include <ComputeEngine/OpenCl/Buffers/OpenClUnifiedBuffer.h>
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
 #include <ComputeEngine/OpenCl/OpenClPlatform.h>
+#include <Utility/ErrorHandling/Assert.h>
 #include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 #include <Utility/StlHelpers.h>
@@ -43,7 +47,9 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
         m_Queues.push_back(std::move(commandQueue));
     }
 
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     InitializeGpa();
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
@@ -82,7 +88,9 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
         m_Queues.push_back(std::move(commandQueue));
     }
 
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     InitializeGpa();
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId)
@@ -92,17 +100,17 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
         throw KttException("Invalid queue index: " + std::to_string(queueId));
     }
 
-    Timer overheadTimer;
-    overheadTimer.Start();
+    Timer timer;
+    timer.Start();
 
     auto kernel = LoadKernel(data);
     SetKernelArguments(*kernel, data.GetArguments());
 
     const auto& queue = *m_Queues[static_cast<size_t>(queueId)];
     auto action = kernel->Launch(queue, data.GetGlobalSize(), data.GetLocalSize());
-    overheadTimer.Stop();
+    timer.Stop();
 
-    action->SetOverhead(overheadTimer.GetElapsedTime());
+    action->IncreaseOverhead(timer.GetElapsedTime());
     action->SetConfigurationPrefix(data.GetConfigurationPrefix());
     const auto id = action->GetId();
     m_ComputeActions[id] = std::move(action);
@@ -118,41 +126,66 @@ KernelResult OpenClEngine::WaitForComputeAction(const ComputeActionId id)
 
     auto& action = *m_ComputeActions[id];
     action.WaitForFinish();
-
-    const Nanoseconds duration = action.GetDuration();
-    const Nanoseconds overhead = action.GetOverhead();
-    const auto& kernel = action.GetKernel();
-    const auto& name = kernel.GetName();
-    const auto& prefix = action.GetConfigurationPrefix();
-    std::unique_ptr<KernelCompilationData> compilationData = kernel.GenerateCompilationData();
-
-    KernelResult result(name, prefix);
-    result.SetDurationData(duration, overhead);
-    result.SetCompilationData(std::move(compilationData));
+    auto result = action.GenerateResult();
 
     m_ComputeActions.erase(id);
     return result;
 }
 
-KernelResult OpenClEngine::RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId)
+KernelResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
+    [[maybe_unused]] const QueueId queueId)
 {
-    return KernelResult();
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    Timer timer;
+    timer.Start();
+
+    const auto id = data.GetUniqueIdentifier();
+
+    if (!IsProfilingSessionActive(id))
+    {
+        InitializeProfiling(id);
+    }
+
+    auto& instance = *m_GpaInstances[id];
+    auto pass = std::make_unique<GpaPass>(m_GpaInterface->GetFunctions(), instance);
+
+    timer.Stop();
+
+    const auto actionId = RunKernelAsync(data, queueId);
+    auto& action = *m_ComputeActions[actionId];
+    action.IncreaseOverhead(timer.GetElapsedTime());
+
+    KernelResult result = WaitForComputeAction(actionId);
+    FillProfilingData(id, result);
+
+    return result;
+#else
+    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-void OpenClEngine::SetProfilingCounters(const std::vector<std::string>& counters)
+void OpenClEngine::SetProfilingCounters([[maybe_unused]] const std::vector<std::string>& counters)
 {
-
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    m_GpaContext->SetCounters(counters);
+#else
+    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-bool OpenClEngine::IsProfilingSessionActive(const KernelComputeId& id)
+bool OpenClEngine::IsProfilingSessionActive([[maybe_unused]] const KernelComputeId& id)
 {
-    return false;
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    return ContainsKey(m_GpaInstances, id);
+#else
+    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 uint64_t OpenClEngine::GetRemainingProfilingRuns([[maybe_unused]] const KernelComputeId& id)
 {
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-    if (!ContainsKey(m_GpaInstances, id))
+    if (!IsProfilingSessionActive(id))
     {
         return 0;
     }
@@ -172,47 +205,212 @@ bool OpenClEngine::HasAccurateRemainingProfilingRuns() const
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-TransferActionId OpenClEngine::UploadArgument(const KernelArgument& kernelArgument, const QueueId queueId)
+TransferActionId OpenClEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
 {
-    return m_Generator.GenerateTransferId();
+    Timer timer;
+    timer.Start();
+
+    const auto id = kernelArgument.GetId();
+    Logger::LogDebug("Uploading buffer for argument with id " + std::to_string(id));
+
+    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    if (ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+    }
+
+    if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
+    {
+        throw KttException("Argument with id " + std::to_string(id) + " is not a vector and cannot be uploaded into buffer");
+    }
+
+    auto buffer = CreateBuffer(kernelArgument);
+    timer.Stop();
+
+    auto action = buffer->UploadData(*m_Queues[static_cast<size_t>(queueId)], kernelArgument.GetData(),
+        kernelArgument.GetDataSize());
+    action->IncreaseOverhead(timer.GetElapsedTime());
+    const auto actionId = action->GetId();
+
+    m_Buffers[id] = std::move(buffer);
+    m_TransferActions[actionId] = std::move(action);
+
+    return actionId;
 }
 
 TransferActionId OpenClEngine::UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
     const size_t dataSize)
 {
-    return m_Generator.GenerateTransferId();
+    Timer timer;
+    timer.Start();
+
+    Logger::LogDebug("Updating buffer for argument with id " + std::to_string(id));
+
+    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+    }
+
+    auto& buffer = *m_Buffers[id];
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = buffer.GetSize();
+    }
+
+    timer.Stop();
+
+    auto action = buffer.UploadData(*m_Queues[static_cast<size_t>(queueId)], data, actualDataSize);
+    action->IncreaseOverhead(timer.GetElapsedTime());
+    const auto actionId = action->GetId();
+    m_TransferActions[actionId] = std::move(action);
+    return actionId;
 }
 
 TransferActionId OpenClEngine::DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
     const size_t dataSize)
 {
-    return m_Generator.GenerateTransferId();
+    Timer timer;
+    timer.Start();
+
+    Logger::LogDebug("Downloading buffer for argument with id " + std::to_string(id));
+
+    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+    }
+
+    auto& buffer = *m_Buffers[id];
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = buffer.GetSize();
+    }
+
+    timer.Stop();
+
+    auto action = buffer.DownloadData(*m_Queues[static_cast<size_t>(queueId)], destination, actualDataSize);
+    action->IncreaseOverhead(timer.GetElapsedTime());
+    const auto actionId = action->GetId();
+    m_TransferActions[actionId] = std::move(action);
+    return actionId;
 }
 
 TransferActionId OpenClEngine::CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
     const size_t dataSize)
 {
-    return m_Generator.GenerateTransferId();
+    Timer timer;
+    timer.Start();
+
+    Logger::LogDebug("Copying buffer for argument with id " + std::to_string(source) + " into buffer for argument with id "
+        + std::to_string(destination));
+
+    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    if (!ContainsKey(m_Buffers, destination))
+    {
+        throw KttException("Copy destination buffer for argument with id " + std::to_string(destination) + " was not found");
+    }
+
+    if (!ContainsKey(m_Buffers, source))
+    {
+        throw KttException("Copy source buffer for argument with id " + std::to_string(source) + " was not found");
+    }
+
+    auto& destinationBuffer = *m_Buffers[destination];
+    const auto& sourceBuffer = *m_Buffers[source];
+
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = sourceBuffer.GetSize();
+    }
+
+    timer.Stop();
+
+    auto action = destinationBuffer.CopyData(*m_Queues[static_cast<size_t>(queueId)], sourceBuffer, actualDataSize);
+    action->IncreaseOverhead(timer.GetElapsedTime());
+    const auto actionId = action->GetId();
+    m_TransferActions[actionId] = std::move(action);
+    return actionId;
 }
 
-uint64_t OpenClEngine::WaitForTransferAction(const TransferActionId id)
+TransferResult OpenClEngine::WaitForTransferAction(const TransferActionId id)
 {
-    return 0;
+    if (!ContainsKey(m_TransferActions, id))
+    {
+        throw KttException("Transfer action with id " + std::to_string(id) + " was not found");
+    }
+
+    auto& action = *m_TransferActions[id];
+    action.WaitForFinish();
+    auto result = action.GenerateResult();
+
+    m_TransferActions.erase(id);
+    return result;
 }
 
 void OpenClEngine::ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
 {
+    Logger::LogDebug("Resizing buffer for argument with id " + std::to_string(id));
 
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+    }
+
+    auto& buffer = *m_Buffers[id];
+    buffer.Resize(*m_Queues[static_cast<size_t>(GetDefaultQueue())], newSize, preserveData);
 }
 
 void OpenClEngine::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle)
 {
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+    }
 
+    auto& buffer = *m_Buffers[id];
+
+    if (buffer.GetMemoryLocation() != ArgumentMemoryLocation::Unified)
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " is not unified memory buffer");
+    }
+
+    handle = buffer.GetRawBuffer();
 }
 
-void OpenClEngine::AddCustomBuffer(const KernelArgument& kernelArgument, ComputeBuffer buffer)
+void OpenClEngine::AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer buffer)
 {
+    const auto id = kernelArgument.GetId();
 
+    if (ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+    }
+
+    auto userBuffer = CreateUserBuffer(kernelArgument, buffer);
+    m_Buffers[id] = std::move(userBuffer);
 }
 
 void OpenClEngine::ClearBuffer(const ArgumentId id)
@@ -302,6 +500,7 @@ DeviceInfo OpenClEngine::GetCurrentDeviceInfo() const
 void OpenClEngine::SetCompilerOptions(const std::string& options)
 {
     OpenClProgram::SetCompilerOptions(options);
+    ClearKernelCache();
 }
 
 void OpenClEngine::SetGlobalSizeType(const GlobalSizeType type)
@@ -373,481 +572,90 @@ void OpenClEngine::SetKernelArgument(OpenClKernel& kernel, const KernelArgument&
     kernel.SetArgument(*m_Buffers[id]);
 }
 
-//EventId OpenCLEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const QueueId queue)
-//{
-//    if (queue >= commandQueues.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
-//    }
-//
-//    if (findBuffer(kernelArgument.getId()) != nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id already exists: ") + std::to_string(kernelArgument.getId()));
-//    }
-//
-//    if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
-//    {
-//        return UINT64_MAX;
-//    }
-//
-//    Logger::logDebug("Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: " + std::to_string(nextEventId));
-//
-//    const EventId eventId = nextEventId;
-//    const ArgumentMemoryLocation location = kernelArgument.getMemoryLocation();
-//    auto buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument);
-//
-//    if (location == ArgumentMemoryLocation::Unified || location == ArgumentMemoryLocation::HostZeroCopy)
-//    {
-//        bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
-//    }
-//    else
-//    {
-//        auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
-//        buffer->uploadData(commandQueues.at(queue)->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
-//            profilingEvent->getEvent());
-//
-//        profilingEvent->setReleaseFlag();
-//        bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
-//    }
-//
-//    buffers.insert(std::move(buffer)); // buffer data will be stolen
-//    nextEventId++;
-//    return eventId;
-//}
-//
-//EventId OpenCLEngine::updateArgumentAsync(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue)
-//{
-//    if (queue >= commandQueues.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
-//    }
-//
-//    OpenCLBuffer* buffer = findBuffer(id);
-//
-//    if (buffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-//    }
-//
-//    EventId eventId = nextEventId;
-//    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
-//    
-//    Logger::getLogger().log(LoggingLevel::Debug, "Updating buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
-//
-//    if (dataSizeInBytes == 0)
-//    {
-//        buffer->uploadData(commandQueues.at(queue)->getQueue(), data, buffer->getBufferSize(), profilingEvent->getEvent());
-//    }
-//    else
-//    {
-//        buffer->uploadData(commandQueues.at(queue)->getQueue(), data, dataSizeInBytes, profilingEvent->getEvent());
-//    }
-//
-//    profilingEvent->setReleaseFlag();
-//    bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
-//    nextEventId++;
-//    return eventId;
-//}
-//
-//EventId OpenCLEngine::downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const
-//{
-//    if (queue >= commandQueues.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
-//    }
-//
-//    OpenCLBuffer* buffer = findBuffer(id);
-//
-//    if (buffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-//    }
-//
-//    EventId eventId = nextEventId;
-//    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
-//
-//    if (dataSizeInBytes == 0)
-//    {
-//        buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, buffer->getBufferSize(), profilingEvent->getEvent());
-//    }
-//    else
-//    {
-//        buffer->downloadData(commandQueues.at(queue)->getQueue(), destination, dataSizeInBytes, profilingEvent->getEvent());
-//    }
-//
-//    profilingEvent->setReleaseFlag();
-//    bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
-//    nextEventId++;
-//    return eventId;
-//}
-//
-//KernelArgument OpenCLEngine::downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const
-//{
-//    OpenCLBuffer* buffer = findBuffer(id);
-//
-//    if (buffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-//    }
-//
-//    KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getElementSize(),
-//        buffer->getDataType(), buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
-//
-//    bool validEvent = true;
-//
-//    if (buffer->getMemoryLocation() == ArgumentMemoryLocation::Unified)
-//    {
-//        validEvent = false;
-//    }
-//
-//    EventId eventId = nextEventId;
-//    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, validEvent);
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
-//    buffer->downloadData(commandQueues.at(getDefaultQueue())->getQueue(), argument.getData(), argument.getDataSizeInBytes(),
-//        profilingEvent->getEvent());
-//
-//    if (validEvent)
-//    {
-//        profilingEvent->setReleaseFlag();
-//    }
-//    
-//    bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
-//    nextEventId++;
-//
-//    uint64_t duration = getArgumentOperationDuration(eventId);
-//    if (downloadDuration != nullptr)
-//    {
-//        *downloadDuration = duration;
-//    }
-//    
-//    return argument;
-//}
-//
-//EventId OpenCLEngine::copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue)
-//{
-//    if (queue >= commandQueues.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
-//    }
-//
-//    OpenCLBuffer* destinationBuffer = findBuffer(destination);
-//    OpenCLBuffer* sourceBuffer = findBuffer(source);
-//
-//    if (destinationBuffer == nullptr || sourceBuffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("One of the buffers with following ids does not exist: ") + std::to_string(destination) + ", "
-//            + std::to_string(source));
-//    }
-//
-//    if (sourceBuffer->getDataType() != destinationBuffer->getDataType())
-//    {
-//        throw std::runtime_error("Data type for buffers during copying operation must match");
-//    }
-//
-//    EventId eventId = nextEventId;
-//    auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Copying buffer for argument " + std::to_string(source) + " into buffer for argument "
-//        + std::to_string(destination) + ", event id: " + std::to_string(eventId));
-//
-//    if (dataSizeInBytes == 0)
-//    {
-//        destinationBuffer->uploadData(commandQueues.at(queue)->getQueue(), sourceBuffer->getBuffer(), sourceBuffer->getBufferSize(),
-//            profilingEvent->getEvent());
-//    }
-//    else
-//    {
-//        destinationBuffer->uploadData(commandQueues.at(queue)->getQueue(), sourceBuffer->getBuffer(), dataSizeInBytes, profilingEvent->getEvent());
-//    }
-//
-//    profilingEvent->setReleaseFlag();
-//    bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
-//    nextEventId++;
-//    return eventId;
-//}
-//
-//uint64_t OpenCLEngine::persistArgument(KernelArgument& kernelArgument, const bool flag)
-//{
-//    bool bufferFound = false;
-//    auto iterator = persistentBuffers.cbegin();
-//
-//    while (iterator != persistentBuffers.cend())
-//    {
-//        if (iterator->get()->getKernelArgumentId() == kernelArgument.getId())
-//        {
-//            bufferFound = true;
-//            if (!flag)
-//            {
-//                persistentBuffers.erase(iterator);
-//            }
-//            break;
-//        }
-//        else
-//        {
-//            ++iterator;
-//        }
-//    }
-//    
-//    if (flag && !bufferFound)
-//    {
-//        Logger::logDebug("Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
-//            + std::to_string(nextEventId));
-//        
-//        const EventId eventId = nextEventId;
-//        const ArgumentMemoryLocation location = kernelArgument.getMemoryLocation();
-//        auto buffer = std::make_unique<OpenCLBuffer>(context->getContext(), kernelArgument);
-//
-//        if (location == ArgumentMemoryLocation::Unified || location == ArgumentMemoryLocation::HostZeroCopy)
-//        {
-//            bufferEvents.insert(std::make_pair(eventId, std::make_unique<OpenCLEvent>(eventId, false)));
-//        }
-//        else
-//        {
-//            auto profilingEvent = std::make_unique<OpenCLEvent>(eventId, true);
-//            buffer->uploadData(commandQueues.at(getDefaultQueue())->getQueue(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
-//                profilingEvent->getEvent());
-//
-//            profilingEvent->setReleaseFlag();
-//            bufferEvents.insert(std::make_pair(eventId, std::move(profilingEvent)));
-//        }
-//
-//        persistentBuffers.insert(std::move(buffer)); // buffer data will be stolen
-//        nextEventId++;
-//
-//        return getArgumentOperationDuration(eventId);
-//    }
-//
-//    return 0;
-//}
-//
-//uint64_t OpenCLEngine::getArgumentOperationDuration(const EventId id) const
-//{
-//    auto eventPointer = bufferEvents.find(id);
-//
-//    if (eventPointer == bufferEvents.end())
-//    {
-//        throw std::runtime_error(std::string("Buffer event with following id does not exist or its result was already retrieved: ")
-//            + std::to_string(id));
-//    }
-//
-//    if (!eventPointer->second->isValid())
-//    {
-//        bufferEvents.erase(id);
-//        return 0;
-//    }
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Performing buffer operation synchronization for event id: " + std::to_string(id));
-//
-//    checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
-//    cl_ulong duration = eventPointer->second->getEventCommandDuration();
-//    bufferEvents.erase(id);
-//
-//    return static_cast<uint64_t>(duration);
-//}
-//
-//void OpenCLEngine::resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
-//{
-//    OpenCLBuffer* buffer = findBuffer(id);
-//
-//    if (buffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-//    }
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Resizing buffer for argument " + std::to_string(id));
-//    buffer->resize(commandQueues.at(getDefaultQueue())->getQueue(), newSize, preserveData);
-//}
-//
-//void OpenCLEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
-//{
-//    OpenCLBuffer* buffer = findBuffer(id);
-//
-//    if (buffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-//    }
-//
-//    handle = buffer->getRawBuffer();
-//}
-//
-//void OpenCLEngine::addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument)
-//{
-//    if (findBuffer(kernelArgument.getId()) != nullptr)
-//    {
-//        throw std::runtime_error(std::string("User buffer with the following id already exists: ") + std::to_string(kernelArgument.getId()));
-//    }
-//
-//    auto openclBuffer = std::make_unique<OpenCLBuffer>(buffer, kernelArgument);
-//    userBuffers.insert(std::move(openclBuffer));
-//}
-//
-//void OpenCLEngine::initializeKernelProfiling(const KernelRuntimeData& kernelData)
-//{
-//    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-//    initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
-//    #else
-//    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-//    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
-//}
-//
-//EventId OpenCLEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-//    const QueueId queue)
-//{
-//    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-//    Timer overheadTimer;
-//    overheadTimer.start();
-//
-//    OpenCLKernel* kernel;
-//    std::unique_ptr<OpenCLKernel> kernelUnique;
-//    std::unique_ptr<OpenCLProgram> program;
-//
-//    if (kernelCacheFlag)
-//    {
-//        if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
-//        {
-//            if (kernelCache.size() >= kernelCacheCapacity)
-//            {
-//                clearKernelCache();
-//            }
-//            std::unique_ptr<OpenCLProgram> cacheProgram = createAndBuildProgram(kernelData.getSource());
-//            auto cacheKernel = std::make_unique<OpenCLKernel>(context->getDevice(), cacheProgram->getProgram(), kernelData.getName());
-//            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::make_pair(std::move(cacheKernel),
-//                std::move(cacheProgram))));
-//        }
-//        auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
-//        kernel = cachePointer->second.first.get();
-//    }
-//    else
-//    {
-//        program = createAndBuildProgram(kernelData.getSource());
-//        kernelUnique = std::make_unique<OpenCLKernel>(context->getDevice(), program->getProgram(), kernelData.getName());
-//        kernel = kernelUnique.get();
-//    }
-//
-//    checkLocalMemoryModifiers(argumentPointers, kernelData.getLocalMemoryModifiers());
-//    kernel->resetKernelArguments();
-//
-//    for (const auto argument : argumentPointers)
-//    {
-//        if (argument->getUploadType() == ArgumentUploadType::Local)
-//        {
-//            setKernelArgument(*kernel, *argument, kernelData.getLocalMemoryModifiers());
-//        }
-//        else
-//        {
-//            setKernelArgument(*kernel, *argument);
-//        }
-//    }
-//
-//    overheadTimer.stop();
-//
-//    if (kernelProfilingInstances.find({kernelData.getName(), kernelData.getSource()}) == kernelProfilingInstances.end())
-//    {
-//        initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
-//    }
-//
-//    auto profilingInstance = kernelProfilingInstances.find({kernelData.getName(), kernelData.getSource()});
-//    auto profilingPass = std::make_unique<GPAProfilingPass>(gpaInterface->getFunctionTable(), *profilingInstance->second.get());
-//    EventId id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), queue, overheadTimer.getElapsedTime());
-//    kernelToEventMap[std::make_pair(kernelData.getName(), kernelData.getSource())].push_back(id);
-//    
-//    auto eventPointer = kernelEvents.find(id);
-//    Logger::logDebug(std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
-//    checkOpenCLError(clWaitForEvents(1, eventPointer->second->getEvent()), "clWaitForEvents");
-//
-//    return id;
-//    #else
-//    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-//    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
-//}
-//
-//KernelResult OpenCLEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
-//{
-//    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-//    KernelResult result = createKernelResult(id);
-//
-//    for (const auto& descriptor : outputDescriptors)
-//    {
-//        downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
-//    }
-//
-//    const std::pair<std::string, std::string>& kernelKey = getKernelFromEvent(id);
-//    auto profilingInstance = kernelProfilingInstances.find(kernelKey);
-//    if (profilingInstance == kernelProfilingInstances.end())
-//    {
-//        throw std::runtime_error(std::string("No profiling data exists for the following kernel in current configuration: " + kernelKey.first));
-//    }
-//
-//    KernelProfilingData profilingData = profilingInstance->second->generateProfilingData();
-//    result.setProfilingData(profilingData);
-//
-//    kernelProfilingInstances.erase(kernelKey);
-//    const std::vector<EventId>& eventIds = kernelToEventMap.find(kernelKey)->second;
-//    for (const auto eventId : eventIds)
-//    {
-//        kernelEvents.erase(eventId);
-//    }
-//    kernelToEventMap.erase(kernelKey);
-//
-//    return result;
-//    #else
-//    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-//    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
-//}
-//
-//void OpenCLEngine::setKernelProfilingCounters(const std::vector<std::string>& counterNames)
-//{
-//    #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-//    gpaProfilingContext->setCounters(counterNames);
-//    #else
-//    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-//    #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
-//}
+std::unique_ptr<OpenClBuffer> OpenClEngine::CreateBuffer(KernelArgument& argument)
+{
+    std::unique_ptr<OpenClBuffer> buffer;
+
+    switch (argument.GetMemoryLocation())
+    {
+    case ArgumentMemoryLocation::Undefined:
+        KttError("Buffer cannot be created for arguments with undefined memory location");
+        break;
+    case ArgumentMemoryLocation::Device:
+        buffer = std::make_unique<OpenClDeviceBuffer>(argument, m_Generator, *m_Context);
+        break;
+    case ArgumentMemoryLocation::Host:
+    case ArgumentMemoryLocation::HostZeroCopy:
+        buffer = std::make_unique<OpenClHostBuffer>(argument, m_Generator, *m_Context);
+        break;
+    case ArgumentMemoryLocation::Unified:
+        buffer = std::make_unique<OpenClUnifiedBuffer>(argument, m_Generator, *m_Context);
+        break;
+    default:
+        KttError("Unhandled argument memory location value");
+        break;
+    }
+
+    return buffer;
+}
+
+std::unique_ptr<OpenClBuffer> OpenClEngine::CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer)
+{
+    std::unique_ptr<OpenClBuffer> userBuffer;
+
+    switch (argument.GetMemoryLocation())
+    {
+    case ArgumentMemoryLocation::Undefined:
+        KttError("Buffer cannot be created for arguments with undefined memory location");
+        break;
+    case ArgumentMemoryLocation::Device:
+        userBuffer = std::make_unique<OpenClDeviceBuffer>(argument, m_Generator, buffer);
+        break;
+    case ArgumentMemoryLocation::Host:
+    case ArgumentMemoryLocation::HostZeroCopy:
+        userBuffer = std::make_unique<OpenClHostBuffer>(argument, m_Generator, buffer);
+        break;
+    case ArgumentMemoryLocation::Unified:
+        userBuffer = std::make_unique<OpenClUnifiedBuffer>(argument, m_Generator, buffer);
+        break;
+    default:
+        KttError("Unhandled argument memory location value");
+        break;
+    }
+
+    return userBuffer;
+}
+
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 
 void OpenClEngine::InitializeGpa()
 {
-#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     m_GpaInterface = std::make_unique<GpaInterface>();
     m_GpaContext = std::make_unique<GpaContext>(m_GpaInterface->GetFunctions(), *m_Queues[GetDefaultQueue()]);
-#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-//#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
-//
-//void OpenCLEngine::initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource)
-//{
-//    auto profilingInstance = kernelProfilingInstances.find(std::make_pair(kernelName, kernelSource));
-//    if (profilingInstance == kernelProfilingInstances.end())
-//    {
-//        kernelProfilingInstances.insert({std::make_pair(kernelName, kernelSource),
-//            std::make_unique<GPAProfilingInstance>(gpaInterface->getFunctionTable(), *gpaProfilingContext.get())});
-//        kernelToEventMap.insert({std::make_pair(kernelName, kernelSource), std::vector<EventId>{}});
-//    }
-//}
-//
-//const std::pair<std::string, std::string>& OpenCLEngine::getKernelFromEvent(const EventId id) const
-//{
-//    for (const auto& entry : kernelToEventMap)
-//    {
-//        if (containsElement(entry.second, id))
-//        {
-//            return entry.first;
-//        }
-//    }
-//
-//    throw std::runtime_error(std::string("Corresponding kernel was not found for event with id: ") + std::to_string(id));
-//}
-//
-//void OpenCLEngine::launchDummyPass(const std::string& kernelName, const std::string& kernelSource)
-//{
-//    auto profilingInstance = kernelProfilingInstances.find({kernelName, kernelSource});
-//    auto profilingPass = std::make_unique<GPAProfilingPass>(gpaInterface->getFunctionTable(), *profilingInstance->second);
-//}
-//
-//#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+void OpenClEngine::InitializeProfiling(const KernelComputeId& id)
+{
+    KttAssert(!IsProfilingSessionActive(id), "Attempting to initialize profiling for compute id with active profiling session");
+    m_GpaInstances[id] = std::make_unique<GpaInstance>(m_GpaInterface->GetFunctions(), *m_GpaContext);
+}
+
+void OpenClEngine::FillProfilingData(const KernelComputeId& id, KernelResult& result)
+{
+    KttAssert(IsProfilingSessionActive(id), "Attempting to retrieve profiling data for kernel without active profiling session");
+
+    auto& instance = *m_GpaInstances[id];
+    auto profilingData = instance.GenerateProfilingData();
+
+    if (profilingData->IsValid())
+    {
+        m_GpaInstances.erase(id);
+    }
+
+    result.SetProfilingData(std::move(profilingData));
+}
+
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
 } // namespace ktt
 

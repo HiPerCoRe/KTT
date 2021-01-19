@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 
+#include <Api/Output/KernelResult.h>
 #include <ComputeEngine/OpenCl/OpenClEvent.h>
 #include <ComputeEngine/OpenCl/OpenClKernel.h>
 #include <KttTypes.h>
@@ -17,7 +18,7 @@ class OpenClComputeAction
 public:
     OpenClComputeAction(const ComputeActionId id, std::shared_ptr<OpenClKernel> kernel);
 
-    void SetOverhead(const Nanoseconds overhead);
+    void IncreaseOverhead(const Nanoseconds overhead);
     void SetConfigurationPrefix(const std::string& prefix);
     void SetReleaseFlag();
     void WaitForFinish();
@@ -28,6 +29,7 @@ public:
     Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
     const std::string& GetConfigurationPrefix() const;
+    KernelResult GenerateResult() const;
 
 private:
     ComputeActionId m_Id;

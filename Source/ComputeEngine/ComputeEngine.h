@@ -8,6 +8,7 @@
 #include <Api/Output/KernelResult.h>
 #include <ComputeEngine/KernelComputeData.h>
 #include <ComputeEngine/GlobalSizeType.h>
+#include <ComputeEngine/TransferResult.h>
 #include <KernelArgument/KernelArgument.h>
 #include <KttTypes.h>
 
@@ -31,17 +32,17 @@ public:
     virtual bool HasAccurateRemainingProfilingRuns() const = 0;
 
     // Buffer methods
-    virtual TransferActionId UploadArgument(const KernelArgument& kernelArgument, const QueueId queueId) = 0;
+    virtual TransferActionId UploadArgument(KernelArgument& kernelArgument, const QueueId queueId) = 0;
     virtual TransferActionId UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
         const size_t dataSize) = 0;
     virtual TransferActionId DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
         const size_t dataSize) = 0;
     virtual TransferActionId CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
         const size_t dataSize) = 0;
-    virtual uint64_t WaitForTransferAction(const TransferActionId id) = 0;
+    virtual TransferResult WaitForTransferAction(const TransferActionId id) = 0;
     virtual void ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) = 0;
     virtual void GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle) = 0;
-    virtual void AddCustomBuffer(const KernelArgument& kernelArgument, ComputeBuffer buffer) = 0;
+    virtual void AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer buffer) = 0;
     virtual void ClearBuffer(const ArgumentId id) = 0;
     virtual void ClearBuffers() = 0;
 

@@ -12,7 +12,7 @@ namespace ktt
 OpenClTransferAction::OpenClTransferAction(const TransferActionId id, const bool isAsync) :
     m_Id(id),
     m_Duration(InvalidDuration),
-    m_Overhead(InvalidDuration)
+    m_Overhead(0)
 {
     Logger::LogDebug("Initializing OpenCL transfer action with id " + std::to_string(id));
 
@@ -28,9 +28,9 @@ void OpenClTransferAction::SetDuration(const Nanoseconds duration)
     m_Duration = duration;
 }
 
-void OpenClTransferAction::SetOverhead(const Nanoseconds overhead)
+void OpenClTransferAction::IncreaseOverhead(const Nanoseconds overhead)
 {
-    m_Overhead = overhead;
+    m_Overhead += overhead;
 }
 
 void OpenClTransferAction::SetReleaseFlag()
@@ -78,6 +78,13 @@ Nanoseconds OpenClTransferAction::GetOverhead() const
 bool OpenClTransferAction::IsAsync() const
 {
     return m_Event != nullptr;
+}
+
+TransferResult OpenClTransferAction::GenerateResult() const
+{
+    const Nanoseconds duration = GetDuration();
+    const Nanoseconds overhead = GetOverhead();
+    return TransferResult(duration, overhead);
 }
 
 } // namespace ktt

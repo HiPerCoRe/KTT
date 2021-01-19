@@ -2,14 +2,16 @@
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 
+#include <memory>
 #include <GPUPerfAPI.h>
 
 #include <Api/Output/KernelProfilingCounter.h>
-#include <Api/Output/KernelProfilingData.h>
 #include <ComputeEngine/OpenCl/Gpa/GpaContext.h>
 
 namespace ktt
 {
+
+class KernelProfilingData;
 
 class GpaInstance
 {
@@ -23,7 +25,7 @@ public:
     gpa_uint32 GetSampleId() const;
     gpa_uint32 GetPassIndex() const;
     gpa_uint32 GetRemainingPassCount() const;
-    KernelProfilingData GenerateProfilingData() const;
+    std::unique_ptr<KernelProfilingData> GenerateProfilingData() const;
 
 private:
     GPAFunctionTable& m_Functions;

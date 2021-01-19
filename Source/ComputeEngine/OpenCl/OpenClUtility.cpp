@@ -71,7 +71,7 @@ void CheckError(const GPA_Status value, GPAFunctionTable& functions, const std::
 {
     if (value != GPA_STATUS_OK)
     {
-        throw KttException("OpenCL GPA profiling engine encountered error " + functions.GPA_GetStatusAsStr(value)
+        throw KttException(std::string("OpenCL GPA profiling engine encountered error ") + functions.GPA_GetStatusAsStr(value)
             + " in function " + function + ", additional info: " + info);
     }
 }
