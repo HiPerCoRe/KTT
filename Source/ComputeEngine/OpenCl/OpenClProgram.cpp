@@ -26,7 +26,7 @@ OpenClProgram::~OpenClProgram()
     CheckError(clReleaseProgram(m_Program), "clReleaseProgram");
 }
 
-void OpenClProgram::Build()
+void OpenClProgram::Build() const
 {
     std::vector<cl_device_id> devices{m_Device};
     cl_int result = clBuildProgram(m_Program, static_cast<cl_uint>(devices.size()), devices.data(), m_CompilerOptions.data(),

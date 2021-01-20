@@ -16,7 +16,7 @@ public:
     explicit OpenClProgram(const OpenClContext& context, const std::string& source);
     ~OpenClProgram();
 
-    void Build();
+    void Build() const;
 
     const std::string& GetSource() const;
     cl_program GetProgram() const;

@@ -62,7 +62,7 @@ OpenClCommandQueue::~OpenClCommandQueue()
     }
 }
 
-void OpenClCommandQueue::Synchronize()
+void OpenClCommandQueue::Synchronize() const
 {
     Logger::LogDebug("Synchronizing OpenCL queue with id " + std::to_string(m_Id));
     CheckError(clFinish(m_Queue), "clFinish");

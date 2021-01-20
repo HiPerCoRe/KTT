@@ -48,7 +48,7 @@ std::vector<OpenClDevice> OpenClPlatform::GetDevices() const
 
     for (DeviceIndex index = 0; index < static_cast<DeviceIndex>(deviceIds.size()); ++index)
     {
-        devices.push_back(OpenClDevice(index, deviceIds[static_cast<size_t>(index)]));
+        devices.emplace_back(index, deviceIds[static_cast<size_t>(index)]);
     }
 
     return devices;
@@ -66,7 +66,7 @@ std::vector<OpenClPlatform> OpenClPlatform::GetAllPlatforms()
 
     for (PlatformIndex index = 0; index < static_cast<PlatformIndex>(platformIds.size()); ++index)
     {
-        platforms.push_back(OpenClPlatform(index, platformIds[static_cast<size_t>(index)]));
+        platforms.emplace_back(index, platformIds[static_cast<size_t>(index)]);
     }
 
     return platforms;
