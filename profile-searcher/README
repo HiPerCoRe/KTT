@@ -1,0 +1,29 @@
+PROFILE-BASED SEARCHER
+======================
+
+The tuning space searcher taking advantage of the hardware performance counter. The searcher uses historical autotuning data to build a model of relations between tuning parameters and performance counters. During searching tuning space, it uses the model to speed-up the search. The model can be build on different GPU and different input. For more information, see J. Filipovic at al., Using hardware performance counters to speed up autotuning convergence on GPUs, 2021.
+
+The profile-based searcher requires a model created on a subsection of tuning space of benchmark of our interest. The tuning space has to be measured with profiling switched on (method ktt::Tuner::setKernelProfiling). Examples with KTT allows to switch progiling on by setting preprocessor macro USE_PROFILING.
+
+Model creation
+--------------
+
+When the tuning space (or its random subsection) is profiled, the model has to be created. The scripts for model preparation are stored in scripts-prep folder. There are three types of model, we recommend to use the knowledge-based model. While generating the model, user has to supply the CSV file containing explored tuning space, columns containing tuning parameters and profiling counters with parallelism configuration ("Global size" and "Local size" columns). For example, when creating a model for mtran example executed on GeForce RTX 2080, we can execute:
+
+python scripts-prep/generate-knowledge-base.py -i mtran_output.csv -t 4:13 -c 2,3,13:51
+
+The script builds several models for matrix transposition autotuning, modelling relations between tuning parameters in columns 4-12 and performance counters in columns 2, 3, and 13-50 (counting the first column as column 0). The most advanced models are stored as mtran_output_Proposed.sav and mtran_output_Proposed.sav.pc, which can be further used with profile-based searcher.
+
+Note that models created on GeForce GTX 1070 for examples cltune-conv, cltune-gemm, coulomb_sum_3d, mtran and nbody are already distributed with KTT in folder profile-searcher/historical, so they can be immediatelly used.
+
+Using with autotuning
+---------------------
+
+Examples cltune-conv, cltune-gemm, coulomb_sum_3d, mtran and nbody are already adapted to using profile-based searcher. The profile-based searcher can be switched on by a preprocessor macro USE_PROFILE_SEARCHER. If a different searcher dir than the one distributed with KTT is to be used, it has to be set in profileSearcherDir constant with examples. The searcher directory has prescribed structure, which must contain following subdirectories:
+historical  : data with created models
+scratch     : folder for temporary files used by the searcher
+scripts-KTT : python scripts called by KTT during search
+
+If user-created model is to be used with the benchmark, the model has to be placed in the historical folder. Furthermore, the model file prefix has to be set when the searcher constructor is called together with compute capability of the GPU used for model creation. For example, the matrix transposition example calls the searcher constructor as follows:
+auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor*10 + ccMinor, myMP, "1070-mtran", 61, profileSearcherDir);
+The computing capability is multiplied by 10 and passed as an integer. The first two arguments of ktt::ProfileSearcher contain the computing capability and the number of multiprocessor of the GPU kernel is to be tuned for (can be obtained via KTT API). The third parameter contains the prefix of the file with model (1070-mtran in our example), the fourth parameter contains compute capability of the GPU the model was created on (6.1 aka 61 in our example) and the last parameter contains the folder of prescribed structure with model, scripts and scratch directory.
