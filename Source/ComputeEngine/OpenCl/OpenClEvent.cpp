@@ -24,7 +24,7 @@ void OpenClEvent::SetReleaseFlag()
     m_ReleaseFlag = true;
 }
 
-void OpenClEvent::WaitForFinish()
+void OpenClEvent::WaitForFinish() const
 {
     CheckError(clWaitForEvents(1, &m_Event), "clWaitForEvents");
 }

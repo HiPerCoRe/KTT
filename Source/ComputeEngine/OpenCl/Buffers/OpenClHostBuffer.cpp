@@ -18,13 +18,8 @@ namespace ktt
 {
 
 OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context) :
-    m_Argument(argument),
-    m_Generator(generator),
-    m_Context(context.GetContext()),
-    m_RawBuffer(nullptr),
-    m_BufferSize(argument.GetDataSize()),
-    m_MemoryFlags(GetMemoryFlags()),
-    m_UserOwned(false)
+    OpenClBuffer(argument, generator, context),
+    m_RawBuffer(nullptr)
 {
     Logger::LogDebug("Initializing OpenCL host buffer with id " + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Host
@@ -46,13 +41,8 @@ OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& 
 }
 
 OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer) :
-    m_Argument(argument),
-    m_Generator(generator),
-    m_Context(nullptr),
-    m_RawBuffer(nullptr),
-    m_BufferSize(argument.GetDataSize()),
-    m_MemoryFlags(GetMemoryFlags()),
-    m_UserOwned(true)
+    OpenClBuffer(argument, generator),
+    m_RawBuffer(nullptr)
 {
     Logger::LogDebug("Initializing OpenCL host buffer with id " + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Host
@@ -190,6 +180,11 @@ void OpenClHostBuffer::Resize(const OpenClCommandQueue& queue, const size_t newS
 {
     Logger::LogDebug("Resizing OpenCL host buffer with id " + std::to_string(m_Argument.GetId()));
 
+    if (m_UserOwned)
+    {
+        throw KttException("Resize operation on user owned buffer is not supported");
+    }
+
     if (IsZeroCopy())
     {
         throw KttException("Resize operation on buffer with CL_MEM_USE_HOST_PTR flag is not supported");
@@ -220,21 +215,6 @@ void OpenClHostBuffer::Resize(const OpenClCommandQueue& queue, const size_t newS
     m_BufferSize = newSize;
 }
 
-ArgumentId OpenClHostBuffer::GetArgumentId() const
-{
-    return m_Argument.GetId();
-}
-
-ArgumentAccessType OpenClHostBuffer::GetAccessType() const
-{
-    return m_Argument.GetAccessType();
-}
-
-ArgumentMemoryLocation OpenClHostBuffer::GetMemoryLocation() const
-{
-    return m_Argument.GetMemoryLocation();
-}
-
 cl_mem OpenClHostBuffer::GetBuffer() const
 {
     return m_Buffer;
@@ -243,11 +223,6 @@ cl_mem OpenClHostBuffer::GetBuffer() const
 void* OpenClHostBuffer::GetRawBuffer()
 {
     return static_cast<void*>(&m_Buffer);
-}
-
-size_t OpenClHostBuffer::GetSize() const
-{
-    return m_BufferSize;
 }
 
 bool OpenClHostBuffer::IsZeroCopy() const

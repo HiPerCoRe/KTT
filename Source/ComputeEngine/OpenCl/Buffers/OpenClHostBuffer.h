@@ -5,13 +5,9 @@
 #include <CL/cl.h>
 
 #include <ComputeEngine/OpenCl/Buffers/OpenClBuffer.h>
-#include <ComputeEngine/ActionIdGenerator.h>
-#include <KernelArgument/KernelArgument.h>
 
 namespace ktt
 {
-
-class OpenClContext;
 
 class OpenClHostBuffer : public OpenClBuffer
 {
@@ -28,22 +24,12 @@ public:
         const size_t dataSize) override;
     void Resize(const OpenClCommandQueue& queue, const size_t newSize, const bool preserveData) override;
 
-    ArgumentId GetArgumentId() const override;
-    ArgumentAccessType GetAccessType() const override;
-    ArgumentMemoryLocation GetMemoryLocation() const override;
     cl_mem GetBuffer() const override;
     void* GetRawBuffer() override;
-    size_t GetSize() const override;
 
 private:
-    KernelArgument& m_Argument;
-    ActionIdGenerator& m_Generator;
-    cl_context m_Context;
     cl_mem m_Buffer;
     void* m_RawBuffer;
-    size_t m_BufferSize;
-    cl_mem_flags m_MemoryFlags;
-    bool m_UserOwned;
 
     bool IsZeroCopy() const;
 };

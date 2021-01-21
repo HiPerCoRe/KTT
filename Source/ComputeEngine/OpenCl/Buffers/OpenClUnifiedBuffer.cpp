@@ -1,4 +1,5 @@
 #ifdef KTT_API_OPENCL
+#ifdef CL_VERSION_2_0
 
 #include <cstring>
 #include <string>
@@ -16,20 +17,13 @@
 namespace ktt
 {
 
-OpenClUnifiedBuffer::OpenClUnifiedBuffer(const KernelArgument& argument, ActionIdGenerator& generator,
-    const OpenClContext& context) :
-    m_Argument(argument),
-    m_Generator(generator),
-    m_Context(context.GetContext()),
-    m_SvmBuffer(nullptr),
-    m_BufferSize(argument.GetDataSize()),
-    m_MemoryFlags(GetMemoryFlags()),
-    m_UserOwned(false)
+OpenClUnifiedBuffer::OpenClUnifiedBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context) :
+    OpenClBuffer(argument, generator, context),
+    m_SvmBuffer(nullptr)
 {
     Logger::LogDebug("Initializing OpenCL unified buffer with id " + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Unified, "Argument memory location mismatch");
 
-#ifdef CL_VERSION_2_0
     m_MemoryFlags |= CL_MEM_SVM_FINE_GRAIN_BUFFER;
     m_SvmBuffer = clSVMAlloc(m_Context, m_MemoryFlags, m_BufferSize, 0);
             
@@ -37,20 +31,11 @@ OpenClUnifiedBuffer::OpenClUnifiedBuffer(const KernelArgument& argument, ActionI
     {
         throw KttException("Failed to allocate unified memory buffer");
     }
-
-#else
-    throw KttException("Unified memory buffers are not supported on this platform");
-#endif
 }
 
-OpenClUnifiedBuffer::OpenClUnifiedBuffer(const KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer) :
-    m_Argument(argument),
-    m_Generator(generator),
-    m_Context(nullptr),
-    m_SvmBuffer(nullptr),
-    m_BufferSize(argument.GetDataSize()),
-    m_MemoryFlags(GetMemoryFlags()),
-    m_UserOwned(true)
+OpenClUnifiedBuffer::OpenClUnifiedBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer) :
+    OpenClBuffer(argument, generator),
+    m_SvmBuffer(nullptr)
 {
     Logger::LogDebug("Initializing OpenCL unified buffer with id " + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Unified, "Argument memory location mismatch");
@@ -60,12 +45,8 @@ OpenClUnifiedBuffer::OpenClUnifiedBuffer(const KernelArgument& argument, ActionI
         throw KttException("The provided user OpenCL buffer is not valid");
     }
 
-#ifdef CL_VERSION_2_0
     m_MemoryFlags |= CL_MEM_SVM_FINE_GRAIN_BUFFER;
     m_SvmBuffer = userBuffer;
-#else
-    throw KttException("Unified memory buffers are not supported on this platform");
-#endif
 }
 
 OpenClUnifiedBuffer::~OpenClUnifiedBuffer()
@@ -77,9 +58,7 @@ OpenClUnifiedBuffer::~OpenClUnifiedBuffer()
         return;
     }
 
-#ifdef CL_VERSION_2_0
     clSVMFree(m_Context, m_SvmBuffer);
-#endif
 }
 
 std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::UploadData([[maybe_unused]] const OpenClCommandQueue& queue,
@@ -128,31 +107,67 @@ std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::DownloadData([[maybe_
     return action;
 }
 
-std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::CopyData([[maybe_unused]] const OpenClCommandQueue& queue,
-    [[maybe_unused]] const OpenClBuffer& source, [[maybe_unused]] const size_t dataSize)
+std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::CopyData(const OpenClCommandQueue& queue, const OpenClBuffer& source,
+    const size_t dataSize)
 {
-    throw KttException("Copy operation on unified OpenCL buffer is not supported");
+    Logger::LogDebug("Copying data into OpenCL unified buffer with id " + std::to_string(m_Argument.GetId())
+        + " from buffer with id " + std::to_string(source.GetArgumentId()));
+
+    if (m_BufferSize < dataSize)
+    {
+        throw KttException("Size of data to copy is larger than size of target buffer");
+    }
+
+    if (source.GetSize() < dataSize)
+    {
+        throw KttException("Size of data to copy is larger than size of source buffer");
+    }
+
+    const auto id = m_Generator.GenerateTransferId();
+    auto action = std::make_unique<OpenClTransferAction>(id, false);
+
+    Timer timer;
+    timer.Start();
+
+    std::vector<uint8_t> data(dataSize);
+    auto action = source.DownloadData(queue, data.data(), dataSize);
+    action->WaitForFinish();
+    std::memcpy(m_SvmBuffer, data.data(), dataSize);
+
+    timer.Stop();
+    action->SetDuration(timer.GetElapsedTime());
+    return action;
 }
 
-void OpenClUnifiedBuffer::Resize([[maybe_unused]] const OpenClCommandQueue& queue, [[maybe_unused]] const size_t newSize,
-    [[maybe_unused]] const bool preserveData)
+void OpenClUnifiedBuffer::Resize([[maybe_unused]] const OpenClCommandQueue& queue, const size_t newSize, const bool preserveData)
 {
-    throw KttException("Resize operation on unified OpenCL buffer is not supported");
-}
+    Logger::LogDebug("Resizing OpenCL unified buffer with id " + std::to_string(m_Argument.GetId()));
 
-ArgumentId OpenClUnifiedBuffer::GetArgumentId() const
-{
-    return m_Argument.GetId();
-}
+    if (m_UserOwned)
+    {
+        throw KttException("Resize operation on user owned buffer is not supported");
+    }
 
-ArgumentAccessType OpenClUnifiedBuffer::GetAccessType() const
-{
-    return m_Argument.GetAccessType();
-}
+    if (m_BufferSize == newSize)
+    {
+        return;
+    }
 
-ArgumentMemoryLocation OpenClUnifiedBuffer::GetMemoryLocation() const
-{
-    return m_Argument.GetMemoryLocation();
+    void* newSvmBuffer = clSVMAlloc(m_Context, m_MemoryFlags, newSize, 0);
+
+    if (m_SvmBuffer == nullptr)
+    {
+        throw KttException("Failed to allocate unified memory buffer");
+    }
+
+    if (preserveData)
+    {
+        std::memcpy(newSvmBuffer, m_SvmBuffer, std::min(m_BufferSize, newSize));
+    }
+
+    clSVMFree(m_Context, m_SvmBuffer);
+    m_SvmBuffer = newSvmBuffer;
+    m_BufferSize = newSize;
 }
 
 cl_mem OpenClUnifiedBuffer::GetBuffer() const
@@ -165,11 +180,7 @@ void* OpenClUnifiedBuffer::GetRawBuffer()
     return m_SvmBuffer;
 }
 
-size_t OpenClUnifiedBuffer::GetSize() const
-{
-    return m_BufferSize;
-}
-
 } // namespace ktt
 
+#endif // CL_VERSION_2_0
 #endif // KTT_API_OPENCL

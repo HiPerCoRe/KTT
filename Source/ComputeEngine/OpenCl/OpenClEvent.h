@@ -16,7 +16,7 @@ public:
     ~OpenClEvent();
 
     void SetReleaseFlag();
-    void WaitForFinish();
+    void WaitForFinish() const;
 
     cl_event* GetEvent();
     Nanoseconds GetDuration() const;

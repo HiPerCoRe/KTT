@@ -5,19 +5,24 @@
 #include <memory>
 #include <CL/cl.h>
 
+#include <ComputeEngine/ActionIdGenerator.h>
 #include <KernelArgument/ArgumentAccessType.h>
 #include <KernelArgument/ArgumentMemoryLocation.h>
+#include <KernelArgument/KernelArgument.h>
 #include <KttTypes.h>
 
 namespace ktt
 {
 
 class OpenClCommandQueue;
+class OpenClContext;
 class OpenClTransferAction;
 
 class OpenClBuffer
 {
 public:
+    explicit OpenClBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context);
+    explicit OpenClBuffer(KernelArgument& argument, ActionIdGenerator& generator);
     virtual ~OpenClBuffer() = default;
 
     virtual std::unique_ptr<OpenClTransferAction> UploadData(const OpenClCommandQueue& queue, const void* source,
@@ -28,14 +33,22 @@ public:
         const size_t dataSize) = 0;
     virtual void Resize(const OpenClCommandQueue& queue, const size_t newSize, const bool preserveData) = 0;
 
-    virtual ArgumentId GetArgumentId() const = 0;
-    virtual ArgumentAccessType GetAccessType() const = 0;
-    virtual ArgumentMemoryLocation GetMemoryLocation() const = 0;
     virtual cl_mem GetBuffer() const = 0;
     virtual void* GetRawBuffer() = 0;
-    virtual size_t GetSize() const = 0;
+
+    ArgumentId GetArgumentId() const;
+    ArgumentAccessType GetAccessType() const;
+    ArgumentMemoryLocation GetMemoryLocation() const;
+    size_t GetSize() const;
 
 protected:
+    KernelArgument& m_Argument;
+    ActionIdGenerator& m_Generator;
+    cl_context m_Context;
+    size_t m_BufferSize;
+    cl_mem_flags m_MemoryFlags;
+    bool m_UserOwned;
+
     cl_mem_flags GetMemoryFlags();
 };
 

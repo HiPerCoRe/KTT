@@ -5,19 +5,15 @@
 #include <CL/cl.h>
 
 #include <ComputeEngine/OpenCl/Buffers/OpenClBuffer.h>
-#include <ComputeEngine/ActionIdGenerator.h>
-#include <KernelArgument/KernelArgument.h>
 
 namespace ktt
 {
 
-class OpenClContext;
-
 class OpenClDeviceBuffer : public OpenClBuffer
 {
 public:
-    explicit OpenClDeviceBuffer(const KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context);
-    explicit OpenClDeviceBuffer(const KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer);
+    explicit OpenClDeviceBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context);
+    explicit OpenClDeviceBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer);
     ~OpenClDeviceBuffer() override;
 
     std::unique_ptr<OpenClTransferAction> UploadData(const OpenClCommandQueue& queue, const void* source,
@@ -28,21 +24,11 @@ public:
         const size_t dataSize) override;
     void Resize(const OpenClCommandQueue& queue, const size_t newSize, const bool preserveData) override;
 
-    ArgumentId GetArgumentId() const override;
-    ArgumentAccessType GetAccessType() const override;
-    ArgumentMemoryLocation GetMemoryLocation() const override;
     cl_mem GetBuffer() const override;
     void* GetRawBuffer() override;
-    size_t GetSize() const override;
 
 private:
-    const KernelArgument& m_Argument;
-    ActionIdGenerator& m_Generator;
-    cl_context m_Context;
     cl_mem m_Buffer;
-    size_t m_BufferSize;
-    cl_mem_flags m_MemoryFlags;
-    bool m_UserOwned;
 };
 
 } // namespace ktt

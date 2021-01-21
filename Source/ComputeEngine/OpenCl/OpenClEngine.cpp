@@ -589,8 +589,12 @@ std::unique_ptr<OpenClBuffer> OpenClEngine::CreateBuffer(KernelArgument& argumen
         buffer = std::make_unique<OpenClHostBuffer>(argument, m_Generator, *m_Context);
         break;
     case ArgumentMemoryLocation::Unified:
+#ifdef CL_VERSION_2_0
         buffer = std::make_unique<OpenClUnifiedBuffer>(argument, m_Generator, *m_Context);
         break;
+#else
+        throw KttException("Unified memory buffers are not supported on this platform");
+#endif // CL_VERSION_2_0
     default:
         KttError("Unhandled argument memory location value");
         break;
@@ -616,8 +620,12 @@ std::unique_ptr<OpenClBuffer> OpenClEngine::CreateUserBuffer(KernelArgument& arg
         userBuffer = std::make_unique<OpenClHostBuffer>(argument, m_Generator, buffer);
         break;
     case ArgumentMemoryLocation::Unified:
+#ifdef CL_VERSION_2_0
         userBuffer = std::make_unique<OpenClUnifiedBuffer>(argument, m_Generator, buffer);
         break;
+#else
+        throw KttException("Unified memory buffers are not supported on this platform");
+#endif // CL_VERSION_2_0
     default:
         KttError("Unhandled argument memory location value");
         break;

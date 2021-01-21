@@ -15,13 +15,8 @@
 namespace ktt
 {
 
-OpenClDeviceBuffer::OpenClDeviceBuffer(const KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context) :
-    m_Argument(argument),
-    m_Generator(generator),
-    m_Context(context.GetContext()),
-    m_BufferSize(argument.GetDataSize()),
-    m_MemoryFlags(GetMemoryFlags()),
-    m_UserOwned(false)
+OpenClDeviceBuffer::OpenClDeviceBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context) :
+    OpenClBuffer(argument, generator, context)
 {
     Logger::LogDebug("Initializing OpenCL device buffer with id " + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Device, "Argument memory location mismatch");
@@ -31,13 +26,8 @@ OpenClDeviceBuffer::OpenClDeviceBuffer(const KernelArgument& argument, ActionIdG
     CheckError(result, "clCreateBuffer");
 }
 
-OpenClDeviceBuffer::OpenClDeviceBuffer(const KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer) :
-    m_Argument(argument),
-    m_Generator(generator),
-    m_Context(nullptr),
-    m_BufferSize(argument.GetDataSize()),
-    m_MemoryFlags(GetMemoryFlags()),
-    m_UserOwned(true)
+OpenClDeviceBuffer::OpenClDeviceBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer) :
+    OpenClBuffer(argument, generator)
 {
     Logger::LogDebug("Initializing OpenCL device buffer with id " + std::to_string(m_Argument.GetId()));
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Device, "Argument memory location mismatch");
@@ -136,6 +126,11 @@ void OpenClDeviceBuffer::Resize(const OpenClCommandQueue& queue, const size_t ne
 {
     Logger::LogDebug("Resizing OpenCL device buffer with id " + std::to_string(m_Argument.GetId()));
 
+    if (m_UserOwned)
+    {
+        throw KttException("Resize operation on user owned buffer is not supported");
+    }
+
     if (m_BufferSize == newSize)
     {
         return;
@@ -161,21 +156,6 @@ void OpenClDeviceBuffer::Resize(const OpenClCommandQueue& queue, const size_t ne
     m_BufferSize = newSize;
 }
 
-ArgumentId OpenClDeviceBuffer::GetArgumentId() const
-{
-    return m_Argument.GetId();
-}
-
-ArgumentAccessType OpenClDeviceBuffer::GetAccessType() const
-{
-    return m_Argument.GetAccessType();
-}
-
-ArgumentMemoryLocation OpenClDeviceBuffer::GetMemoryLocation() const
-{
-    return m_Argument.GetMemoryLocation();
-}
-
 cl_mem OpenClDeviceBuffer::GetBuffer() const
 {
     return m_Buffer;
@@ -184,11 +164,6 @@ cl_mem OpenClDeviceBuffer::GetBuffer() const
 void* OpenClDeviceBuffer::GetRawBuffer()
 {
     return static_cast<void*>(&m_Buffer);
-}
-
-size_t OpenClDeviceBuffer::GetSize() const
-{
-    return m_BufferSize;
 }
 
 } // namespace ktt

@@ -7,6 +7,9 @@
 #include <vector>
 
 #include <Api/ComputeApiInitializer.h>
+#include <ComputeEngine/Cuda/Actions/CudaComputeAction.h>
+#include <ComputeEngine/Cuda/Actions/CudaTransferAction.h>
+#include <ComputeEngine/Cuda/Buffers/CudaBuffer.h>
 #include <ComputeEngine/Cuda/CudaContext.h>
 #include <ComputeEngine/Cuda/CudaKernel.h>
 #include <ComputeEngine/Cuda/CudaStream.h>
@@ -81,10 +84,10 @@ private:
     ActionIdGenerator m_Generator;
     std::unique_ptr<CudaContext> m_Context;
     std::vector<std::unique_ptr<CudaStream>> m_Streams;
-    //std::map<ArgumentId, std::unique_ptr<CudaBuffer>> m_Buffers;
+    std::map<ArgumentId, std::unique_ptr<CudaBuffer>> m_Buffers;
     LruCache<KernelComputeId, std::shared_ptr<CudaKernel>> m_KernelCache;
-    //std::map<ComputeActionId, std::unique_ptr<CudaComputeAction>> m_ComputeActions;
-    //std::map<TransferActionId, std::unique_ptr<CudaTransferAction>> m_TransferActions;
+    std::map<ComputeActionId, std::unique_ptr<CudaComputeAction>> m_ComputeActions;
+    std::map<TransferActionId, std::unique_ptr<CudaTransferAction>> m_TransferActions;
 
     //#ifdef KTT_PROFILING_CUPTI_LEGACY
     //std::vector<std::pair<std::string, CUpti_MetricID>> profilingMetrics;

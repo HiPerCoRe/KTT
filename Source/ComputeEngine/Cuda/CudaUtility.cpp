@@ -37,15 +37,6 @@ void CheckError(const nvrtcResult value, const std::string& function, const std:
     }
 }
 
-Nanoseconds GetEventDuration(const CUevent start, const CUevent end)
-{
-    float duration;
-    CheckError(cuEventElapsedTime(&duration, start, end), "cuEventElapsedTime");
-
-    duration *= 1'000'000.0f;
-    return static_cast<Nanoseconds>(duration);
-}
-
 #if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
 
 std::string GetEnumName(const CUptiResult value)
