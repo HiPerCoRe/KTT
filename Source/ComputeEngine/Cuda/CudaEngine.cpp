@@ -1,51 +1,50 @@
 #ifdef KTT_API_CUDA
 
-//#include <stdexcept>
-//#include <compute_engine/cuda/cuda_engine.h>
-//#include <utility/ktt_utility.h>
-//#include <utility/logger.h>
-//#include <utility/timer.h>
-//
-//#ifdef KTT_PROFILING_CUPTI_LEGACY
-//#include <compute_engine/cuda/cupti_legacy/cupti_profiling_subscription.h>
-//#elif KTT_PROFILING_CUPTI
+#include <ComputeEngine/Cuda/Buffers/CudaDeviceBuffer.h>
+#include <ComputeEngine/Cuda/Buffers/CudaHostBuffer.h>
+#include <ComputeEngine/Cuda/Buffers/CudaUnifiedBuffer.h>
+#include <ComputeEngine/Cuda/CudaDevice.h>
+#include <ComputeEngine/Cuda/CudaEngine.h>
+#include <ComputeEngine/Cuda/CudaUtility.h>
+#include <Utility/ErrorHandling/Assert.h>
+#include <Utility/ErrorHandling/KttException.h>
+#include <Utility/Logger/Logger.h>
+#include <Utility/StlHelpers.h>
+#include <Utility/Timer.h>
+
+#ifdef KTT_PROFILING_CUPTI_LEGACY
+#include <ComputeEngine/Cuda/CuptiLegacy/CuptiSubscription.h>
+#elif KTT_PROFILING_CUPTI
 //#include <compute_engine/cuda/cupti/cupti_profiling_pass.h>
-//#endif // KTT_PROFILING_CUPTI
-//
-//namespace ktt
+#endif // KTT_PROFILING_CUPTI
+
+namespace ktt
+{
+
+//CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
+//    m_DeviceIndex(deviceIndex),
+//    m_KernelCache(10)
 //{
+//    Logger::LogDebug("Initializing CUDA");
+//    CheckError(cuInit(0), "cuInit");
 //
-//CUDAEngine::CUDAEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
-//    deviceIndex(deviceIndex),
-//    globalSizeType(GlobalSizeType::CUDA),
-//    globalSizeCorrection(false),
-//    kernelCacheFlag(true),
-//    kernelCacheCapacity(10),
-//    persistentBufferFlag(true),
-//    nextEventId(0)
-//{
-//    Logger::logDebug("Initializing CUDA runtime");
-//    checkCUDAError(cuInit(0), "cuInit");
+//    auto devices = CudaDevice::GetAllDevices();
 //
-//    auto devices = getCUDADevices();
-//    if (deviceIndex >= devices.size())
+//    if (deviceIndex >= static_cast<DeviceIndex>(devices.size()))
 //    {
-//        throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
+//        throw KttException("Invalid device index: " + std::to_string(deviceIndex));
 //    }
 //
-//    Logger::logDebug("Initializing CUDA context");
-//    context = std::make_unique<CUDAContext>(devices.at(deviceIndex).getDevice());
+//    m_Context = std::make_unique<CudaContext>(devices[deviceIndex]);
 //
-//    initializeCompilerOptions();
-//
-//    Logger::logDebug("Initializing CUDA streams");
-//    for (uint32_t i = 0; i < queueCount; i++)
+//    for (uint32_t i = 0; i < queueCount; ++i)
 //    {
-//        auto stream = std::make_unique<CUDAStream>(i);
-//        streams.push_back(std::move(stream));
+//        auto stream = std::make_unique<CudaStream>(i);
+//        m_Streams.push_back(std::move(stream));
 //    }
 //
-//    initializeProfiler();
+//    InitializeCompilerOptions();
+//    InitializeCupti();
 //}
 //
 //CUDAEngine::CUDAEngine(const UserInitializer& initializer) :
@@ -1224,43 +1223,6 @@
 //    return collectedMetrics;
 //}
 //
-//const std::vector<std::string>& CUDAEngine::getDefaultProfilingMetricNames()
-//{
-//    static const std::vector<std::string> result
-//    {
-//        "achieved_occupancy",
-//        "alu_fu_utilization",
-//        "branch_efficiency",
-//        "double_precision_fu_utilization",
-//        "dram_read_transactions",
-//        "dram_utilization",
-//        "dram_write_transactions",
-//        "gld_efficiency",
-//        "gst_efficiency",
-//        "half_precision_fu_utilization",
-//        "inst_executed",
-//        "inst_fp_16",
-//        "inst_fp_32",
-//        "inst_fp_64",
-//        "inst_integer",
-//        "inst_inter_thread_communication",
-//        "inst_misc",
-//        "inst_replay_overhead",
-//        "l1_shared_utilization",
-//        "l2_utilization",
-//        "ldst_fu_utilization",
-//        "shared_efficiency",
-//        "shared_load_transactions",
-//        "shared_store_transactions",
-//        "shared_utilization",
-//        "single_precision_fu_utilization",
-//        "sm_efficiency",
-//        "special_fu_utilization",
-//        "tex_fu_utilization"
-//    };
-//    return result;
-//}
-//
 //#elif KTT_PROFILING_CUPTI
 //
 //void CUDAEngine::initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource)
@@ -1326,7 +1288,7 @@
 //}
 //
 //#endif // KTT_PROFILING_CUPTI
-//
-//} // namespace ktt
+
+} // namespace ktt
 
 #endif // KTT_API_CUDA

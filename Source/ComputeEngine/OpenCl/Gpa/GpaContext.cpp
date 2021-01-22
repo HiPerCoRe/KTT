@@ -2,6 +2,7 @@
 
 #include <ComputeEngine/OpenCl/Gpa/GpaContext.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
+#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt
@@ -31,6 +32,11 @@ gpa_uint32 GpaContext::GenerateSampleId()
 
 void GpaContext::SetCounters(const std::vector<std::string>& counters)
 {
+    if (counters.empty())
+    {
+        throw KttException("Number of profiling counters must be greater than zero");
+    }
+
     m_Counters = counters;
 }
 

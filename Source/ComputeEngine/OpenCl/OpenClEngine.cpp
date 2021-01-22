@@ -41,7 +41,7 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
     const auto& device = devices[static_cast<size_t>(deviceIndex)];
     m_Context = std::make_unique<OpenClContext>(platform, device);
 
-    for (uint32_t i = 0; i < queueCount; i++)
+    for (uint32_t i = 0; i < queueCount; ++i)
     {
         auto commandQueue = std::make_unique<OpenClCommandQueue>(i, *m_Context);
         m_Queues.push_back(std::move(commandQueue));

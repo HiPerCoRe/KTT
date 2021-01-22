@@ -17,14 +17,13 @@
 #include <ComputeEngine/ComputeEngine.h>
 #include <Utility/LruCache.h>
 
-//#ifdef KTT_PROFILING_CUPTI_LEGACY
-//#include <cupti.h>
-//#include <compute_engine/cuda/cupti_legacy/cupti_profiling_instance.h>
-//#elif KTT_PROFILING_CUPTI
+#ifdef KTT_PROFILING_CUPTI_LEGACY
+#include <ComputeEngine/Cuda/CuptiLegacy/CuptiInstance.h>
+#elif KTT_PROFILING_CUPTI
 //#include <compute_engine/cuda/cupti/cupti_metric_interface.h>
 //#include <compute_engine/cuda/cupti/cupti_profiler.h>
 //#include <compute_engine/cuda/cupti/cupti_profiling_instance.h>
-//#endif // KTT_PROFILING_CUPTI
+#endif // KTT_PROFILING_CUPTI
 
 namespace ktt
 {
@@ -89,17 +88,15 @@ private:
     std::map<ComputeActionId, std::unique_ptr<CudaComputeAction>> m_ComputeActions;
     std::map<TransferActionId, std::unique_ptr<CudaTransferAction>> m_TransferActions;
 
-    //#ifdef KTT_PROFILING_CUPTI_LEGACY
-    //std::vector<std::pair<std::string, CUpti_MetricID>> profilingMetrics;
-    //std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
-    //std::map<std::pair<std::string, std::string>, std::unique_ptr<CUPTIProfilingInstance>> kernelProfilingInstances;
-    //#elif KTT_PROFILING_CUPTI
+    #ifdef KTT_PROFILING_CUPTI_LEGACY
+    std::map<KernelComputeId, std::unique_ptr<CuptiInstance>> m_CuptiInstances;
+    #elif KTT_PROFILING_CUPTI
     //std::unique_ptr<CUPTIProfiler> profiler;
     //std::unique_ptr<CUPTIMetricInterface> metricInterface;
     //std::vector<std::string> profilingCounters;
     //std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
     //std::map<std::pair<std::string, std::string>, std::unique_ptr<CUPTIProfilingInstance>> kernelProfilingInstances;
-    //#endif // KTT_PROFILING_CUPTI
+    #endif // KTT_PROFILING_CUPTI
 
     //void initializeCompilerOptions();
     //void initializeProfiler();
@@ -117,7 +114,6 @@ private:
     //const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
     //CUpti_MetricID getMetricIdFromName(const std::string& metricName);
     //std::vector<std::pair<std::string, CUpti_MetricID>> getProfilingMetricsForCurrentDevice(const std::vector<std::string>& metricNames);
-    //static const std::vector<std::string>& getDefaultProfilingMetricNames();
     //#elif KTT_PROFILING_CUPTI
     //void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
     //const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
