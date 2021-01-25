@@ -20,9 +20,9 @@
 #ifdef KTT_PROFILING_CUPTI_LEGACY
 #include <ComputeEngine/Cuda/CuptiLegacy/CuptiInstance.h>
 #elif KTT_PROFILING_CUPTI
-//#include <compute_engine/cuda/cupti/cupti_metric_interface.h>
-//#include <compute_engine/cuda/cupti/cupti_profiler.h>
-//#include <compute_engine/cuda/cupti/cupti_profiling_instance.h>
+#include <ComputeEngine/Cuda/Cupti/CuptiInstance.h>
+#include <ComputeEngine/Cuda/Cupti/CuptiMetricInterface.h>
+#include <ComputeEngine/Cuda/Cupti/CuptiProfiler.h>
 #endif // KTT_PROFILING_CUPTI
 
 namespace ktt
@@ -88,28 +88,23 @@ private:
     std::map<ComputeActionId, std::unique_ptr<CudaComputeAction>> m_ComputeActions;
     std::map<TransferActionId, std::unique_ptr<CudaTransferAction>> m_TransferActions;
 
-    #ifdef KTT_PROFILING_CUPTI_LEGACY
+#ifdef KTT_PROFILING_CUPTI_LEGACY
     std::map<KernelComputeId, std::unique_ptr<CuptiInstance>> m_CuptiInstances;
-    #elif KTT_PROFILING_CUPTI
-    //std::unique_ptr<CUPTIProfiler> profiler;
-    //std::unique_ptr<CUPTIMetricInterface> metricInterface;
-    //std::vector<std::string> profilingCounters;
-    //std::map<std::pair<std::string, std::string>, std::vector<EventId>> kernelToEventMap;
-    //std::map<std::pair<std::string, std::string>, std::unique_ptr<CUPTIProfilingInstance>> kernelProfilingInstances;
-    #endif // KTT_PROFILING_CUPTI
+#elif KTT_PROFILING_CUPTI
+    std::unique_ptr<CuptiProfiler> m_Profiler;
+    std::unique_ptr<CuptiMetricInterface> m_MetricInterface;
+    std::map<KernelComputeId, std::unique_ptr<CuptiInstance>> m_CuptiInstances;
+#endif // KTT_PROFILING_CUPTI
 
-    //void initializeCompilerOptions();
-    //void initializeProfiler();
-    //std::unique_ptr<CUDAProgram> createAndBuildProgram(const std::string& source) const;
-    //EventId enqueueKernel(CUDAKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
-    //    const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue, const uint64_t kernelLaunchOverhead);
-    //KernelResult createKernelResult(const EventId id) const;
-    //std::vector<CUdeviceptr*> getKernelArguments(const std::vector<KernelArgument*>& argumentPointers);
-    //size_t getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& argumentPointers, const std::vector<LocalMemoryModifier>& modifiers) const;
-    //CUDABuffer* findBuffer(const ArgumentId id) const;
-    //CUdeviceptr* loadBufferFromCache(const ArgumentId id) const;
+    void InitializeCompilerOptions();
+    std::shared_ptr<CudaKernel> LoadKernel(const KernelComputeData& data);
+    std::vector<CUdeviceptr*> GetKernelArguments(const std::vector<const KernelArgument*>& arguments);
+    CUdeviceptr* GetKernelArgument(const KernelArgument& argument);
+    size_t GetSharedMemorySize(const std::vector<const KernelArgument*>& arguments) const;
 
-    //#ifdef KTT_PROFILING_CUPTI_LEGACY
+#if defined(KTT_PROFILING_CUPTI)
+    void InitializeCupti();
+#endif // KTT_PROFILING_CUPTI
     //void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
     //const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
     //CUpti_MetricID getMetricIdFromName(const std::string& metricName);
@@ -117,8 +112,6 @@ private:
     //#elif KTT_PROFILING_CUPTI
     //void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
     //const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
-    //static const std::vector<std::string>& getDefaultProfilingCounters();
-    //#endif // KTT_PROFILING_CUPTI
 };
 
 } // namespace ktt

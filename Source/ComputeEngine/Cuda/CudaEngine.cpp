@@ -15,115 +15,277 @@
 #ifdef KTT_PROFILING_CUPTI_LEGACY
 #include <ComputeEngine/Cuda/CuptiLegacy/CuptiSubscription.h>
 #elif KTT_PROFILING_CUPTI
-//#include <compute_engine/cuda/cupti/cupti_profiling_pass.h>
+#include <ComputeEngine/Cuda/Cupti/CuptiPass.h>
 #endif // KTT_PROFILING_CUPTI
 
 namespace ktt
 {
 
-//CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
-//    m_DeviceIndex(deviceIndex),
-//    m_KernelCache(10)
-//{
-//    Logger::LogDebug("Initializing CUDA");
-//    CheckError(cuInit(0), "cuInit");
-//
-//    auto devices = CudaDevice::GetAllDevices();
-//
-//    if (deviceIndex >= static_cast<DeviceIndex>(devices.size()))
-//    {
-//        throw KttException("Invalid device index: " + std::to_string(deviceIndex));
-//    }
-//
-//    m_Context = std::make_unique<CudaContext>(devices[deviceIndex]);
-//
-//    for (uint32_t i = 0; i < queueCount; ++i)
-//    {
-//        auto stream = std::make_unique<CudaStream>(i);
-//        m_Streams.push_back(std::move(stream));
-//    }
-//
-//    InitializeCompilerOptions();
-//    InitializeCupti();
-//}
-//
-//CUDAEngine::CUDAEngine(const UserInitializer& initializer) :
-//    globalSizeType(GlobalSizeType::CUDA),
-//    globalSizeCorrection(false),
-//    kernelCacheFlag(true),
-//    kernelCacheCapacity(10),
-//    persistentBufferFlag(true),
-//    nextEventId(0)
-//{
-//    Logger::logDebug("Initializing CUDA context");
-//    context = std::make_unique<CUDAContext>(initializer.getContext());
-//
-//    auto devices = getCUDADevices();
-//
-//    for (size_t i = 0; i < devices.size(); ++i)
-//    {
-//        if (context->getDevice() == devices[i].getDevice())
-//        {
-//            deviceIndex = static_cast<DeviceIndex>(i);
-//            break;
-//        }
-//    }
-//
-//    initializeCompilerOptions();
-//
-//    Logger::logDebug("Initializing CUDA streams");
-//    const auto& userStreams = initializer.getQueues();
-//
-//    for (size_t i = 0; i < userStreams.size(); ++i)
-//    {
-//        auto stream = std::make_unique<CUDAStream>(static_cast<QueueId>(i), userStreams[i]);
-//        streams.push_back(std::move(stream));
-//    }
-//
-//    initializeProfiler();
-//}
-//
-//KernelResult CUDAEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-//    const std::vector<OutputDescriptor>& outputDescriptors)
-//{
-//    EventId eventId = runKernelAsync(kernelData, argumentPointers, getDefaultQueue());
-//    KernelResult result = getKernelResult(eventId, outputDescriptors);
-//    return result;
-//}
-//
+CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
+    m_DeviceIndex(deviceIndex),
+    m_KernelCache(10)
+{
+    Logger::LogDebug("Initializing CUDA");
+    CheckError(cuInit(0), "cuInit");
+
+    auto devices = CudaDevice::GetAllDevices();
+
+    if (deviceIndex >= static_cast<DeviceIndex>(devices.size()))
+    {
+        throw KttException("Invalid device index: " + std::to_string(deviceIndex));
+    }
+
+    m_Context = std::make_unique<CudaContext>(devices[deviceIndex]);
+
+    for (uint32_t i = 0; i < queueCount; ++i)
+    {
+        auto stream = std::make_unique<CudaStream>(i);
+        m_Streams.push_back(std::move(stream));
+    }
+
+    InitializeCompilerOptions();
+
+#if defined(KTT_PROFILING_CUPTI)
+    InitializeCupti();
+#endif // KTT_PROFILING_CUPTI
+}
+
+CudaEngine::CudaEngine(const ComputeApiInitializer& initializer) :
+    m_KernelCache(10)
+{
+    m_Context = std::make_unique<CudaContext>(initializer.GetContext());
+
+    const auto devices = CudaDevice::GetAllDevices();
+
+    for (size_t i = 0; i < devices.size(); ++i)
+    {
+        if (m_Context->GetDevice() == devices[i].GetDevice())
+        {
+            m_DeviceIndex = static_cast<DeviceIndex>(i);
+            break;
+        }
+    }
+
+    const auto& streams = initializer.GetQueues();
+
+    for (size_t i = 0; i < streams.size(); ++i)
+    {
+        auto stream = std::make_unique<CudaStream>(static_cast<QueueId>(i), streams[i]);
+        m_Streams.push_back(std::move(stream));
+    }
+
+    InitializeCompilerOptions();
+
+#if defined(KTT_PROFILING_CUPTI)
+    InitializeCupti();
+#endif // KTT_PROFILING_CUPTI
+}
+
+ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId)
+{
+    if (queueId >= static_cast<QueueId>(m_Streams.size()))
+    {
+        throw KttException("Invalid stream index: " + std::to_string(queueId));
+    }
+
+    /*Timer timer;
+    timer.Start();
+
+    auto kernel = LoadKernel(data);
+    std::vector<CUdeviceptr*> arguments = GetKernelArguments(data.GetArguments());
+    const size_t sharedMemorySize = GetSharedMemorySize(data.GetArguments());
+
+    const auto& stream = *m_Streams[static_cast<size_t>(queueId)];
+    auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+    timer.Stop();
+
+    action->IncreaseOverhead(timer.GetElapsedTime());
+    action->SetConfigurationPrefix(data.GetConfigurationPrefix());
+    const auto id = action->GetId();
+    m_ComputeActions[id] = std::move(action);
+    return id;*/
+
+    return m_Generator.GenerateComputeId();
+}
+
+KernelResult CudaEngine::WaitForComputeAction(const ComputeActionId id)
+{
+    return KernelResult();
+}
+
+KernelResult CudaEngine::RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId)
+{
+    return KernelResult();
+}
+
+void CudaEngine::SetProfilingCounters(const std::vector<std::string>& counters)
+{
+
+}
+
+bool CudaEngine::IsProfilingSessionActive(const KernelComputeId& id)
+{
+    return false;
+}
+
+uint64_t CudaEngine::GetRemainingProfilingRuns(const KernelComputeId& id)
+{
+    return 0;
+}
+
+bool CudaEngine::HasAccurateRemainingProfilingRuns() const
+{
+    return false;
+}
+
+TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
+{
+    return m_Generator.GenerateTransferId();
+}
+
+TransferActionId CudaEngine::UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
+    const size_t dataSize)
+{
+    return m_Generator.GenerateTransferId();
+}
+
+TransferActionId CudaEngine::DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
+    const size_t dataSize)
+{
+    return m_Generator.GenerateTransferId();
+}
+
+TransferActionId CudaEngine::CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
+    const size_t dataSize)
+{
+    return m_Generator.GenerateTransferId();
+}
+
+TransferResult CudaEngine::WaitForTransferAction(const TransferActionId id)
+{
+    return TransferResult();
+}
+
+void CudaEngine::ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
+{
+
+}
+
+void CudaEngine::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle)
+{
+
+}
+
+void CudaEngine::AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer buffer)
+{
+
+}
+
+void CudaEngine::ClearBuffer(const ArgumentId id)
+{
+    m_Buffers.erase(id);
+}
+
+void CudaEngine::ClearBuffers()
+{
+    m_Buffers.clear();
+}
+
+QueueId CudaEngine::GetDefaultQueue() const
+{
+    return static_cast<QueueId>(0);
+}
+
+std::vector<QueueId> CudaEngine::GetAllQueues() const
+{
+    std::vector<QueueId> result;
+
+    for (const auto& stream : m_Streams)
+    {
+        result.push_back(stream->GetId());
+    }
+
+    return result;
+}
+
+void CudaEngine::SynchronizeQueue(const QueueId queueId)
+{
+    if (static_cast<size_t>(queueId) >= m_Streams.size())
+    {
+        throw KttException("Invalid CUDA stream index: " + std::to_string(queueId));
+    }
+
+    m_Streams[static_cast<size_t>(queueId)]->Synchronize();
+}
+
+void CudaEngine::SynchronizeDevice()
+{
+    for (auto& stream : m_Streams)
+    {
+        stream->Synchronize();
+    }
+}
+
+std::vector<PlatformInfo> CudaEngine::GetPlatformInfo() const
+{
+    int driverVersion;
+    CheckError(cuDriverGetVersion(&driverVersion), "cuDriverGetVersion");
+
+    PlatformInfo info(0, "NVIDIA CUDA");
+    info.SetVendor("NVIDIA Corporation");
+    info.SetVersion(std::to_string(driverVersion));
+    info.SetExtensions("N/A");
+
+    return std::vector<PlatformInfo>{info};
+}
+
+std::vector<DeviceInfo> CudaEngine::GetDeviceInfo([[maybe_unused]] const PlatformIndex platformIndex) const
+{
+    std::vector<DeviceInfo> result;
+
+    for (const auto& device : CudaDevice::GetAllDevices())
+    {
+        result.push_back(device.GetInfo());
+    }
+
+    return result;
+}
+
+DeviceInfo CudaEngine::GetCurrentDeviceInfo() const
+{
+    const auto deviceInfos = GetDeviceInfo(0);
+    return deviceInfos[static_cast<size_t>(m_DeviceIndex)];
+}
+
+void CudaEngine::SetCompilerOptions(const std::string& options)
+{
+    CudaProgram::SetCompilerOptions(options);
+    ClearKernelCache();
+}
+
+void CudaEngine::SetGlobalSizeType(const GlobalSizeType type)
+{
+    CudaKernel::SetGlobalSizeType(type);
+}
+
+void CudaEngine::SetAutomaticGlobalSizeCorrection(const bool flag)
+{
+    CudaKernel::SetGlobalSizeCorrection(flag);
+}
+
+void CudaEngine::SetKernelCacheCapacity(const uint64_t capacity)
+{
+    m_KernelCache.SetMaxSize(static_cast<size_t>(capacity));
+}
+
+void CudaEngine::ClearKernelCache()
+{
+    m_KernelCache.Clear();
+}
+
 //EventId CUDAEngine::runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
 //{
-//    Timer overheadTimer;
-//    overheadTimer.start();
-//
-//    CUDAKernel* kernel;
-//    std::unique_ptr<CUDAKernel> kernelUnique;
-//
-//    if (kernelCacheFlag)
-//    {
-//        if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
-//        {
-//            if (kernelCache.size() >= kernelCacheCapacity)
-//            {
-//                clearKernelCache();
-//            }
-//            std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
-//            auto kernel = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
-//            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::move(kernel)));
-//        }
-//        auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
-//        kernel = cachePointer->second.get();
-//    }
-//    else
-//    {
-//        std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
-//        kernelUnique = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
-//        kernel = kernelUnique.get();
-//    }
-//
 //    std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
-//
-//    overheadTimer.stop();
 //
 //    return enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
 //        getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
@@ -139,102 +301,6 @@ namespace ktt
 //    }
 //
 //    return result;
-//}
-//
-//uint64_t CUDAEngine::getKernelOverhead(const EventId id) const
-//{
-//    auto eventPointer = kernelEvents.find(id);
-//
-//    if (eventPointer == kernelEvents.end())
-//    {
-//        throw std::runtime_error(std::string("Kernel event with following id does not exist or its result was already retrieved: ")
-//            + std::to_string(id));
-//    }
-//
-//    return eventPointer->second.first->getOverhead();
-//}
-//
-//void CUDAEngine::setCompilerOptions(const std::string& options)
-//{
-//    compilerOptions = options;
-//}
-//
-//void CUDAEngine::setGlobalSizeType(const GlobalSizeType type)
-//{
-//    globalSizeType = type;
-//}
-//
-//void CUDAEngine::setAutomaticGlobalSizeCorrection(const bool flag)
-//{
-//    globalSizeCorrection = flag;
-//}
-//
-//void CUDAEngine::setKernelCacheUsage(const bool flag)
-//{
-//    if (!flag)
-//    {
-//        clearKernelCache();
-//    }
-//    kernelCacheFlag = flag;
-//}
-//
-//void CUDAEngine::setKernelCacheCapacity(const size_t capacity)
-//{
-//    kernelCacheCapacity = capacity;
-//}
-//
-//void CUDAEngine::clearKernelCache()
-//{
-//    kernelCache.clear();
-//}
-//
-//QueueId CUDAEngine::getDefaultQueue() const
-//{
-//    return 0;
-//}
-//
-//std::vector<QueueId> CUDAEngine::getAllQueues() const
-//{
-//    std::vector<QueueId> result;
-//
-//    for (size_t i = 0; i < streams.size(); i++)
-//    {
-//        result.push_back(static_cast<QueueId>(i));
-//    }
-//
-//    return result;
-//}
-//
-//void CUDAEngine::synchronizeQueue(const QueueId queue)
-//{
-//    if (queue >= streams.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
-//    }
-//
-//    checkCUDAError(cuStreamSynchronize(streams.at(queue)->getStream()), "cuStreamSynchronize");
-//}
-//
-//void CUDAEngine::synchronizeDevice()
-//{
-//    for (auto& stream : streams)
-//    {
-//        checkCUDAError(cuStreamSynchronize(stream->getStream()), "cuStreamSynchronize");
-//    }
-//}
-//
-//void CUDAEngine::clearEvents()
-//{
-//    kernelEvents.clear();
-//    bufferEvents.clear();
-//
-//#ifdef KTT_PROFILING_CUPTI_LEGACY
-//    kernelToEventMap.clear();
-//    kernelProfilingInstances.clear();
-//#elif KTT_PROFILING_CUPTI
-//    kernelToEventMap.clear();
-//    kernelProfilingInstances.clear();
-//#endif // KTT_PROFILING_CUPTI
 //}
 //
 //uint64_t CUDAEngine::uploadArgument(KernelArgument& kernelArgument)
@@ -540,24 +606,6 @@ namespace ktt
 //    buffer->resize(newSize, preserveData);
 //}
 //
-//void CUDAEngine::clearBuffer(const ArgumentId id)
-//{
-//    auto iterator = buffers.cbegin();
-//
-//    while (iterator != buffers.cend())
-//    {
-//        if (iterator->get()->getKernelArgumentId() == id)
-//        {
-//            buffers.erase(iterator);
-//            return;
-//        }
-//        else
-//        {
-//            ++iterator;
-//        }
-//    }
-//}
-//
 //void CUDAEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
 //{
 //    CUDABuffer* buffer = findBuffer(id);
@@ -579,75 +627,6 @@ namespace ktt
 //
 //    auto cudaBuffer = std::make_unique<CUDABuffer>(buffer, kernelArgument);
 //    userBuffers.insert(std::move(cudaBuffer));
-//}
-//
-//void CUDAEngine::setPersistentBufferUsage(const bool flag)
-//{
-//    persistentBufferFlag = flag;
-//}
-//
-//void CUDAEngine::clearBuffers()
-//{
-//    buffers.clear();
-//}
-//
-//void CUDAEngine::clearBuffers(const ArgumentAccessType accessType)
-//{
-//    auto iterator = buffers.cbegin();
-//
-//    while (iterator != buffers.cend())
-//    {
-//        if (iterator->get()->getAccessType() == accessType)
-//        {
-//            iterator = buffers.erase(iterator);
-//        }
-//        else
-//        {
-//            ++iterator;
-//        }
-//    }
-//}
-//
-//void CUDAEngine::printComputeAPIInfo(std::ostream& outputTarget) const
-//{
-//    outputTarget << "Platform 0: " << "NVIDIA CUDA" << std::endl;
-//    auto devices = getCUDADevices();
-//
-//    for (size_t i = 0; i < devices.size(); i++)
-//    {
-//        outputTarget << "Device " << i << ": " << devices.at(i).getName() << std::endl;
-//    }
-//    outputTarget << std::endl;
-//}
-//
-//std::vector<PlatformInfo> CUDAEngine::getPlatformInfo() const
-//{
-//    int driverVersion;
-//    checkCUDAError(cuDriverGetVersion(&driverVersion), "cuDriverGetVersion");
-//
-//    PlatformInfo cuda(0, "NVIDIA CUDA");
-//    cuda.setVendor("NVIDIA Corporation");
-//    cuda.setVersion(std::to_string(driverVersion));
-//    cuda.setExtensions("N/A");
-//    return std::vector<PlatformInfo>{cuda};
-//}
-//
-//std::vector<DeviceInfo> CUDAEngine::getDeviceInfo(const PlatformIndex) const
-//{
-//    std::vector<DeviceInfo> result;
-//    auto devices = getCUDADevices();
-//
-//    for (size_t i = 0; i < devices.size(); i++)
-//    {
-//        result.push_back(getCUDADeviceInfo(static_cast<DeviceIndex>(i)));
-//    }
-//
-//    return result;
-//}
-//
-//DeviceInfo CUDAEngine::getCurrentDeviceInfo() const
-//{
-//    return getCUDADeviceInfo(deviceIndex);
 //}
 //
 //void CUDAEngine::initializeKernelProfiling(const KernelRuntimeData& kernelData)
@@ -933,41 +912,115 @@ namespace ktt
 //    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
 //    #endif // KTT_PROFILING_CUPTI_LEGACY
 //}
-//
-//void CUDAEngine::initializeCompilerOptions()
-//{
-//    Logger::logDebug("Initializing compiler options");
-//
-//    int computeCapabilityMajor = 0;
-//    int computeCapabilityMinor = 0;
-//    checkCUDAError(cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, context->getDevice()), "cuDeviceGetAttribute");
-//    checkCUDAError(cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, context->getDevice()), "cuDeviceGetAttribute");
-//    const std::string gpuArchitecture = std::string("--gpu-architecture=compute_") + std::to_string(computeCapabilityMajor) + std::to_string(computeCapabilityMinor);
-//    setCompilerOptions(gpuArchitecture);
-//}
-//
-//void CUDAEngine::initializeProfiler()
-//{
-//    #ifdef KTT_PROFILING_CUPTI_LEGACY
-//    Logger::logDebug("Initializing CUPTI profiling metric IDs");
-//    const std::vector<std::string>& metricNames = getDefaultProfilingMetricNames();
-//    profilingMetrics = getProfilingMetricsForCurrentDevice(metricNames);
-//    #elif KTT_PROFILING_CUPTI
-//    Logger::logDebug("Initializing CUPTI profiler");
-//    profiler = std::make_unique<CUPTIProfiler>();
-//    const std::string deviceName = profiler->getDeviceName(deviceIndex);
-//    metricInterface = std::make_unique<CUPTIMetricInterface>(deviceName);
-//    profilingCounters = getDefaultProfilingCounters();
-//    #endif // KTT_PROFILING_CUPTI
-//}
-//
-//std::unique_ptr<CUDAProgram> CUDAEngine::createAndBuildProgram(const std::string& source) const
-//{
-//    auto program = std::make_unique<CUDAProgram>(source);
-//    program->build(compilerOptions);
-//    return program;
-//}
-//
+
+void CudaEngine::InitializeCompilerOptions()
+{
+    Logger::LogDebug("Initializing default compiler options");
+
+    int computeCapabilityMajor = 0;
+    int computeCapabilityMinor = 0;
+    CheckError(cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, m_Context->GetDevice()),
+        "cuDeviceGetAttribute");
+    CheckError(cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, m_Context->GetDevice()),
+        "cuDeviceGetAttribute");
+
+    const std::string gpuArchitecture = "--gpu-architecture=compute_" + std::to_string(computeCapabilityMajor)
+        + std::to_string(computeCapabilityMinor);
+    SetCompilerOptions(gpuArchitecture);
+}
+
+std::shared_ptr<CudaKernel> CudaEngine::LoadKernel(const KernelComputeData& data)
+{
+    const auto id = data.GetUniqueIdentifier();
+
+    if (m_KernelCache.GetMaxSize() > 0 && m_KernelCache.Exists(id))
+    {
+        return m_KernelCache.Get(id)->second;
+    }
+
+    auto program = std::make_unique<CudaProgram>(data.GetSource());
+    program->Build();
+    auto kernel = std::make_shared<CudaKernel>(std::move(program), data.GetName(), m_Generator);
+
+    if (m_KernelCache.GetMaxSize() > 0)
+    {
+        m_KernelCache.Put(id, kernel);
+    }
+
+    return kernel;
+}
+
+std::vector<CUdeviceptr*> CudaEngine::GetKernelArguments(const std::vector<const KernelArgument*>& arguments)
+{
+    std::vector<CUdeviceptr*> result;
+
+    for (const auto* argument : arguments)
+    {
+        if (argument->GetMemoryType() == ArgumentMemoryType::Local)
+        {
+            continue;
+        }
+
+        CUdeviceptr* deviceArgument = GetKernelArgument(*argument);
+        result.push_back(deviceArgument);
+    }
+
+    return result;
+}
+
+CUdeviceptr* CudaEngine::GetKernelArgument(const KernelArgument& argument)
+{
+    switch (argument.GetMemoryType())
+    {
+    case ArgumentMemoryType::Scalar:
+        return static_cast<CUdeviceptr*>(const_cast<void*>(argument.GetData()));
+    case ArgumentMemoryType::Vector:
+    {
+        const auto id = argument.GetId();
+
+        if (!ContainsKey(m_Buffers, id))
+        {
+            throw KttException("Buffer corresponding to kernel argument with id " + std::to_string(id) + " was not found");
+        }
+
+        return m_Buffers[id]->GetBuffer();
+    }
+    case ArgumentMemoryType::Local:
+        KttError("Local memory arguments do not have CUdeviceptr representation");
+        return nullptr;
+    default:
+        KttError("Unhandled argument memory type value");
+        return nullptr;
+    }
+}
+
+size_t CudaEngine::GetSharedMemorySize(const std::vector<const KernelArgument*>& arguments) const
+{
+    size_t result = 0;
+
+    for (const auto* argument : arguments)
+    {
+        if (argument->GetMemoryType() != ArgumentMemoryType::Local)
+        {
+            continue;
+        }
+
+        result += argument->GetDataSize();
+    }
+
+    return result;
+}
+
+#if defined(KTT_PROFILING_CUPTI)
+
+void CudaEngine::InitializeCupti()
+{
+    m_Profiler = std::make_unique<CuptiProfiler>();
+    m_MetricInterface = std::make_unique<CuptiMetricInterface>(m_DeviceIndex);
+}
+
+#endif // KTT_PROFILING_CUPTI
+
 //EventId CUDAEngine::enqueueKernel(CUDAKernel& kernel, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
 //    const std::vector<CUdeviceptr*>& kernelArguments, const size_t localMemorySize, const QueueId queue, const uint64_t kernelLaunchOverhead)
 //{
@@ -1037,130 +1090,6 @@ namespace ktt
 //    result.setCompilationData(compilationData);
 //
 //    return result;
-//}
-//
-//std::vector<CUdeviceptr*> CUDAEngine::getKernelArguments(const std::vector<KernelArgument*>& argumentPointers)
-//{
-//    std::vector<CUdeviceptr*> result;
-//
-//    for (const auto argument : argumentPointers)
-//    {
-//        if (argument->getUploadType() == ArgumentUploadType::Local)
-//        {
-//            continue;
-//        }
-//        else if (argument->getUploadType() == ArgumentUploadType::Vector)
-//        {
-//            CUdeviceptr* cachedBuffer = loadBufferFromCache(argument->getId());
-//            if (cachedBuffer == nullptr)
-//            {
-//                uploadArgument(*argument);
-//                cachedBuffer = loadBufferFromCache(argument->getId());
-//            }
-//
-//            result.push_back(cachedBuffer);
-//        }
-//        else if (argument->getUploadType() == ArgumentUploadType::Scalar)
-//        {
-//            result.push_back((CUdeviceptr*)argument->getData());
-//        }
-//    }
-//
-//    return result;
-//}
-//
-//size_t CUDAEngine::getSharedMemorySizeInBytes(const std::vector<KernelArgument*>& argumentPointers,
-//    const std::vector<LocalMemoryModifier>& modifiers) const
-//{
-//    for (const auto& modifier : modifiers)
-//    {
-//        bool modifierArgumentFound = false;
-//
-//        for (const auto argument : argumentPointers)
-//        {
-//            if (modifier.getArgument() == argument->getId() && argument->getUploadType() == ArgumentUploadType::Local)
-//            {
-//                modifierArgumentFound = true;
-//            }
-//        }
-//
-//        if (!modifierArgumentFound)
-//        {
-//            throw std::runtime_error(std::string("No matching local memory argument found for modifier, argument id in modifier: ")
-//                + std::to_string(modifier.getArgument()));
-//        }
-//    }
-//
-//    size_t result = 0;
-//
-//    for (const auto argument : argumentPointers)
-//    {
-//        if (argument->getUploadType() != ArgumentUploadType::Local)
-//        {
-//            continue;
-//        }
-//
-//        size_t numberOfElements = argument->getNumberOfElements();
-//
-//        for (const auto& modifier : modifiers)
-//        {
-//            if (modifier.getArgument() != argument->getId())
-//            {
-//                continue;
-//            }
-//
-//            numberOfElements = modifier.getModifiedSize(numberOfElements);
-//        }
-//
-//        size_t argumentSize = argument->getElementSizeInBytes() * numberOfElements;
-//        result += argumentSize;
-//    }
-//
-//    return result;
-//}
-//
-//CUDABuffer* CUDAEngine::findBuffer(const ArgumentId id) const
-//{
-//    for (const auto& buffer : userBuffers)
-//    {
-//        if (buffer->getKernelArgumentId() == id)
-//        {
-//            return buffer.get();
-//        }
-//    }
-//
-//    if (persistentBufferFlag)
-//    {
-//        for (const auto& buffer : persistentBuffers)
-//        {
-//            if (buffer->getKernelArgumentId() == id)
-//            {
-//                return buffer.get();
-//            }
-//        }
-//    }
-//
-//    for (const auto& buffer : buffers)
-//    {
-//        if (buffer->getKernelArgumentId() == id)
-//        {
-//            return buffer.get();
-//        }
-//    }
-//
-//    return nullptr;
-//}
-//
-//CUdeviceptr* CUDAEngine::loadBufferFromCache(const ArgumentId id) const
-//{
-//    CUDABuffer* buffer = findBuffer(id);
-//
-//    if (buffer != nullptr)
-//    {
-//        return buffer->getBuffer();
-//    }
-//
-//    return nullptr;
 //}
 //
 //#ifdef KTT_PROFILING_CUPTI_LEGACY
@@ -1254,37 +1183,6 @@ namespace ktt
 //    }
 //
 //    throw std::runtime_error(std::string("Corresponding kernel was not found for event with id: ") + std::to_string(id));
-//}
-//
-//const std::vector<std::string>& CUDAEngine::getDefaultProfilingCounters()
-//{
-//    static const std::vector<std::string> result
-//    {
-//        "dram__sectors_read.sum", // dram_read_transactions
-//        "dram__sectors_write.sum", // dram_write_transactions
-//        "dram__throughput.avg.pct_of_peak_sustained_elapsed", // dram_utilization
-//        "l1tex__data_pipe_lsu_wavefronts_mem_shared.avg.pct_of_peak_sustained_elapsed", // shared_utilization
-//        "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum", // shared_load_transactions
-//        "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_st.sum", // shared_store_transactions
-//        "lts__t_sectors.avg.pct_of_peak_sustained_elapsed", // l2_utilization
-//        "sm__warps_active.avg.pct_of_peak_sustained_active", // achieved_occupancy
-//        "smsp__cycles_active.avg.pct_of_peak_sustained_elapsed", // sm_efficiency
-//        "smsp__inst_executed_pipe_fp16.sum", // half_precision_fu_utilization
-//        "smsp__inst_executed_pipe_fp64.avg.pct_of_peak_sustained_active", // double_precision_fu_utilization
-//        "smsp__inst_executed_pipe_lsu.avg.pct_of_peak_sustained_active", // ldst_fu_utilization
-//        "smsp__inst_executed_pipe_tex.avg.pct_of_peak_sustained_active", // tex_fu_utilization
-//        "smsp__inst_executed_pipe_xu.avg.pct_of_peak_sustained_active", // special_fu_utilization
-//        "smsp__inst_executed.sum", // inst_executed
-//        "smsp__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active", // single_precision_fu_utilization
-//        "smsp__sass_thread_inst_executed_op_fp16_pred_on.sum", // inst_fp_16
-//        "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum", // inst_fp_32
-//        "smsp__sass_thread_inst_executed_op_fp64_pred_on.sum", // inst_fp_64
-//        "smsp__sass_thread_inst_executed_op_integer_pred_on.sum", // inst_integer
-//        "smsp__sass_thread_inst_executed_op_inter_thread_communication_pred_on.sum", // inst_inter_thread_communication
-//        "smsp__sass_thread_inst_executed_op_misc_pred_on.sum" // inst_misc
-//    };
-//
-//    return result;
 //}
 //
 //#endif // KTT_PROFILING_CUPTI

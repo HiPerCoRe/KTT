@@ -28,10 +28,11 @@ void CuptiMetric::SetEventValue(const CUpti_EventID id, const uint64_t value)
 {
     for (size_t i = 0; i < m_EventIds.size(); ++i)
     {
-        if (m_EventIds[i] == id && !m_EventStates[i])
+        if (m_EventIds[i] == id)
         {
             m_EventValues[i] = value;
             m_EventStates[i] = true;
+            break;
         }
     }
 }

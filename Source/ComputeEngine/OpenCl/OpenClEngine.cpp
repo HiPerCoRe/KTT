@@ -442,7 +442,7 @@ std::vector<QueueId> OpenClEngine::GetAllQueues() const
 
 void OpenClEngine::SynchronizeQueue(const QueueId queueId)
 {
-    if (queueId >= m_Queues.size())
+    if (static_cast<size_t>(queueId) >= m_Queues.size())
     {
         throw KttException("Invalid OpenCL command queue index: " + std::to_string(queueId));
     }
@@ -493,8 +493,8 @@ std::vector<DeviceInfo> OpenClEngine::GetDeviceInfo(const PlatformIndex platform
 
 DeviceInfo OpenClEngine::GetCurrentDeviceInfo() const
 {
-    const auto& deviceInfo = GetDeviceInfo(m_PlatformIndex);
-    return deviceInfo[static_cast<size_t>(m_DeviceIndex)];
+    const auto deviceInfos = GetDeviceInfo(m_PlatformIndex);
+    return deviceInfos[static_cast<size_t>(m_DeviceIndex)];
 }
 
 void OpenClEngine::SetCompilerOptions(const std::string& options)

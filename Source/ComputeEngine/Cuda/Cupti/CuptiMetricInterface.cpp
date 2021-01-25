@@ -1,54 +1,61 @@
 #ifdef KTT_PROFILING_CUPTI
 
-#include <sstream>
-#include <stdexcept>
 #include <cupti_profiler_target.h>
+#include <cupti_target.h>
+#include <nvperf_cuda_host.h>
 #include <nvperf_target.h>
-#include <compute_engine/cuda/cupti/cupti_metric_interface.h>
-#include <compute_engine/cuda/cuda_utility.h>
-#include <utility/logger.h>
+
+#include <ComputeEngine/Cuda/Cupti/CuptiMetricInterface.h>
+#include <ComputeEngine/Cuda/CudaUtility.h>
+#include <Utility/ErrorHandling/Assert.h>
+#include <Utility/ErrorHandling/KttException.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
 
-CUPTIMetricInterface::CUPTIMetricInterface(const std::string& deviceName) :
-    deviceName(deviceName),
-    context(nullptr),
-    maxProfiledRanges(2),
-    maxRangeNameLength(64)
+CuptiMetricInterface::CuptiMetricInterface(const DeviceIndex index) :
+    m_DeviceName(GetDeviceName(index)),
+    m_Context(nullptr),
+    m_MaxProfiledRanges(2),
+    m_MaxRangeNameLength(64)
 {
+    Logger::LogDebug("Initializing CUPTI metric interface");
+
     NVPW_InitializeHost_Params hostParams =
     {
         NVPW_InitializeHost_Params_STRUCT_SIZE,
         nullptr
     };
 
-    checkNVPAError(NVPW_InitializeHost(&hostParams), "NVPW_InitializeHost");
+    CheckError(NVPW_InitializeHost(&hostParams), "NVPW_InitializeHost");
 
     NVPW_CUDA_MetricsContext_Create_Params params =
     {
         NVPW_CUDA_MetricsContext_Create_Params_STRUCT_SIZE,
         nullptr,
-        deviceName.data()
+        m_DeviceName.data()
     };
 
-    checkNVPAError(NVPW_CUDA_MetricsContext_Create(&params), "NVPW_CUDA_MetricsContext_Create");
-    context = params.pMetricsContext;
+    CheckError(NVPW_CUDA_MetricsContext_Create(&params), "NVPW_CUDA_MetricsContext_Create");
+    m_Context = params.pMetricsContext;
 }
 
-CUPTIMetricInterface::~CUPTIMetricInterface()
+CuptiMetricInterface::~CuptiMetricInterface()
 {
+    Logger::LogDebug("Releasing CUPTI metric interface");
+
     NVPW_MetricsContext_Destroy_Params params =
     {
         NVPW_MetricsContext_Destroy_Params_STRUCT_SIZE,
         nullptr,
-        context
+        m_Context
     };
 
-    checkNVPAError(NVPW_MetricsContext_Destroy(&params), "NVPW_MetricsContext_Destroy");
+    CheckError(NVPW_MetricsContext_Destroy(&params), "NVPW_MetricsContext_Destroy");
 }
 
-void CUPTIMetricInterface::listSupportedChips() const
+void CuptiMetricInterface::ListSupportedChips()
 {
     NVPW_GetSupportedChipNames_Params params =
     {
@@ -56,75 +63,71 @@ void CUPTIMetricInterface::listSupportedChips() const
         nullptr
     };
 
-    checkNVPAError(NVPW_GetSupportedChipNames(&params), "NVPW_GetSupportedChipNames");
-    std::stringstream stream;
+    CheckError(NVPW_GetSupportedChipNames(&params), "NVPW_GetSupportedChipNames");
+    std::string chips;
 
     for (size_t i = 0; i < params.numChipNames; ++i)
     {
-        stream << params.ppChipNames[i];
+        chips += params.ppChipNames[i];
+
         if (i + 1 != params.numChipNames)
         {
-            stream << ", ";
+            chips += ", ";
         }
     }
 
-    Logger::logInfo(std::string("Number of supported chips for CUPTI profiling: ") + std::to_string(params.numChipNames));
-    Logger::logInfo(std::string("List of supported chips: ") + stream.str());
+    Logger::LogInfo("Number of supported chips for CUPTI profiling: " + std::to_string(params.numChipNames));
+    Logger::LogInfo("List of supported chips: " + chips);
 }
 
-void CUPTIMetricInterface::listMetrics(const bool listSubMetrics) const
+void CuptiMetricInterface::ListMetrics(const bool listSubMetrics) const
 {
     NVPW_MetricsContext_GetMetricNames_Begin_Params params =
     {
         NVPW_MetricsContext_GetMetricNames_Begin_Params_STRUCT_SIZE,
         nullptr,
-        context
+        m_Context
     };
 
     params.hidePeakSubMetrics = !listSubMetrics;
     params.hidePerCycleSubMetrics = !listSubMetrics;
     params.hidePctOfPeakSubMetrics = !listSubMetrics;
-    checkNVPAError(NVPW_MetricsContext_GetMetricNames_Begin(&params), "NVPW_MetricsContext_GetMetricNames_Begin");
+    CheckError(NVPW_MetricsContext_GetMetricNames_Begin(&params), "NVPW_MetricsContext_GetMetricNames_Begin");
 
-    Logger::logInfo(std::string("Total metrics on the chip: ") + std::to_string(params.numMetrics));
-    Logger::logInfo("Metrics list:");
+    Logger::LogInfo("Total metrics on the chip: " + std::to_string(params.numMetrics));
+    Logger::LogInfo("Metrics list:");
 
     for (size_t i = 0; i < params.numMetrics; ++i)
     {
-        Logger::logInfo(params.ppMetricNames[i]);
+        Logger::LogInfo(params.ppMetricNames[i]);
     }
 
     NVPW_MetricsContext_GetMetricNames_End_Params endParams =
     {
         NVPW_MetricsContext_GetMetricNames_End_Params_STRUCT_SIZE,
         nullptr,
-        context
+        m_Context
     };
 
-    checkNVPAError(NVPW_MetricsContext_GetMetricNames_End(&endParams), "NVPW_MetricsContext_GetMetricNames_End");
+    CheckError(NVPW_MetricsContext_GetMetricNames_End(&endParams), "NVPW_MetricsContext_GetMetricNames_End");
 }
 
-CUPTIMetricConfiguration CUPTIMetricInterface::createMetricConfiguration(const std::vector<std::string>& metricNames) const
+CuptiMetricConfiguration CuptiMetricInterface::CreateMetricConfiguration(const std::vector<std::string>& metrics) const
 {
-    CUPTIMetricConfiguration result;
-    result.metricNames = metricNames;
-    result.configImage = getConfigImage(metricNames);
-    std::vector<uint8_t> prefix = getCounterDataImagePrefix(metricNames);
-    createCounterDataImage(prefix, result.counterDataImage, result.scratchBuffer);
-    result.maxProfiledRanges = maxProfiledRanges;
-    result.dataCollected = false;
+    CuptiMetricConfiguration result(m_MaxProfiledRanges);
+    result.m_MetricNames = metrics;
+    result.m_ConfigImage = GetConfigImage(metrics);
+    std::vector<uint8_t> prefix = GetCounterDataImagePrefix(metrics);
+    CreateCounterDataImage(prefix, result.m_CounterDataImage, result.m_ScratchBuffer);
     return result;
 }
 
-std::vector<CUPTIMetric> CUPTIMetricInterface::getMetricData(const CUPTIMetricConfiguration& configuration) const
+std::vector<CuptiMetric> CuptiMetricInterface::GenerateMetrics(const CuptiMetricConfiguration& configuration) const
 {
-    if (!configuration.dataCollected)
-    {
-        throw std::runtime_error("Unable to retrieve metrics from metric configuration with uncollected data");
-    }
+    KttAssert(configuration.m_DataCollected, "Metrics can only be generated from configuration with collected data");
 
-    const auto& metricNames = configuration.metricNames;
-    const auto& counterDataImage = configuration.counterDataImage;
+    const auto& metricNames = configuration.m_MetricNames;
+    const auto& counterDataImage = configuration.m_CounterDataImage;
 
     NVPW_CounterData_GetNumRanges_Params params =
     {
@@ -133,9 +136,9 @@ std::vector<CUPTIMetric> CUPTIMetricInterface::getMetricData(const CUPTIMetricCo
         counterDataImage.data()
     };
 
-    checkNVPAError(NVPW_CounterData_GetNumRanges(&params), "NVPW_CounterData_GetNumRanges");
+    CheckError(NVPW_CounterData_GetNumRanges(&params), "NVPW_CounterData_GetNumRanges");
 
-    std::vector<CUPTIMetric> result(metricNames.size());
+    std::vector<CuptiMetric> result;
     std::vector<std::string> parsedNames(metricNames.size());
     std::vector<const char*> metricNamePtrs;
     bool isolated = true;
@@ -143,16 +146,11 @@ std::vector<CUPTIMetric> CUPTIMetricInterface::getMetricData(const CUPTIMetricCo
 
     for (size_t metricIndex = 0; metricIndex < metricNames.size(); ++metricIndex)
     {
-        const bool success = parseMetricNameString(metricNames[metricIndex], parsedNames[metricIndex], isolated, keepInstances);
-
-        if (!success)
-        {
-            throw std::runtime_error(std::string("Unable to parse metric name ") + metricNames[metricIndex]);
-        }
+        const bool success = ParseMetricNameString(metricNames[metricIndex], parsedNames[metricIndex], isolated, keepInstances);
+        KttAssert(success, "Unable to parse metric name " + metricNames[metricIndex]);
 
         metricNamePtrs.push_back(parsedNames[metricIndex].c_str());
-        result[metricIndex].name = metricNames[metricIndex];
-        result[metricIndex].rangeCount = params.numRanges;
+        result.emplace_back(metricNames[metricIndex]);
     }
 
     for (size_t rangeIndex = 0; rangeIndex < params.numRanges; ++rangeIndex)
@@ -167,11 +165,13 @@ std::vector<CUPTIMetric> CUPTIMetricInterface::getMetricData(const CUPTIMetricCo
             rangeIndex
         };
 
-        checkNVPAError(NVPW_Profiler_CounterData_GetRangeDescriptions(&descriptionParams), "NVPW_Profiler_CounterData_GetRangeDescriptions");
+        CheckError(NVPW_Profiler_CounterData_GetRangeDescriptions(&descriptionParams),
+            "NVPW_Profiler_CounterData_GetRangeDescriptions");
         descriptionPtrs.resize(descriptionParams.numDescriptions);
 
         descriptionParams.ppDescriptions = descriptionPtrs.data();
-        checkNVPAError(NVPW_Profiler_CounterData_GetRangeDescriptions(&descriptionParams), "NVPW_Profiler_CounterData_GetRangeDescriptions");
+        CheckError(NVPW_Profiler_CounterData_GetRangeDescriptions(&descriptionParams),
+            "NVPW_Profiler_CounterData_GetRangeDescriptions");
 
         std::string rangeName;
 
@@ -186,68 +186,56 @@ std::vector<CUPTIMetric> CUPTIMetricInterface::getMetricData(const CUPTIMetricCo
         }
 
         std::vector<double> gpuValues(metricNames.size());
+
         NVPW_MetricsContext_SetCounterData_Params dataParams =
         {
             NVPW_MetricsContext_SetCounterData_Params_STRUCT_SIZE,
             nullptr,
-            context,
+            m_Context,
             counterDataImage.data(),
             rangeIndex,
             isolated
         };
 
-        checkNVPAError(NVPW_MetricsContext_SetCounterData(&dataParams), "NVPW_MetricsContext_SetCounterData");
+        CheckError(NVPW_MetricsContext_SetCounterData(&dataParams), "NVPW_MetricsContext_SetCounterData");
 
         NVPW_MetricsContext_EvaluateToGpuValues_Params evalParams =
         {
             NVPW_MetricsContext_EvaluateToGpuValues_Params_STRUCT_SIZE,
             nullptr,
-            context,
+            m_Context,
             metricNamePtrs.size(),
             metricNamePtrs.data(),
             gpuValues.data()
         };
 
-        checkNVPAError(NVPW_MetricsContext_EvaluateToGpuValues(&evalParams), "NVPW_MetricsContext_EvaluateToGpuValues");
+        CheckError(NVPW_MetricsContext_EvaluateToGpuValues(&evalParams), "NVPW_MetricsContext_EvaluateToGpuValues");
 
         for (size_t metricIndex = 0; metricIndex < metricNames.size(); ++metricIndex)
         {
-            result[metricIndex].rangeToMetricValue.insert(std::make_pair(rangeName, gpuValues[metricIndex]));
+            result[metricIndex].SetRangeValue(rangeName, gpuValues[metricIndex]);
         }
     }
 
     return result;
 }
 
-void CUPTIMetricInterface::printMetricValues(const std::vector<CUPTIMetric>& metrics)
-{
-    for (const auto& metric : metrics)
-    {
-        Logger::logInfo(std::string("Metric name: ") + metric.name);
-
-        for (const auto& range : metric.rangeToMetricValue)
-        {
-            Logger::logInfo(std::string("Range name: ") + range.first + "\nGPU value:" + std::to_string(range.second));
-        }
-    }
-}
-
-std::vector<uint8_t> CUPTIMetricInterface::getConfigImage(const std::vector<std::string>& metricNames) const
+std::vector<uint8_t> CuptiMetricInterface::GetConfigImage(const std::vector<std::string>& metrics) const
 {
     std::vector<NVPA_RawMetricRequest> rawMetricRequests;
     std::vector<std::string> temp;
-    getRawMetricRequests(metricNames, rawMetricRequests, temp);
+    GetRawMetricRequests(metrics, rawMetricRequests, temp);
 
     NVPA_RawMetricsConfigOptions configOptions =
     {
         NVPA_RAW_METRICS_CONFIG_OPTIONS_STRUCT_SIZE,
         nullptr,
         NVPA_ACTIVITY_KIND_PROFILER,
-        deviceName.c_str()
+        m_DeviceName.c_str()
     };
 
     NVPA_RawMetricsConfig* rawMetricsConfig;
-    checkNVPAError(NVPA_RawMetricsConfig_Create(&configOptions, &rawMetricsConfig), "NVPA_RawMetricsConfig_Create");
+    CheckError(NVPA_RawMetricsConfig_Create(&configOptions, &rawMetricsConfig), "NVPA_RawMetricsConfig_Create");
 
     NVPW_RawMetricsConfig_BeginPassGroup_Params beginParams =
     {
@@ -256,7 +244,7 @@ std::vector<uint8_t> CUPTIMetricInterface::getConfigImage(const std::vector<std:
         rawMetricsConfig
     };
 
-    checkNVPAError(NVPW_RawMetricsConfig_BeginPassGroup(&beginParams), "NVPW_RawMetricsConfig_BeginPassGroup");
+    CheckError(NVPW_RawMetricsConfig_BeginPassGroup(&beginParams), "NVPW_RawMetricsConfig_BeginPassGroup");
 
     NVPW_RawMetricsConfig_AddMetrics_Params addParams =
     {
@@ -267,7 +255,7 @@ std::vector<uint8_t> CUPTIMetricInterface::getConfigImage(const std::vector<std:
         rawMetricRequests.size()
     };
 
-    checkNVPAError(NVPW_RawMetricsConfig_AddMetrics(&addParams), "NVPW_RawMetricsConfig_AddMetrics");
+    CheckError(NVPW_RawMetricsConfig_AddMetrics(&addParams), "NVPW_RawMetricsConfig_AddMetrics");
 
     NVPW_RawMetricsConfig_EndPassGroup_Params endParams =
     {
@@ -276,7 +264,7 @@ std::vector<uint8_t> CUPTIMetricInterface::getConfigImage(const std::vector<std:
         rawMetricsConfig
     };
 
-    checkNVPAError(NVPW_RawMetricsConfig_EndPassGroup(&endParams), "NVPW_RawMetricsConfig_EndPassGroup");
+    CheckError(NVPW_RawMetricsConfig_EndPassGroup(&endParams), "NVPW_RawMetricsConfig_EndPassGroup");
 
     NVPW_RawMetricsConfig_GenerateConfigImage_Params generateParams =
     {
@@ -285,7 +273,7 @@ std::vector<uint8_t> CUPTIMetricInterface::getConfigImage(const std::vector<std:
         rawMetricsConfig
     };
 
-    checkNVPAError(NVPW_RawMetricsConfig_GenerateConfigImage(&generateParams), "NVPW_RawMetricsConfig_GenerateConfigImage");
+    CheckError(NVPW_RawMetricsConfig_GenerateConfigImage(&generateParams), "NVPW_RawMetricsConfig_GenerateConfigImage");
 
     NVPW_RawMetricsConfig_GetConfigImage_Params getParams =
     {
@@ -296,13 +284,13 @@ std::vector<uint8_t> CUPTIMetricInterface::getConfigImage(const std::vector<std:
         nullptr
     };
 
-    checkNVPAError(NVPW_RawMetricsConfig_GetConfigImage(&getParams), "NVPW_RawMetricsConfig_GetConfigImage");
+    CheckError(NVPW_RawMetricsConfig_GetConfigImage(&getParams), "NVPW_RawMetricsConfig_GetConfigImage");
 
     std::vector<uint8_t> result(getParams.bytesCopied);
     getParams.bytesAllocated = result.size();
     getParams.pBuffer = result.data();
 
-    checkNVPAError(NVPW_RawMetricsConfig_GetConfigImage(&getParams), "NVPW_RawMetricsConfig_GetConfigImage");
+    CheckError(NVPW_RawMetricsConfig_GetConfigImage(&getParams), "NVPW_RawMetricsConfig_GetConfigImage");
 
     NVPW_RawMetricsConfig_Destroy_Params destroyParams =
     {
@@ -311,25 +299,25 @@ std::vector<uint8_t> CUPTIMetricInterface::getConfigImage(const std::vector<std:
         rawMetricsConfig
     };
 
-    checkNVPAError(NVPW_RawMetricsConfig_Destroy(&destroyParams), "NVPW_RawMetricsConfig_Destroy");
+    CheckError(NVPW_RawMetricsConfig_Destroy(&destroyParams), "NVPW_RawMetricsConfig_Destroy");
     return result;
 }
 
-std::vector<uint8_t> CUPTIMetricInterface::getCounterDataImagePrefix(const std::vector<std::string>& metricNames) const
+std::vector<uint8_t> CuptiMetricInterface::GetCounterDataImagePrefix(const std::vector<std::string>& metrics) const
 {
     std::vector<NVPA_RawMetricRequest> rawMetricRequests;
     std::vector<std::string> temp;
-    getRawMetricRequests(metricNames, rawMetricRequests, temp);
+    GetRawMetricRequests(metrics, rawMetricRequests, temp);
 
     NVPW_CounterDataBuilder_Create_Params createParams =
     {
         NVPW_CounterDataBuilder_Create_Params_STRUCT_SIZE,
         nullptr,
         nullptr,
-        deviceName.c_str()
+        m_DeviceName.c_str()
     };
 
-    checkNVPAError(NVPW_CounterDataBuilder_Create(&createParams), "NVPW_CounterDataBuilder_Create");
+    CheckError(NVPW_CounterDataBuilder_Create(&createParams), "NVPW_CounterDataBuilder_Create");
 
     NVPW_CounterDataBuilder_AddMetrics_Params addParams =
     {
@@ -340,7 +328,7 @@ std::vector<uint8_t> CUPTIMetricInterface::getCounterDataImagePrefix(const std::
         rawMetricRequests.size()
     };
 
-    checkNVPAError(NVPW_CounterDataBuilder_AddMetrics(&addParams), "NVPW_CounterDataBuilder_AddMetrics");
+    CheckError(NVPW_CounterDataBuilder_AddMetrics(&addParams), "NVPW_CounterDataBuilder_AddMetrics");
 
     NVPW_CounterDataBuilder_GetCounterDataPrefix_Params getParams =
     {
@@ -351,13 +339,13 @@ std::vector<uint8_t> CUPTIMetricInterface::getCounterDataImagePrefix(const std::
         nullptr
     };
 
-    checkNVPAError(NVPW_CounterDataBuilder_GetCounterDataPrefix(&getParams), "NVPW_CounterDataBuilder_GetCounterDataPrefix");
+    CheckError(NVPW_CounterDataBuilder_GetCounterDataPrefix(&getParams), "NVPW_CounterDataBuilder_GetCounterDataPrefix");
 
     std::vector<uint8_t> result(getParams.bytesCopied);
     getParams.bytesAllocated = result.size();
     getParams.pBuffer = result.data();
 
-    checkNVPAError(NVPW_CounterDataBuilder_GetCounterDataPrefix(&getParams), "NVPW_CounterDataBuilder_GetCounterDataPrefix");
+    CheckError(NVPW_CounterDataBuilder_GetCounterDataPrefix(&getParams), "NVPW_CounterDataBuilder_GetCounterDataPrefix");
 
     NVPW_CounterDataBuilder_Destroy_Params destroyParams =
     {
@@ -366,12 +354,12 @@ std::vector<uint8_t> CUPTIMetricInterface::getCounterDataImagePrefix(const std::
         createParams.pCounterDataBuilder
     };
 
-    checkNVPAError(NVPW_CounterDataBuilder_Destroy(&destroyParams), "NVPW_CounterDataBuilder_Destroy");
+    CheckError(NVPW_CounterDataBuilder_Destroy(&destroyParams), "NVPW_CounterDataBuilder_Destroy");
     return result;
 }
 
-void CUPTIMetricInterface::createCounterDataImage(const std::vector<uint8_t>& counterDataImagePrefix, std::vector<uint8_t>& counterDataImage,
-    std::vector<uint8_t>& counterDataScratchBuffer) const
+void CuptiMetricInterface::CreateCounterDataImage(const std::vector<uint8_t>& counterDataImagePrefix,
+    std::vector<uint8_t>& counterDataImage, std::vector<uint8_t>& counterDataScratchBuffer) const
 {
     const CUpti_Profiler_CounterDataImageOptions counterDataImageOptions =
     {
@@ -379,9 +367,9 @@ void CUPTIMetricInterface::createCounterDataImage(const std::vector<uint8_t>& co
         nullptr,
         counterDataImagePrefix.data(),
         counterDataImagePrefix.size(),
-        maxProfiledRanges,
-        maxProfiledRanges,
-        maxRangeNameLength
+        m_MaxProfiledRanges,
+        m_MaxProfiledRanges,
+        m_MaxRangeNameLength
     };
 
     CUpti_Profiler_CounterDataImage_CalculateSize_Params calculateSizeParams =
@@ -392,7 +380,7 @@ void CUPTIMetricInterface::createCounterDataImage(const std::vector<uint8_t>& co
         &counterDataImageOptions
     };
 
-    checkCUPTIError(cuptiProfilerCounterDataImageCalculateSize(&calculateSizeParams), "cuptiProfilerCounterDataImageCalculateSize");
+    CheckError(cuptiProfilerCounterDataImageCalculateSize(&calculateSizeParams), "cuptiProfilerCounterDataImageCalculateSize");
     counterDataImage.resize(calculateSizeParams.counterDataImageSize);
 
     CUpti_Profiler_CounterDataImage_Initialize_Params initializeParams =
@@ -405,7 +393,7 @@ void CUPTIMetricInterface::createCounterDataImage(const std::vector<uint8_t>& co
         counterDataImage.data()
     };
 
-    checkCUPTIError(cuptiProfilerCounterDataImageInitialize(&initializeParams), "cuptiProfilerCounterDataImageInitialize");
+    CheckError(cuptiProfilerCounterDataImageInitialize(&initializeParams), "cuptiProfilerCounterDataImageInitialize");
 
     CUpti_Profiler_CounterDataImage_CalculateScratchBufferSize_Params scratchSizeParams =
     {
@@ -415,7 +403,7 @@ void CUPTIMetricInterface::createCounterDataImage(const std::vector<uint8_t>& co
         counterDataImage.data()
     };
 
-    checkCUPTIError(cuptiProfilerCounterDataImageCalculateScratchBufferSize(&scratchSizeParams),
+    CheckError(cuptiProfilerCounterDataImageCalculateScratchBufferSize(&scratchSizeParams),
         "cuptiProfilerCounterDataImageCalculateScratchBufferSize");
     counterDataScratchBuffer.resize(scratchSizeParams.counterDataScratchBufferSize);
 
@@ -429,25 +417,21 @@ void CUPTIMetricInterface::createCounterDataImage(const std::vector<uint8_t>& co
         counterDataScratchBuffer.data()
     };
 
-    checkCUPTIError(cuptiProfilerCounterDataImageInitializeScratchBuffer(&initializeScratchParams),
+    CheckError(cuptiProfilerCounterDataImageInitializeScratchBuffer(&initializeScratchParams),
         "cuptiProfilerCounterDataImageInitializeScratchBuffer");
 }
 
-void CUPTIMetricInterface::getRawMetricRequests(const std::vector<std::string>& metricNames, std::vector<NVPA_RawMetricRequest>& rawMetricRequests,
-    std::vector<std::string>& temp) const
+void CuptiMetricInterface::GetRawMetricRequests(const std::vector<std::string>& metrics,
+    std::vector<NVPA_RawMetricRequest>& rawMetricRequests, std::vector<std::string>& temp) const
 {
     std::string parsedName;
     bool isolated = true;
     bool keepInstances = true;
 
-    for (const auto& metricName : metricNames)
+    for (const auto& metricName : metrics)
     {
-        const bool success = parseMetricNameString(metricName, parsedName, isolated, keepInstances);
-
-        if (!success)
-        {
-            throw std::runtime_error(std::string("Unable to parse metric name ") + metricName);
-        }
+        const bool success = ParseMetricNameString(metricName, parsedName, isolated, keepInstances);
+        KttAssert(success, "Unable to parse metric name " + metricName);
 
         keepInstances = true; // Bug in collection with collection of metrics without instances, keep it to true
 
@@ -455,11 +439,11 @@ void CUPTIMetricInterface::getRawMetricRequests(const std::vector<std::string>& 
         {
             NVPW_MetricsContext_GetMetricProperties_Begin_Params_STRUCT_SIZE,
             nullptr,
-            context,
+            m_Context,
             parsedName.c_str()
         };
 
-        checkNVPAError(NVPW_MetricsContext_GetMetricProperties_Begin(&params), "NVPW_MetricsContext_GetMetricProperties_Begin");
+        CheckError(NVPW_MetricsContext_GetMetricProperties_Begin(&params), "NVPW_MetricsContext_GetMetricProperties_Begin");
 
         for (const char** metricDependencies = params.ppRawMetricDependencies; *metricDependencies != nullptr; ++metricDependencies)
         {
@@ -470,10 +454,10 @@ void CUPTIMetricInterface::getRawMetricRequests(const std::vector<std::string>& 
         {
             NVPW_MetricsContext_GetMetricProperties_End_Params_STRUCT_SIZE,
             nullptr,
-            context
+            m_Context
         };
 
-        checkNVPAError(NVPW_MetricsContext_GetMetricProperties_End(&endParams), "NVPW_MetricsContext_GetMetricProperties_End");
+        CheckError(NVPW_MetricsContext_GetMetricProperties_End(&endParams), "NVPW_MetricsContext_GetMetricProperties_End");
     }
 
     for (const auto& rawMetricName : temp)
@@ -491,23 +475,29 @@ void CUPTIMetricInterface::getRawMetricRequests(const std::vector<std::string>& 
     }
 }
 
-void CUPTIMetricInterface::checkNVPAError(const NVPA_Status value, const std::string& message)
+std::string CuptiMetricInterface::GetDeviceName(const DeviceIndex index)
 {
-    if (value != NVPA_STATUS_SUCCESS)
+    CUpti_Device_GetChipName_Params params =
     {
-        throw std::runtime_error(std::string("CUPTI error: ") + std::to_string(static_cast<int>(value)) + "\nAdditional info: " + message);
-    }
+        CUpti_Device_GetChipName_Params_STRUCT_SIZE,
+        nullptr,
+        static_cast<size_t>(index)
+    };
+
+    CheckError(cuptiDeviceGetChipName(&params), "cuptiDeviceGetChipName");
+    return params.pChipName;
 }
 
-bool CUPTIMetricInterface::parseMetricNameString(const std::string& metricName, std::string& outputName, bool& isolated, bool& keepInstances)
+bool CuptiMetricInterface::ParseMetricNameString(const std::string& metric, std::string& outputName, bool& isolated,
+    bool& keepInstances)
 {
-    if (metricName.empty())
+    if (metric.empty())
     {
         outputName = "";
         return false;
     }
 
-    outputName = metricName;
+    outputName = metric;
     keepInstances = false;
     isolated = true;
 
