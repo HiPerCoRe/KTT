@@ -6,6 +6,7 @@
 #include <string>
 #include <cuda.h>
 
+#include <Api/DimensionVector.h>
 #include <ComputeEngine/Cuda/CudaProgram.h>
 #include <ComputeEngine/ActionIdGenerator.h>
 #include <ComputeEngine/GlobalSizeType.h>
@@ -13,6 +14,8 @@
 namespace ktt
 {
 
+class CudaComputeAction;
+class CudaStream;
 struct KernelCompilationData;
 
 class CudaKernel : public std::enable_shared_from_this<CudaKernel>
@@ -21,6 +24,8 @@ public:
     explicit CudaKernel(std::unique_ptr<CudaProgram> program, const std::string& name, ActionIdGenerator& generator);
     ~CudaKernel();
 
+    std::unique_ptr<CudaComputeAction> Launch(const CudaStream& stream, const DimensionVector& globalSize,
+        const DimensionVector& localSize, const std::vector<CUdeviceptr*>& arguments, const size_t sharedMemorySize);
     std::unique_ptr<KernelCompilationData> GenerateCompilationData() const;
 
     const std::string& GetName() const;
@@ -41,6 +46,7 @@ private:
     inline static bool m_GlobalSizeCorrection = false;
 
     uint64_t GetAttribute(const CUfunction_attribute attribute) const;
+    static DimensionVector AdjustGlobalSize(const DimensionVector& globalSize, const DimensionVector& localSize);
 };
 
 } // namespace ktt

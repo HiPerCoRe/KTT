@@ -1,8 +1,10 @@
 #ifdef KTT_API_CUDA
 
 #include <Api/Output/KernelCompilationData.h>
+#include <ComputeEngine/Cuda/Actions/CudaComputeAction.h>
 #include <ComputeEngine/Cuda/CudaKernel.h>
-#include <ComputeEngine/cuda/CudaUtility.h>
+#include <ComputeEngine/Cuda/CudaStream.h>
+#include <ComputeEngine/Cuda/CudaUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 
@@ -26,6 +28,34 @@ CudaKernel::~CudaKernel()
 {
     Logger::LogDebug("Releasing CUDA kernel with name " + m_Name);
     CheckError(cuModuleUnload(m_Module), "cuModuleUnload");
+}
+
+std::unique_ptr<CudaComputeAction> CudaKernel::Launch(const CudaStream& stream, const DimensionVector& globalSize,
+    const DimensionVector& localSize, const std::vector<CUdeviceptr*>& arguments, const size_t sharedMemorySize)
+{
+    std::vector<void*> kernelArguments;
+
+    for (size_t i = 0; i < arguments.size(); ++i)
+    {
+        kernelArguments.push_back(static_cast<void*>(arguments[i]));
+    }
+
+    const DimensionVector adjustedSize = AdjustGlobalSize(globalSize, localSize);
+    const auto id = m_Generator.GenerateComputeId();
+    auto action = std::make_unique<CudaComputeAction>(id, shared_from_this());
+
+    Logger::LogDebug("Launching kernel " + m_Name + " with compute action id " + std::to_string(id));
+    const auto globalVector = adjustedSize.GetVector();
+    const auto localVector = localSize.GetVector();
+
+    CheckError(cuEventRecord(action->GetStartEvent(), stream.GetStream()), "cuEventRecord");
+    CheckError(cuLaunchKernel(m_Kernel, static_cast<unsigned int>(globalVector[0]), static_cast<unsigned int>(globalVector[1]),
+        static_cast<unsigned int>(globalVector[2]), static_cast<unsigned int>(localVector[0]),
+        static_cast<unsigned int>(localVector[1]), static_cast<unsigned int>(localVector[2]),
+        static_cast<unsigned int>(sharedMemorySize), stream.GetStream(), kernelArguments.data(), nullptr), "cuLaunchKernel");
+    CheckError(cuEventRecord(action->GetEndEvent(), stream.GetStream()), "cuEventRecord");
+
+    return action;
 }
 
 std::unique_ptr<KernelCompilationData> CudaKernel::GenerateCompilationData() const
@@ -71,6 +101,32 @@ uint64_t CudaKernel::GetAttribute(const CUfunction_attribute attribute) const
     int value;
     CheckError(cuFuncGetAttribute(&value, attribute, m_Kernel), "cuFuncGetAttribute");
     return static_cast<uint64_t>(value);
+}
+
+DimensionVector CudaKernel::AdjustGlobalSize(const DimensionVector& globalSize, const DimensionVector& localSize)
+{
+    DimensionVector result = globalSize;
+
+    if (m_GlobalSizeCorrection)
+    {
+        result.RoundUp(localSize);
+    }
+
+    switch (m_GlobalSizeType)
+    {
+    case GlobalSizeType::OpenCL:
+        result.Divide(localSize);
+        break;
+    case GlobalSizeType::CUDA:
+    case GlobalSizeType::Vulkan:
+        // Do nothing
+        break;
+    default:
+        KttError("Unhandled global size type value");
+        break;
+    }
+
+    return result;
 }
 
 } // namespace ktt

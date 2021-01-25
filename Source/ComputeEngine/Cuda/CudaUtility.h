@@ -8,7 +8,7 @@
 
 #if defined(KTT_PROFILING_CUPTI)
 #include <nvperf_cuda_host.h>
-#endif KTT_PROFILING_CUPTI
+#endif // KTT_PROFILING_CUPTI
 
 #include <ComputeEngine/Cuda/CuptiLegacy/CuptiKtt.h>
 
