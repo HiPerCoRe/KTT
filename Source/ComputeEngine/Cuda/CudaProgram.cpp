@@ -6,6 +6,7 @@
 #include <vector>
 #include <cuda.h>
 
+#include <ComputeEngine/Cuda/CudaContext.h>
 #include <ComputeEngine/Cuda/CudaProgram.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
 #include <Utility/ErrorHandling/KttException.h>
@@ -77,6 +78,21 @@ std::string CudaProgram::GetPtxSource() const
     CheckError(nvrtcGetPTX(m_Program, result.data()), "nvrtcGetPTX");
 
     return result;
+}
+
+void CudaProgram::InitializeCompilerOptions(const CudaContext& context)
+{
+    Logger::LogDebug("Initializing default compiler options");
+
+    int computeCapabilityMajor = 0;
+    int computeCapabilityMinor = 0;
+    CheckError(cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, context.GetDevice()),
+        "cuDeviceGetAttribute");
+    CheckError(cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, context.GetDevice()),
+        "cuDeviceGetAttribute");
+
+    m_CompilerOptions = "--gpu-architecture=compute_" + std::to_string(computeCapabilityMajor)
+        + std::to_string(computeCapabilityMinor);
 }
 
 void CudaProgram::SetCompilerOptions(const std::string& options)

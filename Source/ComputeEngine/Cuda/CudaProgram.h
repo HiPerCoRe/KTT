@@ -8,6 +8,8 @@
 namespace ktt
 {
 
+class CudaContext;
+
 class CudaProgram
 {
 public:
@@ -20,6 +22,7 @@ public:
     nvrtcProgram GetProgram() const;
     std::string GetPtxSource() const;
 
+    static void InitializeCompilerOptions(const CudaContext& context);
     static void SetCompilerOptions(const std::string& options);
 
 private:

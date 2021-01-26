@@ -43,7 +43,7 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
         m_Streams.push_back(std::move(stream));
     }
 
-    InitializeCompilerOptions();
+    CudaProgram::InitializeCompilerOptions(*m_Context);
 
 #if defined(KTT_PROFILING_CUPTI)
     InitializeCupti();
@@ -74,7 +74,7 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer) :
         m_Streams.push_back(std::move(stream));
     }
 
-    InitializeCompilerOptions();
+    CudaProgram::InitializeCompilerOptions(*m_Context);
 
 #if defined(KTT_PROFILING_CUPTI)
     InitializeCupti();
@@ -123,7 +123,70 @@ KernelResult CudaEngine::WaitForComputeAction(const ComputeActionId id)
 
 KernelResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data, [[maybe_unused]] const QueueId queueId)
 {
-    return KernelResult();
+#ifdef KTT_PROFILING_CUPTI_LEGACY
+
+    Timer timer;
+    timer.Start();
+
+    const auto id = data.GetUniqueIdentifier();
+
+    if (!IsProfilingSessionActive(id))
+    {
+        InitializeProfiling(id);
+    }
+
+    auto& instance = *m_CuptiInstances[id];
+    std::unique_ptr<CuptiSubscription> subscription;
+
+    if (instance.HasValidKernelDuration())
+    {
+        subscription = std::make_unique<CuptiSubscription>(instance);
+    }
+
+    timer.Stop();
+
+    const auto actionId = RunKernelAsync(data, queueId);
+    auto& action = *m_ComputeActions[actionId];
+    action.IncreaseOverhead(timer.GetElapsedTime());
+    KernelResult result = WaitForComputeAction(actionId);
+
+    if (!instance.HasValidKernelDuration())
+    {
+        instance.SetKernelDuration(result.GetDuration());
+    }
+
+    FillProfilingData(id, result);
+    return result;
+
+#elif KTT_PROFILING_CUPTI
+
+    Timer timer;
+    timer.Start();
+
+    const auto id = data.GetUniqueIdentifier();
+
+    if (!IsProfilingSessionActive(id))
+    {
+        InitializeProfiling(id);
+    }
+
+    auto& instance = *m_CuptiInstances[id];
+    auto pass = std::make_unique<CuptiPass>(instance);
+
+    timer.Stop();
+
+    const auto actionId = RunKernelAsync(data, queueId);
+    auto& action = *m_ComputeActions[actionId];
+    action.IncreaseOverhead(timer.GetElapsedTime());
+
+    KernelResult result = WaitForComputeAction(actionId);
+    FillProfilingData(id, result);
+
+    return result;
+
+#else
+    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 }
 
 void CudaEngine::SetProfilingCounters([[maybe_unused]] const std::vector<std::string>& counters)
@@ -148,13 +211,32 @@ bool CudaEngine::IsProfilingSessionActive([[maybe_unused]] const KernelComputeId
 
 uint64_t CudaEngine::GetRemainingProfilingRuns([[maybe_unused]] const KernelComputeId& id)
 {
-#if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
+#ifdef KTT_PROFILING_CUPTI_LEGACY
+
+    if (!IsProfilingSessionActive(id))
+    {
+        return 0;
+    }
+
+    const auto& instance = *m_CuptiInstances[id];
+    uint64_t passCount = instance.GetRemainingPassCount();
+
+    if (!instance.HasValidKernelDuration())
+    {
+        passCount += 1;
+    }
+
+    return passCount;
+
+#elif KTT_PROFILING_CUPTI
+
     if (!IsProfilingSessionActive(id))
     {
         return 0;
     }
 
     return m_CuptiInstances[id]->GetRemainingPassCount();
+
 #else
     throw KttException("Support for kernel profiling is not included in this version of KTT framework");
 #endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
@@ -173,45 +255,210 @@ bool CudaEngine::HasAccurateRemainingProfilingRuns() const
 
 TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
 {
-    return m_Generator.GenerateTransferId();
+    Timer timer;
+    timer.Start();
+
+    const auto id = kernelArgument.GetId();
+    Logger::LogDebug("Uploading buffer for argument with id " + std::to_string(id));
+
+    if (queueId >= static_cast<QueueId>(m_Streams.size()))
+    {
+        throw KttException("Invalid stream index: " + std::to_string(queueId));
+    }
+
+    if (ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+    }
+
+    if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
+    {
+        throw KttException("Argument with id " + std::to_string(id) + " is not a vector and cannot be uploaded into buffer");
+    }
+
+    auto buffer = CreateBuffer(kernelArgument);
+    timer.Stop();
+
+    auto action = buffer->UploadData(*m_Streams[static_cast<size_t>(queueId)], kernelArgument.GetData(),
+        kernelArgument.GetDataSize());
+    action->IncreaseOverhead(timer.GetElapsedTime());
+    const auto actionId = action->GetId();
+
+    m_Buffers[id] = std::move(buffer);
+    m_TransferActions[actionId] = std::move(action);
+
+    return actionId;
 }
 
 TransferActionId CudaEngine::UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
     const size_t dataSize)
 {
-    return m_Generator.GenerateTransferId();
+    Timer timer;
+    timer.Start();
+
+    Logger::LogDebug("Updating buffer for argument with id " + std::to_string(id));
+
+    if (queueId >= static_cast<QueueId>(m_Streams.size()))
+    {
+        throw KttException("Invalid stream index: " + std::to_string(queueId));
+    }
+
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+    }
+
+    auto& buffer = *m_Buffers[id];
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = buffer.GetSize();
+    }
+
+    timer.Stop();
+
+    auto action = buffer.UploadData(*m_Streams[static_cast<size_t>(queueId)], data, actualDataSize);
+    action->IncreaseOverhead(timer.GetElapsedTime());
+    const auto actionId = action->GetId();
+    m_TransferActions[actionId] = std::move(action);
+    return actionId;
 }
 
 TransferActionId CudaEngine::DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
     const size_t dataSize)
 {
-    return m_Generator.GenerateTransferId();
+    Timer timer;
+    timer.Start();
+
+    Logger::LogDebug("Downloading buffer for argument with id " + std::to_string(id));
+
+    if (queueId >= static_cast<QueueId>(m_Streams.size()))
+    {
+        throw KttException("Invalid stream index: " + std::to_string(queueId));
+    }
+
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+    }
+
+    auto& buffer = *m_Buffers[id];
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = buffer.GetSize();
+    }
+
+    timer.Stop();
+
+    auto action = buffer.DownloadData(*m_Streams[static_cast<size_t>(queueId)], destination, actualDataSize);
+    action->IncreaseOverhead(timer.GetElapsedTime());
+    const auto actionId = action->GetId();
+    m_TransferActions[actionId] = std::move(action);
+    return actionId;
 }
 
 TransferActionId CudaEngine::CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
     const size_t dataSize)
 {
-    return m_Generator.GenerateTransferId();
+    Timer timer;
+    timer.Start();
+
+    Logger::LogDebug("Copying buffer for argument with id " + std::to_string(source) + " into buffer for argument with id "
+        + std::to_string(destination));
+
+    if (queueId >= static_cast<QueueId>(m_Streams.size()))
+    {
+        throw KttException("Invalid stream index: " + std::to_string(queueId));
+    }
+
+    if (!ContainsKey(m_Buffers, destination))
+    {
+        throw KttException("Copy destination buffer for argument with id " + std::to_string(destination) + " was not found");
+    }
+
+    if (!ContainsKey(m_Buffers, source))
+    {
+        throw KttException("Copy source buffer for argument with id " + std::to_string(source) + " was not found");
+    }
+
+    auto& destinationBuffer = *m_Buffers[destination];
+    const auto& sourceBuffer = *m_Buffers[source];
+
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = sourceBuffer.GetSize();
+    }
+
+    timer.Stop();
+
+    auto action = destinationBuffer.CopyData(*m_Streams[static_cast<size_t>(queueId)], sourceBuffer, actualDataSize);
+    action->IncreaseOverhead(timer.GetElapsedTime());
+    const auto actionId = action->GetId();
+    m_TransferActions[actionId] = std::move(action);
+    return actionId;
 }
 
 TransferResult CudaEngine::WaitForTransferAction(const TransferActionId id)
 {
-    return TransferResult();
+    if (!ContainsKey(m_TransferActions, id))
+    {
+        throw KttException("Transfer action with id " + std::to_string(id) + " was not found");
+    }
+
+    auto& action = *m_TransferActions[id];
+    action.WaitForFinish();
+    auto result = action.GenerateResult();
+
+    m_TransferActions.erase(id);
+    return result;
 }
 
 void CudaEngine::ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
 {
+    Logger::LogDebug("Resizing buffer for argument with id " + std::to_string(id));
 
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+    }
+
+    auto& buffer = *m_Buffers[id];
+    buffer.Resize(newSize, preserveData);
 }
 
 void CudaEngine::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle)
 {
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+    }
 
+    auto& buffer = *m_Buffers[id];
+
+    if (buffer.GetMemoryLocation() != ArgumentMemoryLocation::Unified)
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " is not unified memory buffer");
+    }
+
+    handle = static_cast<UnifiedBufferMemory>(buffer.GetBuffer());
 }
 
 void CudaEngine::AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer buffer)
 {
+    const auto id = kernelArgument.GetId();
 
+    if (ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+    }
+
+    auto userBuffer = CreateUserBuffer(kernelArgument, buffer);
+    m_Buffers[id] = std::move(userBuffer);
 }
 
 void CudaEngine::ClearBuffer(const ArgumentId id)
@@ -316,579 +563,6 @@ void CudaEngine::ClearKernelCache()
     m_KernelCache.Clear();
 }
 
-//uint64_t CUDAEngine::uploadArgument(KernelArgument& kernelArgument)
-//{
-//    if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
-//    {
-//        return 0;
-//    }
-//
-//    EventId eventId = uploadArgumentAsync(kernelArgument, getDefaultQueue());
-//    return getArgumentOperationDuration(eventId);
-//}
-//
-//EventId CUDAEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const QueueId queue)
-//{
-//    if (queue >= streams.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
-//    }
-//
-//    if (findBuffer(kernelArgument.getId()) != nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id already exists: ") + std::to_string(kernelArgument.getId()));
-//    }
-//
-//    if (kernelArgument.getUploadType() != ArgumentUploadType::Vector)
-//    {
-//        return UINT64_MAX;
-//    }
-//
-//    EventId eventId = nextEventId;
-//    Logger::logDebug("Uploading buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: " + std::to_string(eventId));
-//    auto buffer = std::make_unique<CUDABuffer>(kernelArgument);
-//
-//    if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
-//    {
-//        bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::make_unique<CUDAEvent>(eventId, false),
-//            std::make_unique<CUDAEvent>(eventId, false))));
-//    }
-//    else
-//    {
-//        auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
-//        auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
-//        buffer->uploadData(streams.at(queue)->getStream(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(), startEvent->getEvent(),
-//            endEvent->getEvent());
-//        bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
-//    }
-//
-//    buffers.insert(std::move(buffer)); // buffer data will be stolen
-//    nextEventId++;
-//    return eventId;
-//}
-//
-//uint64_t CUDAEngine::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes)
-//{
-//    EventId eventId = updateArgumentAsync(id, data, dataSizeInBytes, getDefaultQueue());
-//    return getArgumentOperationDuration(eventId);
-//}
-//
-//EventId CUDAEngine::updateArgumentAsync(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue)
-//{
-//    if (queue >= streams.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
-//    }
-//
-//    CUDABuffer* buffer = findBuffer(id);
-//
-//    if (buffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-//    }
-//
-//    EventId eventId = nextEventId;
-//    auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
-//    auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Updating buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
-//
-//    if (dataSizeInBytes == 0)
-//    {
-//        buffer->uploadData(streams.at(queue)->getStream(), data, buffer->getBufferSize(), startEvent->getEvent(), endEvent->getEvent());
-//    }
-//    else
-//    {
-//        buffer->uploadData(streams.at(queue)->getStream(), data, dataSizeInBytes, startEvent->getEvent(), endEvent->getEvent());
-//    }
-//
-//    bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
-//    nextEventId++;
-//    return eventId;
-//}
-//
-//uint64_t CUDAEngine::downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
-//{
-//    EventId eventId = downloadArgumentAsync(id, destination, dataSizeInBytes, getDefaultQueue());
-//    return getArgumentOperationDuration(eventId);
-//}
-//
-//EventId CUDAEngine::downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const
-//{
-//    if (queue >= streams.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
-//    }
-//
-//    CUDABuffer* buffer = findBuffer(id);
-//
-//    if (buffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-//    }
-//
-//    EventId eventId = nextEventId;
-//    auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
-//    auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
-//
-//    if (dataSizeInBytes == 0)
-//    {
-//        buffer->downloadData(streams.at(queue)->getStream(), destination, buffer->getBufferSize(), startEvent->getEvent(), endEvent->getEvent());
-//    }
-//    else
-//    {
-//        buffer->downloadData(streams.at(queue)->getStream(), destination, dataSizeInBytes, startEvent->getEvent(), endEvent->getEvent());
-//    }
-//
-//    bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
-//    nextEventId++;
-//    return eventId;
-//}
-//
-//KernelArgument CUDAEngine::downloadArgumentObject(const ArgumentId id, uint64_t* downloadDuration) const
-//{
-//    CUDABuffer* buffer = findBuffer(id);
-//
-//    if (buffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-//    }
-//
-//    KernelArgument argument(buffer->getKernelArgumentId(), buffer->getBufferSize() / buffer->getElementSize(), buffer->getElementSize(),
-//        buffer->getDataType(), buffer->getMemoryLocation(), buffer->getAccessType(), ArgumentUploadType::Vector);
-//    
-//    EventId eventId = nextEventId;
-//    auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
-//    auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Downloading buffer for argument " + std::to_string(id) + ", event id: " + std::to_string(eventId));
-//    buffer->downloadData(streams.at(getDefaultQueue())->getStream(), argument.getData(), argument.getDataSizeInBytes(), startEvent->getEvent(),
-//        endEvent->getEvent());
-//
-//    bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
-//    nextEventId++;
-//
-//    uint64_t duration = getArgumentOperationDuration(eventId);
-//    if (downloadDuration != nullptr)
-//    {
-//        *downloadDuration = duration;
-//    }
-//
-//    return argument;
-//}
-//
-//uint64_t CUDAEngine::copyArgument(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes)
-//{
-//    EventId eventId = copyArgumentAsync(destination, source, dataSizeInBytes, getDefaultQueue());
-//    return getArgumentOperationDuration(eventId);
-//}
-//
-//EventId CUDAEngine::copyArgumentAsync(const ArgumentId destination, const ArgumentId source, const size_t dataSizeInBytes, const QueueId queue)
-//{
-//    if (queue >= streams.size())
-//    {
-//        throw std::runtime_error(std::string("Invalid stream index: ") + std::to_string(queue));
-//    }
-//
-//    CUDABuffer* destinationBuffer = findBuffer(destination);
-//    CUDABuffer* sourceBuffer = findBuffer(source);
-//
-//    if (destinationBuffer == nullptr || sourceBuffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("One of the buffers with following ids does not exist: ") + std::to_string(destination) + ", "
-//            + std::to_string(source));
-//    }
-//
-//    if (sourceBuffer->getDataType() != destinationBuffer->getDataType())
-//    {
-//        throw std::runtime_error("Data type for buffers during copying operation must match");
-//    }
-//
-//    EventId eventId = nextEventId;
-//    auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
-//    auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Copying buffer for argument " + std::to_string(source) + " into buffer for argument "
-//        + std::to_string(destination) + ", event id: " + std::to_string(eventId));
-//
-//    if (dataSizeInBytes == 0)
-//    {
-//        destinationBuffer->uploadData(streams.at(queue)->getStream(), sourceBuffer, sourceBuffer->getBufferSize(), startEvent->getEvent(),
-//            endEvent->getEvent());
-//    }
-//    else
-//    {
-//        destinationBuffer->uploadData(streams.at(queue)->getStream(), sourceBuffer, dataSizeInBytes, startEvent->getEvent(), endEvent->getEvent());
-//    }
-//
-//    bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
-//    nextEventId++;
-//    return eventId;
-//}
-//
-//uint64_t CUDAEngine::persistArgument(KernelArgument& kernelArgument, const bool flag)
-//{
-//    bool bufferFound = false;
-//    auto iterator = persistentBuffers.cbegin();
-//
-//    while (iterator != persistentBuffers.cend())
-//    {
-//        if (iterator->get()->getKernelArgumentId() == kernelArgument.getId())
-//        {
-//            bufferFound = true;
-//            if (!flag)
-//            {
-//                persistentBuffers.erase(iterator);
-//            }
-//            break;
-//        }
-//        else
-//        {
-//            ++iterator;
-//        }
-//    }
-//    
-//    if (flag && !bufferFound)
-//    {
-//        EventId eventId = nextEventId;
-//        Logger::logDebug("Uploading persistent buffer for argument " + std::to_string(kernelArgument.getId()) + ", event id: "
-//            + std::to_string(eventId));
-//        auto buffer = std::make_unique<CUDABuffer>(kernelArgument);
-//
-//        if (kernelArgument.getMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy)
-//        {
-//            bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::make_unique<CUDAEvent>(eventId, false),
-//                std::make_unique<CUDAEvent>(eventId, false))));
-//        }
-//        else
-//        {
-//            auto startEvent = std::make_unique<CUDAEvent>(eventId, true);
-//            auto endEvent = std::make_unique<CUDAEvent>(eventId, true);
-//            buffer->uploadData(streams.at(getDefaultQueue())->getStream(), kernelArgument.getData(), kernelArgument.getDataSizeInBytes(),
-//                startEvent->getEvent(), endEvent->getEvent());
-//            bufferEvents.insert(std::make_pair(eventId, std::make_pair(std::move(startEvent), std::move(endEvent))));
-//        }
-//
-//        persistentBuffers.insert(std::move(buffer)); // buffer data will be stolen
-//        nextEventId++;
-//
-//        return getArgumentOperationDuration(eventId);
-//    }
-//
-//    return 0;
-//}
-//
-//uint64_t CUDAEngine::getArgumentOperationDuration(const EventId id) const
-//{
-//    auto eventPointer = bufferEvents.find(id);
-//
-//    if (eventPointer == bufferEvents.end())
-//    {
-//        throw std::runtime_error(std::string("Buffer event with following id does not exist or its result was already retrieved: ")
-//            + std::to_string(id));
-//    }
-//
-//    if (!eventPointer->second.first->isValid())
-//    {
-//        bufferEvents.erase(id);
-//        return 0;
-//    }
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Performing buffer operation synchronization for event id: " + std::to_string(id));
-//
-//    // Wait until the second event in pair (the end event) finishes
-//    checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
-//    float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
-//    bufferEvents.erase(id);
-//
-//    return static_cast<uint64_t>(duration);
-//}
-//
-//void CUDAEngine::resizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
-//{
-//    CUDABuffer* buffer = findBuffer(id);
-//
-//    if (buffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-//    }
-//
-//    Logger::getLogger().log(LoggingLevel::Debug, "Resizing buffer for argument " + std::to_string(id));
-//    buffer->resize(newSize, preserveData);
-//}
-//
-//void CUDAEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
-//{
-//    CUDABuffer* buffer = findBuffer(id);
-//
-//    if (buffer == nullptr)
-//    {
-//        throw std::runtime_error(std::string("Buffer with following id was not found: ") + std::to_string(id));
-//    }
-//
-//    handle = reinterpret_cast<BufferMemory>(*buffer->getBuffer());
-//}
-//
-//void CUDAEngine::addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument)
-//{
-//    if (findBuffer(kernelArgument.getId()) != nullptr)
-//    {
-//        throw std::runtime_error(std::string("User buffer with the following id already exists: ") + std::to_string(kernelArgument.getId()));
-//    }
-//
-//    auto cudaBuffer = std::make_unique<CUDABuffer>(buffer, kernelArgument);
-//    userBuffers.insert(std::move(cudaBuffer));
-//}
-//
-//void CUDAEngine::initializeKernelProfiling(const KernelRuntimeData& kernelData)
-//{
-//    #ifdef KTT_PROFILING_CUPTI_LEGACY
-//    initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
-//    #elif KTT_PROFILING_CUPTI
-//    initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
-//    #else
-//    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-//    #endif // KTT_PROFILING_CUPTI_LEGACY
-//}
-//
-//EventId CUDAEngine::runKernelWithProfiling(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-//    const QueueId queue)
-//{
-//    #ifdef KTT_PROFILING_CUPTI_LEGACY
-//
-//    Timer overheadTimer;
-//    overheadTimer.start();
-//
-//    CUDAKernel* kernel;
-//    std::unique_ptr<CUDAKernel> kernelUnique;
-//
-//    if (kernelCacheFlag)
-//    {
-//        if (kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelCache.end())
-//        {
-//            if (kernelCache.size() >= kernelCacheCapacity)
-//            {
-//                clearKernelCache();
-//            }
-//            std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
-//            auto kernel = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
-//            kernelCache.insert(std::make_pair(std::make_pair(kernelData.getName(), kernelData.getSource()), std::move(kernel)));
-//        }
-//        auto cachePointer = kernelCache.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
-//        kernel = cachePointer->second.get();
-//    }
-//    else
-//    {
-//        std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
-//        kernelUnique = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
-//        kernel = kernelUnique.get();
-//    }
-//
-//    std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
-//
-//    overheadTimer.stop();
-//
-//    if (kernelProfilingInstances.find(std::make_pair(kernelData.getName(), kernelData.getSource())) == kernelProfilingInstances.end())
-//    {
-//        initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
-//    }
-//
-//    auto profilingInstance = kernelProfilingInstances.find(std::make_pair(kernelData.getName(), kernelData.getSource()));
-//    EventId id;
-//
-//    if (!profilingInstance->second->hasValidKernelDuration()) // The first profiling run only captures kernel duration
-//    {
-//        id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
-//            getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
-//        kernelToEventMap[std::make_pair(kernelData.getName(), kernelData.getSource())].push_back(id);
-//
-//        Logger::logDebug("Performing kernel synchronization for event id: " + std::to_string(id));
-//        auto eventPointer = kernelEvents.find(id);
-//        checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
-//        float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
-//        profilingInstance->second->updateState(static_cast<uint64_t>(duration));
-//    }
-//    else
-//    {
-//        std::vector<CUPTIProfilingMetric>& metricData = profilingInstance->second->getProfilingMetrics();
-//        auto subscription = std::make_unique<CUPTIProfilingSubscription>(metricData);
-//
-//        id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
-//            getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
-//        kernelToEventMap[std::make_pair(kernelData.getName(), kernelData.getSource())].push_back(id);
-//
-//        profilingInstance->second->updateState();
-//    }
-//
-//    return id;
-//
-//    #elif KTT_PROFILING_CUPTI
-//
-//    Timer overheadTimer;
-//    overheadTimer.start();
-//
-//    CUDAKernel* kernel;
-//    std::unique_ptr<CUDAKernel> kernelUnique;
-//    auto key = std::make_pair(kernelData.getName(), kernelData.getSource());
-//
-//    if (kernelCacheFlag)
-//    {
-//        if (kernelCache.find(key) == kernelCache.end())
-//        {
-//            if (kernelCache.size() >= kernelCacheCapacity)
-//            {
-//                clearKernelCache();
-//            }
-//            std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
-//            auto kernel = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
-//            kernelCache.insert(std::make_pair(key, std::move(kernel)));
-//        }
-//        auto cachePointer = kernelCache.find(key);
-//        kernel = cachePointer->second.get();
-//    }
-//    else
-//    {
-//        std::unique_ptr<CUDAProgram> program = createAndBuildProgram(kernelData.getSource());
-//        kernelUnique = std::make_unique<CUDAKernel>(program->getPtxSource(), kernelData.getName());
-//        kernel = kernelUnique.get();
-//    }
-//
-//    std::vector<CUdeviceptr*> kernelArguments = getKernelArguments(argumentPointers);
-//    overheadTimer.stop();
-//
-//    if (kernelProfilingInstances.find(key) == kernelProfilingInstances.cend())
-//    {
-//        initializeKernelProfiling(kernelData.getName(), kernelData.getSource());
-//    }
-//
-//    EventId id;
-//    auto profilingInstance = kernelProfilingInstances.find(key);
-//
-//    if (!profilingInstance->second->hasValidKernelDuration()) // The first profiling run only captures kernel duration
-//    {
-//        id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
-//            getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
-//        kernelToEventMap[std::make_pair(kernelData.getName(), kernelData.getSource())].push_back(id);
-//
-//        Logger::logDebug("Performing kernel synchronization for event id: " + std::to_string(id));
-//        auto eventPointer = kernelEvents.find(id);
-//        checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
-//        float duration = getEventCommandDuration(eventPointer->second.first->getEvent(), eventPointer->second.second->getEvent());
-//        profilingInstance->second->setKernelDuration(static_cast<uint64_t>(duration));
-//    }
-//    else
-//    {
-//        auto subscription = std::make_unique<CUPTIProfilingPass>(*profilingInstance->second);
-//        id = enqueueKernel(*kernel, kernelData.getGlobalSize(), kernelData.getLocalSize(), kernelArguments,
-//            getSharedMemorySizeInBytes(argumentPointers, kernelData.getLocalMemoryModifiers()), queue, overheadTimer.getElapsedTime());
-//        kernelToEventMap[key].push_back(id);
-//
-//        auto eventPointer = kernelEvents.find(id);
-//        Logger::logDebug(std::string("Performing kernel synchronization for event id: ") + std::to_string(id));
-//        checkCUDAError(cuEventSynchronize(eventPointer->second.second->getEvent()), "cuEventSynchronize");
-//    }
-//
-//    return id;
-//
-//    #else
-//    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-//    #endif // KTT_PROFILING_CUPTI_LEGACY
-//}
-//
-//KernelResult CUDAEngine::getKernelResultWithProfiling(const EventId id, const std::vector<OutputDescriptor>& outputDescriptors)
-//{
-//    #ifdef KTT_PROFILING_CUPTI_LEGACY
-//
-//    KernelResult result = createKernelResult(id);
-//
-//    for (const auto& descriptor : outputDescriptors)
-//    {
-//        downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
-//    }
-//
-//    const std::pair<std::string, std::string>& kernelKey = getKernelFromEvent(id);
-//    auto profilingInstance = kernelProfilingInstances.find(kernelKey);
-//    if (profilingInstance == kernelProfilingInstances.end())
-//    {
-//        throw std::runtime_error(std::string("No profiling data exists for the following kernel in current configuration: " + kernelKey.first));
-//    }
-//
-//    KernelProfilingData profilingData = profilingInstance->second->generateProfilingData();
-//    result.setProfilingData(profilingData);
-//
-//    kernelProfilingInstances.erase(kernelKey);
-//    const std::vector<EventId>& eventIds = kernelToEventMap.find(kernelKey)->second;
-//    
-//    for (const auto eventId : eventIds)
-//    {
-//        kernelEvents.erase(eventId);
-//    }
-//
-//    kernelToEventMap.erase(kernelKey);
-//    return result;
-//
-//    #elif KTT_PROFILING_CUPTI
-//
-//    KernelResult result = createKernelResult(id);
-//
-//    for (const auto& descriptor : outputDescriptors)
-//    {
-//        downloadArgument(descriptor.getArgumentId(), descriptor.getOutputDestination(), descriptor.getOutputSizeInBytes());
-//    }
-//
-//    const std::pair<std::string, std::string>& kernelKey = getKernelFromEvent(id);
-//    auto profilingInstance = kernelProfilingInstances.find(kernelKey);
-//    if (profilingInstance == kernelProfilingInstances.end())
-//    {
-//        throw std::runtime_error(std::string("No profiling data exists for the following kernel in current configuration: " + kernelKey.first));
-//    }
-//
-//    result.setComputationDuration(profilingInstance->second->getKernelDuration());
-//
-//    const CUPTIMetricConfiguration& configuration = profilingInstance->second->getMetricConfiguration();
-//    std::vector<CUPTIMetric> metricData = metricInterface->getMetricData(configuration);
-//    KernelProfilingData profilingData;
-//
-//    for (const auto& metric : metricData)
-//    {
-//        profilingData.addCounter(metric.getCounter());
-//    }
-//
-//    result.setProfilingData(profilingData);
-//
-//    kernelProfilingInstances.erase(kernelKey);
-//    const std::vector<EventId>& eventIds = kernelToEventMap.find(kernelKey)->second;
-//    for (const auto eventId : eventIds)
-//    {
-//        kernelEvents.erase(eventId);
-//    }
-//    kernelToEventMap.erase(kernelKey);
-//
-//    return result;
-//
-//    #else
-//    throw std::runtime_error("Support for kernel profiling is not included in this version of KTT framework");
-//    #endif // KTT_PROFILING_CUPTI_LEGACY
-//}
-
-void CudaEngine::InitializeCompilerOptions()
-{
-    Logger::LogDebug("Initializing default compiler options");
-
-    int computeCapabilityMajor = 0;
-    int computeCapabilityMinor = 0;
-    CheckError(cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, m_Context->GetDevice()),
-        "cuDeviceGetAttribute");
-    CheckError(cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, m_Context->GetDevice()),
-        "cuDeviceGetAttribute");
-
-    const std::string gpuArchitecture = "--gpu-architecture=compute_" + std::to_string(computeCapabilityMajor)
-        + std::to_string(computeCapabilityMinor);
-    SetCompilerOptions(gpuArchitecture);
-}
-
 std::shared_ptr<CudaKernel> CudaEngine::LoadKernel(const KernelComputeData& data)
 {
     const auto id = data.GetUniqueIdentifier();
@@ -971,6 +645,60 @@ size_t CudaEngine::GetSharedMemorySize(const std::vector<const KernelArgument*>&
     return result;
 }
 
+std::unique_ptr<CudaBuffer> CudaEngine::CreateBuffer(KernelArgument& argument)
+{
+    std::unique_ptr<CudaBuffer> buffer;
+
+    switch (argument.GetMemoryLocation())
+    {
+    case ArgumentMemoryLocation::Undefined:
+        KttError("Buffer cannot be created for arguments with undefined memory location");
+        break;
+    case ArgumentMemoryLocation::Device:
+        buffer = std::make_unique<CudaDeviceBuffer>(argument, m_Generator);
+        break;
+    case ArgumentMemoryLocation::Host:
+    case ArgumentMemoryLocation::HostZeroCopy:
+        buffer = std::make_unique<CudaHostBuffer>(argument, m_Generator);
+        break;
+    case ArgumentMemoryLocation::Unified:
+        buffer = std::make_unique<CudaUnifiedBuffer>(argument, m_Generator);
+        break;
+    default:
+        KttError("Unhandled argument memory location value");
+        break;
+    }
+
+    return buffer;
+}
+
+std::unique_ptr<CudaBuffer> CudaEngine::CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer)
+{
+    std::unique_ptr<CudaBuffer> userBuffer;
+
+    switch (argument.GetMemoryLocation())
+    {
+    case ArgumentMemoryLocation::Undefined:
+        KttError("Buffer cannot be created for arguments with undefined memory location");
+        break;
+    case ArgumentMemoryLocation::Device:
+        userBuffer = std::make_unique<CudaDeviceBuffer>(argument, m_Generator, buffer);
+        break;
+    case ArgumentMemoryLocation::Host:
+    case ArgumentMemoryLocation::HostZeroCopy:
+        userBuffer = std::make_unique<CudaHostBuffer>(argument, m_Generator, buffer);
+        break;
+    case ArgumentMemoryLocation::Unified:
+        userBuffer = std::make_unique<CudaUnifiedBuffer>(argument, m_Generator, buffer);
+        break;
+    default:
+        KttError("Unhandled argument memory location value");
+        break;
+    }
+
+    return userBuffer;
+}
+
 #if defined(KTT_PROFILING_CUPTI)
 
 void CudaEngine::InitializeCupti()
@@ -979,102 +707,54 @@ void CudaEngine::InitializeCupti()
     m_MetricInterface = std::make_unique<CuptiMetricInterface>(m_DeviceIndex);
 }
 
+void CudaEngine::InitializeProfiling(const KernelComputeId& id)
+{
+    KttAssert(!IsProfilingSessionActive(id), "Attempting to initialize profiling for compute id with active profiling session");
+    const auto configuration = m_MetricInterface->CreateMetricConfiguration(m_Profiler->GetCounters());
+    m_CuptiInstances[id] = std::make_unique<CuptiInstance>(*m_Context, configuration);
+}
+
+void CudaEngine::FillProfilingData(const KernelComputeId& id, KernelResult& result)
+{
+    KttAssert(IsProfilingSessionActive(id), "Attempting to retrieve profiling data for kernel without active profiling session");
+
+    auto& instance = *m_CuptiInstances[id];
+    auto profilingData = m_MetricInterface->GenerateProfilingData(instance.GetConfiguration());
+
+    if (profilingData->IsValid())
+    {
+        m_CuptiInstances.erase(id);
+    }
+
+    result.SetProfilingData(std::move(profilingData));
+}
+
 #endif // KTT_PROFILING_CUPTI
 
-//#ifdef KTT_PROFILING_CUPTI_LEGACY
-//
-//void CUDAEngine::initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource)
-//{
-//    auto key = std::make_pair(kernelName, kernelSource);
-//
-//    if (!containsKey(kernelProfilingInstances, key))
-//    {
-//        kernelProfilingInstances[key] = std::make_unique<CUPTIProfilingInstance>(context->getContext(), context->getDevice(), profilingMetrics);
-//        kernelToEventMap[key] = std::vector<EventId>{};
-//    }
-//}
-//
-//const std::pair<std::string, std::string>& CUDAEngine::getKernelFromEvent(const EventId id) const
-//{
-//    for (const auto& entry : kernelToEventMap)
-//    {
-//        if (containsElement(entry.second, id))
-//        {
-//            return entry.first;
-//        }
-//    }
-//
-//    throw std::runtime_error(std::string("Corresponding kernel was not found for event with id: ") + std::to_string(id));
-//}
-//
-//CUpti_MetricID CUDAEngine::getMetricIdFromName(const std::string& metricName)
-//{
-//    CUpti_MetricID metricId;
-//    const CUptiResult result = cuptiMetricGetIdFromName(context->getDevice(), metricName.c_str(), &metricId);
-//
-//    switch (result)
-//    {
-//    case CUPTI_SUCCESS:
-//        return metricId;
-//    case CUPTI_ERROR_INVALID_METRIC_NAME:
-//        return std::numeric_limits<CUpti_MetricID>::max();
-//    default:
-//        checkCUPTIError(result, "cuptiMetricGetIdFromName");
-//    }
-//
-//    return 0;
-//}
-//
-//std::vector<std::pair<std::string, CUpti_MetricID>> CUDAEngine::getProfilingMetricsForCurrentDevice(const std::vector<std::string>& metricNames)
-//{
-//    std::vector<std::pair<std::string, CUpti_MetricID>> collectedMetrics;
-//
-//    for (const auto& metricName : metricNames)
-//    {
-//        CUpti_MetricID id = getMetricIdFromName(metricName);
-//        if (id != std::numeric_limits<CUpti_MetricID>::max())
-//        {
-//            collectedMetrics.push_back(std::make_pair(metricName, id));
-//        }
-//    }
-//
-//    return collectedMetrics;
-//}
-//
-//#elif KTT_PROFILING_CUPTI
-//
-//void CUDAEngine::initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource)
-//{
-//    auto key = std::make_pair(kernelName, kernelSource);
-//    auto profilingInstance = kernelProfilingInstances.find(key);
-//
-//    if (profilingInstance == kernelProfilingInstances.end())
-//    {
-//        if (!kernelProfilingInstances.empty())
-//        {
-//            throw std::runtime_error("Profiling of multiple kernel instances is not supported for new CUPTI API");
-//        }
-//
-//        const CUPTIMetricConfiguration configuration = metricInterface->createMetricConfiguration(profilingCounters);
-//        kernelProfilingInstances.insert(std::make_pair(key, std::make_unique<CUPTIProfilingInstance>(context->getContext(), configuration)));
-//        kernelToEventMap.insert(std::make_pair(key, std::vector<EventId>{}));
-//    }
-//}
-//
-//const std::pair<std::string, std::string>& CUDAEngine::getKernelFromEvent(const EventId id) const
-//{
-//    for (const auto& entry : kernelToEventMap)
-//    {
-//        if (containsElement(entry.second, id))
-//        {
-//            return entry.first;
-//        }
-//    }
-//
-//    throw std::runtime_error(std::string("Corresponding kernel was not found for event with id: ") + std::to_string(id));
-//}
-//
-//#endif // KTT_PROFILING_CUPTI
+#if defined(KTT_PROFILING_CUPTI_LEGACY)
+
+void CudaEngine::InitializeProfiling(const KernelComputeId& id)
+{
+    KttAssert(!IsProfilingSessionActive(id), "Attempting to initialize profiling for compute id with active profiling session");
+    m_CuptiInstances[id] = std::make_unique<CuptiInstance>(*m_Context);
+}
+
+void CudaEngine::FillProfilingData(const KernelComputeId& id, KernelResult& result)
+{
+    KttAssert(IsProfilingSessionActive(id), "Attempting to retrieve profiling data for kernel without active profiling session");
+
+    auto& instance = *m_CuptiInstances[id];
+    auto profilingData = instance.GenerateProfilingData();
+
+    if (profilingData->IsValid())
+    {
+        m_CuptiInstances.erase(id);
+    }
+
+    result.SetProfilingData(std::move(profilingData));
+}
+
+#endif // KTT_PROFILING_CUPTI_LEGACY
 
 } // namespace ktt
 

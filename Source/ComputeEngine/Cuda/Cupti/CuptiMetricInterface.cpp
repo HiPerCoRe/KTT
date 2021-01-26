@@ -5,6 +5,7 @@
 #include <nvperf_cuda_host.h>
 #include <nvperf_target.h>
 
+#include <Api/Output/KernelProfilingData.h>
 #include <ComputeEngine/Cuda/Cupti/CuptiMetricInterface.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
@@ -122,11 +123,13 @@ CuptiMetricConfiguration CuptiMetricInterface::CreateMetricConfiguration(const s
     return result;
 }
 
-std::vector<CuptiMetric> CuptiMetricInterface::GenerateMetrics(const CuptiMetricConfiguration& configuration) const
+std::unique_ptr<KernelProfilingData> CuptiMetricInterface::GenerateProfilingData(const CuptiMetricConfiguration& configuration) const
 {
-    KttAssert(configuration.m_DataCollected, "Metrics can only be generated from configuration with collected data");
+    if (!configuration.m_DataCollected)
+    {
+        return std::make_unique<KernelProfilingData>(1);
+    }
 
-    const auto& metricNames = configuration.m_MetricNames;
     const auto& counterDataImage = configuration.m_CounterDataImage;
 
     NVPW_CounterData_GetNumRanges_Params params =
@@ -138,7 +141,7 @@ std::vector<CuptiMetric> CuptiMetricInterface::GenerateMetrics(const CuptiMetric
 
     CheckError(NVPW_CounterData_GetNumRanges(&params), "NVPW_CounterData_GetNumRanges");
 
-    std::vector<CuptiMetric> result;
+    const auto& metricNames = configuration.m_MetricNames;
     std::vector<std::string> parsedNames(metricNames.size());
     std::vector<const char*> metricNamePtrs;
     bool isolated = true;
@@ -148,45 +151,13 @@ std::vector<CuptiMetric> CuptiMetricInterface::GenerateMetrics(const CuptiMetric
     {
         const bool success = ParseMetricNameString(metricNames[metricIndex], parsedNames[metricIndex], isolated, keepInstances);
         KttAssert(success, "Unable to parse metric name " + metricNames[metricIndex]);
-
         metricNamePtrs.push_back(parsedNames[metricIndex].c_str());
-        result.emplace_back(metricNames[metricIndex]);
     }
+
+    std::vector<KernelProfilingCounter> counters;
 
     for (size_t rangeIndex = 0; rangeIndex < params.numRanges; ++rangeIndex)
     {
-        std::vector<const char*> descriptionPtrs;
-
-        NVPW_Profiler_CounterData_GetRangeDescriptions_Params descriptionParams =
-        {
-            NVPW_Profiler_CounterData_GetRangeDescriptions_Params_STRUCT_SIZE,
-            nullptr,
-            counterDataImage.data(),
-            rangeIndex
-        };
-
-        CheckError(NVPW_Profiler_CounterData_GetRangeDescriptions(&descriptionParams),
-            "NVPW_Profiler_CounterData_GetRangeDescriptions");
-        descriptionPtrs.resize(descriptionParams.numDescriptions);
-
-        descriptionParams.ppDescriptions = descriptionPtrs.data();
-        CheckError(NVPW_Profiler_CounterData_GetRangeDescriptions(&descriptionParams),
-            "NVPW_Profiler_CounterData_GetRangeDescriptions");
-
-        std::string rangeName;
-
-        for (size_t descriptionIndex = 0; descriptionIndex < descriptionParams.numDescriptions; ++descriptionIndex)
-        {
-            if (descriptionIndex != 0)
-            {
-                rangeName += "/";
-            }
-
-            rangeName += descriptionPtrs[descriptionIndex];
-        }
-
-        std::vector<double> gpuValues(metricNames.size());
-
         NVPW_MetricsContext_SetCounterData_Params dataParams =
         {
             NVPW_MetricsContext_SetCounterData_Params_STRUCT_SIZE,
@@ -198,6 +169,7 @@ std::vector<CuptiMetric> CuptiMetricInterface::GenerateMetrics(const CuptiMetric
         };
 
         CheckError(NVPW_MetricsContext_SetCounterData(&dataParams), "NVPW_MetricsContext_SetCounterData");
+        std::vector<double> gpuValues(metricNames.size());
 
         NVPW_MetricsContext_EvaluateToGpuValues_Params evalParams =
         {
@@ -211,13 +183,19 @@ std::vector<CuptiMetric> CuptiMetricInterface::GenerateMetrics(const CuptiMetric
 
         CheckError(NVPW_MetricsContext_EvaluateToGpuValues(&evalParams), "NVPW_MetricsContext_EvaluateToGpuValues");
 
+        if (rangeIndex > 0)
+        {
+            // Only values from the first range are currently utilized for counters
+            continue;
+        }
+
         for (size_t metricIndex = 0; metricIndex < metricNames.size(); ++metricIndex)
         {
-            result[metricIndex].SetRangeValue(rangeName, gpuValues[metricIndex]);
+            counters.emplace_back(metricNames[metricIndex], ProfilingCounterType::Double, gpuValues[metricIndex]);
         }
     }
 
-    return result;
+    return std::make_unique<KernelProfilingData>(counters);
 }
 
 std::vector<uint8_t> CuptiMetricInterface::GetConfigImage(const std::vector<std::string>& metrics) const

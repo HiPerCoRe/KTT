@@ -96,22 +96,21 @@ private:
     std::map<KernelComputeId, std::unique_ptr<CuptiInstance>> m_CuptiInstances;
 #endif // KTT_PROFILING_CUPTI
 
-    void InitializeCompilerOptions();
     std::shared_ptr<CudaKernel> LoadKernel(const KernelComputeData& data);
     std::vector<CUdeviceptr*> GetKernelArguments(const std::vector<const KernelArgument*>& arguments);
     CUdeviceptr* GetKernelArgument(const KernelArgument& argument);
     size_t GetSharedMemorySize(const std::vector<const KernelArgument*>& arguments) const;
+    std::unique_ptr<CudaBuffer> CreateBuffer(KernelArgument& argument);
+    std::unique_ptr<CudaBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
 
 #if defined(KTT_PROFILING_CUPTI)
     void InitializeCupti();
 #endif // KTT_PROFILING_CUPTI
-    //void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
-    //const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
-    //CUpti_MetricID getMetricIdFromName(const std::string& metricName);
-    //std::vector<std::pair<std::string, CUpti_MetricID>> getProfilingMetricsForCurrentDevice(const std::vector<std::string>& metricNames);
-    //#elif KTT_PROFILING_CUPTI
-    //void initializeKernelProfiling(const std::string& kernelName, const std::string& kernelSource);
-    //const std::pair<std::string, std::string>& getKernelFromEvent(const EventId id) const;
+
+#if defined(KTT_PROFILING_CUPTI) || defined(KTT_PROFILING_CUPTI_LEGACY)
+    void InitializeProfiling(const KernelComputeId& id);
+    void FillProfilingData(const KernelComputeId& id, KernelResult& result);
+#endif // KTT_PROFILING_CUPTI || KTT_PROFILING_CUPTI_LEGACY
 };
 
 } // namespace ktt

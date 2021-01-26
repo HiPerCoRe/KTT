@@ -3,16 +3,18 @@
 #ifdef KTT_PROFILING_CUPTI
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 #include <nvperf_host.h>
 
-#include <ComputeEngine/Cuda/Cupti/CuptiMetric.h>
 #include <ComputeEngine/Cuda/Cupti/CuptiMetricConfiguration.h>
 #include <KttTypes.h>
 
 namespace ktt
 {
+
+class KernelProfilingData;
 
 class CuptiMetricInterface
 {
@@ -24,7 +26,7 @@ public:
     void ListMetrics(const bool listSubMetrics) const;
 
     CuptiMetricConfiguration CreateMetricConfiguration(const std::vector<std::string>& metrics) const;
-    std::vector<CuptiMetric> GenerateMetrics(const CuptiMetricConfiguration& configuration) const;
+    std::unique_ptr<KernelProfilingData> GenerateProfilingData(const CuptiMetricConfiguration& configuration) const;
 
 private:
     std::string m_DeviceName;

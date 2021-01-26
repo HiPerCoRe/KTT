@@ -2,7 +2,6 @@
 
 #include <cuda.h>
 
-#include <ComputeEngine/Cuda/CuptiLegacy/CuptiInstance.h>
 #include <ComputeEngine/Cuda/CuptiLegacy/CuptiSubscription.h>
 #include <ComputeEngine/Cuda/CudaContext.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
@@ -12,7 +11,8 @@
 namespace ktt
 {
 
-CuptiSubscription::CuptiSubscription(CuptiInstance& instance)
+CuptiSubscription::CuptiSubscription(CuptiInstance& instance) :
+    m_Instance(instance)
 {
     Logger::LogDebug("Activating CUPTI subscription");
     CheckError(cuptiSubscribe(&m_Subscriber, (CUpti_CallbackFunc)CuptiSubscription::MetricCallback, &instance),
@@ -27,6 +27,7 @@ CuptiSubscription::~CuptiSubscription()
 {
     Logger::LogDebug("Deactivating CUPTI subscription");
     CheckError(cuptiUnsubscribe(m_Subscriber), "cuptiUnsubscribe");
+    m_Instance.UpdatePassIndex();
 }
 
 void CuptiSubscription::MetricCallback(void* data, [[maybe_unused]]  CUpti_CallbackDomain domain,
