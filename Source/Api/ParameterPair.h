@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 #include <variant>
+#include <vector>
 
 #include <KttPlatform.h>
 
@@ -79,9 +80,30 @@ public:
       */
     bool HasValueDouble() const;
 
+    /** @fn template <typename T> static T GetParameterValue(const std::vector<ParameterPair>& pairs, const std::string& name)
+      * Returns value of the specified parameter from parameter pairs.
+      * @param pairs Pairs which will be searched for the specified parameter.
+      * @param name Parameter whose value will be returned.
+      * @return Value of the specified parameter. Throws KTT exception if the specified parameter was not found.
+      */
+    template <typename T>
+    static T GetParameterValue(const std::vector<ParameterPair>& pairs, const std::string& name);
+
+    /** @fn template <typename T> static std::vector<T> GetParameterValues(const std::vector<ParameterPair>& pairs,
+      * const std::vector<std::string>& names)
+      * Returns value of all the specified parameters from parameter pairs.
+      * @param pairs Pairs which will be searched for the specified parameters.
+      * @param names Parameters whose values will be returned.
+      * @return Values of the specified parameters. Throws KTT exception if any of the specified parameters was not found.
+      */
+    template <typename T>
+    static std::vector<T> GetParameterValues(const std::vector<ParameterPair>& pairs, const std::vector<std::string>& names);
+
 private:
     std::string m_Name;
     std::variant<uint64_t, double> m_Value;
 };
 
 } // namespace ktt
+
+#include <Api/ParameterPair.inl>

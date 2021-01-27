@@ -25,6 +25,11 @@ using DeviceIndex = uint32_t;
   */
 using QueueId = uint32_t;
 
+/** @typedef KernelDefinitionId
+  * Data type for referencing kernel definitions in KTT.
+  */
+using KernelDefinitionId = uint64_t;
+
 /** @typedef KernelId
   * Data type for referencing kernels in KTT.
   */

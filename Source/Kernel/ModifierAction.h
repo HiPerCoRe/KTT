@@ -7,27 +7,27 @@ namespace ktt
 {
 
 /** @enum ModifierAction
-  * Enum for modifier action for kernel parameters which modify thread size or local memory size.
+  * Enum for modifier action for kernel parameters which modify thread size.
   */
 enum class ModifierAction
 {
-    /** Kernel parameter value will be added to corresponding kernel thread size or local memory size.
+    /** Kernel parameter value will be added to corresponding kernel thread size.
       */
     Add,
 
-    /** Kernel parameter value will be subtracted from corresponding kernel thread size or local memory size.
+    /** Kernel parameter value will be subtracted from corresponding kernel thread size.
       */
     Subtract,
 
-    /** Corresponding kernel thread size or local memory size will be multiplied by kernel parameter value.
+    /** Corresponding kernel thread size will be multiplied by kernel parameter value.
       */
     Multiply,
 
-    /** Corresponding kernel thread size or local memory size will be divided by kernel parameter value.
+    /** Corresponding kernel thread size will be divided by kernel parameter value.
       */
     Divide,
 
-    /** Corresponding kernel thread size or local memory size will be divided and rounded up by kernel parameter value.
+    /** Corresponding kernel thread size will be divided by kernel parameter value and then rounded up to its multiple.
       */
     DivideCeil
 };

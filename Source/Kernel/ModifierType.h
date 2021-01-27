@@ -1,5 +1,5 @@
-/** @file modifier_type.h
-  * Definition of enum for modifier type for kernel parameters.
+/** @file ModifierType.h
+  * Modifier type for kernel parameters.
   */
 #pragma once
 

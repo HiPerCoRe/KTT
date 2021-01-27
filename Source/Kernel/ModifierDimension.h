@@ -7,7 +7,8 @@ namespace ktt
 {
 
 /** @enum ModifierDimension
-  * Enum for modifier dimension for kernel parameters. Dimensions are utilized during specification of parameters which modify kernel thread sizes.
+  * Enum for modifier dimension for kernel parameters. Dimensions are utilized during specification of parameters which modify
+  * kernel thread sizes.
   */
 enum class ModifierDimension
 {

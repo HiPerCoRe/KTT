@@ -1,5 +1,5 @@
-/** @file compute_api.h
-  * Definition of enum for compute APIs supported by KTT library.
+/** @file ComputeApi.h
+  * Compute APIs supported by KTT framework.
   */
 #pragma once
 
@@ -7,7 +7,7 @@ namespace ktt
 {
 
 /** @enum ComputeAPI
-  * Enum for compute API used by KTT library. It is utilized during tuner creation.
+  * Enum for compute APIs used by KTT framework. It is utilized during tuner creation.
   */
 enum class ComputeAPI
 {
