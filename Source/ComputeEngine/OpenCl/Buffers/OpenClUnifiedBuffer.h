@@ -13,8 +13,8 @@ namespace ktt
 class OpenClUnifiedBuffer : public OpenClBuffer
 {
 public:
-    explicit OpenClUnifiedBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context);
-    explicit OpenClUnifiedBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer);
+    explicit OpenClUnifiedBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, const OpenClContext& context);
+    explicit OpenClUnifiedBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, ComputeBuffer userBuffer);
     ~OpenClUnifiedBuffer() override;
 
     std::unique_ptr<OpenClTransferAction> UploadData(const OpenClCommandQueue& queue, const void* source,

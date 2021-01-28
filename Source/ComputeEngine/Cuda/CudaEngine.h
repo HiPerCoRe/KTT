@@ -13,8 +13,8 @@
 #include <ComputeEngine/Cuda/CudaContext.h>
 #include <ComputeEngine/Cuda/CudaKernel.h>
 #include <ComputeEngine/Cuda/CudaStream.h>
-#include <ComputeEngine/ActionIdGenerator.h>
 #include <ComputeEngine/ComputeEngine.h>
+#include <Utility/IdGenerator.h>
 #include <Utility/LruCache.h>
 
 #ifdef KTT_PROFILING_CUPTI_LEGACY
@@ -80,7 +80,8 @@ public:
 
 private:
     DeviceIndex m_DeviceIndex;
-    ActionIdGenerator m_Generator;
+    IdGenerator<ComputeActionId> m_ComputeIdGenerator;
+    IdGenerator<TransferActionId> m_TransferIdGenerator;
     std::unique_ptr<CudaContext> m_Context;
     std::vector<std::unique_ptr<CudaStream>> m_Streams;
     std::map<ArgumentId, std::unique_ptr<CudaBuffer>> m_Buffers;

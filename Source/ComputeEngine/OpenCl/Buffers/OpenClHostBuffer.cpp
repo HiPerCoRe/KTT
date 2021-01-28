@@ -17,7 +17,8 @@
 namespace ktt
 {
 
-OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context) :
+OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator,
+    const OpenClContext& context) :
     OpenClBuffer(argument, generator, context),
     m_RawBuffer(nullptr)
 {
@@ -40,7 +41,8 @@ OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& 
     CheckError(result, "clCreateBuffer");
 }
 
-OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer) :
+OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator,
+    ComputeBuffer userBuffer) :
     OpenClBuffer(argument, generator),
     m_RawBuffer(nullptr)
 {
@@ -89,7 +91,7 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::UploadData(const OpenClC
         throw KttException("Size of data to upload is larger than size of buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClTransferAction>(id, false);
 
     Timer timer;
@@ -124,7 +126,7 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::DownloadData(const OpenC
         throw KttException("Size of data to download is larger than size of buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClTransferAction>(id, false);
 
     Timer timer;
@@ -165,7 +167,7 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::CopyData(const OpenClCom
         throw KttException("Size of data to copy is larger than size of source buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClTransferAction>(id, true);
 
     cl_int result = clEnqueueCopyBuffer(queue.GetQueue(), source.GetBuffer(), m_Buffer, 0, 0, dataSize, 0, nullptr,

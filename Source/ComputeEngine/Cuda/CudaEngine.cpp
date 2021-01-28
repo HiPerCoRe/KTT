@@ -574,7 +574,7 @@ std::shared_ptr<CudaKernel> CudaEngine::LoadKernel(const KernelComputeData& data
 
     auto program = std::make_unique<CudaProgram>(data.GetSource());
     program->Build();
-    auto kernel = std::make_shared<CudaKernel>(std::move(program), data.GetName(), m_Generator);
+    auto kernel = std::make_shared<CudaKernel>(std::move(program), data.GetName(), m_ComputeIdGenerator);
 
     if (m_KernelCache.GetMaxSize() > 0)
     {
@@ -655,14 +655,14 @@ std::unique_ptr<CudaBuffer> CudaEngine::CreateBuffer(KernelArgument& argument)
         KttError("Buffer cannot be created for arguments with undefined memory location");
         break;
     case ArgumentMemoryLocation::Device:
-        buffer = std::make_unique<CudaDeviceBuffer>(argument, m_Generator);
+        buffer = std::make_unique<CudaDeviceBuffer>(argument, m_TransferIdGenerator);
         break;
     case ArgumentMemoryLocation::Host:
     case ArgumentMemoryLocation::HostZeroCopy:
-        buffer = std::make_unique<CudaHostBuffer>(argument, m_Generator);
+        buffer = std::make_unique<CudaHostBuffer>(argument, m_TransferIdGenerator);
         break;
     case ArgumentMemoryLocation::Unified:
-        buffer = std::make_unique<CudaUnifiedBuffer>(argument, m_Generator);
+        buffer = std::make_unique<CudaUnifiedBuffer>(argument, m_TransferIdGenerator);
         break;
     default:
         KttError("Unhandled argument memory location value");
@@ -682,14 +682,14 @@ std::unique_ptr<CudaBuffer> CudaEngine::CreateUserBuffer(KernelArgument& argumen
         KttError("Buffer cannot be created for arguments with undefined memory location");
         break;
     case ArgumentMemoryLocation::Device:
-        userBuffer = std::make_unique<CudaDeviceBuffer>(argument, m_Generator, buffer);
+        userBuffer = std::make_unique<CudaDeviceBuffer>(argument, m_TransferIdGenerator, buffer);
         break;
     case ArgumentMemoryLocation::Host:
     case ArgumentMemoryLocation::HostZeroCopy:
-        userBuffer = std::make_unique<CudaHostBuffer>(argument, m_Generator, buffer);
+        userBuffer = std::make_unique<CudaHostBuffer>(argument, m_TransferIdGenerator, buffer);
         break;
     case ArgumentMemoryLocation::Unified:
-        userBuffer = std::make_unique<CudaUnifiedBuffer>(argument, m_Generator, buffer);
+        userBuffer = std::make_unique<CudaUnifiedBuffer>(argument, m_TransferIdGenerator, buffer);
         break;
     default:
         KttError("Unhandled argument memory location value");

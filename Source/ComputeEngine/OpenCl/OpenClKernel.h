@@ -8,8 +8,9 @@
 
 #include <Api/DimensionVector.h>
 #include <ComputeEngine/OpenCl/OpenClProgram.h>
-#include <ComputeEngine/ActionIdGenerator.h>
 #include <ComputeEngine/GlobalSizeType.h>
+#include <Utility/IdGenerator.h>
+#include <KttTypes.h>
 
 namespace ktt
 {
@@ -23,7 +24,8 @@ struct KernelCompilationData;
 class OpenClKernel : public std::enable_shared_from_this<OpenClKernel>
 {
 public:
-    explicit OpenClKernel(std::unique_ptr<OpenClProgram> program, const std::string& name, ActionIdGenerator& generator);
+    explicit OpenClKernel(std::unique_ptr<OpenClProgram> program, const std::string& name,
+        IdGenerator<ComputeActionId>& generator);
     ~OpenClKernel();
 
     std::unique_ptr<OpenClComputeAction> Launch(const OpenClCommandQueue& queue, const DimensionVector& globalSize,
@@ -42,7 +44,7 @@ public:
 private:
     std::string m_Name;
     std::unique_ptr<OpenClProgram> m_Program;
-    ActionIdGenerator& m_Generator;
+    IdGenerator<ComputeActionId>& m_Generator;
     cl_kernel m_Kernel;
     cl_uint m_NextArgumentIndex;
 

@@ -13,8 +13,8 @@
 #include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
 #include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <ComputeEngine/OpenCl/OpenClKernel.h>
-#include <ComputeEngine/ActionIdGenerator.h>
 #include <ComputeEngine/ComputeEngine.h>
+#include <Utility/IdGenerator.h>
 #include <Utility/LruCache.h>
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
@@ -79,7 +79,8 @@ public:
 private:
     PlatformIndex m_PlatformIndex;
     DeviceIndex m_DeviceIndex;
-    ActionIdGenerator m_Generator;
+    IdGenerator<ComputeActionId> m_ComputeIdGenerator;
+    IdGenerator<TransferActionId> m_TransferIdGenerator;
     std::unique_ptr<OpenClContext> m_Context;
     std::vector<std::unique_ptr<OpenClCommandQueue>> m_Queues;
     std::map<ArgumentId, std::unique_ptr<OpenClBuffer>> m_Buffers;

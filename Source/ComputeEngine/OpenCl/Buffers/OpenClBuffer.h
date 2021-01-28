@@ -5,10 +5,10 @@
 #include <memory>
 #include <CL/cl.h>
 
-#include <ComputeEngine/ActionIdGenerator.h>
 #include <KernelArgument/ArgumentAccessType.h>
 #include <KernelArgument/ArgumentMemoryLocation.h>
 #include <KernelArgument/KernelArgument.h>
+#include <Utility/IdGenerator.h>
 #include <KttTypes.h>
 
 namespace ktt
@@ -21,8 +21,8 @@ class OpenClTransferAction;
 class OpenClBuffer
 {
 public:
-    explicit OpenClBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context);
-    explicit OpenClBuffer(KernelArgument& argument, ActionIdGenerator& generator);
+    explicit OpenClBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, const OpenClContext& context);
+    explicit OpenClBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator);
     virtual ~OpenClBuffer() = default;
 
     virtual std::unique_ptr<OpenClTransferAction> UploadData(const OpenClCommandQueue& queue, const void* source,
@@ -43,7 +43,7 @@ public:
 
 protected:
     KernelArgument& m_Argument;
-    ActionIdGenerator& m_Generator;
+    IdGenerator<TransferActionId>& m_Generator;
     cl_context m_Context;
     size_t m_BufferSize;
     cl_mem_flags m_MemoryFlags;

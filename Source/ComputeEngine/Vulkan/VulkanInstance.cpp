@@ -20,6 +20,7 @@ VulkanInstance::VulkanInstance(const std::string& applicationName, const std::ve
     const std::vector<const char*>& validationLayers) :
     m_DebugCallback(nullptr)
 {
+    Logger::LogDebug("Initializing Vulkan instance");
     KttAssert(CheckValidationLayers(validationLayers), "Some of the requested validation layers are not present");
 
     const VkApplicationInfo applicationInfo =
@@ -55,6 +56,8 @@ VulkanInstance::VulkanInstance(const std::string& applicationName, const std::ve
 
 VulkanInstance::~VulkanInstance()
 {
+    Logger::LogDebug("Releasing Vulkan instance");
+
     if (m_DebugCallback != nullptr)
     {
         auto destroyDebugReportCallbackEXT = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(m_Instance,

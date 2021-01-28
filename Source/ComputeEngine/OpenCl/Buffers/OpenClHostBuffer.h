@@ -12,8 +12,8 @@ namespace ktt
 class OpenClHostBuffer : public OpenClBuffer
 {
 public:
-    explicit OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context);
-    explicit OpenClHostBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer);
+    explicit OpenClHostBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, const OpenClContext& context);
+    explicit OpenClHostBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, ComputeBuffer userBuffer);
     ~OpenClHostBuffer() override;
 
     std::unique_ptr<OpenClTransferAction> UploadData(const OpenClCommandQueue& queue, const void* source,

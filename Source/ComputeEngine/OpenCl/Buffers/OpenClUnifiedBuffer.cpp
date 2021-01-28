@@ -17,7 +17,8 @@
 namespace ktt
 {
 
-OpenClUnifiedBuffer::OpenClUnifiedBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context) :
+OpenClUnifiedBuffer::OpenClUnifiedBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator,
+    const OpenClContext& context) :
     OpenClBuffer(argument, generator, context),
     m_SvmBuffer(nullptr)
 {
@@ -33,7 +34,8 @@ OpenClUnifiedBuffer::OpenClUnifiedBuffer(KernelArgument& argument, ActionIdGener
     }
 }
 
-OpenClUnifiedBuffer::OpenClUnifiedBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer) :
+OpenClUnifiedBuffer::OpenClUnifiedBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator,
+    ComputeBuffer userBuffer) :
     OpenClBuffer(argument, generator),
     m_SvmBuffer(nullptr)
 {
@@ -71,7 +73,7 @@ std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::UploadData([[maybe_un
         throw KttException("Size of data to upload is larger than size of buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClTransferAction>(id, false);
 
     Timer timer;
@@ -94,7 +96,7 @@ std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::DownloadData([[maybe_
         throw KttException("Size of data to download is larger than size of buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClTransferAction>(id, false);
 
     Timer timer;
@@ -123,7 +125,7 @@ std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::CopyData(const OpenCl
         throw KttException("Size of data to copy is larger than size of source buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClTransferAction>(id, false);
 
     Timer timer;

@@ -534,7 +534,7 @@ std::shared_ptr<OpenClKernel> OpenClEngine::LoadKernel(const KernelComputeData& 
 
     auto program = std::make_unique<OpenClProgram>(*m_Context, data.GetSource());
     program->Build();
-    auto kernel = std::make_shared<OpenClKernel>(std::move(program), data.GetName(), m_Generator);
+    auto kernel = std::make_shared<OpenClKernel>(std::move(program), data.GetName(), m_ComputeIdGenerator);
 
     if (m_KernelCache.GetMaxSize() > 0)
     {
@@ -582,15 +582,15 @@ std::unique_ptr<OpenClBuffer> OpenClEngine::CreateBuffer(KernelArgument& argumen
         KttError("Buffer cannot be created for arguments with undefined memory location");
         break;
     case ArgumentMemoryLocation::Device:
-        buffer = std::make_unique<OpenClDeviceBuffer>(argument, m_Generator, *m_Context);
+        buffer = std::make_unique<OpenClDeviceBuffer>(argument, m_TransferIdGenerator, *m_Context);
         break;
     case ArgumentMemoryLocation::Host:
     case ArgumentMemoryLocation::HostZeroCopy:
-        buffer = std::make_unique<OpenClHostBuffer>(argument, m_Generator, *m_Context);
+        buffer = std::make_unique<OpenClHostBuffer>(argument, m_TransferIdGenerator, *m_Context);
         break;
     case ArgumentMemoryLocation::Unified:
 #ifdef CL_VERSION_2_0
-        buffer = std::make_unique<OpenClUnifiedBuffer>(argument, m_Generator, *m_Context);
+        buffer = std::make_unique<OpenClUnifiedBuffer>(argument, m_TransferIdGenerator, *m_Context);
         break;
 #else
         throw KttException("Unified memory buffers are not supported on this platform");
@@ -613,15 +613,15 @@ std::unique_ptr<OpenClBuffer> OpenClEngine::CreateUserBuffer(KernelArgument& arg
         KttError("Buffer cannot be created for arguments with undefined memory location");
         break;
     case ArgumentMemoryLocation::Device:
-        userBuffer = std::make_unique<OpenClDeviceBuffer>(argument, m_Generator, buffer);
+        userBuffer = std::make_unique<OpenClDeviceBuffer>(argument, m_TransferIdGenerator, buffer);
         break;
     case ArgumentMemoryLocation::Host:
     case ArgumentMemoryLocation::HostZeroCopy:
-        userBuffer = std::make_unique<OpenClHostBuffer>(argument, m_Generator, buffer);
+        userBuffer = std::make_unique<OpenClHostBuffer>(argument, m_TransferIdGenerator, buffer);
         break;
     case ArgumentMemoryLocation::Unified:
 #ifdef CL_VERSION_2_0
-        userBuffer = std::make_unique<OpenClUnifiedBuffer>(argument, m_Generator, buffer);
+        userBuffer = std::make_unique<OpenClUnifiedBuffer>(argument, m_TransferIdGenerator, buffer);
         break;
 #else
         throw KttException("Unified memory buffers are not supported on this platform");

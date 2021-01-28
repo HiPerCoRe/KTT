@@ -15,7 +15,8 @@
 namespace ktt
 {
 
-OpenClDeviceBuffer::OpenClDeviceBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context) :
+OpenClDeviceBuffer::OpenClDeviceBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator,
+    const OpenClContext& context) :
     OpenClBuffer(argument, generator, context)
 {
     Logger::LogDebug("Initializing OpenCL device buffer with id " + std::to_string(m_Argument.GetId()));
@@ -26,7 +27,8 @@ OpenClDeviceBuffer::OpenClDeviceBuffer(KernelArgument& argument, ActionIdGenerat
     CheckError(result, "clCreateBuffer");
 }
 
-OpenClDeviceBuffer::OpenClDeviceBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer) :
+OpenClDeviceBuffer::OpenClDeviceBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator,
+    ComputeBuffer userBuffer) :
     OpenClBuffer(argument, generator)
 {
     Logger::LogDebug("Initializing OpenCL device buffer with id " + std::to_string(m_Argument.GetId()));
@@ -63,7 +65,7 @@ std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::UploadData(const OpenC
         throw KttException("Size of data to upload is larger than size of buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClTransferAction>(id, true);
 
     cl_int result = clEnqueueWriteBuffer(queue.GetQueue(), m_Buffer, CL_FALSE, 0, dataSize, source, 0, nullptr,
@@ -84,7 +86,7 @@ std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::DownloadData(const Ope
         throw KttException("Size of data to download is larger than size of buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClTransferAction>(id, true);
 
     cl_int result = clEnqueueReadBuffer(queue.GetQueue(), m_Buffer, CL_FALSE, 0, dataSize, destination, 0, nullptr,
@@ -111,7 +113,7 @@ std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::CopyData(const OpenClC
         throw KttException("Size of data to copy is larger than size of source buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClTransferAction>(id, true);
 
     cl_int result = clEnqueueCopyBuffer(queue.GetQueue(), source.GetBuffer(), m_Buffer, 0, 0, dataSize, 0, nullptr,

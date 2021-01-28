@@ -7,7 +7,7 @@
 namespace ktt
 {
 
-OpenClBuffer::OpenClBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context) :
+OpenClBuffer::OpenClBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, const OpenClContext& context) :
     m_Argument(argument),
     m_Generator(generator),
     m_Context(context.GetContext()),
@@ -16,7 +16,7 @@ OpenClBuffer::OpenClBuffer(KernelArgument& argument, ActionIdGenerator& generato
     m_UserOwned(false)
 {}
 
-OpenClBuffer::OpenClBuffer(KernelArgument& argument, ActionIdGenerator& generator) :
+OpenClBuffer::OpenClBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator) :
     m_Argument(argument),
     m_Generator(generator),
     m_Context(nullptr),

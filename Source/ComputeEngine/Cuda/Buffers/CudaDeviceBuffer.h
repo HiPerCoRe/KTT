@@ -10,8 +10,8 @@ namespace ktt
 class CudaDeviceBuffer : public CudaBuffer
 {
 public:
-    explicit CudaDeviceBuffer(KernelArgument& argument, ActionIdGenerator& generator);
-    explicit CudaDeviceBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer);
+    explicit CudaDeviceBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator);
+    explicit CudaDeviceBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, ComputeBuffer userBuffer);
     ~CudaDeviceBuffer() override;
 
     std::unique_ptr<CudaTransferAction> UploadData(const CudaStream& stream, const void* source,

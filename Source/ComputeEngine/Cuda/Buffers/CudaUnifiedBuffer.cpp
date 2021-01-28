@@ -13,7 +13,7 @@
 namespace ktt
 {
 
-CudaUnifiedBuffer::CudaUnifiedBuffer(KernelArgument& argument, ActionIdGenerator& generator) :
+CudaUnifiedBuffer::CudaUnifiedBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator) :
     CudaBuffer(argument, generator)
 {
     Logger::LogDebug("Initializing CUDA unified buffer with id " + std::to_string(m_Argument.GetId()));
@@ -21,7 +21,8 @@ CudaUnifiedBuffer::CudaUnifiedBuffer(KernelArgument& argument, ActionIdGenerator
     CheckError(cuMemAllocManaged(&m_Buffer, m_BufferSize, CU_MEM_ATTACH_GLOBAL), "cuMemAllocManaged");
 }
 
-CudaUnifiedBuffer::CudaUnifiedBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer) :
+CudaUnifiedBuffer::CudaUnifiedBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator,
+    ComputeBuffer userBuffer) :
     CudaBuffer(argument, generator, userBuffer)
 {
     Logger::LogDebug("Initializing CUDA unified buffer with id " + std::to_string(m_Argument.GetId()));
@@ -57,7 +58,7 @@ std::unique_ptr<CudaTransferAction> CudaUnifiedBuffer::UploadData(const CudaStre
         throw KttException("Size of data to upload is larger than size of buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<CudaTransferAction>(id);
 
     CheckError(cuEventRecord(action->GetStartEvent(), stream.GetStream()), "cuEventRecord");
@@ -77,7 +78,7 @@ std::unique_ptr<CudaTransferAction> CudaUnifiedBuffer::DownloadData(const CudaSt
         throw KttException("Size of data to download is larger than size of buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<CudaTransferAction>(id);
 
     CheckError(cuEventRecord(action->GetStartEvent(), stream.GetStream()), "cuEventRecord");
@@ -103,7 +104,7 @@ std::unique_ptr<CudaTransferAction> CudaUnifiedBuffer::CopyData(const CudaStream
         throw KttException("Size of data to copy is larger than size of source buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<CudaTransferAction>(id);
 
     CheckError(cuEventRecord(action->GetStartEvent(), stream.GetStream()), "cuEventRecord");

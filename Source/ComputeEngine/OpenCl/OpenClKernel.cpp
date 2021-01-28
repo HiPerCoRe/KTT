@@ -14,7 +14,8 @@
 namespace ktt
 {
 
-OpenClKernel::OpenClKernel(std::unique_ptr<OpenClProgram> program, const std::string& name, ActionIdGenerator& generator) :
+OpenClKernel::OpenClKernel(std::unique_ptr<OpenClProgram> program, const std::string& name,
+    IdGenerator<ComputeActionId>& generator) :
     m_Name(name),
     m_Program(std::move(program)),
     m_Generator(generator),
@@ -38,7 +39,7 @@ std::unique_ptr<OpenClComputeAction> OpenClKernel::Launch(const OpenClCommandQue
     const DimensionVector& localSize)
 {
     const DimensionVector adjustedSize = AdjustGlobalSize(globalSize, localSize);
-    const auto id = m_Generator.GenerateComputeId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClComputeAction>(id, shared_from_this());
 
     Logger::LogDebug("Launching kernel " + m_Name + " with compute action id " + std::to_string(id));

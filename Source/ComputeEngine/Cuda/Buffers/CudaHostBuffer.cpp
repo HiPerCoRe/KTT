@@ -13,7 +13,7 @@
 namespace ktt
 {
 
-CudaHostBuffer::CudaHostBuffer(KernelArgument& argument, ActionIdGenerator& generator) :
+CudaHostBuffer::CudaHostBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator) :
     CudaBuffer(argument, generator),
     m_RawBuffer(nullptr)
 {
@@ -34,7 +34,7 @@ CudaHostBuffer::CudaHostBuffer(KernelArgument& argument, ActionIdGenerator& gene
     CheckError(cuMemHostGetDevicePointer(&m_Buffer, m_RawBuffer, 0), "cuMemHostGetDevicePointer");
 }
 
-CudaHostBuffer::CudaHostBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer) :
+CudaHostBuffer::CudaHostBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, ComputeBuffer userBuffer) :
     CudaBuffer(argument, generator, userBuffer),
     m_RawBuffer(nullptr)
 {
@@ -79,7 +79,7 @@ std::unique_ptr<CudaTransferAction> CudaHostBuffer::UploadData(const CudaStream&
         throw KttException("Size of data to upload is larger than size of buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<CudaTransferAction>(id);
 
     CheckError(cuEventRecord(action->GetStartEvent(), stream.GetStream()), "cuEventRecord");
@@ -99,7 +99,7 @@ std::unique_ptr<CudaTransferAction> CudaHostBuffer::DownloadData(const CudaStrea
         throw KttException("Size of data to download is larger than size of buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<CudaTransferAction>(id);
 
     CheckError(cuEventRecord(action->GetStartEvent(), stream.GetStream()), "cuEventRecord");
@@ -125,7 +125,7 @@ std::unique_ptr<CudaTransferAction> CudaHostBuffer::CopyData(const CudaStream& s
         throw KttException("Size of data to copy is larger than size of source buffer");
     }
 
-    const auto id = m_Generator.GenerateTransferId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<CudaTransferAction>(id);
 
     CheckError(cuEventRecord(action->GetStartEvent(), stream.GetStream()), "cuEventRecord");

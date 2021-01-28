@@ -11,7 +11,7 @@
 namespace ktt
 {
 
-CudaKernel::CudaKernel(std::unique_ptr<CudaProgram> program, const std::string& name, ActionIdGenerator& generator) :
+CudaKernel::CudaKernel(std::unique_ptr<CudaProgram> program, const std::string& name, IdGenerator<ComputeActionId>& generator) :
     m_Name(name),
     m_Program(std::move(program)),
     m_Generator(generator)
@@ -41,7 +41,7 @@ std::unique_ptr<CudaComputeAction> CudaKernel::Launch(const CudaStream& stream, 
     }
 
     const DimensionVector adjustedSize = AdjustGlobalSize(globalSize, localSize);
-    const auto id = m_Generator.GenerateComputeId();
+    const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<CudaComputeAction>(id, shared_from_this());
 
     Logger::LogDebug("Launching kernel " + m_Name + " with compute action id " + std::to_string(id));

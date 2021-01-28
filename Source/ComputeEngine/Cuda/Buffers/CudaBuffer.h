@@ -5,10 +5,10 @@
 #include <memory>
 #include <cuda.h>
 
-#include <ComputeEngine/ActionIdGenerator.h>
 #include <KernelArgument/ArgumentAccessType.h>
 #include <KernelArgument/ArgumentMemoryLocation.h>
 #include <KernelArgument/KernelArgument.h>
+#include <Utility/IdGenerator.h>
 #include <KttTypes.h>
 
 namespace ktt
@@ -20,8 +20,8 @@ class CudaTransferAction;
 class CudaBuffer
 {
 public:
-    explicit CudaBuffer(KernelArgument& argument, ActionIdGenerator& generator);
-    explicit CudaBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer);
+    explicit CudaBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator);
+    explicit CudaBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, ComputeBuffer userBuffer);
     virtual ~CudaBuffer() = default;
 
     virtual std::unique_ptr<CudaTransferAction> UploadData(const CudaStream& stream, const void* source,
@@ -41,7 +41,7 @@ public:
 
 protected:
     KernelArgument& m_Argument;
-    ActionIdGenerator& m_Generator;
+    IdGenerator<TransferActionId>& m_Generator;
     size_t m_BufferSize;
     CUdeviceptr m_Buffer;
     bool m_UserOwned;

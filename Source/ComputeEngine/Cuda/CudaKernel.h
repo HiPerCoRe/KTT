@@ -8,8 +8,9 @@
 
 #include <Api/DimensionVector.h>
 #include <ComputeEngine/Cuda/CudaProgram.h>
-#include <ComputeEngine/ActionIdGenerator.h>
 #include <ComputeEngine/GlobalSizeType.h>
+#include <Utility/IdGenerator.h>
+#include <KttTypes.h>
 
 namespace ktt
 {
@@ -21,7 +22,7 @@ struct KernelCompilationData;
 class CudaKernel : public std::enable_shared_from_this<CudaKernel>
 {
 public:
-    explicit CudaKernel(std::unique_ptr<CudaProgram> program, const std::string& name, ActionIdGenerator& generator);
+    explicit CudaKernel(std::unique_ptr<CudaProgram> program, const std::string& name, IdGenerator<ComputeActionId>& generator);
     ~CudaKernel();
 
     std::unique_ptr<CudaComputeAction> Launch(const CudaStream& stream, const DimensionVector& globalSize,
@@ -38,7 +39,7 @@ public:
 private:
     std::string m_Name;
     std::unique_ptr<CudaProgram> m_Program;
-    ActionIdGenerator& m_Generator;
+    IdGenerator<ComputeActionId>& m_Generator;
     CUfunction m_Kernel;
     CUmodule m_Module;
 

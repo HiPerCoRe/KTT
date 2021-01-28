@@ -5,7 +5,7 @@
 namespace ktt
 {
 
-CudaBuffer::CudaBuffer(KernelArgument& argument, ActionIdGenerator& generator) :
+CudaBuffer::CudaBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator) :
     m_Argument(argument),
     m_Generator(generator),
     m_BufferSize(argument.GetDataSize()),
@@ -13,7 +13,8 @@ CudaBuffer::CudaBuffer(KernelArgument& argument, ActionIdGenerator& generator) :
     m_UserOwned(false)
 {}
 
-CudaBuffer::CudaBuffer(KernelArgument& argument, ActionIdGenerator& generator, [[maybe_unused]] ComputeBuffer userBuffer) :
+CudaBuffer::CudaBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator,
+    [[maybe_unused]] ComputeBuffer userBuffer) :
     m_Argument(argument),
     m_Generator(generator),
     m_BufferSize(argument.GetDataSize()),

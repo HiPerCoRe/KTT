@@ -12,8 +12,8 @@ namespace ktt
 class OpenClDeviceBuffer : public OpenClBuffer
 {
 public:
-    explicit OpenClDeviceBuffer(KernelArgument& argument, ActionIdGenerator& generator, const OpenClContext& context);
-    explicit OpenClDeviceBuffer(KernelArgument& argument, ActionIdGenerator& generator, ComputeBuffer userBuffer);
+    explicit OpenClDeviceBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, const OpenClContext& context);
+    explicit OpenClDeviceBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, ComputeBuffer userBuffer);
     ~OpenClDeviceBuffer() override;
 
     std::unique_ptr<OpenClTransferAction> UploadData(const OpenClCommandQueue& queue, const void* source,
