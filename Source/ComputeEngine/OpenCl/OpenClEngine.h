@@ -34,10 +34,10 @@ public:
 
     // Kernel methods
     ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) override;
-    KernelResult WaitForComputeAction(const ComputeActionId id) override;
+    ComputationResult WaitForComputeAction(const ComputeActionId id) override;
 
     // Profiling methods
-    KernelResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId) override;
+    ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId) override;
     void SetProfilingCounters(const std::vector<std::string>& counters) override;
     bool IsProfilingSessionActive(const KernelComputeId& id) override;
     uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) override;
@@ -102,7 +102,7 @@ private:
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     void InitializeGpa();
     void InitializeProfiling(const KernelComputeId& id);
-    void FillProfilingData(const KernelComputeId& id, KernelResult& result);
+    void FillProfilingData(const KernelComputeId& id, ComputationResult& result);
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 };
 

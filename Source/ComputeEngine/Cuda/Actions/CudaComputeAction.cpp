@@ -73,9 +73,9 @@ const std::string& CudaComputeAction::GetConfigurationPrefix() const
     return m_Prefix;
 }
 
-KernelResult CudaComputeAction::GenerateResult() const
+ComputationResult CudaComputeAction::GenerateResult() const
 {
-    KernelResult result(m_Kernel->GetName(), GetConfigurationPrefix());
+    ComputationResult result(m_Kernel->GetName(), GetConfigurationPrefix());
     const Nanoseconds duration = GetDuration();
     const Nanoseconds overhead = GetOverhead();
     std::unique_ptr<KernelCompilationData> compilationData = m_Kernel->GenerateCompilationData();

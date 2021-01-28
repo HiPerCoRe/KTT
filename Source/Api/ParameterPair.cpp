@@ -36,20 +36,18 @@ const std::string& ParameterPair::GetName() const
 
 std::string ParameterPair::GetString() const
 {
-    std::string result(m_Name + ": ");
+    std::string result(m_Name + " " + GetValueString());
+    return result;
+}
 
+std::string ParameterPair::GetValueString() const
+{
     if (HasValueDouble())
     {
-        const double value = GetValueDouble();
-        result += std::to_string(value);
-    }
-    else
-    {
-        const uint64_t value = GetValue();
-        result += std::to_string(value);
+        return std::to_string(GetValueDouble());
     }
 
-    return result;
+    return std::to_string(GetValue());
 }
 
 uint64_t ParameterPair::GetValue() const

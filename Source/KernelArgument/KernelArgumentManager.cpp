@@ -42,7 +42,7 @@ ArgumentId KernelArgumentManager::AddUserArgument(const size_t elementSize, cons
 
 const KernelArgument& KernelArgumentManager::GetArgument(const ArgumentId id) const
 {
-    if (id >= m_IdGenerator)
+    if (id >= static_cast<uint64_t>(m_Arguments.size()))
     {
         throw KttException("Attempting to retrieve argument with invalid id: " + std::to_string(id));
     }
@@ -71,8 +71,7 @@ std::vector<KernelArgument*> KernelArgumentManager::GetArguments(const std::vect
 ArgumentId KernelArgumentManager::AddArgument(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType)
 {
-    const auto id = m_IdGenerator;
-    ++m_IdGenerator;
+    const auto id = m_IdGenerator.GenerateId();
 
     auto argument = std::make_unique<KernelArgument>(id, elementSize, dataType, memoryLocation, accessType, memoryType);
     m_Arguments.push_back(std::move(argument));

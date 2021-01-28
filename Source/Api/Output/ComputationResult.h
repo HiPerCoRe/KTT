@@ -1,132 +1,52 @@
-///** @file ComputationResult.h
-//  * Retrieval of information about computation using specific configuration.
-//  */
-//#pragma once
-//
-//#include <cstdint>
-//#include <string>
-//#include <map>
-//#include <vector>
-//
-//#include <api/kernel_compilation_data.h>
-//#include <api/kernel_profiling_data.h>
-//#include <api/parameter_pair.h>
-//#include <KttPlatform.h>
-//#include <KttTypes.h>
-//
-//namespace ktt
-//{
-//
-///** @class ComputationResult
-//  * Class which holds information about computation in specific configuration.
-//  */
-//class KTT_API ComputationResult
-//{
-//public:
-//    /** @fn ComputationResult()
-//      * Default constructor, initializes status to false and duration to maximum value.
-//      */
-//    ComputationResult();
-//
-//    /** @fn explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-//      * const KernelCompilationData& compilationData, const KernelProfilingData& profilingData)
-//      * Constructor which initializes tuning result for successful computations. Error message is initialized to empty string.
-//      * @param kernelName Name of a kernel.
-//      * @param configuration Configuration used for computation.
-//      * @param duration Duration of a computation using specified configuration.
-//      * @param compilationData Compilation data for kernel run in specified configuration.
-//      * @param profilingData Profiling data for kernel run in specified configuration.
-//      */
-//    explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-//        const KernelCompilationData& compilationData, const KernelProfilingData& profilingData);
-//
-//    /** @fn explicit ComputationResult(const std::string& compositionName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-//      * const std::map<KernelId, KernelCompilationData>& compilationData, const std::map<KernelId, KernelProfilingData>& profilingData)
-//      * Constructor which initializes tuning result for successful computations. Error message is initialized to empty string.
-//      * @param compositionName Name of a composition.
-//      * @param configuration Configuration used for computation.
-//      * @param duration Duration of a computation using specified configuration.
-//      * @param compilationData Compilation data for composition run in specified configuration.
-//      * @param profilingData Profiling data for composition run in specified configuration.
-//      */
-//    explicit ComputationResult(const std::string& compositionName, const std::vector<ParameterPair>& configuration, const uint64_t duration,
-//        const std::map<KernelId, KernelCompilationData>& compilationData, const std::map<KernelId, KernelProfilingData>& profilingData);
-//
-//    /** @fn explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration,
-//      * const std::string& errorMessage)
-//      * Constructor which initializes tuning result for failed computations. Duration is initialized to maximum value.
-//      * @param kernelName Name of a kernel.
-//      * @param configuration Configuration used for computation.
-//      * @param errorMessage Contains information about computation failure.
-//      */
-//    explicit ComputationResult(const std::string& kernelName, const std::vector<ParameterPair>& configuration, const std::string& errorMessage);
-//
-//    /** @fn bool getStatus() const
-//      * Getter for computation status.
-//      * @return True if computation was successful. False otherwise.
-//      */
-//    bool getStatus() const;
-//
-//    /** @fn uint64_t getDuration() const
-//      * Getter for computation duration.
-//      * @return If status is true, actual duration of computation in nanoseconds. If status is false, maximum value.
-//      */
-//    uint64_t getDuration() const;
-//
-//    /** @fn const std::string& getKernelName() const
-//      * Getter for kernel name.
-//      * @return Kernel name.
-//      */
-//    const std::string& getKernelName() const;
-//
-//    /** @fn const std::string& getErrorMessage() const
-//      * Getter for error message.
-//      * @return If status is true, empty string. If status is false, message containing information about computation failure.
-//      */
-//    const std::string& getErrorMessage() const;
-//
-//    /** @fn const std::vector<ParameterPair>& getConfiguration() const
-//      * Getter for tuning result configuration.
-//      * @return Tuning result configuration.
-//      */
-//    const std::vector<ParameterPair>& getConfiguration() const;
-//
-//    /** @fn const KernelCompilationData& getCompilationData() const
-//      * Getter for compilation data for kernel run in the current configuration. Returned data is valid only if tuned kernel is a single kernel.
-//      * @return Compilation data for kernel run in the current configuration. See KernelCompilationData for more information.
-//      */
-//    const KernelCompilationData& getCompilationData() const;
-//
-//    /** @fn const std::map<KernelId, KernelCompilationData>& getCompositionCompilationData() const
-//      * Getter for compilation data for composition run in the current configuration. Returned data is valid only if tuned kernel is a composition.
-//      * @return Compilation data for composition run in the current configuration. See KernelCompilationData for more information.
-//      */
-//    const std::map<KernelId, KernelCompilationData>& getCompositionCompilationData() const;
-//
-//    /** @fn const KernelProfilingData& getProfilingData() const
-//      * Getter for profiling data for kernel run in the current configuration. Returned profiling data is valid only if kernel profiling is enabled
-//      * and tuned kernel is a single kernel.
-//      * @return Profiling data for kernel run in the current configuration. See KernelProfilingData for more information.
-//      */
-//    const KernelProfilingData& getProfilingData() const;
-//
-//    /** @fn const std::map<KernelId, KernelProfilingData>& getCompositionProfilingData() const
-//      * Getter for profiling data for composition run in the current configuration. Returned profiling data is valid only if kernel profiling
-//      * is enabled and tuned kernel is a composition.
-//      * @return Profiling data for composition run in the current configuration. See KernelProfilingData for more information.
-//      */
-//    const std::map<KernelId, KernelProfilingData>& getCompositionProfilingData() const;
-//
-//private:
-//    bool status;
-//    uint64_t duration;
-//    std::string kernelName;
-//    std::string errorMessage;
-//    std::vector<ParameterPair> configuration;
-//    KernelCompilationData compilationData;
-//    std::map<KernelId, KernelCompilationData> compositionCompilationData;
-//    KernelProfilingData profilingData;
-//    std::map<KernelId, KernelProfilingData> compositionProfilingData;
-//};
-//
-//} // namespace ktt
+#pragma once
+
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include <Api/Output/ComputationStatus.h>
+#include <Api/Output/KernelCompilationData.h>
+#include <Api/Output/KernelProfilingData.h>
+#include <KttPlatform.h>
+#include <KttTypes.h>
+
+namespace ktt
+{
+
+class KTT_API ComputationResult
+{
+public:
+    ComputationResult();
+    explicit ComputationResult(const std::string& kernelName, const std::string& configurationPrefix);
+    ComputationResult(const ComputationResult& other);
+
+    void SetStatus(const ComputationStatus status);
+    void SetDurationData(const Nanoseconds duration, const Nanoseconds overhead);
+    void SetCompilationData(std::unique_ptr<KernelCompilationData> data);
+    void SetProfilingData(std::unique_ptr<KernelProfilingData> data);
+
+    const std::string& GetKernelName() const;
+    const std::string& GetConfigurationPrefix() const;
+    Nanoseconds GetDuration() const;
+    Nanoseconds GetOverhead() const;
+    ComputationStatus GetStatus() const;
+    bool IsValid() const;
+    bool HasCompilationData() const;
+    const KernelCompilationData& GetCompilationData() const;
+    bool HasProfilingData() const;
+    const KernelProfilingData& GetProfilingData() const;
+
+    ComputationResult& operator=(const ComputationResult& other);
+
+private:
+    std::string m_KernelName;
+    std::string m_ConfigurationPrefix;
+    Nanoseconds m_Duration;
+    Nanoseconds m_Overhead;
+    std::unique_ptr<KernelCompilationData> m_CompilationData;
+    std::unique_ptr<KernelProfilingData> m_ProfilingData;
+    ComputationStatus m_Status;
+};
+
+} // namespace ktt

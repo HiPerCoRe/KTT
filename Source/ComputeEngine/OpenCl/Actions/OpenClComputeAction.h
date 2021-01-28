@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-#include <Api/Output/KernelResult.h>
+#include <Api/Output/ComputationResult.h>
 #include <ComputeEngine/OpenCl/OpenClEvent.h>
 #include <ComputeEngine/OpenCl/OpenClKernel.h>
 #include <KttTypes.h>
@@ -29,7 +29,7 @@ public:
     Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
     const std::string& GetConfigurationPrefix() const;
-    KernelResult GenerateResult() const;
+    ComputationResult GenerateResult() const;
 
 private:
     ComputeActionId m_Id;

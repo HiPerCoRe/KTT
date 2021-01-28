@@ -117,7 +117,7 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
     return id;
 }
 
-KernelResult OpenClEngine::WaitForComputeAction(const ComputeActionId id)
+ComputationResult OpenClEngine::WaitForComputeAction(const ComputeActionId id)
 {
     if (!ContainsKey(m_ComputeActions, id))
     {
@@ -132,7 +132,7 @@ KernelResult OpenClEngine::WaitForComputeAction(const ComputeActionId id)
     return result;
 }
 
-KernelResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
+ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
     [[maybe_unused]] const QueueId queueId)
 {
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
@@ -155,7 +155,7 @@ KernelResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const KernelC
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime());
 
-    KernelResult result = WaitForComputeAction(actionId);
+    ComputationResult result = WaitForComputeAction(actionId);
     FillProfilingData(id, result);
 
     return result;
@@ -648,7 +648,7 @@ void OpenClEngine::InitializeProfiling(const KernelComputeId& id)
     m_GpaInstances[id] = std::make_unique<GpaInstance>(m_GpaInterface->GetFunctions(), *m_GpaContext);
 }
 
-void OpenClEngine::FillProfilingData(const KernelComputeId& id, KernelResult& result)
+void OpenClEngine::FillProfilingData(const KernelComputeId& id, ComputationResult& result)
 {
     KttAssert(IsProfilingSessionActive(id), "Attempting to retrieve profiling data for kernel without active profiling session");
 

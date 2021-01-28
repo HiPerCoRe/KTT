@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <KernelArgument/KernelArgument.h>
+#include <Utility/IdGenerator.h>
 
 namespace ktt
 {
@@ -28,7 +29,7 @@ public:
     std::vector<KernelArgument*> GetArguments(const std::vector<ArgumentId>& ids);
 
 private:
-    ArgumentId m_IdGenerator;
+    IdGenerator<ArgumentId> m_IdGenerator;
     std::vector<std::unique_ptr<KernelArgument>> m_Arguments;
 
     ArgumentId AddArgument(const size_t elementSize, const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation,

@@ -106,7 +106,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     return id;
 }
 
-KernelResult CudaEngine::WaitForComputeAction(const ComputeActionId id)
+ComputationResult CudaEngine::WaitForComputeAction(const ComputeActionId id)
 {
     if (!ContainsKey(m_ComputeActions, id))
     {
@@ -121,7 +121,7 @@ KernelResult CudaEngine::WaitForComputeAction(const ComputeActionId id)
     return result;
 }
 
-KernelResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data, [[maybe_unused]] const QueueId queueId)
+ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data, [[maybe_unused]] const QueueId queueId)
 {
 #ifdef KTT_PROFILING_CUPTI_LEGACY
 
@@ -148,7 +148,7 @@ KernelResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const KernelCom
     const auto actionId = RunKernelAsync(data, queueId);
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime());
-    KernelResult result = WaitForComputeAction(actionId);
+    ComputationResult result = WaitForComputeAction(actionId);
 
     if (!instance.HasValidKernelDuration())
     {
@@ -179,7 +179,7 @@ KernelResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const KernelCom
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime());
 
-    KernelResult result = WaitForComputeAction(actionId);
+    ComputationResult result = WaitForComputeAction(actionId);
     FillProfilingData(id, result);
 
     return result;
@@ -714,7 +714,7 @@ void CudaEngine::InitializeProfiling(const KernelComputeId& id)
     m_CuptiInstances[id] = std::make_unique<CuptiInstance>(*m_Context, configuration);
 }
 
-void CudaEngine::FillProfilingData(const KernelComputeId& id, KernelResult& result)
+void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult& result)
 {
     KttAssert(IsProfilingSessionActive(id), "Attempting to retrieve profiling data for kernel without active profiling session");
 
@@ -739,7 +739,7 @@ void CudaEngine::InitializeProfiling(const KernelComputeId& id)
     m_CuptiInstances[id] = std::make_unique<CuptiInstance>(*m_Context);
 }
 
-void CudaEngine::FillProfilingData(const KernelComputeId& id, KernelResult& result)
+void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult& result)
 {
     KttAssert(IsProfilingSessionActive(id), "Attempting to retrieve profiling data for kernel without active profiling session");
 

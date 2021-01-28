@@ -62,6 +62,12 @@ public:
       */
     std::string GetString() const;
 
+    /** @fn std::string GetValueString() const
+      * Converts parameter value to string.
+      * @return Parameter value converted to string.
+      */
+    std::string GetValueString() const;
+
     /** @fn uint64_t GetValue() const
       * Returns integer representation of parameter value.
       * @return Integer representation of parameter value.

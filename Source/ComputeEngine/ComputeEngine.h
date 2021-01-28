@@ -5,7 +5,7 @@
 
 #include <Api/Info/DeviceInfo.h>
 #include <Api/Info/PlatformInfo.h>
-#include <Api/Output/KernelResult.h>
+#include <Api/Output/ComputationResult.h>
 #include <ComputeEngine/KernelComputeData.h>
 #include <ComputeEngine/GlobalSizeType.h>
 #include <ComputeEngine/TransferResult.h>
@@ -22,10 +22,10 @@ public:
 
     // Kernel methods
     virtual ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) = 0;
-    virtual KernelResult WaitForComputeAction(const ComputeActionId id) = 0;
+    virtual ComputationResult WaitForComputeAction(const ComputeActionId id) = 0;
 
     // Profiling methods
-    virtual KernelResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId) = 0;
+    virtual ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId) = 0;
     virtual void SetProfilingCounters(const std::vector<std::string>& counters) = 0;
     virtual bool IsProfilingSessionActive(const KernelComputeId& id) = 0;
     virtual uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) = 0;
