@@ -25,12 +25,21 @@
     const auto computeAPI = ktt::ComputeAPI::OpenCL;
 #endif
 
+// Rapid test switch off comparison with CPU implementation
 #define RAPID_TEST 1
-#define USE_PROFILING 0
-#define USE_REDUCED_SET 0 /* reduced tuning parameters set, taken from CLTune */
 
-//XXX profile-searcher works with CUDA only
-#define USE_PROFILE_SEARCHER 0
+// Gathering hardware performance counters
+#define USE_PROFILING 0
+
+// use full or reduced tuning parameters set (taken from CLBlast)
+#define USE_REDUCED_SET 0 
+
+// Switch on/off exhaustive search (complete exploration of the tuning space)
+#define EXHAUSTIVE_SEARCH 0
+#if EXHAUSTIVE_SEARCH == 0
+    //XXX profile-searcher works with CUDA only
+    #define USE_PROFILE_SEARCHER 0
+#endif
 
 #define TUNE_SEC 300
 
@@ -212,6 +221,7 @@ int main(int argc, char** argv)
 #endif
 
     // Set and configure searcher
+#if EXHAUSTIVE_SEARCH == 0
 #if USE_PROFILE_SEARCHER == 1 and KTT_CUDA_EXAMPLE
     unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
@@ -222,9 +232,12 @@ int main(int argc, char** argv)
 #else
     tuner.setSearcher(kernelId, std::make_unique<ktt::RandomSearcher>());
 #endif
+#endif
 
     // Launch kernel tuning
-    //tuner.tuneKernel(kernelId, /*std::unique_ptr<ktt::ConfigurationCount>(new ktt::ConfigurationCount(10))*/std::unique_ptr<ktt::TuningDuration>(new ktt::TuningDuration(30))); //XXX tuneKernel does not work with current implementation of profile-based searcher
+#if EXHAUSTIVE_SEARCH == 1
+    tuner.tuneKernel(kernelId); //XXX tuneKernel does not work with current implementation of profile-based searcher
+#else
     //XXX in current implementation of profile-based searcher, the iterative profiling has to be performed
     std::vector<float> oneElement(1);
     ktt::OutputDescriptor output(matCId, (void*)oneElement.data(), 1*sizeof(float));
@@ -256,12 +269,12 @@ int main(int argc, char** argv)
         ktt::ComputationResult bestConf = tuner.getBestComputationResult(kernelId);
         std::cout << "Execution after " << time(NULL) - start << " second(s), tested " << confTested << " configurations, best kernel " << bestConf.getDuration() << " ns" << std::endl;
     }
+    std::cout << "Number of configurations tested: " << confTested << ", required kernel tests: " << kernTested << std::endl;
+#endif
 
     // Print tuning results to standard output and to output.csv file
     tuner.printResult(kernelId, std::cout, ktt::PrintFormat::Verbose);
     tuner.printResult(kernelId, "gemm_output.csv", ktt::PrintFormat::CSV);
-
-    std::cout << "Number of configurations tested: " << confTested << ", required kernel tests: " << kernTested << std::endl;
 
     return 0;
 };
