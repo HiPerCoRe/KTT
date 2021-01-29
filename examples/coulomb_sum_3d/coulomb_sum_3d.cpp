@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     // Declare kernel parameters
     const int gridSize = 256;
     const int atoms = /*4096*/256;
-    const ktt::DimensionVector referenceNdRangeDimensions(gridSize/16, gridSize/16, gridSize);
+    const ktt::DimensionVector referenceNdRangeDimensions(gridSize, gridSize, gridSize);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
     const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
     const ktt::DimensionVector workGroupDimensions(1, 1);
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
     }
 
     ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
-    tuner.setGlobalSizeType(ktt::GlobalSizeType::CUDA);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     if (computeAPI == ktt::ComputeAPI::OpenCL)
@@ -143,7 +143,6 @@ int main(int argc, char** argv)
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_X", {8, 16, 24, 32});
     #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::DivideCeil);
     #if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Y", {1, 2, 4, 8});
     #else
@@ -154,7 +153,6 @@ int main(int argc, char** argv)
         #endif
     #endif
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::DivideCeil);
     tuner.addParameter(kernelId, "WORK_GROUP_SIZE_Z", {1});
     #if USE_DENSE_TUNPAR == 0 && USE_WIDE_TUNPAR == 0
     tuner.addParameter(kernelId, "Z_ITERATIONS", {1, 2, 4, 8, 16, 32});

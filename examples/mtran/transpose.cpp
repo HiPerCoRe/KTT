@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     const int width = 8192;
     const int height = 8192;
     const ktt::DimensionVector ndRangeDimensions(width, height);
-    const ktt::DimensionVector ndRangeDimensionsReference(width/16, height/16);
+    const ktt::DimensionVector ndRangeDimensionsReference(width, height);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
 
     // Declare data variables
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 
     // Create tuner
     ktt::Tuner tuner(platformIndex, deviceIndex, computeAPI);
-    tuner.setGlobalSizeType(ktt::GlobalSizeType::CUDA);
+    tuner.setGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     tuner.setPrintingTimeUnit(ktt::TimeUnit::Microseconds);
 
     #if USE_PROFILING == 1
@@ -158,9 +158,10 @@ int main(int argc, char **argv)
     // Configure parallelism
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", ktt::ModifierAction::Multiply);
     tuner.setThreadModifier(kernelId, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", ktt::ModifierAction::Multiply);
-    auto xGlobalModifier = [](const size_t size, const std::vector<size_t>& vector) {return size / vector.at(0) / vector.at(1);};
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, std::vector<std::string>{ "TILE_SIZE_X", "VECTOR_TYPE" }, xGlobalModifier);
-    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "TILE_SIZE_Y", ktt::ModifierAction::Divide);
+    auto xGlobalModifier = [](const size_t size, const std::vector<size_t>& vector) {return size * vector.at(0) / vector.at(1) / vector.at(2);};
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::X, std::vector<std::string>{ "WORK_GROUP_SIZE_X", "TILE_SIZE_X", "VECTOR_TYPE" }, xGlobalModifier);
+    auto yGlobalModifier = [](const size_t size, const std::vector<size_t>& vector) {return size * vector.at(0) / vector.at(1);};
+    tuner.setThreadModifier(kernelId, ktt::ModifierType::Global, ktt::ModifierDimension::Y, std::vector<std::string>{ "WORK_GROUP_SIZE_Y", "TILE_SIZE_Y" }, yGlobalModifier);
 
     auto wgSize = [](const std::vector<size_t>& v) {return v[0]*v[1] >= 32;};
     tuner.addConstraint(kernelId, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, wgSize);
