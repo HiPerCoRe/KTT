@@ -38,7 +38,7 @@
 #define EXHAUSTIVE_SEARCH 0
 #if EXHAUSTIVE_SEARCH == 0
     //XXX profile-searcher works with CUDA only
-    #define USE_PROFILE_SEARCHER 0
+    #define USE_PROFILE_SEARCHER 1
 #endif
 
 #define TUNE_SEC 30

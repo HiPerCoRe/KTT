@@ -45,7 +45,8 @@ public:
         statComputeCapability(statCC),
         model(model),
         searcherDir(searcherDir),
-        profileRequired(true)
+        profileRequired(true),
+        pythonRunning(false)
     {}
 
     void onInitialize() override
@@ -80,7 +81,10 @@ public:
         std::uniform_int_distribution<> distribution(0, getConfigurations().size()-1);
         bestIdxInBatch = static_cast<size_t>(distribution(generator));
         profileRequired = true;
+    }
 
+    void initializePythonConnection()
+    {
         // create pipes to communicate with python script
 
         if (::pipe(pipe_cpp_to_py) || ::pipe(pipe_py_to_cpp))
@@ -225,6 +229,11 @@ public:
             }
             profilingFile.close();
 
+            if (!pythonRunning) {
+                initializePythonConnection();
+                pythonRunning = true;
+            }
+
             //file is ready, send message "read <bestIdxInBatch>" to python script
             std::string messageToBeSent = "read " + std::to_string(bestIdxInBatch);
             Logger::getLogger().log(LoggingLevel::Debug, "Profile searcher writing message to Python script from calculateNextConfiguration " +  messageToBeSent);
@@ -363,6 +372,7 @@ private:
     ProfileSearcherModel model;
     std::string searcherDir;
     bool profileRequired;
+    bool pythonRunning;
     int pipe_cpp_to_py[2];
     int pipe_py_to_cpp[2];
 };
