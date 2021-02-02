@@ -237,7 +237,7 @@ int main(int argc, char** argv)
     unsigned int ccMajor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMajor();
     unsigned int ccMinor = tuner.getCurrentDeviceInfo().getCUDAComputeCapabilityMinor();
     unsigned int myMP = tuner.getCurrentDeviceInfo().getMaxComputeUnits();
-    auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor*10 + ccMinor, myMP, "1070-conv", 61, profileSearcherDir);
+    auto searcher = std::make_unique<ktt::ProfileSearcher>(ccMajor*10 + ccMinor, myMP, "1070-conv", 61, ktt::ProfileSearcherModel::DecisionTree, profileSearcherDir);
     auto searcherRaw = searcher.get();
     tuner.setSearcher(kernelId, std::move(searcher));
 #else

@@ -20,16 +20,30 @@
 namespace ktt
 {
 
+/** @enum ProfileSearcherModel
+  * Enum for model used with profile-based searcher. Specifies what type of model is used to predict performance counters from tuning parameters
+  */
+enum class ProfileSearcherModel
+{
+    /** Decision-tree non-linear model
+      */
+    DecisionTree,
+    /** Least-square regression non-linear model
+      */
+    LSRNL
+};
+
 class ProfileSearcher : public Searcher
 {
 public:
-    ProfileSearcher(const unsigned int myCC, const unsigned int myMP, const std::string stat, const unsigned int statCC, const std::string searcherDir = "") :
+    ProfileSearcher(const unsigned int myCC, const unsigned int myMP, const std::string stat, const unsigned int statCC, const ProfileSearcherModel model = ProfileSearcherModel::DecisionTree, const std::string searcherDir = "") :
         Searcher(),
         myComputeCapability(myCC),
         myMultiProcessors(myMP),
         myScalarProcessors(myMP * _ConvertSMVer2CoresDRV(myCC/10, myCC%10)),
         statPrefix(stat),
         statComputeCapability(statCC),
+        model(model),
         searcherDir(searcherDir),
         profileRequired(true)
     {}
@@ -93,7 +107,9 @@ public:
                 + "." + std::to_string(myComputeCapability%10)
             + " --mp " + std::to_string(myMultiProcessors)
             + " --co " + std::to_string(myScalarProcessors)
-            + " --kb " + searcherDir + PROFILESEARCHER_HISTORY_DIR + statPrefix + "_output_Proposed.sav"
+            + (model == ProfileSearcherModel::DecisionTree ?
+                " --kb " + searcherDir + PROFILESEARCHER_HISTORY_DIR + statPrefix + "_output_Proposed.sav"
+                : " -m " + searcherDir + PROFILESEARCHER_HISTORY_DIR + statPrefix)
             + " --ic " + std::to_string(statComputeCapability/10) 
                 + "." + std::to_string(statComputeCapability%10)
             + " -i " + std::to_string(bestIdxInBatch) 
@@ -344,6 +360,7 @@ private:
     unsigned int myScalarProcessors;
     std::string statPrefix;
     unsigned int statComputeCapability;
+    ProfileSearcherModel model;
     std::string searcherDir;
     bool profileRequired;
     int pipe_cpp_to_py[2];
