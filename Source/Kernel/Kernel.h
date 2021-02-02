@@ -2,12 +2,14 @@
 
 #include <functional>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
 #include <Kernel/KernelDefinition.h>
 #include <Kernel/KernelConstraint.h>
 #include <Kernel/KernelParameter.h>
+#include <Kernel/KernelParameterGroup.h>
 #include <Kernel/ModifierDimension.h>
 #include <Kernel/ModifierType.h>
 #include <Kernel/ThreadModifier.h>
@@ -31,13 +33,14 @@ public:
     const KernelDefinition& GetDefinition(const KernelDefinitionId id) const;
     const std::vector<const KernelDefinition*>& GetDefinitions() const;
     const std::vector<const KernelDefinition*>& GetProfiledDefinitions() const;
-    const std::vector<KernelParameter>& GetParameters() const;
+    const std::set<KernelParameter>& GetParameters() const;
     const std::vector<KernelConstraint>& GetConstraints() const;
 
     bool HasDefinition(const KernelDefinitionId id) const;
     bool HasParameter(const std::string& parameter) const;
     bool IsComposite() const;
 
+    std::vector<KernelParameterGroup> GenerateParameterGroups() const;
     uint64_t GetConfigurationsCount() const;
     std::vector<ParameterPair> GetPairsForIndex(const uint64_t index) const;
     uint64_t GetIndexForPairs(const std::vector<ParameterPair>& pairs) const;
@@ -49,7 +52,7 @@ private:
     KernelId m_Id;
     std::vector<const KernelDefinition*> m_Definitions;
     std::vector<const KernelDefinition*> m_ProfiledDefinitions;
-    std::vector<KernelParameter> m_Parameters;
+    std::set<KernelParameter> m_Parameters;
     std::vector<KernelConstraint> m_Constraints;
     std::map<ModifierType, std::map<ModifierDimension, ThreadModifier>> m_Modifiers;
 

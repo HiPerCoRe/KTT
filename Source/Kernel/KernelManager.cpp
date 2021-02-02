@@ -42,16 +42,16 @@ KernelId KernelManager::CreateKernel(const std::vector<KernelDefinitionId>& defi
     return id;
 }
 
-void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values)
+void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group)
 {
     auto& kernel = GetKernel(id);
-    kernel.AddParameter(KernelParameter(name, values));
+    kernel.AddParameter(KernelParameter(name, values, group));
 }
 
-void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values)
+void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group)
 {
     auto& kernel = GetKernel(id);
-    kernel.AddParameter(KernelParameter(name, values));
+    kernel.AddParameter(KernelParameter(name, values, group));
 }
 
 void KernelManager::AddConstraint(const KernelId id, const std::vector<std::string>& parameters,

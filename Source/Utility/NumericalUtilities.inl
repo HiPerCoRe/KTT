@@ -23,6 +23,7 @@ T RoundUp(const T number, const T multiple)
 template <typename T>
 bool FloatEquals(const T first, const T second, const T epsilon)
 {
+    static_assert(std::is_floating_point_v<T>, "Floating-point type required.");
     return std::fabs(first - second) <= epsilon;
 }
 

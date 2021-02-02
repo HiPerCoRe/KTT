@@ -25,13 +25,13 @@ VulkanFence::~VulkanFence()
     vkDestroyFence(m_Device, m_Fence, nullptr);
 }
 
-void VulkanFence::Wait()
+void VulkanFence::Wait() const
 {
     const uint64_t defaultDuration = 3600'000'000'000; // one hour
     Wait(defaultDuration);
 }
 
-void VulkanFence::Wait(const uint64_t duration)
+void VulkanFence::Wait(const uint64_t duration) const
 {
     CheckError(vkWaitForFences(m_Device, 1, &m_Fence, VK_TRUE, duration), "vkWaitForFences");
 }

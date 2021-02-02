@@ -86,6 +86,13 @@ public:
       */
     bool HasValueDouble() const;
 
+    /** @fn bool HasSameValue(const ParameterPair& other) const
+      * Checks if parameter value is same as other parameter value.
+      * @param other Source for other value.
+      * @return True if the values are same, false otherwise.
+      */
+    bool HasSameValue(const ParameterPair& other) const;
+
     /** @fn template <typename T> static T GetParameterValue(const std::vector<ParameterPair>& pairs, const std::string& name)
       * Returns value of the specified parameter from parameter pairs.
       * @param pairs Pairs which will be searched for the specified parameter.

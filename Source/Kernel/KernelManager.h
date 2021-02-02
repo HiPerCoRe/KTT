@@ -25,8 +25,8 @@ public:
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
     
     KernelId CreateKernel(const std::vector<KernelDefinitionId>& definitionIds);
-    void AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values);
-    void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values);
+    void AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group);
+    void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group);
     void AddConstraint(const KernelId id, const std::vector<std::string>& parameters,
         std::function<bool(const std::vector<size_t>&)> function);
     void SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,

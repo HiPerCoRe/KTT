@@ -4,8 +4,9 @@
 namespace ktt
 {
 
-KernelParameter::KernelParameter(const std::string& name, const std::vector<uint64_t>& values) :
+KernelParameter::KernelParameter(const std::string& name, const std::vector<uint64_t>& values, const std::string& group) :
     m_Name(name),
+    m_Group(group),
     m_Values(values)
 {
     if (values.empty())
@@ -14,8 +15,9 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<uint
     }
 }
 
-KernelParameter::KernelParameter(const std::string& name, const std::vector<double>& values) :
+KernelParameter::KernelParameter(const std::string& name, const std::vector<double>& values, const std::string& group) :
     m_Name(name),
+    m_Group(group),
     m_Values(values)
 {
     if (values.empty())
@@ -27,6 +29,11 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<doub
 const std::string& KernelParameter::GetName() const
 {
     return m_Name;
+}
+
+const std::string& KernelParameter::GetGroup() const
+{
+    return m_Group;
 }
 
 size_t KernelParameter::GetValuesCount() const
@@ -64,6 +71,35 @@ bool KernelParameter::HasValuesDouble() const
     return std::holds_alternative<std::vector<double>>(m_Values);
 }
 
+ParameterPair KernelParameter::GeneratePair(const size_t valueIndex) const
+{
+    if (valueIndex >= GetValuesCount())
+    {
+        throw KttException("Parameter value index is out of range");
+    }
+
+    if (HasValuesDouble())
+    {
+        const double value = GetValuesDouble()[valueIndex];
+        return ParameterPair(m_Name, value);
+    }
+
+    const uint64_t value = GetValues()[valueIndex];
+    return ParameterPair(m_Name, value);
+}
+
+std::vector<ParameterPair> KernelParameter::GeneratePairs() const
+{
+    std::vector<ParameterPair> result;
+
+    for (size_t i = 0; i < GetValuesCount(); ++i)
+    {
+        result.push_back(GeneratePair(i));
+    }
+
+    return result;
+}
+
 bool KernelParameter::operator==(const KernelParameter& other) const
 {
     return m_Name == other.m_Name;
@@ -72,6 +108,11 @@ bool KernelParameter::operator==(const KernelParameter& other) const
 bool KernelParameter::operator!=(const KernelParameter& other) const
 {
     return !(*this == other);
+}
+
+bool KernelParameter::operator<(const KernelParameter& other) const
+{
+    return m_Name < other.m_Name;
 }
 
 } // namespace ktt

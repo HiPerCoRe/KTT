@@ -1,5 +1,6 @@
 #include <Api/ParameterPair.h>
 #include <Utility/ErrorHandling/KttException.h>
+#include <Utility/NumericalUtilities.h>
 
 namespace ktt
 {
@@ -73,6 +74,21 @@ double ParameterPair::GetValueDouble() const
 bool ParameterPair::HasValueDouble() const
 {
     return std::holds_alternative<double>(m_Value);
+}
+
+bool ParameterPair::HasSameValue(const ParameterPair& other) const
+{
+    if (HasValueDouble() && !other.HasValueDouble())
+    {
+        return false;
+    }
+
+    if (HasValueDouble())
+    {
+        return FloatEquals(GetValueDouble(), other.GetValueDouble());
+    }
+
+    return GetValue() == other.GetValue();
 }
 
 } // namespace ktt

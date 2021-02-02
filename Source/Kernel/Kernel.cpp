@@ -1,7 +1,8 @@
+#include <algorithm>
+
 #include <Kernel/Kernel.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/ErrorHandling/KttException.h>
-#include <Utility/NumericalUtilities.h>
 #include <Utility/StlHelpers.h>
 
 namespace ktt
@@ -17,12 +18,12 @@ Kernel::Kernel(const KernelId id, const std::vector<const KernelDefinition*>& de
 
 void Kernel::AddParameter(const KernelParameter& parameter)
 {
-    if (ContainsElement(m_Parameters, parameter))
+    if (ContainsKey(m_Parameters, parameter))
     {
         throw KttException("Kernel parameter with name " + parameter.GetName() + " already exists");
     }
 
-    m_Parameters.push_back(parameter);
+    m_Parameters.insert(parameter);
 }
 
 void Kernel::AddConstraint(const KernelConstraint& constraint)
@@ -42,10 +43,15 @@ void Kernel::SetThreadModifier(const ModifierType type, const ModifierDimension 
 {
     for (const auto& name : modifier.GetParameters())
     {
-        const bool isValidModifierParameter = ContainsElementIf(m_Parameters, [&name](const auto& parameter)
+        bool isValidModifierParameter = false;
+
+        for (const auto& parameter : m_Parameters)
         {
-            return parameter.GetName() == name && !parameter.HasValuesDouble();
-        });
+            if (parameter.GetName() == name && !parameter.HasValuesDouble())
+            {
+                isValidModifierParameter = true;
+            }
+        }
 
         if (!isValidModifierParameter)
         {
@@ -116,7 +122,7 @@ const std::vector<const KernelDefinition*>& Kernel::GetProfiledDefinitions() con
     return m_ProfiledDefinitions;
 }
 
-const std::vector<KernelParameter>& Kernel::GetParameters() const
+const std::set<KernelParameter>& Kernel::GetParameters() const
 {
     return m_Parameters;
 }
@@ -136,15 +142,44 @@ bool Kernel::HasDefinition(const KernelDefinitionId id) const
 
 bool Kernel::HasParameter(const std::string& parameter) const
 {
-    return ContainsElementIf(m_Parameters, [&parameter](const auto& currentParameter)
+    for (const auto& currentParameter : m_Parameters)
     {
-        return currentParameter.GetName() == parameter;
-    });
+        if (currentParameter.GetName() == parameter)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool Kernel::IsComposite() const
 {
     return m_Definitions.size() > 1;
+}
+
+std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
+{
+    std::map<std::string, std::vector<const KernelParameter*>> groupedParameters;
+
+    for (const auto& parameter : m_Parameters)
+    {
+        groupedParameters[parameter.GetGroup()].push_back(&parameter);
+    }
+
+    std::vector<KernelParameterGroup> result;
+
+    for (const auto& groupPair : groupedParameters)
+    {
+        result.emplace_back(groupPair.first, groupPair.second);
+    }
+
+    std::sort(result.begin(), result.end(), [](const auto& first, const auto& second)
+    {
+        return first.GetConfigurationsCount() < second.GetConfigurationsCount();
+    });
+
+    return result;
 }
 
 uint64_t Kernel::GetConfigurationsCount() const
@@ -223,19 +258,18 @@ uint64_t Kernel::GetIndexForPairs(const std::vector<ParameterPair>& pairs) const
             }
         }
 
-        const size_t valuesCount = parameter.GetValuesCount();
+        const auto parameterPairs = parameter.GeneratePairs();
 
-        for (size_t i = 0; i < valuesCount; ++i)
+        for (size_t i = 0; i < parameterPairs.size(); ++i)
         {
-            if ((parameter.HasValuesDouble() && FloatEquals(parameter.GetValuesDouble()[i], currentPair->GetValueDouble()))
-                || (!parameter.HasValuesDouble() && parameter.GetValues()[i] == currentPair->GetValue()))
+            if (currentPair->HasSameValue(parameterPairs[i]))
             {
                 result += multiplier * i;
                 break;
             }
         }
 
-        multiplier *= valuesCount;
+        multiplier *= parameterPairs.size();
     }
 
     return result;

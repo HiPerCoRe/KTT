@@ -16,8 +16,8 @@ public:
     explicit VulkanFence(const VulkanDevice& device);
     ~VulkanFence();
 
-    void Wait();
-    void Wait(const uint64_t duration);
+    void Wait() const;
+    void Wait(const uint64_t duration) const;
 
 private:
     VkDevice m_Device;
