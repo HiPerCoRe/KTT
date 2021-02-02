@@ -10,7 +10,7 @@
 #include <utility/logger.h>
 
 #define PROFILESEARCHER_SCRIPTS_DIR     "scripts-KTT/"
-#define PROFILESEARCHER_HISTORY_DIR     "historical/"
+#define PROFILESEARCHER_HISTORY_DIR     "models/"
 #define PROFILESEARCHER_SCRATCH_DIR     "scratch/"
 #define PROFILESEARCHER_TEMPFILE_CONF   "ktt-tempfile-conf.csv"
 #define PROFILESEARCHER_TEMPFILE_PC     "ktt-tempfile-pc.csv"
