@@ -12,7 +12,7 @@ When the tuning space (or its random subsection) is profiled, the model has to b
 
 python scripts-prep/generate-knowledge-base.py -i mtran_output.csv -t 4:13 -c 2,3,13:51
 
-The script builds several models for matrix transposition autotuning, modelling relations between tuning parameters in columns 4-12 and performance counters in columns 2, 3, and 13-50 (counting the first column as column 0). The most advanced models are stored as mtran_output_Proposed.sav and mtran_output_Proposed.sav.pc, which can be further used with profile-based searcher.
+The script builds several models for matrix transposition autotuning, modelling relations between tuning parameters in columns 4-12 and performance counters in columns 2, 3, and 13-50 (counting the first column as column 0). The most advanced models are stored as mtran_output_DT.sav and mtran_output_DT.sav.pc, which can be further used with profile-based searcher.
 
 Note that models created on GeForce GTX 1070 for examples cltune-conv, cltune-gemm, coulomb_sum_3d, mtran and nbody are already distributed with KTT in folder profile-searcher/models, so they can be immediatelly used.
 

@@ -87,9 +87,9 @@ if __name__ == '__main__':
     # Estimate the score after iterative imputation of the missing values
     # with different estimators
     estimators = []
-    estimators.append(('DT', DecisionTreeRegressor(max_features='sqrt', random_state=0)))
-    estimators.append(('Proposed', ExtraTreesRegressor(n_estimators=10, random_state=0)))
-    estimators.append(('Knn10', KNeighborsRegressor(n_neighbors=10)))
+    #estimators.append(('DT-simple', DecisionTreeRegressor(max_features='sqrt', random_state=0)))
+    estimators.append(('DT', ExtraTreesRegressor(n_estimators=10, random_state=0)))
+    #estimators.append(('Knn10', KNeighborsRegressor(n_neighbors=10)))
 
     NumberOfModels = len(estimators)
     ExprimentStart = datetime.datetime.now()
