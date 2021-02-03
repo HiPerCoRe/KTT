@@ -72,26 +72,6 @@ if __name__ == '__main__':
     readFromKTT = os.fdopen(readFromKTTfd, 'rb', 0)
     writeToKTT = os.fdopen(writeToKTTfd, 'wb', 0)
 
-    # load statistics
-    if arguments['-s'] :
-        profilingCountersStats = loadStatisticsCounters(statCorr)
-        correlations = loadStatistics(statCorr, tuningParams, profilingCountersStats)
-        variations = loadStatistics(statVar, tuningParams, profilingCountersStats)
-    elif arguments['-m'] :
-        [tuningparamsAssignments, conditionsAllModels, profilingCountersAssignments, profilingCountersStats] = loadModels(modelFiles, tuningParams)
-        completeMappingCounters = makePredictions(configurationsData, tuningparamsAssignments, conditionsAllModels, profilingCountersAssignments)
-    elif arguments['--cm'] :
-        print("XXX workaround with fixed ranges of TPs and PCs!")
-        countersRange = "19:59"
-        tuningRange = "4:19"
-        rangeC = eval("np.r_[" + countersRange + "]")
-        rangeT = eval("np.r_[" + tuningRange + "]")
-        profilingCountersStats = loadCompleteMappingCounters(completeMapping, rangeC)
-        completeMappingCounters = loadCompleteMapping(completeMapping, rangeT, rangeC)
-    elif arguments['--kb'] :
-        profilingCountersStats = readPCList(trainedKnowledgeBase + ".pc")
-
-
     # parse tuning space
     words = tuningSpace.readline().split(',')
     tuningParams = []
@@ -107,6 +87,25 @@ if __name__ == '__main__':
         for w in words:
             tunRow.append(float(w))
         configurationsData.append(tunRow)
+
+    # load statistics
+    if arguments['-s'] :
+        profilingCountersStats = loadStatisticsCounters(statCorr)
+        correlations = loadStatistics(statCorr, tuningParams, profilingCountersStats)
+        variations = loadStatistics(statVar, tuningParams, profilingCountersStats)
+    elif arguments['-m'] :
+        [tuningParams, tuningparamsAssignments, conditionsAllModels, profilingCountersAssignments, profilingCountersStats] = loadModels(modelFiles)
+        completeMappingCounters = makePredictions(configurationsData, tuningparamsAssignments, conditionsAllModels, profilingCountersAssignments)
+    elif arguments['--cm'] :
+        print("XXX workaround with fixed ranges of TPs and PCs!")
+        countersRange = "19:59"
+        tuningRange = "4:19"
+        rangeC = eval("np.r_[" + countersRange + "]")
+        rangeT = eval("np.r_[" + tuningRange + "]")
+        profilingCountersStats = loadCompleteMappingCounters(completeMapping, rangeC)
+        completeMappingCounters = loadCompleteMapping(completeMapping, rangeT, rangeC)
+    elif arguments['--kb'] :
+        profilingCountersStats = readPCList(trainedKnowledgeBase + ".pc")
 
     if debug:
         print("Python ktt-profiling-searcher: Tuning space loaded, statistics prepared.")

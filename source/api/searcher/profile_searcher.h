@@ -30,7 +30,7 @@ enum class ProfileSearcherModel
     DecisionTree,
     /** Least-square regression non-linear model
       */
-    LSRNL
+    LeastSquares
 };
 
 class ProfileSearcher : public Searcher

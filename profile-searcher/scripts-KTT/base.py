@@ -72,7 +72,8 @@ def loadCompleteMappingCounters(tuningSpace, rangeC) :
 
     return counters
 
-def loadModels(modelFiles, tuningparamsNames) :
+def loadModels(modelFiles) :
+    tuningparamsNames = []
     TPassignmentsUnsorted = {}
     TPassignments = {}
     conditionsAllModels = []
@@ -84,15 +85,18 @@ def loadModels(modelFiles, tuningparamsNames) :
         with open(m) as modelFile:
             modelReader = csv.reader(modelFile, delimiter = ',')
             lc = 0
+            afterCondition = False
             for row in modelReader:
                 #skip the first line
                 if lc == 0:
                     lc = 1
                     continue
-                elif lc < len(tuningparamsNames) + 1 :
+                elif row[0] != "Condition" and not afterCondition:
+                    tuningparamsNames.append(row[0])
                     TPassignmentsUnsorted[row[0]] = row[1]
                 elif row[0] == "Condition":
                     condition = row[1]
+                    afterCondition = True
                 else :
                     PCassignments[row[0]] = row[1]
                     counters.append(row[0])
@@ -102,7 +106,7 @@ def loadModels(modelFiles, tuningparamsNames) :
     #"sort" TPassignments to correspond with the order of tuningparamsNames
     for j in range(0, len(tuningparamsNames)) :
         TPassignments[tuningparamsNames[j]] = TPassignmentsUnsorted[tuningparamsNames[j]]
-    return [TPassignments, conditionsAllModels, PCassignmentsAllModels, counters]
+    return [tuningparamsNames, TPassignments, conditionsAllModels, PCassignmentsAllModels, counters]
 
 def prepareForModelsEvaluation(TPassignments, conditionsAllModels, tuningSpace) :
 
