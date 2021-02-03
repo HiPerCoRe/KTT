@@ -19,7 +19,7 @@ public:
     explicit ConfigurationData(const DeviceInfo& deviceInfo, Searcher& searcher, const Kernel& kernel);
     ~ConfigurationData();
 
-    void CalculateNextConfiguration(const KernelResult& previousResult);
+    bool CalculateNextConfiguration(const KernelResult& previousResult);
 
     uint64_t GetConfigurationCount() const;
     bool IsProcessed() const;
@@ -36,7 +36,7 @@ private:
     const Kernel& m_Kernel;
     size_t m_CurrentGroup;
 
-    void InitializeNextGroup();
+    bool InitializeNextGroup();
     void ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,
         const std::vector<ParameterPair>& pairs, std::vector<KernelConfiguration>& finalResult) const;
     std::vector<ParameterPair> GetExtraParameterPairs(const std::vector<ParameterPair>& pairs) const;

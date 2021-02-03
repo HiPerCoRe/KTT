@@ -9,7 +9,6 @@
 #include <Api/Searcher/Searcher.h>
 #include <Api/KernelConfiguration.h>
 #include <Kernel/Kernel.h>
-#include <Kernel/KernelParameterGroup.h>
 #include <KernelRunner/ConfigurationData.h>
 #include <KttTypes.h>
 
@@ -24,12 +23,11 @@ public:
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     void InitializeData(const Kernel& kernel);
     void ClearData(const KernelId id);
-    void CalculateNextConfiguration(const KernelId id, const KernelResult& previousResult);
+    bool CalculateNextConfiguration(const KernelId id, const KernelResult& previousResult);
 
     bool HasData(const KernelId id) const;
     bool IsDataProcessed(const KernelId id) const;
     uint64_t GetConfigurationCount(const KernelId id) const;
-    const KernelParameterGroup& GetCurrentGroup(const KernelId id) const;
     const KernelConfiguration& GetCurrentConfiguration(const KernelId id) const;
     const KernelConfiguration& GetBestConfiguration(const KernelId id) const;
 

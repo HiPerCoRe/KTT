@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <limits>
 
 #include <KernelRunner/ConfigurationData.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/Logger/Logger.h>
 #include <Utility/StlHelpers.h>
 
 namespace ktt
@@ -26,10 +28,17 @@ ConfigurationData::~ConfigurationData()
     m_Searcher.Reset();
 }
 
-void ConfigurationData::CalculateNextConfiguration(const KernelResult& previousResult)
+bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousResult)
 {
     m_ProcessedConfigurations.insert(std::make_pair(previousResult.GetTotalDuration(), GetCurrentConfiguration()));
-    m_Searcher.CalculateNextConfiguration(previousResult);
+
+    if (m_Searcher.GetUnexploredConfigurationCount() > 0)
+    {
+        m_Searcher.CalculateNextConfiguration(previousResult);
+        return true;
+    }
+
+    return InitializeNextGroup();
 }
 
 uint64_t ConfigurationData::GetConfigurationCount() const
@@ -70,16 +79,24 @@ const KernelConfiguration& ConfigurationData::GetBestConfiguration() const
     return GetCurrentConfiguration();
 }
 
-void ConfigurationData::InitializeNextGroup()
+bool ConfigurationData::InitializeNextGroup()
 {
     m_Searcher.Reset();
     m_Configurations.clear();
     ++m_CurrentGroup;
-    const auto& group = GetCurrentGroup();
 
-    std::vector<KernelConfiguration> configurations;
+    if (IsProcessed())
+    {
+        return false;
+    }
+
+    const auto& group = GetCurrentGroup();
     ComputeConfigurations(group, 0, std::vector<ParameterPair>{}, m_Configurations);
     m_Searcher.Initialize(m_Configurations);
+
+    Logger::LogInfo("Starting to explore configurations for kernel " + std::to_string(m_Kernel.GetId()) + " and group "
+        + group.GetName() + ", configuration count in the current group is " + std::to_string(GetConfigurationCount()));
+    return true;
 }
 
 void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,
@@ -88,11 +105,8 @@ void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group,
     if (currentIndex >= group.GetParameters().size())
     {
         // All parameters are now included in the configuration
-        std::vector<ParameterPair> extraPairs = GetExtraParameterPairs(pairs);
-        std::vector<ParameterPair> allPairs;
-        allPairs.reserve(pairs.size() + extraPairs.size());
+        std::vector<ParameterPair> allPairs = GetExtraParameterPairs(pairs);
         allPairs.insert(allPairs.end(), pairs.cbegin(), pairs.cend());
-        allPairs.insert(allPairs.end(), extraPairs.cbegin(), extraPairs.cend());
 
         KernelConfiguration configuration(allPairs);
 
@@ -104,11 +118,6 @@ void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group,
         return;
     }
 
-    if (!EvaluateConstraints(pairs))
-    {
-        return;
-    }
-
     const KernelParameter& parameter = *group.GetParameters()[currentIndex]; 
 
     for (const auto& pair : parameter.GeneratePairs())
@@ -116,6 +125,12 @@ void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group,
         // Recursively build tree of configurations for each parameter value
         std::vector<ParameterPair> newPairs = pairs;
         newPairs.push_back(pair);
+
+        if (!EvaluateConstraints(newPairs))
+        {
+            continue;
+        }
+
         ComputeConfigurations(group, currentIndex + 1, newPairs, finalResult);
     }
 }
@@ -177,17 +192,21 @@ bool ConfigurationData::IsConfigurationCompatible(const std::vector<ParameterPai
 {
     for (const auto& pair : pairs)
     {
-        for (const auto& configurationPair : configuration.GetPairs())
-        {
-            if (pair.GetName() == configurationPair.GetName())
-            {
-                if (!pair.HasSameValue(configurationPair))
-                {
-                    return false;
-                }
+        const auto& configurationPairs = configuration.GetPairs();
 
-                break;
-            }
+        const auto iterator = std::find_if(configurationPairs.cbegin(), configurationPairs.cend(), [&pair](const auto& configurationPair)
+        {
+            return pair.GetName() == configurationPair.GetName();
+        });
+
+        if (iterator == configurationPairs.cend())
+        {
+            continue;
+        }
+
+        if (!pair.HasSameValue(*iterator))
+        {
+            return false;
         }
     }
 
