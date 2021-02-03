@@ -112,8 +112,8 @@ public:
             + " --mp " + std::to_string(myMultiProcessors)
             + " --co " + std::to_string(myScalarProcessors)
             + (model == ProfileSearcherModel::DecisionTree ?
-                " --kb " + searcherDir + PROFILESEARCHER_HISTORY_DIR + statPrefix + "_output_Proposed.sav"
-                : " -m " + searcherDir + PROFILESEARCHER_HISTORY_DIR + statPrefix)
+                " --dt " + searcherDir + PROFILESEARCHER_HISTORY_DIR + statPrefix + "_output_Proposed.sav"
+                : " --ls " + searcherDir + PROFILESEARCHER_HISTORY_DIR + statPrefix)
             + " --ic " + std::to_string(statComputeCapability/10) 
                 + "." + std::to_string(statComputeCapability%10)
             + " -i " + std::to_string(bestIdxInBatch) 
