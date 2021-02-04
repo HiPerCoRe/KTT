@@ -10,7 +10,7 @@ Model creation
 
 When the tuning space (or its random subsection) is profiled, the model has to be created. The scripts for model preparation are stored in scripts-prep folder. There are three types of model, we recommend to use the knowledge-based model. While generating the model, user has to supply the CSV file containing explored tuning space, columns containing tuning parameters and profiling counters with parallelism configuration ("Global size" and "Local size" columns). For example, when creating a model for mtran example executed on GeForce RTX 2080, we can execute:
 
-python scripts-prep/generate-knowledge-base.py -i mtran_output.csv -t 4:13 -c 2,3,13:51
+python scripts-prep/generate_decision_tree_model.py -i mtran_output.csv -t 4:13 -c 2,3,13:51
 
 The script builds several models for matrix transposition autotuning, modelling relations between tuning parameters in columns 4-12 and performance counters in columns 2, 3, and 13-50 (counting the first column as column 0). The most advanced models are stored as mtran_output_DT.sav and mtran_output_DT.sav.pc, which can be further used with profile-based searcher.
 

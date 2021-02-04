@@ -3,7 +3,7 @@
 """Extract average correlation and variance between tuning parameters and profiler counters
 
 Usage:
-  getstatistics.py -s <source> -t <tuningpar_interval> -c <counters_interval> -o <prefix> [-m]
+  generate_simple_corr_var_model.py -s <source> -t <tuningpar_interval> -c <counters_interval> -o <prefix> [-m]
 
 Options:
   -h Show this screen.

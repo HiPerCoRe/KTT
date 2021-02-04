@@ -3,7 +3,7 @@
 """Generating train file for predicting the profiling counter values based on tuning parameters
 
 Usage:
-  generate-knowledge-base.py -i <KTT_output> -t <tuningpar_interval> -c <counters_interval>
+  generate_decision_tree_model.py -i <KTT_output> -t <tuningpar_interval> -c <counters_interval>
 
 Options:
   -h Show this screen.
