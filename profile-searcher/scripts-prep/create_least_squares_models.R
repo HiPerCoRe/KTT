@@ -167,7 +167,7 @@
     y
   }
   
-  printModel <- function(model, outputVariable) {
+  printModel <- function(model) {
     co <- model$coefficients[!is.na(model$coefficients)]
     #replace I(something^2) with (something^2) 
     for (i in 1:length(names(co))) {
@@ -185,7 +185,7 @@
                  collapse=""))
   }
   
-  writeModelToFile <- function(outputFile, factorNames, codedFactorNames, codedValues, centerValues, halfRange, outputVariables, listModels) {
+  writeModelToFile <- function(outputFile, factorNames, codedFactorNames, codedValues, centerValues, halfRange, outputVariables, listModelsForPC) {
     all <- matrix(nrow=length(factorNames) + 1 + length(outputVariables), ncol=2)
     row <- 1
     for (f in factorNames) {
@@ -204,7 +204,8 @@
     row <- row+1
     
     for (i in 1:length(outputVariables)) {
-      all[row,] <- c(outputVariables[i], printModel(listModels[[outputVariables[i]]]))
+      #all[row,] <- c(gsub("\\.", " ",outputVariables[i]), printModel(listModelsForPC[[outputVariables[i]]]))
+      all[row,] <- c(outputVariables[i], printModel(listModelsForPC[[outputVariables[i]]]))
       row <- row+1
     }
     
@@ -219,7 +220,7 @@
     for (i in cs) {
       s <- as.numeric(unlist(strsplit(i, ":")))
       if (length(s) == 1)
-        columns <- c(columns, s)
+        columns <- c(columns, s+1)
       else
         columns <- c(columns, seq(from = s[1]+1, to = s[2]))
     }
@@ -244,7 +245,7 @@
   # - parse the command line options
   #   - input file with tuning space and their evaluated performance and profiling counters
   #   - output file name, this is then concatenated with -model_[number].csv
-  #   - numbers of columns with tuning parameters in format allowing , and :, e.g. 2,5:12 meaning columns 2 and 5 through 12
+  #   - numbers of columns with tuning parameters in format allowing , and :, e.g. 2,5:12 meaning columns 2 and 5 through 11, counting starts at 0
   #   - numbers of columns with profiling counters in the same format
   # - code the values of factors (tuning parameters), this encompasses
   #   - finding possible values of the tuning parameters
@@ -268,10 +269,12 @@
 
   # parse the command line options
   args = commandArgs(trailingOnly=TRUE)
+  if (length(args) < 4) {
+    stop("Usage:
+         Rscript ./create_least_squares_models.R <input file with tuning space and performance counters> <prefix for output files> <column numbers of tuning parameters> <column numbers of profiling counters>")
+  }
 
-
-  #args <- c("/home/janka/research/autotuning/autotuning/profilbased-searcher/data-reducedcounters/1070-conv_output.csv", "1070-conv", "4,13", "14,56")
-  data <- read.csv(args[1])
+  data <- read.csv(args[1], check.names=FALSE)
 
   outputFile <- args[2]
   factorColumnsString <- args[3]
@@ -330,7 +333,9 @@
   listModels <- list()
   training <- 0
   trainingThis <- trainingSize/nrow(designBinaryFactors)
-  # we create a model for each combination of binary parameters' values as we assume that
+  withoutModel <- c() #vector of indexes for the following loop where it was impossible to create a model (due to too little data)
+  withModel <- c() #vector of indexes for the following loop where we created the nonlinear model
+   # we create a model for each combination of binary parameters' values as we assume that
   # these and their combinations influence the code performance significantly
   for (j in 1:nrow(designBinaryFactors))
   {
@@ -372,6 +377,12 @@
       }
     }
 
+    if (nrow(design) == 0) {
+      withoutModel <- c(withoutModel,j)
+      listModels[[j]] <- list(combination = designBinaryFactors[j, names(binaryFactors)], factorNames = factorNames, codedFactorNames = codedFactorNames, codedValues = codedValues, centerValues = centerValues, halfRange = halfRange, outputVariables = outputVariables)
+      next
+    }
+
 
     training <- training+nrow(design)
 
@@ -407,12 +418,37 @@
       #printModel(ml, outputVariables[i])
       #print(paste("Calculation", j, "variable", i, "done"))
     }
-    if (all(is.na(y)))
+    if (all(is.na(y))) {
+      withoutModel <- c(withoutModel, j)
+      listModels[[j]] <- list(combination = designBinaryFactors[j, names(binaryFactors)], factorNames = factorNames, codedFactorNames = codedFactorNames, codedValues = codedValues, centerValues = centerValues, halfRange = halfRange, outputVariables = outputVariables)
       next
-    listModels[[j]] <- list(designBinaryFactors[j, names(binaryFactors)],listModelsPC)
+    }
+    withModel <- c(withModel, j)
+    listModels[[j]] <- list(combination = designBinaryFactors[j, names(binaryFactors)], factorNames = factorNames, codedFactorNames = codedFactorNames, codedValues = codedValues, centerValues = centerValues, halfRange = halfRange, outputVariables = outputVariables, listModelsPC = listModelsPC)
     # write the model to a csv file
+    print(paste0("Printing file ",outputFile,"-model_",j,".csv") )
     writeModelToFile(paste0(outputFile,"-model_",j,".csv"), factorNames, codedFactorNames, codedValues, centerValues, halfRange, outputVariables, listModelsPC)
   }
+
+  #are there combinations of binary parameters that we do not have a model for?
+  if (length(withoutModel) > 0) {
+    #which models are closest to ones we do not have?
+    closestModels <- sapply(withoutModel, function(withoutModel, withModel) {withModel[which.min(abs(withoutModel-withModel))]}, withModel)
+
+    for (k in 1:length(withoutModel)) {
+      j <- withoutModel[k]
+      replacementModel <- closestModels[k]
+      print(paste0("Printing replacement file ",outputFile,"-model_",j,".csv") )
+      writeModelToFile(paste0(outputFile,"-model_",j,".csv"), listModels[[j]]$factorNames, listModels[[j]]$codedFactorNames, listModels[[j]]$codedValues, listModels[[j]]$centerValues, listModels[[j]]$halfRange, listModels[[j]]$outputVariables, listModels[[replacementModel]]$listModelsPC)
+    }
+  }
+
+  print("-----Tuning parameters-----")
+  for (f in factorNames)
+    print(f)
+  print("-----Profiling counters-----")
+  for (o in outputVariables)
+    print(o)
   print(paste("Used", training, "datapoints out of", nrow(data), "to train"))
   
 #save(factorNames, centerValues, halfRange, listModels, file="models.RData")
