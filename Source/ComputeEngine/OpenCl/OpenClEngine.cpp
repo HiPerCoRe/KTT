@@ -205,6 +205,15 @@ bool OpenClEngine::HasAccurateRemainingProfilingRuns() const
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
+bool OpenClEngine::SupportsMultiInstanceProfiling() const
+{
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    return false;
+#else
+    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+}
+
 TransferActionId OpenClEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
 {
     Timer timer;

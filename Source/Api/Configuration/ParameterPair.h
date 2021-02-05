@@ -13,30 +13,27 @@
 namespace ktt
 {
 
+class KernelParameter;
+
 /** @class ParameterPair
   * Class which holds single value for one kernel parameter.
   */
 class KTT_API ParameterPair
 {
 public:
-    /** @fn ParameterPair()
-      * Default constructor, creates parameter pair with empty name and value set to integer zero.
-      */
-    ParameterPair();
-
     /** @fn explicit ParameterPair(const std::string& name, const uint64_t value)
       * Constructor which creates parameter pair for integer parameter.
-      * @param name Name of a parameter.
+      * @param parameter Kernel parameter tied to the pair.
       * @param value Value of a parameter.
       */
-    explicit ParameterPair(const std::string& name, const uint64_t value);
+    explicit ParameterPair(const KernelParameter& parameter, const uint64_t value);
 
     /** @fn explicit ParameterPair(const std::string& name, const double value)
       * Constructor which creates parameter pair for floating-point parameter.
-      * @param name Name of a parameter.
+      * @param parameter Kernel parameter tied to the pair.
       * @param value Value of a parameter.
       */
-    explicit ParameterPair(const std::string& name, const double value);
+    explicit ParameterPair(const KernelParameter& parameter, const double value);
 
     /** @fn void SetValue(const uint64_t value)
       * Setter for value of an integer parameter.
@@ -113,7 +110,7 @@ public:
     static std::vector<T> GetParameterValues(const std::vector<ParameterPair>& pairs, const std::vector<std::string>& names);
 
 private:
-    std::string m_Name;
+    const KernelParameter* m_Parameter;
     std::variant<uint64_t, double> m_Value;
 };
 

@@ -206,11 +206,11 @@ std::vector<ParameterPair> Kernel::GetPairsForIndex(const uint64_t index) const
 
         if (parameter.HasValuesDouble())
         {
-            result.emplace_back(parameter.GetName(), parameter.GetValuesDouble()[parameterIndex]);
+            result.emplace_back(parameter, parameter.GetValuesDouble()[parameterIndex]);
         }
         else
         {
-            result.emplace_back(parameter.GetName(), parameter.GetValues()[parameterIndex]);
+            result.emplace_back(parameter, parameter.GetValues()[parameterIndex]);
         }
 
         currentIndex /= valuesCount;

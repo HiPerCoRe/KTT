@@ -42,6 +42,7 @@ public:
     bool IsProfilingSessionActive(const KernelComputeId& id) override;
     uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) override;
     bool HasAccurateRemainingProfilingRuns() const override;
+    bool SupportsMultiInstanceProfiling() const override;
 
     // Buffer methods
     TransferActionId UploadArgument(KernelArgument& kernelArgument, const QueueId queueId) override;

@@ -253,6 +253,17 @@ bool CudaEngine::HasAccurateRemainingProfilingRuns() const
 #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
+bool CudaEngine::SupportsMultiInstanceProfiling() const
+{
+#ifdef KTT_PROFILING_CUPTI_LEGACY
+    return true;
+#elif KTT_PROFILING_CUPTI
+    return false;
+#else
+    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+#endif // KTT_PROFILING_CUPTI_LEGACY
+}
+
 TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
 {
     Timer timer;

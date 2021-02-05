@@ -30,6 +30,7 @@ public:
     virtual bool IsProfilingSessionActive(const KernelComputeId& id) = 0;
     virtual uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) = 0;
     virtual bool HasAccurateRemainingProfilingRuns() const = 0;
+    virtual bool SupportsMultiInstanceProfiling() const = 0;
 
     // Buffer methods
     virtual TransferActionId UploadArgument(KernelArgument& kernelArgument, const QueueId queueId) = 0;

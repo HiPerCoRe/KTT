@@ -1,22 +1,18 @@
 #include <Api/Configuration/ParameterPair.h>
+#include <Kernel/KernelParameter.h>
 #include <Utility/ErrorHandling/KttException.h>
 #include <Utility/NumericalUtilities.h>
 
 namespace ktt
 {
 
-ParameterPair::ParameterPair() :
-    m_Name(""),
-    m_Value(0ull)
-{}
-
-ParameterPair::ParameterPair(const std::string& name, const uint64_t value) :
-    m_Name(name),
+ParameterPair::ParameterPair(const KernelParameter& parameter, const uint64_t value) :
+    m_Parameter(&parameter),
     m_Value(value)
 {}
 
-ParameterPair::ParameterPair(const std::string& name, const double value) :
-    m_Name(name),
+ParameterPair::ParameterPair(const KernelParameter& parameter, const double value) :
+    m_Parameter(&parameter),
     m_Value(value)
 {}
 
@@ -32,12 +28,12 @@ void ParameterPair::SetValue(const double value)
 
 const std::string& ParameterPair::GetName() const
 {
-    return m_Name;
+    return m_Parameter->GetName();
 }
 
 std::string ParameterPair::GetString() const
 {
-    std::string result(m_Name + " " + GetValueString());
+    std::string result(GetName() + " " + GetValueString());
     return result;
 }
 
