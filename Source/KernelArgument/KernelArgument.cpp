@@ -11,12 +11,12 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t elementSize, co
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType) :
     m_Id(id),
     m_ElementSize(elementSize),
+    m_DataSize(0),
     m_DataType(dataType),
     m_MemoryLocation(memoryLocation),
     m_AccessType(accessType),
     m_MemoryType(memoryType),
     m_Type(ArgumentType::Copy),
-    m_NumberOfElements(0),
     m_ReferencedData(nullptr)
 {
     KttAssert(m_MemoryType == ArgumentMemoryType::Vector || m_MemoryLocation == ArgumentMemoryLocation::Undefined,
@@ -25,9 +25,9 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t elementSize, co
         "Vector arguments must have defined memory location");
 }
 
-void KernelArgument::SetReferencedData(void* data, const uint64_t numberOfElements)
+void KernelArgument::SetReferencedData(void* data, const size_t dataSize)
 {
-    if (numberOfElements == 0)
+    if (dataSize == 0)
     {
         throw KttException("Kernel argument cannot be initialized with number of elements equal to zero");
     }
@@ -38,41 +38,43 @@ void KernelArgument::SetReferencedData(void* data, const uint64_t numberOfElemen
     }
 
     m_Type = ArgumentType::Reference;
-    m_NumberOfElements = numberOfElements;
+    m_DataSize = dataSize;
     m_Data.clear();
     m_ReferencedData = data;
 }
 
-void KernelArgument::SetOwnedData(const void* data, const uint64_t numberOfElements)
+void KernelArgument::SetOwnedData(const void* data, const size_t dataSize)
 {
-    if (numberOfElements == 0)
+    if (dataSize == 0)
     {
         throw KttException("Kernel argument cannot be initialized with number of elements equal to zero");
     }
 
-    if (data == nullptr)
+    if (data == nullptr && GetMemoryType() != ArgumentMemoryType::Local)
     {
         throw KttException("Kernel argument cannot be initialized with null data");
     }
 
     m_Type = ArgumentType::Copy;
-    m_NumberOfElements = numberOfElements;
+    m_DataSize = dataSize;
     m_ReferencedData = nullptr;
 
-    const size_t dataSize = GetDataSize();
-    m_Data.resize(dataSize);
-    std::memcpy(m_Data.data(), data, dataSize);
+    if (data != nullptr)
+    {
+        m_Data.resize(dataSize);
+        std::memcpy(m_Data.data(), data, dataSize);
+    }
 }
 
-void KernelArgument::SetUserBuffer(const uint64_t numberOfElements)
+void KernelArgument::SetUserBuffer(const size_t dataSize)
 {
-    if (numberOfElements == 0)
+    if (dataSize == 0)
     {
         throw KttException("Kernel argument cannot be initialized with number of elements equal to zero");
     }
 
     m_Type = ArgumentType::User;
-    m_NumberOfElements = numberOfElements;
+    m_DataSize = dataSize;
     m_Data.clear();
     m_ReferencedData = nullptr;
 }
@@ -109,12 +111,12 @@ ArgumentMemoryType KernelArgument::GetMemoryType() const
 
 uint64_t KernelArgument::GetNumberOfElements() const
 {
-    return m_NumberOfElements;
+    return static_cast<uint64_t>(GetDataSize() / GetElementSize());
 }
 
 size_t KernelArgument::GetDataSize() const
 {
-    return GetElementSize() * static_cast<size_t>(GetNumberOfElements());
+    return m_DataSize;
 }
 
 const void* KernelArgument::GetData() const

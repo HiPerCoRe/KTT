@@ -6,7 +6,7 @@
 #include <string>
 #include <CL/cl.h>
 
-#include <Api/DimensionVector.h>
+#include <Api/Configuration/DimensionVector.h>
 #include <ComputeEngine/OpenCl/OpenClProgram.h>
 #include <ComputeEngine/GlobalSizeType.h>
 #include <Utility/IdGenerator.h>

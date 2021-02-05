@@ -1,7 +1,7 @@
 #include <string>
 
 #include <Api/Searcher/DeterministicSearcher.h>
-#include <KernelRunner/ConfigurationManager.h>
+#include <TuningRunner/ConfigurationManager.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 #include <Utility/StlHelpers.h>

@@ -19,9 +19,9 @@ public:
     explicit KernelArgument(const ArgumentId id, const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType);
 
-    void SetReferencedData(void* data, const uint64_t numberOfElements);
-    void SetOwnedData(const void* data, const uint64_t numberOfElements);
-    void SetUserBuffer(const uint64_t numberOfElements);
+    void SetReferencedData(void* data, const size_t dataSize);
+    void SetOwnedData(const void* data, const size_t dataSize);
+    void SetUserBuffer(const size_t dataSize);
 
     ArgumentId GetId() const;
     size_t GetElementSize() const;
@@ -46,12 +46,12 @@ public:
 private:
     ArgumentId m_Id;
     size_t m_ElementSize;
+    size_t m_DataSize;
     ArgumentDataType m_DataType;
     ArgumentMemoryLocation m_MemoryLocation;
     ArgumentAccessType m_AccessType;
     ArgumentMemoryType m_MemoryType;
     ArgumentType m_Type;
-    uint64_t m_NumberOfElements;
     std::vector<uint8_t> m_Data;
     void* m_ReferencedData;
 };

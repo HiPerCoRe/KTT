@@ -1,4 +1,5 @@
 #include <Kernel/KernelConstraint.h>
+#include <Utility/StlHelpers.h>
 
 namespace ktt
 {
@@ -12,6 +13,24 @@ KernelConstraint::KernelConstraint(const std::vector<std::string>& parameters,
 const std::vector<std::string>& KernelConstraint::GetParameters() const
 {
     return m_Parameters;
+}
+
+bool KernelConstraint::HasAllParameters(const std::vector<ParameterPair>& pairs) const
+{
+    for (const auto& parameter : m_Parameters)
+    {
+        const bool parameterPresent = ContainsElementIf(pairs, [&parameter](const auto& pair)
+        {
+            return pair.GetName() == parameter;
+        });
+
+        if (!parameterPresent)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool KernelConstraint::IsFulfilled(const std::vector<ParameterPair>& pairs) const

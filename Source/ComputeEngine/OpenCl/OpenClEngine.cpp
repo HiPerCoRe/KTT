@@ -544,7 +544,7 @@ std::shared_ptr<OpenClKernel> OpenClEngine::LoadKernel(const KernelComputeData& 
     return kernel;
 }
 
-void OpenClEngine::SetKernelArguments(OpenClKernel& kernel, const std::vector<const KernelArgument*> arguments)
+void OpenClEngine::SetKernelArguments(OpenClKernel& kernel, const std::vector<KernelArgument*> arguments)
 {
     kernel.ResetArguments();
 

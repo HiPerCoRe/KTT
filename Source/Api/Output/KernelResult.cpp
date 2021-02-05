@@ -5,7 +5,7 @@ namespace ktt
 
 KernelResult::KernelResult() :
     m_Id(InvalidKernelId),
-    m_ExtraDuration(InvalidDuration),
+    m_ExtraDuration(0),
     m_ExtraOverhead(0)
 {}
 

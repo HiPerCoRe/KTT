@@ -3,8 +3,8 @@
   */
 #pragma once
 
+#include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Output/KernelResult.h>
-#include <Api/KernelConfiguration.h>
 #include <KttPlatform.h>
 
 namespace ktt

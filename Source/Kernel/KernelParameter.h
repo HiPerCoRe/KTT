@@ -5,7 +5,7 @@
 #include <variant>
 #include <vector>
 
-#include <Api/ParameterPair.h>
+#include <Api/Configuration/ParameterPair.h>
 #include <KttTypes.h>
 
 namespace ktt

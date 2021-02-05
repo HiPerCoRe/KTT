@@ -3,23 +3,27 @@
 #include <string>
 #include <vector>
 
-#include <Api/DimensionVector.h>
-#include <Api/ParameterPair.h>
+#include <Api/Configuration/DimensionVector.h>
 #include <KernelArgument/KernelArgument.h>
 #include <KttTypes.h>
 
 namespace ktt
 {
 
+class Kernel;
+class KernelConfiguration;
+class KernelDefinition;
+
 class KernelComputeData
 {
 public:
-    explicit KernelComputeData(const std::string& name, const std::string& defaultSource, const std::string& configurationPrefix,
-        const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<ParameterPair>& parameterPairs,
-        const std::vector<const KernelArgument*>& arguments);
+    explicit KernelComputeData(const Kernel& kernel, const KernelDefinition& definition, const KernelConfiguration& configuration);
 
     void SetGlobalSize(const DimensionVector& globalSize);
     void SetLocalSize(const DimensionVector& localSize);
+    void UpdateArgument(const ArgumentId id, KernelArgument& argument);
+    void SwapArguments(const ArgumentId first, const ArgumentId second);
+    void SetArguments(const std::vector<KernelArgument*> arguments);
 
     const std::string& GetName() const;
     const std::string& GetDefaultSource() const;
@@ -28,8 +32,8 @@ public:
     KernelComputeId GetUniqueIdentifier() const;
     const DimensionVector& GetGlobalSize() const;
     const DimensionVector& GetLocalSize() const;
-    const std::vector<ParameterPair>& GetParameterPairs() const;
-    const std::vector<const KernelArgument*>& GetArguments() const;
+    const KernelConfiguration& GetConfiguration() const;
+    const std::vector<KernelArgument*>& GetArguments() const;
 
 private:
     std::string m_Name;
@@ -37,8 +41,8 @@ private:
     std::string m_ConfigurationPrefix;
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;
-    std::vector<ParameterPair> m_ParameterPairs;
-    std::vector<const KernelArgument*> m_Arguments;
+    const KernelConfiguration* m_Configuration;
+    std::vector<KernelArgument*> m_Arguments;
 };
 
 } // namespace ktt

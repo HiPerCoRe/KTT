@@ -1,6 +1,6 @@
 #include <type_traits>
 
-#include <Api/ParameterPair.h>
+#include <Api/Configuration/ParameterPair.h>
 #include <Utility/ErrorHandling/KttException.h>
 
 namespace ktt

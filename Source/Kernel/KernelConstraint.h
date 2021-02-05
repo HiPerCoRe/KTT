@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include <Api/ParameterPair.h>
+#include <Api/Configuration/ParameterPair.h>
 
 namespace ktt
 {
@@ -17,6 +17,7 @@ public:
         std::function<bool(const std::vector<uint64_t>&)> function);
 
     const std::vector<std::string>& GetParameters() const;
+    bool HasAllParameters(const std::vector<ParameterPair>& pairs) const;
     bool IsFulfilled(const std::vector<ParameterPair>& pairs) const;
 
 private:

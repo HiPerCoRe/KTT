@@ -584,11 +584,11 @@ std::shared_ptr<CudaKernel> CudaEngine::LoadKernel(const KernelComputeData& data
     return kernel;
 }
 
-std::vector<CUdeviceptr*> CudaEngine::GetKernelArguments(const std::vector<const KernelArgument*>& arguments)
+std::vector<CUdeviceptr*> CudaEngine::GetKernelArguments(const std::vector<KernelArgument*>& arguments)
 {
     std::vector<CUdeviceptr*> result;
 
-    for (const auto* argument : arguments)
+    for (auto* argument : arguments)
     {
         if (argument->GetMemoryType() == ArgumentMemoryType::Local)
         {
@@ -602,12 +602,12 @@ std::vector<CUdeviceptr*> CudaEngine::GetKernelArguments(const std::vector<const
     return result;
 }
 
-CUdeviceptr* CudaEngine::GetKernelArgument(const KernelArgument& argument)
+CUdeviceptr* CudaEngine::GetKernelArgument(KernelArgument& argument)
 {
     switch (argument.GetMemoryType())
     {
     case ArgumentMemoryType::Scalar:
-        return static_cast<CUdeviceptr*>(const_cast<void*>(argument.GetData()));
+        return static_cast<CUdeviceptr*>(argument.GetData());
     case ArgumentMemoryType::Vector:
     {
         const auto id = argument.GetId();
@@ -628,7 +628,7 @@ CUdeviceptr* CudaEngine::GetKernelArgument(const KernelArgument& argument)
     }
 }
 
-size_t CudaEngine::GetSharedMemorySize(const std::vector<const KernelArgument*>& arguments) const
+size_t CudaEngine::GetSharedMemorySize(const std::vector<KernelArgument*>& arguments) const
 {
     size_t result = 0;
 

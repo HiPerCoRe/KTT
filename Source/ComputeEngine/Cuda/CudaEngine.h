@@ -98,9 +98,9 @@ private:
 #endif // KTT_PROFILING_CUPTI
 
     std::shared_ptr<CudaKernel> LoadKernel(const KernelComputeData& data);
-    std::vector<CUdeviceptr*> GetKernelArguments(const std::vector<const KernelArgument*>& arguments);
-    CUdeviceptr* GetKernelArgument(const KernelArgument& argument);
-    size_t GetSharedMemorySize(const std::vector<const KernelArgument*>& arguments) const;
+    std::vector<CUdeviceptr*> GetKernelArguments(const std::vector<KernelArgument*>& arguments);
+    CUdeviceptr* GetKernelArgument(KernelArgument& argument);
+    size_t GetSharedMemorySize(const std::vector<KernelArgument*>& arguments) const;
     std::unique_ptr<CudaBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<CudaBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
 

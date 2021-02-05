@@ -4,7 +4,6 @@
 #include <functional>
 #include <map>
 
-#include <Api/KernelConfiguration.h>
 #include <Kernel/Kernel.h>
 #include <Kernel/KernelDefinition.h>
 #include <KernelArgument/KernelArgumentManager.h>

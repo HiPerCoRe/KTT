@@ -95,7 +95,7 @@ private:
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 
     std::shared_ptr<OpenClKernel> LoadKernel(const KernelComputeData& data);
-    void SetKernelArguments(OpenClKernel& kernel, const std::vector<const KernelArgument*> arguments);
+    void SetKernelArguments(OpenClKernel& kernel, const std::vector<KernelArgument*> arguments);
     void SetKernelArgument(OpenClKernel& kernel, const KernelArgument& argument);
     std::unique_ptr<OpenClBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<OpenClBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);

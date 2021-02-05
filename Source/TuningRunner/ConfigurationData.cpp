@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <limits>
 
-#include <KernelRunner/ConfigurationData.h>
+#include <TuningRunner/ConfigurationData.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 #include <Utility/StlHelpers.h>
@@ -91,7 +91,8 @@ bool ConfigurationData::InitializeNextGroup()
     }
 
     const auto& group = GetCurrentGroup();
-    ComputeConfigurations(group, 0, std::vector<ParameterPair>{}, m_Configurations);
+    std::vector<ParameterPair> initialPairs;
+    ComputeConfigurations(group, 0, initialPairs, m_Configurations);
     m_Searcher.Initialize(m_Configurations);
 
     Logger::LogInfo("Starting to explore configurations for kernel " + std::to_string(m_Kernel.GetId()) + " and group "
@@ -100,19 +101,16 @@ bool ConfigurationData::InitializeNextGroup()
 }
 
 void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,
-    const std::vector<ParameterPair>& pairs, std::vector<KernelConfiguration>& finalResult) const
+    std::vector<ParameterPair>& pairs, std::vector<KernelConfiguration>& finalResult) const
 {
     if (currentIndex >= group.GetParameters().size())
     {
         // All parameters are now included in the configuration
-        std::vector<ParameterPair> allPairs = GetExtraParameterPairs(pairs);
-        allPairs.insert(allPairs.end(), pairs.cbegin(), pairs.cend());
+        AddExtraParameterPairs(pairs);
 
-        KernelConfiguration configuration(allPairs);
-
-        if (IsConfigurationValid(configuration))
+        if (IsConfigurationValid(pairs))
         {
-            finalResult.push_back(configuration);
+            finalResult.emplace_back(pairs);
         }
 
         return;
@@ -135,17 +133,8 @@ void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group,
     }
 }
 
-std::vector<ParameterPair> ConfigurationData::GetExtraParameterPairs(const std::vector<ParameterPair>& pairs) const
+void ConfigurationData::AddExtraParameterPairs(std::vector<ParameterPair>& pairs) const
 {
-    std::vector<std::string> addedParameters;
-    const auto& currentGroup = GetCurrentGroup();
-
-    for (const auto* parameter : currentGroup.GetParameters())
-    {
-        addedParameters.push_back(parameter->GetName());
-    }
-
-    std::vector<ParameterPair> result;
     KernelConfiguration bestConfiguration;
     const bool valid = GetBestCompatibleConfiguration(pairs, bestConfiguration);
 
@@ -153,24 +142,32 @@ std::vector<ParameterPair> ConfigurationData::GetExtraParameterPairs(const std::
     {
         for (const auto& bestPair : bestConfiguration.GetPairs())
         {
-            if (!ContainsElement(addedParameters, bestPair.GetName()))
+            const bool hasPair = ContainsElementIf(pairs, [&bestPair](const auto& pair)
             {
-                result.push_back(bestPair);
-                addedParameters.push_back(bestPair.GetName());
+                return pair.GetName() == bestPair.GetName();
+            });
+
+            if (!hasPair)
+            {
+                pairs.push_back(bestPair);
             }
         }
+
+        return;
     }
 
     for (const auto& parameter : m_Kernel.GetParameters())
     {
-        if (!ContainsElement(addedParameters, parameter.GetName()))
+        const bool hasPair = ContainsElementIf(pairs, [&parameter](const auto& pair)
         {
-            result.push_back(parameter.GeneratePair(0));
-            addedParameters.push_back(parameter.GetName());
+            return pair.GetName() == parameter.GetName();
+        });
+
+        if (!hasPair)
+        {
+            pairs.push_back(parameter.GeneratePair(0));
         }
     }
-
-    return result;
 }
 
 bool ConfigurationData::GetBestCompatibleConfiguration(const std::vector<ParameterPair>& pairs, KernelConfiguration& output) const
@@ -194,7 +191,8 @@ bool ConfigurationData::IsConfigurationCompatible(const std::vector<ParameterPai
     {
         const auto& configurationPairs = configuration.GetPairs();
 
-        const auto iterator = std::find_if(configurationPairs.cbegin(), configurationPairs.cend(), [&pair](const auto& configurationPair)
+        const auto iterator = std::find_if(configurationPairs.cbegin(), configurationPairs.cend(),
+            [&pair](const auto& configurationPair)
         {
             return pair.GetName() == configurationPair.GetName();
         });
@@ -213,10 +211,8 @@ bool ConfigurationData::IsConfigurationCompatible(const std::vector<ParameterPai
     return true;
 }
 
-bool ConfigurationData::IsConfigurationValid(const KernelConfiguration& configuration) const
+bool ConfigurationData::IsConfigurationValid(const std::vector<ParameterPair>& pairs) const
 {
-    const std::vector<ParameterPair>& pairs = configuration.GetPairs();
-
     for (const auto* definition : m_Kernel.GetDefinitions())
     {
         DimensionVector localSize = m_Kernel.GetModifiedLocalSize(definition->GetId(), pairs);
@@ -239,6 +235,11 @@ bool ConfigurationData::EvaluateConstraints(const std::vector<ParameterPair>& pa
 {
     for (const auto& constraint : m_Kernel.GetConstraints())
     {
+        if (!constraint.HasAllParameters(pairs))
+        {
+            continue;
+        }
+
         if (!constraint.IsFulfilled(pairs))
         {
             return false;

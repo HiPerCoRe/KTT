@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <Api/DimensionVector.h>
+#include <Api/Configuration/DimensionVector.h>
 #include <KernelArgument/KernelArgument.h>
 #include <KttTypes.h>
 

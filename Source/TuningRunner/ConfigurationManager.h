@@ -4,12 +4,12 @@
 #include <map>
 #include <memory>
 
+#include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Info/DeviceInfo.h>
 #include <Api/Output/KernelResult.h>
 #include <Api/Searcher/Searcher.h>
-#include <Api/KernelConfiguration.h>
 #include <Kernel/Kernel.h>
-#include <KernelRunner/ConfigurationData.h>
+#include <TuningRunner/ConfigurationData.h>
 #include <KttTypes.h>
 
 namespace ktt

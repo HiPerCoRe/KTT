@@ -1,4 +1,4 @@
-#include <Api/KernelConfiguration.h>
+#include <Api/Configuration/KernelConfiguration.h>
 #include <Utility/ErrorHandling/KttException.h>
 
 namespace ktt

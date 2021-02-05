@@ -6,7 +6,7 @@
 #include <string>
 #include <cuda.h>
 
-#include <Api/DimensionVector.h>
+#include <Api/Configuration/DimensionVector.h>
 #include <ComputeEngine/Cuda/CudaProgram.h>
 #include <ComputeEngine/GlobalSizeType.h>
 #include <Utility/IdGenerator.h>

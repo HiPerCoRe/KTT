@@ -1,5 +1,5 @@
-/** @file kernel_run_mode.h
-  * Definition of enum for differentiating between different kernel running scenarios.
+/** @file KernelRunMode.h
+  * Definition of different kernel running scenarios.
   */
 #pragma once
 

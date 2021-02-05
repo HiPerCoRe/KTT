@@ -1,4 +1,4 @@
-#include <Api/DimensionVector.h>
+#include <Api/Configuration/DimensionVector.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/NumericalUtilities.h>
 

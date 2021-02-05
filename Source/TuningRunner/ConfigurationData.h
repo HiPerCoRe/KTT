@@ -3,9 +3,9 @@
 #include <map>
 #include <vector>
 
+#include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Info/DeviceInfo.h>
 #include <Api/Searcher/Searcher.h>
-#include <Api/KernelConfiguration.h>
 #include <Kernel/Kernel.h>
 #include <Kernel/KernelParameterGroup.h>
 #include <KttTypes.h>
@@ -38,11 +38,11 @@ private:
 
     bool InitializeNextGroup();
     void ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,
-        const std::vector<ParameterPair>& pairs, std::vector<KernelConfiguration>& finalResult) const;
-    std::vector<ParameterPair> GetExtraParameterPairs(const std::vector<ParameterPair>& pairs) const;
+        std::vector<ParameterPair>& pairs, std::vector<KernelConfiguration>& finalResult) const;
+    void AddExtraParameterPairs(std::vector<ParameterPair>& pairs) const;
     bool GetBestCompatibleConfiguration(const std::vector<ParameterPair>& pairs, KernelConfiguration& output) const;
     bool IsConfigurationCompatible(const std::vector<ParameterPair>& pairs, const KernelConfiguration& configuration) const;
-    bool IsConfigurationValid(const KernelConfiguration& configuration) const;
+    bool IsConfigurationValid(const std::vector<ParameterPair>& pairs) const;
     bool EvaluateConstraints(const std::vector<ParameterPair>& pairs) const;
 };
 
