@@ -4,11 +4,14 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <string>
 
 namespace ktt
 {
+
+class ComputeInterface;
 
 /** @typedef PlatformIndex
   * Data type for referencing platforms in KTT.
@@ -59,6 +62,11 @@ using ComputeActionId = uint64_t;
   * Data type for referencing buffer transfer actions in KTT.
   */
 using TransferActionId = uint64_t;
+
+/** @typedef KernelLauncher
+  * Definition of kernel launch function.
+  */
+using KernelLauncher = std::function<void(ComputeInterface&)>;
 
 /** @typedef UnifiedBufferMemory
   * Data type for accessing unified memory buffers in KTT.

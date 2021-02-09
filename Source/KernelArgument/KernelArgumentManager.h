@@ -17,12 +17,13 @@ public:
 
     ArgumentId AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        void* data, const uint64_t numberOfElements);
+        const ArgumentManagementType managementType, void* data, const uint64_t numberOfElements);
     ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const void* data, const uint64_t numberOfElements);
+        const ArgumentManagementType managementType, const void* data, const uint64_t numberOfElements);
     ArgumentId AddUserArgument(const size_t elementSize, const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation,
-        const ArgumentAccessType accessType, const ArgumentMemoryType memoryType, const uint64_t numberOfElements);
+        const ArgumentAccessType accessType, const ArgumentMemoryType memoryType, const ArgumentManagementType managementType,
+        const uint64_t numberOfElements);
 
     const KernelArgument& GetArgument(const ArgumentId id) const;
     KernelArgument& GetArgument(const ArgumentId id);
@@ -33,7 +34,7 @@ private:
     std::vector<std::unique_ptr<KernelArgument>> m_Arguments;
 
     ArgumentId AddArgument(const size_t elementSize, const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation,
-        const ArgumentAccessType accessType, const ArgumentMemoryType memoryType);
+        const ArgumentAccessType accessType, const ArgumentMemoryType memoryType, const ArgumentManagementType managementType);
 };
 
 } // namespace ktt

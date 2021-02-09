@@ -121,6 +121,18 @@ ComputationResult CudaEngine::WaitForComputeAction(const ComputeActionId id)
     return result;
 }
 
+void CudaEngine::ClearData(const KernelComputeId& id)
+{
+    EraseIf(m_ComputeActions, [&id](const auto& pair)
+    {
+        return pair.second->GetComputeId() == id;
+    });
+
+#if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
+    m_CuptiInstances.erase(id);
+#endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
+}
+
 ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data, [[maybe_unused]] const QueueId queueId)
 {
 #ifdef KTT_PROFILING_CUPTI_LEGACY
@@ -480,6 +492,11 @@ void CudaEngine::ClearBuffer(const ArgumentId id)
 void CudaEngine::ClearBuffers()
 {
     m_Buffers.clear();
+}
+
+bool CudaEngine::HasBuffer(const ArgumentId id)
+{
+    return ContainsKey(m_Buffers, id);
 }
 
 QueueId CudaEngine::GetDefaultQueue() const

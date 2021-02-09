@@ -37,12 +37,18 @@ public:
 
     virtual void WaitForComputeAction(const ComputeActionId id) = 0;
 
+    virtual void ClearKernelData(const KernelDefinitionId id) = 0;
+
+    virtual void ClearKernelData() = 0;
+
     virtual void RunKernelWithProfiling(const KernelDefinitionId id) = 0;
 
     virtual void RunKernelWithProfiling(const KernelDefinitionId id, const DimensionVector& globalSize,
         const DimensionVector& localSize) = 0;
 
     virtual uint64_t GetRemainingProfilingRuns(const KernelDefinitionId id) const = 0;
+
+    virtual uint64_t GetRemainingProfilingRuns() const = 0;
 
     virtual QueueId GetDefaultQueue() const = 0;
 
@@ -80,6 +86,8 @@ public:
     virtual void ResizeBuffer(const ArgumentId id, const size_t newDataSize, const bool preserveData) = 0;
 
     virtual void ClearBuffer(const ArgumentId id) = 0;
+
+    virtual bool HasBuffer(const ArgumentId id) = 0;
 
     virtual void GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& memoryHandle) = 0;
 };

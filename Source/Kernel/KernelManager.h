@@ -8,6 +8,7 @@
 #include <Kernel/KernelDefinition.h>
 #include <KernelArgument/KernelArgumentManager.h>
 #include <Utility/IdGenerator.h>
+#include <KttTypes.h>
 
 namespace ktt
 {
@@ -32,6 +33,7 @@ public:
         const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds,
         std::function<uint64_t(const uint64_t, const std::vector<uint64_t>&)> function);
     void SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds);
+    void SetLauncher(const KernelId id, KernelLauncher launcher);
 
     const Kernel& GetKernel(const KernelId id) const;
     Kernel& GetKernel(const KernelId id);

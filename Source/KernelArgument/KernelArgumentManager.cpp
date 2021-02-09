@@ -12,9 +12,9 @@ KernelArgumentManager::KernelArgumentManager() :
 
 ArgumentId KernelArgumentManager::AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    void* data, const uint64_t numberOfElements)
+    const ArgumentManagementType managementType, void* data, const uint64_t numberOfElements)
 {
-    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType);
+    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType, managementType);
     auto& argument = GetArgument(id);
     argument.SetReferencedData(data, numberOfElements);
     return id;
@@ -22,9 +22,9 @@ ArgumentId KernelArgumentManager::AddArgumentWithReferencedData(const size_t ele
 
 ArgumentId KernelArgumentManager::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const void* data, const uint64_t numberOfElements)
+    const ArgumentManagementType managementType, const void* data, const uint64_t numberOfElements)
 {
-    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType);
+    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType, managementType);
     auto& argument = GetArgument(id);
     argument.SetOwnedData(data, numberOfElements);
     return id;
@@ -32,9 +32,9 @@ ArgumentId KernelArgumentManager::AddArgumentWithOwnedData(const size_t elementS
 
 ArgumentId KernelArgumentManager::AddUserArgument(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const uint64_t numberOfElements)
+    const ArgumentManagementType managementType, const uint64_t numberOfElements)
 {
-    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType);
+    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType, managementType);
     auto& argument = GetArgument(id);
     argument.SetUserBuffer(numberOfElements);
     return id;
@@ -69,11 +69,13 @@ std::vector<KernelArgument*> KernelArgumentManager::GetArguments(const std::vect
 }
 
 ArgumentId KernelArgumentManager::AddArgument(const size_t elementSize, const ArgumentDataType dataType,
-    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType)
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+    const ArgumentManagementType managementType)
 {
     const auto id = m_IdGenerator.GenerateId();
 
-    auto argument = std::make_unique<KernelArgument>(id, elementSize, dataType, memoryLocation, accessType, memoryType);
+    auto argument = std::make_unique<KernelArgument>(id, elementSize, dataType, memoryLocation, accessType, memoryType,
+        managementType);
     m_Arguments.push_back(std::move(argument));
 
     return id;

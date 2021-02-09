@@ -87,6 +87,11 @@ void Kernel::SetProfiledDefinitions(const std::vector<const KernelDefinition*>& 
     m_ProfiledDefinitions = definitions;
 }
 
+void Kernel::SetLauncher(KernelLauncher launcher)
+{
+    m_Launcher = launcher;
+}
+
 KernelId Kernel::GetId() const
 {
     return m_Id;
@@ -94,6 +99,7 @@ KernelId Kernel::GetId() const
 
 const KernelDefinition& Kernel::GetPrimaryDefinition() const
 {
+    KttAssert(!IsComposite(), "Only simple kernels have primary definition");
     return *m_Definitions[0];
 }
 
@@ -130,6 +136,32 @@ const std::set<KernelParameter>& Kernel::GetParameters() const
 const std::vector<KernelConstraint>& Kernel::GetConstraints() const
 {
     return m_Constraints;
+}
+
+std::vector<KernelArgument*> Kernel::GetVectorArguments() const
+{
+    std::set<KernelArgument*> arguments;
+
+    for (const auto* definition : m_Definitions)
+    {
+        for (auto* argument : definition->GetVectorArguments())
+        {
+            arguments.insert(argument);
+        }
+    }
+
+    std::vector<KernelArgument*> result(arguments.cbegin(), arguments.cend());
+    return result;
+}
+
+KernelLauncher Kernel::GetLauncher() const
+{
+    return m_Launcher;
+}
+
+bool Kernel::HasLauncher() const
+{
+    return static_cast<bool>(m_Launcher);
 }
 
 bool Kernel::HasDefinition(const KernelDefinitionId id) const

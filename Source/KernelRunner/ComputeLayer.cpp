@@ -48,6 +48,20 @@ void ComputeLayer::WaitForComputeAction(const ComputeActionId id)
     GetData().AddPartialResult(result);
 }
 
+void ComputeLayer::ClearKernelData(const KernelDefinitionId id)
+{
+    const auto computeId = GetData().GetComputeData(id).GetUniqueIdentifier();
+    m_ComputeEngine.ClearData(computeId);
+}
+
+void ComputeLayer::ClearKernelData()
+{
+    for (const auto* definition : GetData().GetKernel().GetDefinitions())
+    {
+        ClearKernelData(definition->GetId());
+    }
+}
+
 void ComputeLayer::RunKernelWithProfiling(const KernelDefinitionId id)
 {
     if (!GetData().IsProfilingEnabled(id))
@@ -85,6 +99,18 @@ uint64_t ComputeLayer::GetRemainingProfilingRuns(const KernelDefinitionId id) co
 
     const auto& data = GetComputeData(id);
     return m_ComputeEngine.GetRemainingProfilingRuns(data.GetUniqueIdentifier());
+}
+
+uint64_t ComputeLayer::GetRemainingProfilingRuns() const
+{
+    uint64_t result = 0;
+
+    for (const auto* definition : GetData().GetKernel().GetDefinitions())
+    {
+        result += GetRemainingProfilingRuns(definition->GetId());
+    }
+
+    return result;
 }
 
 QueueId ComputeLayer::GetDefaultQueue() const
@@ -215,6 +241,11 @@ void ComputeLayer::ClearBuffer(const ArgumentId id)
     GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
+bool ComputeLayer::HasBuffer(const ArgumentId id)
+{
+    return m_ComputeEngine.HasBuffer(id);
+}
+
 void ComputeLayer::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& memoryHandle)
 {
     m_ComputeEngine.GetUnifiedMemoryBufferHandle(id, memoryHandle);
@@ -232,20 +263,20 @@ void ComputeLayer::ClearActiveKernel()
     m_ActiveKernel = InvalidKernelId;
 }
 
-void ComputeLayer::AddKernelData(const Kernel& kernel, const KernelConfiguration& configuration)
+void ComputeLayer::AddData(const Kernel& kernel, const KernelConfiguration& configuration)
 {
     m_Data[kernel.GetId()] = std::make_unique<ComputeLayerData>(kernel, configuration);
 }
 
-void ComputeLayer::ClearKernelData(const KernelId id)
+void ComputeLayer::ClearData(const KernelId id)
 {
     m_Data.erase(id);
 }
 
-KernelResult ComputeLayer::GenerateResult(const KernelId id) const
+KernelResult ComputeLayer::GenerateResult(const KernelId id, const Nanoseconds launcherDuration) const
 {
     KttAssert(ContainsKey(m_Data, id), "Invalid compute layer data access");
-    return m_Data.find(id)->second->GenerateResult();
+    return m_Data.find(id)->second->GenerateResult(launcherDuration);
 }
 
 const ComputeLayerData& ComputeLayer::GetData() const

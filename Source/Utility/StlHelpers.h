@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <map>
 #include <set>
 #include <vector>
@@ -24,6 +25,9 @@ bool ContainsValue(const std::map<Key, Value>& map, const Value& value);
 
 template <typename Key>
 bool ContainsKey(const std::set<Key>& set, const Key& key);
+
+template <typename Key, typename Value, typename Filter>
+size_t EraseIf(std::map<Key, Value>& map, const Filter& filter);
 
 } // namespace ktt
 

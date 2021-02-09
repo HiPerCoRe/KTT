@@ -5,9 +5,10 @@
 
 #include <KernelArgument/ArgumentAccessType.h>
 #include <KernelArgument/ArgumentDataType.h>
+#include <KernelArgument/ArgumentManagementType.h>
 #include <KernelArgument/ArgumentMemoryLocation.h>
 #include <KernelArgument/ArgumentMemoryType.h>
-#include <KernelArgument/ArgumentType.h>
+#include <KernelArgument/ArgumentOwnership.h>
 #include <KttTypes.h>
 
 namespace ktt
@@ -17,7 +18,8 @@ class KernelArgument
 {
 public:
     explicit KernelArgument(const ArgumentId id, const size_t elementSize, const ArgumentDataType dataType,
-        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType);
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+        const ArgumentManagementType managementType);
 
     void SetReferencedData(void* data, const size_t dataSize);
     void SetOwnedData(const void* data, const size_t dataSize);
@@ -29,6 +31,7 @@ public:
     ArgumentMemoryLocation GetMemoryLocation() const;
     ArgumentAccessType GetAccessType() const;
     ArgumentMemoryType GetMemoryType() const;
+    ArgumentManagementType GetManagementType() const;
 
     uint64_t GetNumberOfElements() const;
     size_t GetDataSize() const;
@@ -51,7 +54,8 @@ private:
     ArgumentMemoryLocation m_MemoryLocation;
     ArgumentAccessType m_AccessType;
     ArgumentMemoryType m_MemoryType;
-    ArgumentType m_Type;
+    ArgumentManagementType m_ManagementType;
+    ArgumentOwnership m_Ownership;
     std::vector<uint8_t> m_Data;
     void* m_ReferencedData;
 };

@@ -29,6 +29,7 @@ public:
     Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
     const std::string& GetConfigurationPrefix() const;
+    KernelComputeId GetComputeId() const;
     ComputationResult GenerateResult() const;
 
 private:

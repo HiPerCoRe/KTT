@@ -47,4 +47,19 @@ const std::vector<KernelArgument*>& KernelDefinition::GetArguments() const
     return m_Arguments;
 }
 
+std::vector<KernelArgument*> KernelDefinition::GetVectorArguments() const
+{
+    std::vector<KernelArgument*> result;
+
+    for (auto* argument : m_Arguments)
+    {
+        if (argument->GetMemoryType() == ArgumentMemoryType::Vector)
+        {
+            result.push_back(argument);
+        }
+    }
+
+    return result;
+}
+
 } // namespace ktt

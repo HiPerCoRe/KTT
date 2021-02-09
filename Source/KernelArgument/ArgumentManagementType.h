@@ -3,10 +3,9 @@
 namespace ktt
 {
 
-enum class ArgumentType
+enum class ArgumentManagementType
 {
-    Copy,
-    Reference,
+    Framework,
     User
 };
 

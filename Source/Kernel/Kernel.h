@@ -27,6 +27,7 @@ public:
     void AddConstraint(const KernelConstraint& constraint);
     void SetThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier);
     void SetProfiledDefinitions(const std::vector<const KernelDefinition*>& definitions);
+    void SetLauncher(KernelLauncher launcher);
 
     KernelId GetId() const;
     const KernelDefinition& GetPrimaryDefinition() const;
@@ -35,7 +36,10 @@ public:
     const std::vector<const KernelDefinition*>& GetProfiledDefinitions() const;
     const std::set<KernelParameter>& GetParameters() const;
     const std::vector<KernelConstraint>& GetConstraints() const;
+    std::vector<KernelArgument*> GetVectorArguments() const;
+    KernelLauncher GetLauncher() const;
 
+    bool HasLauncher() const;
     bool HasDefinition(const KernelDefinitionId id) const;
     bool HasParameter(const std::string& parameter) const;
     bool IsComposite() const;
@@ -55,6 +59,7 @@ private:
     std::set<KernelParameter> m_Parameters;
     std::vector<KernelConstraint> m_Constraints;
     std::map<ModifierType, std::map<ModifierDimension, ThreadModifier>> m_Modifiers;
+    KernelLauncher m_Launcher;
 
     DimensionVector GetModifiedSize(const KernelDefinitionId id, const ModifierType type,
         const std::vector<ParameterPair>& pairs) const;

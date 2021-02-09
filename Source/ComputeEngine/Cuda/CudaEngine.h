@@ -37,6 +37,7 @@ public:
     // Kernel methods
     ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) override;
     ComputationResult WaitForComputeAction(const ComputeActionId id) override;
+    void ClearData(const KernelComputeId& id) override;
 
     // Profiling methods
     ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId) override;
@@ -60,6 +61,7 @@ public:
     void AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer buffer) override;
     void ClearBuffer(const ArgumentId id) override;
     void ClearBuffers() override;
+    bool HasBuffer(const ArgumentId id) override;
 
     // Queue methods
     QueueId GetDefaultQueue() const override;

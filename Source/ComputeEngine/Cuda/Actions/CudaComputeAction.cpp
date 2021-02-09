@@ -73,6 +73,11 @@ const std::string& CudaComputeAction::GetConfigurationPrefix() const
     return m_Prefix;
 }
 
+KernelComputeId CudaComputeAction::GetComputeId() const
+{
+    return m_Kernel->GetName() + m_Prefix;
+}
+
 ComputationResult CudaComputeAction::GenerateResult() const
 {
     ComputationResult result(m_Kernel->GetName(), GetConfigurationPrefix());

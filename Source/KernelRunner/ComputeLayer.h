@@ -27,11 +27,14 @@ public:
     ComputeActionId RunKernelAsync(const KernelDefinitionId id, const QueueId queue, const DimensionVector& globalSize,
         const DimensionVector& localSize) override;
     void WaitForComputeAction(const ComputeActionId id) override;
+    void ClearKernelData(const KernelDefinitionId id) override;
+    void ClearKernelData() override;
 
     void RunKernelWithProfiling(const KernelDefinitionId id) override;
     void RunKernelWithProfiling(const KernelDefinitionId id, const DimensionVector& globalSize,
         const DimensionVector& localSize) override;
     uint64_t GetRemainingProfilingRuns(const KernelDefinitionId id) const override;
+    uint64_t GetRemainingProfilingRuns() const override;
 
     QueueId GetDefaultQueue() const override;
     std::vector<QueueId> GetAllQueues() const override;
@@ -55,14 +58,15 @@ public:
     void WaitForTransferAction(const TransferActionId id) override;
     void ResizeBuffer(const ArgumentId id, const size_t newDataSize, const bool preserveData) override;
     void ClearBuffer(const ArgumentId id) override;
+    bool HasBuffer(const ArgumentId id) override;
     void GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& memoryHandle) override;
 
     void SetActiveKernel(const KernelId id);
     void ClearActiveKernel();
 
-    void AddKernelData(const Kernel& kernel, const KernelConfiguration& configuration);
-    void ClearKernelData(const KernelId id);
-    KernelResult GenerateResult(const KernelId id) const;
+    void AddData(const Kernel& kernel, const KernelConfiguration& configuration);
+    void ClearData(const KernelId id);
+    KernelResult GenerateResult(const KernelId id, const Nanoseconds launcherDuration) const;
 
 private:
     std::map<KernelId, std::unique_ptr<ComputeLayerData>> m_Data;

@@ -72,6 +72,11 @@ const std::string& OpenClComputeAction::GetConfigurationPrefix() const
     return m_Prefix;
 }
 
+KernelComputeId OpenClComputeAction::GetComputeId() const
+{
+    return m_Kernel->GetName() + m_Prefix;
+}
+
 ComputationResult OpenClComputeAction::GenerateResult() const
 {
     ComputationResult result(m_Kernel->GetName(), GetConfigurationPrefix());

@@ -85,6 +85,12 @@ void KernelManager::SetProfiledDefinitions(const KernelId id, const std::vector<
     kernel.SetProfiledDefinitions(definitions);
 }
 
+void KernelManager::SetLauncher(const KernelId id, KernelLauncher launcher)
+{
+    auto& kernel = GetKernel(id);
+    kernel.SetLauncher(launcher);
+}
+
 const Kernel& KernelManager::GetKernel(const KernelId id) const
 {
     if (!ContainsKey(m_Kernels, id))

@@ -132,6 +132,18 @@ ComputationResult OpenClEngine::WaitForComputeAction(const ComputeActionId id)
     return result;
 }
 
+void OpenClEngine::ClearData(const KernelComputeId& id)
+{
+    EraseIf(m_ComputeActions, [&id](const auto& pair)
+    {
+        return pair.second->GetComputeId() == id;
+    });
+
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    m_GpaInstances.erase(id);
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+}
+
 ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
     [[maybe_unused]] const QueueId queueId)
 {
@@ -430,6 +442,11 @@ void OpenClEngine::ClearBuffer(const ArgumentId id)
 void OpenClEngine::ClearBuffers()
 {
     m_Buffers.clear();
+}
+
+bool OpenClEngine::HasBuffer(const ArgumentId id)
+{
+    return ContainsKey(m_Buffers, id);
 }
 
 QueueId OpenClEngine::GetDefaultQueue() const

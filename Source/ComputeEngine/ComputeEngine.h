@@ -23,6 +23,7 @@ public:
     // Kernel methods
     virtual ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) = 0;
     virtual ComputationResult WaitForComputeAction(const ComputeActionId id) = 0;
+    virtual void ClearData(const KernelComputeId& id) = 0;
 
     // Profiling methods
     virtual ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId) = 0;
@@ -46,6 +47,7 @@ public:
     virtual void AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer buffer) = 0;
     virtual void ClearBuffer(const ArgumentId id) = 0;
     virtual void ClearBuffers() = 0;
+    virtual bool HasBuffer(const ArgumentId id) = 0;
 
     // Queue methods
     virtual QueueId GetDefaultQueue() const = 0;

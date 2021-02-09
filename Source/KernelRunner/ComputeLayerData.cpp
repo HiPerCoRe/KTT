@@ -86,6 +86,11 @@ bool ComputeLayerData::IsProfilingEnabled(const KernelDefinitionId id) const
     });
 }
 
+const Kernel& ComputeLayerData::GetKernel() const
+{
+    return m_Kernel;
+}
+
 const KernelConfiguration& ComputeLayerData::GetConfiguration() const
 {
     return m_Configuration;
@@ -102,10 +107,11 @@ const KernelComputeData& ComputeLayerData::GetComputeData(const KernelDefinition
     return m_ComputeData.find(id)->second;
 }
 
-KernelResult ComputeLayerData::GenerateResult() const
+KernelResult ComputeLayerData::GenerateResult(const Nanoseconds launcherDuration) const
 {
     KernelResult result(m_Kernel.GetId(), m_PartialResults);
-    result.SetExtraDuration(m_Duration);
+    const Nanoseconds launcherWithoutOverhead = launcherDuration - m_Overhead;
+    result.SetExtraDuration(m_Duration + launcherWithoutOverhead);
     result.SetExtraOverhead(m_Overhead);
     return result;
 }

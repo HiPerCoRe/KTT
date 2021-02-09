@@ -38,4 +38,21 @@ std::string KernelConfiguration::GeneratePrefix() const
     return result;
 }
 
+std::string KernelConfiguration::GetString() const
+{
+    std::string result;
+
+    for (size_t i = 0; i < m_Pairs.size(); ++i)
+    {
+        result += m_Pairs[i].GetString();
+
+        if (i + 1 != m_Pairs.size())
+        {
+            result += ", ";
+        }
+    }
+
+    return result;
+}
+
 } // namespace ktt

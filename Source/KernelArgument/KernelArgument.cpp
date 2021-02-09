@@ -8,7 +8,8 @@ namespace ktt
 {
 
 KernelArgument::KernelArgument(const ArgumentId id, const size_t elementSize, const ArgumentDataType dataType,
-    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType) :
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+    const ArgumentManagementType managementType) :
     m_Id(id),
     m_ElementSize(elementSize),
     m_DataSize(0),
@@ -16,7 +17,8 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t elementSize, co
     m_MemoryLocation(memoryLocation),
     m_AccessType(accessType),
     m_MemoryType(memoryType),
-    m_Type(ArgumentType::Copy),
+    m_ManagementType(managementType),
+    m_Ownership(ArgumentOwnership::Copy),
     m_ReferencedData(nullptr)
 {
     KttAssert(m_MemoryType == ArgumentMemoryType::Vector || m_MemoryLocation == ArgumentMemoryLocation::Undefined,
@@ -37,7 +39,7 @@ void KernelArgument::SetReferencedData(void* data, const size_t dataSize)
         throw KttException("Kernel argument cannot be initialized with null data");
     }
 
-    m_Type = ArgumentType::Reference;
+    m_Ownership = ArgumentOwnership::Reference;
     m_DataSize = dataSize;
     m_Data.clear();
     m_ReferencedData = data;
@@ -55,7 +57,7 @@ void KernelArgument::SetOwnedData(const void* data, const size_t dataSize)
         throw KttException("Kernel argument cannot be initialized with null data");
     }
 
-    m_Type = ArgumentType::Copy;
+    m_Ownership = ArgumentOwnership::Copy;
     m_DataSize = dataSize;
     m_ReferencedData = nullptr;
 
@@ -73,7 +75,7 @@ void KernelArgument::SetUserBuffer(const size_t dataSize)
         throw KttException("Kernel argument cannot be initialized with number of elements equal to zero");
     }
 
-    m_Type = ArgumentType::User;
+    m_Ownership = ArgumentOwnership::User;
     m_DataSize = dataSize;
     m_Data.clear();
     m_ReferencedData = nullptr;
@@ -109,6 +111,11 @@ ArgumentMemoryType KernelArgument::GetMemoryType() const
     return m_MemoryType;
 }
 
+ArgumentManagementType KernelArgument::GetManagementType() const
+{
+    return m_ManagementType;
+}
+
 uint64_t KernelArgument::GetNumberOfElements() const
 {
     return static_cast<uint64_t>(GetDataSize() / GetElementSize());
@@ -121,17 +128,17 @@ size_t KernelArgument::GetDataSize() const
 
 const void* KernelArgument::GetData() const
 {
-    switch (m_Type)
+    switch (m_Ownership)
     {
-    case ktt::ArgumentType::Copy:
+    case ktt::ArgumentOwnership::Copy:
         return m_Data.data();
-    case ktt::ArgumentType::Reference:
+    case ktt::ArgumentOwnership::Reference:
         return m_ReferencedData;
-    case ktt::ArgumentType::User:
+    case ktt::ArgumentOwnership::User:
         KttError("Data cannot be retrieved for user argument type");
         return nullptr;
     default:
-        KttError("Unhandled argument type value");
+        KttError("Unhandled argument ownership value");
         return nullptr;
     }
 }
@@ -143,12 +150,12 @@ void* KernelArgument::GetData()
 
 bool KernelArgument::HasOwnedData() const
 {
-    return m_Type == ArgumentType::Copy;
+    return m_Ownership == ArgumentOwnership::Copy;
 }
 
 bool KernelArgument::HasUserBuffer() const
 {
-    return m_Type == ArgumentType::User;
+    return m_Ownership == ArgumentOwnership::User;
 }
 
 } // namespace ktt

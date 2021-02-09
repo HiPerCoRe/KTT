@@ -24,6 +24,7 @@ public:
     const DimensionVector& GetGlobalSize() const;
     const DimensionVector& GetLocalSize() const;
     const std::vector<KernelArgument*>& GetArguments() const;
+    std::vector<KernelArgument*> GetVectorArguments() const;
 
 private:
     KernelDefinitionId m_Id;

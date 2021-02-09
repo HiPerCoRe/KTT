@@ -41,11 +41,17 @@ public:
       */
     bool IsValid() const;
 
-    /** @fn bool IsValid() const
+    /** @fn std::string GeneratePrefix() const
       * Generates kernel source preprocessor definitions from configuration.
       * @return Kernel source preprocessor definitions.
       */
     std::string GeneratePrefix() const;
+
+    /** @fn std::string GetString() const
+      * Converts configuration to string.
+      * @return String in format "parameter1String, parameter2String, ...".
+      */
+    std::string GetString() const;
 
 private:
     std::vector<ParameterPair> m_Pairs;

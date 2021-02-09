@@ -27,9 +27,10 @@ public:
     void ChangeArguments(const KernelDefinitionId id, std::vector<KernelArgument*>& arguments);
 
     bool IsProfilingEnabled(const KernelDefinitionId id) const;
+    const Kernel& GetKernel() const;
     const KernelConfiguration& GetConfiguration() const;
     const KernelComputeData& GetComputeData(const KernelDefinitionId id) const;
-    KernelResult GenerateResult() const;
+    KernelResult GenerateResult(const Nanoseconds launcherDuration) const;
 
 private:
     std::map<KernelDefinitionId, KernelComputeData> m_ComputeData;

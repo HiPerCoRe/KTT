@@ -59,4 +59,25 @@ bool ContainsKey(const std::set<Key>& set, const Key& key)
     return set.find(key) != set.cend();
 }
 
+template <typename Key, typename Value, typename Filter>
+size_t EraseIf(std::map<Key, Value>& map, const Filter& filter)
+{
+    size_t erasedCount = 0;
+
+    for (auto iterator = map.cbegin(); iterator != map.cend();)
+    {
+        if (filter(*iterator))
+        {
+            iterator = map.erase(iterator);
+            ++erasedCount;
+        }
+        else
+        {
+            ++iterator;
+        }
+    }
+
+    return erasedCount;
+}
+
 } // namespace ktt
