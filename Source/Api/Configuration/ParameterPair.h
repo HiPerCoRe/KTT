@@ -21,14 +21,14 @@ class KernelParameter;
 class KTT_API ParameterPair
 {
 public:
-    /** @fn explicit ParameterPair(const std::string& name, const uint64_t value)
+    /** @fn explicit ParameterPair(const KernelParameter& parameter, const uint64_t value)
       * Constructor which creates parameter pair for integer parameter.
       * @param parameter Kernel parameter tied to the pair.
       * @param value Value of a parameter.
       */
     explicit ParameterPair(const KernelParameter& parameter, const uint64_t value);
 
-    /** @fn explicit ParameterPair(const std::string& name, const double value)
+    /** @fn explicit ParameterPair(const KernelParameter& parameter, const double value)
       * Constructor which creates parameter pair for floating-point parameter.
       * @param parameter Kernel parameter tied to the pair.
       * @param value Value of a parameter.

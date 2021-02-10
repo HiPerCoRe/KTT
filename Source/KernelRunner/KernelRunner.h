@@ -1,18 +1,16 @@
 #pragma once
 
-#include <functional>
-#include <map>
 #include <memory>
 
+#include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Output/BufferOutputDescriptor.h>
 #include <Api/Output/KernelResult.h>
 #include <ComputeEngine/ComputeEngine.h>
 #include <Kernel/Kernel.h>
-#include <KernelArgument/ArgumentAccessType.h>
 #include <KernelArgument/KernelArgumentManager.h>
 #include <KernelRunner/ComputeLayer.h>
 #include <KernelRunner/KernelRunMode.h>
-// #include <KernelRunner/ResultValidator>
+#include <KernelRunner/ResultValidator.h>
 #include <Output/TimeUnit.h>
 #include <KttTypes.h>
 
@@ -32,20 +30,19 @@ public:
     void SetProfiling(const bool flag);
     bool IsProfilingActive() const;
 
-    //void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold);
-    //void SetValidationMode(const ValidationMode mode);
-    //void SetValidationRange(const ArgumentId id, const size_t range);
-    //void SetArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator);
-    //void SetReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
-    //    const std::vector<ArgumentId>& validatedArgumentIds);
-    //void SetReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass, const std::vector<ArgumentId>& validatedArgumentIds);
-    //void ClearReferenceResult(const KernelId id);
+    void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold);
+    void SetValidationMode(const ValidationMode mode);
+    void SetValidationRange(const ArgumentId id, const size_t range);
+    void SetValueComparator(const ArgumentId id, ValueComparator comparator);
+    void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
+    void SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration);
+    void ClearReferenceResult(const Kernel& kernel);
 
 private:
     std::unique_ptr<ComputeLayer> m_ComputeLayer;
+    std::unique_ptr<ResultValidator> m_Validator;
     ComputeEngine& m_Engine;
     KernelArgumentManager& m_ArgumentManager;
-    // ResultValidator m_Validator;
     TimeUnit m_TimeUnit;
     bool m_ProfilingFlag;
 

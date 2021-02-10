@@ -1,9 +1,9 @@
-/** @file validation_mode.h
-  * Definition of enum for enabling kernel output validation in different scenarios.
+/** @file ValidationMode.h
+  * Definition of kernel output validation in different scenarios.
   */
 #pragma once
 
-#include <enum/enum_bitfield.h>
+#include <Utility/BitfieldEnum.h>
 
 namespace ktt
 {
@@ -41,7 +41,7 @@ struct EnableBitfieldOperators<ValidationMode>
 {
     /** Bitwise operations are enabled.
       */
-    static const bool enable = true;
+    static const bool m_Enable = true;
 };
 
 } // namespace ktt

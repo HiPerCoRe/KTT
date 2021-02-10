@@ -11,9 +11,9 @@ namespace ktt
 
 KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumentManager) :
     m_ComputeLayer(std::make_unique<ComputeLayer>(engine, argumentManager)),
+    m_Validator(std::make_unique<ResultValidator>(*this)),
     m_Engine(engine),
     m_ArgumentManager(argumentManager),
-    //m_Validator(argumentManager, this),
     m_TimeUnit(TimeUnit::Milliseconds),
     m_ProfilingFlag(false)
 {}
@@ -21,17 +21,19 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
 KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
     const std::vector<BufferOutputDescriptor>& output)
 {
-    /*if (!m_Validator.HasReferenceResult(id))
+    const auto id = kernel.GetId();
+
+    if (!m_Validator->HasReferenceResult(kernel))
     {
-        m_Validator.ComputeReferenceResult(kernel, mode);
-    }*/
+        m_Validator->ComputeReferenceResult(kernel, mode);
+    }
 
     if (mode != KernelRunMode::OfflineTuning)
     {
         SetupBuffers(kernel);
     }
 
-    Logger::LogInfo("Running kernel " + std::to_string(kernel.GetId()) + " with configuration: " + configuration.GetString());
+    Logger::LogInfo("Running kernel " + std::to_string(id) + " with configuration: " + configuration.GetString());
     auto launcher = GetKernelLauncher(kernel);
     KernelResult result = RunKernelInternal(kernel, configuration, launcher, output);
     ValidateResult(kernel, result, mode);
@@ -69,43 +71,40 @@ bool KernelRunner::IsProfilingActive() const
     return m_ProfilingFlag;
 }
 
-//void KernelRunner::SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
-//{
-//    m_Validator.SetValidationMethod(method);
-//    m_Validator.SetToleranceThreshold(toleranceThreshold);
-//}
-//
-//void KernelRunner::SetValidationMode(const ValidationMode mode)
-//{
-//    m_Validator.SetValidationMode(mode);
-//}
-//
-//void KernelRunner::SetValidationRange(const ArgumentId id, const size_t range)
-//{
-//    m_Validator.SetValidationRange(id, range);
-//}
-//
-//void KernelRunner::SetArgumentComparator(const ArgumentId id, const std::function<bool(const void*, const void*)>& comparator)
-//{
-//    m_Validator.SetArgumentComparator(id, comparator);
-//}
-//
-//void KernelRunner::SetReferenceKernel(const KernelId id, const KernelId referenceId, const std::vector<ParameterPair>& referenceConfiguration,
-//    const std::vector<ArgumentId>& validatedArgumentIds)
-//{
-//    m_Validator.SetReferenceKernel(id, referenceId, referenceConfiguration, validatedArgumentIds);
-//}
-//
-//void KernelRunner::SetReferenceClass(const KernelId id, std::unique_ptr<ReferenceClass> referenceClass,
-//    const std::vector<ArgumentId>& validatedArgumentIds)
-//{
-//    m_Validator.SetReferenceClass(id, std::move(referenceClass), validatedArgumentIds);
-//}
-//
-//void KernelRunner::ClearReferenceResult(const KernelId id)
-//{
-//    m_Validator.ClearReferenceResults(id);
-//}
+void KernelRunner::SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
+{
+    m_Validator->SetValidationMethod(method, toleranceThreshold);
+}
+
+void KernelRunner::SetValidationMode(const ValidationMode mode)
+{
+    m_Validator->SetValidationMode(mode);
+}
+
+void KernelRunner::SetValidationRange(const ArgumentId id, const size_t range)
+{
+    m_Validator->SetValidationRange(id, range);
+}
+
+void KernelRunner::SetValueComparator(const ArgumentId id, ValueComparator comparator)
+{
+    m_Validator->SetValueComparator(id, comparator);
+}
+
+void KernelRunner::SetReferenceComputation(const ArgumentId id, ReferenceComputation computation)
+{
+    m_Validator->SetReferenceComputation(id, computation);
+}
+
+void KernelRunner::SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration)
+{
+    m_Validator->SetReferenceKernel(id, kernel, configuration);
+}
+
+void KernelRunner::ClearReferenceResult(const Kernel& kernel)
+{
+    m_Validator->ClearReferenceResult(kernel);
+}
 
 void KernelRunner::SetupBuffers(const Kernel& kernel)
 {
@@ -229,7 +228,7 @@ void KernelRunner::ValidateResult(const Kernel& kernel, KernelResult& result, co
         return;
     }
 
-    const bool validResult = true; //m_Validator.ValidateArguments(kernel, mode);
+    const bool validResult = m_Validator->ValidateArguments(kernel, mode);
     const uint64_t duration = Timer::ConvertDuration(result.GetTotalDuration(), m_TimeUnit);
     const uint64_t kernelDuration = Timer::ConvertDuration(result.GetKernelDuration(), m_TimeUnit);
     const std::string tag = Timer::GetTag(m_TimeUnit);

@@ -1,5 +1,5 @@
-/** @file validation_method.h
-  * Definition of enum for validation method used during validation of floating-point output arguments.
+/** @file ValidationMethod.h
+  * Definition of a method used during validation of floating-point output arguments.
   */
 #pragma once
 
@@ -19,7 +19,8 @@ enum class ValidationMethod
       */
     SideBySideComparison,
 
-    /** Calculates difference for each pair of elements, then compares the difference divided by reference value to specified threshold.
+    /** Calculates difference for each pair of elements, then compares the difference divided by reference value to the specified
+      * threshold.
       */
     SideBySideRelativeComparison
 };

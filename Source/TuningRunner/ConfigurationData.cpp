@@ -13,7 +13,7 @@ ConfigurationData::ConfigurationData(const DeviceInfo& deviceInfo, Searcher& sea
     m_DeviceInfo(deviceInfo),
     m_Searcher(searcher),
     m_Kernel(kernel),
-    m_CurrentGroup(std::numeric_limits<size_t>::max())
+    m_CurrentGroup(0)
 {
     m_Groups = kernel.GenerateParameterGroups();
 

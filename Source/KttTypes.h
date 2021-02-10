@@ -68,6 +68,16 @@ using TransferActionId = uint64_t;
   */
 using KernelLauncher = std::function<void(ComputeInterface&)>;
 
+/** @typedef ReferenceComputation
+  * Function for computing reference kernel argument output. Used during validation.
+  */
+using ReferenceComputation = std::function<void(void*)>;
+
+/** @typedef ValueComparator
+  * Custom comparison function for kernel argument values. Used during validation.
+  */
+using ValueComparator = std::function<bool(const void*, const void*)>;
+
 /** @typedef UnifiedBufferMemory
   * Data type for accessing unified memory buffers in KTT.
   */
