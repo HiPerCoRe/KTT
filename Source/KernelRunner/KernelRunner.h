@@ -53,6 +53,8 @@ private:
     KernelResult RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration, KernelLauncher launcher,
         const std::vector<BufferOutputDescriptor>& output);
     Nanoseconds RunLauncher(KernelLauncher launcher);
+
+    void PrepareValidationData(const ArgumentId id);
     void ValidateResult(const Kernel& kernel, KernelResult& result, const KernelRunMode mode);
 };
 

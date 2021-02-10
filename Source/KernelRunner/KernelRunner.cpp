@@ -83,21 +83,25 @@ void KernelRunner::SetValidationMode(const ValidationMode mode)
 
 void KernelRunner::SetValidationRange(const ArgumentId id, const size_t range)
 {
+    PrepareValidationData(id);
     m_Validator->SetValidationRange(id, range);
 }
 
 void KernelRunner::SetValueComparator(const ArgumentId id, ValueComparator comparator)
 {
+    PrepareValidationData(id);
     m_Validator->SetValueComparator(id, comparator);
 }
 
 void KernelRunner::SetReferenceComputation(const ArgumentId id, ReferenceComputation computation)
 {
+    PrepareValidationData(id);
     m_Validator->SetReferenceComputation(id, computation);
 }
 
 void KernelRunner::SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration)
 {
+    PrepareValidationData(id);
     m_Validator->SetReferenceKernel(id, kernel, configuration);
 }
 
@@ -219,6 +223,15 @@ Nanoseconds KernelRunner::RunLauncher(KernelLauncher launcher)
     timer.Stop();
 
     return timer.GetElapsedTime();
+}
+
+void KernelRunner::PrepareValidationData(const ArgumentId id)
+{
+    if (!m_Validator->HasValidationData(id))
+    {
+        const auto& argument = m_ArgumentManager.GetArgument(id);
+        m_Validator->InitializeValidationData(argument);
+    }
 }
 
 void KernelRunner::ValidateResult(const Kernel& kernel, KernelResult& result, const KernelRunMode mode)
