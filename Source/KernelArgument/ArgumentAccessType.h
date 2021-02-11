@@ -3,8 +3,6 @@
   */
 #pragma once
 
-#include <Utility/BitfieldEnum.h>
-
 namespace ktt
 {
 
@@ -16,29 +14,19 @@ enum class ArgumentAccessType
 {
     /** Kernel argument access is undefined.
       */
-    Undefined = 0,
+    Undefined,
 
     /** Kernel argument is used for input.
       */
-    Read = (1 << 0),
+    ReadOnly,
 
     /** Kernel argument is used for output.
       */
-    Write = (2 << 0),
+    WriteOnly,
 
     /** Kernel argument is used for both input and output.
       */
-    ReadWrite = Read | Write
-};
-
-/** Argument access type enum supports bitwise operations.
-  */
-template <>
-struct EnableBitfieldOperators<ArgumentAccessType>
-{
-    /** Bitwise operations are enabled.
-      */
-    static const bool m_Enable = true;
+    ReadWrite
 };
 
 } // namespace ktt

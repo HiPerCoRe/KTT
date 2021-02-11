@@ -49,12 +49,15 @@ cl_mem_flags OpenClBuffer::GetMemoryFlags()
 {
     switch (GetAccessType())
     {
+    case ArgumentAccessType::Undefined:
+        KttError("Arguments with undefined access type cannot be buffers");
+        return 0;
+    case ArgumentAccessType::ReadOnly:
+        return CL_MEM_READ_ONLY;
+    case ArgumentAccessType::WriteOnly:
+        return CL_MEM_WRITE_ONLY;
     case ArgumentAccessType::ReadWrite:
         return CL_MEM_READ_WRITE;
-    case ArgumentAccessType::Read:
-        return CL_MEM_READ_ONLY;
-    case ArgumentAccessType::Write:
-        return CL_MEM_WRITE_ONLY;
     default:
         KttError("Unhandled argument access type value");
         return 0;

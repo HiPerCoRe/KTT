@@ -94,6 +94,16 @@ const KernelProfilingData& ComputationResult::GetProfilingData() const
     return *m_ProfilingData;
 }
 
+bool ComputationResult::HasRemainingProfilingRuns() const
+{
+    if (!HasProfilingData())
+    {
+        return false;
+    }
+
+    return GetProfilingData().HasRemainingProfilingRuns();
+}
+
 ComputationResult& ComputationResult::operator=(const ComputationResult& other)
 {
     m_KernelName = other.m_KernelName;

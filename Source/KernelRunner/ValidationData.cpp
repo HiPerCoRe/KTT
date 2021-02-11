@@ -20,9 +20,16 @@ ValidationData::ValidationData(KernelRunner& kernelRunner, const KernelArgument&
     m_ReferenceComputation(nullptr),
     m_ReferenceKernel(nullptr)
 {
-    if (!HasFlag(argument.GetAccessType(), ArgumentAccessType::Write))
+    const auto id = argument.GetId();
+
+    if (argument.GetMemoryType() != ArgumentMemoryType::Vector)
     {
-        throw KttException("Kernel argument with id " + std::to_string(argument.GetId()) + " is read-only and cannot be validated");
+        throw KttException("Kernel argument with id " + std::to_string(id) + " is not a vector and cannot be validated");
+    }
+
+    if (argument.GetAccessType() == ArgumentAccessType::ReadOnly)
+    {
+        throw KttException("Kernel argument with id " + std::to_string(id) + " is read-only and cannot be validated");
     }
 }
 
@@ -114,11 +121,13 @@ void ValidationData::ComputeReferenceWithKernel()
 
     const bool profiling = m_KernelRunner.IsProfilingActive();
     m_KernelRunner.SetProfiling(false);
+    m_KernelRunner.SetupBuffers(*m_ReferenceKernel);
 
     m_ReferenceKernelResult.resize(m_ValidationRange);
     BufferOutputDescriptor descriptor(m_Argument.GetId(), m_ReferenceKernelResult.data(), m_ValidationRange);
     m_KernelRunner.RunKernel(*m_ReferenceKernel, m_ReferenceConfiguration, KernelRunMode::ResultValidation, {descriptor});
 
+    m_KernelRunner.CleanupBuffers(*m_ReferenceKernel);
     m_KernelRunner.SetProfiling(profiling);
 }
 

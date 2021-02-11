@@ -24,6 +24,8 @@ public:
 
     KernelResult RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
         const std::vector<BufferOutputDescriptor>& output);
+    void SetupBuffers(const Kernel& kernel);
+    void CleanupBuffers(const Kernel& kernel);
     void DownloadBuffers(const std::vector<BufferOutputDescriptor>& output);
 
     void SetTimeUnit(const TimeUnit unit);
@@ -46,10 +48,7 @@ private:
     TimeUnit m_TimeUnit;
     bool m_ProfilingFlag;
 
-    void SetupBuffers(const Kernel& kernel);
-    void CleanupBuffers(const Kernel& kernel);
     KernelLauncher GetKernelLauncher(const Kernel& kernel);
-
     KernelResult RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration, KernelLauncher launcher,
         const std::vector<BufferOutputDescriptor>& output);
     Nanoseconds RunLauncher(KernelLauncher launcher);

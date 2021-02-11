@@ -28,7 +28,7 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
         m_Validator->ComputeReferenceResult(kernel, mode);
     }
 
-    if (mode != KernelRunMode::OfflineTuning)
+    if (mode == KernelRunMode::Running)
     {
         SetupBuffers(kernel);
     }
@@ -38,12 +38,53 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
     KernelResult result = RunKernelInternal(kernel, configuration, launcher, output);
     ValidateResult(kernel, result, mode);
 
-    if (mode != KernelRunMode::OfflineTuning)
+    if (mode == KernelRunMode::Running)
     {
         CleanupBuffers(kernel);
     }
 
     return result;
+}
+
+void KernelRunner::SetupBuffers(const Kernel& kernel)
+{
+    const auto vectorArguments = kernel.GetVectorArguments();
+
+    for (auto* argument : vectorArguments)
+    {
+        const auto id = argument->GetId();
+
+        if (argument->GetManagementType() == ArgumentManagementType::User)
+        {
+            if (!kernel.HasLauncher())
+            {
+                Logger::LogWarning("Kernel argument with id " + std::to_string(id) + " has buffer managed by user, but its "
+                    + "associated kernel with id " + std::to_string(kernel.GetId()) + " does not have a launcher defined by user");
+            }
+
+            continue;
+        }
+
+        const auto actionId = m_Engine.UploadArgument(*argument, m_ComputeLayer->GetDefaultQueue());
+        m_Engine.WaitForTransferAction(actionId);
+    }
+}
+
+void KernelRunner::CleanupBuffers(const Kernel& kernel)
+{
+    const auto vectorArguments = kernel.GetVectorArguments();
+
+    for (const auto* argument : vectorArguments)
+    {
+        const auto id = argument->GetId();
+
+        if (argument->GetManagementType() == ArgumentManagementType::User)
+        {
+            continue;
+        }
+
+        m_Engine.ClearBuffer(id);
+    }
 }
 
 void KernelRunner::DownloadBuffers(const std::vector<BufferOutputDescriptor>& output)
@@ -110,47 +151,6 @@ void KernelRunner::ClearReferenceResult(const Kernel& kernel)
     m_Validator->ClearReferenceResult(kernel);
 }
 
-void KernelRunner::SetupBuffers(const Kernel& kernel)
-{
-    const auto vectorArguments = kernel.GetVectorArguments();
-
-    for (auto* argument : vectorArguments)
-    {
-        const auto id = argument->GetId();
-
-        if (argument->GetManagementType() == ArgumentManagementType::User)
-        {
-            if (!kernel.HasLauncher())
-            {
-                Logger::LogWarning("Kernel argument with id " + std::to_string(id) + " has buffer managed by user, but its "
-                    + "associated kernel with id " + std::to_string(kernel.GetId()) + " does not have a launcher defined by user");
-            }
-            
-            continue;
-        }
-
-        const auto actionId = m_Engine.UploadArgument(*argument, m_ComputeLayer->GetDefaultQueue());
-        m_Engine.WaitForTransferAction(actionId);
-    }
-}
-
-void KernelRunner::CleanupBuffers(const Kernel& kernel)
-{
-    const auto vectorArguments = kernel.GetVectorArguments();
-
-    for (const auto* argument : vectorArguments)
-    {
-        const auto id = argument->GetId();
-
-        if (argument->GetManagementType() == ArgumentManagementType::User)
-        {
-            continue;
-        }
-
-        m_Engine.ClearBuffer(id);
-    }
-}
-
 KernelLauncher KernelRunner::GetKernelLauncher(const Kernel& kernel)
 {
     if (kernel.HasLauncher())
@@ -191,7 +191,7 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
     const KernelId id = kernel.GetId();
 
     auto activator = std::make_unique<KernelActivator>(*m_ComputeLayer, id);
-    KernelResult result(id);
+    KernelResult result(id, configuration);
 
     try
     {

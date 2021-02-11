@@ -4,15 +4,18 @@
 namespace ktt
 {
 
-KernelResult::KernelResult(const KernelId id) :
+KernelResult::KernelResult(const KernelId id, const KernelConfiguration& configuration) :
+    m_Configuration(configuration),
     m_Id(id),
     m_ExtraDuration(0),
     m_ExtraOverhead(0),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
-KernelResult::KernelResult(const KernelId id, const std::vector<ComputationResult>& results) :
+KernelResult::KernelResult(const KernelId id, const KernelConfiguration& configuration,
+    const std::vector<ComputationResult>& results) :
     m_Results(results),
+    m_Configuration(configuration),
     m_Id(id),
     m_ExtraDuration(0),
     m_ExtraOverhead(0),
@@ -43,6 +46,11 @@ KernelId KernelResult::GetId() const
 const std::vector<ComputationResult>& KernelResult::GetResults() const
 {
     return m_Results;
+}
+
+const KernelConfiguration& KernelResult::GetConfiguration() const
+{
+    return m_Configuration;
 }
 
 ResultStatus KernelResult::GetStatus() const
@@ -89,6 +97,19 @@ Nanoseconds KernelResult::GetTotalOverhead() const
 bool KernelResult::IsValid() const
 {
     return m_Status == ResultStatus::Ok;
+}
+
+bool KernelResult::HasRemainingProfilingRuns() const
+{
+    for (const auto& result : m_Results)
+    {
+        if (result.HasRemainingProfilingRuns())
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 } // namespace ktt

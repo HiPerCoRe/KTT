@@ -190,6 +190,20 @@ bool Kernel::IsComposite() const
     return m_Definitions.size() > 1;
 }
 
+bool Kernel::HasWritableZeroCopyArgument() const
+{
+    for (const auto* argument : GetVectorArguments())
+    {
+        if (argument->GetMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy
+            && argument->GetAccessType() != ArgumentAccessType::ReadOnly)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
 {
     std::map<std::string, std::vector<const KernelParameter*>> groupedParameters;

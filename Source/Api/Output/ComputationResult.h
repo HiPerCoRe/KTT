@@ -32,6 +32,7 @@ public:
     const KernelCompilationData& GetCompilationData() const;
     bool HasProfilingData() const;
     const KernelProfilingData& GetProfilingData() const;
+    bool HasRemainingProfilingRuns() const;
 
     ComputationResult& operator=(const ComputationResult& other);
 
