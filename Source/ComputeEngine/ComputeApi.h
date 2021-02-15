@@ -6,10 +6,10 @@
 namespace ktt
 {
 
-/** @enum ComputeAPI
+/** @enum ComputeApi
   * Enum for compute APIs used by KTT framework. It is utilized during tuner creation.
   */
-enum class ComputeAPI
+enum class ComputeApi
 {
     /** Tuner will use OpenCL as compute API.
       */

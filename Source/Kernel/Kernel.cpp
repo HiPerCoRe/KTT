@@ -28,11 +28,14 @@ void Kernel::AddParameter(const KernelParameter& parameter)
 
 void Kernel::AddConstraint(const KernelConstraint& constraint)
 {
-    for (const auto& parameter : constraint.GetParameters())
+    for (const auto& name : constraint.GetParameters())
     {
-        if (!HasParameter(parameter))
+        const auto& parameter = GetParamater(name);
+
+        if (parameter.HasValuesDouble())
         {
-            throw KttException("Kernel parameter with name " + parameter + " specified by constraint does not exist");
+            throw KttException("Kernel parameter with name " + name
+                + " has floating-point values and cannot be used by kernel constraints");
         }
     }
 
@@ -43,20 +46,12 @@ void Kernel::SetThreadModifier(const ModifierType type, const ModifierDimension 
 {
     for (const auto& name : modifier.GetParameters())
     {
-        bool isValidModifierParameter = false;
+        const auto& parameter = GetParamater(name);
 
-        for (const auto& parameter : m_Parameters)
-        {
-            if (parameter.GetName() == name && !parameter.HasValuesDouble())
-            {
-                isValidModifierParameter = true;
-            }
-        }
-
-        if (!isValidModifierParameter)
+        if (parameter.HasValuesDouble())
         {
             throw KttException("Kernel parameter with name " + name
-                + " specified by thread modifier does not exist or has floating-point values");
+                + " has floating-point values and cannot be used by thread modifiers");
         }
     }
 
@@ -172,11 +167,11 @@ bool Kernel::HasDefinition(const KernelDefinitionId id) const
     });
 }
 
-bool Kernel::HasParameter(const std::string& parameter) const
+bool Kernel::HasParameter(const std::string& name) const
 {
-    for (const auto& currentParameter : m_Parameters)
+    for (const auto& parameter : m_Parameters)
     {
-        if (currentParameter.GetName() == parameter)
+        if (parameter.GetName() == name)
         {
             return true;
         }
@@ -202,6 +197,51 @@ bool Kernel::HasWritableZeroCopyArgument() const
     }
 
     return false;
+}
+
+KernelConfiguration Kernel::CreateConfiguration(const ParameterInput& parameters) const
+{
+    std::vector<ParameterPair> pairs;
+
+    for (const auto& pair : parameters)
+    {
+        const auto& parameter = GetParamater(pair.first);
+
+        if (parameter.HasValuesDouble())
+        {
+            if (!std::holds_alternative<double>(pair.second))
+            {
+                throw KttException("Value type mismatch for parameter with name " + pair.first);
+            }
+
+            pairs.emplace_back(parameter.GetName(), std::get<double>(pair.second));
+        }
+        else
+        {
+            if (!std::holds_alternative<uint64_t>(pair.second))
+            {
+                throw KttException("Value type mismatch for parameter with name " + pair.first);
+            }
+
+            pairs.emplace_back(parameter.GetName(), std::get<uint64_t>(pair.second));
+        }
+    }
+
+    for (const auto& parameter : m_Parameters)
+    {
+        const bool parameterIncluded = ContainsElementIf(pairs, [&parameter](const auto& pair)
+        {
+            return pair.GetName() == parameter.GetName();
+        });
+
+        if (!parameterIncluded)
+        {
+            pairs.push_back(parameter.GeneratePair(0));
+        }
+    }
+
+
+    return KernelConfiguration(pairs);
 }
 
 std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
@@ -250,15 +290,7 @@ std::vector<ParameterPair> Kernel::GetPairsForIndex(const uint64_t index) const
         const size_t valuesCount = parameter.GetValuesCount();
         const size_t parameterIndex = currentIndex % valuesCount;
 
-        if (parameter.HasValuesDouble())
-        {
-            result.emplace_back(parameter, parameter.GetValuesDouble()[parameterIndex]);
-        }
-        else
-        {
-            result.emplace_back(parameter, parameter.GetValues()[parameterIndex]);
-        }
-
+        result.push_back(parameter.GeneratePair(parameterIndex));
         currentIndex /= valuesCount;
     }
 
@@ -329,6 +361,19 @@ DimensionVector Kernel::GetModifiedGlobalSize(const KernelDefinitionId id, const
 DimensionVector Kernel::GetModifiedLocalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const
 {
     return GetModifiedSize(id, ModifierType::Local, pairs);
+}
+
+const KernelParameter& Kernel::GetParamater(const std::string& name) const
+{
+    for (const auto& parameter : m_Parameters)
+    {
+        if (parameter.GetName() == name)
+        {
+            return parameter;
+        }
+    }
+
+    throw KttException("Kernel parameter with name " + name + " does not exist");
 }
 
 DimensionVector Kernel::GetModifiedSize(const KernelDefinitionId id, const ModifierType type,

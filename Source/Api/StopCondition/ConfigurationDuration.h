@@ -12,7 +12,7 @@ namespace ktt
 /** @class ConfigurationDuration
   * Class which implements stop condition based on computation duration of a configuration.
   */
-class ConfigurationDuration : public StopCondition
+class KTT_API ConfigurationDuration : public StopCondition
 {
 public:
     /** @fn explicit ConfigurationDuration(const double duration)

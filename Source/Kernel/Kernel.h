@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <Api/Configuration/KernelConfiguration.h>
 #include <Kernel/KernelDefinition.h>
 #include <Kernel/KernelConstraint.h>
 #include <Kernel/KernelParameter.h>
@@ -41,10 +42,11 @@ public:
 
     bool HasLauncher() const;
     bool HasDefinition(const KernelDefinitionId id) const;
-    bool HasParameter(const std::string& parameter) const;
+    bool HasParameter(const std::string& name) const;
     bool IsComposite() const;
     bool HasWritableZeroCopyArgument() const;
 
+    KernelConfiguration CreateConfiguration(const ParameterInput& parameters) const;
     std::vector<KernelParameterGroup> GenerateParameterGroups() const;
     uint64_t GetConfigurationsCount() const;
     std::vector<ParameterPair> GetPairsForIndex(const uint64_t index) const;
@@ -62,6 +64,7 @@ private:
     std::map<ModifierType, std::map<ModifierDimension, ThreadModifier>> m_Modifiers;
     KernelLauncher m_Launcher;
 
+    const KernelParameter& GetParamater(const std::string& name) const;
     DimensionVector GetModifiedSize(const KernelDefinitionId id, const ModifierType type,
         const std::vector<ParameterPair>& pairs) const;
 };

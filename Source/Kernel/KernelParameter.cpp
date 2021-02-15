@@ -81,11 +81,11 @@ ParameterPair KernelParameter::GeneratePair(const size_t valueIndex) const
     if (HasValuesDouble())
     {
         const double value = GetValuesDouble()[valueIndex];
-        return ParameterPair(*this, value);
+        return ParameterPair(m_Name, value);
     }
 
     const uint64_t value = GetValues()[valueIndex];
-    return ParameterPair(*this, value);
+    return ParameterPair(m_Name, value);
 }
 
 std::vector<ParameterPair> KernelParameter::GeneratePairs() const

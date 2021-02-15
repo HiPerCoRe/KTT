@@ -7,6 +7,9 @@
 #include <functional>
 #include <limits>
 #include <string>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace ktt
 {
@@ -42,6 +45,11 @@ using KernelId = uint64_t;
   * Data type for referencing kernel arguments in KTT.
   */
 using ArgumentId = uint64_t;
+
+/** @typedef ParameterInput
+  * Data type used for creating and retrieving specific kernel configuration from KTT.
+  */
+using ParameterInput = std::vector<std::pair<std::string, std::variant<uint64_t, double>>>;
 
 /** @typedef Nanoseconds
   * Data type for retrieving elapsed time in KTT.

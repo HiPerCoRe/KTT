@@ -4,14 +4,12 @@
 #include <TuningRunner/TuningRunner.h>
 #include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
-#include <Utility/StlHelpers.h>
 
 namespace ktt
 {
 
-TuningRunner::TuningRunner(KernelRunner& kernelRunner, KernelArgumentManager& argumentManager, const DeviceInfo& info) :
+TuningRunner::TuningRunner(KernelRunner& kernelRunner, const DeviceInfo& info) :
     m_KernelRunner(kernelRunner),
-    m_ArgumentManager(argumentManager),
     m_ConfigurationManager(std::make_unique<ConfigurationManager>(info))
 {}
 
@@ -89,15 +87,8 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
     return result;
 }
 
-std::vector<KernelResult> TuningRunner::DryTune(const Kernel& kernel, const std::string& /*resultsFile*/, const uint64_t iterations)
+void TuningRunner::DryTune(const Kernel& kernel, const std::vector<KernelResult>& /*results*/, const uint64_t iterations)
 {
-    /*ResultLoader resultLoader;
-
-    if (!resultLoader.LoadResults(resultsFile))
-    {
-        throw KttException("Unable to open file: " + resultsFile);
-    }*/
-
     const auto id = kernel.GetId();
 
     if (!m_ConfigurationManager->HasData(id))
@@ -105,7 +96,6 @@ std::vector<KernelResult> TuningRunner::DryTune(const Kernel& kernel, const std:
         m_ConfigurationManager->InitializeData(kernel);
     }
 
-    std::vector<KernelResult> results;
     KernelResult result(id, m_ConfigurationManager->GetCurrentConfiguration(id));
     uint64_t passedIterations = 0;
 
@@ -121,7 +111,7 @@ std::vector<KernelResult> TuningRunner::DryTune(const Kernel& kernel, const std:
         try
         {
             Logger::LogInfo("Launching new configuration for kernel " + std::to_string(id));
-            //result = resultLoader.ReadResult(currentConfiguration);
+            // todo: find corresponding result for configuration
         }
         catch (const KttException& error)
         {
@@ -129,14 +119,12 @@ std::vector<KernelResult> TuningRunner::DryTune(const Kernel& kernel, const std:
             result.SetStatus(ResultStatus::ComputationFailed);
         }
 
-        results.push_back(result);
         m_ConfigurationManager->CalculateNextConfiguration(id, result);
         ++passedIterations;
     }
     while (m_ConfigurationManager->CalculateNextConfiguration(id, result));
 
     m_ConfigurationManager->ClearData(id);
-    return results;
 }
 
 void TuningRunner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
