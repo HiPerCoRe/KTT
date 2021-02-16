@@ -8,7 +8,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <half.hpp>
 
 // Compatibility for multiple platforms
 #include <KttPlatform.h>
@@ -39,19 +38,13 @@
 #include <Api/Output/BufferOutputDescriptor.h>
 #include <Api/Output/KernelResult.h>
 
-// Searchers
-#include <Api/Searcher/DeterministicSearcher.h>
-#include <Api/Searcher/McmcSearcher.h>
-#include <Api/Searcher/RandomSearcher.h>
-
-// Stop conditions
-#include <Api/StopCondition/ConfigurationCount.h>
-#include <Api/StopCondition/ConfigurationDuration.h>
-#include <Api/StopCondition/TuningDuration.h>
-
-// Compute API customization
+// Tuner customization
+#include <Api/Searcher/Searcher.h>
+#include <Api/StopCondition/StopCondition.h>
 #include <Api/ComputeApiInitializer.h>
-#include <Api/ComputeInterface.h>
+
+// Half floating-point data type support
+#include <Utility/External/half.hpp>
 
 /** @namespace ktt
   * All classes, methods and type aliases related to KTT framework are located inside ktt namespace.
@@ -59,7 +52,6 @@
 namespace ktt
 {
 
-using half_float::half;
 class TunerCore;
 
 /** @class Tuner

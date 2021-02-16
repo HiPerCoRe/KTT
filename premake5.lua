@@ -312,7 +312,7 @@ workspace "Ktt"
 project "Ktt"
     kind "SharedLib"
     files {"Source/**"}
-    includedirs {"Source", "Libraries/Half2.1.0/Include"}
+    includedirs {"Source"}
     defines {"KTT_LIBRARY"}
     targetname("ktt")
     linkLibraries()
