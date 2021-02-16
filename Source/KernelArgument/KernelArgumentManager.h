@@ -17,13 +17,12 @@ public:
 
     ArgumentId AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, void* data, const uint64_t numberOfElements);
+        const ArgumentManagementType managementType, void* data, const size_t dataSize);
     ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const void* data, const uint64_t numberOfElements);
+        const ArgumentManagementType managementType, const void* data, const size_t dataSize);
     ArgumentId AddUserArgument(const size_t elementSize, const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation,
-        const ArgumentAccessType accessType, const ArgumentMemoryType memoryType, const ArgumentManagementType managementType,
-        const uint64_t numberOfElements);
+        const ArgumentAccessType accessType, const size_t dataSize);
 
     const KernelArgument& GetArgument(const ArgumentId id) const;
     KernelArgument& GetArgument(const ArgumentId id);

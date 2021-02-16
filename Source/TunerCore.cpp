@@ -41,25 +41,16 @@ void TunerCore::SetArguments(const KernelDefinitionId id, const std::vector<Argu
     m_KernelManager->SetArguments(id, argumentIds);
 }
 
-KernelId TunerCore::CreateSimpleKernel(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize)
-{
-    const KernelDefinitionId id = AddKernelDefinition(name, source, globalSize, localSize);
-    return m_KernelManager->CreateKernel({id});
-}
-
-KernelId TunerCore::CreateSimpleKernelFromFile(const std::string& name, const std::string& filePath, const DimensionVector& globalSize,
-    const DimensionVector& localSize)
-{
-    const KernelDefinitionId id = AddKernelDefinitionFromFile(name, filePath, globalSize, localSize);
-    return m_KernelManager->CreateKernel({id});
-}
-
 KernelId TunerCore::CreateKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
 {
     const KernelId id = m_KernelManager->CreateKernel(definitionIds);
     m_KernelManager->SetLauncher(id, launcher);
     return id;
+}
+
+void TunerCore::SetLauncher(const KernelId id, KernelLauncher launcher)
+{
+    m_KernelManager->SetLauncher(id, launcher);
 }
 
 void TunerCore::AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group)
@@ -95,34 +86,26 @@ void TunerCore::SetProfiledDefinitions(const KernelId id, const std::vector<Kern
     m_KernelManager->SetProfiledDefinitions(id, definitionIds);
 }
 
-void TunerCore::SetLauncher(const KernelId id, KernelLauncher launcher)
-{
-    m_KernelManager->SetLauncher(id, launcher);
-}
-
 ArgumentId TunerCore::AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, void* data, const uint64_t numberOfElements)
+    const ArgumentManagementType managementType, void* data, const size_t dataSize)
 {
     return m_ArgumentManager->AddArgumentWithReferencedData(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, data, numberOfElements);
+        managementType, data, dataSize);
 }
 
 ArgumentId TunerCore::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const uint64_t numberOfElements)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize)
 {
     return m_ArgumentManager->AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, data, numberOfElements);
+        managementType, data, dataSize);
 }
 
 ArgumentId TunerCore::AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
-    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const uint64_t numberOfElements)
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize)
 {
-    const ArgumentId id = m_ArgumentManager->AddUserArgument(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, numberOfElements);
-
+    const ArgumentId id = m_ArgumentManager->AddUserArgument(elementSize, dataType, memoryLocation, accessType, dataSize);
     auto& argument = m_ArgumentManager->GetArgument(id);
     m_ComputeEngine->AddCustomBuffer(argument, buffer);
     return id;

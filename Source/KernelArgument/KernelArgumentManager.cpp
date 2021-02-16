@@ -12,31 +12,31 @@ KernelArgumentManager::KernelArgumentManager() :
 
 ArgumentId KernelArgumentManager::AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, void* data, const uint64_t numberOfElements)
+    const ArgumentManagementType managementType, void* data, const size_t dataSize)
 {
     const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType, managementType);
     auto& argument = GetArgument(id);
-    argument.SetReferencedData(data, numberOfElements);
+    argument.SetReferencedData(data, dataSize);
     return id;
 }
 
 ArgumentId KernelArgumentManager::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const uint64_t numberOfElements)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize)
 {
     const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType, managementType);
     auto& argument = GetArgument(id);
-    argument.SetOwnedData(data, numberOfElements);
+    argument.SetOwnedData(data, dataSize);
     return id;
 }
 
 ArgumentId KernelArgumentManager::AddUserArgument(const size_t elementSize, const ArgumentDataType dataType,
-    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const uint64_t numberOfElements)
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize)
 {
-    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType, managementType);
+    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector,
+        ArgumentManagementType::User);
     auto& argument = GetArgument(id);
-    argument.SetUserBuffer(numberOfElements);
+    argument.SetUserBuffer(dataSize);
     return id;
 }
 

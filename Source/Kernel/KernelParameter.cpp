@@ -4,6 +4,8 @@
 namespace ktt
 {
 
+static const std::string DefaultGroup = "KTTDefaultGroup";
+
 KernelParameter::KernelParameter(const std::string& name, const std::vector<uint64_t>& values, const std::string& group) :
     m_Name(name),
     m_Group(group),
@@ -12,6 +14,11 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<uint
     if (values.empty())
     {
         throw KttException("Kernel parameter must have at least one value defined");
+    }
+
+    if (group.empty())
+    {
+        m_Group = DefaultGroup;
     }
 }
 
@@ -23,6 +30,11 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<doub
     if (values.empty())
     {
         throw KttException("Kernel parameter must have at least one value defined");
+    }
+
+    if (group.empty())
+    {
+        m_Group = DefaultGroup;
     }
 }
 

@@ -13,7 +13,7 @@ Kernel::Kernel(const KernelId id, const std::vector<const KernelDefinition*>& de
     m_Definitions(definitions)
 {
     KttAssert(!m_Definitions.empty(), "Each kernel must have at least one definition");
-    m_ProfiledDefinitions.push_back(&GetPrimaryDefinition());
+    m_ProfiledDefinitions.push_back(definitions[0]);
 }
 
 void Kernel::AddParameter(const KernelParameter& parameter)

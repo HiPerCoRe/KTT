@@ -1,4 +1,6 @@
 #include <Kernel/KernelDefinition.h>
+#include <Utility/ErrorHandling/KttException.h>
+#include <Utility/StlHelpers.h>
 
 namespace ktt
 {
@@ -14,6 +16,11 @@ KernelDefinition::KernelDefinition(const KernelDefinitionId id, const std::strin
 
 void KernelDefinition::SetArguments(const std::vector<KernelArgument*> arguments)
 {
+    if (!ContainsUniqueElements(arguments))
+    {
+        throw KttException("Kernel arguments for a single kernel definition must be unique");
+    }
+
     m_Arguments = arguments;
 }
 

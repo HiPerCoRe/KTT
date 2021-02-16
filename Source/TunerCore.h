@@ -28,11 +28,8 @@ public:
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
         const DimensionVector& globalSize, const DimensionVector& localSize);
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
-    KernelId CreateSimpleKernel(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-        const DimensionVector& localSize);
-    KernelId CreateSimpleKernelFromFile(const std::string& name, const std::string& filePath, const DimensionVector& globalSize,
-        const DimensionVector& localSize);
     KernelId CreateKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher);
+    void SetLauncher(const KernelId id, KernelLauncher launcher);
     void AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group);
     void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group);
     void AddConstraint(const KernelId id, const std::vector<std::string>& parameters,
@@ -41,18 +38,16 @@ public:
         const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds,
         std::function<uint64_t(const uint64_t, const std::vector<uint64_t>&)> function);
     void SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds);
-    void SetLauncher(const KernelId id, KernelLauncher launcher);
 
     // Argument management
     ArgumentId AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, void* data, const uint64_t numberOfElements);
+        const ArgumentManagementType managementType, void* data, const size_t dataSize);
     ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const void* data, const uint64_t numberOfElements);
+        const ArgumentManagementType managementType, const void* data, const size_t dataSize);
     ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
-        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const uint64_t numberOfElements);
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
 
     // Kernel running and validation
     KernelResult RunKernel(const KernelId id, const KernelConfiguration& configuration, const std::vector<BufferOutputDescriptor>& output);
