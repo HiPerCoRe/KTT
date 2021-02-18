@@ -110,9 +110,22 @@ const KernelComputeData& ComputeLayerData::GetComputeData(const KernelDefinition
 KernelResult ComputeLayerData::GenerateResult(const Nanoseconds launcherDuration) const
 {
     KernelResult result(m_Kernel.GetId(), m_Configuration, m_PartialResults);
-    const Nanoseconds launcherWithoutOverhead = launcherDuration - m_Overhead;
-    result.SetExtraDuration(m_Duration + launcherWithoutOverhead);
+    const Nanoseconds launcherOverhead = CalculateLauncherOverhead();
+    const Nanoseconds actualDuration = launcherDuration - launcherOverhead;
+    result.SetExtraDuration(m_Duration + actualDuration);
     result.SetExtraOverhead(m_Overhead);
+    return result;
+}
+
+Nanoseconds ComputeLayerData::CalculateLauncherOverhead() const
+{
+    Nanoseconds result = m_Overhead;
+
+    for (const auto& partialResult : m_PartialResults)
+    {
+        result += partialResult.GetOverhead();
+    }
+
     return result;
 }
 

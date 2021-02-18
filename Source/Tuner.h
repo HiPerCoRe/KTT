@@ -129,14 +129,21 @@ public:
       */
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
 
-    /** @fn KernelId CreateKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
-      * Creates kernel from specified definitions. Note that kernel launcher is required in order to launch kernel with multiple
-      * definitions.
+    /** @fn KernelId CreateSimpleKernel(const KernelDefinitionId definitionId)
+      * Creates simple kernel from the specified definition.
+      * @param definitionId Id of kernel definition which will be utilized by the kernel.
+      * @return Id assigned to kernel by the tuner. The id can be used in other API methods.
+      */
+    KernelId CreateSimpleKernel(const KernelDefinitionId definitionId);
+
+    /** @fn KernelId CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
+      * Creates composite kernel from the specified definitions. Note that kernel launcher is required in order to launch kernel
+      * with multiple definitions.
       * @param definitionIds Ids of kernel definitions which will be utilized by the kernel.
       * @param launcher Launcher for the kernel.
       * @return Id assigned to kernel by the tuner. The id can be used in other API methods.
       */
-    KernelId CreateKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher);
+    KernelId CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher);
 
     /** @fn void SetLauncher(const KernelId id, KernelLauncher launcher)
       * Specifies kernel launcher for a kernel. Kernel launcher enables customization of kernel execution. This is useful in

@@ -24,8 +24,15 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     m_Duration(other.m_Duration),
     m_Overhead(other.m_Overhead)
 {
-    m_CompilationData = std::make_unique<KernelCompilationData>(*other.m_CompilationData);
-    m_ProfilingData = std::make_unique<KernelProfilingData>(*other.m_ProfilingData);
+    if (other.HasCompilationData())
+    {
+        m_CompilationData = std::make_unique<KernelCompilationData>(*other.m_CompilationData);
+    }
+
+    if (other.HasProfilingData())
+    {
+        m_ProfilingData = std::make_unique<KernelProfilingData>(*other.m_ProfilingData);
+    }
 }
 
 void ComputationResult::SetDurationData(const Nanoseconds duration, const Nanoseconds overhead)
@@ -110,8 +117,17 @@ ComputationResult& ComputationResult::operator=(const ComputationResult& other)
     m_ConfigurationPrefix = other.m_ConfigurationPrefix;
     m_Duration = other.m_Duration;
     m_Overhead = other.m_Overhead;
-    m_CompilationData = std::make_unique<KernelCompilationData>(*other.m_CompilationData);
-    m_ProfilingData = std::make_unique<KernelProfilingData>(*other.m_ProfilingData);
+
+    if (other.HasCompilationData())
+    {
+        m_CompilationData = std::make_unique<KernelCompilationData>(*other.m_CompilationData);
+    }
+
+    if (other.HasProfilingData())
+    {
+        m_ProfilingData = std::make_unique<KernelProfilingData>(*other.m_ProfilingData);
+    }
+
     return *this;
 }
 

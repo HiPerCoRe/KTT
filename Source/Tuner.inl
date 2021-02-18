@@ -6,6 +6,8 @@
 namespace ktt
 {
 
+using half_float::half;
+
 template <typename T>
 ArgumentId Tuner::AddArgumentVector(const std::vector<T>& data, const ArgumentAccessType accessType)
 {
@@ -76,59 +78,59 @@ ArgumentDataType Tuner::DeriveArgumentDataType() const
     static_assert(std::is_trivially_copyable_v<T> && !std::is_reference_v<T> && !std::is_pointer_v<T>, "Unsupported argument data type");
     static_assert(!std::is_same_v<std::remove_cv_t<T>, bool>, "Bool argument data type is not supported");
 
-    if (std::is_same_v<std::remove_cv_t<T>, half>)
+    if constexpr (std::is_same_v<std::remove_cv_t<T>, half>)
     {
         return ArgumentDataType::Half;
     }
-
-    if (!std::is_arithmetic_v<T>)
+    else if constexpr (!std::is_arithmetic_v<T>)
     {
         return ArgumentDataType::Custom;
     }
-
-    if (sizeof(T) == 1 && std::is_unsigned_v<T>)
+    else if constexpr (sizeof(T) == 1 && std::is_unsigned_v<T>)
     {
         return ArgumentDataType::UnsignedChar;
     }
-    else if (sizeof(T) == 1)
+    else if constexpr (sizeof(T) == 1)
     {
         return ArgumentDataType::Char;
     }
-    else if (sizeof(T) == 2 && std::is_unsigned_v<T>)
+    else if constexpr (sizeof(T) == 2 && std::is_unsigned_v<T>)
     {
         return ArgumentDataType::UnsignedShort;
     }
-    else if (sizeof(T) == 2)
+    else if constexpr (sizeof(T) == 2)
     {
         return ArgumentDataType::Short;
     }
-    else if (std::is_same_v<std::remove_cv_t<T>, float>)
+    else if constexpr (std::is_same_v<std::remove_cv_t<T>, float>)
     {
         return ArgumentDataType::Float;
     }
-    else if (sizeof(T) == 4 && std::is_unsigned_v<T>)
+    else if constexpr (sizeof(T) == 4 && std::is_unsigned_v<T>)
     {
         return ArgumentDataType::UnsignedInt;
     }
-    else if (sizeof(T) == 4)
+    else if constexpr (sizeof(T) == 4)
     {
         return ArgumentDataType::Int;
     }
-    else if (std::is_same_v<std::remove_cv_t<T>, double>)
+    else if constexpr (std::is_same_v<std::remove_cv_t<T>, double>)
     {
         return ArgumentDataType::Double;
     }
-    else if (sizeof(T) == 8 && std::is_unsigned_v<T>)
+    else if constexpr (sizeof(T) == 8 && std::is_unsigned_v<T>)
     {
         return ArgumentDataType::UnsignedLong;
     }
-    else if (sizeof(T) == 8)
+    else if constexpr (sizeof(T) == 8)
     {
         return ArgumentDataType::Long;
     }
-
-    // Unknown arithmetic type
-    return ArgumentDataType::Custom;
+    else
+    {
+        // Unknown arithmetic type
+        return ArgumentDataType::Custom;
+    }
 }
 
 } // namespace ktt

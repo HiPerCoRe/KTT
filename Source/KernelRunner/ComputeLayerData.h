@@ -40,6 +40,8 @@ private:
     const KernelConfiguration& m_Configuration;
     Nanoseconds m_Duration;
     Nanoseconds m_Overhead;
+
+    Nanoseconds CalculateLauncherOverhead() const;
 };
 
 } // namespace ktt

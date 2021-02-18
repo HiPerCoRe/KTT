@@ -40,6 +40,11 @@ void ValidationData::SetValidationRange(const size_t range)
 
 void ValidationData::SetValueComparator(ValueComparator comparator)
 {
+    if (comparator == nullptr)
+    {
+        throw KttException("Value comparator must be a valid function");
+    }
+
     m_Comparator = comparator;
 }
 

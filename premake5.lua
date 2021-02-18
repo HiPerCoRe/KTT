@@ -321,27 +321,51 @@ project "Ktt"
 if not _OPTIONS["no-tutorials"] then
 
 if openClProjects then
+
 project "01InfoOpenCl"
     kind "ConsoleApp"
     files {"Tutorials/01ComputeApiInfo/ComputeApiInfoOpenCl.cpp"}
     includedirs {"Source"}
     links {"ktt"}
+    
+project "02KernelRunningOpenCl"
+    kind "ConsoleApp"
+    files {"Tutorials/02KernelRunning/KernelRunningOpenCl.cpp", "Tutorials/02KernelRunning/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
+    
 end -- openClProjects
     
 if cudaProjects then
+
 project "01InfoCuda"
     kind "ConsoleApp"
     files {"Tutorials/01ComputeApiInfo/ComputeApiInfoCuda.cpp"}
     includedirs {"Source"}
     links {"ktt"}
+    
+project "02KernelRunningCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/02KernelRunning/KernelRunningCuda.cpp", "Tutorials/02KernelRunning/CudaKernel.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
+    
 end -- cudaProjects
 
 if vulkanProjects then
+
 project "01InfoVulkan"
     kind "ConsoleApp"
     files {"Tutorials/01ComputeApiInfo/ComputeApiInfoVulkan.cpp"}
     includedirs {"Source"}
     links {"ktt"}
+    
+project "02KernelRunningVulkan"
+    kind "ConsoleApp"
+    files {"Tutorials/02KernelRunning/KernelRunningVulkan.cpp", "Tutorials/02KernelRunning/VulkanKernel.glsl"}
+    includedirs {"Source"}
+    links {"ktt"}
+    
 end -- vulkanProjects
 
 end -- _OPTIONS["no-tutorials"]

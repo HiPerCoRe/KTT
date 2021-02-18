@@ -40,6 +40,11 @@ std::string KernelConfiguration::GeneratePrefix() const
 
 std::string KernelConfiguration::GetString() const
 {
+    if (m_Pairs.empty())
+    {
+        return "empty";
+    }
+
     std::string result;
 
     for (size_t i = 0; i < m_Pairs.size(); ++i)

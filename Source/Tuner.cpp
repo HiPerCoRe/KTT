@@ -60,7 +60,20 @@ void Tuner::SetArguments(const KernelDefinitionId id, const std::vector<Argument
     }
 }
 
-KernelId Tuner::CreateKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
+KernelId Tuner::CreateSimpleKernel(const KernelDefinitionId definitionId)
+{
+    try
+    {
+        return m_Tuner->CreateKernel(definitionId);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidKernelId;
+    }
+}
+
+KernelId Tuner::CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
 {
     try
     {
