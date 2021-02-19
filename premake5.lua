@@ -333,7 +333,13 @@ project "02KernelRunningOpenCl"
     files {"Tutorials/02KernelRunning/KernelRunningOpenCl.cpp", "Tutorials/02KernelRunning/OpenClKernel.cl"}
     includedirs {"Source"}
     links {"ktt"}
-    
+   
+project "03KernelTuningOpenCl"
+    kind "ConsoleApp"
+    files {"Tutorials/03KernelTuning/KernelTuningOpenCl.cpp", "Tutorials/03KernelTuning/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
+   
 end -- openClProjects
     
 if cudaProjects then
@@ -350,6 +356,12 @@ project "02KernelRunningCuda"
     includedirs {"Source"}
     links {"ktt"}
     
+project "03KernelTuningCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/03KernelTuning/KernelTuningCuda.cpp", "Tutorials/03KernelTuning/CudaKernel.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
+    
 end -- cudaProjects
 
 if vulkanProjects then
@@ -363,6 +375,12 @@ project "01InfoVulkan"
 project "02KernelRunningVulkan"
     kind "ConsoleApp"
     files {"Tutorials/02KernelRunning/KernelRunningVulkan.cpp", "Tutorials/02KernelRunning/VulkanKernel.glsl"}
+    includedirs {"Source"}
+    links {"ktt"}
+    
+project "03KernelTuningVulkan"
+    kind "ConsoleApp"
+    files {"Tutorials/03KernelTuning/KernelTuningVulkan.cpp", "Tutorials/03KernelTuning/VulkanKernel.glsl"}
     includedirs {"Source"}
     links {"ktt"}
     

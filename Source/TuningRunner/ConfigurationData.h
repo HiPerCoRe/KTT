@@ -36,7 +36,7 @@ private:
     const Kernel& m_Kernel;
     size_t m_CurrentGroup;
 
-    bool InitializeNextGroup();
+    bool InitializeNextGroup(const bool isInitialGroup);
     void ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,
         std::vector<ParameterPair>& pairs, std::vector<KernelConfiguration>& finalResult) const;
     void AddExtraParameterPairs(std::vector<ParameterPair>& pairs) const;

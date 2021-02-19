@@ -113,7 +113,7 @@ bool ValidationData::HasReferenceResults() const
 void ValidationData::ComputeReferenceWithFunction()
 {
     KttAssert(HasReferenceComputation(), "Reference can be computed only with valid reference computation");
-    Logger::LogDebug("Computing reference computation result for argument with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogInfo("Computing reference computation result for argument with id " + std::to_string(m_Argument.GetId()));
     
     m_ReferenceResult.resize(m_ValidationRange);
     m_ReferenceComputation(m_ReferenceResult.data());
@@ -122,7 +122,7 @@ void ValidationData::ComputeReferenceWithFunction()
 void ValidationData::ComputeReferenceWithKernel()
 {
     KttAssert(HasReferenceKernel(), "Reference can be computed only with valid reference kernel");
-    Logger::LogDebug("Computing reference kernel result for argument with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogInfo("Computing reference kernel result for argument with id " + std::to_string(m_Argument.GetId()));
 
     const bool profiling = m_KernelRunner.IsProfilingActive();
     m_KernelRunner.SetProfiling(false);

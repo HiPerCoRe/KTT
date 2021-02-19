@@ -437,17 +437,18 @@ void Tuner::SetTimeUnit(const TimeUnit unit)
     }
 }
 
-/*void Tuner::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const
+void Tuner::SaveResults(const std::vector<KernelResult>& /*results*/, const std::string& /*filePath*/, const OutputFormat /*format*/) const
 {
     try
     {
-        m_Tuner->SaveResults(results, filePath, format);
+        // Todo: implement new result serialization
+        //m_Tuner->SaveResults(results, filePath, format);
     }
     catch (const KttException& exception)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
     }
-}*/
+}
 
 void Tuner::SetProfilingCounters(const std::vector<std::string>& counters)
 {

@@ -19,7 +19,7 @@ ConfigurationData::ConfigurationData(const DeviceInfo& deviceInfo, Searcher& sea
 
     if (!IsProcessed())
     {
-        InitializeNextGroup();
+        InitializeNextGroup(true);
     }
 }
 
@@ -31,14 +31,14 @@ ConfigurationData::~ConfigurationData()
 bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousResult)
 {
     m_ProcessedConfigurations.insert(std::make_pair(previousResult.GetTotalDuration(), GetCurrentConfiguration()));
+    m_Searcher.CalculateNextConfiguration(previousResult);
 
     if (m_Searcher.GetUnexploredConfigurationCount() > 0)
     {
-        m_Searcher.CalculateNextConfiguration(previousResult);
         return true;
     }
 
-    return InitializeNextGroup();
+    return InitializeNextGroup(false);
 }
 
 uint64_t ConfigurationData::GetConfigurationCount() const
@@ -79,11 +79,15 @@ const KernelConfiguration& ConfigurationData::GetBestConfiguration() const
     return GetCurrentConfiguration();
 }
 
-bool ConfigurationData::InitializeNextGroup()
+bool ConfigurationData::InitializeNextGroup(const bool isInitialGroup)
 {
     m_Searcher.Reset();
     m_Configurations.clear();
-    ++m_CurrentGroup;
+
+    if (!isInitialGroup)
+    {
+        ++m_CurrentGroup;
+    }
 
     if (IsProcessed())
     {

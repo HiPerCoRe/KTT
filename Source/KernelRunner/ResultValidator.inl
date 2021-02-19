@@ -52,8 +52,9 @@ template <typename T>
 bool ResultValidator::ValidateAbsoluteDifference(const KernelArgument& argument, const T* result, const T* reference, const size_t range) const
 {
     double difference = 0.0;
+    const size_t validatedElements = range / argument.GetElementSize();
 
-    for (size_t i = 0; i < range; ++i)
+    for (size_t i = 0; i < validatedElements; ++i)
     {
         difference += std::fabs(result[i] - reference[i]);
     }
@@ -71,7 +72,9 @@ bool ResultValidator::ValidateAbsoluteDifference(const KernelArgument& argument,
 template <typename T>
 bool ResultValidator::ValidateSideBySide(const KernelArgument& argument, const T* result, const T* reference, const size_t range) const
 {
-    for (size_t i = 0; i < range; ++i)
+    const size_t validatedElements = range / argument.GetElementSize();
+
+    for (size_t i = 0; i < validatedElements; ++i)
     {
         const T difference = std::fabs(result[i] - reference[i]);
 
@@ -90,7 +93,9 @@ bool ResultValidator::ValidateSideBySide(const KernelArgument& argument, const T
 template <typename T>
 bool ResultValidator::ValidateSideBySideRelative(const KernelArgument& argument, const T* result, const T* reference, const size_t range) const
 {
-    for (size_t i = 0; i < range; ++i)
+    const size_t validatedElements = range / argument.GetElementSize();
+
+    for (size_t i = 0; i < validatedElements; ++i)
     {
         const T difference = std::fabs(result[i] - reference[i]);
         const T relativeDifference = difference / reference[i];

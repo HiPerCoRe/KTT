@@ -49,10 +49,12 @@ int main(int argc, char** argv)
 
     // Add new kernel definition. Specify kernel function name, path to source file, default grid dimensions and block dimensions.
     // KTT returns handle to the newly added definition, which can be used to reference it in other API methods.
-    const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("vectorAddition", kernelFile, gridDimensions, blockDimensions);
+    const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("vectorAddition", kernelFile, gridDimensions,
+        blockDimensions);
 
     // Add new kernel arguments to tuner. Argument data is copied from std::vector containers. Specify whether the arguments are
-    // used as input or output. KTT returns handle to the newly added argument, which can be used to reference it in other API methods. 
+    // used as input or output. KTT returns handle to the newly added argument, which can be used to reference it in other API
+    // methods. 
     const ktt::ArgumentId aId = tuner.AddArgumentVector(a, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId bId = tuner.AddArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
@@ -73,8 +75,8 @@ int main(int argc, char** argv)
     // In this case, it remains empty. The third argument is used to retrieve the kernel output. For each kernel argument that
     // is retrieved, one BufferOutputDescriptor must be specified. Each of these descriptors contains id of the retrieved argument
     // and memory location where the argument data will be stored. Optionally, it can also include number of bytes to be retrieved,
-    // if only a part of the argument is needed. Here, the data is stored back into result buffer which was created earlier. Note that
-    // the memory location size needs to be equal or greater than the retrieved argument size.
+    // if only a part of the argument is needed. Here, the data is stored back into result buffer which was created earlier. Note
+    // that the memory location size needs to be equal or greater than the retrieved argument size.
     tuner.RunKernel(kernel, {}, {ktt::BufferOutputDescriptor(resultId, result.data())});
 
     // Print first ten elements from the result to check they were computed correctly.

@@ -492,7 +492,7 @@ public:
       * @param filePath File where the results will be saved.
       * @param format Format in which the results are saved. See ::OutputFormat for more information.
       */
-    //void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const;
+    void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const;
 
     /** @fn void SetProfilingCounters(const std::vector<std::string>& counters)
       * Specifies profiling counters that will be collected during kernel profiling. Note that not all profiling counters are

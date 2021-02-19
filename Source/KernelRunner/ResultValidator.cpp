@@ -123,7 +123,7 @@ bool ResultValidator::HasReferenceResult(const Kernel& kernel) const
 
         if (HasValidationData(id))
         {
-            result |= HasReferenceResult(id);
+            result &= HasReferenceResult(id);
         }
     }
 
@@ -151,7 +151,7 @@ bool ResultValidator::ValidateArguments(const Kernel& kernel, const KernelRunMod
 
         if (HasValidationData(id))
         {
-            result |= ValidateArgument(*argument);
+            result &= ValidateArgument(*argument);
         }
     }
 
@@ -191,13 +191,13 @@ bool ResultValidator::ValidateArgument(const KernelArgument& argument) const
     {
         if (validationData.HasReferenceComputation())
         {
-            result |= ValidateResultWithComparator(argument, argumentData.data(), validationData.GetReferenceResult<void>(),
+            result &= ValidateResultWithComparator(argument, argumentData.data(), validationData.GetReferenceResult<void>(),
                 validationRange, validationData.GetValueComparator());
         }
 
         if (validationData.HasReferenceKernel())
         {
-            result |= ValidateResultWithComparator(argument, argumentData.data(), validationData.GetReferenceKernelResult<void>(),
+            result &= ValidateResultWithComparator(argument, argumentData.data(), validationData.GetReferenceKernelResult<void>(),
                 validationRange, validationData.GetValueComparator());
         }
 
@@ -206,13 +206,13 @@ bool ResultValidator::ValidateArgument(const KernelArgument& argument) const
 
     if (validationData.HasReferenceComputation())
     {
-        result |= ValidateResultWithMethod(argument, argumentData.data(), validationData.GetReferenceResult<void>(),
+        result &= ValidateResultWithMethod(argument, argumentData.data(), validationData.GetReferenceResult<void>(),
             validationRange);
     }
 
     if (validationData.HasReferenceKernel())
     {
-        result |= ValidateResultWithMethod(argument, argumentData.data(), validationData.GetReferenceKernelResult<void>(),
+        result &= ValidateResultWithMethod(argument, argumentData.data(), validationData.GetReferenceKernelResult<void>(),
             validationRange);
     }
 
@@ -255,11 +255,11 @@ bool ResultValidator::ValidateResultWithMethod(const KernelArgument& argument, c
 }
 
 bool ResultValidator::ValidateResultWithComparator(const KernelArgument& argument, const void* result, const void* referenceResult,
-    const size_t validationRange, ValueComparator comparator) const
+    const size_t range, ValueComparator comparator) const
 {
     const size_t elementSize = argument.GetElementSize();
 
-    for (size_t i = 0; i < validationRange; i += elementSize)
+    for (size_t i = 0; i < range; i += elementSize)
     {
         if (!comparator(reinterpret_cast<const uint8_t*>(result) + i, reinterpret_cast<const uint8_t*>(referenceResult) + i))
         {

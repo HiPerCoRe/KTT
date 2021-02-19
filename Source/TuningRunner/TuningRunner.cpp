@@ -15,6 +15,9 @@ TuningRunner::TuningRunner(KernelRunner& kernelRunner, const DeviceInfo& info) :
 
 std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_ptr<StopCondition> stopCondition)
 {
+    const auto id = kernel.GetId();
+    Logger::LogInfo("Starting offline tuning for kernel " + std::to_string(id));
+
     if (kernel.HasWritableZeroCopyArgument())
     {
         throw KttException("Offline kernel tuning cannot be performed with writable zero-copy arguments");
@@ -25,14 +28,12 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_p
         stopCondition->Initialize();
     }
 
+    m_ConfigurationManager->InitializeData(kernel);
     std::vector<KernelResult> results;
-    const auto id = kernel.GetId();
     KernelResult result(id, m_ConfigurationManager->GetCurrentConfiguration(id));
 
-    do 
+    while (!m_ConfigurationManager->IsDataProcessed(id))
     {
-        Logger::LogInfo("Launching new configuration for kernel " + std::to_string(id));
-
         do 
         {
             result = TuneIteration(kernel, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false);
@@ -51,9 +52,12 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_p
                 break;
             }
         }
-    }
-    while (m_ConfigurationManager->CalculateNextConfiguration(id, result));
 
+        m_ConfigurationManager->CalculateNextConfiguration(id, result);
+    }
+
+    Logger::LogInfo("Ending offline tuning for kernel " + std::to_string(id) + ", total number of tested configurations is "
+        + std::to_string(results.size()));
     m_KernelRunner.ClearReferenceResult(kernel);
     m_ConfigurationManager->ClearData(id);
     return results;
@@ -75,10 +79,20 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
     }
 
     m_KernelRunner.SetupBuffers(kernel);
-    const auto& currentConfiguration = m_ConfigurationManager->GetCurrentConfiguration(id);
-    KernelResult result = m_KernelRunner.RunKernel(kernel, currentConfiguration, mode, output);
+    const KernelConfiguration* configuration;
 
-    if (mode != KernelRunMode::OfflineTuning)
+    if (m_ConfigurationManager->IsDataProcessed(id))
+    {
+        configuration = &m_ConfigurationManager->GetBestConfiguration(id);
+    }
+    else
+    {
+        configuration = &m_ConfigurationManager->GetCurrentConfiguration(id);
+    }
+
+    KernelResult result = m_KernelRunner.RunKernel(kernel, *configuration, mode, output);
+
+    if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns())
     {
         m_ConfigurationManager->CalculateNextConfiguration(id, result);
     }
