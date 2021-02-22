@@ -1,8 +1,8 @@
 #include <cstring>
 
+#include <Api/KttException.h>
 #include <KernelArgument/KernelArgument.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 
 namespace ktt
 {

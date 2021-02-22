@@ -1,5 +1,6 @@
 #ifdef KTT_API_CUDA
 
+#include <Api/KttException.h>
 #include <ComputeEngine/Cuda/Buffers/CudaDeviceBuffer.h>
 #include <ComputeEngine/Cuda/Buffers/CudaHostBuffer.h>
 #include <ComputeEngine/Cuda/Buffers/CudaUnifiedBuffer.h>
@@ -7,10 +8,9 @@
 #include <ComputeEngine/Cuda/CudaEngine.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/Timer/Timer.h>
 #include <Utility/StlHelpers.h>
-#include <Utility/Timer.h>
 
 #ifdef KTT_PROFILING_CUPTI_LEGACY
 #include <ComputeEngine/Cuda/CuptiLegacy/CuptiSubscription.h>

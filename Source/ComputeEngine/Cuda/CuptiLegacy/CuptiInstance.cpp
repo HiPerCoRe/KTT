@@ -5,11 +5,11 @@
 #include <string>
 
 #include <Api/Output/KernelProfilingData.h>
+#include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CuptiLegacy/CuptiInstance.h>
 #include <ComputeEngine/Cuda/CudaContext.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt

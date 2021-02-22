@@ -1,7 +1,7 @@
+#include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CudaEngine.h>
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 #include <TunerCore.h>
 

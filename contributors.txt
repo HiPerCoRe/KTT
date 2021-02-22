@@ -1,0 +1,8 @@
+List of the KTT framework contributors:
+
+* Jiří Filipovič (https://github.com/jiri-filipovic) - Reduction, matrix transposition, matrix multiplication and 3D Coulomb
+  summation examples, MCMC searcher, proposal of many new features and feedback on overall KTT framework functionality.
+* David Střelák (https://github.com/DStrelak) - N-body example, feedback on online tuning feature.
+* Jana Hozzová (https://github.com/jpazurikova) - Radix sort and hotspot examples, feedback on composite kernel feature.
+* Richard Trembecký (https://github.com/rtrembecky) - BICG, covariance and convolution examples.
+* Knutakir (https://github.com/Knutakir) - Setting CUDA compiler device architecture option based on the selected device.

@@ -1,8 +1,9 @@
+#include <Api/KttException.h>
 #include <KernelRunner/ComputeLayer.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/Timer/Timer.h>
 #include <Utility/StlHelpers.h>
-#include <Utility/Timer.h>
 
 namespace ktt
 {

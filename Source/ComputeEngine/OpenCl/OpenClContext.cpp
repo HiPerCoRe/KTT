@@ -1,10 +1,10 @@
 #ifdef KTT_API_OPENCL
 
+#include <Api/KttException.h>
 #include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <ComputeEngine/OpenCl/OpenClDevice.h>
 #include <ComputeEngine/OpenCl/OpenClPlatform.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt

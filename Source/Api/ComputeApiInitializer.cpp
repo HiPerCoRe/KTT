@@ -1,5 +1,5 @@
 #include <Api/ComputeApiInitializer.h>
-#include <Utility/ErrorHandling/KttException.h>
+#include <Api/KttException.h>
 
 namespace ktt
 {

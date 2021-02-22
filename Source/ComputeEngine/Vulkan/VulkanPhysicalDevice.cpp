@@ -1,9 +1,9 @@
 #ifdef KTT_API_VULKAN
 
+#include <Api/KttException.h>
 #include <ComputeEngine/Vulkan/VulkanPhysicalDevice.h>
 #include <ComputeEngine/Vulkan/VulkanUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 
 namespace ktt
 {

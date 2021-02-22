@@ -1,7 +1,7 @@
 #include <limits>
 
 #include <Api/Output/ComputationResult.h>
-#include <Utility/ErrorHandling/KttException.h>
+#include <Api/KttException.h>
 
 namespace ktt
 {

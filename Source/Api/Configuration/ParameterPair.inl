@@ -1,7 +1,7 @@
 #include <type_traits>
 
 #include <Api/Configuration/ParameterPair.h>
-#include <Utility/ErrorHandling/KttException.h>
+#include <Api/KttException.h>
 
 namespace ktt
 {

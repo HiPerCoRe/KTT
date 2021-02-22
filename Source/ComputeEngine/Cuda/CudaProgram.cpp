@@ -6,10 +6,10 @@
 #include <vector>
 #include <cuda.h>
 
+#include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CudaContext.h>
 #include <ComputeEngine/Cuda/CudaProgram.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt

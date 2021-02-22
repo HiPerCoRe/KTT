@@ -1,5 +1,5 @@
 #include <Api/Searcher/Searcher.h>
-#include <Utility/ErrorHandling/KttException.h>
+#include <Api/KttException.h>
 
 namespace ktt
 {

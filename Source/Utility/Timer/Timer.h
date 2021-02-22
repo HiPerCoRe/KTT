@@ -3,7 +3,7 @@
 #include <chrono>
 #include <string>
 
-#include <Output/TimeUnit.h>
+#include <Utility/Timer/TimeUnit.h>
 #include <KttTypes.h>
 
 namespace ktt

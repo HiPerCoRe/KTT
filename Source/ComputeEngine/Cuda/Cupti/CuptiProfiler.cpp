@@ -2,9 +2,9 @@
 
 #include <cupti_profiler_target.h>
 
+#include <Api/KttException.h>
 #include <ComputeEngine/Cuda/Cupti/CuptiProfiler.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt

@@ -26,8 +26,8 @@
 #include <KernelRunner/ValidationMethod.h>
 #include <KernelRunner/ValidationMode.h>
 #include <Output/OutputFormat.h>
-#include <Output/TimeUnit.h>
 #include <Utility/Logger/LoggingLevel.h>
+#include <Utility/Timer/TimeUnit.h>
 #include <KttTypes.h>
 
 // Data holders

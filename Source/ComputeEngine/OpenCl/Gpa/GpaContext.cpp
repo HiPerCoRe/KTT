@@ -1,8 +1,8 @@
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 
+#include <Api/KttException.h>
 #include <ComputeEngine/OpenCl/Gpa/GpaContext.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt

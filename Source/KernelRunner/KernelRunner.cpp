@@ -1,10 +1,10 @@
 #include <string>
 
+#include <Api/KttException.h>
 #include <KernelRunner/KernelActivator.h>
 #include <KernelRunner/KernelRunner.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
-#include <Utility/Timer.h>
+#include <Utility/Timer/Timer.h>
 
 namespace ktt
 {
@@ -56,7 +56,7 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
 
         if (argument->GetManagementType() == ArgumentManagementType::User)
         {
-            if (!kernel.HasLauncher())
+            if (!kernel.HasLauncher() && !argument->HasUserBuffer())
             {
                 Logger::LogWarning("Kernel argument with id " + std::to_string(id) + " has buffer managed by user, but its "
                     + "associated kernel with id " + std::to_string(kernel.GetId()) + " does not have a launcher defined by user");

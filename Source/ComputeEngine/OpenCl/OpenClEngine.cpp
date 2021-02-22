@@ -1,15 +1,15 @@
 #ifdef KTT_API_OPENCL
 
+#include <Api/KttException.h>
 #include <ComputeEngine/OpenCl/Buffers/OpenClDeviceBuffer.h>
 #include <ComputeEngine/OpenCl/Buffers/OpenClHostBuffer.h>
 #include <ComputeEngine/OpenCl/Buffers/OpenClUnifiedBuffer.h>
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
 #include <ComputeEngine/OpenCl/OpenClPlatform.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/Timer/Timer.h>
 #include <Utility/StlHelpers.h>
-#include <Utility/Timer.h>
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 #include <ComputeEngine/OpenCl/Gpa/GpaPass.h>

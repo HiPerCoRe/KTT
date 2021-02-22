@@ -1,4 +1,4 @@
-#include <Utility/ErrorHandling/KttException.h>
+#include <Api/KttException.h>
 
 namespace ktt
 {

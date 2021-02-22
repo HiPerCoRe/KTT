@@ -1,6 +1,6 @@
 #include <Api/Configuration/ParameterPair.h>
+#include <Api/KttException.h>
 #include <Kernel/KernelParameter.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/NumericalUtilities.h>
 
 namespace ktt

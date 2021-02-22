@@ -2,6 +2,7 @@
 #include <limits>
 
 #include <Api/Configuration/KernelConfiguration.h>
+#include <Api/KttException.h>
 #include <ComputeEngine/KernelComputeData.h>
 #include <Kernel/Kernel.h>
 #include <Kernel/KernelDefinition.h>

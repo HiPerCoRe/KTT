@@ -1,9 +1,9 @@
 #include <string>
 
+#include <Api/KttException.h>
 #include <KernelRunner/KernelRunner.h>
 #include <KernelRunner/ResultValidator.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/External/half.hpp>
 #include <Utility/StlHelpers.h>
 #include <Utility/Logger/Logger.h>

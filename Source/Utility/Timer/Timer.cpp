@@ -1,5 +1,5 @@
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/Timer.h>
+#include <Utility/Timer/Timer.h>
 
 namespace ktt
 {

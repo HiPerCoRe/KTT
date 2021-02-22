@@ -1,6 +1,6 @@
 #include <type_traits>
 
-#include <Utility/ErrorHandling/KttException.h>
+#include <Api/KttException.h>
 #include <Tuner.h>
 
 namespace ktt

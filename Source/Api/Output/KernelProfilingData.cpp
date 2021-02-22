@@ -1,6 +1,6 @@
 #include <Api/Output/KernelProfilingData.h>
+#include <Api/KttException.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/StlHelpers.h>
 
 namespace ktt

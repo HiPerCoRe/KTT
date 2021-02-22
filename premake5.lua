@@ -327,21 +327,34 @@ project "01InfoOpenCl"
     files {"Tutorials/01ComputeApiInfo/ComputeApiInfoOpenCl.cpp"}
     includedirs {"Source"}
     links {"ktt"}
-    
+
 project "02KernelRunningOpenCl"
     kind "ConsoleApp"
     files {"Tutorials/02KernelRunning/KernelRunningOpenCl.cpp", "Tutorials/02KernelRunning/OpenClKernel.cl"}
     includedirs {"Source"}
     links {"ktt"}
-   
+
 project "03KernelTuningOpenCl"
     kind "ConsoleApp"
     files {"Tutorials/03KernelTuning/KernelTuningOpenCl.cpp", "Tutorials/03KernelTuning/OpenClKernel.cl"}
     includedirs {"Source"}
     links {"ktt"}
-   
-end -- openClProjects
+
+project "04CustomArgumentTypesOpenCl"
+    kind "ConsoleApp"
+    files {"Tutorials/04CustomArgumentTypes/CustomArgumentTypesOpenCl.cpp", "Tutorials/04CustomArgumentTypes/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
+
+project "05ComputeApiInitializerOpenCl"
+    kind "ConsoleApp"
+    files {"Tutorials/05ComputeApiInitializer/ComputeApiInitializerOpenCl.cpp", "Tutorials/05ComputeApiInitializer/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
+    linkLibraries()
     
+end -- openClProjects
+
 if cudaProjects then
 
 project "01InfoCuda"
@@ -362,6 +375,19 @@ project "03KernelTuningCuda"
     includedirs {"Source"}
     links {"ktt"}
     
+project "04CustomArgumentTypesCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/04CustomArgumentTypes/CustomArgumentTypesCuda.cpp", "Tutorials/04CustomArgumentTypes/CudaKernel.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
+
+project "05ComputeApiInitializerCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/05ComputeApiInitializer/ComputeApiInitializerCuda.cpp", "Tutorials/05ComputeApiInitializer/CudaKernel.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
+    linkLibraries()
+
 end -- cudaProjects
 
 if vulkanProjects then

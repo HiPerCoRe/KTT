@@ -1,12 +1,12 @@
 #include <string>
 
 #include <Api/Output/BufferOutputDescriptor.h>
+#include <Api/KttException.h>
 #include <Kernel/Kernel.h>
 #include <KernelArgument/KernelArgument.h>
 #include <KernelRunner/KernelRunner.h>
 #include <KernelRunner/ValidationData.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt

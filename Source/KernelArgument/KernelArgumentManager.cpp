@@ -1,7 +1,7 @@
 #include <string>
 
+#include <Api/KttException.h>
 #include <KernelArgument/KernelArgumentManager.h>
-#include <Utility/ErrorHandling/KttException.h>
 
 namespace ktt
 {

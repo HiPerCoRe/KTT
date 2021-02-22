@@ -1,6 +1,7 @@
 #ifdef KTT_API_OPENCL
 
 #include <Api/Output/KernelCompilationData.h>
+#include <Api/KttException.h>
 #include <ComputeEngine/OpenCl/Actions/OpenClComputeAction.h>
 #include <ComputeEngine/OpenCl/Buffers/OpenClBuffer.h>
 #include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
@@ -8,7 +9,6 @@
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 #include <KernelArgument/KernelArgument.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt

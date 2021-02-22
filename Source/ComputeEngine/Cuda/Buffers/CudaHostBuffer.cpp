@@ -2,12 +2,12 @@
 
 #include <algorithm>
 
+#include <Api/KttException.h>
 #include <ComputeEngine/Cuda/Actions/CudaTransferAction.h>
 #include <ComputeEngine/Cuda/Buffers/CudaHostBuffer.h>
 #include <ComputeEngine/Cuda/CudaStream.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt

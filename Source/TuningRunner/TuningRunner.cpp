@@ -1,8 +1,8 @@
 #include <algorithm>
 
 #include <Api/Info/DeviceInfo.h>
+#include <Api/KttException.h>
 #include <TuningRunner/TuningRunner.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt

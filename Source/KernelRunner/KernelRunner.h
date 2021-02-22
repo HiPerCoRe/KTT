@@ -11,7 +11,7 @@
 #include <KernelRunner/ComputeLayer.h>
 #include <KernelRunner/KernelRunMode.h>
 #include <KernelRunner/ResultValidator.h>
-#include <Output/TimeUnit.h>
+#include <Utility/Timer/TimeUnit.h>
 #include <KttTypes.h>
 
 namespace ktt

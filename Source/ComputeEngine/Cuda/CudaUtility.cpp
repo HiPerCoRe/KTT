@@ -1,7 +1,7 @@
 #ifdef KTT_API_CUDA
 
+#include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
-#include <Utility/ErrorHandling/KttException.h>
 
 namespace ktt
 {

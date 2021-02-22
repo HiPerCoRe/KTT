@@ -1,5 +1,5 @@
+#include <Api/KttException.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Tuner.h>
 #include <TunerCore.h>
 

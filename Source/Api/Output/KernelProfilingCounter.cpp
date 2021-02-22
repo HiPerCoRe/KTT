@@ -1,5 +1,5 @@
 #include <Api/Output/KernelProfilingCounter.h>
-#include <Utility/ErrorHandling/KttException.h>
+#include <Api/KttException.h>
 
 namespace ktt
 {

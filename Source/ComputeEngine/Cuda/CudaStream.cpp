@@ -2,9 +2,9 @@
 
 #include <string>
 
+#include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CudaStream.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt

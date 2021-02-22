@@ -1,5 +1,5 @@
+#include <Api/KttException.h>
 #include <Kernel/KernelManager.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/FileSystem.h>
 #include <Utility/StlHelpers.h>
 

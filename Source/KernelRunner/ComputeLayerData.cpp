@@ -1,7 +1,7 @@
 #include <string>
 
+#include <Api/KttException.h>
 #include <KernelRunner/ComputeLayerData.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/StlHelpers.h>
 
 namespace ktt

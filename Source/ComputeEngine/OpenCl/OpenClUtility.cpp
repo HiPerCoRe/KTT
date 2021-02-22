@@ -1,7 +1,7 @@
 #ifdef KTT_API_OPENCL
 
+#include <Api/KttException.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
-#include <Utility/ErrorHandling/KttException.h>
 
 namespace ktt
 {

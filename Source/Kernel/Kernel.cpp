@@ -1,8 +1,8 @@
 #include <algorithm>
 
+#include <Api/KttException.h>
 #include <Kernel/Kernel.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/StlHelpers.h>
 
 namespace ktt

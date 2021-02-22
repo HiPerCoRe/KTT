@@ -1,7 +1,7 @@
 #include <fstream>
 #include <sstream>
 
-#include <Utility/ErrorHandling/KttException.h>
+#include <Api/KttException.h>
 #include <Utility/FileSystem.h>
 
 namespace ktt

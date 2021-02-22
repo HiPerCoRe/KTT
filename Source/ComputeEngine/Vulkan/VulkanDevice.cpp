@@ -2,10 +2,10 @@
 
 #include <string>
 
+#include <Api/KttException.h>
 #include <ComputeEngine/Vulkan/VulkanDevice.h>
 #include <ComputeEngine/Vulkan/VulkanUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/ErrorHandling/KttException.h>
 #include <Utility/Logger/Logger.h>
 #include <Utility/StlHelpers.h>
 
