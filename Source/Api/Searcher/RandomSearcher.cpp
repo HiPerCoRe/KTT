@@ -42,14 +42,4 @@ const KernelConfiguration& RandomSearcher::GetCurrentConfiguration() const
     return GetConfigurations()[currentIndex];
 }
 
-uint64_t RandomSearcher::GetUnexploredConfigurationCount() const
-{
-    if (m_Index >= GetConfigurations().size())
-    {
-        return 0;
-    }
-
-    return static_cast<uint64_t>(GetConfigurations().size() - m_Index);
-}
-
 } // namespace ktt

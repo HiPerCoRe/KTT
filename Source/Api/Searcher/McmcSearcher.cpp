@@ -155,16 +155,6 @@ const KernelConfiguration& McmcSearcher::GetCurrentConfiguration() const
     return GetConfigurations()[m_Index];
 }
 
-uint64_t McmcSearcher::GetUnexploredConfigurationCount() const
-{
-    if (m_VisitedStatesCount >= GetConfigurations().size())
-    {
-        return 0;
-    }
-
-    return static_cast<uint64_t>(GetConfigurations().size() - m_VisitedStatesCount);
-}
-
 std::vector<size_t> McmcSearcher::GetNeighbours(const size_t referenceId) const
 {
     std::vector<size_t> neighbours;

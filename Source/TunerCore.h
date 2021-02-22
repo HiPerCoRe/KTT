@@ -49,6 +49,7 @@ public:
         const ArgumentManagementType managementType, const void* data, const size_t dataSize);
     ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
+    void SetReadOnlyArgumentCache(const bool flag);
 
     // Kernel running and validation
     KernelResult RunKernel(const KernelId id, const KernelConfiguration& configuration, const std::vector<BufferOutputDescriptor>& output);

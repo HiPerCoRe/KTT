@@ -116,6 +116,11 @@ ArgumentId TunerCore::AddUserArgument(ComputeBuffer buffer, const size_t element
     return id;
 }
 
+void TunerCore::SetReadOnlyArgumentCache(const bool flag)
+{
+    m_KernelRunner->SetReadOnlyArgumentCache(flag);
+}
+
 KernelResult TunerCore::RunKernel(const KernelId id, const KernelConfiguration& configuration,
     const std::vector<BufferOutputDescriptor>& output)
 {

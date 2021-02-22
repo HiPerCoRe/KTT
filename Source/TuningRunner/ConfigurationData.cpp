@@ -13,7 +13,8 @@ ConfigurationData::ConfigurationData(const DeviceInfo& deviceInfo, Searcher& sea
     m_DeviceInfo(deviceInfo),
     m_Searcher(searcher),
     m_Kernel(kernel),
-    m_CurrentGroup(0)
+    m_CurrentGroup(0),
+    m_ExploredConfigurations(0)
 {
     m_Groups = kernel.GenerateParameterGroups();
 
@@ -30,11 +31,12 @@ ConfigurationData::~ConfigurationData()
 
 bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousResult)
 {
+    ++m_ExploredConfigurations;
     m_ProcessedConfigurations.insert(std::make_pair(previousResult.GetTotalDuration(), GetCurrentConfiguration()));
-    m_Searcher.CalculateNextConfiguration(previousResult);
-
-    if (m_Searcher.GetUnexploredConfigurationCount() > 0)
+    
+    if (m_ExploredConfigurations < m_Configurations.size())
     {
+        m_Searcher.CalculateNextConfiguration(previousResult);
         return true;
     }
 
@@ -59,7 +61,7 @@ const KernelParameterGroup& ConfigurationData::GetCurrentGroup() const
 
 const KernelConfiguration& ConfigurationData::GetCurrentConfiguration() const
 {
-    if (m_Configurations.empty() || m_Searcher.GetUnexploredConfigurationCount() == 0)
+    if (m_Configurations.empty() || m_ExploredConfigurations >= m_Configurations.size())
     {
         static KernelConfiguration defaultConfiguration;
         return defaultConfiguration;
@@ -83,6 +85,7 @@ bool ConfigurationData::InitializeNextGroup(const bool isInitialGroup)
 {
     m_Searcher.Reset();
     m_Configurations.clear();
+    m_ExploredConfigurations = 0;
 
     if (!isInitialGroup)
     {

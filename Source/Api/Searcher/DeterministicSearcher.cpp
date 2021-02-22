@@ -23,14 +23,4 @@ const KernelConfiguration& DeterministicSearcher::GetCurrentConfiguration() cons
     return GetConfigurations()[m_Index];
 }
 
-uint64_t DeterministicSearcher::GetUnexploredConfigurationCount() const
-{
-    if (m_Index >= GetConfigurations().size())
-    {
-        return 0;
-    }
-
-    return static_cast<uint64_t>(GetConfigurations().size() - m_Index);
-}
-
 } // namespace ktt

@@ -205,6 +205,18 @@ void Tuner::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDe
     }
 }
 
+void Tuner::SetReadOnlyArgumentCache(const bool flag)
+{
+    try
+    {
+        m_Tuner->SetReadOnlyArgumentCache(flag);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 KernelResult Tuner::RunKernel(const KernelId id, const KernelConfiguration& configuration,
     const std::vector<BufferOutputDescriptor>& output)
 {

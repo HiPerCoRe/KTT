@@ -35,6 +35,7 @@ private:
     Searcher& m_Searcher;
     const Kernel& m_Kernel;
     size_t m_CurrentGroup;
+    size_t m_ExploredConfigurations;
 
     bool InitializeNextGroup(const bool isInitialGroup);
     void ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,

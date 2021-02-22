@@ -15,6 +15,7 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
     m_Engine(engine),
     m_ArgumentManager(argumentManager),
     m_TimeUnit(TimeUnit::Milliseconds),
+    m_ReadOnlyCacheFlag(true),
     m_ProfilingFlag(false)
 {}
 
@@ -65,6 +66,11 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
             continue;
         }
 
+        if (m_ReadOnlyCacheFlag && argument->GetAccessType() == ArgumentAccessType::ReadOnly && m_Engine.HasBuffer(id))
+        {
+            continue;
+        }
+
         const auto actionId = m_Engine.UploadArgument(*argument, m_ComputeLayer->GetDefaultQueue());
         m_Engine.WaitForTransferAction(actionId);
     }
@@ -79,6 +85,11 @@ void KernelRunner::CleanupBuffers(const Kernel& kernel)
         const auto id = argument->GetId();
 
         if (argument->GetManagementType() == ArgumentManagementType::User)
+        {
+            continue;
+        }
+
+        if (m_ReadOnlyCacheFlag && argument->GetAccessType() == ArgumentAccessType::ReadOnly)
         {
             continue;
         }
@@ -100,6 +111,11 @@ void KernelRunner::DownloadBuffers(const std::vector<BufferOutputDescriptor>& ou
 void KernelRunner::SetTimeUnit(const TimeUnit unit)
 {
     m_TimeUnit = unit;
+}
+
+void KernelRunner::SetReadOnlyArgumentCache(const bool flag)
+{
+    m_ReadOnlyCacheFlag = flag;
 }
 
 void KernelRunner::SetProfiling(const bool flag)

@@ -29,6 +29,7 @@ public:
     void DownloadBuffers(const std::vector<BufferOutputDescriptor>& output);
 
     void SetTimeUnit(const TimeUnit unit);
+    void SetReadOnlyArgumentCache(const bool flag);
     void SetProfiling(const bool flag);
     bool IsProfilingActive() const;
 
@@ -46,6 +47,7 @@ private:
     ComputeEngine& m_Engine;
     KernelArgumentManager& m_ArgumentManager;
     TimeUnit m_TimeUnit;
+    bool m_ReadOnlyCacheFlag;
     bool m_ProfilingFlag;
 
     KernelLauncher GetKernelLauncher(const Kernel& kernel);

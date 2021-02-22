@@ -34,8 +34,8 @@ public:
     virtual void OnReset();
 
     /** @fn virtual void CalculateNextConfiguration(const KernelResult& previousResult) = 0
-      * Decides which configuration will be run next. Called after GetCurrentConfiguration method if unexplored count
-      * is greater than zero.
+      * Decides which configuration will be run next. Called after GetCurrentConfiguration method if there are remaining
+      * unexplored configurations.
       * @param previousResult Result from the last tested configuration. See KernelResult for more information.
       */
     virtual void CalculateNextConfiguration(const KernelResult& previousResult) = 0;
@@ -45,12 +45,6 @@ public:
       * @return Current configuration.
       */
     virtual const KernelConfiguration& GetCurrentConfiguration() const = 0;
-
-    /** @fn virtual uint64_t GetUnexploredConfigurationCount() const = 0
-      * Returns number of unexplored kernel configurations.
-      * @return Number of unexplored configurations.
-      */
-    virtual uint64_t GetUnexploredConfigurationCount() const = 0;
 
     /** @fn Searcher()
       * Default searcher constructor. Should be called from inheriting searcher's constructor.

@@ -31,7 +31,6 @@ public:
 
     void CalculateNextConfiguration(const KernelResult& previousResult) override;
     const KernelConfiguration& GetCurrentConfiguration() const override;
-    uint64_t GetUnexploredConfigurationCount() const override;
 
 private:
     size_t m_Index;
