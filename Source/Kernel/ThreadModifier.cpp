@@ -9,7 +9,7 @@ ThreadModifier::ThreadModifier() :
 {}
 
 ThreadModifier::ThreadModifier(const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitions,
-    std::function<uint64_t(const uint64_t, const std::vector<uint64_t>&)> function) :
+    ModifierFunction function) :
     m_Parameters(parameters),
     m_Definitions(definitions),
     m_Function(function)

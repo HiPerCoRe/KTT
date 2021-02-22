@@ -78,7 +78,6 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
         m_ConfigurationManager->InitializeData(kernel);
     }
 
-    m_KernelRunner.SetupBuffers(kernel);
     const KernelConfiguration* configuration;
 
     if (m_ConfigurationManager->IsDataProcessed(id))
@@ -97,7 +96,6 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
         m_ConfigurationManager->CalculateNextConfiguration(id, result);
     }
 
-    m_KernelRunner.CleanupBuffers(kernel);
     return result;
 }
 

@@ -20,7 +20,7 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
 {}
 
 KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
-    const std::vector<BufferOutputDescriptor>& output)
+    const std::vector<BufferOutputDescriptor>& output, const bool manageBuffers)
 {
     const auto id = kernel.GetId();
 
@@ -29,7 +29,7 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
         m_Validator->ComputeReferenceResult(kernel, mode);
     }
 
-    if (mode == KernelRunMode::Running)
+    if (manageBuffers)
     {
         SetupBuffers(kernel);
     }
@@ -39,7 +39,7 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
     KernelResult result = RunKernelInternal(kernel, configuration, launcher, output);
     ValidateResult(kernel, result, mode);
 
-    if (mode == KernelRunMode::Running)
+    if (manageBuffers)
     {
         CleanupBuffers(kernel);
     }

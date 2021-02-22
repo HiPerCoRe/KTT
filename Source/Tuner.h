@@ -99,7 +99,7 @@ public:
       * const DimensionVector& globalSize, const DimensionVector& localSize)
       * Adds new kernel definition to tuner. Requires specification of a kernel name, its source code and default global
       * and local thread sizes.
-      * @param name Name of a kernel function inside kernel source code.
+      * @param name Name of a kernel function inside kernel source code. The name must be unique.
       * @param source Kernel source code written in the corresponding compute API language.
       * @param globalSize Dimensions for base kernel global size (e.g., grid size in CUDA, NDRange size in OpenCL).
       * @param localSize Dimensions for base kernel local size (e.g., block size in CUDA, work-group size in OpenCL).
@@ -112,7 +112,7 @@ public:
       * const DimensionVector& globalSize, const DimensionVector& localSize)
       * Adds new kernel definition to tuner. Requires specification of a kernel name, file path to its source code and default
       * global and local thread sizes.
-      * @param name Name of a kernel function inside kernel source code.
+      * @param name Name of a kernel function inside kernel source code. The name must be unique.
       * @param filePath Path to file with kernel source code written in the corresponding compute API language.
       * @param globalSize Dimensions for base kernel global size (e.g., grid size in CUDA, NDRange size in OpenCL).
       * @param localSize Dimensions for base kernel local size (e.g., block size in CUDA, work-group size in OpenCL).
@@ -185,8 +185,7 @@ public:
     void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group = "");
 
     /** @fn void SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
-      * const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds,
-      * std::function<uint64_t(const uint64_t, const std::vector<uint64_t>&)> function)
+      * const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds, ModifierFunction function)
       * Sets thread modifier function for the specified kernel. The function receives thread size in the specified dimension and
       * values of the specified kernel parameters as input and returns modified thread size based on these values. Thread modifiers
       * are useful in cases when kernel parameters affect number of required kernel threads.
@@ -201,7 +200,7 @@ public:
       */
     void SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
         const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds,
-        std::function<uint64_t(const uint64_t, const std::vector<uint64_t>&)> function);
+        ModifierFunction function);
 
     /** @fn void SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
       * const std::string& parameter, const std::vector<KernelDefinitionId>& definitionIds, const ModifierAction action)
@@ -217,8 +216,7 @@ public:
     void SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
         const std::string& parameter, const std::vector<KernelDefinitionId>& definitionIds, const ModifierAction action);
 
-    /** @fn void AddConstraint(const KernelId id, const std::vector<std::string>& parameters,
-      * std::function<bool(const std::vector<size_t>&)> function)
+    /** @fn void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
       * Adds constraint for the specified kernel. Constraints are used to prevent generating of configurations with conflicting
       * combinations of parameter values.
       * @param id Id of kernel for which the constraint will be added.
@@ -226,8 +224,7 @@ public:
       * names corresponds to the order of parameter values inside the constraint function vector argument.
       * @param function Function which returns true if the provided combination of parameter values is valid. Returns false otherwise.
       */
-    void AddConstraint(const KernelId id, const std::vector<std::string>& parameters,
-        std::function<bool(const std::vector<size_t>&)> function);
+    void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function);
 
     /** @fn void SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)
       * Enables profiling of specified kernel definitions. This is useful if only some definitions inside the kernel need to be
@@ -354,7 +351,7 @@ public:
     /** @fn void SetValidationRange(const ArgumentId id, const size_t range)
       * Sets validation range for the specified argument. The entire argument is validated by default.
       * @param id Id of argument for which the validation range will be set. Only not read-only vector arguments can be validated.
-      * @param range Size of argument memory within which its elements will be validated, starting from the first element.
+      * @param range Size of argument memory within which its elements will be validated in bytes, starting from the first element.
       */
     void SetValidationRange(const ArgumentId id, const size_t range);
 

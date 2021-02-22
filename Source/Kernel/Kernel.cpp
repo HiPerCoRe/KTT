@@ -405,7 +405,7 @@ DimensionVector Kernel::GetModifiedSize(const KernelDefinitionId id, const Modif
         if (ContainsKey(specificModifiers, dimension))
         {
             const auto& pair = *specificModifiers.find(dimension);
-            dimensionSize = pair.second.GetModifiedSize(id, dimensionSize, pairs);
+            dimensionSize = static_cast<size_t>(pair.second.GetModifiedSize(id, static_cast<uint64_t>(dimensionSize), pairs));
         }
 
         result.SetSize(dimension, dimensionSize);

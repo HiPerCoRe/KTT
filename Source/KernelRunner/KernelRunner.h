@@ -23,7 +23,7 @@ public:
     explicit KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumentManager);
 
     KernelResult RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
-        const std::vector<BufferOutputDescriptor>& output);
+        const std::vector<BufferOutputDescriptor>& output, const bool manageBuffers = true);
     void SetupBuffers(const Kernel& kernel);
     void CleanupBuffers(const Kernel& kernel);
     void DownloadBuffers(const std::vector<BufferOutputDescriptor>& output);

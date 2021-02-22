@@ -126,13 +126,11 @@ void ValidationData::ComputeReferenceWithKernel()
 
     const bool profiling = m_KernelRunner.IsProfilingActive();
     m_KernelRunner.SetProfiling(false);
-    m_KernelRunner.SetupBuffers(*m_ReferenceKernel);
 
     m_ReferenceKernelResult.resize(m_ValidationRange);
     BufferOutputDescriptor descriptor(m_Argument.GetId(), m_ReferenceKernelResult.data(), m_ValidationRange);
     m_KernelRunner.RunKernel(*m_ReferenceKernel, m_ReferenceConfiguration, KernelRunMode::ResultValidation, {descriptor});
 
-    m_KernelRunner.CleanupBuffers(*m_ReferenceKernel);
     m_KernelRunner.SetProfiling(profiling);
 }
 

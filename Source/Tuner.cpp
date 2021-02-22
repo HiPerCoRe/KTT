@@ -123,8 +123,7 @@ void Tuner::AddParameter(const KernelId id, const std::string& name, const std::
 }
 
 void Tuner::SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
-    const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds,
-    std::function<uint64_t(const uint64_t, const std::vector<uint64_t>&)> function)
+    const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds, ModifierFunction function)
 {
     try
     {
@@ -180,8 +179,7 @@ void Tuner::SetThreadModifier(const KernelId id, const ModifierType type, const 
     SetThreadModifier(id, type, dimension, std::vector<std::string>{parameter}, definitionIds, function);
 }
 
-void Tuner::AddConstraint(const KernelId id, const std::vector<std::string>& parameters,
-    std::function<bool(const std::vector<size_t>&)> function)
+void Tuner::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
 {
     try
     {

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <Api/Configuration/ParameterPair.h>
+#include <KttTypes.h>
 
 namespace ktt
 {
@@ -13,8 +14,7 @@ namespace ktt
 class KernelConstraint
 {
 public:
-    explicit KernelConstraint(const std::vector<std::string>& parameters,
-        std::function<bool(const std::vector<uint64_t>&)> function);
+    explicit KernelConstraint(const std::vector<std::string>& parameters, ConstraintFunction function);
 
     const std::vector<std::string>& GetParameters() const;
     bool HasAllParameters(const std::vector<ParameterPair>& pairs) const;
@@ -22,7 +22,7 @@ public:
 
 private:
     std::vector<std::string> m_Parameters;
-    std::function<bool(const std::vector<uint64_t>&)> m_Function;
+    ConstraintFunction m_Function;
 };
 
 } // namespace ktt

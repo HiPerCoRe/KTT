@@ -71,20 +71,30 @@ using ComputeActionId = uint64_t;
   */
 using TransferActionId = uint64_t;
 
+/** @typedef ModifierFunction
+  * Definition of kernel thread modifier function.
+  */
+using ModifierFunction = std::function<uint64_t(const uint64_t /*defaultSize*/, const std::vector<uint64_t>& /*parameterValues*/)>;
+
+/** @typedef ConstraintFunction
+  * Definition of kernel constraint function.
+  */
+using ConstraintFunction = std::function<bool(const std::vector<uint64_t>& /*parameterValues*/)>;
+
 /** @typedef KernelLauncher
   * Definition of kernel launch function.
   */
-using KernelLauncher = std::function<void(ComputeInterface&)>;
+using KernelLauncher = std::function<void(ComputeInterface& /*interface*/)>;
 
 /** @typedef ReferenceComputation
   * Function for computing reference kernel argument output. Used during validation.
   */
-using ReferenceComputation = std::function<void(void*)>;
+using ReferenceComputation = std::function<void(void* /*buffer*/)>;
 
 /** @typedef ValueComparator
   * Custom comparison function for kernel argument values. Used during validation.
   */
-using ValueComparator = std::function<bool(const void*, const void*)>;
+using ValueComparator = std::function<bool(const void* /*result*/, const void* /*reference*/)>;
 
 /** @typedef UnifiedBufferMemory
   * Data type for accessing unified memory buffers in KTT.

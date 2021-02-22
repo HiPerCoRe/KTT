@@ -4,8 +4,7 @@
 namespace ktt
 {
 
-KernelConstraint::KernelConstraint(const std::vector<std::string>& parameters,
-    std::function<bool(const std::vector<uint64_t>&)> function) :
+KernelConstraint::KernelConstraint(const std::vector<std::string>& parameters, ConstraintFunction function) :
     m_Parameters(parameters),
     m_Function(function)
 {}

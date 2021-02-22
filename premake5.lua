@@ -413,3 +413,19 @@ project "03KernelTuningVulkan"
 end -- vulkanProjects
 
 end -- _OPTIONS["no-tutorials"]
+
+-- Examples configuration 
+if not _OPTIONS["no-examples"] then
+
+if openClProjects then
+
+project "CoulombSum2dOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/CoulombSum2d/*.cpp", "Examples/CoulombSum2d/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+end -- openClProjects
+    
+end -- _OPTIONS["no-examples"]
