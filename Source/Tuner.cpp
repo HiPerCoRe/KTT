@@ -447,12 +447,11 @@ void Tuner::SetTimeUnit(const TimeUnit unit)
     }
 }
 
-void Tuner::SaveResults(const std::vector<KernelResult>& /*results*/, const std::string& /*filePath*/, const OutputFormat /*format*/) const
+void Tuner::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const
 {
     try
     {
-        // Todo: implement new result serialization
-        //m_Tuner->SaveResults(results, filePath, format);
+        m_Tuner->SaveResults(results, filePath, format);
     }
     catch (const KttException& exception)
     {

@@ -4,6 +4,13 @@
 namespace ktt
 {
 
+KernelResult::KernelResult() :
+    m_Id(InvalidKernelId),
+    m_ExtraDuration(InvalidDuration),
+    m_ExtraOverhead(InvalidDuration),
+    m_Status(ResultStatus::ComputationFailed)
+{}
+
 KernelResult::KernelResult(const KernelId id, const KernelConfiguration& configuration) :
     m_Configuration(configuration),
     m_Id(id),

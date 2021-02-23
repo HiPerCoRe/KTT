@@ -14,7 +14,8 @@ namespace ktt
 class KTT_API KernelResult
 {
 public:
-    KernelResult(const KernelId id, const KernelConfiguration& configuration);
+    KernelResult();
+    explicit KernelResult(const KernelId id, const KernelConfiguration& configuration);
     explicit KernelResult(const KernelId id, const KernelConfiguration& configuration, const std::vector<ComputationResult>& results);
 
     void SetStatus(const ResultStatus status);

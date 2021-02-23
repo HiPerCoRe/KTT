@@ -1,6 +1,7 @@
 #include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CudaEngine.h>
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
+#include <Output/Serializer/JsonResultSerializer.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 #include <TunerCore.h>
@@ -223,6 +224,25 @@ std::string TunerCore::GetKernelDefinitionSource(const KernelDefinitionId id, co
 void TunerCore::SetTimeUnit(const TimeUnit unit)
 {
     m_KernelRunner->SetTimeUnit(unit);
+}
+
+void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const
+{
+    switch (format)
+    {
+    case OutputFormat::JSON:
+    {
+        JsonResultSerializer serializer;
+        serializer.SerializeResults(results, filePath);
+        break;
+    }
+    case OutputFormat::XML:
+        throw KttException("Support for XML format is not yet available");
+    case OutputFormat::CSV:
+        throw KttException("Support for CSV format is not yet available");
+    default:
+        KttError("Unhandled output format value");
+    }
 }
 
 void TunerCore::SetProfilingCounters(const std::vector<std::string>& counters)

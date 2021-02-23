@@ -9,6 +9,7 @@
 #include <Kernel/KernelManager.h>
 #include <KernelArgument/KernelArgumentManager.h>
 #include <KernelRunner/KernelRunner.h>
+#include <Output/OutputFormat.h>
 #include <TuningRunner/TuningRunner.h>
 #include <Utility/Logger/LoggingLevel.h>
 #include <KttTypes.h>
@@ -72,6 +73,7 @@ public:
 
     // Result printing
     void SetTimeUnit(const TimeUnit unit);
+    void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const;
 
     // Compute engine
     void SetProfilingCounters(const std::vector<std::string>& counters);
