@@ -62,14 +62,24 @@ bool ConfigurationManager::IsDataProcessed(const KernelId id) const
     return m_ConfigurationData.find(id)->second->IsProcessed();
 }
 
-uint64_t ConfigurationManager::GetConfigurationCount(const KernelId id) const
+uint64_t ConfigurationManager::GetConfigurationCountInGroup(const KernelId id) const
 {
     if (!HasData(id))
     {
         return 0;
     }
 
-    return m_ConfigurationData.find(id)->second->GetConfigurationCount();
+    return m_ConfigurationData.find(id)->second->GetConfigurationCountInGroup();
+}
+
+uint64_t ConfigurationManager::GetExploredConfigurationCountInGroup(const KernelId id) const
+{
+    if (!HasData(id))
+    {
+        return 0;
+    }
+
+    return m_ConfigurationData.find(id)->second->GetExploredConfigurationCountInGroup();
 }
 
 const KernelConfiguration& ConfigurationManager::GetCurrentConfiguration(const KernelId id) const

@@ -351,7 +351,7 @@ public:
     /** @fn void SetValidationRange(const ArgumentId id, const size_t range)
       * Sets validation range for the specified argument. The entire argument is validated by default.
       * @param id Id of argument for which the validation range will be set. Only not read-only vector arguments can be validated.
-      * @param range Size of argument memory within which its elements will be validated in bytes, starting from the first element.
+      * @param range Number of argument elements which will be validated, starting from the first element.
       */
     void SetValidationRange(const ArgumentId id, const size_t range);
 

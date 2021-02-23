@@ -21,7 +21,8 @@ public:
 
     bool CalculateNextConfiguration(const KernelResult& previousResult);
 
-    uint64_t GetConfigurationCount() const;
+    uint64_t GetConfigurationCountInGroup() const;
+    uint64_t GetExploredConfigurationCountInGroup() const;
     bool IsProcessed() const;
     const KernelParameterGroup& GetCurrentGroup() const;
     const KernelConfiguration& GetCurrentConfiguration() const;

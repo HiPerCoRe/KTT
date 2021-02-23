@@ -180,9 +180,10 @@ bool ResultValidator::ValidateArgument(const KernelArgument& argument) const
 {
     const auto& validationData = *m_ValidationData.find(argument.GetId())->second;
     const size_t validationRange = validationData.GetValidationRange();
-    
-    std::vector<uint8_t> argumentData(validationRange);
-    BufferOutputDescriptor descriptor(argument.GetId(), argumentData.data(), validationRange);
+    const size_t bufferSize = validationRange * argument.GetElementSize();
+
+    std::vector<uint8_t> argumentData(bufferSize);
+    BufferOutputDescriptor descriptor(argument.GetId(), argumentData.data(), bufferSize);
     m_KernelRunner.DownloadBuffers({descriptor});
 
     bool result = true;
@@ -258,8 +259,9 @@ bool ResultValidator::ValidateResultWithComparator(const KernelArgument& argumen
     const size_t range, ValueComparator comparator) const
 {
     const size_t elementSize = argument.GetElementSize();
+    const size_t bufferSize = range * elementSize;
 
-    for (size_t i = 0; i < range; i += elementSize)
+    for (size_t i = 0; i < bufferSize; i += elementSize)
     {
         if (!comparator(reinterpret_cast<const uint8_t*>(result) + i, reinterpret_cast<const uint8_t*>(referenceResult) + i))
         {

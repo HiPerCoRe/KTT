@@ -83,10 +83,16 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
     if (m_ConfigurationManager->IsDataProcessed(id))
     {
         configuration = &m_ConfigurationManager->GetBestConfiguration(id);
+        Logger::LogInfo("Launching the best configuration for kernel " + std::to_string(id));
     }
     else
     {
         configuration = &m_ConfigurationManager->GetCurrentConfiguration(id);
+
+        const uint64_t configurationNumber = m_ConfigurationManager->GetExploredConfigurationCountInGroup(id) + 1;
+        const uint64_t configurationCount = m_ConfigurationManager->GetConfigurationCountInGroup(id);
+        Logger::LogInfo("Launching configuration " + std::to_string(configurationNumber) + " / " + std::to_string(configurationCount)
+            + " in the current group for kernel " + std::to_string(id));
     }
 
     KernelResult result = m_KernelRunner.RunKernel(kernel, *configuration, mode, output);

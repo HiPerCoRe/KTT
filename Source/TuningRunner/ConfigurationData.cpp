@@ -43,9 +43,14 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
     return InitializeNextGroup(false);
 }
 
-uint64_t ConfigurationData::GetConfigurationCount() const
+uint64_t ConfigurationData::GetConfigurationCountInGroup() const
 {
     return static_cast<uint64_t>(m_Configurations.size());
+}
+
+uint64_t ConfigurationData::GetExploredConfigurationCountInGroup() const
+{
+    return static_cast<uint64_t>(m_ExploredConfigurations);
 }
 
 bool ConfigurationData::IsProcessed() const
@@ -103,7 +108,7 @@ bool ConfigurationData::InitializeNextGroup(const bool isInitialGroup)
     m_Searcher.Initialize(m_Configurations);
 
     Logger::LogInfo("Starting to explore configurations for kernel " + std::to_string(m_Kernel.GetId()) + " and group "
-        + group.GetName() + ", configuration count in the current group is " + std::to_string(GetConfigurationCount()));
+        + group.GetName() + ", configuration count in the current group is " + std::to_string(GetExploredConfigurationCountInGroup()));
     return true;
 }
 

@@ -27,7 +27,8 @@ public:
 
     bool HasData(const KernelId id) const;
     bool IsDataProcessed(const KernelId id) const;
-    uint64_t GetConfigurationCount(const KernelId id) const;
+    uint64_t GetConfigurationCountInGroup(const KernelId id) const;
+    uint64_t GetExploredConfigurationCountInGroup(const KernelId id) const;
     const KernelConfiguration& GetCurrentConfiguration(const KernelId id) const;
     const KernelConfiguration& GetBestConfiguration(const KernelId id) const;
 

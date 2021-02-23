@@ -15,7 +15,7 @@ namespace ktt
 ValidationData::ValidationData(KernelRunner& kernelRunner, const KernelArgument& argument) :
     m_KernelRunner(kernelRunner),
     m_Argument(argument),
-    m_ValidationRange(argument.GetDataSize()),
+    m_ValidationRange(static_cast<size_t>(argument.GetNumberOfElements())),
     m_Comparator(nullptr),
     m_ReferenceComputation(nullptr),
     m_ReferenceKernel(nullptr)
@@ -115,7 +115,8 @@ void ValidationData::ComputeReferenceWithFunction()
     KttAssert(HasReferenceComputation(), "Reference can be computed only with valid reference computation");
     Logger::LogInfo("Computing reference computation result for argument with id " + std::to_string(m_Argument.GetId()));
     
-    m_ReferenceResult.resize(m_ValidationRange);
+    const size_t referenceSize = m_ValidationRange * m_Argument.GetElementSize();
+    m_ReferenceResult.resize(referenceSize);
     m_ReferenceComputation(m_ReferenceResult.data());
 }
 
@@ -127,8 +128,9 @@ void ValidationData::ComputeReferenceWithKernel()
     const bool profiling = m_KernelRunner.IsProfilingActive();
     m_KernelRunner.SetProfiling(false);
 
-    m_ReferenceKernelResult.resize(m_ValidationRange);
-    BufferOutputDescriptor descriptor(m_Argument.GetId(), m_ReferenceKernelResult.data(), m_ValidationRange);
+    const size_t referenceSize = m_ValidationRange * m_Argument.GetElementSize();
+    m_ReferenceKernelResult.resize(referenceSize);
+    BufferOutputDescriptor descriptor(m_Argument.GetId(), m_ReferenceKernelResult.data(), referenceSize);
     m_KernelRunner.RunKernel(*m_ReferenceKernel, m_ReferenceConfiguration, KernelRunMode::ResultValidation, {descriptor});
 
     m_KernelRunner.SetProfiling(profiling);

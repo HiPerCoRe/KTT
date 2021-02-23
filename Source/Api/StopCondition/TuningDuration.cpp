@@ -24,7 +24,8 @@ void TuningDuration::Initialize()
 void TuningDuration::Update([[maybe_unused]] const KernelResult& result)
 {
     const auto currentTime = std::chrono::steady_clock::now();
-    m_PassedTime = static_cast<double>(std::chrono::duration_cast<std::chrono::seconds>(currentTime - m_InitialTime).count());
+    const uint64_t passedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - m_InitialTime).count();
+    m_PassedTime = static_cast<double>(passedMilliseconds) / 1'000.0;
 }
 
 std::string TuningDuration::GetStatusString() const
