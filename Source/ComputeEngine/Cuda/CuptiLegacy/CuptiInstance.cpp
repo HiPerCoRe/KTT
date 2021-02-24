@@ -33,7 +33,15 @@ CuptiInstance::CuptiInstance(const CudaContext& context) :
     for (const auto& metric : m_EnabledMetrics)
     {
         CUpti_MetricID id;
-        CheckError(cuptiMetricGetIdFromName(context.GetDevice(), metric.c_str(), &id), "cuptiMetricGetIdFromName");
+        const auto result = cuptiMetricGetIdFromName(context.GetDevice(), metric.c_str(), &id);
+
+        if (result == CUPTI_ERROR_INVALID_METRIC_NAME)
+        {
+            Logger::LogWarning("Metric with name " + metric + " is not supported on the current device");
+            continue;
+        }
+
+        CheckError(result, "cuptiMetricGetIdFromName");
         metricIds.push_back(id);
         m_Metrics.push_back(std::make_unique<CuptiMetric>(id, metric));
     }

@@ -3,7 +3,6 @@
 #include <chrono>
 #include <string>
 
-#include <Utility/Timer/TimeUnit.h>
 #include <KttTypes.h>
 
 namespace ktt
@@ -18,9 +17,6 @@ public:
     void Stop();
 
     Nanoseconds GetElapsedTime() const;
-
-    static uint64_t ConvertDuration(const Nanoseconds duration, const TimeUnit unit);
-    static std::string GetTag(const TimeUnit unit);
 
 private:
     std::chrono::steady_clock::time_point m_InitialTime;

@@ -437,14 +437,7 @@ std::string Tuner::GetKernelDefinitionSource(const KernelDefinitionId id, const 
 
 void Tuner::SetTimeUnit(const TimeUnit unit)
 {
-    try
-    {
-        m_Tuner->SetTimeUnit(unit);
-    }
-    catch (const KttException& exception)
-    {
-        TunerCore::Log(LoggingLevel::Error, exception.what());
-    }
+    TunerCore::SetTimeUnit(unit);
 }
 
 void Tuner::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const

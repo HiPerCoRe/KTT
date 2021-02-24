@@ -25,9 +25,9 @@
 #include <KernelArgument/ArgumentMemoryType.h>
 #include <KernelRunner/ValidationMethod.h>
 #include <KernelRunner/ValidationMode.h>
+#include <Output/TimeConfiguration/TimeUnit.h>
 #include <Output/OutputFormat.h>
 #include <Utility/Logger/LoggingLevel.h>
-#include <Utility/Timer/TimeUnit.h>
 #include <KttTypes.h>
 
 // Data holders
@@ -485,11 +485,11 @@ public:
       */
     std::string GetKernelDefinitionSource(const KernelDefinitionId id, const KernelConfiguration& configuration) const;
 
-    /** @fn void SetTimeUnit(const TimeUnit unit)
+    /** @fn static void SetTimeUnit(const TimeUnit unit)
       * Sets time unit used for printing of results. Default time unit is milliseconds.
       * @param unit Time unit which will be used for printing of results. See ::TimeUnit for more information.
       */
-    void SetTimeUnit(const TimeUnit unit);
+    static void SetTimeUnit(const TimeUnit unit);
 
     /** @fn void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const
       * Saves specified kernel results to the specified file.

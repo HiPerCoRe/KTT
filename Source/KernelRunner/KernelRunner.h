@@ -11,7 +11,6 @@
 #include <KernelRunner/ComputeLayer.h>
 #include <KernelRunner/KernelRunMode.h>
 #include <KernelRunner/ResultValidator.h>
-#include <Utility/Timer/TimeUnit.h>
 #include <KttTypes.h>
 
 namespace ktt
@@ -28,7 +27,6 @@ public:
     void CleanupBuffers(const Kernel& kernel);
     void DownloadBuffers(const std::vector<BufferOutputDescriptor>& output);
 
-    void SetTimeUnit(const TimeUnit unit);
     void SetReadOnlyArgumentCache(const bool flag);
     void SetProfiling(const bool flag);
     bool IsProfilingActive() const;
@@ -46,7 +44,6 @@ private:
     std::unique_ptr<ResultValidator> m_Validator;
     ComputeEngine& m_Engine;
     KernelArgumentManager& m_ArgumentManager;
-    TimeUnit m_TimeUnit;
     bool m_ReadOnlyCacheFlag;
     bool m_ProfilingFlag;
 

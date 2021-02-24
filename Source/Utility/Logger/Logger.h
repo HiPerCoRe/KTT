@@ -4,11 +4,12 @@
 #include <string>
 
 #include <Utility/Logger/LoggingLevel.h>
+#include <Utility/DisableCopyMove.h>
 
 namespace ktt
 {
 
-class Logger
+class Logger : public DisableCopyMove
 {
 public:
     static Logger& GetLogger();
@@ -22,11 +23,6 @@ public:
     static void LogWarning(const std::string& message);
     static void LogInfo(const std::string& message);
     static void LogDebug(const std::string& message);
-
-    Logger(const Logger&) = delete;
-    Logger(Logger&&) = delete;
-    void operator=(const Logger&) = delete;
-    void operator=(Logger&&) = delete;
 
 private:
     LoggingLevel m_Level;

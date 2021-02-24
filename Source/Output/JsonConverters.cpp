@@ -1,3 +1,4 @@
+#include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Output/JsonConverters.h>
 #include <Utility/ErrorHandling/Assert.h>
 
@@ -106,11 +107,13 @@ void from_json(const json& /*j*/, KernelProfilingData& /*data*/)
 
 void to_json(json& j, const ComputationResult& result)
 {
+    const auto& time = TimeConfiguration::GetInstance();
+
     j = json
     {
         {"KernelName", result.GetKernelName()},
-        {"Duration", result.GetDuration()},
-        {"Overhead", result.GetOverhead()}
+        {"Duration", time.ConvertDuration(result.GetDuration())},
+        {"Overhead", time.ConvertDuration(result.GetOverhead())}
     };
 
     if (result.HasCompilationData())
@@ -131,14 +134,16 @@ void from_json(const json& /*j*/, ComputationResult& /*result*/)
 
 void to_json(json& j, const KernelResult& result)
 {
+    const auto& time = TimeConfiguration::GetInstance();
+
     j = json
     {
         {"Id", result.GetId()},
         {"Status", result.GetStatus()},
-        {"TotalDuration", result.GetTotalDuration()},
-        {"TotalOverhead", result.GetTotalOverhead()},
-        {"KernelDuration", result.GetKernelDuration()},
-        {"KernelOverhead", result.GetKernelOverhead()},
+        {"TotalDuration", time.ConvertDuration(result.GetTotalDuration())},
+        {"TotalOverhead", time.ConvertDuration(result.GetTotalOverhead())},
+        {"KernelDuration", time.ConvertDuration(result.GetKernelDuration())},
+        {"KernelOverhead", time.ConvertDuration(result.GetKernelOverhead())},
         {"Configuration", result.GetConfiguration()},
         {"ComputationResults", result.GetResults()}
     };

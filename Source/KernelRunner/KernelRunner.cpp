@@ -3,6 +3,7 @@
 #include <Api/KttException.h>
 #include <KernelRunner/KernelActivator.h>
 #include <KernelRunner/KernelRunner.h>
+#include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Utility/Logger/Logger.h>
 #include <Utility/Timer/Timer.h>
 
@@ -14,7 +15,6 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
     m_Validator(std::make_unique<ResultValidator>(*this)),
     m_Engine(engine),
     m_ArgumentManager(argumentManager),
-    m_TimeUnit(TimeUnit::Milliseconds),
     m_ReadOnlyCacheFlag(true),
     m_ProfilingFlag(false)
 {}
@@ -106,11 +106,6 @@ void KernelRunner::DownloadBuffers(const std::vector<BufferOutputDescriptor>& ou
             descriptor.GetOutputDestination(), descriptor.GetOutputSize());
         m_Engine.WaitForTransferAction(id);
     }
-}
-
-void KernelRunner::SetTimeUnit(const TimeUnit unit)
-{
-    m_TimeUnit = unit;
 }
 
 void KernelRunner::SetReadOnlyArgumentCache(const bool flag)
@@ -258,9 +253,10 @@ void KernelRunner::ValidateResult(const Kernel& kernel, KernelResult& result, co
     }
 
     const bool validResult = m_Validator->ValidateArguments(kernel, mode);
-    const uint64_t duration = Timer::ConvertDuration(result.GetTotalDuration(), m_TimeUnit);
-    const uint64_t kernelDuration = Timer::ConvertDuration(result.GetKernelDuration(), m_TimeUnit);
-    const std::string tag = Timer::GetTag(m_TimeUnit);
+    const auto& time = TimeConfiguration::GetInstance();
+    const uint64_t duration = time.ConvertDuration(result.GetTotalDuration());
+    const uint64_t kernelDuration = time.ConvertDuration(result.GetKernelDuration());
+    const std::string tag = time.GetUnitTag();
 
     if (validResult)
     {

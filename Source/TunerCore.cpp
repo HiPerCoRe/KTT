@@ -1,7 +1,8 @@
 #include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CudaEngine.h>
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
-#include <Output/Serializer/JsonResultSerializer.h>
+#include <Output/Serializer/JsonSerializer.h>
+#include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 #include <TunerCore.h>
@@ -223,7 +224,7 @@ std::string TunerCore::GetKernelDefinitionSource(const KernelDefinitionId id, co
 
 void TunerCore::SetTimeUnit(const TimeUnit unit)
 {
-    m_KernelRunner->SetTimeUnit(unit);
+    TimeConfiguration::GetInstance().SetTimeUnit(unit);
 }
 
 void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const
@@ -232,7 +233,7 @@ void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std:
     {
     case OutputFormat::JSON:
     {
-        JsonResultSerializer serializer;
+        JsonSerializer serializer;
         serializer.SerializeResults(results, filePath);
         break;
     }

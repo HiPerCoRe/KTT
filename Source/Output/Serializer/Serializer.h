@@ -8,10 +8,10 @@
 namespace ktt
 {
 
-class ResultSerializer
+class Serializer
 {
 public:
-    virtual ~ResultSerializer() = default;
+    virtual ~Serializer() = default;
 
     virtual void SerializeResults(const std::vector<KernelResult>& results, const std::string& filePath) = 0;
 };

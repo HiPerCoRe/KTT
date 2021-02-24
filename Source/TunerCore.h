@@ -72,7 +72,7 @@ public:
     std::string GetKernelDefinitionSource(const KernelDefinitionId id, const KernelConfiguration& configuration) const;
 
     // Result printing
-    void SetTimeUnit(const TimeUnit unit);
+    static void SetTimeUnit(const TimeUnit unit);
     void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const;
 
     // Compute engine
