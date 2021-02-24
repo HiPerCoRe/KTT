@@ -6,6 +6,7 @@
 #include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <ComputeEngine/OpenCl/OpenClProgram.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
+#include <Utility/StringUtility.h>
 
 namespace ktt
 {
@@ -62,9 +63,11 @@ std::string OpenClProgram::GetBuildLog() const
     CheckError(clGetProgramBuildInfo(m_Program, m_Device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &infoSize),
         "clGetProgramBuildInfo");
     
-    std::string infoString(infoSize, ' ');
+    std::string infoString(infoSize, '\0');
     CheckError(clGetProgramBuildInfo(m_Program, m_Device, CL_PROGRAM_BUILD_LOG, infoSize, infoString.data(), nullptr),
         "clGetProgramBuildInfo");
+
+    RemoveTrailingZero(infoString);
     return infoString;
 }
 

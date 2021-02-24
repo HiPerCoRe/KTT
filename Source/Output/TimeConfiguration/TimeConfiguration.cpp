@@ -15,23 +15,14 @@ void TimeConfiguration::SetTimeUnit(const TimeUnit unit)
     m_TimeUnit = unit;
 }
 
+TimeUnit TimeConfiguration::GetTimeUnit() const
+{
+    return m_TimeUnit;
+}
+
 uint64_t TimeConfiguration::ConvertDuration(const Nanoseconds duration) const
 {
-    return ConvertDuration(duration, m_TimeUnit);
-}
-
-std::string TimeConfiguration::GetUnitTag() const
-{
-    return GetUnitTag(m_TimeUnit);
-}
-
-TimeConfiguration::TimeConfiguration() :
-    m_TimeUnit(TimeUnit::Milliseconds)
-{}
-
-uint64_t TimeConfiguration::ConvertDuration(const Nanoseconds duration, const TimeUnit unit)
-{
-    switch (unit)
+    switch (m_TimeUnit)
     {
     case TimeUnit::Nanoseconds:
         return duration;
@@ -47,9 +38,27 @@ uint64_t TimeConfiguration::ConvertDuration(const Nanoseconds duration, const Ti
     }
 }
 
-std::string TimeConfiguration::GetUnitTag(const TimeUnit unit)
+double TimeConfiguration::ConvertDurationDouble(const Nanoseconds duration) const
 {
-    switch (unit)
+    switch (m_TimeUnit)
+    {
+    case TimeUnit::Nanoseconds:
+        return static_cast<double>(duration);
+    case TimeUnit::Microseconds:
+        return static_cast<double>(duration) / 1'000.0;
+    case TimeUnit::Milliseconds:
+        return static_cast<double>(duration) / 1'000'000.0;
+    case TimeUnit::Seconds:
+        return static_cast<double>(duration) / 1'000'000'000.0;
+    default:
+        KttError("Unhandled time unit value");
+        return 0.0;
+    }
+}
+
+std::string TimeConfiguration::GetUnitTag() const
+{
+    switch (m_TimeUnit)
     {
     case TimeUnit::Nanoseconds:
         return "ns";
@@ -64,5 +73,9 @@ std::string TimeConfiguration::GetUnitTag(const TimeUnit unit)
         return "";
     }
 }
+
+TimeConfiguration::TimeConfiguration() :
+    m_TimeUnit(TimeUnit::Milliseconds)
+{}
 
 } // namespace ktt

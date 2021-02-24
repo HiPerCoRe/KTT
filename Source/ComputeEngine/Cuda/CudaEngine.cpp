@@ -559,6 +559,11 @@ std::vector<DeviceInfo> CudaEngine::GetDeviceInfo([[maybe_unused]] const Platfor
     return result;
 }
 
+PlatformInfo CudaEngine::GetCurrentPlatformInfo() const
+{
+    return GetPlatformInfo()[0];
+}
+
 DeviceInfo CudaEngine::GetCurrentDeviceInfo() const
 {
     const auto deviceInfos = GetDeviceInfo(0);

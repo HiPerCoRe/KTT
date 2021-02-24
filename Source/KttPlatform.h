@@ -3,6 +3,9 @@
   */
 #pragma once
 
+#include <cstdint>
+#include <string>
+
 #ifndef KTT_API
 #if defined(_MSC_VER)
     #pragma warning(disable : 4251) // Irrelevant MSVC warning as long as exported classes have no public attributes
@@ -28,3 +31,11 @@
 /** Patch version of KTT framework. Third number in KTT version description.
   */
 #define KTT_VERSION_PATCH 0
+
+namespace ktt
+{
+
+KTT_API uint32_t GetKttVersion();
+KTT_API std::string GetKttVersionString();
+
+} // namespace ktt

@@ -8,7 +8,7 @@ namespace ktt
 class JsonSerializer : public Serializer
 {
 public:
-    void SerializeResults(const std::vector<KernelResult>& results, const std::string& filePath) override;
+    void SerializeResults(const TunerMetadata& metadata, const std::vector<KernelResult>& results, std::ostream& target) override;
 };
 
 } // namespace ktt

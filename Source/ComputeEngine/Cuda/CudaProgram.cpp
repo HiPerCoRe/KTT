@@ -11,6 +11,7 @@
 #include <ComputeEngine/Cuda/CudaProgram.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/StringUtility.h>
 
 namespace ktt
 {
@@ -74,9 +75,10 @@ std::string CudaProgram::GetPtxSource() const
     size_t size;
     CheckError(nvrtcGetPTXSize(m_Program, &size), "nvrtcGetPTXSize");
 
-    std::string result(size, ' ');
+    std::string result(size, '\0');
     CheckError(nvrtcGetPTX(m_Program, result.data()), "nvrtcGetPTX");
 
+    RemoveTrailingZero(result);
     return result;
 }
 
@@ -105,9 +107,10 @@ std::string CudaProgram::GetBuildInfo() const
     size_t infoSize;
     CheckError(nvrtcGetProgramLogSize(m_Program, &infoSize), "nvrtcGetProgramLogSize");
 
-    std::string infoString(infoSize, ' ');
+    std::string infoString(infoSize, '\0');
     CheckError(nvrtcGetProgramLog(m_Program, infoString.data()), "nvrtcGetProgramLog");
 
+    RemoveTrailingZero(infoString);
     return infoString;
 }
 

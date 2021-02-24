@@ -97,6 +97,7 @@ private:
     std::unique_ptr<ComputeEngine> m_ComputeEngine;
     std::unique_ptr<KernelRunner> m_KernelRunner;
     std::unique_ptr<TuningRunner> m_TuningRunner;
+    ComputeApi m_ComputeApi;
 
     void InitializeComputeEngine(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount);
     void InitializeComputeEngine(const ComputeApi api, const ComputeApiInitializer& initializer);

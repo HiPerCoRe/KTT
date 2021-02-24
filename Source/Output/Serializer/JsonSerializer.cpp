@@ -1,26 +1,18 @@
-#include <fstream>
-
-#include <Api/KttException.h>
 #include <Output/Serializer/JsonSerializer.h>
 #include <Output/JsonConverters.h>
-#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
 
-void JsonSerializer::SerializeResults(const std::vector<KernelResult>& results, const std::string& filePath)
+void JsonSerializer::SerializeResults(const TunerMetadata& metadata, const std::vector<KernelResult>& results, std::ostream& target)
 {
-    const std::string file = filePath + ".json";
-    Logger::LogInfo("Saving kernel results in JSON format to file: " + file);
-    std::ofstream outputFile(file);
-
-    if (!outputFile.is_open())
+    json output
     {
-        throw KttException("Unable to open file: " + file);
-    }
+        {"Metadata", metadata},
+        {"Results", results}
+    };
 
-    json output{"Results", results};
-    outputFile << output.dump(2);
+    target << output.dump(2);
 }
 
 } // namespace ktt

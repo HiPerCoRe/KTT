@@ -72,6 +72,7 @@ public:
     // Information retrieval methods
     std::vector<PlatformInfo> GetPlatformInfo() const override;
     std::vector<DeviceInfo> GetDeviceInfo(const PlatformIndex platformIndex) const override;
+    PlatformInfo GetCurrentPlatformInfo() const override;
     DeviceInfo GetCurrentDeviceInfo() const override;
 
     // Utility methods

@@ -4,11 +4,27 @@
 
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Output/KernelResult.h>
+#include <Output/TunerMetadata.h>
 
 namespace ktt
 {
 
 using json = nlohmann::json;
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ComputeApi,
+{
+    {ComputeApi::OpenCL, "OpenCL"},
+    {ComputeApi::CUDA, "CUDA"},
+    {ComputeApi::Vulkan, "Vulkan"}
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(TimeUnit,
+{
+    {TimeUnit::Nanoseconds, "Nanoseconds"},
+    {TimeUnit::Microseconds, "Microseconds"},
+    {TimeUnit::Milliseconds, "Milliseconds"},
+    {TimeUnit::Seconds, "Seconds"}
+});
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ResultStatus,
 {
@@ -26,6 +42,9 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ProfilingCounterType,
     {ProfilingCounterType::Throughput, "Throughput"},
     {ProfilingCounterType::UtilizationLevel, "UtilizationLevel"}
 });
+
+void to_json(json& j, const TunerMetadata& metadata);
+void from_json(const json& j, TunerMetadata& metadata);
 
 void to_json(json& j, const ParameterPair& pair);
 void from_json(const json& j, ParameterPair& pair);

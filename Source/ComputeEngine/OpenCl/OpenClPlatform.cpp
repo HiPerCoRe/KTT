@@ -2,6 +2,7 @@
 
 #include <ComputeEngine/OpenCl/OpenClPlatform.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
+#include <Utility/StringUtility.h>
 
 namespace ktt
 {
@@ -77,9 +78,10 @@ std::string OpenClPlatform::GetInfoString(const cl_platform_info info) const
     size_t infoSize;
     CheckError(clGetPlatformInfo(m_Id, info, 0, nullptr, &infoSize), "clGetPlatformInfo");
 
-    std::string infoString(infoSize, ' ');
+    std::string infoString(infoSize, '\0');
     CheckError(clGetPlatformInfo(m_Id, info, infoSize, infoString.data(), nullptr), "clGetPlatformInfo");
 
+    RemoveTrailingZero(infoString);
     return infoString;
 }
 

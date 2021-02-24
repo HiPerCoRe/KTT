@@ -5,6 +5,23 @@
 namespace ktt
 {
     
+void to_json(json& j, const TunerMetadata& metadata)
+{
+    j = json
+    {
+        {"ComputeApi", metadata.GetComputeApi()},
+        {"Platform", metadata.GetPlatformName()},
+        {"Device", metadata.GetDeviceName()},
+        {"KttVersion", metadata.GetKttVersion()},
+        {"TimeUnit", metadata.GetTimeUnit()},
+    };
+}
+
+void from_json(const json& /*j*/, TunerMetadata& /*metadata*/)
+{
+    // todo
+}
+
 void to_json(json& j, const ParameterPair& pair)
 {
     j = json

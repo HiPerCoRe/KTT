@@ -58,6 +58,7 @@ public:
     // Information retrieval methods
     virtual std::vector<PlatformInfo> GetPlatformInfo() const = 0;
     virtual std::vector<DeviceInfo> GetDeviceInfo(const PlatformIndex platformIndex) const = 0;
+    virtual PlatformInfo GetCurrentPlatformInfo() const = 0;
     virtual DeviceInfo GetCurrentDeviceInfo() const = 0;
 
     // Utility methods

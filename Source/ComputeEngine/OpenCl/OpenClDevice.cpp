@@ -2,6 +2,7 @@
 
 #include <ComputeEngine/OpenCl/OpenClDevice.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
+#include <Utility/StringUtility.h>
 
 namespace ktt
 {
@@ -72,9 +73,10 @@ std::string OpenClDevice::GetInfoString(const cl_device_info info) const
     size_t infoSize;
     CheckError(clGetDeviceInfo(m_Id, info, 0, nullptr, &infoSize), "clGetDeviceInfo");
 
-    std::string infoString(infoSize, ' ');
+    std::string infoString(infoSize, '\0');
     CheckError(clGetDeviceInfo(m_Id, info, infoSize, infoString.data(), nullptr), "clGetDeviceInfo");
 
+    RemoveTrailingZero(infoString);
     return infoString;
 }
 

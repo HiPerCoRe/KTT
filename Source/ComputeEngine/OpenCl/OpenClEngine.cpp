@@ -517,6 +517,12 @@ std::vector<DeviceInfo> OpenClEngine::GetDeviceInfo(const PlatformIndex platform
     return result;
 }
 
+PlatformInfo OpenClEngine::GetCurrentPlatformInfo() const
+{
+    const auto platformInfos = GetPlatformInfo();
+    return platformInfos[static_cast<size_t>(m_PlatformIndex)];
+}
+
 DeviceInfo OpenClEngine::GetCurrentDeviceInfo() const
 {
     const auto deviceInfos = GetDeviceInfo(m_PlatformIndex);

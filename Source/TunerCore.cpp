@@ -1,10 +1,14 @@
+#include <fstream>
+
 #include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CudaEngine.h>
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
 #include <Output/Serializer/JsonSerializer.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
+#include <Output/TunerMetadata.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/FileSystem.h>
 #include <TunerCore.h>
 
 namespace ktt
@@ -12,7 +16,8 @@ namespace ktt
 
 TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount) :
     m_ArgumentManager(std::make_unique<KernelArgumentManager>()),
-    m_KernelManager(std::make_unique<KernelManager>(*m_ArgumentManager))
+    m_KernelManager(std::make_unique<KernelManager>(*m_ArgumentManager)),
+    m_ComputeApi(api)
 {
     InitializeComputeEngine(platform, device, api, queueCount);
     InitializeRunners();
@@ -20,7 +25,8 @@ TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, con
 
 TunerCore::TunerCore(const ComputeApi api, const ComputeApiInitializer& initializer) :
     m_ArgumentManager(std::make_unique<KernelArgumentManager>()),
-    m_KernelManager(std::make_unique<KernelManager>(*m_ArgumentManager))
+    m_KernelManager(std::make_unique<KernelManager>(*m_ArgumentManager)),
+    m_ComputeApi(api)
 {
     InitializeComputeEngine(api, initializer);
     InitializeRunners();
@@ -229,12 +235,23 @@ void TunerCore::SetTimeUnit(const TimeUnit unit)
 
 void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const
 {
+    const std::string file = filePath + GetFileExtension(format);
+    Logger::LogInfo("Saving kernel results to file: " + file);
+    std::ofstream outputStream(file);
+
+    if (!outputStream.is_open())
+    {
+        throw KttException("Unable to open file: " + file);
+    }
+
+    TunerMetadata metadata(m_ComputeApi, m_ComputeEngine->GetCurrentPlatformInfo(), m_ComputeEngine->GetCurrentDeviceInfo());
+
     switch (format)
     {
     case OutputFormat::JSON:
     {
         JsonSerializer serializer;
-        serializer.SerializeResults(results, filePath);
+        serializer.SerializeResults(metadata, results, outputStream);
         break;
     }
     case OutputFormat::XML:
