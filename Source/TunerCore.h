@@ -29,8 +29,8 @@ public:
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
         const DimensionVector& globalSize, const DimensionVector& localSize);
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
-    KernelId CreateKernel(const KernelDefinitionId definitionId);
-    KernelId CreateKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher);
+    KernelId CreateKernel(const std::string& name, const KernelDefinitionId definitionId);
+    KernelId CreateKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher);
     void SetLauncher(const KernelId id, KernelLauncher launcher);
     void AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group);
     void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group);

@@ -107,8 +107,8 @@ bool ConfigurationData::InitializeNextGroup(const bool isInitialGroup)
     ComputeConfigurations(group, 0, initialPairs, m_Configurations);
     m_Searcher.Initialize(m_Configurations);
 
-    Logger::LogInfo("Starting to explore configurations for kernel " + std::to_string(m_Kernel.GetId()) + " and group "
-        + group.GetName() + ", configuration count in the current group is " + std::to_string(GetExploredConfigurationCountInGroup()));
+    Logger::LogInfo("Starting to explore configurations for kernel " + m_Kernel.GetName() + " and group " + group.GetName()
+        + ", configuration count in the current group is " + std::to_string(GetConfigurationCountInGroup()));
     return true;
 }
 

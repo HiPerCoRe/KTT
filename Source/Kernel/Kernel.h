@@ -22,7 +22,7 @@ namespace ktt
 class Kernel
 {
 public:
-    explicit Kernel(const KernelId id, const std::vector<const KernelDefinition*>& definitions);
+    explicit Kernel(const KernelId id, const std::string& name, const std::vector<const KernelDefinition*>& definitions);
 
     void AddParameter(const KernelParameter& parameter);
     void AddConstraint(const KernelConstraint& constraint);
@@ -31,6 +31,7 @@ public:
     void SetLauncher(KernelLauncher launcher);
 
     KernelId GetId() const;
+    const std::string& GetName() const;
     const KernelDefinition& GetPrimaryDefinition() const;
     const KernelDefinition& GetDefinition(const KernelDefinitionId id) const;
     const std::vector<const KernelDefinition*>& GetDefinitions() const;
@@ -57,6 +58,7 @@ public:
 
 private:
     KernelId m_Id;
+    std::string m_Name;
     std::vector<const KernelDefinition*> m_Definitions;
     std::vector<const KernelDefinition*> m_ProfiledDefinitions;
     std::set<KernelParameter> m_Parameters;

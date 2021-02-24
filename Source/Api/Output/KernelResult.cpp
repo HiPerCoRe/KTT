@@ -5,25 +5,24 @@ namespace ktt
 {
 
 KernelResult::KernelResult() :
-    m_Id(InvalidKernelId),
     m_ExtraDuration(InvalidDuration),
     m_ExtraOverhead(InvalidDuration),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
-KernelResult::KernelResult(const KernelId id, const KernelConfiguration& configuration) :
+KernelResult::KernelResult(const std::string& kernelName, const KernelConfiguration& configuration) :
     m_Configuration(configuration),
-    m_Id(id),
+    m_KernelName(kernelName),
     m_ExtraDuration(0),
     m_ExtraOverhead(0),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
-KernelResult::KernelResult(const KernelId id, const KernelConfiguration& configuration,
+KernelResult::KernelResult(const std::string& kernelName, const KernelConfiguration& configuration,
     const std::vector<ComputationResult>& results) :
-    m_Results(results),
     m_Configuration(configuration),
-    m_Id(id),
+    m_Results(results),
+    m_KernelName(kernelName),
     m_ExtraDuration(0),
     m_ExtraOverhead(0),
     m_Status(ResultStatus::Ok)
@@ -45,9 +44,9 @@ void KernelResult::SetExtraOverhead(const Nanoseconds overhead)
     m_ExtraOverhead = overhead;
 }
 
-KernelId KernelResult::GetId() const
+const std::string& KernelResult::GetKernelName() const
 {
-    return m_Id;
+    return m_KernelName;
 }
 
 const std::vector<ComputationResult>& KernelResult::GetResults() const
@@ -87,6 +86,16 @@ Nanoseconds KernelResult::GetKernelOverhead() const
     }
 
     return overhead;
+}
+
+Nanoseconds KernelResult::GetExtraDuration() const
+{
+    return m_ExtraDuration;
+}
+
+Nanoseconds KernelResult::GetExtraOverhead() const
+{
+    return m_ExtraOverhead;
 }
 
 Nanoseconds KernelResult::GetTotalDuration() const

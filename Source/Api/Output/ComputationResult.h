@@ -17,15 +17,14 @@ class KTT_API ComputationResult
 {
 public:
     ComputationResult();
-    explicit ComputationResult(const std::string& kernelName, const std::string& configurationPrefix);
+    explicit ComputationResult(const std::string& kernelFunction);
     ComputationResult(const ComputationResult& other);
 
     void SetDurationData(const Nanoseconds duration, const Nanoseconds overhead);
     void SetCompilationData(std::unique_ptr<KernelCompilationData> data);
     void SetProfilingData(std::unique_ptr<KernelProfilingData> data);
 
-    const std::string& GetKernelName() const;
-    const std::string& GetConfigurationPrefix() const;
+    const std::string& GetKernelFunction() const;
     Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
     bool HasCompilationData() const;
@@ -37,8 +36,7 @@ public:
     ComputationResult& operator=(const ComputationResult& other);
 
 private:
-    std::string m_KernelName;
-    std::string m_ConfigurationPrefix;
+    std::string m_KernelFunction;
     Nanoseconds m_Duration;
     Nanoseconds m_Overhead;
     std::unique_ptr<KernelCompilationData> m_CompilationData;

@@ -82,11 +82,11 @@ int main(int argc, char** argv)
     // Add two kernels to tuner, one of the kernels acts as a reference kernel.
     const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, ndRangeDimensions,
         workGroupDimensions);
-    const ktt::KernelId kernel = tuner.CreateSimpleKernel(definition);
+    const ktt::KernelId kernel = tuner.CreateSimpleKernel("CoulombSum", definition);
 
     const ktt::KernelDefinitionId referenceDefinition = tuner.AddKernelDefinitionFromFile("directCoulombSumReference", referenceKernelFile,
         ndRangeDimensions, referenceWorkGroupDimensions);
-    const ktt::KernelId referenceKernel = tuner.CreateSimpleKernel(referenceDefinition);
+    const ktt::KernelId referenceKernel = tuner.CreateSimpleKernel("CoulombSumReference", referenceDefinition);
 
     // Add several parameters to tuned kernel, some of them utilize constraint function and thread modifiers.
     tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});

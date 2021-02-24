@@ -50,7 +50,7 @@ void ComputeLayerData::SwapArguments(const KernelDefinitionId id, const Argument
 {
     if (!ContainsKey(m_ComputeData, id))
     {
-        throw KttException("Kernel with id " + std::to_string(m_Kernel.GetId()) + " has no data for definition with id "
+        throw KttException("Kernel " + m_Kernel.GetName() + " has no data for definition with id "
             + std::to_string(id));
     }
 
@@ -61,7 +61,7 @@ void ComputeLayerData::ChangeArguments(const KernelDefinitionId id, std::vector<
 {
     if (!ContainsKey(m_ComputeData, id))
     {
-        throw KttException("Kernel with id " + std::to_string(m_Kernel.GetId()) + " has no data for definition with id "
+        throw KttException("Kernel " + m_Kernel.GetName() + " has no data for definition with id "
             + std::to_string(id));
     }
 
@@ -100,7 +100,7 @@ const KernelComputeData& ComputeLayerData::GetComputeData(const KernelDefinition
 {
     if (!ContainsKey(m_ComputeData, id))
     {
-        throw KttException("Kernel with id " + std::to_string(m_Kernel.GetId()) + " has no data for definition with id "
+        throw KttException("Kernel " + m_Kernel.GetName() + " has no data for definition with id "
             + std::to_string(id));
     }
 
@@ -109,7 +109,7 @@ const KernelComputeData& ComputeLayerData::GetComputeData(const KernelDefinition
 
 KernelResult ComputeLayerData::GenerateResult(const Nanoseconds launcherDuration) const
 {
-    KernelResult result(m_Kernel.GetId(), m_Configuration, m_PartialResults);
+    KernelResult result(m_Kernel.GetName(), m_Configuration, m_PartialResults);
     const Nanoseconds launcherOverhead = CalculateLauncherOverhead();
     const Nanoseconds actualDuration = launcherDuration - launcherOverhead;
     result.SetExtraDuration(m_Duration + actualDuration);

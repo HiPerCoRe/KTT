@@ -8,8 +8,9 @@
 namespace ktt
 {
 
-Kernel::Kernel(const KernelId id, const std::vector<const KernelDefinition*>& definitions) :
+Kernel::Kernel(const KernelId id, const std::string& name, const std::vector<const KernelDefinition*>& definitions) :
     m_Id(id),
+    m_Name(name),
     m_Definitions(definitions)
 {
     KttAssert(!m_Definitions.empty(), "Each kernel must have at least one definition");
@@ -95,6 +96,11 @@ void Kernel::SetLauncher(KernelLauncher launcher)
 KernelId Kernel::GetId() const
 {
     return m_Id;
+}
+
+const std::string& Kernel::GetName() const
+{
+    return m_Name;
 }
 
 const KernelDefinition& Kernel::GetPrimaryDefinition() const

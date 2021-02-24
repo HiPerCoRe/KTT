@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     const ktt::ArgumentId scalarId = tuner.AddArgumentScalar(scalarValue);
     tuner.SetArguments(definition, {aId, bId, resultId, scalarId});
 
-    const ktt::KernelId kernel = tuner.CreateSimpleKernel(definition);
+    const ktt::KernelId kernel = tuner.CreateSimpleKernel("Addition", definition);
 
     // Set reference computation for the result argument which will be used by the tuner to automatically validate kernel output.
     // The computation function receives buffer on input, where the reference result should be saved. The size of buffer corresponds

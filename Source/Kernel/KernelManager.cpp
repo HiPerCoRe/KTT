@@ -42,11 +42,19 @@ void KernelManager::SetArguments(const KernelDefinitionId id, const std::vector<
     definition.SetArguments(arguments);
 }
 
-KernelId KernelManager::CreateKernel(const std::vector<KernelDefinitionId>& definitionIds)
+KernelId KernelManager::CreateKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds)
 {
+    for (const auto& pair : m_Kernels)
+    {
+        if (pair.second->GetName() == name)
+        {
+            throw KttException("Kernel with name " + name + " already exists");
+        }
+    }
+
     const auto id = m_KernelIdGenerator.GenerateId();
     const auto definitions = GetDefinitionsFromIds(definitionIds);
-    m_Kernels[id] = std::make_unique<Kernel>(id, definitions);
+    m_Kernels[id] = std::make_unique<Kernel>(id, name, definitions);
     return id;
 }
 

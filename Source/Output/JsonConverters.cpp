@@ -111,7 +111,7 @@ void to_json(json& j, const ComputationResult& result)
 
     j = json
     {
-        {"KernelName", result.GetKernelName()},
+        {"KernelFunction", result.GetKernelFunction()},
         {"Duration", time.ConvertDuration(result.GetDuration())},
         {"Overhead", time.ConvertDuration(result.GetOverhead())}
     };
@@ -138,12 +138,12 @@ void to_json(json& j, const KernelResult& result)
 
     j = json
     {
-        {"Id", result.GetId()},
+        {"KernelName", result.GetKernelName()},
         {"Status", result.GetStatus()},
         {"TotalDuration", time.ConvertDuration(result.GetTotalDuration())},
         {"TotalOverhead", time.ConvertDuration(result.GetTotalOverhead())},
-        {"KernelDuration", time.ConvertDuration(result.GetKernelDuration())},
-        {"KernelOverhead", time.ConvertDuration(result.GetKernelOverhead())},
+        {"ExtraDuration", time.ConvertDuration(result.GetExtraDuration())},
+        {"ExtraOverhead", time.ConvertDuration(result.GetExtraOverhead())},
         {"Configuration", result.GetConfiguration()},
         {"ComputationResults", result.GetResults()}
     };

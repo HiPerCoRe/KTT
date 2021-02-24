@@ -15,28 +15,31 @@ class KTT_API KernelResult
 {
 public:
     KernelResult();
-    explicit KernelResult(const KernelId id, const KernelConfiguration& configuration);
-    explicit KernelResult(const KernelId id, const KernelConfiguration& configuration, const std::vector<ComputationResult>& results);
+    explicit KernelResult(const std::string& kernelName, const KernelConfiguration& configuration);
+    explicit KernelResult(const std::string& kernelName, const KernelConfiguration& configuration,
+        const std::vector<ComputationResult>& results);
 
     void SetStatus(const ResultStatus status);
     void SetExtraDuration(const Nanoseconds duration);
     void SetExtraOverhead(const Nanoseconds overhead);
 
-    KernelId GetId() const;
+    const std::string& GetKernelName() const;
     const std::vector<ComputationResult>& GetResults() const;
     const KernelConfiguration& GetConfiguration() const;
     ResultStatus GetStatus() const;
     Nanoseconds GetKernelDuration() const;
     Nanoseconds GetKernelOverhead() const;
+    Nanoseconds GetExtraDuration() const;
+    Nanoseconds GetExtraOverhead() const;
     Nanoseconds GetTotalDuration() const;
     Nanoseconds GetTotalOverhead() const;
     bool IsValid() const;
     bool HasRemainingProfilingRuns() const;
 
 private:
-    std::vector<ComputationResult> m_Results;
     KernelConfiguration m_Configuration;
-    KernelId m_Id;
+    std::vector<ComputationResult> m_Results;
+    std::string m_KernelName;
     Nanoseconds m_ExtraDuration;
     Nanoseconds m_ExtraOverhead;
     ResultStatus m_Status;

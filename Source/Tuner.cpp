@@ -60,11 +60,11 @@ void Tuner::SetArguments(const KernelDefinitionId id, const std::vector<Argument
     }
 }
 
-KernelId Tuner::CreateSimpleKernel(const KernelDefinitionId definitionId)
+KernelId Tuner::CreateSimpleKernel(const std::string& name, const KernelDefinitionId definitionId)
 {
     try
     {
-        return m_Tuner->CreateKernel(definitionId);
+        return m_Tuner->CreateKernel(name, definitionId);
     }
     catch (const KttException& exception)
     {
@@ -73,11 +73,12 @@ KernelId Tuner::CreateSimpleKernel(const KernelDefinitionId definitionId)
     }
 }
 
-KernelId Tuner::CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
+KernelId Tuner::CreateCompositeKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds,
+    KernelLauncher launcher)
 {
     try
     {
-        return m_Tuner->CreateKernel(definitionIds, launcher);
+        return m_Tuner->CreateKernel(name, definitionIds, launcher);
     }
     catch (const KttException& exception)
     {
@@ -225,7 +226,7 @@ KernelResult Tuner::RunKernel(const KernelId id, const KernelConfiguration& conf
     catch (const KttException& exception)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
-        return KernelResult(id, configuration);
+        return KernelResult();
     }
 }
 
@@ -341,7 +342,7 @@ KernelResult Tuner::TuneKernelIteration(const KernelId id, const std::vector<Buf
     catch (const KttException& exception)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
-        return KernelResult(id, KernelConfiguration());
+        return KernelResult();
     }
 }
 

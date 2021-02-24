@@ -11,16 +11,14 @@ ComputationResult::ComputationResult() :
     m_Overhead(InvalidDuration)
 {}
 
-ComputationResult::ComputationResult(const std::string& kernelName, const std::string& configurationPrefix) :
-    m_KernelName(kernelName),
-    m_ConfigurationPrefix(configurationPrefix),
+ComputationResult::ComputationResult(const std::string& kernelFunction) :
+    m_KernelFunction(kernelFunction),
     m_Duration(InvalidDuration),
     m_Overhead(InvalidDuration)
 {}
 
 ComputationResult::ComputationResult(const ComputationResult& other) :
-    m_KernelName(other.m_KernelName),
-    m_ConfigurationPrefix(other.m_ConfigurationPrefix),
+    m_KernelFunction(other.m_KernelFunction),
     m_Duration(other.m_Duration),
     m_Overhead(other.m_Overhead)
 {
@@ -51,14 +49,9 @@ void ComputationResult::SetProfilingData(std::unique_ptr<KernelProfilingData> da
     m_ProfilingData = std::move(data);
 }
 
-const std::string& ComputationResult::GetKernelName() const
+const std::string& ComputationResult::GetKernelFunction() const
 {
-    return m_KernelName;
-}
-
-const std::string& ComputationResult::GetConfigurationPrefix() const
-{
-    return m_ConfigurationPrefix;
+    return m_KernelFunction;
 }
 
 Nanoseconds ComputationResult::GetDuration() const
@@ -113,8 +106,7 @@ bool ComputationResult::HasRemainingProfilingRuns() const
 
 ComputationResult& ComputationResult::operator=(const ComputationResult& other)
 {
-    m_KernelName = other.m_KernelName;
-    m_ConfigurationPrefix = other.m_ConfigurationPrefix;
+    m_KernelFunction = other.m_KernelFunction;
     m_Duration = other.m_Duration;
     m_Overhead = other.m_Overhead;
 

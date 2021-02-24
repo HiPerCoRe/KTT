@@ -69,9 +69,9 @@ int main(int argc, char** argv)
     // CUDA kernel function.
     tuner.SetArguments(definition, {aId, bId, resultId});
 
-    // Create simple kernel from the specified definition. In more complex scenarios, kernels can have multiple definitions.
-    // Definitions can be shared between multiple kernels.
-    const ktt::KernelId kernel = tuner.CreateSimpleKernel(definition);
+    // Create simple kernel from the specified definition. Specify name which will be used during logging and output operations.
+    // In more complex scenarios, kernels can have multiple definitions. Definitions can be shared between multiple kernels.
+    const ktt::KernelId kernel = tuner.CreateSimpleKernel("Addition", definition);
 
     // Set time unit used during printing of kernel duration. The default time unit is milliseconds, but since computation in
     // this tutorial is very short, microseconds are used instead.

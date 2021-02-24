@@ -22,8 +22,6 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
 KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
     const std::vector<BufferOutputDescriptor>& output, const bool manageBuffers)
 {
-    const auto id = kernel.GetId();
-
     if (!m_Validator->HasReferenceResult(kernel))
     {
         m_Validator->ComputeReferenceResult(kernel, mode);
@@ -34,7 +32,7 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
         SetupBuffers(kernel);
     }
 
-    Logger::LogInfo("Running kernel " + std::to_string(id) + " with configuration: " + configuration.GetString());
+    Logger::LogInfo("Running kernel " + kernel.GetName() + " with configuration: " + configuration.GetString());
     auto launcher = GetKernelLauncher(kernel);
     KernelResult result = RunKernelInternal(kernel, configuration, launcher, output);
     ValidateResult(kernel, result, mode);
@@ -60,7 +58,7 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
             if (!kernel.HasLauncher() && !argument->HasUserBuffer())
             {
                 Logger::LogWarning("Kernel argument with id " + std::to_string(id) + " has buffer managed by user, but its "
-                    + "associated kernel with id " + std::to_string(kernel.GetId()) + " does not have a launcher defined by user");
+                    + "associated kernel " + kernel.GetName() + " does not have a launcher defined by user");
             }
 
             continue;
@@ -202,7 +200,7 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
     const KernelId id = kernel.GetId();
 
     auto activator = std::make_unique<KernelActivator>(*m_ComputeLayer, id);
-    KernelResult result(id, configuration);
+    KernelResult result(kernel.GetName(), configuration);
 
     try
     {

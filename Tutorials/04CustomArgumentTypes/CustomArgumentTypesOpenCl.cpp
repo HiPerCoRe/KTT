@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     const ktt::ArgumentId dataId = tuner.AddArgumentVector(data, ktt::ArgumentAccessType::ReadWrite);
     tuner.SetArguments(definition, {dataId});
 
-    const ktt::KernelId kernel = tuner.CreateSimpleKernel(definition);
+    const ktt::KernelId kernel = tuner.CreateSimpleKernel("Addition", definition);
 
     tuner.SetReferenceComputation(dataId, [&data](void* buffer)
     {

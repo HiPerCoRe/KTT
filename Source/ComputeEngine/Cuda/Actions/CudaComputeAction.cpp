@@ -80,7 +80,7 @@ KernelComputeId CudaComputeAction::GetComputeId() const
 
 ComputationResult CudaComputeAction::GenerateResult() const
 {
-    ComputationResult result(m_Kernel->GetName(), GetConfigurationPrefix());
+    ComputationResult result(m_Kernel->GetName());
     const Nanoseconds duration = GetDuration();
     const Nanoseconds overhead = GetOverhead();
     std::unique_ptr<KernelCompilationData> compilationData = m_Kernel->GenerateCompilationData();

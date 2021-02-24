@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <string>
 
 #include <Kernel/Kernel.h>
 #include <Kernel/KernelDefinition.h>
@@ -24,7 +25,7 @@ public:
         const DimensionVector& globalSize, const DimensionVector& localSize);
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
     
-    KernelId CreateKernel(const std::vector<KernelDefinitionId>& definitionIds);
+    KernelId CreateKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds);
     void AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group);
     void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group);
     void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function);

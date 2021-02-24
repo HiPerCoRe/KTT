@@ -15,8 +15,7 @@ TuningRunner::TuningRunner(KernelRunner& kernelRunner, const DeviceInfo& info) :
 
 std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_ptr<StopCondition> stopCondition)
 {
-    const auto id = kernel.GetId();
-    Logger::LogInfo("Starting offline tuning for kernel " + std::to_string(id));
+    Logger::LogInfo("Starting offline tuning for kernel " + kernel.GetName());
 
     if (kernel.HasWritableZeroCopyArgument())
     {
@@ -30,7 +29,9 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_p
 
     m_ConfigurationManager->InitializeData(kernel);
     std::vector<KernelResult> results;
-    KernelResult result(id, m_ConfigurationManager->GetCurrentConfiguration(id));
+
+    const auto id = kernel.GetId();
+    KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
 
     while (!m_ConfigurationManager->IsDataProcessed(id))
     {
@@ -56,7 +57,7 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_p
         m_ConfigurationManager->CalculateNextConfiguration(id, result);
     }
 
-    Logger::LogInfo("Ending offline tuning for kernel " + std::to_string(id) + ", total number of tested configurations is "
+    Logger::LogInfo("Ending offline tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
         + std::to_string(results.size()));
     m_KernelRunner.ClearReferenceResult(kernel);
     m_ConfigurationManager->ClearData(id);
@@ -83,7 +84,7 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
     if (m_ConfigurationManager->IsDataProcessed(id))
     {
         configuration = &m_ConfigurationManager->GetBestConfiguration(id);
-        Logger::LogInfo("Launching the best configuration for kernel " + std::to_string(id));
+        Logger::LogInfo("Launching the best configuration for kernel " + kernel.GetName());
     }
     else
     {
@@ -92,7 +93,7 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
         const uint64_t configurationNumber = m_ConfigurationManager->GetExploredConfigurationCountInGroup(id) + 1;
         const uint64_t configurationCount = m_ConfigurationManager->GetConfigurationCountInGroup(id);
         Logger::LogInfo("Launching configuration " + std::to_string(configurationNumber) + " / " + std::to_string(configurationCount)
-            + " in the current group for kernel " + std::to_string(id));
+            + " in the current group for kernel " + kernel.GetName());
     }
 
     KernelResult result = m_KernelRunner.RunKernel(kernel, *configuration, mode, output);
@@ -114,7 +115,7 @@ void TuningRunner::DryTune(const Kernel& kernel, const std::vector<KernelResult>
         m_ConfigurationManager->InitializeData(kernel);
     }
 
-    KernelResult result(id, m_ConfigurationManager->GetCurrentConfiguration(id));
+    KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
     uint64_t passedIterations = 0;
 
     do
@@ -128,7 +129,7 @@ void TuningRunner::DryTune(const Kernel& kernel, const std::vector<KernelResult>
 
         try
         {
-            Logger::LogInfo("Launching new configuration for kernel " + std::to_string(id));
+            Logger::LogInfo("Launching new configuration for kernel " + kernel.GetName());
             // todo: find corresponding result for configuration
         }
         catch (const KttException& error)

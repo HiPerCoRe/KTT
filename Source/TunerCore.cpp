@@ -43,14 +43,14 @@ void TunerCore::SetArguments(const KernelDefinitionId id, const std::vector<Argu
     m_KernelManager->SetArguments(id, argumentIds);
 }
 
-KernelId TunerCore::CreateKernel(const KernelDefinitionId definitionId)
+KernelId TunerCore::CreateKernel(const std::string& name, const KernelDefinitionId definitionId)
 {
-    return m_KernelManager->CreateKernel({definitionId});
+    return m_KernelManager->CreateKernel(name, {definitionId});
 }
 
-KernelId TunerCore::CreateKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
+KernelId TunerCore::CreateKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
 {
-    const KernelId id = m_KernelManager->CreateKernel(definitionIds);
+    const KernelId id = m_KernelManager->CreateKernel(name, definitionIds);
     m_KernelManager->SetLauncher(id, launcher);
     return id;
 }
