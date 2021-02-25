@@ -14,6 +14,31 @@ TunerMetadata::TunerMetadata(const ComputeApi api, const PlatformInfo& platformI
     m_TimeUnit = TimeConfiguration::GetInstance().GetTimeUnit();
 }
 
+void TunerMetadata::SetComputeApi(const ComputeApi api)
+{
+    m_ComputeApi = api;
+}
+
+void TunerMetadata::SetPlatformName(const std::string& name)
+{
+    m_PlatformName = name;
+}
+
+void TunerMetadata::SetDeviceName(const std::string& name)
+{
+    m_DeviceName = name;
+}
+
+void TunerMetadata::SetKttVersion(const std::string& version)
+{
+    m_KttVersion = version;
+}
+
+void TunerMetadata::SetTimeUnit(const TimeUnit unit)
+{
+    m_TimeUnit = unit;
+}
+
 ComputeApi TunerMetadata::GetComputeApi() const
 {
     return m_ComputeApi;

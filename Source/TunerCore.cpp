@@ -3,6 +3,7 @@
 #include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CudaEngine.h>
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
+#include <Output/Deserializer/JsonDeserializer.h>
 #include <Output/Serializer/JsonSerializer.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Output/TunerMetadata.h>
@@ -260,6 +261,34 @@ void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std:
         throw KttException("Support for CSV format is not yet available");
     default:
         KttError("Unhandled output format value");
+    }
+}
+
+std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, const OutputFormat format) const
+{
+    const std::string file = filePath + GetFileExtension(format);
+    Logger::LogInfo("Loading kernel results from file: " + file);
+    std::ifstream inputStream(file);
+
+    if (!inputStream.is_open())
+    {
+        throw KttException("Unable to open file: " + file);
+    }
+
+    switch (format)
+    {
+    case OutputFormat::JSON:
+    {
+        JsonDeserializer deserializer;
+        return deserializer.DeserializeResults(inputStream);
+    }
+    case OutputFormat::XML:
+        throw KttException("Support for XML format is not yet available");
+    case OutputFormat::CSV:
+        throw KttException("Support for CSV format is not yet available");
+    default:
+        KttError("Unhandled output format value");
+        return std::vector<KernelResult>{};
     }
 }
 

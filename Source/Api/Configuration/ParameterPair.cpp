@@ -6,6 +6,11 @@
 namespace ktt
 {
 
+ParameterPair::ParameterPair() :
+    m_Name(nullptr),
+    m_Value(0ull)
+{}
+
 ParameterPair::ParameterPair(const std::string& name, const uint64_t value) :
     m_Name(&name),
     m_Value(value)

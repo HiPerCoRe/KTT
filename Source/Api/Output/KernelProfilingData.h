@@ -17,6 +17,11 @@ namespace ktt
 class KTT_API KernelProfilingData
 {
 public:
+    /** @fn KernelProfilingData() = default
+      * Constructor which creates empty invalid profiling data.
+      */
+    KernelProfilingData() = default;
+
     /** @fn explicit KernelProfilingData(const uint64_t remainingRuns)
       * Constructor which creates invalid profiling data and initializes number of remaining kernel runs needed to gather
       * valid profiling counters.

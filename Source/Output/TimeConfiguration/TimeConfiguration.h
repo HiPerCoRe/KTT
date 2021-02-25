@@ -18,9 +18,13 @@ public:
     void SetTimeUnit(const TimeUnit unit);
 
     TimeUnit GetTimeUnit() const;
-    uint64_t ConvertDuration(const Nanoseconds duration) const;
-    double ConvertDurationDouble(const Nanoseconds duration) const;
     std::string GetUnitTag() const;
+
+    uint64_t ConvertFromNanoseconds(const Nanoseconds duration) const;
+    double ConvertFromNanosecondsDouble(const Nanoseconds duration) const;
+
+    Nanoseconds ConvertToNanoseconds(const uint64_t duration) const;
+    Nanoseconds ConvertToNanosecondsDouble(const double duration) const;
 
 private:
     TimeUnit m_TimeUnit;

@@ -453,6 +453,19 @@ void Tuner::SaveResults(const std::vector<KernelResult>& results, const std::str
     }
 }
 
+std::vector<KernelResult> Tuner::LoadResults(const std::string& filePath, const OutputFormat format) const
+{
+    try
+    {
+        return m_Tuner->LoadResults(filePath, format);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return std::vector<KernelResult>{};
+    }
+}
+
 void Tuner::SetProfilingCounters(const std::vector<std::string>& counters)
 {
     try

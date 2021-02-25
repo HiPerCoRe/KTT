@@ -19,6 +19,11 @@ namespace ktt
 class KTT_API ParameterPair
 {
 public:
+    /** @fn ParameterPair()
+      * Constructor which creates empty parameter pair.
+      */
+    ParameterPair();
+
     /** @fn explicit ParameterPair(const std::string& name, const uint64_t value)
       * Constructor which creates parameter pair for integer parameter.
       * @param name Name of a kernel parameter tied to the pair.

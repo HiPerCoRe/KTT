@@ -252,8 +252,8 @@ void KernelRunner::ValidateResult(const Kernel& kernel, KernelResult& result, co
 
     const bool validResult = m_Validator->ValidateArguments(kernel, mode);
     const auto& time = TimeConfiguration::GetInstance();
-    const uint64_t duration = time.ConvertDuration(result.GetTotalDuration());
-    const uint64_t kernelDuration = time.ConvertDuration(result.GetKernelDuration());
+    const uint64_t duration = time.ConvertFromNanoseconds(result.GetTotalDuration());
+    const uint64_t kernelDuration = time.ConvertFromNanoseconds(result.GetKernelDuration());
     const std::string tag = time.GetUnitTag();
 
     if (validResult)

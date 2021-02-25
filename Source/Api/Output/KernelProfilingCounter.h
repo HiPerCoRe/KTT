@@ -19,6 +19,11 @@ namespace ktt
 class KTT_API KernelProfilingCounter
 {
 public:
+    /** @fn KernelProfilingCounter() = default
+      * Constructor which creates empty profiling counter.
+      */
+    KernelProfilingCounter() = default;
+
     /** @fn explicit KernelProfilingCounter(const std::string& name, const ProfilingCounterType type, const int64_t value)
       * Constructor which initializes a profiling counter with specified name, value and type.
       * @param name Name of a profiling counter.

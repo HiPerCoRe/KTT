@@ -16,6 +16,12 @@ public:
     TunerMetadata() = default;
     explicit TunerMetadata(const ComputeApi api, const PlatformInfo& platformInfo, const DeviceInfo& deviceInfo);
 
+    void SetComputeApi(const ComputeApi api);
+    void SetPlatformName(const std::string& name);
+    void SetDeviceName(const std::string& name);
+    void SetKttVersion(const std::string& version);
+    void SetTimeUnit(const TimeUnit unit);
+
     ComputeApi GetComputeApi() const;
     const std::string& GetPlatformName() const;
     const std::string& GetDeviceName() const;

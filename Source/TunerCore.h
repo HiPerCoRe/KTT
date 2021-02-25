@@ -74,6 +74,7 @@ public:
     // Result printing
     static void SetTimeUnit(const TimeUnit unit);
     void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const;
+    std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format) const;
 
     // Compute engine
     void SetProfilingCounters(const std::vector<std::string>& counters);

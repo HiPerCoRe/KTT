@@ -1,5 +1,4 @@
 #include <Api/Output/KernelResult.h>
-#include <Utility/ErrorHandling/Assert.h>
 
 namespace ktt
 {
@@ -30,7 +29,6 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
 
 void KernelResult::SetStatus(const ResultStatus status)
 {
-    KttAssert(status != ResultStatus::Ok, "Status Ok should be set only by calling the constructor with computation results");
     m_Status = status;
 }
 
