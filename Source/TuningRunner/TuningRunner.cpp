@@ -106,7 +106,7 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
     return result;
 }
 
-void TuningRunner::DryTune(const Kernel& kernel, const std::vector<KernelResult>& /*results*/, const uint64_t iterations)
+void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<KernelResult>& results, const uint64_t iterations)
 {
     const auto id = kernel.GetId();
 
@@ -125,12 +125,12 @@ void TuningRunner::DryTune(const Kernel& kernel, const std::vector<KernelResult>
             break;
         }
 
-        //const auto& currentConfiguration = m_ConfigurationManager->GetCurrentConfiguration(id);
+        const auto& currentConfiguration = m_ConfigurationManager->GetCurrentConfiguration(id);
 
         try
         {
             Logger::LogInfo("Launching new configuration for kernel " + kernel.GetName());
-            // todo: find corresponding result for configuration
+            result = FindMatchingResult(results, currentConfiguration);
         }
         catch (const KttException& error)
         {
@@ -159,6 +159,20 @@ void TuningRunner::ClearData(const KernelId id)
 const KernelConfiguration& TuningRunner::GetBestConfiguration(const KernelId id) const
 {
     return m_ConfigurationManager->GetBestConfiguration(id);
+}
+
+const KernelResult& TuningRunner::FindMatchingResult(const std::vector<KernelResult>& results,
+    const KernelConfiguration& configuration)
+{
+    for (const auto& result : results)
+    {
+        if (result.GetConfiguration() == configuration)
+        {
+            return result;
+        }
+    }
+
+    throw KttException("Matching result was not found");
 }
 
 } // namespace ktt

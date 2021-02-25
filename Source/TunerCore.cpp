@@ -183,10 +183,10 @@ KernelResult TunerCore::TuneKernelIteration(const KernelId id, const std::vector
     return m_TuningRunner->TuneIteration(kernel, KernelRunMode::OnlineTuning, output, recomputeReference);
 }
 
-void TunerCore::DryTuneKernel(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations)
+void TunerCore::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    m_TuningRunner->DryTune(kernel, results, iterations);
+    m_TuningRunner->SimulateTuning(kernel, results, iterations);
 }
 
 void TunerCore::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)

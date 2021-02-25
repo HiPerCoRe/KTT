@@ -63,7 +63,7 @@ public:
     // Kernel tuning and configurations
     std::vector<KernelResult> TuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
     KernelResult TuneKernelIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference);
-    void DryTuneKernel(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations);
+    void SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations);
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     void ClearData(const KernelId id);
     const KernelConfiguration& GetBestConfiguration(const KernelId id) const;

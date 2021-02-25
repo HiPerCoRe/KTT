@@ -1,5 +1,6 @@
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/KttException.h>
+#include <Utility/StlHelpers.h>
 
 namespace ktt
 {
@@ -58,6 +59,51 @@ std::string KernelConfiguration::GetString() const
     }
 
     return result;
+}
+
+bool KernelConfiguration::operator==(const KernelConfiguration& other) const
+{
+    const auto& pairs = GetPairs();
+    const auto& otherPairs = other.GetPairs();
+
+    if (pairs.size() != otherPairs.size())
+    {
+        return false;
+    }
+
+    for (const auto& pair : pairs)
+    {
+        const bool hasPair = ContainsElementIf(otherPairs, [&pair](const auto& otherPair)
+        {
+            return pair.GetName() == otherPair.GetName();
+        });
+
+        if (!hasPair)
+        {
+            return false;
+        }
+    }
+
+    bool matchingValues = true;
+
+    for (const auto& pair : pairs)
+    {
+        for (const auto& otherPair : otherPairs)
+        {
+            if (pair.GetName() == otherPair.GetName())
+            {
+                matchingValues &= pair.HasSameValue(otherPair);
+                break;
+            }
+        }
+    }
+
+    return matchingValues;
+}
+
+bool KernelConfiguration::operator!=(const KernelConfiguration& other) const
+{
+    return !(*this == other);
 }
 
 } // namespace ktt

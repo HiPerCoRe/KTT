@@ -346,11 +346,11 @@ KernelResult Tuner::TuneKernelIteration(const KernelId id, const std::vector<Buf
     }
 }
 
-void Tuner::DryTuneKernel(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations)
+void Tuner::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations)
 {
     try
     {
-        m_Tuner->DryTuneKernel(id, results, iterations);
+        m_Tuner->SimulateKernelTuning(id, results, iterations);
     }
     catch (const KttException& exception)
     {

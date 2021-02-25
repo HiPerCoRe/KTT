@@ -426,17 +426,17 @@ public:
     KernelResult TuneKernelIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
         const bool recomputeReference = false);
 
-    /** @fn void DryTuneKernel(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations = 0)
+    /** @fn void SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations = 0)
       * Performs simulated tuning process for the specified kernel. The kernel is not tuned, execution times are read from the
       * provided results. Creates configuration space based on combinations of provided kernel parameters and constraints. The
       * configurations will be launched in order that depends on specified Searcher. This method can be used to test behaviour
-      * and performance of newly implemented search methods. Note that no checks are performed whether the provided results relate
-      * to kernel, tuning parameters or hardware.
-      * @param id Id of the dry-tuned kernel.
+      * and performance of newly implemented searchers. The provided results should correspond to the results output by the same
+      * kernel during regular tuning.
+      * @param id Id of the kernel for simulated tuning.
       * @param results Results from which the kernel execution times will be retrieved.
       * @param iterations Number of iterations performed. If equal to 0, search of the entire tuning space is performed.
       */
-    void DryTuneKernel(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations = 0);
+    void SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations = 0);
 
     /** @fn void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
       * Sets searcher which will be used during kernel tuning. If no searcher is specified, DeterministicSearcher will be used.

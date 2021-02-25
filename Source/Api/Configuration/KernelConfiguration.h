@@ -53,6 +53,21 @@ public:
       */
     std::string GetString() const;
 
+    /** @fn bool operator==(const KernelConfiguration& other) const
+      * Checks whether kernel configuration is equal to other. I.e., it has the same parameter pairs with the same values.
+      * @param other Comparison target.
+      * @return True if the configurations are equal. False otherwise.
+      */
+    bool operator==(const KernelConfiguration& other) const;
+
+    /** @fn bool operator!=(const KernelConfiguration& other) const
+      * Checks whether kernel configuration is equal to other. I.e., it has different parameter pairs or the pairs have different
+      * values.
+      * @param other Comparison target.
+      * @return True if the configurations are not equal. False otherwise.
+      */
+    bool operator!=(const KernelConfiguration& other) const;
+
 private:
     std::vector<ParameterPair> m_Pairs;
 };
