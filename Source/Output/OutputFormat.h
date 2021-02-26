@@ -1,5 +1,5 @@
 /** @file OutputFormat.h
-  * Format of kernel result output.
+  * Format of tuner output.
   */
 #pragma once
 
@@ -7,19 +7,19 @@ namespace ktt
 {
 
 /** @enum OutputFormat
-  * Enum for format of kernel result output.
+  * Enum for format of tuner output.
   */
 enum class OutputFormat
 {
-    /** Results are printed in JSON format.
+    /** Tuner output has JSON format. Both serialization and deserialization is supported.
       */
     JSON,
 
-    /** Results are printed in XML format.
+    /** Tuner output has XML format. Both serialization and deserialization is supported.
       */
     XML,
 
-    /** Results are printed in CSV format.
+    /** Tuner output has CSV format. Only serialization is supported.
       */
     CSV
 };

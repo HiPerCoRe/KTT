@@ -426,6 +426,24 @@ project "CoulombSum2dOpenCl"
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
+project "ReductionOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Reduction/*.h", "Examples/Reduction/*.cpp", "Examples/Reduction/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
 end -- openClProjects
+    
+if cudaProjects then
+
+project "ReductionCuda"
+    kind "ConsoleApp"
+    files {"Examples/Reduction/*.h", "Examples/Reduction/*.cpp", "Examples/Reduction/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+end -- cudaProjects
     
 end -- _OPTIONS["no-examples"]
