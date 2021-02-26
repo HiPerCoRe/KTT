@@ -37,12 +37,12 @@ void ComputeLayerData::AddPartialResult(const ComputationResult& result)
 
 void ComputeLayerData::AddArgumentOverride(const ArgumentId id, const KernelArgument& argument)
 {
-    m_ArgumentOverrides.insert({id, argument});
-    auto& storedArgument = m_ArgumentOverrides.find(id)->second;
+    m_ArgumentOverrides.erase(id);
+    auto pair = m_ArgumentOverrides.insert({id, argument});
 
     for (auto& data : m_ComputeData)
     {
-        data.second.UpdateArgument(id, storedArgument);
+        data.second.UpdateArgument(id, pair.first->second);
     }
 }
 
