@@ -2,7 +2,7 @@ KTT - Kernel Tuning Toolkit
 ===========================
 <img src="https://github.com/Fillo7/KTT/blob/master/docs/resources/ktt_logo.png" width="425" height="150"/>
 
-KTT is a tuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 1.3 which introduces public searcher
+KTT is a autotuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 1.3 which introduces public searcher
 API and user-provided compute queues and buffers is now available.
 
 Main features
