@@ -87,9 +87,9 @@ int main(int argc, char** argv)
     });
 
     tuner.AddParameter(kernel, "multiply_block_size", std::vector<uint64_t>{32, 64, 128, 256});
-    tuner.SetThreadModifier(kernel, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_block_size", {definition},
+    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_block_size",
         ktt::ModifierAction::Multiply);
-    tuner.SetThreadModifier(kernel, ktt::ModifierType::Global, ktt::ModifierDimension::X, "multiply_block_size", {definition},
+    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "multiply_block_size",
         ktt::ModifierAction::Divide);
 
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);

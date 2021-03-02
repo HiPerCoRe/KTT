@@ -120,7 +120,7 @@ int main(int argc, char** argv)
             384, 416, 448, 480, 512, 576, 640, 704, 768, 832, 896, 960, 1024});
     }
 
-    tuner.SetThreadModifier(kernel, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", {definition},
+    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
         ktt::ModifierAction::Multiply);
     tuner.AddParameter(kernel, "UNBOUNDED_WG", std::vector<uint64_t>{0, 1});
 
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
         tuner.AddParameter(kernel, "VECTOR_SIZE", std::vector<uint64_t>{1, 2, 4});
     }
 
-    tuner.SetThreadModifier(kernel, ktt::ModifierType::Global, ktt::ModifierDimension::X, "VECTOR_SIZE", {definition},
+    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "VECTOR_SIZE",
         ktt::ModifierAction::Divide);
     tuner.AddParameter(kernel, "USE_ATOMICS", std::vector<uint64_t>{0, 1});
 

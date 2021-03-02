@@ -78,13 +78,13 @@ int main(int argc, char** argv)
     // to specify which definitions are affected by the modifier. In this case, only one definition is affected. The default block
     // size inside kernel definition was set to one. This means that the block size of the definition is controlled explicitly by
     // value of this parameter. E.g., size of one is multiplied by 32, which means that result size is 32.
-    tuner.SetThreadModifier(kernel, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_block_size", {definition},
+    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_block_size",
         ktt::ModifierAction::Multiply);
 
     // Previously added parameter affects thread block size of kernel. However, when block size is changed, grid size has to be
     // modified as well, so that grid size multiplied by block size remains constant. This means that another modifier which divides
     // grid size has to be added.
-    tuner.SetThreadModifier(kernel, ktt::ModifierType::Global, ktt::ModifierDimension::X, "multiply_block_size", {definition},
+    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "multiply_block_size",
         ktt::ModifierAction::Divide);
 
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);

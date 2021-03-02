@@ -100,15 +100,15 @@ int main(int argc, char** argv)
 
     // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR.
     tuner.AddParameter(kernel, "OUTER_UNROLL_FACTOR", std::vector<uint64_t>{1, 2, 4, 8});
-    tuner.SetThreadModifier(kernel, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR", {definition},
+    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
         ktt::ModifierAction::Divide);
 
     // Multiply work-group size in dimensions x and y by the following parameters (effectively setting work-group size to their values).
     tuner.AddParameter(kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{4, 8, 16, 32});
-    tuner.SetThreadModifier(kernel, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X", {definition},
+    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
         ktt::ModifierAction::Multiply);
     tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8, 16, 32});
-    tuner.SetThreadModifier(kernel, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y", {definition},
+    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
         ktt::ModifierAction::Multiply);
 
     // Add all kernel arguments.

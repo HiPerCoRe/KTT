@@ -29,8 +29,8 @@ public:
     void AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group);
     void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group);
     void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function);
-    void SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
-        const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds, ModifierFunction function);
+    void SetThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+        const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function);
     void SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds);
     void SetLauncher(const KernelId id, KernelLauncher launcher);
 

@@ -426,9 +426,23 @@ project "CoulombSum2dOpenCl"
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
+project "CoulombSum3dOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "NbodyOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Nbody/*.cpp", "Examples/Nbody/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
 project "ReductionOpenCl"
     kind "ConsoleApp"
-    files {"Examples/Reduction/*.h", "Examples/Reduction/*.cpp", "Examples/Reduction/*.cl"}
+    files {"Examples/Reduction/*.cpp", "Examples/Reduction/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
@@ -437,9 +451,23 @@ end -- openClProjects
     
 if cudaProjects then
 
+project "CoulombSum3dCuda"
+    kind "ConsoleApp"
+    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "NbodyCuda"
+    kind "ConsoleApp"
+    files {"Examples/Nbody/*.cpp", "Examples/Nbody/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
 project "ReductionCuda"
     kind "ConsoleApp"
-    files {"Examples/Reduction/*.h", "Examples/Reduction/*.cpp", "Examples/Reduction/*.cu"}
+    files {"Examples/Reduction/*.cpp", "Examples/Reduction/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}

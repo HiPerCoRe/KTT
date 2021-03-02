@@ -123,12 +123,12 @@ void Tuner::AddParameter(const KernelId id, const std::string& name, const std::
     }
 }
 
-void Tuner::SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
-    const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds, ModifierFunction function)
+void Tuner::SetThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+    const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
 {
     try
     {
-        m_Tuner->SetThreadModifier(id, type, dimension, parameters, definitionIds, function);
+        m_Tuner->SetThreadModifier(id, definitionIds, type, dimension, parameters, function);
     }
     catch (const KttException& exception)
     {
@@ -136,8 +136,8 @@ void Tuner::SetThreadModifier(const KernelId id, const ModifierType type, const 
     }
 }
 
-void Tuner::SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
-    const std::string& parameter, const std::vector<KernelDefinitionId>& definitionIds, const ModifierAction action)
+void Tuner::SetThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+    const ModifierDimension dimension, const std::string& parameter, const ModifierAction action)
 {
     std::function<uint64_t(const uint64_t, const std::vector<uint64_t>&)> function;
 
@@ -177,7 +177,7 @@ void Tuner::SetThreadModifier(const KernelId id, const ModifierType type, const 
         KttError("Unhandled modifier action value");
     }
 
-    SetThreadModifier(id, type, dimension, std::vector<std::string>{parameter}, definitionIds, function);
+    SetThreadModifier(id, definitionIds, type, dimension, std::vector<std::string>{parameter}, function);
 }
 
 void Tuner::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)

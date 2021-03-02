@@ -36,7 +36,7 @@ inline __device__ float4 operator*(float b, float4 a)
     return make_float4(b * a.x, b * a.y, b * a.z, b * a.w);
 }
 
-extern "C" __global__ void nbody_kernel(float dt1,
+extern "C" __global__ void nbody_kernel_reference(float dt1,
 	float4* pos_old, 
 	float4* pos_new,
 	float4* oldVel,
