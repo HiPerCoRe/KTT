@@ -82,10 +82,10 @@ void TunerCore::AddConstraint(const KernelId id, const std::vector<std::string>&
     m_KernelManager->AddConstraint(id, parameters, function);
 }
 
-void TunerCore::SetThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+void TunerCore::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
 {
-    m_KernelManager->SetThreadModifier(id, definitionIds, type, dimension, parameters, function);
+    m_KernelManager->AddThreadModifier(id, definitionIds, type, dimension, parameters, function);
 }
 
 void TunerCore::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)

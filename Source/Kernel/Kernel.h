@@ -26,7 +26,7 @@ public:
 
     void AddParameter(const KernelParameter& parameter);
     void AddConstraint(const KernelConstraint& constraint);
-    void SetThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier);
+    void AddThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier);
     void SetProfiledDefinitions(const std::vector<const KernelDefinition*>& definitions);
     void SetLauncher(KernelLauncher launcher);
 
@@ -63,7 +63,7 @@ private:
     std::vector<const KernelDefinition*> m_ProfiledDefinitions;
     std::set<KernelParameter> m_Parameters;
     std::vector<KernelConstraint> m_Constraints;
-    std::map<ModifierType, std::map<ModifierDimension, ThreadModifier>> m_Modifiers;
+    std::map<ModifierType, std::map<ModifierDimension, std::vector<ThreadModifier>>> m_Modifiers;
     KernelLauncher m_Launcher;
 
     const KernelParameter& GetParamater(const std::string& name) const;

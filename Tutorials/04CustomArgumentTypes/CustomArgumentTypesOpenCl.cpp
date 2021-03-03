@@ -93,7 +93,7 @@ int main(int argc, char** argv)
 
     // Add parameter and thread modifier for the kernel. See the previous tutorial for more information.
     tuner.AddParameter(kernel, "multiply_work_group_size", std::vector<uint64_t>{32, 64, 128, 256});
-    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_work_group_size",
+    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_work_group_size",
         ktt::ModifierAction::Multiply);
 
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);

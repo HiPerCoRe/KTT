@@ -43,7 +43,7 @@ void Kernel::AddConstraint(const KernelConstraint& constraint)
     m_Constraints.push_back(constraint);
 }
 
-void Kernel::SetThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier)
+void Kernel::AddThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier)
 {
     for (const auto& name : modifier.GetParameters())
     {
@@ -66,7 +66,7 @@ void Kernel::SetThreadModifier(const ModifierType type, const ModifierDimension 
     }
 
     auto& specificModifiers = m_Modifiers[type];
-    specificModifiers[dimension] = modifier;
+    specificModifiers[dimension].push_back(modifier);
 }
 
 void Kernel::SetProfiledDefinitions(const std::vector<const KernelDefinition*>& definitions)
@@ -411,7 +411,11 @@ DimensionVector Kernel::GetModifiedSize(const KernelDefinitionId id, const Modif
         if (ContainsKey(specificModifiers, dimension))
         {
             const auto& pair = *specificModifiers.find(dimension);
-            dimensionSize = static_cast<size_t>(pair.second.GetModifiedSize(id, static_cast<uint64_t>(dimensionSize), pairs));
+
+            for (const auto& modifier : pair.second)
+            {
+                dimensionSize = static_cast<size_t>(modifier.GetModifiedSize(id, static_cast<uint64_t>(dimensionSize), pairs));
+            }
         }
 
         result.SetSize(dimension, dimensionSize);

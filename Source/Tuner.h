@@ -186,11 +186,12 @@ public:
       */
     void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group = "");
 
-    /** @fn void SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
+    /** @fn void AddThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
       * const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds, ModifierFunction function)
-      * Sets thread modifier function for the specified kernel. The function receives thread size in the specified dimension and
+      * Adds thread modifier function for the specified kernel. The function receives thread size in the specified dimension and
       * values of the specified kernel parameters as input and returns modified thread size based on these values. Thread modifiers
-      * are useful in cases when kernel parameters affect number of required kernel threads.
+      * are useful in cases when kernel parameters affect number of required kernel threads. If multiple thread modifiers are
+      * specified for the same type and dimension, they are applied in order of their addition.
       * @param id Id of kernel for which the modifier will be set.
       * @param definitionIds Kernel definitions whose thread sizes will be affected by the thread modifier.
       * @param type Type of the thread modifier. See ::ModifierType for more information.
@@ -200,13 +201,14 @@ public:
       * @param function Function which receives thread size in the specified kernel dimension and values of kernel parameters as input
       * and returns modified thread size based on these values.
       */
-    void SetThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+    void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
         const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function);
 
-    /** @fn void SetThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
+    /** @fn void AddThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
       * const std::string& parameter, const std::vector<KernelDefinitionId>& definitionIds, const ModifierAction action)
-      * Sets thread modifier function for the specified kernel. This is a simplified version of the thread modifier method which
-      * supports only a single kernel parameter and limited number of actions, but is easier to use.
+      * Adds thread modifier function for the specified kernel. This is a simplified version of the thread modifier method which
+      * supports only a single kernel parameter and limited number of actions, but is easier to use. If multiple thread modifiers
+      * are specified for the same type and dimension, they are applied in order of their addition.
       * @param id Id of kernel for which the modifier will be set.
       * @param definitionIds Kernel definitions whose thread sizes will be affected by the thread modifier.
       * @param type Type of the thread modifier. See ::ModifierType for more information.
@@ -214,7 +216,7 @@ public:
       * @param parameter Name of a kernel parameter whose value will be utilized by the thread modifier.
       * @param action Action of the thread modifier. See ::ModifierAction for more information.
       */
-    void SetThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+    void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
         const ModifierDimension dimension, const std::string& parameter, const ModifierAction action);
 
     /** @fn void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)

@@ -76,12 +76,12 @@ void KernelManager::AddConstraint(const KernelId id, const std::vector<std::stri
     kernel.AddConstraint(KernelConstraint(parameters, function));
 }
 
-void KernelManager::SetThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+void KernelManager::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters,  ModifierFunction function)
 {
     auto& kernel = GetKernel(id);
     const ThreadModifier modifier(parameters, definitionIds, function);
-    kernel.SetThreadModifier(type, dimension, modifier);
+    kernel.AddThreadModifier(type, dimension, modifier);
 }
 
 void KernelManager::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)

@@ -159,7 +159,7 @@ int main(int argc, char** argv)
             512, 640, 768, 894, 1024});
     }
 
-    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
         ktt::ModifierAction::Multiply);
 
     if constexpr (!useWideParameters)
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
         tuner.AddParameter(kernel, "OUTER_UNROLL_FACTOR", std::vector<uint64_t>{1, 2, 4, 8, 16, 32});
     }
 
-    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
+    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
         ktt::ModifierAction::Divide);
 
     if constexpr (!useDenseParameters)

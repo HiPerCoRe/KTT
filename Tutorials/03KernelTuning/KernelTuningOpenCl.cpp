@@ -84,7 +84,7 @@ int main(int argc, char** argv)
     // to specify which definitions are affected by the modifier. In this case, only one definition is affected. The default work-group
     // size inside kernel definition was set to one. This means that the work-group size of the definition is controlled explicitly by
     // value of this parameter. E.g., size of one is multiplied by 32, which means that result size is 32.
-    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_work_group_size",
+    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_work_group_size",
         ktt::ModifierAction::Multiply);
 
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);

@@ -114,10 +114,10 @@ int main(int argc, char** argv)
 
     // Multiply work-group size in dimensions x and y by two parameters that follow (effectively setting work-group size to parameters' values)
     tuner.AddParameter(kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{4, 8, 16, 32});
-    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
         ktt::ModifierAction::Multiply);
     tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8, 16, 32});
-    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
         ktt::ModifierAction::Multiply);
 
     // Add additional tuning parameters
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
 
     // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR
     tuner.AddParameter(kernel, "OUTER_UNROLL_FACTOR", std::vector<uint64_t>{1, 2, 4, 8});
-    tuner.SetThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
+    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
         ktt::ModifierAction::Divide);
 
     // Specify custom tolerance threshold for validation of floating point arguments. Default threshold is 1e-4.
