@@ -6,6 +6,7 @@
 #include <ComputeEngine/KernelComputeData.h>
 #include <Kernel/Kernel.h>
 #include <Kernel/KernelDefinition.h>
+#include <Utility/ErrorHandling/Assert.h>
 
 namespace ktt
 {
@@ -31,16 +32,10 @@ void KernelComputeData::SetLocalSize(const DimensionVector& localSize)
     m_LocalSize = localSize;
 }
 
-void KernelComputeData::UpdateArgument(const ArgumentId id, KernelArgument& argument)
+void KernelComputeData::UpdateArgumentAtIndex(const size_t index, KernelArgument& argument)
 {
-    for (size_t i = 0; i < m_Arguments.size(); ++i)
-    {
-        if (m_Arguments[i]->GetId() == id)
-        {
-            m_Arguments[i] = &argument;
-            break;
-        }
-    }
+    KttAssert(index < m_Arguments.size(), "Invalid index");
+    m_Arguments[index] = &argument;
 }
 
 void KernelComputeData::SwapArguments(const ArgumentId first, const ArgumentId second)
@@ -113,6 +108,19 @@ const DimensionVector& KernelComputeData::GetLocalSize() const
 const KernelConfiguration& KernelComputeData::GetConfiguration() const
 {
     return *m_Configuration;
+}
+
+size_t KernelComputeData::GetArgumentIndex(const ArgumentId id) const
+{
+    for (size_t i = 0; i < m_Arguments.size(); ++i)
+    {
+        if (m_Arguments[i]->GetId() == id)
+        {
+            return i;
+        }
+    }
+
+    return std::numeric_limits<size_t>::max();
 }
 
 const std::vector<KernelArgument*>& KernelComputeData::GetArguments() const

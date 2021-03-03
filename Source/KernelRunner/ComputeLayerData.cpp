@@ -37,12 +37,24 @@ void ComputeLayerData::AddPartialResult(const ComputationResult& result)
 
 void ComputeLayerData::AddArgumentOverride(const ArgumentId id, const KernelArgument& argument)
 {
+    std::map<KernelDefinitionId, size_t> argumentIndices;
+
+    for (const auto& data : m_ComputeData)
+    {
+        const size_t index = data.second.GetArgumentIndex(id);
+
+        if (index != std::numeric_limits<size_t>::max())
+        {
+            argumentIndices[data.first] = index;
+        }
+    }
+
     m_ArgumentOverrides.erase(id);
     auto pair = m_ArgumentOverrides.insert({id, argument});
 
-    for (auto& data : m_ComputeData)
+    for (const auto& index : argumentIndices)
     {
-        data.second.UpdateArgument(id, pair.first->second);
+        m_ComputeData.find(index.first)->second.UpdateArgumentAtIndex(index.second, pair.first->second);
     }
 }
 

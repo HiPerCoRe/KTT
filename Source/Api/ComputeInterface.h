@@ -212,12 +212,12 @@ public:
       * @param destination Buffer where the argument data will be downloaded. Its size must be equal or greater than the specified
       * data size.
       * @param dataSize Size in bytes of buffer portion which will be downloaded to specified destination, starting with the first
-      * byte.
+      * byte. If zero, the entire buffer will be downloaded.
       * @return Id of asynchronous action corresponding to the issued data transfer command. The action must be waited for with
       * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
       * kernel durations may occur.
       */
-    virtual TransferActionId DownloadBuffer(const ArgumentId id, const QueueId queue, void* destination, const size_t dataSize) = 0;
+    virtual TransferActionId DownloadBuffer(const ArgumentId id, const QueueId queue, void* destination, const size_t dataSize = 0) = 0;
 
     /** @fn virtual TransferActionId UpdateBuffer(const ArgumentId id, const QueueId queue, const void* data,
       * const size_t dataSize) = 0
@@ -227,12 +227,13 @@ public:
       * @param queue Id of queue in which the command to update argument will be submitted.
       * @param data Pointer to new data for vector argument. Its size must be equal or greater than the specified data size.
       * The data must have matching kernel argument data type.
-      * @param dataSize Size in bytes of buffer portion which will be updated, starting with the first byte.
+      * @param dataSize Size in bytes of buffer portion which will be updated, starting with the first byte. If zero, the entire
+      * buffer will be updated.
       * @return Id of asynchronous action corresponding to the issued data transfer command. The action must be waited for with
       * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
       * kernel durations may occur.
       */
-    virtual TransferActionId UpdateBuffer(const ArgumentId id, const QueueId queue, const void* data, const size_t dataSize) = 0;
+    virtual TransferActionId UpdateBuffer(const ArgumentId id, const QueueId queue, const void* data, const size_t dataSize = 0) = 0;
 
     /** @fn virtual TransferActionId CopyBuffer(const ArgumentId destination, const ArgumentId source, const QueueId queue,
       * const size_t dataSize) = 0
@@ -242,12 +243,13 @@ public:
       * @param source Id of source vector argument.
       * @param queue Id of queue in which the command to copy argument will be submitted.
       * @param dataSize Size in bytes of buffer portion which will be copied to destination buffer, starting with the first byte.
+      * If zero, the entire buffer will be copied.
       * @return Id of asynchronous action corresponding to the issued data transfer command. The action must be waited for with
       * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
       * kernel durations may occur.
       */
     virtual TransferActionId CopyBuffer(const ArgumentId destination, const ArgumentId source, const QueueId queue,
-        const size_t dataSize) = 0;
+        const size_t dataSize = 0) = 0;
 
     /** @fn virtual void WaitForTransferAction(const TransferActionId id) = 0
       * Blocks until the specified buffer transfer action is finished.

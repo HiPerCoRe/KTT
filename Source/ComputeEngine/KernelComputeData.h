@@ -21,7 +21,7 @@ public:
 
     void SetGlobalSize(const DimensionVector& globalSize);
     void SetLocalSize(const DimensionVector& localSize);
-    void UpdateArgument(const ArgumentId id, KernelArgument& argument);
+    void UpdateArgumentAtIndex(const size_t index, KernelArgument& argument);
     void SwapArguments(const ArgumentId first, const ArgumentId second);
     void SetArguments(const std::vector<KernelArgument*> arguments);
 
@@ -33,6 +33,7 @@ public:
     const DimensionVector& GetGlobalSize() const;
     const DimensionVector& GetLocalSize() const;
     const KernelConfiguration& GetConfiguration() const;
+    size_t GetArgumentIndex(const ArgumentId id) const;
     const std::vector<KernelArgument*>& GetArguments() const;
 
 private:
