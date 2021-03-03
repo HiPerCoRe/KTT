@@ -433,6 +433,13 @@ project "CoulombSum3dOpenCl"
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
+project "CoulombSum3dIterativeOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/CoulombSum3dIterative/*.cpp", "Examples/CoulombSum3dIterative/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
 project "NbodyOpenCl"
     kind "ConsoleApp"
     files {"Examples/Nbody/*.cpp", "Examples/Nbody/*.cl"}

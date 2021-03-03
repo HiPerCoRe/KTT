@@ -1,7 +1,6 @@
 #pragma once
 
 #include <chrono>
-#include <string>
 
 #include <KttTypes.h>
 

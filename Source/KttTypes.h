@@ -47,12 +47,12 @@ using KernelId = uint64_t;
 using ArgumentId = uint64_t;
 
 /** @typedef ParameterInput
-  * Data type used for creating and retrieving specific kernel configuration from KTT.
+  * Data type used for creating and retrieving specific kernel configurations from KTT.
   */
 using ParameterInput = std::vector<std::pair<std::string, std::variant<uint64_t, double>>>;
 
 /** @typedef Nanoseconds
-  * Data type for retrieving elapsed time in KTT.
+  * Data type for storing elapsed times in KTT.
   */
 using Nanoseconds = uint64_t;
 

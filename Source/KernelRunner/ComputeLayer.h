@@ -27,8 +27,6 @@ public:
     ComputeActionId RunKernelAsync(const KernelDefinitionId id, const QueueId queue, const DimensionVector& globalSize,
         const DimensionVector& localSize) override;
     void WaitForComputeAction(const ComputeActionId id) override;
-    void ClearKernelData(const KernelDefinitionId id) override;
-    void ClearKernelData() override;
 
     void RunKernelWithProfiling(const KernelDefinitionId id) override;
     void RunKernelWithProfiling(const KernelDefinitionId id, const DimensionVector& globalSize,
@@ -63,6 +61,8 @@ public:
 
     void SetActiveKernel(const KernelId id);
     void ClearActiveKernel();
+    void ClearComputeEngineData(const KernelDefinitionId id);
+    void ClearComputeEngineData();
 
     void AddData(const Kernel& kernel, const KernelConfiguration& configuration);
     void ClearData(const KernelId id);

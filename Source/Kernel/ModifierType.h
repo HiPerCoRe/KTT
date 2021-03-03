@@ -11,11 +11,11 @@ namespace ktt
   */
 enum class ModifierType
 {
-    /** Parameter value affects global thread size of corresponding kernel.
+    /** Parameter value affects global kernel thread size.
       */
     Global,
 
-    /** Parameter value affects local thread size of corresponding kernel.
+    /** Parameter value affects local kernel thread size.
       */
     Local
 };

@@ -17,12 +17,12 @@ enum class ArgumentMemoryLocation
     Undefined,
 
     /** Argument data will be accessed from device memory. This is recommended setting for devices with dedicated memory,
-      * e.g. discrete GPUs.
+      * e.g., discrete GPUs.
       */
     Device,
 
     /** Argument data will be accessed from host memory. This is recommended setting for CPUs and devices without dedicated
-      * memory, e.g. integrated GPUs.
+      * memory, e.g., integrated GPUs.
       */
     Host,
 

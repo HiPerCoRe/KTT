@@ -49,20 +49,6 @@ void ComputeLayer::WaitForComputeAction(const ComputeActionId id)
     GetData().AddPartialResult(result);
 }
 
-void ComputeLayer::ClearKernelData(const KernelDefinitionId id)
-{
-    const auto computeId = GetData().GetComputeData(id).GetUniqueIdentifier();
-    m_ComputeEngine.ClearData(computeId);
-}
-
-void ComputeLayer::ClearKernelData()
-{
-    for (const auto* definition : GetData().GetKernel().GetDefinitions())
-    {
-        ClearKernelData(definition->GetId());
-    }
-}
-
 void ComputeLayer::RunKernelWithProfiling(const KernelDefinitionId id)
 {
     if (!GetData().IsProfilingEnabled(id))
@@ -151,6 +137,11 @@ const KernelConfiguration& ComputeLayer::GetCurrentConfiguration() const
 
 void ComputeLayer::ChangeArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& arguments)
 {
+    if (!ContainsUniqueElements(arguments))
+    {
+        throw KttException("Kernel arguments for a single kernel definition must be unique");
+    }
+
     auto newArguments = m_ArgumentManager.GetArguments(arguments);
     GetData().ChangeArguments(id, newArguments);
 }
@@ -262,6 +253,20 @@ void ComputeLayer::ClearActiveKernel()
 {
     KttAssert(m_ActiveKernel != InvalidKernelId, "Unpaired call to set / clear active kernel");
     m_ActiveKernel = InvalidKernelId;
+}
+
+void ComputeLayer::ClearComputeEngineData(const KernelDefinitionId id)
+{
+    const auto computeId = GetData().GetComputeData(id).GetUniqueIdentifier();
+    m_ComputeEngine.ClearData(computeId);
+}
+
+void ComputeLayer::ClearComputeEngineData()
+{
+    for (const auto* definition : GetData().GetKernel().GetDefinitions())
+    {
+        ClearComputeEngineData(definition->GetId());
+    }
 }
 
 void ComputeLayer::AddData(const Kernel& kernel, const KernelConfiguration& configuration)

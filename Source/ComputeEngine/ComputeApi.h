@@ -7,7 +7,7 @@ namespace ktt
 {
 
 /** @enum ComputeApi
-  * Enum for compute APIs used by KTT framework. It is utilized during tuner creation.
+  * Enum for compute API used by KTT framework. It is utilized during tuner creation.
   */
 enum class ComputeApi
 {

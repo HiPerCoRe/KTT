@@ -212,7 +212,7 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
         Logger::LogWarning(std::string("Kernel run failed with reason: ") + exception.what());
         
         m_ComputeLayer->SynchronizeDevice();
-        m_ComputeLayer->ClearKernelData();
+        m_ComputeLayer->ClearComputeEngineData();
 
         result.SetStatus(ResultStatus::ComputationFailed);
     }

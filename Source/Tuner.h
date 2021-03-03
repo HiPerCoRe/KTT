@@ -6,7 +6,6 @@
 #include <memory>
 #include <ostream>
 #include <string>
-#include <utility>
 #include <vector>
 
 // Compatibility for multiple platforms
@@ -61,30 +60,31 @@ class KTT_API Tuner
 {
 public:
     /** @fn explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api)
-      * Constructor which creates tuner for the specified platform, device and compute API. All compute commands are submitted
-      * to a single queue. Indices for available platforms and devices can be retrieved by using GetPlatformInfo() and GetDeviceInfo()
-      * methods. If the specified compute API is CUDA, platform index is ignored.
-      * @param platform Index for platform used by created tuner.
-      * @param device Index for device used by created tuner.
-      * @param api Compute API used by created tuner.
+      * Creates tuner for the specified platform, device and compute API. All compute commands are submitted to a single queue.
+      * Indices for available platforms and devices can be retrieved by using GetPlatformInfo() and GetDeviceInfo() methods. If
+      * the specified compute API is CUDA or Vulkan, platform index is ignored.
+      * @param platform Index for platform used by the tuner.
+      * @param device Index for device used by the tuner.
+      * @param api Compute API used by the tuner.
       */
     explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api);
 
-    /** @fn explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t computeQueueCount)
-      * Constructor which creates tuner for the specified platform, device and compute API. Several compute queues are created,
-      * based on the specified count. Compute commands to different queues can be submitted by utilizing ComputeInterface. Indices
-      * for available platforms and devices can be retrieved by using GetPlatformInfo() and GetDeviceInfo() methods. If the specified
-      * compute API is CUDA, platform index is ignored.
-      * @param platform Index for platform used by created tuner.
-      * @param device Index for device used by created tuner.
-      * @param api Compute API used by created tuner.
+    /** @fn explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api,
+      * const uint32_t computeQueueCount)
+      * Creates tuner for the specified platform, device and compute API. Multiple compute queues can be created, based on the
+      * specified count. Compute commands to different queues can be submitted by utilizing KernelLauncher and ComputeInterface.
+      * Indices for available platforms and devices can be retrieved by using GetPlatformInfo() and GetDeviceInfo() methods. If
+      * the specified compute API is CUDA or Vulkan, platform index is ignored.
+      * @param platform Index for platform used by the tuner.
+      * @param device Index for device used by the tuner.
+      * @param api Compute API used by the tuner.
       * @param computeQueueCount Number of compute queues created inside the tuner. Has to be greater than zero.
       */
     explicit Tuner(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t computeQueueCount);
 
     /** @fn explicit Tuner(const ComputeApi api, const ComputeApiInitializer& initializer)
-      * Constructor which creates tuner for specified compute API using custom initializer. The initializer contains user-provided
-      * compute device context and queues.
+      * Creates tuner for the specified compute API using custom initializer. The initializer contains user-provided compute device
+      * context and queues.
       * @param api Compute API used by the tuner.
       * @param initializer Custom compute API initializer. See ComputeApiInitializer for more information.
       */
@@ -97,8 +97,8 @@ public:
 
     /** @fn KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source,
       * const DimensionVector& globalSize, const DimensionVector& localSize)
-      * Adds new kernel definition to tuner. Requires specification of a kernel name, its source code and default global
-      * and local thread sizes.
+      * Adds new kernel definition to the tuner. Requires specification of a kernel name, its source code and default global and
+      * local thread sizes.
       * @param name Name of a kernel function inside kernel source code. The name must be unique.
       * @param source Kernel source code written in the corresponding compute API language.
       * @param globalSize Dimensions for base kernel global size (e.g., grid size in CUDA, NDRange size in OpenCL).
@@ -110,7 +110,7 @@ public:
 
     /** @fn KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
       * const DimensionVector& globalSize, const DimensionVector& localSize)
-      * Adds new kernel definition to tuner. Requires specification of a kernel name, file path to its source code and default
+      * Adds new kernel definition to the tuner. Requires specification of a kernel name, file path to its source code and default
       * global and local thread sizes.
       * @param name Name of a kernel function inside kernel source code. The name must be unique.
       * @param filePath Path to file with kernel source code written in the corresponding compute API language.
@@ -138,7 +138,7 @@ public:
     KernelId CreateSimpleKernel(const std::string& name, const KernelDefinitionId definitionId);
 
     /** @fn KernelId CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
-      * Creates composite kernel from the specified definitions. Note that kernel launcher is required in order to launch kernel
+      * Creates composite kernel from the specified definitions. Note that kernel launcher is required in order to launch kernels
       * with multiple definitions.
       * @param name Kernel name used during logging and output operations. The name must be unique.
       * @param definitionIds Ids of kernel definitions which will be utilized by the kernel.

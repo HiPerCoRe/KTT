@@ -7,7 +7,7 @@ namespace ktt
 {
 
 /** @enum ArgumentMemoryType
-  * Enum for memory type of kernel arguments. Specifies which compute API function should be used internally by KTT library
+  * Enum for memory type of kernel arguments. Specifies which compute API function should be used internally by KTT framework
   * to make the argument accessible to kernel functions.
   */
 enum class ArgumentMemoryType

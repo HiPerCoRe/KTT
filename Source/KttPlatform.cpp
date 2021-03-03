@@ -12,6 +12,7 @@ uint32_t GetKttVersion()
     const uint32_t majorPart = KTT_VERSION_MAJOR * 1'000'000;
     const uint32_t minorPart = KTT_VERSION_MINOR * 1'000;
     const uint32_t patchPart = KTT_VERSION_PATCH;
+
     return majorPart + minorPart + patchPart;
 }
 
