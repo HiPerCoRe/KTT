@@ -56,7 +56,7 @@ public:
 
     /** @fn void SetExtraOverhead(const Nanoseconds overhead)
       * Sets extra overhead. This includes for example duration of buffer transfers performed in custom kernel launcher.
-      * @param duration Extra computation overhead.
+      * @param overhead Extra computation overhead.
       */
     void SetExtraOverhead(const Nanoseconds overhead);
 

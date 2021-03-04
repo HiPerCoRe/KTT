@@ -186,8 +186,8 @@ public:
       */
     void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group = "");
 
-    /** @fn void AddThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
-      * const std::vector<std::string>& parameters, const std::vector<KernelDefinitionId>& definitionIds, ModifierFunction function)
+    /** @fn void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+      * const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
       * Adds thread modifier function for the specified kernel. The function receives thread size in the specified dimension and
       * values of the specified kernel parameters as input and returns modified thread size based on these values. Thread modifiers
       * are useful in cases when kernel parameters affect number of required kernel threads. If multiple thread modifiers are
@@ -204,8 +204,8 @@ public:
     void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
         const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function);
 
-    /** @fn void AddThreadModifier(const KernelId id, const ModifierType type, const ModifierDimension dimension,
-      * const std::string& parameter, const std::vector<KernelDefinitionId>& definitionIds, const ModifierAction action)
+    /** @fn void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+      * const ModifierDimension dimension, const std::string& parameter, const ModifierAction action)
       * Adds thread modifier function for the specified kernel. This is a simplified version of the thread modifier method which
       * supports only a single kernel parameter and limited number of actions, but is easier to use. If multiple thread modifiers
       * are specified for the same type and dimension, they are applied in order of their addition.

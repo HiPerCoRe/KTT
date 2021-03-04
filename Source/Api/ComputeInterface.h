@@ -56,7 +56,8 @@ public:
       */
     virtual ComputeActionId RunKernelAsync(const KernelDefinitionId id, const QueueId queue) = 0;
 
-    /** @fn virtual ComputeActionId RunKernelAsync(const KernelDefinitionId id, const QueueId queue) = 0
+    /** @fn virtual ComputeActionId RunKernelAsync(const KernelDefinitionId id, const QueueId queue, const DimensionVector& globalSize,
+      * const DimensionVector& localSize) = 0
       * Runs the specified kernel definition using provided thread sizes. The kernel will be launched asynchronously in the
       * specified queue.
       * @param id Id of kernel definition which will be run. The specified definition must be included in the currently launched
@@ -86,7 +87,8 @@ public:
       */
     virtual void RunKernelWithProfiling(const KernelDefinitionId id) = 0;
 
-    /** @fn virtual void RunKernelWithProfiling(const KernelDefinitionId id) = 0
+    /** @fn virtual void RunKernelWithProfiling(const KernelDefinitionId id, const DimensionVector& globalSize,
+      * const DimensionVector& localSize) = 0
       * Runs the specified kernel definition using provided thread sizes. Collection of kernel profiling counters will be enabled
       * for this run which means that performance will be decreased. Running kernels with profiling will always cause implicit
       * device synchronization before and after the kernel run is finished.

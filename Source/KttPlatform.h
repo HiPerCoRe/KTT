@@ -11,8 +11,6 @@
     #pragma warning(disable : 4251) // Irrelevant MSVC warning as long as exported classes have no public attributes.
     
     #if defined(KTT_LIBRARY)
-        /** KTT dynamic library export configuration under Windows.
-          */
         #define KTT_API __declspec(dllexport)
     #else
         #define KTT_API __declspec(dllimport)

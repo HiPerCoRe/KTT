@@ -60,7 +60,7 @@ public:
       */
     const std::vector<KernelProfilingCounter>& GetCounters() const;
 
-    /** @fn void SetCounters(const std::vector<KernelProfilingCounter>& profilingCounters)
+    /** @fn void SetCounters(const std::vector<KernelProfilingCounter>& counters)
       * Fills the structure with provided profiling counters. Sets number of remaining kernel runs to zero.
       * @param counters Vector of profiling counters.
       */

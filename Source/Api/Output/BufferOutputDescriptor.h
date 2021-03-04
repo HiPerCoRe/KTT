@@ -25,7 +25,7 @@ public:
       */
     explicit BufferOutputDescriptor(const ArgumentId id, void* outputDestination);
 
-    /** @fn explicit BufferOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSizeInBytes)
+    /** @fn explicit BufferOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSize)
       * Constructor, which creates new output descriptor object for specified kernel argument.
       * @param id Id of vector argument which will be retrieved.
       * @param outputDestination Pointer to destination where vector argument data will be copied. Destination buffer size

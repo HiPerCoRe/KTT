@@ -21,7 +21,7 @@ class KTT_API DeviceInfo
 public:
     /** @fn explicit DeviceInfo(const DeviceIndex index, const std::string& name)
       * Constructor which creates new device info object.
-      * @param device Index of device assigned by KTT framework.
+      * @param index Index of device assigned by KTT framework.
       * @param name Name of device retrieved from compute API.
       */
     explicit DeviceInfo(const DeviceIndex index, const std::string& name);
