@@ -48,10 +48,16 @@ public:
     void UpdateScalarArgument(const ArgumentId id, const void* data) override;
     void UpdateLocalArgument(const ArgumentId id, const size_t dataSize) override;
 
-    TransferActionId UploadBuffer(const ArgumentId id, const QueueId queue) override;
-    TransferActionId DownloadBuffer(const ArgumentId id, const QueueId queue, void* destination, const size_t dataSize = 0) override;
-    TransferActionId UpdateBuffer(const ArgumentId id, const QueueId queue, const void* data, const size_t dataSize = 0) override;
-    TransferActionId CopyBuffer(const ArgumentId destination, const ArgumentId source, const QueueId queue,
+    void UploadBuffer(const ArgumentId id) override;
+    TransferActionId UploadBufferAsync(const ArgumentId id, const QueueId queue) override;
+    void DownloadBuffer(const ArgumentId id, void* destination, const size_t dataSize = 0) override;
+    TransferActionId DownloadBufferAsync(const ArgumentId id, const QueueId queue, void* destination,
+        const size_t dataSize = 0) override;
+    void UpdateBuffer(const ArgumentId id, const void* data, const size_t dataSize = 0) override;
+    TransferActionId UpdateBufferAsync(const ArgumentId id, const QueueId queue, const void* data,
+        const size_t dataSize = 0) override;
+    void CopyBuffer(const ArgumentId destination, const ArgumentId source, const size_t dataSize = 0) override;
+    TransferActionId CopyBufferAsync(const ArgumentId destination, const ArgumentId source, const QueueId queue,
         const size_t dataSize = 0) override;
     void WaitForTransferAction(const TransferActionId id) override;
     void ResizeBuffer(const ArgumentId id, const size_t newDataSize, const bool preserveData) override;

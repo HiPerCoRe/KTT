@@ -179,23 +179,49 @@ void ComputeLayer::UpdateLocalArgument(const ArgumentId id, const size_t dataSiz
     GetData().AddArgumentOverride(id, argumentOverride);
 }
 
-TransferActionId ComputeLayer::UploadBuffer(const ArgumentId id, const QueueId queue)
+void ComputeLayer::UploadBuffer(const ArgumentId id)
+{
+    const auto actionId = UploadBufferAsync(id, GetDefaultQueue());
+    WaitForTransferAction(actionId);
+}
+
+TransferActionId ComputeLayer::UploadBufferAsync(const ArgumentId id, const QueueId queue)
 {
     auto& argument = m_ArgumentManager.GetArgument(id);
     return m_ComputeEngine.UploadArgument(argument, queue);
 }
 
-TransferActionId ComputeLayer::DownloadBuffer(const ArgumentId id, const QueueId queue, void* destination, const size_t dataSize)
+void ComputeLayer::DownloadBuffer(const ArgumentId id, void* destination, const size_t dataSize)
+{
+    const auto actionId = DownloadBufferAsync(id, GetDefaultQueue(), destination, dataSize);
+    WaitForTransferAction(actionId);
+}
+
+TransferActionId ComputeLayer::DownloadBufferAsync(const ArgumentId id, const QueueId queue, void* destination,
+    const size_t dataSize)
 {
     return m_ComputeEngine.DownloadArgument(id, queue, destination, dataSize);
 }
 
-TransferActionId ComputeLayer::UpdateBuffer(const ArgumentId id, const QueueId queue, const void* data, const size_t dataSize)
+void ComputeLayer::UpdateBuffer(const ArgumentId id, const void* data, const size_t dataSize)
+{
+    const auto actionId = UpdateBufferAsync(id, GetDefaultQueue(), data, dataSize);
+    WaitForTransferAction(actionId);
+}
+
+TransferActionId ComputeLayer::UpdateBufferAsync(const ArgumentId id, const QueueId queue, const void* data,
+    const size_t dataSize)
 {
     return m_ComputeEngine.UpdateArgument(id, queue, data, dataSize);
 }
 
-TransferActionId ComputeLayer::CopyBuffer(const ArgumentId destination, const ArgumentId source, const QueueId queue,
+void ComputeLayer::CopyBuffer(const ArgumentId destination, const ArgumentId source, const size_t dataSize)
+{
+    const auto actionId = CopyBufferAsync(destination, source, GetDefaultQueue(), dataSize);
+    WaitForTransferAction(actionId);
+}
+
+TransferActionId ComputeLayer::CopyBufferAsync(const ArgumentId destination, const ArgumentId source, const QueueId queue,
     const size_t dataSize)
 {
     return m_ComputeEngine.CopyArgument(destination, queue, source, dataSize);

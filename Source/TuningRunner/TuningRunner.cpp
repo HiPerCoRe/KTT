@@ -17,11 +17,6 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_p
 {
     Logger::LogInfo("Starting offline tuning for kernel " + kernel.GetName());
 
-    if (kernel.HasWritableZeroCopyArgument())
-    {
-        throw KttException("Offline kernel tuning cannot be performed with writable zero-copy arguments");
-    }
-
     if (stopCondition != nullptr)
     {
         stopCondition->Initialize();

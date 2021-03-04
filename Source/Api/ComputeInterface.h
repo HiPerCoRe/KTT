@@ -192,7 +192,13 @@ public:
       */
     virtual void UpdateLocalArgument(const ArgumentId id, const size_t dataSize) = 0;
 
-    /** @fn virtual TransferActionId UploadBuffer(const ArgumentId id, const QueueId queue) = 0
+    /** @fn virtual void UploadBuffer(const ArgumentId id) = 0
+      * Uploads the specified vector argument into compute buffer.
+      * @param id Id of vector argument which will be uploaded.
+      */
+    virtual void UploadBuffer(const ArgumentId id) = 0;
+
+    /** @fn virtual TransferActionId UploadBufferAsync(const ArgumentId id, const QueueId queue) = 0
       * Uploads the specified vector argument into compute buffer. The data will be transferred asynchronously in the specified
       * queue.
       * @param id Id of vector argument which will be uploaded.
@@ -201,9 +207,19 @@ public:
       * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
       * kernel durations may occur.
       */
-    virtual TransferActionId UploadBuffer(const ArgumentId id, const QueueId queue) = 0;
+    virtual TransferActionId UploadBufferAsync(const ArgumentId id, const QueueId queue) = 0;
 
-    /** @fn virtual TransferActionId DownloadBuffer(const ArgumentId id, const QueueId queue, void* destination,
+    /** @fn virtual void DownloadBuffer(const ArgumentId id, void* destination, const size_t dataSize = 0) = 0
+      * Downloads the specified vector argument from compute buffer.
+      * @param id Id of vector argument which will be downloaded.
+      * @param destination Buffer where the argument data will be downloaded. Its size must be equal or greater than the specified
+      * data size.
+      * @param dataSize Size in bytes of buffer portion which will be downloaded to specified destination, starting with the first
+      * byte. If zero, the entire buffer will be downloaded.
+      */
+    virtual void DownloadBuffer(const ArgumentId id, void* destination, const size_t dataSize = 0) = 0;
+
+    /** @fn virtual TransferActionId DownloadBufferAsync(const ArgumentId id, const QueueId queue, void* destination,
       * const size_t dataSize) = 0
       * Downloads the specified vector argument from compute buffer. The data will be transferred asynchronously in the specified
       * queue.
@@ -217,9 +233,20 @@ public:
       * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
       * kernel durations may occur.
       */
-    virtual TransferActionId DownloadBuffer(const ArgumentId id, const QueueId queue, void* destination, const size_t dataSize = 0) = 0;
+    virtual TransferActionId DownloadBufferAsync(const ArgumentId id, const QueueId queue, void* destination,
+        const size_t dataSize = 0) = 0;
 
-    /** @fn virtual TransferActionId UpdateBuffer(const ArgumentId id, const QueueId queue, const void* data,
+    /** @fn virtual void UpdateBuffer(const ArgumentId id, const void* data, const size_t dataSize = 0) = 0
+      * Updates data in compute buffer of the specified vector argument.
+      * @param id Id of vector argument which will be updated.
+      * @param data Pointer to new data for vector argument. Its size must be equal or greater than the specified data size.
+      * The data must have matching kernel argument data type.
+      * @param dataSize Size in bytes of buffer portion which will be updated, starting with the first byte. If zero, the entire
+      * buffer will be updated.
+      */
+    virtual void UpdateBuffer(const ArgumentId id, const void* data, const size_t dataSize = 0) = 0;
+
+    /** @fn virtual TransferActionId UpdateBufferAsync(const ArgumentId id, const QueueId queue, const void* data,
       * const size_t dataSize) = 0
       * Updates data in compute buffer of the specified vector argument. The data will be transferred asynchronously in the
       * specified queue.
@@ -233,9 +260,19 @@ public:
       * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
       * kernel durations may occur.
       */
-    virtual TransferActionId UpdateBuffer(const ArgumentId id, const QueueId queue, const void* data, const size_t dataSize = 0) = 0;
+    virtual TransferActionId UpdateBufferAsync(const ArgumentId id, const QueueId queue, const void* data,
+        const size_t dataSize = 0) = 0;
 
-    /** @fn virtual TransferActionId CopyBuffer(const ArgumentId destination, const ArgumentId source, const QueueId queue,
+    /** @fn virtual void CopyBuffer(const ArgumentId destination, const ArgumentId source, const size_t dataSize = 0) = 0
+      * Copies part of the compute buffer of source vector argument to compute buffer of destination vector argument.
+      * @param destination Id of destination vector argument.
+      * @param source Id of source vector argument.
+      * @param dataSize Size in bytes of buffer portion which will be copied to destination buffer, starting with the first byte.
+      * If zero, the entire buffer will be copied.
+      */
+    virtual void CopyBuffer(const ArgumentId destination, const ArgumentId source, const size_t dataSize = 0) = 0;
+
+    /** @fn virtual TransferActionId CopyBufferAsync(const ArgumentId destination, const ArgumentId source, const QueueId queue,
       * const size_t dataSize) = 0
       * Copies part of the compute buffer of source vector argument to compute buffer of destination vector argument. The data
       * will be transferred asynchronously in the specified queue.
@@ -248,7 +285,7 @@ public:
       * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
       * kernel durations may occur.
       */
-    virtual TransferActionId CopyBuffer(const ArgumentId destination, const ArgumentId source, const QueueId queue,
+    virtual TransferActionId CopyBufferAsync(const ArgumentId destination, const ArgumentId source, const QueueId queue,
         const size_t dataSize = 0) = 0;
 
     /** @fn virtual void WaitForTransferAction(const TransferActionId id) = 0

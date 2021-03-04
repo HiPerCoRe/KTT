@@ -167,8 +167,7 @@ int main(int argc, char** argv)
                     atomInfoPrecomp[j * 4 + 2] = (z - atomInfoZ[j]) * (z - atomInfoZ[j]);
                 }
 
-                const auto transferId = interface.UpdateBuffer(atomInfoPrecompId, interface.GetDefaultQueue(), atomInfoPrecomp.data());
-                interface.WaitForTransferAction(transferId);
+                interface.UpdateBuffer(atomInfoPrecompId, atomInfoPrecomp.data());
             }
             else
             {
@@ -177,8 +176,7 @@ int main(int argc, char** argv)
                     atomInfoZ2[j] = (z - atomInfoZ[j]) * (z - atomInfoZ[j]);
                 }
 
-                const auto transferId = interface.UpdateBuffer(atomInfoZ2Id, interface.GetDefaultQueue(), atomInfoZ2.data());
-                interface.WaitForTransferAction(transferId);
+                interface.UpdateBuffer(atomInfoZ2Id, atomInfoZ2.data());
             }
 
             interface.UpdateScalarArgument(zIndexId, &i);

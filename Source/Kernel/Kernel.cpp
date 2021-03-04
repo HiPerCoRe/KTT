@@ -196,20 +196,6 @@ bool Kernel::IsComposite() const
     return m_Definitions.size() > 1;
 }
 
-bool Kernel::HasWritableZeroCopyArgument() const
-{
-    for (const auto* argument : GetVectorArguments())
-    {
-        if (argument->GetMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy
-            && argument->GetAccessType() != ArgumentAccessType::ReadOnly)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 KernelConfiguration Kernel::CreateConfiguration(const ParameterInput& parameters) const
 {
     std::vector<ParameterPair> pairs;

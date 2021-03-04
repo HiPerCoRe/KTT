@@ -45,7 +45,6 @@ public:
     bool HasDefinition(const KernelDefinitionId id) const;
     bool HasParameter(const std::string& name) const;
     bool IsComposite() const;
-    bool HasWritableZeroCopyArgument() const;
 
     KernelConfiguration CreateConfiguration(const ParameterInput& parameters) const;
     std::vector<KernelParameterGroup> GenerateParameterGroups() const;
