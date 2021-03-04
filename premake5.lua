@@ -461,6 +461,27 @@ project "ReductionOpenCl"
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
+project "SortOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Sort/*.cpp", "Examples/Sort/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "Sort2OpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Sort2/*.cpp", "Examples/Sort2/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "TransposeOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Transpose/*.cpp", "Examples/Transpose/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
 end -- openClProjects
     
 if cudaProjects then
@@ -489,6 +510,27 @@ project "NbodyCuda"
 project "ReductionCuda"
     kind "ConsoleApp"
     files {"Examples/Reduction/*.cpp", "Examples/Reduction/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "SortCuda"
+    kind "ConsoleApp"
+    files {"Examples/Sort/*.cpp", "Examples/Sort/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "Sort2Cuda"
+    kind "ConsoleApp"
+    files {"Examples/Sort2/*.cpp", "Examples/Sort2/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "TransposeCuda"
+    kind "ConsoleApp"
+    files {"Examples/Transpose/*.cpp", "Examples/Transpose/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
