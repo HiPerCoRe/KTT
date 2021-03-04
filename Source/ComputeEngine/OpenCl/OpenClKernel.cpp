@@ -42,9 +42,11 @@ std::unique_ptr<OpenClComputeAction> OpenClKernel::Launch(const OpenClCommandQue
     const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<OpenClComputeAction>(id, shared_from_this());
 
-    Logger::LogDebug("Launching kernel " + m_Name + " with compute action id " + std::to_string(id));
+    Logger::LogDebug("Launching kernel " + m_Name + " with compute action id " + std::to_string(id) + ", global thread size: "
+        + adjustedSize.GetString() + ", local thread size: " + localSize.GetString());
     const auto globalVector = adjustedSize.GetVector();
     const auto localVector = localSize.GetVector();
+
     cl_int result = clEnqueueNDRangeKernel(queue.GetQueue(), m_Kernel, static_cast<cl_uint>(globalVector.size()), nullptr,
         globalVector.data(), localVector.data(), 0, nullptr, action->GetEvent());
     CheckError(result, "clEnqueueNDRangeKernel");

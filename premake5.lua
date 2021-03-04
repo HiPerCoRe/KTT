@@ -419,6 +419,13 @@ if not _OPTIONS["no-examples"] then
 
 if openClProjects then
 
+project "BicgOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
 project "CoulombSum2dOpenCl"
     kind "ConsoleApp"
     files {"Examples/CoulombSum2d/*.cpp", "Examples/CoulombSum2d/*.cl"}
@@ -457,6 +464,13 @@ project "ReductionOpenCl"
 end -- openClProjects
     
 if cudaProjects then
+
+project "BicgCuda"
+    kind "ConsoleApp"
+    files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
 
 project "CoulombSum3dCuda"
     kind "ConsoleApp"

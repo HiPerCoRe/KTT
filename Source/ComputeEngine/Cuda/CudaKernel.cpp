@@ -44,7 +44,8 @@ std::unique_ptr<CudaComputeAction> CudaKernel::Launch(const CudaStream& stream, 
     const auto id = m_Generator.GenerateId();
     auto action = std::make_unique<CudaComputeAction>(id, shared_from_this());
 
-    Logger::LogDebug("Launching kernel " + m_Name + " with compute action id " + std::to_string(id));
+    Logger::LogDebug("Launching kernel " + m_Name + " with compute action id " + std::to_string(id) + ", global thread size: "
+        + adjustedSize.GetString() + ", local thread size: " + localSize.GetString());
     const auto globalVector = adjustedSize.GetVector();
     const auto localVector = localSize.GetVector();
 
