@@ -28,6 +28,23 @@ void from_json(const json& j, TunerMetadata& metadata)
     metadata.SetTimeUnit(j.at("TimeUnit").get<TimeUnit>());
 }
 
+void to_json(json& j, const DimensionVector& vector)
+{
+    j = json
+    {
+        {"X", vector.GetSizeX()},
+        {"Y", vector.GetSizeY()},
+        {"Z", vector.GetSizeZ()}
+    };
+}
+
+void from_json(const json& j, DimensionVector& vector)
+{
+    vector.SetSizeX(j.at("X").get<size_t>());
+    vector.SetSizeY(j.at("Y").get<size_t>());
+    vector.SetSizeZ(j.at("Z").get<size_t>());
+}
+
 void to_json(json& j, const ParameterPair& pair)
 {
     j = json
@@ -195,7 +212,9 @@ void to_json(json& j, const ComputationResult& result)
     {
         {"KernelFunction", result.GetKernelFunction()},
         {"Duration", time.ConvertFromNanosecondsDouble(result.GetDuration())},
-        {"Overhead", time.ConvertFromNanosecondsDouble(result.GetOverhead())}
+        {"Overhead", time.ConvertFromNanosecondsDouble(result.GetOverhead())},
+        {"GlobalSize", result.GetGlobalSize()},
+        {"LocalSize", result.GetLocalSize()}
     };
 
     if (result.HasCompilationData())
@@ -226,6 +245,14 @@ void from_json(const json& j, ComputationResult& result)
     const Nanoseconds overheadNs = time.ConvertToNanosecondsDouble(overhead);
 
     result.SetDurationData(durationNs, overheadNs);
+
+    DimensionVector globalSize;
+    j.at("GlobalSize").get_to(globalSize);
+
+    DimensionVector localSize;
+    j.at("LocalSize").get_to(localSize);
+
+    result.SetSizeData(globalSize, localSize);
 
     if (j.contains("CompilationData"))
     {

@@ -9,10 +9,13 @@
 namespace ktt
 {
 
-OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, std::shared_ptr<OpenClKernel> kernel) :
+OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, std::shared_ptr<OpenClKernel> kernel,
+    const DimensionVector& globalSize, const DimensionVector& localSize) :
     m_Id(id),
     m_Kernel(kernel),
-    m_Overhead(0)
+    m_Overhead(0),
+    m_GlobalSize(globalSize),
+    m_LocalSize(localSize)
 {
     Logger::LogDebug("Initializing OpenCL compute action with id " + std::to_string(id)
         + " for kernel with name " + kernel->GetName());
@@ -85,6 +88,7 @@ ComputationResult OpenClComputeAction::GenerateResult() const
     std::unique_ptr<KernelCompilationData> compilationData = m_Kernel->GenerateCompilationData();
 
     result.SetDurationData(duration, overhead);
+    result.SetSizeData(m_GlobalSize, m_LocalSize);
     result.SetCompilationData(std::move(compilationData));
 
     return result;

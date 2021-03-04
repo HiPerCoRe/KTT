@@ -20,7 +20,9 @@ ComputationResult::ComputationResult(const std::string& kernelFunction) :
 ComputationResult::ComputationResult(const ComputationResult& other) :
     m_KernelFunction(other.m_KernelFunction),
     m_Duration(other.m_Duration),
-    m_Overhead(other.m_Overhead)
+    m_Overhead(other.m_Overhead),
+    m_GlobalSize(other.m_GlobalSize),
+    m_LocalSize(other.m_LocalSize)
 {
     if (other.HasCompilationData())
     {
@@ -39,6 +41,12 @@ void ComputationResult::SetDurationData(const Nanoseconds duration, const Nanose
     m_Overhead = overhead;
 }
 
+void ComputationResult::SetSizeData(const DimensionVector& globalSize, const DimensionVector& localSize)
+{
+    m_GlobalSize = globalSize;
+    m_LocalSize = localSize;
+}
+
 void ComputationResult::SetCompilationData(std::unique_ptr<KernelCompilationData> data)
 {
     m_CompilationData = std::move(data);
@@ -52,6 +60,16 @@ void ComputationResult::SetProfilingData(std::unique_ptr<KernelProfilingData> da
 const std::string& ComputationResult::GetKernelFunction() const
 {
     return m_KernelFunction;
+}
+
+const DimensionVector& ComputationResult::GetGlobalSize() const
+{
+    return m_GlobalSize;
+}
+
+const DimensionVector& ComputationResult::GetLocalSize() const
+{
+    return m_LocalSize;
 }
 
 Nanoseconds ComputationResult::GetDuration() const
@@ -109,6 +127,8 @@ ComputationResult& ComputationResult::operator=(const ComputationResult& other)
     m_KernelFunction = other.m_KernelFunction;
     m_Duration = other.m_Duration;
     m_Overhead = other.m_Overhead;
+    m_GlobalSize = other.m_GlobalSize;
+    m_LocalSize = other.m_LocalSize;
 
     if (other.HasCompilationData())
     {

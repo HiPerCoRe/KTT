@@ -2,6 +2,7 @@
 
 #include <json.hpp>
 
+#include <Api/Configuration/DimensionVector.h>
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Output/KernelResult.h>
 #include <Output/TunerMetadata.h>
@@ -48,6 +49,9 @@ void from_json(const json& j, TunerMetadata& metadata);
 
 void to_json(json& j, const ParameterPair& pair);
 void from_json(const json& j, ParameterPair& pair);
+
+void to_json(json& j, const DimensionVector& vector);
+void from_json(const json& j, DimensionVector& vector);
 
 void to_json(json& j, const KernelConfiguration& configuration);
 void from_json(const json& j, KernelConfiguration& configuration);

@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 
+#include <Api//Configuration/DimensionVector.h>
 #include <Api/Output/ComputationResult.h>
 #include <ComputeEngine/Cuda/CudaEvent.h>
 #include <ComputeEngine/Cuda/CudaKernel.h>
@@ -16,7 +17,8 @@ namespace ktt
 class CudaComputeAction
 {
 public:
-    CudaComputeAction(const ComputeActionId id, std::shared_ptr<CudaKernel> kernel);
+    CudaComputeAction(const ComputeActionId id, std::shared_ptr<CudaKernel> kernel, const DimensionVector& globalSize,
+        const DimensionVector& localSize);
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void SetConfigurationPrefix(const std::string& prefix);
@@ -39,6 +41,8 @@ private:
     std::unique_ptr<CudaEvent> m_EndEvent;
     Nanoseconds m_Overhead;
     std::string m_Prefix;
+    DimensionVector m_GlobalSize;
+    DimensionVector m_LocalSize;
 };
 
 } // namespace ktt

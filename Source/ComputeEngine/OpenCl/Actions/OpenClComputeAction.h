@@ -16,7 +16,8 @@ namespace ktt
 class OpenClComputeAction
 {
 public:
-    OpenClComputeAction(const ComputeActionId id, std::shared_ptr<OpenClKernel> kernel);
+    OpenClComputeAction(const ComputeActionId id, std::shared_ptr<OpenClKernel> kernel, const DimensionVector& globalSize,
+        const DimensionVector& localSize);
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void SetConfigurationPrefix(const std::string& prefix);
@@ -38,6 +39,8 @@ private:
     std::unique_ptr<OpenClEvent> m_Event;
     Nanoseconds m_Overhead;
     std::string m_Prefix;
+    DimensionVector m_GlobalSize;
+    DimensionVector m_LocalSize;
 };
 
 } // namespace ktt
