@@ -216,7 +216,7 @@ std::string TunerCore::GetKernelSource(const KernelId id, const KernelConfigurat
 
     if (kernel.IsComposite())
     {
-        throw KttException("Kernel with id " + std::to_string(id) + " has multiple definitions, its source cannot be directly retrieved");
+        throw KttException("Kernel " + kernel.GetName() + " has multiple definitions, its source cannot be directly retrieved");
     }
 
     const auto& definition = kernel.GetPrimaryDefinition();

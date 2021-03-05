@@ -195,7 +195,8 @@ public:
     virtual void UpdateLocalArgument(const ArgumentId id, const size_t dataSize) = 0;
 
     /** @fn virtual void UploadBuffer(const ArgumentId id) = 0
-      * Uploads the specified vector argument into compute buffer.
+      * Uploads the specified vector argument into compute buffer. This method should be used mainly with arguments with
+      * ::ArgumentManagementType set to User.
       * @param id Id of vector argument which will be uploaded.
       */
     virtual void UploadBuffer(const ArgumentId id) = 0;
@@ -305,7 +306,8 @@ public:
     virtual void ResizeBuffer(const ArgumentId id, const size_t newDataSize, const bool preserveData) = 0;
 
     /** @fn virtual void ClearBuffer(const ArgumentId id) = 0
-      * Removes compute buffer for the specified vector argument.
+      * Removes compute buffer for the specified vector argument. This method should be used mainly with arguments with
+      * ::ArgumentManagementType set to User.
       * @param id Id of vector argument whose buffer will be removed.
       */
     virtual void ClearBuffer(const ArgumentId id) = 0;

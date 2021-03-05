@@ -25,7 +25,7 @@ void ConfigurationManager::SetSearcher(const KernelId id, std::unique_ptr<Search
 void ConfigurationManager::InitializeData(const Kernel& kernel)
 {
     const auto id = kernel.GetId();
-    Logger::LogDebug("Initializing configuration data for kernel with id " + std::to_string(id));
+    Logger::LogDebug("Initializing configuration data for kernel " + kernel.GetName());
 
     if (!ContainsKey(m_Searchers, id))
     {

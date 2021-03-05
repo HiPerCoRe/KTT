@@ -30,24 +30,24 @@ function findLibrariesAmd()
     
     if _OPTIONS["profiling"] == "gpa" then
         defines {"KTT_PROFILING_GPA"}
-        includedirs {"Libraries/GpuPerfApi3.6/Include"}
+        includedirs {"Libraries/GpuPerfApi-3.6/Include"}
         
         if os.target() == "linux" then
-            libdirs {"Libraries/GpuPerfApi3.6/Lib/Linux"}
+            libdirs {"Libraries/GpuPerfApi-3.6/Lib/Linux"}
         else
             -- One of the GPA headers includes Windows.h with evil min/max macros
             defines {"NOMINMAX"}
-            libdirs {"Libraries/GpuPerfApi3.6/Lib/Windows"}
+            libdirs {"Libraries/GpuPerfApi-3.6/Lib/Windows"}
         end
     elseif _OPTIONS["profiling"] == "gpa-legacy" then
         defines {"KTT_PROFILING_GPA_LEGACY"}
-        includedirs {"Libraries/GpuPerfApi3.3/Include"}
+        includedirs {"Libraries/GpuPerfApi-3.3/Include"}
         
         if os.target() == "linux" then
-            libdirs {"Libraries/GpuPerfApi3.3/Lib/Linux"}
+            libdirs {"Libraries/GpuPerfApi-3.3/Lib/Linux"}
         else
             defines {"NOMINMAX"}
-            libdirs {"Libraries/GpuPerfApi3.3/Lib/Windows"}
+            libdirs {"Libraries/GpuPerfApi-3.3/Lib/Windows"}
         end
     end
     
@@ -153,14 +153,14 @@ function findVulkan()
     end
     
     defines {"KTT_API_VULKAN"}
-    includedirs {"Libraries/Shaderc1.1.101/Include"}
+    includedirs {"Libraries/Shaderc-1.1.101/Include"}
     
     if os.target() == "linux" then
         includedirs {"$(VULKAN_SDK)/include"}
-        libdirs {"$(VULKAN_SDK)/lib", "Libraries/Shaderc1.1.101/Lib/Linux"}
+        libdirs {"$(VULKAN_SDK)/lib", "Libraries/Shaderc-1.1.101/Lib/Linux"}
     else
         includedirs {"$(VULKAN_SDK)/Include"}
-        libdirs {"$(VULKAN_SDK)/Lib", "Libraries/Shaderc1.1.101/Lib/Windows"}
+        libdirs {"$(VULKAN_SDK)/Lib", "Libraries/Shaderc-1.1.101/Lib/Windows"}
     end
     
     links {"shaderc_shared"}
@@ -312,7 +312,7 @@ workspace "Ktt"
 project "Ktt"
     kind "SharedLib"
     files {"Source/**"}
-    includedirs {"Source", "Libraries/Json3.9.1"}
+    includedirs {"Source", "Libraries/CsvParser-2.1.0.1", "Libraries/Json-3.9.1"}
     defines {"KTT_LIBRARY"}
     targetname("ktt")
     linkLibraries()

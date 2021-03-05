@@ -6,8 +6,6 @@
 
 #include <Ktt.h>
 
-// TODO: This example has broken compute buffer handling after migration from KTT v1. Needs to be fixed.
-
 #if defined(_MSC_VER)
 const std::string kernelPrefix = "";
 #else
@@ -41,9 +39,9 @@ void ScanArrayRecursive(ktt::ComputeInterface& interface, const std::vector<ktt:
     const ktt::DimensionVector ndRangeDimensions(numBlocks*scanBlockSize, 1, 1);
 
     interface.UpdateScalarArgument(numElementsId, &numElements);
-    interface.UpdateBuffer(scanOutDataId, outArray.data(), outArray.size());
-    interface.UpdateBuffer(scanInDataId, inArray.data(), inArray.size());
-    interface.UpdateBuffer(scanOneBlockSumId, blockSums.at(level).data(), blockSums.at(level).size());
+    interface.UpdateBuffer(scanOutDataId, outArray.data(), outArray.size() * sizeof(unsigned int));
+    interface.UpdateBuffer(scanInDataId, inArray.data(), inArray.size() * sizeof(unsigned int));
+    interface.UpdateBuffer(scanOneBlockSumId, blockSums.at(level).data(), blockSums.at(level).size() * sizeof(unsigned int));
     bool fullBlock = (numElements == numBlocks * sortVectorSize * scanBlockSize);
     interface.UpdateScalarArgument(fullBlockId, &fullBlock);
     bool storeSum;
@@ -55,24 +53,24 @@ void ScanArrayRecursive(ktt::ComputeInterface& interface, const std::vector<ktt:
 
         interface.UpdateScalarArgument(storeSumId, &storeSum);
         interface.RunKernel(definitionIds[4], ndRangeDimensions, workGroupDimensions); 
-        interface.DownloadBuffer(scanOneBlockSumId, blockSums.at(level).data(), blockSums.at(level).size());
-        interface.DownloadBuffer(scanOutDataId, outArray.data(), outArray.size());
+        interface.DownloadBuffer(scanOneBlockSumId, blockSums.at(level).data(), blockSums.at(level).size() * sizeof(unsigned int));
+        interface.DownloadBuffer(scanOutDataId, outArray.data(), outArray.size() * sizeof(unsigned int));
 
         ScanArrayRecursive(interface, definitionIds, numElementsId, fullBlockId, storeSumId, scanInDataId, scanOutDataId,
             scanOneBlockSumId, (blockSums[level]), (blockSums[level]), numBlocks, level + 1, blockSums);
 
         interface.UpdateScalarArgument(numElementsId, &numElements);
-        interface.UpdateBuffer(scanOutDataId, outArray.data(), outArray.size());
-        interface.UpdateBuffer(scanOneBlockSumId, blockSums.at(level).data(), blockSums.at(level).size());
+        interface.UpdateBuffer(scanOutDataId, outArray.data(), outArray.size() * sizeof(unsigned int));
+        interface.UpdateBuffer(scanOneBlockSumId, blockSums.at(level).data(), blockSums.at(level).size() * sizeof(unsigned int));
         interface.RunKernel(definitionIds[3], ndRangeDimensions, workGroupDimensions);
-        interface.DownloadBuffer(scanOutDataId, outArray.data(), outArray.size());
+        interface.DownloadBuffer(scanOutDataId, outArray.data(), outArray.size() * sizeof(unsigned int));
     }
     else
     {
         storeSum = 0;
         interface.UpdateScalarArgument(storeSumId, &storeSum);
         interface.RunKernel(definitionIds[4], ndRangeDimensions, workGroupDimensions);
-        interface.DownloadBuffer(scanOutDataId, outArray.data(), outArray.size());
+        interface.DownloadBuffer(scanOutDataId, outArray.data(), outArray.size() * sizeof(unsigned int));
     }
 }
 
@@ -182,10 +180,14 @@ int main(int argc, char** argv)
         unsigned int countersSize = 16 * scanNumBlocks;
         std::vector<unsigned int> counters(countersSize);
         interface.ResizeBuffer(countersId, countersSize * sizeof(unsigned int), false);
+        interface.ResizeBuffer(scanInDataId, countersSize * sizeof(unsigned int), false);
         interface.UpdateBuffer(countersId, counters.data());
+
         std::vector<unsigned int> counterSums(countersSize);
         interface.ResizeBuffer(counterSumsId, countersSize * sizeof(unsigned int), false);
+        interface.ResizeBuffer(scanOutDataId, countersSize * sizeof(unsigned int), false);
         interface.UpdateBuffer(counterSumsId, counterSums.data());
+
         std::vector<unsigned int> blockOffsets(countersSize);
         interface.ResizeBuffer(blockOffsetsId, countersSize * sizeof(unsigned int), false);
         interface.UpdateBuffer(blockOffsetsId, blockOffsets.data());
@@ -212,6 +214,8 @@ int main(int argc, char** argv)
         while (numScanElts > 1);
 
         scanBlockSums.push_back(std::vector<unsigned int>(1));
+        interface.ResizeBuffer(scanOneBlockSumId, scanBlockSums[0].size() * sizeof(unsigned int), false);
+
         unsigned int startbit;
         bool swap = true;
 
@@ -238,8 +242,8 @@ int main(int argc, char** argv)
             //  (startbit, (uint*)keys, (uint*)values, (uint2*)tempKeys,
             //   (uint2*)tempValues, blockOffsets, countersSum, counters,
             //   reorderBlocks);
-            interface.UpdateBuffer(counterSumsId, counterSums.data(), counterSums.size());
-            interface.UpdateBuffer(countersId, counters.data(), counters.size());
+            interface.UpdateBuffer(counterSumsId, counterSums.data(), counterSums.size() * sizeof(unsigned int));
+            interface.UpdateBuffer(countersId, counters.data(), counters.size() * sizeof(unsigned int));
 
             if (swap)
             {
