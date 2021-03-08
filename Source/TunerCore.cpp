@@ -5,6 +5,7 @@
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
 #include <Output/Deserializer/JsonDeserializer.h>
 #include <Output/Serializer/JsonSerializer.h>
+#include <Output/Serializer/XmlSerializer.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Output/TunerMetadata.h>
 #include <Utility/ErrorHandling/Assert.h>
@@ -261,7 +262,11 @@ void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std:
         break;
     }
     case OutputFormat::XML:
-        throw KttException("Support for XML format is not yet available");
+    {
+        XmlSerializer serializer;
+        serializer.SerializeResults(metadata, results, outputStream);
+        break;
+    }
     case OutputFormat::CSV:
         throw KttException("Support for CSV format is not yet available");
     default:

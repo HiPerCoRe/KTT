@@ -311,8 +311,8 @@ workspace "Ktt"
 -- Library configuration
 project "Ktt"
     kind "SharedLib"
-    files {"Source/**"}
-    includedirs {"Source", "Libraries/CsvParser-2.1.0.1", "Libraries/Json-3.9.1"}
+    files {"Source/**", "Libraries/pugixml-1.11.4/**"}
+    includedirs {"Source", "Libraries/CsvParser-2.1.0.1", "Libraries/Json-3.9.1", "Libraries/pugixml-1.11.4"}
     defines {"KTT_LIBRARY"}
     targetname("ktt")
     linkLibraries()
