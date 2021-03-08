@@ -236,6 +236,11 @@ void TunerCore::SetTimeUnit(const TimeUnit unit)
 
 void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const
 {
+    if (results.empty())
+    {
+        throw KttException("Unable to save results because input vector is empty");
+    }
+
     const std::string file = filePath + GetFileExtension(format);
     Logger::LogInfo("Saving kernel results to file: " + file);
     std::ofstream outputStream(file);
@@ -275,12 +280,15 @@ std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, co
         throw KttException("Unable to open file: " + file);
     }
 
+    std::pair<TunerMetadata, std::vector<KernelResult>> data;
+
     switch (format)
     {
     case OutputFormat::JSON:
     {
         JsonDeserializer deserializer;
-        return deserializer.DeserializeResults(inputStream);
+        data = deserializer.DeserializeResults(inputStream);
+        break;
     }
     case OutputFormat::XML:
         throw KttException("Support for XML format is not yet available");
@@ -288,8 +296,15 @@ std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, co
         throw KttException("Support for CSV format is not yet available");
     default:
         KttError("Unhandled output format value");
-        return std::vector<KernelResult>{};
+        return {};
     }
+
+    if (data.first.GetTimeUnit() != TimeConfiguration::GetInstance().GetTimeUnit())
+    {
+        Logger::LogWarning("Loaded kernel results use different time unit than tuner");
+    }
+
+    return data.second;
 }
 
 void TunerCore::SetProfilingCounters(const std::vector<std::string>& counters)

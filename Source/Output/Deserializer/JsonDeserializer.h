@@ -8,7 +8,7 @@ namespace ktt
 class JsonDeserializer : public Deserializer
 {
 public:
-    std::vector<KernelResult> DeserializeResults(std::istream& source) override;
+    std::pair<TunerMetadata, std::vector<KernelResult>> DeserializeResults(std::istream& source) override;
 };
 
 } // namespace ktt
