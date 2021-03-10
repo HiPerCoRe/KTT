@@ -27,8 +27,8 @@ TunerMetadata ParseMetadata(const pugi::xml_node node);
 void AppendPair(pugi::xml_node parent, const ParameterPair& pair);
 ParameterPair ParsePair(const pugi::xml_node node);
 
-void AppendVector(pugi::xml_node parent, const DimensionVector& vector);
-DimensionVector ParseVector(const pugi::xml_node node);
+void AppendVector(pugi::xml_node parent, const DimensionVector& vector, const std::string& tag);
+DimensionVector ParseVector(const pugi::xml_node node, const std::string& tag);
 
 void AppendConfiguration(pugi::xml_node parent, const KernelConfiguration& configuration);
 KernelConfiguration ParseConfiguration(const pugi::xml_node node);

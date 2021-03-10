@@ -37,6 +37,7 @@ void CuptiSubscription::MetricCallback(void* data, [[maybe_unused]]  CUpti_Callb
         "Unexpected callback id was passed into metric value collection function");
 
     auto& instance = *reinterpret_cast<CuptiInstance*>(data);
+    KttAssert(instance.GetRemainingPassCount() > 0, "Running metric value collection for instance which has already all data collected");
 
     if (info->callbackSite == CUPTI_API_ENTER)
     {

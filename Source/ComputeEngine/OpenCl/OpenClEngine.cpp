@@ -168,6 +168,7 @@ ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const Ke
     action.IncreaseOverhead(timer.GetElapsedTime());
 
     ComputationResult result = WaitForComputeAction(actionId);
+    pass.reset();
     FillProfilingData(id, result);
 
     return result;

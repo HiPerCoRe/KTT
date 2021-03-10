@@ -4,6 +4,7 @@
 #include <ComputeEngine/Cuda/CudaEngine.h>
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
 #include <Output/Deserializer/JsonDeserializer.h>
+#include <Output/Deserializer/XmlDeserializer.h>
 #include <Output/Serializer/JsonSerializer.h>
 #include <Output/Serializer/XmlSerializer.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
@@ -296,7 +297,11 @@ std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, co
         break;
     }
     case OutputFormat::XML:
-        throw KttException("Support for XML format is not yet available");
+    {
+        XmlDeserializer deserializer;
+        data = deserializer.DeserializeResults(inputStream);
+        break;
+    }
     case OutputFormat::CSV:
         throw KttException("Support for CSV format is not yet available");
     default:

@@ -167,6 +167,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
         instance.SetKernelDuration(result.GetDuration());
     }
 
+    subscription.reset();
     FillProfilingData(id, result);
     return result;
 
@@ -192,6 +193,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     action.IncreaseOverhead(timer.GetElapsedTime());
 
     ComputationResult result = WaitForComputeAction(actionId);
+    pass.reset();
     FillProfilingData(id, result);
 
     return result;
