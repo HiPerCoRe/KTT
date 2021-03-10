@@ -96,8 +96,9 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     const size_t sharedMemorySize = GetSharedMemorySize(data.GetArguments());
 
     const auto& stream = *m_Streams[static_cast<size_t>(queueId)];
-    auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
     timer.Stop();
+
+    auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
 
     action->IncreaseOverhead(timer.GetElapsedTime());
     action->SetConfigurationPrefix(data.GetConfigurationPrefix());

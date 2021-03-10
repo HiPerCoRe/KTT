@@ -107,8 +107,9 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
     SetKernelArguments(*kernel, data.GetArguments());
 
     const auto& queue = *m_Queues[static_cast<size_t>(queueId)];
-    auto action = kernel->Launch(queue, data.GetGlobalSize(), data.GetLocalSize());
     timer.Stop();
+
+    auto action = kernel->Launch(queue, data.GetGlobalSize(), data.GetLocalSize());
 
     action->IncreaseOverhead(timer.GetElapsedTime());
     action->SetConfigurationPrefix(data.GetConfigurationPrefix());
