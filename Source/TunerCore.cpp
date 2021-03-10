@@ -253,26 +253,8 @@ void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std:
     }
 
     TunerMetadata metadata(m_ComputeApi, m_ComputeEngine->GetCurrentPlatformInfo(), m_ComputeEngine->GetCurrentDeviceInfo());
-
-    switch (format)
-    {
-    case OutputFormat::JSON:
-    {
-        JsonSerializer serializer;
-        serializer.SerializeResults(metadata, results, outputStream);
-        break;
-    }
-    case OutputFormat::XML:
-    {
-        XmlSerializer serializer;
-        serializer.SerializeResults(metadata, results, outputStream);
-        break;
-    }
-    case OutputFormat::CSV:
-        throw KttException("Support for CSV format is not yet available");
-    default:
-        KttError("Unhandled output format value");
-    }
+    auto serializer = CreateSerializer(format);
+    serializer->SerializeResults(metadata, results, outputStream);
 }
 
 std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, const OutputFormat format) const
@@ -286,28 +268,8 @@ std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, co
         throw KttException("Unable to open file: " + file);
     }
 
-    std::pair<TunerMetadata, std::vector<KernelResult>> data;
-
-    switch (format)
-    {
-    case OutputFormat::JSON:
-    {
-        JsonDeserializer deserializer;
-        data = deserializer.DeserializeResults(inputStream);
-        break;
-    }
-    case OutputFormat::XML:
-    {
-        XmlDeserializer deserializer;
-        data = deserializer.DeserializeResults(inputStream);
-        break;
-    }
-    case OutputFormat::CSV:
-        throw KttException("Support for CSV format is not yet available");
-    default:
-        KttError("Unhandled output format value");
-        return {};
-    }
+    auto deserializer = CreateDeserializer(format);
+    const auto data = deserializer->DeserializeResults(inputStream);
 
     if (data.first.GetTimeUnit() != TimeConfiguration::GetInstance().GetTimeUnit())
     {
@@ -449,6 +411,34 @@ void TunerCore::InitializeRunners()
 
     m_KernelRunner = std::make_unique<KernelRunner>(*m_ComputeEngine, *m_ArgumentManager);
     m_TuningRunner = std::make_unique<TuningRunner>(*m_KernelRunner, info);
+}
+
+std::unique_ptr<Serializer> TunerCore::CreateSerializer(const OutputFormat format)
+{
+    switch (format)
+    {
+    case OutputFormat::JSON:
+        return std::make_unique<JsonSerializer>();
+    case OutputFormat::XML:
+        return std::make_unique<XmlSerializer>();
+    default:
+        KttError("Unhandled output format value");
+        return nullptr;
+    }
+}
+
+std::unique_ptr<Deserializer> TunerCore::CreateDeserializer(const OutputFormat format)
+{
+    switch (format)
+    {
+    case OutputFormat::JSON:
+        return std::make_unique<JsonDeserializer>();
+    case OutputFormat::XML:
+        return std::make_unique<XmlDeserializer>();
+    default:
+        KttError("Unhandled output format value");
+        return nullptr;
+    }
 }
 
 } // namespace ktt

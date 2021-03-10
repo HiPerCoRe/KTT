@@ -11,17 +11,13 @@ namespace ktt
   */
 enum class OutputFormat
 {
-    /** Tuner output has JSON format. Both serialization and deserialization is supported.
+    /** Tuner output has JSON format.
       */
     JSON,
 
-    /** Tuner output has XML format. Both serialization and deserialization is supported.
+    /** Tuner output has XML format.
       */
-    XML,
-
-    /** Tuner output has CSV format. Only serialization is supported.
-      */
-    CSV
+    XML
 };
 
 } // namespace ktt

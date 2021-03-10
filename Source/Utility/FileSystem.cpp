@@ -30,8 +30,6 @@ std::string GetFileExtension(const OutputFormat format)
         return ".json";
     case OutputFormat::XML:
         return ".xml";
-    case OutputFormat::CSV:
-        return ".csv";
     default:
         KttError("Unhandled output format value");
         return "";

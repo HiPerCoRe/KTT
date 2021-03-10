@@ -9,6 +9,8 @@
 #include <Kernel/KernelManager.h>
 #include <KernelArgument/KernelArgumentManager.h>
 #include <KernelRunner/KernelRunner.h>
+#include <Output/Deserializer/Deserializer.h>
+#include <Output/Serializer/Serializer.h>
 #include <Output/OutputFormat.h>
 #include <TuningRunner/TuningRunner.h>
 #include <Utility/Logger/LoggingLevel.h>
@@ -103,6 +105,9 @@ private:
     void InitializeComputeEngine(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount);
     void InitializeComputeEngine(const ComputeApi api, const ComputeApiInitializer& initializer);
     void InitializeRunners();
+
+    static std::unique_ptr<Serializer> CreateSerializer(const OutputFormat format);
+    static std::unique_ptr<Deserializer> CreateDeserializer(const OutputFormat format);
 };
 
 } // namespace ktt
