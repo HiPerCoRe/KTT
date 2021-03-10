@@ -1,3 +1,7 @@
+#include <chrono>
+#include <sstream>
+#include <date.h>
+
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Output/TunerMetadata.h>
 #include <KttPlatform.h>
@@ -12,6 +16,15 @@ TunerMetadata::TunerMetadata(const ComputeApi api, const PlatformInfo& platformI
 {
     m_KttVersion = GetKttVersionString();
     m_TimeUnit = TimeConfiguration::GetInstance().GetTimeUnit();
+
+    using namespace date;
+
+    const auto now = std::chrono::system_clock::now();
+    const auto today = date::floor<days>(now);
+
+    std::stringstream stream;
+    stream << today << ' ' << make_time(now - today) << " UTC";
+    m_Timestamp = stream.str();
 }
 
 void TunerMetadata::SetComputeApi(const ComputeApi api)
@@ -32,6 +45,11 @@ void TunerMetadata::SetDeviceName(const std::string& name)
 void TunerMetadata::SetKttVersion(const std::string& version)
 {
     m_KttVersion = version;
+}
+
+void TunerMetadata::SetTimestamp(const std::string& timestamp)
+{
+    m_Timestamp = timestamp;
 }
 
 void TunerMetadata::SetTimeUnit(const TimeUnit unit)
@@ -57,6 +75,11 @@ const std::string& TunerMetadata::GetDeviceName() const
 const std::string& TunerMetadata::GetKttVersion() const
 {
     return m_KttVersion;
+}
+
+const std::string& TunerMetadata::GetTimestamp() const
+{
+    return m_Timestamp;
 }
 
 TimeUnit TunerMetadata::GetTimeUnit() const

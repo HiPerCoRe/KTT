@@ -15,6 +15,7 @@ void to_json(json& j, const TunerMetadata& metadata)
         {"Platform", metadata.GetPlatformName()},
         {"Device", metadata.GetDeviceName()},
         {"KttVersion", metadata.GetKttVersion()},
+        {"Timestamp", metadata.GetTimestamp()},
         {"TimeUnit", metadata.GetTimeUnit()},
     };
 }
@@ -25,6 +26,7 @@ void from_json(const json& j, TunerMetadata& metadata)
     metadata.SetPlatformName(j.at("Platform").get<std::string>());
     metadata.SetDeviceName(j.at("Device").get<std::string>());
     metadata.SetKttVersion(j.at("KttVersion").get<std::string>());
+    metadata.SetTimestamp(j.at("Timestamp").get<std::string>());
     metadata.SetTimeUnit(j.at("TimeUnit").get<TimeUnit>());
 }
 

@@ -180,6 +180,7 @@ void AppendMetadata(pugi::xml_node parent, const TunerMetadata& metadata)
     node.append_attribute("Platform").set_value(metadata.GetPlatformName().c_str());
     node.append_attribute("Device").set_value(metadata.GetDeviceName().c_str());
     node.append_attribute("KttVersion").set_value(metadata.GetKttVersion().c_str());
+    node.append_attribute("Timestamp").set_value(metadata.GetTimestamp().c_str());
     node.append_attribute("TimeUnit").set_value(TimeUnitToString(metadata.GetTimeUnit()).c_str());
 }
 
@@ -191,6 +192,7 @@ TunerMetadata ParseMetadata(const pugi::xml_node node)
     metadata.SetPlatformName(node.attribute("Platform").value());
     metadata.SetDeviceName(node.attribute("Device").value());
     metadata.SetKttVersion(node.attribute("KttVersion").value());
+    metadata.SetTimestamp(node.attribute("Timestamp").value());
     metadata.SetTimeUnit(TimeUnitFromString(node.attribute("TimeUnit").value()));
 
     return metadata;
