@@ -23,11 +23,11 @@ public:
       */
     KTT_API KttException(const std::string& message);
 
-    /** @fn const char* what() const
+    /** @fn const char* what() const noexcept
       * Returns reason why the exception was thrown.
       * @return Reason why the exception was thrown.
       */
-    KTT_API const char* what() const override;
+    KTT_API const char* what() const noexcept override;
 
 private:
     std::string m_Message;

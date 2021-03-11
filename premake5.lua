@@ -426,6 +426,13 @@ project "BicgOpenCl"
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
+project "Convolution3dOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Convolution3d/*.cpp", "Examples/Convolution3d/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
 project "CoulombSum2dOpenCl"
     kind "ConsoleApp"
     files {"Examples/CoulombSum2d/*.cpp", "Examples/CoulombSum2d/*.cl"}

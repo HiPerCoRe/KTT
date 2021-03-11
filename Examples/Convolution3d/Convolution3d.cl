@@ -512,7 +512,7 @@ inline void ShiftLocalAndLoadNextHalo(__local float* lmem, const int lmem_width,
 }
 
 // requirements: TBZ == 1, WPTZ == 1, HFS == 1
-__kernel void conv(const int width, const int height, const int depth, const __global float* src,
+__kernel void conv2(const int width, const int height, const int depth, const __global float* src,
                    COEFFTYPE coeff, __global floatvec* dest) {
   // Thread identifiers
   const int gid_x = get_global_id(0);  // From 0 to width/WPTX-1
@@ -614,7 +614,7 @@ inline void ShiftLocalAndLoadNextFull(__local float* lmem, const int lmem_width,
   }
 }
 
-__kernel void conv(const int width, const int height, const int depth, const __global float* src,
+__kernel void conv2(const int width, const int height, const int depth, const __global float* src,
                    COEFFTYPE coeff, __global floatvec* dest) {
   // Thread identifiers
   const int gid_x = get_local_id(0) + TBX * get_group_id(0);

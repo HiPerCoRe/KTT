@@ -18,7 +18,7 @@ T ParameterPair::GetParameterValue(const std::vector<ParameterPair>& pairs, cons
             continue;
         }
 
-        if (pair.HasValueDouble() && !std::is_same_v<T, double> || !pair.HasValueDouble() && !std::is_same_v<T, uint64_t>)
+        if ((pair.HasValueDouble() && !std::is_same_v<T, double>) || (!pair.HasValueDouble() && !std::is_same_v<T, uint64_t>))
         {
             throw KttException("Parameter value type mismatch");
         }

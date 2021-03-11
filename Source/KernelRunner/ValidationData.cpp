@@ -106,8 +106,8 @@ void ValidationData::ClearReferenceResults()
 
 bool ValidationData::HasReferenceResults() const
 {
-    return HasReferenceComputation() && !m_ReferenceResult.empty()
-        || HasReferenceKernel() && !m_ReferenceKernelResult.empty();
+    return (HasReferenceComputation() && !m_ReferenceResult.empty())
+        || (HasReferenceKernel() && !m_ReferenceKernelResult.empty());
 }
 
 void ValidationData::ComputeReferenceWithFunction()

@@ -19,10 +19,10 @@ ComputationResult::ComputationResult(const std::string& kernelFunction) :
 
 ComputationResult::ComputationResult(const ComputationResult& other) :
     m_KernelFunction(other.m_KernelFunction),
-    m_Duration(other.m_Duration),
-    m_Overhead(other.m_Overhead),
     m_GlobalSize(other.m_GlobalSize),
-    m_LocalSize(other.m_LocalSize)
+    m_LocalSize(other.m_LocalSize),
+    m_Duration(other.m_Duration),
+    m_Overhead(other.m_Overhead)
 {
     if (other.HasCompilationData())
     {
