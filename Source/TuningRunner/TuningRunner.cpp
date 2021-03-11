@@ -113,9 +113,9 @@ void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<Kernel
     KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
     uint64_t passedIterations = 0;
 
-    do
+    while (!m_ConfigurationManager->IsDataProcessed(id))
     {
-        if (passedIterations >= iterations)
+        if (iterations != 0 && passedIterations >= iterations)
         {
             break;
         }
@@ -136,7 +136,6 @@ void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<Kernel
         m_ConfigurationManager->CalculateNextConfiguration(id, result);
         ++passedIterations;
     }
-    while (m_ConfigurationManager->CalculateNextConfiguration(id, result));
 
     m_ConfigurationManager->ClearData(id);
 }
