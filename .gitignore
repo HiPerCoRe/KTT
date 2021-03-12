@@ -1,3 +1,5 @@
 .vs/*
+.vscode/*
 Build/*
 premake5.exe
+premake5

@@ -85,9 +85,9 @@ int main(int argc, char** argv)
 	// Declare kernel parameters
 	const ktt::DimensionVector ndRangeDimensions(m, n / 64); // replaced in manipulator
 	const ktt::DimensionVector workGroupDimensions(32, 4); // replaced in manipulator
-	const ktt::DimensionVector referenceNdRangeDimensions1(static_cast<size_t>(ceil(n / WORK_GROUP_X)) * WORK_GROUP_X, 1);
-	const ktt::DimensionVector referenceNdRangeDimensions2(static_cast<size_t>(ceil(m / WORK_GROUP_X)) * WORK_GROUP_X, 1);
-	const ktt::DimensionVector referenceWorkGroupDimensions(WORK_GROUP_X, 1);
+	const ktt::DimensionVector referenceNdRangeDimensions1(static_cast<size_t>(ceil(n / WORK_GROUP_X)) * WORK_GROUP_X, WORK_GROUP_Y);
+	const ktt::DimensionVector referenceNdRangeDimensions2(static_cast<size_t>(ceil(m / WORK_GROUP_X)) * WORK_GROUP_X, WORK_GROUP_Y);
+	const ktt::DimensionVector referenceWorkGroupDimensions(WORK_GROUP_X, WORK_GROUP_Y);
 
 	// Declare data variables
 	std::vector<float> A(n * m);

@@ -13,17 +13,11 @@ const std::string kernelPrefix = "../";
 
 int main(int argc, char** argv)
 {
-    ktt::DeviceIndex deviceIndex = 0;
     std::string kernelFile = kernelPrefix + "../Tutorials/05ComputeApiInitializer/CudaKernel.cu";
 
     if (argc >= 2)
     {
-        deviceIndex = std::stoul(std::string(argv[1]));
-
-        if (argc >= 3)
-        {
-            kernelFile = std::string(argv[2]);
-        }
+        kernelFile = std::string(argv[2]);
     }
 
     const size_t numberOfElements = 1024 * 1024;

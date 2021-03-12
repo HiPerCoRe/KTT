@@ -99,7 +99,6 @@ int main(int argc, char** argv)
     const ktt::ArgumentId atomInfoPrecompId = tuner.AddArgumentVector(atomInfoPrecomp, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId atomInfoXId = tuner.AddArgumentVector(atomInfoX, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId atomInfoYId = tuner.AddArgumentVector(atomInfoY, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId atomInfoZId = tuner.AddArgumentVector(atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId atomInfoZ2Id = tuner.AddArgumentVector(atomInfoZ2, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId atomInfoWId = tuner.AddArgumentVector(atomInfoW, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId numberOfAtomsId = tuner.AddArgumentScalar(atoms);

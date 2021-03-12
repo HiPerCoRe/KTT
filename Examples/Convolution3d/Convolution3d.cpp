@@ -135,7 +135,6 @@ int main(int argc, char **argv)
     const ktt::KernelDefinitionId referenceDefinition = tuner.AddKernelDefinitionFromFile("conv_reference", referenceKernelFile,
         ndRangeDimensions, workGroupDimensions);
 
-    const ktt::KernelId referenceKernel = tuner.CreateSimpleKernel("3D Convolution Reference", referenceDefinition);
     const ktt::KernelId kernel = tuner.CreateCompositeKernel("3D Convolution", {blockedDefinition, referenceDefinition,
         slidingPlaneDefinition}, [blockedDefinition, referenceDefinition, slidingPlaneDefinition](ktt::ComputeInterface& interface)
     {

@@ -8,7 +8,7 @@ namespace ktt
 
 ParameterPair::ParameterPair() :
     m_Name(nullptr),
-    m_Value(0ull)
+    m_Value(static_cast<uint64_t>(0))
 {}
 
 ParameterPair::ParameterPair(const std::string& name, const uint64_t value) :

@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 
         bool inOutSwapped = false;
 
-        for (int shift = 0; shift < sizeof(unsigned int) * 8; shift += radix_width)
+        for (int shift = 0; shift < static_cast<int>(sizeof(unsigned int) * 8); shift += radix_width)
         {
             // Like scan, we use a reduce-then-scan approach
 
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
             // Also, the sort is not in place, so swap the input and output buffers on each pass.
             interface.SwapArguments(definitionIds[2], inId, outId);
 
-            if (shift + radix_width < sizeof(unsigned int) * 8) // Not the last iteration
+            if (shift + radix_width < static_cast<int>(sizeof(unsigned int) * 8)) // Not the last iteration
             {
                 inOutSwapped = !inOutSwapped;
             }

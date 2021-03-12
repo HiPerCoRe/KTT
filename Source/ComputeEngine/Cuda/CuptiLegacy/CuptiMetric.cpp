@@ -49,7 +49,7 @@ const std::string& CuptiMetric::GetName() const
 
 KernelProfilingCounter CuptiMetric::GenerateCounter(const CudaContext& context, const Nanoseconds kernelDuration)
 {
-    const bool allStatesValid = std::all_of(m_EventStates.cbegin(), m_EventStates.cend(), [](const bool state)
+    [[maybe_unused]] const bool allStatesValid = std::all_of(m_EventStates.cbegin(), m_EventStates.cend(), [](const bool state)
     {
         return state;
     });
@@ -82,7 +82,7 @@ KernelProfilingCounter CuptiMetric::GenerateCounter(const CudaContext& context, 
             static_cast<uint64_t>(metricValue.metricValueUtilizationLevel));
     default:
         KttError("Unhandled CUPTI metric type");
-        return KernelProfilingCounter("", ProfilingCounterType::UnsignedInt, 0ull);
+        return KernelProfilingCounter("", ProfilingCounterType::UnsignedInt, static_cast<uint64_t>(0));
     }
 }
 

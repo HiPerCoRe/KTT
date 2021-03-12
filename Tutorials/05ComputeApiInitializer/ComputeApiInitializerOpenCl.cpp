@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <Cl/cl.h>
+#include <CL/cl.h>
 
 #include <Ktt.h>
 
@@ -13,23 +13,11 @@ const std::string kernelPrefix = "../";
 
 int main(int argc, char** argv)
 {
-    ktt::PlatformIndex platformIndex = 0;
-    ktt::DeviceIndex deviceIndex = 0;
     std::string kernelFile = kernelPrefix + "../Tutorials/05ComputeApiInitializer/OpenClKernel.cl";
 
     if (argc >= 2)
     {
-        platformIndex = std::stoul(std::string(argv[1]));
-
-        if (argc >= 3)
-        {
-            deviceIndex = std::stoul(std::string(argv[2]));
-
-            if (argc >= 4)
-            {
-                kernelFile = std::string(argv[3]);
-            }
-        }
+        kernelFile = std::string(argv[3]);
     }
 
     const size_t numberOfElements = 1024 * 1024;
