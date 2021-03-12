@@ -40,10 +40,13 @@ CuptiInstance::CuptiInstance(const CudaContext& context, const CuptiMetricConfig
         nullptr,
         m_Context.GetContext(),
         m_Configuration.m_ConfigImage.data(),
-        m_Configuration.m_ConfigImage.size()
+        m_Configuration.m_ConfigImage.size(),
+        1,
+        1,
+        0,
+        1
     };
 
-    setParams.passIndex = 0;
     CheckError(cuptiProfilerSetConfig(&setParams), "cuptiProfilerSetConfig");
 }
 
@@ -76,7 +79,9 @@ void CuptiInstance::CollectData()
     {
         CUpti_Profiler_FlushCounterData_Params_STRUCT_SIZE,
         nullptr,
-        m_Context.GetContext()
+        m_Context.GetContext(),
+        0,
+        0
     };
 
     CheckError(cuptiProfilerFlushCounterData(&flushParams), "cuptiProfilerFlushCounterData");

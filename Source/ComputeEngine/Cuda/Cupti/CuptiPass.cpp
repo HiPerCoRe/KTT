@@ -45,7 +45,10 @@ CuptiPass::~CuptiPass()
     {
         CUpti_Profiler_EndPass_Params_STRUCT_SIZE,
         nullptr,
-        m_Instance.GetContext().GetContext()
+        m_Instance.GetContext().GetContext(),
+        0,
+        0,
+        0
     };
 
     CheckError(cuptiProfilerEndPass(&endParams), "cuptiProfilerEndPass");

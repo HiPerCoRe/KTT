@@ -35,7 +35,8 @@ CuptiMetricInterface::CuptiMetricInterface(const DeviceIndex index) :
     {
         NVPW_CUDA_MetricsContext_Create_Params_STRUCT_SIZE,
         nullptr,
-        m_DeviceName.data()
+        m_DeviceName.data(),
+        nullptr
     };
 
     CheckError(NVPW_CUDA_MetricsContext_Create(&params), "NVPW_CUDA_MetricsContext_Create");
@@ -61,7 +62,9 @@ void CuptiMetricInterface::ListSupportedChips()
     NVPW_GetSupportedChipNames_Params params =
     {
         NVPW_GetSupportedChipNames_Params_STRUCT_SIZE,
-        nullptr
+        nullptr,
+        nullptr,
+        0
     };
 
     CheckError(NVPW_GetSupportedChipNames(&params), "NVPW_GetSupportedChipNames");
@@ -87,12 +90,15 @@ void CuptiMetricInterface::ListMetrics(const bool listSubMetrics) const
     {
         NVPW_MetricsContext_GetMetricNames_Begin_Params_STRUCT_SIZE,
         nullptr,
-        m_Context
+        m_Context,
+        0,
+        nullptr,
+        !listSubMetrics,
+        !listSubMetrics,
+        !listSubMetrics,
+        !listSubMetrics,
     };
 
-    params.hidePeakSubMetrics = !listSubMetrics;
-    params.hidePerCycleSubMetrics = !listSubMetrics;
-    params.hidePctOfPeakSubMetrics = !listSubMetrics;
     CheckError(NVPW_MetricsContext_GetMetricNames_Begin(&params), "NVPW_MetricsContext_GetMetricNames_Begin");
 
     Logger::LogInfo("Total metrics on the chip: " + std::to_string(params.numMetrics));
@@ -136,7 +142,8 @@ std::unique_ptr<KernelProfilingData> CuptiMetricInterface::GenerateProfilingData
     {
         NVPW_CounterData_GetNumRanges_Params_STRUCT_SIZE,
         nullptr,
-        counterDataImage.data()
+        counterDataImage.data(),
+        0
     };
 
     CheckError(NVPW_CounterData_GetNumRanges(&params), "NVPW_CounterData_GetNumRanges");
@@ -149,7 +156,8 @@ std::unique_ptr<KernelProfilingData> CuptiMetricInterface::GenerateProfilingData
 
     for (size_t metricIndex = 0; metricIndex < metricNames.size(); ++metricIndex)
     {
-        const bool success = ParseMetricNameString(metricNames[metricIndex], parsedNames[metricIndex], isolated, keepInstances);
+        [[maybe_unused]] const bool success = ParseMetricNameString(metricNames[metricIndex], parsedNames[metricIndex], isolated,
+            keepInstances);
         KttAssert(success, "Unable to parse metric name " + metricNames[metricIndex]);
         metricNamePtrs.push_back(parsedNames[metricIndex].c_str());
     }
@@ -259,7 +267,8 @@ std::vector<uint8_t> CuptiMetricInterface::GetConfigImage(const std::vector<std:
         nullptr,
         rawMetricsConfig,
         0,
-        nullptr
+        nullptr,
+        0
     };
 
     CheckError(NVPW_RawMetricsConfig_GetConfigImage(&getParams), "NVPW_RawMetricsConfig_GetConfigImage");
@@ -314,7 +323,8 @@ std::vector<uint8_t> CuptiMetricInterface::GetCounterDataImagePrefix(const std::
         nullptr,
         createParams.pCounterDataBuilder,
         0,
-        nullptr
+        nullptr,
+        0
     };
 
     CheckError(NVPW_CounterDataBuilder_GetCounterDataPrefix(&getParams), "NVPW_CounterDataBuilder_GetCounterDataPrefix");
@@ -355,7 +365,8 @@ void CuptiMetricInterface::CreateCounterDataImage(const std::vector<uint8_t>& co
         CUpti_Profiler_CounterDataImage_CalculateSize_Params_STRUCT_SIZE,
         nullptr,
         CUpti_Profiler_CounterDataImageOptions_STRUCT_SIZE,
-        &counterDataImageOptions
+        &counterDataImageOptions,
+        0
     };
 
     CheckError(cuptiProfilerCounterDataImageCalculateSize(&calculateSizeParams), "cuptiProfilerCounterDataImageCalculateSize");
@@ -378,7 +389,8 @@ void CuptiMetricInterface::CreateCounterDataImage(const std::vector<uint8_t>& co
         CUpti_Profiler_CounterDataImage_CalculateScratchBufferSize_Params_STRUCT_SIZE,
         nullptr,
         counterDataImage.size(),
-        counterDataImage.data()
+        counterDataImage.data(),
+        0
     };
 
     CheckError(cuptiProfilerCounterDataImageCalculateScratchBufferSize(&scratchSizeParams),
@@ -408,7 +420,7 @@ void CuptiMetricInterface::GetRawMetricRequests(const std::vector<std::string>& 
 
     for (const auto& metricName : metrics)
     {
-        const bool success = ParseMetricNameString(metricName, parsedName, isolated, keepInstances);
+        [[maybe_unused]] const bool success = ParseMetricNameString(metricName, parsedName, isolated, keepInstances);
         KttAssert(success, "Unable to parse metric name " + metricName);
 
         keepInstances = true; // Bug in collection with collection of metrics without instances, keep it to true
@@ -418,7 +430,12 @@ void CuptiMetricInterface::GetRawMetricRequests(const std::vector<std::string>& 
             NVPW_MetricsContext_GetMetricProperties_Begin_Params_STRUCT_SIZE,
             nullptr,
             m_Context,
-            parsedName.c_str()
+            parsedName.c_str(),
+            nullptr,
+            nullptr,
+            nullptr,
+            0.0,
+            0.0
         };
 
         CheckError(NVPW_MetricsContext_GetMetricProperties_Begin(&params), "NVPW_MetricsContext_GetMetricProperties_Begin");
@@ -459,7 +476,8 @@ std::string CuptiMetricInterface::GetDeviceName(const DeviceIndex index)
     {
         CUpti_Device_GetChipName_Params_STRUCT_SIZE,
         nullptr,
-        static_cast<size_t>(index)
+        static_cast<size_t>(index),
+        nullptr
     };
 
     CheckError(cuptiDeviceGetChipName(&params), "cuptiDeviceGetChipName");
