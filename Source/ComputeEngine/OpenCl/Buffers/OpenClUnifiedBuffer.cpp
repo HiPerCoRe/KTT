@@ -1,4 +1,7 @@
 #ifdef KTT_API_OPENCL
+
+#include <CL/cl.h>
+
 #ifdef CL_VERSION_2_0
 
 #include <cstring>
@@ -132,8 +135,8 @@ std::unique_ptr<OpenClTransferAction> OpenClUnifiedBuffer::CopyData(const OpenCl
     timer.Start();
 
     std::vector<uint8_t> data(dataSize);
-    auto action = source.DownloadData(queue, data.data(), dataSize);
-    action->WaitForFinish();
+    auto downloadAction = source.DownloadData(queue, data.data(), dataSize);
+    downloadAction->WaitForFinish();
     std::memcpy(m_SvmBuffer, data.data(), dataSize);
 
     timer.Stop();

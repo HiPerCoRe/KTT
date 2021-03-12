@@ -1,9 +1,10 @@
 #pragma once
 
 #ifdef KTT_API_OPENCL
-#ifdef CL_VERSION_2_0
 
 #include <CL/cl.h>
+
+#ifdef CL_VERSION_2_0
 
 #include <ComputeEngine/OpenCl/Buffers/OpenClBuffer.h>
 
