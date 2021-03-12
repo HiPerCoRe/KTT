@@ -1,5 +1,6 @@
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 
+#include <cstring>
 #include <string>
 
 #include <Api/Output/KernelProfilingData.h>
@@ -130,12 +131,16 @@ KernelProfilingCounter GpaInstance::GenerateCounterForIndex(const gpa_uint32 ind
     switch (counterType)
     {
     case GPA_DATA_TYPE_FLOAT64:
-        return KernelProfilingCounter(counterName, ProfilingCounterType::Double, *(reinterpret_cast<double*>(&sampleData)));
+    {
+        double sampleDouble;
+        std::memcpy(&sampleDouble, &sampleData, sizeof(sampleData));
+        return KernelProfilingCounter(counterName, ProfilingCounterType::Double, sampleDouble);
+    }
     case GPA_DATA_TYPE_UINT64:
         return KernelProfilingCounter(counterName, ProfilingCounterType::UnsignedInt, sampleData);
     default:
         KttError("Unhandled GPA counter type");
-        return KernelProfilingCounter("", ProfilingCounterType::UnsignedInt, 0ull);
+        return KernelProfilingCounter("", ProfilingCounterType::UnsignedInt, static_cast<uint64_t>(0));
     }
 }
 
