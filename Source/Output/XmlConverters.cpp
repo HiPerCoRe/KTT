@@ -1,5 +1,3 @@
-#include <set>
-
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Output/XmlConverters.h>
 #include <Utility/ErrorHandling/Assert.h>
@@ -217,23 +215,19 @@ void AppendPair(pugi::xml_node parent, const ParameterPair& pair)
 
 ParameterPair ParsePair(const pugi::xml_node node)
 {
-    static std::set<std::string> names;
-
     const std::string name = node.attribute("Name").value();
-    auto namePair = names.insert(name);
-
     const bool isDouble = node.attribute("IsDouble").as_bool();
     ParameterPair pair;
 
     if (isDouble)
     {
         const double value = node.attribute("Value").as_double();
-        pair = ParameterPair(*namePair.first, value);
+        pair = ParameterPair(name, value);
     }
     else
     {
         const uint64_t value = node.attribute("Value").as_ullong();
-        pair = ParameterPair(*namePair.first, value);
+        pair = ParameterPair(name, value);
     }
 
     return pair;

@@ -113,7 +113,7 @@ public:
     static std::vector<T> GetParameterValues(const std::vector<ParameterPair>& pairs, const std::vector<std::string>& names);
 
 private:
-    const std::string* m_Name;
+    std::string m_Name;
     std::variant<uint64_t, double> m_Value;
 };
 

@@ -232,7 +232,7 @@ newoption
     description = "Enables compilation of kernel profiling functionality using specified library",
     allowed =
     {
-        {"cupti", "Nvidia CUPTI for Volta and Turing"},
+        {"cupti", "Nvidia CUPTI for Volta, Turing and Ampere"},
         {"cupti-legacy", "Nvidia CUPTI for legacy GPUs (Volta and older)"},
         {"gpa", "AMD GPA for GCN 3.0 GPUs and newer"},
         {"gpa-legacy", "AMD GPA for GCN 5.0 GPUs and older"}

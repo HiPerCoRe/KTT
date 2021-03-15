@@ -1,5 +1,3 @@
-#include <set>
-
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Output/JsonConverters.h>
 #include <Utility/ErrorHandling/Assert.h>
@@ -67,11 +65,8 @@ void to_json(json& j, const ParameterPair& pair)
 
 void from_json(const json& j, ParameterPair& pair)
 {
-    static std::set<std::string> names;
-
     std::string name;
     j.at("Name").get_to(name);
-    auto namePair = names.insert(name);
 
     bool isDouble;
     j.at("IsDouble").get_to(isDouble);
@@ -80,13 +75,13 @@ void from_json(const json& j, ParameterPair& pair)
     {
         double value;
         j.at("Value").get_to(value);
-        pair = ParameterPair(*namePair.first, value);
+        pair = ParameterPair(name, value);
     }
     else
     {
         uint64_t value;
         j.at("Value").get_to(value);
-        pair = ParameterPair(*namePair.first, value);
+        pair = ParameterPair(name, value);
     }
 }
 

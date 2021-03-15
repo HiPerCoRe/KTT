@@ -7,17 +7,16 @@ namespace ktt
 {
 
 ParameterPair::ParameterPair() :
-    m_Name(nullptr),
     m_Value(static_cast<uint64_t>(0))
 {}
 
 ParameterPair::ParameterPair(const std::string& name, const uint64_t value) :
-    m_Name(&name),
+    m_Name(name),
     m_Value(value)
 {}
 
 ParameterPair::ParameterPair(const std::string& name, const double value) :
-    m_Name(&name),
+    m_Name(name),
     m_Value(value)
 {}
 
@@ -33,7 +32,7 @@ void ParameterPair::SetValue(const double value)
 
 const std::string& ParameterPair::GetName() const
 {
-    return *m_Name;
+    return m_Name;
 }
 
 std::string ParameterPair::GetString() const
