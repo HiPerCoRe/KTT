@@ -33,6 +33,15 @@ bool ContainsUniqueElements(const std::vector<T>& vector)
     return set.size() == vector.size();
 }
 
+template <typename T, typename Filter>
+size_t EraseIf(std::vector<T>& vector, const Filter& filter)
+{
+    auto iterator = std::remove_if(vector.begin(), vector.end(), filter);
+    const size_t count = std::distance(iterator, vector.end());
+    vector.erase(iterator, vector.end());
+    return count;
+}
+
 template <typename Key, typename Value>
 bool ContainsKey(const std::map<Key, Value>& map, const Key& key)
 {

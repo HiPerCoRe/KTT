@@ -17,6 +17,9 @@ bool ContainsElement(const std::vector<T>& vector, const T& element);
 template <typename T>
 bool ContainsUniqueElements(const std::vector<T>& vector);
 
+template <typename T, typename Filter>
+size_t EraseIf(std::vector<T>& vector, const Filter& filter);
+
 template <typename Key, typename Value>
 bool ContainsKey(const std::map<Key, Value>& map, const Key& key);
 

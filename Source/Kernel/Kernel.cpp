@@ -27,9 +27,12 @@ void Kernel::AddParameter(const KernelParameter& parameter)
     m_Parameters.insert(parameter);
 }
 
-void Kernel::AddConstraint(const KernelConstraint& constraint)
+void Kernel::AddConstraint(const std::vector<std::string>& parameterNames, ConstraintFunction function)
 {
-    for (const auto& name : constraint.GetParameters())
+    std::vector<const KernelParameter*> parameters;
+    std::set<std::string> usedGroups;
+
+    for (const auto& name : parameterNames)
     {
         const auto& parameter = GetParamater(name);
 
@@ -38,9 +41,18 @@ void Kernel::AddConstraint(const KernelConstraint& constraint)
             throw KttException("Kernel parameter with name " + name
                 + " has floating-point values and cannot be used by kernel constraints");
         }
+
+        usedGroups.insert(parameter.GetGroup());
+
+        if (usedGroups.size() > 1)
+        {
+            throw KttException("Constraint can only be added between parameters that belong to the same group");
+        }
+
+        parameters.push_back(&parameter);
     }
 
-    m_Constraints.push_back(constraint);
+    m_Constraints.emplace_back(parameters, function);
 }
 
 void Kernel::AddThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier)
@@ -254,7 +266,8 @@ std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
 
     for (const auto& groupPair : groupedParameters)
     {
-        result.emplace_back(groupPair.first, groupPair.second);
+        const auto constraints = GetConstraintsForParameters(groupPair.second);
+        result.emplace_back(groupPair.first, groupPair.second, constraints);
     }
 
     std::sort(result.begin(), result.end(), [](const auto& first, const auto& second)
@@ -277,79 +290,6 @@ uint64_t Kernel::GetConfigurationsCount() const
     return result;
 }
 
-std::vector<ParameterPair> Kernel::GetPairsForIndex(const uint64_t index) const
-{
-    std::vector<ParameterPair> result;
-    uint64_t currentIndex = index;
-
-    for (const auto& parameter : m_Parameters)
-    {
-        const size_t valuesCount = parameter.GetValuesCount();
-        const size_t parameterIndex = currentIndex % valuesCount;
-
-        result.push_back(parameter.GeneratePair(parameterIndex));
-        currentIndex /= valuesCount;
-    }
-
-    return result;
-}
-
-uint64_t Kernel::GetIndexForPairs(const std::vector<ParameterPair>& pairs) const
-{
-    for (const auto& pair : pairs)
-    {
-        if (!HasParameter(pair.GetName()))
-        {
-            throw KttException("Kernel parameter with name " + pair.GetName() + " does not exist");
-        }
-    }
-
-    for (const auto& parameter : m_Parameters)
-    {
-        const bool hasPair = ContainsElementIf(pairs, [&parameter](const auto& pair)
-        {
-            return pair.GetName() == parameter.GetName();
-        });
-
-        if (!hasPair)
-        {
-            throw KttException("Kernel parameter with name " + parameter.GetName() + " is not present in pairs");
-        }
-    }
-
-    uint64_t result = 0;
-    uint64_t multiplier = 1;
-
-    for (const auto& parameter : m_Parameters)
-    {
-        const ParameterPair* currentPair = nullptr;
-
-        for (const auto& pair : pairs)
-        {
-            if (parameter.GetName() == pair.GetName())
-            {
-                currentPair = &pair;
-                break;
-            }
-        }
-
-        const auto parameterPairs = parameter.GeneratePairs();
-
-        for (size_t i = 0; i < parameterPairs.size(); ++i)
-        {
-            if (currentPair->HasSameValue(parameterPairs[i]))
-            {
-                result += multiplier * i;
-                break;
-            }
-        }
-
-        multiplier *= parameterPairs.size();
-    }
-
-    return result;
-}
-
 DimensionVector Kernel::GetModifiedGlobalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const
 {
     return GetModifiedSize(id, ModifierType::Global, pairs);
@@ -358,6 +298,25 @@ DimensionVector Kernel::GetModifiedGlobalSize(const KernelDefinitionId id, const
 DimensionVector Kernel::GetModifiedLocalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const
 {
     return GetModifiedSize(id, ModifierType::Local, pairs);
+}
+
+std::vector<const KernelConstraint*> Kernel::GetConstraintsForParameters(const std::vector<const KernelParameter*>& parameters) const
+{
+    std::vector<const KernelConstraint*> result;
+
+    for (const auto& constraint : GetConstraints())
+    {
+        for (const auto* parameter : parameters)
+        {
+            if (constraint.AffectsParameter(parameter->GetName()))
+            {
+                result.push_back(&constraint);
+                break;
+            }
+        }
+    }
+
+    return result;
 }
 
 const KernelParameter& Kernel::GetParamater(const std::string& name) const

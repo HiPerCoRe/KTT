@@ -1,10 +1,12 @@
 #include <algorithm>
 #include <limits>
 
+#include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <TuningRunner/ConfigurationData.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 #include <Utility/StlHelpers.h>
+#include <Utility/Timer/Timer.h>
 
 namespace ktt
 {
@@ -103,12 +105,23 @@ bool ConfigurationData::InitializeNextGroup(const bool isInitialGroup)
     }
 
     const auto& group = GetCurrentGroup();
+    Logger::LogInfo("Generating configurations for kernel " + m_Kernel.GetName() + " and group " + group.GetName());
+
+    Timer timer;
+    timer.Start();
+
     std::vector<ParameterPair> initialPairs;
     ComputeConfigurations(group, 0, initialPairs, m_Configurations);
-    m_Searcher.Initialize(m_Configurations);
+    //m_Tree = std::make_unique<ConfigurationTree>();
+    //m_Tree->Build(group);
 
-    Logger::LogInfo("Starting to explore configurations for kernel " + m_Kernel.GetName() + " and group " + group.GetName()
-        + ", configuration count in the current group is " + std::to_string(GetConfigurationCountInGroup()));
+    timer.Stop();
+
+    const auto& time = TimeConfiguration::GetInstance();
+    const uint64_t elapsedTime = time.ConvertFromNanoseconds(timer.GetElapsedTime());
+    Logger::LogInfo("Configurations were generated in " + std::to_string(elapsedTime) + time.GetUnitTag());
+
+    m_Searcher.Initialize(m_Configurations);
     return true;
 }
 

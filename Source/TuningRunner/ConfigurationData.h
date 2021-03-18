@@ -8,6 +8,7 @@
 #include <Api/Searcher/Searcher.h>
 #include <Kernel/Kernel.h>
 #include <Kernel/KernelParameterGroup.h>
+#include <TuningRunner/ConfigurationTree.h>
 #include <KttTypes.h>
 
 namespace ktt
@@ -31,6 +32,7 @@ public:
 private:
     std::vector<KernelParameterGroup> m_Groups;
     std::vector<KernelConfiguration> m_Configurations;
+    std::unique_ptr<ConfigurationTree> m_Tree;
     std::multimap<Nanoseconds, KernelConfiguration> m_ProcessedConfigurations;
     const DeviceInfo& m_DeviceInfo;
     Searcher& m_Searcher;

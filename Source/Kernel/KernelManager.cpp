@@ -73,7 +73,7 @@ void KernelManager::AddParameter(const KernelId id, const std::string& name, con
 void KernelManager::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
 {
     auto& kernel = GetKernel(id);
-    kernel.AddConstraint(KernelConstraint(parameters, function));
+    kernel.AddConstraint(parameters, function);
 }
 
 void KernelManager::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
