@@ -27,6 +27,7 @@ public:
     bool IsFulfilled(const std::vector<ParameterPair>& pairs) const;
 
     void EnumeratePairs(const std::function<void(std::vector<ParameterPair>&, const bool)>& enumerator) const;
+    void EnumerateParameterIndices(const std::function<void(std::vector<size_t>&, const bool)>& enumerator) const;
 
 private:
     std::vector<const KernelParameter*> m_Parameters;
@@ -35,6 +36,8 @@ private:
 
     void ComputePairs(const size_t currentIndex, std::vector<ParameterPair>& pairs,
         const std::function<void(std::vector<ParameterPair>&, const bool)>& enumerator) const;
+    void ComputeIndices(const size_t currentIndex, std::vector<size_t>& indices, const std::vector<uint64_t>& values,
+        const std::function<void(std::vector<size_t>&, const bool)>& enumerator) const;
 };
 
 } // namespace ktt

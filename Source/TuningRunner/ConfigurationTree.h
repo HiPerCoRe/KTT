@@ -5,6 +5,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <Api/Configuration/KernelConfiguration.h>
@@ -28,15 +29,17 @@ public:
     KernelConfiguration GetConfiguration(const uint64_t index) const;
 
 private:
-    std::map<std::string, uint64_t> m_ParameterToLevel;
+    std::map<const KernelParameter*, uint64_t> m_ParameterToLevel;
     std::unique_ptr<ConfigurationNode> m_Root;
     bool m_IsBuilt;
 
-    void AddPaths(std::vector<ParameterPair>& pairs, const std::set<std::string>& lockedParameters);
-    void PrunePaths(std::vector<ParameterPair>& pairs);
-    void ComputeConfigurationCounts();
-    std::vector<uint64_t> PreprocessPairs(std::vector<ParameterPair>& pairs, const std::set<std::string>& lockedParameters,
-        std::vector<uint64_t>& lockedLevels);
+    void AddPaths(const std::vector<size_t>& indices, const std::vector<const KernelParameter*>& parameters,
+        std::set<std::string>& lockedParameters);
+    void PrunePaths(const std::vector<size_t>& indices, const std::vector<const KernelParameter*>& parameters);
+    std::vector<size_t> PreprocessIndices(const std::vector<size_t>& indices, const std::vector<const KernelParameter*>& parameters,
+        const std::set<std::string>& lockedParameters, std::vector<uint64_t>& levels, std::vector<uint64_t>& lockedLevels);
+    static std::vector<std::pair<const KernelParameter*, size_t>> MergeParametersWithIndices(
+        const std::vector<const KernelParameter*>& parameters, const std::vector<size_t>& indices);
 };
 
 } // namespace ktt

@@ -7,17 +7,17 @@ namespace ktt
 
 ConfigurationNode::ConfigurationNode() :
     m_Parent(nullptr),
-    m_Value(0),
+    m_Index(0),
     m_ConfigurationCount(0)
 {}
 
-ConfigurationNode::ConfigurationNode(const ConfigurationNode& parent, const uint64_t value) :
+ConfigurationNode::ConfigurationNode(const ConfigurationNode& parent, const size_t index) :
     m_Parent(&parent),
-    m_Value(value),
+    m_Index(index),
     m_ConfigurationCount(0)
 {}
 
-void ConfigurationNode::AddPaths(const std::vector<ParameterPair>& pairs, const size_t pairsIndex,
+void ConfigurationNode::AddPaths(const std::vector<size_t>& indices, const size_t indicesIndex,
     const std::vector<uint64_t>& levels, const size_t levelsIndex, const std::vector<uint64_t>& lockedLevels)
 {
     const uint64_t level = GetLevel();
@@ -26,32 +26,32 @@ void ConfigurationNode::AddPaths(const std::vector<ParameterPair>& pairs, const 
     {
         for (auto& child : m_Children)
         {
-            child->AddPaths(pairs, pairsIndex, levels, levelsIndex, lockedLevels);
+            child->AddPaths(indices, indicesIndex, levels, levelsIndex, lockedLevels);
         }
 
         return;
     }
 
-    const uint64_t value = pairs[pairsIndex].GetValue();
+    const size_t index = indices[indicesIndex];
 
-    if (!HasChildWithValue(value))
+    if (!HasChildWithIndex(index))
     {
         if (ContainsElement(lockedLevels, level + 1))
         {
             return;
         }
 
-        AddChild(value);
+        AddChild(index);
     }
 
-    if (pairs.size() > pairsIndex + 1)
+    if (indices.size() > indicesIndex + 1)
     {
-        auto& child = GetChildWithValue(value);
-        child.AddPaths(pairs, pairsIndex + 1, levels, levelsIndex + 1, lockedLevels);
+        auto& child = GetChildWithIndex(index);
+        child.AddPaths(indices, indicesIndex + 1, levels, levelsIndex + 1, lockedLevels);
     }
 }
 
-void ConfigurationNode::PrunePaths(const std::vector<ParameterPair>& pairs, const size_t pairsIndex,
+void ConfigurationNode::PrunePaths(const std::vector<size_t>& indices, const size_t indicesIndex,
     const std::vector<uint64_t>& levels, const size_t levelsIndex)
 {
     const uint64_t level = GetLevel();
@@ -63,7 +63,7 @@ void ConfigurationNode::PrunePaths(const std::vector<ParameterPair>& pairs, cons
         for (auto& child : m_Children)
         {
             const size_t originalCount = child->GetChildrenCount();
-            child->PrunePaths(pairs, pairsIndex, levels, levelsIndex);
+            child->PrunePaths(indices, indicesIndex, levels, levelsIndex);
 
             if (originalCount > 0 && child->GetChildrenCount() == 0)
             {
@@ -79,12 +79,12 @@ void ConfigurationNode::PrunePaths(const std::vector<ParameterPair>& pairs, cons
         return;
     }
 
-    const uint64_t value = pairs[pairsIndex].GetValue();
+    const size_t index = indices[indicesIndex];
 
-    if (HasChildWithValue(value))
+    if (HasChildWithIndex(index))
     {
-        auto& child = GetChildWithValue(value);
-        child.PrunePaths(pairs, pairsIndex + 1, levels, levelsIndex + 1);
+        auto& child = GetChildWithIndex(index);
+        child.PrunePaths(indices, indicesIndex + 1, levels, levelsIndex + 1);
 
         if (child.GetChildrenCount() == 0)
         {
@@ -134,9 +134,9 @@ uint64_t ConfigurationNode::GetLevel() const
     return result;
 }
 
-uint64_t ConfigurationNode::GetValue() const
+size_t ConfigurationNode::GetIndex() const
 {
-    return m_Value;
+    return m_Index;
 }
 
 size_t ConfigurationNode::GetChildrenCount() const
@@ -149,9 +149,9 @@ uint64_t ConfigurationNode::GetConfigurationCount() const
     return m_ConfigurationCount;
 }
 
-void ConfigurationNode::GatherValuesForIndex(const uint64_t index, std::vector<uint64_t>& values) const
+void ConfigurationNode::GatherParameterIndices(const uint64_t index, std::vector<size_t>& indices) const
 {
-    values.push_back(m_Value);
+    indices.push_back(m_Index);
 
     if (m_Children.empty())
     {
@@ -160,32 +160,30 @@ void ConfigurationNode::GatherValuesForIndex(const uint64_t index, std::vector<u
     }
 
     uint64_t cumulativeConfigurations = 0;
-    uint64_t skippedConfigurations = 0;
 
     for (const auto& child : m_Children)
     {
+        const uint64_t skippedConfigurations = cumulativeConfigurations;
         cumulativeConfigurations += child->GetConfigurationCount();
 
         if (index <= cumulativeConfigurations)
         {
-            child->GatherValuesForIndex(index - skippedConfigurations, values);
+            child->GatherParameterIndices(index - skippedConfigurations, indices);
             return;
         }
-
-        skippedConfigurations = cumulativeConfigurations;
     }
 }
 
-void ConfigurationNode::AddChild(const uint64_t value)
+void ConfigurationNode::AddChild(const size_t index)
 {
-    m_Children.push_back(std::make_unique<ConfigurationNode>(*this, value));
+    m_Children.push_back(std::make_unique<ConfigurationNode>(*this, index));
 }
 
-bool ConfigurationNode::HasChildWithValue(const uint64_t value)
+bool ConfigurationNode::HasChildWithIndex(const size_t index)
 {
     for (auto& child : m_Children)
     {
-        if (child->GetValue() == value)
+        if (child->GetIndex() == index)
         {
             return true;
         }
@@ -194,11 +192,11 @@ bool ConfigurationNode::HasChildWithValue(const uint64_t value)
     return false;
 }
 
-ConfigurationNode& ConfigurationNode::GetChildWithValue(const uint64_t value)
+ConfigurationNode& ConfigurationNode::GetChildWithIndex(const size_t index)
 {
     for (auto& child : m_Children)
     {
-        if (child->GetValue() == value)
+        if (child->GetIndex() == index)
         {
             return *child;
         }

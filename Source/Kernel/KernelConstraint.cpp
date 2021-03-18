@@ -84,6 +84,13 @@ void KernelConstraint::EnumeratePairs(const std::function<void(std::vector<Param
     ComputePairs(0, initialPairs, enumerator);
 }
 
+void KernelConstraint::EnumerateParameterIndices(const std::function<void(std::vector<size_t>&, const bool)>& enumerator) const
+{
+    std::vector<size_t> initialIndices;
+    std::vector<uint64_t> initialValues;
+    ComputeIndices(0, initialIndices, initialValues, enumerator);
+}
+
 void KernelConstraint::ComputePairs(const size_t currentIndex, std::vector<ParameterPair>& pairs,
     const std::function<void(std::vector<ParameterPair>&, const bool)>& enumerator) const
 {
@@ -101,6 +108,30 @@ void KernelConstraint::ComputePairs(const size_t currentIndex, std::vector<Param
         std::vector<ParameterPair> newPairs = pairs;
         newPairs.push_back(pair);
         ComputePairs(currentIndex + 1, newPairs, enumerator);
+    }
+}
+
+void KernelConstraint::ComputeIndices(const size_t currentIndex, std::vector<size_t>& indices, const std::vector<uint64_t>& values,
+    const std::function<void(std::vector<size_t>&, const bool)>& enumerator) const
+{
+    if (currentIndex >= m_Parameters.size())
+    {
+        const bool isFulfilled = m_Function(values);
+        enumerator(indices, isFulfilled);
+        return;
+    }
+
+    const auto& parameterValues = m_Parameters[currentIndex]->GetValues();
+
+    for (size_t i = 0; i < parameterValues.size(); ++i)
+    {
+        std::vector<size_t> newIndices = indices;
+        newIndices.push_back(i);
+
+        std::vector<uint64_t> newValues = values;
+        newValues.push_back(parameterValues[i]);
+
+        ComputeIndices(currentIndex + 1, newIndices, newValues, enumerator);
     }
 }
 
