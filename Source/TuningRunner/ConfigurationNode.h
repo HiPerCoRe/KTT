@@ -26,6 +26,7 @@ public:
     uint64_t GetValue() const;
     size_t GetChildrenCount() const;
     uint64_t GetConfigurationCount() const;
+    void GatherValuesForIndex(const uint64_t index, std::vector<uint64_t>& values) const;
 
 private:
     std::vector<std::unique_ptr<ConfigurationNode>> m_Children;

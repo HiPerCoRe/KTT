@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include <Api/KttException.h>
 #include <TuningRunner/ConfigurationTree.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/StlHelpers.h>
@@ -81,6 +82,35 @@ uint64_t ConfigurationTree::GetConfigurationCount() const
 {
     KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
     return m_Root->GetConfigurationCount();
+}
+
+KernelConfiguration ConfigurationTree::GetConfiguration(const uint64_t index) const
+{
+    KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
+    
+    if (index >= GetConfigurationCount())
+    {
+        throw KttException("Invalid configuration index");
+    }
+
+    std::vector<uint64_t> values;
+    m_Root->GatherValuesForIndex(index + 1, values);
+
+    std::vector<ParameterPair> pairs;
+
+    for (size_t i = 1; i < values.size(); ++i)
+    {
+        for (const auto& pair : m_ParameterToLevel)
+        {
+            if (pair.second == i)
+            {
+                pairs.emplace_back(pair.first, values[i]);
+                break;
+            }
+        }
+    }
+
+    return KernelConfiguration(pairs);
 }
 
 void ConfigurationTree::AddPaths(std::vector<ParameterPair>& pairs, const std::set<std::string>& lockedParameters)

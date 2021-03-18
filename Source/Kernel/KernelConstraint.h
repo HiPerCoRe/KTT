@@ -18,6 +18,7 @@ class KernelConstraint
 public:
     explicit KernelConstraint(const std::vector<const KernelParameter*>& parameters, ConstraintFunction function);
 
+    const std::vector<const KernelParameter*>& GetParameters() const;
     const std::vector<std::string>& GetParameterNames() const;
     bool AffectsParameter(const std::string& name) const;
     bool HasAllParameters(const std::vector<ParameterPair>& pairs) const;

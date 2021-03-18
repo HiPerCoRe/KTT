@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Configuration/ParameterPair.h>
 #include <Kernel/KernelParameterGroup.h>
 #include <TuningRunner/ConfigurationNode.h>
@@ -24,6 +25,7 @@ public:
 
     uint64_t GetDepth() const;
     uint64_t GetConfigurationCount() const;
+    KernelConfiguration GetConfiguration(const uint64_t index) const;
 
 private:
     std::map<std::string, uint64_t> m_ParameterToLevel;

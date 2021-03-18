@@ -14,6 +14,11 @@ KernelConstraint::KernelConstraint(const std::vector<const KernelParameter*>& pa
     }
 }
 
+const std::vector<const KernelParameter*>& KernelConstraint::GetParameters() const
+{
+    return m_Parameters;
+}
+
 const std::vector<std::string>& KernelConstraint::GetParameterNames() const
 {
     return m_ParameterNames;

@@ -149,6 +149,33 @@ uint64_t ConfigurationNode::GetConfigurationCount() const
     return m_ConfigurationCount;
 }
 
+void ConfigurationNode::GatherValuesForIndex(const uint64_t index, std::vector<uint64_t>& values) const
+{
+    values.push_back(m_Value);
+
+    if (m_Children.empty())
+    {
+        KttAssert(index == 1, "Leaf nodes should only be referenced with index 1");
+        return;
+    }
+
+    uint64_t cumulativeConfigurations = 0;
+    uint64_t skippedConfigurations = 0;
+
+    for (const auto& child : m_Children)
+    {
+        cumulativeConfigurations += child->GetConfigurationCount();
+
+        if (index <= cumulativeConfigurations)
+        {
+            child->GatherValuesForIndex(index - skippedConfigurations, values);
+            return;
+        }
+
+        skippedConfigurations = cumulativeConfigurations;
+    }
+}
+
 void ConfigurationNode::AddChild(const uint64_t value)
 {
     m_Children.push_back(std::make_unique<ConfigurationNode>(*this, value));
