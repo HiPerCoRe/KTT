@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <Utility/StlHelpers.h>
 
 namespace ktt
