@@ -30,10 +30,10 @@ public:
     void OnReset() override;
 
     void CalculateNextConfiguration(const KernelResult& previousResult) override;
-    const KernelConfiguration& GetCurrentConfiguration() const override;
+    KernelConfiguration GetCurrentConfiguration() const override;
 
 private:
-    size_t m_Index;
+    uint64_t m_Index;
     size_t m_VisitedStatesCount;
     size_t m_OriginState;
     size_t m_CurrentState;

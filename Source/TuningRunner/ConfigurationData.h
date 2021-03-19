@@ -26,12 +26,11 @@ public:
     uint64_t GetExploredConfigurationCountInGroup() const;
     bool IsProcessed() const;
     const KernelParameterGroup& GetCurrentGroup() const;
-    const KernelConfiguration& GetCurrentConfiguration() const;
-    const KernelConfiguration& GetBestConfiguration() const;
+    KernelConfiguration GetCurrentConfiguration() const;
+    KernelConfiguration GetBestConfiguration() const;
 
 private:
     std::vector<KernelParameterGroup> m_Groups;
-    std::vector<KernelConfiguration> m_Configurations;
     std::unique_ptr<ConfigurationTree> m_Tree;
     std::multimap<Nanoseconds, KernelConfiguration> m_ProcessedConfigurations;
     const DeviceInfo& m_DeviceInfo;

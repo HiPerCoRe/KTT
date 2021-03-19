@@ -82,13 +82,13 @@ uint64_t ConfigurationManager::GetExploredConfigurationCountInGroup(const Kernel
     return m_ConfigurationData.find(id)->second->GetExploredConfigurationCountInGroup();
 }
 
-const KernelConfiguration& ConfigurationManager::GetCurrentConfiguration(const KernelId id) const
+KernelConfiguration ConfigurationManager::GetCurrentConfiguration(const KernelId id) const
 {
     KttAssert(HasData(id), "Current configuration can only be retrieved for kernels with initialized configuration data");
     return m_ConfigurationData.find(id)->second->GetCurrentConfiguration();
 }
 
-const KernelConfiguration& ConfigurationManager::GetBestConfiguration(const KernelId id) const
+KernelConfiguration ConfigurationManager::GetBestConfiguration(const KernelId id) const
 {
     KttAssert(HasData(id), "Best configuration can only be retrieved for kernels with initialized configuration data");
     return m_ConfigurationData.find(id)->second->GetBestConfiguration();

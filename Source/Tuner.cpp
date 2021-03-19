@@ -382,7 +382,7 @@ void Tuner::ClearData(const KernelId id)
     }
 }
 
-const KernelConfiguration& Tuner::GetBestConfiguration(const KernelId id) const
+KernelConfiguration Tuner::GetBestConfiguration(const KernelId id) const
 {
     try
     {

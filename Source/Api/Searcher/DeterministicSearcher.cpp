@@ -18,9 +18,9 @@ void DeterministicSearcher::CalculateNextConfiguration([[maybe_unused]] const Ke
     ++m_Index;
 }
 
-const KernelConfiguration& DeterministicSearcher::GetCurrentConfiguration() const
+KernelConfiguration DeterministicSearcher::GetCurrentConfiguration() const
 {
-    return GetConfigurations()[m_Index];
+    return GetConfiguration(m_Index);
 }
 
 } // namespace ktt

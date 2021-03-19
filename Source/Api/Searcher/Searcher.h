@@ -10,6 +10,8 @@
 namespace ktt
 {
 
+class ConfigurationTree;
+
 /** @class Searcher
   * Class which is used to decide which kernel configuration will be run next during the kernel tuning process.
   */
@@ -40,22 +42,30 @@ public:
       */
     virtual void CalculateNextConfiguration(const KernelResult& previousResult) = 0;
 
-    /** @fn virtual const KernelConfiguration& GetCurrentConfiguration() const = 0
+    /** @fn virtual KernelConfiguration GetCurrentConfiguration() const = 0
       * Returns current kernel configuration.
       * @return Current configuration.
       */
-    virtual const KernelConfiguration& GetCurrentConfiguration() const = 0;
+    virtual KernelConfiguration GetCurrentConfiguration() const = 0;
 
     /** @fn Searcher()
       * Default searcher constructor. Should be called from inheriting searcher's constructor.
       */
     Searcher();
 
-    /** @fn const std::vector<KernelConfiguration>& GetConfigurations() const
-      * Returns all configurations which can be explored for corresponding kernel.
-      * @return All configurations which can be explored.
+    /** @fn KernelConfiguration GetConfiguration(const uint64_t index) const
+      * Returns configuration with the specified index.
+      * @param index Index of the configuration that should be retrieved. The index must be less than the count returned by
+      * GetConfigurationsCount method.
+      * @return Configuration with the specified index.
       */
-    const std::vector<KernelConfiguration>& GetConfigurations() const;
+    KernelConfiguration GetConfiguration(const uint64_t index) const;
+
+    /** @fn uint64_t GetConfigurationsCount() const
+      * Returns total number of valid kernel configurations.
+      * @return Number of valid kernel configurations.
+      */
+    uint64_t GetConfigurationsCount() const;
 
     /** @fn bool IsInitialized() const
       * Returns whether searcher is initialized.
@@ -63,19 +73,19 @@ public:
       */
     bool IsInitialized() const;
 
-    /** @fn void Initialize(const std::vector<KernelConfiguration>& configurations)
-      * Initializes searcher with all configurations which can be explored for corresponding kernel.
-      * @param configurations Vector of all valid kernel configurations. See KernelConfiguration for more information.
+    /** @fn void Initialize(const ConfigurationTree& tree)
+      * Initializes searcher with the tree of configurations which can be explored for corresponding kernel.
+      * @param tree Tree of configurations which can be explored
       */
-    void Initialize(const std::vector<KernelConfiguration>& configurations);
+    void Initialize(const ConfigurationTree& tree);
 
     /** @fn void Reset()
-      * Resets searcher to initial state and clears configurations.
+      * Resets searcher to initial state and clears configuration tree.
       */
     void Reset();
 
 private:
-    const std::vector<KernelConfiguration>* m_Configurations;
+    const ConfigurationTree* m_Tree;
 };
 
 } // namespace ktt

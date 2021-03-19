@@ -27,7 +27,7 @@ public:
 
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     void ClearData(const KernelId id);
-    const KernelConfiguration& GetBestConfiguration(const KernelId id) const;
+    KernelConfiguration GetBestConfiguration(const KernelId id) const;
 
 private:
     KernelRunner& m_KernelRunner;

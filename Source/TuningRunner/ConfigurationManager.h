@@ -29,8 +29,8 @@ public:
     bool IsDataProcessed(const KernelId id) const;
     uint64_t GetConfigurationCountInGroup(const KernelId id) const;
     uint64_t GetExploredConfigurationCountInGroup(const KernelId id) const;
-    const KernelConfiguration& GetCurrentConfiguration(const KernelId id) const;
-    const KernelConfiguration& GetBestConfiguration(const KernelId id) const;
+    KernelConfiguration GetCurrentConfiguration(const KernelId id) const;
+    KernelConfiguration GetBestConfiguration(const KernelId id) const;
 
 private:
     DeviceInfo m_DeviceInfo;

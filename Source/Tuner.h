@@ -452,13 +452,13 @@ public:
       */
     void ClearData(const KernelId id);
 
-    /** @fn const KernelConfiguration& GetBestConfiguration(const KernelId id) const
+    /** @fn KernelConfiguration GetBestConfiguration(const KernelId id) const
       * Returns the best configuration found for specified kernel. Valid configuration will be returned only if kernel tuning was
       * already performed for the corresponding kernel.
       * @param id Id of kernel for which the best configuration will be returned.
       * @return Best configuration for the specified kernel. See KernelConfiguration for more information.
       */
-    const KernelConfiguration& GetBestConfiguration(const KernelId id) const;
+    KernelConfiguration GetBestConfiguration(const KernelId id) const;
 
     /** @fn KernelConfiguration CreateConfiguration(const KernelId id, const ParameterInput& parameters) const
       * Creates and returns configuration for the specified kernel based on provided parameters and their values.

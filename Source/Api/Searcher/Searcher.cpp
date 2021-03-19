@@ -1,5 +1,6 @@
 #include <Api/Searcher/Searcher.h>
-#include <Api/KttException.h>
+#include <TuningRunner/ConfigurationTree.h>
+#include <Utility/ErrorHandling/Assert.h>
 
 namespace ktt
 {
@@ -11,34 +12,36 @@ void Searcher::OnReset()
 {}
 
 Searcher::Searcher() :
-    m_Configurations(nullptr)
+    m_Tree(nullptr)
 {}
 
-const std::vector<KernelConfiguration>& Searcher::GetConfigurations() const
+KernelConfiguration Searcher::GetConfiguration(const uint64_t index) const
 {
-    return *m_Configurations;
+    return m_Tree->GetConfiguration(index);
+}
+
+uint64_t Searcher::GetConfigurationsCount() const
+{
+    return m_Tree->GetConfigurationsCount();
 }
 
 bool Searcher::IsInitialized() const
 {
-    return m_Configurations != nullptr;
+    return m_Tree != nullptr;
 }
 
-void Searcher::Initialize(const std::vector<KernelConfiguration>& configurations)
+void Searcher::Initialize(const ConfigurationTree& tree)
 {
-    if (configurations.empty())
-    {
-        throw KttException("No configurations provided for searcher");
-    }
+    KttAssert(tree.IsBuilt(), "Invalid configuration tree passed to searcher");
 
-    m_Configurations = &configurations;
+    m_Tree = &tree;
     OnInitialize();
 }
 
 void Searcher::Reset()
 {
     OnReset();
-    m_Configurations = nullptr;
+    m_Tree = nullptr;
 }
 
 } // namespace ktt

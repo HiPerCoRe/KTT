@@ -13,7 +13,7 @@ RandomSearcher::RandomSearcher() :
 
 void RandomSearcher::OnInitialize()
 {
-    m_ConfigurationIndices.resize(GetConfigurations().size());
+    m_ConfigurationIndices.resize(GetConfigurationsCount());
 
     for (size_t i = 0; i < m_ConfigurationIndices.size(); ++i)
     {
@@ -36,10 +36,10 @@ void RandomSearcher::CalculateNextConfiguration([[maybe_unused]] const KernelRes
     ++m_Index;
 }
 
-const KernelConfiguration& RandomSearcher::GetCurrentConfiguration() const
+KernelConfiguration RandomSearcher::GetCurrentConfiguration() const
 {
-    const size_t currentIndex = m_ConfigurationIndices[m_Index];
-    return GetConfigurations()[currentIndex];
+    const uint64_t currentIndex = m_ConfigurationIndices[m_Index];
+    return GetConfiguration(currentIndex);
 }
 
 } // namespace ktt

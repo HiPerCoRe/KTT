@@ -72,12 +72,17 @@ void ConfigurationTree::Clear()
     m_IsBuilt = false;
 }
 
+bool ConfigurationTree::IsBuilt() const
+{
+    return m_IsBuilt;
+}
+
 uint64_t ConfigurationTree::GetDepth() const
 {
     return m_ParameterToLevel.size();
 }
 
-uint64_t ConfigurationTree::GetConfigurationCount() const
+uint64_t ConfigurationTree::GetConfigurationsCount() const
 {
     KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
     return m_Root->GetConfigurationsCount();
@@ -87,7 +92,7 @@ KernelConfiguration ConfigurationTree::GetConfiguration(const uint64_t index) co
 {
     KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
     
-    if (index >= GetConfigurationCount())
+    if (index >= GetConfigurationsCount())
     {
         throw KttException("Invalid configuration index");
     }

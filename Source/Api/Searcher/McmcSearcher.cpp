@@ -23,8 +23,8 @@ McmcSearcher::McmcSearcher(const std::vector<double>& start) :
 
 void McmcSearcher::OnInitialize()
 {
-    m_IntDistribution = std::uniform_int_distribution<size_t>(0, GetConfigurations().size() - 1),
-    m_ExecutionTimes.resize(GetConfigurations().size(), std::numeric_limits<double>::max());
+    m_IntDistribution = std::uniform_int_distribution<size_t>(0, GetConfigurationsCount() - 1),
+    m_ExecutionTimes.resize(GetConfigurationsCount(), std::numeric_limits<double>::max());
 
     size_t initialState = 0;
 
@@ -42,7 +42,7 @@ void McmcSearcher::OnInitialize()
     m_CurrentState = initialState;
     m_Index = initialState;
 
-    for (size_t i = 0; i < GetConfigurations().size(); ++i)
+    for (size_t i = 0; i < GetConfigurationsCount(); ++i)
     {
         m_UnexploredIndices.insert(i);
     } 
@@ -150,22 +150,24 @@ void McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
     m_Index = m_CurrentState;
 }
 
-const KernelConfiguration& McmcSearcher::GetCurrentConfiguration() const
+KernelConfiguration McmcSearcher::GetCurrentConfiguration() const
 {
-    return GetConfigurations()[m_Index];
+    return GetConfiguration(m_Index);
 }
 
 std::vector<size_t> McmcSearcher::GetNeighbours(const size_t referenceId) const
 {
     std::vector<size_t> neighbours;
-    const auto& referencePairs = GetConfigurations()[referenceId].GetPairs();
+    const auto referenceConfiguration = GetConfiguration(referenceId);
+    const auto& referencePairs = referenceConfiguration.GetPairs();
 
     for (const auto i : m_UnexploredIndices)
     {
         size_t differences = 0;
         size_t settingId = 0;
+        const auto configuration = GetConfiguration(i);
 
-        for (const auto& parameter : GetConfigurations()[i].GetPairs())
+        for (const auto& parameter : configuration.GetPairs())
         {
             if (!parameter.HasSameValue(referencePairs[settingId]))
             {
@@ -190,8 +192,9 @@ size_t McmcSearcher::SearchStateIndex(const std::vector<double>& state) const
     size_t ret = 0;
     bool match = true;
 
-    for (const auto& configuration : GetConfigurations())
+    for (uint64_t index = 0; index < GetConfigurationsCount(); ++index)
     {
+        const auto configuration = GetConfiguration(index);
         match = true;
 
         for (size_t i = 0; i < states; ++i)

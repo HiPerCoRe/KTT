@@ -36,7 +36,7 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
     ++m_ExploredConfigurations;
     m_ProcessedConfigurations.insert(std::make_pair(previousResult.GetTotalDuration(), GetCurrentConfiguration()));
     
-    if (m_ExploredConfigurations < m_Configurations.size())
+    if (m_ExploredConfigurations < static_cast<size_t>(GetConfigurationCountInGroup()))
     {
         m_Searcher.CalculateNextConfiguration(previousResult);
         return true;
@@ -47,7 +47,7 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
 
 uint64_t ConfigurationData::GetConfigurationCountInGroup() const
 {
-    return static_cast<uint64_t>(m_Configurations.size());
+    return m_Tree->GetConfigurationsCount();
 }
 
 uint64_t ConfigurationData::GetExploredConfigurationCountInGroup() const
@@ -66,18 +66,17 @@ const KernelParameterGroup& ConfigurationData::GetCurrentGroup() const
     return m_Groups[m_CurrentGroup];
 }
 
-const KernelConfiguration& ConfigurationData::GetCurrentConfiguration() const
+KernelConfiguration ConfigurationData::GetCurrentConfiguration() const
 {
-    if (m_Configurations.empty() || m_ExploredConfigurations >= m_Configurations.size())
+    if (m_Tree == nullptr || m_ExploredConfigurations >= static_cast<size_t>(GetConfigurationCountInGroup()))
     {
-        static KernelConfiguration defaultConfiguration;
-        return defaultConfiguration;
+        return KernelConfiguration();
     }
 
     return m_Searcher.GetCurrentConfiguration();
 }
 
-const KernelConfiguration& ConfigurationData::GetBestConfiguration() const
+KernelConfiguration ConfigurationData::GetBestConfiguration() const
 {
     if (!m_ProcessedConfigurations.empty())
     {
@@ -91,7 +90,7 @@ const KernelConfiguration& ConfigurationData::GetBestConfiguration() const
 bool ConfigurationData::InitializeNextGroup(const bool isInitialGroup)
 {
     m_Searcher.Reset();
-    m_Configurations.clear();
+    m_Tree.reset();
     m_ExploredConfigurations = 0;
 
     if (!isInitialGroup)
@@ -110,10 +109,8 @@ bool ConfigurationData::InitializeNextGroup(const bool isInitialGroup)
     Timer timer;
     timer.Start();
 
-    std::vector<ParameterPair> initialPairs;
-    ComputeConfigurations(group, 0, initialPairs, m_Configurations);
-    //m_Tree = std::make_unique<ConfigurationTree>();
-    //m_Tree->Build(group);
+    m_Tree = std::make_unique<ConfigurationTree>();
+    m_Tree->Build(group);
 
     timer.Stop();
 
@@ -121,7 +118,7 @@ bool ConfigurationData::InitializeNextGroup(const bool isInitialGroup)
     const uint64_t elapsedTime = time.ConvertFromNanoseconds(timer.GetElapsedTime());
     Logger::LogInfo("Configurations were generated in " + std::to_string(elapsedTime) + time.GetUnitTag());
 
-    m_Searcher.Initialize(m_Configurations);
+    m_Searcher.Initialize(*m_Tree);
     return true;
 }
 

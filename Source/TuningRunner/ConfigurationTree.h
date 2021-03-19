@@ -23,8 +23,9 @@ public:
     void Build(const KernelParameterGroup& group);
     void Clear();
 
+    bool IsBuilt() const;
     uint64_t GetDepth() const;
-    uint64_t GetConfigurationCount() const;
+    uint64_t GetConfigurationsCount() const;
     KernelConfiguration GetConfiguration(const uint64_t index) const;
 
 private:

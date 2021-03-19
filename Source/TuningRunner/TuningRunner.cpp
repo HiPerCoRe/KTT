@@ -74,16 +74,16 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
         m_ConfigurationManager->InitializeData(kernel);
     }
 
-    const KernelConfiguration* configuration;
+    KernelConfiguration configuration;
 
     if (m_ConfigurationManager->IsDataProcessed(id))
     {
-        configuration = &m_ConfigurationManager->GetBestConfiguration(id);
+        configuration = m_ConfigurationManager->GetBestConfiguration(id);
         Logger::LogInfo("Launching the best configuration for kernel " + kernel.GetName());
     }
     else
     {
-        configuration = &m_ConfigurationManager->GetCurrentConfiguration(id);
+        configuration = m_ConfigurationManager->GetCurrentConfiguration(id);
 
         const uint64_t configurationNumber = m_ConfigurationManager->GetExploredConfigurationCountInGroup(id) + 1;
         const uint64_t configurationCount = m_ConfigurationManager->GetConfigurationCountInGroup(id);
@@ -91,7 +91,7 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
             + " in the current group for kernel " + kernel.GetName());
     }
 
-    KernelResult result = m_KernelRunner.RunKernel(kernel, *configuration, mode, output);
+    KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, mode, output);
 
     if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns())
     {
@@ -120,7 +120,7 @@ void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<Kernel
             break;
         }
 
-        const auto& currentConfiguration = m_ConfigurationManager->GetCurrentConfiguration(id);
+        const auto currentConfiguration = m_ConfigurationManager->GetCurrentConfiguration(id);
 
         try
         {
@@ -150,7 +150,7 @@ void TuningRunner::ClearData(const KernelId id)
     m_ConfigurationManager->ClearData(id);
 }
 
-const KernelConfiguration& TuningRunner::GetBestConfiguration(const KernelId id) const
+KernelConfiguration TuningRunner::GetBestConfiguration(const KernelId id) const
 {
     return m_ConfigurationManager->GetBestConfiguration(id);
 }
