@@ -8,21 +8,19 @@ namespace ktt
 ConfigurationNode::ConfigurationNode() :
     m_Parent(nullptr),
     m_Index(0),
-    m_ConfigurationCount(0)
+    m_ConfigurationsCount(0)
 {}
 
 ConfigurationNode::ConfigurationNode(const ConfigurationNode& parent, const size_t index) :
     m_Parent(&parent),
     m_Index(index),
-    m_ConfigurationCount(0)
+    m_ConfigurationsCount(0)
 {}
 
 void ConfigurationNode::AddPaths(const std::vector<size_t>& indices, const size_t indicesIndex,
     const std::vector<uint64_t>& levels, const size_t levelsIndex, const std::vector<uint64_t>& lockedLevels)
 {
-    const uint64_t level = GetLevel();
-
-    if (levels.size() <= levelsIndex || levels[levelsIndex] - 1 != level)
+    if (HasBroadcastLevel(levels, levelsIndex))
     {
         for (auto& child : m_Children)
         {
@@ -36,6 +34,8 @@ void ConfigurationNode::AddPaths(const std::vector<size_t>& indices, const size_
 
     if (!HasChildWithIndex(index))
     {
+        const uint64_t level = GetLevel();
+
         if (ContainsElement(lockedLevels, level + 1))
         {
             return;
@@ -54,9 +54,7 @@ void ConfigurationNode::AddPaths(const std::vector<size_t>& indices, const size_
 void ConfigurationNode::PrunePaths(const std::vector<size_t>& indices, const size_t indicesIndex,
     const std::vector<uint64_t>& levels, const size_t levelsIndex)
 {
-    const uint64_t level = GetLevel();
-
-    if (levels.size() <= levelsIndex || levels[levelsIndex] - 1 != level)
+    if (HasBroadcastLevel(levels, levelsIndex))
     {
         std::vector<ConfigurationNode*> toErase;
 
@@ -96,11 +94,11 @@ void ConfigurationNode::PrunePaths(const std::vector<size_t>& indices, const siz
     }
 }
 
-void ConfigurationNode::ComputeConfigurationCounts()
+void ConfigurationNode::ComputeConfigurationsCount()
 {
     if (m_Children.empty())
     {
-        m_ConfigurationCount = 1;
+        m_ConfigurationsCount = 1;
         return;
     }
 
@@ -108,11 +106,36 @@ void ConfigurationNode::ComputeConfigurationCounts()
 
     for (const auto& child : m_Children)
     {
-        child->ComputeConfigurationCounts();
-        count += child->GetConfigurationCount();
+        child->ComputeConfigurationsCount();
+        count += child->GetConfigurationsCount();
     }
 
-    m_ConfigurationCount = count;
+    m_ConfigurationsCount = count;
+}
+
+void ConfigurationNode::GatherParameterIndices(const uint64_t index, std::vector<size_t>& indices) const
+{
+    indices.push_back(m_Index);
+
+    if (m_Children.empty())
+    {
+        KttAssert(index == 1, "Leaf nodes should only be referenced with index 1");
+        return;
+    }
+
+    uint64_t cumulativeConfigurations = 0;
+
+    for (const auto& child : m_Children)
+    {
+        const uint64_t skippedConfigurations = cumulativeConfigurations;
+        cumulativeConfigurations += child->GetConfigurationsCount();
+
+        if (index <= cumulativeConfigurations)
+        {
+            child->GatherParameterIndices(index - skippedConfigurations, indices);
+            return;
+        }
+    }
 }
 
 const ConfigurationNode* ConfigurationNode::GetParent() const
@@ -144,34 +167,9 @@ size_t ConfigurationNode::GetChildrenCount() const
     return m_Children.size();
 }
 
-uint64_t ConfigurationNode::GetConfigurationCount() const
+uint64_t ConfigurationNode::GetConfigurationsCount() const
 {
-    return m_ConfigurationCount;
-}
-
-void ConfigurationNode::GatherParameterIndices(const uint64_t index, std::vector<size_t>& indices) const
-{
-    indices.push_back(m_Index);
-
-    if (m_Children.empty())
-    {
-        KttAssert(index == 1, "Leaf nodes should only be referenced with index 1");
-        return;
-    }
-
-    uint64_t cumulativeConfigurations = 0;
-
-    for (const auto& child : m_Children)
-    {
-        const uint64_t skippedConfigurations = cumulativeConfigurations;
-        cumulativeConfigurations += child->GetConfigurationCount();
-
-        if (index <= cumulativeConfigurations)
-        {
-            child->GatherParameterIndices(index - skippedConfigurations, indices);
-            return;
-        }
-    }
+    return m_ConfigurationsCount;
 }
 
 void ConfigurationNode::AddChild(const size_t index)
@@ -179,31 +177,36 @@ void ConfigurationNode::AddChild(const size_t index)
     m_Children.push_back(std::make_unique<ConfigurationNode>(*this, index));
 }
 
-bool ConfigurationNode::HasChildWithIndex(const size_t index)
+bool ConfigurationNode::HasChildWithIndex(const size_t index) const
 {
-    for (auto& child : m_Children)
-    {
-        if (child->GetIndex() == index)
-        {
-            return true;
-        }
-    }
-
-    return false;
+    return GetChildWithIndexPointer(index) != nullptr;
 }
 
-ConfigurationNode& ConfigurationNode::GetChildWithIndex(const size_t index)
+ConfigurationNode& ConfigurationNode::GetChildWithIndex(const size_t index) const
+{
+    auto* child = GetChildWithIndexPointer(index);
+    KttAssert(child != nullptr, "No child with given index found");
+    return *child;
+}
+
+ConfigurationNode* ConfigurationNode::GetChildWithIndexPointer(const size_t index) const
 {
     for (auto& child : m_Children)
     {
         if (child->GetIndex() == index)
         {
-            return *child;
+            return child.get();
         }
     }
 
-    KttError("No child with given value found");
-    return **m_Children.begin();
+    return nullptr;
+}
+
+bool ConfigurationNode::HasBroadcastLevel(const std::vector<uint64_t>& levels, const size_t levelsIndex) const
+{
+    // Node has broadcast level if its level is not included in the levels vector.
+    const uint64_t level = GetLevel();
+    return levels.size() <= levelsIndex || levels[levelsIndex] - 1 != level;
 }
 
 } // namespace ktt

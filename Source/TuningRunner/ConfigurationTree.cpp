@@ -61,7 +61,7 @@ void ConfigurationTree::Build(const KernelParameterGroup& group)
         processedParameters.insert(parameter->GetName());
     }
 
-    m_Root->ComputeConfigurationCounts();
+    m_Root->ComputeConfigurationsCount();
     m_IsBuilt = true;
 }
 
@@ -80,7 +80,7 @@ uint64_t ConfigurationTree::GetDepth() const
 uint64_t ConfigurationTree::GetConfigurationCount() const
 {
     KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
-    return m_Root->GetConfigurationCount();
+    return m_Root->GetConfigurationsCount();
 }
 
 KernelConfiguration ConfigurationTree::GetConfiguration(const uint64_t index) const
@@ -115,22 +115,20 @@ void ConfigurationTree::AddPaths(const std::vector<size_t>& indices, const std::
     std::set<std::string>& lockedParameters)
 {
     std::vector<uint64_t> levels;
-    std::vector<uint64_t> lockedLevels;
-    const auto finalIndices = PreprocessIndices(indices, parameters, lockedParameters, levels, lockedLevels);
+    const auto finalIndices = PreprocessIndices(indices, parameters, levels);
+    const auto lockedLevels = GetLockedLevels(lockedParameters);
     m_Root->AddPaths(finalIndices, 0, levels, 0, lockedLevels);
 }
 
 void ConfigurationTree::PrunePaths(const std::vector<size_t>& indices, const std::vector<const KernelParameter*>& parameters)
 {
     std::vector<uint64_t> levels;
-    std::vector<uint64_t> lockedLevels;
-    const auto finalIndices = PreprocessIndices(indices, parameters, {}, levels, lockedLevels);
+    const auto finalIndices = PreprocessIndices(indices, parameters, levels);
     m_Root->PrunePaths(finalIndices, 0, levels, 0);
 }
 
 std::vector<size_t> ConfigurationTree::PreprocessIndices(const std::vector<size_t>& indices,
-    const std::vector<const KernelParameter*>& parameters, const std::set<std::string>& lockedParameters,
-    std::vector<uint64_t>& levels, std::vector<uint64_t>& lockedLevels)
+    const std::vector<const KernelParameter*>& parameters, std::vector<uint64_t>& levels)
 {
     auto parameterIndices = MergeParametersWithIndices(parameters, indices);
 
@@ -158,19 +156,26 @@ std::vector<size_t> ConfigurationTree::PreprocessIndices(const std::vector<size_
         levels.push_back(m_ParameterToLevel[pair.first]);
     }
 
+    return finalIndices;
+}
+
+std::vector<uint64_t> ConfigurationTree::GetLockedLevels(const std::set<std::string>& lockedParameters)
+{
+    std::vector<uint64_t> result;
+
     for (const auto& parameterName : lockedParameters)
     {
         for (const auto& pair : m_ParameterToLevel)
         {
             if (pair.first->GetName() == parameterName)
             {
-                lockedLevels.push_back(pair.second);
+                result.push_back(pair.second);
                 break;
             }
         }
     }
 
-    return finalIndices;
+    return result;
 }
 
 std::vector<std::pair<const KernelParameter*, size_t>> ConfigurationTree::MergeParametersWithIndices(

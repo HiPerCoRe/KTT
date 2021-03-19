@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <Api/Configuration/KernelConfiguration.h>
-#include <Api/Configuration/ParameterPair.h>
 #include <Kernel/KernelParameterGroup.h>
 #include <TuningRunner/ConfigurationNode.h>
 
@@ -37,7 +36,8 @@ private:
         std::set<std::string>& lockedParameters);
     void PrunePaths(const std::vector<size_t>& indices, const std::vector<const KernelParameter*>& parameters);
     std::vector<size_t> PreprocessIndices(const std::vector<size_t>& indices, const std::vector<const KernelParameter*>& parameters,
-        const std::set<std::string>& lockedParameters, std::vector<uint64_t>& levels, std::vector<uint64_t>& lockedLevels);
+        std::vector<uint64_t>& levels);
+    std::vector<uint64_t> GetLockedLevels(const std::set<std::string>& lockedParameters);
     static std::vector<std::pair<const KernelParameter*, size_t>> MergeParametersWithIndices(
         const std::vector<const KernelParameter*>& parameters, const std::vector<size_t>& indices);
 };
