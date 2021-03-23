@@ -426,6 +426,20 @@ project "BicgOpenCl"
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
+project "ClTuneConvolutionOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/ClTuneConvolution/*.cpp", "Examples/ClTuneConvolution/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "ClTuneGemmOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/ClTuneGemm/*.cpp", "Examples/ClTuneGemm/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
 project "Convolution3dOpenCl"
     kind "ConsoleApp"
     files {"Examples/Convolution3d/*.cpp", "Examples/Convolution3d/*.cl"}
@@ -496,6 +510,20 @@ if cudaProjects then
 project "BicgCuda"
     kind "ConsoleApp"
     files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "ClTuneConvolutionCuda"
+    kind "ConsoleApp"
+    files {"Examples/ClTuneConvolution/*.cpp", "Examples/ClTuneConvolution/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "ClTuneGemmCuda"
+    kind "ConsoleApp"
+    files {"Examples/ClTuneGemm/*.cpp", "Examples/ClTuneGemm/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}

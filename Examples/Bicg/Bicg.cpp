@@ -21,7 +21,7 @@ const std::string kernelPrefix = "../";
     const auto computeApi = ktt::ComputeApi::OpenCL;
 #endif
 
-	// Toggle rapid test (e.g., disable output validation).
+// Toggle rapid test (e.g., disable output validation).
 const bool rapidTest = false;
 
 // Toggle kernel profiling.

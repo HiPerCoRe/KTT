@@ -166,7 +166,7 @@ int main(int argc, char **argv)
     tuner.AddParameter(kernel, "WPTY", std::vector<uint64_t>{1, 2, 4, 8});
     tuner.AddParameter(kernel, "WPTZ", std::vector<uint64_t>{1, 2, 4, 8});
     tuner.AddParameter(kernel, "VECTOR", std::vector<uint64_t>{1, 2, 4});
-    tuner.AddParameter(kernel, "UNROLL_FACTOR", std::vector<uint64_t>{1, fs});
+    tuner.AddParameter(kernel, "UNROLL_FACTOR", std::vector<uint64_t>{1, static_cast<uint64_t>(fs)});
     tuner.AddParameter(kernel, "CONSTANT_COEFF", std::vector<uint64_t>{0, 1});
     tuner.AddParameter(kernel, "CACHE_WORK_TO_REGS", std::vector<uint64_t>{0, 1});
     tuner.AddParameter(kernel, "REVERSE_LOOP_ORDER", std::vector<uint64_t>{0, 1});
