@@ -46,6 +46,11 @@ CuptiInstance::CuptiInstance(const CudaContext& context) :
         m_Metrics.push_back(std::make_unique<CuptiMetric>(id, metric));
     }
 
+    if (metricIds.empty())
+    {
+        throw KttException("No valid metrics provided for the current device");
+    }
+
     CheckError(cuptiMetricCreateEventGroupSets(context.GetContext(), sizeof(CUpti_MetricID) * metricIds.size(), metricIds.data(),
         &m_EventSets), "cuptiMetricCreateEventGroupSets");
     m_TotalPassCount = static_cast<uint64_t>(m_EventSets->numSets);

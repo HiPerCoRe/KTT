@@ -4,7 +4,7 @@
 namespace ktt
 {
 
-std::pair<TunerMetadata, std::vector<KernelResult>> XmlDeserializer::DeserializeResults(std::istream& source)
+std::pair<TunerMetadata, std::vector<KernelResult>> XmlDeserializer::DeserializeResults(UserData& data, std::istream& source)
 {
     pugi::xml_document document;
     document.load(source);
@@ -17,6 +17,13 @@ std::pair<TunerMetadata, std::vector<KernelResult>> XmlDeserializer::Deserialize
     for (const auto result : root.child("Results").children())
     {
         results.push_back(ParseKernelResult(result));
+    }
+
+    const auto userData = root.child("UserData");
+
+    if (!userData.empty())
+    {
+        data = ParseUserData(userData);
     }
 
     return std::make_pair(metadata, results);

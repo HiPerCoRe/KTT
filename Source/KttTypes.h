@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
+#include <map>
 #include <string>
 #include <utility>
 #include <variant>
@@ -50,6 +51,11 @@ using ArgumentId = uint64_t;
   * Data type used for creating and retrieving specific kernel configurations from KTT.
   */
 using ParameterInput = std::vector<std::pair<std::string, std::variant<uint64_t, double>>>;
+
+/** @typedef UserData
+  * Custom user data which can be saved or loaded together with tuning results.
+  */
+using UserData = std::map<std::string, std::string>;
 
 /** @typedef Nanoseconds
   * Data type for storing elapsed times in KTT.

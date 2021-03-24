@@ -441,11 +441,12 @@ void Tuner::SetTimeUnit(const TimeUnit unit)
     TunerCore::SetTimeUnit(unit);
 }
 
-void Tuner::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const
+void Tuner::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format,
+    const UserData& data) const
 {
     try
     {
-        m_Tuner->SaveResults(results, filePath, format);
+        m_Tuner->SaveResults(results, filePath, format, data);
     }
     catch (const KttException& exception)
     {
@@ -455,9 +456,15 @@ void Tuner::SaveResults(const std::vector<KernelResult>& results, const std::str
 
 std::vector<KernelResult> Tuner::LoadResults(const std::string& filePath, const OutputFormat format) const
 {
+    [[maybe_unused]] UserData emptyData;
+    return LoadResults(filePath, format, emptyData);
+}
+
+std::vector<KernelResult> Tuner::LoadResults(const std::string& filePath, const OutputFormat format, UserData& data) const
+{
     try
     {
-        return m_Tuner->LoadResults(filePath, format);
+        return m_Tuner->LoadResults(filePath, format, data);
     }
     catch (const KttException& exception)
     {

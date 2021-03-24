@@ -6,7 +6,8 @@
 namespace ktt
 {
 
-void XmlSerializer::SerializeResults(const TunerMetadata& metadata, const std::vector<KernelResult>& results, std::ostream& target)
+void XmlSerializer::SerializeResults(const TunerMetadata& metadata, const std::vector<KernelResult>& results, const UserData& data,
+    std::ostream& target)
 {
     pugi::xml_document document;
     pugi::xml_node root = document.append_child("TuningData");
@@ -17,6 +18,11 @@ void XmlSerializer::SerializeResults(const TunerMetadata& metadata, const std::v
     for (const auto& result : results)
     {
         AppendKernelResult(resultsNode, result);
+    }
+
+    if (!data.empty())
+    {
+        AppendUserData(root, data);
     }
 
     document.save(target);

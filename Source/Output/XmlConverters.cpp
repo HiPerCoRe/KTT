@@ -196,6 +196,30 @@ TunerMetadata ParseMetadata(const pugi::xml_node node)
     return metadata;
 }
 
+void AppendUserData(pugi::xml_node parent, const UserData& data)
+{
+    pugi::xml_node node = parent.append_child("UserData");
+
+    for (const auto& pair : data)
+    {
+        pugi::xml_node pairNode = node.append_child("Pair");
+        pairNode.append_attribute("Key").set_value(pair.first.c_str());
+        pairNode.append_attribute("Value").set_value(pair.second.c_str());
+    }
+}
+
+UserData ParseUserData(const pugi::xml_node node)
+{
+    UserData data;
+
+    for (const auto entry : node.children())
+    {
+        data[entry.attribute("Key").value()] = entry.attribute("Value").value();
+    }
+
+    return data;
+}
+
 void AppendPair(pugi::xml_node parent, const ParameterPair& pair)
 {
     pugi::xml_node node = parent.append_child("Pair");

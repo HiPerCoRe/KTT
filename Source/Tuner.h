@@ -494,14 +494,17 @@ public:
       */
     static void SetTimeUnit(const TimeUnit unit);
 
-    /** @fn void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const
+    /** @fn void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format,
+      * const UserData& data = {}) const
       * Saves specified kernel results to the specified file.
       * @param results Results which will be saved.
       * @param filePath File where the results will be saved. The file extension is added automatically based on the specified
       * format.
       * @param format Format in which the results are saved. See ::OutputFormat for more information.
+      * @param data User data which will be saved into the file together with results.
       */
-    void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const;
+    void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format,
+        const UserData& data = {}) const;
 
     /** @fn std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format) const
       * Loads kernel results from the specified file. The file must be previously created by the tuner method SaveResults() with
@@ -512,6 +515,17 @@ public:
       * @return Results loaded from the file.
       */
     std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format) const;
+
+    /** @fn std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format, UserData& data) const
+      * Loads kernel results from the specified file. The file must be previously created by the tuner method SaveResults() with
+      * corresponding output format.
+      * @param filePath File from which the results will be loaded. The file extension is added automatically based on the
+      * specified format.
+      * @param format Format in which the results are stored. See ::OutputFormat for more information.
+      * @param data User data which will be loaded from the file together with results.
+      * @return Results loaded from the file.
+      */
+    std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format, UserData& data) const;
 
     /** @fn void SetProfilingCounters(const std::vector<std::string>& counters)
       * Specifies profiling counters that will be collected during kernel profiling. Note that not all profiling counters are

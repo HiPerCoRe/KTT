@@ -236,7 +236,8 @@ void TunerCore::SetTimeUnit(const TimeUnit unit)
     TimeConfiguration::GetInstance().SetTimeUnit(unit);
 }
 
-void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format) const
+void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format,
+    const UserData& data) const
 {
     if (results.empty())
     {
@@ -254,10 +255,10 @@ void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std:
 
     TunerMetadata metadata(m_ComputeApi, m_ComputeEngine->GetCurrentPlatformInfo(), m_ComputeEngine->GetCurrentDeviceInfo());
     auto serializer = CreateSerializer(format);
-    serializer->SerializeResults(metadata, results, outputStream);
+    serializer->SerializeResults(metadata, results, data, outputStream);
 }
 
-std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, const OutputFormat format) const
+std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, const OutputFormat format, UserData& data) const
 {
     const std::string file = filePath + GetFileExtension(format);
     Logger::LogInfo("Loading kernel results from file: " + file);
@@ -269,14 +270,14 @@ std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, co
     }
 
     auto deserializer = CreateDeserializer(format);
-    const auto data = deserializer->DeserializeResults(inputStream);
+    const auto pair = deserializer->DeserializeResults(data, inputStream);
 
-    if (data.first.GetTimeUnit() != TimeConfiguration::GetInstance().GetTimeUnit())
+    if (pair.first.GetTimeUnit() != TimeConfiguration::GetInstance().GetTimeUnit())
     {
         Logger::LogWarning("Loaded kernel results use different time unit than tuner");
     }
 
-    return data.second;
+    return pair.second;
 }
 
 void TunerCore::SetProfilingCounters(const std::vector<std::string>& counters)

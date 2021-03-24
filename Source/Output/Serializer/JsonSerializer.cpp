@@ -4,13 +4,19 @@
 namespace ktt
 {
 
-void JsonSerializer::SerializeResults(const TunerMetadata& metadata, const std::vector<KernelResult>& results, std::ostream& target)
+void JsonSerializer::SerializeResults(const TunerMetadata& metadata, const std::vector<KernelResult>& results, const UserData& data,
+    std::ostream& target)
 {
     json output
     {
         {"Metadata", metadata},
         {"Results", results}
     };
+
+    if (!data.empty())
+    {
+        output["UserData"] = data;
+    }
 
     target << output.dump(2);
 }

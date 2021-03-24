@@ -7,6 +7,7 @@
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Output/KernelResult.h>
 #include <Output/TunerMetadata.h>
+#include <KttTypes.h>
 
 namespace ktt
 {
@@ -23,6 +24,9 @@ ProfilingCounterType ProfilingCounterTypeFromString(const std::string& string);
 
 void AppendMetadata(pugi::xml_node parent, const TunerMetadata& metadata);
 TunerMetadata ParseMetadata(const pugi::xml_node node);
+
+void AppendUserData(pugi::xml_node parent, const UserData& data);
+UserData ParseUserData(const pugi::xml_node node);
 
 void AppendPair(pugi::xml_node parent, const ParameterPair& pair);
 ParameterPair ParsePair(const pugi::xml_node node);
