@@ -13,12 +13,10 @@
 namespace ktt
 {
 
-class DeviceInfo;
-
 class TuningRunner
 {
 public:
-    explicit TuningRunner(KernelRunner& kernelRunner, const DeviceInfo& info);
+    explicit TuningRunner(KernelRunner& kernelRunner);
 
     std::vector<KernelResult> Tune(const Kernel& kernel, std::unique_ptr<StopCondition> stopCondition);
     KernelResult TuneIteration(const Kernel& kernel, const KernelRunMode mode, const std::vector<BufferOutputDescriptor>& output,

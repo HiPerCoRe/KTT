@@ -32,8 +32,9 @@ public:
 
     /** @fn virtual void Initialize() = 0
       * Performs initialization of stop condition. Called right before the tuning process begins.
+      * @param configurationsCount Total count of generated configurations for the tuned kernel.
       */
-    virtual void Initialize() = 0;
+    virtual void Initialize(const uint64_t configurationsCount) = 0;
 
     /** @fn virtual void Update(const KernelResult& result) = 0
       * Performs update of stop condition. Called after each tested configuration.

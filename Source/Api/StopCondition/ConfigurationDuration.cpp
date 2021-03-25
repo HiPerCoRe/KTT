@@ -16,7 +16,7 @@ bool ConfigurationDuration::IsFulfilled() const
     return m_BestDuration <= m_TargetDuration;
 }
 
-void ConfigurationDuration::Initialize()
+void ConfigurationDuration::Initialize([[maybe_unused]] const uint64_t configurationsCount)
 {
     m_BestDuration = std::numeric_limits<double>::max();
 }

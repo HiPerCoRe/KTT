@@ -1,6 +1,5 @@
 #include <algorithm>
 
-#include <Api/Info/DeviceInfo.h>
 #include <Api/KttException.h>
 #include <TuningRunner/TuningRunner.h>
 #include <Utility/Logger/Logger.h>
@@ -8,24 +7,24 @@
 namespace ktt
 {
 
-TuningRunner::TuningRunner(KernelRunner& kernelRunner, const DeviceInfo& info) :
+TuningRunner::TuningRunner(KernelRunner& kernelRunner) :
     m_KernelRunner(kernelRunner),
-    m_ConfigurationManager(std::make_unique<ConfigurationManager>(info))
+    m_ConfigurationManager(std::make_unique<ConfigurationManager>())
 {}
 
 std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_ptr<StopCondition> stopCondition)
 {
     Logger::LogInfo("Starting offline tuning for kernel " + kernel.GetName());
+    m_ConfigurationManager->InitializeData(kernel);
+    const auto id = kernel.GetId();
 
     if (stopCondition != nullptr)
     {
-        stopCondition->Initialize();
+        const uint64_t configurationsCount = m_ConfigurationManager->GetTotalConfigurationsCount(id);
+        stopCondition->Initialize(configurationsCount);
     }
 
-    m_ConfigurationManager->InitializeData(kernel);
     std::vector<KernelResult> results;
-
-    const auto id = kernel.GetId();
     KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
 
     while (!m_ConfigurationManager->IsDataProcessed(id))
@@ -85,10 +84,10 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
     {
         configuration = m_ConfigurationManager->GetCurrentConfiguration(id);
 
-        const uint64_t configurationNumber = m_ConfigurationManager->GetExploredConfigurationCountInGroup(id) + 1;
-        const uint64_t configurationCount = m_ConfigurationManager->GetConfigurationCountInGroup(id);
+        const uint64_t configurationNumber = m_ConfigurationManager->GetExploredConfigurationsCount(id) + 1;
+        const uint64_t configurationCount = m_ConfigurationManager->GetTotalConfigurationsCount(id);
         Logger::LogInfo("Launching configuration " + std::to_string(configurationNumber) + " / " + std::to_string(configurationCount)
-            + " in the current group for kernel " + kernel.GetName());
+            + " for kernel " + kernel.GetName());
     }
 
     KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, mode, output);

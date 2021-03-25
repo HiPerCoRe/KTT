@@ -411,7 +411,7 @@ void TunerCore::InitializeRunners()
     Logger::LogInfo("Initializing tuner for device " + info.GetName());
 
     m_KernelRunner = std::make_unique<KernelRunner>(*m_ComputeEngine, *m_ArgumentManager);
-    m_TuningRunner = std::make_unique<TuningRunner>(*m_KernelRunner, info);
+    m_TuningRunner = std::make_unique<TuningRunner>(*m_KernelRunner);
 }
 
 std::unique_ptr<Serializer> TunerCore::CreateSerializer(const OutputFormat format)

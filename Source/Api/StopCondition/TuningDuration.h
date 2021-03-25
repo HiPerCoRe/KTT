@@ -25,7 +25,7 @@ public:
     explicit TuningDuration(const double duration);
 
     bool IsFulfilled() const override;
-    void Initialize() override;
+    void Initialize(const uint64_t configurationsCount) override;
     void Update(const KernelResult& result) override;
     std::string GetStatusString() const override;
 

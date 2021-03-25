@@ -5,7 +5,6 @@
 #include <memory>
 
 #include <Api/Configuration/KernelConfiguration.h>
-#include <Api/Info/DeviceInfo.h>
 #include <Api/Output/KernelResult.h>
 #include <Api/Searcher/Searcher.h>
 #include <Kernel/Kernel.h>
@@ -18,7 +17,7 @@ namespace ktt
 class ConfigurationManager
 {
 public:
-    ConfigurationManager(const DeviceInfo& info);
+    ConfigurationManager();
 
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     void InitializeData(const Kernel& kernel);
@@ -27,13 +26,12 @@ public:
 
     bool HasData(const KernelId id) const;
     bool IsDataProcessed(const KernelId id) const;
-    uint64_t GetConfigurationCountInGroup(const KernelId id) const;
-    uint64_t GetExploredConfigurationCountInGroup(const KernelId id) const;
+    uint64_t GetTotalConfigurationsCount(const KernelId id) const;
+    uint64_t GetExploredConfigurationsCount(const KernelId id) const;
     KernelConfiguration GetCurrentConfiguration(const KernelId id) const;
     KernelConfiguration GetBestConfiguration(const KernelId id) const;
 
 private:
-    DeviceInfo m_DeviceInfo;
     std::map<KernelId, std::unique_ptr<Searcher>> m_Searchers;
     std::map<KernelId, std::unique_ptr<ConfigurationData>> m_ConfigurationData;
 };

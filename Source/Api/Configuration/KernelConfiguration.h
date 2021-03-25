@@ -53,6 +53,13 @@ public:
       */
     std::string GetString() const;
 
+    /** @fn void Merge(const KernelConfiguration& other)
+      * Merges two configurations, adding paramater values from the specified configuration into this one. If the configurations
+      * share some parameters, the values of parameters from this configuration are preserved.
+      * @param other Configuration that will be merged into this one.
+      */
+    void Merge(const KernelConfiguration& other);
+
     /** @fn bool operator==(const KernelConfiguration& other) const
       * Checks whether kernel configuration is equal to other. I.e., it has the same parameter pairs with the same values.
       * @param other Comparison target.

@@ -11,6 +11,7 @@
 
 #include <Api/StopCondition/ConfigurationCount.h>
 #include <Api/StopCondition/ConfigurationDuration.h>
+#include <Api/StopCondition/ConfigurationFraction.h>
 #include <Api/StopCondition/TuningDuration.h>
 
 #include <Api/ComputeInterface.h>

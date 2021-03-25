@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <limits>
 
+#include <Api/KttException.h>
+#include <Kernel/KernelParameterGroup.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <TuningRunner/ConfigurationData.h>
 #include <Utility/ErrorHandling/Assert.h>
@@ -11,19 +13,13 @@
 namespace ktt
 {
 
-ConfigurationData::ConfigurationData(const DeviceInfo& deviceInfo, Searcher& searcher, const Kernel& kernel) :
-    m_DeviceInfo(deviceInfo),
+ConfigurationData::ConfigurationData(Searcher& searcher, const Kernel& kernel) :
+    m_BestConfiguration({KernelConfiguration(), InvalidDuration}),
     m_Searcher(searcher),
     m_Kernel(kernel),
-    m_CurrentGroup(0),
     m_ExploredConfigurations(0)
 {
-    m_Groups = kernel.GenerateParameterGroups();
-
-    if (!IsProcessed())
-    {
-        InitializeNextGroup(true);
-    }
+    InitializeConfigurations();
 }
 
 ConfigurationData::~ConfigurationData()
@@ -34,41 +30,71 @@ ConfigurationData::~ConfigurationData()
 bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousResult)
 {
     ++m_ExploredConfigurations;
-    m_ProcessedConfigurations.insert(std::make_pair(previousResult.GetTotalDuration(), GetCurrentConfiguration()));
-    
-    if (m_ExploredConfigurations < static_cast<size_t>(GetConfigurationCountInGroup()))
+    UpdateBestConfiguration(previousResult);
+
+    if (!IsProcessed())
     {
         m_Searcher.CalculateNextConfiguration(previousResult);
         return true;
     }
 
-    return InitializeNextGroup(false);
+    return false;
 }
 
-uint64_t ConfigurationData::GetConfigurationCountInGroup() const
+KernelConfiguration ConfigurationData::GetConfigurationForIndex(const uint64_t index) const
 {
-    return m_Tree->GetConfigurationsCount();
+    if (index >= GetTotalConfigurationsCount())
+    {
+        throw KttException("Invalid configuration index");
+    }
+
+    const ConfigurationTree* localTree = nullptr;
+    uint64_t localIndex = index;
+
+    for (const auto& tree : m_Trees)
+    {
+        const uint64_t localCount = tree->GetConfigurationsCount();
+
+        if (localCount <= localIndex)
+        {
+            localIndex -= localCount;
+            continue;
+        }
+
+        localTree = tree.get();
+        break;
+    }
+
+    auto result = localTree->GetConfiguration(localIndex);
+    result.Merge(m_BestConfiguration.first);
+    return result;
 }
 
-uint64_t ConfigurationData::GetExploredConfigurationCountInGroup() const
+uint64_t ConfigurationData::GetTotalConfigurationsCount() const
+{
+    uint64_t result = 0;
+
+    for (const auto& tree : m_Trees)
+    {
+        result += tree->GetConfigurationsCount();
+    }
+
+    return result;
+}
+
+uint64_t ConfigurationData::GetExploredConfigurationsCount() const
 {
     return static_cast<uint64_t>(m_ExploredConfigurations);
 }
 
 bool ConfigurationData::IsProcessed() const
 {
-    return m_CurrentGroup >= m_Groups.size();
-}
-
-const KernelParameterGroup& ConfigurationData::GetCurrentGroup() const
-{
-    KttAssert(!IsProcessed(), "Current group can only be retrieved for configuration data that is not processed");
-    return m_Groups[m_CurrentGroup];
+    return GetExploredConfigurationsCount() >= GetTotalConfigurationsCount();
 }
 
 KernelConfiguration ConfigurationData::GetCurrentConfiguration() const
 {
-    if (m_Tree == nullptr || m_ExploredConfigurations >= static_cast<size_t>(GetConfigurationCountInGroup()))
+    if (!m_Searcher.IsInitialized() || IsProcessed())
     {
         return KernelConfiguration();
     }
@@ -78,39 +104,28 @@ KernelConfiguration ConfigurationData::GetCurrentConfiguration() const
 
 KernelConfiguration ConfigurationData::GetBestConfiguration() const
 {
-    if (!m_ProcessedConfigurations.empty())
+    if (m_BestConfiguration.second != InvalidDuration)
     {
-        const auto& bestPair = *m_ProcessedConfigurations.cbegin();
-        return bestPair.second;
+        return m_BestConfiguration.first;
     }
 
     return GetCurrentConfiguration();
 }
 
-bool ConfigurationData::InitializeNextGroup(const bool isInitialGroup)
+void ConfigurationData::InitializeConfigurations()
 {
-    m_Searcher.Reset();
-    m_Tree.reset();
-    m_ExploredConfigurations = 0;
-
-    if (!isInitialGroup)
-    {
-        ++m_CurrentGroup;
-    }
-
-    if (IsProcessed())
-    {
-        return false;
-    }
-
-    const auto& group = GetCurrentGroup();
-    Logger::LogInfo("Generating configurations for kernel " + m_Kernel.GetName() + " and group " + group.GetName());
+    const auto groups = m_Kernel.GenerateParameterGroups();
+    Logger::LogInfo("Generating configurations for kernel " + m_Kernel.GetName());
 
     Timer timer;
     timer.Start();
 
-    m_Tree = std::make_unique<ConfigurationTree>();
-    m_Tree->Build(group);
+    for (const auto& group : groups)
+    {
+        auto tree = std::make_unique<ConfigurationTree>();
+        tree->Build(group);
+        m_Trees.push_back(std::move(tree));
+    }
 
     timer.Stop();
 
@@ -118,8 +133,27 @@ bool ConfigurationData::InitializeNextGroup(const bool isInitialGroup)
     const uint64_t elapsedTime = time.ConvertFromNanoseconds(timer.GetElapsedTime());
     Logger::LogInfo("Configurations were generated in " + std::to_string(elapsedTime) + time.GetUnitTag());
 
-    m_Searcher.Initialize(*m_Tree);
-    return true;
+    KernelConfiguration initialBest;
+
+    for (const auto& tree : m_Trees)
+    {
+        initialBest.Merge(tree->GetConfiguration(0));
+    }
+
+    m_BestConfiguration = {initialBest, InvalidDuration};
+    m_Searcher.Initialize(*this);
+}
+
+void ConfigurationData::UpdateBestConfiguration(const KernelResult& previousResult)
+{
+    const auto& configuration = previousResult.GetConfiguration();
+    const Nanoseconds duration = previousResult.GetTotalDuration();
+
+    if (duration < m_BestConfiguration.second)
+    {
+        m_BestConfiguration.first = configuration;
+        m_BestConfiguration.second = duration;
+    }
 }
 
 void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,
@@ -128,8 +162,6 @@ void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group,
     if (currentIndex >= group.GetParameters().size())
     {
         // All parameters are now included in the configuration
-        AddExtraParameterPairs(pairs);
-
         if (IsConfigurationValid(pairs))
         {
             finalResult.emplace_back(pairs);
@@ -146,7 +178,7 @@ void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group,
         std::vector<ParameterPair> newPairs = pairs;
         newPairs.push_back(pair);
 
-        if (!EvaluateConstraints(newPairs))
+        if (!IsConfigurationValid(newPairs))
         {
             continue;
         }
@@ -155,105 +187,7 @@ void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group,
     }
 }
 
-void ConfigurationData::AddExtraParameterPairs(std::vector<ParameterPair>& pairs) const
-{
-    KernelConfiguration bestConfiguration;
-    const bool valid = GetBestCompatibleConfiguration(pairs, bestConfiguration);
-
-    if (valid)
-    {
-        for (const auto& bestPair : bestConfiguration.GetPairs())
-        {
-            const bool hasPair = ContainsElementIf(pairs, [&bestPair](const auto& pair)
-            {
-                return pair.GetName() == bestPair.GetName();
-            });
-
-            if (!hasPair)
-            {
-                pairs.push_back(bestPair);
-            }
-        }
-
-        return;
-    }
-
-    for (const auto& parameter : m_Kernel.GetParameters())
-    {
-        const bool hasPair = ContainsElementIf(pairs, [&parameter](const auto& pair)
-        {
-            return pair.GetName() == parameter.GetName();
-        });
-
-        if (!hasPair)
-        {
-            pairs.push_back(parameter.GeneratePair(0));
-        }
-    }
-}
-
-bool ConfigurationData::GetBestCompatibleConfiguration(const std::vector<ParameterPair>& pairs, KernelConfiguration& output) const
-{
-    for (const auto& configuration : m_ProcessedConfigurations)
-    {
-        if (IsConfigurationCompatible(pairs, configuration.second))
-        {
-            output = configuration.second;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool ConfigurationData::IsConfigurationCompatible(const std::vector<ParameterPair>& pairs,
-    const KernelConfiguration& configuration) const
-{
-    for (const auto& pair : pairs)
-    {
-        const auto& configurationPairs = configuration.GetPairs();
-
-        const auto iterator = std::find_if(configurationPairs.cbegin(), configurationPairs.cend(),
-            [&pair](const auto& configurationPair)
-        {
-            return pair.GetName() == configurationPair.GetName();
-        });
-
-        if (iterator == configurationPairs.cend())
-        {
-            continue;
-        }
-
-        if (!pair.HasSameValue(*iterator))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 bool ConfigurationData::IsConfigurationValid(const std::vector<ParameterPair>& pairs) const
-{
-    for (const auto* definition : m_Kernel.GetDefinitions())
-    {
-        DimensionVector localSize = m_Kernel.GetModifiedLocalSize(definition->GetId(), pairs);
-
-        if (localSize.GetTotalSize() > static_cast<size_t>(m_DeviceInfo.GetMaxWorkGroupSize()))
-        {
-            return false;
-        }
-    }
-
-    if (!EvaluateConstraints(pairs))
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool ConfigurationData::EvaluateConstraints(const std::vector<ParameterPair>& pairs) const
 {
     for (const auto& constraint : m_Kernel.GetConstraints())
     {

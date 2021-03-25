@@ -61,6 +61,22 @@ std::string KernelConfiguration::GetString() const
     return result;
 }
 
+void KernelConfiguration::Merge(const KernelConfiguration& other)
+{
+    for (const auto& otherPair : other.GetPairs())
+    {
+        const bool includePair = !ContainsElementIf(m_Pairs, [&otherPair](const auto& pair)
+        {
+            return otherPair.GetName() == pair.GetName();
+        });
+
+        if (includePair)
+        {
+            m_Pairs.push_back(otherPair);
+        }
+    }
+}
+
 bool KernelConfiguration::operator==(const KernelConfiguration& other) const
 {
     const auto& pairs = GetPairs();

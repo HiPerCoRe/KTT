@@ -15,7 +15,7 @@ bool TuningDuration::IsFulfilled() const
     return m_PassedTime > m_TargetTime;
 }
 
-void TuningDuration::Initialize()
+void TuningDuration::Initialize([[maybe_unused]] const uint64_t configurationsCount)
 {
     m_InitialTime = std::chrono::steady_clock::now();
     m_PassedTime = 0.0;

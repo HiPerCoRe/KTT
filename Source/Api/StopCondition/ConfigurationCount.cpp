@@ -15,9 +15,10 @@ bool ConfigurationCount::IsFulfilled() const
     return m_CurrentCount >= m_TargetCount;
 }
 
-void ConfigurationCount::Initialize()
+void ConfigurationCount::Initialize(const uint64_t configurationsCount)
 {
     m_CurrentCount = 0;
+    m_TargetCount = std::min(m_TargetCount, configurationsCount);
 }
 
 void ConfigurationCount::Update([[maybe_unused]] const KernelResult& result)

@@ -1,6 +1,7 @@
 #include <string>
 
 #include <Api/Searcher/DeterministicSearcher.h>
+#include <Api/KttException.h>
 #include <TuningRunner/ConfigurationManager.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
@@ -9,8 +10,7 @@
 namespace ktt
 {
 
-ConfigurationManager::ConfigurationManager(const DeviceInfo& info) :
-    m_DeviceInfo(info)
+ConfigurationManager::ConfigurationManager()
 {
     Logger::LogDebug("Initializing configuration manager");
 }
@@ -32,7 +32,7 @@ void ConfigurationManager::InitializeData(const Kernel& kernel)
         m_Searchers[id] = std::make_unique<DeterministicSearcher>();
     }
 
-    m_ConfigurationData[id] = std::make_unique<ConfigurationData>(m_DeviceInfo, *m_Searchers[id], kernel);
+    m_ConfigurationData[id] = std::make_unique<ConfigurationData>(*m_Searchers[id], kernel);
 }
 
 void ConfigurationManager::ClearData(const KernelId id)
@@ -62,24 +62,24 @@ bool ConfigurationManager::IsDataProcessed(const KernelId id) const
     return m_ConfigurationData.find(id)->second->IsProcessed();
 }
 
-uint64_t ConfigurationManager::GetConfigurationCountInGroup(const KernelId id) const
+uint64_t ConfigurationManager::GetTotalConfigurationsCount(const KernelId id) const
 {
     if (!HasData(id))
     {
         return 0;
     }
 
-    return m_ConfigurationData.find(id)->second->GetConfigurationCountInGroup();
+    return m_ConfigurationData.find(id)->second->GetTotalConfigurationsCount();
 }
 
-uint64_t ConfigurationManager::GetExploredConfigurationCountInGroup(const KernelId id) const
+uint64_t ConfigurationManager::GetExploredConfigurationsCount(const KernelId id) const
 {
     if (!HasData(id))
     {
         return 0;
     }
 
-    return m_ConfigurationData.find(id)->second->GetExploredConfigurationCountInGroup();
+    return m_ConfigurationData.find(id)->second->GetExploredConfigurationsCount();
 }
 
 KernelConfiguration ConfigurationManager::GetCurrentConfiguration(const KernelId id) const
@@ -90,7 +90,11 @@ KernelConfiguration ConfigurationManager::GetCurrentConfiguration(const KernelId
 
 KernelConfiguration ConfigurationManager::GetBestConfiguration(const KernelId id) const
 {
-    KttAssert(HasData(id), "Best configuration can only be retrieved for kernels with initialized configuration data");
+    if (!HasData(id))
+    {
+        throw KttException("The best configuration can only be retrieved for kernels with initialized configuration data");
+    }
+
     return m_ConfigurationData.find(id)->second->GetBestConfiguration();
 }
 

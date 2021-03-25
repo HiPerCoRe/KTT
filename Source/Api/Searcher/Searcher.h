@@ -10,7 +10,7 @@
 namespace ktt
 {
 
-class ConfigurationTree;
+class ConfigurationData;
 
 /** @class Searcher
   * Class which is used to decide which kernel configuration will be run next during the kernel tuning process.
@@ -75,9 +75,9 @@ public:
 
     /** @fn void Initialize(const ConfigurationTree& tree)
       * Initializes searcher with the tree of configurations which can be explored for corresponding kernel.
-      * @param tree Tree of configurations which can be explored
+      * @param data Internal structure containing configurations which can be explored
       */
-    void Initialize(const ConfigurationTree& tree);
+    void Initialize(const ConfigurationData& data);
 
     /** @fn void Reset()
       * Resets searcher to initial state and clears configuration tree.
@@ -85,7 +85,7 @@ public:
     void Reset();
 
 private:
-    const ConfigurationTree* m_Tree;
+    const ConfigurationData* m_Data;
 };
 
 } // namespace ktt
