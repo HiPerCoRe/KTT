@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <future>
 #include <limits>
 
 #include <Api/KttException.h>
@@ -120,11 +121,26 @@ void ConfigurationData::InitializeConfigurations()
     Timer timer;
     timer.Start();
 
-    for (const auto& group : groups)
+    // Thread pool library would be useful here
+    std::vector<std::future<void>> futures;
+
+    for (size_t i = 0; i < groups.size(); ++i)
     {
-        auto tree = std::make_unique<ConfigurationTree>();
-        tree->Build(group);
-        m_Trees.push_back(std::move(tree));
+        auto newTree = std::make_unique<ConfigurationTree>();
+        m_Trees.push_back(std::move(newTree));
+
+        auto& tree = *m_Trees[i].get();
+        auto& group = groups[i];
+
+        futures.push_back(std::async([&tree, &group]()
+        {
+            tree.Build(group);
+        }));
+    }
+
+    for (auto& future : futures)
+    {
+        future.wait();
     }
 
     timer.Stop();
