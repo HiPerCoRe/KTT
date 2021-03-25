@@ -311,8 +311,8 @@ workspace "Ktt"
 -- Library configuration
 project "Ktt"
     kind "SharedLib"
-    files {"Source/**", "Libraries/pugixml-1.11.4/**"}
-    includedirs {"Source", "Libraries/date-3", "Libraries/Json-3.9.1", "Libraries/pugixml-1.11.4"}
+    files {"Source/**", "Libraries/CTPL-Ahajha/**", "Libraries/date-3/**", "Libraries/Json-3.9.1/**", "Libraries/pugixml-1.11.4/**"}
+    includedirs {"Source", "Libraries/CTPL-Ahajha", "Libraries/date-3", "Libraries/Json-3.9.1", "Libraries/pugixml-1.11.4"}
     defines {"KTT_LIBRARY"}
     targetname("ktt")
     linkLibraries()

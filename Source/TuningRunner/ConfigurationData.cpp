@@ -1,6 +1,6 @@
 #include <algorithm>
-#include <future>
 #include <limits>
+#include <ctpl_stl.h>
 
 #include <Api/KttException.h>
 #include <Kernel/KernelParameterGroup.h>
@@ -121,8 +121,7 @@ void ConfigurationData::InitializeConfigurations()
     Timer timer;
     timer.Start();
 
-    // Thread pool library would be useful here
-    std::vector<std::future<void>> futures;
+    ctpl::thread_pool pool;
 
     for (size_t i = 0; i < groups.size(); ++i)
     {
@@ -132,16 +131,13 @@ void ConfigurationData::InitializeConfigurations()
         auto& tree = *m_Trees[i].get();
         auto& group = groups[i];
 
-        futures.push_back(std::async([&tree, &group]()
+        pool.push([&tree, &group]()
         {
             tree.Build(group);
-        }));
+        });
     }
 
-    for (auto& future : futures)
-    {
-        future.wait();
-    }
+    pool.wait();
 
     timer.Stop();
 
