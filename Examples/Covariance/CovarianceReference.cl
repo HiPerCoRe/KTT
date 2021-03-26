@@ -15,7 +15,7 @@
 
 typedef float DATA_TYPE;
 
-__kernel void mean_kernel(__global DATA_TYPE *mean, __global DATA_TYPE *data, DATA_TYPE float_n,
+__kernel void mean_kernel_reference(__global DATA_TYPE *mean, __global DATA_TYPE *data, DATA_TYPE float_n,
                           int m, int n) {
   int j = get_global_id(0);
 
@@ -30,7 +30,7 @@ __kernel void mean_kernel(__global DATA_TYPE *mean, __global DATA_TYPE *data, DA
   }
 }
 
-__kernel void reduce_kernel(__global DATA_TYPE *mean, __global DATA_TYPE *data, int m, int n) {
+__kernel void reduce_kernel_reference(__global DATA_TYPE *mean, __global DATA_TYPE *data, int m, int n) {
   int j = get_global_id(0);
   int i = get_global_id(1);
 
@@ -39,7 +39,7 @@ __kernel void reduce_kernel(__global DATA_TYPE *mean, __global DATA_TYPE *data, 
   }
 }
 
-__kernel void covar_kernel(__global DATA_TYPE *symmat, __global DATA_TYPE *data, int m, int n) {
+__kernel void covar_kernel_reference(__global DATA_TYPE *symmat, __global DATA_TYPE *data, int m, int n) {
   int j1 = get_global_id(0);
   int i, j2;
 

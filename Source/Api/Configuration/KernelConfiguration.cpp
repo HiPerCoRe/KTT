@@ -1,5 +1,4 @@
 #include <Api/Configuration/KernelConfiguration.h>
-#include <Api/KttException.h>
 #include <Utility/StlHelpers.h>
 
 namespace ktt
@@ -10,12 +9,7 @@ KernelConfiguration::KernelConfiguration()
 
 KernelConfiguration::KernelConfiguration(const std::vector<ParameterPair>& pairs) :
     m_Pairs(pairs)
-{
-    if (pairs.empty())
-    {
-        throw KttException("Valid kernel configuration must have at least one parameter pair");
-    }
-}
+{}
 
 const std::vector<ParameterPair>& KernelConfiguration::GetPairs() const
 {

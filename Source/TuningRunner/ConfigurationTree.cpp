@@ -25,14 +25,19 @@ void ConfigurationTree::Build(const KernelParameterGroup& group)
         const KernelConstraint& constraint = group.GetNextConstraintToProcess(processedConstraints, processedParameters);
         const uint64_t affectedCount = constraint.GetAffectedParameterCount(processedParameters);
 
-        constraint.EnumerateParameterIndices([this, &processedParameters, &constraint, affectedCount](std::vector<size_t>& indices,
+        constraint.EnumerateParameterIndices([this, &processedParameters, &constraint, affectedCount] (std::vector<size_t>& indices,
             const bool validIndices)
         {
             if (validIndices && affectedCount < constraint.GetParameterNames().size())
             {
                 AddPaths(indices, constraint.GetParameters(), processedParameters);
             }
-            else if (!validIndices && affectedCount > 0)
+        });
+
+        constraint.EnumerateParameterIndices([this, &constraint, affectedCount] (std::vector<size_t>& indices,
+            const bool validIndices)
+        {
+            if (!validIndices && affectedCount > 0)
             {
                 PrunePaths(indices, constraint.GetParameters());
             }
