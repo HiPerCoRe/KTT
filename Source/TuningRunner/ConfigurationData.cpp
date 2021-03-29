@@ -71,6 +71,17 @@ KernelConfiguration ConfigurationData::GetConfigurationForIndex(const uint64_t i
     return result;
 }
 
+uint64_t ConfigurationData::GetRandomConfigurationIndex(const std::set<uint64_t>& excludedIndices) const
+{
+    if (excludedIndices.size() >= GetTotalConfigurationsCount())
+    {
+        throw KttException("Excluded indices must not contain all valid configuration indices during random configuration generation");
+    }
+
+    const uint64_t index = m_Generator.Generate(0, GetTotalConfigurationsCount() - 1, excludedIndices);
+    return index;
+}
+
 uint64_t ConfigurationData::GetTotalConfigurationsCount() const
 {
     uint64_t result = 0;

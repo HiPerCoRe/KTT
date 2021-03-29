@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -7,6 +8,7 @@
 #include <Api/Searcher/Searcher.h>
 #include <Kernel/Kernel.h>
 #include <TuningRunner/ConfigurationTree.h>
+#include <Utility/RandomIntGenerator.h>
 #include <KttTypes.h>
 
 namespace ktt
@@ -19,7 +21,9 @@ public:
     ~ConfigurationData();
 
     bool CalculateNextConfiguration(const KernelResult& previousResult);
+
     KernelConfiguration GetConfigurationForIndex(const uint64_t index) const;
+    uint64_t GetRandomConfigurationIndex(const std::set<uint64_t>& excludedIndices) const;
 
     uint64_t GetTotalConfigurationsCount() const;
     uint64_t GetExploredConfigurationsCount() const;
@@ -30,6 +34,7 @@ public:
 private:
     std::vector<std::unique_ptr<ConfigurationTree>> m_Trees;
     std::pair<KernelConfiguration, Nanoseconds> m_BestConfiguration;
+    mutable RandomIntGenerator<uint64_t> m_Generator;
     Searcher& m_Searcher;
     const Kernel& m_Kernel;
     size_t m_ExploredConfigurations;

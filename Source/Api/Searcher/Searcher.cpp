@@ -19,6 +19,11 @@ KernelConfiguration Searcher::GetConfiguration(const uint64_t index) const
     return m_Data->GetConfigurationForIndex(index);
 }
 
+uint64_t Searcher::GetRandomConfigurationIndex(const std::set<uint64_t>& excludedIndices) const
+{
+    return m_Data->GetRandomConfigurationIndex(excludedIndices);
+}
+
 uint64_t Searcher::GetConfigurationsCount() const
 {
     return m_Data->GetTotalConfigurationsCount();

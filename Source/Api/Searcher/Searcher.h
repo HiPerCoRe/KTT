@@ -3,6 +3,9 @@
   */
 #pragma once
 
+#include <cstdint>
+#include <set>
+
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Output/KernelResult.h>
 #include <KttPlatform.h>
@@ -60,6 +63,14 @@ public:
       * @return Configuration with the specified index.
       */
     KernelConfiguration GetConfiguration(const uint64_t index) const;
+
+    /** @fn uint64_t GetRandomConfigurationIndex(const std::set<uint64_t>& excludedIndices = {}) const
+      * Returns index of random configuration.
+      * @param excludedIndices The specified indices will not be returned. All indices must have values lower than the total count
+      * of configurations. If all the valid configuration indices are excluded, an exception will be thrown.
+      * @return Index of random valid configuration.
+      */
+    uint64_t GetRandomConfigurationIndex(const std::set<uint64_t>& excludedIndices = {}) const;
 
     /** @fn uint64_t GetConfigurationsCount() const
       * Returns total number of valid kernel configurations.

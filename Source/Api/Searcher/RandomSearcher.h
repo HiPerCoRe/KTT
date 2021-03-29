@@ -3,7 +3,7 @@
   */
 #pragma once
 
-#include <cstddef>
+#include <set>
 
 #include <Api/Searcher/Searcher.h>
 #include <KttPlatform.h>
@@ -29,8 +29,8 @@ public:
     KernelConfiguration GetCurrentConfiguration() const override;
 
 private:
-    size_t m_Index;
-    std::vector<uint64_t> m_ConfigurationIndices;
+    std::set<uint64_t> m_ExploredIndices;
+    uint64_t m_CurrentIndex;
 };
 
 } // namespace ktt
