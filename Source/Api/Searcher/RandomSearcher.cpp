@@ -4,30 +4,23 @@ namespace ktt
 {
 
 RandomSearcher::RandomSearcher() :
-    Searcher(),
-    m_CurrentIndex(std::numeric_limits<uint64_t>::max())
+    Searcher()
 {}
 
 void RandomSearcher::OnInitialize()
 {
-    m_CurrentIndex = GetRandomConfigurationIndex();
+    m_CurrentConfiguration = GetRandomConfiguration();
 }
 
-void RandomSearcher::OnReset()
+bool RandomSearcher::CalculateNextConfiguration([[maybe_unused]] const KernelResult& previousResult)
 {
-    m_CurrentIndex = std::numeric_limits<uint64_t>::max();
-    m_ExploredIndices.clear();
-}
-
-void RandomSearcher::CalculateNextConfiguration([[maybe_unused]] const KernelResult& previousResult)
-{
-    m_ExploredIndices.insert(m_CurrentIndex);
-    m_CurrentIndex = GetRandomConfigurationIndex(m_ExploredIndices);
+    m_CurrentConfiguration = GetRandomConfiguration();
+    return true;
 }
 
 KernelConfiguration RandomSearcher::GetCurrentConfiguration() const
 {
-    return GetConfiguration(m_CurrentIndex);
+    return m_CurrentConfiguration;
 }
 
 } // namespace ktt

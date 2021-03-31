@@ -13,9 +13,10 @@ void DeterministicSearcher::OnReset()
     m_Index = 0;
 }
 
-void DeterministicSearcher::CalculateNextConfiguration([[maybe_unused]] const KernelResult& previousResult)
+bool DeterministicSearcher::CalculateNextConfiguration([[maybe_unused]] const KernelResult& previousResult)
 {
     ++m_Index;
+    return true;
 }
 
 KernelConfiguration DeterministicSearcher::GetCurrentConfiguration() const

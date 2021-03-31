@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <set>
+#include <vector>
 
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Output/KernelResult.h>
@@ -28,7 +29,8 @@ public:
     virtual ~Searcher() = default;
 
     /** @fn virtual void OnInitialize()
-      * Called after searcher is initialized with kernel configurations. Custom searcher parameters should be initialized here.
+      * Called after searcher is initialized with kernel configurations. The first kernel configuration as well as custom searcher
+      * parameters should be initialized here.
       */
     virtual void OnInitialize();
 
@@ -38,15 +40,18 @@ public:
       */
     virtual void OnReset();
 
-    /** @fn virtual void CalculateNextConfiguration(const KernelResult& previousResult) = 0
-      * Decides which configuration will be run next. Called after GetCurrentConfiguration method if there are remaining
-      * unexplored configurations.
+    /** @fn virtual bool CalculateNextConfiguration(const KernelResult& previousResult) = 0
+      * Calculates the configuration which will be run next. Called after processing the current configuration if there are any
+      * remaining unexplored configurations.
       * @param previousResult Result from the last tested configuration. See KernelResult for more information.
+      * @return True if the next configuration was successfully calculated, false otherwise. If false is returned, configuration
+      * space exploration will be stopped.
       */
-    virtual void CalculateNextConfiguration(const KernelResult& previousResult) = 0;
+    virtual bool CalculateNextConfiguration(const KernelResult& previousResult) = 0;
 
     /** @fn virtual KernelConfiguration GetCurrentConfiguration() const = 0
-      * Returns current kernel configuration.
+      * Returns current kernel configuration. Note that this may be called repeatedly before calculating next configuration. In
+      * that case, the returned configuration must always be the same.
       * @return Current configuration.
       */
     virtual KernelConfiguration GetCurrentConfiguration() const = 0;
@@ -64,19 +69,43 @@ public:
       */
     KernelConfiguration GetConfiguration(const uint64_t index) const;
 
-    /** @fn uint64_t GetRandomConfigurationIndex(const std::set<uint64_t>& excludedIndices = {}) const
-      * Returns index of random configuration.
-      * @param excludedIndices The specified indices will not be returned. All indices must have values lower than the total count
-      * of configurations. If all the valid configuration indices are excluded, an exception will be thrown.
-      * @return Index of random valid configuration.
+    /** @fn uint64_t GetIndex(const KernelConfiguration& configuration) const
+      * Returns index of the specified configuration.
+      * @param configuration Configuration for which the index will be retrieved.
+      * @return Index of the specified configuration.
       */
-    uint64_t GetRandomConfigurationIndex(const std::set<uint64_t>& excludedIndices = {}) const;
+    uint64_t GetIndex(const KernelConfiguration& configuration) const;
+
+    /** @fn KernelConfiguration GetRandomConfigurationIndex() const
+      * Returns random unexplored configuration.
+      * @return Random unexplored configuration.
+      */
+    KernelConfiguration GetRandomConfiguration() const;
+
+    /** @fn std::vector<KernelConfiguration> GetNeighbourConfigurations(const KernelConfiguration& configuration,
+      * const uint64_t maxDifferences, const size_t maxNeighbours = 3) const
+      * Retrieves unexplored neighbour configurations of the specified configuration.
+      * @param configuration Configuration whose neighbours will be retrieved.
+      * @param maxDifferences Maximum number of parameters in neighbour configurations whose values differ from the original
+      * configuration.
+      * @param maxNeighbours Maximum number of retrieved neighbour configurations.
+      * @return Neighbours of the specified configuration. Note that the result might be empty in case no suitable configurations
+      * were found.
+      */
+    std::vector<KernelConfiguration> GetNeighbourConfigurations(const KernelConfiguration& configuration,
+        const uint64_t maxDifferences, const size_t maxNeighbours = 3) const;
 
     /** @fn uint64_t GetConfigurationsCount() const
       * Returns total number of valid kernel configurations.
       * @return Number of valid kernel configurations.
       */
     uint64_t GetConfigurationsCount() const;
+
+    /** @fn const std::set<uint64_t>& GetExploredIndices() const
+      * Returns indices of already explored configurations.
+      * @return Indices of already explored configurations.
+      */
+    const std::set<uint64_t>& GetExploredIndices() const;
 
     /** @fn bool IsInitialized() const
       * Returns whether searcher is initialized.

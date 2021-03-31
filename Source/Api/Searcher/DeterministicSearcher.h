@@ -24,7 +24,7 @@ public:
 
     void OnReset() override;
 
-    void CalculateNextConfiguration(const KernelResult& previousResult) override;
+    bool CalculateNextConfiguration(const KernelResult& previousResult) override;
     KernelConfiguration GetCurrentConfiguration() const override;
 
 private:

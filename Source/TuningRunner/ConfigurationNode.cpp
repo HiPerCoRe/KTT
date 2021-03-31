@@ -115,7 +115,10 @@ void ConfigurationNode::ComputeConfigurationsCount()
 
 void ConfigurationNode::GatherParameterIndices(const uint64_t index, std::vector<size_t>& indices) const
 {
-    indices.push_back(m_Index);
+    if (m_Parent != nullptr)
+    {
+        indices.push_back(m_Index);
+    }
 
     if (m_Children.empty())
     {
@@ -136,6 +139,39 @@ void ConfigurationNode::GatherParameterIndices(const uint64_t index, std::vector
             return;
         }
     }
+}
+
+std::vector<std::vector<size_t>> ConfigurationNode::GatherNeighbourIndices(const std::vector<size_t>& parameterIndices,
+    const uint64_t maxDifferences, const size_t maxNeighbours, const std::set<std::vector<size_t>>& exploredIndices) const
+{
+    std::vector<std::vector<size_t>> result;
+    std::vector<size_t> initialIndices;
+    GatherNeighbours(result, initialIndices, parameterIndices, maxDifferences, maxNeighbours, exploredIndices);
+    return result;
+}
+
+uint64_t ConfigurationNode::ComputeLocalIndex(const std::vector<size_t>& parameterIndices) const
+{
+    if (m_Children.empty())
+    {
+        return 1;
+    }
+
+    uint64_t result = 0;
+    const size_t searchedIndex = parameterIndices[GetLevel()];
+
+    for (const auto& child : m_Children)
+    {
+        if (child->GetIndex() == searchedIndex)
+        {
+            result += child->ComputeLocalIndex(parameterIndices);
+            break;
+        }
+        
+        result += child->GetConfigurationsCount();
+    }
+
+    return result;
 }
 
 const ConfigurationNode* ConfigurationNode::GetParent() const
@@ -207,6 +243,45 @@ bool ConfigurationNode::HasBroadcastLevel(const std::vector<uint64_t>& levels, c
     // Node has broadcast level if its level is not included in the levels vector.
     const uint64_t level = GetLevel();
     return levels.size() <= levelsIndex || levels[levelsIndex] - 1 != level;
+}
+
+void ConfigurationNode::GatherNeighbours(std::vector<std::vector<size_t>>& result, std::vector<size_t>& partialResult,
+    const std::vector<size_t>& parameterIndices, const uint64_t maxDifferences, const size_t maxNeighbours,
+    const std::set<std::vector<size_t>>& exploredIndices) const
+{
+    if (result.size() >= maxNeighbours)
+    {
+        return;
+    }
+
+    if (m_Children.empty())
+    {
+        if (!ContainsKey(exploredIndices, partialResult) && partialResult != parameterIndices)
+        {
+            result.push_back(partialResult);
+        }
+
+        return;
+    }
+
+    for (const auto& child : m_Children)
+    {
+        uint64_t newMaxDifferences = maxDifferences;
+
+        if (child->GetIndex() != parameterIndices[GetLevel()])
+        {
+            if (maxDifferences == 0)
+            {
+                continue;
+            }
+
+            --newMaxDifferences;
+        }
+
+        std::vector<size_t> newPartialResult = partialResult;
+        newPartialResult.push_back(child->GetIndex());
+        child->GatherNeighbours(result, newPartialResult, parameterIndices, newMaxDifferences, maxNeighbours, exploredIndices);
+    }
 }
 
 } // namespace ktt

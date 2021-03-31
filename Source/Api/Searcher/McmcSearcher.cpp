@@ -59,7 +59,7 @@ void McmcSearcher::OnReset()
     m_UnexploredIndices.clear();
 }
 
-void McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult)
+bool McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult)
 {
     ++m_VisitedStatesCount;
     m_UnexploredIndices.erase(m_Index);
@@ -85,7 +85,7 @@ void McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
         }
 
         m_CurrentState = m_Index;
-        return;
+        return true;
     }
 
     // acceptation of a new state
@@ -122,7 +122,7 @@ void McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
 
     if (m_UnexploredIndices.empty())
     {
-        return;
+        return false;
     }
 
     std::vector<size_t> neighbours = GetNeighbours(m_OriginState);
@@ -139,7 +139,7 @@ void McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
         
         m_Index = m_OriginState;
         m_CurrentState = m_OriginState;
-        return;
+        return true;
     }
 
     Logger::LogDebug("MCMC step " + std::to_string(m_VisitedStatesCount) + ", choosing randomly one of "
@@ -148,6 +148,7 @@ void McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
     // select a random neighbour state
     m_CurrentState = neighbours.at(m_IntDistribution(m_Generator) % neighbours.size());
     m_Index = m_CurrentState;
+    return true;
 }
 
 KernelConfiguration McmcSearcher::GetCurrentConfiguration() const

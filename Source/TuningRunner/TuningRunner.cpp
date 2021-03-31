@@ -92,7 +92,7 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
 
     KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, mode, output);
 
-    if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns())
+    if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns() && !m_ConfigurationManager->IsDataProcessed(id))
     {
         m_ConfigurationManager->CalculateNextConfiguration(id, result);
     }
@@ -102,6 +102,7 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
 
 void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<KernelResult>& results, const uint64_t iterations)
 {
+    Logger::LogInfo("Starting simulated tuning for kernel " + kernel.GetName());
     const auto id = kernel.GetId();
 
     if (!m_ConfigurationManager->HasData(id))
@@ -132,10 +133,12 @@ void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<Kernel
             result.SetStatus(ResultStatus::ComputationFailed);
         }
 
-        m_ConfigurationManager->CalculateNextConfiguration(id, result);
         ++passedIterations;
+        m_ConfigurationManager->CalculateNextConfiguration(id, result);
     }
 
+    Logger::LogInfo("Ending simulated tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
+        + std::to_string(passedIterations));
     m_ConfigurationManager->ClearData(id);
 }
 

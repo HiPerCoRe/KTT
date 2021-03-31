@@ -82,6 +82,19 @@ bool ConfigurationTree::IsBuilt() const
     return m_IsBuilt;
 }
 
+bool ConfigurationTree::HasParameter(const std::string& name) const
+{
+    for (const auto& pair : m_ParameterToLevel)
+    {
+        if (pair.first->GetName() == name)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 uint64_t ConfigurationTree::GetDepth() const
 {
     return m_ParameterToLevel.size();
@@ -104,21 +117,39 @@ KernelConfiguration ConfigurationTree::GetConfiguration(const uint64_t index) co
 
     std::vector<size_t> indices;
     m_Root->GatherParameterIndices(index + 1, indices);
-    std::vector<ParameterPair> pairs;
+    return GetConfigurationFromIndices(indices);
+}
 
-    for (size_t i = 1; i < indices.size(); ++i)
+std::vector<KernelConfiguration> ConfigurationTree::GetNeighbourConfigurations(const KernelConfiguration& configuration,
+    const uint64_t maxDifferences, const size_t maxNeighbours, const std::set<uint64_t> exploredConfigurations) const
+{
+    KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
+    const std::vector<size_t> indices = GetIndicesFromConfiguration(configuration);
+    std::set<std::vector<size_t>> exploredIndices;
+
+    for (const auto exploredIndex : exploredConfigurations)
     {
-        for (const auto& pair : m_ParameterToLevel)
-        {
-            if (pair.second == i)
-            {
-                pairs.push_back(pair.first->GeneratePair(indices[i]));
-                break;
-            }
-        }
+        std::vector<size_t> exploredParameterIndices;
+        m_Root->GatherParameterIndices(exploredIndex + 1, exploredParameterIndices);
+        exploredIndices.insert(exploredParameterIndices);
     }
 
-    return KernelConfiguration(pairs);
+    const auto neighbours = m_Root->GatherNeighbourIndices(indices, maxDifferences, maxNeighbours, exploredIndices);
+    std::vector<KernelConfiguration> result;
+
+    for (const auto& neighbourIndices : neighbours)
+    {
+        result.push_back(GetConfigurationFromIndices(neighbourIndices));
+    }
+
+    return result;
+}
+
+uint64_t ConfigurationTree::GetLocalConfigurationIndex(const KernelConfiguration& configuration) const
+{
+    KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
+    const std::vector<size_t> indices = GetIndicesFromConfiguration(configuration);
+    return m_Root->ComputeLocalIndex(indices);
 }
 
 void ConfigurationTree::AddPaths(const std::vector<size_t>& indices, const std::vector<const KernelParameter*>& parameters,
@@ -126,7 +157,7 @@ void ConfigurationTree::AddPaths(const std::vector<size_t>& indices, const std::
 {
     std::vector<uint64_t> levels;
     const auto finalIndices = PreprocessIndices(indices, parameters, levels);
-    const auto lockedLevels = GetLockedLevels(lockedParameters);
+    const auto lockedLevels = GetParameterLevels(lockedParameters);
     m_Root->AddPaths(finalIndices, 0, levels, 0, lockedLevels);
 }
 
@@ -169,11 +200,11 @@ std::vector<size_t> ConfigurationTree::PreprocessIndices(const std::vector<size_
     return finalIndices;
 }
 
-std::vector<uint64_t> ConfigurationTree::GetLockedLevels(const std::set<std::string>& lockedParameters)
+std::vector<uint64_t> ConfigurationTree::GetParameterLevels(const std::set<std::string>& parameters) const
 {
     std::vector<uint64_t> result;
 
-    for (const auto& parameterName : lockedParameters)
+    for (const auto& parameterName : parameters)
     {
         for (const auto& pair : m_ParameterToLevel)
         {
@@ -186,6 +217,65 @@ std::vector<uint64_t> ConfigurationTree::GetLockedLevels(const std::set<std::str
     }
 
     return result;
+}
+
+KernelConfiguration ConfigurationTree::GetConfigurationFromIndices(const std::vector<size_t>& indices) const
+{
+    std::vector<ParameterPair> pairs;
+
+    for (size_t i = 0; i < indices.size(); ++i)
+    {
+        for (const auto& pair : m_ParameterToLevel)
+        {
+            if (pair.second == i + 1)
+            {
+                pairs.push_back(pair.first->GeneratePair(indices[i]));
+                break;
+            }
+        }
+    }
+
+    return KernelConfiguration(pairs);
+}
+
+std::vector<size_t> ConfigurationTree::GetIndicesFromConfiguration(const KernelConfiguration& configuration) const
+{
+    std::vector<size_t> indices;
+
+    for (uint64_t level = 1; level <= GetDepth(); ++level)
+    {
+        const KernelParameter* currentParameter = nullptr;
+
+        for (const auto& pair : m_ParameterToLevel)
+        {
+            if (pair.second == level)
+            {
+                currentParameter = pair.first;
+                break;
+            }
+        }
+
+        for (const auto& pair : configuration.GetPairs())
+        {
+            if (pair.GetName() != currentParameter->GetName())
+            {
+                continue;
+            }
+
+            for (size_t index = 0; index < currentParameter->GetValuesCount(); ++index)
+            {
+                if (pair.HasSameValue(currentParameter->GeneratePair(index)))
+                {
+                    indices.push_back(index);
+                    break;
+                }
+            }
+
+            break;
+        }
+    }
+
+    return indices;
 }
 
 std::vector<std::pair<const KernelParameter*, size_t>> ConfigurationTree::MergeParametersWithIndices(

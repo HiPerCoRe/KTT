@@ -18,7 +18,7 @@ ConfigurationData::ConfigurationData(Searcher& searcher, const Kernel& kernel) :
     m_BestConfiguration({KernelConfiguration(), InvalidDuration}),
     m_Searcher(searcher),
     m_Kernel(kernel),
-    m_ExploredConfigurations(0)
+    m_SearcherActive(false)
 {
     InitializeConfigurations();
 }
@@ -30,16 +30,25 @@ ConfigurationData::~ConfigurationData()
 
 bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousResult)
 {
-    ++m_ExploredConfigurations;
+    const auto& previousConfiguration = previousResult.GetConfiguration();
+    const uint64_t index = GetIndexForConfiguration(previousConfiguration);
+    m_ExploredConfigurations.insert(index);
+
     UpdateBestConfiguration(previousResult);
 
-    if (!IsProcessed())
+    if (IsProcessed())
     {
-        m_Searcher.CalculateNextConfiguration(previousResult);
-        return true;
+        return false;
     }
 
-    return false;
+    m_SearcherActive = m_Searcher.CalculateNextConfiguration(previousResult);
+
+    if (!m_SearcherActive)
+    {
+        Logger::LogInfo("Searcher failed to calculate next configuration for kernel " + m_Kernel.GetName());
+    }
+
+    return m_SearcherActive;
 }
 
 KernelConfiguration ConfigurationData::GetConfigurationForIndex(const uint64_t index) const
@@ -71,15 +80,47 @@ KernelConfiguration ConfigurationData::GetConfigurationForIndex(const uint64_t i
     return result;
 }
 
-uint64_t ConfigurationData::GetRandomConfigurationIndex(const std::set<uint64_t>& excludedIndices) const
+uint64_t ConfigurationData::GetIndexForConfiguration(const KernelConfiguration& configuration) const
 {
-    if (excludedIndices.size() >= GetTotalConfigurationsCount())
+    const ConfigurationTree& localTree = GetLocalTree(configuration);
+    uint64_t result = 0;
+
+    for (const auto& tree : m_Trees)
     {
-        throw KttException("Excluded indices must not contain all valid configuration indices during random configuration generation");
+        if (&localTree == tree.get())
+        {
+            break;
+        }
+
+        result += tree->GetConfigurationsCount();
     }
 
-    const uint64_t index = m_Generator.Generate(0, GetTotalConfigurationsCount() - 1, excludedIndices);
-    return index;
+    result += localTree.GetLocalConfigurationIndex(configuration);
+    --result;
+    KttAssert(result < GetTotalConfigurationsCount(), "Invalid computed configuration index");
+    return result;
+}
+
+KernelConfiguration ConfigurationData::GetRandomConfiguration() const
+{
+    KttAssert(!IsProcessed(), "This should not be called after configuration space exploration is finished.");
+    const uint64_t index = m_Generator.Generate(0, GetTotalConfigurationsCount() - 1, m_ExploredConfigurations);
+    return GetConfigurationForIndex(index);
+}
+
+std::vector<KernelConfiguration> ConfigurationData::GetNeighbourConfigurations(const KernelConfiguration& configuration,
+    const uint64_t maxDifferences, const size_t maxNeighbours) const
+{
+    const ConfigurationTree& localTree = GetLocalTree(configuration);
+    auto configurations = localTree.GetNeighbourConfigurations(configuration, maxDifferences, maxNeighbours,
+        m_ExploredConfigurations);
+
+    for (auto& neighbour : configurations)
+    {
+        neighbour.Merge(m_BestConfiguration.first);
+    }
+
+    return configurations;
 }
 
 uint64_t ConfigurationData::GetTotalConfigurationsCount() const
@@ -96,12 +137,17 @@ uint64_t ConfigurationData::GetTotalConfigurationsCount() const
 
 uint64_t ConfigurationData::GetExploredConfigurationsCount() const
 {
-    return static_cast<uint64_t>(m_ExploredConfigurations);
+    return static_cast<uint64_t>(m_ExploredConfigurations.size());
+}
+
+const std::set<uint64_t>& ConfigurationData::GetExploredConfigurations() const
+{
+    return m_ExploredConfigurations;
 }
 
 bool ConfigurationData::IsProcessed() const
 {
-    return GetExploredConfigurationsCount() >= GetTotalConfigurationsCount();
+    return GetExploredConfigurationsCount() >= GetTotalConfigurationsCount() || !m_SearcherActive;
 }
 
 KernelConfiguration ConfigurationData::GetCurrentConfiguration() const
@@ -164,6 +210,7 @@ void ConfigurationData::InitializeConfigurations()
     }
 
     m_BestConfiguration = {initialBest, InvalidDuration};
+    m_SearcherActive = true;
     m_Searcher.Initialize(*this);
 }
 
@@ -177,6 +224,45 @@ void ConfigurationData::UpdateBestConfiguration(const KernelResult& previousResu
         m_BestConfiguration.first = configuration;
         m_BestConfiguration.second = duration;
     }
+}
+
+const ConfigurationTree& ConfigurationData::GetLocalTree(const KernelConfiguration& configuration) const
+{
+    KttAssert(!IsProcessed(), "This should not be called after configuration space exploration is finished.");
+    const ParameterPair* differentPair = nullptr;
+
+    for (const auto& bestPair : m_BestConfiguration.first.GetPairs())
+    {
+        for (const auto& pair : configuration.GetPairs())
+        {
+            if (bestPair.GetName() == pair.GetName() && !bestPair.HasSameValue(pair))
+            {
+                differentPair = &bestPair;
+                break;
+            }
+        }
+
+        if (differentPair != nullptr)
+        {
+            break;
+        }
+    }
+
+    if (differentPair == nullptr)
+    {
+        return *m_Trees[0];
+    }
+
+    for (const auto& tree : m_Trees)
+    {
+        if (tree->HasParameter(differentPair->GetName()))
+        {
+            return *tree;
+        }
+    }
+
+    KttError("Inconsistent tree or configuration data.");
+    return *m_Trees[0];
 }
 
 void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,

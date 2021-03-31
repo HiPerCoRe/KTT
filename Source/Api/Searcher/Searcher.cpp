@@ -19,14 +19,30 @@ KernelConfiguration Searcher::GetConfiguration(const uint64_t index) const
     return m_Data->GetConfigurationForIndex(index);
 }
 
-uint64_t Searcher::GetRandomConfigurationIndex(const std::set<uint64_t>& excludedIndices) const
+uint64_t Searcher::GetIndex(const KernelConfiguration& configuration) const
 {
-    return m_Data->GetRandomConfigurationIndex(excludedIndices);
+    return m_Data->GetIndexForConfiguration(configuration);
+}
+
+KernelConfiguration Searcher::GetRandomConfiguration() const
+{
+    return m_Data->GetRandomConfiguration();
+}
+
+std::vector<KernelConfiguration> Searcher::GetNeighbourConfigurations(const KernelConfiguration& configuration,
+    const uint64_t maxDifferences, const size_t maxNeighbours) const
+{
+    return m_Data->GetNeighbourConfigurations(configuration, maxDifferences, maxNeighbours);
 }
 
 uint64_t Searcher::GetConfigurationsCount() const
 {
     return m_Data->GetTotalConfigurationsCount();
+}
+
+const std::set<uint64_t>& Searcher::GetExploredIndices() const
+{
+    return m_Data->GetExploredConfigurations();
 }
 
 bool Searcher::IsInitialized() const

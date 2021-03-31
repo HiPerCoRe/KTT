@@ -3,8 +3,6 @@
   */
 #pragma once
 
-#include <set>
-
 #include <Api/Searcher/Searcher.h>
 #include <KttPlatform.h>
 
@@ -23,14 +21,12 @@ public:
     RandomSearcher();
 
     void OnInitialize() override;
-    void OnReset() override;
 
-    void CalculateNextConfiguration(const KernelResult& previousResult) override;
+    bool CalculateNextConfiguration(const KernelResult& previousResult) override;
     KernelConfiguration GetCurrentConfiguration() const override;
 
 private:
-    std::set<uint64_t> m_ExploredIndices;
-    uint64_t m_CurrentIndex;
+    KernelConfiguration m_CurrentConfiguration;
 };
 
 } // namespace ktt
