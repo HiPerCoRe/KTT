@@ -567,7 +567,7 @@ public:
     /** @fn void SetAutomaticGlobalSizeCorrection(const bool flag)
       * Toggles automatic correction for kernel global size, which ensures that global size in each dimension is always a multiple
       * of local size in corresponding dimension. Performs a roundup to the nearest higher multiple. Automatic global size correction
-      * is disabled by default.
+      * is disabled by default. Note that automatic global size correction works only if global size type is set to OpenCL.
       * @param flag If true, automatic global size correction will be enabled. It will be disabled otherwise.
       */
     void SetAutomaticGlobalSizeCorrection(const bool flag);

@@ -195,7 +195,14 @@ DimensionVector OpenClKernel::AdjustGlobalSize(const DimensionVector& globalSize
 
     if (m_GlobalSizeCorrection)
     {
-        result.RoundUp(localSize);
+        if (m_GlobalSizeType == GlobalSizeType::OpenCL)
+        {
+            result.RoundUp(localSize);
+        }
+        else
+        {
+            Logger::LogWarning("Global size correction has no effect if global size type is not set to OpenCL");
+        }
     }
 
     return result;
