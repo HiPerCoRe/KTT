@@ -229,33 +229,20 @@ void ConfigurationData::UpdateBestConfiguration(const KernelResult& previousResu
 const ConfigurationTree& ConfigurationData::GetLocalTree(const KernelConfiguration& configuration) const
 {
     KttAssert(!IsProcessed(), "This should not be called after configuration space exploration is finished.");
-    const ParameterPair* differentPair = nullptr;
+    const auto& pairs = configuration.GetPairs();
 
-    for (const auto& bestPair : m_BestConfiguration.first.GetPairs())
-    {
-        for (const auto& pair : configuration.GetPairs())
-        {
-            if (bestPair.GetName() == pair.GetName() && !bestPair.HasSameValue(pair))
-            {
-                differentPair = &bestPair;
-                break;
-            }
-        }
-
-        if (differentPair != nullptr)
-        {
-            break;
-        }
-    }
-
-    if (differentPair == nullptr)
+    if (pairs.empty())
     {
         return *m_Trees[0];
     }
 
+    // Assume that local tree parameters are at the beginning. Merge operation pushes parameters from different trees to the end.
+    // Each tree contains at least one parameter, so the first pair is guaranteed to belong to the local tree.
+    const auto& localPair = pairs[0];
+
     for (const auto& tree : m_Trees)
     {
-        if (tree->HasParameter(differentPair->GetName()))
+        if (tree->HasParameter(localPair.GetName()))
         {
             return *tree;
         }
