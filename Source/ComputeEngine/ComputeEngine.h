@@ -67,6 +67,7 @@ public:
     virtual void SetAutomaticGlobalSizeCorrection(const bool flag) = 0;
     virtual void SetKernelCacheCapacity(const uint64_t capacity) = 0;
     virtual void ClearKernelCache() = 0;
+    virtual void EnsureThreadContext() = 0;
 };
 
 } // namespace ktt

@@ -557,6 +557,9 @@ void OpenClEngine::ClearKernelCache()
     m_KernelCache.Clear();
 }
 
+void OpenClEngine::EnsureThreadContext()
+{}
+
 std::shared_ptr<OpenClKernel> OpenClEngine::LoadKernel(const KernelComputeData& data)
 {
     const auto id = data.GetUniqueIdentifier();

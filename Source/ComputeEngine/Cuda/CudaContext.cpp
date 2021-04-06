@@ -41,6 +41,19 @@ CudaContext::~CudaContext()
     }
 }
 
+void CudaContext::EnsureThreadContext() const
+{
+    CUcontext current;
+    CheckError(cuCtxGetCurrent(&current), "cuCtxGetCurrent");
+
+    if (current == m_Context)
+    {
+        return;
+    }
+
+    CheckError(cuCtxSetCurrent(m_Context), "cuCtxSetCurrent");
+}
+
 CUcontext CudaContext::GetContext() const
 {
     return m_Context;

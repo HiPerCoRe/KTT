@@ -22,6 +22,8 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
 KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
     const std::vector<BufferOutputDescriptor>& output, const bool manageBuffers)
 {
+    m_Engine.EnsureThreadContext();
+
     if (!m_Validator->HasReferenceResult(kernel))
     {
         m_Validator->ComputeReferenceResult(kernel, mode);
@@ -98,6 +100,8 @@ void KernelRunner::CleanupBuffers(const Kernel& kernel)
 
 void KernelRunner::DownloadBuffers(const std::vector<BufferOutputDescriptor>& output)
 {
+    m_Engine.EnsureThreadContext();
+
     for (const auto& descriptor : output)
     {
         const auto id = m_Engine.DownloadArgument(descriptor.GetArgumentId(), m_Engine.GetDefaultQueue(),

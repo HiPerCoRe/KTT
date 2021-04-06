@@ -599,6 +599,11 @@ void CudaEngine::ClearKernelCache()
     m_KernelCache.Clear();
 }
 
+void CudaEngine::EnsureThreadContext()
+{
+    m_Context->EnsureThreadContext();
+}
+
 std::shared_ptr<CudaKernel> CudaEngine::LoadKernel(const KernelComputeData& data)
 {
     const auto id = data.GetUniqueIdentifier();

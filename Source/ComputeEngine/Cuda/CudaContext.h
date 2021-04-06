@@ -18,6 +18,8 @@ public:
     explicit CudaContext(ComputeContext context);
     ~CudaContext();
 
+    void EnsureThreadContext() const;
+
     CUcontext GetContext() const;
     CUdevice GetDevice() const;
 

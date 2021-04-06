@@ -79,6 +79,7 @@ public:
     void SetAutomaticGlobalSizeCorrection(const bool flag) override;
     void SetKernelCacheCapacity(const uint64_t capacity) override;
     void ClearKernelCache() override;
+    void EnsureThreadContext() override;
 
 private:
     PlatformIndex m_PlatformIndex;
