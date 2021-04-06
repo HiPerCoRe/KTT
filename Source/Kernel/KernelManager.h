@@ -38,6 +38,7 @@ public:
     Kernel& GetKernel(const KernelId id);
     const KernelDefinition& GetDefinition(const KernelDefinitionId id) const;
     KernelDefinition& GetDefinition(const KernelDefinitionId id);
+    bool IsArgumentUsed(const ArgumentId id) const;
 
 private:
     KernelArgumentManager& m_ArgumentManager;

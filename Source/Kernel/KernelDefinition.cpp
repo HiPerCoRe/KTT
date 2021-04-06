@@ -69,4 +69,12 @@ std::vector<KernelArgument*> KernelDefinition::GetVectorArguments() const
     return result;
 }
 
+bool KernelDefinition::HasArgument(const ArgumentId id) const
+{
+    return ContainsElementIf(m_Arguments, [id](const auto* argument)
+    {
+        return argument->GetId() == id;
+    });
+}
+
 } // namespace ktt

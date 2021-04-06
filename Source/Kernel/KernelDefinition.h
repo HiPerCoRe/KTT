@@ -25,6 +25,7 @@ public:
     const DimensionVector& GetLocalSize() const;
     const std::vector<KernelArgument*>& GetArguments() const;
     std::vector<KernelArgument*> GetVectorArguments() const;
+    bool HasArgument(const ArgumentId id) const;
 
 private:
     KernelDefinitionId m_Id;

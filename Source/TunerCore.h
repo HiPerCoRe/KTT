@@ -50,6 +50,7 @@ public:
         const ArgumentManagementType managementType, const void* data, const size_t dataSize);
     ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
+    void RemoveArgument(const ArgumentId id);
     void SetReadOnlyArgumentCache(const bool flag);
 
     // Kernel running and validation

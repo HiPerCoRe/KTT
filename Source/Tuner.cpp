@@ -204,6 +204,18 @@ void Tuner::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDe
     }
 }
 
+void Tuner::RemoveArgument(const ArgumentId id)
+{
+    try
+    {
+        m_Tuner->RemoveArgument(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::SetReadOnlyArgumentCache(const bool flag)
 {
     try

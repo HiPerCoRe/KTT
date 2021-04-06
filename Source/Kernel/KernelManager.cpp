@@ -127,6 +127,19 @@ KernelDefinition& KernelManager::GetDefinition(const KernelDefinitionId id)
     return const_cast<KernelDefinition&>(static_cast<const KernelManager*>(this)->GetDefinition(id));
 }
 
+bool KernelManager::IsArgumentUsed(const ArgumentId id) const
+{
+    for (const auto& definition : m_Definitions)
+    {
+        if (definition.second->HasArgument(id))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 const std::vector<const KernelDefinition*> KernelManager::GetDefinitionsFromIds(const std::vector<KernelDefinitionId>& ids) const
 {
     std::vector<const KernelDefinition*> definitions;

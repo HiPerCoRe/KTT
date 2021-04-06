@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -23,6 +24,7 @@ public:
         const ArgumentManagementType managementType, const void* data, const size_t dataSize);
     ArgumentId AddUserArgument(const size_t elementSize, const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation,
         const ArgumentAccessType accessType, const size_t dataSize);
+    void RemoveArgument(const ArgumentId id);
 
     const KernelArgument& GetArgument(const ArgumentId id) const;
     KernelArgument& GetArgument(const ArgumentId id);
@@ -30,7 +32,7 @@ public:
 
 private:
     IdGenerator<ArgumentId> m_IdGenerator;
-    std::vector<std::unique_ptr<KernelArgument>> m_Arguments;
+    std::map<ArgumentId, std::unique_ptr<KernelArgument>> m_Arguments;
 
     ArgumentId AddArgument(const size_t elementSize, const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation,
         const ArgumentAccessType accessType, const ArgumentMemoryType memoryType, const ArgumentManagementType managementType);

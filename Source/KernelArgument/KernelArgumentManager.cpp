@@ -2,6 +2,7 @@
 
 #include <Api/KttException.h>
 #include <KernelArgument/KernelArgumentManager.h>
+#include <Utility/StlHelpers.h>
 
 namespace ktt
 {
@@ -40,14 +41,24 @@ ArgumentId KernelArgumentManager::AddUserArgument(const size_t elementSize, cons
     return id;
 }
 
+void KernelArgumentManager::RemoveArgument(const ArgumentId id)
+{
+    const size_t erasedCount = m_Arguments.erase(id);
+
+    if (erasedCount == 0)
+    {
+        throw KttException("Attempting to remove argument with invalid id: " + std::to_string(id));
+    }
+}
+
 const KernelArgument& KernelArgumentManager::GetArgument(const ArgumentId id) const
 {
-    if (id >= static_cast<uint64_t>(m_Arguments.size()))
+    if (!ContainsKey(m_Arguments, id))
     {
         throw KttException("Attempting to retrieve argument with invalid id: " + std::to_string(id));
     }
 
-    return *m_Arguments[id];
+    return *m_Arguments.find(id)->second;
 }
 
 KernelArgument& KernelArgumentManager::GetArgument(const ArgumentId id)
@@ -76,7 +87,7 @@ ArgumentId KernelArgumentManager::AddArgument(const size_t elementSize, const Ar
 
     auto argument = std::make_unique<KernelArgument>(id, elementSize, dataType, memoryLocation, accessType, memoryType,
         managementType);
-    m_Arguments.push_back(std::move(argument));
+    m_Arguments[id] = std::move(argument);
 
     return id;
 }

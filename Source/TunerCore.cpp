@@ -125,6 +125,18 @@ ArgumentId TunerCore::AddUserArgument(ComputeBuffer buffer, const size_t element
     return id;
 }
 
+void TunerCore::RemoveArgument(const ArgumentId id)
+{
+    if (m_KernelManager->IsArgumentUsed(id))
+    {
+        throw KttException("Argument with id " + std::to_string(id) +
+            " cannot be removed because it is still referenced by at least one kernel definition");
+    }
+
+    m_ComputeEngine->ClearBuffer(id);
+    m_ArgumentManager->RemoveArgument(id);
+}
+
 void TunerCore::SetReadOnlyArgumentCache(const bool flag)
 {
     m_KernelRunner->SetReadOnlyArgumentCache(flag);

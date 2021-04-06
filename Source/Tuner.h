@@ -307,6 +307,12 @@ public:
     template <typename T>
     ArgumentId AddArgumentLocal(const size_t localMemorySize);
 
+    /** @fn void RemoveArgument(const ArgumentId id)
+      * Removes argument with the specified id from the tuner.
+      * @param id Id of the argument which will be removed.
+      */
+    void RemoveArgument(const ArgumentId id);
+
     /** @fn void SetReadOnlyArgumentCache(const bool flag)
       * Toggles caching of read-only kernel arguments which have management type set to framework. This can significantly speed up
       * tuning, since arguments are uploaded into compute API buffers only once. Caching is enabled by default. Users who wish to
