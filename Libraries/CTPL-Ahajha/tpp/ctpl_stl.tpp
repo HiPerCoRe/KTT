@@ -123,6 +123,11 @@ void thread_pool::clear_queue()
 
 void thread_pool::wait()
 {
+	if (this->_n_idle == this->size())
+	{
+		return;
+	}
+
 	std::unique_lock lock(this->waiter_mut);
 	waiter.wait(lock);
 }

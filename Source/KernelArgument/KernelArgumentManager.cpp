@@ -83,6 +83,11 @@ ArgumentId KernelArgumentManager::AddArgument(const size_t elementSize, const Ar
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
     const ArgumentManagementType managementType)
 {
+    if (memoryType == ArgumentMemoryType::Vector && memoryLocation == ArgumentMemoryLocation::Undefined)
+    {
+        throw KttException("Vector kernel arguments must have properly defined memory location");
+    }
+
     const auto id = m_IdGenerator.GenerateId();
 
     auto argument = std::make_unique<KernelArgument>(id, elementSize, dataType, memoryLocation, accessType, memoryType,

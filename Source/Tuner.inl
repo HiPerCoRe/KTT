@@ -1,6 +1,5 @@
 #include <type_traits>
 
-#include <Api/KttException.h>
 #include <Tuner.h>
 
 namespace ktt
@@ -22,11 +21,6 @@ template <typename T>
 ArgumentId Tuner::AddArgumentVector(std::vector<T>& data, const ArgumentAccessType accessType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentManagementType managementType, const bool referenceUserData)
 {
-    if (memoryLocation == ArgumentMemoryLocation::Undefined)
-    {
-        throw KttException("Vector kernel arguments must have properly defined memory location");
-    }
-
     const size_t elementSize = sizeof(T);
     const size_t dataSize = data.size() * elementSize;
     const ArgumentDataType dataType = DeriveArgumentDataType<T>();
@@ -45,11 +39,6 @@ template <typename T>
 ArgumentId Tuner::AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const ArgumentAccessType accessType,
     const ArgumentMemoryLocation memoryLocation)
 {
-    if (memoryLocation == ArgumentMemoryLocation::Undefined)
-    {
-        throw KttException("Vector kernel arguments must have properly defined memory location");
-    }
-
     const size_t elementSize = sizeof(T);
     const ArgumentDataType dataType = DeriveArgumentDataType<T>();
 
