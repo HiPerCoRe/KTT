@@ -260,12 +260,6 @@ newoption
 
 newoption
 {
-    trigger = "tests",
-    description = "Enables compilation of unit tests"
-}
-
-newoption
-{
     trigger = "no-examples",
     description = "Disables compilation of examples"
 }
@@ -352,6 +346,12 @@ project "05ComputeApiInitializerOpenCl"
     includedirs {"Source"}
     links {"ktt"}
     linkLibraries()
+
+project "06VectorArgumentCustomizationOpenCl"
+    kind "ConsoleApp"
+    files {"Tutorials/06VectorArgumentCustomization/VectorArgumentCustomizationOpenCl.cpp", "Tutorials/06VectorArgumentCustomization/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
     
 end -- openClProjects
 
@@ -387,6 +387,12 @@ project "05ComputeApiInitializerCuda"
     includedirs {"Source"}
     links {"ktt"}
     linkLibraries()
+
+project "06VectorArgumentCustomizationCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/06VectorArgumentCustomization/VectorArgumentCustomizationCuda.cpp", "Tutorials/06VectorArgumentCustomization/CudaKernel.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
 
 end -- cudaProjects
 
