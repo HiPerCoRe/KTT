@@ -270,11 +270,6 @@ std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
         result.emplace_back(groupPair.first, groupPair.second, constraints);
     }
 
-    std::sort(result.begin(), result.end(), [](const auto& first, const auto& second)
-    {
-        return first.GetConfigurationsCount() < second.GetConfigurationsCount();
-    });
-
     return result;
 }
 
