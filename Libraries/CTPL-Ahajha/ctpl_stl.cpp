@@ -17,38 +17,10 @@
 *
 *********************************************************/
 
-template <typename T>
-bool detail::atomic_queue<T>::push(T&& value)
-{
-	std::lock_guard lock(this->mut);
-	this->q.push(std::forward<T>(value));
-	return true;
-}
+#include "ctpl_stl.h"
 
-template <typename T>
-bool detail::atomic_queue<T>::pop(T & value)
+namespace ctpl
 {
-	std::lock_guard lock(this->mut);
-	if (this->q.empty())
-		return false;
-	value = std::move(this->q.front());
-	this->q.pop();
-	return true;
-}
-
-template <typename T>
-bool detail::atomic_queue<T>::empty() const
-{
-	std::lock_guard lock(this->mut);
-	return this->q.empty();
-}
-
-template <typename T>
-void detail::atomic_queue<T>::clear()
-{
-	std::lock_guard lock(this->mut);
-	while (!this->q.empty()) this->q.pop();
-}
 
 thread_pool::thread_pool(std::size_t n_threads) :
 	done(false), stopped(false), _n_idle(0)
@@ -123,11 +95,6 @@ void thread_pool::clear_queue()
 
 void thread_pool::wait()
 {
-	if (this->_n_idle == this->size())
-	{
-		return;
-	}
-
 	std::unique_lock lock(this->waiter_mut);
 	waiter.wait(lock);
 }
@@ -178,46 +145,6 @@ void thread_pool::stop(bool finish)
 	this->clear_queue();
 	this->threads.clear();
 	this->stop_flags.clear();
-}
-
-template<typename F, typename... Args>
-std::future<std::invoke_result_t<F,Args...>> thread_pool::push(F && f, Args&&... args)
-{
-	// std::packaged_task is used to get a future out of the function call.
-	auto pck = std::make_shared<std::packaged_task<std::invoke_result_t<F,Args...>()>>(
-		// This has been tested to ensure perfect forwarding still occurs with
-		// the parameters captured by reference.
-		[&f,&args...]
-		{
-			if constexpr (sizeof...(args) == 0)
-			{
-				// Only need to forward the function.
-				return std::forward<F>(f);
-			}
-			else
-			{
-				// std::forward is used to ensure perfect
-				//     forwarding of rvalues where necessary.
-				// std::bind is used to make a parameterless function
-				//     that simulates calling f with its respective arguments.
-				return std::bind(std::forward<F>(f), std::forward<Args>(args)...);
-			}
-		}()
-	);
-	
-	// Lastly, create a function that wraps the packaged
-	// task into a signature of void().
-	this->tasks.push(std::make_unique<std::function<void()>>(
-		[pck]{ (*pck)(); })
-	);
-	
-	// Notify one waiting thread so it can wake up and take this new task.
-	std::lock_guard lock(this->signal_mut);
-	this->signal.notify_one();
-	
-	// Return the future, the user is now responsible
-	// for the return value of the task.
-	return pck->get_future();
 }
 
 void thread_pool::emplace_thread()
@@ -289,3 +216,5 @@ void thread_pool::emplace_thread()
 		}
 	});
 }
+
+} // namespace ctpl

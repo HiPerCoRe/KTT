@@ -136,8 +136,8 @@ namespace ctpl
 		std::condition_variable signal, waiter;
 		std::mutex signal_mut, waiter_mut;
 	};
-
-#include "tpp/ctpl_stl.tpp"
 }
+
+#include "ctpl_stl.inl"
 
 #endif // __ctpl_stl_thread_pool_H__
