@@ -85,6 +85,12 @@ bool ValidationData::HasReferenceKernel() const
     return m_ReferenceKernel != nullptr;
 }
 
+KernelId ValidationData::GetReferenceKernelId() const
+{
+    KttAssert(HasReferenceKernel(), "Reference kernel id should be retrieved only after prior check");
+    return m_ReferenceKernel->GetId();
+}
+
 void ValidationData::ComputeReferenceResults()
 {
     if (HasReferenceComputation())

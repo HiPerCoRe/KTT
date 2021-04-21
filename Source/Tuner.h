@@ -121,6 +121,13 @@ public:
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
         const DimensionVector& globalSize, const DimensionVector& localSize);
 
+    /** @fn void RemoveKernelDefinition(const KernelDefinitionId id)
+      * Removes kernel definition with the specified id from the tuner. Note that definition can only be removed if it is not
+      * associated with any kernel.
+      * @param id Id of the kernel definition which will be removed.
+      */
+    void RemoveKernelDefinition(const KernelDefinitionId id);
+
     /** @fn void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds)
       * Sets arguments for the specified kernel definition.
       * @param id Id of a kernel definition for which the arguments will be set.
@@ -146,6 +153,13 @@ public:
       * @return Id assigned to kernel by the tuner. The id can be used in other API methods.
       */
     KernelId CreateCompositeKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher);
+
+    /** @fn void RemoveKernel(const KernelId id)
+      * Removes kernel with the specified id from the tuner. If the kernel is used as a reference kernel, the corresponding kernel
+      * argument output validation will be disabled.
+      * @param id Id of the kernel which will be removed.
+      */
+    void RemoveKernel(const KernelId id);
 
     /** @fn void SetLauncher(const KernelId id, KernelLauncher launcher)
       * Specifies kernel launcher for a kernel. Kernel launcher enables customization of kernel execution. This is useful in
@@ -308,7 +322,8 @@ public:
     ArgumentId AddArgumentLocal(const size_t localMemorySize);
 
     /** @fn void RemoveArgument(const ArgumentId id)
-      * Removes argument with the specified id from the tuner.
+      * Removes argument with the specified id from the tuner. Note that argument can only be removed if it is not associated with
+      * any kernel definition.
       * @param id Id of the argument which will be removed.
       */
     void RemoveArgument(const ArgumentId id);

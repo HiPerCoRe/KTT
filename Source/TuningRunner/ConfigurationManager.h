@@ -21,7 +21,7 @@ public:
 
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     void InitializeData(const Kernel& kernel);
-    void ClearData(const KernelId id);
+    void ClearData(const KernelId id, const bool clearSearcher = false);
     bool CalculateNextConfiguration(const KernelId id, const KernelResult& previousResult);
 
     bool HasData(const KernelId id) const;

@@ -35,10 +35,15 @@ void ConfigurationManager::InitializeData(const Kernel& kernel)
     m_ConfigurationData[id] = std::make_unique<ConfigurationData>(*m_Searchers[id], kernel);
 }
 
-void ConfigurationManager::ClearData(const KernelId id)
+void ConfigurationManager::ClearData(const KernelId id, const bool clearSearcher)
 {
     Logger::LogDebug("Clearing configuration data for kernel with id " + std::to_string(id));
     m_ConfigurationData.erase(id);
+
+    if (clearSearcher)
+    {
+        m_Searchers.erase(id);
+    }
 }
 
 bool ConfigurationManager::CalculateNextConfiguration(const KernelId id, const KernelResult& previousResult)

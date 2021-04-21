@@ -147,9 +147,9 @@ void TuningRunner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> sear
     m_ConfigurationManager->SetSearcher(id, std::move(searcher));
 }
 
-void TuningRunner::ClearData(const KernelId id)
+void TuningRunner::ClearData(const KernelId id, const bool clearSearcher)
 {
-    m_ConfigurationManager->ClearData(id);
+    m_ConfigurationManager->ClearData(id, clearSearcher);
 }
 
 KernelConfiguration TuningRunner::GetBestConfiguration(const KernelId id) const

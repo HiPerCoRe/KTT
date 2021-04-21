@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <Api/KttException.h>
 #include <Kernel/KernelManager.h>
 #include <Utility/FileSystem.h>
@@ -35,6 +37,27 @@ KernelDefinitionId KernelManager::AddKernelDefinitionFromFile(const std::string&
     return AddKernelDefinition(name, source, globalSize, localSize);
 }
 
+void KernelManager::RemoveKernelDefinition(const KernelDefinitionId id)
+{
+    const bool definitionUsed = std::any_of(m_Kernels.cbegin(), m_Kernels.cend(), [id](const auto& pair)
+    {
+        return pair.second->HasDefinition(id);
+    });
+
+    if (definitionUsed)
+    {
+        throw KttException("Kernel definition with id " + std::to_string(id) +
+            " cannot be removed because it is still referenced by at least one kernel");
+    }
+
+    const size_t erasedCount = m_Definitions.erase(id);
+
+    if (erasedCount == 0)
+    {
+        throw KttException("Attempting to remove kernel definition with invalid id: " + std::to_string(id));
+    }
+}
+
 void KernelManager::SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds)
 {
     auto& definition = GetDefinition(id);
@@ -56,6 +79,16 @@ KernelId KernelManager::CreateKernel(const std::string& name, const std::vector<
     const auto definitions = GetDefinitionsFromIds(definitionIds);
     m_Kernels[id] = std::make_unique<Kernel>(id, name, definitions);
     return id;
+}
+
+void KernelManager::RemoveKernel(const KernelId id)
+{
+    const size_t erasedCount = m_Kernels.erase(id);
+
+    if (erasedCount == 0)
+    {
+        throw KttException("Attempting to remove kernel with invalid id: " + std::to_string(id));
+    }
 }
 
 void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group)

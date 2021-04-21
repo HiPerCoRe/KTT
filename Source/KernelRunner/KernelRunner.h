@@ -38,6 +38,8 @@ public:
     void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
     void SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration);
     void ClearReferenceResult(const Kernel& kernel);
+    void RemoveKernelData(const KernelId id);
+    void RemoveValidationData(const ArgumentId id);
 
 private:
     std::unique_ptr<ComputeLayer> m_ComputeLayer;

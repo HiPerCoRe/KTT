@@ -11,6 +11,7 @@
 #include <Utility/Logger/Logger.h>
 #include <Utility/Timer/Timer.h>
 #include <Utility/StlHelpers.h>
+#include <Utility/StringUtility.h>
 
 #ifdef KTT_PROFILING_CUPTI_LEGACY
 #include <ComputeEngine/Cuda/CuptiLegacy/CuptiSubscription.h>
@@ -131,6 +132,21 @@ void CudaEngine::ClearData(const KernelComputeId& id)
 
 #if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
     m_CuptiInstances.erase(id);
+#endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
+}
+
+void CudaEngine::ClearKernelData(const std::string& kernelName)
+{
+    EraseIf(m_ComputeActions, [&kernelName](const auto& pair)
+    {
+        return StartsWith(pair.second->GetComputeId(), kernelName);
+    });
+
+#if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
+    EraseIf(m_CuptiInstances, [&kernelName](const auto& pair)
+    {
+        return StartsWith(pair.first, kernelName);
+    });
 #endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 }
 

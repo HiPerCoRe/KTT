@@ -30,6 +30,8 @@ public:
     void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
     void SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration);
     bool HasValidationData(const ArgumentId id) const;
+    void RemoveValidationData(const ArgumentId id);
+    void RemoveDataWithReferenceKernel(const KernelId id);
 
     void ComputeReferenceResult(const Kernel& kernel, const KernelRunMode runMode);
     void ComputeReferenceResult(const ArgumentId id);

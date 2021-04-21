@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <Api/Configuration/KernelConfiguration.h>
+#include <KttTypes.h>
 
 namespace ktt
 {
@@ -28,6 +29,7 @@ public:
     bool HasValueComparator() const;
     bool HasReferenceComputation() const;
     bool HasReferenceKernel() const;
+    KernelId GetReferenceKernelId() const;
 
     void ComputeReferenceResults();
     void ClearReferenceResults();

@@ -10,6 +10,7 @@
 #include <Utility/Logger/Logger.h>
 #include <Utility/Timer/Timer.h>
 #include <Utility/StlHelpers.h>
+#include <Utility/StringUtility.h>
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 #include <ComputeEngine/OpenCl/Gpa/GpaPass.h>
@@ -22,7 +23,7 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
     m_PlatformIndex(platformIndex),
     m_DeviceIndex(deviceIndex),
     m_KernelCache(10)
-{    
+{
     const auto platforms = OpenClPlatform::GetAllPlatforms();
 
     if (platformIndex >= static_cast<PlatformIndex>(platforms.size()))
@@ -142,6 +143,21 @@ void OpenClEngine::ClearData(const KernelComputeId& id)
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     m_GpaInstances.erase(id);
+#endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+}
+
+void OpenClEngine::ClearKernelData(const std::string& kernelName)
+{
+    EraseIf(m_ComputeActions, [&kernelName](const auto& pair)
+    {
+        return StartsWith(pair.second->GetComputeId(), kernelName);
+    });
+
+#if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
+    EraseIf(m_GpaInstances, [&kernelName](const auto& pair)
+    {
+        return StartsWith(pair.first), kernelName);
+    });
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 

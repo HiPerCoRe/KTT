@@ -47,6 +47,11 @@ KernelDefinitionId TunerCore::AddKernelDefinitionFromFile(const std::string& nam
     return m_KernelManager->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize);
 }
 
+void TunerCore::RemoveKernelDefinition(const KernelDefinitionId id)
+{
+    m_KernelManager->RemoveKernelDefinition(id);
+}
+
 void TunerCore::SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds)
 {
     m_KernelManager->SetArguments(id, argumentIds);
@@ -62,6 +67,16 @@ KernelId TunerCore::CreateKernel(const std::string& name, const std::vector<Kern
     const KernelId id = m_KernelManager->CreateKernel(name, definitionIds);
     m_KernelManager->SetLauncher(id, launcher);
     return id;
+}
+
+void TunerCore::RemoveKernel(const KernelId id)
+{
+    m_TuningRunner->ClearData(id, true);
+    m_KernelRunner->RemoveKernelData(id);
+    
+    const auto& name = m_KernelManager->GetKernel(id).GetName();
+    m_ComputeEngine->ClearKernelData(name);
+    m_KernelManager->RemoveKernel(id);
 }
 
 void TunerCore::SetLauncher(const KernelId id, KernelLauncher launcher)
@@ -133,6 +148,7 @@ void TunerCore::RemoveArgument(const ArgumentId id)
             " cannot be removed because it is still referenced by at least one kernel definition");
     }
 
+    m_KernelRunner->RemoveValidationData(id);
     m_ComputeEngine->ClearBuffer(id);
     m_ArgumentManager->RemoveArgument(id);
 }

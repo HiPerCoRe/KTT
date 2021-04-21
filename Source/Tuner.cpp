@@ -48,6 +48,18 @@ KernelDefinitionId Tuner::AddKernelDefinitionFromFile(const std::string& name, c
     }
 }
 
+void Tuner::RemoveKernelDefinition(const KernelDefinitionId id)
+{
+    try
+    {
+        m_Tuner->RemoveKernelDefinition(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds)
 {
     try
@@ -84,6 +96,18 @@ KernelId Tuner::CreateCompositeKernel(const std::string& name, const std::vector
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
         return InvalidKernelId;
+    }
+}
+
+void Tuner::RemoveKernel(const KernelId id)
+{
+    try
+    {
+        m_Tuner->RemoveKernel(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
     }
 }
 

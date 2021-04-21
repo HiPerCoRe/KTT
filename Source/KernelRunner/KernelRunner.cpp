@@ -164,6 +164,17 @@ void KernelRunner::ClearReferenceResult(const Kernel& kernel)
     m_Validator->ClearReferenceResult(kernel);
 }
 
+void KernelRunner::RemoveKernelData(const KernelId id)
+{
+    m_ComputeLayer->ClearData(id);
+    m_Validator->RemoveDataWithReferenceKernel(id);
+}
+
+void KernelRunner::RemoveValidationData(const ArgumentId id)
+{
+    m_Validator->RemoveValidationData(id);
+}
+
 KernelLauncher KernelRunner::GetKernelLauncher(const Kernel& kernel)
 {
     if (kernel.HasLauncher())

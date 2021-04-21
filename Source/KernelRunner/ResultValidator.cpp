@@ -70,6 +70,19 @@ bool ResultValidator::HasValidationData(const ArgumentId id) const
     return ContainsKey(m_ValidationData, id);
 }
 
+void ResultValidator::RemoveValidationData(const ArgumentId id)
+{
+    m_ValidationData.erase(id);
+}
+
+void ResultValidator::RemoveDataWithReferenceKernel(const KernelId id)
+{
+    EraseIf(m_ValidationData, [id](const auto& pair)
+    {
+        return pair.second->HasReferenceKernel() && pair.second->GetReferenceKernelId() == id;
+    });
+}
+
 void ResultValidator::ComputeReferenceResult(const Kernel& kernel, const KernelRunMode runMode)
 {
     if (!IsRunModeValidated(runMode))

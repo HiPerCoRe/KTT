@@ -36,6 +36,7 @@ public:
     ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) override;
     ComputationResult WaitForComputeAction(const ComputeActionId id) override;
     void ClearData(const KernelComputeId& id) override;
+    void ClearKernelData(const std::string& kernelName) override;
 
     // Profiling methods
     ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId) override;
