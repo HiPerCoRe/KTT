@@ -58,12 +58,12 @@ KernelConfiguration ConfigurationData::GetConfigurationForIndex(const uint64_t i
         throw KttException("Invalid configuration index");
     }
 
-    const ConfigurationTree* localTree = nullptr;
+    const ConfigurationForest* localForest = nullptr;
     uint64_t localIndex = index;
 
-    for (const auto& tree : m_Trees)
+    for (const auto& forest : m_Forests)
     {
-        const uint64_t localCount = tree->GetConfigurationsCount();
+        const uint64_t localCount = forest->GetConfigurationsCount();
 
         if (localCount <= localIndex)
         {
@@ -71,32 +71,31 @@ KernelConfiguration ConfigurationData::GetConfigurationForIndex(const uint64_t i
             continue;
         }
 
-        localTree = tree.get();
+        localForest = forest.get();
         break;
     }
 
-    auto result = localTree->GetConfiguration(localIndex);
+    auto result = localForest->GetConfiguration(localIndex);
     result.Merge(m_BestConfiguration.first);
     return result;
 }
 
 uint64_t ConfigurationData::GetIndexForConfiguration(const KernelConfiguration& configuration) const
 {
-    const ConfigurationTree& localTree = GetLocalTree(configuration);
+    const ConfigurationForest& localForest = GetLocalForest(configuration);
     uint64_t result = 0;
 
-    for (const auto& tree : m_Trees)
+    for (const auto& forest : m_Forests)
     {
-        if (&localTree == tree.get())
+        if (&localForest == forest.get())
         {
             break;
         }
 
-        result += tree->GetConfigurationsCount();
+        result += forest->GetConfigurationsCount();
     }
 
-    result += localTree.GetLocalConfigurationIndex(configuration);
-    --result;
+    result += localForest.GetLocalConfigurationIndex(configuration);
     KttAssert(result < GetTotalConfigurationsCount(), "Invalid computed configuration index");
     return result;
 }
@@ -111,9 +110,38 @@ KernelConfiguration ConfigurationData::GetRandomConfiguration() const
 std::vector<KernelConfiguration> ConfigurationData::GetNeighbourConfigurations(const KernelConfiguration& configuration,
     const uint64_t maxDifferences, const size_t maxNeighbours) const
 {
-    const ConfigurationTree& localTree = GetLocalTree(configuration);
-    auto configurations = localTree.GetNeighbourConfigurations(configuration, maxDifferences, maxNeighbours,
-        m_ExploredConfigurations);
+    std::vector<KernelConfiguration> configurations;
+
+    m_Kernel.EnumerateNeighbourConfigurations(configuration, [this, &configurations, maxDifferences, maxNeighbours]
+        (const auto& neighbour, const uint64_t differences)
+    {
+        if (configurations.size() >= maxNeighbours)
+        {
+            return false;
+        }
+
+        if (differences > maxDifferences)
+        {
+            return false;
+        }
+
+        const bool validNeighbour = std::all_of(m_Forests.cbegin(), m_Forests.cend(), [&neighbour](const auto& forest)
+        {
+            return forest->IsConfigurationValid(neighbour);
+        });
+
+        if (validNeighbour)
+        {
+            const uint64_t index = GetIndexForConfiguration(neighbour);
+
+            if (!ContainsKey(m_ExploredConfigurations, index))
+            {
+                configurations.push_back(neighbour);
+            }
+        }
+
+        return true;
+    });
 
     for (auto& neighbour : configurations)
     {
@@ -127,9 +155,9 @@ uint64_t ConfigurationData::GetTotalConfigurationsCount() const
 {
     uint64_t result = 0;
 
-    for (const auto& tree : m_Trees)
+    for (const auto& forest : m_Forests)
     {
-        result += tree->GetConfigurationsCount();
+        result += forest->GetConfigurationsCount();
     }
 
     return result;
@@ -177,36 +205,27 @@ void ConfigurationData::InitializeConfigurations()
 
     Timer timer;
     timer.Start();
-
     ctpl::thread_pool pool;
 
-    for (size_t i = 0; i < groups.size(); ++i)
+    for (const auto& group : groups)
     {
-        auto newTree = std::make_unique<ConfigurationTree>();
-        m_Trees.push_back(std::move(newTree));
-
-        auto& tree = *m_Trees[i].get();
-        auto& group = groups[i];
-
-        pool.push([&tree, &group]()
-        {
-            tree.Build(group);
-        });
+        m_Forests.push_back(std::make_unique<ConfigurationForest>());
+        m_Forests.back()->Build(group, pool);
     }
 
     pool.wait();
-
     timer.Stop();
 
     const auto& time = TimeConfiguration::GetInstance();
     const uint64_t elapsedTime = time.ConvertFromNanoseconds(timer.GetElapsedTime());
-    Logger::LogInfo("Configurations were generated in " + std::to_string(elapsedTime) + time.GetUnitTag());
+    Logger::LogInfo("Total count of " + std::to_string(GetTotalConfigurationsCount()) + " configurations was generated in "
+        + std::to_string(elapsedTime) + time.GetUnitTag());
 
     KernelConfiguration initialBest;
 
-    for (const auto& tree : m_Trees)
+    for (const auto& forest : m_Forests)
     {
-        initialBest.Merge(tree->GetConfiguration(0));
+        initialBest.Merge(forest->GetConfiguration(0));
     }
 
     m_BestConfiguration = {initialBest, InvalidDuration};
@@ -226,30 +245,30 @@ void ConfigurationData::UpdateBestConfiguration(const KernelResult& previousResu
     }
 }
 
-const ConfigurationTree& ConfigurationData::GetLocalTree(const KernelConfiguration& configuration) const
+const ConfigurationForest& ConfigurationData::GetLocalForest(const KernelConfiguration& configuration) const
 {
     KttAssert(!IsProcessed(), "This should not be called after configuration space exploration is finished.");
     const auto& pairs = configuration.GetPairs();
 
     if (pairs.empty())
     {
-        return *m_Trees[0];
+        return *m_Forests[0];
     }
 
     // Assume that local tree parameters are at the beginning. Merge operation pushes parameters from different trees to the end.
     // Each tree contains at least one parameter, so the first pair is guaranteed to belong to the local tree.
     const auto& localPair = pairs[0];
 
-    for (const auto& tree : m_Trees)
+    for (const auto& forest : m_Forests)
     {
-        if (tree->HasParameter(localPair.GetName()))
+        if (forest->HasParameter(localPair.GetName()))
         {
-            return *tree;
+            return *forest;
         }
     }
 
     KttError("Inconsistent tree or configuration data.");
-    return *m_Trees[0];
+    return *m_Forests[0];
 }
 
 void ConfigurationData::ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,

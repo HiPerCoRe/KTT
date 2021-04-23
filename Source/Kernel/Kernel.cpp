@@ -273,16 +273,12 @@ std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
     return result;
 }
 
-uint64_t Kernel::GetConfigurationsCount() const
+void Kernel::EnumerateNeighbourConfigurations(const KernelConfiguration& configuration,
+    std::function<bool(const KernelConfiguration&, const uint64_t)> enumerator) const
 {
-    uint64_t result = 1;
-
-    for (const auto& parameter : m_Parameters)
-    {
-        result *= static_cast<uint64_t>(parameter.GetValuesCount());
-    }
-
-    return result;
+    std::set<std::set<const KernelParameter*>> initialSets;
+    std::queue<std::tuple<const KernelConfiguration&, const KernelParameter*, const std::set<const KernelParameter*>&>> initialQueue;
+    EnumerateNeighbours(configuration, nullptr, std::set<const KernelParameter*>{}, initialSets, enumerator, initialQueue);
 }
 
 DimensionVector Kernel::GetModifiedGlobalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const
@@ -362,6 +358,65 @@ DimensionVector Kernel::GetModifiedSize(const KernelDefinitionId id, const Modif
     }
 
     return result;
+}
+
+void Kernel::EnumerateNeighbours(const KernelConfiguration& configuration, const KernelParameter* neighbourParameter,
+    const std::set<const KernelParameter*>& enumeratedParameters, std::set<std::set<const KernelParameter*>>& enumeratedSets,
+    std::function<bool(const KernelConfiguration&, const uint64_t)> enumerator,
+    std::queue<std::tuple<const KernelConfiguration&, const KernelParameter*, const std::set<const KernelParameter*>&>>& queue) const
+{
+    std::vector<KernelConfiguration> newNeighbours;
+
+    if (neighbourParameter != nullptr)
+    {
+        newNeighbours = configuration.GenerateNeighbours(neighbourParameter->GetName(), neighbourParameter->GeneratePairs());
+    }
+
+    for (const auto& neighbour : newNeighbours)
+    {
+        const bool interrupt = !enumerator(neighbour, enumeratedParameters.size());
+
+        if (interrupt)
+        {
+            while (!queue.empty())
+            {
+                queue.pop();
+            }
+
+            return;
+        }
+    }
+
+    for (const auto& parameter : m_Parameters)
+    {
+        auto newEnumerated = enumeratedParameters;
+        newEnumerated.insert(&parameter);
+
+        if (ContainsKey(enumeratedSets, newEnumerated))
+        {
+            continue;
+        }
+
+        auto iterator = enumeratedSets.insert(newEnumerated);
+
+        if (neighbourParameter == nullptr)
+        {
+            queue.push({configuration, &parameter, *iterator.first});
+            continue;
+        }
+
+        for (const auto& neighbour : newNeighbours)
+        {
+            queue.push({neighbour, &parameter, *iterator.first});
+        }
+    }
+
+    while (!queue.empty())
+    {
+        auto next = queue.front();
+        queue.pop();
+        EnumerateNeighbours(std::get<0>(next), std::get<1>(next), std::get<2>(next), enumeratedSets, enumerator, queue);
+    }
 }
 
 } // namespace ktt

@@ -7,7 +7,7 @@
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Searcher/Searcher.h>
 #include <Kernel/Kernel.h>
-#include <TuningRunner/ConfigurationTree.h>
+#include <TuningRunner/ConfigurationForest.h>
 #include <Utility/RandomIntGenerator.h>
 #include <KttTypes.h>
 
@@ -36,7 +36,7 @@ public:
     KernelConfiguration GetBestConfiguration() const;
 
 private:
-    std::vector<std::unique_ptr<ConfigurationTree>> m_Trees;
+    std::vector<std::unique_ptr<ConfigurationForest>> m_Forests;
     std::set<uint64_t> m_ExploredConfigurations;
     std::pair<KernelConfiguration, Nanoseconds> m_BestConfiguration;
     mutable RandomIntGenerator<uint64_t> m_Generator;
@@ -46,7 +46,7 @@ private:
 
     void InitializeConfigurations();
     void UpdateBestConfiguration(const KernelResult& previousResult);
-    const ConfigurationTree& GetLocalTree(const KernelConfiguration& configuration) const;
+    const ConfigurationForest& GetLocalForest(const KernelConfiguration& configuration) const;
 
     // Legacy configuration computation
     void ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,

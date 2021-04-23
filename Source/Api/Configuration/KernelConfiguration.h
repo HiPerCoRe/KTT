@@ -59,6 +59,14 @@ public:
       * @param other Configuration that will be merged into this one.
       */
     void Merge(const KernelConfiguration& other);
+    
+    /** @fn std::vector<KernelConfiguration> GenerateNeighbours(const std::string& parameter, const std::vector<ParameterPair>& pairs) const
+      * Generates neighbour configurations which differ in the specified parameter.
+      * @param parameter Parameter which will be different in the generated configurations. All other parameters will remain identical.
+      * @param pairs All valid pairs for the previously specified parameter.
+      * @return Generated neighbour configurations.
+      */
+    std::vector<KernelConfiguration> GenerateNeighbours(const std::string& parameter, const std::vector<ParameterPair>& pairs) const;
 
     /** @fn bool operator==(const KernelConfiguration& other) const
       * Checks whether kernel configuration is equal to other. I.e., it has the same parameter pairs with the same values.

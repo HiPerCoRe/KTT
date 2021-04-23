@@ -1,4 +1,5 @@
 #include <Api/Configuration/KernelConfiguration.h>
+#include <Utility/ErrorHandling/Assert.h>
 #include <Utility/StlHelpers.h>
 
 namespace ktt
@@ -69,6 +70,37 @@ void KernelConfiguration::Merge(const KernelConfiguration& other)
             m_Pairs.push_back(otherPair);
         }
     }
+}
+
+std::vector<KernelConfiguration> KernelConfiguration::GenerateNeighbours(const std::string& parameter, const std::vector<ParameterPair>& pairs) const
+{
+    size_t parameterIndex = static_cast<size_t>(-1);
+
+    for (size_t i = 0; i < m_Pairs.size(); ++i)
+    {
+        if (m_Pairs[i].GetName() == parameter)
+        {
+            parameterIndex = i;
+            break;
+        }
+    }
+
+    KttAssert(parameterIndex != static_cast<size_t>(-1), "Invalid parameter on input");
+    std::vector<KernelConfiguration> result;
+
+    for (const auto& pair : pairs)
+    {
+        if (pair.HasSameValue(m_Pairs[parameterIndex]))
+        {
+            continue;
+        }
+
+        auto newPairs = m_Pairs;
+        newPairs[parameterIndex] = pair;
+        result.emplace_back(newPairs);
+    }
+
+    return result;
 }
 
 bool KernelConfiguration::operator==(const KernelConfiguration& other) const

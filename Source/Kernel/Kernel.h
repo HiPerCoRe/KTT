@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <map>
+#include <queue>
 #include <set>
 #include <string>
 #include <vector>
@@ -48,7 +49,8 @@ public:
 
     KernelConfiguration CreateConfiguration(const ParameterInput& parameters) const;
     std::vector<KernelParameterGroup> GenerateParameterGroups() const;
-    uint64_t GetConfigurationsCount() const;
+    void EnumerateNeighbourConfigurations(const KernelConfiguration& configuration,
+        std::function<bool(const KernelConfiguration&, const uint64_t)> enumerator) const;
 
     DimensionVector GetModifiedGlobalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const;
     DimensionVector GetModifiedLocalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const;
@@ -67,6 +69,10 @@ private:
     const KernelParameter& GetParamater(const std::string& name) const;
     DimensionVector GetModifiedSize(const KernelDefinitionId id, const ModifierType type,
         const std::vector<ParameterPair>& pairs) const;
+    void EnumerateNeighbours(const KernelConfiguration& configuration, const KernelParameter* neighbourParameter,
+        const std::set<const KernelParameter*>& enumeratedParameters, std::set<std::set<const KernelParameter*>>& enumeratedSets,
+        std::function<bool(const KernelConfiguration&, const uint64_t)> enumerator,
+        std::queue<std::tuple<const KernelConfiguration&, const KernelParameter*, const std::set<const KernelParameter*>&>>& queue) const;
 };
 
 } // namespace ktt

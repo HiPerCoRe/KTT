@@ -84,6 +84,8 @@ bool ConfigurationTree::IsBuilt() const
 
 bool ConfigurationTree::HasParameter(const std::string& name) const
 {
+    KttAssert(IsBuilt(), "The tree must be built before submitting queries");
+
     for (const auto& pair : m_ParameterToLevel)
     {
         if (pair.first->GetName() == name)
@@ -120,36 +122,20 @@ KernelConfiguration ConfigurationTree::GetConfiguration(const uint64_t index) co
     return GetConfigurationFromIndices(indices);
 }
 
-std::vector<KernelConfiguration> ConfigurationTree::GetNeighbourConfigurations(const KernelConfiguration& configuration,
-    const uint64_t maxDifferences, const size_t maxNeighbours, const std::set<uint64_t> exploredConfigurations) const
-{
-    KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
-    const std::vector<size_t> indices = GetIndicesFromConfiguration(configuration);
-    std::set<std::vector<size_t>> exploredIndices;
-
-    for (const auto exploredIndex : exploredConfigurations)
-    {
-        std::vector<size_t> exploredParameterIndices;
-        m_Root->GatherParameterIndices(exploredIndex + 1, exploredParameterIndices);
-        exploredIndices.insert(exploredParameterIndices);
-    }
-
-    const auto neighbours = m_Root->GatherNeighbourIndices(indices, maxDifferences, maxNeighbours, exploredIndices);
-    std::vector<KernelConfiguration> result;
-
-    for (const auto& neighbourIndices : neighbours)
-    {
-        result.push_back(GetConfigurationFromIndices(neighbourIndices));
-    }
-
-    return result;
-}
-
 uint64_t ConfigurationTree::GetLocalConfigurationIndex(const KernelConfiguration& configuration) const
 {
     KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
     const std::vector<size_t> indices = GetIndicesFromConfiguration(configuration);
-    return m_Root->ComputeLocalIndex(indices);
+    uint64_t index = m_Root->ComputeLocalIndex(indices);
+    --index;
+    return index;
+}
+
+bool ConfigurationTree::IsConfigurationValid(const KernelConfiguration& configuration) const
+{
+    KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
+    const std::vector<size_t> indices = GetIndicesFromConfiguration(configuration);
+    return m_Root->IsPathValid(indices);
 }
 
 void ConfigurationTree::AddPaths(const std::vector<size_t>& indices, const std::vector<const KernelParameter*>& parameters,

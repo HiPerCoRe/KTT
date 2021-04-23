@@ -28,9 +28,8 @@ public:
     uint64_t GetDepth() const;
     uint64_t GetConfigurationsCount() const;
     KernelConfiguration GetConfiguration(const uint64_t index) const;
-    std::vector<KernelConfiguration> GetNeighbourConfigurations(const KernelConfiguration& configuration,
-        const uint64_t maxDifferences, const size_t maxNeighbours, const std::set<uint64_t> exploredConfigurations) const;
     uint64_t GetLocalConfigurationIndex(const KernelConfiguration& configuration) const;
+    bool IsConfigurationValid(const KernelConfiguration& configuration) const;
 
 private:
     std::map<const KernelParameter*, uint64_t> m_ParameterToLevel;
