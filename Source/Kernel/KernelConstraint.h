@@ -25,6 +25,7 @@ public:
     bool HasAllParameters(const std::set<std::string>& parameterNames) const;
     uint64_t GetAffectedParameterCount(const std::set<std::string>& parameterNames) const;
     bool IsFulfilled(const std::vector<ParameterPair>& pairs) const;
+    bool IsFulfilled(const std::vector<uint64_t>& values) const;
 
     void EnumeratePairs(const std::function<void(std::vector<ParameterPair>&, const bool)>& enumerator) const;
     void EnumerateParameterIndices(const std::function<void(std::vector<size_t>&, const bool)>& enumerator) const;

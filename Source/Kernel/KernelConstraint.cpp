@@ -78,6 +78,11 @@ bool KernelConstraint::IsFulfilled(const std::vector<ParameterPair>& pairs) cons
     return m_Function(values);
 }
 
+bool KernelConstraint::IsFulfilled(const std::vector<uint64_t>& values) const
+{
+    return m_Function(values);
+}
+
 void KernelConstraint::EnumeratePairs(const std::function<void(std::vector<ParameterPair>&, const bool)>& enumerator) const
 {
     std::vector<ParameterPair> initialPairs;

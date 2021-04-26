@@ -16,55 +16,13 @@ ConfigurationTree::ConfigurationTree() :
 void ConfigurationTree::Build(const KernelParameterGroup& group)
 {
     m_Root = std::make_unique<ConfigurationNode>();
+    std::set<std::string> lockedParameters;
 
-    std::set<const KernelConstraint*> processedConstraints;
-    std::set<std::string> processedParameters;
-
-    while (processedConstraints.size() != group.GetConstraints().size())
+    group.EnumerateParameterIndices([this, &lockedParameters](std::vector<size_t>& indices,
+        const std::vector<const KernelParameter*>& parameters)
     {
-        const KernelConstraint& constraint = group.GetNextConstraintToProcess(processedConstraints, processedParameters);
-        const uint64_t affectedCount = constraint.GetAffectedParameterCount(processedParameters);
-
-        constraint.EnumerateParameterIndices([this, &processedParameters, &constraint, affectedCount] (std::vector<size_t>& indices,
-            const bool validIndices)
-        {
-            if (validIndices && affectedCount < constraint.GetParameterNames().size())
-            {
-                AddPaths(indices, constraint.GetParameters(), processedParameters);
-            }
-        });
-
-        constraint.EnumerateParameterIndices([this, &constraint, affectedCount] (std::vector<size_t>& indices,
-            const bool validIndices)
-        {
-            if (!validIndices && affectedCount > 0)
-            {
-                PrunePaths(indices, constraint.GetParameters());
-            }
-        });
-
-        processedConstraints.insert(&constraint);
-
-        for (const auto& name : constraint.GetParameterNames())
-        {
-            processedParameters.insert(name);
-        }
-    }
-
-    for (const auto* parameter : group.GetParameters())
-    {
-        if (ContainsKey(processedParameters, parameter->GetName()))
-        {
-            continue;
-        }
-
-        for (size_t index = 0; index < parameter->GetValuesCount(); ++index)
-        {
-            AddPaths({index}, {parameter}, processedParameters);
-        }
-
-        processedParameters.insert(parameter->GetName());
-    }
+        AddPaths(indices, parameters, lockedParameters);
+    });
 
     m_Root->ComputeConfigurationsCount();
     m_IsBuilt = true;

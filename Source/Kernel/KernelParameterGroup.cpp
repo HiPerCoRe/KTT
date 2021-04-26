@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <Kernel/KernelParameterGroup.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/StlHelpers.h>
@@ -130,6 +132,122 @@ const KernelConstraint& KernelParameterGroup::GetNextConstraintToProcess(const s
     }
 
     return **constraintsToProcess.cbegin();
+}
+
+void KernelParameterGroup::EnumerateParameterIndices(const std::function<void(std::vector<size_t>&,
+    const std::vector<const KernelParameter*>&)>& enumerator) const
+{
+    std::vector<size_t> initialIndices;
+    const auto parameters = GetParametersInEnumerationOrder();
+    const auto evaluationLevels = GetConstraintEvaluationLevels();
+    ComputeIndices(0, initialIndices, parameters, evaluationLevels, enumerator);
+}
+
+void KernelParameterGroup::ComputeIndices(const size_t currentIndex, std::vector<size_t>& indices,
+    const std::vector<const KernelParameter*>& parameters,
+    const std::map<size_t, std::vector<const KernelConstraint*>>& evaluationLevels,
+    const std::function<void(std::vector<size_t>&, const std::vector<const KernelParameter*>&)>& enumerator) const
+{
+    if (currentIndex >= parameters.size())
+    {
+        enumerator(indices, parameters);
+        return;
+    }
+
+    const auto& parameterValues = parameters[currentIndex]->GetValues();
+
+    for (size_t i = 0; i < parameterValues.size(); ++i)
+    {
+        std::vector<size_t> newIndices = indices;
+        newIndices.push_back(i);
+        bool constraintsFulfilled = true;
+
+        for (const auto* constraint : evaluationLevels.find(currentIndex)->second)
+        {
+            std::vector<uint64_t> values;
+
+            for (const auto* parameter : constraint->GetParameters())
+            {
+                for (size_t index = 0; index < newIndices.size(); ++index)
+                {
+                    if (parameter == parameters[index])
+                    {
+                        values.push_back(parameter->GetValues()[newIndices[index]]);
+                        break;
+                    }
+                }
+            }
+
+            constraintsFulfilled &= constraint->IsFulfilled(values);
+        }
+
+        if (constraintsFulfilled)
+        {
+            ComputeIndices(currentIndex + 1, newIndices, parameters, evaluationLevels, enumerator);
+        }
+    }
+}
+
+std::vector<const KernelParameter*> KernelParameterGroup::GetParametersInEnumerationOrder() const
+{
+    std::vector<const KernelParameter*> result;
+    auto sortedConstraints = m_Constraints;
+
+    std::sort(sortedConstraints.begin(), sortedConstraints.end(), [](const auto* left, const auto* right)
+    {
+        return left->GetParameters().size() < right->GetParameters().size();
+    });
+
+    for (const auto* constraint : sortedConstraints)
+    {
+        for (const auto* parameter : constraint->GetParameters())
+        {
+            if (!ContainsElement(result, parameter))
+            {
+                result.push_back(parameter);
+            }
+        }
+    }
+
+    for (const auto* parameter : m_Parameters)
+    {
+        if (!ContainsElement(result, parameter))
+        {
+            result.push_back(parameter);
+        }
+    }
+
+    return result;
+}
+
+std::map<size_t, std::vector<const KernelConstraint*>> KernelParameterGroup::GetConstraintEvaluationLevels() const
+{
+    std::map<size_t, std::vector<const KernelConstraint*>> result;
+    const auto orderedParameters = GetParametersInEnumerationOrder();
+    std::set<std::string> includedParameters;
+    std::set<const KernelConstraint*> processedConstraints;
+
+    for (size_t level = 0; level < orderedParameters.size(); ++level)
+    {
+        result[level] = std::vector<const KernelConstraint*>{};
+        includedParameters.insert(orderedParameters[level]->GetName());
+
+        for (const auto* constraint : m_Constraints)
+        {
+            if (ContainsKey(processedConstraints, constraint))
+            {
+                continue;
+            }
+
+            if (constraint->HasAllParameters(includedParameters))
+            {
+                result[level].push_back(constraint);
+                processedConstraints.insert(constraint);
+            }
+        }
+    }
+
+    return result;
 }
 
 } // namespace ktt
