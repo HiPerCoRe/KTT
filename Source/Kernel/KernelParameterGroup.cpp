@@ -107,89 +107,10 @@ std::vector<KernelParameterGroup> KernelParameterGroup::GenerateSubgroups() cons
     return result;
 }
 
-const KernelConstraint& KernelParameterGroup::GetNextConstraintToProcess(const std::set<const KernelConstraint*> processedConstraints,
-    const std::set<std::string>& processedParameters) const
-{
-    std::vector<const KernelConstraint*> constraintsToProcess;
-
-    for (const auto* constraint : m_Constraints)
-    {
-        if (!ContainsKey(processedConstraints, constraint))
-        {
-            constraintsToProcess.push_back(constraint);
-        }
-    }
-
-    KttAssert(!constraintsToProcess.empty(), "Retrieving next constraint to process when there are no unprocessed constraints left");
-
-    for (const auto* constraint : constraintsToProcess)
-    {
-        // Constraints with all intersecting parameters are prioritized
-        if (constraint->HasAllParameters(processedParameters))
-        {
-            return *constraint;
-        }
-    }
-
-    return **constraintsToProcess.cbegin();
-}
-
-void KernelParameterGroup::EnumerateParameterIndices(const std::function<void(std::vector<size_t>&,
-    const std::vector<const KernelParameter*>&)>& enumerator) const
-{
-    std::vector<size_t> initialIndices;
-    const auto parameters = GetParametersInEnumerationOrder();
-    const auto evaluationLevels = GetConstraintEvaluationLevels();
-    ComputeIndices(0, initialIndices, parameters, evaluationLevels, enumerator);
-}
-
-void KernelParameterGroup::ComputeIndices(const size_t currentIndex, std::vector<size_t>& indices,
-    const std::vector<const KernelParameter*>& parameters,
-    const std::map<size_t, std::vector<const KernelConstraint*>>& evaluationLevels,
-    const std::function<void(std::vector<size_t>&, const std::vector<const KernelParameter*>&)>& enumerator) const
-{
-    if (currentIndex >= parameters.size())
-    {
-        enumerator(indices, parameters);
-        return;
-    }
-
-    const auto& parameterValues = parameters[currentIndex]->GetValues();
-
-    for (size_t i = 0; i < parameterValues.size(); ++i)
-    {
-        std::vector<size_t> newIndices = indices;
-        newIndices.push_back(i);
-        bool constraintsFulfilled = true;
-
-        for (const auto* constraint : evaluationLevels.find(currentIndex)->second)
-        {
-            std::vector<uint64_t> values;
-
-            for (const auto* parameter : constraint->GetParameters())
-            {
-                for (size_t index = 0; index < newIndices.size(); ++index)
-                {
-                    if (parameter == parameters[index])
-                    {
-                        values.push_back(parameter->GetValues()[newIndices[index]]);
-                        break;
-                    }
-                }
-            }
-
-            constraintsFulfilled &= constraint->IsFulfilled(values);
-        }
-
-        if (constraintsFulfilled)
-        {
-            ComputeIndices(currentIndex + 1, newIndices, parameters, evaluationLevels, enumerator);
-        }
-    }
-}
-
 std::vector<const KernelParameter*> KernelParameterGroup::GetParametersInEnumerationOrder() const
 {
+    // Parameters which are part of constraints with low number of parameters are prioritized, so these constraints can be
+    // evaluated sooner during configurations enumeration.
     std::vector<const KernelParameter*> result;
     auto sortedConstraints = m_Constraints;
 
@@ -218,6 +139,59 @@ std::vector<const KernelParameter*> KernelParameterGroup::GetParametersInEnumera
     }
 
     return result;
+}
+
+void KernelParameterGroup::EnumerateParameterIndices(const std::function<void(const std::vector<size_t>&)>& enumerator) const
+{
+    std::vector<size_t> initialIndices;
+    const auto evaluationLevels = GetConstraintEvaluationLevels();
+    const auto parameters = GetParametersInEnumerationOrder();
+    ComputeIndices(0, initialIndices, evaluationLevels, parameters, enumerator);
+}
+
+void KernelParameterGroup::ComputeIndices(const size_t currentIndex, const std::vector<size_t>& indices,
+    const std::map<size_t, std::vector<const KernelConstraint*>>& evaluationLevels,
+    const std::vector<const KernelParameter*>& parameters, const std::function<void(const std::vector<size_t>&)>& enumerator) const
+{
+    if (currentIndex >= parameters.size())
+    {
+        enumerator(indices);
+        return;
+    }
+
+    const auto& parameterValues = parameters[currentIndex]->GetValues();
+
+    for (size_t i = 0; i < parameterValues.size(); ++i)
+    {
+        std::vector<size_t> newIndices = indices;
+        newIndices.push_back(i);
+        bool constraintsFulfilled = true;
+        KttAssert(ContainsKey(evaluationLevels, currentIndex), "Invalid current index or evaluation levels");
+
+        for (const auto* constraint : evaluationLevels.find(currentIndex)->second)
+        {
+            std::vector<uint64_t> values;
+
+            for (const auto* parameter : constraint->GetParameters())
+            {
+                for (size_t index = 0; index < newIndices.size(); ++index)
+                {
+                    if (parameter == parameters[index])
+                    {
+                        values.push_back(parameter->GetValues()[newIndices[index]]);
+                        break;
+                    }
+                }
+            }
+
+            constraintsFulfilled &= constraint->IsFulfilled(values);
+        }
+
+        if (constraintsFulfilled)
+        {
+            ComputeIndices(currentIndex + 1, newIndices, evaluationLevels, parameters, enumerator);
+        }
+    }
 }
 
 std::map<size_t, std::vector<const KernelConstraint*>> KernelParameterGroup::GetConstraintEvaluationLevels() const

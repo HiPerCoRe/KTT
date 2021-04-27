@@ -1,9 +1,6 @@
-#include <algorithm>
-
 #include <Api/KttException.h>
 #include <TuningRunner/ConfigurationTree.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/StlHelpers.h>
 
 namespace ktt
 {
@@ -16,12 +13,12 @@ ConfigurationTree::ConfigurationTree() :
 void ConfigurationTree::Build(const KernelParameterGroup& group)
 {
     m_Root = std::make_unique<ConfigurationNode>();
-    std::set<std::string> lockedParameters;
+    const auto orderedParameters = group.GetParametersInEnumerationOrder();
+    InitializeParameterLevels(orderedParameters);
 
-    group.EnumerateParameterIndices([this, &lockedParameters](std::vector<size_t>& indices,
-        const std::vector<const KernelParameter*>& parameters)
+    group.EnumerateParameterIndices([this](const std::vector<size_t>& indices)
     {
-        AddPaths(indices, parameters, lockedParameters);
+        AddPath(indices);
     });
 
     m_Root->ComputeConfigurationsCount();
@@ -96,71 +93,23 @@ bool ConfigurationTree::IsConfigurationValid(const KernelConfiguration& configur
     return m_Root->IsPathValid(indices);
 }
 
-void ConfigurationTree::AddPaths(const std::vector<size_t>& indices, const std::vector<const KernelParameter*>& parameters,
-    std::set<std::string>& lockedParameters)
+void ConfigurationTree::InitializeParameterLevels(const std::vector<const KernelParameter*>& parameters)
 {
-    std::vector<uint64_t> levels;
-    const auto finalIndices = PreprocessIndices(indices, parameters, levels);
-    const auto lockedLevels = GetParameterLevels(lockedParameters);
-    m_Root->AddPaths(finalIndices, 0, levels, 0, lockedLevels);
-}
-
-void ConfigurationTree::PrunePaths(const std::vector<size_t>& indices, const std::vector<const KernelParameter*>& parameters)
-{
-    std::vector<uint64_t> levels;
-    const auto finalIndices = PreprocessIndices(indices, parameters, levels);
-    m_Root->PrunePaths(finalIndices, 0, levels, 0);
-}
-
-std::vector<size_t> ConfigurationTree::PreprocessIndices(const std::vector<size_t>& indices,
-    const std::vector<const KernelParameter*>& parameters, std::vector<uint64_t>& levels)
-{
-    auto parameterIndices = MergeParametersWithIndices(parameters, indices);
-
-    auto iterator = std::partition(parameterIndices.begin(), parameterIndices.end(), [this](const auto& pair)
-    {
-        return ContainsKey(m_ParameterToLevel, pair.first);
-    });
-
-    for (; iterator != parameterIndices.end(); ++iterator)
+    for (const auto* parameter : parameters)
     {
         const uint64_t depth = GetDepth();
-        m_ParameterToLevel[iterator->first] = depth + 1;
+        m_ParameterToLevel[parameter] = depth + 1;
     }
-
-    std::sort(parameterIndices.begin(), parameterIndices.end(), [this](const auto& leftPair, const auto& rightPair)
-    {
-        return m_ParameterToLevel[leftPair.first] < m_ParameterToLevel[rightPair.first];
-    });
-
-    std::vector<size_t> finalIndices;
-
-    for (const auto& pair : parameterIndices)
-    {
-        finalIndices.push_back(pair.second);
-        levels.push_back(m_ParameterToLevel[pair.first]);
-    }
-
-    return finalIndices;
 }
 
-std::vector<uint64_t> ConfigurationTree::GetParameterLevels(const std::set<std::string>& parameters) const
+void ConfigurationTree::AddPath(const std::vector<size_t>& indices)
 {
-    std::vector<uint64_t> result;
+    m_Root->AddPath(indices, 0);
+}
 
-    for (const auto& parameterName : parameters)
-    {
-        for (const auto& pair : m_ParameterToLevel)
-        {
-            if (pair.first->GetName() == parameterName)
-            {
-                result.push_back(pair.second);
-                break;
-            }
-        }
-    }
-
-    return result;
+void ConfigurationTree::RemovePath(const std::vector<size_t>& indices)
+{
+    m_Root->RemovePath(indices, 0);
 }
 
 KernelConfiguration ConfigurationTree::GetConfigurationFromIndices(const std::vector<size_t>& indices) const
@@ -220,21 +169,6 @@ std::vector<size_t> ConfigurationTree::GetIndicesFromConfiguration(const KernelC
     }
 
     return indices;
-}
-
-std::vector<std::pair<const KernelParameter*, size_t>> ConfigurationTree::MergeParametersWithIndices(
-    const std::vector<const KernelParameter*>& parameters, const std::vector<size_t>& indices)
-{
-    KttAssert(parameters.size() == indices.size(), "Vector sizes must be equal");
-    std::vector<std::pair<const KernelParameter*, size_t>> result;
-    result.reserve(parameters.size());
-
-    for (size_t i = 0; i < parameters.size(); ++i)
-    {
-        result.emplace_back(parameters[i], indices[i]);
-    }
-
-    return result;
 }
 
 } // namespace ktt

@@ -47,11 +47,6 @@ private:
     void InitializeConfigurations();
     void UpdateBestConfiguration(const KernelResult& previousResult);
     const ConfigurationForest& GetLocalForest(const KernelConfiguration& configuration) const;
-
-    // Legacy configuration computation
-    void ComputeConfigurations(const KernelParameterGroup& group, const size_t currentIndex,
-        std::vector<ParameterPair>& pairs, std::vector<KernelConfiguration>& finalResult) const;
-    bool IsConfigurationValid(const std::vector<ParameterPair>& pairs) const;
 };
 
 } // namespace ktt

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <set>
 #include <string>
 #include <vector>
 
@@ -19,26 +18,21 @@ public:
     const std::string& GetName() const;
     const std::vector<const KernelParameter*>& GetParameters() const;
     const std::vector<const KernelConstraint*>& GetConstraints() const;
-
     bool ContainsParameter(const KernelParameter& parameter) const;
     bool ContainsParameter(const std::string& parameter) const;
 
     std::vector<KernelParameterGroup> GenerateSubgroups() const;
-    const KernelConstraint& GetNextConstraintToProcess(const std::set<const KernelConstraint*> processedConstraints,
-        const std::set<std::string>& processedParameters) const;
-    void EnumerateParameterIndices(const std::function<void(std::vector<size_t>&,
-        const std::vector<const KernelParameter*>&)>& enumerator) const;
+    std::vector<const KernelParameter*> GetParametersInEnumerationOrder() const;
+    void EnumerateParameterIndices(const std::function<void(const std::vector<size_t>&)>& enumerator) const;
 
 private:
     std::string m_Name;
     std::vector<const KernelParameter*> m_Parameters;
     std::vector<const KernelConstraint*> m_Constraints;
 
-    void ComputeIndices(const size_t currentIndex, std::vector<size_t>& indices,
-        const std::vector<const KernelParameter*>& parameters,
+    void ComputeIndices(const size_t currentIndex, const std::vector<size_t>& indices,
         const std::map<size_t, std::vector<const KernelConstraint*>>& evaluationLevels,
-        const std::function<void(std::vector<size_t>&, const std::vector<const KernelParameter*>&)>& enumerator) const;
-    std::vector<const KernelParameter*> GetParametersInEnumerationOrder() const;
+        const std::vector<const KernelParameter*>& parameters, const std::function<void(const std::vector<size_t>&)>& enumerator) const;
     std::map<size_t, std::vector<const KernelConstraint*>> GetConstraintEvaluationLevels() const;
 };
 

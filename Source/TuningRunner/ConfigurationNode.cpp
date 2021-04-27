@@ -17,72 +17,30 @@ ConfigurationNode::ConfigurationNode(const ConfigurationNode& parent, const size
     m_ConfigurationsCount(0)
 {}
 
-void ConfigurationNode::AddPaths(const std::vector<size_t>& indices, const size_t indicesIndex,
-    const std::vector<uint64_t>& levels, const size_t levelsIndex, const std::vector<uint64_t>& lockedLevels)
+void ConfigurationNode::AddPath(const std::vector<size_t>& indices, const size_t indicesIndex)
 {
-    if (HasBroadcastLevel(levels, levelsIndex))
-    {
-        for (auto& child : m_Children)
-        {
-            child->AddPaths(indices, indicesIndex, levels, levelsIndex, lockedLevels);
-        }
-
-        return;
-    }
-
     const size_t index = indices[indicesIndex];
 
     if (!HasChildWithIndex(index))
     {
-        const uint64_t level = GetLevel();
-
-        if (ContainsElement(lockedLevels, level + 1))
-        {
-            return;
-        }
-
         AddChild(index);
     }
 
     if (indices.size() > indicesIndex + 1)
     {
         auto& child = GetChildWithIndex(index);
-        child.AddPaths(indices, indicesIndex + 1, levels, levelsIndex + 1, lockedLevels);
+        child.AddPath(indices, indicesIndex + 1);
     }
 }
 
-void ConfigurationNode::PrunePaths(const std::vector<size_t>& indices, const size_t indicesIndex,
-    const std::vector<uint64_t>& levels, const size_t levelsIndex)
+void ConfigurationNode::RemovePath(const std::vector<size_t>& indices, const size_t indicesIndex)
 {
-    if (HasBroadcastLevel(levels, levelsIndex))
-    {
-        std::vector<ConfigurationNode*> toErase;
-
-        for (auto& child : m_Children)
-        {
-            const size_t originalCount = child->GetChildrenCount();
-            child->PrunePaths(indices, indicesIndex, levels, levelsIndex);
-
-            if (originalCount > 0 && child->GetChildrenCount() == 0)
-            {
-                toErase.push_back(child.get());
-            }
-        }
-
-        EraseIf(m_Children, [&toErase](const auto& currentChild)
-        {
-            return ContainsElement(toErase, currentChild.get());
-        });
-
-        return;
-    }
-
     const size_t index = indices[indicesIndex];
 
     if (HasChildWithIndex(index))
     {
         auto& child = GetChildWithIndex(index);
-        child.PrunePaths(indices, indicesIndex + 1, levels, levelsIndex + 1);
+        child.RemovePath(indices, indicesIndex + 1);
 
         if (child.GetChildrenCount() == 0)
         {
@@ -246,13 +204,6 @@ ConfigurationNode* ConfigurationNode::GetChildWithIndexPointer(const size_t inde
     }
 
     return nullptr;
-}
-
-bool ConfigurationNode::HasBroadcastLevel(const std::vector<uint64_t>& levels, const size_t levelsIndex) const
-{
-    // Node has broadcast level if its level is not included in the levels vector.
-    const uint64_t level = GetLevel();
-    return levels.size() <= levelsIndex || levels[levelsIndex] - 1 != level;
 }
 
 } // namespace ktt
