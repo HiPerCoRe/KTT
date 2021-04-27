@@ -129,6 +129,30 @@ int main(int argc, char** argv)
         definition = tuner.AddKernelDefinitionFromFile("gaussian_1", kernelPath + "GaussianStatic1.cl", ktt::DimensionVector(), ktt::DimensionVector());
         kernel = tuner.CreateSimpleKernel("Convolution", definition);
 
+        std::vector<float> in(inputSize1 * inputSize2);
+        std::vector<float> out((inputSize1 - 4) * (inputSize2 - 4));
+        std::vector<float> intRes((inputSize1 - 4) * (inputSize2 - 4));
+
+        for (size_t i = 0; i < in.size(); ++i)
+        {
+            in[i] = static_cast<float>((i % 100) + 1);
+        }
+
+        for (size_t i = 0; i < out.size(); ++i)
+        {
+            out[i] = 0.0f;
+        }
+
+        for (size_t i = 0; i < intRes.size(); ++i)
+        {
+            intRes[i] = 0.0f;
+        }
+
+        const auto inId = tuner.AddArgumentVector(in, ktt::ArgumentAccessType::ReadOnly);
+        const auto outId = tuner.AddArgumentVector(out, ktt::ArgumentAccessType::ReadWrite);
+        const auto intResId = tuner.AddArgumentVector(intRes, ktt::ArgumentAccessType::ReadWrite);
+        tuner.SetArguments(definition, {inId, outId, intResId});
+
         tuner.AddParameter(kernel, "CACHE_L_CB", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "CACHE_P_CB", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "G_CB_RES_DEST_LEVEL", std::vector<uint64_t>{2});
@@ -138,17 +162,17 @@ int main(int argc, char** argv)
         tuner.AddParameter(kernel, "OCL_DIM_L_1", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "OCL_DIM_L_2", std::vector<uint64_t>{0, 1});
 
-        tuner.AddParameter(kernel, "INPUT_SIZE_L_1", std::vector<uint64_t>{inputSize1});
-        tuner.AddParameter(kernel, "L_CB_SIZE_L_1", ParameterRange(inputSize1));
-        tuner.AddParameter(kernel, "P_CB_SIZE_L_1", ParameterRange(inputSize1));
-        tuner.AddParameter(kernel, "NUM_WG_L_1", ParameterRange(inputSize1));
-        tuner.AddParameter(kernel, "NUM_WI_L_1", ParameterRange(inputSize1));
+        tuner.AddParameter(kernel, "INPUT_SIZE_L_1", std::vector<uint64_t>{inputSize1 - 4});
+        tuner.AddParameter(kernel, "L_CB_SIZE_L_1", ParameterRange(inputSize1 - 4));
+        tuner.AddParameter(kernel, "P_CB_SIZE_L_1", ParameterRange(inputSize1 - 4));
+        tuner.AddParameter(kernel, "NUM_WG_L_1", ParameterRange(inputSize1 - 4));
+        tuner.AddParameter(kernel, "NUM_WI_L_1", ParameterRange(inputSize1 - 4));
 
-        tuner.AddParameter(kernel, "INPUT_SIZE_L_2", std::vector<uint64_t>{inputSize2});
-        tuner.AddParameter(kernel, "L_CB_SIZE_L_2", ParameterRange(inputSize2));
-        tuner.AddParameter(kernel, "P_CB_SIZE_L_2", ParameterRange(inputSize2));
-        tuner.AddParameter(kernel, "NUM_WG_L_2", ParameterRange(inputSize2));
-        tuner.AddParameter(kernel, "NUM_WI_L_2", ParameterRange(inputSize2));
+        tuner.AddParameter(kernel, "INPUT_SIZE_L_2", std::vector<uint64_t>{inputSize2 - 4});
+        tuner.AddParameter(kernel, "L_CB_SIZE_L_2", ParameterRange(inputSize2 - 4));
+        tuner.AddParameter(kernel, "P_CB_SIZE_L_2", ParameterRange(inputSize2 - 4));
+        tuner.AddParameter(kernel, "NUM_WG_L_2", ParameterRange(inputSize2 - 4));
+        tuner.AddParameter(kernel, "NUM_WI_L_2", ParameterRange(inputSize2 - 4));
 
         tuner.AddParameter(kernel, "L_REDUCTION", std::vector<uint64_t>{1});
         tuner.AddParameter(kernel, "P_WRITE_BACK", std::vector<uint64_t>{0});
@@ -168,6 +192,30 @@ int main(int argc, char** argv)
         tuner.AddConstraint(kernel, {"NUM_WG_L_2", "INPUT_SIZE_L_2", "L_CB_SIZE_L_2"}, DividesDivConstraint);
         tuner.AddConstraint(kernel, {"NUM_WI_L_2", "L_CB_SIZE_L_2", "P_CB_SIZE_L_2"}, DividesDivConstraint);
         tuner.AddConstraint(kernel, {"NUM_WI_L_2", "INPUT_SIZE_L_2", "NUM_WG_L_2"}, LessThanOrEqualCeilDivConstraint);
+
+        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X,
+            {"OCL_DIM_L_1", "NUM_WG_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WG_L_2", "NUM_WI_L_2"}, [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 0) * values[1] * values[2] + static_cast<uint64_t>(values[3] == 0) * values[4] * values[5];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y,
+            {"OCL_DIM_L_1", "NUM_WG_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WG_L_2", "NUM_WI_L_2"}, [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 1) * values[1] * values[2] + static_cast<uint64_t>(values[3] == 1) * values[4] * values[5];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X,
+            {"OCL_DIM_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WI_L_2"}, [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 0) * values[1] + static_cast<uint64_t>(values[2] == 0) * values[3];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y,
+            {"OCL_DIM_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WI_L_2"}, [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 1) * values[1] + static_cast<uint64_t>(values[2] == 1) * values[3];
+        });
     }
     else if constexpr (activeSample == AtfSampleType::GEMM)
     {
@@ -408,6 +456,7 @@ int main(int argc, char** argv)
         tuner.AddConstraint(kernel, {"NUM_WG_R_1", "L_CB_SIZE_R_1"}, NoPostInSecondKernelConstraint);
     }
 
+    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
     auto results = tuner.TuneKernel(kernel);
     tuner.SaveResults(results, "AtfOutput", ktt::OutputFormat::XML);
     return 0;
