@@ -425,6 +425,13 @@ if not _OPTIONS["no-examples"] then
 
 if openClProjects then
 
+project "AtfSamplesOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/AtfSamples/*.cpp", "Examples/AtfSamples/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
 project "BicgOpenCl"
     kind "ConsoleApp"
     files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cl"}
