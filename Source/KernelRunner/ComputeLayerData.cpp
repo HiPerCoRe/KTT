@@ -11,7 +11,6 @@ namespace ktt
 ComputeLayerData::ComputeLayerData(const Kernel& kernel, const KernelConfiguration& configuration) :
     m_Kernel(kernel),
     m_Configuration(configuration),
-    m_Duration(0),
     m_Overhead(0)
 {
     for (const auto* definition : kernel.GetDefinitions())
@@ -19,11 +18,6 @@ ComputeLayerData::ComputeLayerData(const Kernel& kernel, const KernelConfigurati
         const auto id = definition->GetId();
         m_ComputeData.insert({id, KernelComputeData(kernel, *definition, configuration)});
     }
-}
-
-void ComputeLayerData::IncreaseDuration(const Nanoseconds duration)
-{
-    m_Duration += duration;
 }
 
 void ComputeLayerData::IncreaseOverhead(const Nanoseconds overhead)
@@ -126,14 +120,14 @@ KernelResult ComputeLayerData::GenerateResult(const Nanoseconds launcherDuration
     const Nanoseconds launcherOverhead = CalculateLauncherOverhead();
     KttAssert(launcherDuration >= launcherOverhead, "Launcher overhead must be lower than its total duration");
     const Nanoseconds actualLauncherDuration = launcherDuration - launcherOverhead;
-    result.SetExtraDuration(m_Duration + actualLauncherDuration);
+    result.SetExtraDuration(actualLauncherDuration);
     result.SetExtraOverhead(m_Overhead);
     return result;
 }
 
 Nanoseconds ComputeLayerData::CalculateLauncherOverhead() const
 {
-    Nanoseconds result = m_Duration + m_Overhead;
+    Nanoseconds result = m_Overhead;
 
     for (const auto& partialResult : m_PartialResults)
     {

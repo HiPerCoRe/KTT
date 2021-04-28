@@ -19,7 +19,6 @@ class ComputeLayerData
 public:
     explicit ComputeLayerData(const Kernel& kernel, const KernelConfiguration& configuration);
 
-    void IncreaseDuration(const Nanoseconds duration);
     void IncreaseOverhead(const Nanoseconds overhead);
     void AddPartialResult(const ComputationResult& result);
     void AddArgumentOverride(const ArgumentId id, const KernelArgument& argument);
@@ -38,7 +37,6 @@ private:
     std::vector<ComputationResult> m_PartialResults;
     const Kernel& m_Kernel;
     const KernelConfiguration& m_Configuration;
-    Nanoseconds m_Duration;
     Nanoseconds m_Overhead;
 
     Nanoseconds CalculateLauncherOverhead() const;

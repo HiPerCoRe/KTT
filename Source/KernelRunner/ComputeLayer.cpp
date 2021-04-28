@@ -181,8 +181,14 @@ void ComputeLayer::UpdateLocalArgument(const ArgumentId id, const size_t dataSiz
 
 void ComputeLayer::UploadBuffer(const ArgumentId id)
 {
+    Timer timer;
+    timer.Start();
+
     const auto actionId = UploadBufferAsync(id, GetDefaultQueue());
     WaitForTransferAction(actionId);
+
+    timer.Stop();
+    GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
 TransferActionId ComputeLayer::UploadBufferAsync(const ArgumentId id, const QueueId queue)
@@ -193,8 +199,14 @@ TransferActionId ComputeLayer::UploadBufferAsync(const ArgumentId id, const Queu
 
 void ComputeLayer::DownloadBuffer(const ArgumentId id, void* destination, const size_t dataSize)
 {
+    Timer timer;
+    timer.Start();
+
     const auto actionId = DownloadBufferAsync(id, GetDefaultQueue(), destination, dataSize);
     WaitForTransferAction(actionId);
+
+    timer.Stop();
+    GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
 TransferActionId ComputeLayer::DownloadBufferAsync(const ArgumentId id, const QueueId queue, void* destination,
@@ -205,8 +217,14 @@ TransferActionId ComputeLayer::DownloadBufferAsync(const ArgumentId id, const Qu
 
 void ComputeLayer::UpdateBuffer(const ArgumentId id, const void* data, const size_t dataSize)
 {
+    Timer timer;
+    timer.Start();
+
     const auto actionId = UpdateBufferAsync(id, GetDefaultQueue(), data, dataSize);
     WaitForTransferAction(actionId);
+
+    timer.Stop();
+    GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
 TransferActionId ComputeLayer::UpdateBufferAsync(const ArgumentId id, const QueueId queue, const void* data,
@@ -217,8 +235,14 @@ TransferActionId ComputeLayer::UpdateBufferAsync(const ArgumentId id, const Queu
 
 void ComputeLayer::CopyBuffer(const ArgumentId destination, const ArgumentId source, const size_t dataSize)
 {
+    Timer timer;
+    timer.Start();
+
     const auto actionId = CopyBufferAsync(destination, source, GetDefaultQueue(), dataSize);
     WaitForTransferAction(actionId);
+
+    timer.Stop();
+    GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
 TransferActionId ComputeLayer::CopyBufferAsync(const ArgumentId destination, const ArgumentId source, const QueueId queue,
@@ -229,12 +253,7 @@ TransferActionId ComputeLayer::CopyBufferAsync(const ArgumentId destination, con
 
 void ComputeLayer::WaitForTransferAction(const TransferActionId id)
 {
-    const auto result = m_ComputeEngine.WaitForTransferAction(id);
-    auto& data = GetData();
-
-    // All argument operations are currently counted as overhead
-    data.IncreaseOverhead(result.GetDuration());
-    data.IncreaseOverhead(result.GetOverhead());
+    m_ComputeEngine.WaitForTransferAction(id);
 }
 
 void ComputeLayer::ResizeBuffer(const ArgumentId id, const size_t newDataSize, const bool preserveData)
