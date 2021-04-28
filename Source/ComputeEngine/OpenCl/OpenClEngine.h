@@ -85,6 +85,7 @@ public:
 private:
     PlatformIndex m_PlatformIndex;
     DeviceIndex m_DeviceIndex;
+    DeviceInfo m_DeviceInfo;
     IdGenerator<ComputeActionId> m_ComputeIdGenerator;
     IdGenerator<TransferActionId> m_TransferIdGenerator;
     std::unique_ptr<OpenClContext> m_Context;

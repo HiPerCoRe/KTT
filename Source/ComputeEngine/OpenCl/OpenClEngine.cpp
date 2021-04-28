@@ -22,6 +22,7 @@ namespace ktt
 OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     m_PlatformIndex(platformIndex),
     m_DeviceIndex(deviceIndex),
+    m_DeviceInfo(0, ""),
     m_KernelCache(10)
 {
     const auto platforms = OpenClPlatform::GetAllPlatforms();
@@ -48,12 +49,15 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
         m_Queues.push_back(std::move(commandQueue));
     }
 
+    m_DeviceInfo = GetDeviceInfo(m_PlatformIndex)[m_DeviceIndex];
+
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     InitializeGpa();
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
 OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
+    m_DeviceInfo(0, ""),
     m_KernelCache(10)
 {
     m_Context = std::make_unique<OpenClContext>(initializer.GetContext());
@@ -89,6 +93,8 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
         m_Queues.push_back(std::move(commandQueue));
     }
 
+    m_DeviceInfo = GetDeviceInfo(m_PlatformIndex)[m_DeviceIndex];
+
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     InitializeGpa();
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
@@ -99,6 +105,13 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
     if (queueId >= static_cast<QueueId>(m_Queues.size()))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    const uint64_t localSize = static_cast<uint64_t>(data.GetLocalSize().GetTotalSize());
+
+    if (localSize > m_DeviceInfo.GetMaxWorkGroupSize())
+    {
+        throw KttException("Work-group size of " + std::to_string(localSize) + " exceeds current device limit");
     }
 
     Timer timer;
@@ -543,8 +556,7 @@ PlatformInfo OpenClEngine::GetCurrentPlatformInfo() const
 
 DeviceInfo OpenClEngine::GetCurrentDeviceInfo() const
 {
-    const auto deviceInfos = GetDeviceInfo(m_PlatformIndex);
-    return deviceInfos[static_cast<size_t>(m_DeviceIndex)];
+    return m_DeviceInfo;
 }
 
 void OpenClEngine::SetCompilerOptions(const std::string& options)

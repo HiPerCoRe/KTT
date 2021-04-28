@@ -86,6 +86,7 @@ public:
 
 private:
     DeviceIndex m_DeviceIndex;
+    DeviceInfo m_DeviceInfo;
     IdGenerator<ComputeActionId> m_ComputeIdGenerator;
     IdGenerator<TransferActionId> m_TransferIdGenerator;
     std::unique_ptr<CudaContext> m_Context;

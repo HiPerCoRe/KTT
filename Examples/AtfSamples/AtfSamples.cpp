@@ -122,6 +122,7 @@ int main(int argc, char** argv)
 
     ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeApi::OpenCL);
     ktt::KernelDefinitionId definition;
+    ktt::KernelDefinitionId definition2;
     ktt::KernelId kernel;
 
     if constexpr (activeSample == AtfSampleType::Convolution)
@@ -220,7 +221,73 @@ int main(int argc, char** argv)
     else if constexpr (activeSample == AtfSampleType::GEMM)
     {
         definition = tuner.AddKernelDefinitionFromFile("gemm_1", kernelPath + "Gemm1.cl", ktt::DimensionVector(), ktt::DimensionVector());
-        kernel = tuner.CreateSimpleKernel("GEMM", definition);
+        definition2 = tuner.AddKernelDefinitionFromFile("gemm_2", kernelPath + "Gemm2.cl", ktt::DimensionVector(), ktt::DimensionVector());
+
+        std::vector<float> a(inputSize1 * inputSize3);
+        std::vector<float> b(inputSize3 * inputSize2);
+        std::vector<float> c(inputSize1 * inputSize2);
+        std::vector<float> intRes(inputSize1 * inputSize2);
+        std::vector<float> res(inputSize1 * inputSize2);
+        
+        for (size_t i = 0; i < a.size(); ++i)
+        {
+            a[i] = static_cast<float>((i % 100) + 1);
+        }
+
+        for (size_t i = 0; i < b.size(); ++i)
+        {
+            b[i] = static_cast<float>((i % 100) + 1);
+        }
+
+        for (size_t i = 0; i < c.size(); ++i)
+        {
+            c[i] = 0.0f;
+            intRes[i] = 0.0f;
+            res[i] = 0.0f;
+        }
+
+        const size_t resSize = res.size() * sizeof(float);
+        const auto aId = tuner.AddArgumentVector(a, ktt::ArgumentAccessType::ReadOnly);
+        const auto bId = tuner.AddArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
+        const auto cId = tuner.AddArgumentVector(c, ktt::ArgumentAccessType::ReadWrite);
+        const auto resId = tuner.AddArgumentVector(res, ktt::ArgumentAccessType::ReadWrite);
+        const auto intResId = tuner.AddArgumentVector(intRes, ktt::ArgumentAccessType::ReadWrite);
+        tuner.SetArguments(definition, {aId, bId, resId, intResId});
+        tuner.SetArguments(definition2, {intResId, resId, cId});
+
+        kernel = tuner.CreateCompositeKernel("GEMM", {definition, definition2}, [resSize, resId, intResId, definition, definition2]
+            (ktt::ComputeInterface& interface)
+        {
+            const auto& pairs = interface.GetCurrentConfiguration().GetPairs();
+            size_t newResSize = resSize;
+
+            if (ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "G_CB_RES_DEST_LEVEL") == 2)
+            {
+                newResSize *= ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WG_R_1");
+            }
+
+            if (ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "L_CB_RES_DEST_LEVEL") == 2)
+            {
+                newResSize *= ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WI_R_1");
+            }
+
+            interface.ResizeBuffer(resId, newResSize, false);
+
+            const size_t newIntResSize = resSize * ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WG_R_1");
+            interface.ResizeBuffer(intResId, newIntResSize, false);
+
+            interface.RunKernel(definition);
+
+            if (ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WG_R_1") > 1)
+            {
+                if (ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "L_CB_RES_DEST_LEVEL") == 2)
+                {
+                    interface.ResizeBuffer(resId, resSize * ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WI_R_1"), false);
+                }
+
+                interface.RunKernel(definition2);
+            }
+        });
 
         tuner.AddParameter(kernel, "CACHE_L_CB", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "CACHE_P_CB", std::vector<uint64_t>{0, 1});
@@ -277,6 +344,114 @@ int main(int argc, char** argv)
         tuner.AddConstraint(kernel, {"NUM_WI_R_1", "L_CB_SIZE_R_1", "P_CB_SIZE_R_1"}, DividesDivConstraint);
         tuner.AddConstraint(kernel, {"NUM_WI_R_1", "INPUT_SIZE_R_1", "NUM_WG_R_1"}, LessThanOrEqualCeilDivConstraint);
         tuner.AddConstraint(kernel, {"NUM_WG_R_1", "L_CB_SIZE_R_1"}, NoPostInSecondKernelConstraint);
+
+        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X,
+            {"OCL_DIM_L_1", "NUM_WG_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WG_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WG_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 0) * values[1] * values[2]
+                + static_cast<uint64_t>(values[3] == 0) * values[4] * values[5]
+                + static_cast<uint64_t>(values[6] == 0) * values[7] * values[8];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y,
+            {"OCL_DIM_L_1", "NUM_WG_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WG_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WG_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 1) * values[1] * values[2]
+                + static_cast<uint64_t>(values[3] == 1) * values[4] * values[5]
+                + static_cast<uint64_t>(values[6] == 1) * values[7] * values[8];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z,
+            {"OCL_DIM_L_1", "NUM_WG_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WG_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WG_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 2) * values[1] * values[2]
+                + static_cast<uint64_t>(values[3] == 2) * values[4] * values[5]
+                + static_cast<uint64_t>(values[6] == 2) * values[7] * values[8];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition2}, ktt::ModifierType::Global, ktt::ModifierDimension::X,
+            {"OCL_DIM_L_1", "NUM_WG_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WG_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 0) * values[1] * values[2]
+                + static_cast<uint64_t>(values[3] == 0) * values[4] * values[5]
+                + static_cast<uint64_t>(values[6] == 0) * values[7];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition2}, ktt::ModifierType::Global, ktt::ModifierDimension::Y,
+            {"OCL_DIM_L_1", "NUM_WG_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WG_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 1) * values[1] * values[2]
+                + static_cast<uint64_t>(values[3] == 1) * values[4] * values[5]
+                + static_cast<uint64_t>(values[6] == 1) * values[7];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition2}, ktt::ModifierType::Global, ktt::ModifierDimension::Z,
+            {"OCL_DIM_L_1", "NUM_WG_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WG_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 2) * values[1] * values[2]
+                + static_cast<uint64_t>(values[3] == 2) * values[4] * values[5]
+                + static_cast<uint64_t>(values[6] == 2) * values[7];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X,
+            {"OCL_DIM_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 0) * values[1]
+                + static_cast<uint64_t>(values[2] == 0) * values[3]
+                + static_cast<uint64_t>(values[4] == 0) * values[5];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y,
+            {"OCL_DIM_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 1) * values[1]
+                + static_cast<uint64_t>(values[2] == 1) * values[3]
+                + static_cast<uint64_t>(values[4] == 1) * values[5];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Z,
+            {"OCL_DIM_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 2) * values[1]
+                + static_cast<uint64_t>(values[2] == 2) * values[3]
+                + static_cast<uint64_t>(values[4] == 2) * values[5];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition2}, ktt::ModifierType::Local, ktt::ModifierDimension::X,
+            {"OCL_DIM_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 0) * values[1]
+                + static_cast<uint64_t>(values[2] == 0) * values[3]
+                + static_cast<uint64_t>(values[4] == 0) * values[5];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition2}, ktt::ModifierType::Local, ktt::ModifierDimension::Y,
+            {"OCL_DIM_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 1) * values[1]
+                + static_cast<uint64_t>(values[2] == 1) * values[3]
+                + static_cast<uint64_t>(values[4] == 1) * values[5];
+        });
+
+        tuner.AddThreadModifier(kernel, {definition2}, ktt::ModifierType::Local, ktt::ModifierDimension::Z,
+            {"OCL_DIM_L_1", "NUM_WI_L_1", "OCL_DIM_L_2", "NUM_WI_L_2", "OCL_DIM_R_1", "NUM_WI_R_1"},
+            [](const uint64_t, const std::vector<uint64_t>& values)
+        {
+            return static_cast<uint64_t>(values[0] == 2) * values[1]
+                + static_cast<uint64_t>(values[2] == 2) * values[3]
+                + static_cast<uint64_t>(values[4] == 2) * values[5];
+        });
     }
     else if constexpr (activeSample == AtfSampleType::CCSD)
     {

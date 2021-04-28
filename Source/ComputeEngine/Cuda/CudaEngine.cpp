@@ -24,6 +24,7 @@ namespace ktt
 
 CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
     m_DeviceIndex(deviceIndex),
+    m_DeviceInfo(0, ""),
     m_KernelCache(10)
 {
     Logger::LogDebug("Initializing CUDA");
@@ -45,6 +46,7 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     }
 
     CudaProgram::InitializeCompilerOptions(*m_Context);
+    m_DeviceInfo = GetDeviceInfo(0)[m_DeviceIndex];
 
 #if defined(KTT_PROFILING_CUPTI)
     InitializeCupti();
@@ -52,6 +54,7 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 }
 
 CudaEngine::CudaEngine(const ComputeApiInitializer& initializer) :
+    m_DeviceInfo(0, ""),
     m_KernelCache(10)
 {
     m_Context = std::make_unique<CudaContext>(initializer.GetContext());
@@ -76,6 +79,7 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer) :
     }
 
     CudaProgram::InitializeCompilerOptions(*m_Context);
+    m_DeviceInfo = GetDeviceInfo(0)[m_DeviceIndex];
 
 #if defined(KTT_PROFILING_CUPTI)
     InitializeCupti();
@@ -87,6 +91,13 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     if (queueId >= static_cast<QueueId>(m_Streams.size()))
     {
         throw KttException("Invalid stream index: " + std::to_string(queueId));
+    }
+
+    const uint64_t localSize = static_cast<uint64_t>(data.GetLocalSize().GetTotalSize());
+
+    if (localSize > m_DeviceInfo.GetMaxWorkGroupSize())
+    {
+        throw KttException("Block size of " + std::to_string(localSize) + " exceeds current device limit");
     }
 
     Timer timer;
@@ -585,8 +596,7 @@ PlatformInfo CudaEngine::GetCurrentPlatformInfo() const
 
 DeviceInfo CudaEngine::GetCurrentDeviceInfo() const
 {
-    const auto deviceInfos = GetDeviceInfo(0);
-    return deviceInfos[static_cast<size_t>(m_DeviceIndex)];
+    return m_DeviceInfo;
 }
 
 void CudaEngine::SetCompilerOptions(const std::string& options)
