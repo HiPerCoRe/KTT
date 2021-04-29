@@ -6,10 +6,11 @@ namespace ktt
 {
 
 KernelDefinition::KernelDefinition(const KernelDefinitionId id, const std::string& name, const std::string& source,
-    const DimensionVector& globalSize, const DimensionVector& localSize) :
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName) :
     m_Id(id),
     m_Name(name),
     m_Source(source),
+    m_TypeName(typeName),
     m_GlobalSize(globalSize),
     m_LocalSize(localSize)
 {}
@@ -37,6 +38,11 @@ const std::string& KernelDefinition::GetName() const
 const std::string& KernelDefinition::GetSource() const
 {
     return m_Source;
+}
+
+const std::string& KernelDefinition::GetTypeName() const
+{
+    return m_TypeName;
 }
 
 const DimensionVector& KernelDefinition::GetGlobalSize() const

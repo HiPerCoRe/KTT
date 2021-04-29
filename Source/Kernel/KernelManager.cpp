@@ -15,7 +15,7 @@ KernelManager::KernelManager(KernelArgumentManager& argumentManager) :
 {}
 
 KernelDefinitionId KernelManager::AddKernelDefinition(const std::string& name, const std::string& source,
-    const DimensionVector& globalSize, const DimensionVector& localSize)
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName)
 {
     for (const auto& pair : m_Definitions)
     {
@@ -26,15 +26,15 @@ KernelDefinitionId KernelManager::AddKernelDefinition(const std::string& name, c
     }
 
     const auto id = m_DefinitionIdGenerator.GenerateId();
-    m_Definitions[id] = std::make_unique<KernelDefinition>(id, name, source, globalSize, localSize);
+    m_Definitions[id] = std::make_unique<KernelDefinition>(id, name, source, globalSize, localSize, typeName);
     return id;
 }
 
 KernelDefinitionId KernelManager::AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-    const DimensionVector& globalSize, const DimensionVector& localSize)
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName)
 {
     const std::string source = LoadFileToString(filePath);
-    return AddKernelDefinition(name, source, globalSize, localSize);
+    return AddKernelDefinition(name, source, globalSize, localSize, typeName);
 }
 
 void KernelManager::RemoveKernelDefinition(const KernelDefinitionId id)

@@ -36,15 +36,15 @@ TunerCore::TunerCore(const ComputeApi api, const ComputeApiInitializer& initiali
 }
 
 KernelDefinitionId TunerCore::AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize)
+    const DimensionVector& localSize, const std::string& typeName)
 {
-    return m_KernelManager->AddKernelDefinition(name, source, globalSize, localSize);
+    return m_KernelManager->AddKernelDefinition(name, source, globalSize, localSize, typeName);
 }
 
 KernelDefinitionId TunerCore::AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-    const DimensionVector& globalSize, const DimensionVector& localSize)
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName)
 {
-    return m_KernelManager->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize);
+    return m_KernelManager->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize, typeName);
 }
 
 void TunerCore::RemoveKernelDefinition(const KernelDefinitionId id)

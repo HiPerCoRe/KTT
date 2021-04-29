@@ -21,11 +21,11 @@ Tuner::Tuner(const ComputeApi api, const ComputeApiInitializer& initializer) :
 Tuner::~Tuner() = default;
 
 KernelDefinitionId Tuner::AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize)
+    const DimensionVector& localSize, const std::string& typeName)
 {
     try
     {
-        return m_Tuner->AddKernelDefinition(name, source, globalSize, localSize);
+        return m_Tuner->AddKernelDefinition(name, source, globalSize, localSize, typeName);
     }
     catch (const KttException& exception)
     {
@@ -35,11 +35,11 @@ KernelDefinitionId Tuner::AddKernelDefinition(const std::string& name, const std
 }
 
 KernelDefinitionId Tuner::AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-    const DimensionVector& globalSize, const DimensionVector& localSize)
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName)
 {
     try
     {
-        return m_Tuner->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize);
+        return m_Tuner->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize, typeName);
     }
     catch (const KttException& exception)
     {

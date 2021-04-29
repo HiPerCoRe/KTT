@@ -22,7 +22,8 @@ struct KernelCompilationData;
 class CudaKernel : public std::enable_shared_from_this<CudaKernel>
 {
 public:
-    explicit CudaKernel(std::unique_ptr<CudaProgram> program, const std::string& name, IdGenerator<ComputeActionId>& generator);
+    explicit CudaKernel(IdGenerator<ComputeActionId>& generator, const std::string& name, const std::string& source,
+        const std::string& typeName = "");
     ~CudaKernel();
 
     std::unique_ptr<CudaComputeAction> Launch(const CudaStream& stream, const DimensionVector& globalSize,

@@ -29,6 +29,7 @@ public:
     const std::string& GetDefaultSource() const;
     const std::string& GetConfigurationPrefix() const;
     std::string GetSource() const;
+    const std::string& GetTypeName() const;
     KernelComputeId GetUniqueIdentifier() const;
     const DimensionVector& GetGlobalSize() const;
     const DimensionVector& GetLocalSize() const;
@@ -40,6 +41,7 @@ private:
     std::string m_Name;
     std::string m_DefaultSource;
     std::string m_ConfigurationPrefix;
+    std::string m_TypeName;
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;
     const KernelConfiguration* m_Configuration;

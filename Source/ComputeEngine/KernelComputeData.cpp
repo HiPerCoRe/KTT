@@ -15,6 +15,7 @@ KernelComputeData::KernelComputeData(const Kernel& kernel, const KernelDefinitio
     m_Name(definition.GetName()),
     m_DefaultSource(definition.GetSource()),
     m_ConfigurationPrefix(configuration.GeneratePrefix()),
+    m_TypeName(definition.GetTypeName()),
     m_Configuration(&configuration),
     m_Arguments(definition.GetArguments())
 {
@@ -88,6 +89,11 @@ const std::string& KernelComputeData::GetConfigurationPrefix() const
 std::string KernelComputeData::GetSource() const
 {
     return m_ConfigurationPrefix + m_DefaultSource;
+}
+
+const std::string& KernelComputeData::GetTypeName() const
+{
+    return m_TypeName;
 }
 
 KernelComputeId KernelComputeData::GetUniqueIdentifier() const

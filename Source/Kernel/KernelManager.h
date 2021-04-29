@@ -20,9 +20,9 @@ public:
     KernelManager(KernelArgumentManager& argumentManager);
 
     KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-        const DimensionVector& localSize);
+        const DimensionVector& localSize, const std::string& typeName = "");
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-        const DimensionVector& globalSize, const DimensionVector& localSize);
+        const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName = "");
     void RemoveKernelDefinition(const KernelDefinitionId id);
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
     

@@ -11,17 +11,20 @@
 namespace ktt
 {
 
-CudaKernel::CudaKernel(std::unique_ptr<CudaProgram> program, const std::string& name, IdGenerator<ComputeActionId>& generator) :
+CudaKernel::CudaKernel(IdGenerator<ComputeActionId>& generator, const std::string& name, const std::string& source,
+    const std::string& typeName) :
     m_Name(name),
-    m_Program(std::move(program)),
     m_Generator(generator)
 {
     Logger::LogDebug("Initializing CUDA kernel with name " + name);
-    KttAssert(m_Program != nullptr, "Invalid program was used during CUDA kernel initialization");
+    m_Program = std::make_unique<CudaProgram>(name, source, typeName);
+    m_Program->Build();
 
     const std::string ptx = m_Program->GetPtxSource();
     CheckError(cuModuleLoadDataEx(&m_Module, ptx.data(), 0, nullptr, nullptr), "cuModuleLoadDataEx");
-    CheckError(cuModuleGetFunction(&m_Kernel, m_Module, name.data()), "cuModuleGetFunction");
+
+    const std::string loweredName = m_Program->GetLoweredName();
+    CheckError(cuModuleGetFunction(&m_Kernel, m_Module, loweredName.c_str()), "cuModuleGetFunction");
 }
 
 CudaKernel::~CudaKernel()

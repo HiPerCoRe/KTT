@@ -96,30 +96,32 @@ public:
     ~Tuner();
 
     /** @fn KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source,
-      * const DimensionVector& globalSize, const DimensionVector& localSize)
+      * const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName = "")
       * Adds new kernel definition to the tuner. Requires specification of a kernel name, its source code and default global and
       * local thread sizes.
       * @param name Name of a kernel function inside kernel source code. The name must be unique.
       * @param source Kernel source code written in the corresponding compute API language.
       * @param globalSize Dimensions for base kernel global size (e.g., grid size in CUDA, NDRange size in OpenCL).
       * @param localSize Dimensions for base kernel local size (e.g., block size in CUDA, work-group size in OpenCL).
+      * @param typeName Name of a type which will be used to instantiate kernel template. Only supported in CUDA kernels.
       * @return Id assigned to kernel definition by the tuner. The id can be used in other API methods.
       */
     KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-        const DimensionVector& localSize);
+        const DimensionVector& localSize, const std::string& typeName = "");
 
     /** @fn KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-      * const DimensionVector& globalSize, const DimensionVector& localSize)
+      * const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName = "")
       * Adds new kernel definition to the tuner. Requires specification of a kernel name, file path to its source code and default
       * global and local thread sizes.
       * @param name Name of a kernel function inside kernel source code. The name must be unique.
       * @param filePath Path to file with kernel source code written in the corresponding compute API language.
       * @param globalSize Dimensions for base kernel global size (e.g., grid size in CUDA, NDRange size in OpenCL).
       * @param localSize Dimensions for base kernel local size (e.g., block size in CUDA, work-group size in OpenCL).
+      * @param typeName Name of a type which will be used to instantiate kernel template. Only supported in CUDA kernels.
       * @return Id assigned to kernel definition by the tuner. The id can be used in other API methods.
       */
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-        const DimensionVector& globalSize, const DimensionVector& localSize);
+        const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName = "");
 
     /** @fn void RemoveKernelDefinition(const KernelDefinitionId id)
       * Removes kernel definition with the specified id from the tuner. Note that definition can only be removed if it is not
