@@ -113,7 +113,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
 
     action->IncreaseOverhead(timer.GetElapsedTime());
-    action->SetConfigurationPrefix(data.GetConfigurationPrefix());
+    action->SetComputeId(data.GetUniqueIdentifier());
     const auto id = action->GetId();
     m_ComputeActions[id] = std::move(action);
     return id;

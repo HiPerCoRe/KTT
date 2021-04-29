@@ -30,9 +30,9 @@ void CudaComputeAction::IncreaseOverhead(const Nanoseconds overhead)
     m_Overhead += overhead;
 }
 
-void CudaComputeAction::SetConfigurationPrefix(const std::string& prefix)
+void CudaComputeAction::SetComputeId(const KernelComputeId& id)
 {
-    m_Prefix = prefix;
+    m_ComputeId = id;
 }
 
 void CudaComputeAction::WaitForFinish()
@@ -71,14 +71,9 @@ Nanoseconds CudaComputeAction::GetOverhead() const
     return m_Overhead;
 }
 
-const std::string& CudaComputeAction::GetConfigurationPrefix() const
+const KernelComputeId& CudaComputeAction::GetComputeId() const
 {
-    return m_Prefix;
-}
-
-KernelComputeId CudaComputeAction::GetComputeId() const
-{
-    return m_Kernel->GetName() + m_Prefix;
+    return m_ComputeId;
 }
 
 ComputationResult CudaComputeAction::GenerateResult() const

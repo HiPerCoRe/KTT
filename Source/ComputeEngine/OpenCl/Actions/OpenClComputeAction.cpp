@@ -29,9 +29,9 @@ void OpenClComputeAction::IncreaseOverhead(const Nanoseconds overhead)
     m_Overhead += overhead;
 }
 
-void OpenClComputeAction::SetConfigurationPrefix(const std::string& prefix)
+void OpenClComputeAction::SetComputeId(const KernelComputeId& id)
 {
-    m_Prefix = prefix;
+    m_ComputeId = id;
 }
 
 void OpenClComputeAction::SetReleaseFlag()
@@ -70,14 +70,9 @@ Nanoseconds OpenClComputeAction::GetOverhead() const
     return m_Overhead;
 }
 
-const std::string& OpenClComputeAction::GetConfigurationPrefix() const
+const KernelComputeId& OpenClComputeAction::GetComputeId() const
 {
-    return m_Prefix;
-}
-
-KernelComputeId OpenClComputeAction::GetComputeId() const
-{
-    return m_Kernel->GetName() + m_Prefix;
+    return m_ComputeId;
 }
 
 ComputationResult OpenClComputeAction::GenerateResult() const

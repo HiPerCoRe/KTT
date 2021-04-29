@@ -20,7 +20,7 @@ public:
         const DimensionVector& localSize);
 
     void IncreaseOverhead(const Nanoseconds overhead);
-    void SetConfigurationPrefix(const std::string& prefix);
+    void SetComputeId(const KernelComputeId& id);
     void SetReleaseFlag();
     void WaitForFinish();
 
@@ -29,8 +29,7 @@ public:
     cl_event* GetEvent();
     Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
-    const std::string& GetConfigurationPrefix() const;
-    KernelComputeId GetComputeId() const;
+    const KernelComputeId& GetComputeId() const;
     ComputationResult GenerateResult() const;
 
 private:
@@ -38,7 +37,7 @@ private:
     std::shared_ptr<OpenClKernel> m_Kernel;
     std::unique_ptr<OpenClEvent> m_Event;
     Nanoseconds m_Overhead;
-    std::string m_Prefix;
+    KernelComputeId m_ComputeId;
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;
 };

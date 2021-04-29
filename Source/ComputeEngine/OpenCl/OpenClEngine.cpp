@@ -126,7 +126,7 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
     auto action = kernel->Launch(queue, data.GetGlobalSize(), data.GetLocalSize());
 
     action->IncreaseOverhead(timer.GetElapsedTime());
-    action->SetConfigurationPrefix(data.GetConfigurationPrefix());
+    action->SetComputeId(data.GetUniqueIdentifier());
     const auto id = action->GetId();
     m_ComputeActions[id] = std::move(action);
     return id;

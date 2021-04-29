@@ -19,7 +19,7 @@ KernelDefinitionId KernelManager::AddKernelDefinition(const std::string& name, c
 {
     for (const auto& pair : m_Definitions)
     {
-        if (pair.second->GetName() == name)
+        if (pair.second->GetName() == name && pair.second->GetTypeName() == typeName)
         {
             throw KttException("Kernel definition with name " + name + " already exists");
         }

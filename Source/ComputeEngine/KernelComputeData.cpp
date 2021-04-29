@@ -98,7 +98,7 @@ const std::string& KernelComputeData::GetTypeName() const
 
 KernelComputeId KernelComputeData::GetUniqueIdentifier() const
 {
-    return m_Name + m_ConfigurationPrefix;
+    return m_Name + m_TypeName + m_ConfigurationPrefix;
 }
 
 const DimensionVector& KernelComputeData::GetGlobalSize() const

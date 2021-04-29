@@ -49,6 +49,8 @@ KernelDefinitionId TunerCore::AddKernelDefinitionFromFile(const std::string& nam
 
 void TunerCore::RemoveKernelDefinition(const KernelDefinitionId id)
 {
+    const auto& definition = m_KernelManager->GetDefinition(id);
+    m_ComputeEngine->ClearKernelData(definition.GetName() + definition.GetTypeName());
     m_KernelManager->RemoveKernelDefinition(id);
 }
 
@@ -73,9 +75,6 @@ void TunerCore::RemoveKernel(const KernelId id)
 {
     m_TuningRunner->ClearData(id, true);
     m_KernelRunner->RemoveKernelData(id);
-    
-    const auto& name = m_KernelManager->GetKernel(id).GetName();
-    m_ComputeEngine->ClearKernelData(name);
     m_KernelManager->RemoveKernel(id);
 }
 

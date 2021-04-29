@@ -21,7 +21,7 @@ public:
         const DimensionVector& localSize);
 
     void IncreaseOverhead(const Nanoseconds overhead);
-    void SetConfigurationPrefix(const std::string& prefix);
+    void SetComputeId(const KernelComputeId& id);
     void WaitForFinish();
 
     ComputeActionId GetId() const;
@@ -30,8 +30,7 @@ public:
     CUevent GetEndEvent() const;
     Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
-    const std::string& GetConfigurationPrefix() const;
-    KernelComputeId GetComputeId() const;
+    const KernelComputeId& GetComputeId() const;
     ComputationResult GenerateResult() const;
 
 private:
@@ -40,7 +39,7 @@ private:
     std::unique_ptr<CudaEvent> m_StartEvent;
     std::unique_ptr<CudaEvent> m_EndEvent;
     Nanoseconds m_Overhead;
-    std::string m_Prefix;
+    KernelComputeId m_ComputeId;
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;
 };
