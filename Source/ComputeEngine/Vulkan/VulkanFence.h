@@ -19,6 +19,8 @@ public:
     void Wait() const;
     void Wait(const uint64_t duration) const;
 
+    VkFence GetFence() const;
+
 private:
     VkDevice m_Device;
     VkFence m_Fence;

@@ -36,6 +36,11 @@ void VulkanFence::Wait(const uint64_t duration) const
     CheckError(vkWaitForFences(m_Device, 1, &m_Fence, VK_TRUE, duration), "vkWaitForFences");
 }
 
+VkFence VulkanFence::GetFence() const
+{
+    return m_Fence;
+}
+
 } // namespace ktt
 
 #endif // KTT_API_VULKAN

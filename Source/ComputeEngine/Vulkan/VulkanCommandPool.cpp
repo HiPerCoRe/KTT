@@ -14,7 +14,7 @@ VulkanCommandPool::VulkanCommandPool(const VulkanDevice& device, const uint32_t 
 
 VulkanCommandPool::VulkanCommandPool(const VulkanDevice& device, const uint32_t queueFamilyIndex,
     const VkCommandPoolCreateFlags flags) :
-    m_Device(device.GetDevice())
+    m_Device(device)
 {
     Logger::LogDebug("Initializing Vulkan command pool");
 
@@ -26,13 +26,19 @@ VulkanCommandPool::VulkanCommandPool(const VulkanDevice& device, const uint32_t 
         queueFamilyIndex
     };
 
-    CheckError(vkCreateCommandPool(m_Device, &createInfo, nullptr, &m_Pool), "vkCreateCommandPool");
+    CheckError(vkCreateCommandPool(m_Device.GetDevice(), &createInfo, nullptr, &m_Pool), "vkCreateCommandPool");
 }
 
 VulkanCommandPool::~VulkanCommandPool()
 {
     Logger::LogDebug("Releasing Vulkan command pool");
-    vkDestroyCommandPool(m_Device, m_Pool, nullptr);
+    vkDestroyCommandPool(m_Device.GetDevice(), m_Pool, nullptr);
+}
+
+std::unique_ptr<VulkanCommandBuffers> VulkanCommandPool::AllocateBuffers(const uint32_t count,
+    const VkCommandBufferLevel level) const
+{
+    return std::make_unique<VulkanCommandBuffers>(m_Device, *this, count, level);
 }
 
 VkCommandPool VulkanCommandPool::GetPool() const
