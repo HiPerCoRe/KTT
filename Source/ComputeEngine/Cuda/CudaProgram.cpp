@@ -18,9 +18,13 @@ namespace ktt
 
 CudaProgram::CudaProgram(const std::string& name, const std::string& source, const std::string& typeName) :
     m_Name(name),
-    m_Source(source),
-    m_TypeName(typeName)
+    m_Source(source)
 {
+    if (!typeName.empty())
+    {
+        m_Name =  name + "<" + typeName + ">";
+    }
+
     CheckError(nvrtcCreateProgram(&m_Program, source.data(), nullptr, 0, nullptr, nullptr), "nvrtcCreateProgram");
 }
 
@@ -31,13 +35,8 @@ CudaProgram::~CudaProgram()
 
 void CudaProgram::Build() const
 {
+    CheckError(nvrtcAddNameExpression(m_Program, m_Name.c_str()), "nvrtcAddNameExpression");
     std::vector<const char*> individualOptionsChar;
-
-    if (!m_TypeName.empty())
-    {
-        const std::string name = GetNameWithType();
-        CheckError(nvrtcAddNameExpression(m_Program, name.c_str()), "nvrtcAddNameExpression");
-    }
 
     if (!m_CompilerOptions.empty())
     {
@@ -75,14 +74,8 @@ const std::string& CudaProgram::GetSource() const
 
 std::string CudaProgram::GetLoweredName() const
 {
-    if (m_TypeName.empty())
-    {
-        return m_Name;
-    }
-
-    const std::string name = GetNameWithType();
     const char* loweredName;
-    CheckError(nvrtcGetLoweredName(m_Program, name.c_str(), &loweredName), "nvrtcGetLoweredName");
+    CheckError(nvrtcGetLoweredName(m_Program, m_Name.c_str(), &loweredName), "nvrtcGetLoweredName");
     return std::string(loweredName);
 }
 
@@ -133,11 +126,6 @@ std::string CudaProgram::GetBuildInfo() const
 
     RemoveTrailingZero(infoString);
     return infoString;
-}
-
-std::string CudaProgram::GetNameWithType() const
-{
-    return m_Name + "<" + m_TypeName + ">";
 }
 
 } // namespace ktt

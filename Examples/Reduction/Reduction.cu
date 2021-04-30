@@ -28,7 +28,7 @@ inline __host__ __device__ void operator+=(float4 &a, float4 b)
     a.w += b.w;
 }
 
-extern "C" __global__ void reduce( const VEC* in,  float* out, unsigned int n, unsigned int inOffset, unsigned int outOffset) {
+__global__ void reduce( const VEC* in,  float* out, unsigned int n, unsigned int inOffset, unsigned int outOffset) {
     unsigned int tid = threadIdx.x;
     unsigned int i = blockDim.x*blockIdx.x + threadIdx.x;
 

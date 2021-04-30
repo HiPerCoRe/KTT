@@ -262,7 +262,7 @@ __device__ void fillBuffers(
 #if VECTOR_SIZE > 1
 __global__ __attribute__((vec_type_hint(vector)))
 #endif
-extern "C" __global__ void nbody_kernel(float timeDelta,
+__global__ void nbody_kernel(float timeDelta,
     float4* oldBodyInfo, // pos XYZ, mass
     vector* oldPosX,
     vector* oldPosY,

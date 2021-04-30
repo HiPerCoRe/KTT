@@ -29,13 +29,11 @@ public:
 private:
     std::string m_Name;
     std::string m_Source;
-    std::string m_TypeName;
     nvrtcProgram m_Program;
 
     inline static std::string m_CompilerOptions;
 
     std::string GetBuildInfo() const;
-    std::string GetNameWithType() const;
 };
 
 } // namespace ktt
