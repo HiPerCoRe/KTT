@@ -30,8 +30,8 @@ VulkanInstance::VulkanInstance(const std::string& applicationName, const std::ve
         applicationName.c_str(),
         VK_MAKE_VERSION(1, 0, 0),
         "KTT",
-        VK_MAKE_VERSION(1, 0, 0),
-        VK_API_VERSION_1_0
+        VK_MAKE_VERSION(2, 0, 0),
+        VK_API_VERSION_1_1
     };
 
     const VkInstanceCreateInfo instanceInfo =

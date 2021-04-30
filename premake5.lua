@@ -153,7 +153,8 @@ function findVulkan()
     end
     
     defines {"KTT_API_VULKAN"}
-    includedirs {"Libraries/Shaderc-1.1.101/Include"}
+    includedirs {"Libraries/Shaderc-1.1.101/Include", "Libraries/VulkanMemoryAllocator-2.3.0"}
+    files {"Libraries/VulkanMemoryAllocator-2.3.0/**"}
     
     if os.target() == "linux" then
         includedirs {"$(VULKAN_SDK)/include"}
