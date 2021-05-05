@@ -498,7 +498,7 @@ void CudaEngine::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBuffer
         throw KttException("Buffer for argument with id " + std::to_string(id) + " is not unified memory buffer");
     }
 
-    handle = static_cast<UnifiedBufferMemory>(buffer.GetBuffer());
+    handle = reinterpret_cast<UnifiedBufferMemory>(*buffer.GetBuffer());
 }
 
 void CudaEngine::AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer buffer)
