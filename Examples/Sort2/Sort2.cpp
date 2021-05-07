@@ -285,7 +285,7 @@ int main(int argc, char** argv)
         std::sort(intArray, intArray + valuesIn.size());
     });
 
-    const auto results = tuner.TuneKernel(kernel);
+    const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "Sort2Output", ktt::OutputFormat::JSON);
 
     return 0;

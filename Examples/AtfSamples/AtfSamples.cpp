@@ -796,12 +796,12 @@ int main(int argc, char** argv)
         tuner.AddConstraint(kernel, {"NUM_WG_R_1", "L_CB_SIZE_R_1"}, NoPostInSecondKernelConstraint);
 
         // Only search space generation is supported in this sample
-        tuner.TuneKernel(kernel);
+        tuner.Tune(kernel);
         return 0;
     }
 
     tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
-    auto results = tuner.TuneKernel(kernel);
+    auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "AtfOutput", ktt::OutputFormat::XML);
     return 0;
 }

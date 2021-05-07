@@ -241,7 +241,7 @@ int main(int argc, char** argv)
         tuner.SetReferenceKernel(newBodyInfoId, referenceKernel, ktt::KernelConfiguration());
     }
 
-    const auto results = tuner.TuneKernel(kernel);
+    const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "NbodyOutput", ktt::OutputFormat::JSON);
 
     return 0;

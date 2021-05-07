@@ -225,7 +225,7 @@ int main(int argc, char** argv)
         tuner.SetReferenceKernel(matCId, referenceKernel, ktt::KernelConfiguration());
     }
 
-    const auto results = tuner.TuneKernel(kernel);
+    const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "GemmOutput", ktt::OutputFormat::XML);
 
     return 0;

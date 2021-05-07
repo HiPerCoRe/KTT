@@ -338,7 +338,7 @@ public:
       */
     void SetReadOnlyArgumentCache(const bool flag);
 
-    /** @fn KernelResult RunKernel(const KernelId id, const KernelConfiguration& configuration,
+    /** @fn KernelResult Run(const KernelId id, const KernelConfiguration& configuration,
       * const std::vector<BufferOutputDescriptor>& output)
       * Runs kernel using the specified configuration.
       * @param id Id of kernel which will be run.
@@ -347,7 +347,7 @@ public:
       * for more information.
       * @return Result containing information about kernel computation. See KernelResult for more information.
       */
-    KernelResult RunKernel(const KernelId id, const KernelConfiguration& configuration, const std::vector<BufferOutputDescriptor>& output);
+    KernelResult Run(const KernelId id, const KernelConfiguration& configuration, const std::vector<BufferOutputDescriptor>& output);
 
     /** @fn void SetProfiling(const bool flag)
       * Toggles profiling of kernels inside the tuner. Profiled kernel runs generate profiling counters which can be used by
@@ -413,7 +413,7 @@ public:
       */
     void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration);
 
-    /** @fn std::vector<KernelResult> TuneKernel(const KernelId id)
+    /** @fn std::vector<KernelResult> Tune(const KernelId id)
       * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
       * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
       * will end when all configurations are explored.
@@ -421,9 +421,9 @@ public:
       * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
       * more information.
       */
-    std::vector<KernelResult> TuneKernel(const KernelId id);
+    std::vector<KernelResult> Tune(const KernelId id);
 
-    /** @fn std::vector<KernelResult> TuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+    /** @fn std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
       * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
       * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
       * will end either when all configurations are explored or when the specified stop condition is fulfilled.
@@ -432,9 +432,9 @@ public:
       * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
       * more information.
       */
-    std::vector<KernelResult> TuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
+    std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
 
-    /** @fn KernelResult TuneKernelIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
+    /** @fn KernelResult TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
       * const bool recomputeReference = false)
       * Performs one step of the tuning process for specified kernel. When this method is called for the kernel for the first time,
       * it creates configuration space based on combinations of provided kernel parameters and constraints. Each time this method
@@ -449,7 +449,7 @@ public:
       * @return Result containing information about kernel computation in specific configuration. See KernelResult for more
       * information.
       */
-    KernelResult TuneKernelIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
+    KernelResult TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
         const bool recomputeReference = false);
 
     /** @fn void SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations = 0)
@@ -552,10 +552,10 @@ public:
       */
     std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format, UserData& data) const;
 
-    /** @fn void SynchronizeDevice()
+    /** @fn void Synchronize()
       * Blocks until all commands submitted to all KTT device queues are completed.
       */
-    void SynchronizeDevice();
+    void Synchronize();
 
     /** @fn void SetProfilingCounters(const std::vector<std::string>& counters)
       * Specifies profiling counters that will be collected during kernel profiling. Note that not all profiling counters are

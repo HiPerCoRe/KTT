@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
 
-    const std::vector<ktt::KernelResult> results = tuner.TuneKernel(kernel);
+    const std::vector<ktt::KernelResult> results = tuner.Tune(kernel);
     tuner.SaveResults(results, "TuningOutput", ktt::OutputFormat::JSON);
 
     // Make sure to delete the tuner before releasing referenced CUDA structures.

@@ -252,7 +252,7 @@ void Tuner::SetReadOnlyArgumentCache(const bool flag)
     }
 }
 
-KernelResult Tuner::RunKernel(const KernelId id, const KernelConfiguration& configuration,
+KernelResult Tuner::Run(const KernelId id, const KernelConfiguration& configuration,
     const std::vector<BufferOutputDescriptor>& output)
 {
     try
@@ -350,12 +350,12 @@ void Tuner::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, 
     }
 }
 
-std::vector<KernelResult> Tuner::TuneKernel(const KernelId id)
+std::vector<KernelResult> Tuner::Tune(const KernelId id)
 {
-    return TuneKernel(id, nullptr);
+    return Tune(id, nullptr);
 }
 
-std::vector<KernelResult> Tuner::TuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+std::vector<KernelResult> Tuner::Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
     try
     {
@@ -368,7 +368,7 @@ std::vector<KernelResult> Tuner::TuneKernel(const KernelId id, std::unique_ptr<S
     }
 }
 
-KernelResult Tuner::TuneKernelIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
+KernelResult Tuner::TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
     const bool recomputeReference)
 {
     try
@@ -509,7 +509,7 @@ std::vector<KernelResult> Tuner::LoadResults(const std::string& filePath, const 
     }
 }
 
-void Tuner::SynchronizeDevice()
+void Tuner::Synchronize()
 {
     try
     {

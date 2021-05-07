@@ -183,7 +183,7 @@ int main(int argc, char** argv)
         }
     });
     
-    const std::vector<ktt::KernelResult> results = tuner.TuneKernel(kernel);
+    const std::vector<ktt::KernelResult> results = tuner.Tune(kernel);
     tuner.SaveResults(results, "CoulombSum3dIterativeOutput", ktt::OutputFormat::JSON);
 
     return 0;

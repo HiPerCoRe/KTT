@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 
     // Perform tuning for the specified kernel. This generates multiple versions of the kernel based on provided tuning parameters
     // and their values. In this case, 4 different versions of kernel will be run.
-    const std::vector<ktt::KernelResult> results = tuner.TuneKernel(kernel);
+    const std::vector<ktt::KernelResult> results = tuner.Tune(kernel);
 
     // Save tuning results to JSON file.
     tuner.SaveResults(results, "TuningOutput", ktt::OutputFormat::JSON);

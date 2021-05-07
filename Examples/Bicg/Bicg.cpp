@@ -282,7 +282,7 @@ int main(int argc, char** argv)
 	}
 
 	// Launch kernel tuning
-	const auto results = tuner.TuneKernel(kernel);
+	const auto results = tuner.Tune(kernel);
 	tuner.SaveResults(results, "BicgOutput", ktt::OutputFormat::JSON);
 
 	return 0;
