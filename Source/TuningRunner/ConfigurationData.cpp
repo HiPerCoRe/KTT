@@ -34,7 +34,10 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
     const uint64_t index = GetIndexForConfiguration(previousConfiguration);
     m_ExploredConfigurations.insert(index);
 
-    UpdateBestConfiguration(previousResult);
+    if (previousResult.IsValid())
+    {
+        UpdateBestConfiguration(previousResult);
+    }
 
     if (IsProcessed())
     {

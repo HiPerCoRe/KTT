@@ -63,7 +63,15 @@ bool McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
 {
     ++m_VisitedStatesCount;
     m_UnexploredIndices.erase(m_Index);
-    m_ExecutionTimes[m_Index] = static_cast<double>(previousResult.GetTotalDuration());
+
+    if (previousResult.IsValid())
+    {
+        m_ExecutionTimes[m_Index] = static_cast<double>(previousResult.GetTotalDuration());
+    }
+    else
+    {
+        m_ExecutionTimes[m_Index] = std::numeric_limits<double>::max();
+    }
 
     // boot-up, sweeps randomly across bootIterations states and sets
     // origin of MCMC to the best state
