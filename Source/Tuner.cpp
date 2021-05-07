@@ -509,6 +509,18 @@ std::vector<KernelResult> Tuner::LoadResults(const std::string& filePath, const 
     }
 }
 
+void Tuner::SynchronizeDevice()
+{
+    try
+    {
+        m_Tuner->SynchronizeDevice();
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::SetProfilingCounters(const std::vector<std::string>& counters)
 {
     try

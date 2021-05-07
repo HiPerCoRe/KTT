@@ -83,6 +83,7 @@ public:
     std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format, UserData& data) const;
 
     // Compute engine
+    void SynchronizeDevice();
     void SetProfilingCounters(const std::vector<std::string>& counters);
     void SetCompilerOptions(const std::string& options);
     void SetGlobalSizeType(const GlobalSizeType type);

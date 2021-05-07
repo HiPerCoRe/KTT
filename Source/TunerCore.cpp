@@ -307,6 +307,11 @@ std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, co
     return pair.second;
 }
 
+void TunerCore::SynchronizeDevice()
+{
+    m_ComputeEngine->SynchronizeDevice();
+}
+
 void TunerCore::SetProfilingCounters(const std::vector<std::string>& counters)
 {
     m_ComputeEngine->SetProfilingCounters(counters);

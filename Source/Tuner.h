@@ -552,6 +552,11 @@ public:
       */
     std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format, UserData& data) const;
 
+    /** @fn void SynchronizeDevice()
+      * Blocks until all commands submitted to all KTT device queues are completed.
+      */
+    void SynchronizeDevice();
+
     /** @fn void SetProfilingCounters(const std::vector<std::string>& counters)
       * Specifies profiling counters that will be collected during kernel profiling. Note that not all profiling counters are
       * available on all devices.
