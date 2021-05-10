@@ -41,11 +41,16 @@ int main(int argc, char** argv)
     cl_device_id device;
     clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, &device, nullptr);
 
-    cl_context_properties properties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0 };
+    cl_context_properties properties[] = {CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0};
     cl_context context = clCreateContext(properties, 1, &device, nullptr, nullptr, nullptr);
 
     // Using CL_QUEUE_PROFILING_ENABLE flag is mandatory if the queue is going to be used with the tuner.
+#ifdef CL_VERSION_2_0
+    cl_queue_properties queueProperties[] = {CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0};
+    cl_command_queue queue = clCreateCommandQueueWithProperties(context, device, queueProperties, nullptr);
+#else
     cl_command_queue queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, nullptr);
+#endif
 
     const size_t bufferSize = a.size() * sizeof(float);
     cl_mem bufferA = clCreateBuffer(context, CL_MEM_READ_ONLY, bufferSize, nullptr, nullptr);

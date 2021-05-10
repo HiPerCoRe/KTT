@@ -28,8 +28,11 @@ GpaInterface::GpaInterface()
     }
 
     CheckError(m_Functions->GPA_Initialize(GPA_INITIALIZE_DEFAULT_BIT), *m_Functions, "GPA_Initialize");
+
+#if defined(KTT_CONFIGURATION_DEBUG)
     CheckError(m_Functions->GPA_RegisterLoggingCallback(GPA_LOGGING_ERROR_MESSAGE_AND_TRACE, LoggingCallback), *m_Functions,
         "GPA_RegisterLoggingCallback");
+#endif
 }
 
 GpaInterface::~GpaInterface()

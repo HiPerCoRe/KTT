@@ -169,7 +169,7 @@ void OpenClEngine::ClearKernelData(const std::string& kernelName)
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     EraseIf(m_GpaInstances, [&kernelName](const auto& pair)
     {
-        return StartsWith(pair.first), kernelName);
+        return StartsWith(pair.first, kernelName);
     });
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
@@ -198,9 +198,13 @@ ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const Ke
     action.IncreaseOverhead(timer.GetElapsedTime());
 
     ComputationResult result = WaitForComputeAction(actionId);
+
+    timer.Start();
     pass.reset();
     FillProfilingData(id, result);
+    timer.Stop();
 
+    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime());
     return result;
 #else
     throw KttException("Support for kernel profiling is not included in this version of KTT framework");

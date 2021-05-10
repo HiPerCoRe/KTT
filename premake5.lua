@@ -5,19 +5,19 @@ vulkanProjects = false
 
 -- Helper functions to find compute API headers and libraries
 function findLibrariesAmd()
-    local path = os.getenv("AMDAPPSDKROOT")
+    local path = os.getenv("OCL_ROOT")
     
     if not path then
         return false
     end
     
     defines {"KTT_PLATFORM_AMD"}
-    includedirs {"$(AMDAPPSDKROOT)/include"}
+    includedirs {"$(OCL_ROOT)/include"}
         
     if os.target() == "linux" then
-        libdirs {"$(AMDAPPSDKROOT)/lib64"}
+        libdirs {"$(OCL_ROOT)/lib64"}
     else
-        libdirs {"$(AMDAPPSDKROOT)/lib/x86_64"}
+        libdirs {"$(OCL_ROOT)/lib/x86_64"}
     end
     
     if _OPTIONS["no-opencl"] then
@@ -194,7 +194,7 @@ function linkLibraries()
     end
     
     if not librariesFound and (not _OPTIONS["vulkan"] or _OPTIONS["platform"]) then
-        error("Compute API libraries were not found. Please ensure that path to the SDK is correctly set in the environment variables:\nAMDAPPSDKROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
+        error("Compute API libraries were not found. Please ensure that path to the SDK is correctly set in the environment variables:\nOCL_ROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
     end
     
     if _OPTIONS["vulkan"] then

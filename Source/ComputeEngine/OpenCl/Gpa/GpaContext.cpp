@@ -11,12 +11,12 @@ namespace ktt
 GpaContext::GpaContext(GPAFunctionTable& functions, OpenClCommandQueue& queue) :
     m_Functions(functions),
     m_Queue(queue),
-    m_Counters(GetDefaultCounters()),
     m_SampleIdGenerator(0)
 {
     Logger::LogDebug("Initializing GPA context");
     CheckError(functions.GPA_OpenContext(queue.GetQueue(), GPA_OPENCONTEXT_DEFAULT_BIT, &m_Context), functions,
         "GPA_OpenContext");
+    SetCounters(GetDefaultCounters());
 }
 
 GpaContext::~GpaContext()
@@ -37,7 +37,23 @@ void GpaContext::SetCounters(const std::vector<std::string>& counters)
         throw KttException("Number of profiling counters must be greater than zero");
     }
 
-    m_Counters = counters;
+    std::vector<std::string> filteredCounters;
+
+    for (const auto& counter : counters)
+    {
+        [[maybe_unused]] gpa_uint32 index;
+        const GPA_Status status = m_Functions.GPA_GetCounterIndex(m_Context, counter.c_str(), &index);
+
+        if (status != GPA_STATUS_OK)
+        {
+            Logger::LogWarning("Profiling counter with name " + counter + " is not supported on the current device");
+            continue;
+        }
+
+        filteredCounters.push_back(counter);
+    }
+
+    m_Counters = filteredCounters;
 }
 
 GPA_ContextId GpaContext::GetContext() const
