@@ -195,8 +195,12 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
         instance.SetKernelDuration(result.GetDuration());
     }
 
+    timer.Start();
     subscription.reset();
     FillProfilingData(id, result);
+    timer.Stop();
+
+    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime());
     return result;
 
 #elif KTT_PROFILING_CUPTI
@@ -219,11 +223,14 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     const auto actionId = RunKernelAsync(data, queueId);
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime());
-
     ComputationResult result = WaitForComputeAction(actionId);
+    
+    timer.Start();
     pass.reset();
     FillProfilingData(id, result);
+    timer.Stop();
 
+    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime());
     return result;
 
 #else

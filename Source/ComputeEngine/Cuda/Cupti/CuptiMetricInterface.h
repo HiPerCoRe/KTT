@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 #include <nvperf_host.h>
@@ -22,18 +23,19 @@ public:
     CuptiMetricInterface(const DeviceIndex index);
     ~CuptiMetricInterface();
 
-    static void ListSupportedChips();
-    void ListMetrics(const bool listSubMetrics) const;
-
     CuptiMetricConfiguration CreateMetricConfiguration(const std::vector<std::string>& metrics) const;
     std::unique_ptr<KernelProfilingData> GenerateProfilingData(const CuptiMetricConfiguration& configuration) const;
 
+    static void ListSupportedChips();
+
 private:
     std::string m_DeviceName;
+    std::set<std::string> m_SupportedMetrics;
     NVPA_MetricsContext* m_Context;
     uint32_t m_MaxProfiledRanges;
     uint32_t m_MaxRangeNameLength;
 
+    std::set<std::string> GetSupportedMetrics(const bool listSubMetrics) const;
     std::vector<uint8_t> GetConfigImage(const std::vector<std::string>& metrics) const;
     std::vector<uint8_t> GetCounterDataImagePrefix(const std::vector<std::string>& metrics) const;
     void CreateCounterDataImage(const std::vector<uint8_t>& counterDataImagePrefix, std::vector<uint8_t>& counterDataImage,

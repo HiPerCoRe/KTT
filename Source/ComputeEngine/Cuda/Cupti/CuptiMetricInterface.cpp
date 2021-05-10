@@ -11,6 +11,7 @@
 #include <ComputeEngine/Cuda/CudaUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/StlHelpers.h>
 
 namespace ktt
 {
@@ -41,6 +42,7 @@ CuptiMetricInterface::CuptiMetricInterface(const DeviceIndex index) :
 
     CheckError(NVPW_CUDA_MetricsContext_Create(&params), "NVPW_CUDA_MetricsContext_Create");
     m_Context = params.pMetricsContext;
+    m_SupportedMetrics = GetSupportedMetrics(true);
 }
 
 CuptiMetricInterface::~CuptiMetricInterface()
@@ -57,74 +59,25 @@ CuptiMetricInterface::~CuptiMetricInterface()
     CheckError(NVPW_MetricsContext_Destroy(&params), "NVPW_MetricsContext_Destroy");
 }
 
-void CuptiMetricInterface::ListSupportedChips()
-{
-    NVPW_GetSupportedChipNames_Params params =
-    {
-        NVPW_GetSupportedChipNames_Params_STRUCT_SIZE,
-        nullptr,
-        nullptr,
-        0
-    };
-
-    CheckError(NVPW_GetSupportedChipNames(&params), "NVPW_GetSupportedChipNames");
-    std::string chips;
-
-    for (size_t i = 0; i < params.numChipNames; ++i)
-    {
-        chips += params.ppChipNames[i];
-
-        if (i + 1 != params.numChipNames)
-        {
-            chips += ", ";
-        }
-    }
-
-    Logger::LogInfo("Number of supported chips for CUPTI profiling: " + std::to_string(params.numChipNames));
-    Logger::LogInfo("List of supported chips: " + chips);
-}
-
-void CuptiMetricInterface::ListMetrics(const bool listSubMetrics) const
-{
-    NVPW_MetricsContext_GetMetricNames_Begin_Params params =
-    {
-        NVPW_MetricsContext_GetMetricNames_Begin_Params_STRUCT_SIZE,
-        nullptr,
-        m_Context,
-        0,
-        nullptr,
-        !listSubMetrics,
-        !listSubMetrics,
-        !listSubMetrics,
-        !listSubMetrics,
-    };
-
-    CheckError(NVPW_MetricsContext_GetMetricNames_Begin(&params), "NVPW_MetricsContext_GetMetricNames_Begin");
-
-    Logger::LogInfo("Total metrics on the chip: " + std::to_string(params.numMetrics));
-    Logger::LogInfo("Metrics list:");
-
-    for (size_t i = 0; i < params.numMetrics; ++i)
-    {
-        Logger::LogInfo(params.ppMetricNames[i]);
-    }
-
-    NVPW_MetricsContext_GetMetricNames_End_Params endParams =
-    {
-        NVPW_MetricsContext_GetMetricNames_End_Params_STRUCT_SIZE,
-        nullptr,
-        m_Context
-    };
-
-    CheckError(NVPW_MetricsContext_GetMetricNames_End(&endParams), "NVPW_MetricsContext_GetMetricNames_End");
-}
-
 CuptiMetricConfiguration CuptiMetricInterface::CreateMetricConfiguration(const std::vector<std::string>& metrics) const
 {
+    std::vector<std::string> filteredMetrics;
+
+    for (const auto& metric : metrics)
+    {
+        if (!ContainsKey(m_SupportedMetrics, metric))
+        {
+            Logger::LogWarning("Metric with name " + metric + " is not supported on the current device");
+            continue;
+        }
+
+        filteredMetrics.push_back(metric);
+    }
+
     CuptiMetricConfiguration result(m_MaxProfiledRanges);
-    result.m_MetricNames = metrics;
-    result.m_ConfigImage = GetConfigImage(metrics);
-    std::vector<uint8_t> prefix = GetCounterDataImagePrefix(metrics);
+    result.m_MetricNames = filteredMetrics;
+    result.m_ConfigImage = GetConfigImage(filteredMetrics);
+    std::vector<uint8_t> prefix = GetCounterDataImagePrefix(filteredMetrics);
     CreateCounterDataImage(prefix, result.m_CounterDataImage, result.m_ScratchBuffer);
     return result;
 }
@@ -204,6 +157,67 @@ std::unique_ptr<KernelProfilingData> CuptiMetricInterface::GenerateProfilingData
     }
 
     return std::make_unique<KernelProfilingData>(counters);
+}
+
+void CuptiMetricInterface::ListSupportedChips()
+{
+    NVPW_GetSupportedChipNames_Params params =
+    {
+        NVPW_GetSupportedChipNames_Params_STRUCT_SIZE,
+        nullptr,
+        nullptr,
+        0
+    };
+
+    CheckError(NVPW_GetSupportedChipNames(&params), "NVPW_GetSupportedChipNames");
+    std::string chips;
+
+    for (size_t i = 0; i < params.numChipNames; ++i)
+    {
+        chips += params.ppChipNames[i];
+
+        if (i + 1 != params.numChipNames)
+        {
+            chips += ", ";
+        }
+    }
+
+    Logger::LogInfo("Number of supported chips for CUPTI profiling: " + std::to_string(params.numChipNames));
+    Logger::LogInfo("List of supported chips: " + chips);
+}
+
+std::set<std::string> CuptiMetricInterface::GetSupportedMetrics(const bool listSubMetrics) const
+{
+    NVPW_MetricsContext_GetMetricNames_Begin_Params params =
+    {
+        NVPW_MetricsContext_GetMetricNames_Begin_Params_STRUCT_SIZE,
+        nullptr,
+        m_Context,
+        0,
+        nullptr,
+        !listSubMetrics,
+        !listSubMetrics,
+        !listSubMetrics,
+        !listSubMetrics,
+    };
+
+    CheckError(NVPW_MetricsContext_GetMetricNames_Begin(&params), "NVPW_MetricsContext_GetMetricNames_Begin");
+    std::set<std::string> result;
+
+    for (size_t i = 0; i < params.numMetrics; ++i)
+    {
+        result.insert(params.ppMetricNames[i]);
+    }
+
+    NVPW_MetricsContext_GetMetricNames_End_Params endParams =
+    {
+        NVPW_MetricsContext_GetMetricNames_End_Params_STRUCT_SIZE,
+        nullptr,
+        m_Context
+    };
+
+    CheckError(NVPW_MetricsContext_GetMetricNames_End(&endParams), "NVPW_MetricsContext_GetMetricNames_End");
+    return result;
 }
 
 std::vector<uint8_t> CuptiMetricInterface::GetConfigImage(const std::vector<std::string>& metrics) const
@@ -414,12 +428,12 @@ void CuptiMetricInterface::CreateCounterDataImage(const std::vector<uint8_t>& co
 void CuptiMetricInterface::GetRawMetricRequests(const std::vector<std::string>& metrics,
     std::vector<NVPA_RawMetricRequest>& rawMetricRequests, std::vector<std::string>& temp) const
 {
-    std::string parsedName;
     bool isolated = true;
     bool keepInstances = true;
 
     for (const auto& metricName : metrics)
     {
+        std::string parsedName;
         [[maybe_unused]] const bool success = ParseMetricNameString(metricName, parsedName, isolated, keepInstances);
         KttAssert(success, "Unable to parse metric name " + metricName);
 
