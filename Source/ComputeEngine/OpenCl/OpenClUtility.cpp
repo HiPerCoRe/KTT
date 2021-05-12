@@ -59,21 +59,38 @@ std::string GetEnumName(const cl_int value)
 
 void CheckError(const cl_int value, const std::string& function, const std::string& info)
 {
-    if (value != CL_SUCCESS)
+    if (value == CL_SUCCESS)
     {
-        throw KttException("OpenCL engine encountered error " + GetEnumName(value) + " in function " + function
-            + ", additional info: " + info);
+        return;
     }
+
+    std::string message = "OpenCL engine encountered error " + GetEnumName(value) + " in function " + function;
+
+    if (!info.empty())
+    {
+        message += ", additional info: " + info;
+    }
+
+    throw KttException(message);
 }
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 void CheckError(const GPA_Status value, GPAFunctionTable& functions, const std::string& function, const std::string& info)
 {
-    if (value != GPA_STATUS_OK)
+    if (value == GPA_STATUS_OK)
     {
-        throw KttException(std::string("OpenCL GPA profiling engine encountered error ") + functions.GPA_GetStatusAsStr(value)
-            + " in function " + function + ", additional info: " + info);
+        return;
     }
+
+    std::string message = std::string("OpenCL GPA profiling engine encountered error ") + functions.GPA_GetStatusAsStr(value)
+        + " in function " + function;
+
+    if (!info.empty())
+    {
+        message += ", additional info: " + info;
+    }
+
+    throw KttException(message);
 }
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 

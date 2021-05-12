@@ -87,7 +87,9 @@ DeviceInfo VulkanPhysicalDevice::GetInfo() const
     result.SetLocalMemorySize(static_cast<uint64_t>(properties.limits.maxComputeSharedMemorySize));
     result.SetMaxWorkGroupSize(static_cast<uint64_t>(properties.limits.maxComputeWorkGroupSize[0]));
     result.SetMaxConstantBufferSize(static_cast<uint64_t>(properties.limits.maxUniformBufferRange));
-    result.SetMaxComputeUnits(properties.limits.maxComputeWorkGroupInvocations);
+
+    // Todo: this info can be currently found only through specific HW vendor extensions
+    result.SetMaxComputeUnits(0);
 
     return result;
 }

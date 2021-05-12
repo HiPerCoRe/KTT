@@ -21,20 +21,36 @@ std::string GetEnumName(const nvrtcResult value)
 
 void CheckError(const CUresult value, const std::string& function, const std::string& info)
 {
-    if (value != CUDA_SUCCESS)
+    if (value == CUDA_SUCCESS)
     {
-        throw KttException("CUDA engine encountered error " + GetEnumName(value) + " in function " + function
-            + ", additional info: " + info);
+        return;
     }
+
+    std::string message = "CUDA engine encountered error " + GetEnumName(value) + " in function " + function;
+
+    if (!info.empty())
+    {
+        message += ", additional info: " + info;
+    }
+
+    throw KttException(message);
 }
 
 void CheckError(const nvrtcResult value, const std::string& function, const std::string& info)
 {
-    if (value != NVRTC_SUCCESS)
+    if (value == NVRTC_SUCCESS)
     {
-        throw KttException("CUDA NVRTC encountered error " + GetEnumName(value) + " in function " + function
-            + ", additional info: " + info);
+        return;
     }
+
+    std::string message = "CUDA NVRTC encountered error " + GetEnumName(value) + " in function " + function;
+
+    if (!info.empty())
+    {
+        message += ", additional info: " + info;
+    }
+
+    throw KttException(message);
 }
 
 #if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
@@ -48,11 +64,19 @@ std::string GetEnumName(const CUptiResult value)
 
 void CheckError(const CUptiResult value, const std::string& function, const std::string& info)
 {
-    if (value != CUPTI_SUCCESS)
+    if (value == CUPTI_SUCCESS)
     {
-        throw KttException("CUDA CUPTI encountered error " + GetEnumName(value) + " in function " + function
-            + ", additional info: " + info);
+        return;
     }
+
+    std::string message = "CUDA CUPTI encountered error " + GetEnumName(value) + " in function " + function;
+
+    if (!info.empty())
+    {
+        message += ", additional info: " + info;
+    }
+
+    throw KttException(message);
 }
 
 #endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
@@ -102,11 +126,19 @@ std::string GetEnumName(const NVPA_Status value)
 
 void CheckError(const NVPA_Status value, const std::string& function, const std::string& info)
 {
-    if (value != NVPA_STATUS_SUCCESS)
+    if (value == NVPA_STATUS_SUCCESS)
     {
-        throw KttException("CUDA NVPA encountered error " + GetEnumName(value) + " in function " + function
-            + ", additional info: " + info);
+        return;
     }
+
+    std::string message = "CUDA NVPA encountered error " + GetEnumName(value) + " in function " + function;
+
+    if (!info.empty())
+    {
+        message += ", additional info: " + info;
+    }
+
+    throw KttException(message);
 }
 
 #endif // KTT_PROFILING_CUPTI

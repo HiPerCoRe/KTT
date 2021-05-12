@@ -37,11 +37,19 @@ std::string GetEnumName(const VkResult value)
 
 void CheckError(const VkResult value, const std::string& function, const std::string& info)
 {
-    if (value != VK_SUCCESS)
+    if (value == VK_SUCCESS)
     {
-        throw KttException("Vulkan engine encountered error " + GetEnumName(value) + " in function " + function
-            + ", additional info: " + info);
+        return;
     }
+
+    std::string message = "Vulkan engine encountered error " + GetEnumName(value) + " in function " + function;
+
+    if (!info.empty())
+    {
+        message += ", additional info: " + info;
+    }
+
+    throw KttException(message);
 }
 
 } // namespace ktt
