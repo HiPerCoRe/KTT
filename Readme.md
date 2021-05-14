@@ -57,8 +57,8 @@ Building KTT
 systems are Linux and Windows.
 
 * The prerequisites to build KTT are:
-    - C++17 compiler, for example Clang 7.0, GCC 8.1, MSVC 14.16 (Visual Studio 2017) or newer
-    - OpenCL, CUDA or Vulkan library, supported SDKs are AMD APP SDK, Intel SDK for OpenCL, NVIDIA CUDA Toolkit
+    - C++17 compiler, for example Clang 7.0, GCC 9.1, MSVC 14.16 (Visual Studio 2017) or newer
+    - OpenCL, CUDA or Vulkan library, supported SDKs are AMD OCL SDK, Intel SDK for OpenCL, NVIDIA CUDA Toolkit
       and Vulkan SDK
     - [Premake 5](https://premake.github.io/download.html)
     
@@ -86,21 +86,24 @@ systems are Linux and Windows.
     - `--no-opencl` disables inclusion of OpenCL API during compilation
 
 * KTT and applications utilizing it rely on external dynamic (shared) libraries in order to work correctly. There are
-  multiple ways to provide access to these libraries, e.g. copying given library inside application folder or adding the
+  multiple ways to provide access to these libraries, e.g., copying given library inside application folder or adding the
   containing folder to library path (example for Linux: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/shared/library).
-  Libraries which are bundled with device drivers are usually visible by default. List of the libraries currently utilized
+  Libraries which are bundled with device drivers are usually visible by default. The list of libraries currently utilized
   by KTT:
     - `OpenCL` distributed with specific device drivers (OpenCL only)
     - `cuda` distributed with specific device drivers (CUDA only)
     - `nvrtc` distributed with specific device drivers (CUDA only)
     - `cupti` bundled with Nvidia CUDA Toolkit (CUDA profiling only)
+    - `nvperf_host` bundled with Nvidia CUDA Toolkit (new CUDA profiling only)
+    - `nvperf_target` bundled with Nvidia CUDA Toolkit (new CUDA profiling only)
+    - `GPUPerfAPICL` bundled with KTT distribution (AMD OpenCL profiling only)
     - `vulkan` distributed with specific device drivers (Vulkan only)
     - `shaderc_shared` bundled with KTT distribution (Vulkan only)
     
-Original project
+Related projects
 ----------------
-KTT is based on [CLTune project](https://github.com/CNugteren/CLTune). Some parts of KTT API are similar to CLTune API,
-however internal structure was completely rewritten from scratch. Portions of code for the following features were ported
-from CLTune:
-* Generating of kernel configurations
-* Tuning parameter constraints
+KTT API is based on [CLTune project](https://github.com/CNugteren/CLTune). Certain parts of the API are similar to CLTune,
+however internal structure is completely rewritten from scratch.
+
+KTT search space generation and tuning configuration storage techniques are derived from [ATF project](https://dl.acm.org/doi/10.1145/3427093).
+Certain modifications were made to the original ATF algorithms due to differences in API and available framework features.
