@@ -6,6 +6,7 @@
 #include <ComputeEngine/Vulkan/VulkanDevice.h>
 #include <ComputeEngine/Vulkan/VulkanQueryPool.h>
 #include <ComputeEngine/Vulkan/VulkanUtility.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
@@ -14,6 +15,8 @@ VulkanQueryPool::VulkanQueryPool(const VulkanDevice& device, const uint32_t maxC
     m_Device(device.GetDevice()),
     m_TimestampPeriod(static_cast<double>(device.GetPhysicalDevice().GetProperties().limits.timestampPeriod))
 {
+    Logger::LogDebug("Initializing Vulkan query pool");
+
     const VkQueryPoolCreateInfo poolInfo =
     {
         VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
@@ -34,6 +37,7 @@ VulkanQueryPool::VulkanQueryPool(const VulkanDevice& device, const uint32_t maxC
 
 VulkanQueryPool::~VulkanQueryPool()
 {
+    Logger::LogDebug("Releasing Vulkan query pool");
     vkDestroyQueryPool(m_Device, m_Pool, nullptr);
 }
 

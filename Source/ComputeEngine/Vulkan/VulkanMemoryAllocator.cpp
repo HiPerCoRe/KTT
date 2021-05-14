@@ -5,13 +5,16 @@
 #include <ComputeEngine/Vulkan/VulkanMemoryAllocator.h>
 #include <ComputeEngine/Vulkan/VulkanPhysicalDevice.h>
 #include <ComputeEngine/Vulkan/VulkanUtility.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
 
 VulkanMemoryAllocator::VulkanMemoryAllocator(const VulkanInstance& instance, const VulkanDevice& device)
 {
-    VmaAllocatorCreateInfo allocatorInfo;
+    Logger::LogDebug("Initializing Vulkan memory allocator");
+
+    VmaAllocatorCreateInfo allocatorInfo = {};
     allocatorInfo.physicalDevice = device.GetPhysicalDevice().GetPhysicalDevice();
     allocatorInfo.device = device.GetDevice();
     allocatorInfo.instance = instance.GetInstance();
@@ -22,6 +25,7 @@ VulkanMemoryAllocator::VulkanMemoryAllocator(const VulkanInstance& instance, con
 
 VulkanMemoryAllocator::~VulkanMemoryAllocator()
 {
+    Logger::LogDebug("Releasing Vulkan memory allocator");
     vmaDestroyAllocator(m_Allocator);
 }
 

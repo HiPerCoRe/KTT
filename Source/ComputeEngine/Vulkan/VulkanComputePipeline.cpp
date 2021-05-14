@@ -9,6 +9,7 @@
 #include <ComputeEngine/Vulkan/VulkanQueryPool.h>
 #include <ComputeEngine/Vulkan/VulkanQueue.h>
 #include <ComputeEngine/Vulkan/VulkanUtility.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
@@ -22,6 +23,7 @@ VulkanComputePipeline::VulkanComputePipeline(const VulkanDevice& device, IdGener
     m_ShaderModule(std::make_unique<VulkanShaderModule>(compiler, device, name, source, localSize, configuration)),
     m_Generator(generator)
 {
+    Logger::LogDebug("Initializing Vulkan compute pipeline with name " + name);
     std::vector<KernelArgument*> scalarArguments;
     uint32_t vectorArgumentCount = 0;
 
@@ -85,6 +87,7 @@ VulkanComputePipeline::VulkanComputePipeline(const VulkanDevice& device, IdGener
 
 VulkanComputePipeline::~VulkanComputePipeline()
 {
+    Logger::LogDebug("Releasing Vulkan compute pipeline with name " + GetName());
     vkDestroyPipeline(m_Device.GetDevice(), m_Pipeline, nullptr);
     vkDestroyPipelineLayout(m_Device.GetDevice(), m_PipelineLayout, nullptr);
 }
@@ -143,6 +146,8 @@ std::unique_ptr<VulkanComputeAction> VulkanComputePipeline::DispatchShader(const
 
     CheckError(vkEndCommandBuffer(commandBuffer), "vkEndCommandBuffer");
 
+    Logger::LogDebug("Launching compute pipeline " + GetName() + " with compute action id " + std::to_string(id)
+        + ", global thread size: " + globalSize.GetString() + ", local thread size: " + m_LocalSize.GetString());
     queue.SubmitCommand(commandBuffer, action->GetFence());
     return action;
 }

@@ -3,6 +3,7 @@
 #include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CudaEngine.h>
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
+#include <ComputeEngine/Vulkan/VulkanEngine.h>
 #include <Output/Deserializer/JsonDeserializer.h>
 #include <Output/Deserializer/XmlDeserializer.h>
 #include <Output/Serializer/JsonSerializer.h>
@@ -397,7 +398,7 @@ void TunerCore::InitializeComputeEngine(const PlatformIndex platform, const Devi
         break;
     case ComputeApi::Vulkan:
         #ifdef KTT_API_VULKAN
-        throw KttException("Support for Vulkan API is not yet available");
+        m_ComputeEngine = std::make_unique<VulkanEngine>(device, queueCount);
         #else
         throw KttException("Support for Vulkan API is not included in this version of KTT framework");
         #endif // KTT_API_VULKAN

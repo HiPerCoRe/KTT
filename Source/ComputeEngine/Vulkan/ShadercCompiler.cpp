@@ -4,12 +4,14 @@
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/KttException.h>
 #include <ComputeEngine/Vulkan/ShadercCompiler.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
 
 ShadercCompiler::ShadercCompiler()
 {
+    Logger::LogDebug("Initializing Shaderc compiler");
     m_DefaultOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
 }
 

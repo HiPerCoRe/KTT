@@ -4,6 +4,7 @@
 #include <ComputeEngine/Vulkan/VulkanDescriptorSetLayout.h>
 #include <ComputeEngine/Vulkan/VulkanDevice.h>
 #include <ComputeEngine/Vulkan/VulkanUtility.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
@@ -13,6 +14,8 @@ VulkanDescriptorPool::VulkanDescriptorPool(const VulkanDevice& device, const VkD
     m_Device(device),
     m_DescriptorCount(descriptorCount)
 {
+    Logger::LogDebug("Initializing Vulkan descriptor pool");
+
     const VkDescriptorPoolSize poolSize =
     {
         descriptorType,
@@ -34,6 +37,7 @@ VulkanDescriptorPool::VulkanDescriptorPool(const VulkanDevice& device, const VkD
 
 VulkanDescriptorPool::~VulkanDescriptorPool()
 {
+    Logger::LogDebug("Releasing Vulkan descriptor pool");
     vkDestroyDescriptorPool(m_Device.GetDevice(), m_Pool, nullptr);
 }
 

@@ -5,13 +5,17 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
+#include <KttTypes.h>
+
 namespace ktt
 {
 
 class VulkanQueue
 {
 public:
-    explicit VulkanQueue(const VkQueue queue);
+    explicit VulkanQueue(const QueueId id, const VkQueue queue);
+
+    QueueId GetId() const;
 
     void SubmitCommand(VkCommandBuffer buffer) const;
     void SubmitCommand(VkCommandBuffer buffer, VkFence fence) const;
@@ -21,6 +25,7 @@ public:
 
 private:
     VkQueue m_Queue;
+    QueueId m_Id;
 };
 
 } // namespace ktt

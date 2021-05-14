@@ -1,14 +1,25 @@
 #ifdef KTT_API_VULKAN
 
+#include <string>
+
 #include <ComputeEngine/Vulkan/VulkanQueue.h>
 #include <ComputeEngine/Vulkan/VulkanUtility.h>
+#include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
 
-VulkanQueue::VulkanQueue(const VkQueue queue) :
-    m_Queue(queue)
-{}
+VulkanQueue::VulkanQueue(const QueueId id, const VkQueue queue) :
+    m_Queue(queue),
+    m_Id(id)
+{
+    Logger::LogDebug("Initializing Vulkan queue with id " + std::to_string(id));
+}
+
+QueueId VulkanQueue::GetId() const
+{
+    return m_Id;
+}
 
 void VulkanQueue::SubmitCommand(VkCommandBuffer buffer) const
 {

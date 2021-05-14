@@ -1,64 +1,63 @@
-#ifdef KTT_PLATFORM_VULKAN
+#ifdef KTT_API_VULKAN
 
-#include <limits>
-#include <compute_engine/vulkan/vulkan_engine.h>
-#include <utility/ktt_utility.h>
-#include <utility/logger.h>
-#include <utility/timer.h>
+#include <Api/KttException.h>
+#include <ComputeEngine/Vulkan/VulkanEngine.h>
+#include <ComputeEngine/Vulkan/VulkanUtility.h>
+#include <Utility/ErrorHandling/Assert.h>
+#include <Utility/Logger/Logger.h>
+#include <Utility/Timer/Timer.h>
+#include <Utility/StlHelpers.h>
+#include <Utility/StringUtility.h>
 
 namespace ktt
 {
 
 VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
-    deviceIndex(deviceIndex),
-    compilerOptions(std::string("")),
-    globalSizeType(GlobalSizeType::Vulkan),
-    globalSizeCorrection(false),
-    kernelCacheFlag(true),
-    kernelCacheCapacity(10),
-    persistentBufferFlag(true),
-    nextEventId(0)
+    m_DeviceIndex(deviceIndex),
+    m_DeviceInfo(0, ""),
+    m_CompilerOptions(""),
+    m_GlobalSizeType(GlobalSizeType::Vulkan),
+    m_GlobalSizeCorrection(false),
+    m_PipelineCache(10)
 {
-    std::vector<const char*> instanceExtensions;
+    std::vector<const char*> extensions;
     std::vector<const char*> validationLayers;
 
-    #ifdef KTT_CONFIGURATION_DEBUG
-    instanceExtensions.emplace_back("VK_EXT_debug_report");
-    validationLayers.emplace_back("VK_LAYER_LUNARG_standard_validation");
-    #endif
+#ifdef KTT_CONFIGURATION_DEBUG
+    extensions.emplace_back("VK_EXT_debug_report");
+    validationLayers.emplace_back("VK_LAYER_KHRONOS_validation");
+#endif
 
-    Logger::logDebug("Initializing Vulkan instance");
-    instance = std::make_unique<VulkanInstance>("KTT Compute Engine", instanceExtensions, validationLayers);
+    m_Instance = std::make_unique<VulkanInstance>("KTT Tuner", extensions, validationLayers);
+    std::vector<VulkanPhysicalDevice> devices = m_Instance->GetPhysicalDevices();
 
-    std::vector<VulkanPhysicalDevice> devices = instance->getPhysicalDevices();
     if (deviceIndex >= devices.size())
     {
-        throw std::runtime_error(std::string("Invalid device index: ") + std::to_string(deviceIndex));
+        throw KttException("Invalid device index: " + std::to_string(deviceIndex));
     }
 
-    Logger::logDebug("Initializing Vulkan device and queues");
-    device = std::make_unique<VulkanDevice>(devices.at(deviceIndex), queueCount, VK_QUEUE_COMPUTE_BIT, std::vector<const char*>{}, validationLayers);
-    queues = device->getQueues();
+    m_Device = std::make_unique<VulkanDevice>(devices[deviceIndex], queueCount, VK_QUEUE_COMPUTE_BIT, std::vector<const char*>{},
+        validationLayers);
+    std::vector<VkQueue> queues = m_Device->GetQueues();
 
-    Logger::logDebug("Initializing Vulkan command pool");
-    commandPool = std::make_unique<VulkanCommandPool>(device->getDevice(), device->getQueueFamilyIndex());
+    for (size_t i = 0; i < queues.size(); ++i)
+    {
+        m_Queues.push_back(std::make_unique<VulkanQueue>(static_cast<QueueId>(i), queues[i]));
+    }
 
-    Logger::logDebug("Initializing Vulkan query pool");
-    queryPool = std::make_unique<VulkanQueryPool>(device->getDevice(), devices.at(deviceIndex).getProperties().limits.timestampPeriod);
+    m_CommandPool = std::make_unique<VulkanCommandPool>(*m_Device, m_Device->GetQueueFamilyIndex());
+    m_DescriptorPool = std::make_unique<VulkanDescriptorPool>(*m_Device, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        static_cast<uint32_t>(m_PipelineCache.GetMaxSize() * 10));
+    m_QueryPool = std::make_unique<VulkanQueryPool>(*m_Device);
+    m_Compiler = std::make_unique<ShadercCompiler>();
+    m_Allocator = std::make_unique<VulkanMemoryAllocator>(*m_Instance, *m_Device);
+    m_DeviceInfo = GetDeviceInfo(0)[m_DeviceIndex];
 }
 
-KernelResult VulkanEngine::runKernel(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers,
-    const std::vector<OutputDescriptor>& outputDescriptors)
-{
-    EventId eventId = runKernelAsync(kernelData, argumentPointers, getDefaultQueue());
-    KernelResult result = getKernelResult(eventId, outputDescriptors);
-    return result;
-}
-
-EventId VulkanEngine::runKernelAsync(const KernelRuntimeData& kernelData, const std::vector<KernelArgument*>& argumentPointers, const QueueId queue)
+/*ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId)
 {
     Timer overheadTimer;
-    overheadTimer.start();
+    overheadTimer.Start();
 
     VulkanComputePipeline* pipeline;
     std::unique_ptr<VulkanComputePipeline> pipelineUnique;
@@ -128,72 +127,6 @@ uint64_t VulkanEngine::getKernelOverhead(const EventId id) const
     }
 
     return eventPointer->second->getOverhead();
-}
-
-void VulkanEngine::setCompilerOptions(const std::string& options)
-{
-    compilerOptions = options;
-}
-
-void VulkanEngine::setGlobalSizeType(const GlobalSizeType type)
-{
-    globalSizeType = type;
-}
-
-void VulkanEngine::setAutomaticGlobalSizeCorrection(const bool flag)
-{
-    globalSizeCorrection = flag;
-}
-
-void VulkanEngine::setKernelCacheUsage(const bool flag)
-{
-    if (!flag)
-    {
-        clearKernelCache();
-    }
-    kernelCacheFlag = flag;
-}
-
-void VulkanEngine::setKernelCacheCapacity(const size_t capacity)
-{
-    kernelCacheCapacity = capacity;
-}
-
-void VulkanEngine::clearKernelCache()
-{
-    pipelineCache.clear();
-}
-
-QueueId VulkanEngine::getDefaultQueue() const
-{
-    return 0;
-}
-
-std::vector<QueueId> VulkanEngine::getAllQueues() const
-{
-    std::vector<QueueId> result;
-
-    for (size_t i = 0; i < queues.size(); ++i)
-    {
-        result.push_back(static_cast<QueueId>(i));
-    }
-
-    return result;
-}
-
-void VulkanEngine::synchronizeQueue(const QueueId queue)
-{
-    if (queue >= queues.size())
-    {
-        throw std::runtime_error(std::string("Invalid queue index: ") + std::to_string(queue));
-    }
-
-    queues[queue].waitIdle();
-}
-
-void VulkanEngine::synchronizeDevice()
-{
-    device->waitIdle();
 }
 
 void VulkanEngine::clearEvents()
@@ -282,21 +215,9 @@ EventId VulkanEngine::uploadArgumentAsync(KernelArgument& kernelArgument, const 
     return eventId;
 }
 
-uint64_t VulkanEngine::updateArgument(const ArgumentId id, const void* data, const size_t dataSizeInBytes)
-{
-    EventId eventId = updateArgumentAsync(id, data, dataSizeInBytes, getDefaultQueue());
-    return getArgumentOperationDuration(eventId);
-}
-
 EventId VulkanEngine::updateArgumentAsync(const ArgumentId id, const void* data, const size_t dataSizeInBytes, const QueueId queue)
 {
     throw std::runtime_error("Vulkan API is not yet supported");
-}
-
-uint64_t VulkanEngine::downloadArgument(const ArgumentId id, void* destination, const size_t dataSizeInBytes) const
-{
-    EventId eventId = downloadArgumentAsync(id, destination, dataSizeInBytes, getDefaultQueue());
-    return getArgumentOperationDuration(eventId);
 }
 
 EventId VulkanEngine::downloadArgumentAsync(const ArgumentId id, void* destination, const size_t dataSizeInBytes, const QueueId queue) const
@@ -454,137 +375,270 @@ void VulkanEngine::getArgumentHandle(const ArgumentId id, BufferMemory& handle)
     throw std::runtime_error("Vulkan API is not yet supported");
 }
 
-void VulkanEngine::setPersistentBufferUsage(const bool flag)
-{
-    persistentBufferFlag = flag;
-}
-
 void VulkanEngine::addUserBuffer(UserBuffer buffer, KernelArgument& kernelArgument)
 {
     throw std::runtime_error("Vulkan API is not yet supported");
+}*/
+
+ComputeActionId VulkanEngine::RunKernelAsync([[maybe_unused]] const KernelComputeData& data, [[maybe_unused]] const QueueId queueId)
+{
+    return 0;
 }
 
-void VulkanEngine::clearBuffer(const ArgumentId id)
+ComputationResult VulkanEngine::WaitForComputeAction([[maybe_unused]] const ComputeActionId id)
 {
-    auto iterator = buffers.cbegin();
+    return ComputationResult();
+}
 
-    while (iterator != buffers.cend())
+void VulkanEngine::ClearData([[maybe_unused]] const KernelComputeId& id)
+{
+
+}
+
+void VulkanEngine::ClearKernelData([[maybe_unused]] const std::string& kernelName)
+{
+
+}
+
+ComputationResult VulkanEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
+    [[maybe_unused]] const QueueId queueId)
+{
+    throw KttException("Kernel profiling is not yet supported for Vulkan backend");
+}
+
+void VulkanEngine::SetProfilingCounters([[maybe_unused]] const std::vector<std::string>& counters)
+{
+    throw KttException("Kernel profiling is not yet supported for Vulkan backend");
+}
+
+bool VulkanEngine::IsProfilingSessionActive([[maybe_unused]] const KernelComputeId& id)
+{
+    throw KttException("Kernel profiling is not yet supported for Vulkan backend");
+}
+
+uint64_t VulkanEngine::GetRemainingProfilingRuns([[maybe_unused]] const KernelComputeId& id)
+{
+    throw KttException("Kernel profiling is not yet supported for Vulkan backend");
+}
+
+bool VulkanEngine::HasAccurateRemainingProfilingRuns() const
+{
+    return false;
+}
+
+bool VulkanEngine::SupportsMultiInstanceProfiling() const
+{
+    return false;
+}
+
+TransferActionId VulkanEngine::UploadArgument([[maybe_unused]] KernelArgument& kernelArgument, [[maybe_unused]] const QueueId queueId)
+{
+    return 0;
+}
+
+TransferActionId VulkanEngine::UpdateArgument([[maybe_unused]] const ArgumentId id, [[maybe_unused]] const QueueId queueId,
+    [[maybe_unused]] const void* data, [[maybe_unused]] const size_t dataSize)
+{
+    return 0;
+}
+
+TransferActionId VulkanEngine::DownloadArgument([[maybe_unused]] const ArgumentId id, [[maybe_unused]] const QueueId queueId,
+    [[maybe_unused]] void* destination, [[maybe_unused]] const size_t dataSize)
+{
+    return 0;
+}
+
+TransferActionId VulkanEngine::CopyArgument([[maybe_unused]] const ArgumentId destination, [[maybe_unused]] const QueueId queueId,
+    [[maybe_unused]] const ArgumentId source, [[maybe_unused]] const size_t dataSize)
+{
+    return 0;
+}
+
+TransferResult VulkanEngine::WaitForTransferAction([[maybe_unused]] const TransferActionId id)
+{
+    return TransferResult();
+}
+
+void VulkanEngine::ResizeArgument([[maybe_unused]] const ArgumentId id, [[maybe_unused]] const size_t newSize,
+    [[maybe_unused]] const bool preserveData)
+{
+
+}
+
+void VulkanEngine::GetUnifiedMemoryBufferHandle([[maybe_unused]] const ArgumentId id, [[maybe_unused]] UnifiedBufferMemory& handle)
+{
+
+}
+
+void VulkanEngine::AddCustomBuffer([[maybe_unused]] KernelArgument& kernelArgument, [[maybe_unused]] ComputeBuffer buffer)
+{
+
+}
+
+void VulkanEngine::ClearBuffer(const ArgumentId id)
+{
+    m_Buffers.erase(id);
+}
+
+void VulkanEngine::ClearBuffers()
+{
+    m_Buffers.clear();
+}
+
+bool VulkanEngine::HasBuffer(const ArgumentId id)
+{
+    return ContainsKey(m_Buffers, id);
+}
+
+QueueId VulkanEngine::GetDefaultQueue() const
+{
+    return static_cast<QueueId>(0);
+}
+
+std::vector<QueueId> VulkanEngine::GetAllQueues() const
+{
+    std::vector<QueueId> result;
+
+    for (const auto& queue : m_Queues)
     {
-        if (iterator->get()->getKernelArgumentId() == id)
-        {
-            buffers.erase(iterator);
-            return;
-        }
-        else
-        {
-            ++iterator;
-        }
-    }
-}
-
-void VulkanEngine::clearBuffers()
-{
-    buffers.clear();
-}
-
-void VulkanEngine::clearBuffers(const ArgumentAccessType accessType)
-{
-    auto iterator = buffers.cbegin();
-
-    while (iterator != buffers.cend())
-    {
-        if (iterator->get()->getAccessType() == accessType)
-        {
-            iterator = buffers.erase(iterator);
-        }
-        else
-        {
-            ++iterator;
-        }
-    }
-}
-
-void VulkanEngine::printComputeAPIInfo(std::ostream& outputTarget) const
-{
-    outputTarget << "Platform 0: " << "Vulkan" << std::endl;
-    std::vector<VulkanPhysicalDevice> devices = instance->getPhysicalDevices();
-
-    for (size_t i = 0; i < devices.size(); i++)
-    {
-        outputTarget << "Device " << i << ": " << devices.at(i).getName() << std::endl;
-    }
-    outputTarget << std::endl;
-}
-
-std::vector<PlatformInfo> VulkanEngine::getPlatformInfo() const
-{
-    PlatformInfo info(0, "Vulkan");
-    info.setVendor("N/A");
-    info.setVersion(instance->getAPIVersion());
-
-    std::vector<std::string> extensions = instance->getExtensions();
-    std::string mergedExtensions("");
-    for (size_t i = 0; i < extensions.size(); ++i)
-    {
-        mergedExtensions += extensions[i];
-        if (i != extensions.size() - 1)
-        {
-            mergedExtensions += ", ";
-        }
-    }
-    info.setExtensions(mergedExtensions);
-    return std::vector<PlatformInfo>{info};
-}
-
-std::vector<DeviceInfo> VulkanEngine::getDeviceInfo(const PlatformIndex) const
-{
-    std::vector<DeviceInfo> result;
-    std::vector<VulkanPhysicalDevice> devices = instance->getPhysicalDevices();
-
-    for (const auto& device : devices)
-    {
-        result.push_back(device.getDeviceInfo());
+        result.push_back(queue->GetId());
     }
 
     return result;
 }
 
-DeviceInfo VulkanEngine::getCurrentDeviceInfo() const
+void VulkanEngine::SynchronizeQueue(const QueueId queueId)
 {
-    return getDeviceInfo(0).at(deviceIndex);
+    if (static_cast<size_t>(queueId) >= m_Queues.size())
+    {
+        throw KttException("Invalid Vulkan queue index: " + std::to_string(queueId));
+    }
+
+    m_Queues[static_cast<size_t>(queueId)]->WaitIdle();
 }
 
-void VulkanEngine::initializeKernelProfiling(const KernelRuntimeData&)
+void VulkanEngine::SynchronizeDevice()
 {
-    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
+    m_Device->WaitIdle();
 }
 
-EventId VulkanEngine::runKernelWithProfiling(const KernelRuntimeData&, const std::vector<KernelArgument*>&, const QueueId)
+std::vector<PlatformInfo> VulkanEngine::GetPlatformInfo() const
 {
-    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
+    PlatformInfo info(0, "Vulkan");
+    info.SetVendor("N/A");
+    info.SetVersion(m_Instance->GetApiVersion());
+
+    std::vector<std::string> extensions = m_Instance->GetExtensions();
+    std::string mergedExtensions;
+
+    for (size_t i = 0; i < extensions.size(); ++i)
+    {
+        mergedExtensions += extensions[i];
+
+        if (i != extensions.size() - 1)
+        {
+            mergedExtensions += ", ";
+        }
+    }
+
+    info.SetExtensions(mergedExtensions);
+    return std::vector<PlatformInfo>{info};
 }
 
-uint64_t VulkanEngine::getRemainingKernelProfilingRuns(const std::string&, const std::string&)
+std::vector<DeviceInfo> VulkanEngine::GetDeviceInfo([[maybe_unused]] const PlatformIndex platformIndex) const
 {
-    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
+    std::vector<DeviceInfo> result;
+    std::vector<VulkanPhysicalDevice> devices = m_Instance->GetPhysicalDevices();
+
+    for (const auto& device : devices)
+    {
+        result.push_back(device.GetInfo());
+    }
+
+    return result;
 }
 
-bool VulkanEngine::hasAccurateRemainingKernelProfilingRuns() const
+PlatformInfo VulkanEngine::GetCurrentPlatformInfo() const
 {
-    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
+    return GetPlatformInfo()[0];
 }
 
-KernelResult VulkanEngine::getKernelResultWithProfiling(const EventId, const std::vector<OutputDescriptor>&)
+DeviceInfo VulkanEngine::GetCurrentDeviceInfo() const
 {
-    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
+    return m_DeviceInfo;
 }
 
-void VulkanEngine::setKernelProfilingCounters(const std::vector<std::string>&)
+void VulkanEngine::SetCompilerOptions(const std::string& options)
 {
-    throw std::runtime_error("Kernel profiling is not supported for Vulkan backend");
+    m_CompilerOptions = options;
+    ClearKernelCache();
 }
 
-EventId VulkanEngine::enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
+void VulkanEngine::SetGlobalSizeType(const GlobalSizeType type)
+{
+    m_GlobalSizeType = type;
+}
+
+void VulkanEngine::SetAutomaticGlobalSizeCorrection(const bool flag)
+{
+    m_GlobalSizeCorrection = flag;
+}
+
+void VulkanEngine::SetKernelCacheCapacity(const uint64_t capacity)
+{
+    m_PipelineCache.SetMaxSize(static_cast<size_t>(capacity));
+}
+
+void VulkanEngine::ClearKernelCache()
+{
+    m_PipelineCache.Clear();
+}
+
+void VulkanEngine::EnsureThreadContext()
+{}
+
+std::shared_ptr<VulkanComputePipeline> VulkanEngine::LoadPipeline([[maybe_unused]] const KernelComputeData& data)
+{
+    return nullptr;
+}
+
+VulkanBuffer* VulkanEngine::GetPipelineArgument([[maybe_unused]] KernelArgument& argument)
+{
+    return nullptr;
+}
+
+std::vector<VulkanBuffer*> VulkanEngine::GetPipelineArguments([[maybe_unused]] const std::vector<KernelArgument*>& arguments)
+{
+    return {};
+}
+
+std::unique_ptr<VulkanBuffer> VulkanEngine::CreateBuffer([[maybe_unused]] KernelArgument& argument)
+{
+    return nullptr;
+}
+
+std::unique_ptr<VulkanBuffer> VulkanEngine::CreateUserBuffer([[maybe_unused]] KernelArgument& argument,
+    [[maybe_unused]] ComputeBuffer buffer)
+{
+    return nullptr;
+}
+
+std::vector<KernelArgument*> VulkanEngine::GetScalarArguments(const std::vector<KernelArgument*>& arguments)
+{
+    std::vector<KernelArgument*> result;
+
+    for (auto* argument : arguments)
+    {
+        if (argument->GetMemoryType() == ArgumentMemoryType::Scalar)
+        {
+            result.push_back(argument);
+        }
+    }
+
+    return result;
+}
+
+/*EventId VulkanEngine::enqueuePipeline(VulkanComputePipeline& pipeline, const std::vector<size_t>& globalSize, const std::vector<size_t>& localSize,
     const QueueId queue, const uint64_t kernelLaunchOverhead, const VulkanPushConstant& pushConstant)
 {
     if (queue >= queues.size())
@@ -671,47 +725,8 @@ std::vector<VulkanBuffer*> VulkanEngine::getPipelineArguments(const std::vector<
     }
 
     return result;
-}
-
-VulkanBuffer* VulkanEngine::findBuffer(const ArgumentId id) const
-{
-    if (persistentBufferFlag)
-    {
-        for (const auto& buffer : persistentBuffers)
-        {
-            if (buffer->getKernelArgumentId() == id)
-            {
-                return buffer.get();
-            }
-        }
-    }
-
-    for (const auto& buffer : buffers)
-    {
-        if (buffer->getKernelArgumentId() == id)
-        {
-            return buffer.get();
-        }
-    }
-
-    return nullptr;
-}
-
-std::vector<KernelArgument*> VulkanEngine::getScalarArguments(const std::vector<KernelArgument*>& arguments)
-{
-    std::vector<KernelArgument*> result;
-
-    for (auto* argument : arguments)
-    {
-        if (argument->getUploadType() == ArgumentUploadType::Scalar)
-        {
-            result.push_back(argument);
-        }
-    }
-
-    return result;
-}
+}*/
 
 } // namespace ktt
 
-#endif // KTT_PLATFORM_VULKAN
+#endif // KTT_API_VULKAN

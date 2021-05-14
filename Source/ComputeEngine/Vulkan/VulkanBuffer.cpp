@@ -10,6 +10,7 @@
 #include <ComputeEngine/Vulkan/VulkanQueryPool.h>
 #include <ComputeEngine/Vulkan/VulkanQueue.h>
 #include <ComputeEngine/Vulkan/VulkanUtility.h>
+#include <Utility/Logger/Logger.h>
 #include <Utility/Timer/Timer.h>
 
 namespace ktt
@@ -23,6 +24,8 @@ VulkanBuffer::VulkanBuffer(KernelArgument& kernelArgument, IdGenerator<TransferA
     m_Allocator(allocator.GetAllocator()),
     m_BufferSize(static_cast<VkDeviceSize>(kernelArgument.GetDataSize()))
 {
+    Logger::LogDebug("Initializing Vulkan buffer with id " + std::to_string(m_Argument.GetId()));
+
     const VkBufferCreateInfo bufferInfo =
     {
         VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -35,7 +38,7 @@ VulkanBuffer::VulkanBuffer(KernelArgument& kernelArgument, IdGenerator<TransferA
         nullptr
     };
 
-    VmaAllocationCreateInfo allocationInfo;
+    VmaAllocationCreateInfo allocationInfo = {};
     allocationInfo.usage = memoryUsage;
 
     CheckError(vmaCreateBuffer(m_Allocator, &bufferInfo, &allocationInfo, &m_Buffer, &m_Allocation, nullptr), "vmaCreateBuffer");
@@ -43,11 +46,14 @@ VulkanBuffer::VulkanBuffer(KernelArgument& kernelArgument, IdGenerator<TransferA
 
 VulkanBuffer::~VulkanBuffer()
 {
+    Logger::LogDebug("Releasing Vulkan buffer with id " + std::to_string(m_Argument.GetId()));
     vmaDestroyBuffer(m_Allocator, m_Buffer, m_Allocation);
 }
 
 std::unique_ptr<VulkanTransferAction> VulkanBuffer::UploadData(const void* source, const VkDeviceSize dataSize)
 {
+    Logger::LogDebug("Uploading data into Vulkan buffer with id " + std::to_string(m_Argument.GetId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to upload is larger than size of buffer");
@@ -71,6 +77,8 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::UploadData(const void* sourc
 
 std::unique_ptr<VulkanTransferAction> VulkanBuffer::DownloadData(void* target, const VkDeviceSize dataSize)
 {
+    Logger::LogDebug("Downloading data from Vulkan buffer with id " + std::to_string(m_Argument.GetId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to download is larger than size of buffer");
@@ -95,6 +103,9 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::DownloadData(void* target, c
 std::unique_ptr<VulkanTransferAction> VulkanBuffer::CopyData(const VulkanQueue& queue, const VulkanCommandPool& commandPool,
     VulkanQueryPool& queryPool, const VulkanBuffer& source, const VkDeviceSize dataSize)
 {
+    Logger::LogDebug("Copying data into Vulkan buffer with id " + std::to_string(m_Argument.GetId())
+        + " from buffer with id " + std::to_string(source.GetArgumentId()));
+
     if (m_BufferSize < dataSize)
     {
         throw KttException("Size of data to copy is larger than size of target buffer");
