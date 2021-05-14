@@ -42,7 +42,7 @@ CuptiMetricInterface::CuptiMetricInterface(const DeviceIndex index) :
 
     CheckError(NVPW_CUDA_MetricsContext_Create(&params), "NVPW_CUDA_MetricsContext_Create");
     m_Context = params.pMetricsContext;
-    m_SupportedMetrics = GetSupportedMetrics(true);
+    SetMetrics(GetDefaultMetrics());
 }
 
 CuptiMetricInterface::~CuptiMetricInterface()
@@ -59,13 +59,19 @@ CuptiMetricInterface::~CuptiMetricInterface()
     CheckError(NVPW_MetricsContext_Destroy(&params), "NVPW_MetricsContext_Destroy");
 }
 
-CuptiMetricConfiguration CuptiMetricInterface::CreateMetricConfiguration(const std::vector<std::string>& metrics) const
+void CuptiMetricInterface::SetMetrics(const std::vector<std::string>& metrics)
 {
+    if (metrics.empty())
+    {
+        throw KttException("Number of profiling metrics must be greater than zero");
+    }
+
     std::vector<std::string> filteredMetrics;
+    const auto supportedMetrics = GetSupportedMetrics(true);
 
     for (const auto& metric : metrics)
     {
-        if (!ContainsKey(m_SupportedMetrics, metric))
+        if (!ContainsKey(supportedMetrics, metric))
         {
             Logger::LogWarning("Metric with name " + metric + " is not supported on the current device");
             continue;
@@ -74,10 +80,15 @@ CuptiMetricConfiguration CuptiMetricInterface::CreateMetricConfiguration(const s
         filteredMetrics.push_back(metric);
     }
 
+    m_Metrics = filteredMetrics;
+}
+
+CuptiMetricConfiguration CuptiMetricInterface::CreateMetricConfiguration() const
+{
     CuptiMetricConfiguration result(m_MaxProfiledRanges);
-    result.m_MetricNames = filteredMetrics;
-    result.m_ConfigImage = GetConfigImage(filteredMetrics);
-    std::vector<uint8_t> prefix = GetCounterDataImagePrefix(filteredMetrics);
+    result.m_MetricNames = m_Metrics;
+    result.m_ConfigImage = GetConfigImage(m_Metrics);
+    std::vector<uint8_t> prefix = GetCounterDataImagePrefix(m_Metrics);
     CreateCounterDataImage(prefix, result.m_CounterDataImage, result.m_ScratchBuffer);
     return result;
 }
@@ -482,6 +493,37 @@ void CuptiMetricInterface::GetRawMetricRequests(const std::vector<std::string>& 
 
         rawMetricRequests.push_back(request);
     }
+}
+
+const std::vector<std::string>& CuptiMetricInterface::GetDefaultMetrics()
+{
+    static const std::vector<std::string> result
+    {
+        "dram__sectors_read.sum", // dram_read_transactions
+        "dram__sectors_write.sum", // dram_write_transactions
+        "dram__throughput.avg.pct_of_peak_sustained_elapsed", // dram_utilization
+        "l1tex__data_pipe_lsu_wavefronts_mem_shared.avg.pct_of_peak_sustained_elapsed", // shared_utilization
+        "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum", // shared_load_transactions
+        "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_st.sum", // shared_store_transactions
+        "lts__t_sectors.avg.pct_of_peak_sustained_elapsed", // l2_utilization
+        "sm__warps_active.avg.pct_of_peak_sustained_active", // achieved_occupancy
+        "smsp__cycles_active.avg.pct_of_peak_sustained_elapsed", // sm_efficiency
+        "smsp__inst_executed_pipe_fp16.sum", // half_precision_fu_utilization
+        "smsp__inst_executed_pipe_fp64.avg.pct_of_peak_sustained_active", // double_precision_fu_utilization
+        "smsp__inst_executed_pipe_lsu.avg.pct_of_peak_sustained_active", // ldst_fu_utilization
+        "smsp__inst_executed_pipe_tex.avg.pct_of_peak_sustained_active", // tex_fu_utilization
+        "smsp__inst_executed_pipe_xu.avg.pct_of_peak_sustained_active", // special_fu_utilization
+        "smsp__inst_executed.sum", // inst_executed
+        "smsp__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active", // single_precision_fu_utilization
+        "smsp__sass_thread_inst_executed_op_fp16_pred_on.sum", // inst_fp_16
+        "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum", // inst_fp_32
+        "smsp__sass_thread_inst_executed_op_fp64_pred_on.sum", // inst_fp_64
+        "smsp__sass_thread_inst_executed_op_integer_pred_on.sum", // inst_integer
+        "smsp__sass_thread_inst_executed_op_inter_thread_communication_pred_on.sum", // inst_inter_thread_communication
+        "smsp__sass_thread_inst_executed_op_misc_pred_on.sum" // inst_misc
+    };
+
+    return result;
 }
 
 std::string CuptiMetricInterface::GetDeviceName(const DeviceIndex index)

@@ -23,14 +23,16 @@ public:
     CuptiMetricInterface(const DeviceIndex index);
     ~CuptiMetricInterface();
 
-    CuptiMetricConfiguration CreateMetricConfiguration(const std::vector<std::string>& metrics) const;
+    void SetMetrics(const std::vector<std::string>& metrics);
+
+    CuptiMetricConfiguration CreateMetricConfiguration() const;
     std::unique_ptr<KernelProfilingData> GenerateProfilingData(const CuptiMetricConfiguration& configuration) const;
 
     static void ListSupportedChips();
 
 private:
+    std::vector<std::string> m_Metrics;
     std::string m_DeviceName;
-    std::set<std::string> m_SupportedMetrics;
     NVPA_MetricsContext* m_Context;
     uint32_t m_MaxProfiledRanges;
     uint32_t m_MaxRangeNameLength;
@@ -42,6 +44,8 @@ private:
         std::vector<uint8_t>& counterDataScratchBuffer) const;
     void GetRawMetricRequests(const std::vector<std::string>& metrics, std::vector<NVPA_RawMetricRequest>& rawMetricRequests,
         std::vector<std::string>& temp) const;
+
+    static const std::vector<std::string>& GetDefaultMetrics();
     static std::string GetDeviceName(const DeviceIndex index);
     static bool ParseMetricNameString(const std::string& metric, std::string& outputName, bool& isolated, bool& keepInstances);
 };

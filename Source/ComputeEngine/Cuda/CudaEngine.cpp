@@ -243,7 +243,7 @@ void CudaEngine::SetProfilingCounters([[maybe_unused]] const std::vector<std::st
 #ifdef KTT_PROFILING_CUPTI_LEGACY
     CuptiInstance::SetEnabledMetrics(counters);
 #elif KTT_PROFILING_CUPTI
-    m_Profiler->SetCounters(counters);
+    m_MetricInterface->SetMetrics(counters);
 #else
     throw KttException("Support for kernel profiling is not included in this version of KTT framework");
 #endif // KTT_PROFILING_CUPTI_LEGACY
@@ -782,7 +782,7 @@ void CudaEngine::InitializeCupti()
 void CudaEngine::InitializeProfiling(const KernelComputeId& id)
 {
     KttAssert(!IsProfilingSessionActive(id), "Attempting to initialize profiling for compute id with active profiling session");
-    const auto configuration = m_MetricInterface->CreateMetricConfiguration(m_Profiler->GetCounters());
+    const auto configuration = m_MetricInterface->CreateMetricConfiguration();
     m_CuptiInstances[id] = std::make_unique<CuptiInstance>(*m_Context, configuration);
 }
 
