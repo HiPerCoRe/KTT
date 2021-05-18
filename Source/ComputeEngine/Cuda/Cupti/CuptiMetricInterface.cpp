@@ -499,28 +499,39 @@ const std::vector<std::string>& CuptiMetricInterface::GetDefaultMetrics()
 {
     static const std::vector<std::string> result
     {
-        "dram__sectors_read.sum", // dram_read_transactions
-        "dram__sectors_write.sum", // dram_write_transactions
-        "dram__throughput.avg.pct_of_peak_sustained_elapsed", // dram_utilization
-        "l1tex__data_pipe_lsu_wavefronts_mem_shared.avg.pct_of_peak_sustained_elapsed", // shared_utilization
-        "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum", // shared_load_transactions
-        "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_st.sum", // shared_store_transactions
-        "lts__t_sectors.avg.pct_of_peak_sustained_elapsed", // l2_utilization
-        "sm__warps_active.avg.pct_of_peak_sustained_active", // achieved_occupancy
-        "smsp__cycles_active.avg.pct_of_peak_sustained_elapsed", // sm_efficiency
-        "smsp__inst_executed_pipe_fp16.sum", // half_precision_fu_utilization
-        "smsp__inst_executed_pipe_fp64.avg.pct_of_peak_sustained_active", // double_precision_fu_utilization
-        "smsp__inst_executed_pipe_lsu.avg.pct_of_peak_sustained_active", // ldst_fu_utilization
-        "smsp__inst_executed_pipe_tex.avg.pct_of_peak_sustained_active", // tex_fu_utilization
-        "smsp__inst_executed_pipe_xu.avg.pct_of_peak_sustained_active", // special_fu_utilization
-        "smsp__inst_executed.sum", // inst_executed
-        "smsp__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active", // single_precision_fu_utilization
-        "smsp__sass_thread_inst_executed_op_fp16_pred_on.sum", // inst_fp_16
-        "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum", // inst_fp_32
-        "smsp__sass_thread_inst_executed_op_fp64_pred_on.sum", // inst_fp_64
-        "smsp__sass_thread_inst_executed_op_integer_pred_on.sum", // inst_integer
-        "smsp__sass_thread_inst_executed_op_inter_thread_communication_pred_on.sum", // inst_inter_thread_communication
-        "smsp__sass_thread_inst_executed_op_misc_pred_on.sum" // inst_misc
+        "dram__throughput.avg.pct_of_peak_sustained_elapsed",
+        "dram__sectors_read.sum",
+        "dram__sectors_write.sum",
+        "lts__t_sectors.avg.pct_of_peak_sustained_elapsed",
+        "lts__t_sectors_op_read.sum",
+        "lts__t_sectors_op_write.sum",
+        "l1tex__t_requests_pipe_lsu_mem_global_op_ld.avg.pct_of_peak_sustained_active",
+        "l1tex__t_requests_pipe_lsu_mem_global_op_ld.sum",
+        "l1tex__data_pipe_lsu_wavefronts_mem_shared.avg.pct_of_peak_sustained_elapsed",
+        "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum",
+        "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_st.sum",
+        "l1tex__t_sectors_pipe_lsu_mem_local_op_ld.sum",
+        "l1tex__t_sectors_pipe_lsu_mem_local_op_st.sum",
+        "sm__warps_active.avg.pct_of_peak_sustained_active",
+        "smsp__cycles_active.avg.pct_of_peak_sustained_elapsed",
+        "smsp__sass_thread_inst_executed_op_fp16_pred_on.sum",
+        "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum",
+        "smsp__sass_thread_inst_executed_op_fp64_pred_on.sum",
+        "smsp__sass_thread_inst_executed_op_integer_pred_on.sum",
+        "smsp__sass_thread_inst_executed_op_control_pred_on.sum",
+        "smsp__sass_thread_inst_executed_op_memory_pred_on.sum",
+        "smsp__sass_thread_inst_executed_op_misc_pred_on.sum",
+        "smsp__sass_thread_inst_executed_op_conversion_pred_on.sum",
+        "smsp__inst_executed.sum",
+        "smsp__inst_executed_pipe_fp16.sum",
+        "smsp__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active",
+        "smsp__inst_executed_pipe_fp64.avg.pct_of_peak_sustained_active",
+        "smsp__inst_executed_pipe_xu.avg.pct_of_peak_sustained_active",
+        "smsp__inst_executed_pipe_lsu.avg.pct_of_peak_sustained_active",
+        "smsp__inst_executed_pipe_tex.avg.pct_of_peak_sustained_active",
+        "smsp__issue_active.avg.pct_of_peak_sustained_active",
+        "smsp__thread_inst_executed_per_inst_executed.ratio",
+        "smsp__thread_inst_executed_per_inst_executed.pct",
     };
 
     return result;

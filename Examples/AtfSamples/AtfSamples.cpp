@@ -18,6 +18,9 @@ const std::string kernelPrefix = "../";
     const auto computeApi = ktt::ComputeApi::OpenCL;
 #endif
 
+// Toggle kernel profiling.
+const bool useProfiling = false;
+
 std::vector<uint64_t> ParameterRange(const uint64_t max)
 {
     std::vector<uint64_t> values;
@@ -128,6 +131,10 @@ int main(int argc, char** argv)
 
     ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
     tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+    if constexpr (computeApi == ktt::ComputeApi::CUDA && useProfiling) {
+        printf("Executing with profiling switched ON.\n");
+        tuner.SetProfiling(true);
+    }
     ktt::KernelDefinitionId definition;
     ktt::KernelDefinitionId definition2;
     ktt::KernelId kernel;
@@ -826,7 +833,7 @@ int main(int argc, char** argv)
     }
 
     tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
-    auto results = tuner.Tune(kernel);
+    //auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(100));
     tuner.SaveResults(results, "AtfOutput", ktt::OutputFormat::XML);
     return 0;
 }
