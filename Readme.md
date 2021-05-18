@@ -1,6 +1,6 @@
 KTT - Kernel Tuning Toolkit
 ===========================
-<img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogo.png" width="425" height="150"/>
+<img src="https://github.com/HiPerCoRe/KTT/blob/master/docs/resources/ktt_logo.png" width="425" height="150"/>
 
 KTT is an auto-tuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 2.0 which introduces major
 new features and improvements is now available.
@@ -103,7 +103,11 @@ systems are Linux and Windows.
 Related projects
 ----------------
 KTT API is based on [CLTune project](https://github.com/CNugteren/CLTune). Certain parts of the API are similar to CLTune,
-however internal structure is completely rewritten from scratch.
+however internal structure is completely rewritten from scratch. The ClTuneGemm and ClTuneConvolution examples are adopted from CLTune.
 
 KTT search space generation and tuning configuration storage techniques are derived from [ATF project](https://dl.acm.org/doi/10.1145/3427093).
-Certain modifications were made to the original ATF algorithms due to differences in API and available framework features.
+Certain modifications were made to the original ATF algorithms due to differences in API and available framework features. The examples stored in AtfSamples folder are adopted from ATF.
+
+How ro cite
+-----------
+F. Petrovič et al. [A benchmark set of highly-efficient CUDA and OpenCL kernels and its dynamic autotuning with Kernel Tuning Toolkit](https://www.sciencedirect.com/science/article/abs/pii/S0167739X19327360). In Future Generation Computer Systems, Volume 108, 2020.
