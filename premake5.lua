@@ -528,6 +528,13 @@ end -- openClProjects
     
 if cudaProjects then
 
+project "AtfSamplesCuda"
+    kind "ConsoleApp"
+    files {"Examples/AtfSamples/*.cpp", "Examples/AtfSamples/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
 project "BicgCuda"
     kind "ConsoleApp"
     files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cu"}

@@ -12,6 +12,12 @@ const std::string kernelPrefix = "";
 const std::string kernelPrefix = "../";
 #endif
 
+#if KTT_CUDA_EXAMPLE
+    const auto computeApi = ktt::ComputeApi::CUDA;
+#elif KTT_OPENCL_EXAMPLE
+    const auto computeApi = ktt::ComputeApi::OpenCL;
+#endif
+
 std::vector<uint64_t> ParameterRange(const uint64_t max)
 {
     std::vector<uint64_t> values;
@@ -120,14 +126,19 @@ int main(int argc, char** argv)
     auto DividesDivConstraint = [](const std::vector<uint64_t>& v) { return (v[1] / v[2]) % v[0] == 0; };
     auto NoPostInSecondKernelConstraint = [](const std::vector<uint64_t>& v) { return v[0] == 1 || (v[0] % v[1] == 0); };
 
-    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeApi::OpenCL);
+    ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
+    tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     ktt::KernelDefinitionId definition;
     ktt::KernelDefinitionId definition2;
     ktt::KernelId kernel;
 
     if constexpr (activeSample == AtfSampleType::Convolution)
     {
+#if KTT_CUDA_EXAMPLE
+        definition = tuner.AddKernelDefinitionFromFile("gaussian_1", kernelPath + "GaussianStatic1.cu", ktt::DimensionVector(), ktt::DimensionVector());
+#elif KTT_OPENCL_EXAMPLE
         definition = tuner.AddKernelDefinitionFromFile("gaussian_1", kernelPath + "GaussianStatic1.cl", ktt::DimensionVector(), ktt::DimensionVector());
+#endif
         kernel = tuner.CreateSimpleKernel("Convolution", definition);
 
         std::vector<float> in(inputSize1 * inputSize2);
@@ -220,8 +231,13 @@ int main(int argc, char** argv)
     }
     else if constexpr (activeSample == AtfSampleType::GEMM)
     {
+#if KTT_CUDA_EXAMPLE
+        definition = tuner.AddKernelDefinitionFromFile("gemm_1", kernelPath + "Gemm1.cu", ktt::DimensionVector(), ktt::DimensionVector());
+        definition2 = tuner.AddKernelDefinitionFromFile("gemm_2", kernelPath + "Gemm2.cu", ktt::DimensionVector(), ktt::DimensionVector());
+#elif KTT_OPENCL_EXAMPLE
         definition = tuner.AddKernelDefinitionFromFile("gemm_1", kernelPath + "Gemm1.cl", ktt::DimensionVector(), ktt::DimensionVector());
         definition2 = tuner.AddKernelDefinitionFromFile("gemm_2", kernelPath + "Gemm2.cl", ktt::DimensionVector(), ktt::DimensionVector());
+#endif
 
         std::vector<float> a(inputSize1 * inputSize3);
         std::vector<float> b(inputSize3 * inputSize2);
@@ -428,8 +444,13 @@ int main(int argc, char** argv)
     }
     else if constexpr (activeSample == AtfSampleType::CCSD)
     {
+#if KTT_CUDA_EXAMPLE
+        definition = tuner.AddKernelDefinitionFromFile("tc_1", kernelPath + "TcAbcdefGebcDfga1.cu", ktt::DimensionVector(), ktt::DimensionVector());
+        definition2 = tuner.AddKernelDefinitionFromFile("tc_2", kernelPath + "TcAbcdefGebcDfga2.cu", ktt::DimensionVector(), ktt::DimensionVector());
+#elif KTT_OPENCL_EXAMPLE
         definition = tuner.AddKernelDefinitionFromFile("tc_1", kernelPath + "TcAbcdefGebcDfga1.cl", ktt::DimensionVector(), ktt::DimensionVector());
         definition2 = tuner.AddKernelDefinitionFromFile("tc_2", kernelPath + "TcAbcdefGebcDfga2.cl", ktt::DimensionVector(), ktt::DimensionVector());
+#endif
 
         std::vector<float> a(inputSize7 * inputSize5 * inputSize2 * inputSize3);
         std::vector<float> b(inputSize4 * inputSize6 * inputSize7 * inputSize1);
@@ -751,7 +772,11 @@ int main(int argc, char** argv)
     }
     else // AtfSampleType::PRL
     {
+#if KTT_CUDA_EXAMPLE
+        definition = tuner.AddKernelDefinitionFromFile("rl_1", kernelPath + "Rl1.cu", ktt::DimensionVector(), ktt::DimensionVector());
+#elif KTT_OPENCL_EXAMPLE
         definition = tuner.AddKernelDefinitionFromFile("rl_1", kernelPath + "Rl1.cl", ktt::DimensionVector(), ktt::DimensionVector());
+#endif
         kernel = tuner.CreateSimpleKernel("PRL", definition);
 
         tuner.AddParameter(kernel, "CACHE_L_CB", std::vector<uint64_t>{0, 1});
