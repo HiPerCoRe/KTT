@@ -7,10 +7,8 @@
 #include <cuda.h>
 
 #include <Api/KttException.h>
-#include <ComputeEngine/Cuda/CudaContext.h>
 #include <ComputeEngine/Cuda/CudaProgram.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
-#include <Utility/Logger/Logger.h>
 #include <Utility/StringUtility.h>
 
 namespace ktt
@@ -33,16 +31,16 @@ CudaProgram::~CudaProgram()
     CheckError(nvrtcDestroyProgram(&m_Program), "nvrtcDestroyProgram");
 }
 
-void CudaProgram::Build() const
+void CudaProgram::Build(const std::string& compilerOptions) const
 {
     CheckError(nvrtcAddNameExpression(m_Program, m_Name.c_str()), "nvrtcAddNameExpression");
     std::vector<const char*> individualOptionsChar;
 
-    if (!m_CompilerOptions.empty())
+    if (!compilerOptions.empty())
     {
         std::vector<std::string> individualOptions;
         std::regex separator(" ");
-        std::sregex_token_iterator iterator(m_CompilerOptions.begin(), m_CompilerOptions.end(), separator, -1);
+        std::sregex_token_iterator iterator(compilerOptions.begin(), compilerOptions.end(), separator, -1);
         std::copy(iterator, std::sregex_token_iterator(), std::back_inserter(individualOptions));
 
         std::transform(individualOptions.begin(), individualOptions.end(), std::back_inserter(individualOptionsChar),
@@ -94,26 +92,6 @@ std::string CudaProgram::GetPtxSource() const
 
     RemoveTrailingZero(result);
     return result;
-}
-
-void CudaProgram::InitializeCompilerOptions(const CudaContext& context)
-{
-    Logger::LogDebug("Initializing default compiler options");
-
-    int computeCapabilityMajor = 0;
-    int computeCapabilityMinor = 0;
-    CheckError(cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, context.GetDevice()),
-        "cuDeviceGetAttribute");
-    CheckError(cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, context.GetDevice()),
-        "cuDeviceGetAttribute");
-
-    m_CompilerOptions = "--gpu-architecture=compute_" + std::to_string(computeCapabilityMajor)
-        + std::to_string(computeCapabilityMinor);
-}
-
-void CudaProgram::SetCompilerOptions(const std::string& options)
-{
-    m_CompilerOptions = options;
 }
 
 std::string CudaProgram::GetBuildInfo() const

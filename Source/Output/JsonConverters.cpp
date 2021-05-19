@@ -10,6 +10,7 @@ void to_json(json& j, const TunerMetadata& metadata)
     j = json
     {
         {"ComputeApi", metadata.GetComputeApi()},
+        {"GlobalSizeType", metadata.GetGlobalSizeType()},
         {"Platform", metadata.GetPlatformName()},
         {"Device", metadata.GetDeviceName()},
         {"KttVersion", metadata.GetKttVersion()},
@@ -21,6 +22,7 @@ void to_json(json& j, const TunerMetadata& metadata)
 void from_json(const json& j, TunerMetadata& metadata)
 {
     metadata.SetComputeApi(j.at("ComputeApi").get<ComputeApi>());
+    metadata.SetGlobalSizeType(j.at("GlobalSizeType").get<GlobalSizeType>());
     metadata.SetPlatformName(j.at("Platform").get<std::string>());
     metadata.SetDeviceName(j.at("Device").get<std::string>());
     metadata.SetKttVersion(j.at("KttVersion").get<std::string>());

@@ -13,11 +13,9 @@ namespace ktt
 {
 
 VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
+    m_Configuration(GlobalSizeType::Vulkan),
     m_DeviceIndex(deviceIndex),
     m_DeviceInfo(0, ""),
-    m_CompilerOptions(""),
-    m_GlobalSizeType(GlobalSizeType::Vulkan),
-    m_GlobalSizeCorrection(false),
     m_PipelineCache(10)
 {
     std::vector<const char*> extensions;
@@ -568,20 +566,30 @@ DeviceInfo VulkanEngine::GetCurrentDeviceInfo() const
     return m_DeviceInfo;
 }
 
+ComputeApi VulkanEngine::GetComputeApi() const
+{
+    return ComputeApi::Vulkan;
+}
+
+GlobalSizeType VulkanEngine::GetGlobalSizeType() const
+{
+    return m_Configuration.GetGlobalSizeType();
+}
+
 void VulkanEngine::SetCompilerOptions(const std::string& options)
 {
-    m_CompilerOptions = options;
+    m_Configuration.SetCompilerOptions(options);
     ClearKernelCache();
 }
 
 void VulkanEngine::SetGlobalSizeType(const GlobalSizeType type)
 {
-    m_GlobalSizeType = type;
+    m_Configuration.SetGlobalSizeType(type);
 }
 
 void VulkanEngine::SetAutomaticGlobalSizeCorrection(const bool flag)
 {
-    m_GlobalSizeCorrection = flag;
+    m_Configuration.SetGlobalSizeCorrection(flag);
 }
 
 void VulkanEngine::SetKernelCacheCapacity(const uint64_t capacity)

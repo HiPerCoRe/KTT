@@ -27,10 +27,10 @@ OpenClProgram::~OpenClProgram()
     CheckError(clReleaseProgram(m_Program), "clReleaseProgram");
 }
 
-void OpenClProgram::Build() const
+void OpenClProgram::Build(const std::string& compilerOptions) const
 {
     std::vector<cl_device_id> devices{m_Device};
-    cl_int result = clBuildProgram(m_Program, static_cast<cl_uint>(devices.size()), devices.data(), m_CompilerOptions.data(),
+    cl_int result = clBuildProgram(m_Program, static_cast<cl_uint>(devices.size()), devices.data(), compilerOptions.data(),
         nullptr, nullptr);
 
     const std::string buildInfo = GetBuildLog();
@@ -50,11 +50,6 @@ cl_program OpenClProgram::GetProgram() const
 cl_device_id OpenClProgram::GetDevice() const
 {
     return m_Device;
-}
-
-void OpenClProgram::SetCompilerOptions(const std::string& options)
-{
-    m_CompilerOptions = options;
 }
 
 std::string OpenClProgram::GetBuildLog() const

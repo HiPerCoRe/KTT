@@ -20,6 +20,7 @@ namespace ktt
 {
 
 OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
+    m_Configuration(GlobalSizeType::OpenCL),
     m_PlatformIndex(platformIndex),
     m_DeviceIndex(deviceIndex),
     m_DeviceInfo(0, ""),
@@ -57,6 +58,7 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
 }
 
 OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
+    m_Configuration(GlobalSizeType::OpenCL),
     m_DeviceInfo(0, ""),
     m_KernelCache(10)
 {
@@ -563,20 +565,30 @@ DeviceInfo OpenClEngine::GetCurrentDeviceInfo() const
     return m_DeviceInfo;
 }
 
+ComputeApi OpenClEngine::GetComputeApi() const
+{
+    return ComputeApi::OpenCL;
+}
+
+GlobalSizeType OpenClEngine::GetGlobalSizeType() const
+{
+    return m_Configuration.GetGlobalSizeType();
+}
+
 void OpenClEngine::SetCompilerOptions(const std::string& options)
 {
-    OpenClProgram::SetCompilerOptions(options);
+    m_Configuration.SetCompilerOptions(options);
     ClearKernelCache();
 }
 
 void OpenClEngine::SetGlobalSizeType(const GlobalSizeType type)
 {
-    OpenClKernel::SetGlobalSizeType(type);
+    m_Configuration.SetGlobalSizeType(type);
 }
 
 void OpenClEngine::SetAutomaticGlobalSizeCorrection(const bool flag)
 {
-    OpenClKernel::SetGlobalSizeCorrection(flag);
+    m_Configuration.SetGlobalSizeCorrection(flag);
 }
 
 void OpenClEngine::SetKernelCacheCapacity(const uint64_t capacity)
@@ -602,8 +614,8 @@ std::shared_ptr<OpenClKernel> OpenClEngine::LoadKernel(const KernelComputeData& 
     }
 
     auto program = std::make_unique<OpenClProgram>(*m_Context, data.GetSource());
-    program->Build();
-    auto kernel = std::make_shared<OpenClKernel>(std::move(program), data.GetName(), m_ComputeIdGenerator);
+    program->Build(m_Configuration.GetCompilerOptions());
+    auto kernel = std::make_shared<OpenClKernel>(std::move(program), data.GetName(), m_ComputeIdGenerator, m_Configuration);
 
     if (m_KernelCache.GetMaxSize() > 0)
     {

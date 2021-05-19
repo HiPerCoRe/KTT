@@ -2,6 +2,9 @@
 #include <sstream>
 #include <date.h>
 
+#include <Api/Info/DeviceInfo.h>
+#include <Api/Info/PlatformInfo.h>
+#include <ComputeEngine/ComputeEngine.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Output/TunerMetadata.h>
 #include <KttPlatform.h>
@@ -9,10 +12,11 @@
 namespace ktt
 {
 
-TunerMetadata::TunerMetadata(const ComputeApi api, const PlatformInfo& platformInfo, const DeviceInfo& deviceInfo) :
-    m_ComputeApi(api),
-    m_PlatformName(platformInfo.GetName()),
-    m_DeviceName(deviceInfo.GetName())
+TunerMetadata::TunerMetadata(const ComputeEngine& engine) :
+    m_ComputeApi(engine.GetComputeApi()),
+    m_GlobalSizeType(engine.GetGlobalSizeType()),
+    m_PlatformName(engine.GetCurrentPlatformInfo().GetName()),
+    m_DeviceName(engine.GetCurrentDeviceInfo().GetName())
 {
     m_KttVersion = GetKttVersionString();
     m_TimeUnit = TimeConfiguration::GetInstance().GetTimeUnit();
@@ -30,6 +34,11 @@ TunerMetadata::TunerMetadata(const ComputeApi api, const PlatformInfo& platformI
 void TunerMetadata::SetComputeApi(const ComputeApi api)
 {
     m_ComputeApi = api;
+}
+
+void TunerMetadata::SetGlobalSizeType(const GlobalSizeType sizeType)
+{
+    m_GlobalSizeType = sizeType;
 }
 
 void TunerMetadata::SetPlatformName(const std::string& name)
@@ -60,6 +69,11 @@ void TunerMetadata::SetTimeUnit(const TimeUnit unit)
 ComputeApi TunerMetadata::GetComputeApi() const
 {
     return m_ComputeApi;
+}
+
+GlobalSizeType TunerMetadata::GetGlobalSizeType() const
+{
+    return m_GlobalSizeType;
 }
 
 const std::string& TunerMetadata::GetPlatformName() const

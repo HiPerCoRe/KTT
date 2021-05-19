@@ -5,20 +5,22 @@
 #include <ComputeEngine/Cuda/CudaKernel.h>
 #include <ComputeEngine/Cuda/CudaStream.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
+#include <ComputeEngine/EngineConfiguration.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt
 {
 
-CudaKernel::CudaKernel(IdGenerator<ComputeActionId>& generator, const std::string& name, const std::string& source,
-    const std::string& typeName) :
+CudaKernel::CudaKernel(IdGenerator<ComputeActionId>& generator, const EngineConfiguration& configuration, const std::string& name,
+    const std::string& source, const std::string& typeName) :
     m_Name(name),
-    m_Generator(generator)
+    m_Generator(generator),
+    m_Configuration(configuration)
 {
     Logger::LogDebug("Initializing CUDA kernel with name " + name);
     m_Program = std::make_unique<CudaProgram>(name, source, typeName);
-    m_Program->Build();
+    m_Program->Build(m_Configuration.GetCompilerOptions());
 
     const std::string ptx = m_Program->GetPtxSource();
     CheckError(cuModuleLoadDataEx(&m_Module, ptx.data(), 0, nullptr, nullptr), "cuModuleLoadDataEx");
@@ -90,16 +92,6 @@ CUmodule CudaKernel::GetModule() const
     return m_Module;
 }
 
-void CudaKernel::SetGlobalSizeType(const GlobalSizeType type)
-{
-    m_GlobalSizeType = type;
-}
-
-void CudaKernel::SetGlobalSizeCorrection(const bool flag)
-{
-    m_GlobalSizeCorrection = flag;
-}
-
 uint64_t CudaKernel::GetAttribute(const CUfunction_attribute attribute) const
 {
     int value;
@@ -107,13 +99,13 @@ uint64_t CudaKernel::GetAttribute(const CUfunction_attribute attribute) const
     return static_cast<uint64_t>(value);
 }
 
-DimensionVector CudaKernel::AdjustGlobalSize(const DimensionVector& globalSize, const DimensionVector& localSize)
+DimensionVector CudaKernel::AdjustGlobalSize(const DimensionVector& globalSize, const DimensionVector& localSize) const
 {
     DimensionVector result = globalSize;
 
-    if (m_GlobalSizeCorrection)
+    if (m_Configuration.GetGlobalSizeCorrection())
     {
-        if (m_GlobalSizeType == GlobalSizeType::OpenCL)
+        if (m_Configuration.GetGlobalSizeType() == GlobalSizeType::OpenCL)
         {
             result.RoundUp(localSize);
         }
@@ -123,7 +115,7 @@ DimensionVector CudaKernel::AdjustGlobalSize(const DimensionVector& globalSize, 
         }
     }
 
-    switch (m_GlobalSizeType)
+    switch (m_Configuration.GetGlobalSizeType())
     {
     case GlobalSizeType::OpenCL:
         result.Divide(localSize);

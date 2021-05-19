@@ -14,6 +14,7 @@
 #include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <ComputeEngine/OpenCl/OpenClKernel.h>
 #include <ComputeEngine/ComputeEngine.h>
+#include <ComputeEngine/EngineConfiguration.h>
 #include <Utility/IdGenerator.h>
 #include <Utility/LruCache.h>
 
@@ -73,6 +74,8 @@ public:
     std::vector<DeviceInfo> GetDeviceInfo(const PlatformIndex platformIndex) const override;
     PlatformInfo GetCurrentPlatformInfo() const override;
     DeviceInfo GetCurrentDeviceInfo() const override;
+    ComputeApi GetComputeApi() const override;
+    GlobalSizeType GetGlobalSizeType() const override;
 
     // Utility methods
     void SetCompilerOptions(const std::string& options) override;
@@ -83,6 +86,7 @@ public:
     void EnsureThreadContext() override;
 
 private:
+    EngineConfiguration m_Configuration;
     PlatformIndex m_PlatformIndex;
     DeviceIndex m_DeviceIndex;
     DeviceInfo m_DeviceInfo;
