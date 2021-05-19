@@ -12,17 +12,19 @@ res = myroot.find('Results')
 
 # Create CSV header
 print('Kernel name, Computation duration (us), Global size, Local size', end = ', ')
-kr = res[0] #XXX is ok also when Status != Ok?
-conf = kr.find('Configuration')
-for tp in conf.findall('Pair') :
-    print(tp.attrib['Name'], end = ', ')
-crs = kr.find('ComputationResults')
-cr = crs.find('ComputationResult')
-pd = cr.find('ProfilingData')
-if pd != None :
-    cts = pd.find('Counters')
-    for ct in cts.findall('Counter') :
-        print(ct.attrib['Name'], end = ', ')
+for kr in res.findall('KernelResult') :
+    if kr.attrib['Status'] == 'Ok' :
+        conf = kr.find('Configuration')
+        for tp in conf.findall('Pair') :
+            print(tp.attrib['Name'], end = ', ')
+        crs = kr.find('ComputationResults')
+        cr = crs.find('ComputationResult')
+        pd = cr.find('ProfilingData')
+        if pd != None :
+            cts = pd.find('Counters')
+            for ct in cts.findall('Counter') :
+                print(ct.attrib['Name'], end = ', ')
+        break
 print('Maximum work-group size, Local memory size, Private memory size, Constant memory size, Registers count')
 
 # Extract data into CSV
