@@ -171,7 +171,7 @@ const std::vector<std::string>& CuptiInstance::GetDefaultMetrics()
         "local_store_transactions",
         "achieved_occupancy",
         "sm_efficiency",
-    	"inst_fp_16",
+        "inst_fp_16",
         "inst_fp_32",
         "inst_fp_64",
         "inst_integer",

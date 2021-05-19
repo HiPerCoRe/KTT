@@ -37,6 +37,7 @@ tutorials:
 * `KernelTuning`: Simple kernel tuning using small number of tuning parameters and reference computation to validate output.
 * `CustomArgumentTypes`: Usage of kernel arguments with custom data types and validating the output with value comparator.
 * `ComputeApiInitializer`: Providing tuner with custom compute context, queues and buffers.
+* `VectorArgumentCustomization`: Showcasing different usage options for vector kernel arguments.
 
 Examples
 --------
@@ -108,6 +109,6 @@ however internal structure is completely rewritten from scratch. The ClTuneGemm 
 KTT search space generation and tuning configuration storage techniques are derived from [ATF project](https://dl.acm.org/doi/10.1145/3427093).
 Certain modifications were made to the original ATF algorithms due to differences in API and available framework features. The examples stored in AtfSamples folder are adopted from ATF.
 
-How ro cite
+How to cite
 -----------
 F. Petrovič et al. [A benchmark set of highly-efficient CUDA and OpenCL kernels and its dynamic autotuning with Kernel Tuning Toolkit](https://www.sciencedirect.com/science/article/abs/pii/S0167739X19327360). In Future Generation Computer Systems, Volume 108, 2020.

@@ -833,7 +833,7 @@ int main(int argc, char** argv)
     }
 
     tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
-    //auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(100));
+    auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(100));
     tuner.SaveResults(results, "AtfOutput", ktt::OutputFormat::XML);
     return 0;
 }
