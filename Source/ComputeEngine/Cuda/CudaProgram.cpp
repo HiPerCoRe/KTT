@@ -1,7 +1,6 @@
 #ifdef KTT_API_CUDA
 
 #include <algorithm>
-#include <cstring>
 #include <regex>
 #include <vector>
 #include <cuda.h>
@@ -34,11 +33,11 @@ CudaProgram::~CudaProgram()
 void CudaProgram::Build(const std::string& compilerOptions) const
 {
     CheckError(nvrtcAddNameExpression(m_Program, m_Name.c_str()), "nvrtcAddNameExpression");
+    std::vector<std::string> individualOptions;
     std::vector<const char*> individualOptionsChar;
 
     if (!compilerOptions.empty())
     {
-        std::vector<std::string> individualOptions;
         std::regex separator(" ");
         std::sregex_token_iterator iterator(compilerOptions.begin(), compilerOptions.end(), separator, -1);
         std::copy(iterator, std::sregex_token_iterator(), std::back_inserter(individualOptions));
@@ -46,20 +45,12 @@ void CudaProgram::Build(const std::string& compilerOptions) const
         std::transform(individualOptions.begin(), individualOptions.end(), std::back_inserter(individualOptionsChar),
             [](const std::string& sourceString)
         {
-            // Making a copy is necessary, because NVRTC expects the options to be in continuous memory block
-            char* result = new char[sourceString.size() + 1];
-            std::memcpy(result, sourceString.c_str(), sourceString.size() + 1);
-            return result; 
+            return sourceString.data();
         });
     }
 
     const nvrtcResult result = nvrtcCompileProgram(m_Program, static_cast<int>(individualOptionsChar.size()),
         individualOptionsChar.data());
-
-    for (size_t i = 0; i < individualOptionsChar.size(); ++i)
-    {
-        delete[] individualOptionsChar[i];
-    }
 
     const std::string buildInfo = GetBuildInfo();
     CheckError(result, "nvrtcCompileProgram", buildInfo);
