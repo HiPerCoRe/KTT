@@ -218,15 +218,25 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     }
 
     auto& instance = *m_CuptiInstances[id];
-    auto pass = std::make_unique<CuptiPass>(instance);
+    std::unique_ptr<CuptiPass> pass;
+
+    if (instance.HasValidKernelDuration())
+    {
+        pass = std::make_unique<CuptiPass>(instance);
+    }
 
     timer.Stop();
 
     const auto actionId = RunKernelAsync(data, queueId);
     auto& action = *m_ComputeActions[actionId];
-    action.IncreaseOverhead(timer.GetElapsedTime());
+    action.IncreaseOverhead(timer.GetElapsedTime()); 
     ComputationResult result = WaitForComputeAction(actionId);
     
+    if (!instance.HasValidKernelDuration())
+    {
+        instance.SetKernelDuration(result.GetDuration());
+    }
+
     timer.Start();
     pass.reset();
     FillProfilingData(id, result);
@@ -817,12 +827,21 @@ void CudaEngine::InitializeProfiling(const KernelComputeId& id)
 void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult& result)
 {
     KttAssert(IsProfilingSessionActive(id), "Attempting to retrieve profiling data for kernel without active profiling session");
-
+    
     auto& instance = *m_CuptiInstances[id];
     auto profilingData = m_MetricInterface->GenerateProfilingData(instance.GetConfiguration());
 
     if (profilingData->IsValid())
     {
+        KttAssert(instance.HasValidKernelDuration(), "Kernel duration must be known before filling in profiling data");
+        uint64_t profiledKernelOverhead = 0;
+
+        if (result.GetDuration() > instance.GetKernelDuration())
+        {
+            profiledKernelOverhead = result.GetDuration() - instance.GetKernelDuration();
+        }
+
+        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead);
         m_CuptiInstances.erase(id);
     }
 
@@ -842,12 +861,20 @@ void CudaEngine::InitializeProfiling(const KernelComputeId& id)
 void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult& result)
 {
     KttAssert(IsProfilingSessionActive(id), "Attempting to retrieve profiling data for kernel without active profiling session");
-
+    
     auto& instance = *m_CuptiInstances[id];
     auto profilingData = instance.GenerateProfilingData();
 
     if (profilingData->IsValid())
     {
+        uint64_t profiledKernelOverhead = 0;
+
+        if (result.GetDuration() > instance.GetKernelDuration())
+        {
+            profiledKernelOverhead = result.GetDuration() - instance.GetKernelDuration();
+        }
+
+        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead);
         m_CuptiInstances.erase(id);
     }
 
