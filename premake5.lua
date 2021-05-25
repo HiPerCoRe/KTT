@@ -298,6 +298,9 @@ workspace "Ktt"
         optimize "Full"
         symbols "Off"
     
+    filter "action:vs*"
+        buildoptions {"/Zc:__cplusplus"}
+        
     filter {}
     
     targetdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}")
