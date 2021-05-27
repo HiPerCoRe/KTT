@@ -24,7 +24,7 @@ class CudaKernel : public std::enable_shared_from_this<CudaKernel>
 {
 public:
     explicit CudaKernel(IdGenerator<ComputeActionId>& generator, const EngineConfiguration& configuration, const std::string& name,
-        const std::string& source, const std::string& typeName = "");
+        const std::string& source, const std::string& templatedName = "");
     ~CudaKernel();
 
     std::unique_ptr<CudaComputeAction> Launch(const CudaStream& stream, const DimensionVector& globalSize,

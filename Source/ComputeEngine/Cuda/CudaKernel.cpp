@@ -13,13 +13,15 @@ namespace ktt
 {
 
 CudaKernel::CudaKernel(IdGenerator<ComputeActionId>& generator, const EngineConfiguration& configuration, const std::string& name,
-    const std::string& source, const std::string& typeName) :
+    const std::string& source, const std::string& templatedName) :
     m_Name(name),
     m_Generator(generator),
     m_Configuration(configuration)
 {
     Logger::LogDebug("Initializing CUDA kernel with name " + name);
-    m_Program = std::make_unique<CudaProgram>(name, source, typeName);
+
+    const auto& programName = templatedName.empty() ? name : templatedName;
+    m_Program = std::make_unique<CudaProgram>(programName, source);
     m_Program->Build(m_Configuration.GetCompilerOptions());
 
     const std::string ptx = m_Program->GetPtxSource();

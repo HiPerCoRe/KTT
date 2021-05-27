@@ -669,7 +669,7 @@ std::shared_ptr<CudaKernel> CudaEngine::LoadKernel(const KernelComputeData& data
     }
 
     auto kernel = std::make_shared<CudaKernel>(m_ComputeIdGenerator, m_Configuration, data.GetName(), data.GetSource(),
-        data.GetTypeName());
+        data.GetTemplatedName());
 
     if (m_KernelCache.GetMaxSize() > 0)
     {

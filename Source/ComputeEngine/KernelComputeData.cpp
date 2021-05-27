@@ -15,7 +15,7 @@ KernelComputeData::KernelComputeData(const Kernel& kernel, const KernelDefinitio
     m_Name(definition.GetName()),
     m_DefaultSource(definition.GetSource()),
     m_ConfigurationPrefix(configuration.GeneratePrefix()),
-    m_TypeName(definition.GetTypeName()),
+    m_TemplatedName(definition.GetTemplatedName()),
     m_Configuration(&configuration),
     m_Arguments(definition.GetArguments())
 {
@@ -91,14 +91,14 @@ std::string KernelComputeData::GetSource() const
     return m_ConfigurationPrefix + m_DefaultSource;
 }
 
-const std::string& KernelComputeData::GetTypeName() const
+const std::string& KernelComputeData::GetTemplatedName() const
 {
-    return m_TypeName;
+    return m_TemplatedName;
 }
 
 KernelComputeId KernelComputeData::GetUniqueIdentifier() const
 {
-    return m_Name + m_TypeName + m_ConfigurationPrefix;
+    return m_Name + m_TemplatedName + m_ConfigurationPrefix;
 }
 
 const DimensionVector& KernelComputeData::GetGlobalSize() const

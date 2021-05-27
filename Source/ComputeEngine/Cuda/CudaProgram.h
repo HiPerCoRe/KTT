@@ -11,7 +11,7 @@ namespace ktt
 class CudaProgram
 {
 public:
-    explicit CudaProgram(const std::string& name, const std::string& source, const std::string& typeName = "");
+    explicit CudaProgram(const std::string& name, const std::string& source);
     ~CudaProgram();
 
     void Build(const std::string& compilerOptions) const;

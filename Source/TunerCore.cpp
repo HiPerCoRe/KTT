@@ -34,22 +34,22 @@ TunerCore::TunerCore(const ComputeApi api, const ComputeApiInitializer& initiali
     InitializeRunners();
 }
 
-KernelDefinitionId TunerCore::AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize, const std::string& typeName)
+KernelDefinitionId TunerCore::AddKernelDefinition(const std::string& name, const std::string& source,
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames)
 {
-    return m_KernelManager->AddKernelDefinition(name, source, globalSize, localSize, typeName);
+    return m_KernelManager->AddKernelDefinition(name, source, globalSize, localSize, typeNames);
 }
 
 KernelDefinitionId TunerCore::AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-    const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName)
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames)
 {
-    return m_KernelManager->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize, typeName);
+    return m_KernelManager->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize, typeNames);
 }
 
 void TunerCore::RemoveKernelDefinition(const KernelDefinitionId id)
 {
     const auto& definition = m_KernelManager->GetDefinition(id);
-    m_ComputeEngine->ClearKernelData(definition.GetName() + definition.GetTypeName());
+    m_ComputeEngine->ClearKernelData(definition.GetName() + definition.GetTemplatedName());
     m_KernelManager->RemoveKernelDefinition(id);
 }
 

@@ -13,15 +13,10 @@
 namespace ktt
 {
 
-CudaProgram::CudaProgram(const std::string& name, const std::string& source, const std::string& typeName) :
+CudaProgram::CudaProgram(const std::string& name, const std::string& source) :
     m_Name(name),
     m_Source(source)
 {
-    if (!typeName.empty())
-    {
-        m_Name =  name + "<" + typeName + ">";
-    }
-
     CheckError(nvrtcCreateProgram(&m_Program, source.data(), nullptr, 0, nullptr, nullptr), "nvrtcCreateProgram");
 }
 

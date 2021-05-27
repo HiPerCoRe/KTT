@@ -27,9 +27,9 @@ public:
 
     // Kernel management
     KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-        const DimensionVector& localSize, const std::string& typeName = "");
+        const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-        const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName = "");
+        const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
     void RemoveKernelDefinition(const KernelDefinitionId id);
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
     KernelId CreateKernel(const std::string& name, const KernelDefinitionId definitionId);
