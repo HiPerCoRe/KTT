@@ -3,6 +3,7 @@
 #include <string>
 
 #include <ComputeEngine/Vulkan/Actions/VulkanTransferAction.h>
+#include <ComputeEngine/Vulkan/VulkanBuffer.h>
 #include <ComputeEngine/Vulkan/VulkanCommandPool.h>
 #include <ComputeEngine/Vulkan/VulkanDevice.h>
 #include <ComputeEngine/Vulkan/VulkanQueryPool.h>
@@ -13,8 +14,9 @@ namespace ktt
 {
 
 VulkanTransferAction::VulkanTransferAction(const TransferActionId id, const VulkanDevice* device, const VulkanCommandPool* commandPool,
-    VulkanQueryPool* queryPool) :
+    VulkanQueryPool* queryPool, std::unique_ptr<VulkanBuffer> stagingBuffer) :
     m_Id(id),
+    m_StagingBuffer(std::move(stagingBuffer)),
     m_QueryPool(queryPool),
     m_Duration(InvalidDuration),
     m_Overhead(0),

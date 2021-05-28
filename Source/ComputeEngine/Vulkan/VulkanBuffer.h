@@ -30,8 +30,11 @@ public:
     std::unique_ptr<VulkanTransferAction> DownloadData(void* target, const VkDeviceSize dataSize);
     std::unique_ptr<VulkanTransferAction> CopyData(const VulkanQueue& queue, const VulkanCommandPool& commandPool,
         VulkanQueryPool& queryPool, const VulkanBuffer& source, const VkDeviceSize dataSize);
+    std::unique_ptr<VulkanTransferAction> CopyData(const VulkanQueue& queue, const VulkanCommandPool& commandPool,
+        VulkanQueryPool& queryPool, std::unique_ptr<VulkanBuffer> stagingSource, const VkDeviceSize dataSize);
 
     VkBuffer GetBuffer() const;
+    KernelArgument& GetArgument() const;
     ArgumentId GetArgumentId() const;
     ArgumentAccessType GetAccessType() const;
     ArgumentMemoryLocation GetMemoryLocation() const;
@@ -45,6 +48,9 @@ private:
     VmaAllocation m_Allocation;
     VmaAllocator m_Allocator;
     VkDeviceSize m_BufferSize;
+
+    std::unique_ptr<VulkanTransferAction> CopyDataInternal(const VulkanQueue& queue, VulkanQueryPool& queryPool,
+        const VulkanBuffer& source, const VkDeviceSize dataSize, std::unique_ptr<VulkanTransferAction> action);
 };
 
 } // namespace ktt
