@@ -479,7 +479,8 @@ std::unique_ptr<VulkanBuffer> VulkanEngine::CreateBuffer(KernelArgument& argumen
         break;
     case ArgumentMemoryLocation::Device:
         buffer = std::make_unique<VulkanBuffer>(argument, m_TransferIdGenerator, *m_Device, *m_Allocator,
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            VMA_MEMORY_USAGE_GPU_ONLY);
         break;
     case ArgumentMemoryLocation::Host:
     case ArgumentMemoryLocation::HostZeroCopy:

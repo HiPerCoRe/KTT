@@ -43,7 +43,16 @@ VulkanComputePipeline::VulkanComputePipeline(const VulkanDevice& device, IdGener
     m_DescriptorSets = descriptorPool.AllocateSets(std::vector<const VulkanDescriptorSetLayout*>{m_SetLayout.get()});
 
     VkDescriptorSetLayout setLayout = m_SetLayout->GetLayout();
+    uint32_t rangeCount = 0;
+    const VkPushConstantRange* range = nullptr;
+
     VulkanPushConstant pushConstant(scalarArguments);
+
+    if (pushConstant.IsValid())
+    {
+        rangeCount = 1;
+        range = &pushConstant.GetRange();
+    }
 
     const VkPipelineLayoutCreateInfo layoutCreateInfo =
     {
@@ -52,8 +61,8 @@ VulkanComputePipeline::VulkanComputePipeline(const VulkanDevice& device, IdGener
         0,
         1,
         &setLayout,
-        1,
-        &pushConstant.GetRange()
+        rangeCount,
+        range
     };
 
     CheckError(vkCreatePipelineLayout(m_Device.GetDevice(), &layoutCreateInfo, nullptr, &m_PipelineLayout),
