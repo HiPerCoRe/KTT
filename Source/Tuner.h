@@ -146,15 +146,16 @@ public:
       */
     KernelId CreateSimpleKernel(const std::string& name, const KernelDefinitionId definitionId);
 
-    /** @fn KernelId CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
+    /** @fn KernelId CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher = nullptr)
       * Creates composite kernel from the specified definitions. Note that kernel launcher is required in order to launch kernels
       * with multiple definitions.
       * @param name Kernel name used during logging and output operations. The name must be unique.
       * @param definitionIds Ids of kernel definitions which will be utilized by the kernel.
-      * @param launcher Launcher for the kernel.
+      * @param launcher Launcher for the kernel. It can be defined either during kernel creation or later with SetLauncher() method.
       * @return Id assigned to kernel by the tuner. The id can be used in other API methods.
       */
-    KernelId CreateCompositeKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher);
+    KernelId CreateCompositeKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds,
+        KernelLauncher launcher = nullptr);
 
     /** @fn void RemoveKernel(const KernelId id)
       * Removes kernel with the specified id from the tuner. If the kernel is used as a reference kernel, the corresponding kernel
