@@ -415,7 +415,7 @@ std::shared_ptr<VulkanComputePipeline> VulkanEngine::LoadPipeline(const KernelCo
     }
 
     auto pipeline = std::make_shared<VulkanComputePipeline>(*m_Device, m_ComputeIdGenerator, *m_Compiler, data.GetName(),
-        data.GetSource(), data.GetLocalSize(), data.GetConfiguration(), *m_DescriptorPool, data.GetArguments());
+        data.GetDefaultSource(), data.GetLocalSize(), data.GetConfiguration(), *m_DescriptorPool, data.GetArguments());
 
     if (m_PipelineCache.GetMaxSize() > 0)
     {
