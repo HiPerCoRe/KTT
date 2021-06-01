@@ -99,7 +99,7 @@ systems are Linux and Windows.
     - `nvperf_target` bundled with Nvidia CUDA Toolkit (new CUDA profiling only)
     - `GPUPerfAPICL` bundled with KTT distribution (AMD OpenCL profiling only)
     - `vulkan` distributed with specific device drivers (Vulkan only)
-    - `shaderc_shared` bundled with KTT distribution (Vulkan only)
+    - `shaderc_shared` bundled with Vulkan SDK (Vulkan only)
     
 Related projects
 ----------------

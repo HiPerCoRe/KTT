@@ -6,6 +6,9 @@ var dir_49c4ffe5cd0c89340eeffad86272a62d =
     [ "ConfigurationDuration.h", "_configuration_duration_8h.html", [
       [ "ConfigurationDuration", "classktt_1_1_configuration_duration.html", "classktt_1_1_configuration_duration" ]
     ] ],
+    [ "ConfigurationFraction.h", "_configuration_fraction_8h.html", [
+      [ "ConfigurationFraction", "classktt_1_1_configuration_fraction.html", "classktt_1_1_configuration_fraction" ]
+    ] ],
     [ "StopCondition.h", "_stop_condition_8h.html", [
       [ "StopCondition", "classktt_1_1_stop_condition.html", "classktt_1_1_stop_condition" ]
     ] ],
