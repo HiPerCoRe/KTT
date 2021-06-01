@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <shaderc.hpp>
+#include <shaderc/shaderc.hpp>
 
 namespace ktt
 {
