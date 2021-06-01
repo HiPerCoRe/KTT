@@ -22,6 +22,7 @@
 #include <ComputeEngine/Cuda/CudaKernel.h>
 #include <ComputeEngine/Cuda/CudaStream.h>
 #include <ComputeEngine/ComputeEngine.h>
+#include <ComputeEngine/EngineConfiguration.h>
 #include <Utility/IdGenerator.h>
 #include <Utility/LruCache.h>
 
@@ -74,6 +75,8 @@ public:
     std::vector<DeviceInfo> GetDeviceInfo(const PlatformIndex platformIndex) const override;
     PlatformInfo GetCurrentPlatformInfo() const override;
     DeviceInfo GetCurrentDeviceInfo() const override;
+    ComputeApi GetComputeApi() const override;
+    GlobalSizeType GetGlobalSizeType() const override;
 
     // Utility methods
     void SetCompilerOptions(const std::string& options) override;
@@ -84,13 +87,11 @@ public:
     void EnsureThreadContext() override;
 
 private:
+    EngineConfiguration m_Configuration;
     DeviceIndex m_DeviceIndex;
     DeviceInfo m_DeviceInfo;
     IdGenerator<ComputeActionId> m_ComputeIdGenerator;
     IdGenerator<TransferActionId> m_TransferIdGenerator;
-    std::string m_CompilerOptions;
-    GlobalSizeType m_GlobalSizeType;
-    bool m_GlobalSizeCorrection;
     std::unique_ptr<VulkanInstance> m_Instance;
     std::unique_ptr<VulkanDevice> m_Device;
     std::unique_ptr<VulkanCommandPool> m_CommandPool;

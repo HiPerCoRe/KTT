@@ -26,7 +26,7 @@ VulkanDescriptorPool::VulkanDescriptorPool(const VulkanDevice& device, const VkD
     {
         VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         nullptr,
-        0,
+        VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
         m_DescriptorCount,
         1,
         &poolSize

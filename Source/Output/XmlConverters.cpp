@@ -23,6 +23,22 @@ std::string ComputeApiToString(const ComputeApi api)
     }
 }
 
+std::string GlobalSizeTypeToString(const GlobalSizeType sizeType)
+{
+    switch (sizeType)
+    {
+    case GlobalSizeType::OpenCL:
+        return "OpenCL";
+    case GlobalSizeType::CUDA:
+        return "CUDA";
+    case GlobalSizeType::Vulkan:
+        return "Vulkan";
+    default:
+        KttError("Unhandled value");
+        return "";
+    }
+}
+
 std::string TimeUnitToString(const TimeUnit unit)
 {
     switch (unit)
@@ -96,6 +112,25 @@ ComputeApi ComputeApiFromString(const std::string& string)
 
     KttError("Invalid string value");
     return ComputeApi::OpenCL;
+}
+
+GlobalSizeType GlobalSizeTypeFromString(const std::string& string)
+{
+    if (string == "OpenCL")
+    {
+        return GlobalSizeType::OpenCL;
+    }
+    else if (string == "CUDA")
+    {
+        return GlobalSizeType::CUDA;
+    }
+    else if (string == "Vulkan")
+    {
+        return GlobalSizeType::Vulkan;
+    }
+
+    KttError("Invalid string value");
+    return GlobalSizeType::OpenCL;
 }
 
 TimeUnit TimeUnitFromString(const std::string& string)
@@ -175,6 +210,7 @@ void AppendMetadata(pugi::xml_node parent, const TunerMetadata& metadata)
 {
     pugi::xml_node node = parent.append_child("Metadata");
     node.append_attribute("ComputeApi").set_value(ComputeApiToString(metadata.GetComputeApi()).c_str());
+    node.append_attribute("GlobalSizeType").set_value(GlobalSizeTypeToString(metadata.GetGlobalSizeType()).c_str());
     node.append_attribute("Platform").set_value(metadata.GetPlatformName().c_str());
     node.append_attribute("Device").set_value(metadata.GetDeviceName().c_str());
     node.append_attribute("KttVersion").set_value(metadata.GetKttVersion().c_str());
@@ -187,6 +223,7 @@ TunerMetadata ParseMetadata(const pugi::xml_node node)
     TunerMetadata metadata;
 
     metadata.SetComputeApi(ComputeApiFromString(node.attribute("ComputeApi").value()));
+    metadata.SetGlobalSizeType(GlobalSizeTypeFromString(node.attribute("GlobalSizeType").value()));
     metadata.SetPlatformName(node.attribute("Platform").value());
     metadata.SetDeviceName(node.attribute("Device").value());
     metadata.SetKttVersion(node.attribute("KttVersion").value());

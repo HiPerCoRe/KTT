@@ -50,6 +50,11 @@ const std::vector<uint8_t>& VulkanPushConstant::GetData() const
     return m_Data;
 }
 
+bool VulkanPushConstant::IsValid() const
+{
+    return !m_Data.empty();
+}
+
 } // namespace ktt
 
 #endif // KTT_API_VULKAN

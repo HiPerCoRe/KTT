@@ -19,6 +19,7 @@ var _ktt_types_8h =
     [ "ReferenceComputation", "_ktt_types_8h.html#aa072e8ed2d94052fbb5686b3ff75878f", null ],
     [ "TransferActionId", "_ktt_types_8h.html#a90efa06798a7148f493e206ae3a3d410", null ],
     [ "UnifiedBufferMemory", "_ktt_types_8h.html#a1f5ef8463df054fbf4aa56f12284a52e", null ],
+    [ "UserData", "_ktt_types_8h.html#af9cd5c78192f75cafc2a66b8942868bb", null ],
     [ "ValueComparator", "_ktt_types_8h.html#ab2cf30aab952f8ea4366979237f9e1e9", null ],
     [ "InvalidArgumentId", "_ktt_types_8h.html#a06314e7380eb0baeb140510fcae36003", null ],
     [ "InvalidDuration", "_ktt_types_8h.html#a903bdfdf84555ceb9eba5dc578c446bb", null ],

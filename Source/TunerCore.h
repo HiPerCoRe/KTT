@@ -27,9 +27,9 @@ public:
 
     // Kernel management
     KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-        const DimensionVector& localSize, const std::string& typeName = "");
+        const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-        const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName = "");
+        const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
     void RemoveKernelDefinition(const KernelDefinitionId id);
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
     KernelId CreateKernel(const std::string& name, const KernelDefinitionId definitionId);
@@ -105,7 +105,6 @@ private:
     std::unique_ptr<ComputeEngine> m_ComputeEngine;
     std::unique_ptr<KernelRunner> m_KernelRunner;
     std::unique_ptr<TuningRunner> m_TuningRunner;
-    ComputeApi m_ComputeApi;
 
     void InitializeComputeEngine(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount);
     void InitializeComputeEngine(const ComputeApi api, const ComputeApiInitializer& initializer);

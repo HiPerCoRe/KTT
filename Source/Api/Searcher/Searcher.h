@@ -76,7 +76,7 @@ public:
       */
     uint64_t GetIndex(const KernelConfiguration& configuration) const;
 
-    /** @fn KernelConfiguration GetRandomConfigurationIndex() const
+    /** @fn KernelConfiguration GetRandomConfiguration() const
       * Returns random unexplored configuration.
       * @return Random unexplored configuration.
       */

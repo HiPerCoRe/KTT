@@ -14,6 +14,7 @@
 #include <ComputeEngine/Cuda/CudaKernel.h>
 #include <ComputeEngine/Cuda/CudaStream.h>
 #include <ComputeEngine/ComputeEngine.h>
+#include <ComputeEngine/EngineConfiguration.h>
 #include <Utility/IdGenerator.h>
 #include <Utility/LruCache.h>
 
@@ -75,6 +76,8 @@ public:
     std::vector<DeviceInfo> GetDeviceInfo(const PlatformIndex platformIndex) const override;
     PlatformInfo GetCurrentPlatformInfo() const override;
     DeviceInfo GetCurrentDeviceInfo() const override;
+    ComputeApi GetComputeApi() const override;
+    GlobalSizeType GetGlobalSizeType() const override;
 
     // Utility methods
     void SetCompilerOptions(const std::string& options) override;
@@ -85,6 +88,7 @@ public:
     void EnsureThreadContext() override;
 
 private:
+    EngineConfiguration m_Configuration;
     DeviceIndex m_DeviceIndex;
     DeviceInfo m_DeviceInfo;
     IdGenerator<ComputeActionId> m_ComputeIdGenerator;
@@ -110,6 +114,7 @@ private:
     size_t GetSharedMemorySize(const std::vector<KernelArgument*>& arguments) const;
     std::unique_ptr<CudaBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<CudaBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
+    void InitializeCompilerOptions();
 
 #if defined(KTT_PROFILING_CUPTI)
     void InitializeCupti();

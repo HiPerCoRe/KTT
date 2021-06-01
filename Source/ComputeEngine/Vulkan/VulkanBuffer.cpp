@@ -103,6 +103,56 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::DownloadData(void* target, c
 std::unique_ptr<VulkanTransferAction> VulkanBuffer::CopyData(const VulkanQueue& queue, const VulkanCommandPool& commandPool,
     VulkanQueryPool& queryPool, const VulkanBuffer& source, const VkDeviceSize dataSize)
 {
+    const auto id = m_Generator.GenerateId();
+    auto action = std::make_unique<VulkanTransferAction>(id, &m_Device, &commandPool, &queryPool);
+
+    return CopyDataInternal(queue, queryPool, source, dataSize, std::move(action));
+}
+
+std::unique_ptr<VulkanTransferAction> VulkanBuffer::CopyData(const VulkanQueue& queue, const VulkanCommandPool& commandPool,
+    VulkanQueryPool& queryPool, std::unique_ptr<VulkanBuffer> stagingSource, const VkDeviceSize dataSize)
+{
+    const auto& source = *stagingSource;
+
+    const auto id = m_Generator.GenerateId();
+    auto action = std::make_unique<VulkanTransferAction>(id, &m_Device, &commandPool, &queryPool, std::move(stagingSource));
+
+    return CopyDataInternal(queue, queryPool, source, dataSize, std::move(action));
+}
+
+VkBuffer VulkanBuffer::GetBuffer() const
+{
+    return m_Buffer;
+}
+
+KernelArgument& VulkanBuffer::GetArgument() const
+{
+    return m_Argument;
+}
+
+ArgumentId VulkanBuffer::GetArgumentId() const
+{
+    return m_Argument.GetId();
+}
+
+ArgumentAccessType VulkanBuffer::GetAccessType() const
+{
+    return m_Argument.GetAccessType();
+}
+
+ArgumentMemoryLocation VulkanBuffer::GetMemoryLocation() const
+{
+    return m_Argument.GetMemoryLocation();
+}
+
+VkDeviceSize VulkanBuffer::GetSize() const
+{
+    return m_BufferSize;
+}
+
+std::unique_ptr<VulkanTransferAction> VulkanBuffer::CopyDataInternal(const VulkanQueue& queue, VulkanQueryPool& queryPool,
+    const VulkanBuffer& source, const VkDeviceSize dataSize, std::unique_ptr<VulkanTransferAction> action)
+{
     Logger::LogDebug("Copying data into Vulkan buffer with id " + std::to_string(m_Argument.GetId())
         + " from buffer with id " + std::to_string(source.GetArgumentId()));
 
@@ -131,9 +181,6 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::CopyData(const VulkanQueue& 
         dataSize
     };
 
-    const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<VulkanTransferAction>(id, &m_Device, &commandPool, &queryPool);
-
     CheckError(vkBeginCommandBuffer(action->GetCommandBuffer(), &beginInfo), "vkBeginCommandBuffer");
 
     vkCmdResetQueryPool(action->GetCommandBuffer(), queryPool.GetPool(), action->GetFirstQueryId(), 2);
@@ -147,31 +194,6 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::CopyData(const VulkanQueue& 
 
     queue.SubmitCommand(action->GetCommandBuffer(), action->GetFence());
     return action;
-}
-
-VkBuffer VulkanBuffer::GetBuffer() const
-{
-    return m_Buffer;
-}
-
-ArgumentId VulkanBuffer::GetArgumentId() const
-{
-    return m_Argument.GetId();
-}
-
-ArgumentAccessType VulkanBuffer::GetAccessType() const
-{
-    return m_Argument.GetAccessType();
-}
-
-ArgumentMemoryLocation VulkanBuffer::GetMemoryLocation() const
-{
-    return m_Argument.GetMemoryLocation();
-}
-
-VkDeviceSize VulkanBuffer::GetSize() const
-{
-    return m_BufferSize;
 }
 
 } // namespace ktt

@@ -7,6 +7,7 @@
 #include <ComputeEngine/OpenCl/OpenClCommandQueue.h>
 #include <ComputeEngine/OpenCl/OpenClKernel.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
+#include <ComputeEngine/EngineConfiguration.h>
 #include <KernelArgument/KernelArgument.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
@@ -15,10 +16,11 @@ namespace ktt
 {
 
 OpenClKernel::OpenClKernel(std::unique_ptr<OpenClProgram> program, const std::string& name,
-    IdGenerator<ComputeActionId>& generator) :
+    IdGenerator<ComputeActionId>& generator, const EngineConfiguration& configuration) :
     m_Name(name),
     m_Program(std::move(program)),
     m_Generator(generator),
+    m_Configuration(configuration),
     m_NextArgumentIndex(0)
 {
     Logger::LogDebug("Initializing OpenCL kernel with name " + name);
@@ -121,16 +123,6 @@ cl_kernel OpenClKernel::GetKernel() const
     return m_Kernel;
 }
 
-void OpenClKernel::SetGlobalSizeType(const GlobalSizeType type)
-{
-    m_GlobalSizeType = type;
-}
-
-void OpenClKernel::SetGlobalSizeCorrection(const bool flag)
-{
-    m_GlobalSizeCorrection = flag;
-}
-
 void OpenClKernel::SetKernelArgumentVector(const void* buffer)
 {
     Logger::LogDebug("Setting vector argument on index " + std::to_string(m_NextArgumentIndex)
@@ -175,11 +167,11 @@ uint64_t OpenClKernel::GetAttribute(const cl_kernel_work_group_info attribute) c
     return result;
 }
 
-DimensionVector OpenClKernel::AdjustGlobalSize(const DimensionVector& globalSize, const DimensionVector& localSize)
+DimensionVector OpenClKernel::AdjustGlobalSize(const DimensionVector& globalSize, const DimensionVector& localSize) const
 {
     DimensionVector result = globalSize;
 
-    switch (m_GlobalSizeType)
+    switch (m_Configuration.GetGlobalSizeType())
     {
     case GlobalSizeType::OpenCL:
         // Do nothing
@@ -193,9 +185,9 @@ DimensionVector OpenClKernel::AdjustGlobalSize(const DimensionVector& globalSize
         break;
     }
 
-    if (m_GlobalSizeCorrection)
+    if (m_Configuration.GetGlobalSizeCorrection())
     {
-        if (m_GlobalSizeType == GlobalSizeType::OpenCL)
+        if (m_Configuration.GetGlobalSizeType() == GlobalSizeType::OpenCL)
         {
             result.RoundUp(localSize);
         }

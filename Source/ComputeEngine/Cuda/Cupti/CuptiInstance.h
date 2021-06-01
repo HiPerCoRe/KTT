@@ -6,6 +6,7 @@
 
 #include <ComputeEngine/Cuda/Cupti/CuptiMetricConfiguration.h>
 #include <ComputeEngine/Cuda/CudaContext.h>
+#include <KttTypes.h>
 
 namespace ktt
 {
@@ -17,8 +18,11 @@ public:
     ~CuptiInstance();
 
     void CollectData();
+    void SetKernelDuration(const Nanoseconds duration);
 
     const CudaContext& GetContext() const;
+    Nanoseconds GetKernelDuration() const;
+    bool HasValidKernelDuration() const;
     uint64_t GetRemainingPassCount() const;
     bool IsDataReady() const;
     const CuptiMetricConfiguration& GetConfiguration() const;
@@ -26,6 +30,7 @@ public:
 private:
     const CudaContext& m_Context;
     CuptiMetricConfiguration m_Configuration;
+    Nanoseconds m_KernelDuration;
 };
 
 } // namespace ktt

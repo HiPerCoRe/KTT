@@ -96,32 +96,32 @@ public:
     ~Tuner();
 
     /** @fn KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source,
-      * const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName = "")
+      * const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {})
       * Adds new kernel definition to the tuner. Requires specification of a kernel name, its source code and default global and
       * local thread sizes.
       * @param name Name of a kernel function inside kernel source code. The name must be unique.
       * @param source Kernel source code written in the corresponding compute API language.
       * @param globalSize Dimensions for base kernel global size (e.g., grid size in CUDA, NDRange size in OpenCL).
       * @param localSize Dimensions for base kernel local size (e.g., block size in CUDA, work-group size in OpenCL).
-      * @param typeName Name of a type which will be used to instantiate kernel template. Only supported in CUDA kernels.
+      * @param typeNames Names of types which will be used to instantiate kernel template. Only supported in CUDA kernels.
       * @return Id assigned to kernel definition by the tuner. The id can be used in other API methods.
       */
     KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-        const DimensionVector& localSize, const std::string& typeName = "");
+        const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
 
     /** @fn KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-      * const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName = "")
+      * const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {})
       * Adds new kernel definition to the tuner. Requires specification of a kernel name, file path to its source code and default
       * global and local thread sizes.
       * @param name Name of a kernel function inside kernel source code. The name must be unique.
       * @param filePath Path to file with kernel source code written in the corresponding compute API language.
       * @param globalSize Dimensions for base kernel global size (e.g., grid size in CUDA, NDRange size in OpenCL).
       * @param localSize Dimensions for base kernel local size (e.g., block size in CUDA, work-group size in OpenCL).
-      * @param typeName Name of a type which will be used to instantiate kernel template. Only supported in CUDA kernels.
+      * @param typeNames Names of types which will be used to instantiate kernel template. Only supported in CUDA kernels.
       * @return Id assigned to kernel definition by the tuner. The id can be used in other API methods.
       */
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-        const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName = "");
+        const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
 
     /** @fn void RemoveKernelDefinition(const KernelDefinitionId id)
       * Removes kernel definition with the specified id from the tuner. Note that definition can only be removed if it is not
@@ -146,15 +146,16 @@ public:
       */
     KernelId CreateSimpleKernel(const std::string& name, const KernelDefinitionId definitionId);
 
-    /** @fn KernelId CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher)
+    /** @fn KernelId CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher = nullptr)
       * Creates composite kernel from the specified definitions. Note that kernel launcher is required in order to launch kernels
       * with multiple definitions.
       * @param name Kernel name used during logging and output operations. The name must be unique.
       * @param definitionIds Ids of kernel definitions which will be utilized by the kernel.
-      * @param launcher Launcher for the kernel.
+      * @param launcher Launcher for the kernel. It can be defined either during kernel creation or later with SetLauncher() method.
       * @return Id assigned to kernel by the tuner. The id can be used in other API methods.
       */
-    KernelId CreateCompositeKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher);
+    KernelId CreateCompositeKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds,
+        KernelLauncher launcher = nullptr);
 
     /** @fn void RemoveKernel(const KernelId id)
       * Removes kernel with the specified id from the tuner. If the kernel is used as a reference kernel, the corresponding kernel

@@ -4,6 +4,7 @@
 
 #include <ComputeEngine/Cuda/Cupti/CuptiInstance.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
+#include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 
 namespace ktt
@@ -11,7 +12,8 @@ namespace ktt
 
 CuptiInstance::CuptiInstance(const CudaContext& context, const CuptiMetricConfiguration& configuration) :
     m_Context(context),
-    m_Configuration(configuration)
+    m_Configuration(configuration),
+    m_KernelDuration(InvalidDuration)
 {
     Logger::LogDebug("Initializing CUPTI instance");
 
@@ -88,9 +90,25 @@ void CuptiInstance::CollectData()
     m_Configuration.m_DataCollected = true;
 }
 
+void CuptiInstance::SetKernelDuration(const Nanoseconds duration)
+{
+    KttAssert(duration != InvalidDuration, "Kernel duration must be valid");
+    m_KernelDuration = duration;
+}
+
 const CudaContext& CuptiInstance::GetContext() const
 {
     return m_Context;
+}
+
+Nanoseconds CuptiInstance::GetKernelDuration() const
+{
+    return m_KernelDuration;
+}
+
+bool CuptiInstance::HasValidKernelDuration() const
+{
+    return m_KernelDuration != InvalidDuration;
 }
 
 uint64_t CuptiInstance::GetRemainingPassCount() const

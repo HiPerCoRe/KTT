@@ -7,7 +7,7 @@ var hierarchy =
     [ "ktt::DeviceInfo", "classktt_1_1_device_info.html", null ],
     [ "ktt::DimensionVector", "classktt_1_1_dimension_vector.html", null ],
     [ "ktt::EnableBitfieldOperators< ValidationMode >", "structktt_1_1_enable_bitfield_operators_3_01_validation_mode_01_4.html", null ],
-    [ "exception", null, [
+    [ "std::exception", null, [
       [ "ktt::KttException", "classktt_1_1_ktt_exception.html", null ]
     ] ],
     [ "ktt::KernelCompilationData", "structktt_1_1_kernel_compilation_data.html", null ],
@@ -25,6 +25,7 @@ var hierarchy =
     [ "ktt::StopCondition", "classktt_1_1_stop_condition.html", [
       [ "ktt::ConfigurationCount", "classktt_1_1_configuration_count.html", null ],
       [ "ktt::ConfigurationDuration", "classktt_1_1_configuration_duration.html", null ],
+      [ "ktt::ConfigurationFraction", "classktt_1_1_configuration_fraction.html", null ],
       [ "ktt::TuningDuration", "classktt_1_1_tuning_duration.html", null ]
     ] ],
     [ "ktt::Tuner", "classktt_1_1_tuner.html", null ]

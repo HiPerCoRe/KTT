@@ -23,6 +23,7 @@ namespace ktt
 {
 
 CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
+    m_Configuration(GlobalSizeType::CUDA),
     m_DeviceIndex(deviceIndex),
     m_DeviceInfo(0, ""),
     m_KernelCache(10)
@@ -45,7 +46,7 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
         m_Streams.push_back(std::move(stream));
     }
 
-    CudaProgram::InitializeCompilerOptions(*m_Context);
+    InitializeCompilerOptions();
     m_DeviceInfo = GetDeviceInfo(0)[m_DeviceIndex];
 
 #if defined(KTT_PROFILING_CUPTI)
@@ -54,6 +55,7 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 }
 
 CudaEngine::CudaEngine(const ComputeApiInitializer& initializer) :
+    m_Configuration(GlobalSizeType::CUDA),
     m_DeviceInfo(0, ""),
     m_KernelCache(10)
 {
@@ -78,7 +80,7 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer) :
         m_Streams.push_back(std::move(stream));
     }
 
-    CudaProgram::InitializeCompilerOptions(*m_Context);
+    InitializeCompilerOptions();
     m_DeviceInfo = GetDeviceInfo(0)[m_DeviceIndex];
 
 #if defined(KTT_PROFILING_CUPTI)
@@ -216,15 +218,25 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     }
 
     auto& instance = *m_CuptiInstances[id];
-    auto pass = std::make_unique<CuptiPass>(instance);
+    std::unique_ptr<CuptiPass> pass;
+
+    if (instance.HasValidKernelDuration())
+    {
+        pass = std::make_unique<CuptiPass>(instance);
+    }
 
     timer.Stop();
 
     const auto actionId = RunKernelAsync(data, queueId);
     auto& action = *m_ComputeActions[actionId];
-    action.IncreaseOverhead(timer.GetElapsedTime());
+    action.IncreaseOverhead(timer.GetElapsedTime()); 
     ComputationResult result = WaitForComputeAction(actionId);
     
+    if (!instance.HasValidKernelDuration())
+    {
+        instance.SetKernelDuration(result.GetDuration());
+    }
+
     timer.Start();
     pass.reset();
     FillProfilingData(id, result);
@@ -606,20 +618,30 @@ DeviceInfo CudaEngine::GetCurrentDeviceInfo() const
     return m_DeviceInfo;
 }
 
+ComputeApi CudaEngine::GetComputeApi() const
+{
+    return ComputeApi::CUDA;
+}
+
+GlobalSizeType CudaEngine::GetGlobalSizeType() const
+{
+    return m_Configuration.GetGlobalSizeType();
+}
+
 void CudaEngine::SetCompilerOptions(const std::string& options)
 {
-    CudaProgram::SetCompilerOptions(options);
+    m_Configuration.SetCompilerOptions(options);
     ClearKernelCache();
 }
 
 void CudaEngine::SetGlobalSizeType(const GlobalSizeType type)
 {
-    CudaKernel::SetGlobalSizeType(type);
+    m_Configuration.SetGlobalSizeType(type);
 }
 
 void CudaEngine::SetAutomaticGlobalSizeCorrection(const bool flag)
 {
-    CudaKernel::SetGlobalSizeCorrection(flag);
+    m_Configuration.SetGlobalSizeCorrection(flag);
 }
 
 void CudaEngine::SetKernelCacheCapacity(const uint64_t capacity)
@@ -646,7 +668,8 @@ std::shared_ptr<CudaKernel> CudaEngine::LoadKernel(const KernelComputeData& data
         return m_KernelCache.Get(id)->second;
     }
 
-    auto kernel = std::make_shared<CudaKernel>(m_ComputeIdGenerator, data.GetName(), data.GetSource(), data.GetTypeName());
+    auto kernel = std::make_shared<CudaKernel>(m_ComputeIdGenerator, m_Configuration, data.GetName(), data.GetSource(),
+        data.GetTemplatedName());
 
     if (m_KernelCache.GetMaxSize() > 0)
     {
@@ -771,6 +794,21 @@ std::unique_ptr<CudaBuffer> CudaEngine::CreateUserBuffer(KernelArgument& argumen
     return userBuffer;
 }
 
+void CudaEngine::InitializeCompilerOptions()
+{
+    Logger::LogDebug("Initializing default compiler options");
+
+    int computeCapabilityMajor = 0;
+    int computeCapabilityMinor = 0;
+    CheckError(cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, m_Context->GetDevice()),
+        "cuDeviceGetAttribute");
+    CheckError(cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, m_Context->GetDevice()),
+        "cuDeviceGetAttribute");
+
+    m_Configuration.SetCompilerOptions("--gpu-architecture=compute_" + std::to_string(computeCapabilityMajor)
+        + std::to_string(computeCapabilityMinor));
+}
+
 #if defined(KTT_PROFILING_CUPTI)
 
 void CudaEngine::InitializeCupti()
@@ -789,12 +827,21 @@ void CudaEngine::InitializeProfiling(const KernelComputeId& id)
 void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult& result)
 {
     KttAssert(IsProfilingSessionActive(id), "Attempting to retrieve profiling data for kernel without active profiling session");
-
+    
     auto& instance = *m_CuptiInstances[id];
     auto profilingData = m_MetricInterface->GenerateProfilingData(instance.GetConfiguration());
 
     if (profilingData->IsValid())
     {
+        KttAssert(instance.HasValidKernelDuration(), "Kernel duration must be known before filling in profiling data");
+        uint64_t profiledKernelOverhead = 0;
+
+        if (result.GetDuration() > instance.GetKernelDuration())
+        {
+            profiledKernelOverhead = result.GetDuration() - instance.GetKernelDuration();
+        }
+
+        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead);
         m_CuptiInstances.erase(id);
     }
 
@@ -814,12 +861,20 @@ void CudaEngine::InitializeProfiling(const KernelComputeId& id)
 void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult& result)
 {
     KttAssert(IsProfilingSessionActive(id), "Attempting to retrieve profiling data for kernel without active profiling session");
-
+    
     auto& instance = *m_CuptiInstances[id];
     auto profilingData = instance.GenerateProfilingData();
 
     if (profilingData->IsValid())
     {
+        uint64_t profiledKernelOverhead = 0;
+
+        if (result.GetDuration() > instance.GetKernelDuration())
+        {
+            profiledKernelOverhead = result.GetDuration() - instance.GetKernelDuration();
+        }
+
+        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead);
         m_CuptiInstances.erase(id);
     }
 

@@ -20,8 +20,7 @@ namespace ktt
 
 TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount) :
     m_ArgumentManager(std::make_unique<KernelArgumentManager>()),
-    m_KernelManager(std::make_unique<KernelManager>(*m_ArgumentManager)),
-    m_ComputeApi(api)
+    m_KernelManager(std::make_unique<KernelManager>(*m_ArgumentManager))
 {
     InitializeComputeEngine(platform, device, api, queueCount);
     InitializeRunners();
@@ -29,29 +28,28 @@ TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, con
 
 TunerCore::TunerCore(const ComputeApi api, const ComputeApiInitializer& initializer) :
     m_ArgumentManager(std::make_unique<KernelArgumentManager>()),
-    m_KernelManager(std::make_unique<KernelManager>(*m_ArgumentManager)),
-    m_ComputeApi(api)
+    m_KernelManager(std::make_unique<KernelManager>(*m_ArgumentManager))
 {
     InitializeComputeEngine(api, initializer);
     InitializeRunners();
 }
 
-KernelDefinitionId TunerCore::AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
-    const DimensionVector& localSize, const std::string& typeName)
+KernelDefinitionId TunerCore::AddKernelDefinition(const std::string& name, const std::string& source,
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames)
 {
-    return m_KernelManager->AddKernelDefinition(name, source, globalSize, localSize, typeName);
+    return m_KernelManager->AddKernelDefinition(name, source, globalSize, localSize, typeNames);
 }
 
 KernelDefinitionId TunerCore::AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
-    const DimensionVector& globalSize, const DimensionVector& localSize, const std::string& typeName)
+    const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames)
 {
-    return m_KernelManager->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize, typeName);
+    return m_KernelManager->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize, typeNames);
 }
 
 void TunerCore::RemoveKernelDefinition(const KernelDefinitionId id)
 {
     const auto& definition = m_KernelManager->GetDefinition(id);
-    m_ComputeEngine->ClearKernelData(definition.GetName() + definition.GetTypeName());
+    m_ComputeEngine->ClearKernelData(definition.GetName() + definition.GetTemplatedName());
     m_KernelManager->RemoveKernelDefinition(id);
 }
 
@@ -281,7 +279,7 @@ void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std:
         throw KttException("Unable to open file: " + file);
     }
 
-    TunerMetadata metadata(m_ComputeApi, m_ComputeEngine->GetCurrentPlatformInfo(), m_ComputeEngine->GetCurrentDeviceInfo());
+    TunerMetadata metadata(*m_ComputeEngine);
     auto serializer = CreateSerializer(format);
     serializer->SerializeResults(metadata, results, data, outputStream);
 }

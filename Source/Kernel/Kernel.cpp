@@ -97,11 +97,6 @@ void Kernel::SetProfiledDefinitions(const std::vector<const KernelDefinition*>& 
 
 void Kernel::SetLauncher(KernelLauncher launcher)
 {
-    if (launcher == nullptr)
-    {
-        throw KttException("Kernel launcher must be a valid function");
-    }
-
     m_Launcher = launcher;
 }
 

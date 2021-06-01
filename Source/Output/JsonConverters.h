@@ -19,6 +19,13 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ComputeApi,
     {ComputeApi::Vulkan, "Vulkan"}
 });
 
+NLOHMANN_JSON_SERIALIZE_ENUM(GlobalSizeType,
+{
+    {GlobalSizeType::OpenCL, "OpenCL"},
+    {GlobalSizeType::CUDA, "CUDA"},
+    {GlobalSizeType::Vulkan, "Vulkan"}
+});
+
 NLOHMANN_JSON_SERIALIZE_ENUM(TimeUnit,
 {
     {TimeUnit::Nanoseconds, "Nanoseconds"},

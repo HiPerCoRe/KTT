@@ -18,6 +18,7 @@ public:
 
     const VkPushConstantRange& GetRange() const;
     const std::vector<uint8_t>& GetData() const;
+    bool IsValid() const;
 
 private:
     VkPushConstantRange m_Range;

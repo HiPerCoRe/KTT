@@ -2,21 +2,23 @@
 
 #include <string>
 
-#include <Api/Info/DeviceInfo.h>
-#include <Api/Info/PlatformInfo.h>
 #include <ComputeEngine/ComputeApi.h>
+#include <ComputeEngine/GlobalSizeType.h>
 #include <Output/TimeConfiguration/TimeUnit.h>
 
 namespace ktt
 {
 
+class ComputeEngine;
+
 class TunerMetadata
 {
 public:
     TunerMetadata() = default;
-    explicit TunerMetadata(const ComputeApi api, const PlatformInfo& platformInfo, const DeviceInfo& deviceInfo);
+    explicit TunerMetadata(const ComputeEngine& engine);
 
     void SetComputeApi(const ComputeApi api);
+    void SetGlobalSizeType(const GlobalSizeType sizeType);
     void SetPlatformName(const std::string& name);
     void SetDeviceName(const std::string& name);
     void SetKttVersion(const std::string& version);
@@ -24,6 +26,7 @@ public:
     void SetTimeUnit(const TimeUnit unit);
 
     ComputeApi GetComputeApi() const;
+    GlobalSizeType GetGlobalSizeType() const;
     const std::string& GetPlatformName() const;
     const std::string& GetDeviceName() const;
     const std::string& GetKttVersion() const;
@@ -32,6 +35,7 @@ public:
 
 private:
     ComputeApi m_ComputeApi;
+    GlobalSizeType m_GlobalSizeType;
     std::string m_PlatformName;
     std::string m_DeviceName;
     std::string m_KttVersion;

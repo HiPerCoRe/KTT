@@ -26,7 +26,7 @@ VulkanComputeAction::VulkanComputeAction(const ComputeActionId id, const VulkanD
 {
     Logger::LogDebug("Initializing Vulkan compute action with id " + std::to_string(id) + " for kernel with name "
         + pipeline->GetName());
-    KttAssert(m_Pipeline != nullptr, "Invalid kernel was used during Vulkan compute action initialization");
+    KttAssert(m_Pipeline != nullptr, "Invalid pipeline was used during Vulkan compute action initialization");
 
     m_Fence = std::make_unique<VulkanFence>(device);
     m_CommandBuffers = commandPool.AllocateBuffers(1);

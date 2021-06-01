@@ -6,6 +6,7 @@
 #include <Api/Info/DeviceInfo.h>
 #include <Api/Info/PlatformInfo.h>
 #include <Api/Output/ComputationResult.h>
+#include <ComputeEngine/ComputeApi.h>
 #include <ComputeEngine/KernelComputeData.h>
 #include <ComputeEngine/GlobalSizeType.h>
 #include <ComputeEngine/TransferResult.h>
@@ -61,6 +62,8 @@ public:
     virtual std::vector<DeviceInfo> GetDeviceInfo(const PlatformIndex platformIndex) const = 0;
     virtual PlatformInfo GetCurrentPlatformInfo() const = 0;
     virtual DeviceInfo GetCurrentDeviceInfo() const = 0;
+    virtual ComputeApi GetComputeApi() const = 0;
+    virtual GlobalSizeType GetGlobalSizeType() const = 0;
 
     // Utility methods
     virtual void SetCompilerOptions(const std::string& options) = 0;
