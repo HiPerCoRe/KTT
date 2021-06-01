@@ -19,7 +19,7 @@ const std::string kernelPrefix = "../";
 #endif
 
 // Toggle kernel profiling.
-const bool useProfiling = false;
+const bool useProfiling = true;
 
 std::vector<uint64_t> ParameterRange(const uint64_t max)
 {
@@ -41,7 +41,7 @@ enum class AtfSampleType
     PRL
 };
 
-constexpr AtfSampleType activeSample = AtfSampleType::Convolution;
+constexpr AtfSampleType activeSample = AtfSampleType::GEMM;
 const std::string kernelPath = kernelPrefix + "../Examples/AtfSamples/";
 
 int main(int argc, char** argv)
@@ -131,10 +131,6 @@ int main(int argc, char** argv)
 
     ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
     tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-    if constexpr (computeApi == ktt::ComputeApi::CUDA && useProfiling) {
-        printf("Executing with profiling switched ON.\n");
-        tuner.SetProfiling(true);
-    }
     ktt::KernelDefinitionId definition;
     ktt::KernelDefinitionId definition2;
     ktt::KernelId kernel;
@@ -299,7 +295,10 @@ int main(int argc, char** argv)
             const size_t newIntResSize = resSize * ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WG_R_1");
             interface.ResizeBuffer(intResId, newIntResSize, false);
 
-            interface.RunKernel(definition);
+            if constexpr (computeApi == ktt::ComputeApi::CUDA && useProfiling)
+                interface.RunKernelWithProfiling(definition);
+	    else
+                interface.RunKernel(definition);
 
             if (ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WG_R_1") > 1)
             {
@@ -512,7 +511,10 @@ int main(int argc, char** argv)
             const size_t newIntResSize = resSize * ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WG_R_1");
             interface.ResizeBuffer(intResId, newIntResSize, false);
 
-            interface.RunKernel(definition);
+	    if constexpr (computeApi == ktt::ComputeApi::CUDA && useProfiling)
+                interface.RunKernelWithProfiling(definition);
+            else
+                interface.RunKernel(definition);
 
             if (ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WG_R_1") > 1)
             {
@@ -832,6 +834,10 @@ int main(int argc, char** argv)
         return 0;
     }
 
+    if constexpr (computeApi == ktt::ComputeApi::CUDA && useProfiling) {
+        printf("Executing with profiling switched ON.\n");
+        tuner.SetProfiling(true);
+    }
     tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
     auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(100));
     tuner.SaveResults(results, "AtfOutput", ktt::OutputFormat::XML);
