@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include <Api/KttException.h>
+#include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <TuningRunner/TuningRunner.h>
 #include <Utility/Logger/Logger.h>
 
@@ -121,11 +122,20 @@ void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<Kernel
         }
 
         const auto currentConfiguration = m_ConfigurationManager->GetCurrentConfiguration(id);
+        const uint64_t configurationCount = iterations != 0 ? iterations : m_ConfigurationManager->GetTotalConfigurationsCount(id);
 
         try
         {
-            Logger::LogInfo("Launching new configuration for kernel " + kernel.GetName());
+            Logger::LogInfo("Simulating run for configuration " + std::to_string(passedIterations + 1) + " / "
+                + std::to_string(configurationCount) + " for kernel " + kernel.GetName() + ": " + currentConfiguration.GetString());
             result = FindMatchingResult(results, currentConfiguration);
+
+            const auto& time = TimeConfiguration::GetInstance();
+            const uint64_t duration = time.ConvertFromNanoseconds(result.GetTotalDuration());
+            const uint64_t kernelDuration = time.ConvertFromNanoseconds(result.GetKernelDuration());
+            const std::string tag = time.GetUnitTag();
+            Logger::LogInfo("Kernel run completed successfully in " + std::to_string(duration) + tag + ", kernel duration was "
+                + std::to_string(kernelDuration) + tag);
         }
         catch (const KttException& error)
         {
@@ -168,7 +178,7 @@ const KernelResult& TuningRunner::FindMatchingResult(const std::vector<KernelRes
         }
     }
 
-    throw KttException("Matching result was not found");
+    throw KttException("Matching configuration was not found");
 }
 
 } // namespace ktt
