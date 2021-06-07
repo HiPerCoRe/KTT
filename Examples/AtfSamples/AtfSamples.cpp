@@ -297,7 +297,7 @@ int main(int argc, char** argv)
 
             if constexpr (computeApi == ktt::ComputeApi::CUDA && useProfiling)
                 interface.RunKernelWithProfiling(definition);
-	    else
+            else
                 interface.RunKernel(definition);
 
             if (ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WG_R_1") > 1)
@@ -511,7 +511,7 @@ int main(int argc, char** argv)
             const size_t newIntResSize = resSize * ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WG_R_1");
             interface.ResizeBuffer(intResId, newIntResSize, false);
 
-	    if constexpr (computeApi == ktt::ComputeApi::CUDA && useProfiling)
+            if constexpr (computeApi == ktt::ComputeApi::CUDA && useProfiling)
                 interface.RunKernelWithProfiling(definition);
             else
                 interface.RunKernel(definition);

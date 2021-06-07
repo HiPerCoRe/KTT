@@ -5,8 +5,6 @@ __kernel void directCoulombSumReference(__global float4* atomInfo, int numberOfA
         
     int outIndex = get_global_size(0) * yIndex + xIndex;
 
-    float currentEnergy = energyGrid[outIndex];
-
     float coordX = gridSpacing * xIndex;
     float coordY = gridSpacing * yIndex;
     float energyValue = 0.0f;
@@ -19,5 +17,5 @@ __kernel void directCoulombSumReference(__global float4* atomInfo, int numberOfA
         energyValue += atomInfo[i].w * partialResult;
     }
 
-    energyGrid[outIndex] += currentEnergy + energyValue;
+    energyGrid[outIndex] = energyValue;
 }

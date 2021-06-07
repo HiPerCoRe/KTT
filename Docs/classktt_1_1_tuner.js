@@ -54,7 +54,7 @@ var classktt_1_1_tuner =
     [ "SetValidationMode", "classktt_1_1_tuner.html#a77e12637ab4df58139ce03161f6a9a47", null ],
     [ "SetValidationRange", "classktt_1_1_tuner.html#a8d0a53f0d54ac5a285b40386ec5a39a4", null ],
     [ "SetValueComparator", "classktt_1_1_tuner.html#a385b67cfa5ac085f540fe21c1f461bf2", null ],
-    [ "SimulateKernelTuning", "classktt_1_1_tuner.html#a9ac0ad3f3fd35b223c1f0f2ccab3142c", null ],
+    [ "SimulateKernelTuning", "classktt_1_1_tuner.html#acf0bb2189bf6c1210c42b0f1ddd93399", null ],
     [ "Synchronize", "classktt_1_1_tuner.html#a0c8667aa5703517c100b261a23eed0dd", null ],
     [ "Tune", "classktt_1_1_tuner.html#a7ed0d38ea099aef96218bd95a98e8a06", null ],
     [ "Tune", "classktt_1_1_tuner.html#a16040c3a6f5603ef337ef4a7057f9b69", null ],

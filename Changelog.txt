@@ -1,3 +1,30 @@
+Version 2.0 (../6/2021)
+* Major release with significant changes to public API as well as internal functionality, code utilizing v1 API has
+  to be updated
+* Tuning manipulator API was replaced with kernel launchers and compute interface which are more straightforward
+  and convenient to use
+* Reference class API was replaced with reference function which is easier to use
+* Unified API methods for working with simple and composite kernels, there is now only one set of methods which is
+  used for both types of kernels
+* Adopted new algorithm for generating and storing tuning configurations - search of very large configuration spaces
+  is now possible
+* Extended and improved searcher API - new functionality includes easy retrieval of neighbouring configurations
+* Tuner now supports two formats for kernel result output - JSON and XML
+* CSV format was deprecated, it is possible to utilize bundled Python script to partially convert XML output to CSV
+* Added full support for loading of kernel results, which can be used in improved simulated tuning method
+* Kernel results now contain metadata such as version of KTT framework, compute API and timestamp
+* Kernel results can now contain additional user data as pairs of keys and values
+* Added support for name mangling and templates in CUDA kernels
+* Added support for multiple kernel thread modifiers in the same dimension
+* Added methods for removing kernels and kernel arguments from tuner
+* Added new exception type for exceptions thrown by KTT framework
+* Improved argument handling functionality, introduced option to manage all buffers manually without any framework
+  interference
+* Improved logging messages, added more debug level logging
+* Significantly improved performance of result validation when only a part of argument is validated
+* When trying to profile unsupported metrics, a warning is now issued instead of an error
+* Added new tutorials and examples, most of the old examples were updated to utilize new tuner API
+
 Version 1.3 (18/10/2020)
 * Added public API for configuration searchers
 * Added support for user-provided compute context, queues and buffers

@@ -44,7 +44,7 @@ var searchData=
   ['setvaluecomparator_632',['SetValueComparator',['../classktt_1_1_tuner.html#a385b67cfa5ac085f540fe21c1f461bf2',1,'ktt::Tuner']]],
   ['setvendor_633',['SetVendor',['../classktt_1_1_device_info.html#a05e071b6d35a78281006ef47be4a7d9d',1,'ktt::DeviceInfo::SetVendor()'],['../classktt_1_1_platform_info.html#a2df54982dc384626b5d729bb4b5b8552',1,'ktt::PlatformInfo::SetVendor(const std::string &amp;vendor)']]],
   ['setversion_634',['SetVersion',['../classktt_1_1_platform_info.html#afae7a17ec655b25e1486e532ae2a99a1',1,'ktt::PlatformInfo']]],
-  ['simulatekerneltuning_635',['SimulateKernelTuning',['../classktt_1_1_tuner.html#a9ac0ad3f3fd35b223c1f0f2ccab3142c',1,'ktt::Tuner']]],
+  ['simulatekerneltuning_635',['SimulateKernelTuning',['../classktt_1_1_tuner.html#acf0bb2189bf6c1210c42b0f1ddd93399',1,'ktt::Tuner']]],
   ['swaparguments_636',['SwapArguments',['../classktt_1_1_compute_interface.html#a8b7e7a9742a11f1ef0ae207d3130312f',1,'ktt::ComputeInterface']]],
   ['synchronize_637',['Synchronize',['../classktt_1_1_tuner.html#a0c8667aa5703517c100b261a23eed0dd',1,'ktt::Tuner']]],
   ['synchronizedevice_638',['SynchronizeDevice',['../classktt_1_1_compute_interface.html#a98c87a68ccfd62d97570bb499447a32b',1,'ktt::ComputeInterface']]],

@@ -50,7 +50,7 @@ var searchData=
   ['short_317',['Short',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a30bb747c98bccdd11b3f89e644c4d0ad',1,'ktt']]],
   ['sidebysidecomparison_318',['SideBySideComparison',['../namespacektt.html#a187d4987bb48bc1f78f628c8aa840a20a02dc3aadaf5d37fb8def639351068c3b',1,'ktt']]],
   ['sidebysiderelativecomparison_319',['SideBySideRelativeComparison',['../namespacektt.html#a187d4987bb48bc1f78f628c8aa840a20afbd9c2b8d6c9a13483253add7aae125a',1,'ktt']]],
-  ['simulatekerneltuning_320',['SimulateKernelTuning',['../classktt_1_1_tuner.html#a9ac0ad3f3fd35b223c1f0f2ccab3142c',1,'ktt::Tuner']]],
+  ['simulatekerneltuning_320',['SimulateKernelTuning',['../classktt_1_1_tuner.html#acf0bb2189bf6c1210c42b0f1ddd93399',1,'ktt::Tuner']]],
   ['stopcondition_321',['StopCondition',['../classktt_1_1_stop_condition.html',1,'ktt']]],
   ['stopcondition_2eh_322',['StopCondition.h',['../_stop_condition_8h.html',1,'']]],
   ['subtract_323',['Subtract',['../namespacektt.html#aa22e627ca88d7d508cd228c977bf4dd8a1d9baf077ee87921f57a8fe42d510b65',1,'ktt']]],
