@@ -211,10 +211,11 @@ KernelResult TunerCore::TuneKernelIteration(const KernelId id, const std::vector
     return m_TuningRunner->TuneIteration(kernel, KernelRunMode::OnlineTuning, output, recomputeReference);
 }
 
-void TunerCore::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations)
+std::vector<KernelResult> TunerCore::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
+    const uint64_t iterations)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    m_TuningRunner->SimulateTuning(kernel, results, iterations);
+    return m_TuningRunner->SimulateTuning(kernel, results, iterations);
 }
 
 void TunerCore::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)

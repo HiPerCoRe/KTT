@@ -101,7 +101,8 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
     return result;
 }
 
-void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<KernelResult>& results, const uint64_t iterations)
+std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<KernelResult>& results,
+    const uint64_t iterations)
 {
     Logger::LogInfo("Starting simulated tuning for kernel " + kernel.GetName());
     const auto id = kernel.GetId();
@@ -111,8 +112,8 @@ void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<Kernel
         m_ConfigurationManager->InitializeData(kernel);
     }
 
-    KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
     uint64_t passedIterations = 0;
+    std::vector<KernelResult> output;
 
     while (!m_ConfigurationManager->IsDataProcessed(id))
     {
@@ -123,6 +124,7 @@ void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<Kernel
 
         const auto currentConfiguration = m_ConfigurationManager->GetCurrentConfiguration(id);
         const uint64_t configurationCount = iterations != 0 ? iterations : m_ConfigurationManager->GetTotalConfigurationsCount(id);
+        KernelResult result;
 
         try
         {
@@ -140,16 +142,19 @@ void TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<Kernel
         catch (const KttException& error)
         {
             Logger::LogWarning(std::string("Kernel run failed, reason: ") + error.what());
+            result = KernelResult(kernel.GetName(), currentConfiguration);
             result.SetStatus(ResultStatus::ComputationFailed);
         }
 
         ++passedIterations;
         m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        output.push_back(result);
     }
 
     Logger::LogInfo("Ending simulated tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
         + std::to_string(passedIterations));
     m_ConfigurationManager->ClearData(id);
+    return output;
 }
 
 void TuningRunner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)

@@ -120,8 +120,18 @@ KernelResult ComputeLayerData::GenerateResult(const Nanoseconds launcherDuration
     const Nanoseconds launcherOverhead = CalculateLauncherOverhead();
     KttAssert(launcherDuration >= launcherOverhead, "Launcher overhead must be lower than its total duration");
     const Nanoseconds actualLauncherDuration = launcherDuration - launcherOverhead;
-    result.SetExtraDuration(actualLauncherDuration);
-    result.SetExtraOverhead(m_Overhead);
+    
+    if (m_Kernel.HasLauncher())
+    {
+        result.SetExtraDuration(actualLauncherDuration);
+        result.SetExtraOverhead(m_Overhead);
+    }
+    else
+    {
+        // For simple kernels without user launcher, total duration is the same as kernel duration, everything else is overhead.
+        result.SetExtraOverhead(actualLauncherDuration + m_Overhead);
+    }
+
     return result;
 }
 

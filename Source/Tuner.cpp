@@ -382,15 +382,17 @@ KernelResult Tuner::TuneIteration(const KernelId id, const std::vector<BufferOut
     }
 }
 
-void Tuner::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations)
+std::vector<KernelResult> Tuner::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
+    const uint64_t iterations)
 {
     try
     {
-        m_Tuner->SimulateKernelTuning(id, results, iterations);
+        return m_Tuner->SimulateKernelTuning(id, results, iterations);
     }
     catch (const KttException& exception)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
+        return std::vector<KernelResult>{};
     }
 }
 
