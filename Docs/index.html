@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="md_Readme"></a> <img src="Resources/KttLogo.png" alt="" width="425" height="150" class="inline"/></p>
-<p>KTT is an auto-tuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 2.0 which introduces major new features and improvements is now available.</p>
+<p>KTT is an auto-tuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 2.0 which contains major API overhaul as well as new features and improvements is now available.</p>
 <h1>Main features </h1>
 <ul>
 <li>Ability to define kernel tuning parameters such as kernel thread sizes, vector data types and loop unroll factors in order to optimize computation for a particular device.</li>
@@ -111,6 +111,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <h1>Getting started </h1>
 <ul>
 <li>Documentation for KTT API can be found <a href="https://hipercore.github.io/KTT/">here</a>.</li>
+<li>KTT FAQ can be found <a href="https://hipercore.github.io/KTT/md__docs__resources__faq.html">here</a>.</li>
 <li>The newest release of KTT framework can be found <a href="https://github.com/HiPerCoRe/KTT/releases">here</a>.</li>
 <li>Prebuilt binaries are not provided due to many different combinations of compute APIs and build options available. Please check the <code>Building KTT</code> section for detailed instructions on how to perform a build.</li>
 </ul>
@@ -146,7 +147,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </li>
 <li>Build under Linux (inside KTT root folder):<ul>
 <li>ensure that path to vendor SDK is correctly set in the environment variables</li>
-<li>run <code>premake5 gmake</code> to generate makefile</li>
+<li>run <code>./premake5 gmake</code> to generate makefile</li>
 <li>run <code>cd build</code> to get inside build directory</li>
 <li>afterwards run <code>make config={configuration}_{architecture}</code> to build the project (e.g., <code>make config=release_x86_64</code>)</li>
 </ul>
