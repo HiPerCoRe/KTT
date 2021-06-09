@@ -1,54 +1,53 @@
--- Configuration variables
-ktt_library_name = "ktt"
-cuda_projects = false
-opencl_projects = false
-vulkan_projects = false
+-- Global configuration variables
+cudaProjects = false
+openClProjects = false
+vulkanProjects = false
 
 -- Helper functions to find compute API headers and libraries
 function findLibrariesAmd()
-    local path = os.getenv("AMDAPPSDKROOT")
+    local path = os.getenv("OCL_ROOT")
     
     if not path then
         return false
     end
     
-    defines { "KTT_PLATFORM_AMD" }
-    includedirs { "$(AMDAPPSDKROOT)/include" }
+    defines {"KTT_PLATFORM_AMD"}
+    includedirs {"$(OCL_ROOT)/include"}
         
     if os.target() == "linux" then
-        libdirs { "$(AMDAPPSDKROOT)/lib64" }
+        libdirs {"$(OCL_ROOT)/lib64"}
     else
-        libdirs { "$(AMDAPPSDKROOT)/lib/x86_64" }
+        libdirs {"$(OCL_ROOT)/lib/x86_64"}
     end
     
-    if not _OPTIONS["no-opencl"] then
-        opencl_projects = true
-        defines { "KTT_PLATFORM_OPENCL" }
-        links { "OpenCL" }
+    if _OPTIONS["no-opencl"] then
+        return true
+    end
+    
+    defines {"KTT_API_OPENCL"}
+    links {"OpenCL"}
+    openClProjects = true
+    
+    if _OPTIONS["profiling"] == "gpa" then
+        defines {"KTT_PROFILING_GPA"}
+        includedirs {"Libraries/GpuPerfApi-3.6/Include"}
         
-        if _OPTIONS["profiling"] == "gpa" then
-            defines { "KTT_PROFILING_GPA" }
-            includedirs { "libraries/include" }
-            
-            if os.target() == "linux" then
-                libdirs { "libraries/lib/linux/gpu_perf_api" }
-            else
-                -- One of the GPA headers includes Windows.h with evil min/max macros
-                defines { "NOMINMAX" }
-                libdirs { "libraries/lib/windows/gpu_perf_api" }
-            end  
+        if os.target() == "linux" then
+            libdirs {"Libraries/GpuPerfApi-3.6/Lib/Linux"}
+        else
+            -- One of the GPA headers includes Windows.h with evil min/max macros
+            defines {"NOMINMAX"}
+            libdirs {"Libraries/GpuPerfApi-3.6/Lib/Windows"}
         end
+    elseif _OPTIONS["profiling"] == "gpa-legacy" then
+        defines {"KTT_PROFILING_GPA_LEGACY"}
+        includedirs {"Libraries/GpuPerfApi-3.3/Include"}
         
-        if _OPTIONS["profiling"] == "gpa-legacy" then
-            defines { "KTT_PROFILING_GPA_LEGACY" }
-            includedirs { "libraries/include" }
-            
-            if os.target() == "linux" then
-                libdirs { "libraries/lib/linux/gpu_perf_api_legacy" }
-            else
-                defines { "NOMINMAX" }
-                libdirs { "libraries/lib/windows/gpu_perf_api_legacy" }
-            end  
+        if os.target() == "linux" then
+            libdirs {"Libraries/GpuPerfApi-3.3/Lib/Linux"}
+        else
+            defines {"NOMINMAX"}
+            libdirs {"Libraries/GpuPerfApi-3.3/Lib/Windows"}
         end
     end
     
@@ -62,20 +61,22 @@ function findLibrariesIntel()
         return false
     end
     
-    defines { "KTT_PLATFORM_INTEL" }
-    includedirs { "$(INTELOCLSDKROOT)/include" }
+    defines {"KTT_PLATFORM_INTEL"}
+    includedirs {"$(INTELOCLSDKROOT)/include"}
         
     if os.target() == "linux" then
-        libdirs { "$(INTELOCLSDKROOT)/lib64" }
+        libdirs {"$(INTELOCLSDKROOT)/lib64"}
     else
-        libdirs { "$(INTELOCLSDKROOT)/lib/x64" }
+        libdirs {"$(INTELOCLSDKROOT)/lib/x64"}
     end
     
-    if not _OPTIONS["no-opencl"] then
-        opencl_projects = true
-        defines { "KTT_PLATFORM_OPENCL" }
-        links { "OpenCL" }
+    if _OPTIONS["no-opencl"] then
+        return true
     end
+    
+    defines {"KTT_API_OPENCL"}
+    links {"OpenCL"}
+    openClProjects = true
     
     return true
 end
@@ -87,43 +88,41 @@ function findLibrariesNvidia()
         return false
     end
     
-    defines { "KTT_PLATFORM_NVIDIA" }
-    includedirs { "$(CUDA_PATH)/include" }
+    defines {"KTT_PLATFORM_NVIDIA"}
+    includedirs {"$(CUDA_PATH)/include"}
         
     if os.target() == "linux" then
-        libdirs { "$(CUDA_PATH)/lib64" }
+        libdirs {"$(CUDA_PATH)/lib64"}
     else
-        libdirs { "$(CUDA_PATH)/lib/x64" }
+        libdirs {"$(CUDA_PATH)/lib/x64"}
     end
     
     if not _OPTIONS["no-opencl"] then
-        opencl_projects = true
-        defines { "KTT_PLATFORM_OPENCL" }
-        links { "OpenCL" }
+        defines {"KTT_API_OPENCL"}
+        links {"OpenCL"}
+        openClProjects = true
     end
         
     if not _OPTIONS["no-cuda"] then
-        cuda_projects = true
-        defines { "KTT_PLATFORM_CUDA" }
-        links { "cuda", "nvrtc" }
+        defines {"KTT_API_CUDA"}
+        links {"cuda", "nvrtc"}
+        cudaProjects = true
         
         if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" then
-            includedirs { "$(CUDA_PATH)/extras/CUPTI/include" }
-            libdirs { "$(CUDA_PATH)/extras/CUPTI/lib64" }
-            links { "cupti" }
+            includedirs {"$(CUDA_PATH)/extras/CUPTI/include"}
+            libdirs {"$(CUDA_PATH)/extras/CUPTI/lib64"}
+            links {"cupti"}
         end
         
         if _OPTIONS["profiling"] == "cupti-legacy" then
-            defines { "KTT_PROFILING_CUPTI_LEGACY" }
+            defines {"KTT_PROFILING_CUPTI_LEGACY"}
             
             if os.target() == "windows" then
-                libdirs { "$(CUDA_PATH)/extras/CUPTI/libx64" }
+                libdirs {"$(CUDA_PATH)/extras/CUPTI/libx64"}
             end
-        end
-        
-        if _OPTIONS["profiling"] == "cupti" then
-            defines { "KTT_PROFILING_CUPTI" }
-            links { "nvperf_host", "nvperf_target" }
+        elseif _OPTIONS["profiling"] == "cupti" then
+            defines {"KTT_PROFILING_CUPTI"}
+            links {"nvperf_host", "nvperf_target"}
         end
     end
         
@@ -153,23 +152,27 @@ function findVulkan()
         return false
     end
     
-    if os.target() == "linux" then
-        includedirs { "$(VULKAN_SDK)/include", "libraries/include" }
-        libdirs { "$(VULKAN_SDK)/lib", "libraries/lib/linux/shaderc_ktt" }
-    else
-        includedirs { "$(VULKAN_SDK)/Include", "libraries/include" }
-        libdirs { "$(VULKAN_SDK)/Lib", "libraries/lib/windows/shaderc_ktt" }
-    end
-    
-    vulkan_projects = true
-    defines { "KTT_PLATFORM_VULKAN" }
+    defines {"KTT_API_VULKAN"}
+    includedirs {"Libraries/VulkanMemoryAllocator-2.3.0"}
+    files {"Libraries/VulkanMemoryAllocator-2.3.0/**"}
     
     if os.target() == "linux" then
-        links { "vulkan", "shaderc_shared" }
+        includedirs {"$(VULKAN_SDK)/include"}
+        libdirs {"$(VULKAN_SDK)/lib"}
     else
-        links { "vulkan-1", "shaderc_shared" }
+        includedirs {"$(VULKAN_SDK)/Include"}
+        libdirs {"$(VULKAN_SDK)/Lib"}
     end
     
+    links {"shaderc_shared"}
+    
+    if os.target() == "linux" then
+        links {"vulkan"}
+    else
+        links {"vulkan-1"}
+    end
+    
+    vulkanProjects = true
     return true
 end
 
@@ -181,15 +184,17 @@ function linkLibraries()
             librariesFound = findLibrariesAmd()
         elseif _OPTIONS["platform"] == "intel" then
             librariesFound = findLibrariesIntel()
-        else
+        elseif _OPTIONS["platform"] == "nvidia" then
             librariesFound = findLibrariesNvidia()
+        else
+            error("The specified platform is unknown.")
         end
     else
         librariesFound = findLibraries()
     end
     
     if not librariesFound and (not _OPTIONS["vulkan"] or _OPTIONS["platform"]) then
-        error("Compute API libraries were not found. Please ensure that path to your device vendor SDK is correctly set in the environment variables:\nAMDAPPSDKROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
+        error("Compute API libraries were not found. Please ensure that path to the SDK is correctly set in the environment variables:\nOCL_ROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
     end
     
     if _OPTIONS["vulkan"] then
@@ -209,9 +214,9 @@ newoption
     description = "Specifies platform for KTT library compilation",
     allowed =
     {
-        { "amd", "AMD" },
-        { "intel", "Intel" },
-        { "nvidia", "Nvidia" }
+        {"amd", "AMD"},
+        {"intel", "Intel"},
+        {"nvidia", "Nvidia"}
     }
 }
 
@@ -228,10 +233,10 @@ newoption
     description = "Enables compilation of kernel profiling functionality using specified library",
     allowed =
     {
-        { "cupti", "Nvidia CUPTI for Volta and Turing" },
-        { "cupti-legacy", "Nvidia CUPTI for legacy GPUs (Volta and older)" },
-        { "gpa", "AMD GPA for GCN 3.0 GPUs and newer" },
-        { "gpa-legacy", "AMD GPA for GCN 5.0 GPUs and older" }
+        {"cupti", "Nvidia CUPTI for Volta, Turing and Ampere"},
+        {"cupti-legacy", "Nvidia CUPTI for legacy GPUs (Volta and older)"},
+        {"gpa", "AMD GPA for GCN 3.0 GPUs and newer"},
+        {"gpa-legacy", "AMD GPA for GCN 5.0 GPUs and older"}
     }
 }
 
@@ -239,7 +244,7 @@ newoption
 {
     trigger = "outdir",
     value = "path",
-    description = "Specifies output directory for generated files"
+    description = "Specifies output directory for generated project files"
 }
 
 newoption
@@ -256,12 +261,6 @@ newoption
 
 newoption
 {
-    trigger = "tests",
-    description = "Enables compilation of unit tests"
-}
-
-newoption
-{
     trigger = "no-examples",
     description = "Disables compilation of examples"
 }
@@ -273,359 +272,335 @@ newoption
 }
 
 -- Project configuration
-workspace "ktt"
-    local buildPath = "build"
+workspace "Ktt"
+    local buildPath = "Build"
+    
     if _OPTIONS["outdir"] then
         buildPath = _OPTIONS["outdir"]
     end
     
-    configurations { "Release", "Debug" }
-    platforms { "x86_64" }
+    configurations {"Release", "Debug"}
+    platforms {"x86_64"}
     architecture "x86_64"
     
     location(buildPath)
     language "C++"
-    cppdialect "C++14"
+    cppdialect "C++17"
+    warnings "Extra"
     
     filter "configurations:Debug"
-        defines { "KTT_CONFIGURATION_DEBUG" }
+        defines {"KTT_CONFIGURATION_DEBUG"}
+        optimize "Off"
         symbols "On"
     
     filter "configurations:Release"
-        defines { "KTT_CONFIGURATION_RELEASE" }
-        optimize "On"
+        defines {"KTT_CONFIGURATION_RELEASE"}
+        optimize "Full"
+        symbols "Off"
     
+    filter "action:vs*"
+        buildoptions {"/Zc:__cplusplus"}
+        
     filter {}
     
     targetdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}")
     objdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}/obj")
     
 -- Library configuration
-project "ktt"
+project "Ktt"
     kind "SharedLib"
-    files { "source/**.h", "source/**.hpp", "source/**.cpp" }
-    includedirs { "source" }
-    defines { "KTT_LIBRARY" }
-    targetname(ktt_library_name)
+    files {"Source/**", "Libraries/CTPL-Ahajha/**", "Libraries/date-3/**", "Libraries/Json-3.9.1/**", "Libraries/pugixml-1.11.4/**"}
+    includedirs {"Source", "Libraries/CTPL-Ahajha", "Libraries/date-3", "Libraries/Json-3.9.1", "Libraries/pugixml-1.11.4"}
+    defines {"KTT_LIBRARY"}
+    targetname("ktt")
     linkLibraries()
-    
--- Examples configuration 
-if not _OPTIONS["no-examples"] then
-
-if opencl_projects then
-
-project "bicg_opencl"
-    kind "ConsoleApp"
-    files { "examples/bicg/*.cpp", "examples/bicg/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "conv_opencl"
-    kind "ConsoleApp"
-    files { "examples/cltune-conv/*.cpp", "examples/cltune-conv/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "gemm_opencl"
-    kind "ConsoleApp"
-    files { "examples/cltune-gemm/*.cpp", "examples/cltune-gemm/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "conv_3d_opencl"
-    kind "ConsoleApp"
-    files { "examples/conv_3d/*.cpp", "examples/conv_3d/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "coulomb_sum_2d_opencl"
-    kind "ConsoleApp"
-    files { "examples/coulomb_sum_2d/*.cpp", "examples/coulomb_sum_2d/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "coulomb_sum_3d_opencl"
-    kind "ConsoleApp"
-    files { "examples/coulomb_sum_3d/*.cpp", "examples/coulomb_sum_3d/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "coulomb_sum_3d_iterative_opencl"
-    kind "ConsoleApp"
-    files { "examples/coulomb_sum_3d_iterative/*.cpp", "examples/coulomb_sum_3d_iterative/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "covariance_opencl"
-    kind "ConsoleApp"
-    files { "examples/covariance/*.cpp", "examples/covariance/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "gemm_demo_opencl"
-    kind "ConsoleApp"
-    files { "examples/gemm_batch/demo.cpp", "examples/gemm_batch/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "gemm_batch_opencl"
-    kind "ConsoleApp"
-    files { "examples/gemm_batch/gemm_batch.cpp", "examples/gemm_batch/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "mtran_opencl"
-    kind "ConsoleApp"
-    files { "examples/mtran/*.cpp", "examples/mtran/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "nbody_opencl"
-    kind "ConsoleApp"
-    files { "examples/nbody/*.cpp", "examples/nbody/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "reduction_opencl"
-    kind "ConsoleApp"
-    files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-if os.target() == "linux" then
-project "hotspot_opencl"
-    kind "ConsoleApp"
-    files { "examples/rodinia-hotspot/*.h", "examples/rodinia-hotspot/*.cpp", "examples/rodinia-hotspot/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-end
-
-project "sort_opencl"
-    kind "ConsoleApp"
-    files { "examples/sort/*.h", "examples/sort/*.cpp", "examples/sort/*.cl" }
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-project "sort_new_opencl"
-    kind "ConsoleApp"
-    files {"examples/sort-new/*.h", "examples/sort-new/*.cpp", "examples/sort-new/*.cl"}
-    includedirs { "source" }
-    defines { "KTT_OPENCL_EXAMPLE" }
-    links { "ktt" }
-
-end -- opencl_projects
-
-if cuda_projects then
-
-project "bicg_cuda"
-    kind "ConsoleApp"
-    files { "examples/bicg/*.cpp", "examples/bicg/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-    
-project "conv_cuda"
-    kind "ConsoleApp"
-    files { "examples/cltune-conv/*.cpp", "examples/cltune-conv/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-    
-project "gemm_cuda"
-    kind "ConsoleApp"
-    files { "examples/cltune-gemm/*.cpp", "examples/cltune-gemm/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-    
-project "coulomb_sum_3d_cuda"
-    kind "ConsoleApp"
-    files { "examples/coulomb_sum_3d/*.cpp", "examples/coulomb_sum_3d/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-    
-project "gemm_demo_cuda"
-    kind "ConsoleApp"
-    files { "examples/gemm_batch/demo.cpp", "examples/gemm_batch/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-    
-project "gemm_batch_cuda"
-    kind "ConsoleApp"
-    files { "examples/gemm_batch/gemm_batch.cpp", "examples/gemm_batch/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-
-project "mtran_cuda"
-    kind "ConsoleApp"
-    files { "examples/mtran/*.cpp", "examples/mtran/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-
-project "nbody_cuda"
-    kind "ConsoleApp"
-    files { "examples/nbody/*.cpp", "examples/nbody/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-
-project "reduction_cuda"
-    kind "ConsoleApp"
-    files { "examples/reduction/*.h", "examples/reduction/*.cpp", "examples/reduction/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-
-if os.target() == "linux" then
-project "hotspot_cuda"
-    kind "ConsoleApp"
-    files { "examples/rodinia-hotspot/*.h", "examples/rodinia-hotspot/*.cpp", "examples/rodinia-hotspot/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-end
-
-project "sort_cuda"
-    kind "ConsoleApp"
-    files { "examples/sort/*.h", "examples/sort/*.cpp", "examples/sort/*.cu" }
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-
-project "sort_new_cuda"
-    kind "ConsoleApp"
-    files {"examples/sort-new/*.h", "examples/sort-new/*.cpp", "examples/sort-new/*.cu"}
-    includedirs { "source" }
-    defines { "KTT_CUDA_EXAMPLE" }
-    links { "ktt" }
-end -- cuda_projects
-
-end -- _OPTIONS["no-examples"]
 
 -- Tutorials configuration 
 if not _OPTIONS["no-tutorials"] then
 
-if opencl_projects then
-project "00_info_opencl"
-    kind "ConsoleApp"
-    files { "tutorials/00_compute_api_info/compute_api_info_opencl.cpp" }
-    includedirs { "source" }
-    links { "ktt" }
+if openClProjects then
 
-project "01_running_kernel_opencl"
+project "01InfoOpenCl"
     kind "ConsoleApp"
-    files { "tutorials/01_running_kernel/running_kernel_opencl.cpp", "tutorials/01_running_kernel/opencl_kernel.cl" }
-    includedirs { "source" }
-    links { "ktt" }
+    files {"Tutorials/01ComputeApiInfo/ComputeApiInfoOpenCl.cpp"}
+    includedirs {"Source"}
+    links {"ktt"}
 
-project "02_tuning_kernel_simple_opencl"
+project "02KernelRunningOpenCl"
     kind "ConsoleApp"
-    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_opencl.cpp", "tutorials/02_tuning_kernel_simple/opencl_kernel.cl" }
-    includedirs { "source" }
-    links { "ktt" }
-    
-project "03_custom_kernel_arguments_opencl"
+    files {"Tutorials/02KernelRunning/KernelRunningOpenCl.cpp", "Tutorials/02KernelRunning/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
+
+project "03KernelTuningOpenCl"
     kind "ConsoleApp"
-    files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_opencl.cpp", "tutorials/03_custom_kernel_arguments/opencl_kernel.cl" }
-    includedirs { "source" }
-    links { "ktt" }
-    
-project "04_user_tuner_initializer_opencl"
+    files {"Tutorials/03KernelTuning/KernelTuningOpenCl.cpp", "Tutorials/03KernelTuning/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
+
+project "04CustomArgumentTypesOpenCl"
     kind "ConsoleApp"
-    files { "tutorials/04_user_tuner_initializer/user_tuner_initializer_opencl.cpp", "tutorials/04_user_tuner_initializer/kernel.cl" }
-    includedirs { "source" }
-    links { "ktt" }
+    files {"Tutorials/04CustomArgumentTypes/CustomArgumentTypesOpenCl.cpp", "Tutorials/04CustomArgumentTypes/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
+
+project "05ComputeApiInitializerOpenCl"
+    kind "ConsoleApp"
+    files {"Tutorials/05ComputeApiInitializer/ComputeApiInitializerOpenCl.cpp", "Tutorials/05ComputeApiInitializer/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
     linkLibraries()
-end -- opencl_projects
-    
-if cuda_projects then
-project "00_info_cuda"
-    kind "ConsoleApp"
-    files { "tutorials/00_compute_api_info/compute_api_info_cuda.cpp" }
-    includedirs { "source" }
-    links { "ktt" }
 
-project "01_running_kernel_cuda"
+project "06VectorArgumentCustomizationOpenCl"
     kind "ConsoleApp"
-    files { "tutorials/01_running_kernel/running_kernel_cuda.cpp", "tutorials/01_running_kernel/cuda_kernel.cu" }
-    includedirs { "source" }
-    links { "ktt" }
-
-project "02_tuning_kernel_simple_cuda"
-    kind "ConsoleApp"
-    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_cuda.cpp", "tutorials/02_tuning_kernel_simple/cuda_kernel.cu" }
-    includedirs { "source" }
-    links { "ktt" }
-   
-project "03_custom_kernel_arguments_cuda"
-    kind "ConsoleApp"
-    files { "tutorials/03_custom_kernel_arguments/custom_kernel_arguments_cuda.cpp", "tutorials/03_custom_kernel_arguments/cuda_kernel.cu" }
-    includedirs { "source" }
-    links { "ktt" }
+    files {"Tutorials/06VectorArgumentCustomization/VectorArgumentCustomizationOpenCl.cpp", "Tutorials/06VectorArgumentCustomization/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
     
-project "04_user_tuner_initializer_cuda"
+end -- openClProjects
+
+if cudaProjects then
+
+project "01InfoCuda"
     kind "ConsoleApp"
-    files { "tutorials/04_user_tuner_initializer/user_tuner_initializer_cuda.cpp", "tutorials/04_user_tuner_initializer/kernel.cu" }
-    includedirs { "source" }
-    links { "ktt" }
+    files {"Tutorials/01ComputeApiInfo/ComputeApiInfoCuda.cpp"}
+    includedirs {"Source"}
+    links {"ktt"}
+    
+project "02KernelRunningCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/02KernelRunning/KernelRunningCuda.cpp", "Tutorials/02KernelRunning/CudaKernel.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
+    
+project "03KernelTuningCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/03KernelTuning/KernelTuningCuda.cpp", "Tutorials/03KernelTuning/CudaKernel.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
+    
+project "04CustomArgumentTypesCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/04CustomArgumentTypes/CustomArgumentTypesCuda.cpp", "Tutorials/04CustomArgumentTypes/CudaKernel.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
+
+project "05ComputeApiInitializerCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/05ComputeApiInitializer/ComputeApiInitializerCuda.cpp", "Tutorials/05ComputeApiInitializer/CudaKernel.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
     linkLibraries()
-    
-end -- cuda_projects
 
-if vulkan_projects then
-project "00_info_vulkan"
+project "06VectorArgumentCustomizationCuda"
     kind "ConsoleApp"
-    files { "tutorials/00_compute_api_info/compute_api_info_vulkan.cpp" }
-    includedirs { "source" }
-    links { "ktt" }
-    
-project "01_running_kernel_vulkan"
+    files {"Tutorials/06VectorArgumentCustomization/VectorArgumentCustomizationCuda.cpp", "Tutorials/06VectorArgumentCustomization/CudaKernel.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
+
+end -- cudaProjects
+
+if vulkanProjects then
+
+project "01InfoVulkan"
     kind "ConsoleApp"
-    files { "tutorials/01_running_kernel/running_kernel_vulkan.cpp", "tutorials/01_running_kernel/vulkan_kernel.glsl" }
-    includedirs { "source" }
-    links { "ktt" }
+    files {"Tutorials/01ComputeApiInfo/ComputeApiInfoVulkan.cpp"}
+    includedirs {"Source"}
+    links {"ktt"}
     
-project "02_tuning_kernel_simple_vulkan"
+project "02KernelRunningVulkan"
     kind "ConsoleApp"
-    files { "tutorials/02_tuning_kernel_simple/tuning_kernel_simple_vulkan.cpp", "tutorials/02_tuning_kernel_simple/vulkan_kernel.glsl" }
-    includedirs { "source" }
-    links { "ktt" }
+    files {"Tutorials/02KernelRunning/KernelRunningVulkan.cpp", "Tutorials/02KernelRunning/VulkanKernel.glsl"}
+    includedirs {"Source"}
+    links {"ktt"}
     
-end -- vulkan_projects
+project "03KernelTuningVulkan"
+    kind "ConsoleApp"
+    files {"Tutorials/03KernelTuning/KernelTuningVulkan.cpp", "Tutorials/03KernelTuning/VulkanKernel.glsl"}
+    includedirs {"Source"}
+    links {"ktt"}
+    
+end -- vulkanProjects
 
 end -- _OPTIONS["no-tutorials"]
 
--- Unit tests configuration   
-if _OPTIONS["tests"] then
+-- Examples configuration 
+if not _OPTIONS["no-examples"] then
 
-project "tests"
+if openClProjects then
+
+project "AtfSamplesOpenCl"
     kind "ConsoleApp"
-    files { "tests/**.hpp", "tests/**.cpp", "tests/**.cl", "source/**.h", "source/**.hpp", "source/**.cpp" }
-    includedirs { "tests", "source" }
-    defines { "KTT_TESTS", "DO_NOT_USE_WMAIN" }
+    files {"Examples/AtfSamples/*.cpp", "Examples/AtfSamples/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "BicgOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "ClTuneConvolutionOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/ClTuneConvolution/*.cpp", "Examples/ClTuneConvolution/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "ClTuneGemmOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/ClTuneGemm/*.cpp", "Examples/ClTuneGemm/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "Convolution3dOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Convolution3d/*.cpp", "Examples/Convolution3d/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "CoulombSum2dOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/CoulombSum2d/*.cpp", "Examples/CoulombSum2d/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "CoulombSum3dOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "CoulombSum3dIterativeOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/CoulombSum3dIterative/*.cpp", "Examples/CoulombSum3dIterative/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "CovarianceOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Covariance/*.cpp", "Examples/Covariance/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "NbodyOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Nbody/*.cpp", "Examples/Nbody/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "ReductionOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Reduction/*.cpp", "Examples/Reduction/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "SortOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Sort/*.cpp", "Examples/Sort/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "Sort2OpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Sort2/*.cpp", "Examples/Sort2/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+project "TransposeOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Transpose/*.cpp", "Examples/Transpose/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
+
+end -- openClProjects
     
-    if _OPTIONS["no-opencl"] then
-        removefiles { "tests/opencl_engine_tests.cpp" }
-    end
+if cudaProjects then
+
+project "AtfSamplesCuda"
+    kind "ConsoleApp"
+    files {"Examples/AtfSamples/*.cpp", "Examples/AtfSamples/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "BicgCuda"
+    kind "ConsoleApp"
+    files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "ClTuneConvolutionCuda"
+    kind "ConsoleApp"
+    files {"Examples/ClTuneConvolution/*.cpp", "Examples/ClTuneConvolution/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "ClTuneGemmCuda"
+    kind "ConsoleApp"
+    files {"Examples/ClTuneGemm/*.cpp", "Examples/ClTuneGemm/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "CoulombSum3dCuda"
+    kind "ConsoleApp"
+    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "NbodyCuda"
+    kind "ConsoleApp"
+    files {"Examples/Nbody/*.cpp", "Examples/Nbody/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "ReductionCuda"
+    kind "ConsoleApp"
+    files {"Examples/Reduction/*.cpp", "Examples/Reduction/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "SortCuda"
+    kind "ConsoleApp"
+    files {"Examples/Sort/*.cpp", "Examples/Sort/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "Sort2Cuda"
+    kind "ConsoleApp"
+    files {"Examples/Sort2/*.cpp", "Examples/Sort2/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "TransposeCuda"
+    kind "ConsoleApp"
+    files {"Examples/Transpose/*.cpp", "Examples/Transpose/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+end -- cudaProjects
     
-    linkLibraries()
-end -- _OPTIONS["tests"]
+end -- _OPTIONS["no-examples"]
