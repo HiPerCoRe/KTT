@@ -1,6 +1,7 @@
-Version 2.0 (../6/2021)
+Version 2.0 (9/6/2021)
 * Major release with significant changes to public API as well as internal functionality, code utilizing v1 API has
   to be updated
+* KTT now requires C++17 compiler
 * Tuning manipulator API was replaced with kernel launchers and compute interface which are more straightforward
   and convenient to use
 * Reference class API was replaced with reference function which is easier to use

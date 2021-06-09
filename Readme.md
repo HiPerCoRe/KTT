@@ -1,9 +1,9 @@
 KTT - Kernel Tuning Toolkit
 ===========================
-<img src="https://github.com/HiPerCoRe/KTT/blob/master/docs/resources/ktt_logo.png" width="425" height="150"/>
+<img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogo.png" width="425" height="150"/>
 
-KTT is an auto-tuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 2.0 which introduces major
-new features and improvements is now available.
+KTT is an auto-tuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 2.0 which contains major
+API overhaul as well as new features and improvements is now available.
 
 Main features
 -------------
@@ -65,7 +65,7 @@ systems are Linux and Windows.
     
 * Build under Linux (inside KTT root folder):
     - ensure that path to vendor SDK is correctly set in the environment variables
-    - run `premake5 gmake` to generate makefile
+    - run `./premake5 gmake` to generate makefile
     - run `cd build` to get inside build directory
     - afterwards run `make config={configuration}_{architecture}` to build the project (e.g., `make config=release_x86_64`)
     
