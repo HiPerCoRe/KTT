@@ -2,6 +2,11 @@
 
 #ifdef KTT_API_VULKAN
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC system_header
+#endif // __GNUC__
+
 #if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable : 4100) // Unreferenced parameter
@@ -11,6 +16,10 @@
 #endif // _MSC_VER
 
 #include <vk_mem_alloc.h>
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
 #if defined(_MSC_VER)
 #pragma warning(pop)
