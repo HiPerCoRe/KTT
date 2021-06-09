@@ -231,6 +231,11 @@ std::set<std::string> CuptiMetricInterface::GetSupportedMetrics(const bool listS
     return result;
 }
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif // __GNUC__
+
 std::vector<uint8_t> CuptiMetricInterface::GetConfigImage(const std::vector<std::string>& metrics) const
 {
     std::vector<NVPA_RawMetricRequest> rawMetricRequests;
@@ -314,6 +319,10 @@ std::vector<uint8_t> CuptiMetricInterface::GetConfigImage(const std::vector<std:
     CheckError(NVPW_RawMetricsConfig_Destroy(&destroyParams), "NVPW_RawMetricsConfig_Destroy");
     return result;
 }
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif // __GNUC__
 
 std::vector<uint8_t> CuptiMetricInterface::GetCounterDataImagePrefix(const std::vector<std::string>& metrics) const
 {
