@@ -21,6 +21,7 @@ ability to change kernel compiler flags and more.
 Getting started
 ---------------
 * Documentation for KTT API can be found [here](https://hipercore.github.io/KTT/).
+* KTT FAQ can be found [here](https://hipercore.github.io/KTT/md__docs__resources__faq.html).
 * The newest release of KTT framework can be found [here](https://github.com/HiPerCoRe/KTT/releases).
 * Prebuilt binaries are not provided due to many different combinations of compute APIs and build options available.
 Please check the `Building KTT` section for detailed instructions on how to perform a build.

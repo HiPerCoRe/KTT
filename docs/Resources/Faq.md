@@ -8,8 +8,8 @@ Building KTT
 
 **Q: During project file generation, Premake prints error that compute API libraries were not found.**<br/>
 A: There are two likely reasons for this. First, you need to make sure that compute SDK provided by
-your device vendor (eg. CUDA Toolkit) is installed correctly on your machine. Second, you need to set
-path to the SDK in your environment variables (eg. setting path to CUDA Toolkit on Linux:
+your device vendor (e.g., CUDA Toolkit) is installed correctly on your machine. Second, you need to set
+path to the SDK in your environment variables (e.g., setting path to CUDA Toolkit on Linux:
 `export CUDA_PATH=/path/to/cuda/toolkit`). On Windows, the path to SDK is usually set automatically
 during SDK installation.
 
