@@ -62,12 +62,12 @@ systems are Linux and Windows.
     - C++17 compiler, for example Clang 7.0, GCC 9.1, MSVC 14.16 (Visual Studio 2017) or newer
     - OpenCL, CUDA or Vulkan library, supported SDKs are AMD OCL SDK, Intel SDK for OpenCL, NVIDIA CUDA Toolkit
       and Vulkan SDK
-    - [Premake 5](https://premake.github.io/download.html)
+    - [Premake 5](https://premake.github.io/download)
     
 * Build under Linux (inside KTT root folder):
     - ensure that path to vendor SDK is correctly set in the environment variables
     - run `./premake5 gmake` to generate makefile
-    - run `cd build` to get inside build directory
+    - run `cd Build` to get inside build directory
     - afterwards run `make config={configuration}_{architecture}` to build the project (e.g., `make config=release_x86_64`)
     
 * Build under Windows (inside KTT root folder):
