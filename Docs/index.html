@@ -142,13 +142,13 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <li>The prerequisites to build KTT are:<ul>
 <li>C++17 compiler, for example Clang 7.0, GCC 9.1, MSVC 14.16 (Visual Studio 2017) or newer</li>
 <li>OpenCL, CUDA or Vulkan library, supported SDKs are AMD OCL SDK, Intel SDK for OpenCL, NVIDIA CUDA Toolkit and Vulkan SDK</li>
-<li><a href="https://premake.github.io/download.html">Premake 5</a></li>
+<li><a href="https://premake.github.io/download">Premake 5</a></li>
 </ul>
 </li>
 <li>Build under Linux (inside KTT root folder):<ul>
 <li>ensure that path to vendor SDK is correctly set in the environment variables</li>
 <li>run <code>./premake5 gmake</code> to generate makefile</li>
-<li>run <code>cd build</code> to get inside build directory</li>
+<li>run <code>cd Build</code> to get inside build directory</li>
 <li>afterwards run <code>make config={configuration}_{architecture}</code> to build the project (e.g., <code>make config=release_x86_64</code>)</li>
 </ul>
 </li>
