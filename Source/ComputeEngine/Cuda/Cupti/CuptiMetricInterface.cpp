@@ -80,6 +80,11 @@ void CuptiMetricInterface::SetMetrics(const std::vector<std::string>& metrics)
         filteredMetrics.push_back(metric);
     }
 
+    if (filteredMetrics.empty())
+    {
+        throw KttException("No valid metrics provided for the current device");
+    }
+
     m_Metrics = filteredMetrics;
 }
 

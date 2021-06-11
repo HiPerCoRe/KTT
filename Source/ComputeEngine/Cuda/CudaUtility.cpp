@@ -36,7 +36,7 @@ void CheckError(const CUresult value, const std::string& function, const std::st
     throw KttException(message);
 }
 
-void CheckError(const nvrtcResult value, const std::string& function, const std::string& info)
+void CheckError(const nvrtcResult value, const std::string& function, const std::string& info, const ExceptionReason reason)
 {
     if (value == NVRTC_SUCCESS)
     {
@@ -50,7 +50,7 @@ void CheckError(const nvrtcResult value, const std::string& function, const std:
         message += ", additional info: " + info;
     }
 
-    throw KttException(message);
+    throw KttException(message, reason);
 }
 
 #if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)

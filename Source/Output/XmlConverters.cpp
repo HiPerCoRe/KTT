@@ -67,6 +67,10 @@ std::string ResultStatusToString(const ResultStatus status)
         return "ComputationFailed";
     case ResultStatus::ValidationFailed:
         return "ValidationFailed";
+    case ResultStatus::CompilationFailed:
+        return "CompilationFailed";
+    case ResultStatus::DeviceLimitsExceeded:
+        return "DeviceLimitsExceeded";
     default:
         KttError("Unhandled value");
         return "";
@@ -169,6 +173,14 @@ ResultStatus ResultStatusFromString(const std::string& string)
     else if (string == "ValidationFailed")
     {
         return ResultStatus::ValidationFailed;
+    }
+    else if (string == "CompilationFailed")
+    {
+        return ResultStatus::CompilationFailed;
+    }
+    else if (string == "DeviceLimitsExceeded")
+    {
+        return ResultStatus::DeviceLimitsExceeded;
     }
 
     KttError("Invalid string value");

@@ -10,6 +10,7 @@
 #include <nvperf_cuda_host.h>
 #endif // KTT_PROFILING_CUPTI
 
+#include <Api/ExceptionReason.h>
 #include <ComputeEngine/Cuda/CuptiLegacy/CuptiKtt.h>
 
 namespace ktt
@@ -18,7 +19,8 @@ namespace ktt
 std::string GetEnumName(const CUresult value);
 std::string GetEnumName(const nvrtcResult value);
 void CheckError(const CUresult value, const std::string& function, const std::string& info = "");
-void CheckError(const nvrtcResult value, const std::string& function, const std::string& info = "");
+void CheckError(const nvrtcResult value, const std::string& function, const std::string& info = "",
+    const ExceptionReason reason = ExceptionReason::General);
 
 #if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
 std::string GetEnumName(const CUptiResult value);

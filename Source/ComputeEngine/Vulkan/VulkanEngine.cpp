@@ -59,6 +59,14 @@ ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, cons
         throw KttException("Invalid queue index: " + std::to_string(queueId));
     }
 
+    const uint64_t localSize = static_cast<uint64_t>(data.GetLocalSize().GetTotalSize());
+
+    if (localSize > m_DeviceInfo.GetMaxWorkGroupSize())
+    {
+        throw KttException("Work-group size of " + std::to_string(localSize) + " exceeds current device limit",
+            ExceptionReason::DeviceLimitsExceeded);
+    }
+
     Timer timer;
     timer.Start();
 

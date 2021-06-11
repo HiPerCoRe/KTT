@@ -99,7 +99,8 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
 
     if (localSize > m_DeviceInfo.GetMaxWorkGroupSize())
     {
-        throw KttException("Block size of " + std::to_string(localSize) + " exceeds current device limit");
+        throw KttException("Block size of " + std::to_string(localSize) + " exceeds current device limit",
+            ExceptionReason::DeviceLimitsExceeded);
     }
 
     Timer timer;

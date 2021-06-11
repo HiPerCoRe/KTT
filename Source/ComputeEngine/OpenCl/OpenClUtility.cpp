@@ -57,7 +57,7 @@ std::string GetEnumName(const cl_int value)
     }
 }
 
-void CheckError(const cl_int value, const std::string& function, const std::string& info)
+void CheckError(const cl_int value, const std::string& function, const std::string& info, const ExceptionReason reason)
 {
     if (value == CL_SUCCESS)
     {
@@ -71,7 +71,7 @@ void CheckError(const cl_int value, const std::string& function, const std::stri
         message += ", additional info: " + info;
     }
 
-    throw KttException(message);
+    throw KttException(message, reason);
 }
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
