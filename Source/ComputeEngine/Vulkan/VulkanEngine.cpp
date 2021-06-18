@@ -233,6 +233,7 @@ TransferActionId VulkanEngine::DownloadArgument(const ArgumentId id, const Queue
     auto action = stagingBuffer->CopyData(*m_Queues[static_cast<size_t>(queueId)], *m_CommandPool, *m_QueryPool, buffer, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     action->WaitForFinish();
+    action->GenerateResult();
 
     auto downloadAction = stagingBuffer->DownloadData(destination, actualDataSize);
 
