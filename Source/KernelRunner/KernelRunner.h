@@ -5,6 +5,7 @@
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Output/BufferOutputDescriptor.h>
 #include <Api/Output/KernelResult.h>
+#include <Api/ExceptionReason.h>
 #include <ComputeEngine/ComputeEngine.h>
 #include <Kernel/Kernel.h>
 #include <KernelArgument/KernelArgumentManager.h>
@@ -56,6 +57,7 @@ private:
 
     void PrepareValidationData(const ArgumentId id);
     void ValidateResult(const Kernel& kernel, KernelResult& result, const KernelRunMode mode);
+    static ResultStatus GetStatusFromException(const ExceptionReason reason);
 };
 
 } // namespace ktt

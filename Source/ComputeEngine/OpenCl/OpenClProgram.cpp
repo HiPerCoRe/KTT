@@ -34,7 +34,7 @@ void OpenClProgram::Build(const std::string& compilerOptions) const
         nullptr, nullptr);
 
     const std::string buildInfo = GetBuildLog();
-    CheckError(result, "clBuildProgram", buildInfo);
+    CheckError(result, "clBuildProgram", buildInfo, ExceptionReason::CompilerError);
 }
 
 const std::string& OpenClProgram::GetSource() const

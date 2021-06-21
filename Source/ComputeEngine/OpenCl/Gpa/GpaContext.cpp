@@ -53,6 +53,11 @@ void GpaContext::SetCounters(const std::vector<std::string>& counters)
         filteredCounters.push_back(counter);
     }
 
+    if (filteredCounters.empty())
+    {
+        throw KttException("No valid counters provided for the current device");
+    }
+
     m_Counters = filteredCounters;
 }
 

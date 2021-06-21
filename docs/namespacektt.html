@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">2.0</span>
+   &#160;<span id="projectnumber">2.0.1</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -203,6 +203,11 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
+<tr class="memitem:aafca65fbebe616882f3343d1d37979fc"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fc">ExceptionReason</a> { <a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fca0db377921f4ce762c62526131097968f">General</a>
+, <a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fca9027a5aeb7743971341f4d6385244eb3">CompilerError</a>
+, <a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fca424d85ec05ce1ff1aabb2ebff7f67ac2">DeviceLimitsExceeded</a>
+ }</td></tr>
+<tr class="separator:aafca65fbebe616882f3343d1d37979fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a615cf89b27d4d1f734af56573e5c2e01"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01">DeviceType</a> { <a class="el" href="namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01a2b55387dd066c5bac646ac61543d152d">CPU</a>
 , <a class="el" href="namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01a52f9ec21735243ad9917cda3ca077d32">GPU</a>
 , <a class="el" href="namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01a90589c47f06eb971d548591f23c285af">Custom</a>
@@ -219,9 +224,14 @@ Enumerations</h2></td></tr>
 <br />
  }</td></tr>
 <tr class="separator:ae380b017e6b4aee36ed6598aa4a51282"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7ffb69a1caa29577202f4b1590ace695"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a7ffb69a1caa29577202f4b1590ace695">ResultStatus</a> { <a class="el" href="namespacektt.html#a7ffb69a1caa29577202f4b1590ace695aa60852f204ed8028c1c58808b746d115">Ok</a>
+<tr class="memitem:a7ffb69a1caa29577202f4b1590ace695"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a7ffb69a1caa29577202f4b1590ace695">ResultStatus</a> { <br />
+&#160;&#160;<a class="el" href="namespacektt.html#a7ffb69a1caa29577202f4b1590ace695aa60852f204ed8028c1c58808b746d115">Ok</a>
 , <a class="el" href="namespacektt.html#a7ffb69a1caa29577202f4b1590ace695ac12871375c41d2ad6e44aeb147436c23">ComputationFailed</a>
 , <a class="el" href="namespacektt.html#a7ffb69a1caa29577202f4b1590ace695a180b13250d9cde4f32c7e611c95789db">ValidationFailed</a>
+, <a class="el" href="namespacektt.html#a7ffb69a1caa29577202f4b1590ace695a70c0a6f196573f739f6756850b866fda">CompilationFailed</a>
+, <br />
+&#160;&#160;<a class="el" href="namespacektt.html#a7ffb69a1caa29577202f4b1590ace695a424d85ec05ce1ff1aabb2ebff7f67ac2">DeviceLimitsExceeded</a>
+<br />
  }</td></tr>
 <tr class="separator:a7ffb69a1caa29577202f4b1590ace695"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9738ef47337610739add496ce522de0a"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacektt.html#a9738ef47337610739add496ce522de0a">ComputeApi</a> { <a class="el" href="namespacektt.html#a9738ef47337610739add496ce522de0aa7982b09a852b37f2afb1227eaf552e47">OpenCL</a>
@@ -906,6 +916,37 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="aafca65fbebe616882f3343d1d37979fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aafca65fbebe616882f3343d1d37979fc">&#9670;&nbsp;</a></span>ExceptionReason</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fc">ktt::ExceptionReason</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Enum which describes reason why KTT exception was thrown. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="aafca65fbebe616882f3343d1d37979fca0db377921f4ce762c62526131097968f"></a>General&#160;</td><td class="fielddoc"><p>General issue with KTT API usage. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="aafca65fbebe616882f3343d1d37979fca9027a5aeb7743971341f4d6385244eb3"></a>CompilerError&#160;</td><td class="fielddoc"><p>Kernel source file compilation error. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="aafca65fbebe616882f3343d1d37979fca424d85ec05ce1ff1aabb2ebff7f67ac2"></a>DeviceLimitsExceeded&#160;</td><td class="fielddoc"><p>Compute device limits were exceeded (e.g., local size was too large, shared memory usage was too high). </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <a id="a16e643cd2325370c79affaeee8ef85f0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a16e643cd2325370c79affaeee8ef85f0">&#9670;&nbsp;</a></span>GlobalSizeType</h2>
 
@@ -1156,9 +1197,13 @@ Variables</h2></td></tr>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a7ffb69a1caa29577202f4b1590ace695aa60852f204ed8028c1c58808b746d115"></a>Ok&#160;</td><td class="fielddoc"><p>Computation was completed successfully. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a7ffb69a1caa29577202f4b1590ace695ac12871375c41d2ad6e44aeb147436c23"></a>ComputationFailed&#160;</td><td class="fielddoc"><p>Computation failed (e.g., due to invalid source code or some other compute API error). </p>
+<tr><td class="fieldname"><a id="a7ffb69a1caa29577202f4b1590ace695ac12871375c41d2ad6e44aeb147436c23"></a>ComputationFailed&#160;</td><td class="fielddoc"><p>Computation failed due to generic compute API error. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a7ffb69a1caa29577202f4b1590ace695a180b13250d9cde4f32c7e611c95789db"></a>ValidationFailed&#160;</td><td class="fielddoc"><p>Computation was completed successfully, but its output does not match the expected output. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a7ffb69a1caa29577202f4b1590ace695a70c0a6f196573f739f6756850b866fda"></a>CompilationFailed&#160;</td><td class="fielddoc"><p>Kernel source file failed to compile. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a7ffb69a1caa29577202f4b1590ace695a424d85ec05ce1ff1aabb2ebff7f67ac2"></a>DeviceLimitsExceeded&#160;</td><td class="fielddoc"><p>Computation could not launch due to device limits being exceeded (e.g., local size was too large). </p>
 </td></tr>
 </table>
 

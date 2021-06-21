@@ -6,20 +6,23 @@
 namespace ktt
 {
 
-void ConfigurationForest::Build(const KernelParameterGroup& group, ctpl::thread_pool& pool)
+std::vector<std::future<void>> ConfigurationForest::Build(const KernelParameterGroup& group, ctpl::thread_pool& pool)
 {
     m_Subgroups = group.GenerateSubgroups();
+    std::vector<std::future<void>> futures;
 
     for (const auto& subgroup : m_Subgroups)
     {
         m_Trees.push_back(std::make_unique<ConfigurationTree>());
         auto& tree = *m_Trees.back();
 
-        pool.push([&tree, &subgroup]()
+        futures.push_back(pool.push([&tree, &subgroup]()
         {
             tree.Build(subgroup);
-        });
+        }));
     }
+
+    return futures;
 }
 
 void ConfigurationForest::Clear()

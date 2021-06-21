@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <future>
 #include <memory>
 #include <vector>
 #include <ctpl_stl.h>
@@ -17,7 +18,7 @@ namespace ktt
 class ConfigurationForest
 {
 public:
-    void Build(const KernelParameterGroup& group, ctpl::thread_pool& pool);
+    std::vector<std::future<void>> Build(const KernelParameterGroup& group, ctpl::thread_pool& pool);
     void Clear();
 
     bool IsBuilt() const;

@@ -229,7 +229,8 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
         m_ComputeLayer->SynchronizeDevice();
         m_ComputeLayer->ClearComputeEngineData();
 
-        result.SetStatus(ResultStatus::ComputationFailed);
+        const auto reason = exception.GetReason();
+        result.SetStatus(GetStatusFromException(reason));
     }
 
     DownloadBuffers(output);
@@ -281,6 +282,22 @@ void KernelRunner::ValidateResult(const Kernel& kernel, KernelResult& result, co
     Logger::LogWarning("Kernel run completed in " + std::to_string(duration) + tag
         + ", kernel duration was " + std::to_string(kernelDuration) + tag + ", but results differ");
     result.SetStatus(ResultStatus::ValidationFailed);
+}
+
+ResultStatus KernelRunner::GetStatusFromException(const ExceptionReason reason)
+{
+    switch (reason)
+    {
+    case ExceptionReason::General:
+        return ResultStatus::ComputationFailed;
+    case ExceptionReason::CompilerError:
+        return ResultStatus::CompilationFailed;
+    case ExceptionReason::DeviceLimitsExceeded:
+        return ResultStatus::DeviceLimitsExceeded;
+    default:
+        KttError("Unhandled value");
+        return ResultStatus::ComputationFailed;
+    }
 }
 
 } // namespace ktt

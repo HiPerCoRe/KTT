@@ -38,7 +38,9 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ResultStatus,
 {
     {ResultStatus::Ok, "Ok"},
     {ResultStatus::ComputationFailed, "ComputationFailed"},
-    {ResultStatus::ValidationFailed, "ValidationFailed"}
+    {ResultStatus::ValidationFailed, "ValidationFailed"},
+    {ResultStatus::CompilationFailed, "CompilationFailed"},
+    {ResultStatus::DeviceLimitsExceeded, "DeviceLimitsExceeded"}
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ProfilingCounterType,

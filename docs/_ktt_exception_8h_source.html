@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">2.0</span>
+   &#160;<span id="projectnumber">2.0.1</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -102,28 +102,36 @@ $(document).ready(function(){initNavTree('_ktt_exception_8h_source.html',''); in
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;exception&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="_ktt_platform_8h.html">KttPlatform.h</a>&gt;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacektt.html">ktt</a></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;{</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="classktt_1_1_ktt_exception.html">   17</a></span>&#160;<span class="keyword">class </span><a class="code" href="classktt_1_1_ktt_exception.html">KttException</a> : <span class="keyword">public</span> std::exception</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;{</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="classktt_1_1_ktt_exception.html#a5ed90a3d1e508c4751a9a3d94ac4a855">   24</a></span>&#160;    KTT_API <a class="code" href="classktt_1_1_ktt_exception.html#a5ed90a3d1e508c4751a9a3d94ac4a855">KttException</a>(<span class="keyword">const</span> std::string&amp; message);</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="classktt_1_1_ktt_exception.html#ada9eeeda3a8152e72f1d01c40b2d4608">   30</a></span>&#160;    KTT_API <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code" href="classktt_1_1_ktt_exception.html#ada9eeeda3a8152e72f1d01c40b2d4608">what</a>() const noexcept override;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;private:</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    std::<span class="keywordtype">string</span> m_Message;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;};</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;} <span class="comment">// namespace ktt</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="_exception_reason_8h.html">Api/ExceptionReason.h</a>&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="_ktt_platform_8h.html">KttPlatform.h</a>&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacektt.html">ktt</a></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;{</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classktt_1_1_ktt_exception.html">   18</a></span>&#160;<span class="keyword">class </span><a class="code" href="classktt_1_1_ktt_exception.html">KttException</a> : <span class="keyword">public</span> std::exception</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;{</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="classktt_1_1_ktt_exception.html#ab6dcdf4a93cf0bce9d9f47a79c549f8c">   26</a></span>&#160;    KTT_API <a class="code" href="classktt_1_1_ktt_exception.html#ab6dcdf4a93cf0bce9d9f47a79c549f8c">KttException</a>(<span class="keyword">const</span> std::string&amp; message, <span class="keyword">const</span> <a class="code" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fc">ExceptionReason</a> reason = <a class="code" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fca0db377921f4ce762c62526131097968f">ExceptionReason::General</a>);</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="classktt_1_1_ktt_exception.html#ada9eeeda3a8152e72f1d01c40b2d4608">   32</a></span>&#160;    KTT_API <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code" href="classktt_1_1_ktt_exception.html#ada9eeeda3a8152e72f1d01c40b2d4608">what</a>() const noexcept override;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="classktt_1_1_ktt_exception.html#a47058989269370f6b3ca0933e5462720">   38</a></span>&#160;    KTT_API <a class="code" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fc">ExceptionReason</a> <a class="code" href="classktt_1_1_ktt_exception.html#a47058989269370f6b3ca0933e5462720">GetReason</a>() const;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;private:</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    std::<span class="keywordtype">string</span> m_Message;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <a class="code" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fc">ExceptionReason</a> m_Reason;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;};</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;} <span class="comment">// namespace ktt</span></div>
+<div class="ttc" id="a_exception_reason_8h_html"><div class="ttname"><a href="_exception_reason_8h.html">ExceptionReason.h</a></div></div>
 <div class="ttc" id="a_ktt_platform_8h_html"><div class="ttname"><a href="_ktt_platform_8h.html">KttPlatform.h</a></div></div>
-<div class="ttc" id="aclassktt_1_1_ktt_exception_html"><div class="ttname"><a href="classktt_1_1_ktt_exception.html">ktt::KttException</a></div><div class="ttdef"><b>Definition:</b> KttException.h:18</div></div>
-<div class="ttc" id="aclassktt_1_1_ktt_exception_html_a5ed90a3d1e508c4751a9a3d94ac4a855"><div class="ttname"><a href="classktt_1_1_ktt_exception.html#a5ed90a3d1e508c4751a9a3d94ac4a855">ktt::KttException::KttException</a></div><div class="ttdeci">KTT_API KttException(const std::string &amp;message)</div></div>
+<div class="ttc" id="aclassktt_1_1_ktt_exception_html"><div class="ttname"><a href="classktt_1_1_ktt_exception.html">ktt::KttException</a></div><div class="ttdef"><b>Definition:</b> KttException.h:19</div></div>
+<div class="ttc" id="aclassktt_1_1_ktt_exception_html_a47058989269370f6b3ca0933e5462720"><div class="ttname"><a href="classktt_1_1_ktt_exception.html#a47058989269370f6b3ca0933e5462720">ktt::KttException::GetReason</a></div><div class="ttdeci">KTT_API ExceptionReason GetReason() const</div></div>
+<div class="ttc" id="aclassktt_1_1_ktt_exception_html_ab6dcdf4a93cf0bce9d9f47a79c549f8c"><div class="ttname"><a href="classktt_1_1_ktt_exception.html#ab6dcdf4a93cf0bce9d9f47a79c549f8c">ktt::KttException::KttException</a></div><div class="ttdeci">KTT_API KttException(const std::string &amp;message, const ExceptionReason reason=ExceptionReason::General)</div></div>
 <div class="ttc" id="aclassktt_1_1_ktt_exception_html_ada9eeeda3a8152e72f1d01c40b2d4608"><div class="ttname"><a href="classktt_1_1_ktt_exception.html#ada9eeeda3a8152e72f1d01c40b2d4608">ktt::KttException::what</a></div><div class="ttdeci">KTT_API const char * what() const noexcept override</div></div>
 <div class="ttc" id="anamespacektt_html"><div class="ttname"><a href="namespacektt.html">ktt</a></div><div class="ttdef"><b>Definition:</b> KttPlatform.h:36</div></div>
+<div class="ttc" id="anamespacektt_html_aafca65fbebe616882f3343d1d37979fc"><div class="ttname"><a href="namespacektt.html#aafca65fbebe616882f3343d1d37979fc">ktt::ExceptionReason</a></div><div class="ttdeci">ExceptionReason</div><div class="ttdef"><b>Definition:</b> ExceptionReason.h:13</div></div>
+<div class="ttc" id="anamespacektt_html_aafca65fbebe616882f3343d1d37979fca0db377921f4ce762c62526131097968f"><div class="ttname"><a href="namespacektt.html#aafca65fbebe616882f3343d1d37979fca0db377921f4ce762c62526131097968f">ktt::ExceptionReason::General</a></div><div class="ttdeci">@ General</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
