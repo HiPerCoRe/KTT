@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Kernel Tuning Toolkit
-   &#160;<span id="projectnumber">2.0</span>
+   &#160;<span id="projectnumber">2.0.1</span>
    </div>
   </td>
    <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -110,16 +110,18 @@ Inheritance diagram for ktt::KttException:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a5ed90a3d1e508c4751a9a3d94ac4a855"><td class="memItemLeft" align="right" valign="top">KTT_API&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_ktt_exception.html#a5ed90a3d1e508c4751a9a3d94ac4a855">KttException</a> (const std::string &amp;message)</td></tr>
-<tr class="separator:a5ed90a3d1e508c4751a9a3d94ac4a855"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6dcdf4a93cf0bce9d9f47a79c549f8c"><td class="memItemLeft" align="right" valign="top">KTT_API&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_ktt_exception.html#ab6dcdf4a93cf0bce9d9f47a79c549f8c">KttException</a> (const std::string &amp;message, const <a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fc">ExceptionReason</a> reason=<a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fca0db377921f4ce762c62526131097968f">ExceptionReason::General</a>)</td></tr>
+<tr class="separator:ab6dcdf4a93cf0bce9d9f47a79c549f8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada9eeeda3a8152e72f1d01c40b2d4608"><td class="memItemLeft" align="right" valign="top">KTT_API const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_ktt_exception.html#ada9eeeda3a8152e72f1d01c40b2d4608">what</a> () const noexcept override</td></tr>
 <tr class="separator:ada9eeeda3a8152e72f1d01c40b2d4608"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47058989269370f6b3ca0933e5462720"><td class="memItemLeft" align="right" valign="top">KTT_API <a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fc">ExceptionReason</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_ktt_exception.html#a47058989269370f6b3ca0933e5462720">GetReason</a> () const</td></tr>
+<tr class="separator:a47058989269370f6b3ca0933e5462720"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Exception thrown when invalid usage of KTT API is detected. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a5ed90a3d1e508c4751a9a3d94ac4a855"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5ed90a3d1e508c4751a9a3d94ac4a855">&#9670;&nbsp;</a></span>KttException()</h2>
+<a id="ab6dcdf4a93cf0bce9d9f47a79c549f8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6dcdf4a93cf0bce9d9f47a79c549f8c">&#9670;&nbsp;</a></span>KttException()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -128,14 +130,25 @@ Public Member Functions</h2></td></tr>
           <td class="memname">ktt::KttException::KttException </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>message</em></td><td>)</td>
+          <td class="paramname"><em>message</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const <a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fc">ExceptionReason</a>&#160;</td>
+          <td class="paramname"><em>reason</em> = <code><a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fca0db377921f4ce762c62526131097968f">ExceptionReason::General</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Creates new exception with the specified error message. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">message</td><td>Holds reason why the exception was thrown. </td></tr>
+    <tr><td class="paramname">message</td><td>Holds message describing why the exception was thrown. </td></tr>
+    <tr><td class="paramname">reason</td><td>Reason why the exception was thrown. </td></tr>
   </table>
   </dd>
 </dl>
@@ -143,6 +156,24 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="a47058989269370f6b3ca0933e5462720"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a47058989269370f6b3ca0933e5462720">&#9670;&nbsp;</a></span>GetReason()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacektt.html#aafca65fbebe616882f3343d1d37979fc">ExceptionReason</a> ktt::KttException::GetReason </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Returns reason why the exception was thrown. </p><dl class="section return"><dt>Returns</dt><dd>Reason why the exception was thrown. </dd></dl>
+
+</div>
+</div>
 <a id="ada9eeeda3a8152e72f1d01c40b2d4608"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ada9eeeda3a8152e72f1d01c40b2d4608">&#9670;&nbsp;</a></span>what()</h2>
 
@@ -165,7 +196,7 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Returns reason why the exception was thrown. </p><dl class="section return"><dt>Returns</dt><dd>Reason why the exception was thrown. </dd></dl>
+<p>Returns message which describes why the exception was thrown. </p><dl class="section return"><dt>Returns</dt><dd>Message which describes why the exception was thrown. </dd></dl>
 
 </div>
 </div>
