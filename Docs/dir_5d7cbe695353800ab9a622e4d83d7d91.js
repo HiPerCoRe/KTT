@@ -11,6 +11,7 @@ var dir_5d7cbe695353800ab9a622e4d83d7d91 =
     [ "ComputeInterface.h", "_compute_interface_8h.html", [
       [ "ComputeInterface", "classktt_1_1_compute_interface.html", "classktt_1_1_compute_interface" ]
     ] ],
+    [ "ExceptionReason.h", "_exception_reason_8h.html", "_exception_reason_8h" ],
     [ "KttException.h", "_ktt_exception_8h.html", [
       [ "KttException", "classktt_1_1_ktt_exception.html", "classktt_1_1_ktt_exception" ]
     ] ]

@@ -59,6 +59,14 @@ ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, cons
         throw KttException("Invalid queue index: " + std::to_string(queueId));
     }
 
+    const uint64_t localSize = static_cast<uint64_t>(data.GetLocalSize().GetTotalSize());
+
+    if (localSize > m_DeviceInfo.GetMaxWorkGroupSize())
+    {
+        throw KttException("Work-group size of " + std::to_string(localSize) + " exceeds current device limit",
+            ExceptionReason::DeviceLimitsExceeded);
+    }
+
     Timer timer;
     timer.Start();
 
@@ -225,6 +233,7 @@ TransferActionId VulkanEngine::DownloadArgument(const ArgumentId id, const Queue
     auto action = stagingBuffer->CopyData(*m_Queues[static_cast<size_t>(queueId)], *m_CommandPool, *m_QueryPool, buffer, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     action->WaitForFinish();
+    action->GenerateResult();
 
     auto downloadAction = stagingBuffer->DownloadData(destination, actualDataSize);
 

@@ -48,7 +48,7 @@ void CudaProgram::Build(const std::string& compilerOptions) const
         individualOptionsChar.data());
 
     const std::string buildInfo = GetBuildInfo();
-    CheckError(result, "nvrtcCompileProgram", buildInfo);
+    CheckError(result, "nvrtcCompileProgram", buildInfo, ExceptionReason::CompilerError);
 }
 
 const std::string& CudaProgram::GetSource() const

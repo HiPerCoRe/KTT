@@ -30,7 +30,7 @@
 
 /** Patch version of KTT framework. Third number in KTT version description.
   */
-#define KTT_VERSION_PATCH 0
+#define KTT_VERSION_PATCH 1
 
 namespace ktt
 {

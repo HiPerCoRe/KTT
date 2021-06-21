@@ -113,7 +113,8 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
 
     if (localSize > m_DeviceInfo.GetMaxWorkGroupSize())
     {
-        throw KttException("Work-group size of " + std::to_string(localSize) + " exceeds current device limit");
+        throw KttException("Work-group size of " + std::to_string(localSize) + " exceeds current device limit",
+            ExceptionReason::DeviceLimitsExceeded);
     }
 
     Timer timer;

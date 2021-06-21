@@ -209,14 +209,22 @@ void ConfigurationData::InitializeConfigurations()
     Timer timer;
     timer.Start();
     ctpl::thread_pool pool;
+    std::vector<std::vector<std::future<void>>> futures;
 
     for (const auto& group : groups)
     {
         m_Forests.push_back(std::make_unique<ConfigurationForest>());
-        m_Forests.back()->Build(group, pool);
+        futures.push_back(m_Forests.back()->Build(group, pool));
     }
 
-    pool.wait();
+    for (const auto& groupFutures : futures)
+    {
+        for (const auto& future : groupFutures)
+        {
+            future.wait();
+        }
+    }
+
     timer.Stop();
 
     const auto& time = TimeConfiguration::GetInstance();

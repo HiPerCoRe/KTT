@@ -1,3 +1,9 @@
+Version 2.0.1 (21/6/2021)
+* Added more kernel result status categories to distinguish kernel runs which failed due to compiler error or device
+  limits being exceeded
+* Fixed problem with tuner sometimes getting stuck on generating configurations
+* Fixed issue with tuning in Vulkan ending prematurely with an error
+
 Version 2.0 (9/6/2021)
 * Major release with significant changes to public API as well as internal functionality, code utilizing v1 API has
   to be updated

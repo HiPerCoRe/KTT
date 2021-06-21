@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['profilingcountertype_702',['ProfilingCounterType',['../namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282',1,'ktt']]]
+  ['outputformat_711',['OutputFormat',['../namespacektt.html#aa3395e2ad389eb11a09e94a5eb5e5b51',1,'ktt']]]
 ];

@@ -36,7 +36,7 @@ std::string ShadercCompiler::PreprocessShader(const std::string& name, const std
 
     if (result.GetCompilationStatus() != shaderc_compilation_status_success)
     {
-        throw KttException("Vulkan shader compiler error: " + result.GetErrorMessage());
+        throw KttException("Vulkan shader compiler error: " + result.GetErrorMessage(), ExceptionReason::CompilerError);
     }
 
     return std::string{result.cbegin(), result.cend()};
@@ -49,7 +49,7 @@ std::vector<uint32_t> ShadercCompiler::CompileShader(const std::string& name, co
 
     if (binaryModule.GetCompilationStatus() != shaderc_compilation_status_success)
     {
-        throw KttException("Vulkan shader compiler error: " + binaryModule.GetErrorMessage());
+        throw KttException("Vulkan shader compiler error: " + binaryModule.GetErrorMessage(), ExceptionReason::CompilerError);
     }
 
     return std::vector<uint32_t>{binaryModule.cbegin(), binaryModule.cend()};
@@ -62,7 +62,7 @@ std::string ShadercCompiler::CompileShaderToAssembly(const std::string& name, co
 
     if (assembly.GetCompilationStatus() != shaderc_compilation_status_success)
     {
-        throw KttException("Vulkan shader compiler error: " + assembly.GetErrorMessage());
+        throw KttException("Vulkan shader compiler error: " + assembly.GetErrorMessage(), ExceptionReason::CompilerError);
     }
 
     return std::string{assembly.cbegin(), assembly.cend()};

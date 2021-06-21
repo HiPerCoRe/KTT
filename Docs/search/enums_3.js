@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['globalsizetype_696',['GlobalSizeType',['../namespacektt.html#a16e643cd2325370c79affaeee8ef85f0',1,'ktt']]]
+  ['exceptionreason_705',['ExceptionReason',['../namespacektt.html#aafca65fbebe616882f3343d1d37979fc',1,'ktt']]]
 ];
