@@ -64,7 +64,8 @@ ArgumentId Tuner::AddArgumentLocal(const size_t localMemorySize)
 template <typename T>
 ArgumentDataType Tuner::DeriveArgumentDataType() const
 {
-    static_assert(std::is_trivially_copyable_v<T> && !std::is_reference_v<T> && !std::is_pointer_v<T>, "Unsupported argument data type");
+    static_assert(std::is_trivially_copyable_v<T> && !std::is_reference_v<T> && !std::is_pointer_v<T> && !std::is_null_pointer_v<T>,
+        "Unsupported argument data type");
     static_assert(!std::is_same_v<std::remove_cv_t<T>, bool>, "Bool argument data type is not supported");
 
     if constexpr (std::is_same_v<std::remove_cv_t<T>, half>)
