@@ -29,7 +29,7 @@ VulkanComputePipeline::VulkanComputePipeline(const VulkanDevice& device, IdGener
 
     for (auto* argument : arguments)
     {
-        if (argument->GetMemoryType() == ArgumentMemoryType::Scalar)
+        if (argument->GetMemoryType() == ArgumentMemoryType::Scalar || argument->GetMemoryType() == ArgumentMemoryType::Symbol)
         {
             scalarArguments.push_back(argument);
         }

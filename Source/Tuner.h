@@ -324,6 +324,16 @@ public:
     template <typename T>
     ArgumentId AddArgumentLocal(const size_t localMemorySize);
 
+    /** @fn template <typename T> ArgumentId AddArgumentSymbol(const T& data, const std::string& symbolName = "")
+      * Adds new symbol argument to the tuner.
+      * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.
+      * @param symbolName Name of the corresponding symbol in kernel source code. Only utilized when tuner is using CUDA API. The symbol
+      * name must be unique.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
+    template <typename T>
+    ArgumentId AddArgumentSymbol(const T& data, const std::string& symbolName = "");
+
     /** @fn void RemoveArgument(const ArgumentId id)
       * Removes argument with the specified id from the tuner. Note that argument can only be removed if it is not associated with
       * any kernel definition.
@@ -651,7 +661,7 @@ private:
         const ArgumentManagementType managementType, void* data, const size_t dataSize);
     ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const void* data, const size_t dataSize);
+        const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName = "");
     ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
 

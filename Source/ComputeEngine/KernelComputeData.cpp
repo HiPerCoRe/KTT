@@ -98,7 +98,15 @@ const std::string& KernelComputeData::GetTemplatedName() const
 
 KernelComputeId KernelComputeData::GetUniqueIdentifier() const
 {
-    return m_Name + m_TemplatedName + m_ConfigurationPrefix;
+    KernelComputeId id = m_Name + m_TemplatedName + m_ConfigurationPrefix;
+    const auto symbolArguments = KernelArgument::GetArgumentsWithMemoryType(m_Arguments, ArgumentMemoryType::Symbol);
+    
+    for (const auto* argument : symbolArguments)
+    {
+        id += argument->GetSymbolName();
+    }
+    
+    return id;
 }
 
 const DimensionVector& KernelComputeData::GetGlobalSize() const

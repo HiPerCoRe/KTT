@@ -669,8 +669,9 @@ std::shared_ptr<CudaKernel> CudaEngine::LoadKernel(const KernelComputeData& data
         return m_KernelCache.Get(id)->second;
     }
 
+    const auto symbolArguments = KernelArgument::GetArgumentsWithMemoryType(data.GetArguments(), ArgumentMemoryType::Symbol);
     auto kernel = std::make_shared<CudaKernel>(m_ComputeIdGenerator, m_Configuration, data.GetName(), data.GetSource(),
-        data.GetTemplatedName());
+        data.GetTemplatedName(), symbolArguments);
 
     if (m_KernelCache.GetMaxSize() > 0)
     {
@@ -686,7 +687,7 @@ std::vector<CUdeviceptr*> CudaEngine::GetKernelArguments(const std::vector<Kerne
 
     for (auto* argument : arguments)
     {
-        if (argument->GetMemoryType() == ArgumentMemoryType::Local)
+        if (argument->GetMemoryType() == ArgumentMemoryType::Local || argument->GetMemoryType() == ArgumentMemoryType::Symbol)
         {
             continue;
         }
@@ -716,7 +717,8 @@ CUdeviceptr* CudaEngine::GetKernelArgument(KernelArgument& argument)
         return m_Buffers[id]->GetBuffer();
     }
     case ArgumentMemoryType::Local:
-        KttError("Local memory arguments do not have CUdeviceptr representation");
+    case ArgumentMemoryType::Symbol:
+        KttError("Local memory and symbol arguments cannot be retrieved as kernel arguments");
         return nullptr;
     default:
         KttError("Unhandled argument memory type value");

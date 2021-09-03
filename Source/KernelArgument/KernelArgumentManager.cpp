@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <string>
 
 #include <Api/KttException.h>
@@ -23,9 +24,9 @@ ArgumentId KernelArgumentManager::AddArgumentWithReferencedData(const size_t ele
 
 ArgumentId KernelArgumentManager::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const size_t dataSize)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName)
 {
-    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType, managementType);
+    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType, managementType, symbolName);
     auto& argument = GetArgument(id);
     argument.SetOwnedData(data, dataSize);
     return id;
@@ -81,8 +82,21 @@ std::vector<KernelArgument*> KernelArgumentManager::GetArguments(const std::vect
 
 ArgumentId KernelArgumentManager::AddArgument(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType)
+    const ArgumentManagementType managementType, const std::string& symbolName)
 {
+    if (memoryType == ArgumentMemoryType::Symbol && !symbolName.empty())
+    {
+        const bool symbolNameExists = std::any_of(m_Arguments.cbegin(), m_Arguments.cend(), [&symbolName](const auto& pair)
+        {
+            return pair.second->GetSymbolName() == symbolName;
+        });
+
+        if (symbolNameExists)
+        {
+            throw KttException("Kernel argument with symbol name " + symbolName + " already exists");
+        }
+    }
+
     if (memoryType == ArgumentMemoryType::Vector && memoryLocation == ArgumentMemoryLocation::Undefined)
     {
         throw KttException("Vector kernel arguments must have properly defined memory location");
@@ -91,7 +105,7 @@ ArgumentId KernelArgumentManager::AddArgument(const size_t elementSize, const Ar
     const auto id = m_IdGenerator.GenerateId();
 
     auto argument = std::make_unique<KernelArgument>(id, elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType);
+        managementType, symbolName);
     m_Arguments[id] = std::move(argument);
 
     return id;

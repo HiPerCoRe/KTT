@@ -655,12 +655,12 @@ ArgumentId Tuner::AddArgumentWithReferencedData(const size_t elementSize, const 
 
 ArgumentId Tuner::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const size_t dataSize)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName)
 {
     try
     {
         return m_Tuner->AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, memoryType, managementType,
-            data, dataSize);
+            data, dataSize, symbolName);
     }
     catch (const KttException& exception)
     {

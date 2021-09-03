@@ -440,7 +440,8 @@ VulkanBuffer* VulkanEngine::GetPipelineArgument(KernelArgument& argument)
     {
     case ArgumentMemoryType::Scalar:
     case ArgumentMemoryType::Local:
-        KttError("Scalar and local memory arguments do not have Vulkan buffer representation");
+    case ArgumentMemoryType::Symbol:
+        KttError("Scalar, symbol and local memory arguments do not have Vulkan buffer representation");
         return nullptr;
     case ArgumentMemoryType::Vector:
     {
@@ -518,7 +519,7 @@ std::vector<KernelArgument*> VulkanEngine::GetScalarArguments(const std::vector<
 
     for (auto* argument : arguments)
     {
-        if (argument->GetMemoryType() == ArgumentMemoryType::Scalar)
+        if (argument->GetMemoryType() == ArgumentMemoryType::Scalar || argument->GetMemoryType() == ArgumentMemoryType::Symbol)
         {
             result.push_back(argument);
         }

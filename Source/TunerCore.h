@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <ostream>
+#include <string>
 
 #include <Api/ComputeApiInitializer.h>
 #include <ComputeEngine/ComputeApi.h>
@@ -49,7 +50,7 @@ public:
         const ArgumentManagementType managementType, void* data, const size_t dataSize);
     ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const void* data, const size_t dataSize);
+        const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName = "");
     ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
     void RemoveArgument(const ArgumentId id);

@@ -62,6 +62,7 @@ void OpenClKernel::SetArgument(const KernelArgument& argument)
     switch (argument.GetMemoryType())
     {
     case ArgumentMemoryType::Scalar:
+    case ArgumentMemoryType::Symbol:
         SetKernelArgumentScalar(argument.GetData(), argument.GetElementSize());
         break;
     case ArgumentMemoryType::Vector:

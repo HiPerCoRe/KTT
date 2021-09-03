@@ -123,10 +123,15 @@ ArgumentId TunerCore::AddArgumentWithReferencedData(const size_t elementSize, co
 
 ArgumentId TunerCore::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const size_t dataSize)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName)
 {
+    if (memoryType == ArgumentMemoryType::Symbol && symbolName.empty() && m_ComputeEngine->GetComputeApi() == ComputeApi::CUDA)
+    {
+        throw KttException("Symbol arguments in CUDA must have defined symbol name");
+    }
+
     return m_ArgumentManager->AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, data, dataSize);
+        managementType, data, dataSize, symbolName);
 }
 
 ArgumentId TunerCore::AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,

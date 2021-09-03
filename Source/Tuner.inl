@@ -62,6 +62,14 @@ ArgumentId Tuner::AddArgumentLocal(const size_t localMemorySize)
 }
 
 template <typename T>
+ArgumentId Tuner::AddArgumentSymbol(const T& data, const std::string& symbolName)
+{
+    const ArgumentDataType dataType = DeriveArgumentDataType<T>();
+    return AddArgumentWithOwnedData(sizeof(T), dataType, ArgumentMemoryLocation::Undefined, ArgumentAccessType::ReadOnly,
+        ArgumentMemoryType::Symbol, ArgumentManagementType::Framework, &data, sizeof(T), symbolName);
+}
+
+template <typename T>
 ArgumentDataType Tuner::DeriveArgumentDataType() const
 {
     static_assert(std::is_trivially_copyable_v<T> && !std::is_reference_v<T> && !std::is_pointer_v<T> && !std::is_null_pointer_v<T>,
