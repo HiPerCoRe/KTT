@@ -377,7 +377,8 @@ void TunerCore::Log(const LoggingLevel level, const std::string& message)
     Logger::GetLogger().Log(level, message);
 }
 
-void TunerCore::InitializeComputeEngine(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount)
+void TunerCore::InitializeComputeEngine([[maybe_unused]] const PlatformIndex platform, const DeviceIndex device, const ComputeApi api,
+    const uint32_t queueCount)
 {
     if (queueCount == 0)
     {
