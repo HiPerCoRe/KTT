@@ -26,11 +26,11 @@ TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, con
     InitializeRunners();
 }
 
-TunerCore::TunerCore(const ComputeApi api, const ComputeApiInitializer& initializer) :
+TunerCore::TunerCore(const ComputeApi api, const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
     m_ArgumentManager(std::make_unique<KernelArgumentManager>()),
     m_KernelManager(std::make_unique<KernelManager>(*m_ArgumentManager))
 {
-    InitializeComputeEngine(api, initializer);
+    InitializeComputeEngine(api, initializer, assignedQueueIds);
     InitializeRunners();
 }
 
@@ -312,6 +312,16 @@ std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, co
     return pair.second;
 }
 
+QueueId TunerCore::AddComputeQueue(ComputeQueue queue)
+{
+    return m_ComputeEngine->AddComputeQueue(queue);
+}
+
+void TunerCore::RemoveComputeQueue(const QueueId id)
+{
+    m_ComputeEngine->RemoveComputeQueue(id);
+}
+
 void TunerCore::SynchronizeDevice()
 {
     m_ComputeEngine->SynchronizeDevice();
@@ -413,20 +423,21 @@ void TunerCore::InitializeComputeEngine([[maybe_unused]] const PlatformIndex pla
     }
 }
 
-void TunerCore::InitializeComputeEngine(const ComputeApi api, const ComputeApiInitializer& initializer)
+void TunerCore::InitializeComputeEngine(const ComputeApi api, [[maybe_unused]] const ComputeApiInitializer& initializer,
+    [[maybe_unused]] std::vector<QueueId>& assignedQueueIds)
 {
     switch (api)
     {
     case ComputeApi::OpenCL:
         #ifdef KTT_API_OPENCL
-        m_ComputeEngine = std::make_unique<OpenClEngine>(initializer);
+        m_ComputeEngine = std::make_unique<OpenClEngine>(initializer, assignedQueueIds);
         #else
         throw KttException("Support for OpenCL API is not included in this version of KTT framework");
         #endif // KTT_API_OPENCL
         break;
     case ComputeApi::CUDA:
         #ifdef KTT_API_CUDA
-        m_ComputeEngine = std::make_unique<CudaEngine>(initializer);
+        m_ComputeEngine = std::make_unique<CudaEngine>(initializer, assignedQueueIds);
         #else
         throw KttException("Support for CUDA API is not included in this version of KTT framework");
         #endif // KTT_API_CUDA

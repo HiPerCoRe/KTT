@@ -65,6 +65,8 @@ public:
     bool HasBuffer(const ArgumentId id) override;
 
     // Queue methods
+    QueueId AddComputeQueue(ComputeQueue queue) override;
+    void RemoveComputeQueue(const QueueId id) override;
     QueueId GetDefaultQueue() const override;
     std::vector<QueueId> GetAllQueues() const override;
     void SynchronizeQueue(const QueueId queueId) override;

@@ -24,7 +24,7 @@ class TunerCore
 {
 public:
     explicit TunerCore(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount);
-    explicit TunerCore(const ComputeApi api, const ComputeApiInitializer& initializer);
+    explicit TunerCore(const ComputeApi api, const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
 
     // Kernel management
     KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
@@ -84,6 +84,8 @@ public:
     std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format, UserData& data) const;
 
     // Compute engine
+    QueueId AddComputeQueue(ComputeQueue queue);
+    void RemoveComputeQueue(const QueueId id);
     void SynchronizeDevice();
     void SetProfilingCounters(const std::vector<std::string>& counters);
     void SetCompilerOptions(const std::string& options);
@@ -108,7 +110,7 @@ private:
     std::unique_ptr<TuningRunner> m_TuningRunner;
 
     void InitializeComputeEngine(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount);
-    void InitializeComputeEngine(const ComputeApi api, const ComputeApiInitializer& initializer);
+    void InitializeComputeEngine(const ComputeApi api, const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
     void InitializeRunners();
 
     static std::unique_ptr<Serializer> CreateSerializer(const OutputFormat format);

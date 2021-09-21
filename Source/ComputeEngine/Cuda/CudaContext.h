@@ -22,6 +22,7 @@ public:
 
     CUcontext GetContext() const;
     CUdevice GetDevice() const;
+    bool IsUserOwned() const;
 
 private:
     CUcontext m_Context;

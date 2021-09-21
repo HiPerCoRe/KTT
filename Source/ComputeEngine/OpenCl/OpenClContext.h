@@ -22,6 +22,7 @@ public:
     cl_context GetContext() const;
     cl_platform_id GetPlatform() const;
     cl_device_id GetDevice() const;
+    bool IsUserOwned() const;
 
 private:
     cl_context m_Context;

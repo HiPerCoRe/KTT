@@ -294,6 +294,16 @@ bool VulkanEngine::HasBuffer(const ArgumentId id)
     return ContainsKey(m_Buffers, id);
 }
 
+QueueId VulkanEngine::AddComputeQueue([[maybe_unused]] ComputeQueue queue)
+{
+    throw KttException("Support for compute queue addition is not yet available for Vulkan backend");
+}
+
+void VulkanEngine::RemoveComputeQueue([[maybe_unused]] const QueueId id)
+{
+    throw KttException("Support for compute queue removal is not yet available for Vulkan backend");
+}
+
 QueueId VulkanEngine::GetDefaultQueue() const
 {
     return static_cast<QueueId>(0);

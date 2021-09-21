@@ -76,6 +76,11 @@ cl_device_id OpenClContext::GetDevice() const
     return m_Device;
 }
 
+bool OpenClContext::IsUserOwned() const
+{
+    return !m_OwningContext;
+}
+
 } // namespace ktt
 
 #endif // KTT_PLATFORM_OPENCL

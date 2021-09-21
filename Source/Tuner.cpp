@@ -14,8 +14,14 @@ Tuner::Tuner(const PlatformIndex platform, const DeviceIndex device, const Compu
     m_Tuner(std::make_unique<TunerCore>(platform, device, api, computeQueueCount))
 {}
 
-Tuner::Tuner(const ComputeApi api, const ComputeApiInitializer& initializer) :
-    m_Tuner(std::make_unique<TunerCore>(api, initializer))
+Tuner::Tuner(const ComputeApi api, const ComputeApiInitializer& initializer)
+{
+    std::vector<QueueId> ids;
+    m_Tuner = std::make_unique<TunerCore>(api, initializer, ids);
+}
+
+Tuner::Tuner(const ComputeApi api, const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
+    m_Tuner(std::make_unique<TunerCore>(api, initializer, assignedQueueIds))
 {}
 
 Tuner::~Tuner() = default;
@@ -508,6 +514,31 @@ std::vector<KernelResult> Tuner::LoadResults(const std::string& filePath, const 
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
         return std::vector<KernelResult>{};
+    }
+}
+
+QueueId Tuner::AddComputeQueue(ComputeQueue queue)
+{
+    try
+    {
+        return m_Tuner->AddComputeQueue(queue);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidQueueId;
+    }
+}
+
+void Tuner::RemoveComputeQueue(const QueueId id)
+{
+    try
+    {
+        m_Tuner->RemoveComputeQueue(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
     }
 }
 

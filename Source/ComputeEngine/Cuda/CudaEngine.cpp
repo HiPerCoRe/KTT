@@ -42,8 +42,9 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 
     for (uint32_t i = 0; i < queueCount; ++i)
     {
-        auto stream = std::make_unique<CudaStream>(i);
-        m_Streams.push_back(std::move(stream));
+        const QueueId id = m_QueueIdGenerator.GenerateId();
+        auto stream = std::make_unique<CudaStream>(id);
+        m_Streams[id] = std::move(stream);
     }
 
     InitializeCompilerOptions();
@@ -54,7 +55,7 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 #endif // KTT_PROFILING_CUPTI
 }
 
-CudaEngine::CudaEngine(const ComputeApiInitializer& initializer) :
+CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
     m_Configuration(GlobalSizeType::CUDA),
     m_DeviceInfo(0, ""),
     m_KernelCache(10)
@@ -74,10 +75,12 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer) :
 
     const auto& streams = initializer.GetQueues();
 
-    for (size_t i = 0; i < streams.size(); ++i)
+    for (auto& stream : streams)
     {
-        auto stream = std::make_unique<CudaStream>(static_cast<QueueId>(i), streams[i]);
-        m_Streams.push_back(std::move(stream));
+        const QueueId id = m_QueueIdGenerator.GenerateId();
+        auto cudaStream = std::make_unique<CudaStream>(id, stream);
+        m_Streams[id] = std::move(cudaStream);
+        assignedQueueIds.push_back(id);
     }
 
     InitializeCompilerOptions();
@@ -90,7 +93,7 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer) :
 
 ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId)
 {
-    if (queueId >= static_cast<QueueId>(m_Streams.size()))
+    if (!ContainsKey(m_Streams, queueId))
     {
         throw KttException("Invalid stream index: " + std::to_string(queueId));
     }
@@ -110,7 +113,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     std::vector<CUdeviceptr*> arguments = GetKernelArguments(data.GetArguments());
     const size_t sharedMemorySize = GetSharedMemorySize(data.GetArguments());
 
-    const auto& stream = *m_Streams[static_cast<size_t>(queueId)];
+    const auto& stream = *m_Streams[queueId];
     timer.Stop();
 
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
@@ -334,7 +337,7 @@ TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, cons
     const auto id = kernelArgument.GetId();
     Logger::LogDebug("Uploading buffer for argument with id " + std::to_string(id));
 
-    if (queueId >= static_cast<QueueId>(m_Streams.size()))
+    if (!ContainsKey(m_Streams, queueId))
     {
         throw KttException("Invalid stream index: " + std::to_string(queueId));
     }
@@ -352,8 +355,7 @@ TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, cons
     auto buffer = CreateBuffer(kernelArgument);
     timer.Stop();
 
-    auto action = buffer->UploadData(*m_Streams[static_cast<size_t>(queueId)], kernelArgument.GetData(),
-        kernelArgument.GetDataSize());
+    auto action = buffer->UploadData(*m_Streams[queueId], kernelArgument.GetData(), kernelArgument.GetDataSize());
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
 
@@ -371,7 +373,7 @@ TransferActionId CudaEngine::UpdateArgument(const ArgumentId id, const QueueId q
 
     Logger::LogDebug("Updating buffer for argument with id " + std::to_string(id));
 
-    if (queueId >= static_cast<QueueId>(m_Streams.size()))
+    if (!ContainsKey(m_Streams, queueId))
     {
         throw KttException("Invalid stream index: " + std::to_string(queueId));
     }
@@ -391,7 +393,7 @@ TransferActionId CudaEngine::UpdateArgument(const ArgumentId id, const QueueId q
 
     timer.Stop();
 
-    auto action = buffer.UploadData(*m_Streams[static_cast<size_t>(queueId)], data, actualDataSize);
+    auto action = buffer.UploadData(*m_Streams[queueId], data, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
     m_TransferActions[actionId] = std::move(action);
@@ -406,7 +408,7 @@ TransferActionId CudaEngine::DownloadArgument(const ArgumentId id, const QueueId
 
     Logger::LogDebug("Downloading buffer for argument with id " + std::to_string(id));
 
-    if (queueId >= static_cast<QueueId>(m_Streams.size()))
+    if (!ContainsKey(m_Streams, queueId))
     {
         throw KttException("Invalid stream index: " + std::to_string(queueId));
     }
@@ -426,7 +428,7 @@ TransferActionId CudaEngine::DownloadArgument(const ArgumentId id, const QueueId
 
     timer.Stop();
 
-    auto action = buffer.DownloadData(*m_Streams[static_cast<size_t>(queueId)], destination, actualDataSize);
+    auto action = buffer.DownloadData(*m_Streams[queueId], destination, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
     m_TransferActions[actionId] = std::move(action);
@@ -442,7 +444,7 @@ TransferActionId CudaEngine::CopyArgument(const ArgumentId destination, const Qu
     Logger::LogDebug("Copying buffer for argument with id " + std::to_string(source) + " into buffer for argument with id "
         + std::to_string(destination));
 
-    if (queueId >= static_cast<QueueId>(m_Streams.size()))
+    if (!ContainsKey(m_Streams, queueId))
     {
         throw KttException("Invalid stream index: " + std::to_string(queueId));
     }
@@ -469,7 +471,7 @@ TransferActionId CudaEngine::CopyArgument(const ArgumentId destination, const Qu
 
     timer.Stop();
 
-    auto action = destinationBuffer.CopyData(*m_Streams[static_cast<size_t>(queueId)], sourceBuffer, actualDataSize);
+    auto action = destinationBuffer.CopyData(*m_Streams[queueId], sourceBuffer, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
     m_TransferActions[actionId] = std::move(action);
@@ -549,6 +551,42 @@ bool CudaEngine::HasBuffer(const ArgumentId id)
     return ContainsKey(m_Buffers, id);
 }
 
+QueueId CudaEngine::AddComputeQueue(ComputeQueue queue)
+{
+    if (!m_Context->IsUserOwned())
+    {
+        throw KttException("New CUDA streams cannot be added to tuner which was not created with compute API initializer");
+    }
+
+    for (const auto& stream : m_Streams)
+    {
+        if (stream.second->GetStream() == static_cast<CUstream>(queue))
+        {
+            throw KttException("The provided CUDA stream already exists inside the tuner under id: " + std::to_string(stream.first));
+        }
+    }
+
+    const QueueId id = m_QueueIdGenerator.GenerateId();
+    auto stream = std::make_unique<CudaStream>(id, queue);
+    m_Streams[id] = std::move(stream);
+    return id;
+}
+
+void CudaEngine::RemoveComputeQueue(const QueueId id)
+{
+    if (!m_Context->IsUserOwned())
+    {
+        throw KttException("CUDA streams cannot be removed from tuner which was not created with compute API initializer");
+    }
+
+    if (!ContainsKey(m_Streams, id))
+    {
+        throw KttException("Invalid CUDA stream index: " + std::to_string(id));
+    }
+
+    m_Streams.erase(id);
+}
+
 QueueId CudaEngine::GetDefaultQueue() const
 {
     return static_cast<QueueId>(0);
@@ -560,7 +598,7 @@ std::vector<QueueId> CudaEngine::GetAllQueues() const
 
     for (const auto& stream : m_Streams)
     {
-        result.push_back(stream->GetId());
+        result.push_back(stream.first);
     }
 
     return result;
@@ -568,19 +606,19 @@ std::vector<QueueId> CudaEngine::GetAllQueues() const
 
 void CudaEngine::SynchronizeQueue(const QueueId queueId)
 {
-    if (static_cast<size_t>(queueId) >= m_Streams.size())
+    if (!ContainsKey(m_Streams, queueId))
     {
         throw KttException("Invalid CUDA stream index: " + std::to_string(queueId));
     }
 
-    m_Streams[static_cast<size_t>(queueId)]->Synchronize();
+    m_Streams[queueId]->Synchronize();
 }
 
 void CudaEngine::SynchronizeDevice()
 {
     for (auto& stream : m_Streams)
     {
-        stream->Synchronize();
+        stream.second->Synchronize();
     }
 }
 

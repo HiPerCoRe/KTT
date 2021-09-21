@@ -64,6 +64,11 @@ CUdevice CudaContext::GetDevice() const
     return m_Device;
 }
 
+bool CudaContext::IsUserOwned() const
+{
+    return !m_OwningContext;
+}
+
 } // namespace ktt
 
 #endif // KTT_API_CUDA
