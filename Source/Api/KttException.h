@@ -18,7 +18,7 @@ namespace ktt
 class KttException : public std::exception
 {
 public:
-    /** @fn KttException(const std::string& message)
+    /** @fn KttException(const std::string& message, const ExceptionReason reason = ExceptionReason::General)
       * Creates new exception with the specified error message.
       * @param message Holds message describing why the exception was thrown.
       * @param reason Reason why the exception was thrown.
