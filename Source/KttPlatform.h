@@ -15,8 +15,11 @@
     #else
         #define KTT_API __declspec(dllimport)
     #endif // KTT_LIBRARY
+
+    #define KTT_VIRTUAL_API virtual
 #else
     #define KTT_API
+    #define KTT_VIRTUAL_API
 #endif // _MSC_VER
 #endif // KTT_API
 
