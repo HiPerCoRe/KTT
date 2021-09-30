@@ -234,6 +234,20 @@ void Tuner::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDe
     }
 }
 
+ArgumentId Tuner::AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
+    const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation)
+{
+    try
+    {
+        return AddUserArgument(buffer, elementSize, ArgumentDataType::Custom, memoryLocation, accessType, bufferSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidArgumentId;
+    }
+}
+
 void Tuner::RemoveArgument(const ArgumentId id)
 {
     try

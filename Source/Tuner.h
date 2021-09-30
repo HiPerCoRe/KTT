@@ -314,6 +314,24 @@ public:
     ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const ArgumentAccessType accessType,
         const ArgumentMemoryLocation memoryLocation);
 
+    /** @fn ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
+      * const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation)
+      * Adds new vector argument to the tuner. The argument buffer is created and managed by user and depending on the compute API, can
+      * be either CUdeviceptr or cl_mem handle. The tuner will not destroy the argument. This method can be utilized when templated
+      * version of argument addition cannot be used. When using validation for arguments added through this method, value comparator
+      * must always be provided.
+      * @param buffer User-provided memory buffer.
+      * @param bufferSize Size of the provided user buffer in bytes.
+      * @param elementSize Size of a single element inside buffer in bytes (e.g., 4 for 32-bit float).
+      * @param accessType Access type specifies whether argument is used for input or output. See ::ArgumentAccessType for more
+      * information.
+      * @param memoryLocation Memory location specifies whether argument data will be accessed from device or host memory during its
+      * usage by compute API. See ::ArgumentMemoryLocation for more information.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
+    ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
+        const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation);
+
     /** @fn template <typename T> ArgumentId AddArgumentScalar(const T& data);
       * Adds new scalar argument to the tuner. All scalar arguments are read-only.
       * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.
