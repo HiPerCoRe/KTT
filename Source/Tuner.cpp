@@ -248,6 +248,20 @@ ArgumentId Tuner::AddArgumentVector(ComputeBuffer buffer, const size_t bufferSiz
     }
 }
 
+ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize)
+{
+    try
+    {
+        return AddArgumentWithOwnedData(dataSize, ArgumentDataType::Custom, ArgumentMemoryLocation::Undefined,
+            ArgumentAccessType::ReadOnly, ArgumentMemoryType::Scalar, ArgumentManagementType::Framework, data, dataSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidArgumentId;
+    }
+}
+
 void Tuner::RemoveArgument(const ArgumentId id)
 {
     try

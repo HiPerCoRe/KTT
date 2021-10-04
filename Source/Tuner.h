@@ -340,6 +340,15 @@ public:
     template <typename T>
     ArgumentId AddArgumentScalar(const T& data);
 
+    /** @fn ArgumentId AddArgumentScalar(const void* data, const size_t elementSize)
+      * Adds new scalar argument to the tuner. All scalar arguments are read-only. This method can be utilized when templated version
+      * of scalar argument addition cannot be used.
+      * @param data Pointer to memory with kernel argument data.
+      * @param dataSize Size of data in bytes (e.g., 4 for 32-bit float).
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
+    ArgumentId AddArgumentScalar(const void* data, const size_t dataSize);
+
     /** @fn template <typename T> ArgumentId AddArgumentLocal(const size_t localMemorySize)
       * Adds new local memory (shared memory in CUDA) argument to the tuner. All local memory arguments are read-only and cannot be
       * initialized from host memory. In case of CUDA API usage, local memory arguments cannot be directly set as kernel function
