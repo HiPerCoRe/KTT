@@ -3,8 +3,8 @@ cudaProjects = false
 openClProjects = false
 vulkanProjects = false
 
--- Helper functions to find compute API headers and libraries
-function findLibrariesAmd()
+-- Helper functions to find and link compute API headers and libraries
+function linkLibrariesAmd()
     local path = os.getenv("OCL_ROOT")
     
     if not path then
@@ -54,7 +54,7 @@ function findLibrariesAmd()
     return true
 end
 
-function findLibrariesIntel()
+function linkLibrariesIntel()
     local path = os.getenv("INTELOCLSDKROOT")
     
     if not path then
@@ -81,7 +81,7 @@ function findLibrariesIntel()
     return true
 end
 
-function findLibrariesNvidia()
+function linkLibrariesNvidia()
     local path = os.getenv("CUDA_PATH")
     
     if not path then
@@ -129,23 +129,35 @@ function findLibrariesNvidia()
     return true
 end
 
-function findLibraries()
-    if findLibrariesAmd() then
+function linkComputeLibraries()
+    if _OPTIONS["platform"] then
+        if _OPTIONS["platform"] == "amd" then
+            return linkLibrariesAmd()
+        elseif _OPTIONS["platform"] == "intel" then
+            return linkLibrariesIntel()
+        elseif _OPTIONS["platform"] == "nvidia" then
+            return linkLibrariesNvidia()
+        else
+            error("The specified platform is unknown.")
+        end
+    end
+
+    if linkLibrariesAmd() then
         return true
     end
     
-    if findLibrariesIntel() then
+    if linkLibrariesIntel() then
         return true
     end
     
-    if findLibrariesNvidia() then
+    if linkLibrariesNvidia() then
         return true
     end
     
     return false
 end
 
-function findVulkan()
+function linkVulkan()
     local path = os.getenv("VULKAN_SDK")
     
     if not path then
@@ -176,29 +188,16 @@ function findVulkan()
     return true
 end
 
-function linkLibraries()
-    local librariesFound = false
+function linkAllLibraries()
+    local librariesFound = linkComputeLibraries()
     
-    if _OPTIONS["platform"] then
-        if _OPTIONS["platform"] == "amd" then
-            librariesFound = findLibrariesAmd()
-        elseif _OPTIONS["platform"] == "intel" then
-            librariesFound = findLibrariesIntel()
-        elseif _OPTIONS["platform"] == "nvidia" then
-            librariesFound = findLibrariesNvidia()
-        else
-            error("The specified platform is unknown.")
-        end
-    else
-        librariesFound = findLibraries()
-    end
-    
+    -- Allow usage of KTT with only Vulkan if no other compute API was explicitly specified by user
     if not librariesFound and (not _OPTIONS["vulkan"] or _OPTIONS["platform"]) then
         error("Compute API libraries were not found. Please ensure that path to the SDK is correctly set in the environment variables:\nOCL_ROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
     end
     
     if _OPTIONS["vulkan"] then
-        vulkanFound = findVulkan()
+        local vulkanFound = linkVulkan()
         
         if not vulkanFound then
             error("Vulkan SDK was not found. Please ensure that path to the SDK is correctly set in the environment variables under VULKAN_SDK.")
@@ -313,7 +312,7 @@ project "Ktt"
     includedirs {"Source", "Libraries/CTPL-Ahajha", "Libraries/date-3", "Libraries/Json-3.9.1", "Libraries/pugixml-1.11.4"}
     defines {"KTT_LIBRARY"}
     targetname("ktt")
-    linkLibraries()
+    linkAllLibraries()
 
 -- Tutorials configuration 
 if not _OPTIONS["no-tutorials"] then
@@ -349,7 +348,7 @@ project "05ComputeApiInitializerOpenCl"
     files {"Tutorials/05ComputeApiInitializer/ComputeApiInitializerOpenCl.cpp", "Tutorials/05ComputeApiInitializer/OpenClKernel.cl"}
     includedirs {"Source"}
     links {"ktt"}
-    linkLibraries()
+    linkComputeLibraries()
 
 project "06VectorArgumentCustomizationOpenCl"
     kind "ConsoleApp"
@@ -390,7 +389,7 @@ project "05ComputeApiInitializerCuda"
     files {"Tutorials/05ComputeApiInitializer/ComputeApiInitializerCuda.cpp", "Tutorials/05ComputeApiInitializer/CudaKernel.cu"}
     includedirs {"Source"}
     links {"ktt"}
-    linkLibraries()
+    linkComputeLibraries()
 
 project "06VectorArgumentCustomizationCuda"
     kind "ConsoleApp"
