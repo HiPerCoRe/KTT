@@ -117,7 +117,7 @@ private:
     size_t GetSharedMemorySize(const std::vector<KernelArgument*>& arguments) const;
     std::unique_ptr<CudaBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<CudaBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
-    void InitializeCompilerOptions();
+    std::string GetDefaultCompilerOptions() const;
 
 #if defined(KTT_PROFILING_CUPTI)
     void InitializeCupti();

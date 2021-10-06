@@ -47,7 +47,8 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
         m_Streams[id] = std::move(stream);
     }
 
-    InitializeCompilerOptions();
+    Logger::LogDebug("Initializing default compiler options");
+    SetCompilerOptions("");
     m_DeviceInfo = GetDeviceInfo(0)[m_DeviceIndex];
 
 #if defined(KTT_PROFILING_CUPTI)
@@ -83,7 +84,8 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<Que
         assignedQueueIds.push_back(id);
     }
 
-    InitializeCompilerOptions();
+    Logger::LogDebug("Initializing default compiler options");
+    SetCompilerOptions("");
     m_DeviceInfo = GetDeviceInfo(0)[m_DeviceIndex];
 
 #if defined(KTT_PROFILING_CUPTI)
@@ -669,7 +671,14 @@ GlobalSizeType CudaEngine::GetGlobalSizeType() const
 
 void CudaEngine::SetCompilerOptions(const std::string& options)
 {
-    m_Configuration.SetCompilerOptions(options);
+    std::string finalOptions = GetDefaultCompilerOptions();
+
+    if (!options.empty())
+    {
+        finalOptions += " " + options;
+    }
+
+    m_Configuration.SetCompilerOptions(finalOptions);
     ClearKernelCache();
 }
 
@@ -835,19 +844,18 @@ std::unique_ptr<CudaBuffer> CudaEngine::CreateUserBuffer(KernelArgument& argumen
     return userBuffer;
 }
 
-void CudaEngine::InitializeCompilerOptions()
+std::string CudaEngine::GetDefaultCompilerOptions() const
 {
-    Logger::LogDebug("Initializing default compiler options");
-
     int computeCapabilityMajor = 0;
     int computeCapabilityMinor = 0;
     CheckError(cuDeviceGetAttribute(&computeCapabilityMajor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, m_Context->GetDevice()),
         "cuDeviceGetAttribute");
     CheckError(cuDeviceGetAttribute(&computeCapabilityMinor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, m_Context->GetDevice()),
         "cuDeviceGetAttribute");
-
-    m_Configuration.SetCompilerOptions("--gpu-architecture=compute_" + std::to_string(computeCapabilityMajor)
-        + std::to_string(computeCapabilityMinor));
+    
+    std::string result = "--gpu-architecture=compute_" + std::to_string(computeCapabilityMajor)
+        + std::to_string(computeCapabilityMinor);
+    return result;
 }
 
 #if defined(KTT_PROFILING_CUPTI)

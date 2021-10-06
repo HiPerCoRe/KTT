@@ -687,9 +687,9 @@ public:
     DeviceInfo GetCurrentDeviceInfo() const;
 
      /** @fn static void SetLoggingLevel(const LoggingLevel level)
-      * Sets logging level for tuner. Default logging level is info.
-      * @param level Logging level which will be used by tuner. See ::LoggingLevel for more information.
-      */
+       * Sets logging level for tuner. Default logging level is info.
+       * @param level Logging level which will be used by tuner. See ::LoggingLevel for more information.
+       */
     static void SetLoggingLevel(const LoggingLevel level);
 
     /** @fn static void SetLoggingTarget(std::ostream& outputTarget)
