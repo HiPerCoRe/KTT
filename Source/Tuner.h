@@ -133,6 +133,14 @@ public:
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
         const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
 
+    /** @fn KernelDefinitionId GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames = {}) const
+      * Retrieves kernel definition id from the tuner based on provided name and template arguments.
+      * @param name Name of a kernel definition.
+      * @param typeNames Names of types which were used to instantiate kernel template. Only supported in CUDA kernels.
+      * @return Id of the corresponding kernel definition. If no such definition exists, InvalidKernelDefinitionId will be returned.
+      */
+    KernelDefinitionId GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames = {}) const;
+
     /** @fn void RemoveKernelDefinition(const KernelDefinitionId id)
       * Removes kernel definition with the specified id from the tuner. Note that definition can only be removed if it is not
       * associated with any kernel.
@@ -148,7 +156,7 @@ public:
       */
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
 
-    /** @fn KernelId CreateSimpleKernel(const KernelDefinitionId definitionId)
+    /** @fn KernelId CreateSimpleKernel(const std::string& name, const KernelDefinitionId definitionId)
       * Creates simple kernel from the specified definition.
       * @param name Kernel name used during logging and output operations. The name must be unique.
       * @param definitionId Id of kernel definition which will be utilized by the kernel.
@@ -156,7 +164,8 @@ public:
       */
     KernelId CreateSimpleKernel(const std::string& name, const KernelDefinitionId definitionId);
 
-    /** @fn KernelId CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher = nullptr)
+    /** @fn KernelId CreateCompositeKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds,
+      * KernelLauncher launcher = nullptr)
       * Creates composite kernel from the specified definitions. Note that kernel launcher is required in order to launch kernels
       * with multiple definitions.
       * @param name Kernel name used during logging and output operations. The name must be unique.

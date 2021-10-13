@@ -46,6 +46,11 @@ KernelDefinitionId TunerCore::AddKernelDefinitionFromFile(const std::string& nam
     return m_KernelManager->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize, typeNames);
 }
 
+KernelDefinitionId TunerCore::GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames) const
+{
+    return m_KernelManager->GetDefinitionId(name, typeNames);
+}
+
 void TunerCore::RemoveKernelDefinition(const KernelDefinitionId id)
 {
     const auto& definition = m_KernelManager->GetDefinition(id);

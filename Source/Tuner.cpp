@@ -54,6 +54,19 @@ KernelDefinitionId Tuner::AddKernelDefinitionFromFile(const std::string& name, c
     }
 }
 
+KernelDefinitionId Tuner::GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames) const
+{
+    try
+    {
+        return m_Tuner->GetKernelDefinitionId(name, typeNames);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidKernelDefinitionId;
+    }
+}
+
 void Tuner::RemoveKernelDefinition(const KernelDefinitionId id)
 {
     try
