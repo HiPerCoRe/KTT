@@ -188,6 +188,23 @@ function linkVulkan()
     return true
 end
 
+function linkPython()
+    local path = os.getenv("PYTHON_PATH")
+    
+    if not path then
+        return false
+    end
+    
+    defines {"KTT_PYTHON"}
+    includedirs {"$(PYTHON_PATH)/include", "Libraries/pybind11-2.8.0"}
+    files {"Libraries/pybind11-2.8.0/**"}
+    
+    libdirs {"$(PYTHON_PATH)/libs"}
+    links {"python3"}
+    
+    return true
+end
+
 function linkAllLibraries()
     local librariesFound = linkComputeLibraries()
     
@@ -201,6 +218,14 @@ function linkAllLibraries()
         
         if not vulkanFound then
             error("Vulkan SDK was not found. Please ensure that path to the SDK is correctly set in the environment variables under VULKAN_SDK.")
+        end
+    end
+    
+    if _OPTIONS["python"] then
+        local pythonFound = linkPython()
+        
+        if not pythonFound then
+            error("Python installation was not found. Please ensure that path to Python is correctly set in the environment variables under PYTHON_PATH.")
         end
     end
 end
@@ -237,6 +262,12 @@ newoption
         {"gpa", "AMD GPA for GCN 3.0 GPUs and newer"},
         {"gpa-legacy", "AMD GPA for GCN 5.0 GPUs and older"}
     }
+}
+
+newoption
+{
+    trigger = "python",
+    description = "Enables compilation of Python bindings"
 }
 
 newoption
@@ -298,7 +329,7 @@ workspace "Ktt"
         symbols "Off"
     
     filter "action:vs*"
-        buildoptions {"/Zc:__cplusplus"}
+        buildoptions {"/Zc:__cplusplus", "/permissive-"}
         
     filter {}
     
@@ -308,8 +339,32 @@ workspace "Ktt"
 -- Library configuration
 project "Ktt"
     kind "SharedLib"
-    files {"Source/**", "Libraries/CTPL-Ahajha/**", "Libraries/date-3/**", "Libraries/Json-3.9.1/**", "Libraries/pugixml-1.11.4/**"}
-    includedirs {"Source", "Libraries/CTPL-Ahajha", "Libraries/date-3", "Libraries/Json-3.9.1", "Libraries/pugixml-1.11.4"}
+    
+    files
+    {
+        "Source/**",
+        "Libraries/CTPL-Ahajha/**",
+        "Libraries/date-3/**",
+        "Libraries/Json-3.9.1/**",
+        "Libraries/pugixml-1.11.4/**"
+    }
+    
+    includedirs
+    {
+        "Source",
+        "Libraries/CTPL-Ahajha",
+        "Libraries/date-3",
+        "Libraries/Json-3.9.1",
+        "Libraries/pugixml-1.11.4"
+    }
+    
+    filter "system:windows"
+        if _OPTIONS["python"] then
+            postbuildcommands {"{COPYFILE} %{cfg.targetdir}/ktt.dll %{cfg.targetdir}/ktt.pyd"}
+        end  
+    
+    filter {}
+    
     defines {"KTT_LIBRARY"}
     targetname("ktt")
     linkAllLibraries()
