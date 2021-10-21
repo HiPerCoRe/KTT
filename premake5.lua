@@ -361,7 +361,7 @@ project "Ktt"
     filter "system:windows"
         if _OPTIONS["python"] then
             postbuildcommands {"{COPYFILE} %{cfg.targetdir}/ktt.dll %{cfg.targetdir}/ktt.pyd"}
-        end  
+        end
     
     filter {}
     

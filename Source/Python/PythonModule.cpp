@@ -65,12 +65,57 @@ PYBIND11_MODULE(ktt, module)
         .def("UpdateLocalArgument", &ktt::ComputeInterface::UpdateLocalArgument)
         .def("UploadBuffer", &ktt::ComputeInterface::UploadBuffer)
         .def("UploadBufferAsync", &ktt::ComputeInterface::UploadBufferAsync)
-        .def("DownloadBuffer", &ktt::ComputeInterface::DownloadBuffer)
-        .def("DownloadBufferAsync", &ktt::ComputeInterface::DownloadBufferAsync)
-        .def("UpdateBuffer", &ktt::ComputeInterface::UpdateBuffer)
-        .def("UpdateBufferAsync", &ktt::ComputeInterface::UpdateBufferAsync)
-        .def("CopyBuffer", &ktt::ComputeInterface::CopyBuffer)
-        .def("CopyBufferAsync", &ktt::ComputeInterface::CopyBufferAsync)
+        .def
+        (
+            "DownloadBuffer",
+            &ktt::ComputeInterface::DownloadBuffer,
+            py::arg("id"),
+            py::arg("destination"),
+            py::arg("dataSize") = 0
+        )
+        .def
+        (
+            "DownloadBufferAsync",
+            &ktt::ComputeInterface::DownloadBufferAsync,
+            py::arg("id"),
+            py::arg("queue"),
+            py::arg("destination"),
+            py::arg("dataSize") = 0
+        )
+        .def
+        (
+            "UpdateBuffer",
+            &ktt::ComputeInterface::UpdateBuffer,
+            py::arg("id"),
+            py::arg("data"),
+            py::arg("dataSize") = 0
+        )
+        .def
+        (
+            "UpdateBufferAsync",
+            &ktt::ComputeInterface::UpdateBufferAsync,
+            py::arg("id"),
+            py::arg("queue"),
+            py::arg("data"),
+            py::arg("dataSize") = 0
+        )
+        .def
+        (
+            "CopyBuffer",
+            &ktt::ComputeInterface::CopyBuffer,
+            py::arg("destination"),
+            py::arg("source"),
+            py::arg("dataSize") = 0
+        )
+        .def
+        (
+            "CopyBufferAsync",
+            &ktt::ComputeInterface::CopyBufferAsync,
+            py::arg("destination"),
+            py::arg("source"),
+            py::arg("queue"),
+            py::arg("dataSize") = 0
+        )
         .def("WaitForTransferAction", &ktt::ComputeInterface::WaitForTransferAction)
         .def("ResizeBuffer", &ktt::ComputeInterface::ResizeBuffer)
         .def("ClearBuffer", &ktt::ComputeInterface::ClearBuffer)
@@ -82,19 +127,64 @@ PYBIND11_MODULE(ktt, module)
         .def(py::init<const ktt::PlatformIndex, const ktt::DeviceIndex, const ktt::ComputeApi, const uint32_t>())
         .def(py::init<const ktt::ComputeApi, const ktt::ComputeApiInitializer&>())
         .def(py::init<const ktt::ComputeApi, const ktt::ComputeApiInitializer&, std::vector<ktt::QueueId>&>())
-        .def("AddKernelDefinition", &ktt::Tuner::AddKernelDefinition)
-        .def("AddKernelDefinitionFromFile", &ktt::Tuner::AddKernelDefinitionFromFile)
-        .def("GetKernelDefinitionId", &ktt::Tuner::GetKernelDefinitionId)
+        .def
+        (
+            "AddKernelDefinition",
+            &ktt::Tuner::AddKernelDefinition,
+            py::arg("name"),
+            py::arg("source"),
+            py::arg("globalSize"),
+            py::arg("localSize"),
+            py::arg("typeNames") = std::vector<std::string>{}
+        )
+        .def
+        (
+            "AddKernelDefinitionFromFile",
+            &ktt::Tuner::AddKernelDefinitionFromFile,
+            py::arg("name"),
+            py::arg("filePath"),
+            py::arg("globalSize"),
+            py::arg("localSize"),
+            py::arg("typeNames") = std::vector<std::string>{}
+        )
+        .def
+        (
+            "GetKernelDefinitionId",
+            &ktt::Tuner::GetKernelDefinitionId,
+            py::arg("name"),
+            py::arg("typeNames") = std::vector<std::string>{}
+        )
         .def("RemoveKernelDefinition", &ktt::Tuner::RemoveKernelDefinition)
         .def("SetArguments", &ktt::Tuner::SetArguments)
         .def("CreateSimpleKernel", &ktt::Tuner::CreateSimpleKernel)
-        .def("CreateCompositeKernel", &ktt::Tuner::CreateCompositeKernel)
+        .def
+        (
+            "CreateCompositeKernel",
+            &ktt::Tuner::CreateCompositeKernel,
+            py::arg("name"),
+            py::arg("definitionIds"),
+            py::arg("launcher") = static_cast<ktt::KernelLauncher>(nullptr)
+        )
         .def("RemoveKernel", &ktt::Tuner::RemoveKernel)
         .def("SetLauncher", &ktt::Tuner::SetLauncher)
-        .def("AddParameter", py::overload_cast<const ktt::KernelId, const std::string&, const std::vector<uint64_t>&,
-            const std::string&>(&ktt::Tuner::AddParameter))
-        .def("AddParameter", py::overload_cast<const ktt::KernelId, const std::string&, const std::vector<double>&,
-            const std::string&>(&ktt::Tuner::AddParameter))
+        .def
+        (
+            "AddParameter",
+            py::overload_cast<const ktt::KernelId, const std::string&, const std::vector<uint64_t>&, const std::string&>(&ktt::Tuner::AddParameter),
+            py::arg("id"),
+            py::arg("name"),
+            py::arg("values"),
+            py::arg("group") = std::string()
+        )
+        .def
+        (
+            "AddParameter",
+            py::overload_cast<const ktt::KernelId, const std::string&, const std::vector<double>&, const std::string&>(&ktt::Tuner::AddParameter),
+            py::arg("id"),
+            py::arg("name"),
+            py::arg("values"),
+            py::arg("group") = std::string()
+        )
         .def("AddThreadModifier", py::overload_cast<const ktt::KernelId, const std::vector<ktt::KernelDefinitionId>&, const ktt::ModifierType,
             const ktt::ModifierDimension, const std::vector<std::string>&, ktt::ModifierFunction>(&ktt::Tuner::AddThreadModifier))
         .def("AddThreadModifier", py::overload_cast<const ktt::KernelId, const std::vector<ktt::KernelDefinitionId>&, const ktt::ModifierType,
@@ -145,12 +235,48 @@ PYBIND11_MODULE(ktt, module)
         .def("AddArgumentLocalLong", &ktt::Tuner::AddArgumentLocal<int64_t>)
         .def("AddArgumentLocalFloat", &ktt::Tuner::AddArgumentLocal<float>)
         .def("AddArgumentLocalDouble", &ktt::Tuner::AddArgumentLocal<double>)
-        .def("AddArgumentSymbolChar", &ktt::Tuner::AddArgumentSymbol<int8_t>)
-        .def("AddArgumentSymbolShort", &ktt::Tuner::AddArgumentSymbol<int16_t>)
-        .def("AddArgumentSymbolInt", &ktt::Tuner::AddArgumentSymbol<int32_t>)
-        .def("AddArgumentSymbolLong", &ktt::Tuner::AddArgumentSymbol<int64_t>)
-        .def("AddArgumentSymbolFloat", &ktt::Tuner::AddArgumentSymbol<float>)
-        .def("AddArgumentSymbolDouble", &ktt::Tuner::AddArgumentSymbol<double>)
+        .def
+        (
+            "AddArgumentSymbolChar",
+            &ktt::Tuner::AddArgumentSymbol<int8_t>,
+            py::arg("data"),
+            py::arg("symbolName") = std::string()
+        )
+        .def
+        (
+            "AddArgumentSymbolShort",
+            &ktt::Tuner::AddArgumentSymbol<int16_t>,
+            py::arg("data"),
+            py::arg("symbolName") = std::string()
+        )
+        .def
+        (
+            "AddArgumentSymbolInt",
+            &ktt::Tuner::AddArgumentSymbol<int32_t>,
+            py::arg("data"),
+            py::arg("symbolName") = std::string()
+        )
+        .def
+        (
+            "AddArgumentSymbolLong",
+            &ktt::Tuner::AddArgumentSymbol<int64_t>,
+            py::arg("data"),
+            py::arg("symbolName") = std::string()
+        )
+        .def
+        (
+            "AddArgumentSymbolFloat",
+            &ktt::Tuner::AddArgumentSymbol<float>,
+            py::arg("data"),
+            py::arg("symbolName") = std::string()
+        )
+        .def
+        (
+            "AddArgumentSymbolDouble",
+            &ktt::Tuner::AddArgumentSymbol<double>,
+            py::arg("data"),
+            py::arg("symbolName") = std::string()
+        )
         .def("RemoveArgument", &ktt::Tuner::RemoveArgument)
         .def("SetReadOnlyArgumentCache", &ktt::Tuner::SetReadOnlyArgumentCache)
         .def("Run", &ktt::Tuner::Run)
@@ -165,8 +291,22 @@ PYBIND11_MODULE(ktt, module)
         .def("Tune", py::overload_cast<const ktt::KernelId>(&ktt::Tuner::Tune))
         // Todo: check pybind11 smart_holder branch for unique_ptr argument passing support
         //.def("Tune", py::overload_cast<const ktt::KernelId, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune))
-        .def("TuneIteration", &ktt::Tuner::TuneIteration)
-        .def("SimulateKernelTuning", &ktt::Tuner::SimulateKernelTuning)
+        .def
+        (
+            "TuneIteration",
+            &ktt::Tuner::TuneIteration,
+            py::arg("id"),
+            py::arg("output"),
+            py::arg("recomputeReference") = false
+        )
+        .def
+        (
+            "SimulateKernelTuning",
+            &ktt::Tuner::SimulateKernelTuning,
+            py::arg("id"),
+            py::arg("results"),
+            py::arg("iterations") = 0
+        )
         // Todo: check pybind11 smart_holder branch for unique_ptr argument passing support
         //.def("SetSearcher", &ktt::Tuner::SetSearcher)
         .def("ClearData", &ktt::Tuner::ClearData)
@@ -175,7 +315,15 @@ PYBIND11_MODULE(ktt, module)
         .def("GetKernelSource", &ktt::Tuner::GetKernelSource)
         .def("GetKernelDefinitionSource", &ktt::Tuner::GetKernelDefinitionSource)
         .def_static("SetTimeUnit", &ktt::Tuner::SetTimeUnit)
-        .def("SaveResults", &ktt::Tuner::SaveResults)
+        .def
+        (
+            "SaveResults",
+            &ktt::Tuner::SaveResults,
+            py::arg("results"),
+            py::arg("filePath"),
+            py::arg("format"),
+            py::arg("data") = ktt::UserData{}
+        )
         // Todo: these overloads do not work for some reason
         /*.def("LoadResults", py::overload_cast<const std::string&, const ktt::OutputFormat>(&ktt::Tuner::LoadResults))
         .def("LoadResults", py::overload_cast<const std::string&, const ktt::OutputFormat, ktt::UserData&>(&ktt::Tuner::LoadResults))*/
