@@ -195,9 +195,9 @@ function linkPython()
         return false
     end
     
-    defines {"KTT_PYTHON"}
-    includedirs {"$(PYTHON_PATH)/include", "Libraries/pybind11-2.8.0"}
-    files {"Libraries/pybind11-2.8.0/**"}
+    defines {"KTT_PYTHON", "PYBIND11_USE_SMART_HOLDER_AS_DEFAULT"}
+    includedirs {"$(PYTHON_PATH)/include", "Libraries/pybind11-2.8.1-smart_holder"}
+    files {"Libraries/pybind11-2.8.1-smart_holder/**"}
     
     libdirs {"$(PYTHON_PATH)/libs"}
     links {"python3"}

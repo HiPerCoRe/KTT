@@ -1,3 +1,4 @@
+// clang-format off
 /*
     pybind11/pybind11.h: Main header file of the C++11 python
     binding generator library
@@ -15,6 +16,7 @@
 #include "options.h"
 #include "detail/class.h"
 #include "detail/init.h"
+#include "detail/smart_holder_sfinae_hooks_only.h"
 
 #include <cstdlib>
 #include <memory>
@@ -1124,13 +1126,23 @@ inline dict globals() {
     return reinterpret_borrow<dict>(p ? p : module_::import("__main__").attr("__dict__").ptr());
 }
 
+#if PY_VERSION_HEX >= 0x03030000
+template <typename... Args,
+          typename = detail::enable_if_t<args_are_all_keyword_or_ds<Args...>()>>
+PYBIND11_DEPRECATED("make_simple_namespace should be replaced with py::module_::import(\"types\").attr(\"SimpleNamespace\") ")
+object make_simple_namespace(Args&&... args_) {
+    return module_::import("types").attr("SimpleNamespace")(std::forward<Args>(args_)...);
+}
+#endif
+
 PYBIND11_NAMESPACE_BEGIN(detail)
 /// Generic support for creating new Python heap types
 class generic_type : public object {
 public:
     PYBIND11_OBJECT_DEFAULT(generic_type, object, PyType_Check)
 protected:
-    void initialize(const type_record &rec) {
+    void initialize(const type_record &rec,
+                    void *(*type_caster_module_local_load)(PyObject *, const type_info *)) {
         if (rec.scope && hasattr(rec.scope, "__dict__") && rec.scope.attr("__dict__").contains(rec.name))
             pybind11_fail("generic_type: cannot initialize type \"" + std::string(rec.name) +
                           "\": an object with that name is already defined");
@@ -1177,7 +1189,7 @@ protected:
 
         if (rec.module_local) {
             // Stash the local typeinfo and loader so that external modules can access it.
-            tinfo->module_local_load = &type_caster_generic::local_load;
+            tinfo->module_local_load = type_caster_module_local_load;
             setattr(m_ptr, PYBIND11_MODULE_LOCAL_ID, capsule(tinfo));
         }
     }
@@ -1291,11 +1303,63 @@ auto method_adaptor(Return (Class::*pmf)(Args...) const) -> Return (Derived::*)(
     return pmf;
 }
 
+// clang-format on
+template <typename T>
+#ifndef PYBIND11_USE_SMART_HOLDER_AS_DEFAULT
+
+using default_holder_type = std::unique_ptr<T>;
+
+#    ifndef PYBIND11_SH_AVL
+#        define PYBIND11_SH_AVL(...) std::shared_ptr<__VA_ARGS__> // "Smart_Holder if AVaiLable"
+// -------- std::shared_ptr(...) -- same length by design, to not disturb the indentation
+// of existing code.
+#    endif
+
+#    define PYBIND11_SH_DEF(...) std::shared_ptr<__VA_ARGS__> // "Smart_Holder if DEFault"
+// -------- std::shared_ptr(...) -- same length by design, to not disturb the indentation
+// of existing code.
+
+#    define PYBIND11_TYPE_CASTER_BASE_HOLDER(T, ...)
+
+#else
+
+using default_holder_type = smart_holder;
+
+#    ifndef PYBIND11_SH_AVL
+#        define PYBIND11_SH_AVL(...) ::pybind11::smart_holder // "Smart_Holder if AVaiLable"
+// -------- std::shared_ptr(...) -- same length by design, to not disturb the indentation
+// of existing code.
+#    endif
+
+#    define PYBIND11_SH_DEF(...) ::pybind11::smart_holder // "Smart_Holder if DEFault"
+
+// This define could be hidden away inside detail/smart_holder_type_casters.h, but is kept here
+// for clarity.
+#    define PYBIND11_TYPE_CASTER_BASE_HOLDER(T, ...)                                              \
+        namespace pybind11 {                                                                      \
+        namespace detail {                                                                        \
+        template <>                                                                               \
+        class type_caster<T> : public type_caster_base<T> {};                                     \
+        template <>                                                                               \
+        class type_caster<__VA_ARGS__> : public type_caster_holder<T, __VA_ARGS__> {};            \
+        }                                                                                         \
+        }
+
+#endif
+// clang-format off
+
 template <typename type_, typename... options>
 class class_ : public detail::generic_type {
-    template <typename T> using is_holder = detail::is_holder_type<type_, T>;
     template <typename T> using is_subtype = detail::is_strict_base_of<type_, T>;
     template <typename T> using is_base = detail::is_strict_base_of<T, type_>;
+    template <typename T>
+    // clang-format on
+    using is_holder
+        = detail::any_of<detail::is_holder_type<type_, T>,
+                         detail::all_of<detail::negation<is_base<T>>,
+                                        detail::negation<is_subtype<T>>,
+                                        detail::type_uses_smart_holder_type_caster<type_>>>;
+    // clang-format off
     // struct instead of using here to help MSVC:
     template <typename T> struct is_valid_class_option :
         detail::any_of<is_holder<T>, is_subtype<T>, is_base<T>> {};
@@ -1304,7 +1368,7 @@ public:
     using type = type_;
     using type_alias = detail::exactly_one_t<is_subtype, void, options...>;
     constexpr static bool has_alias = !std::is_void<type_alias>::value;
-    using holder_type = detail::exactly_one_t<is_holder, std::unique_ptr<type>, options...>;
+    using holder_type = detail::exactly_one_t<is_holder, default_holder_type<type>, options...>;
 
     static_assert(detail::all_of<is_valid_class_option<options>...>::value,
             "Unknown/invalid class_ template parameters provided");
@@ -1326,6 +1390,37 @@ public:
                 none_of<std::is_same<multiple_inheritance, Extra>...>::value), // no multiple_inheritance attr
             "Error: multiple inheritance bases must be specified via class_ template options");
 
+        // clang-format on
+        static constexpr bool holder_is_smart_holder
+            = detail::is_smart_holder_type<holder_type>::value;
+        static constexpr bool wrapped_type_uses_smart_holder_type_caster
+            = detail::type_uses_smart_holder_type_caster<type>::value;
+        static constexpr bool type_caster_type_is_type_caster_base_subtype
+            = std::is_base_of<detail::type_caster_base<type>, detail::type_caster<type>>::value;
+        // Necessary conditions, but not strict.
+        static_assert(!(detail::is_instantiation<std::unique_ptr, holder_type>::value
+                        && wrapped_type_uses_smart_holder_type_caster),
+                      "py::class_ holder vs type_caster mismatch:"
+                      " missing PYBIND11_TYPE_CASTER_BASE_HOLDER(T, std::unique_ptr<T>)?");
+        static_assert(!(detail::is_instantiation<std::shared_ptr, holder_type>::value
+                        && wrapped_type_uses_smart_holder_type_caster),
+                      "py::class_ holder vs type_caster mismatch:"
+                      " missing PYBIND11_TYPE_CASTER_BASE_HOLDER(T, std::shared_ptr<T>)?");
+        static_assert(!(holder_is_smart_holder && type_caster_type_is_type_caster_base_subtype),
+                      "py::class_ holder vs type_caster mismatch:"
+                      " missing PYBIND11_SMART_HOLDER_TYPE_CASTERS(T)?");
+#ifdef PYBIND11_STRICT_ASSERTS_CLASS_HOLDER_VS_TYPE_CASTER_MIX
+        // Strict conditions cannot be enforced universally at the moment (PR #2836).
+        static_assert(holder_is_smart_holder == wrapped_type_uses_smart_holder_type_caster,
+                      "py::class_ holder vs type_caster mismatch:"
+                      " missing PYBIND11_SMART_HOLDER_TYPE_CASTERS(T)"
+                      " or collision with custom py::detail::type_caster<T>?");
+        static_assert(!holder_is_smart_holder == type_caster_type_is_type_caster_base_subtype,
+                      "py::class_ holder vs type_caster mismatch:"
+                      " missing PYBIND11_TYPE_CASTER_BASE_HOLDER(T, ...)"
+                      " or collision with custom py::detail::type_caster<T>?");
+#endif
+        // clang-format off
         type_record record;
         record.scope = scope;
         record.name = name;
@@ -1335,6 +1430,8 @@ public:
         record.holder_size = sizeof(holder_type);
         record.init_instance = init_instance;
         record.dealloc = dealloc;
+
+        // A more fitting name would be uses_unique_ptr_holder.
         record.default_holder = detail::is_instantiation<std::unique_ptr, holder_type>::value;
 
         set_operator_new<type>(&record);
@@ -1345,7 +1442,7 @@ public:
         /* Process optional arguments, if any */
         process_attributes<Extra...>::init(extra..., &record);
 
-        generic_type::initialize(record);
+        generic_type_initialize(record);
 
         if (has_alias) {
             auto &instances = record.module_local ? get_local_internals().registered_types_cpp : get_internals().registered_types_cpp;
@@ -1555,6 +1652,20 @@ public:
     }
 
 private:
+    // clang-format on
+    template <typename T = type,
+              detail::enable_if_t<!detail::type_uses_smart_holder_type_caster<T>::value, int> = 0>
+    void generic_type_initialize(const detail::type_record &record) {
+        generic_type::initialize(record, &detail::type_caster_generic::local_load);
+    }
+
+    template <typename T = type,
+              detail::enable_if_t<detail::type_uses_smart_holder_type_caster<T>::value, int> = 0>
+    void generic_type_initialize(const detail::type_record &record) {
+        generic_type::initialize(record, detail::type_caster<T>::get_local_load_function_ptr());
+    }
+    // clang-format off
+
     /// Initialize holder object, variant 1: object derives from enable_shared_from_this
     template <typename T>
     static void init_holder(detail::instance *inst, detail::value_and_holder &v_h,
@@ -1599,6 +1710,9 @@ private:
     /// instance.  Should be called as soon as the `type` value_ptr is set for an instance.  Takes an
     /// optional pointer to an existing holder to use; if not specified and the instance is
     /// `.owned`, a new holder will be constructed to manage the value pointer.
+    template <
+        typename T = type,
+        detail::enable_if_t<!detail::type_uses_smart_holder_type_caster<T>::value, int> = 0>
     static void init_instance(detail::instance *inst, const void *holder_ptr) {
         auto v_h = inst->get_value_and_holder(detail::get_type_info(typeid(type)));
         if (!v_h.instance_registered()) {
@@ -1607,6 +1721,15 @@ private:
         }
         init_holder(inst, v_h, (const holder_type *) holder_ptr, v_h.value_ptr<type>());
     }
+
+    // clang-format on
+    template <typename T = type,
+              typename A = type_alias,
+              detail::enable_if_t<detail::type_uses_smart_holder_type_caster<T>::value, int> = 0>
+    static void init_instance(detail::instance *inst, const void *holder_ptr) {
+        detail::type_caster<T>::template init_instance_for_type<T, A>(inst, holder_ptr);
+    }
+    // clang-format off
 
     /// Deallocates an instance; via holder, if constructed; otherwise via operator delete.
     static void dealloc(detail::value_and_holder &v_h) {
@@ -1967,29 +2090,54 @@ struct iterator_state {
 };
 
 // Note: these helpers take the iterator by non-const reference because some
-// iterators in the wild can't be dereferenced when const. C++ needs the extra parens in decltype
-// to enforce an lvalue. The & after Iterator is required for MSVC < 16.9. SFINAE cannot be
-// reused for result_type due to bugs in ICC, NVCC, and PGI compilers. See PR #3293.
-template <typename Iterator, typename SFINAE = decltype((*std::declval<Iterator &>()))>
+// iterators in the wild can't be dereferenced when const. The & after Iterator
+// is required for MSVC < 16.9. SFINAE cannot be reused for result_type due to
+// bugs in ICC, NVCC, and PGI compilers. See PR #3293.
+template <typename Iterator, typename SFINAE = decltype(*std::declval<Iterator &>())>
 struct iterator_access {
-    using result_type = decltype((*std::declval<Iterator &>()));
+    using result_type = decltype(*std::declval<Iterator &>());
     // NOLINTNEXTLINE(readability-const-return-type) // PR #3263
     result_type operator()(Iterator &it) const {
         return *it;
     }
 };
 
-template <typename Iterator, typename SFINAE = decltype(((*std::declval<Iterator &>()).first)) >
-struct iterator_key_access {
-    using result_type = decltype(((*std::declval<Iterator &>()).first));
+template <typename Iterator, typename SFINAE = decltype((*std::declval<Iterator &>()).first) >
+class iterator_key_access {
+private:
+    using pair_type = decltype(*std::declval<Iterator &>());
+
+public:
+    /* If either the pair itself or the element of the pair is a reference, we
+     * want to return a reference, otherwise a value. When the decltype
+     * expression is parenthesized it is based on the value category of the
+     * expression; otherwise it is the declared type of the pair member.
+     * The use of declval<pair_type> in the second branch rather than directly
+     * using *std::declval<Iterator &>() is a workaround for nvcc
+     * (it's not used in the first branch because going via decltype and back
+     * through declval does not perfectly preserve references).
+     */
+    using result_type = conditional_t<
+        std::is_reference<decltype(*std::declval<Iterator &>())>::value,
+        decltype(((*std::declval<Iterator &>()).first)),
+        decltype(std::declval<pair_type>().first)
+    >;
     result_type operator()(Iterator &it) const {
         return (*it).first;
     }
 };
 
-template <typename Iterator, typename SFINAE = decltype(((*std::declval<Iterator &>()).second))>
-struct iterator_value_access {
-    using result_type = decltype(((*std::declval<Iterator &>()).second));
+template <typename Iterator, typename SFINAE = decltype((*std::declval<Iterator &>()).second)>
+class iterator_value_access {
+private:
+    using pair_type = decltype(*std::declval<Iterator &>());
+
+public:
+    using result_type = conditional_t<
+        std::is_reference<decltype(*std::declval<Iterator &>())>::value,
+        decltype(((*std::declval<Iterator &>()).second)),
+        decltype(std::declval<pair_type>().second)
+    >;
     result_type operator()(Iterator &it) const {
         return (*it).second;
     }
@@ -2301,6 +2449,29 @@ inline function get_type_override(const void *this_ptr, const type_info *this_ty
     /* Don't call dispatch code if invoked from overridden function.
        Unfortunately this doesn't work on PyPy. */
 #if !defined(PYPY_VERSION)
+
+#if PY_VERSION_HEX >= 0x03090000
+    PyFrameObject *frame = PyThreadState_GetFrame(PyThreadState_Get());
+    if (frame != nullptr) {
+        PyCodeObject *f_code = PyFrame_GetCode(frame);
+        // f_code is guaranteed to not be NULL
+        if ((std::string) str(f_code->co_name) == name && f_code->co_argcount > 0) {
+            PyObject* locals = PyEval_GetLocals();
+            if (locals != nullptr) {
+                PyObject *self_caller = dict_getitem(
+                    locals, PyTuple_GET_ITEM(f_code->co_varnames, 0)
+                );
+                if (self_caller == self.ptr()) {
+                    Py_DECREF(f_code);
+                    Py_DECREF(frame);
+                    return function();
+                }
+            }
+        }
+        Py_DECREF(f_code);
+        Py_DECREF(frame);
+    }
+#else
     PyFrameObject *frame = PyThreadState_Get()->frame;
     if (frame != nullptr && (std::string) str(frame->f_code->co_name) == name
         && frame->f_code->co_argcount > 0) {
@@ -2310,6 +2481,8 @@ inline function get_type_override(const void *this_ptr, const type_info *this_ty
         if (self_caller == self.ptr())
             return function();
     }
+#endif
+
 #else
     /* PyPy currently doesn't provide a detailed cpyext emulation of
        frame objects, so we have to emulate this using Python. This
