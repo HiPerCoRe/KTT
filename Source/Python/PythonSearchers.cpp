@@ -7,7 +7,7 @@
 
 namespace py = pybind11;
 
-class PySearcher : public ktt::Searcher
+class PySearcher : public ktt::Searcher, public py::trampoline_self_life_support
 {
 public:
     using Searcher::Searcher;

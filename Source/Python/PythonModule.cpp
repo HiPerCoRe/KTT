@@ -49,9 +49,8 @@ PYBIND11_MODULE(ktt, module)
         .def("RunKernelWithProfiling", py::overload_cast<const ktt::KernelDefinitionId>(&ktt::ComputeInterface::RunKernelWithProfiling))
         .def("RunKernelWithProfiling", py::overload_cast<const ktt::KernelDefinitionId, const ktt::DimensionVector&,
             const ktt::DimensionVector&>(&ktt::ComputeInterface::RunKernelWithProfiling))
-        // Todo: these overloads do not work for some reason
-        //.def("GetRemainingProfilingRuns", py::overload_cast<const ktt::KernelDefinitionId>(&ktt::ComputeInterface::GetRemainingProfilingRuns))
-        //.def("GetRemainingProfilingRuns", py::overload_cast<>(&ktt::ComputeInterface::GetRemainingProfilingRuns))
+        .def("GetRemainingProfilingRuns", [](ktt::ComputeInterface& ci, const ktt::KernelDefinitionId id) { return ci.GetRemainingProfilingRuns(id); })
+        .def("GetRemainingProfilingRuns", [](ktt::ComputeInterface& ci) { return ci.GetRemainingProfilingRuns(); })
         .def("GetDefaultQueue", &ktt::ComputeInterface::GetDefaultQueue)
         .def("GetAllQueues", &ktt::ComputeInterface::GetAllQueues)
         .def("SynchronizeQueue", &ktt::ComputeInterface::SynchronizeQueue)
@@ -221,14 +220,14 @@ PYBIND11_MODULE(ktt, module)
             const ktt::ArgumentMemoryLocation>(&ktt::Tuner::AddArgumentVector<float>))
         .def("AddArgumentVectorDouble", py::overload_cast<ktt::ComputeBuffer, const size_t, const ktt::ArgumentAccessType,
             const ktt::ArgumentMemoryLocation>(&ktt::Tuner::AddArgumentVector<double>))
-        //.def("AddArgumentVector", &ktt::Tuner::AddArgumentVector)
+        // Todo: AddArgumentVector version with user buffer
         .def("AddArgumentScalarChar", &ktt::Tuner::AddArgumentScalar<int8_t>)
         .def("AddArgumentScalarShort", &ktt::Tuner::AddArgumentScalar<int16_t>)
         .def("AddArgumentScalarInt", &ktt::Tuner::AddArgumentScalar<int32_t>)
         .def("AddArgumentScalarLong", &ktt::Tuner::AddArgumentScalar<int64_t>)
         .def("AddArgumentScalarFloat", &ktt::Tuner::AddArgumentScalar<float>)
         .def("AddArgumentScalarDouble", &ktt::Tuner::AddArgumentScalar<double>)
-        //.def("AddArgumentScalar", py::overload_cast<const void*, const size_t>(&ktt::Tuner::AddArgumentScalar))
+        .def("AddArgumentScalar", [](ktt::Tuner& tuner, const void* data, const size_t dataSize) { return tuner.AddArgumentScalar(data, dataSize); })
         .def("AddArgumentLocalChar", &ktt::Tuner::AddArgumentLocal<int8_t>)
         .def("AddArgumentLocalShort", &ktt::Tuner::AddArgumentLocal<int16_t>)
         .def("AddArgumentLocalInt", &ktt::Tuner::AddArgumentLocal<int32_t>)
@@ -289,8 +288,7 @@ PYBIND11_MODULE(ktt, module)
         .def("SetReferenceComputation", &ktt::Tuner::SetReferenceComputation)
         .def("SetReferenceKernel", &ktt::Tuner::SetReferenceKernel)
         .def("Tune", py::overload_cast<const ktt::KernelId>(&ktt::Tuner::Tune))
-        // Todo: check pybind11 smart_holder branch for unique_ptr argument passing support
-        //.def("Tune", py::overload_cast<const ktt::KernelId, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune))
+        .def("Tune", py::overload_cast<const ktt::KernelId, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune))
         .def
         (
             "TuneIteration",
@@ -307,8 +305,7 @@ PYBIND11_MODULE(ktt, module)
             py::arg("results"),
             py::arg("iterations") = 0
         )
-        // Todo: check pybind11 smart_holder branch for unique_ptr argument passing support
-        //.def("SetSearcher", &ktt::Tuner::SetSearcher)
+        .def("SetSearcher", &ktt::Tuner::SetSearcher)
         .def("ClearData", &ktt::Tuner::ClearData)
         .def("GetBestConfiguration", &ktt::Tuner::GetBestConfiguration)
         .def("CreateConfiguration", &ktt::Tuner::CreateConfiguration)
@@ -324,9 +321,8 @@ PYBIND11_MODULE(ktt, module)
             py::arg("format"),
             py::arg("data") = ktt::UserData{}
         )
-        // Todo: these overloads do not work for some reason
-        /*.def("LoadResults", py::overload_cast<const std::string&, const ktt::OutputFormat>(&ktt::Tuner::LoadResults))
-        .def("LoadResults", py::overload_cast<const std::string&, const ktt::OutputFormat, ktt::UserData&>(&ktt::Tuner::LoadResults))*/
+        .def("LoadResults", [](ktt::Tuner& tuner, const std::string& filePath, const ktt::OutputFormat format) { return tuner.LoadResults(filePath, format); })
+        .def("LoadResults", [](ktt::Tuner& tuner, const std::string& filePath, const ktt::OutputFormat format, ktt::UserData& data) { return tuner.LoadResults(filePath, format, data); })
         .def("AddComputeQueue", &ktt::Tuner::AddComputeQueue)
         .def("RemoveComputeQueue", &ktt::Tuner::RemoveComputeQueue)
         .def("Synchronize", &ktt::Tuner::Synchronize)
