@@ -55,9 +55,9 @@ PYBIND11_MODULE(ktt, module)
         .def("GetAllQueues", &ktt::ComputeInterface::GetAllQueues)
         .def("SynchronizeQueue", &ktt::ComputeInterface::SynchronizeQueue)
         .def("SynchronizeDevice", &ktt::ComputeInterface::SynchronizeDevice)
-        .def("GetCurrentGlobalSize", &ktt::ComputeInterface::GetCurrentGlobalSize)
-        .def("GetCurrentLocalSize", &ktt::ComputeInterface::GetCurrentLocalSize)
-        .def("GetCurrentConfiguration", &ktt::ComputeInterface::GetCurrentConfiguration)
+        .def("GetCurrentGlobalSize", &ktt::ComputeInterface::GetCurrentGlobalSize, py::return_value_policy::reference)
+        .def("GetCurrentLocalSize", &ktt::ComputeInterface::GetCurrentLocalSize, py::return_value_policy::reference)
+        .def("GetCurrentConfiguration", &ktt::ComputeInterface::GetCurrentConfiguration, py::return_value_policy::reference)
         .def("ChangeArguments", &ktt::ComputeInterface::ChangeArguments)
         .def("SwapArguments", &ktt::ComputeInterface::SwapArguments)
         .def("UpdateScalarArgument", &ktt::ComputeInterface::UpdateScalarArgument)
@@ -159,13 +159,26 @@ PYBIND11_MODULE(ktt, module)
         .def
         (
             "CreateCompositeKernel",
-            &ktt::Tuner::CreateCompositeKernel,
+            [](ktt::Tuner& tuner, const std::string& name, const std::vector<ktt::KernelDefinitionId>& definitionIds,
+                std::function<void(ktt::ComputeInterface*)> launcher)
+            {
+                ktt::KernelLauncher actualLauncher = [launcher](ktt::ComputeInterface& interface) { launcher(&interface); };
+                return tuner.CreateCompositeKernel(name, definitionIds, actualLauncher);
+            },
             py::arg("name"),
             py::arg("definitionIds"),
-            py::arg("launcher") = static_cast<ktt::KernelLauncher>(nullptr)
+            py::arg("launcher") = static_cast<std::function<void(ktt::ComputeInterface*)>>(nullptr)
         )
         .def("RemoveKernel", &ktt::Tuner::RemoveKernel)
-        .def("SetLauncher", &ktt::Tuner::SetLauncher)
+        .def
+        (
+            "SetLauncher",
+            [](ktt::Tuner& tuner, const ktt::KernelId id, std::function<void(ktt::ComputeInterface*)> launcher)
+            {
+                ktt::KernelLauncher actualLauncher = [launcher](ktt::ComputeInterface& interface) { launcher(&interface); };
+                tuner.SetLauncher(id, actualLauncher);
+            }
+        )
         .def
         (
             "AddParameter",
