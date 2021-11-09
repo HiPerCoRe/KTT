@@ -11,8 +11,8 @@ def computeReference(a, b, scalar, buffer):
         floatList[i] = a[i] + b[i] + scalar
 
 def main():
-    deviceIndex = 0;
-    kernelFile = "./CudaKernel.cu";
+    deviceIndex = 0
+    kernelFile = "./CudaKernel.cu"
 
     argc = len(sys.argv)
     
@@ -22,10 +22,10 @@ def main():
         if argc >= 3:
             kernelFile = sys.argv[2]
 
-    numberOfElements = 1024 * 1024;
-    gridDimensions = ktt.DimensionVector(numberOfElements);
+    numberOfElements = 1024 * 1024
+    gridDimensions = ktt.DimensionVector(numberOfElements)
     # Block size is initialized to one in this case, it will be controlled with tuning parameter which is added later.
-    blockDimensions = ktt.DimensionVector();
+    blockDimensions = ktt.DimensionVector()
     
     a = [i * 1.0 for i in range(numberOfElements)]
     b = [i * 1.0 for i in range(numberOfElements)]

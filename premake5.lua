@@ -279,6 +279,12 @@ newoption
 
 newoption
 {
+    trigger = "tests",
+    description = "Enables compilation of unit tests"
+}
+
+newoption
+{
     trigger = "no-cuda",
     description = "Disables compilation of CUDA backend (Nvidia platform only)"
 }

@@ -15,6 +15,7 @@ in order to optimize computation for a particular device.
 * Ability to automatically ensure correctness of tuned computation with reference kernel or C++ function.
 * Support for multiple compute APIs, switching between CUDA, OpenCL and Vulkan requires only minor changes in C++ code
 (e.g., changing the kernel source file), no library recompilation is needed.
+* Public API available in C++ (native) and Python (bindings).
 * Large number of customization options, including support for kernel arguments with user-defined data types,
 ability to change kernel compiler flags and more.
 
@@ -39,6 +40,7 @@ tutorials:
 * `CustomArgumentTypes`: Usage of kernel arguments with custom data types and validating the output with value comparator.
 * `ComputeApiInitializer`: Providing tuner with custom compute context, queues and buffers.
 * `VectorArgumentCustomization`: Showcasing different usage options for vector kernel arguments.
+* `PythonInterfaces`: Implementing custom searchers and stop conditions in Python which can afterwards be used with tuner.
 
 Examples
 --------
@@ -62,7 +64,8 @@ systems are Linux and Windows.
     - C++17 compiler, for example Clang 7.0, GCC 9.1, MSVC 14.16 (Visual Studio 2017) or newer
     - OpenCL, CUDA or Vulkan library, supported SDKs are AMD OCL SDK, Intel SDK for OpenCL, NVIDIA CUDA Toolkit
       and Vulkan SDK
-    - [Premake 5](https://premake.github.io/download)
+    - Command line build tool [Premake 5](https://premake.github.io/download)
+    - (Optional) Python 3 for Python bindings support
     
 * Build under Linux (inside KTT root folder):
     - ensure that path to vendor SDK is correctly set in the environment variables
@@ -81,6 +84,7 @@ systems are Linux and Windows.
     - `--platform=vendor` specifies SDK used for building KTT, useful when multiple SDKs are installed
     - `--profiling=library` enables compilation of kernel profiling functionality using specified library
     - `--vulkan` enables compilation of experimental Vulkan backend
+    - `--python` enables compilation of Python bindings
     - `--no-examples` disables compilation of examples
     - `--no-tutorials` disables compilation of tutorials
     - `--tests` enables compilation of unit tests
