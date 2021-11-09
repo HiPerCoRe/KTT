@@ -300,12 +300,13 @@ PYBIND11_MODULE(ktt, module)
         .def("SetValueComparator", &ktt::Tuner::SetValueComparator)
         .def("SetReferenceComputation", &ktt::Tuner::SetReferenceComputation)
         .def("SetReferenceKernel", &ktt::Tuner::SetReferenceKernel)
-        .def("Tune", py::overload_cast<const ktt::KernelId>(&ktt::Tuner::Tune))
-        .def("Tune", py::overload_cast<const ktt::KernelId, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune))
+        .def("Tune", py::overload_cast<const ktt::KernelId>(&ktt::Tuner::Tune), py::call_guard<py::gil_scoped_release>())
+        .def("Tune", py::overload_cast<const ktt::KernelId, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune), py::call_guard<py::gil_scoped_release>())
         .def
         (
             "TuneIteration",
             &ktt::Tuner::TuneIteration,
+            py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
             py::arg("output"),
             py::arg("recomputeReference") = false
@@ -314,6 +315,7 @@ PYBIND11_MODULE(ktt, module)
         (
             "SimulateKernelTuning",
             &ktt::Tuner::SimulateKernelTuning,
+            py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
             py::arg("results"),
             py::arg("iterations") = 0
