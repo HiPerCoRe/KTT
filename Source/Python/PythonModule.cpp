@@ -60,7 +60,12 @@ PYBIND11_MODULE(ktt, module)
         .def("GetCurrentConfiguration", &ktt::ComputeInterface::GetCurrentConfiguration, py::return_value_policy::reference)
         .def("ChangeArguments", &ktt::ComputeInterface::ChangeArguments)
         .def("SwapArguments", &ktt::ComputeInterface::SwapArguments)
-        .def("UpdateScalarArgument", &ktt::ComputeInterface::UpdateScalarArgument)
+        .def("UpdateScalarArgumentChar", [](ktt::ComputeInterface& ci, const ktt::ArgumentId id, const int8_t data) { ci.UpdateScalarArgument(id, &data); })
+        .def("UpdateScalarArgumentShort", [](ktt::ComputeInterface& ci, const ktt::ArgumentId id, const int16_t data) { ci.UpdateScalarArgument(id, &data); })
+        .def("UpdateScalarArgumentInt", [](ktt::ComputeInterface& ci, const ktt::ArgumentId id, const int32_t data) { ci.UpdateScalarArgument(id, &data); })
+        .def("UpdateScalarArgumentLong", [](ktt::ComputeInterface& ci, const ktt::ArgumentId id, const int64_t data) { ci.UpdateScalarArgument(id, &data); })
+        .def("UpdateScalarArgumentFloat", [](ktt::ComputeInterface& ci, const ktt::ArgumentId id, const float data) { ci.UpdateScalarArgument(id, &data); })
+        .def("UpdateScalarArgumentDouble", [](ktt::ComputeInterface& ci, const ktt::ArgumentId id, const double data) { ci.UpdateScalarArgument(id, &data); })
         .def("UpdateLocalArgument", &ktt::ComputeInterface::UpdateLocalArgument)
         .def("UploadBuffer", &ktt::ComputeInterface::UploadBuffer)
         .def("UploadBufferAsync", &ktt::ComputeInterface::UploadBufferAsync)
@@ -124,8 +129,6 @@ PYBIND11_MODULE(ktt, module)
     py::class_<ktt::Tuner>(module, "Tuner")
         .def(py::init<const ktt::PlatformIndex, const ktt::DeviceIndex, const ktt::ComputeApi>())
         .def(py::init<const ktt::PlatformIndex, const ktt::DeviceIndex, const ktt::ComputeApi, const uint32_t>())
-        .def(py::init<const ktt::ComputeApi, const ktt::ComputeApiInitializer&>())
-        .def(py::init<const ktt::ComputeApi, const ktt::ComputeApiInitializer&, std::vector<ktt::QueueId>&>())
         .def
         (
             "AddKernelDefinition",
@@ -221,26 +224,12 @@ PYBIND11_MODULE(ktt, module)
             const ktt::ArgumentManagementType, const bool>(&ktt::Tuner::AddArgumentVector<float>))
         .def("AddArgumentVectorDouble", py::overload_cast<std::vector<double>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation,
             const ktt::ArgumentManagementType, const bool>(&ktt::Tuner::AddArgumentVector<double>))
-        .def("AddArgumentVectorChar", py::overload_cast<ktt::ComputeBuffer, const size_t, const ktt::ArgumentAccessType,
-            const ktt::ArgumentMemoryLocation>(&ktt::Tuner::AddArgumentVector<int8_t>))
-        .def("AddArgumentVectorShort", py::overload_cast<ktt::ComputeBuffer, const size_t, const ktt::ArgumentAccessType,
-            const ktt::ArgumentMemoryLocation>(&ktt::Tuner::AddArgumentVector<int16_t>))
-        .def("AddArgumentVectorInt", py::overload_cast<ktt::ComputeBuffer, const size_t, const ktt::ArgumentAccessType,
-            const ktt::ArgumentMemoryLocation>(&ktt::Tuner::AddArgumentVector<int32_t>))
-        .def("AddArgumentVectorLong", py::overload_cast<ktt::ComputeBuffer, const size_t, const ktt::ArgumentAccessType,
-            const ktt::ArgumentMemoryLocation>(&ktt::Tuner::AddArgumentVector<int64_t>))
-        .def("AddArgumentVectorFloat", py::overload_cast<ktt::ComputeBuffer, const size_t, const ktt::ArgumentAccessType,
-            const ktt::ArgumentMemoryLocation>(&ktt::Tuner::AddArgumentVector<float>))
-        .def("AddArgumentVectorDouble", py::overload_cast<ktt::ComputeBuffer, const size_t, const ktt::ArgumentAccessType,
-            const ktt::ArgumentMemoryLocation>(&ktt::Tuner::AddArgumentVector<double>))
-        // Todo: AddArgumentVector version with user buffer
         .def("AddArgumentScalarChar", &ktt::Tuner::AddArgumentScalar<int8_t>)
         .def("AddArgumentScalarShort", &ktt::Tuner::AddArgumentScalar<int16_t>)
         .def("AddArgumentScalarInt", &ktt::Tuner::AddArgumentScalar<int32_t>)
         .def("AddArgumentScalarLong", &ktt::Tuner::AddArgumentScalar<int64_t>)
         .def("AddArgumentScalarFloat", &ktt::Tuner::AddArgumentScalar<float>)
         .def("AddArgumentScalarDouble", &ktt::Tuner::AddArgumentScalar<double>)
-        .def("AddArgumentScalar", [](ktt::Tuner& tuner, const void* data, const size_t dataSize) { return tuner.AddArgumentScalar(data, dataSize); })
         .def("AddArgumentLocalChar", &ktt::Tuner::AddArgumentLocal<int8_t>)
         .def("AddArgumentLocalShort", &ktt::Tuner::AddArgumentLocal<int16_t>)
         .def("AddArgumentLocalInt", &ktt::Tuner::AddArgumentLocal<int32_t>)
@@ -337,7 +326,16 @@ PYBIND11_MODULE(ktt, module)
             py::arg("data") = ktt::UserData{}
         )
         .def("LoadResults", [](ktt::Tuner& tuner, const std::string& filePath, const ktt::OutputFormat format) { return tuner.LoadResults(filePath, format); })
-        .def("LoadResults", [](ktt::Tuner& tuner, const std::string& filePath, const ktt::OutputFormat format, ktt::UserData& data) { return tuner.LoadResults(filePath, format, data); })
+        .def
+        (
+            "LoadResultsWithData",
+            [](ktt::Tuner& tuner, const std::string& filePath, const ktt::OutputFormat format)
+            {
+                ktt::UserData data;
+                auto results = tuner.LoadResults(filePath, format, data);
+                return std::make_pair(results, data);
+            }
+        )
         .def("AddComputeQueue", &ktt::Tuner::AddComputeQueue)
         .def("RemoveComputeQueue", &ktt::Tuner::RemoveComputeQueue)
         .def("Synchronize", &ktt::Tuner::Synchronize)

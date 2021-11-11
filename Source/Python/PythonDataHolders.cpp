@@ -187,11 +187,6 @@ void InitializePythonDataHolders(py::module_& module)
         .def("GetTotalOverhead", &ktt::KernelResult::GetTotalOverhead)
         .def("IsValid", &ktt::KernelResult::IsValid)
         .def("HasRemainingProfilingRuns", &ktt::KernelResult::HasRemainingProfilingRuns);
-
-    py::class_<ktt::ComputeApiInitializer>(module, "ComputeApiInitializer")
-        .def(py::init<ktt::ComputeContext, const std::vector<ktt::ComputeQueue>&>())
-        .def("GetContext", &ktt::ComputeApiInitializer::GetContext)
-        .def("GetQueues", &ktt::ComputeApiInitializer::GetQueues, py::return_value_policy::reference);
 }
 
 #endif // KTT_PYTHON
