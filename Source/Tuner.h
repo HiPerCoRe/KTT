@@ -390,7 +390,7 @@ public:
     /** @fn void SetReadOnlyArgumentCache(const bool flag)
       * Toggles caching of read-only kernel arguments which have management type set to framework. This can significantly speed up
       * tuning, since arguments are uploaded into compute API buffers only once. Caching is enabled by default. Users who wish to
-      * modify read-only arguments inside kernel launcher may wish to disable this behaviour.
+      * modify read-only arguments inside kernel launcher may want to disable this behaviour.
       * @param flag If true, read-only argument caching is enabled. It is disabled otherwise.
       */
     void SetReadOnlyArgumentCache(const bool flag);
