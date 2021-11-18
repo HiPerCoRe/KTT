@@ -32,7 +32,7 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
 
 ### Basic principles behind KTT
 
-When leveraging autotuning, a programmer needs to think about which parts of their computation can be autotuned. For
+When leveraging autotuning, a programmer needs to think about which properties of their computation can be autotuned. For
 example, an algorithm may contain for loop which can be unrolled. There are multiple options for unroll factor value
 of this loop, e.g., 1 (no unroll), 2, 4, 8. Picking the optimal value for a given device manually is difficult, therefore
 we can define a tuning parameter for the unroll factor with the specified values. Afterwards, we can launch four different
