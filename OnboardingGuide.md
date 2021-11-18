@@ -55,6 +55,8 @@ code in a form of preprocessor definitions. E.g., when configuration which conta
 is launched, the following code is added at the beginning of kernel source code: `#define unroll_factor 2`. The definitions can be used
 to alter kernel functionality based on tuning parameter values.
 
+TODO consider adding also code for the kernel implementing tuning parameter
+
 ```cpp
 const size_t numberOfElements = 1024 * 1024;
 const ktt::DimensionVector globalDimensions(numberOfElements);
