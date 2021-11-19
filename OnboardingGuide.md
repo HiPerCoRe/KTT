@@ -199,8 +199,8 @@ const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAc
 
 #### Local memory arguments
 
-Local (shared in CUDA terminology) memory arguments are used to allocate corresponding amount of cache-like memory which is shared accross all items
-(threads) inside a work-group. User has to specify the data type and total size of allocated memory in bytes.
+Local (shared in CUDA terminology) memory arguments are used to allocate corresponding amount of cache-like memory which is shared accross all work-items
+(threads) inside a work-group (thread block). User has to specify the data type and total size of allocated memory in bytes.
 
 ```cpp
 // Allocate local memory for 4 floats and 2 integers.
