@@ -55,14 +55,18 @@ code in a form of preprocessor definitions. E.g., when configuration which conta
 is launched, the following code is added at the beginning of kernel source code: `#define unroll_factor 2`. The definitions can be used
 to alter kernel functionality based on tuning parameter values.
 
-TODO consider adding also code for the kernel implementing tuning parameter
+In the code snippet below, we create a kernel definition by specifying the name of kernel function and path to its source file. We also define
+its default global and local dimensions (e.g., size of ND-range and work-group in OpenCL, size of grid and block in CUDA). We use provided
+kernel definition handle to create kernel. We can also specify custom name for the kernel which is used e.g., for logging purposes. Afterwards,
+we can use the kernel handle to define tuning parameter and launch autotuning. The step of creating kernel definition and kernel separately may
+seem redundant at first, but it plays important role during more complex use cases that will be covered later.
 
 ```cpp
 const size_t numberOfElements = 1024 * 1024;
 const ktt::DimensionVector globalDimensions(numberOfElements);
 const ktt::DimensionVector localDimensions(64);
 
-const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("kernelName", "kernelFile.cl", globalDimensions, localDimensions);
+const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("computeStuff", "kernelFile.cl", globalDimensions, localDimensions);
 const ktt::KernelId kernel = tuner.CreateSimpleKernel("TestKernel", definition);
 
 /* Initialize kernel input and output */
@@ -71,11 +75,24 @@ tuner.AddParameter(kernel, "unroll_factor", std::vector<uint64_t>{1, 2, 4, 8});
 tuner.Tune(kernel);
 ```
 
-In the code snippet above, we create a kernel definition by specifying the name of kernel function and path to its source file. We also define
-its default global and local dimensions (e.g., size of ND-range and work-group in OpenCL, size of grid and block in CUDA). We use provided
-kernel definition handle to create kernel. We can also specify custom name for the kernel which is used e.g., for logging purposes. Afterwards,
-we can use the kernel handle to define tuning parameter and launch autotuning. The step of creating kernel definition and kernel separately may
-seem redundant at first, but it plays important role during more complex use cases that will be covered later.
+The next snippet demonstrates how our previously defined tuning parameter could be used to alter computation inside kernel.
+
+```cpp
+__kernel void computeStuff(__global float* input, int itemsPerThread, __global float* output)
+{
+    ...
+    
+    #if unroll_factor > 1
+    #pragma unroll unroll_factor
+    #endif
+    for (int i = 0; i < itemsPerThread; i++)
+    {
+        // do some computation
+    }
+    
+    ...
+}
+```
 
 ----
 
@@ -89,6 +106,9 @@ structures also contain some other useful information such as list of supported 
 more. Note that the assigned indices remain the same when autotuning applications are launched multiple times on the same computer. They change only
 when the hardware configuration is changed (e.g., new device is added, old device is removed, device driver is reinstalled). Also note, that the indices
 may not be the same across multiple compute APIs (e.g., index for the same device may be different under OpenCL and CUDA).
+
+The code below demonstrates how information about all available OpenCL platforms and devices is retrieved from KTT. In this case, the tuner is created
+for the first device on the first platform (both platform and device index is 0).
 
 ```cpp
 ktt::Tuner tuner(0, 0, ktt::ComputeApi::OpenCL);
@@ -107,8 +127,39 @@ for (const auto& platform : platforms)
 }
 ```
 
-The code above demonstrates how information about all available OpenCL platforms and devices is retrieved from KTT. In this case, the tuner is created
-for the first device on the first platform (both platform and device index is 0).
+----
+
+### Kernel definitions and kernels
+
+Before kernel can be launched via KTT, its source must be loaded into tuner. This is achieved by creating kernel definition. During its creation,
+we specify kernel function name and kernel source. The source can be added either from string or from file. Next, we specify default global
+(NDrange / grid) and local (work-group / block) sizes. The sizes are specified with KTT structure `DimensionVector` which supports up to three
+dimensions. When a kernel is launched during tuning, the thread sizes chosen during definition creation will be used. There are ways to launch kernels
+with different than default sizes which will be covered later. For CUDA API, addition of templated kernels is supported as well. When creating
+definition, it is possible to specify types that should be used to instantiate kernel function from template. When we need to instantiate the same
+kernel template with different types, we do that by adding multiple kernel definitions with corresponding types which are then handled independently.
+
+Once we have kernel definitions, we can create kernels from them. It is possible to create a simple kernel which only uses one definition as well as
+composite kernel which uses multiple definitions. Usage of composite kernels is useful for computations which require launching of multiple kernel
+functions in order to compute the result. In this case it is also necessary to define kernel launcher which is a function that tells tuner in which
+order and how many times each kernel function is launched. Kernel launchers are covered in detail in their own section.
+
+Note that KTT terminology regarding kernel definitions and kernels differs slightly from regular compute APIs. KTT kernel definition roughly
+corresponds to a single kernel function (also called kernel in e.g., OpenCL or CUDA). KTT kernel corresponds to a specific computation which uses
+one or more kernel functions and for which it is possible to define tuning parameters. KTT framework allows kernel definitions to be shared across
+multiple kernels (i.e., the same kernel function can be used in multiple computations).
+
+```cpp
+// Create convolution kernel, utilizes single kernel function
+const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("conv", kernelFile, gridSize, blockSize);
+const ktt::KernelId kernel = tuner.CreateSimpleKernel("Convolution", definition);
+
+// Create kernel which performs radix sort, utilizes 3 separate kernel functions
+const ktt::KernelDefinitionId definition0 = tuner.AddKernelDefinitionFromFile("reduce", kernelFile, gridSize, blockSize);
+const ktt::KernelDefinitionId definition1 = tuner.AddKernelDefinitionFromFile("top_scan", kernelFile, gridSize, blockSize);
+const ktt::KernelDefinitionId definition2 = tuner.AddKernelDefinitionFromFile("bottom_scan", kernelFile, gridSize, blockSize);
+const ktt::KernelId kernel = tuner.CreateCompositeKernel("Sort", {definition0, definition1, definition2});
+```
 
 ----
 
@@ -162,7 +213,8 @@ configurations. Setting correct access type can therefore lead to better tuning 
 Next, it is possible to decide memory location from which the buffer is accessed by kernel - the two main options are host memory and device memory.
 Users may wish to choose different memory depending on the type of device used for autotuning (e.g., host memory for CPUs, device memory for
 dedicated GPUs). For host memory, it is possible to use zero-copy option, which makes kernel access the argument data directly, instead of creating
-separate buffer and thus reduce memory usage.
+separate buffer and thus reduce memory usage. For CUDA and OpenCL 2.0, there exists one additional memory location option - unified. Unified memory
+buffers can be accessed both from host and kernel side, relying on device driver to take care of migrating the data automatically.
 
 Management type option specifies whether buffer management is handled automatically by the tuner (e.g., write arguments are automatically reset
 to initial state before new kernel configuration is launched, buffers are created and deleted automatically) or by the user. In some advanced cases,
@@ -219,18 +271,6 @@ const ktt::ArgumentId symbolId = tuner.AddArgumentSymbol(42, "magicNumber");
 ```
 
 ----
-
-### Kernel definitions and kernels
-
-Before kernel can be launched with KTT, its source must be loaded into tuner. This is achieved by creating kernel definition. During its creation,
-we specify kernel function name and kernel source. The source can be added either from string or from file. Next, we specify default global
-(NDrange / grid) and local (work-group / block) sizes. The sizes are specified with KTT structure `DimensionVector` which supports up to three
-dimensions. When a kernel is launched during tuning, the thread sizes chosen during definition creation will be used. There are ways to modify these
-sizes which will be covered later. For CUDA API, addition of templated kernels is supported as well. When creating definition, it is possible to specify
-types that should be used to instantiate kernel function from template. When we need to instantiate the same kernel template with different types, we do
-that by adding multiple kernel definitions with corresponding types which are then handled independently.
-
-
 
 ### Tuning parameters and constraints
 
