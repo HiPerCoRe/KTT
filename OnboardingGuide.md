@@ -210,7 +210,7 @@ const ktt::ArgumentId local2Id = tuner.AddArgumentLocal<int32_t>(8);
 
 #### Symbol arguments
 
-Symbol arguments were added in order to support CUDA arguments marked as `__constant__` or `__device__`. In other APIs, symbol arguments behave in
+Symbol arguments were introduced in order to support CUDA arguments marked as `__constant__` or `__device__`. In other APIs, symbol arguments behave in
 the same way as scalars since they do not require special handling. In case of CUDA, the name of symbol argument appearing inside CUDA kernel source
 code has to be specified during argument addition to tuner.
 
@@ -220,13 +220,23 @@ const ktt::ArgumentId symbolId = tuner.AddArgumentSymbol(42, "magicNumber");
 
 ----
 
-### Creating and running kernel
+### Kernel definitions and kernels
 
-### Tuning the kernel
+Before kernel can be launched with KTT, its source must be loaded into tuner. This is achieved by creating kernel definition. During its creation,
+we specify kernel function name and kernel source. The source can be added either from string or from file. Next, we specify default global
+(NDrange / grid) and local (work-group / block) sizes. The sizes are specified with KTT structure `DimensionVector` which supports up to three
+dimensions. When a kernel is launched during tuning, the thread sizes chosen during definition creation will be used. There are ways to modify these
+sizes which will be covered later. For CUDA API, addition of templated kernels is supported as well. When creating definition, it is possible to specify
+types that should be used to instantiate kernel function from template. When we need to instantiate the same kernel template with different types, we do
+that by adding multiple kernel definitions with corresponding types which are then handled independently.
 
-### Checking kernel results
 
-### Using kernel launchers
+
+### Tuning parameters and constraints
+
+### Kernel output validation
+
+### Kernel launchers
 
 #### Motivation example
 
