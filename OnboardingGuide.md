@@ -27,7 +27,10 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
     * [Vector arguments](#vector-arguments)
     * [Local memory arguments](#local-memory-arguments)
     * [Symbol arguments](#symbol-arguments)
-
+* [Tuning parameters](#tuning-parameters)
+    * [Parameter constraints](#parameter-constraints)
+    * [Parameter groups](#parameter-groups)
+    * [Thread modifiers](#thread-modifiers)
 ----
 
 ### Basic principles behind KTT
@@ -272,7 +275,59 @@ const ktt::ArgumentId symbolId = tuner.AddArgumentSymbol(42, "magicNumber");
 
 ----
 
-### Tuning parameters and constraints
+### Tuning parameters
+
+Tuning parameters in KTT can be either unsigned integers or floats. When defining new parameter, we need to specify its name (i.e., the name through
+which it can be referenced in kernel source) and values. With addition of more tuning parameters, the size of tuning space grows exponentially as we
+need to explore all parameter combinations. KTT provides two features for users to slow down the tuning space growth.
+
+```cpp
+// We add 4 different parameters, the size of tuning space is 40 (5 * 2 * 4 * 1)
+tuner.AddParameter(kernel, "unroll_factor", std::vector<uint64_t>{1, 2, 4, 8, 16});
+tuner.AddParameter(kernel, "use_constant_memory", std::vector<uint64_t>{0, 1});
+tuner.AddParameter(kernel, "vector_type", std::vector<uint64_t>{1, 2, 4, 8});
+tuner.AddParameter(kernel, "float_value", std::vector<double>{1.0});
+```
+
+#### Parameter constraints
+
+The first option are tuning constraints. Through constraints, it is possible to tell tuner to skip generating configurations for certain combinations
+of parameters. The constraint is a function which receives values for the specified parameters on input and decides whether that combination should
+be launched. User can choose which parameters are evaluated by specific constraint. Note that currently, it is possible to add constraints only
+between integer parameters.
+
+```cpp
+// We add 3 different parameters, the size of tuning space is 40 (5 * 2 * 4)
+tuner.AddParameter(kernel, "unroll_factor", std::vector<uint64_t>{1, 2, 4, 8, 16});
+tuner.AddParameter(kernel, "vectorized_soa", std::vector<uint64_t>{0, 1});
+tuner.AddParameter(kernel, "vector_type", std::vector<uint64_t>{1, 2, 4, 8});
+
+// We add constraint between 2 parameters, reducing size of tuning space from 40 to 35 (vectorized SoA is used only for vector types,
+// constraint disables all configurations where vector_type == 1 and vectorized_soa == 1)
+auto vectorizedSoA = [](const std::vector<uint64_t>& values) {return values[0] > 1 || values[1] != 1;}; 
+tuner.AddConstraint(kernel, {"vector_type", "vectorized_soa"}, vectorizedSoA);
+```
+
+#### Parameter groups
+
+The second option are tuning parameter groups. This option is mainly useful for composite kernels with certain tuning parameters only affecting one
+kernel definition inside the kernel. For example, if we have composite kernel with 2 kernel definitions and each definition is affected by 3 parameters
+(we have 6 parameters in total), and we know that each parameter only affects one specific definition, we can evaluate the two parameter groups
+independently. This can greatly reduce the total number of evaluated configurations (e.g., if each of the parameters has 2 different values, total
+number of configurations is 64 -- 2^6; with usage of parameter groups, it is only 16 -- 2^3 + 2^3). It is also possible to combine usage of
+constraints and groups, however constraint can only be added between parameters which belong into the same group.
+
+```cpp
+// We add 4 different parameters split into 2 independent groups, reducing size of tuning space from 16 to 8
+tuner.AddParameter(kernel, "a1", std::vector<uint64_t>{0, 1}, "group_a");
+tuner.AddParameter(kernel, "a2", std::vector<uint64_t>{0, 1}, "group_a");
+tuner.AddParameter(kernel, "b1", std::vector<uint64_t>{0, 1}, "group_b");
+tuner.AddParameter(kernel, "b2", std::vector<uint64_t>{0, 1}, "group_b");
+```
+
+#### Thread modifiers
+
+Todo
 
 ### Kernel output validation
 
@@ -281,12 +336,6 @@ const ktt::ArgumentId symbolId = tuner.AddArgumentSymbol(42, "magicNumber");
 #### Motivation example
 
 #### Launcher implementation
-
-### Using composite kernels
-
-#### Motivation example
-
-#### Composite kernel implementation
 
 ### Stop conditions
 
