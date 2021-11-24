@@ -22,6 +22,7 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
 * [Basic principles behind KTT](#basic-principles-behind-ktt)
 * [Offline tuning of a single kernel](#offline-tuning-of-a-single-kernel)
 * [Initialization of KTT](#initialization-of-ktt)
+* [Kernel definitions and kernels](#kernel-definitions-and-kernels)
 * [Kernel arguments](#kernel-arguments)
     * [Scalar arguments](#scalar-arguments)
     * [Vector arguments](#vector-arguments)
@@ -31,6 +32,10 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
     * [Parameter constraints](#parameter-constraints)
     * [Parameter groups](#parameter-groups)
     * [Thread modifiers](#thread-modifiers)
+* [Output validation](#output-validation)
+    * [Reference computation](#reference-computation)
+    * [Reference kernel](#reference-kernel)
+    * [Validation customization](#validation-customization)
 ----
 
 ### Basic principles behind KTT
@@ -327,9 +332,83 @@ tuner.AddParameter(kernel, "b2", std::vector<uint64_t>{0, 1}, "group_b");
 
 #### Thread modifiers
 
-Todo
+Some tuning parameters can affect global or local number of threads a kernel is launched with. For example we may have a parameter which affects
+amount of work performed by each thread. The more work each thread does, the less (global) threads we need in total to perform computation. In KTT,
+we can define such dependency via thread modifiers. The thread modifier is a function which takes a default thread size and changes it based on
+values of specified tuning parameters. When adding a new modifier, we specify kernel and its definitions whose thread sizes are affected by the
+modifier. Then we choose whether modifier affects global or local size, its dimension and names of tuning parameters tied to modifier. The modifier
+function can be specified through enum which supports certain simple functions such as multiplication or addition, but allows only one tuning parameter
+to be tied to modifier. Another option is using a custom user function which can be more complex and support multiple tuning parameters. It is
+possible to create multiple thread modifiers for the same thread type (global / local) and dimension. In that case, the modifiers will be applied
+in the order of their addition to tuner. Similar to constraints, it is possible to tie only integer parameters to thread modifiers.
 
-### Kernel output validation
+```cpp
+tuner.AddParameter(kernel, "block_size", std::vector<uint64_t>{32, 64, 128, 256});
+
+// block_size parameter decides the number of local threads.
+tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "block_size", ktt::ModifierAction::Multiply);
+
+// Larger block size means that the grid size should be smaller, so the total number of threads remains the same. Therefore we divide the grid
+// size by block_size parameter.
+tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, {"block_size"},
+    [](const uint64_t defaultSize, const std::vector<uint64_t>& parameters)
+{
+    return defaultSize / parameters[0];
+});
+```
+
+----
+
+### Output validation
+
+When developing kernels with large number of tuning parameters, it is often necessary to check whether each configuration computes the correct output.
+KTT provides a way to automatically compare output from tuned kernel configurations to reference output. That means each time a kernel configuration is
+finished, the contents of its output buffer are transferred into host memory and then compared to precomputed reference output. The reference can be
+computed in two ways.
+
+#### Reference computation
+
+Reference computation is a function which computes the reference output in host code and stores the result in the buffer provided by KTT. The size of
+that buffer matches the size of validated kernel output buffer. When defining reference computation, we only need to provide the function and the id
+of validated output argument.
+
+```cpp
+tuner.SetReferenceComputation(resultArgument, [&a, &b](void* buffer)
+{
+    float* result = static_cast<float*>(buffer);
+
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        result[i] = a[i] + b[i];
+    }
+});
+```
+
+#### Reference kernel
+
+Another option is to compute reference result with a kernel. In this case, we need to provide the id of reference kernel and the id of validated output
+argument. It is possible for reference kernel to have tuning parameters as well, so there is an option to choose specific reference configuration. If
+reference kernel has no parameters, empty configuration can be provided. The reference kernel id may be the same as tuned kernel.
+
+```cpp
+tuner.SetReferenceKernel(outputId, referenceKernel, ktt::KernelConfiguration());
+```
+
+#### Validation customization
+
+There are certain ways to further customize how validation is performed. By default, the entire output buffer is validated. If validating only
+a portion of the buffer is sufficient, setting a custom validation range is possible. In this case, the size of reference buffer provided by KTT
+for reference computation validation will be automatically adjusted as well.
+
+Validation works out-of-the-box for integer and floating-point argument data types. In case of floating-point arguments, it is possible to choose
+validation method (e.g., comparing each element separately or summing up all elements and comparing the result) and tolerance threshold since
+different kernel configurations may have different accuracy of computing floating-point output.
+
+If arguments with user-defined types are used, it is necessary to define value comparator. Comparator is a function which receives two elements
+with the specified type on input and decides whether they are equal. Value comparator can optionally be also used for integer and floating-point
+data types to override the default comparison functionality.
+
+----
 
 ### Kernel launchers
 
