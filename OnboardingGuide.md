@@ -36,6 +36,8 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
     * [Reference computation](#reference-computation)
     * [Reference kernel](#reference-kernel)
     * [Validation customization](#validation-customization)
+* [Kernel launchers](#kernel-launchers)
+* [Kernel running and tuning modes](#kernel-running-and-tuning-modes)
 ----
 
 ### Basic principles behind KTT
@@ -335,12 +337,14 @@ tuner.AddParameter(kernel, "b2", std::vector<uint64_t>{0, 1}, "group_b");
 Some tuning parameters can affect global or local number of threads a kernel is launched with. For example we may have a parameter which affects
 amount of work performed by each thread. The more work each thread does, the less (global) threads we need in total to perform computation. In KTT,
 we can define such dependency via thread modifiers. The thread modifier is a function which takes a default thread size and changes it based on
-values of specified tuning parameters. When adding a new modifier, we specify kernel and its definitions whose thread sizes are affected by the
-modifier. Then we choose whether modifier affects global or local size, its dimension and names of tuning parameters tied to modifier. The modifier
-function can be specified through enum which supports certain simple functions such as multiplication or addition, but allows only one tuning parameter
-to be tied to modifier. Another option is using a custom user function which can be more complex and support multiple tuning parameters. It is
-possible to create multiple thread modifiers for the same thread type (global / local) and dimension. In that case, the modifiers will be applied
-in the order of their addition to tuner. Similar to constraints, it is possible to tie only integer parameters to thread modifiers.
+values of specified tuning parameters.
+
+When adding a new modifier, we specify kernel and its definitions whose thread sizes are affected by the modifier. Then we choose whether modifier
+affects global or local size, its dimension and names of tuning parameters tied to modifier. The modifier function can be specified through enum
+which supports certain simple functions such as multiplication or addition, but allows only one tuning parameter to be tied to modifier. Another
+option is using a custom user function which can be more complex and support multiple tuning parameters. It is possible to create multiple thread
+modifiers for the same thread type (global / local) and dimension. In that case, the modifiers will be applied in the order of their addition to
+tuner. Similar to constraints, it is possible to tie only integer parameters to thread modifiers.
 
 ```cpp
 tuner.AddParameter(kernel, "block_size", std::vector<uint64_t>{32, 64, 128, 256});
@@ -412,9 +416,33 @@ data types to override the default comparison functionality.
 
 ### Kernel launchers
 
-#### Motivation example
+Kernel launchers enable users to customize how kernels are run inside KTT. Launcher is a function which defines what happens when kernel under
+certain configuration is launched via tuner. For simple kernels, default launcher is provided by KTT. This launcher simply runs the kernel function
+tied to kernel definition and waits until its finished. If a computation requires launching a kernel function multiple times, running some part in
+host code or using multiple kernel functions, then user needs to define their own launcher. In case of composite kernels, defining custom launcher is
+mandatory, since KTT does not know the order in which the individual kernel functions should be run.
 
-#### Launcher implementation
+Kernel launcher has access to low-level KTT compute interface on input. Through this interface, it is possible to launch kernel functions, modify
+buffers and retrieve the current kernel configuration. This makes it possible for tuning parameters to affect computation behaviour in host code in
+addition to modifying kernel behavior. The modifications done to kernel arguments and buffers inside a launcher are isolated to the specific kernel
+configuration launch. Therefore, it is not necessary to reset arguments to their original values for each kernel launch, it is done automatically by
+the tuner. The only exception to this is usage of user-managed vector arguments, those have to be reset manually.
+
+```cpp
+// This launcher is equivalent in functionality to the default simple kernel launcher provided by KTT.
+tuner.SetLauncher(kernel, [definition](ktt::ComputeInterface& interface)
+{
+    interface.RunKernel(definition);
+});
+```
+
+----
+
+### Kernel running and tuning modes
+
+Todo
+
+----
 
 ### Stop conditions
 
@@ -428,6 +456,8 @@ data types to override the default comparison functionality.
 
 #### Example
 
+### Utility functions
+
 ### Advanced topics
 
 #### Asynchronous execution
@@ -437,3 +467,5 @@ data types to override the default comparison functionality.
 #### Interoperability
 
 #### Python API
+
+### Feature parity across compute APIs
