@@ -38,6 +38,8 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
     * [Validation customization](#validation-customization)
 * [Kernel launchers](#kernel-launchers)
 * [Kernel running and tuning modes](#kernel-running-and-tuning-modes)
+    * [Offline tuning](#offline-tuning)
+    * [Online tuning](#online-tuning)
 ----
 
 ### Basic principles behind KTT
@@ -322,7 +324,7 @@ kernel definition inside the kernel. For example, if we have composite kernel wi
 (we have 6 parameters in total), and we know that each parameter only affects one specific definition, we can evaluate the two parameter groups
 independently. This can greatly reduce the total number of evaluated configurations (e.g., if each of the parameters has 2 different values, total
 number of configurations is 64 -- 2^6; with usage of parameter groups, it is only 16 -- 2^3 + 2^3). It is also possible to combine usage of
-constraints and groups, however constraint can only be added between parameters which belong into the same group.
+constraints and groups, however constraints can only be added between parameters which belong into the same group.
 
 ```cpp
 // We add 4 different parameters split into 2 independent groups, reducing size of tuning space from 16 to 8
@@ -440,6 +442,30 @@ tuner.SetLauncher(kernel, [definition](ktt::ComputeInterface& interface)
 
 ### Kernel running and tuning modes
 
+KTT supports kernel tuning as well as ordinary kernel running. Running kernels via tuner is often more convenient compared to directly using certain
+compute API, since a lot of boilerplate code such as compute queue management and kernel source compilation is abstracted. It is possible to specify
+configuration under which the kernel is run, so the workflow where kernel is first tuned and then launched repeatedly with the best configuration is
+supported. It is possible to transfer kernel output into host memory by utilizing `BufferOutputDescriptor` structure. When creating this structure,
+we need to specify id of buffer that should be transferred and pointer to memory where the buffer contents should be saved. It is possible to pass
+multiple such structures into kernel running method -- each structure corresponds to a single buffer that should be transferred. After kernel run is
+finished, `KernelResult` structure is returned. This structure contains detailed information about kernel run such as execution times of individual
+kernel functions, status of computation (i.e., if it finished successfully) and more.
+
+```cpp
+std::vector<float> output(numberOfElements, 0.0f);
+
+// Add kernel and buffers to tuner
+...
+
+const auto result = tuner.Run(kernel, {}, {ktt::BufferOutputDescriptor(outputId, output.data())});
+```
+
+#### Offline tuning
+
+Todo
+
+#### Online tuning
+
 Todo
 
 ----
@@ -448,24 +474,14 @@ Todo
 
 ### Searchers
 
-### Dynamic autotuning
-
-#### Differences over offline tuning
-
-#### Handling kernel arguments
-
-#### Example
-
 ### Utility functions
 
-### Advanced topics
+### Asynchronous execution
 
-#### Asynchronous execution
+### Profiling
 
-#### Profiling
+### Interoperability
 
-#### Interoperability
-
-#### Python API
+### Python API
 
 ### Feature parity across compute APIs
