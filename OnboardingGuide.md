@@ -40,6 +40,9 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
 * [Kernel running and tuning modes](#kernel-running-and-tuning-modes)
     * [Offline tuning](#offline-tuning)
     * [Online tuning](#online-tuning)
+    * [Accuracy of tuning results](#accuracy-of-tuning-results)
+* [Stop conditions](#stop-conditions)
+* [Searchers](#searchers)
 ----
 
 ### Basic principles behind KTT
@@ -323,7 +326,7 @@ The second option are tuning parameter groups. This option is mainly useful for 
 kernel definition inside the kernel. For example, if we have composite kernel with 2 kernel definitions and each definition is affected by 3 parameters
 (we have 6 parameters in total), and we know that each parameter only affects one specific definition, we can evaluate the two parameter groups
 independently. This can greatly reduce the total number of evaluated configurations (e.g., if each of the parameters has 2 different values, total
-number of configurations is 64 -- 2^6; with usage of parameter groups, it is only 16 -- 2^3 + 2^3). It is also possible to combine usage of
+number of configurations is 64 - 2^6; with usage of parameter groups, it is only 16 - 2^3 + 2^3). It is also possible to combine usage of
 constraints and groups, however constraints can only be added between parameters which belong into the same group.
 
 ```cpp
@@ -442,12 +445,12 @@ tuner.SetLauncher(kernel, [definition](ktt::ComputeInterface& interface)
 
 ### Kernel running and tuning modes
 
-KTT supports kernel tuning as well as ordinary kernel running. Running kernels via tuner is often more convenient compared to directly using certain
+KTT supports kernel tuning as well as ordinary kernel running. Running kernels via tuner is often more convenient compared to directly using specific
 compute API, since a lot of boilerplate code such as compute queue management and kernel source compilation is abstracted. It is possible to specify
 configuration under which the kernel is run, so the workflow where kernel is first tuned and then launched repeatedly with the best configuration is
 supported. It is possible to transfer kernel output into host memory by utilizing `BufferOutputDescriptor` structure. When creating this structure,
 we need to specify id of buffer that should be transferred and pointer to memory where the buffer contents should be saved. It is possible to pass
-multiple such structures into kernel running method -- each structure corresponds to a single buffer that should be transferred. After kernel run is
+multiple such structures into kernel running method - each structure corresponds to a single buffer that should be transferred. After kernel run is
 finished, `KernelResult` structure is returned. This structure contains detailed information about kernel run such as execution times of individual
 kernel functions, status of computation (i.e., if it finished successfully) and more.
 
@@ -462,17 +465,54 @@ const auto result = tuner.Run(kernel, {}, {ktt::BufferOutputDescriptor(outputId,
 
 #### Offline tuning
 
-Todo
+During offline tuning, tuner runs kernel configurations one after another without user interference. This mode therefore separates finding the best
+configuration and subsequent usage of tuned kernel in applications. This enables tuner to implement certain optimizations which would otherwise not be
+possible - for example caching of read-only buffers over multiple kernel runs in different configurations. By default, the entire configuration space is
+explored during offline tuning. This can be altered by leveraging stop conditions, which are described in detail in the next section.
+
+Kernel output cannot be retrieved during offline tuning, because all of the configurations are launched within a single API call. The list of `KernelResult`
+structures corresponding to all tested configurations is returned after the tuning ends. These results can be saved either in XML or JSON format for
+further analysis.
+
+```cpp
+const std::vector<ktt::KernelResult> results = tuner.Tune(kernel);
+tuner.SaveResults(results, "TuningOutput", ktt::OutputFormat::JSON);
+```
 
 #### Online tuning
 
-Todo
+Online tuning combines kernel tuning with regular running. Similar to kernel running, we can retrieve and use output from each kernel run. However, we
+do not specify the configuration under which kernel is run, but tuner launches a different configuration each time a kernel is launched, similar to
+offline tuning. This mode does not separate tuning and usage of tuned kernel, but rather enables both to happen simultaneously. This can be beneficial
+in situations where employment of offline tuning is impractical (e.g., when the size of kernel input is frequently changed which causes the optimal
+configuration to change as well). If kernel is launched with online tuning after all configurations were already explored, the best configuration is used.
+
+```cpp
+std::vector<float> output(numberOfElements, 0.0f);
+
+// Add kernel and buffers to tuner
+...
+
+const auto result = tuner.TuneIteration(kernel, {ktt::BufferOutputDescriptor(outputId, output.data())});
+```
+
+#### Accuracy of tuning results
+
+In order to identify the best configuration accurately, it is necessary to launch all configurations under the same conditions so that metrics such as
+kernel function execution times can be objectively compared. This means, that tuned kernels should be launched on the target device in isolation.
+Launching multiple kernels concurrently while tuning is performed may cause inaccuracies in collected data. Furthemore, if size of kernel input is changed
+(e.g., during online tuning), tuning should be restarted from the beginning, since the size of input often affects the best configuration. The restart can
+be achieved with `ClearData` API method.
 
 ----
 
 ### Stop conditions
 
+Todo
+
 ### Searchers
+
+Todo
 
 ### Utility functions
 
