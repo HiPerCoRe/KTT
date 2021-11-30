@@ -43,6 +43,8 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
     * [Accuracy of tuning results](#accuracy-of-tuning-results)
 * [Stop conditions](#stop-conditions)
 * [Searchers](#searchers)
+* [Utility functions](#utility-functions)
+
 ----
 
 ### Basic principles behind KTT
@@ -519,6 +521,8 @@ offers the following stop conditions:
 The stop condition API is public, which means that users can also create their own stop conditions. All of the built-in conditions are implemented in public
 API, so it possible to modify them as well.
 
+----
+
 ### Searchers
 
 Searchers decide the order in which kernel configurations are selected during offline and online tuning. Having an efficient searcher can significantly reduce the
@@ -533,7 +537,23 @@ The searcher API is public, so users can implement their own searchers. The API 
 easier. These include method to get random unexplored configuration or neighbouring configurations (configurations which differ in small amount of parameter values
 compared to the specified configuration).
 
+----
+
 ### Utility functions
+
+KTT provides many utility functions to further customize tuner behavior. The following list contains descriptions of certain functions which users may find handy
+to use:
+* `SetCompilerOptions` - sets options for kernel source code compiler used by compute API (e.g., NVRTC for CUDA).
+* `SetGlobalSizeType` - compute APIs use different ways for specifying global thread size (e.g., grid size or ND-range size). This method makes it possible to override
+the global thread size format to the one used by the specified API. Usage of this method makes it easier to port programs between different compute APIs.
+* `SetAutomaticGlobalSizeCorrection` - tuner automatically ensures that global thread size is divisible by local thread size. This is required by certain compute
+APIs such as OpenCL.
+* `SetKernelCacheCapacity` - changes size of cache for compiled kernels. KTT utilizes the cache to improve performance when the same kernel function with the same
+configuration is launched multiple times (e.g., inside kernel launcher).
+* `SetLoggingLevel` - controls the amount of logging information printed to output. Higher levels print more detailed information which is useful for debugging.
+* `SetTimeUnit` - specifies time unit used for printing execution times. Affects both console output as well as kernel results serialized into XML or JSON.
+
+----
 
 ### Asynchronous execution
 
