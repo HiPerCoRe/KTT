@@ -20,7 +20,7 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
 
 ### Table of contents
 * [Basic principles behind KTT](#basic-principles-behind-ktt)
-* [Offline tuning of a single kernel](#offline-tuning-of-a-single-kernel)
+* [Simple tuning example](#simple-tuning-example)
 * [Initialization of KTT](#initialization-of-ktt)
 * [Kernel definitions and kernels](#kernel-definitions-and-kernels)
 * [Kernel arguments](#kernel-arguments)
@@ -62,7 +62,7 @@ parameters. KTT framework offers functionality to deal with this problem which w
 
 ----
 
-### Offline tuning of a single kernel
+### Simple tuning example
 
 Offline kernel tuning is the simplest use case of KTT framework. It involves creating a kernel, specifying its arguments (data),
 defining tuning parameters and then launching autotuning. During autotuning, tuning parameter values are propagated to kernel source
@@ -508,11 +508,30 @@ be achieved with `ClearData` API method.
 
 ### Stop conditions
 
-Todo
+Stop conditions can be used to stop offline tuning when certain criteria is met. The stop condition is initialized before offline tuning begins and updated
+after each tested configuration. Within the update, it has access to `KernelResult` structure whose data it can utilize to check its criteria. KTT currently
+offers the following stop conditions:
+* ConfigurationCount - tuning stops after reaching the specified number of tested configurations.
+* ConfigurationDuration - tuning stops after a configuration with execution time below the specified threshold was found.
+* ConfigurationFraction - tuning stops after exploring the specified fraction of configuration space.
+* TuningDuration - tuning stops after the specified duration has passed.
+
+The stop condition API is public, which means that users can also create their own stop conditions. All of the built-in conditions are implemented in public
+API, so it possible to modify them as well.
 
 ### Searchers
 
-Todo
+Searchers decide the order in which kernel configurations are selected during offline and online tuning. Having an efficient searcher can significantly reduce the
+time it takes to find well-performing configurations. Similar to a stop condition, a searcher is initialized before tuning begins and is updated after each tested
+configuration with access to `KernelResult` structure from the previous run. Searchers are assigned to kernels individually, so each kernel can have a different
+seacher. The following searchers are available in KTT API:
+* DeterministicSearcher - always explores configurations in the same order (provided that tuning parameters, order of their addition or their values were not changed).
+* RandomSearcher - explores configurations in random order.
+* McmcSearcher - utilizes Markov chain Monte Carlo method to predict well-performing configurations more accurately than random searcher.
+
+The searcher API is public, so users can implement their own searchers. The API also includes certain common utility methods to make the custom searcher implementation
+easier. These include method to get random unexplored configuration or neighbouring configurations (configurations which differ in small amount of parameter values
+compared to the specified configuration).
 
 ### Utility functions
 
