@@ -46,9 +46,13 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
 * [Utility functions](#utility-functions)
 * [Collecting profiling metrics](#collecting-profiling-metrics)
     * [Interaction with online tuning and kernel running](#interaction-with-online-tuning-and-kernel-running)
-* [Interoperability]
+* [Interoperability](#interoperability)
     * [Custom compute library initialization](#custom-compute-library-initialization)
     * [Asynchronous execution](#asynchronous-execution)
+    * [Lifetime of internal tuner structures](#lifetime-of-internal-tuner-structures)
+* [Python API](#python-api)
+    * [Python limitations](#python-limitations)
+* [Feature parity across compute APIs](#feature-parity-across-compute-apis)
 
 ----
 
@@ -590,15 +594,41 @@ in this section.
 
 #### Custom compute library initialization
 
-Todo
+By default, when tuner is created, it initializes its own internal compute API structures such as context, compute queues and buffers. It is however possible to
+also use tuner with custom structures as well. This makes it possible to integrate tuner into libraries which need to perform their own compute API initialization.
+During tuner initialization, we can pass `ComputeApiInitializer` structure to it, which contains our own context and compute queues. When adding a vector argument,
+it is possible to pass our own compute buffer which will then be utilized by tuner. All of these structures will still remain under our own management, tuner will
+simply reference them and use them when needed. Before releasing these structures, the tuner should be destroyed first, so it can perform proper cleanup (note that
+tuner will not destroy the referenced structures on its own).
 
 #### Asynchronous execution
 
-Todo
+When performing tuning, all kernel function runs and buffer data transfers are synchronized. This is necessary to obtain accurate tuning data. Applications which
+combine kernel tuning and kernel running have an option to enable asynchronous kernel launches and buffer transfers after tuning is completed. This can be achieved
+by utilizing kernel launchers and compute interface. The compute interface API contains methods for asynchronous operations. They enable user to choose a compute
+queue for launching an operation and return event id which can be later used to wait for the operation to complete. Note however, that kernel results returned from
+asynchronous launches will contain inaccurate execution times, since the results may be returned before the asynchronous operation has finished. This feature should
+only be utilized for kernel running, not tuning.
+
+#### Lifetime of internal tuner structures
+
+Internal KTT structures such as kernels, kernel definitions, arguments and configuration data have their lifetimes tied to tuner. Certain applications which utilize
+tuner may prefer to remove certain structures on-the-fly to save memory. Currently, it is possible to remove kernels, kernel definitions, arguments and user-provided
+compute queues from the tuner by specifying their ids. When removing a kernel, all of its associated data such as generated configurations, parameters and validation
+data are removed as well. Note that it is not possible to remove structures which are referenced by other structures. E.g., when removing a kernel definition, user
+has to make sure that all kernels which utilize that definition are removed first.
 
 ----
 
 ### Python API
+
+The native KTT API is available in C++. Users who prefer Python have an option to build KTT as Python module which can be then imported into Python. Majority of the
+KTT API methods can be afterwards called directly from Python while still benefitting from perfomance of KTT module built in C++. It is also possible to provide
+custom searcher and stop condition implementations directly in Python. Users can therefore take advantage of certain libraries available in Python but not in C++ for
+more complex searcher implementations. Majority of functions, enums and classes have the same names and arguments as in C++. A small number of differences are
+described in the followup subsection.
+
+#### Python limitations
 
 Todo
 
