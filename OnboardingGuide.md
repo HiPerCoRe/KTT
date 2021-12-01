@@ -44,6 +44,11 @@ timing of tuned kernels, allows dynamic tuning during program runtime, profiling
 * [Stop conditions](#stop-conditions)
 * [Searchers](#searchers)
 * [Utility functions](#utility-functions)
+* [Collecting profiling metrics](#collecting-profiling-metrics)
+    * [Interaction with online tuning and kernel running](#interaction-with-online-tuning-and-kernel-running)
+* [Interoperability]
+    * [Custom compute library initialization](#custom-compute-library-initialization)
+    * [Asynchronous execution](#asynchronous-execution)
 
 ----
 
@@ -555,12 +560,50 @@ configuration is launched multiple times (e.g., inside kernel launcher).
 
 ----
 
-### Asynchronous execution
+### Collecting profiling metrics
 
-### Profiling
+Apart from execution times, KTT can also collect other types of information from kernel runs. This includes low-level profiling metrics from kernel function
+executions such as global memory utilization, number of executed instructions and more. These metrics can be utilized e.g., by searchers to find well-performing
+configurations faster. The collection of profiling metrics is disabled by default as it changes the default tuning behaviour. In order to collect all profiling
+metrics, it is usually necessary to run the same kernel function multiple times (the number increases when more metrics are collected). It furthemore requires
+kernels to be run synchronously. Enabling profiling metrics collection thus decreases tuning performance. It is possible to mitigate performance impact by enabling
+only certain metrics, which can be done through KTT API.
+
+Collection of profiling metrics is currently supported for Nvidia devices on CUDA backend and AMD devices on OpenCL backend. Intel devices are currently unsupported
+due to lack of profiling library support. Profiling metrics can also be collected for composite kernels. Note however, that for AMD devices and newer Nvidia devices
+(Turing and onwards), collection of metrics is restricted to a single kernel definition within a composite kernel due to profiling library limitations.
+
+#### Interaction with online tuning and kernel running
+
+When utilizing kernel running and online tuning, it is possible to further decrease performance impact of having to execute the same kernel function multiple times.
+Rather than performing all of the profiling runs at once, it is possible to split the profiling metric collection over multiple online tuning or kernel running API
+function invocations and utilize output from each run. The intermediate `KernelResult` structures from such runs will not contain valid profiling counters, but still
+have the remaining data accurate. Once the profiling for the current configuration is concluded, the final kernel result will contain valid profiling data.
+
+----
 
 ### Interoperability
 
+The KTT framework could originally be used only in isolation to create standalone programs which are focused on tuning a specific kernel. In recent versions, the API
+was extended to also support tuner integration into larger software suites. There are multiple major features which contribute to this support. They are described
+in this section.
+
+#### Custom compute library initialization
+
+Todo
+
+#### Asynchronous execution
+
+Todo
+
+----
+
 ### Python API
 
+Todo
+
+----
+
 ### Feature parity across compute APIs
+
+Todo
