@@ -625,15 +625,27 @@ has to make sure that all kernels which utilize that definition are removed firs
 The native KTT API is available in C++. Users who prefer Python have an option to build KTT as Python module which can be then imported into Python. Majority of the
 KTT API methods can be afterwards called directly from Python while still benefitting from perfomance of KTT module built in C++. It is also possible to provide
 custom searcher and stop condition implementations directly in Python. Users can therefore take advantage of certain libraries available in Python but not in C++ for
-more complex searcher implementations. Majority of functions, enums and classes have the same names and arguments as in C++. A small number of differences are
-described in the followup subsection.
+more complex searcher implementations. Majority of functions, enums and classes have the same names and arguments as in C++. A small number of limitations is
+described in the follow-up subsection.
 
 #### Python limitations
 
-Todo
+Major part of KTT API is available in Python. There are however certain features which are restricuted to C++ API due to limitations in Python language and libraries.
+They are the following:
+* Templated methods - Python does not support templates, so there are separate versions of method for different data types instead (e.g., `AddArgumentVectorFloat`,
+`AddArgumentVectorInt`). Addition of kernel arguments with custom types is not supported.
+* Custom library initialization - Custom context, compute queues and buffers cannot be used in Python.
+* Methods which use void pointers (void*) in C++ API - Python does not have a direct equivalent to void* type. It is necessary to utilize low-level `ctypes` Python
+module to be able to interact with these methods.
 
 ----
 
 ### Feature parity across compute APIs
 
-Todo
+KTT framework aims to maintain feature parity across all of its supported compute APIs (OpenCL, CUDA and Vulkan). That means if a certain feature is supported in
+KTT CUDA backend, it should also be available in OpenCL and Vulkan backends, provided that the feature is natively supported in those APIs. There are certain exceptions
+to that:
+* Vulkan backend - certain features are currently unsupported in Vulkan due to development time constraints. These include support for profiling metrics, unified
+and zero-copy buffers and certain advanced buffer handling methods. The support for these features may still be added at later time.
+* Unified memory in OpenCL - usage of unified OpenCL buffers requires support for OpenCL 2.0. Certain devices (e.g., Nvidia GPUs) still have this support unfinished.
+* Templated kernel functions - templates are currently limited to CUDA kernels due to lack of support in other APIs
