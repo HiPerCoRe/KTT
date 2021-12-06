@@ -36,7 +36,7 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
 
     Logger::LogInfo("Running kernel " + kernel.GetName() + " with configuration: " + configuration.GetString());
     auto launcher = GetKernelLauncher(kernel);
-    KernelResult result = RunKernelInternal(kernel, configuration, launcher, output);
+    KernelResult result = RunKernelInternal(kernel, configuration, mode, launcher, output);
     ValidateResult(kernel, result, mode);
 
     if (manageBuffers)
@@ -209,9 +209,9 @@ KernelLauncher KernelRunner::GetKernelLauncher(const Kernel& kernel)
 }
 
 KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration,
-    KernelLauncher launcher, const std::vector<BufferOutputDescriptor>& output)
+    const KernelRunMode mode, KernelLauncher launcher, const std::vector<BufferOutputDescriptor>& output)
 {
-    m_ComputeLayer->AddData(kernel, configuration);
+    m_ComputeLayer->AddData(kernel, configuration, mode);
     const KernelId id = kernel.GetId();
 
     auto activator = std::make_unique<KernelActivator>(*m_ComputeLayer, id);

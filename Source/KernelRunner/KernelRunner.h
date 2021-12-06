@@ -51,8 +51,8 @@ private:
     bool m_ProfilingFlag;
 
     KernelLauncher GetKernelLauncher(const Kernel& kernel);
-    KernelResult RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration, KernelLauncher launcher,
-        const std::vector<BufferOutputDescriptor>& output);
+    KernelResult RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
+        KernelLauncher launcher, const std::vector<BufferOutputDescriptor>& output);
     Nanoseconds RunLauncher(KernelLauncher launcher);
 
     void PrepareValidationData(const ArgumentId id);

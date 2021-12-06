@@ -42,6 +42,7 @@ public:
     const DimensionVector& GetCurrentGlobalSize(const KernelDefinitionId id) const override;
     const DimensionVector& GetCurrentLocalSize(const KernelDefinitionId id) const override;
     const KernelConfiguration& GetCurrentConfiguration() const override;
+    KernelRunMode GetRunMode() const override;
 
     void ChangeArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& arguments) override;
     void SwapArguments(const KernelDefinitionId id, const ArgumentId first, const ArgumentId second) override;
@@ -70,7 +71,7 @@ public:
     void ClearComputeEngineData(const KernelDefinitionId id);
     void ClearComputeEngineData();
 
-    void AddData(const Kernel& kernel, const KernelConfiguration& configuration);
+    void AddData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode);
     void ClearData(const KernelId id);
     KernelResult GenerateResult(const KernelId id, const Nanoseconds launcherDuration) const;
 

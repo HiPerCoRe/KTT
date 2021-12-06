@@ -135,6 +135,11 @@ const KernelConfiguration& ComputeLayer::GetCurrentConfiguration() const
     return GetData().GetConfiguration();
 }
 
+KernelRunMode ComputeLayer::GetRunMode() const
+{
+    return GetData().GetRunMode();
+}
+
 void ComputeLayer::ChangeArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& arguments)
 {
     if (!ContainsUniqueElements(arguments))
@@ -314,9 +319,9 @@ void ComputeLayer::ClearComputeEngineData()
     }
 }
 
-void ComputeLayer::AddData(const Kernel& kernel, const KernelConfiguration& configuration)
+void ComputeLayer::AddData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode)
 {
-    m_Data[kernel.GetId()] = std::make_unique<ComputeLayerData>(kernel, configuration);
+    m_Data[kernel.GetId()] = std::make_unique<ComputeLayerData>(kernel, configuration, mode);
 }
 
 void ComputeLayer::ClearData(const KernelId id)

@@ -9,6 +9,7 @@
 
 #include <Api/Configuration/DimensionVector.h>
 #include <Api/Configuration/KernelConfiguration.h>
+#include <KernelRunner/KernelRunMode.h>
 #include <KttPlatform.h>
 #include <KttTypes.h>
 
@@ -161,6 +162,12 @@ public:
       * @return Configuration of the currently launched kernel. See KernelConfiguration for more information.
       */
     virtual const KernelConfiguration& GetCurrentConfiguration() const = 0;
+
+    /** @fn virtual KernelRunMode GetRunMode() const = 0
+      * Returns run mode of the currently launched kernel.
+      * @return Run mode of the currently launched kernel. See ::KernelRunMode for more information.
+      */
+    virtual KernelRunMode GetRunMode() const = 0;
 
     /** @fn virtual void ChangeArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& arguments) = 0
       * Changes kernel arguments for the specified kernel definitions under currently launched kernel.
