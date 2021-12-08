@@ -59,7 +59,7 @@ void InitializePythonSearchers(py::module_& module)
         .def(py::init<>());
 
     py::class_<ktt::McmcSearcher, ktt::Searcher>(module, "McmcSearcher")
-        .def(py::init<const std::vector<double>&>());
+        .def(py::init<const ktt::KernelConfiguration&>(), py::arg("start") = ktt::KernelConfiguration());
 
     py::class_<ktt::RandomSearcher, ktt::Searcher>(module, "RandomSearcher")
         .def(py::init<>());
