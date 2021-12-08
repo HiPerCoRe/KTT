@@ -200,6 +200,10 @@ function linkPython()
     includedirs {pythonHeaders, "Libraries/pybind11-2.8.1-smart_holder"}
     files {"Libraries/pybind11-2.8.1-smart_holder/**"}
     
+    if os.target() == "windows" then
+        pythonLibrary = pythonLibrary:gsub("\\", "/")
+    end
+    
     local libraryPath = path.getdirectory(pythonLibrary)
     libdirs {libraryPath}
     
