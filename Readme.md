@@ -107,6 +107,14 @@ systems are Linux and Windows.
     - `vulkan` distributed with specific device drivers (Vulkan only)
     - `shaderc_shared` bundled with Vulkan SDK (Vulkan only)
     
+Python bindings
+---------------
+To be able to use KTT Python API, the KTT module must be built with `--python` option. For the build option to work, access to Python
+development headers and library must be provided under environment variables `PYTHON_HEADERS` and `PYTHON_LIB` respectively. Once the
+build is finished, in addition to the regular C++ module, a Python module will be created (named `pyktt.pyd` under Windows, `pyktt.so`
+under Linux). This module can be imported into Python programs in the same way as regular modules. Note that Python must have access to
+all modules which depend on the KTT module (e.g., various profiling libraries), otherwise the loading will fail.
+
 Related projects
 ----------------
 KTT API is based on [CLTune project](https://github.com/CNugteren/CLTune). Certain parts of the API are similar to CLTune. However, the internal
