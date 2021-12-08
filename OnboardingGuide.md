@@ -330,6 +330,8 @@ tuner.AddParameter(kernel, "vector_type", std::vector<uint64_t>{1, 2, 4, 8});
 auto vectorizedSoA = [](const std::vector<uint64_t>& values) {return values[0] > 1 || values[1] != 1;}; 
 tuner.AddConstraint(kernel, {"vector_type", "vectorized_soa"}, vectorizedSoA);
 ```
+Note that parameter constraints are typically used in three scenarios. First, constraints can remove points in the tuning space (i.e., combinations of tuning parameters' values), which produces invalid code. Consider an example when two-dimensional blocks (work-groups in OpenCL) are created. The constraint can upper-bound thread block size (computed as block's x-dimension multiplied by block's y-dimension), so it does not exceed the highest thread block size executable on GPU. Second, constraints can prune redundant points in tuning space. In the example above, there is no need to tune vector size when the code is not vectorized. Third, constraints can remove points in the tuning space that produce underperforming code. In our example, considering two-dimensional thread blocks, we can constrain tuning space to avoid sub-warp blocks with less than 32 threads.
+
 
 #### Parameter groups
 
