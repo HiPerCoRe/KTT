@@ -1,6 +1,6 @@
 import ctypes
 import sys
-import ktt
+import pyktt as ktt
 
 def main():
     # Initialize device index and path to kernel.

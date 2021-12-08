@@ -189,19 +189,27 @@ function linkVulkan()
 end
 
 function linkPython()
-    local path = os.getenv("PYTHON_PATH")
+    local pythonHeaders = os.getenv("PYTHON_HEADERS")
+    local pythonLibrary = os.getenv("PYTHON_LIB")
     
-    if not path then
+    if not pythonHeaders or not pythonLibrary then
         return false
     end
     
     defines {"KTT_PYTHON", "PYBIND11_USE_SMART_HOLDER_AS_DEFAULT"}
-    includedirs {"$(PYTHON_PATH)/include", "Libraries/pybind11-2.8.1-smart_holder"}
+    includedirs {pythonHeaders, "Libraries/pybind11-2.8.1-smart_holder"}
     files {"Libraries/pybind11-2.8.1-smart_holder/**"}
     
-    libdirs {"$(PYTHON_PATH)/libs"}
-    links {"python3"}
+    local libraryPath = path.getdirectory(pythonLibrary)
+    libdirs {libraryPath}
     
+    local libraryName = path.getbasename(pythonLibrary)
+    
+    if os.target() == "linux" and string.startswith(libraryName, "lib") then
+        libraryName = libraryName:sub(4)
+    end
+    
+    links {libraryName}
     return true
 end
 
@@ -225,7 +233,7 @@ function linkAllLibraries()
         local pythonFound = linkPython()
         
         if not pythonFound then
-            error("Python installation was not found. Please ensure that path to Python is correctly set in the environment variables under PYTHON_PATH.")
+            error("Python installation was not found. Please ensure that paths to Python headers and Python library (including library name) are correctly set in the environment variables under PYTHON_HEADERS and PYTHON_LIB.")
         end
     end
 end
@@ -364,12 +372,13 @@ project "Ktt"
         "Libraries/pugixml-1.11.4"
     }
     
-    filter "system:windows"
-        if _OPTIONS["python"] then
-            postbuildcommands {"{COPYFILE} %{cfg.targetdir}/ktt.dll %{cfg.targetdir}/ktt.pyd"}
-        end
-    
-    filter {}
+    if _OPTIONS["python"] then
+        if os.target() == "linux" then
+            postbuildcommands {"{COPYFILE} %{cfg.targetdir}/libktt.so %{cfg.targetdir}/pyktt.so"}
+        else
+            postbuildcommands {"{COPYFILE} %{cfg.targetdir}/ktt.dll %{cfg.targetdir}/pyktt.pyd"}
+        end     
+    end
     
     defines {"KTT_LIBRARY"}
     targetname("ktt")

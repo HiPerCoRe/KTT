@@ -17,9 +17,11 @@
     #endif // KTT_LIBRARY
 
     #define KTT_VIRTUAL_API virtual
+    #define KTT_VISIBILITY_HIDDEN
 #else
     #define KTT_API
     #define KTT_VIRTUAL_API
+    #define KTT_VISIBILITY_HIDDEN __attribute__((visibility("hidden")))
 #endif // _MSC_VER
 #endif // KTT_API
 

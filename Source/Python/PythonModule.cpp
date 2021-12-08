@@ -14,7 +14,7 @@ void InitializePythonDataHolders(py::module_& module);
 void InitializePythonSearchers(py::module_& module);
 void InitializePythonStopConditions(py::module_& module);
 
-PYBIND11_MODULE(ktt, module)
+PYBIND11_MODULE(pyktt, module)
 {
     module.doc() = "Python bindings for KTT auto-tuning framework (https://github.com/HiPerCoRe/KTT)";
 

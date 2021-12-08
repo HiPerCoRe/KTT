@@ -7,7 +7,7 @@
 
 namespace py = pybind11;
 
-class PyStopCondition : public ktt::StopCondition, public py::trampoline_self_life_support
+class KTT_VISIBILITY_HIDDEN PyStopCondition : public ktt::StopCondition, public py::trampoline_self_life_support
 {
 public:
     using StopCondition::StopCondition;

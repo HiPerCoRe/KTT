@@ -1,6 +1,6 @@
 import ctypes
 import sys
-import ktt
+import pyktt as ktt
 
 def computeReference(a, b, scalar, buffer):
     ctypes.pythonapi.PyCapsule_GetPointer.restype = ctypes.POINTER(ctypes.c_float)

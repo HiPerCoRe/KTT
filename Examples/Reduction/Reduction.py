@@ -1,7 +1,7 @@
 import ctypes
 import random
 import sys
-import ktt
+import pyktt as ktt
 
 def reference(buffer, src):
     ctypes.pythonapi.PyCapsule_GetPointer.restype = ctypes.POINTER(ctypes.c_float)

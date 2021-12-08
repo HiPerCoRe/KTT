@@ -1,6 +1,6 @@
 import random
 import sys
-import ktt
+import pyktt as ktt
 
 def main():
     # Initialize platform index, device index and paths to kernels.

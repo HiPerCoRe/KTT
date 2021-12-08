@@ -1,4 +1,4 @@
-import ktt
+import pyktt as ktt
 
 def main():
     # Create new tuner which uses CUDA as compute API.

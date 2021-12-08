@@ -1,6 +1,6 @@
 import ctypes
 import sys
-import ktt
+import pyktt as ktt
 
 # Implement custom stop condition in Python. The interface is the same as in C++. Note that it is necessary to call
 # the parent class constructor from inheriting constructor.
