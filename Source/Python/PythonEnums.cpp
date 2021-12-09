@@ -65,6 +65,12 @@ void InitializePythonEnums(py::module_& module)
         .value("CUDA", ktt::GlobalSizeType::CUDA)
         .value("Vulkan", ktt::GlobalSizeType::Vulkan);
 
+    py::enum_<ktt::KernelRunMode>(module, "KernelRunMode")
+        .value("Running", ktt::KernelRunMode::Running)
+        .value("OfflineTuning", ktt::KernelRunMode::OfflineTuning)
+        .value("OnlineTuning", ktt::KernelRunMode::OnlineTuning)
+        .value("ResultValidation", ktt::KernelRunMode::ResultValidation);
+
     py::enum_<ktt::LoggingLevel>(module, "LoggingLevel")
         .value("Off", ktt::LoggingLevel::Off)
         .value("Error", ktt::LoggingLevel::Error)
