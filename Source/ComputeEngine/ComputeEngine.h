@@ -57,6 +57,7 @@ public:
     virtual QueueId GetDefaultQueue() const = 0;
     virtual std::vector<QueueId> GetAllQueues() const = 0;
     virtual void SynchronizeQueue(const QueueId queueId) = 0;
+    virtual void SynchronizeQueues() = 0;
     virtual void SynchronizeDevice() = 0;
 
     // Information retrieval methods

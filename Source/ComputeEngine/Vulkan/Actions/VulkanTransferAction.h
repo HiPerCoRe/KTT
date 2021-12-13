@@ -20,14 +20,16 @@ class VulkanQueryPool;
 class VulkanTransferAction
 {
 public:
-    VulkanTransferAction(const TransferActionId id, const VulkanDevice* device = nullptr, const VulkanCommandPool* commandPool = nullptr,
-        VulkanQueryPool* queryPool = nullptr, std::unique_ptr<VulkanBuffer> stagingBuffer = nullptr);
+    VulkanTransferAction(const TransferActionId id, const QueueId queueId, const VulkanDevice* device = nullptr,
+        const VulkanCommandPool* commandPool = nullptr, VulkanQueryPool* queryPool = nullptr,
+        std::unique_ptr<VulkanBuffer> stagingBuffer = nullptr);
 
     void SetDuration(const Nanoseconds duration);
     void IncreaseOverhead(const Nanoseconds overhead);
     void WaitForFinish();
 
     TransferActionId GetId() const;
+    QueueId GetQueueId() const;
     VkFence GetFence() const;
     VkCommandBuffer GetCommandBuffer() const;
     uint32_t GetFirstQueryId() const;
@@ -39,6 +41,7 @@ public:
 
 private:
     TransferActionId m_Id;
+    QueueId m_QueueId;
     std::unique_ptr<VulkanFence> m_Fence;
     std::unique_ptr<VulkanCommandBuffers> m_CommandBuffers;
     std::unique_ptr<VulkanBuffer> m_StagingBuffer;

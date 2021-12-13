@@ -583,7 +583,55 @@ void Tuner::RemoveComputeQueue(const QueueId id)
     }
 }
 
-void Tuner::Synchronize()
+void Tuner::WaitForComputeAction(const ComputeActionId id)
+{
+    try
+    {
+        m_Tuner->WaitForComputeAction(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::WaitForTransferAction(const TransferActionId id)
+{
+    try
+    {
+        m_Tuner->WaitForTransferAction(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::SynchronizeQueue(const QueueId id)
+{
+    try
+    {
+        m_Tuner->SynchronizeQueue(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::SynchronizeQueues()
+{
+    try
+    {
+        m_Tuner->SynchronizeQueues();
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::SynchronizeDevice()
 {
     try
     {
@@ -593,6 +641,11 @@ void Tuner::Synchronize()
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
     }
+}
+
+void Tuner::Synchronize()
+{
+    SynchronizeDevice();
 }
 
 void Tuner::SetProfilingCounters(const std::vector<std::string>& counters)

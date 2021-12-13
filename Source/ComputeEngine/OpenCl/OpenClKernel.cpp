@@ -42,7 +42,7 @@ std::unique_ptr<OpenClComputeAction> OpenClKernel::Launch(const OpenClCommandQue
 {
     const DimensionVector adjustedSize = AdjustGlobalSize(globalSize, localSize);
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<OpenClComputeAction>(id, shared_from_this(), adjustedSize, localSize);
+    auto action = std::make_unique<OpenClComputeAction>(id, queue.GetId(), shared_from_this(), adjustedSize, localSize);
 
     Logger::LogDebug("Launching kernel " + m_Name + " with compute action id " + std::to_string(id) + ", global thread size: "
         + adjustedSize.GetString() + ", local thread size: " + localSize.GetString());

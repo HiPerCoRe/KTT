@@ -69,6 +69,7 @@ public:
     QueueId GetDefaultQueue() const override;
     std::vector<QueueId> GetAllQueues() const override;
     void SynchronizeQueue(const QueueId queueId) override;
+    void SynchronizeQueues() override;
     void SynchronizeDevice() override;
 
     // Information retrieval methods
@@ -113,6 +114,7 @@ private:
     void SetKernelArgument(OpenClKernel& kernel, const KernelArgument& argument);
     std::unique_ptr<OpenClBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<OpenClBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
+    void ClearQueueActions(const QueueId id);
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     void InitializeGpa();

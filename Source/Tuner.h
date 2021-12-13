@@ -626,10 +626,38 @@ public:
       */
     void RemoveComputeQueue(const QueueId id);
 
-    /** @fn void Synchronize()
+    /** @fn void WaitForComputeAction(const ComputeActionId id)
+      * Blocks until the specified compute action is finished.
+      * @param id Id of compute action to wait for.
+      */
+    void WaitForComputeAction(const ComputeActionId id);
+
+    /** @fn void WaitForTransferAction(const TransferActionId id)
+      * Blocks until the specified buffer transfer action is finished.
+      * @param id Id of transfer action to wait for.
+      */
+    void WaitForTransferAction(const TransferActionId id);
+
+    /** @fn void SynchronizeQueue(const QueueId id)
+      * Blocks until all commands submitted to the specified KTT device queue are completed.
+      * @param id Id of queue which will be synchronized.
+      */
+    void SynchronizeQueue(const QueueId id);
+
+    /** @fn void SynchronizeQueues()
       * Blocks until all commands submitted to all KTT device queues are completed.
       */
-    void Synchronize();
+    void SynchronizeQueues();
+
+    /** @fn void SynchronizeDevice()
+      * Blocks until all commands submitted to KTT device are completed.
+      */
+    void SynchronizeDevice();
+
+    /** @fn void Synchronize()
+      * Blocks until all commands submitted to KTT device are completed.
+      */
+    [[deprecated("Use SynchronizeDevice() or SynchronizeQueues() method instead.")]] void Synchronize();
 
     /** @fn void SetProfilingCounters(const std::vector<std::string>& counters)
       * Specifies profiling counters that will be collected during kernel profiling. Note that not all profiling counters are

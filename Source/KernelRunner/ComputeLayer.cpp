@@ -115,6 +115,11 @@ void ComputeLayer::SynchronizeQueue(const QueueId queue)
     m_ComputeEngine.SynchronizeQueue(queue);
 }
 
+void ComputeLayer::SynchronizeQueues()
+{
+    m_ComputeEngine.SynchronizeQueues();
+}
+
 void ComputeLayer::SynchronizeDevice()
 {
     m_ComputeEngine.SynchronizeDevice();

@@ -37,6 +37,7 @@ public:
     QueueId GetDefaultQueue() const override;
     std::vector<QueueId> GetAllQueues() const override;
     void SynchronizeQueue(const QueueId queue) override;
+    void SynchronizeQueues() override;
     void SynchronizeDevice() override;
 
     const DimensionVector& GetCurrentGlobalSize(const KernelDefinitionId id) const override;

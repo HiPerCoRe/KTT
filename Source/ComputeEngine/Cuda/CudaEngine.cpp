@@ -614,14 +614,23 @@ void CudaEngine::SynchronizeQueue(const QueueId queueId)
     }
 
     m_Streams[queueId]->Synchronize();
+    ClearStreamActions(queueId);
 }
 
-void CudaEngine::SynchronizeDevice()
+void CudaEngine::SynchronizeQueues()
 {
     for (auto& stream : m_Streams)
     {
         stream.second->Synchronize();
+        ClearStreamActions(stream.first);
     }
+}
+
+void CudaEngine::SynchronizeDevice()
+{
+    m_Context->Synchronize();
+    m_ComputeActions.clear();
+    m_TransferActions.clear();
 }
 
 std::vector<PlatformInfo> CudaEngine::GetPlatformInfo() const
@@ -856,6 +865,19 @@ std::string CudaEngine::GetDefaultCompilerOptions() const
     std::string result = "--gpu-architecture=compute_" + std::to_string(computeCapabilityMajor)
         + std::to_string(computeCapabilityMinor);
     return result;
+}
+
+void CudaEngine::ClearStreamActions(const QueueId id)
+{
+    EraseIf(m_ComputeActions, [id](const auto& pair)
+    {
+        return pair.second->GetQueueId() == id;
+    });
+
+    EraseIf(m_TransferActions, [id](const auto& pair)
+    {
+        return pair.second->GetQueueId() == id;
+    });
 }
 
 #if defined(KTT_PROFILING_CUPTI)

@@ -14,10 +14,11 @@
 namespace ktt
 {
 
-VulkanComputeAction::VulkanComputeAction(const ComputeActionId id, const VulkanDevice& device, const VulkanCommandPool& commandPool,
-    VulkanQueryPool& queryPool, std::shared_ptr<VulkanComputePipeline> pipeline, const DimensionVector& globalSize,
-    const DimensionVector& localSize) :
+VulkanComputeAction::VulkanComputeAction(const ComputeActionId id, const QueueId queueId, const VulkanDevice& device,
+    const VulkanCommandPool& commandPool, VulkanQueryPool& queryPool, std::shared_ptr<VulkanComputePipeline> pipeline,
+    const DimensionVector& globalSize, const DimensionVector& localSize) :
     m_Id(id),
+    m_QueueId(queueId),
     m_Pipeline(pipeline),
     m_QueryPool(queryPool),
     m_Overhead(0),
@@ -55,6 +56,11 @@ void VulkanComputeAction::WaitForFinish()
 ComputeActionId VulkanComputeAction::GetId() const
 {
     return m_Id;
+}
+
+QueueId VulkanComputeAction::GetQueueId() const
+{
+    return m_QueueId;
 }
 
 VulkanComputePipeline& VulkanComputeAction::GetPipeline()

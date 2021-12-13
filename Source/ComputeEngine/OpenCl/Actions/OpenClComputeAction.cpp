@@ -9,9 +9,10 @@
 namespace ktt
 {
 
-OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, std::shared_ptr<OpenClKernel> kernel,
+OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, const QueueId queueId, std::shared_ptr<OpenClKernel> kernel,
     const DimensionVector& globalSize, const DimensionVector& localSize) :
     m_Id(id),
+    m_QueueId(queueId),
     m_Kernel(kernel),
     m_Overhead(0),
     m_GlobalSize(globalSize),
@@ -48,6 +49,11 @@ void OpenClComputeAction::WaitForFinish()
 ComputeActionId OpenClComputeAction::GetId() const
 {
     return m_Id;
+}
+
+QueueId OpenClComputeAction::GetQueueId() const
+{
+    return m_QueueId;
 }
 
 OpenClKernel& OpenClComputeAction::GetKernel()

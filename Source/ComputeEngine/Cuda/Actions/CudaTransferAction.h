@@ -14,12 +14,13 @@ namespace ktt
 class CudaTransferAction
 {
 public:
-    CudaTransferAction(const TransferActionId id);
+    CudaTransferAction(const TransferActionId id, const QueueId queueId);
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void WaitForFinish();
 
     TransferActionId GetId() const;
+    QueueId GetQueueId() const;
     CUevent GetStartEvent() const;
     CUevent GetEndEvent() const;
     Nanoseconds GetDuration() const;
@@ -28,6 +29,7 @@ public:
 
 private:
     TransferActionId m_Id;
+    QueueId m_QueueId;
     std::unique_ptr<CudaEvent> m_StartEvent;
     std::unique_ptr<CudaEvent> m_EndEvent;
     Nanoseconds m_Overhead;

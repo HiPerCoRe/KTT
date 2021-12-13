@@ -129,8 +129,8 @@ std::unique_ptr<VulkanComputeAction> VulkanComputePipeline::DispatchShader(const
     };
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<VulkanComputeAction>(id, m_Device, commandPool, queryPool, shared_from_this(), globalSize,
-        m_LocalSize);
+    auto action = std::make_unique<VulkanComputeAction>(id, queue.GetId(), m_Device, commandPool, queryPool, shared_from_this(),
+        globalSize, m_LocalSize);
     std::vector<VkDescriptorSet> sets = m_DescriptorSets->GetSets();
     VulkanPushConstant pushConstant(scalarArguments);
     VkCommandBuffer commandBuffer = action->GetCommandBuffer();

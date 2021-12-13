@@ -18,6 +18,7 @@ public:
     explicit CudaContext(ComputeContext context);
     ~CudaContext();
 
+    void Synchronize() const;
     void EnsureThreadContext() const;
 
     CUcontext GetContext() const;

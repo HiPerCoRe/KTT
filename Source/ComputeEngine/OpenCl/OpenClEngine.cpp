@@ -552,14 +552,21 @@ void OpenClEngine::SynchronizeQueue(const QueueId queueId)
     }
 
     m_Queues[queueId]->Synchronize();
+    ClearQueueActions(queueId);
 }
 
-void OpenClEngine::SynchronizeDevice()
+void OpenClEngine::SynchronizeQueues()
 {
     for (auto& queue : m_Queues)
     {
         queue.second->Synchronize();
+        ClearQueueActions(queue.first);
     }
+}
+
+void OpenClEngine::SynchronizeDevice()
+{
+    SynchronizeQueues();
 }
 
 std::vector<PlatformInfo> OpenClEngine::GetPlatformInfo() const
@@ -754,6 +761,19 @@ std::unique_ptr<OpenClBuffer> OpenClEngine::CreateUserBuffer(KernelArgument& arg
     }
 
     return userBuffer;
+}
+
+void OpenClEngine::ClearQueueActions(const QueueId id)
+{
+    EraseIf(m_ComputeActions, [id](const auto& pair)
+    {
+        return pair.second->GetQueueId() == id;
+    });
+
+    EraseIf(m_TransferActions, [id](const auto& pair)
+    {
+        return pair.second->GetQueueId() == id;
+    });
 }
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)

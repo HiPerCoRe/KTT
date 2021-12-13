@@ -87,6 +87,10 @@ public:
     // Compute engine
     QueueId AddComputeQueue(ComputeQueue queue);
     void RemoveComputeQueue(const QueueId id);
+    void WaitForComputeAction(const ComputeActionId id);
+    void WaitForTransferAction(const TransferActionId id);
+    void SynchronizeQueue(const QueueId queueId);
+    void SynchronizeQueues();
     void SynchronizeDevice();
     void SetProfilingCounters(const std::vector<std::string>& counters);
     void SetCompilerOptions(const std::string& options);

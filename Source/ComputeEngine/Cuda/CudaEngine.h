@@ -71,6 +71,7 @@ public:
     QueueId GetDefaultQueue() const override;
     std::vector<QueueId> GetAllQueues() const override;
     void SynchronizeQueue(const QueueId queueId) override;
+    void SynchronizeQueues() override;
     void SynchronizeDevice() override;
 
     // Information retrieval methods
@@ -118,6 +119,7 @@ private:
     std::unique_ptr<CudaBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<CudaBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
     std::string GetDefaultCompilerOptions() const;
+    void ClearStreamActions(const QueueId id);
 
 #if defined(KTT_PROFILING_CUPTI)
     void InitializeCupti();

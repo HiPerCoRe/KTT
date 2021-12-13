@@ -52,8 +52,8 @@ public:
       * kernel.
       * @param queue Id of queue in which the command to run kernel will be submitted.
       * @return Id of asynchronous action corresponding to the issued kernel run command. The action must be waited for with
-      * WaitForComputeAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
-      * kernel durations may occur.
+      * e.g., WaitForComputeAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded kernel durations
+      * may occur.
       */
     virtual ComputeActionId RunKernelAsync(const KernelDefinitionId id, const QueueId queue) = 0;
 
@@ -67,8 +67,8 @@ public:
       * @param globalSize Dimensions for global size with which the kernel will be run.
       * @param localSize Dimensions for local size with which the kernel will be run.
       * @return Id of asynchronous action corresponding to the issued kernel run command. The action must be waited for with
-      * WaitForComputeAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
-      * kernel durations may occur.
+      * e.g., WaitForComputeAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded kernel durations
+      * may occur.
       */
     virtual ComputeActionId RunKernelAsync(const KernelDefinitionId id, const QueueId queue, const DimensionVector& globalSize,
         const DimensionVector& localSize) = 0;
@@ -136,8 +136,13 @@ public:
       */
     virtual void SynchronizeQueue(const QueueId queue) = 0;
 
-    /** @fn virtual void SynchronizeDevice() = 0
+    /** @fn virtual void SynchronizeQueues() = 0
       * Blocks until all commands submitted to all device queues are completed.
+      */
+    virtual void SynchronizeQueues() = 0;
+
+    /** @fn virtual void SynchronizeDevice() = 0
+      * Blocks until all commands submitted to device are completed.
       */
     virtual void SynchronizeDevice() = 0;
 
@@ -214,8 +219,8 @@ public:
       * @param id Id of vector argument which will be uploaded.
       * @param queue Id of queue in which the command to upload argument will be submitted.
       * @return Id of asynchronous action corresponding to the issued data transfer command. The action must be waited for with
-      * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
-      * kernel durations may occur.
+      * e.g., WaitForTransferAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded transfer
+      * durations may occur.
       */
     virtual TransferActionId UploadBufferAsync(const ArgumentId id, const QueueId queue) = 0;
 
@@ -240,8 +245,8 @@ public:
       * @param dataSize Size in bytes of buffer portion which will be downloaded to specified destination, starting with the first
       * byte. If zero, the entire buffer will be downloaded.
       * @return Id of asynchronous action corresponding to the issued data transfer command. The action must be waited for with
-      * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
-      * kernel durations may occur.
+      * e.g., WaitForTransferAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded transfer
+      * durations may occur.
       */
     virtual TransferActionId DownloadBufferAsync(const ArgumentId id, const QueueId queue, void* destination,
         const size_t dataSize = 0) = 0;
@@ -267,8 +272,8 @@ public:
       * @param dataSize Size in bytes of buffer portion which will be updated, starting with the first byte. If zero, the entire
       * buffer will be updated.
       * @return Id of asynchronous action corresponding to the issued data transfer command. The action must be waited for with
-      * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
-      * kernel durations may occur.
+      * e.g., WaitForTransferAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded transfer
+      * durations may occur.
       */
     virtual TransferActionId UpdateBufferAsync(const ArgumentId id, const QueueId queue, const void* data,
         const size_t dataSize = 0) = 0;
@@ -292,8 +297,8 @@ public:
       * @param dataSize Size in bytes of buffer portion which will be copied to destination buffer, starting with the first byte.
       * If zero, the entire buffer will be copied.
       * @return Id of asynchronous action corresponding to the issued data transfer command. The action must be waited for with
-      * WaitForTransferAction(), SynchronizeQueue() or SynchronizeDevice() methods. Otherwise, problems such as incorrectly recorded
-      * kernel durations may occur.
+      * e.g., WaitForTransferAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded transfer
+      * durations may occur.
       */
     virtual TransferActionId CopyBufferAsync(const ArgumentId destination, const ArgumentId source, const QueueId queue,
         const size_t dataSize = 0) = 0;

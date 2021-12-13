@@ -327,6 +327,26 @@ void TunerCore::RemoveComputeQueue(const QueueId id)
     m_ComputeEngine->RemoveComputeQueue(id);
 }
 
+void TunerCore::WaitForComputeAction(const ComputeActionId id)
+{
+    m_ComputeEngine->WaitForComputeAction(id);
+}
+
+void TunerCore::WaitForTransferAction(const TransferActionId id)
+{
+    m_ComputeEngine->WaitForTransferAction(id);
+}
+
+void TunerCore::SynchronizeQueue(const QueueId queueId)
+{
+    m_ComputeEngine->SynchronizeQueue(queueId);
+}
+
+void TunerCore::SynchronizeQueues()
+{
+    m_ComputeEngine->SynchronizeQueues();
+}
+
 void TunerCore::SynchronizeDevice()
 {
     m_ComputeEngine->SynchronizeDevice();

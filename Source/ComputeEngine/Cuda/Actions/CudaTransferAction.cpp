@@ -9,8 +9,9 @@
 namespace ktt
 {
 
-CudaTransferAction::CudaTransferAction(const TransferActionId id) :
+CudaTransferAction::CudaTransferAction(const TransferActionId id, const QueueId queueId) :
     m_Id(id),
+    m_QueueId(queueId),
     m_Overhead(0)
 {
     Logger::LogDebug("Initializing CUDA transfer action with id " + std::to_string(id));
@@ -32,6 +33,11 @@ void CudaTransferAction::WaitForFinish()
 TransferActionId CudaTransferAction::GetId() const
 {
     return m_Id;
+}
+
+QueueId CudaTransferAction::GetQueueId() const
+{
+    return m_QueueId;
 }
 
 CUevent CudaTransferAction::GetStartEvent() const

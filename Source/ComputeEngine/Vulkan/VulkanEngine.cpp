@@ -329,14 +329,23 @@ void VulkanEngine::SynchronizeQueue(const QueueId queueId)
     }
 
     m_Queues[static_cast<size_t>(queueId)]->WaitIdle();
+    ClearQueueActions(queueId);
 }
 
-void VulkanEngine::SynchronizeDevice()
+void VulkanEngine::SynchronizeQueues()
 {
     for (auto& queue : m_Queues)
     {
         queue->WaitIdle();
+        ClearQueueActions(queue->GetId());
     }
+}
+
+void VulkanEngine::SynchronizeDevice()
+{
+    m_Device->WaitIdle();
+    m_ComputeActions.clear();
+    m_TransferActions.clear();
 }
 
 std::vector<PlatformInfo> VulkanEngine::GetPlatformInfo() const
@@ -521,6 +530,19 @@ std::unique_ptr<VulkanBuffer> VulkanEngine::CreateUserBuffer([[maybe_unused]] Ke
     [[maybe_unused]] ComputeBuffer buffer)
 {
     throw KttException("Support for custom buffers is not yet available for Vulkan backend");
+}
+
+void VulkanEngine::ClearQueueActions(const QueueId id)
+{
+    EraseIf(m_ComputeActions, [id](const auto& pair)
+    {
+        return pair.second->GetQueueId() == id || pair.second->GetQueueId() == InvalidQueueId;
+    });
+
+    EraseIf(m_TransferActions, [id](const auto& pair)
+    {
+        return pair.second->GetQueueId() == id || pair.second->GetQueueId() == InvalidQueueId;
+    });
 }
 
 std::vector<KernelArgument*> VulkanEngine::GetScalarArguments(const std::vector<KernelArgument*>& arguments)

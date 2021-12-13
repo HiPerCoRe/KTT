@@ -28,6 +28,7 @@ CudaContext::CudaContext(ComputeContext context) :
         throw KttException("The provided user CUDA context is not valid");
     }
 
+    EnsureThreadContext();
     CheckError(cuCtxGetDevice(&m_Device), "cuCtxGetDevice");
 }
 
@@ -39,6 +40,12 @@ CudaContext::~CudaContext()
     {
         CheckError(cuCtxDestroy(m_Context), "cuCtxDestroy");
     }
+}
+
+void CudaContext::Synchronize() const
+{
+    EnsureThreadContext();
+    CheckError(cuCtxSynchronize(), "cuCtxSynchronize");
 }
 
 void CudaContext::EnsureThreadContext() const
