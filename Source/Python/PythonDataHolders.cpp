@@ -106,8 +106,22 @@ void InitializePythonDataHolders(py::module_& module)
         .def("__repr__", &ktt::PlatformInfo::GetString);
 
     py::class_<ktt::BufferOutputDescriptor>(module, "BufferOutputDescriptor")
-        .def(py::init<const ktt::ArgumentId, void*>())
-        .def(py::init<const ktt::ArgumentId, void*, const size_t>())
+        .def
+        (
+            py::init([](const ktt::ArgumentId id, py::buffer buffer)
+            {
+                void* outputDestination = buffer.request(true).ptr;
+                return ktt::BufferOutputDescriptor(id, outputDestination);
+            })
+        )
+        .def
+        (
+            py::init([](const ktt::ArgumentId id, py::buffer buffer, const size_t size)
+            {
+                void* outputDestination = buffer.request(true).ptr;
+                return ktt::BufferOutputDescriptor(id, outputDestination, size);
+            })
+        )
         .def("GetArgumentId", &ktt::BufferOutputDescriptor::GetArgumentId)
         .def("GetOutputDestination", &ktt::BufferOutputDescriptor::GetOutputDestination)
         .def("GetOutputSize", &ktt::BufferOutputDescriptor::GetOutputSize);

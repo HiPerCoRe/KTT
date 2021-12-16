@@ -66,7 +66,7 @@ systems are Linux and Windows.
     - OpenCL, CUDA or Vulkan library, supported SDKs are AMD OCL SDK, Intel SDK for OpenCL, NVIDIA CUDA Toolkit
       and Vulkan SDK
     - Command line build tool [Premake 5](https://premake.github.io/download)
-    - (Optional) Python 3 for Python bindings support
+    - (Optional) Python 3 with NumPy for Python bindings support
     
 * Build under Linux (inside KTT root folder):
     - ensure that path to vendor SDK is correctly set in the environment variables

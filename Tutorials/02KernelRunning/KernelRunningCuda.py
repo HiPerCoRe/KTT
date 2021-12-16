@@ -1,5 +1,5 @@
-import ctypes
 import sys
+import numpy as np
 import pyktt as ktt
 
 def main():
@@ -23,9 +23,10 @@ def main():
     gridSize = int(numberOfElements / blockDimensions.GetSizeX())
     gridDimensions = ktt.DimensionVector(gridSize)
     
-    a = [i * 1.0 for i in range(numberOfElements)]
-    b = [i * 1.0 for i in range(numberOfElements)]
-    result = [0.0 for i in range(numberOfElements)]
+    # Use NumPy arrays to store data
+    a = np.arange(1.0, numberOfElements, dtype=np.single)
+    b = np.arange(1.0, numberOfElements, dtype=np.single)
+    result = np.zeros(numberOfElements, dtype=np.single)
     
     # Create new tuner for the specified device, tuner uses CUDA as compute API. Platform index is ignored when using CUDA.
     tuner = ktt.Tuner(0, deviceIndex, ktt.ComputeApi.CUDA)
@@ -59,16 +60,13 @@ def main():
     # argument and memory location where the argument data will be stored. Optionally, it can also include number of bytes to be retrieved,
     # if only a part of the argument is needed. Note that the memory location size needs to be equal or greater than the retrieved
     # argument size.
-    array = (ctypes.c_float * numberOfElements)()
-    ctypes.pythonapi.PyCapsule_New.restype = ctypes.py_object
-    arrayCapsule = ctypes.pythonapi.PyCapsule_New(array)
-    tuner.Run(kernel, ktt.KernelConfiguration(), [ktt.BufferOutputDescriptor(resultId, arrayCapsule)])
+    tuner.Run(kernel, ktt.KernelConfiguration(), [ktt.BufferOutputDescriptor(resultId, result.data)])
 
     # Print first ten elements from the result to check they were computed correctly.
     print("Printing the first 10 elements from result: ")
 
     for i in range(10):
-        print(array[i])
+        print(result[i])
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
-import ctypes
 import sys
+import numpy as np
 import pyktt as ktt
 
 # Implement custom stop condition in Python. The interface is the same as in C++. Note that it is necessary to call
@@ -60,10 +60,10 @@ def main():
     gridDimensions = ktt.DimensionVector(numberOfElements)
     blockDimensions = ktt.DimensionVector()
     
-    a = [i * 1.0 for i in range(numberOfElements)]
-    b = [i * 1.0 for i in range(numberOfElements)]
-    result = [0.0 for i in range(numberOfElements)]
-    scalarValue = 3.0
+    a = np.arange(1.0, numberOfElements, dtype=np.single)
+    b = np.arange(1.0, numberOfElements, dtype=np.single)
+    result = np.zeros(numberOfElements, dtype=np.single)
+    scalarValue = np.single(3.0)
     
     tuner = ktt.Tuner(0, deviceIndex, ktt.ComputeApi.CUDA)
 
