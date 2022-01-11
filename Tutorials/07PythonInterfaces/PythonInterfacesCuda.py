@@ -60,9 +60,9 @@ def main():
     gridDimensions = ktt.DimensionVector(numberOfElements)
     blockDimensions = ktt.DimensionVector()
     
-    a = np.arange(1.0, numberOfElements, dtype=np.single)
-    b = np.arange(1.0, numberOfElements, dtype=np.single)
-    result = np.zeros(numberOfElements, dtype=np.single)
+    a = np.arange(1.0, numberOfElements + 1, dtype = np.single)
+    b = np.arange(1.0, numberOfElements + 1, dtype = np.single)
+    result = np.zeros(numberOfElements, dtype = np.single)
     scalarValue = np.single(3.0)
     
     tuner = ktt.Tuner(0, deviceIndex, ktt.ComputeApi.CUDA)

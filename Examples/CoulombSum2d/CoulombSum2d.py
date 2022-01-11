@@ -1,5 +1,5 @@
-import random
 import sys
+import numpy as np
 import pyktt as ktt
 
 def main():
@@ -34,13 +34,13 @@ def main():
     # Declare data variables.
     gridSpacing = 0.5
     
-    random.seed(17)
-    atomInfo = [0.0 for i in range(4 * numberOfAtoms)]
-    atomInfoX = [random.uniform(0.0, 40.0) for i in range(numberOfAtoms)]
-    atomInfoY = [random.uniform(0.0, 40.0) for i in range(numberOfAtoms)]
-    atomInfoZ = [random.uniform(0.0, 40.0) for i in range(numberOfAtoms)]
-    atomInfoW = [random.uniform(0.0, 1.0) for i in range(numberOfAtoms)]
-    energyGrid = [0.0 for i in range(numberOfGridPoints)]
+    rng = np.random.default_rng()
+    atomInfo = np.zeros(4 * numberOfAtoms, dtype = np.single)
+    atomInfoX = 40.0 * rng.random(numberOfAtoms, dtype = np.single)
+    atomInfoY = 40.0 * rng.random(numberOfAtoms, dtype = np.single)
+    atomInfoZ = 40.0 * rng.random(numberOfAtoms, dtype = np.single)
+    atomInfoW = rng.random(numberOfAtoms, dtype = np.single)
+    energyGrid = np.zeros(numberOfGridPoints, dtype = np.single)
     
     for i in range(numberOfAtoms):
         atomInfo[4 * i] = atomInfoX[i]

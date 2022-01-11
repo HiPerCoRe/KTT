@@ -1,6 +1,6 @@
 import ctypes
-import random
 import sys
+import numpy as np
 import pyktt as ktt
 
 def reference(buffer, src):
@@ -83,12 +83,9 @@ def main():
 
     n = 64 * 1024 * 1024
     nAlloc = int((n + 16 - 1) / 16) * 16 # pad to the longest vector size
-    src = [0.0 for i in range(nAlloc)]
-    dst = [0.0 for i in range(nAlloc)]
-    random.seed(17)
-    
-    for i in range(n):
-        src[i] = random.uniform(0.0, 1000.0)
+    rng = np.random.default_rng()
+    src = 1000.0 * rng.random(nAlloc, dtype = np.single)
+    dst = np.zeros(nAlloc, dtype = np.single)
 
     tuner = ktt.Tuner(platformIndex, deviceIndex, ktt.ComputeApi.CUDA)
     tuner.SetGlobalSizeType(ktt.GlobalSizeType.OpenCL)

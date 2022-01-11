@@ -24,9 +24,9 @@ def main():
     gridDimensions = ktt.DimensionVector(gridSize)
     
     # Use NumPy arrays to store data
-    a = np.arange(1.0, numberOfElements, dtype=np.single)
-    b = np.arange(1.0, numberOfElements, dtype=np.single)
-    result = np.zeros(numberOfElements, dtype=np.single)
+    a = np.arange(1.0, numberOfElements + 1, dtype = np.single)
+    b = np.arange(1.0, numberOfElements + 1, dtype = np.single)
+    result = np.zeros(numberOfElements, dtype = np.single)
     
     # Create new tuner for the specified device, tuner uses CUDA as compute API. Platform index is ignored when using CUDA.
     tuner = ktt.Tuner(0, deviceIndex, ktt.ComputeApi.CUDA)

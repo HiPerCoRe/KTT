@@ -1,5 +1,6 @@
 import ctypes
 import sys
+import numpy as np
 import pyktt as ktt
 
 def computeReference(a, b, scalar, buffer):
@@ -27,9 +28,9 @@ def main():
     # Block size is initialized to one in this case, it will be controlled with tuning parameter which is added later.
     blockDimensions = ktt.DimensionVector()
     
-    a = [i * 1.0 for i in range(numberOfElements)]
-    b = [i * 1.0 for i in range(numberOfElements)]
-    result = [0.0 for i in range(numberOfElements)]
+    a = np.arange(1.0, numberOfElements + 1, dtype = np.single)
+    b = np.arange(1.0, numberOfElements + 1, dtype = np.single)
+    result = np.zeros(numberOfElements, dtype = np.single)
     scalarValue = 3.0
     
     tuner = ktt.Tuner(0, deviceIndex, ktt.ComputeApi.CUDA)
@@ -43,7 +44,7 @@ def main():
     tuner.SetArguments(definition, [aId, bId, resultId, scalarId])
 
     kernel = tuner.CreateSimpleKernel("Addition", definition)
-
+    
     # Set reference computation for the result argument which will be used by the tuner to automatically validate kernel output.
     # The computation function receives buffer on input, where the reference result should be saved. The size of buffer corresponds
     # to the validated argument size.
