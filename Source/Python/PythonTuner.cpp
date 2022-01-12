@@ -173,7 +173,21 @@ void InitializePythonTuner(py::module_& module)
         .def("SetValidationMode", &ktt::Tuner::SetValidationMode)
         .def("SetValidationRange", &ktt::Tuner::SetValidationRange)
         .def("SetValueComparator", &ktt::Tuner::SetValueComparator)
-        .def("SetReferenceComputation", &ktt::Tuner::SetReferenceComputation)
+        .def
+        (
+            "SetReferenceComputation",
+            [](ktt::Tuner& tuner, const ktt::ArgumentId id, const size_t referenceSize, std::function<void(py::memoryview)> reference)
+            {
+                ktt::ReferenceComputation actualReference = [reference, referenceSize](void* buffer)
+                {
+                    py::gil_scoped_acquire acquire;
+                    auto view = py::memoryview::from_memory(buffer, referenceSize);
+                    reference(view);
+                };
+
+                tuner.SetReferenceComputation(id, actualReference);
+            }
+        )
         .def("SetReferenceKernel", &ktt::Tuner::SetReferenceKernel)
         .def("Tune", py::overload_cast<const ktt::KernelId>(&ktt::Tuner::Tune), py::call_guard<py::gil_scoped_release>())
         .def("Tune", py::overload_cast<const ktt::KernelId, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune), py::call_guard<py::gil_scoped_release>())

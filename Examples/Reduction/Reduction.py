@@ -1,14 +1,11 @@
-import ctypes
 import sys
 import numpy as np
 import pyktt as ktt
 
 def reference(buffer, src):
-    ctypes.pythonapi.PyCapsule_GetPointer.restype = ctypes.POINTER(ctypes.c_float)
-    ctypes.pythonapi.PyCapsule_GetPointer.argtypes = [ctypes.py_object, ctypes.c_void_p]
-    result = ctypes.pythonapi.PyCapsule_GetPointer(buffer, None)
+    result = buffer.cast('f')
     resSize = len(src)
-    resD = [0.0 for i in range(resSize)]
+    resD = np.zeros(resSize, dtype = np.single)
 
     for i in range(resSize):
         resD[i] = src[i]
@@ -129,7 +126,7 @@ def main():
     tuner.AddConstraint(kernel, ["UNBOUNDED_WG", "WORK_GROUP_SIZE_X"], unboundedWG)
     
     referenceComp = lambda buffer: reference(buffer, src)
-    tuner.SetReferenceComputation(dstId, referenceComp)
+    tuner.SetReferenceComputation(dstId, 4, referenceComp)
 
     tuner.SetValidationMethod(ktt.ValidationMethod.SideBySideComparison, float(n) * 10000.0 / 10000000.0)
     tuner.SetValidationRange(dstId, 1)

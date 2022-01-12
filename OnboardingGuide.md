@@ -663,8 +663,8 @@ libraries. They are the following:
 * Templated methods - Python does not support templates, so there are separate versions of methods for different data types instead (e.g., `AddArgumentVectorFloat`,
 `AddArgumentVectorInt`). The addition of kernel arguments with custom types is not supported either.
 * Custom library initialization - Custom context, compute queues and buffers cannot be used in Python.
-* Methods that use void pointers in C++ API - Python does not have a direct equivalent to void* type. It is necessary to utilize a low-level `ctypes` Python
-module to interact with these methods through `PyCapsule` objects.
+* Methods that use void pointers in C++ API - Python does not have a direct equivalent to void* type. It is necessary to utilize NumPy arrays to interact
+with these methods.
 
 ----
 

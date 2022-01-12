@@ -1,12 +1,9 @@
-import ctypes
 import sys
 import numpy as np
 import pyktt as ktt
 
 def computeReference(a, b, scalar, buffer):
-    ctypes.pythonapi.PyCapsule_GetPointer.restype = ctypes.POINTER(ctypes.c_float)
-    ctypes.pythonapi.PyCapsule_GetPointer.argtypes = [ctypes.py_object, ctypes.c_void_p]
-    floatList = ctypes.pythonapi.PyCapsule_GetPointer(buffer, None)
+    floatList = buffer.cast('f')
     
     for i in range(len(a)):
         floatList[i] = a[i] + b[i] + scalar
@@ -49,7 +46,7 @@ def main():
     # The computation function receives buffer on input, where the reference result should be saved. The size of buffer corresponds
     # to the validated argument size.
     reference = lambda buffer : computeReference(a, b, scalarValue, buffer)
-    tuner.SetReferenceComputation(resultId, reference)
+    tuner.SetReferenceComputation(resultId, 4 * numberOfElements, reference)
 
     # Add new kernel parameter. Specify parameter name and possible values. When kernel is tuned, the parameter value is added
     # to the beginning of kernel source as preprocessor definition. E.g., for value of this parameter equal to 32, it is added
