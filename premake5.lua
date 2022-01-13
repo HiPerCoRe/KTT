@@ -197,8 +197,8 @@ function linkPython()
     end
     
     defines {"KTT_PYTHON", "PYBIND11_USE_SMART_HOLDER_AS_DEFAULT"}
-    includedirs {pythonHeaders, "Libraries/pybind11-2.8.1-smart_holder"}
-    files {"Libraries/pybind11-2.8.1-smart_holder/**"}
+    includedirs {pythonHeaders, "Libraries/pybind11-2.9.0-smart_holder"}
+    files {"Libraries/pybind11-2.9.0-smart_holder/**"}
     
     if os.target() == "windows" then
         pythonLibrary = pythonLibrary:gsub("\\", "/")
