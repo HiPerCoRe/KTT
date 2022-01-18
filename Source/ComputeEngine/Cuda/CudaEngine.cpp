@@ -885,7 +885,7 @@ void CudaEngine::ClearStreamActions(const QueueId id)
 void CudaEngine::InitializeCupti()
 {
     m_Profiler = std::make_unique<CuptiProfiler>();
-    m_MetricInterface = std::make_unique<CuptiMetricInterface>(m_DeviceIndex);
+    m_MetricInterface = std::make_unique<CuptiMetricInterface>(m_DeviceIndex, *m_Context);
 }
 
 void CudaEngine::InitializeProfiling(const KernelComputeId& id)
