@@ -330,8 +330,11 @@ tuner.AddParameter(kernel, "vector_type", std::vector<uint64_t>{1, 2, 4, 8});
 auto vectorizedSoA = [](const std::vector<uint64_t>& values) {return values[0] > 1 || values[1] != 1;}; 
 tuner.AddConstraint(kernel, {"vector_type", "vectorized_soa"}, vectorizedSoA);
 ```
-Note that parameter constraints are typically used in three scenarios. First, constraints can remove points in the tuning space (i.e., combinations of tuning parameters' values), which produces invalid code. Consider an example when two-dimensional blocks (work-groups in OpenCL) are created. The constraint can upper-bound thread block size (computed as block's x-dimension multiplied by block's y-dimension), so it does not exceed the highest thread block size executable on GPU. Second, constraints can prune redundant points in tuning space. In the example above, there is no need to tune vector size when the code is not vectorized. Third, constraints can remove points in the tuning space that produce underperforming code. In our example, considering two-dimensional thread blocks, we can constrain tuning space to avoid sub-warp blocks with less than 32 threads.
-
+The parameter constraints are typically used in three scenarios. First, constraints can remove configurations that produce invalid code. Consider an example
+where two-dimensional blocks (work-groups in OpenCL) are created. The constraint can upper-bound thread block size (computed as block's x-dimension multiplied
+by block's y-dimension), so it does not exceed the highest thread block size executable on a GPU. Second, constraints can prune redundant configurations. In
+the example above, there is no need to tune vector size when the code is not vectorized. Third, constraints can remove configurations that are known to produce
+underperforming code. In our example, considering two-dimensional thread blocks, we can constrain the tuning space to avoid sub-warp blocks with less than 32 threads.
 
 #### Parameter groups
 
@@ -339,7 +342,7 @@ The second option is tuning parameter groups. This option is mainly helpful for 
 kernel definition inside the kernel. For example, if we have a composite kernel with two kernel definitions and each definition is affected by three
 parameters (we have six parameters in total), and we know that each parameter only affects one specific definition, we can evaluate the two groups
 independently. This can significantly reduce the total number of evaluated configurations (e.g., if each of the parameters has two different values,
-the total number of configurations is 64 - 2^6; with the usage of parameter groups, it is only 16 - 2^3 + 2^3). It is also possible to combine the use
+the total number of configurations is 64 = 2^6; with the usage of parameter groups, it is only 16 = 2^3 + 2^3). It is also possible to combine the use
 of constraints and groups. However, constraints can only be added between parameters that belong to the same group.
 
 ```cpp
