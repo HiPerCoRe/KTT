@@ -66,7 +66,7 @@ versions of our computation to see which value performs best.
 
 In practice, the computations are often complex enough to contain multiple parts that can be optimized, leading
 to a definition of many tuning parameters. For example, we may have the previously mentioned loop unroll parameter with
-values {1, 2, 4, 8} and another parameter controlling data arrangement in memory with values {0, 1}. Combinations of these
+values {1, 2, 4, 8} and another parameter switching two types of data arrangement in memory with values {0, 1}. Combinations of these
 parameters now define eight different versions of computation. One such combination is called tuning configuration. Together, all
 tuning configurations define configuration space. The size of the space grows exponentially with the addition of more tuning
 parameters. KTT framework offers functionality to mitigate this problem which we will discuss in the follow-up sections.
@@ -167,8 +167,9 @@ kernel template with different types, we add multiple kernel definitions with co
 
 Once we have kernel definitions, we can create kernels from them. It is possible to create a simple kernel that only uses one definition and
 a composite kernel that uses multiple definitions. Usage of composite kernels is useful for computations that launch multiple kernel
-functions in order to compute the result. In this case, it is also necessary to define a kernel launcher which is a function that tells the tuner in which
-order and how many times each kernel function is launched. Kernel launchers are covered in detail in a separate section.
+functions in order to compute the result. Those kernel functions can share some tuning parameters, so it is desirable to tune them together. With 
+composite kernels, it is also necessary to define a kernel launcher which is a function that tells the tuner in which order and how many times each 
+kernel function is launched. Kernel launchers are covered in detail in a separate section.
 
 Note that KTT terminology regarding kernel definitions and kernels differs slightly from regular compute APIs. KTT kernel definition roughly
 corresponds to a single kernel function (also called kernel in e.g., OpenCL or CUDA). KTT kernel corresponds to a specific computation that uses
@@ -246,10 +247,13 @@ Management type option specifies whether buffer management is handled automatica
 to initial state before a new kernel configuration is launched, buffers are created and deleted automatically) or by the user. In some advanced cases,
 users may wish to manage the buffers manually. Note, however, that this requires the usage of kernel launchers which we will discuss later.
 
-The final option for vector arguments is whether the initial data provided by the user should be copied inside the tuner or referenced directly. By default,
-the data is copied, which is safer (i.e., temporary arguments work correctly) but less memory efficient. If the initial data is provided in the form of
-an lvalue argument, the tuner can use a direct reference to avoid copying. This requires the user to keep the initial data buffer valid while the tuner uses
-the argument.
+The final option for vector arguments is whether the initial data provided by the user should be copied inside the tuner or referenced directly (note that 
+this is different option than memory location of data accessed by the kernel -- KTT can make its private copy of provided buffer and then copy it to the 
+host or device to be directly used by the kernel). By default, the data is copied, which is safer (i.e., temporary arguments work correctly) but less memory 
+efficient. If the initial data is provided in the form of an lvalue argument, the tuner can use a direct reference to avoid copying. This requires the user 
+to keep the initial data buffer valid while the tuner uses the argument.
+
+The comprehensive diagram of KTT buffer types is located [here](https://github.com/HiPerCoRe/KTT/tree/master/Docs/Resources/KttBufferTypes.png).
 
 ```cpp
 std::vector<float> input1;
@@ -278,7 +282,7 @@ const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAc
 #### Local memory arguments
 
 Local (shared in CUDA terminology) memory arguments are used to allocate a corresponding amount of cache-like memory, which is shared across all work-items
-(threads) inside a work-group (thread block). We just need to specify the data type and total size of allocated memory in bytes.
+(threads) inside a work-group (thread block). We just need to specify the data type and total size of allocated memory in bytes. Note that the local (shared) memory of static size can be also allocated inside the kernel code by using __local (__shared__) declaration specifier.
 
 ```cpp
 // Allocate local memory for 4 floats and 2 integers.
@@ -355,26 +359,28 @@ tuner.AddParameter(kernel, "b2", std::vector<uint64_t>{0, 1}, "group_b");
 
 #### Thread modifiers
 
-Some tuning parameters can affect the global or local number of threads with which a kernel function is launched. For example, we may have a parameter
-that affects the amount of work performed by each thread. The more work each thread does, the fewer (global) threads we need in total to perform computation.
-In KTT, we can define such dependency via thread modifiers. The thread modifier is a function that takes a default thread size and changes it based on
-values of specified tuning parameters.
+Some tuning parameters can affect the NDRange size (global number of threads), or work-group (thread block) size with which a kernel function is launched. 
+For example, we may have a parameter that affects the amount of work performed by each work-item (thread). The more work each work-item (thread) does, the 
+fewer (global) work-items (threads) we need in total to perform computation. In KTT, we can define such dependency via thread modifiers. The thread modifier 
+is a function that takes a default thread size and changes it based on values of specified tuning parameters.
 
-When adding a new modifier, we specify a kernel and its definitions whose thread sizes are affected by the modifier. Then we choose whether the modifier
-affects the global or local size, its dimension and names of tuning parameters tied to the modifier. The modifier function can be specified through enum,
-which supports simple operations such as multiplication or addition, but allows only one tuning parameter to be tied to the modifier. Another
-option is using a custom function that can be more complex and supports multiple tuning parameters. Creating multiple thread modifiers for the same thread
-type (global/local) and dimension is possible. In that case, the modifiers will be applied in the order of their addition to the tuner. Similar to constraints,
-it is possible to tie only integer parameters to thread modifiers.
+When adding a new modifier, we specify a kernel and its definitions whose sizes are affected by the modifier. Then we choose whether the 
+modifier affects the global size (NDRange or grid size) or local size (work-group or thread block size), its dimension and names of tuning 
+parameters tied to the modifier. The modifier function can be specified through enum, which supports simple operations such as multiplication or addition, but
+allows only one tuning parameter to be tied to the modifier. Another option is using a custom function that can be more complex and supports multiple tuning 
+parameters. Creating multiple thread modifiers for the same thread size type (global/local) and dimension is possible. In that case, the modifiers will be 
+applied in the order of their addition to the tuner. Similar to constraints, it is possible to tie only integer parameters to thread modifiers. 
+
+Note that KTT can be configured to use global and local sizes according to OpenCL standard (global size is overal number of work-items in NDRange, local size is work-group size) or CUDA (global size is number of thread block and local size is number of threads per thread block). In the example below, CUDA standard is used.
 
 ```cpp
 tuner.AddParameter(kernel, "block_size", std::vector<uint64_t>{32, 64, 128, 256});
 
-// block_size parameter decides the number of local threads.
+// block_size parameter decides the work-group (thread block) size, i.e. the local size.
 tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "block_size", ktt::ModifierAction::Multiply);
 
-// Larger block size means that the grid size should be smaller, so the total number of threads remains the same. Therefore we divide the grid
-// size by block_size parameter.
+// Larger block size means that the global number of threads should be smaller, so the total number of threads remains the same. Therefore we divide the grid size
+// by block_size parameter.
 tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, {"block_size"},
     [](const uint64_t defaultSize, const std::vector<uint64_t>& parameters)
 {
