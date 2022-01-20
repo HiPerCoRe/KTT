@@ -24,5 +24,6 @@ var _ktt_types_8h =
     [ "InvalidArgumentId", "_ktt_types_8h.html#a06314e7380eb0baeb140510fcae36003", null ],
     [ "InvalidDuration", "_ktt_types_8h.html#a903bdfdf84555ceb9eba5dc578c446bb", null ],
     [ "InvalidKernelDefinitionId", "_ktt_types_8h.html#a275bc1cfb6ac089034630c96f78285d4", null ],
-    [ "InvalidKernelId", "_ktt_types_8h.html#af007a5e422c999a5a8f4fd1d875cc7bf", null ]
+    [ "InvalidKernelId", "_ktt_types_8h.html#af007a5e422c999a5a8f4fd1d875cc7bf", null ],
+    [ "InvalidQueueId", "_ktt_types_8h.html#ad611ee0e290241acfe5dcec46fce712c", null ]
 ];

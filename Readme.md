@@ -2,8 +2,8 @@ KTT - Kernel Tuning Toolkit
 ===========================
 <img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogo.png" width="425" height="150"/>
 
-KTT is an autotuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 2.0, which contains
-significant API overhaul and new features and improvements, is now available.
+KTT is an autotuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 2.1 which introduces
+API bindings for Python and new onboarding guide is now available.
 
 Main features
 -------------
@@ -21,7 +21,7 @@ kernel compiler flags and more.
 
 Getting started
 ---------------
-* Introductory guide to KTT can be found [here](https://github.com/HiPerCoRe/KTT/blob/development/OnboardingGuide.md).
+* Introductory guide to KTT can be found [here](https://github.com/HiPerCoRe/KTT/blob/master/OnboardingGuide.md).
 * Full documentation for KTT API can be found [here](https://hipercore.github.io/KTT/).
 * KTT FAQ can be found [here](https://hipercore.github.io/KTT/md__docs__resources__faq.html).
 * The newest release of the KTT framework can be found [here](https://github.com/HiPerCoRe/KTT/releases).

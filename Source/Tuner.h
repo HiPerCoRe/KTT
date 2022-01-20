@@ -349,7 +349,7 @@ public:
     template <typename T>
     ArgumentId AddArgumentScalar(const T& data);
 
-    /** @fn ArgumentId AddArgumentScalar(const void* data, const size_t elementSize)
+    /** @fn ArgumentId AddArgumentScalar(const void* data, const size_t dataSize)
       * Adds new scalar argument to the tuner. All scalar arguments are read-only. This method can be utilized when templated version
       * of scalar argument addition cannot be used.
       * @param data Pointer to memory with kernel argument data.
