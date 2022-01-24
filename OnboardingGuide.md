@@ -39,7 +39,7 @@ and timing of tuned kernels, allows dynamic (online) tuning during program runti
 * [Kernel launchers](#kernel-launchers)
 * [Kernel running and tuning modes](#kernel-running-and-tuning-modes)
     * [Offline tuning](#offline-tuning)
-    * [Online tuning](#online-tuning)
+    * [Dynamic tuning](#dynamic-tuning)
     * [Accuracy of tuning results](#accuracy-of-tuning-results)
 * [Stop conditions](#stop-conditions)
 * [Searchers](#searchers)
@@ -525,13 +525,13 @@ const std::vector<ktt::KernelResult> results = tuner.Tune(kernel);
 tuner.SaveResults(results, "TuningOutput", ktt::OutputFormat::JSON);
 ```
 
-#### Online tuning
+#### Dynamic tuning
 
-Online tuning combines kernel tuning with regular running. We can retrieve and use the output from each kernel run like during kernel running. However,
+Dynamic tuning combines kernel tuning with regular running. We can retrieve and use the output from each kernel run like during kernel running. However,
 we do not specify the configuration under which kernel is run, but the tuner launches a different configuration each time a kernel is launched, similar to
 offline tuning. This mode does not separate tuning and usage of a tuned kernel but enables both to happen simultaneously. This can be beneficial
 in situations where offline tuning is impractical (e.g., when the size of kernel input is frequently changed, which causes the optimal configuration
-to change as well). If a kernel is launched via online tuning after exploring all configurations, the best configuration is used.
+to change as well). If a kernel is launched via dynamic tuning after exploring all configurations, the best configuration is used.
 
 ```cpp
 std::vector<float> output(numberOfElements, 0.0f);
@@ -547,8 +547,8 @@ const auto result = tuner.TuneIteration(kernel, {ktt::BufferOutputDescriptor(out
 In order to identify the best configuration accurately, it is necessary to launch all configurations under the same conditions so that metrics such as
 kernel function execution times can be objectively compared. This means that tuned kernels should be launched on the target device in isolation.
 Launching multiple kernels concurrently while performing tuning may cause inaccuracies in collected data. Furthermore, if the size of kernel input is
-changed (e.g., during online tuning), we should restart the tuning process from the beginning since the input size often affects the best configuration.
-We can achieve the restart by calling the `ClearData` API method.
+changed (e.g., during dynamic tuning), we should restart the tuning process from the beginning since the input size often affects the best configuration.
+It is programmer's responsibility to ensure this. We can achieve the restart by calling the `ClearData` API method.
 
 ----
 
@@ -563,13 +563,13 @@ offers the following stop conditions:
 * TuningDuration - tuning stops after the specified duration has passed.
 
 The stop condition API is public, allowing users to create their own stop conditions. All of the built-in conditions are implemented in public API, so
-it is possible to modify them as well.
+it is possible to modify them as well. TODO: here there is the first mention on public API, it should be probably discussed somewhere what is public API
 
 ----
 
 ### Searchers
 
-Searchers decide the order in which kernel configurations are selected and run during offline and online tuning. Having an efficient searcher can significantly
+Searchers decide the order in which kernel configurations are selected and run during offline and dynamic tuning. Having an efficient searcher can significantly
 reduce the time it takes to find a well-performing configuration. Like stop conditions, a searcher is initialized before tuning begins and updated after
 each tested configuration with access to the `KernelResult` structure from the previous run. Searchers are assigned to kernels individually so that each kernel
 can have a different searcher. The following searchers are available in KTT API:
@@ -603,20 +603,20 @@ same configuration is launched multiple times (e.g., inside kernel launcher or d
 ### Profiling metrics collection
 
 Apart from execution times, KTT can also collect other types of information from kernel runs. This includes low-level profiling metrics from kernel function
-executions such as global memory utilization, number of executed instructions and more. These metrics can be utilized e.g., by searchers to find well-performing
-configurations faster. The collection of profiling metrics is disabled by default as it changes the default tuning behavior. In order to collect all profiling
-metrics, it is usually necessary to run the same kernel function multiple times (the number increases when more metrics are collected). It furthermore requires
-kernels to be run synchronously. Enabling profiling metrics collection thus decreases tuning performance. It is possible to mitigate performance impact by allowing
-only specific metrics, which can be done through KTT API.
+executions such as global memory utilization, number of executed instructions and more. These metrics can be utilized, e.g., by searchers to find well-performing
+configurations faster, or KTT user may want to collect them to better understand their kernel's performance. The collection of profiling metrics is disabled by 
+default as it changes the default tuning behavior. In order to collect all profiling metrics, it is usually necessary to run the same kernel function multiple 
+times (the number increases when more metrics are collected). It furthermore requires kernels to be run synchronously. Enabling profiling metrics collection thus 
+decreases tuning performance. It is possible to mitigate performance impact by allowing only specific metrics, which can be done through KTT API.
 
 Collection of profiling metrics is currently supported for Nvidia devices on CUDA backend and AMD devices on OpenCL backend. Intel devices are unsupported
 at the moment due to a lack of profiling library support. Profiling metrics can also be collected for composite kernels. Note, however, that the metrics
 collection is restricted to a single definition within a composite kernel for AMD devices and newer Nvidia devices (Turing and onwards). This is due to profiling
 library limitations.
 
-#### Interaction with online tuning and kernel running
+#### Interaction with dynamic tuning and kernel running
 
-When utilizing kernel running and online tuning, it is possible to decrease further the performance impact of executing the same kernel function multiple times
+When utilizing kernel running and dynamic tuning, it is possible to decrease further the performance impact of executing the same kernel function multiple times
 during profiling. Rather than performing all of the profiling runs at once, it is possible to split the profiling metric collection over multiple online tuning or
 kernel running API function invocations and utilize output from each run. The intermediate `KernelResult` structures from such runs will not contain valid profiling
 metrics, but the other data will remain accurate. Once the profiling for the current configuration is concluded, the final kernel result will have valid
@@ -662,8 +662,8 @@ must first remove all kernels which utilize that definition.
 The native KTT API is available in C++. Users who prefer Python have an option to build KTT as a Python module which can then be imported into Python. The majority
 of KTT API methods can be afterward called directly from Python while still benefitting from the performance of the KTT module built in C++. It is also possible to
 implement custom searchers and stop conditions directly in Python. Therefore, users can take advantage of libraries available in Python but not in C++ for more
-complex searcher implementations. The majority of functions, enums and classes have the same names and arguments as in C++. A small number of limitations is
-described in the follow-up subsection.
+complex searcher implementations, e.g., using a python-based machine learning framework. The majority of functions, enums and classes have the same names and 
+arguments as in C++. A small number of limitations is described in the follow-up subsection.
 
 #### Python limitations
 
