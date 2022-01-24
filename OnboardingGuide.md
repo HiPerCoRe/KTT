@@ -12,9 +12,10 @@ Naturally, a batch script can be sufficient for autotuning in a simple use case.
 usage of an autotuning framework can be beneficial, as it can automatically handle memory objects, detect errors in autotuned
 kernels or perform autotuning during program runtime.
 
-Kernel Tuning Toolkit is a framework that allows autotuning of compute kernels written in CUDA, OpenCL or Vulkan. It provides
-unified interface for those APIs, handles communication between host (CPU) and accelerator (GPU, Xeon Phi, etc.), checks results
-and timing of tuned kernels, allows dynamic (online) tuning during program runtime, profiling of autotuned kernels and more.
+Kernel Tuning Toolkit (KTT) is a framework that allows autotuning of compute kernels written in CUDA, OpenCL or Vulkan. It provides
+a unified interface for those APIs, handles communication between host (CPU) and accelerator (GPU, Xeon Phi, etc.), checks results
+and timing of tuned kernels, allows dynamic (online) tuning during program runtime, profiling of autotuned kernels and more. This
+functionality is exposed in the public API through which KTT can be integrated into user applications.
 
 ----
 
@@ -66,7 +67,7 @@ versions of our computation to see which value performs best.
 
 In practice, the computations are often complex enough to contain multiple parts that can be optimized, leading
 to a definition of many tuning parameters. For example, we may have the previously mentioned loop unroll parameter with
-values {1, 2, 4, 8} and another parameter switching two types of data arrangement in memory with values {0, 1}. Combinations of these
+values {1, 2, 4, 8} and another parameter that switches two types of data arrangement in memory with values {0, 1}. Combinations of these
 parameters now define eight different versions of computation. One such combination is called tuning configuration. Together, all
 tuning configurations define configuration space. The size of the space grows exponentially with the addition of more tuning
 parameters. KTT framework offers functionality to mitigate this problem which we will discuss in the follow-up sections.
@@ -128,7 +129,7 @@ The first step before we can utilize KTT is a creation of a tuner instance. The 
 autotuning logic. The KTT structures such as kernels, kernel arguments and tuning parameters are tied to a specific tuner instance.
 The simplest tuner constructor requires three parameters - index for a platform, index for a device and compute API that will be utilized (e.g., CUDA,
 OpenCL). The indices for platforms and devices are assigned by KTT. We can retrieve them through `PlatformInfo` and `DeviceInfo` structures. These
-structures also contain some other useful information such as a list of supported extensions, global memory size, a number of available compute units and
+structures also contain other useful information such as a list of supported extensions, global memory size, a number of available compute units and
 more. Note that the assigned indices remain the same when autotuning applications are launched multiple times on the same computer. They only change
 when the hardware configuration changes (e.g., a new device is added, an old device is removed, a device driver is reinstalled). Also note, that the indices
 may not be the same across multiple compute APIs (e.g., an index for the same device may be different under OpenCL and CUDA).
@@ -193,7 +194,7 @@ const ktt::KernelId kernel = tuner.CreateCompositeKernel("Sort", {definition0, d
 ### Kernel arguments
 
 Kernel arguments define the input and output of a kernel. KTT supports multiple forms of kernel arguments such as buffers, scalars and constant memory
-arguments. The tuner must receive an argument's description before it can be assigned to a kernel. In case of a buffer argument, this includes the
+arguments. The tuner must receive an argument's description before it can be assigned to a kernel. In the case of a buffer argument, this includes the
 initial data placed inside the buffer before a kernel is launched, its access type (read or write) and the memory location from which kernel accesses the buffer
 (host or device). Once the information is provided, the tuner returns a handle to the argument. As the code below shows, we can assign arguments to kernel
 definitions through this handle. KTT supports a wide range of data types for kernel arguments, including all built-in integer and floating-point
@@ -241,19 +242,19 @@ Next, it is possible to decide the memory location from which a kernel accesses 
 memory. Users may wish to choose a different location depending on the type of device used for autotuning (e.g., host memory for CPUs, device memory for
 dedicated GPUs). For host memory, it is additionally possible to use zero-copy optimization. This optimization causes kernels to access the argument data
 directly instead of creating a separate buffer and thus reduces memory usage. For CUDA and OpenCL 2.0, one additional memory location option exists - unified.
-Unified memory buffers can be accessed from both host and kernel side, relying on a device driver to migrate the data automatically.
+Unified memory buffers can be accessed from both host and kernel sides, relying on a device driver to migrate the data automatically.
 
 Management type option specifies whether buffer management is handled automatically by the tuner (e.g., write arguments are automatically reset
 to initial state before a new kernel configuration is launched, buffers are created and deleted automatically) or by the user. In some advanced cases,
 users may wish to manage the buffers manually. Note, however, that this requires the usage of kernel launchers which we will discuss later.
 
-The final option for vector arguments is whether the initial data provided by the user should be copied inside the tuner or referenced directly (note that 
-this is different option than memory location of data accessed by the kernel -- KTT can make its private copy of provided buffer and then copy it to the 
-host or device to be directly used by the kernel). By default, the data is copied, which is safer (i.e., temporary arguments work correctly) but less memory 
+The final option for vector arguments is whether the initial data provided by the user should be copied inside the tuner or referenced directly. Note that 
+this is a different option than the memory location of data accessed by the kernel - KTT can make its private copy of provided buffer and then copy it to the 
+host or device to be directly used by the kernel. By default, the data is copied, which is safer (i.e., temporary arguments work correctly) but less memory 
 efficient. If the initial data is provided in the form of an lvalue argument, the tuner can use a direct reference to avoid copying. This requires the user 
 to keep the initial data buffer valid while the tuner uses the argument.
 
-The comprehensive diagram of KTT buffer types is located [here](https://github.com/HiPerCoRe/KTT/tree/master/Docs/Resources/KttBufferTypes.png).
+The comprehensive diagram of KTT buffer copy options is located [here](https://github.com/HiPerCoRe/KTT/tree/master/Docs/Resources/KttBufferTypes.png).
 
 ```cpp
 std::vector<float> input1;
@@ -282,7 +283,8 @@ const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAc
 #### Local memory arguments
 
 Local (shared in CUDA terminology) memory arguments are used to allocate a corresponding amount of cache-like memory, which is shared across all work-items
-(threads) inside a work-group (thread block). We just need to specify the data type and total size of allocated memory in bytes. Note that the local (shared) memory of static size can be also allocated inside the kernel code by using __local (__shared__) declaration specifier.
+(threads) inside a work-group (thread block). We just need to specify the data type and total size of allocated memory in bytes. The local (shared) memory
+of static size can also be allocated inside the kernel code by using __local (__shared__) declaration specifier.
 
 ```cpp
 // Allocate local memory for 4 floats and 2 integers.
@@ -371,7 +373,9 @@ allows only one tuning parameter to be tied to the modifier. Another option is u
 parameters. Creating multiple thread modifiers for the same thread size type (global/local) and dimension is possible. In that case, the modifiers will be 
 applied in the order of their addition to the tuner. Similar to constraints, it is possible to tie only integer parameters to thread modifiers. 
 
-Note that KTT can be configured to use global and local sizes according to OpenCL standard (global size is overal number of work-items in NDRange, local size is work-group size) or CUDA (global size is number of thread block and local size is number of threads per thread block). In the example below, CUDA standard is used.
+KTT can be configured to use global and local sizes according to OpenCL standard (global size is the overall number of work-items in NDRange, local size is
+work-group size) or CUDA (global size is the number of thread blocks, and local size is the number of threads per thread block). In the example below, CUDA
+standard is used.
 
 ```cpp
 tuner.AddParameter(kernel, "block_size", std::vector<uint64_t>{32, 64, 128, 256});
@@ -548,22 +552,22 @@ In order to identify the best configuration accurately, it is necessary to launc
 kernel function execution times can be objectively compared. This means that tuned kernels should be launched on the target device in isolation.
 Launching multiple kernels concurrently while performing tuning may cause inaccuracies in collected data. Furthermore, if the size of kernel input is
 changed (e.g., during dynamic tuning), we should restart the tuning process from the beginning since the input size often affects the best configuration.
-It is programmer's responsibility to ensure this. We can achieve the restart by calling the `ClearData` API method.
+It is the programmer's responsibility to ensure this. We can achieve the restart by calling the `ClearData` API method.
 
 ----
 
 ### Stop conditions
 
 We can utilize stop conditions to interrupt offline tuning when certain criteria are met. The stop condition is initialized before offline tuning begins
-and updated after each tested configuration. Within the update, the condition has access to the `KernelResult` structure from prior kernel run. KTT currently
-offers the following stop conditions:
+and updated after each tested configuration. Within the update, the condition has access to the `KernelResult` structure from the prior kernel run. KTT
+currently offers the following stop conditions:
 * ConfigurationCount - tuning stops after reaching the specified number of tested configurations.
 * ConfigurationDuration - tuning stops after a configuration with execution time below the specified threshold is found.
 * ConfigurationFraction - tuning stops after exploring the specified fraction of configuration space.
 * TuningDuration - tuning stops after the specified duration has passed.
 
 The stop condition API is public, allowing users to create their own stop conditions. All of the built-in conditions are implemented in public API, so
-it is possible to modify them as well. TODO: here there is the first mention on public API, it should be probably discussed somewhere what is public API
+it is possible to modify them as well.
 
 ----
 
@@ -595,7 +599,7 @@ APIs.
 APIs such as OpenCL.
 * `SetKernelCacheCapacity` - changes size of a cache for compiled kernels. KTT utilizes the cache to improve performance when the same kernel function with the
 same configuration is launched multiple times (e.g., inside kernel launcher or during kernel running).
-* `SetLoggingLevel` - controls the amount of logging information printed to the output. Higher levels print more detailed information which aids debugging.
+* `SetLoggingLevel` - controls the amount of logging information printed to the output. Higher levels print more detailed information, which aids debugging.
 * `SetTimeUnit` - specifies time unit used for printing execution times. This affects console output as well as kernel results saved into a file.
 
 ----
@@ -604,7 +608,7 @@ same configuration is launched multiple times (e.g., inside kernel launcher or d
 
 Apart from execution times, KTT can also collect other types of information from kernel runs. This includes low-level profiling metrics from kernel function
 executions such as global memory utilization, number of executed instructions and more. These metrics can be utilized, e.g., by searchers to find well-performing
-configurations faster, or KTT user may want to collect them to better understand their kernel's performance. The collection of profiling metrics is disabled by 
+configurations faster, or KTT users may want to collect them to better understand their kernel's performance. The collection of profiling metrics is disabled by 
 default as it changes the default tuning behavior. In order to collect all profiling metrics, it is usually necessary to run the same kernel function multiple 
 times (the number increases when more metrics are collected). It furthermore requires kernels to be run synchronously. Enabling profiling metrics collection thus 
 decreases tuning performance. It is possible to mitigate performance impact by allowing only specific metrics, which can be done through KTT API.
@@ -662,7 +666,7 @@ must first remove all kernels which utilize that definition.
 The native KTT API is available in C++. Users who prefer Python have an option to build KTT as a Python module which can then be imported into Python. The majority
 of KTT API methods can be afterward called directly from Python while still benefitting from the performance of the KTT module built in C++. It is also possible to
 implement custom searchers and stop conditions directly in Python. Therefore, users can take advantage of libraries available in Python but not in C++ for more
-complex searcher implementations, e.g., using a python-based machine learning framework. The majority of functions, enums and classes have the same names and 
+complex searcher implementations, e.g., using a Python-based machine learning framework. The majority of functions, enums and classes have the same names and 
 arguments as in C++. A small number of limitations is described in the follow-up subsection.
 
 #### Python limitations
