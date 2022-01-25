@@ -294,6 +294,16 @@ bool VulkanEngine::HasBuffer(const ArgumentId id)
     return ContainsKey(m_Buffers, id);
 }
 
+QueueId VulkanEngine::AddComputeQueue([[maybe_unused]] ComputeQueue queue)
+{
+    throw KttException("Support for compute queue addition is not yet available for Vulkan backend");
+}
+
+void VulkanEngine::RemoveComputeQueue([[maybe_unused]] const QueueId id)
+{
+    throw KttException("Support for compute queue removal is not yet available for Vulkan backend");
+}
+
 QueueId VulkanEngine::GetDefaultQueue() const
 {
     return static_cast<QueueId>(0);
@@ -319,14 +329,23 @@ void VulkanEngine::SynchronizeQueue(const QueueId queueId)
     }
 
     m_Queues[static_cast<size_t>(queueId)]->WaitIdle();
+    ClearQueueActions(queueId);
 }
 
-void VulkanEngine::SynchronizeDevice()
+void VulkanEngine::SynchronizeQueues()
 {
     for (auto& queue : m_Queues)
     {
         queue->WaitIdle();
+        ClearQueueActions(queue->GetId());
     }
+}
+
+void VulkanEngine::SynchronizeDevice()
+{
+    m_Device->WaitIdle();
+    m_ComputeActions.clear();
+    m_TransferActions.clear();
 }
 
 std::vector<PlatformInfo> VulkanEngine::GetPlatformInfo() const
@@ -440,7 +459,8 @@ VulkanBuffer* VulkanEngine::GetPipelineArgument(KernelArgument& argument)
     {
     case ArgumentMemoryType::Scalar:
     case ArgumentMemoryType::Local:
-        KttError("Scalar and local memory arguments do not have Vulkan buffer representation");
+    case ArgumentMemoryType::Symbol:
+        KttError("Scalar, symbol and local memory arguments do not have Vulkan buffer representation");
         return nullptr;
     case ArgumentMemoryType::Vector:
     {
@@ -512,13 +532,26 @@ std::unique_ptr<VulkanBuffer> VulkanEngine::CreateUserBuffer([[maybe_unused]] Ke
     throw KttException("Support for custom buffers is not yet available for Vulkan backend");
 }
 
+void VulkanEngine::ClearQueueActions(const QueueId id)
+{
+    EraseIf(m_ComputeActions, [id](const auto& pair)
+    {
+        return pair.second->GetQueueId() == id || pair.second->GetQueueId() == InvalidQueueId;
+    });
+
+    EraseIf(m_TransferActions, [id](const auto& pair)
+    {
+        return pair.second->GetQueueId() == id || pair.second->GetQueueId() == InvalidQueueId;
+    });
+}
+
 std::vector<KernelArgument*> VulkanEngine::GetScalarArguments(const std::vector<KernelArgument*>& arguments)
 {
     std::vector<KernelArgument*> result;
 
     for (auto* argument : arguments)
     {
-        if (argument->GetMemoryType() == ArgumentMemoryType::Scalar)
+        if (argument->GetMemoryType() == ArgumentMemoryType::Scalar || argument->GetMemoryType() == ArgumentMemoryType::Symbol)
         {
             result.push_back(argument);
         }

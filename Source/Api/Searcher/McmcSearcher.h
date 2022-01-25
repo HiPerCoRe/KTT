@@ -4,9 +4,9 @@
 #pragma once
 
 #include <cstddef>
+#include <map>
 #include <random>
 #include <set>
-#include <vector>
 
 #include <Api/Searcher/Searcher.h>
 #include <KttPlatform.h>
@@ -20,11 +20,17 @@ namespace ktt
 class KTT_API McmcSearcher : public Searcher
 {
 public:
+    /** @fn McmcSearcher(const KernelConfiguration& start = {})
+      * Initializes MCMC searcher.
+      * @param start Optional parameter which specifies the starting point for MCMC searcher.
+      */
+    McmcSearcher(const KernelConfiguration& start = {});
+
     /** @fn McmcSearcher(const std::vector<double>& start)
       * Initializes MCMC searcher.
       * @param start Optional parameter which specifies starting point for MCMC searcher.
       */
-    McmcSearcher(const std::vector<double>& start);
+    [[deprecated("Use constructor which accepts kernel configuration.")]] McmcSearcher(const std::vector<double>& start);
 
     void OnInitialize() override;
     void OnReset() override;
@@ -40,9 +46,8 @@ private:
     size_t m_Boot;
     double m_BestTime;
 
-    std::vector<double> m_Start;
-    std::vector<double> m_ExecutionTimes;
-    std::set<size_t> m_UnexploredIndices;
+    KernelConfiguration m_Start;
+    std::map<size_t, double> m_ExecutionTimes;
 
     std::default_random_engine m_Generator;
     std::uniform_int_distribution<size_t> m_IntDistribution;
@@ -51,9 +56,6 @@ private:
     inline static size_t m_MaximumDifferences = 2;
     inline static size_t m_BootIterations = 10;
     inline static double m_EscapeProbability = 0.02;
-
-    std::vector<size_t> GetNeighbours(const size_t referenceId) const;
-    size_t SearchStateIndex(const std::vector<double>& state) const;
 };
 
 } // namespace ktt

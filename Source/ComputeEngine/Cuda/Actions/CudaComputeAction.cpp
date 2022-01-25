@@ -9,9 +9,10 @@
 namespace ktt
 {
 
-CudaComputeAction::CudaComputeAction(const ComputeActionId id, std::shared_ptr<CudaKernel> kernel, const DimensionVector& globalSize,
-    const DimensionVector& localSize) :
+CudaComputeAction::CudaComputeAction(const ComputeActionId id, const QueueId queueId, std::shared_ptr<CudaKernel> kernel,
+    const DimensionVector& globalSize, const DimensionVector& localSize) :
     m_Id(id),
+    m_QueueId(queueId),
     m_Kernel(kernel),
     m_Overhead(0),
     m_GlobalSize(globalSize),
@@ -44,6 +45,11 @@ void CudaComputeAction::WaitForFinish()
 ComputeActionId CudaComputeAction::GetId() const
 {
     return m_Id;
+}
+
+QueueId CudaComputeAction::GetQueueId() const
+{
+    return m_QueueId;
 }
 
 CudaKernel& CudaComputeAction::GetKernel()

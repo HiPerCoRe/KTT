@@ -51,7 +51,7 @@ void CuptiSubscription::MetricCallback(void* data, [[maybe_unused]]  CUpti_Callb
 
 void CuptiSubscription::BeginCollection(CuptiInstance& instance, const CUpti_CallbackData& info)
 {
-    CheckError(cuCtxSynchronize(), "cuCtxSynchronize");
+    instance.GetContext().Synchronize();
     CheckError(cuptiSetEventCollectionMode(info.context, CUPTI_EVENT_COLLECTION_MODE_KERNEL), "cuptiSetEventCollectionMode");
 
     auto& sets = instance.GetEventSets();
@@ -68,7 +68,7 @@ void CuptiSubscription::BeginCollection(CuptiInstance& instance, const CUpti_Cal
 
 void CuptiSubscription::EndCollection(CuptiInstance& instance)
 {
-    CheckError(cuCtxSynchronize(), "cuCtxSynchronize");
+    instance.GetContext().Synchronize();
 
     auto& sets = instance.GetEventSets();
     const uint32_t index = instance.GetCurrentIndex();

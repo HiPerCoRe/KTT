@@ -33,7 +33,7 @@ class CudaEngine : public ComputeEngine
 {
 public:
     explicit CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount);
-    explicit CudaEngine(const ComputeApiInitializer& initializer);
+    explicit CudaEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
 
     // Kernel methods
     ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) override;
@@ -66,9 +66,12 @@ public:
     bool HasBuffer(const ArgumentId id) override;
 
     // Queue methods
+    QueueId AddComputeQueue(ComputeQueue queue) override;
+    void RemoveComputeQueue(const QueueId id) override;
     QueueId GetDefaultQueue() const override;
     std::vector<QueueId> GetAllQueues() const override;
     void SynchronizeQueue(const QueueId queueId) override;
+    void SynchronizeQueues() override;
     void SynchronizeDevice() override;
 
     // Information retrieval methods
@@ -91,10 +94,11 @@ private:
     EngineConfiguration m_Configuration;
     DeviceIndex m_DeviceIndex;
     DeviceInfo m_DeviceInfo;
+    IdGenerator<QueueId> m_QueueIdGenerator;
     IdGenerator<ComputeActionId> m_ComputeIdGenerator;
     IdGenerator<TransferActionId> m_TransferIdGenerator;
     std::unique_ptr<CudaContext> m_Context;
-    std::vector<std::unique_ptr<CudaStream>> m_Streams;
+    std::map<QueueId, std::unique_ptr<CudaStream>> m_Streams;
     std::map<ArgumentId, std::unique_ptr<CudaBuffer>> m_Buffers;
     LruCache<KernelComputeId, std::shared_ptr<CudaKernel>> m_KernelCache;
     std::map<ComputeActionId, std::unique_ptr<CudaComputeAction>> m_ComputeActions;
@@ -114,7 +118,8 @@ private:
     size_t GetSharedMemorySize(const std::vector<KernelArgument*>& arguments) const;
     std::unique_ptr<CudaBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<CudaBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
-    void InitializeCompilerOptions();
+    std::string GetDefaultCompilerOptions() const;
+    void ClearStreamActions(const QueueId id);
 
 #if defined(KTT_PROFILING_CUPTI)
     void InitializeCupti();

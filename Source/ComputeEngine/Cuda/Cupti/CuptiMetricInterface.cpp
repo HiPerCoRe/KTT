@@ -8,6 +8,7 @@
 #include <Api/Output/KernelProfilingData.h>
 #include <Api/KttException.h>
 #include <ComputeEngine/Cuda/Cupti/CuptiMetricInterface.h>
+#include <ComputeEngine/Cuda/CudaContext.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
@@ -16,13 +17,14 @@
 namespace ktt
 {
 
-CuptiMetricInterface::CuptiMetricInterface(const DeviceIndex index) :
+CuptiMetricInterface::CuptiMetricInterface(const DeviceIndex index, const CudaContext& context) :
     m_DeviceName(GetDeviceName(index)),
-    m_Context(nullptr),
+    m_Evaluator(nullptr),
     m_MaxProfiledRanges(2),
     m_MaxRangeNameLength(64)
 {
     Logger::LogDebug("Initializing CUPTI metric interface");
+    InitializeCounterAvailabilityImage(context);
 
     NVPW_InitializeHost_Params hostParams =
     {
@@ -32,16 +34,33 @@ CuptiMetricInterface::CuptiMetricInterface(const DeviceIndex index) :
 
     CheckError(NVPW_InitializeHost(&hostParams), "NVPW_InitializeHost");
 
-    NVPW_CUDA_MetricsContext_Create_Params params =
+    NVPW_CUDA_MetricsEvaluator_CalculateScratchBufferSize_Params scratchBufferSizeParams =
     {
-        NVPW_CUDA_MetricsContext_Create_Params_STRUCT_SIZE,
+        NVPW_CUDA_MetricsEvaluator_CalculateScratchBufferSize_Params_STRUCT_SIZE,
         nullptr,
-        m_DeviceName.data(),
+        m_DeviceName.c_str(),
+        m_CounterAvailabilityImage.data(),
+        0
+    };
+
+    CheckError(NVPW_CUDA_MetricsEvaluator_CalculateScratchBufferSize(&scratchBufferSizeParams), "NVPW_CUDA_MetricsEvaluator_CalculateScratchBufferSize");
+    m_ScratchBuffer.resize(scratchBufferSizeParams.scratchBufferSize);
+
+    NVPW_CUDA_MetricsEvaluator_Initialize_Params evaluatorInitializeParams =
+    {
+        NVPW_CUDA_MetricsEvaluator_Initialize_Params_STRUCT_SIZE,
+        nullptr,
+        m_ScratchBuffer.data(),
+        m_ScratchBuffer.size(),
+        m_DeviceName.c_str(),
+        m_CounterAvailabilityImage.data(),
+        nullptr,
+        0,
         nullptr
     };
 
-    CheckError(NVPW_CUDA_MetricsContext_Create(&params), "NVPW_CUDA_MetricsContext_Create");
-    m_Context = params.pMetricsContext;
+    CheckError(NVPW_CUDA_MetricsEvaluator_Initialize(&evaluatorInitializeParams), "NVPW_CUDA_MetricsEvaluator_Initialize");
+    m_Evaluator = evaluatorInitializeParams.pMetricsEvaluator;
     SetMetrics(GetDefaultMetrics());
 }
 
@@ -49,14 +68,14 @@ CuptiMetricInterface::~CuptiMetricInterface()
 {
     Logger::LogDebug("Releasing CUPTI metric interface");
 
-    NVPW_MetricsContext_Destroy_Params params =
+    NVPW_MetricsEvaluator_Destroy_Params params =
     {
-        NVPW_MetricsContext_Destroy_Params_STRUCT_SIZE,
+        NVPW_MetricsEvaluator_Destroy_Params_STRUCT_SIZE,
         nullptr,
-        m_Context
+        m_Evaluator
     };
 
-    CheckError(NVPW_MetricsContext_Destroy(&params), "NVPW_MetricsContext_Destroy");
+    CheckError(NVPW_MetricsEvaluator_Destroy(&params), "NVPW_MetricsEvaluator_Destroy");
 }
 
 void CuptiMetricInterface::SetMetrics(const std::vector<std::string>& metrics)
@@ -116,60 +135,72 @@ std::unique_ptr<KernelProfilingData> CuptiMetricInterface::GenerateProfilingData
     };
 
     CheckError(NVPW_CounterData_GetNumRanges(&params), "NVPW_CounterData_GetNumRanges");
-
     const auto& metricNames = configuration.m_MetricNames;
-    std::vector<std::string> parsedNames(metricNames.size());
-    std::vector<const char*> metricNamePtrs;
     bool isolated = true;
     bool keepInstances = true;
+    std::vector<KernelProfilingCounter> counters;
 
     for (size_t metricIndex = 0; metricIndex < metricNames.size(); ++metricIndex)
     {
-        [[maybe_unused]] const bool success = ParseMetricNameString(metricNames[metricIndex], parsedNames[metricIndex], isolated,
-            keepInstances);
+        std::string parsedName;
+        [[maybe_unused]] const bool success = ParseMetricNameString(metricNames[metricIndex], parsedName, isolated, keepInstances);
         KttAssert(success, "Unable to parse metric name " + metricNames[metricIndex]);
-        metricNamePtrs.push_back(parsedNames[metricIndex].c_str());
-    }
+        NVPW_MetricEvalRequest evalRequest;
 
-    std::vector<KernelProfilingCounter> counters;
-
-    for (size_t rangeIndex = 0; rangeIndex < params.numRanges; ++rangeIndex)
-    {
-        NVPW_MetricsContext_SetCounterData_Params dataParams =
+        NVPW_MetricsEvaluator_ConvertMetricNameToMetricEvalRequest_Params evalRequestParams =
         {
-            NVPW_MetricsContext_SetCounterData_Params_STRUCT_SIZE,
+            NVPW_MetricsEvaluator_ConvertMetricNameToMetricEvalRequest_Params_STRUCT_SIZE,
             nullptr,
-            m_Context,
-            counterDataImage.data(),
-            rangeIndex,
-            isolated
+            m_Evaluator,
+            parsedName.c_str(),
+            &evalRequest,
+            NVPW_MetricEvalRequest_STRUCT_SIZE
         };
 
-        CheckError(NVPW_MetricsContext_SetCounterData(&dataParams), "NVPW_MetricsContext_SetCounterData");
-        std::vector<double> gpuValues(metricNames.size());
+        CheckError(NVPW_MetricsEvaluator_ConvertMetricNameToMetricEvalRequest(&evalRequestParams),
+            "NVPW_MetricsEvaluator_ConvertMetricNameToMetricEvalRequest");
+        double counterValue = 0.0;
 
-        NVPW_MetricsContext_EvaluateToGpuValues_Params evalParams =
+        for (size_t rangeIndex = 0; rangeIndex < params.numRanges; ++rangeIndex)
         {
-            NVPW_MetricsContext_EvaluateToGpuValues_Params_STRUCT_SIZE,
-            nullptr,
-            m_Context,
-            metricNamePtrs.size(),
-            metricNamePtrs.data(),
-            gpuValues.data()
-        };
+            NVPW_MetricsEvaluator_SetDeviceAttributes_Params attributesParams =
+            {
+                NVPW_MetricsEvaluator_SetDeviceAttributes_Params_STRUCT_SIZE,
+                nullptr,
+                m_Evaluator,
+                counterDataImage.data(),
+                counterDataImage.size()
+            };
 
-        CheckError(NVPW_MetricsContext_EvaluateToGpuValues(&evalParams), "NVPW_MetricsContext_EvaluateToGpuValues");
+            CheckError(NVPW_MetricsEvaluator_SetDeviceAttributes(&attributesParams), "NVPW_MetricsEvaluator_SetDeviceAttributes");
+            double metricValue = 0.0;
 
-        if (rangeIndex > 0)
-        {
-            // Only values from the first range are currently utilized for counters
-            continue;
+            NVPW_MetricsEvaluator_EvaluateToGpuValues_Params evaluateParams =
+            {
+                NVPW_MetricsEvaluator_EvaluateToGpuValues_Params_STRUCT_SIZE,
+                nullptr,
+                m_Evaluator,
+                &evalRequest,
+                1,
+                NVPW_MetricEvalRequest_STRUCT_SIZE,
+                sizeof(NVPW_MetricEvalRequest),
+                counterDataImage.data(),
+                counterDataImage.size(),
+                rangeIndex,
+                isolated,
+                &metricValue
+            };
+
+            CheckError(NVPW_MetricsEvaluator_EvaluateToGpuValues(&evaluateParams), "NVPW_MetricsEvaluator_EvaluateToGpuValues");
+
+            if (rangeIndex == 0)
+            {
+                // Only values from the first range are currently utilized for counters
+                counterValue = metricValue;
+            }
         }
 
-        for (size_t metricIndex = 0; metricIndex < metricNames.size(); ++metricIndex)
-        {
-            counters.emplace_back(metricNames[metricIndex], ProfilingCounterType::Double, gpuValues[metricIndex]);
-        }
+        counters.emplace_back(metricNames[metricIndex], ProfilingCounterType::Double, counterValue);
     }
 
     return std::make_unique<KernelProfilingData>(counters);
@@ -204,35 +235,67 @@ void CuptiMetricInterface::ListSupportedChips()
 
 std::set<std::string> CuptiMetricInterface::GetSupportedMetrics(const bool listSubMetrics) const
 {
-    NVPW_MetricsContext_GetMetricNames_Begin_Params params =
-    {
-        NVPW_MetricsContext_GetMetricNames_Begin_Params_STRUCT_SIZE,
-        nullptr,
-        m_Context,
-        0,
-        nullptr,
-        !listSubMetrics,
-        !listSubMetrics,
-        !listSubMetrics,
-        !listSubMetrics,
-    };
-
-    CheckError(NVPW_MetricsContext_GetMetricNames_Begin(&params), "NVPW_MetricsContext_GetMetricNames_Begin");
     std::set<std::string> result;
 
-    for (size_t i = 0; i < params.numMetrics; ++i)
+    for (int i = 0; i < static_cast<int>(NVPW_MetricType::NVPW_METRIC_TYPE__COUNT); ++i)
     {
-        result.insert(params.ppMetricNames[i]);
+        const auto metricType = static_cast<NVPW_MetricType>(i);
+
+        NVPW_MetricsEvaluator_GetMetricNames_Params params =
+        {
+            NVPW_MetricsEvaluator_GetMetricNames_Params_STRUCT_SIZE,
+            nullptr,
+            m_Evaluator,
+            static_cast<uint8_t>(metricType),
+            nullptr,
+            nullptr,
+            0
+        };
+
+        CheckError(NVPW_MetricsEvaluator_GetMetricNames(&params), "NVPW_MetricsEvaluator_GetMetricNames");
+
+        for (size_t metricIndex = 0; metricIndex < params.numMetrics; ++metricIndex)
+        {
+            size_t metricNameIndex = params.pMetricNameBeginIndices[metricIndex];
+
+            for (int rollupOp = 0; rollupOp < static_cast<int>(NVPW_RollupOp::NVPW_ROLLUP_OP__COUNT); ++rollupOp)
+            {
+                std::string metricName = &params.pMetricNames[metricNameIndex];
+
+                if (metricType != NVPW_MetricType::NVPW_METRIC_TYPE_RATIO)
+                {
+                    metricName += GetMetricRollupOpString(static_cast<NVPW_RollupOp>(rollupOp));
+                }
+
+                if (!listSubMetrics)
+                {
+                    result.insert(metricName);
+                    continue;
+                }
+
+                NVPW_MetricsEvaluator_GetSupportedSubmetrics_Params submetricsParmas =
+                {
+                    NVPW_MetricsEvaluator_GetSupportedSubmetrics_Params_STRUCT_SIZE,
+                    nullptr,
+                    m_Evaluator,
+                    static_cast<uint8_t>(metricType),
+                    nullptr,
+                    0
+                };
+
+                CheckError(NVPW_MetricsEvaluator_GetSupportedSubmetrics(&submetricsParmas),
+                    "NVPW_MetricsEvaluator_GetSupportedSubmetrics");
+
+                for (size_t submetricIndex = 0; submetricIndex < submetricsParmas.numSupportedSubmetrics; ++submetricIndex)
+                {
+                    const auto submetric = static_cast<NVPW_Submetric>(submetricsParmas.pSupportedSubmetrics[submetricIndex]);
+                    std::string submetricName = metricName + GetSubmetricString(submetric);
+                    result.insert(submetricName);
+                }
+            }
+        }
     }
 
-    NVPW_MetricsContext_GetMetricNames_End_Params endParams =
-    {
-        NVPW_MetricsContext_GetMetricNames_End_Params_STRUCT_SIZE,
-        nullptr,
-        m_Context
-    };
-
-    CheckError(NVPW_MetricsContext_GetMetricNames_End(&endParams), "NVPW_MetricsContext_GetMetricNames_End");
     return result;
 }
 
@@ -244,19 +307,34 @@ std::set<std::string> CuptiMetricInterface::GetSupportedMetrics(const bool listS
 std::vector<uint8_t> CuptiMetricInterface::GetConfigImage(const std::vector<std::string>& metrics) const
 {
     std::vector<NVPA_RawMetricRequest> rawMetricRequests;
-    std::vector<std::string> temp;
-    GetRawMetricRequests(metrics, rawMetricRequests, temp);
+    GetRawMetricRequests(metrics, rawMetricRequests);
 
-    NVPA_RawMetricsConfigOptions configOptions =
+    NVPW_CUDA_RawMetricsConfig_Create_V2_Params configCreateParams =
     {
-        NVPA_RAW_METRICS_CONFIG_OPTIONS_STRUCT_SIZE,
+        NVPW_CUDA_RawMetricsConfig_Create_V2_Params_STRUCT_SIZE,
         nullptr,
         NVPA_ACTIVITY_KIND_PROFILER,
-        m_DeviceName.c_str()
+        m_DeviceName.c_str(),
+        m_CounterAvailabilityImage.data(),
+        nullptr
     };
 
-    NVPA_RawMetricsConfig* rawMetricsConfig;
-    CheckError(NVPA_RawMetricsConfig_Create(&configOptions, &rawMetricsConfig), "NVPA_RawMetricsConfig_Create");
+    CheckError(NVPW_CUDA_RawMetricsConfig_Create_V2(&configCreateParams), "NVPW_CUDA_RawMetricsConfig_Create_V2");
+    NVPA_RawMetricsConfig* rawMetricsConfig = configCreateParams.pRawMetricsConfig;
+
+    if (!m_CounterAvailabilityImage.empty())
+    {
+        NVPW_RawMetricsConfig_SetCounterAvailability_Params counterAvailabilityParams =
+        {
+            NVPW_RawMetricsConfig_SetCounterAvailability_Params_STRUCT_SIZE,
+            nullptr,
+            rawMetricsConfig,
+            m_CounterAvailabilityImage.data()
+        };
+
+        CheckError(NVPW_RawMetricsConfig_SetCounterAvailability(&counterAvailabilityParams),
+            "NVPW_RawMetricsConfig_SetCounterAvailability");
+    }
 
     NVPW_RawMetricsConfig_BeginPassGroup_Params beginParams =
     {
@@ -332,18 +410,18 @@ std::vector<uint8_t> CuptiMetricInterface::GetConfigImage(const std::vector<std:
 std::vector<uint8_t> CuptiMetricInterface::GetCounterDataImagePrefix(const std::vector<std::string>& metrics) const
 {
     std::vector<NVPA_RawMetricRequest> rawMetricRequests;
-    std::vector<std::string> temp;
-    GetRawMetricRequests(metrics, rawMetricRequests, temp);
+    GetRawMetricRequests(metrics, rawMetricRequests);
 
-    NVPW_CounterDataBuilder_Create_Params createParams =
+    NVPW_CUDA_CounterDataBuilder_Create_Params createParams =
     {
-        NVPW_CounterDataBuilder_Create_Params_STRUCT_SIZE,
+        NVPW_CUDA_CounterDataBuilder_Create_Params_STRUCT_SIZE,
         nullptr,
-        nullptr,
-        m_DeviceName.c_str()
+        m_DeviceName.c_str(),
+        m_CounterAvailabilityImage.data(),
+        nullptr
     };
 
-    CheckError(NVPW_CounterDataBuilder_Create(&createParams), "NVPW_CounterDataBuilder_Create");
+    CheckError(NVPW_CUDA_CounterDataBuilder_Create(&createParams), "NVPW_CUDA_CounterDataBuilder_Create");
 
     NVPW_CounterDataBuilder_AddMetrics_Params addParams =
     {
@@ -451,10 +529,11 @@ void CuptiMetricInterface::CreateCounterDataImage(const std::vector<uint8_t>& co
 }
 
 void CuptiMetricInterface::GetRawMetricRequests(const std::vector<std::string>& metrics,
-    std::vector<NVPA_RawMetricRequest>& rawMetricRequests, std::vector<std::string>& temp) const
+    std::vector<NVPA_RawMetricRequest>& rawMetricRequests) const
 {
     bool isolated = true;
     bool keepInstances = true;
+    std::vector<const char*> rawMetricNames;
 
     for (const auto& metricName : metrics)
     {
@@ -463,50 +542,80 @@ void CuptiMetricInterface::GetRawMetricRequests(const std::vector<std::string>& 
         KttAssert(success, "Unable to parse metric name " + metricName);
 
         keepInstances = true; // Bug in collection with collection of metrics without instances, keep it to true
+        NVPW_MetricEvalRequest evalRequest;
 
-        NVPW_MetricsContext_GetMetricProperties_Begin_Params params =
+        NVPW_MetricsEvaluator_ConvertMetricNameToMetricEvalRequest_Params metricToEvalRequest =
         {
-            NVPW_MetricsContext_GetMetricProperties_Begin_Params_STRUCT_SIZE,
+            NVPW_MetricsEvaluator_ConvertMetricNameToMetricEvalRequest_Params_STRUCT_SIZE,
             nullptr,
-            m_Context,
+            m_Evaluator,
             parsedName.c_str(),
-            nullptr,
-            nullptr,
-            nullptr,
-            0.0,
-            0.0
+            &evalRequest,
+            NVPW_MetricEvalRequest_STRUCT_SIZE
         };
 
-        CheckError(NVPW_MetricsContext_GetMetricProperties_Begin(&params), "NVPW_MetricsContext_GetMetricProperties_Begin");
+        CheckError(NVPW_MetricsEvaluator_ConvertMetricNameToMetricEvalRequest(&metricToEvalRequest),
+            "NVPW_MetricsEvaluator_ConvertMetricNameToMetricEvalRequest");
+        std::vector<const char*> rawDependencies;
 
-        for (const char** metricDependencies = params.ppRawMetricDependencies; *metricDependencies != nullptr; ++metricDependencies)
+        NVPW_MetricsEvaluator_GetMetricRawDependencies_Params rawDependenciesParams =
         {
-            temp.push_back(*metricDependencies);
+            NVPW_MetricsEvaluator_GetMetricRawDependencies_Params_STRUCT_SIZE,
+            nullptr,
+            m_Evaluator,
+            &evalRequest,
+            1,
+            NVPW_MetricEvalRequest_STRUCT_SIZE,
+            sizeof(NVPW_MetricEvalRequest),
+            nullptr,
+            0,
+            nullptr,
+            0
+        };
+
+        CheckError(NVPW_MetricsEvaluator_GetMetricRawDependencies(&rawDependenciesParams),
+            "NVPW_MetricsEvaluator_GetMetricRawDependencies");
+        rawDependencies.resize(rawDependenciesParams.numRawDependencies);
+        rawDependenciesParams.ppRawDependencies = rawDependencies.data();
+        CheckError(NVPW_MetricsEvaluator_GetMetricRawDependencies(&rawDependenciesParams),
+            "NVPW_MetricsEvaluator_GetMetricRawDependencies");
+
+        for (size_t i = 0; i < rawDependencies.size(); ++i)
+        {
+            rawMetricNames.push_back(rawDependencies[i]);
         }
-
-        NVPW_MetricsContext_GetMetricProperties_End_Params endParams =
-        {
-            NVPW_MetricsContext_GetMetricProperties_End_Params_STRUCT_SIZE,
-            nullptr,
-            m_Context
-        };
-
-        CheckError(NVPW_MetricsContext_GetMetricProperties_End(&endParams), "NVPW_MetricsContext_GetMetricProperties_End");
     }
 
-    for (const auto& rawMetricName : temp)
+    for (const auto* rawMetricName : rawMetricNames)
     {
         NVPA_RawMetricRequest request =
         {
             NVPA_RAW_METRIC_REQUEST_STRUCT_SIZE,
             nullptr,
-            rawMetricName.c_str(),
+            rawMetricName,
             isolated,
             keepInstances
         };
 
         rawMetricRequests.push_back(request);
     }
+}
+
+void CuptiMetricInterface::InitializeCounterAvailabilityImage(const CudaContext& context)
+{
+    CUpti_Profiler_GetCounterAvailability_Params counterAvailabilityParams =
+    {
+        CUpti_Profiler_GetCounterAvailability_Params_STRUCT_SIZE,
+        nullptr,
+        context.GetContext(),
+        0,
+        nullptr
+    };
+
+    CheckError(cuptiProfilerGetCounterAvailability(&counterAvailabilityParams), "cuptiProfilerGetCounterAvailability");
+    m_CounterAvailabilityImage.resize(counterAvailabilityParams.counterAvailabilityImageSize);
+    counterAvailabilityParams.pCounterAvailabilityImage = m_CounterAvailabilityImage.data();
+    CheckError(cuptiProfilerGetCounterAvailability(&counterAvailabilityParams), "cuptiProfilerGetCounterAvailability");
 }
 
 const std::vector<std::string>& CuptiMetricInterface::GetDefaultMetrics()
@@ -575,8 +684,6 @@ bool CuptiMetricInterface::ParseMetricNameString(const std::string& metric, std:
     }
 
     outputName = metric;
-    keepInstances = false;
-    isolated = true;
 
     // boost program_options sometimes inserts a \n between the metric name and a '&' at the end
     size_t pos = outputName.find('\n');
@@ -597,6 +704,8 @@ bool CuptiMetricInterface::ParseMetricNameString(const std::string& metric, std:
         }
     }
 
+    keepInstances = false;
+
     if (outputName.back() == '+')
     {
         keepInstances = true;
@@ -607,6 +716,8 @@ bool CuptiMetricInterface::ParseMetricNameString(const std::string& metric, std:
             return false;
         }
     }
+
+    isolated = true;
 
     if (outputName.back() == '$')
     {
@@ -629,6 +740,76 @@ bool CuptiMetricInterface::ParseMetricNameString(const std::string& metric, std:
     }
 
     return true;
+}
+
+std::string CuptiMetricInterface::GetMetricRollupOpString(const NVPW_RollupOp rollupOp)
+{
+    switch (rollupOp)
+    {
+    case NVPW_ROLLUP_OP_AVG:
+        return ".avg";
+    case NVPW_ROLLUP_OP_MAX:
+        return ".max";
+    case NVPW_ROLLUP_OP_MIN:
+        return ".min";
+    case NVPW_ROLLUP_OP_SUM:
+        return ".sum";
+    default:
+        return "";
+    }
+}
+
+std::string CuptiMetricInterface::GetSubmetricString(const NVPW_Submetric submetric)
+{
+    switch (submetric)
+    {
+    case NVPW_SUBMETRIC_NONE:
+        return "";
+    case NVPW_SUBMETRIC_PEAK_SUSTAINED:
+        return ".peak_sustained";
+    case NVPW_SUBMETRIC_PEAK_SUSTAINED_ACTIVE:
+        return ".peak_sustained_active";
+    case NVPW_SUBMETRIC_PEAK_SUSTAINED_ACTIVE_PER_SECOND:
+        return ".peak_sustained_active.per_second";
+    case NVPW_SUBMETRIC_PEAK_SUSTAINED_ELAPSED:
+        return ".peak_sustained_elapsed";
+    case NVPW_SUBMETRIC_PEAK_SUSTAINED_ELAPSED_PER_SECOND:
+        return ".peak_sustained_elapsed.per_second";
+    case NVPW_SUBMETRIC_PEAK_SUSTAINED_FRAME:
+        return ".peak_sustained_frame";
+    case NVPW_SUBMETRIC_PEAK_SUSTAINED_FRAME_PER_SECOND:
+        return ".peak_sustained_frame.per_second";
+    case NVPW_SUBMETRIC_PEAK_SUSTAINED_REGION:
+        return ".peak_sustained_region";
+    case NVPW_SUBMETRIC_PEAK_SUSTAINED_REGION_PER_SECOND:
+        return ".peak_sustained_region.per_second";
+    case NVPW_SUBMETRIC_PER_CYCLE_ACTIVE:
+        return ".per_cycle_active";
+    case NVPW_SUBMETRIC_PER_CYCLE_ELAPSED:
+        return ".per_cycle_elapsed";
+    case NVPW_SUBMETRIC_PER_CYCLE_IN_FRAME:
+        return ".per_cycle_in_frame";
+    case NVPW_SUBMETRIC_PER_CYCLE_IN_REGION:
+        return ".per_cycle_in_region";
+    case NVPW_SUBMETRIC_PER_SECOND:
+        return ".per_second";
+    case NVPW_SUBMETRIC_PCT_OF_PEAK_SUSTAINED_ACTIVE:
+        return ".pct_of_peak_sustained_active";
+    case NVPW_SUBMETRIC_PCT_OF_PEAK_SUSTAINED_ELAPSED:
+        return ".pct_of_peak_sustained_elapsed";
+    case NVPW_SUBMETRIC_PCT_OF_PEAK_SUSTAINED_FRAME:
+        return ".pct_of_peak_sustained_frame";
+    case NVPW_SUBMETRIC_PCT_OF_PEAK_SUSTAINED_REGION:
+        return ".pct_of_peak_sustained_region";
+    case NVPW_SUBMETRIC_MAX_RATE:
+        return ".max_rate";
+    case NVPW_SUBMETRIC_PCT:
+        return ".pct";
+    case NVPW_SUBMETRIC_RATIO:
+        return ".ratio";
+    default:
+        return "";
+    }
 }
 
 } // namespace ktt

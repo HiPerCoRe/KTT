@@ -80,7 +80,7 @@ std::unique_ptr<CudaTransferAction> CudaHostBuffer::UploadData(const CudaStream&
     }
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<CudaTransferAction>(id);
+    auto action = std::make_unique<CudaTransferAction>(id, stream.GetId());
 
     CheckError(cuEventRecord(action->GetStartEvent(), stream.GetStream()), "cuEventRecord");
     CheckError(cuMemcpyHtoDAsync(m_Buffer, source, dataSize, stream.GetStream()), "cuMemcpyHtoDAsync");
@@ -100,7 +100,7 @@ std::unique_ptr<CudaTransferAction> CudaHostBuffer::DownloadData(const CudaStrea
     }
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<CudaTransferAction>(id);
+    auto action = std::make_unique<CudaTransferAction>(id, stream.GetId());
 
     CheckError(cuEventRecord(action->GetStartEvent(), stream.GetStream()), "cuEventRecord");
     CheckError(cuMemcpyDtoHAsync(destination, m_Buffer, dataSize, stream.GetStream()), "cuMemcpyDtoHAsync");
@@ -126,7 +126,7 @@ std::unique_ptr<CudaTransferAction> CudaHostBuffer::CopyData(const CudaStream& s
     }
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<CudaTransferAction>(id);
+    auto action = std::make_unique<CudaTransferAction>(id, stream.GetId());
 
     CheckError(cuEventRecord(action->GetStartEvent(), stream.GetStream()), "cuEventRecord");
     CheckError(cuMemcpyDtoDAsync(m_Buffer, *source.GetBuffer(), dataSize, stream.GetStream()), "cuMemcpyDtoDAsync");

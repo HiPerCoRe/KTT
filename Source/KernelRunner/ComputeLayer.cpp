@@ -115,6 +115,11 @@ void ComputeLayer::SynchronizeQueue(const QueueId queue)
     m_ComputeEngine.SynchronizeQueue(queue);
 }
 
+void ComputeLayer::SynchronizeQueues()
+{
+    m_ComputeEngine.SynchronizeQueues();
+}
+
 void ComputeLayer::SynchronizeDevice()
 {
     m_ComputeEngine.SynchronizeDevice();
@@ -133,6 +138,11 @@ const DimensionVector& ComputeLayer::GetCurrentLocalSize(const KernelDefinitionI
 const KernelConfiguration& ComputeLayer::GetCurrentConfiguration() const
 {
     return GetData().GetConfiguration();
+}
+
+KernelRunMode ComputeLayer::GetRunMode() const
+{
+    return GetData().GetRunMode();
 }
 
 void ComputeLayer::ChangeArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& arguments)
@@ -314,9 +324,9 @@ void ComputeLayer::ClearComputeEngineData()
     }
 }
 
-void ComputeLayer::AddData(const Kernel& kernel, const KernelConfiguration& configuration)
+void ComputeLayer::AddData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode)
 {
-    m_Data[kernel.GetId()] = std::make_unique<ComputeLayerData>(kernel, configuration);
+    m_Data[kernel.GetId()] = std::make_unique<ComputeLayerData>(kernel, configuration, mode);
 }
 
 void ComputeLayer::ClearData(const KernelId id)

@@ -11,7 +11,8 @@ VulkanSpecializationConstant::VulkanSpecializationConstant(const std::vector<Ker
     for (size_t i = 0; i < arguments.size(); ++i)
     {
         const auto& argument = *arguments[i];
-        KttAssert(argument.GetMemoryType() == ArgumentMemoryType::Scalar, "Only scalar arguments can be used as specialization constants");
+        KttAssert(argument.GetMemoryType() == ArgumentMemoryType::Scalar || argument.GetMemoryType() == ArgumentMemoryType::Symbol,
+            "Only scalar and symbol arguments can be used as specialization constants");
 
         VkSpecializationMapEntry entry =
         {

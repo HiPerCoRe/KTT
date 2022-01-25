@@ -6,16 +6,19 @@
 #include <cuda.h>
 
 #include <Api/KttException.h>
+#include <ComputeEngine/Cuda/CudaKernel.h>
 #include <ComputeEngine/Cuda/CudaProgram.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
+#include <KernelArgument/KernelArgument.h>
 #include <Utility/StringUtility.h>
 
 namespace ktt
 {
 
-CudaProgram::CudaProgram(const std::string& name, const std::string& source) :
+CudaProgram::CudaProgram(const std::string& name, const std::string& source, const std::vector<KernelArgument*>& symbolArguments) :
     m_Name(name),
-    m_Source(source)
+    m_Source(source),
+    m_SymbolArguments(symbolArguments)
 {
     CheckError(nvrtcCreateProgram(&m_Program, source.data(), nullptr, 0, nullptr, nullptr), "nvrtcCreateProgram");
 }
@@ -28,6 +31,12 @@ CudaProgram::~CudaProgram()
 void CudaProgram::Build(const std::string& compilerOptions) const
 {
     CheckError(nvrtcAddNameExpression(m_Program, m_Name.c_str()), "nvrtcAddNameExpression");
+    
+    for (const auto* argument : m_SymbolArguments)
+    {
+        CheckError(nvrtcAddNameExpression(m_Program, argument->GetSymbolName().c_str()), "nvrtcAddNameExpression");
+    }
+    
     std::vector<std::string> individualOptions;
     std::vector<const char*> individualOptionsChar;
 
@@ -49,6 +58,19 @@ void CudaProgram::Build(const std::string& compilerOptions) const
 
     const std::string buildInfo = GetBuildInfo();
     CheckError(result, "nvrtcCompileProgram", buildInfo, ExceptionReason::CompilerError);
+}
+
+void CudaProgram::InitializeSymbolData(const CudaKernel& kernel) const
+{
+    for (const auto* argument : m_SymbolArguments)
+    {
+        const char* symbolName;
+        CheckError(nvrtcGetLoweredName(m_Program, argument->GetSymbolName().c_str(), &symbolName), "nvrtcGetLoweredName");
+        
+        CUdeviceptr symbolAddress;
+        CheckError(cuModuleGetGlobal(&symbolAddress, nullptr, kernel.GetModule(), symbolName), "cuModuleGetGlobal");
+        CheckError(cuMemcpyHtoD(symbolAddress, argument->GetData(), argument->GetDataSize()), "cuMemcpyHtoD");
+    }
 }
 
 const std::string& CudaProgram::GetSource() const

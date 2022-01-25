@@ -20,15 +20,16 @@ class VulkanQueryPool;
 class VulkanComputeAction
 {
 public:
-    VulkanComputeAction(const ComputeActionId id, const VulkanDevice& device, const VulkanCommandPool& commandPool,
-        VulkanQueryPool& queryPool, std::shared_ptr<VulkanComputePipeline> pipeline, const DimensionVector& globalSize,
-        const DimensionVector& localSize);
+    VulkanComputeAction(const ComputeActionId id, const QueueId queueId, const VulkanDevice& device,
+        const VulkanCommandPool& commandPool, VulkanQueryPool& queryPool, std::shared_ptr<VulkanComputePipeline> pipeline,
+        const DimensionVector& globalSize, const DimensionVector& localSize);
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void SetComputeId(const KernelComputeId& id);
     void WaitForFinish();
 
     ComputeActionId GetId() const;
+    QueueId GetQueueId() const;
     VulkanComputePipeline& GetPipeline();
     VkFence GetFence() const;
     VkCommandBuffer GetCommandBuffer() const;
@@ -41,6 +42,7 @@ public:
 
 private:
     ComputeActionId m_Id;
+    QueueId m_QueueId;
     std::shared_ptr<VulkanComputePipeline> m_Pipeline;
     std::unique_ptr<VulkanFence> m_Fence;
     std::unique_ptr<VulkanCommandBuffers> m_CommandBuffers;

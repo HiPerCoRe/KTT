@@ -90,6 +90,16 @@ public:
       */
     explicit Tuner(const ComputeApi api, const ComputeApiInitializer& initializer);
 
+    /** @fn explicit Tuner(const ComputeApi api, const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds)
+      * Creates tuner for the specified compute API using custom initializer. The initializer contains user-provided compute device
+      * context and queues. The ids assigned to queues will be added to the provided vector.
+      * @param api Compute API used by the tuner.
+      * @param initializer Custom compute API initializer. See ComputeApiInitializer for more information.
+      * @param assignedQueueIds Ids assigned to compute queues inside initializer by the tuner. The order of assigned ids matches
+      * the order of queues inside initializer.
+      */
+    explicit Tuner(const ComputeApi api, const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
+
     /** @fn ~Tuner()
       * Tuner destructor.
       */
@@ -123,6 +133,14 @@ public:
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
         const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
 
+    /** @fn KernelDefinitionId GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames = {}) const
+      * Retrieves kernel definition id from the tuner based on provided name and template arguments.
+      * @param name Name of a kernel definition.
+      * @param typeNames Names of types which were used to instantiate kernel template. Only supported in CUDA kernels.
+      * @return Id of the corresponding kernel definition. If no such definition exists, InvalidKernelDefinitionId will be returned.
+      */
+    KernelDefinitionId GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames = {}) const;
+
     /** @fn void RemoveKernelDefinition(const KernelDefinitionId id)
       * Removes kernel definition with the specified id from the tuner. Note that definition can only be removed if it is not
       * associated with any kernel.
@@ -138,7 +156,7 @@ public:
       */
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
 
-    /** @fn KernelId CreateSimpleKernel(const KernelDefinitionId definitionId)
+    /** @fn KernelId CreateSimpleKernel(const std::string& name, const KernelDefinitionId definitionId)
       * Creates simple kernel from the specified definition.
       * @param name Kernel name used during logging and output operations. The name must be unique.
       * @param definitionId Id of kernel definition which will be utilized by the kernel.
@@ -146,7 +164,8 @@ public:
       */
     KernelId CreateSimpleKernel(const std::string& name, const KernelDefinitionId definitionId);
 
-    /** @fn KernelId CreateCompositeKernel(const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher = nullptr)
+    /** @fn KernelId CreateCompositeKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds,
+      * KernelLauncher launcher = nullptr)
       * Creates composite kernel from the specified definitions. Note that kernel launcher is required in order to launch kernels
       * with multiple definitions.
       * @param name Kernel name used during logging and output operations. The name must be unique.
@@ -304,6 +323,24 @@ public:
     ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const ArgumentAccessType accessType,
         const ArgumentMemoryLocation memoryLocation);
 
+    /** @fn ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
+      * const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation)
+      * Adds new vector argument to the tuner. The argument buffer is created and managed by user and depending on the compute API, can
+      * be either CUdeviceptr or cl_mem handle. The tuner will not destroy the argument. This method can be utilized when templated
+      * version of argument addition cannot be used. When using validation for arguments added through this method, value comparator
+      * must always be provided.
+      * @param buffer User-provided memory buffer.
+      * @param bufferSize Size of the provided user buffer in bytes.
+      * @param elementSize Size of a single element inside buffer in bytes (e.g., 4 for 32-bit float).
+      * @param accessType Access type specifies whether argument is used for input or output. See ::ArgumentAccessType for more
+      * information.
+      * @param memoryLocation Memory location specifies whether argument data will be accessed from device or host memory during its
+      * usage by compute API. See ::ArgumentMemoryLocation for more information.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
+    ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
+        const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation);
+
     /** @fn template <typename T> ArgumentId AddArgumentScalar(const T& data);
       * Adds new scalar argument to the tuner. All scalar arguments are read-only.
       * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.
@@ -311,6 +348,15 @@ public:
       */
     template <typename T>
     ArgumentId AddArgumentScalar(const T& data);
+
+    /** @fn ArgumentId AddArgumentScalar(const void* data, const size_t dataSize)
+      * Adds new scalar argument to the tuner. All scalar arguments are read-only. This method can be utilized when templated version
+      * of scalar argument addition cannot be used.
+      * @param data Pointer to memory with kernel argument data.
+      * @param dataSize Size of data in bytes (e.g., 4 for 32-bit float).
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
+    ArgumentId AddArgumentScalar(const void* data, const size_t dataSize);
 
     /** @fn template <typename T> ArgumentId AddArgumentLocal(const size_t localMemorySize)
       * Adds new local memory (shared memory in CUDA) argument to the tuner. All local memory arguments are read-only and cannot be
@@ -324,6 +370,16 @@ public:
     template <typename T>
     ArgumentId AddArgumentLocal(const size_t localMemorySize);
 
+    /** @fn template <typename T> ArgumentId AddArgumentSymbol(const T& data, const std::string& symbolName = "")
+      * Adds new symbol argument to the tuner.
+      * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.
+      * @param symbolName Name of the corresponding symbol in kernel source code. Only utilized when tuner is using CUDA API. The symbol
+      * name must be unique.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
+    template <typename T>
+    ArgumentId AddArgumentSymbol(const T& data, const std::string& symbolName = "");
+
     /** @fn void RemoveArgument(const ArgumentId id)
       * Removes argument with the specified id from the tuner. Note that argument can only be removed if it is not associated with
       * any kernel definition.
@@ -334,7 +390,7 @@ public:
     /** @fn void SetReadOnlyArgumentCache(const bool flag)
       * Toggles caching of read-only kernel arguments which have management type set to framework. This can significantly speed up
       * tuning, since arguments are uploaded into compute API buffers only once. Caching is enabled by default. Users who wish to
-      * modify read-only arguments inside kernel launcher may wish to disable this behaviour.
+      * modify read-only arguments inside kernel launcher may want to disable this behaviour.
       * @param flag If true, read-only argument caching is enabled. It is disabled otherwise.
       */
     void SetReadOnlyArgumentCache(const bool flag);
@@ -556,10 +612,52 @@ public:
       */
     std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format, UserData& data) const;
 
-    /** @fn void Synchronize()
+    /** @fn QueueId AddComputeQueue(ComputeQueue queue)
+      * Adds the specified compute queue to the tuner. New queues can only be added if tuner was initialized with compute API
+      * initializer.
+      * @param queue Queue which will be added. The queue should be tied to the context specified inside compute API initializer.
+      * @return Id assigned to queue by the tuner.
+      */
+    QueueId AddComputeQueue(ComputeQueue queue);
+
+    /** @fn void RemoveComputeQueue(const QueueId id)
+      * Removes the specified compute queue from the tuner. Only queues added by user can be removed.
+      * @param id Id of compute queue which will be removed.
+      */
+    void RemoveComputeQueue(const QueueId id);
+
+    /** @fn void WaitForComputeAction(const ComputeActionId id)
+      * Blocks until the specified compute action is finished.
+      * @param id Id of compute action to wait for.
+      */
+    void WaitForComputeAction(const ComputeActionId id);
+
+    /** @fn void WaitForTransferAction(const TransferActionId id)
+      * Blocks until the specified buffer transfer action is finished.
+      * @param id Id of transfer action to wait for.
+      */
+    void WaitForTransferAction(const TransferActionId id);
+
+    /** @fn void SynchronizeQueue(const QueueId id)
+      * Blocks until all commands submitted to the specified KTT device queue are completed.
+      * @param id Id of queue which will be synchronized.
+      */
+    void SynchronizeQueue(const QueueId id);
+
+    /** @fn void SynchronizeQueues()
       * Blocks until all commands submitted to all KTT device queues are completed.
       */
-    void Synchronize();
+    void SynchronizeQueues();
+
+    /** @fn void SynchronizeDevice()
+      * Blocks until all commands submitted to KTT device are completed.
+      */
+    void SynchronizeDevice();
+
+    /** @fn void Synchronize()
+      * Blocks until all commands submitted to KTT device are completed.
+      */
+    [[deprecated("Use SynchronizeDevice() or SynchronizeQueues() method instead.")]] void Synchronize();
 
     /** @fn void SetProfilingCounters(const std::vector<std::string>& counters)
       * Specifies profiling counters that will be collected during kernel profiling. Note that not all profiling counters are
@@ -626,9 +724,9 @@ public:
     DeviceInfo GetCurrentDeviceInfo() const;
 
      /** @fn static void SetLoggingLevel(const LoggingLevel level)
-      * Sets logging level for tuner. Default logging level is info.
-      * @param level Logging level which will be used by tuner. See ::LoggingLevel for more information.
-      */
+       * Sets logging level for tuner. Default logging level is info.
+       * @param level Logging level which will be used by tuner. See ::LoggingLevel for more information.
+       */
     static void SetLoggingLevel(const LoggingLevel level);
 
     /** @fn static void SetLoggingTarget(std::ostream& outputTarget)
@@ -646,13 +744,13 @@ public:
 private:
     std::unique_ptr<TunerCore> m_Tuner;
 
-    ArgumentId AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
+    KTT_VIRTUAL_API ArgumentId AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
         const ArgumentManagementType managementType, void* data, const size_t dataSize);
-    ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
+    KTT_VIRTUAL_API ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const void* data, const size_t dataSize);
-    ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
+        const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName = "");
+    KTT_VIRTUAL_API ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
 
     template <typename T>

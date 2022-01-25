@@ -15,12 +15,13 @@
 namespace ktt
 {
 
+class CudaContext;
 class KernelProfilingData;
 
 class CuptiMetricInterface
 {
 public:
-    CuptiMetricInterface(const DeviceIndex index);
+    CuptiMetricInterface(const DeviceIndex index, const CudaContext& context);
     ~CuptiMetricInterface();
 
     void SetMetrics(const std::vector<std::string>& metrics);
@@ -32,8 +33,10 @@ public:
 
 private:
     std::vector<std::string> m_Metrics;
+    std::vector<uint8_t> m_CounterAvailabilityImage;
+    std::vector<uint8_t> m_ScratchBuffer;
     std::string m_DeviceName;
-    NVPA_MetricsContext* m_Context;
+    NVPW_MetricsEvaluator* m_Evaluator;
     uint32_t m_MaxProfiledRanges;
     uint32_t m_MaxRangeNameLength;
 
@@ -42,12 +45,14 @@ private:
     std::vector<uint8_t> GetCounterDataImagePrefix(const std::vector<std::string>& metrics) const;
     void CreateCounterDataImage(const std::vector<uint8_t>& counterDataImagePrefix, std::vector<uint8_t>& counterDataImage,
         std::vector<uint8_t>& counterDataScratchBuffer) const;
-    void GetRawMetricRequests(const std::vector<std::string>& metrics, std::vector<NVPA_RawMetricRequest>& rawMetricRequests,
-        std::vector<std::string>& temp) const;
+    void GetRawMetricRequests(const std::vector<std::string>& metrics, std::vector<NVPA_RawMetricRequest>& rawMetricRequests) const;
+    void InitializeCounterAvailabilityImage(const CudaContext& context);
 
     static const std::vector<std::string>& GetDefaultMetrics();
     static std::string GetDeviceName(const DeviceIndex index);
     static bool ParseMetricNameString(const std::string& metric, std::string& outputName, bool& isolated, bool& keepInstances);
+    static std::string GetMetricRollupOpString(const NVPW_RollupOp rollupOp);
+    static std::string GetSubmetricString(const NVPW_Submetric submetric);
 };
 
 } // namespace ktt

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <ostream>
+#include <string>
 
 #include <Api/ComputeApiInitializer.h>
 #include <ComputeEngine/ComputeApi.h>
@@ -23,13 +24,14 @@ class TunerCore
 {
 public:
     explicit TunerCore(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount);
-    explicit TunerCore(const ComputeApi api, const ComputeApiInitializer& initializer);
+    explicit TunerCore(const ComputeApi api, const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
 
     // Kernel management
     KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
         const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
         const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
+    KernelDefinitionId GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames = {}) const;
     void RemoveKernelDefinition(const KernelDefinitionId id);
     void SetArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& argumentIds);
     KernelId CreateKernel(const std::string& name, const KernelDefinitionId definitionId);
@@ -49,7 +51,7 @@ public:
         const ArgumentManagementType managementType, void* data, const size_t dataSize);
     ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const void* data, const size_t dataSize);
+        const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName = "");
     ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
     void RemoveArgument(const ArgumentId id);
@@ -83,6 +85,12 @@ public:
     std::vector<KernelResult> LoadResults(const std::string& filePath, const OutputFormat format, UserData& data) const;
 
     // Compute engine
+    QueueId AddComputeQueue(ComputeQueue queue);
+    void RemoveComputeQueue(const QueueId id);
+    void WaitForComputeAction(const ComputeActionId id);
+    void WaitForTransferAction(const TransferActionId id);
+    void SynchronizeQueue(const QueueId queueId);
+    void SynchronizeQueues();
     void SynchronizeDevice();
     void SetProfilingCounters(const std::vector<std::string>& counters);
     void SetCompilerOptions(const std::string& options);
@@ -107,7 +115,7 @@ private:
     std::unique_ptr<TuningRunner> m_TuningRunner;
 
     void InitializeComputeEngine(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount);
-    void InitializeComputeEngine(const ComputeApi api, const ComputeApiInitializer& initializer);
+    void InitializeComputeEngine(const ComputeApi api, const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
     void InitializeRunners();
 
     static std::unique_ptr<Serializer> CreateSerializer(const OutputFormat format);

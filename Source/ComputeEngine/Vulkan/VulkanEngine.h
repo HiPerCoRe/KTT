@@ -65,9 +65,12 @@ public:
     bool HasBuffer(const ArgumentId id) override;
 
     // Queue methods
+    QueueId AddComputeQueue(ComputeQueue queue) override;
+    void RemoveComputeQueue(const QueueId id) override;
     QueueId GetDefaultQueue() const override;
     std::vector<QueueId> GetAllQueues() const override;
     void SynchronizeQueue(const QueueId queueId) override;
+    void SynchronizeQueues() override;
     void SynchronizeDevice() override;
 
     // Information retrieval methods
@@ -110,6 +113,7 @@ private:
     std::vector<VulkanBuffer*> GetPipelineArguments(const std::vector<KernelArgument*>& arguments);
     std::unique_ptr<VulkanBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<VulkanBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
+    void ClearQueueActions(const QueueId id);
     static std::vector<KernelArgument*> GetScalarArguments(const std::vector<KernelArgument*>& arguments);
 };
 

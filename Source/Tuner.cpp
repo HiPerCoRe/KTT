@@ -14,8 +14,14 @@ Tuner::Tuner(const PlatformIndex platform, const DeviceIndex device, const Compu
     m_Tuner(std::make_unique<TunerCore>(platform, device, api, computeQueueCount))
 {}
 
-Tuner::Tuner(const ComputeApi api, const ComputeApiInitializer& initializer) :
-    m_Tuner(std::make_unique<TunerCore>(api, initializer))
+Tuner::Tuner(const ComputeApi api, const ComputeApiInitializer& initializer)
+{
+    std::vector<QueueId> ids;
+    m_Tuner = std::make_unique<TunerCore>(api, initializer, ids);
+}
+
+Tuner::Tuner(const ComputeApi api, const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
+    m_Tuner(std::make_unique<TunerCore>(api, initializer, assignedQueueIds))
 {}
 
 Tuner::~Tuner() = default;
@@ -40,6 +46,19 @@ KernelDefinitionId Tuner::AddKernelDefinitionFromFile(const std::string& name, c
     try
     {
         return m_Tuner->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize, typeNames);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidKernelDefinitionId;
+    }
+}
+
+KernelDefinitionId Tuner::GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames) const
+{
+    try
+    {
+        return m_Tuner->GetKernelDefinitionId(name, typeNames);
     }
     catch (const KttException& exception)
     {
@@ -225,6 +244,34 @@ void Tuner::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDe
     catch (const KttException& exception)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+ArgumentId Tuner::AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
+    const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation)
+{
+    try
+    {
+        return AddUserArgument(buffer, elementSize, ArgumentDataType::Custom, memoryLocation, accessType, bufferSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidArgumentId;
+    }
+}
+
+ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize)
+{
+    try
+    {
+        return AddArgumentWithOwnedData(dataSize, ArgumentDataType::Custom, ArgumentMemoryLocation::Undefined,
+            ArgumentAccessType::ReadOnly, ArgumentMemoryType::Scalar, ArgumentManagementType::Framework, data, dataSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidArgumentId;
     }
 }
 
@@ -511,7 +558,80 @@ std::vector<KernelResult> Tuner::LoadResults(const std::string& filePath, const 
     }
 }
 
-void Tuner::Synchronize()
+QueueId Tuner::AddComputeQueue(ComputeQueue queue)
+{
+    try
+    {
+        return m_Tuner->AddComputeQueue(queue);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidQueueId;
+    }
+}
+
+void Tuner::RemoveComputeQueue(const QueueId id)
+{
+    try
+    {
+        m_Tuner->RemoveComputeQueue(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::WaitForComputeAction(const ComputeActionId id)
+{
+    try
+    {
+        m_Tuner->WaitForComputeAction(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::WaitForTransferAction(const TransferActionId id)
+{
+    try
+    {
+        m_Tuner->WaitForTransferAction(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::SynchronizeQueue(const QueueId id)
+{
+    try
+    {
+        m_Tuner->SynchronizeQueue(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::SynchronizeQueues()
+{
+    try
+    {
+        m_Tuner->SynchronizeQueues();
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::SynchronizeDevice()
 {
     try
     {
@@ -521,6 +641,11 @@ void Tuner::Synchronize()
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
     }
+}
+
+void Tuner::Synchronize()
+{
+    SynchronizeDevice();
 }
 
 void Tuner::SetProfilingCounters(const std::vector<std::string>& counters)
@@ -655,12 +780,12 @@ ArgumentId Tuner::AddArgumentWithReferencedData(const size_t elementSize, const 
 
 ArgumentId Tuner::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const size_t dataSize)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName)
 {
     try
     {
         return m_Tuner->AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, memoryType, managementType,
-            data, dataSize);
+            data, dataSize, symbolName);
     }
     catch (const KttException& exception)
     {

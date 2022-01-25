@@ -40,6 +40,7 @@ public:
     Kernel& GetKernel(const KernelId id);
     const KernelDefinition& GetDefinition(const KernelDefinitionId id) const;
     KernelDefinition& GetDefinition(const KernelDefinitionId id);
+    KernelDefinitionId GetDefinitionId(const std::string& name, const std::vector<std::string>& typeNames = {}) const;
     bool IsArgumentUsed(const ArgumentId id) const;
 
 private:

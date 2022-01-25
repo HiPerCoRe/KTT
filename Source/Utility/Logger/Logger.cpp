@@ -86,15 +86,15 @@ std::string Logger::GetLoggingLevelString(const LoggingLevel level)
     switch (level)
     {
     case LoggingLevel::Off:
-        return "[OFF]";
+        return "[Off]";
     case LoggingLevel::Error:
-        return "[ERROR]";
+        return "[Error]";
     case LoggingLevel::Warning:
-        return "[WARNING]";
+        return "[Warning]";
     case LoggingLevel::Info:
-        return "[INFO]";
+        return "[Info]";
     case LoggingLevel::Debug:
-        return "[DEBUG]";
+        return "[Debug]";
     default:
         KttError("Unhandled logging level value");
         return "";

@@ -92,7 +92,7 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::UploadData(const OpenClC
     }
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<OpenClTransferAction>(id, false);
+    auto action = std::make_unique<OpenClTransferAction>(id, queue.GetId(), false);
 
     Timer timer;
     timer.Start();
@@ -127,7 +127,7 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::DownloadData(const OpenC
     }
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<OpenClTransferAction>(id, false);
+    auto action = std::make_unique<OpenClTransferAction>(id, queue.GetId(), false);
 
     Timer timer;
     timer.Start();
@@ -168,7 +168,7 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::CopyData(const OpenClCom
     }
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<OpenClTransferAction>(id, true);
+    auto action = std::make_unique<OpenClTransferAction>(id, queue.GetId(), true);
 
     cl_int result = clEnqueueCopyBuffer(queue.GetQueue(), source.GetBuffer(), m_Buffer, 0, 0, dataSize, 0, nullptr,
         action->GetEvent());
