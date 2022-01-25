@@ -3,3 +3,4 @@
 Build/*
 premake5.exe
 premake5
+*.json
