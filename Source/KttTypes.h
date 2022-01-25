@@ -122,6 +122,10 @@ using ComputeQueue = void*;
   */
 using ComputeBuffer = void*;
 
+/** Queue id returned by compute queue addition methods in case of an error.
+  */
+inline const QueueId InvalidQueueId = std::numeric_limits<QueueId>::max();
+
 /** Kernel definition id returned by kernel definition addition methods in case of an error.
   */
 inline const KernelDefinitionId InvalidKernelDefinitionId = std::numeric_limits<KernelDefinitionId>::max();

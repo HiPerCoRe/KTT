@@ -11,6 +11,6 @@ var dir_74389ed8173ad57b461b9d623a1f3867 =
     [ "KttPlatform.h", "_ktt_platform_8h.html", "_ktt_platform_8h" ],
     [ "KttTypes.h", "_ktt_types_8h.html", "_ktt_types_8h" ],
     [ "Tuner.h", "_tuner_8h.html", [
-      [ "Tuner", "classktt_1_1_tuner.html", "classktt_1_1_tuner" ]
+      [ "ktt::Tuner", "classktt_1_1_tuner.html", "classktt_1_1_tuner" ]
     ] ]
 ];

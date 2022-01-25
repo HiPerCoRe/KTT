@@ -6,6 +6,7 @@
 #include <ComputeEngine/Cuda/CudaStream.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
 #include <ComputeEngine/EngineConfiguration.h>
+#include <KernelArgument/KernelArgument.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 
@@ -13,7 +14,7 @@ namespace ktt
 {
 
 CudaKernel::CudaKernel(IdGenerator<ComputeActionId>& generator, const EngineConfiguration& configuration, const std::string& name,
-    const std::string& source, const std::string& templatedName) :
+    const std::string& source, const std::string& templatedName, const std::vector<KernelArgument*>& symbolArguments) :
     m_Name(name),
     m_Generator(generator),
     m_Configuration(configuration)
@@ -21,7 +22,7 @@ CudaKernel::CudaKernel(IdGenerator<ComputeActionId>& generator, const EngineConf
     Logger::LogDebug("Initializing CUDA kernel with name " + name);
 
     const auto& programName = templatedName.empty() ? name : templatedName;
-    m_Program = std::make_unique<CudaProgram>(programName, source);
+    m_Program = std::make_unique<CudaProgram>(programName, source, symbolArguments);
     m_Program->Build(m_Configuration.GetCompilerOptions());
 
     const std::string ptx = m_Program->GetPtxSource();
@@ -29,6 +30,8 @@ CudaKernel::CudaKernel(IdGenerator<ComputeActionId>& generator, const EngineConf
 
     const std::string loweredName = m_Program->GetLoweredName();
     CheckError(cuModuleGetFunction(&m_Kernel, m_Module, loweredName.c_str()), "cuModuleGetFunction");
+
+    m_Program->InitializeSymbolData(*this);
 }
 
 CudaKernel::~CudaKernel()
@@ -49,7 +52,7 @@ std::unique_ptr<CudaComputeAction> CudaKernel::Launch(const CudaStream& stream, 
 
     const DimensionVector adjustedSize = AdjustGlobalSize(globalSize, localSize);
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<CudaComputeAction>(id, shared_from_this(), adjustedSize, localSize);
+    auto action = std::make_unique<CudaComputeAction>(id, stream.GetId(), shared_from_this(), adjustedSize, localSize);
 
     Logger::LogDebug("Launching kernel " + m_Name + " with compute action id " + std::to_string(id) + ", global thread size: "
         + adjustedSize.GetString() + ", local thread size: " + localSize.GetString());

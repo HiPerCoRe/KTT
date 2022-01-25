@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include <cuda.h>
 
 #include <Api/Configuration/DimensionVector.h>
@@ -18,13 +19,14 @@ namespace ktt
 class CudaComputeAction;
 class CudaStream;
 class EngineConfiguration;
+class KernelArgument;
 struct KernelCompilationData;
 
 class CudaKernel : public std::enable_shared_from_this<CudaKernel>
 {
 public:
     explicit CudaKernel(IdGenerator<ComputeActionId>& generator, const EngineConfiguration& configuration, const std::string& name,
-        const std::string& source, const std::string& templatedName = "");
+        const std::string& source, const std::string& templatedName = "", const std::vector<KernelArgument*>& symbolArguments = {});
     ~CudaKernel();
 
     std::unique_ptr<CudaComputeAction> Launch(const CudaStream& stream, const DimensionVector& globalSize,

@@ -26,7 +26,12 @@ enum class ArgumentMemoryType
       * enough local memory to hold number of elements specified by the argument. The memory then needs to be filled with
       * data on kernel side.
       */
-    Local
+    Local,
+
+    /** Argument corresponds to the CUDA symbol which resides in global or constant device memory and matches the argument's name.
+      * In Vulkan and OpenCL, symbol arguments are treated in the same way as scalars.
+      */
+    Symbol
 };
 
 } // namespace ktt

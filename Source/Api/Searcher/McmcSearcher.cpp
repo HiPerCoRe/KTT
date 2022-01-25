@@ -8,7 +8,7 @@
 namespace ktt
 {
 
-McmcSearcher::McmcSearcher(const std::vector<double>& start) :
+McmcSearcher::McmcSearcher(const KernelConfiguration& start) :
     Searcher(),
     m_Index(0),
     m_VisitedStatesCount(0),
@@ -21,16 +21,18 @@ McmcSearcher::McmcSearcher(const std::vector<double>& start) :
     m_ProbabilityDistribution(0.0, 1.0)
 {}
 
+McmcSearcher::McmcSearcher([[maybe_unused]] const std::vector<double>& start) :
+    McmcSearcher(KernelConfiguration())
+{}
+
 void McmcSearcher::OnInitialize()
 {
-    m_IntDistribution = std::uniform_int_distribution<size_t>(0, GetConfigurationsCount() - 1),
-    m_ExecutionTimes.resize(GetConfigurationsCount(), std::numeric_limits<double>::max());
-
+    m_IntDistribution = std::uniform_int_distribution<size_t>(0, GetConfigurationsCount() - 1);
     size_t initialState = 0;
 
-    if (!m_Start.empty())
+    if (m_Start.IsValid())
     {
-        initialState = SearchStateIndex(m_Start);
+        initialState = GetIndex(m_Start);
     } 
     else
     {
@@ -41,11 +43,6 @@ void McmcSearcher::OnInitialize()
     m_OriginState = initialState;
     m_CurrentState = initialState;
     m_Index = initialState;
-
-    for (size_t i = 0; i < GetConfigurationsCount(); ++i)
-    {
-        m_UnexploredIndices.insert(i);
-    } 
 }
 
 void McmcSearcher::OnReset()
@@ -56,13 +53,11 @@ void McmcSearcher::OnReset()
     m_CurrentState = 0;
     m_BestTime = std::numeric_limits<double>::max();
     m_ExecutionTimes.clear();
-    m_UnexploredIndices.clear();
 }
 
 bool McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult)
 {
     ++m_VisitedStatesCount;
-    m_UnexploredIndices.erase(m_Index);
 
     if (previousResult.IsValid())
     {
@@ -77,6 +72,16 @@ bool McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
     // origin of MCMC to the best state
     if (m_Boot > 0) 
     {
+        if (m_ExecutionTimes.find(m_CurrentState) == m_ExecutionTimes.cend())
+        {
+            m_ExecutionTimes[m_CurrentState] = std::numeric_limits<double>::max();
+        }
+
+        if (m_ExecutionTimes.find(m_OriginState) == m_ExecutionTimes.cend())
+        {
+            m_ExecutionTimes[m_OriginState] = std::numeric_limits<double>::max();
+        }
+
         if (m_ExecutionTimes[m_CurrentState] <= m_ExecutionTimes[m_OriginState])
         {            
             m_OriginState = m_CurrentState;
@@ -87,7 +92,12 @@ bool McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
 
         --m_Boot;
 
-        while (m_UnexploredIndices.find(m_Index) == m_UnexploredIndices.cend() || m_UnexploredIndices.empty()) 
+        if (GetExploredIndices().size() == GetConfigurationsCount())
+        {
+            return false;
+        }
+
+        while (GetExploredIndices().find(m_Index) != GetExploredIndices().cend())
         {
             m_Index = m_IntDistribution(m_Generator);
         }
@@ -97,6 +107,16 @@ bool McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
     }
 
     // acceptation of a new state
+    if (m_ExecutionTimes.find(m_CurrentState) == m_ExecutionTimes.cend())
+    {
+        m_ExecutionTimes[m_CurrentState] = std::numeric_limits<double>::max();
+    }
+
+    if (m_ExecutionTimes.find(m_OriginState) == m_ExecutionTimes.cend())
+    {
+        m_ExecutionTimes[m_OriginState] = std::numeric_limits<double>::max();
+    }
+
     if ((m_ExecutionTimes[m_CurrentState] <= m_ExecutionTimes[m_OriginState])
         || m_ProbabilityDistribution(m_Generator) < m_EscapeProbability)
     {
@@ -128,19 +148,27 @@ bool McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
         Logger::LogDebug("MCMC step " + std::to_string(m_VisitedStatesCount) + ", continuing searching neighbours");
     }
 
-    if (m_UnexploredIndices.empty())
+    if (GetExploredIndices().size() == GetConfigurationsCount())
     {
         return false;
     }
 
-    std::vector<size_t> neighbours = GetNeighbours(m_OriginState);
+    std::vector<KernelConfiguration> neighbourConfigurations = GetNeighbourConfigurations(GetConfiguration(m_OriginState),
+        m_MaximumDifferences, std::numeric_limits<size_t>::max());
+    std::vector<size_t> neighbours;
+
+    for (const auto& neighbour : neighbourConfigurations)
+    {
+        const size_t index = GetIndex(neighbour);
+        neighbours.push_back(index);
+    }
 
     // reset origin position when there are no neighbours
     if (neighbours.empty())
     {
         Logger::LogDebug("MCMC step " + std::to_string(m_VisitedStatesCount) + ", no neighbours, resetting position");
-
-        while (m_UnexploredIndices.find(m_OriginState) == m_UnexploredIndices.cend())
+        
+        while (GetExploredIndices().find(m_OriginState) != GetExploredIndices().cend())
         {
             m_OriginState = m_IntDistribution(m_Generator);
         }
@@ -162,77 +190,6 @@ bool McmcSearcher::CalculateNextConfiguration(const KernelResult& previousResult
 KernelConfiguration McmcSearcher::GetCurrentConfiguration() const
 {
     return GetConfiguration(m_Index);
-}
-
-std::vector<size_t> McmcSearcher::GetNeighbours(const size_t referenceId) const
-{
-    std::vector<size_t> neighbours;
-    const auto referenceConfiguration = GetConfiguration(referenceId);
-    const auto& referencePairs = referenceConfiguration.GetPairs();
-
-    for (const auto i : m_UnexploredIndices)
-    {
-        size_t differences = 0;
-        size_t settingId = 0;
-        const auto configuration = GetConfiguration(i);
-
-        for (const auto& parameter : configuration.GetPairs())
-        {
-            if (!parameter.HasSameValue(referencePairs[settingId]))
-            {
-                ++differences;
-            }
-
-            ++settingId;
-        }
-
-        if (differences <= m_MaximumDifferences) 
-        {
-            neighbours.push_back(i);
-        }
-    }
-
-    return neighbours;
-}
-
-size_t McmcSearcher::SearchStateIndex(const std::vector<double>& state) const
-{
-    size_t states = state.size();
-    size_t ret = 0;
-    bool match = true;
-
-    for (uint64_t index = 0; index < GetConfigurationsCount(); ++index)
-    {
-        const auto configuration = GetConfiguration(index);
-        match = true;
-
-        for (size_t i = 0; i < states; ++i)
-        {
-            const auto& pair = configuration.GetPairs()[i];
-
-            if ((pair.HasValueDouble() && pair.GetValueDouble() != state[i])
-                || (pair.GetValue() != static_cast<uint64_t>(state[i])))
-            {
-                match = false;
-                break;
-            }
-        }
-
-        if (match)
-        {
-            break;
-        }
-
-        ++ret;
-    }
-
-    if (!match)
-    {
-        Logger::LogWarning("MCMC starting point not found.");
-        ret = 0;
-    }
-
-    return ret;
 }
 
 } // namespace ktt

@@ -52,9 +52,12 @@ public:
     virtual bool HasBuffer(const ArgumentId id) = 0;
 
     // Queue methods
+    virtual QueueId AddComputeQueue(ComputeQueue queue) = 0;
+    virtual void RemoveComputeQueue(const QueueId id) = 0;
     virtual QueueId GetDefaultQueue() const = 0;
     virtual std::vector<QueueId> GetAllQueues() const = 0;
     virtual void SynchronizeQueue(const QueueId queueId) = 0;
+    virtual void SynchronizeQueues() = 0;
     virtual void SynchronizeDevice() = 0;
 
     // Information retrieval methods

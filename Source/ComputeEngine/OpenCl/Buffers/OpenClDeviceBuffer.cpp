@@ -66,7 +66,7 @@ std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::UploadData(const OpenC
     }
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<OpenClTransferAction>(id, true);
+    auto action = std::make_unique<OpenClTransferAction>(id, queue.GetId(), true);
 
     cl_int result = clEnqueueWriteBuffer(queue.GetQueue(), m_Buffer, CL_FALSE, 0, dataSize, source, 0, nullptr,
         action->GetEvent());
@@ -87,7 +87,7 @@ std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::DownloadData(const Ope
     }
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<OpenClTransferAction>(id, true);
+    auto action = std::make_unique<OpenClTransferAction>(id, queue.GetId(), true);
 
     cl_int result = clEnqueueReadBuffer(queue.GetQueue(), m_Buffer, CL_FALSE, 0, dataSize, destination, 0, nullptr,
         action->GetEvent());
@@ -114,7 +114,7 @@ std::unique_ptr<OpenClTransferAction> OpenClDeviceBuffer::CopyData(const OpenClC
     }
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<OpenClTransferAction>(id, true);
+    auto action = std::make_unique<OpenClTransferAction>(id, queue.GetId(), true);
 
     cl_int result = clEnqueueCopyBuffer(queue.GetQueue(), source.GetBuffer(), m_Buffer, 0, 0, dataSize, 0, nullptr,
         action->GetEvent());

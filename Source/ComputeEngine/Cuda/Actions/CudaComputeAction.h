@@ -17,14 +17,15 @@ namespace ktt
 class CudaComputeAction
 {
 public:
-    CudaComputeAction(const ComputeActionId id, std::shared_ptr<CudaKernel> kernel, const DimensionVector& globalSize,
-        const DimensionVector& localSize);
+    CudaComputeAction(const ComputeActionId id, const QueueId queueId, std::shared_ptr<CudaKernel> kernel,
+        const DimensionVector& globalSize, const DimensionVector& localSize);
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void SetComputeId(const KernelComputeId& id);
     void WaitForFinish();
 
     ComputeActionId GetId() const;
+    QueueId GetQueueId() const;
     CudaKernel& GetKernel();
     CUevent GetStartEvent() const;
     CUevent GetEndEvent() const;
@@ -35,6 +36,7 @@ public:
 
 private:
     ComputeActionId m_Id;
+    QueueId m_QueueId;
     std::shared_ptr<CudaKernel> m_Kernel;
     std::unique_ptr<CudaEvent> m_StartEvent;
     std::unique_ptr<CudaEvent> m_EndEvent;

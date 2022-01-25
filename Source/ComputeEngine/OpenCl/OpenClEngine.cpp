@@ -46,8 +46,9 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
 
     for (uint32_t i = 0; i < queueCount; ++i)
     {
-        auto commandQueue = std::make_unique<OpenClCommandQueue>(i, *m_Context);
-        m_Queues.push_back(std::move(commandQueue));
+        const QueueId id = m_QueueIdGenerator.GenerateId();
+        auto commandQueue = std::make_unique<OpenClCommandQueue>(id, *m_Context);
+        m_Queues[id] = std::move(commandQueue);
     }
 
     m_DeviceInfo = GetDeviceInfo(m_PlatformIndex)[m_DeviceIndex];
@@ -57,7 +58,7 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
+OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
     m_Configuration(GlobalSizeType::OpenCL),
     m_DeviceInfo(0, ""),
     m_KernelCache(10)
@@ -89,10 +90,12 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
 
     const auto& queues = initializer.GetQueues();
 
-    for (size_t i = 0; i < queues.size(); ++i)
+    for (auto& queue : queues)
     {
-        auto commandQueue = std::make_unique<OpenClCommandQueue>(static_cast<QueueId>(i), *m_Context, queues[i]);
-        m_Queues.push_back(std::move(commandQueue));
+        const QueueId id = m_QueueIdGenerator.GenerateId();
+        auto commandQueue = std::make_unique<OpenClCommandQueue>(id, *m_Context, queue);
+        m_Queues[id] = std::move(commandQueue);
+        assignedQueueIds.push_back(id);
     }
 
     m_DeviceInfo = GetDeviceInfo(m_PlatformIndex)[m_DeviceIndex];
@@ -104,7 +107,7 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer) :
 
 ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId)
 {
-    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    if (!ContainsKey(m_Queues, queueId))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));
     }
@@ -123,7 +126,7 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
     auto kernel = LoadKernel(data);
     SetKernelArguments(*kernel, data.GetArguments());
 
-    const auto& queue = *m_Queues[static_cast<size_t>(queueId)];
+    const auto& queue = *m_Queues[queueId];
     timer.Stop();
 
     auto action = kernel->Launch(queue, data.GetGlobalSize(), data.GetLocalSize());
@@ -272,7 +275,7 @@ TransferActionId OpenClEngine::UploadArgument(KernelArgument& kernelArgument, co
     const auto id = kernelArgument.GetId();
     Logger::LogDebug("Uploading buffer for argument with id " + std::to_string(id));
 
-    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    if (!ContainsKey(m_Queues, queueId))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));
     }
@@ -290,7 +293,7 @@ TransferActionId OpenClEngine::UploadArgument(KernelArgument& kernelArgument, co
     auto buffer = CreateBuffer(kernelArgument);
     timer.Stop();
 
-    auto action = buffer->UploadData(*m_Queues[static_cast<size_t>(queueId)], kernelArgument.GetData(),
+    auto action = buffer->UploadData(*m_Queues[queueId], kernelArgument.GetData(),
         kernelArgument.GetDataSize());
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
@@ -309,7 +312,7 @@ TransferActionId OpenClEngine::UpdateArgument(const ArgumentId id, const QueueId
 
     Logger::LogDebug("Updating buffer for argument with id " + std::to_string(id));
 
-    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    if (!ContainsKey(m_Queues, queueId))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));
     }
@@ -329,7 +332,7 @@ TransferActionId OpenClEngine::UpdateArgument(const ArgumentId id, const QueueId
 
     timer.Stop();
 
-    auto action = buffer.UploadData(*m_Queues[static_cast<size_t>(queueId)], data, actualDataSize);
+    auto action = buffer.UploadData(*m_Queues[queueId], data, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
     m_TransferActions[actionId] = std::move(action);
@@ -344,7 +347,7 @@ TransferActionId OpenClEngine::DownloadArgument(const ArgumentId id, const Queue
 
     Logger::LogDebug("Downloading buffer for argument with id " + std::to_string(id));
 
-    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    if (!ContainsKey(m_Queues, queueId))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));
     }
@@ -364,7 +367,7 @@ TransferActionId OpenClEngine::DownloadArgument(const ArgumentId id, const Queue
 
     timer.Stop();
 
-    auto action = buffer.DownloadData(*m_Queues[static_cast<size_t>(queueId)], destination, actualDataSize);
+    auto action = buffer.DownloadData(*m_Queues[queueId], destination, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
     m_TransferActions[actionId] = std::move(action);
@@ -380,7 +383,7 @@ TransferActionId OpenClEngine::CopyArgument(const ArgumentId destination, const 
     Logger::LogDebug("Copying buffer for argument with id " + std::to_string(source) + " into buffer for argument with id "
         + std::to_string(destination));
 
-    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    if (!ContainsKey(m_Queues, queueId))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));
     }
@@ -407,7 +410,7 @@ TransferActionId OpenClEngine::CopyArgument(const ArgumentId destination, const 
 
     timer.Stop();
 
-    auto action = destinationBuffer.CopyData(*m_Queues[static_cast<size_t>(queueId)], sourceBuffer, actualDataSize);
+    auto action = destinationBuffer.CopyData(*m_Queues[queueId], sourceBuffer, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
     m_TransferActions[actionId] = std::move(action);
@@ -439,7 +442,7 @@ void OpenClEngine::ResizeArgument(const ArgumentId id, const size_t newSize, con
     }
 
     auto& buffer = *m_Buffers[id];
-    buffer.Resize(*m_Queues[static_cast<size_t>(GetDefaultQueue())], newSize, preserveData);
+    buffer.Resize(*m_Queues[GetDefaultQueue()], newSize, preserveData);
 }
 
 void OpenClEngine::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle)
@@ -487,6 +490,43 @@ bool OpenClEngine::HasBuffer(const ArgumentId id)
     return ContainsKey(m_Buffers, id);
 }
 
+QueueId OpenClEngine::AddComputeQueue(ComputeQueue queue)
+{
+    if (!m_Context->IsUserOwned())
+    {
+        throw KttException("New OpenCL queues cannot be added to tuner which was not created with compute API initializer");
+    }
+
+    for (const auto& commandQueue : m_Queues)
+    {
+        if (commandQueue.second->GetQueue() == static_cast<cl_command_queue>(queue))
+        {
+            throw KttException("The provided OpenCL queue already exists inside the tuner under id: "
+                + std::to_string(commandQueue.first));
+        }
+    }
+
+    const QueueId id = m_QueueIdGenerator.GenerateId();
+    auto commandQueue = std::make_unique<OpenClCommandQueue>(id, *m_Context, queue);
+    m_Queues[id] = std::move(commandQueue);
+    return id;
+}
+
+void OpenClEngine::RemoveComputeQueue(const QueueId id)
+{
+    if (!m_Context->IsUserOwned())
+    {
+        throw KttException("OpenCL command queues cannot be removed from tuner which was not created with compute API initializer");
+    }
+
+    if (!ContainsKey(m_Queues, id))
+    {
+        throw KttException("Invalid queue index: " + std::to_string(id));
+    }
+
+    m_Queues.erase(id);
+}
+
 QueueId OpenClEngine::GetDefaultQueue() const
 {
     return static_cast<QueueId>(0);
@@ -498,7 +538,7 @@ std::vector<QueueId> OpenClEngine::GetAllQueues() const
 
     for (const auto& queue : m_Queues)
     {
-        result.push_back(queue->GetId());
+        result.push_back(queue.first);
     }
 
     return result;
@@ -506,20 +546,27 @@ std::vector<QueueId> OpenClEngine::GetAllQueues() const
 
 void OpenClEngine::SynchronizeQueue(const QueueId queueId)
 {
-    if (static_cast<size_t>(queueId) >= m_Queues.size())
+    if (!ContainsKey(m_Queues, queueId))
     {
         throw KttException("Invalid OpenCL command queue index: " + std::to_string(queueId));
     }
 
-    m_Queues[static_cast<size_t>(queueId)]->Synchronize();
+    m_Queues[queueId]->Synchronize();
+    ClearQueueActions(queueId);
+}
+
+void OpenClEngine::SynchronizeQueues()
+{
+    for (auto& queue : m_Queues)
+    {
+        queue.second->Synchronize();
+        ClearQueueActions(queue.first);
+    }
 }
 
 void OpenClEngine::SynchronizeDevice()
 {
-    for (auto& queue : m_Queues)
-    {
-        queue->Synchronize();
-    }
+    SynchronizeQueues();
 }
 
 std::vector<PlatformInfo> OpenClEngine::GetPlatformInfo() const
@@ -714,6 +761,19 @@ std::unique_ptr<OpenClBuffer> OpenClEngine::CreateUserBuffer(KernelArgument& arg
     }
 
     return userBuffer;
+}
+
+void OpenClEngine::ClearQueueActions(const QueueId id)
+{
+    EraseIf(m_ComputeActions, [id](const auto& pair)
+    {
+        return pair.second->GetQueueId() == id;
+    });
+
+    EraseIf(m_TransferActions, [id](const auto& pair)
+    {
+        return pair.second->GetQueueId() == id;
+    });
 }
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)

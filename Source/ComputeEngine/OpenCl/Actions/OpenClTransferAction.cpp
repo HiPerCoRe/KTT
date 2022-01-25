@@ -9,8 +9,9 @@
 namespace ktt
 {
 
-OpenClTransferAction::OpenClTransferAction(const TransferActionId id, const bool isAsync) :
+OpenClTransferAction::OpenClTransferAction(const TransferActionId id, const QueueId queueId, const bool isAsync) :
     m_Id(id),
+    m_QueueId(queueId),
     m_Duration(InvalidDuration),
     m_Overhead(0)
 {
@@ -52,6 +53,11 @@ void OpenClTransferAction::WaitForFinish()
 TransferActionId OpenClTransferAction::GetId() const
 {
     return m_Id;
+}
+
+QueueId OpenClTransferAction::GetQueueId() const
+{
+    return m_QueueId;
 }
 
 cl_event* OpenClTransferAction::GetEvent()

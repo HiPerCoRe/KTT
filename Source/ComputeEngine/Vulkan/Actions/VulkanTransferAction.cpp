@@ -13,9 +13,10 @@
 namespace ktt
 {
 
-VulkanTransferAction::VulkanTransferAction(const TransferActionId id, const VulkanDevice* device, const VulkanCommandPool* commandPool,
-    VulkanQueryPool* queryPool, std::unique_ptr<VulkanBuffer> stagingBuffer) :
+VulkanTransferAction::VulkanTransferAction(const TransferActionId id, const QueueId queueId, const VulkanDevice* device,
+    const VulkanCommandPool* commandPool, VulkanQueryPool* queryPool, std::unique_ptr<VulkanBuffer> stagingBuffer) :
     m_Id(id),
+    m_QueueId(queueId),
     m_StagingBuffer(std::move(stagingBuffer)),
     m_QueryPool(queryPool),
     m_Duration(InvalidDuration),
@@ -62,6 +63,11 @@ void VulkanTransferAction::WaitForFinish()
 TransferActionId VulkanTransferAction::GetId() const
 {
     return m_Id;
+}
+
+QueueId VulkanTransferAction::GetQueueId() const
+{
+    return m_QueueId;
 }
 
 VkFence VulkanTransferAction::GetFence() const

@@ -31,7 +31,7 @@ class OpenClEngine : public ComputeEngine
 {
 public:
     explicit OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount);
-    explicit OpenClEngine(const ComputeApiInitializer& initializer);
+    explicit OpenClEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
 
     // Kernel methods
     ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) override;
@@ -64,9 +64,12 @@ public:
     bool HasBuffer(const ArgumentId id) override;
 
     // Queue methods
+    QueueId AddComputeQueue(ComputeQueue queue) override;
+    void RemoveComputeQueue(const QueueId id) override;
     QueueId GetDefaultQueue() const override;
     std::vector<QueueId> GetAllQueues() const override;
     void SynchronizeQueue(const QueueId queueId) override;
+    void SynchronizeQueues() override;
     void SynchronizeDevice() override;
 
     // Information retrieval methods
@@ -90,10 +93,11 @@ private:
     PlatformIndex m_PlatformIndex;
     DeviceIndex m_DeviceIndex;
     DeviceInfo m_DeviceInfo;
+    IdGenerator<QueueId> m_QueueIdGenerator;
     IdGenerator<ComputeActionId> m_ComputeIdGenerator;
     IdGenerator<TransferActionId> m_TransferIdGenerator;
     std::unique_ptr<OpenClContext> m_Context;
-    std::vector<std::unique_ptr<OpenClCommandQueue>> m_Queues;
+    std::map<QueueId, std::unique_ptr<OpenClCommandQueue>> m_Queues;
     std::map<ArgumentId, std::unique_ptr<OpenClBuffer>> m_Buffers;
     LruCache<KernelComputeId, std::shared_ptr<OpenClKernel>> m_KernelCache;
     std::map<ComputeActionId, std::unique_ptr<OpenClComputeAction>> m_ComputeActions;
@@ -110,6 +114,7 @@ private:
     void SetKernelArgument(OpenClKernel& kernel, const KernelArgument& argument);
     std::unique_ptr<OpenClBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<OpenClBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
+    void ClearQueueActions(const QueueId id);
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     void InitializeGpa();

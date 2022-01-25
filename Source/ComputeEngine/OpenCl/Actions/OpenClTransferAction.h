@@ -14,7 +14,7 @@ namespace ktt
 class OpenClTransferAction
 {
 public:
-    OpenClTransferAction(const TransferActionId id, const bool isAsync);
+    OpenClTransferAction(const TransferActionId id, const QueueId queueId, const bool isAsync);
 
     void SetDuration(const Nanoseconds duration);
     void IncreaseOverhead(const Nanoseconds overhead);
@@ -22,6 +22,7 @@ public:
     void WaitForFinish();
 
     TransferActionId GetId() const;
+    QueueId GetQueueId() const;
     cl_event* GetEvent();
     Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
@@ -30,6 +31,7 @@ public:
 
 private:
     TransferActionId m_Id;
+    QueueId m_QueueId;
     std::unique_ptr<OpenClEvent> m_Event;
     Nanoseconds m_Duration;
     Nanoseconds m_Overhead;

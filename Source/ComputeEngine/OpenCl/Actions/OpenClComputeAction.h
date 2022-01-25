@@ -16,8 +16,8 @@ namespace ktt
 class OpenClComputeAction
 {
 public:
-    OpenClComputeAction(const ComputeActionId id, std::shared_ptr<OpenClKernel> kernel, const DimensionVector& globalSize,
-        const DimensionVector& localSize);
+    OpenClComputeAction(const ComputeActionId id, const QueueId queueId, std::shared_ptr<OpenClKernel> kernel,
+        const DimensionVector& globalSize, const DimensionVector& localSize);
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void SetComputeId(const KernelComputeId& id);
@@ -25,6 +25,7 @@ public:
     void WaitForFinish();
 
     ComputeActionId GetId() const;
+    QueueId GetQueueId() const;
     OpenClKernel& GetKernel();
     cl_event* GetEvent();
     Nanoseconds GetDuration() const;
@@ -34,6 +35,7 @@ public:
 
 private:
     ComputeActionId m_Id;
+    QueueId m_QueueId;
     std::shared_ptr<OpenClKernel> m_Kernel;
     std::unique_ptr<OpenClEvent> m_Event;
     Nanoseconds m_Overhead;

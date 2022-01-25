@@ -162,6 +162,23 @@ KernelDefinition& KernelManager::GetDefinition(const KernelDefinitionId id)
     return const_cast<KernelDefinition&>(static_cast<const KernelManager*>(this)->GetDefinition(id));
 }
 
+KernelDefinitionId KernelManager::GetDefinitionId(const std::string& name, const std::vector<std::string>& typeNames) const
+{
+    const auto templatedName = KernelDefinition::CreateTemplatedName(name, typeNames);
+
+    const auto iterator = std::find_if(m_Definitions.cbegin(), m_Definitions.cend(), [&name, &templatedName](const auto& pair)
+    {
+        return pair.second->GetName() == name && pair.second->GetTemplatedName() == templatedName;
+    });
+
+    if (iterator == m_Definitions.cend())
+    {
+        return InvalidKernelDefinitionId;
+    }
+
+    return iterator->first;
+}
+
 bool KernelManager::IsArgumentUsed(const ArgumentId id) const
 {
     for (const auto& definition : m_Definitions)

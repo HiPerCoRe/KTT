@@ -62,17 +62,7 @@ const std::vector<KernelArgument*>& KernelDefinition::GetArguments() const
 
 std::vector<KernelArgument*> KernelDefinition::GetVectorArguments() const
 {
-    std::vector<KernelArgument*> result;
-
-    for (auto* argument : m_Arguments)
-    {
-        if (argument->GetMemoryType() == ArgumentMemoryType::Vector)
-        {
-            result.push_back(argument);
-        }
-    }
-
-    return result;
+    return KernelArgument::GetArgumentsWithMemoryType(m_Arguments, ArgumentMemoryType::Vector);
 }
 
 bool KernelDefinition::HasArgument(const ArgumentId id) const

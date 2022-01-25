@@ -9,6 +9,7 @@
 #include <ComputeEngine/KernelComputeData.h>
 #include <Kernel/Kernel.h>
 #include <KernelArgument/KernelArgument.h>
+#include <KernelRunner/KernelRunMode.h>
 #include <KttTypes.h>
 
 namespace ktt
@@ -17,7 +18,7 @@ namespace ktt
 class ComputeLayerData
 {
 public:
-    explicit ComputeLayerData(const Kernel& kernel, const KernelConfiguration& configuration);
+    explicit ComputeLayerData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode runMode);
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void AddPartialResult(const ComputationResult& result);
@@ -28,6 +29,7 @@ public:
     bool IsProfilingEnabled(const KernelDefinitionId id) const;
     const Kernel& GetKernel() const;
     const KernelConfiguration& GetConfiguration() const;
+    KernelRunMode GetRunMode() const;
     const KernelComputeData& GetComputeData(const KernelDefinitionId id) const;
     KernelResult GenerateResult(const Nanoseconds launcherDuration) const;
 
@@ -37,6 +39,7 @@ private:
     std::vector<ComputationResult> m_PartialResults;
     const Kernel& m_Kernel;
     const KernelConfiguration& m_Configuration;
+    KernelRunMode m_RunMode;
     Nanoseconds m_Overhead;
 
     Nanoseconds CalculateLauncherOverhead() const;

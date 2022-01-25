@@ -15,8 +15,13 @@
     #else
         #define KTT_API __declspec(dllimport)
     #endif // KTT_LIBRARY
+
+    #define KTT_VIRTUAL_API virtual
+    #define KTT_VISIBILITY_HIDDEN
 #else
     #define KTT_API
+    #define KTT_VIRTUAL_API
+    #define KTT_VISIBILITY_HIDDEN __attribute__((visibility("hidden")))
 #endif // _MSC_VER
 #endif // KTT_API
 
@@ -26,11 +31,11 @@
 
 /** Minor version of KTT framework. Second number in KTT version description.
   */
-#define KTT_VERSION_MINOR 0
+#define KTT_VERSION_MINOR 1
 
 /** Patch version of KTT framework. Third number in KTT version description.
   */
-#define KTT_VERSION_PATCH 1
+#define KTT_VERSION_PATCH 0
 
 namespace ktt
 {

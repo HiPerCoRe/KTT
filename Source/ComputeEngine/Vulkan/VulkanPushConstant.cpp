@@ -14,7 +14,8 @@ VulkanPushConstant::VulkanPushConstant(const std::vector<KernelArgument*>& argum
 
     for (const auto* argument : arguments)
     {
-        KttAssert(argument->GetMemoryType() == ArgumentMemoryType::Scalar, "Only scalar arguments can be used as push constants");
+        KttAssert(argument->GetMemoryType() == ArgumentMemoryType::Scalar || argument->GetMemoryType() == ArgumentMemoryType::Symbol,
+            "Only scalar and symbol arguments can be used as push constants");
         const size_t dataSize = argument->GetDataSize();
 
         for (size_t i = 0; i < dataSize; ++i)

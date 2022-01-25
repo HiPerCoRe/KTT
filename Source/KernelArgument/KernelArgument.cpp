@@ -9,7 +9,7 @@ namespace ktt
 
 KernelArgument::KernelArgument(const ArgumentId id, const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType) :
+    const ArgumentManagementType managementType, const std::string& symbolName) :
     m_Id(id),
     m_ElementSize(elementSize),
     m_DataSize(0),
@@ -19,12 +19,18 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t elementSize, co
     m_MemoryType(memoryType),
     m_ManagementType(managementType),
     m_Ownership(ArgumentOwnership::Copy),
+    m_SymbolName(symbolName),
     m_ReferencedData(nullptr)
 {
     KttAssert(m_MemoryType == ArgumentMemoryType::Vector || m_MemoryLocation == ArgumentMemoryLocation::Undefined,
         "Non-vector arguments must have undefined memory location");
     KttAssert(m_MemoryType != ArgumentMemoryType::Vector || m_MemoryLocation != ArgumentMemoryLocation::Undefined,
         "Vector arguments must have defined memory location");
+
+    if (!m_SymbolName.empty())
+    {
+        m_SymbolName = "&" + m_SymbolName;
+    }
 }
 
 void KernelArgument::SetReferencedData(void* data, const size_t dataSize)
@@ -116,6 +122,11 @@ ArgumentManagementType KernelArgument::GetManagementType() const
     return m_ManagementType;
 }
 
+const std::string& KernelArgument::GetSymbolName() const
+{
+    return m_SymbolName;
+}
+
 uint64_t KernelArgument::GetNumberOfElements() const
 {
     return static_cast<uint64_t>(GetDataSize() / GetElementSize());
@@ -156,6 +167,22 @@ bool KernelArgument::HasOwnedData() const
 bool KernelArgument::HasUserBuffer() const
 {
     return m_Ownership == ArgumentOwnership::User;
+}
+
+std::vector<KernelArgument*> KernelArgument::GetArgumentsWithMemoryType(const std::vector<KernelArgument*>& arguments,
+    const ArgumentMemoryType type)
+{
+    std::vector<KernelArgument*> result;
+
+    for (auto* argument : arguments)
+    {
+        if (argument->GetMemoryType() == type)
+        {
+            result.push_back(argument);
+        }
+    }
+
+    return result;
 }
 
 } // namespace ktt

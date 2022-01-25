@@ -70,7 +70,7 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::UploadData(const void* sourc
     timer.Stop();
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<VulkanTransferAction>(id);
+    auto action = std::make_unique<VulkanTransferAction>(id, InvalidQueueId);
     action->SetDuration(timer.GetElapsedTime());
     return action;
 }
@@ -95,7 +95,7 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::DownloadData(void* target, c
     timer.Stop();
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<VulkanTransferAction>(id);
+    auto action = std::make_unique<VulkanTransferAction>(id, InvalidQueueId);
     action->SetDuration(timer.GetElapsedTime());
     return action;
 }
@@ -104,7 +104,7 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::CopyData(const VulkanQueue& 
     VulkanQueryPool& queryPool, const VulkanBuffer& source, const VkDeviceSize dataSize)
 {
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<VulkanTransferAction>(id, &m_Device, &commandPool, &queryPool);
+    auto action = std::make_unique<VulkanTransferAction>(id, queue.GetId(), &m_Device, &commandPool, &queryPool);
 
     return CopyDataInternal(queue, queryPool, source, dataSize, std::move(action));
 }
@@ -115,7 +115,7 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::CopyData(const VulkanQueue& 
     const auto& source = *stagingSource;
 
     const auto id = m_Generator.GenerateId();
-    auto action = std::make_unique<VulkanTransferAction>(id, &m_Device, &commandPool, &queryPool, std::move(stagingSource));
+    auto action = std::make_unique<VulkanTransferAction>(id, queue.GetId(), &m_Device, &commandPool, &queryPool, std::move(stagingSource));
 
     return CopyDataInternal(queue, queryPool, source, dataSize, std::move(action));
 }

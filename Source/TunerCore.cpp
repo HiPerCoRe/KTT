@@ -26,11 +26,11 @@ TunerCore::TunerCore(const PlatformIndex platform, const DeviceIndex device, con
     InitializeRunners();
 }
 
-TunerCore::TunerCore(const ComputeApi api, const ComputeApiInitializer& initializer) :
+TunerCore::TunerCore(const ComputeApi api, const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
     m_ArgumentManager(std::make_unique<KernelArgumentManager>()),
     m_KernelManager(std::make_unique<KernelManager>(*m_ArgumentManager))
 {
-    InitializeComputeEngine(api, initializer);
+    InitializeComputeEngine(api, initializer, assignedQueueIds);
     InitializeRunners();
 }
 
@@ -44,6 +44,11 @@ KernelDefinitionId TunerCore::AddKernelDefinitionFromFile(const std::string& nam
     const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames)
 {
     return m_KernelManager->AddKernelDefinitionFromFile(name, filePath, globalSize, localSize, typeNames);
+}
+
+KernelDefinitionId TunerCore::GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames) const
+{
+    return m_KernelManager->GetDefinitionId(name, typeNames);
 }
 
 void TunerCore::RemoveKernelDefinition(const KernelDefinitionId id)
@@ -123,10 +128,15 @@ ArgumentId TunerCore::AddArgumentWithReferencedData(const size_t elementSize, co
 
 ArgumentId TunerCore::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const size_t dataSize)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName)
 {
+    if (memoryType == ArgumentMemoryType::Symbol && symbolName.empty() && m_ComputeEngine->GetComputeApi() == ComputeApi::CUDA)
+    {
+        throw KttException("Symbol arguments in CUDA must have defined symbol name");
+    }
+
     return m_ArgumentManager->AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, data, dataSize);
+        managementType, data, dataSize, symbolName);
 }
 
 ArgumentId TunerCore::AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
@@ -307,6 +317,36 @@ std::vector<KernelResult> TunerCore::LoadResults(const std::string& filePath, co
     return pair.second;
 }
 
+QueueId TunerCore::AddComputeQueue(ComputeQueue queue)
+{
+    return m_ComputeEngine->AddComputeQueue(queue);
+}
+
+void TunerCore::RemoveComputeQueue(const QueueId id)
+{
+    m_ComputeEngine->RemoveComputeQueue(id);
+}
+
+void TunerCore::WaitForComputeAction(const ComputeActionId id)
+{
+    m_ComputeEngine->WaitForComputeAction(id);
+}
+
+void TunerCore::WaitForTransferAction(const TransferActionId id)
+{
+    m_ComputeEngine->WaitForTransferAction(id);
+}
+
+void TunerCore::SynchronizeQueue(const QueueId queueId)
+{
+    m_ComputeEngine->SynchronizeQueue(queueId);
+}
+
+void TunerCore::SynchronizeQueues()
+{
+    m_ComputeEngine->SynchronizeQueues();
+}
+
 void TunerCore::SynchronizeDevice()
 {
     m_ComputeEngine->SynchronizeDevice();
@@ -372,7 +412,8 @@ void TunerCore::Log(const LoggingLevel level, const std::string& message)
     Logger::GetLogger().Log(level, message);
 }
 
-void TunerCore::InitializeComputeEngine(const PlatformIndex platform, const DeviceIndex device, const ComputeApi api, const uint32_t queueCount)
+void TunerCore::InitializeComputeEngine([[maybe_unused]] const PlatformIndex platform, const DeviceIndex device, const ComputeApi api,
+    const uint32_t queueCount)
 {
     if (queueCount == 0)
     {
@@ -407,20 +448,21 @@ void TunerCore::InitializeComputeEngine(const PlatformIndex platform, const Devi
     }
 }
 
-void TunerCore::InitializeComputeEngine(const ComputeApi api, const ComputeApiInitializer& initializer)
+void TunerCore::InitializeComputeEngine(const ComputeApi api, [[maybe_unused]] const ComputeApiInitializer& initializer,
+    [[maybe_unused]] std::vector<QueueId>& assignedQueueIds)
 {
     switch (api)
     {
     case ComputeApi::OpenCL:
         #ifdef KTT_API_OPENCL
-        m_ComputeEngine = std::make_unique<OpenClEngine>(initializer);
+        m_ComputeEngine = std::make_unique<OpenClEngine>(initializer, assignedQueueIds);
         #else
         throw KttException("Support for OpenCL API is not included in this version of KTT framework");
         #endif // KTT_API_OPENCL
         break;
     case ComputeApi::CUDA:
         #ifdef KTT_API_CUDA
-        m_ComputeEngine = std::make_unique<CudaEngine>(initializer);
+        m_ComputeEngine = std::make_unique<CudaEngine>(initializer, assignedQueueIds);
         #else
         throw KttException("Support for CUDA API is not included in this version of KTT framework");
         #endif // KTT_API_CUDA

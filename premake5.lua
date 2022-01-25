@@ -3,8 +3,8 @@ cudaProjects = false
 openClProjects = false
 vulkanProjects = false
 
--- Helper functions to find compute API headers and libraries
-function findLibrariesAmd()
+-- Helper functions to find and link compute API headers and libraries
+function linkLibrariesAmd()
     local path = os.getenv("OCL_ROOT")
     
     if not path then
@@ -54,7 +54,7 @@ function findLibrariesAmd()
     return true
 end
 
-function findLibrariesIntel()
+function linkLibrariesIntel()
     local path = os.getenv("INTELOCLSDKROOT")
     
     if not path then
@@ -81,7 +81,7 @@ function findLibrariesIntel()
     return true
 end
 
-function findLibrariesNvidia()
+function linkLibrariesNvidia()
     local path = os.getenv("CUDA_PATH")
     
     if not path then
@@ -129,23 +129,35 @@ function findLibrariesNvidia()
     return true
 end
 
-function findLibraries()
-    if findLibrariesAmd() then
+function linkComputeLibraries()
+    if _OPTIONS["platform"] then
+        if _OPTIONS["platform"] == "amd" then
+            return linkLibrariesAmd()
+        elseif _OPTIONS["platform"] == "intel" then
+            return linkLibrariesIntel()
+        elseif _OPTIONS["platform"] == "nvidia" then
+            return linkLibrariesNvidia()
+        else
+            error("The specified platform is unknown.")
+        end
+    end
+
+    if linkLibrariesAmd() then
         return true
     end
     
-    if findLibrariesIntel() then
+    if linkLibrariesIntel() then
         return true
     end
     
-    if findLibrariesNvidia() then
+    if linkLibrariesNvidia() then
         return true
     end
     
     return false
 end
 
-function findVulkan()
+function linkVulkan()
     local path = os.getenv("VULKAN_SDK")
     
     if not path then
@@ -176,32 +188,56 @@ function findVulkan()
     return true
 end
 
-function linkLibraries()
-    local librariesFound = false
+function linkPython()
+    local pythonHeaders = os.getenv("PYTHON_HEADERS")
+    local pythonLibrary = os.getenv("PYTHON_LIB")
     
-    if _OPTIONS["platform"] then
-        if _OPTIONS["platform"] == "amd" then
-            librariesFound = findLibrariesAmd()
-        elseif _OPTIONS["platform"] == "intel" then
-            librariesFound = findLibrariesIntel()
-        elseif _OPTIONS["platform"] == "nvidia" then
-            librariesFound = findLibrariesNvidia()
-        else
-            error("The specified platform is unknown.")
-        end
-    else
-        librariesFound = findLibraries()
+    if not pythonHeaders or not pythonLibrary then
+        return false
     end
     
+    defines {"KTT_PYTHON", "PYBIND11_USE_SMART_HOLDER_AS_DEFAULT"}
+    includedirs {pythonHeaders, "Libraries/pybind11-2.9.0-smart_holder"}
+    files {"Libraries/pybind11-2.9.0-smart_holder/**"}
+    
+    if os.target() == "windows" then
+        pythonLibrary = pythonLibrary:gsub("\\", "/")
+    end
+    
+    local libraryPath = path.getdirectory(pythonLibrary)
+    libdirs {libraryPath}
+    
+    local libraryName = path.getbasename(pythonLibrary)
+    
+    if os.target() == "linux" and string.startswith(libraryName, "lib") then
+        libraryName = libraryName:sub(4)
+    end
+    
+    links {libraryName}
+    return true
+end
+
+function linkAllLibraries()
+    local librariesFound = linkComputeLibraries()
+    
+    -- Allow usage of KTT with only Vulkan if no other compute API was explicitly specified by user
     if not librariesFound and (not _OPTIONS["vulkan"] or _OPTIONS["platform"]) then
         error("Compute API libraries were not found. Please ensure that path to the SDK is correctly set in the environment variables:\nOCL_ROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
     end
     
     if _OPTIONS["vulkan"] then
-        vulkanFound = findVulkan()
+        local vulkanFound = linkVulkan()
         
         if not vulkanFound then
             error("Vulkan SDK was not found. Please ensure that path to the SDK is correctly set in the environment variables under VULKAN_SDK.")
+        end
+    end
+    
+    if _OPTIONS["python"] then
+        local pythonFound = linkPython()
+        
+        if not pythonFound then
+            error("Python installation was not found. Please ensure that paths to Python headers and Python library (including library name) are correctly set in the environment variables under PYTHON_HEADERS and PYTHON_LIB.")
         end
     end
 end
@@ -242,9 +278,21 @@ newoption
 
 newoption
 {
+    trigger = "python",
+    description = "Enables compilation of Python bindings"
+}
+
+newoption
+{
     trigger = "outdir",
     value = "path",
     description = "Specifies output directory for generated project files"
+}
+
+newoption
+{
+    trigger = "tests",
+    description = "Enables compilation of unit tests"
 }
 
 newoption
@@ -299,7 +347,7 @@ workspace "Ktt"
         symbols "Off"
     
     filter "action:vs*"
-        buildoptions {"/Zc:__cplusplus"}
+        buildoptions {"/Zc:__cplusplus", "/permissive-"}
         
     filter {}
     
@@ -309,11 +357,36 @@ workspace "Ktt"
 -- Library configuration
 project "Ktt"
     kind "SharedLib"
-    files {"Source/**", "Libraries/CTPL-Ahajha/**", "Libraries/date-3/**", "Libraries/Json-3.9.1/**", "Libraries/pugixml-1.11.4/**"}
-    includedirs {"Source", "Libraries/CTPL-Ahajha", "Libraries/date-3", "Libraries/Json-3.9.1", "Libraries/pugixml-1.11.4"}
+    
+    files
+    {
+        "Source/**",
+        "Libraries/CTPL-Ahajha/**",
+        "Libraries/date-3/**",
+        "Libraries/Json-3.9.1/**",
+        "Libraries/pugixml-1.11.4/**"
+    }
+    
+    includedirs
+    {
+        "Source",
+        "Libraries/CTPL-Ahajha",
+        "Libraries/date-3",
+        "Libraries/Json-3.9.1",
+        "Libraries/pugixml-1.11.4"
+    }
+    
+    if _OPTIONS["python"] then
+        if os.target() == "linux" then
+            postbuildcommands {"{COPYFILE} %{cfg.targetdir}/libktt.so %{cfg.targetdir}/pyktt.so"}
+        else
+            postbuildcommands {"{COPYFILE} %{cfg.targetdir}/ktt.dll %{cfg.targetdir}/pyktt.pyd"}
+        end     
+    end
+    
     defines {"KTT_LIBRARY"}
     targetname("ktt")
-    linkLibraries()
+    linkAllLibraries()
 
 -- Tutorials configuration 
 if not _OPTIONS["no-tutorials"] then
@@ -349,7 +422,7 @@ project "05ComputeApiInitializerOpenCl"
     files {"Tutorials/05ComputeApiInitializer/ComputeApiInitializerOpenCl.cpp", "Tutorials/05ComputeApiInitializer/OpenClKernel.cl"}
     includedirs {"Source"}
     links {"ktt"}
-    linkLibraries()
+    linkComputeLibraries()
 
 project "06VectorArgumentCustomizationOpenCl"
     kind "ConsoleApp"
@@ -390,7 +463,7 @@ project "05ComputeApiInitializerCuda"
     files {"Tutorials/05ComputeApiInitializer/ComputeApiInitializerCuda.cpp", "Tutorials/05ComputeApiInitializer/CudaKernel.cu"}
     includedirs {"Source"}
     links {"ktt"}
-    linkLibraries()
+    linkComputeLibraries()
 
 project "06VectorArgumentCustomizationCuda"
     kind "ConsoleApp"

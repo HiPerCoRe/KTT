@@ -1,3 +1,17 @@
+Version 2.1 (25/1/2022)
+* Introduced KTT Python bindings making it possible to utilize KTT API in Python
+* Added onboarding guide for KTT which describes core KTT features and their usage
+* Added new methods for compute queue management
+* Added new methods for synchronization to main tuner API
+* Added non-templated versions of methods for scalar and user buffer kernel arguments addition
+* Added support for constant memory variables in CUDA
+* Updated CUPTI implementation to utilize newer API functions introduced in CUDA Toolkit 11.3
+* Updated and optimized MCMC searcher
+* Kernel run mode can now be queried through compute interface
+* Fixed linking issue under Windows caused by unexported methods
+* Improved error messages when attempting to add kernel arguments with unsupported data types
+* Added Python version of tutorials and certain examples showcasing the usage of new Python bindings
+
 Version 2.0.1 (21/6/2021)
 * Added more kernel result status categories to distinguish kernel runs which failed due to compiler error or device
   limits being exceeded
