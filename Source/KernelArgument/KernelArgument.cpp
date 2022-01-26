@@ -53,7 +53,7 @@ void KernelArgument::SetReferencedData(void* data, const size_t dataSize)
 
 void KernelArgument::SetOwnedData(const void* data, const size_t dataSize)
 {
-    if (dataSize == 0)
+    if (dataSize == 0 && GetMemoryType() != ArgumentMemoryType::Local)
     {
         throw KttException("Kernel argument cannot be initialized with number of elements equal to zero");
     }
