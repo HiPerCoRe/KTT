@@ -677,3 +677,39 @@ project "TransposeCuda"
 end -- cudaProjects
     
 end -- _OPTIONS["no-examples"]
+
+-- Unit tests configuration   
+if _OPTIONS["tests"] then
+
+project "Tests"
+    kind "ConsoleApp"
+    
+    files
+    {
+        "Tests/**",
+        "Source/**",
+        "Libraries/Catch-2.13.8/**",
+        "Libraries/CTPL-Ahajha/**",
+        "Libraries/date-3/**",
+        "Libraries/Json-3.9.1/**",
+        "Libraries/pugixml-1.11.4/**"
+    }
+    
+    includedirs
+    {
+        "Source",
+        "Libraries/Catch-2.13.8",
+        "Libraries/CTPL-Ahajha",
+        "Libraries/date-3",
+        "Libraries/Json-3.9.1",
+        "Libraries/pugixml-1.11.4"
+    }
+    
+    if _OPTIONS["no-opencl"] then
+        removefiles {"Tests/OpenClEngineTests.cpp", "Tests/Kernels/SimpleOpenClKernel.cl"}
+    end
+    
+    defines {"KTT_LIBRARY", "KTT_TESTS"}
+    linkAllLibraries()
+    
+end -- _OPTIONS["tests"]
