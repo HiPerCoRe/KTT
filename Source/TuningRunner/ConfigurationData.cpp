@@ -54,6 +54,17 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
     return m_SearcherActive;
 }
 
+void ConfigurationData::ListConfigurations() const
+{
+    Logger::LogInfo("Listing all configurations for kernel " + m_Kernel.GetName());
+
+    for (uint64_t index = 0; index < GetTotalConfigurationsCount(); ++index)
+    {
+        KernelConfiguration configuration = GetConfigurationForIndex(index);
+        Logger::LogInfo("Configuration " + std::to_string(index) + ": " + configuration.GetString());
+    }
+}
+
 KernelConfiguration ConfigurationData::GetConfigurationForIndex(const uint64_t index) const
 {
     if (index >= GetTotalConfigurationsCount())

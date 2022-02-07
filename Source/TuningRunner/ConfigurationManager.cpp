@@ -52,6 +52,13 @@ bool ConfigurationManager::CalculateNextConfiguration(const KernelId id, const K
     return m_ConfigurationData[id]->CalculateNextConfiguration(previousResult);
 }
 
+void ConfigurationManager::ListConfigurations(const KernelId id) const
+{
+    KttAssert(HasData(id), "Configurations can only be listed for kernels with initialized configuration data");
+    const auto& data = *m_ConfigurationData.find(id)->second;
+    data.ListConfigurations();
+}
+
 bool ConfigurationManager::HasData(const KernelId id) const
 {
     return ContainsKey(m_ConfigurationData, id) ;

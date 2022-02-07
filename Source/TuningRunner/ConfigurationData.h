@@ -21,6 +21,7 @@ public:
     ~ConfigurationData();
 
     bool CalculateNextConfiguration(const KernelResult& previousResult);
+    void ListConfigurations() const;
 
     KernelConfiguration GetConfigurationForIndex(const uint64_t index) const;
     uint64_t GetIndexForConfiguration(const KernelConfiguration& configuration) const;
