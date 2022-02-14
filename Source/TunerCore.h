@@ -73,6 +73,7 @@ public:
     std::vector<KernelResult> SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations);
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     void ClearData(const KernelId id);
+    uint64_t GetConfigurationsCount(const KernelId id) const;
     KernelConfiguration GetBestConfiguration(const KernelId id) const;
     KernelConfiguration CreateConfiguration(const KernelId id, const ParameterInput& parameters) const;
     std::string GetKernelSource(const KernelId id, const KernelConfiguration& configuration) const;

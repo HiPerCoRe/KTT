@@ -537,9 +537,17 @@ public:
       */
     void ClearData(const KernelId id);
 
+    /** @fn uint64_t GetConfigurationsCount(const KernelId id) const
+      * Returns the total number of configurations for specified kernel. Valid number will be returned only if kernel tuning was
+      * already performed for the corresponding kernel (e.g., TuneIteration was called at least once).
+      * @param id Id of kernel for which the total number of configurations will be returned.
+      * @return Total number of configurations for specified kernel
+      */
+    uint64_t GetConfigurationsCount(const KernelId id) const;
+
     /** @fn KernelConfiguration GetBestConfiguration(const KernelId id) const
       * Returns the best configuration found for specified kernel. Valid configuration will be returned only if kernel tuning was
-      * already performed for the corresponding kernel.
+      * already performed for the corresponding kernel (e.g., TuneIteration was called at least once).
       * @param id Id of kernel for which the best configuration will be returned.
       * @return Best configuration for the specified kernel. See KernelConfiguration for more information.
       */

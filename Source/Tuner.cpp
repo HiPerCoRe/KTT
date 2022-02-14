@@ -467,6 +467,19 @@ void Tuner::ClearData(const KernelId id)
     }
 }
 
+uint64_t Tuner::GetConfigurationsCount(const KernelId id) const
+{
+    try
+    {
+        return m_Tuner->GetConfigurationsCount(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return 0;
+    }
+}
+
 KernelConfiguration Tuner::GetBestConfiguration(const KernelId id) const
 {
     try

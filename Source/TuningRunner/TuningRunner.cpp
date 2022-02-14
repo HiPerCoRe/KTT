@@ -170,6 +170,11 @@ void TuningRunner::ClearData(const KernelId id, const bool clearSearcher)
     m_ConfigurationManager->ClearData(id, clearSearcher);
 }
 
+uint64_t TuningRunner::GetConfigurationsCount(const KernelId id) const
+{
+    return m_ConfigurationManager->GetTotalConfigurationsCount(id);
+}
+
 KernelConfiguration TuningRunner::GetBestConfiguration(const KernelId id) const
 {
     return m_ConfigurationManager->GetBestConfiguration(id);

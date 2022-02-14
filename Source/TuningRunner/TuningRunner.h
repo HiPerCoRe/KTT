@@ -25,6 +25,7 @@ public:
 
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     void ClearData(const KernelId id, const bool clearSearcher = false);
+    uint64_t GetConfigurationsCount(const KernelId id) const;
     KernelConfiguration GetBestConfiguration(const KernelId id) const;
 
 private:

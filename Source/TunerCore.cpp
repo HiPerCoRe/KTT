@@ -238,6 +238,11 @@ void TunerCore::ClearData(const KernelId id)
     m_TuningRunner->ClearData(id);
 }
 
+uint64_t TunerCore::GetConfigurationsCount(const KernelId id) const
+{
+    return m_TuningRunner->GetConfigurationsCount(id);
+}
+
 KernelConfiguration TunerCore::GetBestConfiguration(const KernelId id) const
 {
     return m_TuningRunner->GetBestConfiguration(id);
