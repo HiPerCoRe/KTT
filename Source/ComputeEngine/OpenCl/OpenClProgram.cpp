@@ -6,6 +6,7 @@
 #include <ComputeEngine/OpenCl/OpenClContext.h>
 #include <ComputeEngine/OpenCl/OpenClProgram.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
+#include <Utility/Logger/Logger.h>
 #include <Utility/StringUtility.h>
 
 namespace ktt
@@ -29,6 +30,9 @@ OpenClProgram::~OpenClProgram()
 
 void OpenClProgram::Build(const std::string& compilerOptions) const
 {
+    const std::string logCompilerOptions = compilerOptions.empty() ? "empty" : compilerOptions;
+    Logger::LogDebug("Building OpenCL program with options: " + logCompilerOptions);
+
     std::vector<cl_device_id> devices{m_Device};
     cl_int result = clBuildProgram(m_Program, static_cast<cl_uint>(devices.size()), devices.data(), compilerOptions.data(),
         nullptr, nullptr);
