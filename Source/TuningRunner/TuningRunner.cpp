@@ -16,8 +16,12 @@ TuningRunner::TuningRunner(KernelRunner& kernelRunner) :
 std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_ptr<StopCondition> stopCondition)
 {
     Logger::LogInfo("Starting offline tuning for kernel " + kernel.GetName());
-    m_ConfigurationManager->InitializeData(kernel);
     const auto id = kernel.GetId();
+
+    if (!m_ConfigurationManager->HasData(id))
+    {
+        m_ConfigurationManager->InitializeData(kernel);
+    }
 
     if (stopCondition != nullptr)
     {
@@ -55,7 +59,6 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_p
     Logger::LogInfo("Ending offline tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
         + std::to_string(results.size()));
     m_KernelRunner.ClearReferenceResult(kernel);
-    m_ConfigurationManager->ClearData(id);
     return results;
 }
 
