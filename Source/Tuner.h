@@ -729,6 +729,12 @@ public:
        */
     static void SetLoggingLevel(const LoggingLevel level);
 
+    /** @fn static LoggingLevel GetLoggingLevel()
+      * Retrieves logging level currently used by tuner.
+      * @return Logging level currently used by tuner. See ::LoggingLevel for more information.
+      */
+    static LoggingLevel GetLoggingLevel();
+
     /** @fn static void SetLoggingTarget(std::ostream& outputTarget)
       * Sets the target for info messages logging to specified output stream. Default logging target is `std::clog`.
       * @param outputTarget Location where tuner info messages will be printed.

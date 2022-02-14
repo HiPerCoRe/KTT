@@ -251,6 +251,7 @@ void InitializePythonTuner(py::module_& module)
         .def("GetDeviceInfo", &ktt::Tuner::GetDeviceInfo)
         .def("GetCurrentDeviceInfo", &ktt::Tuner::GetCurrentDeviceInfo)
         .def_static("SetLoggingLevel", &ktt::Tuner::SetLoggingLevel)
+        .def_static("GetLoggingLevel", &ktt::Tuner::GetLoggingLevel)
         .def_static("SetLoggingTarget", py::overload_cast<std::ostream&>(&ktt::Tuner::SetLoggingTarget))
         .def_static("SetLoggingTarget", py::overload_cast<const std::string&>(&ktt::Tuner::SetLoggingTarget));
 }

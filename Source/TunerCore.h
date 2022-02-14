@@ -105,6 +105,7 @@ public:
     static void SetLoggingLevel(const LoggingLevel level);
     static void SetLoggingTarget(std::ostream& target);
     static void SetLoggingTarget(const std::string& file);
+    static LoggingLevel GetLoggingLevel();
     static void Log(const LoggingLevel level, const std::string& message);
 
 private:

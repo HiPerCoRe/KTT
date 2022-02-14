@@ -407,6 +407,11 @@ void TunerCore::SetLoggingTarget(const std::string& file)
     Logger::GetLogger().SetLoggingTarget(file);
 }
 
+LoggingLevel TunerCore::GetLoggingLevel()
+{
+    return Logger::GetLogger().GetLoggingLevel();
+}
+
 void TunerCore::Log(const LoggingLevel level, const std::string& message)
 {
     Logger::GetLogger().Log(level, message);

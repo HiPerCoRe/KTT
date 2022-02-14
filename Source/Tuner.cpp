@@ -752,6 +752,11 @@ void Tuner::SetLoggingLevel(const LoggingLevel level)
     TunerCore::SetLoggingLevel(level);
 }
 
+LoggingLevel Tuner::GetLoggingLevel()
+{
+    return TunerCore::GetLoggingLevel();
+}
+
 void Tuner::SetLoggingTarget(std::ostream& outputTarget)
 {
     TunerCore::SetLoggingTarget(outputTarget);
