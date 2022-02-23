@@ -81,16 +81,17 @@ systems are Linux and Windows.
     - open generated solution file and build the project inside Visual Studio
 
 * The following build options are available:
-    - `--outdir=path` specifies custom build directory, default build directory is `Build`
-    - `--platform=vendor` specifies SDK used for building KTT, useful when multiple SDKs are installed
-    - `--profiling=library` enables compilation of kernel profiling functionality using specified library
-    - `--vulkan` enables compilation of experimental Vulkan backend
-    - `--python` enables compilation of Python bindings
-    - `--no-examples` disables compilation of examples
-    - `--no-tutorials` disables compilation of tutorials
-    - `--tests` enables compilation of unit tests
-    - `--no-cuda` disables the inclusion of CUDA API during compilation, only affects Nvidia platform
-    - `--no-opencl` disables the inclusion of OpenCL API during compilation
+    - `--outdir=path` Specifies custom build directory. The default build directory is `Build`.
+    - `--platform=vendor` Specifies SDK used for building KTT. May be useful when multiple SDKs are installed.
+    - `--profiling=library` Enables compilation of kernel profiling functionality using the specified library.
+    - `--power-usage` Enables compilation of device power usage collection functionality. This feature is currently supported only on Nvidia platform.
+    - `--vulkan` Enables compilation of experimental Vulkan backend.
+    - `--python` Enables compilation of Python bindings.
+    - `--no-examples` Disables compilation of examples.
+    - `--no-tutorials` Disables compilation of tutorials.
+    - `--tests` Enables compilation of unit tests.
+    - `--no-cuda` Disables the inclusion of CUDA API during compilation. Only affects Nvidia platform.
+    - `--no-opencl` Disables the inclusion of OpenCL API during compilation.
 
 * KTT and applications that utilize it rely on external dynamic (shared) libraries to work correctly. There are
   multiple ways to provide access to these libraries, e.g., copying a given library inside the application folder or adding the

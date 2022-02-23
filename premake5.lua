@@ -108,7 +108,12 @@ function linkLibrariesNvidia()
         links {"cuda", "nvrtc"}
         cudaProjects = true
         
-        if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" then
+        if _OPTIONS["power-usage"] then
+            defines {"KTT_POWER_USAGE_NVML"}
+            links {"nvml"}
+        end
+        
+        if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" or _OPTIONS["power-usage"] then
             includedirs {"$(CUDA_PATH)/extras/CUPTI/include"}
             libdirs {"$(CUDA_PATH)/extras/CUPTI/lib64"}
             links {"cupti"}
@@ -274,6 +279,12 @@ newoption
         {"gpa", "AMD GPA for GCN 3.0 GPUs and newer"},
         {"gpa-legacy", "AMD GPA for GCN 5.0 GPUs and older"}
     }
+}
+
+newoption
+{
+    trigger = "power-usage",
+    description = "Enables compilation of device power usage collection functionality"
 }
 
 newoption

@@ -19,6 +19,10 @@
 #include <ComputeEngine/Cuda/Cupti/CuptiPass.h>
 #endif // KTT_PROFILING_CUPTI
 
+#ifdef KTT_POWER_USAGE_NVML
+#include <ComputeEngine/Cuda/Nvml/NvmlPowerSubscription.h>
+#endif // KTT_POWER_USAGE_NVML
+
 namespace ktt
 {
 
@@ -54,6 +58,10 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 #if defined(KTT_PROFILING_CUPTI)
     InitializeCupti();
 #endif // KTT_PROFILING_CUPTI
+
+#if defined(KTT_POWER_USAGE_NVML)
+    m_PowerManager = std::make_unique<NvmlPowerManager>(*m_Context, m_DeviceIndex);
+#endif // KTT_POWER_USAGE_NVML
 }
 
 CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
@@ -91,6 +99,10 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<Que
 #if defined(KTT_PROFILING_CUPTI)
     InitializeCupti();
 #endif // KTT_PROFILING_CUPTI
+
+#if defined(KTT_POWER_USAGE_NVML)
+    m_PowerManager = std::make_unique<NvmlPowerManager>(*m_Context, m_DeviceIndex);
+#endif // KTT_POWER_USAGE_NVML
 }
 
 ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId)
@@ -118,7 +130,16 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     const auto& stream = *m_Streams[queueId];
     timer.Stop();
 
+#if defined(KTT_POWER_USAGE_NVML)
+    auto subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
+#endif // KTT_POWER_USAGE_NVML
+    
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+
+#if defined(KTT_POWER_USAGE_NVML)
+    const uint32_t powerUsage = m_PowerManager->GetPowerUsage();
+    // todo: add power usage to action and kernel result
+#endif // KTT_POWER_USAGE_NVML
 
     action->IncreaseOverhead(timer.GetElapsedTime());
     action->SetComputeId(data.GetUniqueIdentifier());

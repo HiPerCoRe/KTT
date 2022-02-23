@@ -10,6 +10,10 @@
 #include <nvperf_cuda_host.h>
 #endif // KTT_PROFILING_CUPTI
 
+#if defined(KTT_POWER_USAGE_NVML)
+#include <nvml.h>
+#endif // KTT_POWER_USAGE_NVML
+
 #include <Api/ExceptionReason.h>
 #include <ComputeEngine/Cuda/CuptiLegacy/CuptiKtt.h>
 
@@ -31,6 +35,11 @@ void CheckError(const CUptiResult value, const std::string& function, const std:
 std::string GetEnumName(const NVPA_Status value);
 void CheckError(const NVPA_Status value, const std::string& function, const std::string& info = "");
 #endif // KTT_PROFILING_CUPTI
+
+#if defined(KTT_POWER_USAGE_NVML)
+std::string GetEnumName(const nvmlReturn_t value);
+void CheckError(const nvmlReturn_t value, const std::string& function, const std::string& info = "");
+#endif // KTT_POWER_USAGE_NVML
 
 } // namespace ktt
 

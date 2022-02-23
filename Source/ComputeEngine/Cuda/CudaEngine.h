@@ -26,6 +26,10 @@
 #include <ComputeEngine/Cuda/Cupti/CuptiProfiler.h>
 #endif // KTT_PROFILING_CUPTI
 
+#ifdef KTT_POWER_USAGE_NVML
+#include <ComputeEngine/Cuda/Nvml/NvmlPowerManager.h>
+#endif // KTT_POWER_USAGE_NVML
+
 namespace ktt
 {
 
@@ -111,6 +115,10 @@ private:
     std::unique_ptr<CuptiMetricInterface> m_MetricInterface;
     std::map<KernelComputeId, std::unique_ptr<CuptiInstance>> m_CuptiInstances;
 #endif // KTT_PROFILING_CUPTI
+
+#ifdef KTT_POWER_USAGE_NVML
+    std::unique_ptr<NvmlPowerManager> m_PowerManager;
+#endif // KTT_POWER_USAGE_NVML
 
     std::shared_ptr<CudaKernel> LoadKernel(const KernelComputeData& data);
     std::vector<CUdeviceptr*> GetKernelArguments(const std::vector<KernelArgument*>& arguments);
