@@ -225,6 +225,12 @@ void to_json(json& j, const ComputationResult& result)
     {
         j["ProfilingData"] = result.GetProfilingData();
     }
+
+    if (result.HasPowerData())
+    {
+        j["PowerUsage"] = result.GetPowerUsage();
+        j["EnergyConsumption"] = result.GetEnergyConsumption();
+    }
 }
 
 void from_json(const json& j, ComputationResult& result)
@@ -269,6 +275,13 @@ void from_json(const json& j, ComputationResult& result)
 
         auto uniqueData = std::make_unique<KernelProfilingData>(data);
         result.SetProfilingData(std::move(uniqueData));
+    }
+
+    if (j.contains("PowerUsage"))
+    {
+        uint32_t powerUsage;
+        j.at("PowerUsage").get_to(powerUsage);
+        result.SetPowerUsage(powerUsage);
     }
 }
 

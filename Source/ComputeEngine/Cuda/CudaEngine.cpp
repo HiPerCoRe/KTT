@@ -138,7 +138,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
 
 #if defined(KTT_POWER_USAGE_NVML)
     const uint32_t powerUsage = m_PowerManager->GetPowerUsage();
-    // todo: add power usage to action and kernel result
+    action->SetPowerUsage(powerUsage);
 #endif // KTT_POWER_USAGE_NVML
 
     action->IncreaseOverhead(timer.GetElapsedTime());

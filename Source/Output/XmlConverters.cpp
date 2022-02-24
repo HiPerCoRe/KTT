@@ -483,6 +483,12 @@ void AppendComputationResult(pugi::xml_node parent, const ComputationResult& res
     {
         AppendProfilingData(node, result.GetProfilingData());
     }
+
+    if (result.HasPowerData())
+    {
+        node.append_attribute("PowerUsage").set_value(result.GetPowerUsage());
+        node.append_attribute("EnergyConsumption").set_value(result.GetEnergyConsumption(), xmlFloatingPointPrecision);
+    }
 }
 
 ComputationResult ParseComputationResult(const pugi::xml_node node)
@@ -517,6 +523,14 @@ ComputationResult ParseComputationResult(const pugi::xml_node node)
         KernelProfilingData data = ParseProfilingData(profilingDataNode);
         auto uniqueData = std::make_unique<KernelProfilingData>(data);
         result.SetProfilingData(std::move(uniqueData));
+    }
+
+    const auto powerUsage = node.attribute("PowerUsage");
+
+    if (!powerUsage.empty())
+    {
+        const uint32_t powerUsageValue = powerUsage.as_uint();
+        result.SetPowerUsage(powerUsageValue);
     }
 
     return result;

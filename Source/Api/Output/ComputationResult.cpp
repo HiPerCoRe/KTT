@@ -22,7 +22,8 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     m_GlobalSize(other.m_GlobalSize),
     m_LocalSize(other.m_LocalSize),
     m_Duration(other.m_Duration),
-    m_Overhead(other.m_Overhead)
+    m_Overhead(other.m_Overhead),
+    m_PowerUsage(other.m_PowerUsage)
 {
     if (other.HasCompilationData())
     {
@@ -55,6 +56,11 @@ void ComputationResult::SetCompilationData(std::unique_ptr<KernelCompilationData
 void ComputationResult::SetProfilingData(std::unique_ptr<KernelProfilingData> data)
 {
     m_ProfilingData = std::move(data);
+}
+
+void ComputationResult::SetPowerUsage(const uint32_t powerUsage)
+{
+    m_PowerUsage = powerUsage;
 }
 
 const std::string& ComputationResult::GetKernelFunction() const
@@ -122,6 +128,28 @@ bool ComputationResult::HasRemainingProfilingRuns() const
     return GetProfilingData().HasRemainingProfilingRuns();
 }
 
+bool ComputationResult::HasPowerData() const
+{
+    return m_PowerUsage.has_value();
+}
+
+uint32_t ComputationResult::GetPowerUsage() const
+{
+    if (!HasPowerData())
+    {
+        throw KttException("Power usage can only be retrieved after prior check that it exists");
+    }
+
+    return m_PowerUsage.value();
+}
+
+double ComputationResult::GetEnergyConsumption() const
+{
+    const double powerUsageWatts = static_cast<double>(GetPowerUsage()) / 1'000.0;
+    const double durationSeconds = static_cast<double>(GetDuration()) / 1'000'000'000.0;
+    return powerUsageWatts * durationSeconds;
+}
+
 ComputationResult& ComputationResult::operator=(const ComputationResult& other)
 {
     m_KernelFunction = other.m_KernelFunction;
@@ -129,6 +157,7 @@ ComputationResult& ComputationResult::operator=(const ComputationResult& other)
     m_Overhead = other.m_Overhead;
     m_GlobalSize = other.m_GlobalSize;
     m_LocalSize = other.m_LocalSize;
+    m_PowerUsage = other.m_PowerUsage;
 
     if (other.HasCompilationData())
     {

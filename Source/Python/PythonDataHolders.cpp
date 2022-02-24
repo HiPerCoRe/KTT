@@ -180,6 +180,9 @@ void InitializePythonDataHolders(py::module_& module)
         .def("HasProfilingData", &ktt::ComputationResult::HasProfilingData)
         .def("GetProfilingData", &ktt::ComputationResult::GetProfilingData, py::return_value_policy::reference)
         .def("HasRemainingProfilingRuns", &ktt::ComputationResult::HasRemainingProfilingRuns)
+        .def("HasPowerData", &ktt::ComputationResult::HasPowerData)
+        .def("GetPowerUsage", &ktt::ComputationResult::GetPowerUsage)
+        .def("GetEnergyConsumption", &ktt::ComputationResult::GetEnergyConsumption)
         .def("assign", &ktt::ComputationResult::operator=);
 
     py::class_<ktt::KernelResult>(module, "KernelResult")

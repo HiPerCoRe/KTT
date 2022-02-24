@@ -36,6 +36,11 @@ void CudaComputeAction::SetComputeId(const KernelComputeId& id)
     m_ComputeId = id;
 }
 
+void CudaComputeAction::SetPowerUsage(const uint32_t powerUsage)
+{
+    m_PowerUsage = powerUsage;
+}
+
 void CudaComputeAction::WaitForFinish()
 {
     Logger::LogDebug("Waiting for CUDA kernel compute action with id " + std::to_string(m_Id));
@@ -92,6 +97,11 @@ ComputationResult CudaComputeAction::GenerateResult() const
     result.SetDurationData(duration, overhead);
     result.SetSizeData(m_GlobalSize, m_LocalSize);
     result.SetCompilationData(std::move(compilationData));
+    
+    if (m_PowerUsage.has_value())
+    {
+        result.SetPowerUsage(m_PowerUsage.value());
+    }
 
     return result;
 }

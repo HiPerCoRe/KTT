@@ -3,6 +3,7 @@
 #ifdef KTT_API_CUDA
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <Api//Configuration/DimensionVector.h>
@@ -22,6 +23,7 @@ public:
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void SetComputeId(const KernelComputeId& id);
+    void SetPowerUsage(const uint32_t powerUsage);
     void WaitForFinish();
 
     ComputeActionId GetId() const;
@@ -44,6 +46,7 @@ private:
     KernelComputeId m_ComputeId;
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;
+    std::optional<uint32_t> m_PowerUsage;
 };
 
 } // namespace ktt
