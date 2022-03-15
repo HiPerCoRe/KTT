@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -33,7 +32,7 @@ public:
 
 private:
     IdGenerator<ArgumentId> m_IdGenerator;
-    std::map<ArgumentId, std::unique_ptr<KernelArgument>> m_Arguments;
+    std::vector<std::unique_ptr<KernelArgument>> m_Arguments;
 
     ArgumentId AddArgument(const size_t elementSize, const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation,
         const ArgumentAccessType accessType, const ArgumentMemoryType memoryType, const ArgumentManagementType managementType,
