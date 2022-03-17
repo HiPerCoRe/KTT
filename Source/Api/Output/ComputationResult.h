@@ -92,13 +92,13 @@ public:
     const DimensionVector& GetLocalSize() const;
 
     /** @fn Nanoseconds GetDuration() const
-      * Returns raw kernel duration, usually reported by the underlying compute API.
+      * Returns raw kernel duration reported by the underlying compute API.
       * @return Kernel duration.
       */
     Nanoseconds GetDuration() const;
 
     /** @fn Nanoseconds GetOverhead() const
-      * Returns overhead related to kernel launch such as kernel function compilation.
+      * Returns overhead related to kernel launch such as kernel function compilation and profiling data collection.
       * @return Kernel overhead.
       */
     Nanoseconds GetOverhead() const;

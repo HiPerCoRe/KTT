@@ -5,7 +5,9 @@ namespace ktt
 
 KernelResult::KernelResult() :
     m_ExtraDuration(InvalidDuration),
-    m_ExtraOverhead(InvalidDuration),
+    m_DataMovementOverhead(InvalidDuration),
+    m_ValidationOverhead(InvalidDuration),
+    m_SearcherOverhead(InvalidDuration),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
@@ -13,7 +15,9 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     m_Configuration(configuration),
     m_KernelName(kernelName),
     m_ExtraDuration(0),
-    m_ExtraOverhead(0),
+    m_DataMovementOverhead(0),
+    m_ValidationOverhead(0),
+    m_SearcherOverhead(0),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
@@ -23,7 +27,9 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     m_Results(results),
     m_KernelName(kernelName),
     m_ExtraDuration(0),
-    m_ExtraOverhead(0),
+    m_DataMovementOverhead(0),
+    m_ValidationOverhead(0),
+    m_SearcherOverhead(0),
     m_Status(ResultStatus::Ok)
 {}
 
@@ -39,7 +45,22 @@ void KernelResult::SetExtraDuration(const Nanoseconds duration)
 
 void KernelResult::SetExtraOverhead(const Nanoseconds overhead)
 {
-    m_ExtraOverhead = overhead;
+    m_DataMovementOverhead = overhead;
+}
+
+void KernelResult::SetDataMovementOverhead(const Nanoseconds overhead)
+{
+    m_DataMovementOverhead = overhead;
+}
+
+void KernelResult::SetValidationOverhead(const Nanoseconds overhead)
+{
+    m_ValidationOverhead = overhead;
+}
+
+void KernelResult::SetSearcherOverhead(const Nanoseconds overhead)
+{
+    m_SearcherOverhead = overhead;
 }
 
 const std::string& KernelResult::GetKernelName() const
@@ -93,7 +114,22 @@ Nanoseconds KernelResult::GetExtraDuration() const
 
 Nanoseconds KernelResult::GetExtraOverhead() const
 {
-    return m_ExtraOverhead;
+    return m_DataMovementOverhead;
+}
+
+Nanoseconds KernelResult::GetDataMovementOverhead() const
+{
+    return m_DataMovementOverhead;
+}
+
+Nanoseconds KernelResult::GetValidationOverhead() const
+{
+    return m_ValidationOverhead;
+}
+
+Nanoseconds KernelResult::GetSearcherOverhead() const
+{
+    return m_SearcherOverhead;
 }
 
 Nanoseconds KernelResult::GetTotalDuration() const
@@ -104,7 +140,7 @@ Nanoseconds KernelResult::GetTotalDuration() const
 
 Nanoseconds KernelResult::GetTotalOverhead() const
 {
-    const Nanoseconds overhead = m_ExtraOverhead + GetKernelOverhead();
+    const Nanoseconds overhead = m_DataMovementOverhead + m_ValidationOverhead + m_SearcherOverhead + GetKernelOverhead();
     return overhead;
 }
 

@@ -5,6 +5,7 @@
 #include <KernelRunner/KernelRunner.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/Timer/ScopeTimer.h>
 #include <Utility/Timer/Timer.h>
 
 namespace ktt
@@ -29,9 +30,14 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
         m_Validator->ComputeReferenceResult(kernel, mode);
     }
 
+    Nanoseconds dataOverhead = 0;
+
     if (manageBuffers)
     {
-        SetupBuffers(kernel);
+        dataOverhead += RunScopeTimer([this, &kernel]()
+        {
+            SetupBuffers(kernel);
+        });
     }
 
     Logger::LogInfo("Running kernel " + kernel.GetName() + " with configuration: " + configuration.GetString());
@@ -41,9 +47,13 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
 
     if (manageBuffers)
     {
-        CleanupBuffers(kernel);
+        dataOverhead += RunScopeTimer([this, &kernel]()
+        {
+            CleanupBuffers(kernel);
+        });
     }
 
+    result.SetDataMovementOverhead(result.GetDataMovementOverhead() + dataOverhead);
     return result;
 }
 
@@ -233,9 +243,13 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
         result.SetStatus(GetStatusFromException(reason));
     }
 
-    DownloadBuffers(output);
-    m_ComputeLayer->ClearData(id);
+    const Nanoseconds dataOverhead = RunScopeTimer([this, &output]()
+    {
+        DownloadBuffers(output);
+    });
 
+    result.SetDataMovementOverhead(result.GetDataMovementOverhead() + dataOverhead);
+    m_ComputeLayer->ClearData(id);
     return result;
 }
 
@@ -266,7 +280,14 @@ void KernelRunner::ValidateResult(const Kernel& kernel, KernelResult& result, co
         return;
     }
 
-    const bool validResult = m_Validator->ValidateArguments(kernel, mode);
+    bool validResult = false;
+
+    const Nanoseconds validationOverhead = RunScopeTimer([this, &kernel, mode, &validResult]()
+    {
+        validResult = m_Validator->ValidateArguments(kernel, mode);
+    });
+
+    result.SetValidationOverhead(validationOverhead);
     const auto& time = TimeConfiguration::GetInstance();
     const uint64_t duration = time.ConvertFromNanoseconds(result.GetTotalDuration());
     const uint64_t kernelDuration = time.ConvertFromNanoseconds(result.GetKernelDuration());

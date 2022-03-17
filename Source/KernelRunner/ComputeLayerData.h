@@ -40,7 +40,7 @@ private:
     const Kernel& m_Kernel;
     const KernelConfiguration& m_Configuration;
     KernelRunMode m_RunMode;
-    Nanoseconds m_Overhead;
+    Nanoseconds m_DataOverhead;
 
     Nanoseconds CalculateLauncherOverhead() const;
 };

@@ -12,7 +12,7 @@ ComputeLayerData::ComputeLayerData(const Kernel& kernel, const KernelConfigurati
     m_Kernel(kernel),
     m_Configuration(configuration),
     m_RunMode(runMode),
-    m_Overhead(0)
+    m_DataOverhead(0)
 {
     for (const auto* definition : kernel.GetDefinitions())
     {
@@ -23,7 +23,7 @@ ComputeLayerData::ComputeLayerData(const Kernel& kernel, const KernelConfigurati
 
 void ComputeLayerData::IncreaseOverhead(const Nanoseconds overhead)
 {
-    m_Overhead += overhead;
+    m_DataOverhead += overhead;
 }
 
 void ComputeLayerData::AddPartialResult(const ComputationResult& result)
@@ -130,12 +130,12 @@ KernelResult ComputeLayerData::GenerateResult(const Nanoseconds launcherDuration
     if (m_Kernel.HasLauncher())
     {
         result.SetExtraDuration(actualLauncherDuration);
-        result.SetExtraOverhead(m_Overhead);
+        result.SetDataMovementOverhead(m_DataOverhead);
     }
     else
     {
         // For simple kernels without user launcher, total duration is the same as kernel duration, everything else is overhead.
-        result.SetExtraOverhead(actualLauncherDuration + m_Overhead);
+        result.SetDataMovementOverhead(actualLauncherDuration + m_DataOverhead);
     }
 
     return result;
@@ -143,7 +143,7 @@ KernelResult ComputeLayerData::GenerateResult(const Nanoseconds launcherDuration
 
 Nanoseconds ComputeLayerData::CalculateLauncherOverhead() const
 {
-    Nanoseconds result = m_Overhead;
+    Nanoseconds result = m_DataOverhead;
 
     for (const auto& partialResult : m_PartialResults)
     {

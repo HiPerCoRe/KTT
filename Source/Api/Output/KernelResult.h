@@ -49,16 +49,34 @@ public:
     void SetStatus(const ResultStatus status);
 
     /** @fn void SetExtraDuration(const Nanoseconds duration)
-      * Sets extra duration. This includes for example duration of custom kernel launcher minus the duration of buffer transfers.
-      * @param duration Extra computation duration.
+      * Sets duration of a kernel launcher. The duration of buffer transfers performed within the launcher is not included.
+      * @param duration Kernel launcher duration.
       */
     void SetExtraDuration(const Nanoseconds duration);
 
     /** @fn void SetExtraOverhead(const Nanoseconds overhead)
-      * Sets extra overhead. This includes for example duration of buffer transfers performed in custom kernel launcher.
-      * @param overhead Extra computation overhead.
+      * Sets duration of buffer transfers (e.g., between host and device memory).
+      * @param overhead Duration of buffer transfers.
       */
-    void SetExtraOverhead(const Nanoseconds overhead);
+    [[deprecated("Use SetDataMovementOverhead() instead.")]] void SetExtraOverhead(const Nanoseconds overhead);
+
+    /** @fn void SetDataMovementOverhead(const Nanoseconds overhead)
+      * Sets duration of buffer transfers (e.g., between host and device memory).
+      * @param overhead Duration of buffer transfers.
+      */
+    void SetDataMovementOverhead(const Nanoseconds overhead);
+
+    /** @fn void SetValidationOverhead(const Nanoseconds overhead)
+      * Sets duration of kernel output validation.
+      * @param overhead Duration of kernel output validation.
+      */
+    void SetValidationOverhead(const Nanoseconds overhead);
+
+    /** @fn void SetSearcherOverhead(const Nanoseconds overhead)
+      * Sets duration of searcher finding the next configuration to run.
+      * @param overhead Duration of searcher finding the next configuration to run.
+      */
+    void SetSearcherOverhead(const Nanoseconds overhead);
 
     /** @fn const std::string& GetKernelName() const
       * Returns name of a kernel tied to the result.
@@ -97,18 +115,34 @@ public:
     Nanoseconds GetKernelOverhead() const;
 
     /** @fn Nanoseconds GetExtraDuration() const
-      * Retrieves extra kernel result duration. This includes for example duration of custom kernel launcher minus the duration
-      * of buffer transfers.
-      * @return Extra kernel result duration.
+      * Retrieves duration of a kernel launcher. The duration of buffer transfers performed within the launcher is not included.
+      * @return Kernel launcher duration.
       */
     Nanoseconds GetExtraDuration() const;
 
     /** @fn Nanoseconds GetExtraOverhead() const
-      * Retrieves extra kernel result overhead. This includes for example duration of buffer transfers performed in custom kernel
-      * launcher.
-      * @return Extra kernel result overhead.
+      * Retrieves duration of buffer transfers (e.g., between host and device memory).
+      * @return Duration of buffer transfers.
       */
-    Nanoseconds GetExtraOverhead() const;
+    [[deprecated("Use GetDataMovementOverhead() instead.")]] Nanoseconds GetExtraOverhead() const;
+
+    /** @fn Nanoseconds GetDataMovementOverhead() const
+      * Retrieves duration of buffer transfers (e.g., between host and device memory).
+      * @return Duration of buffer transfers.
+      */
+    Nanoseconds GetDataMovementOverhead() const;
+
+    /** @fn Nanoseconds GetValidationOverhead() const
+      * Retrieves duration of kernel output validation.
+      * @return Duration of kernel output validation.
+      */
+    Nanoseconds GetValidationOverhead() const;
+
+    /** @fn Nanoseconds GetSearcherOverhead() const
+      * Retrieves duration of searcher finding the next configuration to run.
+      * @return Duration of searcher finding the next configuration to run.
+      */
+    Nanoseconds GetSearcherOverhead() const;
 
     /** @fn Nanoseconds GetTotalDuration() const
       * Retrieves the sum of kernel duration and extra duration.
@@ -117,8 +151,8 @@ public:
     Nanoseconds GetTotalDuration() const;
 
     /** @fn Nanoseconds GetTotalOverhead() const
-      * Retrieves the sum of kernel overhead and extra overhead.
-      * @return Sum of kernel overhead and extra overhead.
+      * Retrieves the sum of kernel, data movement, validation and searcher overhead.
+      * @return The sum of kernel, data movement, validation and searcher overhead.
       */
     Nanoseconds GetTotalOverhead() const;
 
@@ -140,7 +174,9 @@ private:
     std::vector<ComputationResult> m_Results;
     std::string m_KernelName;
     Nanoseconds m_ExtraDuration;
-    Nanoseconds m_ExtraOverhead;
+    Nanoseconds m_DataMovementOverhead;
+    Nanoseconds m_ValidationOverhead;
+    Nanoseconds m_SearcherOverhead;
     ResultStatus m_Status;
 };
 

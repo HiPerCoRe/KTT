@@ -4,6 +4,7 @@
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <TuningRunner/TuningRunner.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/Timer/ScopeTimer.h>
 
 namespace ktt
 {
@@ -40,20 +41,26 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_p
         }
         while (result.HasRemainingProfilingRuns());
 
+        const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
+        {
+            m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        });
+
+        result.SetSearcherOverhead(searcherOverhead);
         results.push_back(result);
 
-        if (stopCondition != nullptr)
+        if (stopCondition == nullptr)
         {
-            stopCondition->Update(result);
-            Logger::LogInfo(stopCondition->GetStatusString());
-
-            if (stopCondition->IsFulfilled())
-            {
-                break;
-            }
+            continue;
         }
 
-        m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        stopCondition->Update(result);
+        Logger::LogInfo(stopCondition->GetStatusString());
+
+        if (stopCondition->IsFulfilled())
+        {
+            break;
+        }
     }
 
     Logger::LogInfo("Ending offline tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
@@ -98,7 +105,12 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
 
     if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns() && !m_ConfigurationManager->IsDataProcessed(id))
     {
-        m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
+        {
+            m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        });
+
+        result.SetSearcherOverhead(searcherOverhead);
     }
 
     return result;
@@ -150,7 +162,13 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
         }
 
         ++passedIterations;
-        m_ConfigurationManager->CalculateNextConfiguration(id, result);
+
+        const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
+        {
+            m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        });
+
+        result.SetSearcherOverhead(searcherOverhead);
         output.push_back(result);
     }
 

@@ -296,7 +296,9 @@ void to_json(json& j, const KernelResult& result)
         {"TotalDuration", time.ConvertFromNanosecondsDouble(result.GetTotalDuration())},
         {"TotalOverhead", time.ConvertFromNanosecondsDouble(result.GetTotalOverhead())},
         {"ExtraDuration", time.ConvertFromNanosecondsDouble(result.GetExtraDuration())},
-        {"ExtraOverhead", time.ConvertFromNanosecondsDouble(result.GetExtraOverhead())},
+        {"DataMovementOverhead", time.ConvertFromNanosecondsDouble(result.GetDataMovementOverhead())},
+        {"ValidationOverhead", time.ConvertFromNanosecondsDouble(result.GetValidationOverhead())},
+        {"SearcherOverhead", time.ConvertFromNanosecondsDouble(result.GetSearcherOverhead())},
         {"Configuration", result.GetConfiguration()},
         {"ComputationResults", result.GetResults()}
     };
@@ -326,10 +328,20 @@ void from_json(const json& j, KernelResult& result)
     const Nanoseconds extraDurationNs = time.ConvertToNanosecondsDouble(extraDuration);
     result.SetExtraDuration(extraDurationNs);
 
-    double extraOverhead;
-    j.at("ExtraOverhead").get_to(extraOverhead);
-    const Nanoseconds extraOverheadNs = time.ConvertToNanosecondsDouble(extraOverhead);
-    result.SetExtraOverhead(extraOverheadNs);
+    double dataMovementOverhead;
+    j.at("DataMovementOverhead").get_to(dataMovementOverhead);
+    const Nanoseconds dataMovementOverheadNs = time.ConvertToNanosecondsDouble(dataMovementOverhead);
+    result.SetDataMovementOverhead(dataMovementOverheadNs);
+
+    double validationOverhead;
+    j.at("ValidationOverhead").get_to(validationOverhead);
+    const Nanoseconds validationOverheadNs = time.ConvertToNanosecondsDouble(validationOverhead);
+    result.SetValidationOverhead(validationOverheadNs);
+
+    double searcherOverhead;
+    j.at("SearcherOverhead").get_to(searcherOverhead);
+    const Nanoseconds searcherOverheadNs = time.ConvertToNanosecondsDouble(searcherOverhead);
+    result.SetSearcherOverhead(searcherOverheadNs);
 }
 
 } // namespace ktt

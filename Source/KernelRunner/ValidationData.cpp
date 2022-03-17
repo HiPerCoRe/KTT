@@ -6,8 +6,10 @@
 #include <KernelArgument/KernelArgument.h>
 #include <KernelRunner/KernelRunner.h>
 #include <KernelRunner/ValidationData.h>
+#include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/Timer/ScopeTimer.h>
 
 namespace ktt
 {
@@ -93,15 +95,23 @@ KernelId ValidationData::GetReferenceKernelId() const
 
 void ValidationData::ComputeReferenceResults()
 {
-    if (HasReferenceComputation())
+    const Nanoseconds referenceComputationTime = RunScopeTimer([this]()
     {
-        ComputeReferenceWithFunction();
-    }
+        if (HasReferenceComputation())
+        {
+            ComputeReferenceWithFunction();
+        }
 
-    if (HasReferenceKernel())
-    {
-        ComputeReferenceWithKernel();
-    }
+        if (HasReferenceKernel())
+        {
+            ComputeReferenceWithKernel();
+        }
+    });
+
+    const auto& time = TimeConfiguration::GetInstance();
+    const uint64_t elapsedTime = time.ConvertFromNanoseconds(referenceComputationTime);
+    Logger::LogInfo("Reference result for argument with id " + std::to_string(m_Argument.GetId()) + " was computed in "
+        + std::to_string(elapsedTime) + time.GetUnitTag());
 }
 
 void ValidationData::ClearReferenceResults()

@@ -549,7 +549,11 @@ void AppendKernelResult(pugi::xml_node parent, const KernelResult& result)
         xmlFloatingPointPrecision);
     node.append_attribute("ExtraDuration").set_value(time.ConvertFromNanosecondsDouble(result.GetExtraDuration()),
         xmlFloatingPointPrecision);
-    node.append_attribute("ExtraOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetExtraOverhead()),
+    node.append_attribute("DataMovementOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetDataMovementOverhead()),
+        xmlFloatingPointPrecision);
+    node.append_attribute("ValidationOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetValidationOverhead()),
+        xmlFloatingPointPrecision);
+    node.append_attribute("SearcherOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetSearcherOverhead()),
         xmlFloatingPointPrecision);
     AppendConfiguration(node, result.GetConfiguration());
 
@@ -584,9 +588,17 @@ KernelResult ParseKernelResult(const pugi::xml_node node)
     const Nanoseconds extraDurationNs = time.ConvertToNanosecondsDouble(extraDuration);
     result.SetExtraDuration(extraDurationNs);
 
-    const double extraOverhead = node.attribute("ExtraOverhead").as_double();
-    const Nanoseconds extraOverheadNs = time.ConvertToNanosecondsDouble(extraOverhead);
-    result.SetExtraOverhead(extraOverheadNs);
+    const double dataMovementOverhead = node.attribute("DataMovementOverhead").as_double();
+    const Nanoseconds dataMovementOverheadNs = time.ConvertToNanosecondsDouble(dataMovementOverhead);
+    result.SetDataMovementOverhead(dataMovementOverheadNs);
+
+    const double validationOverhead = node.attribute("ValidationOverhead").as_double();
+    const Nanoseconds validationOverheadNs = time.ConvertToNanosecondsDouble(validationOverhead);
+    result.SetValidationOverhead(validationOverheadNs);
+
+    const double searcherOverhead = node.attribute("SearcherOverhead").as_double();
+    const Nanoseconds searcherOverheadNs = time.ConvertToNanosecondsDouble(searcherOverhead);
+    result.SetSearcherOverhead(searcherOverheadNs);
 
     return result;
 }
