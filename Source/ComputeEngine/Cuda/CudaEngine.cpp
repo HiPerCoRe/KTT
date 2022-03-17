@@ -126,6 +126,13 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     auto kernel = LoadKernel(data);
     std::vector<CUdeviceptr*> arguments = GetKernelArguments(data.GetArguments());
     const size_t sharedMemorySize = GetSharedMemorySize(data.GetArguments());
+    const size_t totalSharedMemorySize = sharedMemorySize + kernel->GetAttribute(CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES);
+
+    if (totalSharedMemorySize > m_DeviceInfo.GetLocalMemorySize())
+    {
+        throw KttException("Shared memory usage of " + std::to_string(totalSharedMemorySize) + " bytes exceeds current device limit",
+            ExceptionReason::DeviceLimitsExceeded);
+    }
 
     const auto& stream = *m_Streams[queueId];
     timer.Stop();

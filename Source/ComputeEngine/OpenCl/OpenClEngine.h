@@ -112,6 +112,7 @@ private:
     std::shared_ptr<OpenClKernel> LoadKernel(const KernelComputeData& data);
     void SetKernelArguments(OpenClKernel& kernel, const std::vector<KernelArgument*> arguments);
     void SetKernelArgument(OpenClKernel& kernel, const KernelArgument& argument);
+    size_t GetLocalMemorySize(const std::vector<KernelArgument*>& arguments) const;
     std::unique_ptr<OpenClBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<OpenClBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
     void ClearQueueActions(const QueueId id);

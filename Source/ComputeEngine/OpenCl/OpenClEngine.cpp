@@ -126,6 +126,14 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
     auto kernel = LoadKernel(data);
     SetKernelArguments(*kernel, data.GetArguments());
 
+    const size_t localMemorySize = GetLocalMemorySize(data.GetArguments()) + kernel->GetAttribute(CL_KERNEL_LOCAL_MEM_SIZE);
+
+    if (localMemorySize > m_DeviceInfo.GetLocalMemorySize())
+    {
+        throw KttException("Local memory usage of " + std::to_string(localMemorySize) + " bytes exceeds current device limit",
+            ExceptionReason::DeviceLimitsExceeded);
+    }
+
     const auto& queue = *m_Queues[queueId];
     timer.Stop();
 
@@ -699,6 +707,23 @@ void OpenClEngine::SetKernelArgument(OpenClKernel& kernel, const KernelArgument&
     }
 
     kernel.SetArgument(*m_Buffers[id]);
+}
+
+size_t OpenClEngine::GetLocalMemorySize(const std::vector<KernelArgument*>& arguments) const
+{
+    size_t result = 0;
+
+    for (const auto* argument : arguments)
+    {
+        if (argument->GetMemoryType() != ArgumentMemoryType::Local)
+        {
+            continue;
+        }
+
+        result += argument->GetDataSize();
+    }
+
+    return result;
 }
 
 std::unique_ptr<OpenClBuffer> OpenClEngine::CreateBuffer(KernelArgument& argument)

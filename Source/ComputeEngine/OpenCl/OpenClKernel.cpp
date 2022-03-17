@@ -124,6 +124,14 @@ cl_kernel OpenClKernel::GetKernel() const
     return m_Kernel;
 }
 
+uint64_t OpenClKernel::GetAttribute(const cl_kernel_work_group_info attribute) const
+{
+    uint64_t result;
+    CheckError(clGetKernelWorkGroupInfo(m_Kernel, m_Program->GetDevice(), attribute, sizeof(result), &result, nullptr),
+        "clGetKernelWorkGroupInfo");
+    return result;
+}
+
 void OpenClKernel::SetKernelArgumentVector(const void* buffer)
 {
     Logger::LogDebug("Setting vector argument on index " + std::to_string(m_NextArgumentIndex)
@@ -158,14 +166,6 @@ void OpenClKernel::SetKernelArgumentLocal(const size_t size)
         + " for OpenCL kernel with name " + m_Name);
     CheckError(clSetKernelArg(m_Kernel, m_NextArgumentIndex, size, nullptr), "clSetKernelArg");
     ++m_NextArgumentIndex;
-}
-
-uint64_t OpenClKernel::GetAttribute(const cl_kernel_work_group_info attribute) const
-{
-    uint64_t result;
-    CheckError(clGetKernelWorkGroupInfo(m_Kernel, m_Program->GetDevice(), attribute, sizeof(result), &result, nullptr),
-        "clGetKernelWorkGroupInfo");
-    return result;
 }
 
 DimensionVector OpenClKernel::AdjustGlobalSize(const DimensionVector& globalSize, const DimensionVector& localSize) const
