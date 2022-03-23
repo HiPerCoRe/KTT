@@ -47,10 +47,15 @@ using KernelId = uint64_t;
   */
 using ArgumentId = uint64_t;
 
+/** @typedef ParameterValue
+  * Data type for referencing parameter values in KTT.
+  */
+using ParameterValue = std::variant<int64_t, uint64_t, double, bool, std::string>;
+
 /** @typedef ParameterInput
   * Data type used for creating and retrieving specific kernel configurations from KTT.
   */
-using ParameterInput = std::vector<std::pair<std::string, std::variant<uint64_t, double>>>;
+using ParameterInput = std::vector<std::pair<std::string, ParameterValue>>;
 
 /** @typedef UserData
   * Custom user data which can be saved or loaded together with tuning results.

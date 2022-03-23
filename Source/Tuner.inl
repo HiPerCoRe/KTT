@@ -8,6 +8,22 @@ namespace ktt
 using half_float::half;
 
 template <typename T>
+void Tuner::AddParameter(const KernelId id, const std::string& name, const std::vector<T>& values, const std::string& group)
+{
+    static_assert(std::is_same_v<T, int64_t> || std::is_same_v<T, uint64_t> || std::is_same_v<T, double>
+        || std::is_same_v<T, bool> || std::is_same_v<T, std::string>, "Unsupported kernel parameter value type");
+
+    std::vector<ParameterValue> parameterValues;
+
+    for (const auto& value : values)
+    {
+        parameterValues.push_back(value);
+    }
+
+    AddParameterInternal(id, name, parameterValues, group);
+}
+
+template <typename T>
 ArgumentId Tuner::AddArgumentVector(const std::vector<T>& data, const ArgumentAccessType accessType)
 {
     const size_t elementSize = sizeof(T);

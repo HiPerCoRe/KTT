@@ -9,7 +9,8 @@ namespace ktt
 template <typename T>
 T ParameterPair::GetParameterValue(const std::vector<ParameterPair>& pairs, const std::string& name)
 {
-    static_assert(std::is_same_v<T, double> || std::is_same_v<T, uint64_t>, "Unsupported parameter value type");
+    static_assert(std::is_same_v<T, int64_t> || std::is_same_v<T, uint64_t> || std::is_same_v<T, double>
+        || std::is_same_v<T, bool> || std::is_same_v<T, std::string>, "Unsupported kernel parameter value type");
 
     for (const auto& pair : pairs)
     {
@@ -18,7 +19,7 @@ T ParameterPair::GetParameterValue(const std::vector<ParameterPair>& pairs, cons
             continue;
         }
 
-        if ((pair.HasValueDouble() && !std::is_same_v<T, double>) || (!pair.HasValueDouble() && !std::is_same_v<T, uint64_t>))
+        if (!std::holds_alternative<T>(pair.m_Value))
         {
             throw KttException("Parameter value type mismatch");
         }

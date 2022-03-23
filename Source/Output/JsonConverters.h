@@ -43,6 +43,15 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ResultStatus,
     {ResultStatus::DeviceLimitsExceeded, "DeviceLimitsExceeded"}
 });
 
+NLOHMANN_JSON_SERIALIZE_ENUM(ParameterValueType,
+{
+    {ParameterValueType::Int, "Int"},
+    {ParameterValueType::UnsignedInt, "UnsignedInt"},
+    {ParameterValueType::Double, "Double"},
+    {ParameterValueType::Bool, "Bool"},
+    {ParameterValueType::String, "String"}
+});
+
 NLOHMANN_JSON_SERIALIZE_ENUM(ProfilingCounterType,
 {
     {ProfilingCounterType::Int, "Int"},

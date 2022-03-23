@@ -93,13 +93,7 @@ void KernelManager::RemoveKernel(const KernelId id)
     }
 }
 
-void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group)
-{
-    auto& kernel = GetKernel(id);
-    kernel.AddParameter(KernelParameter(name, values, group));
-}
-
-void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group)
+void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group)
 {
     auto& kernel = GetKernel(id);
     kernel.AddParameter(KernelParameter(name, values, group));

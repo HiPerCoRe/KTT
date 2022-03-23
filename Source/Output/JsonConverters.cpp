@@ -52,16 +52,28 @@ void to_json(json& j, const ParameterPair& pair)
     j = json
     {
         {"Name", pair.GetName()},
-        {"IsDouble", pair.HasValueDouble()}
+        {"ValueType", pair.GetValueType()}
     };
 
-    if (pair.HasValueDouble())
+    switch (pair.GetValueType())
     {
-        j["Value"] = pair.GetValueDouble();
-    }
-    else
-    {
-        j["Value"] = pair.GetValue();
+    case ParameterValueType::Int:
+        j["Value"] = std::get<int64_t>(pair.GetValue());
+        break;
+    case ParameterValueType::UnsignedInt:
+        j["Value"] = pair.GetValueUint();
+        break;
+    case ParameterValueType::Double:
+        j["Value"] = std::get<double>(pair.GetValue());
+        break;
+    case ParameterValueType::Bool:
+        j["Value"] = std::get<bool>(pair.GetValue());
+        break;
+    case ParameterValueType::String:
+        j["Value"] = pair.GetValueString();
+        break;
+    default:
+        KttError("Unhandled parameter value type");
     }
 }
 
@@ -70,20 +82,48 @@ void from_json(const json& j, ParameterPair& pair)
     std::string name;
     j.at("Name").get_to(name);
 
-    bool isDouble;
-    j.at("IsDouble").get_to(isDouble);
+    ParameterValueType valueType;
+    j.at("ValueType").get_to(valueType);
 
-    if (isDouble)
+    switch (valueType)
     {
-        double value;
-        j.at("Value").get_to(value);
-        pair = ParameterPair(name, value);
+    case ParameterValueType::Int:
+    {
+        int64_t valueInt;
+        j.at("Value").get_to(valueInt);
+        pair = ParameterPair(name, valueInt);
+        break;
     }
-    else
+    case ParameterValueType::UnsignedInt:
     {
-        uint64_t value;
-        j.at("Value").get_to(value);
-        pair = ParameterPair(name, value);
+        uint64_t valueUint;
+        j.at("Value").get_to(valueUint);
+        pair = ParameterPair(name, valueUint);
+        break;
+    }
+    case ParameterValueType::Double:
+    {
+        double valueDouble;
+        j.at("Value").get_to(valueDouble);
+        pair = ParameterPair(name, valueDouble);
+        break;
+    }
+    case ParameterValueType::Bool:
+    {
+        bool valueBool;
+        j.at("Value").get_to(valueBool);
+        pair = ParameterPair(name, valueBool);
+        break;
+    }
+    case ParameterValueType::String:
+    {
+        std::string valueString;
+        j.at("Value").get_to(valueString);
+        pair = ParameterPair(name, valueString);
+        break;
+    }
+    default:
+        KttError("Unhandled parameter value type");
     }
 }
 

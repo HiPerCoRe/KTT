@@ -87,12 +87,7 @@ void TunerCore::SetLauncher(const KernelId id, KernelLauncher launcher)
     m_KernelManager->SetLauncher(id, launcher);
 }
 
-void TunerCore::AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group)
-{
-    m_KernelManager->AddParameter(id, name, values, group);
-}
-
-void TunerCore::AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group)
+void TunerCore::AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group)
 {
     m_KernelManager->AddParameter(id, name, values, group);
 }

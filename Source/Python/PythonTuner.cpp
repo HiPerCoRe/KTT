@@ -71,7 +71,7 @@ void InitializePythonTuner(py::module_& module)
         .def
         (
             "AddParameter",
-            py::overload_cast<const ktt::KernelId, const std::string&, const std::vector<uint64_t>&, const std::string&>(&ktt::Tuner::AddParameter),
+            &ktt::Tuner::AddParameter<uint64_t>,
             py::arg("id"),
             py::arg("name"),
             py::arg("values"),
@@ -79,8 +79,44 @@ void InitializePythonTuner(py::module_& module)
         )
         .def
         (
-            "AddParameter",
-            py::overload_cast<const ktt::KernelId, const std::string&, const std::vector<double>&, const std::string&>(&ktt::Tuner::AddParameter),
+            "AddParameterInt",
+            &ktt::Tuner::AddParameter<int64_t>,
+            py::arg("id"),
+            py::arg("name"),
+            py::arg("values"),
+            py::arg("group") = std::string()
+        )
+        .def
+        (
+            "AddParameterUint",
+            &ktt::Tuner::AddParameter<uint64_t>,
+            py::arg("id"),
+            py::arg("name"),
+            py::arg("values"),
+            py::arg("group") = std::string()
+        )
+        .def
+        (
+            "AddParameterDouble",
+            &ktt::Tuner::AddParameter<double>,
+            py::arg("id"),
+            py::arg("name"),
+            py::arg("values"),
+            py::arg("group") = std::string()
+        )
+        .def
+        (
+            "AddParameterBool",
+            &ktt::Tuner::AddParameter<bool>,
+            py::arg("id"),
+            py::arg("name"),
+            py::arg("values"),
+            py::arg("group") = std::string()
+        )
+        .def
+        (
+            "AddParameterString",
+            &ktt::Tuner::AddParameter<std::string>,
             py::arg("id"),
             py::arg("name"),
             py::arg("values"),

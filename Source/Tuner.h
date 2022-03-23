@@ -192,33 +192,21 @@ public:
       */
     void SetLauncher(const KernelId id, KernelLauncher launcher);
 
-    /** @fn void AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values,
+    /** @fn template <typename T> void AddParameter(const KernelId id, const std::string& name, const std::vector<T>& values,
       * const std::string& group = "")
-      * Adds new integer parameter for the specified kernel, providing parameter name and list of allowed values. Parameters will
+      * Adds new parameter for the specified kernel, providing parameter name and list of allowed values. Parameters will
       * be added to the kernel source code as preprocessor definitions. During the tuning process, tuner will generate configurations
       * for combinations of kernel parameters and their values.
       * @param id Id of kernel for which the parameter will be added.
       * @param name Name of a parameter. Parameter names for a single kernel must be unique.
-      * @param values Allowed values for the parameter.
+      * @param values Allowed values for the parameter. Supported value types are 64-bit integer (signed / unsigned), double, bool and
+      * string.
       * @param group Optional group inside which the parameter will be added. Tuning configurations are generated separately for each
       * group. This is useful when kernels contain groups of parameters that can be tuned independently. In this way, the total number
       * of generated configurations can be significantly reduced.
       */
-    void AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group = "");
-
-    /** @fn void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values,
-      * const std::string& group = "")
-      * Adds new floating-point parameter for the specified kernel, providing parameter name and list of allowed values. Parameters
-      * will be added to the kernel source code as preprocessor definitions. During the tuning process, tuner will generate
-      * configurations for combinations of kernel parameters and their values.
-      * @param id Id of kernel for which the parameter will be added.
-      * @param name Name of a parameter. Parameter names for a single kernel must be unique.
-      * @param values Allowed values for the parameter.
-      * @param group Optional group inside which the parameter will be added. Tuning configurations are generated separately for each
-      * group. This is useful when kernels contain groups of parameters that can be tuned independently. In this way, the total number
-      * of generated configurations can be significantly reduced.
-      */
-    void AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group = "");
+    template <typename T>
+    void AddParameter(const KernelId id, const std::string& name, const std::vector<T>& values, const std::string& group = "");
 
     /** @fn void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
       * const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
@@ -232,7 +220,8 @@ public:
       * @param dimension Dimension which will be affected by the modifier. See ::ModifierDimension for more information.
       * @param parameters Names of kernel parameters whose values will be passed into the modifier function. The order of parameter
       * names will correspond to the order of parameter values inside the modifier function vector argument. The corresponding
-      * parameters must be added to the tuner with AddParameter() before calling this method.
+      * parameters must be added to the tuner with AddParameter() before calling this method. Only parameters with the unsigned integer
+      * type can be used with thread modifiers.
       * @param function Function which receives thread size in the specified kernel dimension and values of kernel parameters as input
       * and returns modified thread size based on these values.
       */
@@ -249,7 +238,8 @@ public:
       * @param type Type of the thread modifier. See ::ModifierType for more information.
       * @param dimension Dimension which will be affected by the thread modifier. See ::ModifierDimension for more information.
       * @param parameter Name of a kernel parameter whose value will be utilized by the thread modifier. The corresponding
-      * parameter must be added to the tuner with AddParameter() before calling this method.
+      * parameter must be added to the tuner with AddParameter() before calling this method. Only parameters with the unsigned integer
+      * type can be used with thread modifiers.
       * @param action Action of the thread modifier. See ::ModifierAction for more information.
       */
     void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
@@ -262,7 +252,7 @@ public:
       * @param parameters Names of kernel parameters which will be affected by the constraint function. The order of parameter
       * names corresponds to the order of parameter values inside the constraint function vector argument. Note that constraints
       * can only be added between parameters which belong into the same group. The corresponding parameters must be added to the
-      * tuner with AddParameter() before calling this method.
+      * tuner with AddParameter() before calling this method. Only parameters with the unsigned integer type can be used with constraints.
       * @param function Function which returns true if the provided combination of parameter values is valid. Returns false otherwise.
       */
     void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function);
@@ -766,6 +756,8 @@ private:
         const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName = "");
     KTT_VIRTUAL_API ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
+    KTT_VIRTUAL_API void AddParameterInternal(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values,
+        const std::string& group);
 
     template <typename T>
     ArgumentDataType DeriveArgumentDataType() const;

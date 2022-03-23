@@ -77,6 +77,26 @@ std::string ResultStatusToString(const ResultStatus status)
     }
 }
 
+std::string ParameterValueTypeToString(const ParameterValueType type)
+{
+    switch (type)
+    {
+    case ParameterValueType::Int:
+        return "Int";
+    case ParameterValueType::UnsignedInt:
+        return "UnsignedInt";
+    case ParameterValueType::Double:
+        return "Double";
+    case ParameterValueType::Bool:
+        return "Bool";
+    case ParameterValueType::String:
+        return "String";
+    default:
+        KttError("Unhandled value");
+        return "";
+    }
+}
+
 std::string ProfilingCounterTypeToString(const ProfilingCounterType type)
 {
     switch (type)
@@ -187,6 +207,33 @@ ResultStatus ResultStatusFromString(const std::string& string)
     return ResultStatus::Ok;
 }
 
+ParameterValueType ParameterValueTypeFromString(const std::string& string)
+{
+    if (string == "Int")
+    {
+        return ParameterValueType::Int;
+    }
+    else if (string == "UnsignedInt")
+    {
+        return ParameterValueType::UnsignedInt;
+    }
+    else if (string == "Double")
+    {
+        return ParameterValueType::Double;
+    }
+    else if (string == "Bool")
+    {
+        return ParameterValueType::Bool;
+    }
+    else if (string == "String")
+    {
+        return ParameterValueType::String;
+    }
+
+    KttError("Invalid string value");
+    return ParameterValueType::Int;
+}
+
 ProfilingCounterType ProfilingCounterTypeFromString(const std::string& string)
 {
     if (string == "Int")
@@ -272,35 +319,74 @@ UserData ParseUserData(const pugi::xml_node node)
 void AppendPair(pugi::xml_node parent, const ParameterPair& pair)
 {
     pugi::xml_node node = parent.append_child("Pair");
-    node.append_attribute("IsDouble").set_value(pair.HasValueDouble());
+    node.append_attribute("ValueType").set_value(ParameterValueTypeToString(pair.GetValueType()).c_str());
     node.append_attribute("Name").set_value(pair.GetName().c_str());
     pugi::xml_attribute value = node.append_attribute("Value");
 
-    if (pair.HasValueDouble())
+    switch (pair.GetValueType())
     {
-        value.set_value(pair.GetValueDouble(), xmlFloatingPointPrecision);
-    }
-    else
-    {
-        value.set_value(pair.GetValue());
+    case ParameterValueType::Int:
+        value.set_value(std::get<int64_t>(pair.GetValue()));
+        break;
+    case ParameterValueType::UnsignedInt:
+        value.set_value(pair.GetValueUint());
+        break;
+    case ParameterValueType::Double:
+        value.set_value(std::get<double>(pair.GetValue()), xmlFloatingPointPrecision);
+        break;
+    case ParameterValueType::Bool:
+        value.set_value(std::get<bool>(pair.GetValue()));
+        break;
+    case ParameterValueType::String:
+        value.set_value(pair.GetString().c_str());
+        break;
+    default:
+        KttError("Unhandled parameter value type");
     }
 }
 
 ParameterPair ParsePair(const pugi::xml_node node)
 {
     const std::string name = node.attribute("Name").value();
-    const bool isDouble = node.attribute("IsDouble").as_bool();
+    const ParameterValueType valueType = ParameterValueTypeFromString(node.attribute("ValueType").value());
+    
+    const pugi::xml_attribute value = node.attribute("Value");
     ParameterPair pair;
 
-    if (isDouble)
+    switch (valueType)
     {
-        const double value = node.attribute("Value").as_double();
-        pair = ParameterPair(name, value);
+    case ParameterValueType::Int:
+    {
+        const int64_t valueInt = value.as_llong();
+        pair = ParameterPair(name, valueInt);
+        break;
     }
-    else
+    case ParameterValueType::UnsignedInt:
     {
-        const uint64_t value = node.attribute("Value").as_ullong();
-        pair = ParameterPair(name, value);
+        const uint64_t valueUint = value.as_ullong();
+        pair = ParameterPair(name, valueUint);
+        break;
+    }
+    case ParameterValueType::Double:
+    {
+        const double valueDouble = value.as_double();
+        pair = ParameterPair(name, valueDouble);
+        break;
+    }
+    case ParameterValueType::Bool:
+    {
+        const bool valueBool = value.as_bool();
+        pair = ParameterPair(name, valueBool);
+        break;
+    }
+    case ParameterValueType::String:
+    {
+        const std::string valueString = value.as_string();
+        pair = ParameterPair(name, valueString);
+        break;
+    }
+    default:
+        KttError("Unhandled parameter value type");
     }
 
     return pair;

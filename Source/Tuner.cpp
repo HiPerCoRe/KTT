@@ -142,30 +142,6 @@ void Tuner::SetLauncher(const KernelId id, KernelLauncher launcher)
     }
 }
 
-void Tuner::AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group)
-{
-    try
-    {
-        m_Tuner->AddParameter(id, name, values, group);
-    }
-    catch (const KttException& exception)
-    {
-        TunerCore::Log(LoggingLevel::Error, exception.what());
-    }
-}
-
-void Tuner::AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group)
-{
-    try
-    {
-        m_Tuner->AddParameter(id, name, values, group);
-    }
-    catch (const KttException& exception)
-    {
-        TunerCore::Log(LoggingLevel::Error, exception.what());
-    }
-}
-
 void Tuner::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
 {
@@ -823,6 +799,19 @@ ArgumentId Tuner::AddUserArgument(ComputeBuffer buffer, const size_t elementSize
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
         return InvalidArgumentId;
+    }
+}
+
+void Tuner::AddParameterInternal(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values,
+    const std::string& group)
+{
+    try
+    {
+        m_Tuner->AddParameter(id, name, values, group);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
     }
 }
 

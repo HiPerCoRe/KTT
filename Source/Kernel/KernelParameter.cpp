@@ -6,23 +6,7 @@ namespace ktt
 
 static const std::string DefaultGroup = "KTTDefaultGroup";
 
-KernelParameter::KernelParameter(const std::string& name, const std::vector<uint64_t>& values, const std::string& group) :
-    m_Name(name),
-    m_Group(group),
-    m_Values(values)
-{
-    if (values.empty())
-    {
-        throw KttException("Kernel parameter must have at least one value defined");
-    }
-
-    if (group.empty())
-    {
-        m_Group = DefaultGroup;
-    }
-}
-
-KernelParameter::KernelParameter(const std::string& name, const std::vector<double>& values, const std::string& group) :
+KernelParameter::KernelParameter(const std::string& name, const std::vector<ParameterValue>& values, const std::string& group) :
     m_Name(name),
     m_Group(group),
     m_Values(values)
@@ -50,37 +34,17 @@ const std::string& KernelParameter::GetGroup() const
 
 size_t KernelParameter::GetValuesCount() const
 {
-    if (HasValuesDouble())
-    {
-        return GetValuesDouble().size();
-    }
-
-    return GetValues().size();
+    return m_Values.size();
 }
 
-const std::vector<uint64_t>& KernelParameter::GetValues() const
+const std::vector<ParameterValue>& KernelParameter::GetValues() const
 {
-    if (HasValuesDouble())
-    {
-        throw KttException("Attempting to retrieve integer values from floating-point kernel parameter");
-    }
-
-    return std::get<std::vector<uint64_t>>(m_Values);
+    return m_Values;
 }
 
-const std::vector<double>& KernelParameter::GetValuesDouble() const
+ParameterValueType KernelParameter::GetValueType() const
 {
-    if (!HasValuesDouble())
-    {
-        throw KttException("Attempting to retrieve floating-point value from integer parameter pair");
-    }
-
-    return std::get<std::vector<double>>(m_Values);
-}
-
-bool KernelParameter::HasValuesDouble() const
-{
-    return std::holds_alternative<std::vector<double>>(m_Values);
+    return ParameterPair::GetTypeFromValue(m_Values[0]);
 }
 
 ParameterPair KernelParameter::GeneratePair(const size_t valueIndex) const
@@ -90,14 +54,7 @@ ParameterPair KernelParameter::GeneratePair(const size_t valueIndex) const
         throw KttException("Parameter value index is out of range");
     }
 
-    if (HasValuesDouble())
-    {
-        const double value = GetValuesDouble()[valueIndex];
-        return ParameterPair(m_Name, value);
-    }
-
-    const uint64_t value = GetValues()[valueIndex];
-    return ParameterPair(m_Name, value);
+    return ParameterPair(m_Name, m_Values[valueIndex]);
 }
 
 std::vector<ParameterPair> KernelParameter::GeneratePairs() const

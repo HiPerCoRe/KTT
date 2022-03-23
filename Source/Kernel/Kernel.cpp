@@ -36,10 +36,10 @@ void Kernel::AddConstraint(const std::vector<std::string>& parameterNames, Const
     {
         const auto& parameter = GetParamater(name);
 
-        if (parameter.HasValuesDouble())
+        if (parameter.GetValueType() != ParameterValueType::UnsignedInt)
         {
             throw KttException("Kernel parameter with name " + name
-                + " has floating-point values and cannot be used by kernel constraints");
+                + " does not have unsigned integer values and cannot be used by kernel constraints");
         }
 
         usedGroups.insert(parameter.GetGroup());
@@ -61,10 +61,10 @@ void Kernel::AddThreadModifier(const ModifierType type, const ModifierDimension 
     {
         const auto& parameter = GetParamater(name);
 
-        if (parameter.HasValuesDouble())
+        if (parameter.GetValueType() != ParameterValueType::UnsignedInt)
         {
             throw KttException("Kernel parameter with name " + name
-                + " has floating-point values and cannot be used by thread modifiers");
+                + " does not have unsigned integer values and cannot be used by thread modifiers");
         }
     }
 
@@ -211,24 +211,12 @@ KernelConfiguration Kernel::CreateConfiguration(const ParameterInput& parameters
     {
         const auto& parameter = GetParamater(pair.first);
 
-        if (parameter.HasValuesDouble())
+        if (parameter.GetValueType() != ParameterPair::GetTypeFromValue(pair.second))
         {
-            if (!std::holds_alternative<double>(pair.second))
-            {
-                throw KttException("Value type mismatch for parameter with name " + pair.first);
-            }
-
-            pairs.emplace_back(parameter.GetName(), std::get<double>(pair.second));
+            throw KttException("Value type mismatch for parameter with name " + pair.first);
         }
-        else
-        {
-            if (!std::holds_alternative<uint64_t>(pair.second))
-            {
-                throw KttException("Value type mismatch for parameter with name " + pair.first);
-            }
 
-            pairs.emplace_back(parameter.GetName(), std::get<uint64_t>(pair.second));
-        }
+        pairs.emplace_back(parameter.GetName(), pair.second);
     }
 
     for (const auto& parameter : m_Parameters)
@@ -243,7 +231,6 @@ KernelConfiguration Kernel::CreateConfiguration(const ParameterInput& parameters
             pairs.push_back(parameter.GeneratePair(0));
         }
     }
-
 
     return KernelConfiguration(pairs);
 }

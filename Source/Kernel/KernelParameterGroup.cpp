@@ -159,9 +159,7 @@ void KernelParameterGroup::ComputeIndices(const size_t currentIndex, const std::
         return;
     }
 
-    const auto& parameterValues = parameters[currentIndex]->GetValues();
-
-    for (size_t i = 0; i < parameterValues.size(); ++i)
+    for (size_t i = 0; i < parameters[currentIndex]->GetValuesCount(); ++i)
     {
         std::vector<size_t> newIndices = indices;
         newIndices.push_back(i);
@@ -178,7 +176,9 @@ void KernelParameterGroup::ComputeIndices(const size_t currentIndex, const std::
                 {
                     if (parameter == parameters[index])
                     {
-                        values.push_back(parameter->GetValues()[newIndices[index]]);
+                        KttAssert(parameter->GetValueType() == ParameterValueType::UnsignedInt,
+                            "Unsupported parameter value type in constraint");
+                        values.push_back(std::get<uint64_t>(parameter->GetValues()[newIndices[index]]));
                         break;
                     }
                 }

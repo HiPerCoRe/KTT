@@ -47,8 +47,8 @@ TEST_CASE("Kernel handling operations", "KernelManager")
 
     SECTION("Parameter with same name cannot be added twice")
     {
-        manager.AddParameter(kernel, "param", std::vector<uint64_t>{1, 2, 3}, "");
-        REQUIRE_THROWS_AS(manager.AddParameter(kernel, "param", std::vector<uint64_t>{3}, ""), ktt::KttException);
+        manager.AddParameter(kernel, "param", std::vector<ktt::ParameterValue>{1LLU, 2LLU, 3LLU}, "");
+        REQUIRE_THROWS_AS(manager.AddParameter(kernel, "param", std::vector<ktt::ParameterValue>{3LLU}, ""), ktt::KttException);
     }
 }
 
@@ -61,8 +61,8 @@ TEST_CASE("Adding preprocessor definitions to kernel source", "KernelManager")
         ktt::DimensionVector(1024), ktt::DimensionVector(8, 8));
     const ktt::KernelId kernel = manager.CreateKernel("kernel", {definition});
 
-    manager.AddParameter(kernel, "param_one", std::vector<uint64_t>{1, 2, 3}, "");
-    manager.AddParameter(kernel, "param_two", std::vector<uint64_t>{5, 10}, "");
+    manager.AddParameter(kernel, "param_one", std::vector<ktt::ParameterValue>{1LLU, 2LLU, 3LLU}, "");
+    manager.AddParameter(kernel, "param_two", std::vector<ktt::ParameterValue>{5LLU, 10LLU}, "");
 
     SECTION("Kernel configuration prefix is generated correctly")
     {
