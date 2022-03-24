@@ -97,6 +97,11 @@ void TunerCore::AddConstraint(const KernelId id, const std::vector<std::string>&
     m_KernelManager->AddConstraint(id, parameters, function);
 }
 
+void TunerCore::AddGenericConstraint(const KernelId id, const std::vector<std::string>& parameters, GenericConstraintFunction function)
+{
+    m_KernelManager->AddGenericConstraint(id, parameters, function);
+}
+
 void TunerCore::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
 {

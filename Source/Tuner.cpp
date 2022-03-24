@@ -211,6 +211,18 @@ void Tuner::AddConstraint(const KernelId id, const std::vector<std::string>& par
     }
 }
 
+void Tuner::AddGenericConstraint(const KernelId id, const std::vector<std::string>& parameters, GenericConstraintFunction function)
+{
+    try
+    {
+        m_Tuner->AddGenericConstraint(id, parameters, function);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)
 {
     try

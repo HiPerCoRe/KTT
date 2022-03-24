@@ -6,7 +6,21 @@ namespace ktt
 
 KernelConstraint::KernelConstraint(const std::vector<const KernelParameter*>& parameters, ConstraintFunction function) :
     m_Parameters(parameters),
-    m_Function(function)
+    m_Function(function),
+    m_GenericFunction(nullptr)
+{
+    for (const auto* parameter : parameters)
+    {
+        m_ParameterNames.push_back(parameter->GetName());
+    }
+
+    m_ValuesCache.reserve(m_Parameters.size());
+}
+
+KernelConstraint::KernelConstraint(const std::vector<const KernelParameter*>& parameters, GenericConstraintFunction function) :
+    m_Parameters(parameters),
+    m_Function(nullptr),
+    m_GenericFunction(function)
 {
     for (const auto* parameter : parameters)
     {
@@ -49,9 +63,21 @@ uint64_t KernelConstraint::GetAffectedParameterCount(const std::set<std::string>
     return count;
 }
 
-bool KernelConstraint::IsFulfilled(const std::vector<uint64_t>& values) const
+bool KernelConstraint::IsFulfilled(const std::vector<const ParameterValue*>& values) const
 {
-    return m_Function(values);
+    if (m_GenericFunction != nullptr)
+    {
+        return m_GenericFunction(values);
+    }
+
+    m_ValuesCache.clear();
+
+    for (const auto& value : values)
+    {
+        m_ValuesCache.push_back(std::get<uint64_t>(*value));
+    }
+
+    return m_Function(m_ValuesCache);
 }
 
 } // namespace ktt

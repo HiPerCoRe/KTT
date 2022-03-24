@@ -29,6 +29,7 @@ private:
     std::string m_Name;
     std::vector<const KernelParameter*> m_Parameters;
     std::vector<const KernelConstraint*> m_Constraints;
+    mutable std::vector<const ParameterValue*> m_ValuesCache;
 
     void ComputeIndices(const size_t currentIndex, const std::vector<size_t>& indices,
         const std::map<size_t, std::vector<const KernelConstraint*>>& evaluationLevels,

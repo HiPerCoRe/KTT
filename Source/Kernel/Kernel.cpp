@@ -29,29 +29,13 @@ void Kernel::AddParameter(const KernelParameter& parameter)
 
 void Kernel::AddConstraint(const std::vector<std::string>& parameterNames, ConstraintFunction function)
 {
-    std::vector<const KernelParameter*> parameters;
-    std::set<std::string> usedGroups;
+    const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, false);
+    m_Constraints.emplace_back(parameters, function);
+}
 
-    for (const auto& name : parameterNames)
-    {
-        const auto& parameter = GetParamater(name);
-
-        if (parameter.GetValueType() != ParameterValueType::UnsignedInt)
-        {
-            throw KttException("Kernel parameter with name " + name
-                + " does not have unsigned integer values and cannot be used by kernel constraints");
-        }
-
-        usedGroups.insert(parameter.GetGroup());
-
-        if (usedGroups.size() > 1)
-        {
-            throw KttException("Constraint can only be added between parameters that belong to the same group");
-        }
-
-        parameters.push_back(&parameter);
-    }
-
+void Kernel::AddGenericConstraint(const std::vector<std::string>& parameterNames, GenericConstraintFunction function)
+{
+    const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, true);
     m_Constraints.emplace_back(parameters, function);
 }
 
@@ -271,6 +255,35 @@ DimensionVector Kernel::GetModifiedGlobalSize(const KernelDefinitionId id, const
 DimensionVector Kernel::GetModifiedLocalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const
 {
     return GetModifiedSize(id, ModifierType::Local, pairs);
+}
+
+std::vector<const KernelParameter*> Kernel::PreprocessConstraintParameters(const std::vector<std::string>& parameterNames,
+    const bool genericConstraint) const
+{
+    std::vector<const KernelParameter*> parameters;
+    std::set<std::string> usedGroups;
+
+    for (const auto& name : parameterNames)
+    {
+        const auto& parameter = GetParamater(name);
+
+        if (!genericConstraint && parameter.GetValueType() != ParameterValueType::UnsignedInt)
+        {
+            throw KttException("Kernel parameter with name " + name
+                + " does not have unsigned integer values and cannot be used by non-generic kernel constraints");
+        }
+
+        usedGroups.insert(parameter.GetGroup());
+
+        if (usedGroups.size() > 1)
+        {
+            throw KttException("Constraint can only be added between parameters that belong to the same group");
+        }
+
+        parameters.push_back(&parameter);
+    }
+
+    return parameters;
 }
 
 std::vector<const KernelConstraint*> Kernel::GetConstraintsForParameters(const std::vector<const KernelParameter*>& parameters) const

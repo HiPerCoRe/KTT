@@ -127,6 +127,7 @@ void InitializePythonTuner(py::module_& module)
         .def("AddThreadModifier", py::overload_cast<const ktt::KernelId, const std::vector<ktt::KernelDefinitionId>&, const ktt::ModifierType,
             const ktt::ModifierDimension, const std::string&, const ktt::ModifierAction>(&ktt::Tuner::AddThreadModifier))
         .def("AddConstraint", &ktt::Tuner::AddConstraint)
+        .def("AddGenericConstraint", &ktt::Tuner::AddGenericConstraint)
         .def("SetProfiledDefinitions", &ktt::Tuner::SetProfiledDefinitions)
         .def("AddArgumentVectorChar", py::overload_cast<const std::vector<int8_t>&, const ktt::ArgumentAccessType>(&ktt::Tuner::AddArgumentVector<int8_t>))
         .def("AddArgumentVectorShort", py::overload_cast<const std::vector<int16_t>&, const ktt::ArgumentAccessType>(&ktt::Tuner::AddArgumentVector<int16_t>))

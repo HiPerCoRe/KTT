@@ -40,6 +40,7 @@ public:
     void SetLauncher(const KernelId id, KernelLauncher launcher);
     void AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group);
     void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function);
+    void AddGenericConstraint(const KernelId id, const std::vector<std::string>& parameters, GenericConstraintFunction function);
     void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
         const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function);
     void SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds);

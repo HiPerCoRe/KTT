@@ -88,9 +88,14 @@ using TransferActionId = uint64_t;
 using ModifierFunction = std::function<uint64_t(const uint64_t /*defaultSize*/, const std::vector<uint64_t>& /*parameterValues*/)>;
 
 /** @typedef ConstraintFunction
-  * Definition of kernel constraint function.
+  * Definition of a kernel constraint function. This is an older version of constraint function which supports only unsigned integer parameters.
   */
 using ConstraintFunction = std::function<bool(const std::vector<uint64_t>& /*parameterValues*/)>;
+
+/** @typedef GenericConstraintFunction
+  * Definition of a kernel constraint function. This is a newer version of constraint function which supports parameters with different data types.
+  */
+using GenericConstraintFunction = std::function<bool(const std::vector<const ParameterValue*>& /*parameterValues*/)>;
 
 /** @typedef KernelLauncher
   * Definition of kernel launch function.

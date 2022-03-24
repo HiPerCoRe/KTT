@@ -257,6 +257,18 @@ public:
       */
     void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function);
 
+    /** @fn void AddGenericConstraint(const KernelId id, const std::vector<std::string>& parameters, GenericConstraintFunction function)
+      * Adds constraint for the specified kernel. Constraints are used to prevent generating of configurations with conflicting
+      * combinations of parameter values.
+      * @param id Id of kernel for which the constraint will be added.
+      * @param parameters Names of kernel parameters which will be affected by the constraint function. The order of parameter
+      * names corresponds to the order of parameter values inside the constraint function vector argument. Note that constraints
+      * can only be added between parameters which belong into the same group. The corresponding parameters must be added to the
+      * tuner with AddParameter() before calling this method.
+      * @param function Function which returns true if the provided combination of parameter values is valid. Returns false otherwise.
+      */
+    void AddGenericConstraint(const KernelId id, const std::vector<std::string>& parameters, GenericConstraintFunction function);
+
     /** @fn void SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)
       * Enables profiling of specified kernel definitions. This is useful if only some definitions inside the kernel need to be
       * profiled. By default, profiling is enabled only for the first definition specified during kernel creation. Note that this
