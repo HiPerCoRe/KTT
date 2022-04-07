@@ -11,7 +11,7 @@ template <typename T>
 void Tuner::AddParameter(const KernelId id, const std::string& name, const std::vector<T>& values, const std::string& group)
 {
     static_assert(std::is_same_v<T, int64_t> || std::is_same_v<T, uint64_t> || std::is_same_v<T, double>
-        || std::is_same_v<T, bool> || std::is_same_v<T, std::string>, "Unsupported kernel parameter value type");
+        || std::is_same_v<T, bool> || std::is_same_v<T, std::string> || std::is_same_v<T, ParameterValue>, "Unsupported kernel parameter value type");
 
     std::vector<ParameterValue> parameterValues;
 
