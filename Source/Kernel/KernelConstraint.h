@@ -16,6 +16,7 @@ class KernelConstraint
 public:
     explicit KernelConstraint(const std::vector<const KernelParameter*>& parameters, ConstraintFunction function);
     explicit KernelConstraint(const std::vector<const KernelParameter*>& parameters, GenericConstraintFunction function);
+    explicit KernelConstraint(const std::vector<const KernelParameter*>& parameters, const std::string& script);
 
     const std::vector<const KernelParameter*>& GetParameters() const;
     bool AffectsParameter(const std::string& name) const;
@@ -29,6 +30,9 @@ private:
     mutable std::vector<uint64_t> m_ValuesCache;
     ConstraintFunction m_Function;
     GenericConstraintFunction m_GenericFunction;
+    std::string m_Script;
+
+    static std::string GetAdjustedScript(const std::string& script);
 };
 
 } // namespace ktt

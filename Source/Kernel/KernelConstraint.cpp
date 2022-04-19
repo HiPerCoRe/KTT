@@ -1,4 +1,6 @@
+#include <Api/KttException.h>
 #include <Kernel/KernelConstraint.h>
+#include <Python/PythonInterpreter.h>
 #include <Utility/StlHelpers.h>
 
 namespace ktt
@@ -22,6 +24,22 @@ KernelConstraint::KernelConstraint(const std::vector<const KernelParameter*>& pa
     m_Function(nullptr),
     m_GenericFunction(function)
 {
+    for (const auto* parameter : parameters)
+    {
+        m_ParameterNames.push_back(parameter->GetName());
+    }
+}
+
+KernelConstraint::KernelConstraint(const std::vector<const KernelParameter*>& parameters, const std::string& script) :
+    m_Parameters(parameters),
+    m_Function(nullptr),
+    m_GenericFunction(nullptr),
+    m_Script(GetAdjustedScript(script))
+{
+#ifndef KTT_PYTHON
+    throw KttException("Usage of script-based kernel constraints requires compilation of Python backend");
+#endif // KTT_PYTHON
+
     for (const auto* parameter : parameters)
     {
         m_ParameterNames.push_back(parameter->GetName());
@@ -70,6 +88,18 @@ bool KernelConstraint::IsFulfilled(const std::vector<const ParameterValue*>& val
         return m_GenericFunction(values);
     }
 
+    if (!m_Script.empty())
+    {
+#ifdef KTT_PYTHON
+        auto& interpreter = PythonInterpreter::GetInterpreter();
+        interpreter.Execute(m_Script);
+        // todo
+        return true;
+#else
+        return false;
+#endif // KTT_PYTHON
+    }
+
     m_ValuesCache.clear();
 
     for (const auto& value : values)
@@ -78,6 +108,12 @@ bool KernelConstraint::IsFulfilled(const std::vector<const ParameterValue*>& val
     }
 
     return m_Function(m_ValuesCache);
+}
+
+std::string KernelConstraint::GetAdjustedScript(const std::string& script)
+{
+    // todo
+    return script;
 }
 
 } // namespace ktt
