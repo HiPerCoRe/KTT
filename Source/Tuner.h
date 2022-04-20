@@ -269,6 +269,18 @@ public:
       */
     void AddGenericConstraint(const KernelId id, const std::vector<std::string>& parameters, GenericConstraintFunction function);
 
+
+    /** @fn void AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script)
+      * Adds constraint for the specified kernel. Constraints are used to prevent generating of configurations with conflicting
+      * combinations of parameter values. This version of constraint addition requires inclusion of Python backend.
+      * @param id Id of kernel for which the constraint will be added.
+      * @param parameters Names of kernel parameters which will be affected by the constraint. Note that constraints can only be
+      * added between parameters which belong into the same group. The corresponding parameters must be added to the tuner with
+      * AddParameter() before calling this method.
+      * @param script Python script which will be executed to evaluate the constraint.
+      */
+    void AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script);
+
     /** @fn void SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)
       * Enables profiling of specified kernel definitions. This is useful if only some definitions inside the kernel need to be
       * profiled. By default, profiling is enabled only for the first definition specified during kernel creation. Note that this

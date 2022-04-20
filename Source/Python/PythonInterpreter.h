@@ -16,6 +16,9 @@ class PythonInterpreter : public DisableCopyMove
 public:
     static PythonInterpreter& GetInterpreter();
 
+    bool Evaluate(const std::string& expression);
+    bool Evaluate(const std::string& expression, pybind11::dict& locals);
+
     void Execute(const std::string& script);
     void Execute(const std::string& script, pybind11::dict& locals);
 

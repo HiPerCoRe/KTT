@@ -39,6 +39,12 @@ void Kernel::AddGenericConstraint(const std::vector<std::string>& parameterNames
     m_Constraints.emplace_back(parameters, function);
 }
 
+void Kernel::AddScriptConstraint(const std::vector<std::string>& parameterNames, const std::string& script)
+{
+    const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, true);
+    m_Constraints.emplace_back(parameters, script);
+}
+
 void Kernel::AddThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier)
 {
     for (const auto& name : modifier.GetParameters())

@@ -223,6 +223,18 @@ void Tuner::AddGenericConstraint(const KernelId id, const std::vector<std::strin
     }
 }
 
+void Tuner::AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script)
+{
+    try
+    {
+        m_Tuner->AddScriptConstraint(id, parameters, script);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)
 {
     try

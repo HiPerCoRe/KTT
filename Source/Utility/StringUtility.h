@@ -5,6 +5,7 @@
 namespace ktt
 {
 
+std::string ReplaceSubstring(const std::string& target, const std::string& oldString, const std::string& newString);
 bool StartsWith(const std::string& target, const std::string& prefix);
 
 // Compute API methods (e.g., CUDA, OpenCL) which return string in char* format often add terminating \0 character to the end.

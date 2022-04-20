@@ -32,7 +32,7 @@ private:
     GenericConstraintFunction m_GenericFunction;
     std::string m_Script;
 
-    static std::string GetAdjustedScript(const std::string& script);
+    bool EvaluateScript(const std::vector<const ParameterValue*>& values) const;
 };
 
 } // namespace ktt

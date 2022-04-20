@@ -102,6 +102,11 @@ void TunerCore::AddGenericConstraint(const KernelId id, const std::vector<std::s
     m_KernelManager->AddGenericConstraint(id, parameters, function);
 }
 
+void TunerCore::AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script)
+{
+    m_KernelManager->AddScriptConstraint(id, parameters, script);
+}
+
 void TunerCore::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
 {

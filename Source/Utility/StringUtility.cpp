@@ -1,7 +1,14 @@
+#include <regex>
+
 #include <Utility/StringUtility.h>
 
 namespace ktt
 {
+
+std::string ReplaceSubstring(const std::string& target, const std::string& oldString, const std::string& newString)
+{
+    return std::regex_replace(target, std::regex(oldString), newString);
+}
 
 bool StartsWith(const std::string& target, const std::string& prefix)
 {
