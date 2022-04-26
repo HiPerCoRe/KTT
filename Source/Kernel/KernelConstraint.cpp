@@ -112,7 +112,6 @@ bool KernelConstraint::EvaluateScript(const std::vector<const ParameterValue*>& 
 {
 #ifdef KTT_PYTHON
     auto& interpreter = PythonInterpreter::GetInterpreter();
-
     pybind11::dict locals;
     bool result = false;
 

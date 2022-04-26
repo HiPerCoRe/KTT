@@ -15,11 +15,33 @@ void from_json(const json& j, AddKernelCommand& command)
     command = AddKernelCommand(name, source);
 }
 
+void from_json(const json& j, ConstraintCommand& command)
+{
+    std::vector<std::string> parameters;
+    j.at("Parameters").get_to(parameters);
+
+    std::string expression;
+    j.at("Expression").get_to(expression);
+
+    command = ConstraintCommand(parameters, expression);
+}
+
 void from_json(const json& j, CreateTunerCommand& command)
 {
     ComputeApi api;
     j.at("Language").get_to(api);
     command = CreateTunerCommand(api);
+}
+
+void from_json(const json& j, OutputCommand& command)
+{
+    std::string file;
+    j.at("OutputFile").get_to(file);
+
+    OutputFormat format;
+    j.at("OutputFormat").get_to(format);
+
+    command = OutputCommand(file, format);
 }
 
 void from_json(const json& j, ParameterCommand& command)
@@ -179,6 +201,14 @@ void from_json(const json& j, ParameterCommand& command)
     }
 
     command = ParameterCommand(name, finalValues);
+}
+
+void from_json(const json& j, TimeUnitCommand& command)
+{
+    TimeUnit unit;
+    j.at("TimeUnit").get_to(unit);
+
+    command = TimeUnitCommand(unit);
 }
 
 } // namespace ktt

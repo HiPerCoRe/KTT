@@ -3,8 +3,12 @@
 
 #include <Api/KttException.h>
 #include <TuningLoader/Commands/AddKernelCommand.h>
+#include <TuningLoader/Commands/ConstraintCommand.h>
 #include <TuningLoader/Commands/CreateTunerCommand.h>
+#include <TuningLoader/Commands/OutputCommand.h>
 #include <TuningLoader/Commands/ParameterCommand.h>
+#include <TuningLoader/Commands/TimeUnitCommand.h>
+#include <TuningLoader/Commands/TuneCommand.h>
 #include <TuningLoader/JsonCommandConverters.h>
 #include <TuningLoader/TuningLoader.h>
 
@@ -31,12 +35,28 @@ void TuningLoader::LoadTuningDescription(const std::string& file)
         m_Commands.push_back(std::make_unique<ParameterCommand>(command));
     }
 
+    const auto constraintCommands = configurationSpace["Conditions"].get<std::vector<ConstraintCommand>>();
+
+    for (const auto& command : constraintCommands)
+    {
+        m_Commands.push_back(std::make_unique<ConstraintCommand>(command));
+    }
+
+    auto& general = input["General"];
+    auto timeUnitCommand = general.get<TimeUnitCommand>();
+    m_Commands.push_back(std::make_unique<TimeUnitCommand>(timeUnitCommand));
+
+    auto outputCommand = general.get<OutputCommand>();
+    m_Commands.push_back(std::make_unique<OutputCommand>(outputCommand));
+
     auto& kernelSpecification = input["KernelSpecification"];
     auto createTunerCommand = kernelSpecification.get<CreateTunerCommand>();
     m_Commands.push_back(std::make_unique<CreateTunerCommand>(createTunerCommand));
 
     auto addKernelCommand = kernelSpecification.get<AddKernelCommand>();
     m_Commands.push_back(std::make_unique<AddKernelCommand>(addKernelCommand));
+
+    m_Commands.push_back(std::make_unique<TuneCommand>());
 }
 
 void TuningLoader::ApplyCommands()
@@ -50,11 +70,6 @@ void TuningLoader::ApplyCommands()
     {
         command->Execute(m_Context);
     }
-}
-
-std::unique_ptr<Tuner> TuningLoader::RetrieveTuner()
-{
-    return m_Context.RetrieveTuner();
 }
 
 } // namespace ktt

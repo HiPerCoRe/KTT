@@ -15,17 +15,18 @@ public:
     void SetTuner(std::unique_ptr<Tuner> tuner);
     void SetKernelDefinitionId(const KernelDefinitionId id);
     void SetKernelId(const KernelId id);
+    void SetResults(const std::vector<KernelResult> results);
 
     Tuner& GetTuner();
     KernelDefinitionId GetKernelDefinitionId() const;
     KernelId GetKernelId() const;
-
-    std::unique_ptr<Tuner> RetrieveTuner();
+    const std::vector<KernelResult>& GetResults() const;
 
 private:
     std::unique_ptr<Tuner> m_Tuner;
     KernelDefinitionId m_DefinitionId;
     KernelId m_KernelId;
+    std::vector<KernelResult> m_Results;
 };
 
 } // namespace ktt

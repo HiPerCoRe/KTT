@@ -9,7 +9,9 @@ enum class CommandPriority
     General,
     KernelCreation,
     ParameterDefinition,
-    ConstraintDefinition
+    ConstraintDefinition,
+    Tuning,
+    Output
 };
 
 } // namespace ktt

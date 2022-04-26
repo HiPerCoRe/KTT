@@ -24,6 +24,11 @@ void TunerContext::SetKernelId(const KernelId id)
     m_KernelId = id;
 }
 
+void TunerContext::SetResults(const std::vector<KernelResult> results)
+{
+    m_Results = results;
+}
+
 Tuner& TunerContext::GetTuner()
 {
     return *m_Tuner;
@@ -39,9 +44,9 @@ KernelId TunerContext::GetKernelId() const
     return m_KernelId;
 }
 
-std::unique_ptr<Tuner> TunerContext::RetrieveTuner()
+const std::vector<KernelResult>& TunerContext::GetResults() const
 {
-    return std::move(m_Tuner);
+    return m_Results;
 }
 
 } // namespace ktt

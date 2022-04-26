@@ -15,7 +15,6 @@ class TuningLoader
 public:
     void LoadTuningDescription(const std::string& file);
     void ApplyCommands();
-    std::unique_ptr<Tuner> RetrieveTuner();
 
 private:
     TunerContext m_Context;
