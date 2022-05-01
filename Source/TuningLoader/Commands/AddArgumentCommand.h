@@ -7,19 +7,17 @@
 namespace ktt
 {
 
-class AddKernelCommand : public TunerCommand
+class AddArgumentCommand : public TunerCommand
 {
 public:
-    AddKernelCommand() = default;
-    explicit AddKernelCommand(const std::string& name, const std::string& source, const DimensionVector& globalSize);
+    AddArgumentCommand() = default;
+    explicit AddArgumentCommand(const std::string& name);
 
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
 
 private:
     std::string m_Name;
-    std::string m_Source;
-    DimensionVector m_GlobalSize;
 };
 
 } // namespace ktt

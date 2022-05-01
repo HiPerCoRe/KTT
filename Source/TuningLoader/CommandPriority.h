@@ -8,8 +8,10 @@ enum class CommandPriority
     TunerCreation,
     General,
     KernelCreation,
+    ArgumentAddition,
     ParameterDefinition,
     ConstraintDefinition,
+    ModifierDefinition,
     Tuning,
     Output
 };

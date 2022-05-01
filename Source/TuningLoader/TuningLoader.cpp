@@ -5,6 +5,7 @@
 #include <TuningLoader/Commands/AddKernelCommand.h>
 #include <TuningLoader/Commands/ConstraintCommand.h>
 #include <TuningLoader/Commands/CreateTunerCommand.h>
+#include <TuningLoader/Commands/ModifierCommand.h>
 #include <TuningLoader/Commands/OutputCommand.h>
 #include <TuningLoader/Commands/ParameterCommand.h>
 #include <TuningLoader/Commands/TimeUnitCommand.h>
@@ -55,6 +56,13 @@ void TuningLoader::LoadTuningDescription(const std::string& file)
 
     auto addKernelCommand = kernelSpecification.get<AddKernelCommand>();
     m_Commands.push_back(std::make_unique<AddKernelCommand>(addKernelCommand));
+
+    const auto modifierCommands = kernelSpecification["Modifiers"].get<std::vector<ModifierCommand>>();
+
+    for (const auto& command : modifierCommands)
+    {
+        m_Commands.push_back(std::make_unique<ModifierCommand>(command));
+    }
 
     m_Commands.push_back(std::make_unique<TuneCommand>());
 }

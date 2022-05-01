@@ -1,8 +1,14 @@
+#include <Output/JsonConverters.h>
 #include <TuningLoader/JsonCommandConverters.h>
 #include <Utility/ErrorHandling/Assert.h>
 
 namespace ktt
 {
+
+void from_json(const json& j, AddArgumentCommand& command)
+{
+
+}
 
 void from_json(const json& j, AddKernelCommand& command)
 {
@@ -12,7 +18,10 @@ void from_json(const json& j, AddKernelCommand& command)
     std::string source;
     j.at("KernelCode").get_to(source);
 
-    command = AddKernelCommand(name, source);
+    DimensionVector globalSize;
+    j.at("GlobalSize").get_to(globalSize);
+
+    command = AddKernelCommand(name, source, globalSize);
 }
 
 void from_json(const json& j, ConstraintCommand& command)
@@ -31,6 +40,23 @@ void from_json(const json& j, CreateTunerCommand& command)
     ComputeApi api;
     j.at("Language").get_to(api);
     command = CreateTunerCommand(api);
+}
+
+void from_json(const json& j, ModifierCommand& command)
+{
+    ModifierType type;
+    j.at("Type").get_to(type);
+
+    ModifierDimension dimension;
+    j.at("Dimension").get_to(dimension);
+
+    std::string parameter;
+    j.at("Parameter").get_to(parameter);
+
+    ModifierAction action;
+    j.at("Action").get_to(action);
+
+    command = ModifierCommand(type, dimension, parameter, action);
 }
 
 void from_json(const json& j, OutputCommand& command)
