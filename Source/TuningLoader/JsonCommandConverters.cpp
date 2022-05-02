@@ -7,7 +7,25 @@ namespace ktt
 
 void from_json(const json& j, AddArgumentCommand& command)
 {
+    ArgumentDataType type;
+    j.at("Type").get_to(type);
 
+    size_t size;
+    j.at("Size").get_to(size);
+
+    ArgumentAccessType accessType;
+    j.at("AccessType").get_to(accessType);
+    
+    ArgumentFillType fillType;
+    j.at("FillType").get_to(fillType);
+
+    float fillValue;
+    j.at("FillValue").get_to(fillValue);
+    
+    size_t order;
+    j.at("Order").get_to(order);
+
+    command = AddArgumentCommand(type, size, accessType, fillType, fillValue, order);
 }
 
 void from_json(const json& j, AddKernelCommand& command)

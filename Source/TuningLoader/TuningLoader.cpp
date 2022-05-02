@@ -2,6 +2,7 @@
 #include <fstream>
 
 #include <Api/KttException.h>
+#include <TuningLoader/Commands/AddArgumentCommand.h>
 #include <TuningLoader/Commands/AddKernelCommand.h>
 #include <TuningLoader/Commands/ConstraintCommand.h>
 #include <TuningLoader/Commands/CreateTunerCommand.h>
@@ -16,6 +17,10 @@
 namespace ktt
 {
 
+TuningLoader::TuningLoader() :
+    m_Context(std::make_unique<TunerContext>())
+{}
+
 void TuningLoader::LoadTuningDescription(const std::string& file)
 {
     std::ifstream inputStream(file);
@@ -29,26 +34,36 @@ void TuningLoader::LoadTuningDescription(const std::string& file)
     inputStream >> input;
 
     auto& configurationSpace = input["ConfigurationSpace"];
-    const auto parameterCommands = configurationSpace["TuningParameters"].get<std::vector<ParameterCommand>>();
 
-    for (const auto& command : parameterCommands)
+    if (configurationSpace.contains("TuningParameters"))
     {
-        m_Commands.push_back(std::make_unique<ParameterCommand>(command));
+        const auto parameterCommands = configurationSpace["TuningParameters"].get<std::vector<ParameterCommand>>();
+
+        for (const auto& command : parameterCommands)
+        {
+            m_Commands.push_back(std::make_unique<ParameterCommand>(command));
+        }
     }
 
-    const auto constraintCommands = configurationSpace["Conditions"].get<std::vector<ConstraintCommand>>();
-
-    for (const auto& command : constraintCommands)
+    if (configurationSpace.contains("Conditions"))
     {
-        m_Commands.push_back(std::make_unique<ConstraintCommand>(command));
+        const auto constraintCommands = configurationSpace["Conditions"].get<std::vector<ConstraintCommand>>();
+
+        for (const auto& command : constraintCommands)
+        {
+            m_Commands.push_back(std::make_unique<ConstraintCommand>(command));
+        }
     }
 
-    auto& general = input["General"];
-    auto timeUnitCommand = general.get<TimeUnitCommand>();
-    m_Commands.push_back(std::make_unique<TimeUnitCommand>(timeUnitCommand));
+    if (input.contains("General"))
+    {
+        auto& general = input["General"];
+        auto timeUnitCommand = general.get<TimeUnitCommand>();
+        m_Commands.push_back(std::make_unique<TimeUnitCommand>(timeUnitCommand));
 
-    auto outputCommand = general.get<OutputCommand>();
-    m_Commands.push_back(std::make_unique<OutputCommand>(outputCommand));
+        auto outputCommand = general.get<OutputCommand>();
+        m_Commands.push_back(std::make_unique<OutputCommand>(outputCommand));
+    }
 
     auto& kernelSpecification = input["KernelSpecification"];
     auto createTunerCommand = kernelSpecification.get<CreateTunerCommand>();
@@ -57,11 +72,29 @@ void TuningLoader::LoadTuningDescription(const std::string& file)
     auto addKernelCommand = kernelSpecification.get<AddKernelCommand>();
     m_Commands.push_back(std::make_unique<AddKernelCommand>(addKernelCommand));
 
-    const auto modifierCommands = kernelSpecification["Modifiers"].get<std::vector<ModifierCommand>>();
-
-    for (const auto& command : modifierCommands)
+    if (kernelSpecification.contains("Modifiers"))
     {
-        m_Commands.push_back(std::make_unique<ModifierCommand>(command));
+        const auto modifierCommands = kernelSpecification["Modifiers"].get<std::vector<ModifierCommand>>();
+
+        for (const auto& command : modifierCommands)
+        {
+            m_Commands.push_back(std::make_unique<ModifierCommand>(command));
+        }
+    }
+
+    if (kernelSpecification.contains("Arguments"))
+    {
+        auto argumentCommands = kernelSpecification["Arguments"].get<std::vector<AddArgumentCommand>>();
+
+        std::sort(argumentCommands.begin(), argumentCommands.end(), [](const auto& left, const auto& right)
+        {
+            return left.GetOrder() < right.GetOrder();
+        });
+
+        for (const auto& command : argumentCommands)
+        {
+            m_Commands.push_back(std::make_unique<AddArgumentCommand>(command));
+        }
     }
 
     m_Commands.push_back(std::make_unique<TuneCommand>());
@@ -69,15 +102,17 @@ void TuningLoader::LoadTuningDescription(const std::string& file)
 
 void TuningLoader::ApplyCommands()
 {
-    std::sort(m_Commands.begin(), m_Commands.end(), [](const auto& left, const auto& right)
+    std::stable_sort(m_Commands.begin(), m_Commands.end(), [](const auto& left, const auto& right)
     {
         return static_cast<int>(left->GetPriority()) < static_cast<int>(right->GetPriority());
     });
 
     for (const auto& command : m_Commands)
     {
-        command->Execute(m_Context);
+        command->Execute(*m_Context);
     }
+
+    m_Commands.clear();
 }
 
 } // namespace ktt

@@ -24,6 +24,11 @@ void TunerContext::SetKernelId(const KernelId id)
     m_KernelId = id;
 }
 
+void TunerContext::SetArguments(const std::vector<ArgumentId>& arguments)
+{
+    m_Arguments = arguments;
+}
+
 void TunerContext::SetResults(const std::vector<KernelResult> results)
 {
     m_Results = results;
@@ -42,6 +47,16 @@ KernelDefinitionId TunerContext::GetKernelDefinitionId() const
 KernelId TunerContext::GetKernelId() const
 {
     return m_KernelId;
+}
+
+std::vector<ArgumentId>& TunerContext::GetArguments()
+{
+    return m_Arguments;
+}
+
+const std::vector<ArgumentId>& TunerContext::GetArguments() const
+{
+    return m_Arguments;
 }
 
 const std::vector<KernelResult>& TunerContext::GetResults() const

@@ -10,11 +10,19 @@
 #include <TuningLoader/Commands/OutputCommand.h>
 #include <TuningLoader/Commands/ParameterCommand.h>
 #include <TuningLoader/Commands/TimeUnitCommand.h>
+#include <TuningLoader/ArgumentFillType.h>
 
 namespace ktt
 {
 
 using json = nlohmann::json;
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentFillType,
+{
+    {ArgumentFillType::Constant, "Constant"},
+    {ArgumentFillType::Ascending, "Ascending"},
+    {ArgumentFillType::Random, "Random"}
+});
 
 void from_json(const json& j, AddArgumentCommand& command);
 void from_json(const json& j, AddKernelCommand& command);

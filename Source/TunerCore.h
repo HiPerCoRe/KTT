@@ -59,6 +59,7 @@ public:
     void SetReadOnlyArgumentCache(const bool flag);
 
     // Kernel running and validation
+    static void RunTuningFile(const std::string& file);
     KernelResult RunKernel(const KernelId id, const KernelConfiguration& configuration, const std::vector<BufferOutputDescriptor>& output);
     void SetProfiling(const bool flag);
     void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold);

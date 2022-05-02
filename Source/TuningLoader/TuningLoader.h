@@ -13,11 +13,13 @@ namespace ktt
 class TuningLoader
 {
 public:
+    TuningLoader();
+
     void LoadTuningDescription(const std::string& file);
     void ApplyCommands();
 
 private:
-    TunerContext m_Context;
+    std::unique_ptr<TunerContext> m_Context;
     std::vector<std::unique_ptr<TunerCommand>> m_Commands;
 };
 

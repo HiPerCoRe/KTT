@@ -5,6 +5,12 @@
 #include <Api/Configuration/DimensionVector.h>
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Output/KernelResult.h>
+#include <Kernel/ModifierAction.h>
+#include <Kernel/ModifierDimension.h>
+#include <Kernel/ModifierType.h>
+#include <KernelArgument/ArgumentAccessType.h>
+#include <KernelArgument/ArgumentDataType.h>
+#include <Output/OutputFormat.h>
 #include <Output/TunerMetadata.h>
 
 namespace ktt
@@ -32,6 +38,58 @@ NLOHMANN_JSON_SERIALIZE_ENUM(TimeUnit,
     {TimeUnit::Microseconds, "Microseconds"},
     {TimeUnit::Milliseconds, "Milliseconds"},
     {TimeUnit::Seconds, "Seconds"}
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentAccessType,
+{
+    {ArgumentAccessType::Undefined, "Undefined"},
+    {ArgumentAccessType::ReadOnly, "ReadOnly"},
+    {ArgumentAccessType::WriteOnly, "WriteOnly"},
+    {ArgumentAccessType::ReadWrite, "ReadWrite"}
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentDataType,
+{
+    {ArgumentDataType::Char, "Char"},
+    {ArgumentDataType::UnsignedChar, "UnsignedChar"},
+    {ArgumentDataType::Short, "Short"},
+    {ArgumentDataType::UnsignedShort, "UnsignedShort"},
+    {ArgumentDataType::Int, "Int"},
+    {ArgumentDataType::UnsignedInt, "UnsignedInt"},
+    {ArgumentDataType::Long, "Long"},
+    {ArgumentDataType::UnsignedLong, "UnsignedLong"},
+    {ArgumentDataType::Half, "Half"},
+    {ArgumentDataType::Float, "Float"},
+    {ArgumentDataType::Double, "Double"},
+    {ArgumentDataType::Custom, "Custom"}
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ModifierAction,
+{
+    {ModifierAction::Add, "Add"},
+    {ModifierAction::Subtract, "Subtract"},
+    {ModifierAction::Multiply, "Multiply"},
+    {ModifierAction::Divide, "Divide"},
+    {ModifierAction::DivideCeil, "DivideCeil"}
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ModifierDimension,
+{
+    {ModifierDimension::X, "X"},
+    {ModifierDimension::Y, "Y"},
+    {ModifierDimension::Z, "Z"}
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ModifierType,
+{
+    {ModifierType::Global, "Global"},
+    {ModifierType::Local, "Local"}
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(OutputFormat,
+{
+    {OutputFormat::JSON, "JSON"},
+    {OutputFormat::XML, "XML"}
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ResultStatus,
