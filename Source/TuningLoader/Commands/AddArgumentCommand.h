@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include <TuningLoader/ArgumentFillType.h>
 #include <TuningLoader/TunerCommand.h>
 
@@ -12,8 +10,8 @@ class AddArgumentCommand : public TunerCommand
 {
 public:
     AddArgumentCommand() = default;
-    explicit AddArgumentCommand(const ArgumentDataType dataType, const size_t size, const ArgumentAccessType accessType,
-        const ArgumentFillType fillType, const float fillValue, const size_t order);
+    explicit AddArgumentCommand(const ArgumentMemoryType memoryType, const ArgumentDataType dataType, const size_t size,
+        const ArgumentAccessType accessType, const ArgumentFillType fillType, const float fillValue, const size_t order);
 
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
@@ -21,6 +19,7 @@ public:
     size_t GetOrder() const;
 
 private:
+    ArgumentMemoryType m_MemoryType;
     ArgumentDataType m_Type;
     size_t m_Size;
     ArgumentAccessType m_AccessType;

@@ -1,9 +1,11 @@
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 
 #include <Api/KttException.h>
 #include <TuningLoader/Commands/AddArgumentCommand.h>
 #include <TuningLoader/Commands/AddKernelCommand.h>
+#include <TuningLoader/Commands/CompilerOptionsCommand.h>
 #include <TuningLoader/Commands/ConstraintCommand.h>
 #include <TuningLoader/Commands/CreateTunerCommand.h>
 #include <TuningLoader/Commands/ModifierCommand.h>
@@ -29,6 +31,9 @@ void TuningLoader::LoadTuningDescription(const std::string& file)
     {
         throw KttException("Unable to open file: " + file);
     }
+
+    const std::string directory = std::filesystem::path(file).parent_path().string();
+    m_Context->SetWorkingDirectory(directory);
 
     json input;
     inputStream >> input;
@@ -58,11 +63,24 @@ void TuningLoader::LoadTuningDescription(const std::string& file)
     if (input.contains("General"))
     {
         auto& general = input["General"];
-        auto timeUnitCommand = general.get<TimeUnitCommand>();
-        m_Commands.push_back(std::make_unique<TimeUnitCommand>(timeUnitCommand));
 
-        auto outputCommand = general.get<OutputCommand>();
-        m_Commands.push_back(std::make_unique<OutputCommand>(outputCommand));
+        if (input.contains("TimeUnit"))
+        {
+            auto timeUnitCommand = general.get<TimeUnitCommand>();
+            m_Commands.push_back(std::make_unique<TimeUnitCommand>(timeUnitCommand));
+        }
+
+        if (input.contains("CompilerOptions"))
+        {
+            auto compilerOptionsCommand = general.get<CompilerOptionsCommand>();
+            m_Commands.push_back(std::make_unique<CompilerOptionsCommand>(compilerOptionsCommand));
+        }
+
+        if (input.contains("OutputFile"))
+        {
+            auto outputCommand = general.get<OutputCommand>();
+            m_Commands.push_back(std::make_unique<OutputCommand>(outputCommand));
+        }
     }
 
     auto& kernelSpecification = input["KernelSpecification"];

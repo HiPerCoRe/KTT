@@ -10,6 +10,7 @@
 #include <Kernel/ModifierType.h>
 #include <KernelArgument/ArgumentAccessType.h>
 #include <KernelArgument/ArgumentDataType.h>
+#include <KernelArgument/ArgumentMemoryType.h>
 #include <Output/OutputFormat.h>
 #include <Output/TunerMetadata.h>
 
@@ -62,6 +63,14 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentDataType,
     {ArgumentDataType::Float, "Float"},
     {ArgumentDataType::Double, "Double"},
     {ArgumentDataType::Custom, "Custom"}
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentMemoryType,
+{
+    {ArgumentMemoryType::Scalar, "Scalar"},
+    {ArgumentMemoryType::Vector, "Vector"},
+    {ArgumentMemoryType::Local, "Local"},
+    {ArgumentMemoryType::Symbol, "Symbol"}
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ModifierAction,

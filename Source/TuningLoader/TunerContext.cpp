@@ -9,6 +9,11 @@ TunerContext::TunerContext() :
     m_KernelId(InvalidKernelDefinitionId)
 {}
 
+void TunerContext::SetWorkingDirectory(const std::string& directory)
+{
+    m_WorkingDirectory = directory;
+}
+
 void TunerContext::SetTuner(std::unique_ptr<Tuner> tuner)
 {
     m_Tuner = std::move(tuner);
@@ -32,6 +37,11 @@ void TunerContext::SetArguments(const std::vector<ArgumentId>& arguments)
 void TunerContext::SetResults(const std::vector<KernelResult> results)
 {
     m_Results = results;
+}
+
+const std::string& TunerContext::GetWorkingDirectory() const
+{
+    return m_WorkingDirectory;
 }
 
 Tuner& TunerContext::GetTuner()

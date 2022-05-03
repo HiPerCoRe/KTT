@@ -12,12 +12,14 @@ class TunerContext
 public:
     TunerContext();
 
+    void SetWorkingDirectory(const std::string& directory);
     void SetTuner(std::unique_ptr<Tuner> tuner);
     void SetKernelDefinitionId(const KernelDefinitionId id);
     void SetKernelId(const KernelId id);
     void SetArguments(const std::vector<ArgumentId>& arguments);
     void SetResults(const std::vector<KernelResult> results);
 
+    const std::string& GetWorkingDirectory() const;
     Tuner& GetTuner();
     KernelDefinitionId GetKernelDefinitionId() const;
     KernelId GetKernelId() const;
@@ -26,6 +28,7 @@ public:
     const std::vector<KernelResult>& GetResults() const;
 
 private:
+    std::string m_WorkingDirectory;
     std::unique_ptr<Tuner> m_Tuner;
     KernelDefinitionId m_DefinitionId;
     KernelId m_KernelId;

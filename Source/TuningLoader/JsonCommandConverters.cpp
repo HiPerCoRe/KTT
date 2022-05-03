@@ -7,17 +7,32 @@ namespace ktt
 
 void from_json(const json& j, AddArgumentCommand& command)
 {
+    ArgumentMemoryType memoryType;
+    j.at("MemoryType").get_to(memoryType);
+
     ArgumentDataType type;
     j.at("Type").get_to(type);
 
-    size_t size;
-    j.at("Size").get_to(size);
+    size_t size = 0;
 
-    ArgumentAccessType accessType;
-    j.at("AccessType").get_to(accessType);
+    if (j.contains("Size"))
+    {
+        j.at("Size").get_to(size);
+    }
+
+    ArgumentAccessType accessType = ArgumentAccessType::ReadWrite;
+
+    if (j.contains("AccessType"))
+    {
+        j.at("AccessType").get_to(accessType);
+    }
     
-    ArgumentFillType fillType;
-    j.at("FillType").get_to(fillType);
+    ArgumentFillType fillType = ArgumentFillType::Constant;
+
+    if (j.contains("FillType"))
+    {
+        j.at("FillType").get_to(fillType);
+    }
 
     float fillValue;
     j.at("FillValue").get_to(fillValue);
@@ -25,7 +40,7 @@ void from_json(const json& j, AddArgumentCommand& command)
     size_t order;
     j.at("Order").get_to(order);
 
-    command = AddArgumentCommand(type, size, accessType, fillType, fillValue, order);
+    command = AddArgumentCommand(memoryType, type, size, accessType, fillType, fillValue, order);
 }
 
 void from_json(const json& j, AddKernelCommand& command)
@@ -33,13 +48,21 @@ void from_json(const json& j, AddKernelCommand& command)
     std::string name;
     j.at("KernelName").get_to(name);
 
-    std::string source;
-    j.at("KernelCode").get_to(source);
+    std::string file;
+    j.at("KernelFile").get_to(file);
 
     DimensionVector globalSize;
     j.at("GlobalSize").get_to(globalSize);
 
-    command = AddKernelCommand(name, source, globalSize);
+    command = AddKernelCommand(name, file, globalSize);
+}
+
+void from_json(const json& j, CompilerOptionsCommand& command)
+{
+    std::string options;
+    j.at("CompilerOptions").get_to(options);
+
+    command = CompilerOptionsCommand(options);
 }
 
 void from_json(const json& j, ConstraintCommand& command)

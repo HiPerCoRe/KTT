@@ -1,17 +1,23 @@
 #pragma once
 
+#include <string>
+
 #include <TuningLoader/TunerCommand.h>
 
 namespace ktt
 {
 
-class TuneCommand : public TunerCommand
+class CompilerOptionsCommand : public TunerCommand
 {
 public:
-    TuneCommand() = default;
+    CompilerOptionsCommand() = default;
+    explicit CompilerOptionsCommand(const std::string& options);
 
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
+
+private:
+    std::string m_Options;
 };
 
 } // namespace ktt

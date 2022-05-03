@@ -6,8 +6,9 @@
 namespace ktt
 {
 
-AddArgumentCommand::AddArgumentCommand(const ArgumentDataType dataType, const size_t size, const ArgumentAccessType accessType,
-    const ArgumentFillType fillType, const float fillValue, const size_t order) :
+AddArgumentCommand::AddArgumentCommand(const ArgumentMemoryType memoryType, const ArgumentDataType dataType, const size_t size,
+    const ArgumentAccessType accessType, const ArgumentFillType fillType, const float fillValue, const size_t order) :
+    m_MemoryType(memoryType),
     m_Type(dataType),
     m_Size(size),
     m_AccessType(accessType),
@@ -18,6 +19,15 @@ AddArgumentCommand::AddArgumentCommand(const ArgumentDataType dataType, const si
 
 void AddArgumentCommand::Execute(TunerContext& context)
 {
+    if (m_MemoryType == ArgumentMemoryType::Scalar)
+    {
+        const auto id = context.GetTuner().AddArgumentScalar<float>(m_FillValue);
+        context.GetArguments().push_back(id);
+        context.GetTuner().SetArguments(context.GetKernelDefinitionId(), context.GetArguments());
+        return;
+    }
+
+    KttAssert(m_MemoryType == ArgumentMemoryType::Vector, "Unsupported memory type");
     std::vector<float> input(m_Size);
 
     switch (m_FillType)
