@@ -21,7 +21,18 @@ void AddArgumentCommand::Execute(TunerContext& context)
 {
     if (m_MemoryType == ArgumentMemoryType::Scalar)
     {
-        const auto id = context.GetTuner().AddArgumentScalar<float>(m_FillValue);
+        KttAssert(m_Type == ArgumentDataType::Int || m_Type == ArgumentDataType::Float, "Unsupported data type");
+        ArgumentId id;
+
+        if (m_Type == ArgumentDataType::Int)
+        {
+            id = context.GetTuner().AddArgumentScalar(static_cast<int>(m_FillValue));
+        }
+        else
+        {
+            id = context.GetTuner().AddArgumentScalar(m_FillValue);
+        }
+        
         context.GetArguments().push_back(id);
         context.GetTuner().SetArguments(context.GetKernelDefinitionId(), context.GetArguments());
         return;

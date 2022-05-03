@@ -1,0 +1,77 @@
+{
+  "ConfigurationSpace": {
+    "TuningParameters": [
+      {
+        "Name": "multiply_block_size",
+        "Type": "UnsignedInt",
+        "Values": [32, 64, 128, 256]
+      }
+    ]
+  },
+  "Search": {
+  },
+  "General": {
+    "TimeUnit": "Microseconds",
+    "OutputFile": "TuningOutput",
+    "OutputFormat": "JSON"
+  },
+  "KernelSpecification": {
+    "Language": "CUDA",
+    "KernelName": "vectorAddition",
+    "KernelFile": "CudaKernel.cu",
+    "GlobalSize": {
+      "X": 1048576,
+      "Y": 1,
+      "Z": 1
+    },
+    "Modifiers": [
+      {
+        "Type": "Local",
+        "Dimension": "X",
+        "Parameter": "multiply_block_size",
+        "Action": "Multiply"
+      },
+      {
+        "Type": "Global",
+        "Dimension": "X",
+        "Parameter": "multiply_block_size",
+        "Action": "Divide"
+      }
+    ],
+    "Arguments": [
+      {
+        "Type": "Float",
+        "Size": 1048576,
+        "FillType": "Ascending",
+        "FillValue": 1.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector",
+        "Order": 0
+      },
+      {
+        "Type": "Float",
+        "Size": 1048576,
+        "FillType": "Ascending",
+        "FillValue": 2.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector",
+        "Order": 1
+      },
+      {
+        "Type": "Float",
+        "Size": 1048576,
+        "FillType": "Constant",
+        "FillValue": 0.0,
+        "AccessType": "WriteOnly",
+        "MemoryType": "Vector",
+        "Order": 2
+      },
+      {
+        "Type": "Float",
+        "FillValue": 3.0,
+        "MemoryType": "Scalar",
+        "Order": 3
+      }
+    ]
+  }
+}
