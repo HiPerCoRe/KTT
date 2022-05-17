@@ -51,10 +51,15 @@ def main():
     energyGrid = np.zeros(gridSize*gridSize*gridSize, dtype = np.single)
 
     tuner = ktt.Tuner(0, deviceIndex, ktt.ComputeApi.CUDA)
-
-    definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, gridDimensions, blockDimensions)
     tuner.SetCompilerOptions("-use_fast_math")
     tuner.SetTimeUnit(ktt.TimeUnit.Microseconds)
+    tuner.SetProfiling(True)
+
+    ccMajor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMajor()
+    ccMinor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMinor()
+    print (ccMajor, ccMinor)
+
+    definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, gridDimensions, blockDimensions)
 
     aXId = tuner.AddArgumentVectorFloat(aX, ktt.ArgumentAccessType.ReadOnly)
     aYId = tuner.AddArgumentVectorFloat(aY, ktt.ArgumentAccessType.ReadOnly)

@@ -49,6 +49,12 @@ DeviceInfo CudaDevice::GetInfo() const
     int computeUnits = GetAttribute(CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT);
     result.SetMaxComputeUnits(static_cast<uint32_t>(computeUnits));
 
+    int computeCapabilityMajor = GetAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
+    result.SetCUDAComputeCapabilityMajor(computeCapabilityMajor);
+
+    int computeCapabilityMinor = GetAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
+    result.SetCUDAComputeCapabilityMinor(computeCapabilityMinor);
+
     return result;
 }
 

@@ -92,6 +92,18 @@ public:
       */
     uint32_t GetMaxComputeUnits() const;
 
+    /** @fn size_t getCUDAComputeCapabilityMajor() const
+      * Getter for CUDA compute capability.
+      * @return Compute capability (major) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+      */
+    unsigned int GetCUDAComputeCapabilityMajor() const;
+
+    /** @fn size_t getCUDAComputeCapabilityMajor() const
+      * Getter for CUDA compute capability.
+      * @return Compute capability (minor) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+      */
+    unsigned int GetCUDAComputeCapabilityMinor() const;
+
     /** @fn std::string GetString() const
       * Converts device info to string.
       * @return String containing information about the device.
@@ -146,6 +158,18 @@ public:
       */
     void SetMaxComputeUnits(const uint32_t maxComputeUnits);
 
+    /** @fn void setCUDAComputeCapabilityMajor(const unsigned int cudaComputeCapabilityMajor) const
+      * Setter for CUDA compute capability.
+      * @param Compute capability (major) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+      */
+    void SetCUDAComputeCapabilityMajor(const unsigned int cudaComputeCapabilityMajor);
+
+    /** @fn void setCUDAComputeCapabilityMinor(const unsigned int cudaComputeCapabilityMajor) const
+      * Setter for CUDA compute capability.
+      * @param Compute capability (minor) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+      */
+    void SetCUDAComputeCapabilityMinor(const unsigned int cudaComputeCapabilityMinor);
+
 private:
     DeviceIndex m_Index;
     std::string m_Name;
@@ -157,6 +181,8 @@ private:
     uint64_t m_MaxConstantBufferSize;
     uint64_t m_MaxWorkGroupSize;
     uint32_t m_MaxComputeUnits;
+    unsigned int m_CudaComputeCapabilityMajor;
+    unsigned int m_CudaComputeCapabilityMinor;
 };
 
 } // namespace ktt

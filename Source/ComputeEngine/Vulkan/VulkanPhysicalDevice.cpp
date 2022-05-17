@@ -91,6 +91,9 @@ DeviceInfo VulkanPhysicalDevice::GetInfo() const
     // Todo: this info can be currently found only through specific HW vendor extensions
     result.SetMaxComputeUnits(0);
 
+    result.setCUDAComputeCapabilityMajor(0);
+    result.setCUDAComputeCapabilityMinor(0);
+
     return result;
 }
 
