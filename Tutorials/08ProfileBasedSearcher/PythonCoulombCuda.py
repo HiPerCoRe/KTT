@@ -2,6 +2,11 @@ import sys
 import numpy as np
 import pyktt as ktt
 
+from base import *
+from mlKTTPredictor import *
+
+BATCH = 5
+
 # Implement custom searcher in Python. The interface is the same as in C++, including helper methods defined in
 # the parent class. Note that it is necessary to call the parent class constructor from inheriting constructor.
 class PyRandomSearcher(ktt.Searcher):
@@ -19,6 +24,107 @@ class PyRandomSearcher(ktt.Searcher):
         return self.currentConfiguration
 
     currentConfiguration = ktt.KernelConfiguration()
+
+class PyProfilingSearcher(ktt.Searcher):
+    ccMajor = 0
+    ccMinor = 0
+    cc = 0
+    profilingCountersModel = 0
+    bestDuration = -1
+    bestConf = None
+    preselectedBatch = []
+    tuningParamsNames = []
+    currentConfiguration = ktt.KernelConfiguration()
+    tuner = None
+    modelFileChangeme = "" #TODO model file should be loaded only once
+
+    def __init__(self):
+        ktt.Searcher.__init__(self)
+
+    def OnInitialize(self):
+        for i in range(0, BATCH) :
+            self.preselectedBatch.append(self.GetRandomConfiguration())
+        self.currentConfiguration = self.preselectedBatch[0]
+        tp = self.currentConfiguration.GetPairs()
+        for p in tp :
+            self.tuningParamsNames.append(p.GetName())
+
+    def Configure(self, tuner, modelFile):
+        self.tuner = tuner
+        self.ccMajor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMajor()
+        self.ccMinor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMinor()
+        self.cc = self.ccMajor + round(0.1 * self.ccMinor, 1)
+        print (self.ccMajor, self.ccMinor)
+        # tuningParams
+        # configurationsData
+        self.profilingCountersModel = readPCList(modelFile + ".pc")
+        self.modelFileChangeme = modelFile
+
+    def CalculateNextConfiguration(self, previousResult):
+        # select the new configuration
+        if len(self.preselectedBatch) > 0:
+            # we are testing current batch
+            if (self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration) :
+                self.bestDuration = previousResult.GetKernelDuration()
+                self.bestConf = self.currentConfiguration
+            self.currentConfiguration = self.preselectedBatch.pop(0)
+        else :
+            if self.bestDuration != -1 :
+                # we run the fastest one once again, but with profiling
+                self.currentConfiguration = self.bestConf
+                self.bestDuration = -1
+                self.tuner.SetProfiling(True)
+            else :
+                # get PCs from the last tuning run
+                globalSize = previousResult.GetResults()[0].GetGlobalSize()
+                localSize = previousResult.GetResults()[0].GetLocalSize()
+                profilingCountersRun = previousResult.GetResults()[0].GetProfilingData().GetCounters() #FIXME this supposes there is no composition profiled
+                pcNames = ["Global size", "Local size"]
+                pcVals = [globalSize.GetTotalSize(), localSize.GetTotalSize()]
+                for pd in profilingCountersRun :
+                    pcNames.append(pd.GetName())
+                    if (pd.GetType() == ktt.ProfilingCounterType.Int) :
+                        pcVals.append(pd.GetValueInt())
+                    elif (pd.GetType() == ktt.ProfilingCounterType.UnsignedInt) or (pd.GetType() == ktt.ProfilingCounterType.Throughput) or (pd.GetType() == ktt.ProfilingCounterType.UtilizationLevel):
+                        pcVals.append(pd.GetValueUint())
+                    elif (pd.GetType() == ktt.ProfilingCounterType.Double) or (pd.GetType() == ktt.ProfilingCounterType.Percent) :
+                        pcVals.append(pd.GetValueDouble())
+                    else :
+                        print("Fatal error, unsupported PC value!")
+                        exit(1)
+
+                # select candidate configurations according to position of the best one plus some random sample
+                candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)
+                for i in range (0, 10) :
+                    candidates.append(self.GetRandomConfiguration())
+                print("Evaluating model for " + str(len(candidates)) + " candidates...")
+
+                # get tuning space from candidates
+                candidatesTuningSpace = []
+                for c in candidates :
+                    tp = c.GetPairs()
+                    candidateParams = []
+                    for p in tp :
+                        candidateParams.append(p.GetValue()) #FIXME floating-point values?
+                    candidatesTuningSpace.append(candidateParams)
+                myTuningSpace = []
+                tp = self.bestConf.GetPairs()
+                for p in tp :
+                    myTuningSpace.append(p.GetValue())
+
+                # score the configurations
+                scoreDistrib = [1.0]*len(candidates)
+                bottlenecks = analyzeBottlenecks(pcNames, pcVals, 6.1, 10, 10)
+                changes = computeChanges(bottlenecks, self.profilingCountersModel, self.cc)
+                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.modelFileChangeme)
+
+                exit(0)
+
+
+        return True
+
+    def GetCurrentConfiguration(self):
+        return self.currentConfiguration
 
 def main():
     deviceIndex = 0
@@ -53,11 +159,11 @@ def main():
     tuner = ktt.Tuner(0, deviceIndex, ktt.ComputeApi.CUDA)
     tuner.SetCompilerOptions("-use_fast_math")
     tuner.SetTimeUnit(ktt.TimeUnit.Microseconds)
-    tuner.SetProfiling(True)
+    tuner.SetProfiling(False)
 
-    ccMajor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMajor()
-    ccMinor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMinor()
-    print (ccMajor, ccMinor)
+    #ccMajor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMajor()
+    #ccMinor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMinor()
+    #print (ccMajor, ccMinor)
 
     definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, gridDimensions, blockDimensions)
 
@@ -92,7 +198,9 @@ def main():
     tuner.AddConstraint(kernel, ["WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"], parallelBound)
 
     # Make tuner user the searcher implemented in Python.
-    tuner.SetSearcher(kernel, PyRandomSearcher())
+    searcher = PyProfilingSearcher()
+    tuner.SetSearcher(kernel, searcher)
+    searcher.Configure(tuner, "1070-coulomb_output_DT.sav")
 
     # Begin tuning utilizing the stop condition implemented in Python.
     results = tuner.Tune(kernel)
