@@ -114,12 +114,20 @@ class PyProfilingSearcher(ktt.Searcher):
 
                 # score the configurations
                 scoreDistrib = [1.0]*len(candidates)
-                bottlenecks = analyzeBottlenecks(pcNames, pcVals, 6.1, 10, 10)
+                bottlenecks = analyzeBottlenecks(pcNames, pcVals, 6.1, 15, 1920) #FIXME multiprocessors and cores!
                 changes = computeChanges(bottlenecks, self.profilingCountersModel, self.cc)
                 scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.modelFileChangeme)
 
-                exit(0)
+                print(scoreDistrib)
 
+                # select next batch
+                for i in range(0, BATCH) :
+                    idx = weightedRandomSearchStep(scoreDistrib, len(candidates))
+                    self.preselectedBatch.append(candidates[idx])
+                    print(scoreDistrib[i])
+                self.currentConfiguration = self.preselectedBatch[0]
+                self.bestConf = None
+                self.tuner.SetProfiling(False)
 
         return True
 
