@@ -24,11 +24,6 @@ CudaStream::CudaStream(const QueueId id, ComputeQueue stream) :
 {
     Logger::LogDebug("Initializing CUDA stream with id " + std::to_string(id));
     m_Stream = static_cast<CUstream>(stream);
-
-    if (m_Stream == nullptr)
-    {
-        throw KttException("The provided user CUDA stream is not valid");
-    }
 }
 
 CudaStream::~CudaStream()
