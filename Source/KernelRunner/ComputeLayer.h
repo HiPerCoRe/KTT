@@ -72,7 +72,8 @@ public:
     void ClearComputeEngineData(const KernelDefinitionId id);
     void ClearComputeEngineData();
 
-    void AddData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode);
+    void AddData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+        const KernelRunMode mode);
     void ClearData(const KernelId id);
     KernelResult GenerateResult(const KernelId id, const Nanoseconds launcherDuration) const;
 

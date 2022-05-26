@@ -53,8 +53,9 @@ public:
     void EnumerateNeighbourConfigurations(const KernelConfiguration& configuration,
         std::function<bool(const KernelConfiguration&, const uint64_t)> enumerator) const;
 
-    DimensionVector GetModifiedGlobalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const;
-    DimensionVector GetModifiedLocalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const;
+    DimensionVector GetModifiedSize(const KernelDefinitionId id, const ModifierType type, const std::vector<ParameterPair>& pairs) const;
+    DimensionVector GetModifiedSize(const KernelDefinitionId id, const DimensionVector& originalSize, const ModifierType type,
+        const std::vector<ParameterPair>& pairs) const;
 
 private:
     KernelId m_Id;
@@ -70,8 +71,6 @@ private:
         const bool genericConstraint) const;
     std::vector<const KernelConstraint*> GetConstraintsForParameters(const std::vector<const KernelParameter*>& parameters) const;
     const KernelParameter& GetParamater(const std::string& name) const;
-    DimensionVector GetModifiedSize(const KernelDefinitionId id, const ModifierType type,
-        const std::vector<ParameterPair>& pairs) const;
     void EnumerateNeighbours(const KernelConfiguration& configuration, const KernelParameter* neighbourParameter,
         const std::set<const KernelParameter*>& enumeratedParameters, std::set<std::set<const KernelParameter*>>& enumeratedSets,
         std::function<bool(const KernelConfiguration&, const uint64_t)> enumerator,

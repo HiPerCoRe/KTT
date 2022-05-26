@@ -107,7 +107,7 @@ public:
 
     /** @fn KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source,
       * const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {})
-      * Adds new kernel definition to the tuner. Requires specification of a kernel name, its source code and default global and
+      * Adds new kernel definition to the tuner. Requires specification of a kernel name, its source code and its global and
       * local thread sizes.
       * @param name Name of a kernel function inside kernel source code. The name must be unique.
       * @param source Kernel source code written in the corresponding compute API language.
@@ -119,9 +119,20 @@ public:
     KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source, const DimensionVector& globalSize,
         const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
 
+    /** @fn KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source,
+      * const std::vector<std::string>& typeNames = {})
+      * Adds new kernel definition to the tuner. Requires specification of a kernel name and its source code.
+      * @param name Name of a kernel function inside kernel source code. The name must be unique.
+      * @param source Kernel source code written in the corresponding compute API language.
+      * @param typeNames Names of types which will be used to instantiate kernel template. Only supported in CUDA kernels.
+      * @return Id assigned to kernel definition by the tuner. The id can be used in other API methods.
+      */
+    KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source,
+        const std::vector<std::string>& typeNames = {});
+
     /** @fn KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
       * const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {})
-      * Adds new kernel definition to the tuner. Requires specification of a kernel name, file path to its source code and default
+      * Adds new kernel definition to the tuner. Requires specification of a kernel name, file path to its source code and its
       * global and local thread sizes.
       * @param name Name of a kernel function inside kernel source code. The name must be unique.
       * @param filePath Path to file with kernel source code written in the corresponding compute API language.
@@ -132,6 +143,17 @@ public:
       */
     KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
         const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {});
+
+    /** @fn KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
+      * const std::vector<std::string>& typeNames = {})
+      * Adds new kernel definition to the tuner. Requires specification of a kernel name and file path to its source code.
+      * @param name Name of a kernel function inside kernel source code. The name must be unique.
+      * @param filePath Path to file with kernel source code written in the corresponding compute API language.
+      * @param typeNames Names of types which will be used to instantiate kernel template. Only supported in CUDA kernels.
+      * @return Id assigned to kernel definition by the tuner. The id can be used in other API methods.
+      */
+    KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
+        const std::vector<std::string>& typeNames = {});
 
     /** @fn KernelDefinitionId GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames = {}) const
       * Retrieves kernel definition id from the tuner based on provided name and template arguments.
@@ -408,6 +430,20 @@ public:
       */
     KernelResult Run(const KernelId id, const KernelConfiguration& configuration, const std::vector<BufferOutputDescriptor>& output);
 
+    /** @fn KernelResult Run(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+      * const std::vector<BufferOutputDescriptor>& output)
+      * Runs kernel using the specified dimensions and configuration.
+      * @param id Id of kernel which will be run.
+      * @param configuration Configuration under which the kernel will be launched. See KernelConfiguration for more information.
+      * @param dimensions Global and local sizes with which the kernel will be launched. If no dimensions are specified for some
+      * definition, the sizes specified during its addition will be used.
+      * @param output User-provided memory locations for kernel arguments which should be retrieved. See BufferOutputDescriptor
+      * for more information.
+      * @return Result containing information about kernel computation. See KernelResult for more information.
+      */
+    KernelResult Run(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+        const std::vector<BufferOutputDescriptor>& output);
+
     /** @fn void SetProfiling(const bool flag)
       * Toggles profiling of kernels inside the tuner. Profiled kernel runs generate profiling counters which can be used by
       * searchers and stop conditions for more accurate performance measurement. Profiling counters can also be retrieved through
@@ -462,36 +498,47 @@ public:
       */
     void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
 
-    /** @fn void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration)
+    /** @fn void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
+      * const KernelDimensions& dimensions = {})
       * Sets reference kernel for the specified argument. Reference kernel output will be compared to tuned kernel output in order
       * to ensure correctness of computation. Reference kernel uses only specified configuration.
       * @param id Id of argument for which reference kernel will be set. Only not read-only vector arguments can be validated.
       * @param referenceId Id of reference kernel.
       * @param configuration Configuration under which the reference kernel will be launched to produce reference output. This is
       * useful if the kernel has a configuration which is known to produce correct results.
+      * @param dimensions Global and local sizes with which the reference kernel will be launched. If no dimensions are specified
+      * for some definition, the sizes specified during its addition will be used.
       */
-    void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration);
+    void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
+        const KernelDimensions& dimensions = {});
 
-    /** @fn std::vector<KernelResult> Tune(const KernelId id)
-      * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
-      * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
-      * will end when all configurations are explored.
-      * @param id Id of the tuned kernel.
-      * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
-      * more information.
-      */
-    std::vector<KernelResult> Tune(const KernelId id);
-
-    /** @fn std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+    /** @fn std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr)
       * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
       * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
       * will end either when all configurations are explored or when the specified stop condition is fulfilled.
       * @param id Id of the tuned kernel.
-      * @param stopCondition Condition which decides whether to continue the tuning process. See StopCondition for more information.
+      * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
+      * will end when all configurations are explored. See StopCondition for more information.
       * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
       * more information.
       */
-    std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
+    std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr);
+
+    /** @fn std::vector<KernelResult> Tune(const KernelId id, const KernelDimensions& dimensions,
+      * std::unique_ptr<StopCondition> stopCondition = nullptr)
+      * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
+      * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
+      * will end either when all configurations are explored or when the specified stop condition is fulfilled.
+      * @param id Id of the tuned kernel.
+      * @param dimensions Global and local sizes with which the kernel will be launched. If no dimensions are specified for some
+      * definition, the sizes specified during its addition will be used.
+      * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
+      * will end when all configurations are explored. See StopCondition for more information.
+      * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
+      * more information.
+      */
+    std::vector<KernelResult> Tune(const KernelId id, const KernelDimensions& dimensions,
+        std::unique_ptr<StopCondition> stopCondition = nullptr);
 
     /** @fn KernelResult TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
       * const bool recomputeReference = false)
@@ -509,6 +556,26 @@ public:
       * information.
       */
     KernelResult TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
+        const bool recomputeReference = false);
+
+    /** @fn KernelResult TuneIteration(const KernelId id, const KernelDimensions& dimensions,
+      * const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference = false)
+      * Performs one step of the tuning process for specified kernel. When this method is called for the kernel for the first time,
+      * it creates configuration space based on combinations of provided kernel parameters and constraints. Each time this method
+      * is called, it launches a single kernel configuration. If all configurations were already launched, it runs kernel using the
+      * best configuration. Output data can be retrieved by providing output descriptors. Allows control over recomputation of
+      * reference output.
+      * @param id Id of the tuned kernel.
+      * @param dimensions Global and local sizes with which the kernel will be launched. If no dimensions are specified for some
+      * definition, the sizes specified during its addition will be used.
+      * @param output User-provided memory locations for kernel arguments which should be retrieved. See BufferOutputDescriptor for
+      * more information.
+      * @param recomputeReference Flag which controls whether recomputation of reference output should be performed or not. Useful
+      * if kernel data between individual method invocations change.
+      * @return Result containing information about kernel computation in specific configuration. See KernelResult for more
+      * information.
+      */
+    KernelResult TuneIteration(const KernelId id, const KernelDimensions& dimensions, const std::vector<BufferOutputDescriptor>& output,
         const bool recomputeReference = false);
 
     /** @fn std::vector<KernelResult> SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,

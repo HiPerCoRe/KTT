@@ -58,18 +58,21 @@ public:
     void SetReadOnlyArgumentCache(const bool flag);
 
     // Kernel running and validation
-    KernelResult RunKernel(const KernelId id, const KernelConfiguration& configuration, const std::vector<BufferOutputDescriptor>& output);
+    KernelResult RunKernel(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+        const std::vector<BufferOutputDescriptor>& output);
     void SetProfiling(const bool flag);
     void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void SetValidationMode(const ValidationMode mode);
     void SetValidationRange(const ArgumentId id, const size_t range);
     void SetValueComparator(const ArgumentId id, ValueComparator comparator);
     void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
-    void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration);
+    void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
+        const KernelDimensions& dimensions);
 
     // Kernel tuning and configurations
-    std::vector<KernelResult> TuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition);
-    KernelResult TuneKernelIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference);
+    std::vector<KernelResult> TuneKernel(const KernelId id, const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition);
+    KernelResult TuneKernelIteration(const KernelId id, const KernelDimensions& dimensions, const std::vector<BufferOutputDescriptor>& output,
+        const bool recomputeReference);
     std::vector<KernelResult> SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations);
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     void ClearData(const KernelId id);

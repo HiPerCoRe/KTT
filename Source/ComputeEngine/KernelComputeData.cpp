@@ -7,11 +7,13 @@
 #include <Kernel/Kernel.h>
 #include <Kernel/KernelDefinition.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/StlHelpers.h>
 
 namespace ktt
 {
 
-KernelComputeData::KernelComputeData(const Kernel& kernel, const KernelDefinition& definition, const KernelConfiguration& configuration) :
+KernelComputeData::KernelComputeData(const Kernel& kernel, const KernelDefinition& definition, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions) :
     m_Name(definition.GetName()),
     m_DefaultSource(definition.GetSource()),
     m_ConfigurationPrefix(configuration.GeneratePrefix()),
@@ -19,8 +21,20 @@ KernelComputeData::KernelComputeData(const Kernel& kernel, const KernelDefinitio
     m_Configuration(&configuration),
     m_Arguments(definition.GetArguments())
 {
-    m_GlobalSize = kernel.GetModifiedGlobalSize(definition.GetId(), configuration.GetPairs());
-    m_LocalSize = kernel.GetModifiedLocalSize(definition.GetId(), configuration.GetPairs());
+    const auto id = definition.GetId();
+    const auto& pairs = configuration.GetPairs();
+
+    if (ContainsKey(dimensions, id))
+    {
+        const auto& pair = dimensions.find(id)->second;
+        m_GlobalSize = kernel.GetModifiedSize(id, pair.first, ModifierType::Global, pairs);
+        m_LocalSize = kernel.GetModifiedSize(id, pair.second, ModifierType::Local, pairs);
+    }
+    else
+    {
+        m_GlobalSize = kernel.GetModifiedSize(id, ModifierType::Global, pairs);
+        m_LocalSize = kernel.GetModifiedSize(id, ModifierType::Local, pairs);
+    }
 }
 
 void KernelComputeData::SetGlobalSize(const DimensionVector& globalSize)

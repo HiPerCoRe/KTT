@@ -166,11 +166,11 @@ void TunerCore::SetReadOnlyArgumentCache(const bool flag)
     m_KernelRunner->SetReadOnlyArgumentCache(flag);
 }
 
-KernelResult TunerCore::RunKernel(const KernelId id, const KernelConfiguration& configuration,
+KernelResult TunerCore::RunKernel(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
     const std::vector<BufferOutputDescriptor>& output)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_KernelRunner->RunKernel(kernel, configuration, KernelRunMode::Running, output);
+    return m_KernelRunner->RunKernel(kernel, configuration, dimensions, KernelRunMode::Running, output);
 }
 
 void TunerCore::SetProfiling(const bool flag)
@@ -203,22 +203,25 @@ void TunerCore::SetReferenceComputation(const ArgumentId id, ReferenceComputatio
     m_KernelRunner->SetReferenceComputation(id, computation);
 }
 
-void TunerCore::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration)
+void TunerCore::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions)
 {
     const auto& kernel = m_KernelManager->GetKernel(referenceId);
-    m_KernelRunner->SetReferenceKernel(id, kernel, configuration);
+    m_KernelRunner->SetReferenceKernel(id, kernel, configuration, dimensions);
 }
 
-std::vector<KernelResult> TunerCore::TuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+std::vector<KernelResult> TunerCore::TuneKernel(const KernelId id, const KernelDimensions& dimensions,
+    std::unique_ptr<StopCondition> stopCondition)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_TuningRunner->Tune(kernel, std::move(stopCondition));
+    return m_TuningRunner->Tune(kernel, dimensions, std::move(stopCondition));
 }
 
-KernelResult TunerCore::TuneKernelIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
+KernelResult TunerCore::TuneKernelIteration(const KernelId id, const KernelDimensions& dimensions,
+    const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_TuningRunner->TuneIteration(kernel, KernelRunMode::OnlineTuning, output, recomputeReference);
+    return m_TuningRunner->TuneIteration(kernel, dimensions, KernelRunMode::OnlineTuning, output, recomputeReference);
 }
 
 std::vector<KernelResult> TunerCore::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,

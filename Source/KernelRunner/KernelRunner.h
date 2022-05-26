@@ -22,8 +22,8 @@ class KernelRunner
 public:
     explicit KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumentManager);
 
-    KernelResult RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
-        const std::vector<BufferOutputDescriptor>& output, const bool manageBuffers = true);
+    KernelResult RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+        const KernelRunMode mode, const std::vector<BufferOutputDescriptor>& output, const bool manageBuffers = true);
     void SetupBuffers(const Kernel& kernel);
     void CleanupBuffers(const Kernel& kernel);
     void DownloadBuffers(const std::vector<BufferOutputDescriptor>& output);
@@ -37,7 +37,8 @@ public:
     void SetValidationRange(const ArgumentId id, const size_t range);
     void SetValueComparator(const ArgumentId id, ValueComparator comparator);
     void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
-    void SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration);
+    void SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration,
+        const KernelDimensions& dimensions);
     void ClearReferenceResult(const Kernel& kernel);
     void RemoveKernelData(const KernelId id);
     void RemoveValidationData(const ArgumentId id);
@@ -51,8 +52,8 @@ private:
     bool m_ProfilingFlag;
 
     KernelLauncher GetKernelLauncher(const Kernel& kernel);
-    KernelResult RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
-        KernelLauncher launcher, const std::vector<BufferOutputDescriptor>& output);
+    KernelResult RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+        const KernelRunMode mode, KernelLauncher launcher, const std::vector<BufferOutputDescriptor>& output);
     Nanoseconds RunLauncher(KernelLauncher launcher);
 
     void PrepareValidationData(const ArgumentId id);
