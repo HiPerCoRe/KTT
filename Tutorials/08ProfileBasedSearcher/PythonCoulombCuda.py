@@ -29,6 +29,7 @@ class PyProfilingSearcher(ktt.Searcher):
     ccMajor = 0
     ccMinor = 0
     cc = 0
+    multiprocessors = 0
     profilingCountersModel = 0
     bestDuration = -1
     bestConf = None
@@ -36,7 +37,7 @@ class PyProfilingSearcher(ktt.Searcher):
     tuningParamsNames = []
     currentConfiguration = ktt.KernelConfiguration()
     tuner = None
-    modelFileChangeme = "" #TODO model file should be loaded only once
+    model = None
 
     def __init__(self):
         ktt.Searcher.__init__(self)
@@ -45,6 +46,7 @@ class PyProfilingSearcher(ktt.Searcher):
         for i in range(0, BATCH) :
             self.preselectedBatch.append(self.GetRandomConfiguration())
         self.currentConfiguration = self.preselectedBatch[0]
+
         tp = self.currentConfiguration.GetPairs()
         for p in tp :
             self.tuningParamsNames.append(p.GetName())
@@ -54,11 +56,13 @@ class PyProfilingSearcher(ktt.Searcher):
         self.ccMajor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMajor()
         self.ccMinor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMinor()
         self.cc = self.ccMajor + round(0.1 * self.ccMinor, 1)
+        self.multiprocessors = tuner.GetCurrentDeviceInfo().GetMaxComputeUnits()
         print (self.ccMajor, self.ccMinor)
+        print(self.convertSM2Cores(), self.convertSM2Cores() * self.multiprocessors)
         # tuningParams
         # configurationsData
         self.profilingCountersModel = readPCList(modelFile + ".pc")
-        self.modelFileChangeme = modelFile
+        self.model = loadMLModel(modelFile)
 
     def CalculateNextConfiguration(self, previousResult):
         # select the new configuration
@@ -114,9 +118,9 @@ class PyProfilingSearcher(ktt.Searcher):
 
                 # score the configurations
                 scoreDistrib = [1.0]*len(candidates)
-                bottlenecks = analyzeBottlenecks(pcNames, pcVals, 6.1, 15, 1920) #FIXME multiprocessors and cores!
+                bottlenecks = analyzeBottlenecks(pcNames, pcVals, 6.1, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)
                 changes = computeChanges(bottlenecks, self.profilingCountersModel, self.cc)
-                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.modelFileChangeme)
+                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
 
                 print(scoreDistrib)
 
@@ -133,6 +137,33 @@ class PyProfilingSearcher(ktt.Searcher):
 
     def GetCurrentConfiguration(self):
         return self.currentConfiguration
+
+    def convertSM2Cores(self):
+        smToCoresDict = {
+            0x30: 192,
+            0x32: 192,
+            0x35: 192,
+            0x37: 192,
+            0x50: 128,
+            0x52: 128,
+            0x53: 128,
+            0x60: 64,
+            0x61: 128,
+            0x62: 128,
+            0x70: 64,
+            0x72: 64,
+            0x75: 64,
+            0x80: 64,
+            0x86: 64
+        }
+        defaultSM = 64
+
+        compact = (self.ccMajor << 4) + self.ccMinor
+        if compact in smToCoresDict:
+            return smToCoresDict[compact]
+        else:
+            print("Warning: unknown number of cores for SM " + str(self.ccMajor) + "." + str(self.ccMinor) + ", using default value of " + str(defaultSM))
+            return defaultSM
 
 def main():
     deviceIndex = 0
