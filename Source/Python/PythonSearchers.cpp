@@ -3,6 +3,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <TuningRunner/ConfigurationData.h>
+
 #include <Ktt.h>
 
 namespace py = pybind11;
@@ -38,6 +40,7 @@ void InitializePythonSearchers(py::module_& module)
     py::class_<ktt::Searcher, PySearcher>(module, "Searcher")
         .def(py::init<>())
         .def("OnInitialize", &ktt::Searcher::OnInitialize)
+        .def("Initialize", &ktt::Searcher::Initialize)
         .def("OnReset", &ktt::Searcher::OnReset)
         .def("CalculateNextConfiguration", &ktt::Searcher::CalculateNextConfiguration)
         .def("GetCurrentConfiguration", &ktt::Searcher::GetCurrentConfiguration)

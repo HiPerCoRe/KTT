@@ -409,6 +409,7 @@ project "01InfoOpenCl"
     files {"Tutorials/01ComputeApiInfo/ComputeApiInfoOpenCl.cpp"}
     includedirs {"Source"}
     links {"ktt"}
+    linkPython()
 
 project "02KernelRunningOpenCl"
     kind "ConsoleApp"

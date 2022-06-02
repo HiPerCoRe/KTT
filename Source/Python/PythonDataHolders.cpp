@@ -6,11 +6,15 @@
 #include <pybind11/stl.h>
 
 #include <Ktt.h>
+#include <TuningRunner/ConfigurationData.h>
 
 namespace py = pybind11;
 
 void InitializePythonDataHolders(py::module_& module)
 {
+    py::class_<ktt::ConfigurationData>(module, "ConfigurationData")
+        .def(py::init<ktt::Searcher&, const ktt::Kernel&>());
+
     py::class_<ktt::DimensionVector>(module, "DimensionVector")
         .def(py::init<>())
         .def(py::init<const size_t>())

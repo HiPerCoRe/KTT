@@ -124,7 +124,7 @@ public:
       */
     void Reset();
 
-private:
+protected:
     const ConfigurationData* m_Data;
 };
 

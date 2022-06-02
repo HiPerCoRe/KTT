@@ -225,6 +225,8 @@ int main(int argc, char** argv)
         tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
 
+    tuner.SetSearcher(kernel, std::make_unique<ktt::ProfileBasedSearcher>());
+
     const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
 
