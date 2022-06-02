@@ -57,10 +57,7 @@ class PyProfilingSearcher(ktt.Searcher):
         self.ccMinor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMinor()
         self.cc = self.ccMajor + round(0.1 * self.ccMinor, 1)
         self.multiprocessors = tuner.GetCurrentDeviceInfo().GetMaxComputeUnits()
-        print (self.ccMajor, self.ccMinor)
-        print(self.convertSM2Cores(), self.convertSM2Cores() * self.multiprocessors)
-        # tuningParams
-        # configurationsData
+
         self.profilingCountersModel = readPCList(modelFile + ".pc")
         self.model = loadMLModel(modelFile)
 
@@ -80,6 +77,8 @@ class PyProfilingSearcher(ktt.Searcher):
                 self.tuner.SetProfiling(True)
             else :
                 # get PCs from the last tuning run
+                if len(previousResult.GetResults()) > 1:
+                    print("Warning: this version of profile-based searcher does not support searching kernels collections. Using counters from kernels 0 only.")
                 globalSize = previousResult.GetResults()[0].GetGlobalSize()
                 localSize = previousResult.GetResults()[0].GetLocalSize()
                 profilingCountersRun = previousResult.GetResults()[0].GetProfilingData().GetCounters() #FIXME this supposes there is no composition profiled
@@ -94,14 +93,14 @@ class PyProfilingSearcher(ktt.Searcher):
                     elif (pd.GetType() == ktt.ProfilingCounterType.Double) or (pd.GetType() == ktt.ProfilingCounterType.Percent) :
                         pcVals.append(pd.GetValueDouble())
                     else :
-                        print("Fatal error, unsupported PC value!")
+                        print("Fatal error, unsupported PC value passed to profile-based searcher!")
                         exit(1)
 
                 # select candidate configurations according to position of the best one plus some random sample
                 candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)
                 for i in range (0, 10) :
                     candidates.append(self.GetRandomConfiguration())
-                print("Evaluating model for " + str(len(candidates)) + " candidates...")
+                print("Profile-based searcher: evaluating model for " + str(len(candidates)) + " candidates...")
 
                 # get tuning space from candidates
                 candidatesTuningSpace = []
@@ -109,7 +108,7 @@ class PyProfilingSearcher(ktt.Searcher):
                     tp = c.GetPairs()
                     candidateParams = []
                     for p in tp :
-                        candidateParams.append(p.GetValue()) #FIXME floating-point values?
+                        candidateParams.append(p.GetValue())
                     candidatesTuningSpace.append(candidateParams)
                 myTuningSpace = []
                 tp = self.bestConf.GetPairs()
@@ -122,13 +121,10 @@ class PyProfilingSearcher(ktt.Searcher):
                 changes = computeChanges(bottlenecks, self.profilingCountersModel, self.cc)
                 scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
 
-                print(scoreDistrib)
-
                 # select next batch
                 for i in range(0, BATCH) :
                     idx = weightedRandomSearchStep(scoreDistrib, len(candidates))
                     self.preselectedBatch.append(candidates[idx])
-                    print(scoreDistrib[i])
                 self.currentConfiguration = self.preselectedBatch[0]
                 self.bestConf = None
                 self.tuner.SetProfiling(False)
@@ -199,10 +195,6 @@ def main():
     tuner.SetCompilerOptions("-use_fast_math")
     tuner.SetTimeUnit(ktt.TimeUnit.Microseconds)
     tuner.SetProfiling(False)
-
-    #ccMajor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMajor()
-    #ccMinor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMinor()
-    #print (ccMajor, ccMinor)
 
     definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, gridDimensions, blockDimensions)
 
