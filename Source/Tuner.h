@@ -600,15 +600,27 @@ public:
       */
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
 
+    /** @fn void InitializeConfigurationData(const KernelId id)
+      * Generates configuration space and initializes searcher for the specified kernel.
+      * @param id Id of kernel whose configuration data will be initialized.
+      */
+    void InitializeConfigurationData(const KernelId id);
+
+    /** @fn void ClearConfigurationData(const KernelId id)
+      * Resets searcher and clears generated configurations for the specified kernel.
+      * @param id Id of kernel whose configuration data will be cleared.
+      */
+    void ClearConfigurationData(const KernelId id);
+
     /** @fn void ClearData(const KernelId id)
       * Resets tuning process and clears generated configurations for the specified kernel.
       * @param id Id of kernel whose data will be cleared.
       */
-    void ClearData(const KernelId id);
+    [[deprecated("Use ClearConfigurationData() method instead.")]] void ClearData(const KernelId id);
 
     /** @fn uint64_t GetConfigurationsCount(const KernelId id) const
-      * Returns the total number of configurations for specified kernel. Valid number will be returned only if kernel tuning was
-      * already performed for the corresponding kernel (e.g., TuneIteration was called at least once).
+      * Returns the total number of configurations for specified kernel. Valid number will be returned only if configuration data was
+      * already initialized for the corresponding kernel (e.g., InitializeConfigurationData, TuneIteration, Tune was called beforehand).
       * @param id Id of kernel for which the total number of configurations will be returned.
       * @return Total number of configurations for specified kernel
       */
@@ -746,15 +758,17 @@ public:
       */
     void SetProfilingCounters(const std::vector<std::string>& counters);
 
-    /** @fn void SetCompilerOptions(const std::string& options)
+    /** @fn void SetCompilerOptions(const std::string& options, const bool overrideDefault = false)
       * Sets compute API compiler options to specified options. There are no default options for OpenCL backend. By default for
-      * CUDA backend it adds the compiler option "--gpu-architecture=compute_xx", where `xx` is the compute capability retrieved
+      * CUDA backend, the compiler option "--gpu-architecture=compute_xx" is added, where `xx` is the compute capability retrieved
       * from the device.
       * For the list of OpenCL compiler options, see: https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/clBuildProgram.html
       * For the list of CUDA compiler options, see: http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-command-options
       * @param options Compute API compiler options. If multiple options are used, they need to be separated by a single space character.
+      * @param overrideDefault If false, the default options will be applied in addition to the specified options. If true, no default
+      * options will be applied.
       */
-    void SetCompilerOptions(const std::string& options);
+    void SetCompilerOptions(const std::string& options, const bool overrideDefault = false);
 
     /** @fn void SetGlobalSizeType(const GlobalSizeType type)
       * Sets global size specification type to specified compute API style. In OpenCL, NDrange size is specified as number

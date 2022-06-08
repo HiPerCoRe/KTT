@@ -302,7 +302,9 @@ void InitializePythonTuner(py::module_& module)
             py::arg("iterations") = 0
         )
         .def("SetSearcher", &ktt::Tuner::SetSearcher)
-        .def("ClearData", &ktt::Tuner::ClearData)
+        .def("InitializeConfigurationData", &ktt::Tuner::InitializeConfigurationData)
+        .def("ClearConfigurationData", &ktt::Tuner::ClearConfigurationData)
+        .def("ClearData", &ktt::Tuner::ClearConfigurationData)
         .def("GetConfigurationsCount", &ktt::Tuner::GetConfigurationsCount)
         .def("GetBestConfiguration", &ktt::Tuner::GetBestConfiguration)
         .def("CreateConfiguration", &ktt::Tuner::CreateConfiguration)
@@ -336,6 +338,13 @@ void InitializePythonTuner(py::module_& module)
         .def("SynchronizeQueue", &ktt::Tuner::SynchronizeQueue)
         .def("SynchronizeQueues", &ktt::Tuner::SynchronizeQueues)
         .def("SynchronizeDevice", &ktt::Tuner::SynchronizeDevice)
+        .def
+        (
+            "SetCompilerOptions",
+            &ktt::Tuner::SetCompilerOptions,
+            py::arg("options"),
+            py::arg("overrideDefault") = false
+        )
         .def("SetCompilerOptions", &ktt::Tuner::SetCompilerOptions)
         .def("SetGlobalSizeType", &ktt::Tuner::SetGlobalSizeType)
         .def("SetAutomaticGlobalSizeCorrection", &ktt::Tuner::SetAutomaticGlobalSizeCorrection)

@@ -75,7 +75,8 @@ public:
         const bool recomputeReference);
     std::vector<KernelResult> SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results, const uint64_t iterations);
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
-    void ClearData(const KernelId id);
+    void InitializeConfigurationData(const KernelId id);
+    void ClearConfigurationData(const KernelId id);
     uint64_t GetConfigurationsCount(const KernelId id) const;
     KernelConfiguration GetBestConfiguration(const KernelId id) const;
     KernelConfiguration CreateConfiguration(const KernelId id, const ParameterInput& parameters) const;
@@ -97,7 +98,7 @@ public:
     void SynchronizeQueues();
     void SynchronizeDevice();
     void SetProfilingCounters(const std::vector<std::string>& counters);
-    void SetCompilerOptions(const std::string& options);
+    void SetCompilerOptions(const std::string& options, const bool overrideDefault = false);
     void SetGlobalSizeType(const GlobalSizeType type);
     void SetAutomaticGlobalSizeCorrection(const bool flag);
     void SetKernelCacheCapacity(const uint64_t capacity);

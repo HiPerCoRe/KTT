@@ -631,7 +631,7 @@ GlobalSizeType OpenClEngine::GetGlobalSizeType() const
     return m_Configuration.GetGlobalSizeType();
 }
 
-void OpenClEngine::SetCompilerOptions(const std::string& options)
+void OpenClEngine::SetCompilerOptions(const std::string& options, [[maybe_unused]] const bool overrideDefault)
 {
     m_Configuration.SetCompilerOptions(options);
     ClearKernelCache();

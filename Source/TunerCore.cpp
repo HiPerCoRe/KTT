@@ -77,7 +77,7 @@ KernelId TunerCore::CreateKernel(const std::string& name, const std::vector<Kern
 
 void TunerCore::RemoveKernel(const KernelId id)
 {
-    m_TuningRunner->ClearData(id, true);
+    m_TuningRunner->ClearConfigurationData(id, true);
     m_KernelRunner->RemoveKernelData(id);
     m_KernelManager->RemoveKernel(id);
 }
@@ -236,9 +236,15 @@ void TunerCore::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searche
     m_TuningRunner->SetSearcher(id, std::move(searcher));
 }
 
-void TunerCore::ClearData(const KernelId id)
+void TunerCore::InitializeConfigurationData(const KernelId id)
 {
-    m_TuningRunner->ClearData(id);
+    const auto& kernel = m_KernelManager->GetKernel(id);
+    m_TuningRunner->InitializeConfigurationData(kernel);
+}
+
+void TunerCore::ClearConfigurationData(const KernelId id)
+{
+    m_TuningRunner->ClearConfigurationData(id);
 }
 
 uint64_t TunerCore::GetConfigurationsCount(const KernelId id) const
@@ -365,9 +371,9 @@ void TunerCore::SetProfilingCounters(const std::vector<std::string>& counters)
     m_ComputeEngine->SetProfilingCounters(counters);
 }
 
-void TunerCore::SetCompilerOptions(const std::string& options)
+void TunerCore::SetCompilerOptions(const std::string& options, const bool overrideDefault)
 {
-    m_ComputeEngine->SetCompilerOptions(options);
+    m_ComputeEngine->SetCompilerOptions(options, overrideDefault);
 }
 
 void TunerCore::SetGlobalSizeType(const GlobalSizeType type)

@@ -469,16 +469,33 @@ void Tuner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
     }
 }
 
-void Tuner::ClearData(const KernelId id)
+void Tuner::InitializeConfigurationData(const KernelId id)
 {
     try
     {
-        m_Tuner->ClearData(id);
+        m_Tuner->InitializeConfigurationData(id);
     }
     catch (const KttException& exception)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
     }
+}
+
+void Tuner::ClearConfigurationData(const KernelId id)
+{
+    try
+    {
+        m_Tuner->ClearConfigurationData(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::ClearData(const KernelId id)
+{
+    ClearConfigurationData(id);
 }
 
 uint64_t Tuner::GetConfigurationsCount(const KernelId id) const
@@ -687,11 +704,11 @@ void Tuner::SetProfilingCounters(const std::vector<std::string>& counters)
     }
 }
 
-void Tuner::SetCompilerOptions(const std::string& options)
+void Tuner::SetCompilerOptions(const std::string& options, const bool overrideDefault)
 {
     try
     {
-        m_Tuner->SetCompilerOptions(options);
+        m_Tuner->SetCompilerOptions(options, overrideDefault);
     }
     catch (const KttException& exception)
     {

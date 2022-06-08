@@ -24,7 +24,8 @@ public:
     std::vector<KernelResult> SimulateTuning(const Kernel& kernel, const std::vector<KernelResult>& results, const uint64_t iterations);
 
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
-    void ClearData(const KernelId id, const bool clearSearcher = false);
+    void InitializeConfigurationData(const Kernel& kernel);
+    void ClearConfigurationData(const KernelId id, const bool clearSearcher = false);
     uint64_t GetConfigurationsCount(const KernelId id) const;
     KernelConfiguration GetBestConfiguration(const KernelId id) const;
 

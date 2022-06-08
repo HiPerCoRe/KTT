@@ -81,7 +81,7 @@ public:
     GlobalSizeType GetGlobalSizeType() const override;
 
     // Utility methods
-    void SetCompilerOptions(const std::string& options) override;
+    void SetCompilerOptions(const std::string& options, const bool overrideDefault = false) override;
     void SetGlobalSizeType(const GlobalSizeType type) override;
     void SetAutomaticGlobalSizeCorrection(const bool flag) override;
     void SetKernelCacheCapacity(const uint64_t capacity) override;
