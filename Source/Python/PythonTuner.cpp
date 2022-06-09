@@ -345,7 +345,6 @@ void InitializePythonTuner(py::module_& module)
             py::arg("options"),
             py::arg("overrideDefault") = false
         )
-        .def("SetCompilerOptions", &ktt::Tuner::SetCompilerOptions)
         .def("SetGlobalSizeType", &ktt::Tuner::SetGlobalSizeType)
         .def("SetAutomaticGlobalSizeCorrection", &ktt::Tuner::SetAutomaticGlobalSizeCorrection)
         .def("SetKernelCacheCapacity", &ktt::Tuner::SetKernelCacheCapacity)
