@@ -5,6 +5,12 @@
 
 #include <Ktt.h>
 
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
+
+namespace py = pybind11;
+
+
 #if defined(_MSC_VER)
 const std::string kernelPrefix = "";
 #else
@@ -66,7 +72,7 @@ int main(int argc, char** argv)
 
     if constexpr (!useProfiling)
     {
-        atoms = 4000;
+        atoms = 256;
     }
     else
     {
@@ -224,6 +230,12 @@ int main(int argc, char** argv)
         tuner.SetReferenceKernel(gridId, referenceKernel, ktt::KernelConfiguration());
         tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
+
+    //tuner.SetSearcher(kernel, std::make_unique<ktt::ProfileBasedSearcher>((void*)(&tuner), kernel, "1070-coulomb_output_DT.sav"));
+
+    py::scoped_interpreter guard{};
+    py::module_ searcher = py::module_::import("ProfileSearcherExecutor");
+    py::object searcherInstance = searcher.attr("executeSearcher")(&tuner, kernel, "1070-coulomb_output_DT.sav");
 
     const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
