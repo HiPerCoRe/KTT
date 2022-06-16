@@ -2,6 +2,7 @@
 
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
 #include <KernelArgument/KernelArgument.h>
+#include <Utility/NumericalUtilities.h>
 
 TEST_CASE("Working with OpenCL buffer", "OpenClEngine")
 {
@@ -19,14 +20,17 @@ TEST_CASE("Working with OpenCL buffer", "OpenClEngine")
 
     SECTION("Transfering argument to / from device")
     {
-        engine.UploadArgument(argument, engine.GetDefaultQueue());
-        
+        const auto uploadAction = engine.UploadArgument(argument, engine.GetDefaultQueue());
+        engine.WaitForTransferAction(uploadAction);
+
         std::vector<float> result(64);
-        engine.DownloadArgument(argument.GetId(), engine.GetDefaultQueue(), result.data(), result.size() * sizeof(float));
+        const auto downloadAction = engine.DownloadArgument(argument.GetId(), engine.GetDefaultQueue(), result.data(),
+            result.size() * sizeof(float));
+        engine.WaitForTransferAction(downloadAction);
 
         for (size_t i = 0; i < data.size(); ++i)
         {
-            REQUIRE(result[i] == data[i]);
+            REQUIRE(ktt::FloatEquals(result[i], data[i], 0.001f));
         }
     }
 }

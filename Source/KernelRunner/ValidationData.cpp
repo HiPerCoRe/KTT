@@ -55,10 +55,11 @@ void ValidationData::SetReferenceComputation(ReferenceComputation computation)
     m_ReferenceComputation = computation;
 }
 
-void ValidationData::SetReferenceKernel(const Kernel& kernel, const KernelConfiguration& configuration)
+void ValidationData::SetReferenceKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions)
 {
     m_ReferenceKernel = &kernel;
     m_ReferenceConfiguration = configuration;
+    m_ReferenceDimensions = dimensions;
 }
 
 size_t ValidationData::GetValidationRange() const
@@ -147,7 +148,8 @@ void ValidationData::ComputeReferenceWithKernel()
     const size_t referenceSize = m_ValidationRange * m_Argument.GetElementSize();
     m_ReferenceKernelResult.resize(referenceSize);
     BufferOutputDescriptor descriptor(m_Argument.GetId(), m_ReferenceKernelResult.data(), referenceSize);
-    m_KernelRunner.RunKernel(*m_ReferenceKernel, m_ReferenceConfiguration, KernelRunMode::ResultValidation, {descriptor});
+    m_KernelRunner.RunKernel(*m_ReferenceKernel, m_ReferenceConfiguration, m_ReferenceDimensions, KernelRunMode::ResultValidation,
+        {descriptor});
 
     m_KernelRunner.SetProfiling(profiling);
 }

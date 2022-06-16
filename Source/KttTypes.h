@@ -12,6 +12,8 @@
 #include <variant>
 #include <vector>
 
+#include <Api/Configuration/DimensionVector.h>
+
 namespace ktt
 {
 
@@ -51,6 +53,11 @@ using ArgumentId = uint64_t;
   * Data type for referencing parameter values in KTT.
   */
 using ParameterValue = std::variant<int64_t, uint64_t, double, bool, std::string>;
+
+/** @typedef KernelDimensions
+  * Global and local size for each kernel definition can be specified during kernel tuning and running.
+  */
+using KernelDimensions = std::map<KernelDefinitionId, std::pair<DimensionVector /*globalSize*/, DimensionVector /*localSize*/>>;
 
 /** @typedef ParameterInput
   * Data type used for creating and retrieving specific kernel configurations from KTT.

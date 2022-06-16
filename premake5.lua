@@ -359,7 +359,7 @@ workspace "Ktt"
     
     filter "action:vs*"
         buildoptions {"/Zc:__cplusplus", "/permissive-"}
-        
+    
     filter {}
     
     targetdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}")
@@ -721,6 +721,12 @@ project "Tests"
     if _OPTIONS["no-opencl"] then
         removefiles {"Tests/OpenClEngineTests.cpp", "Tests/Kernels/SimpleOpenClKernel.cl"}
     end
+    
+    filter "action:gmake*"
+        buildoptions {"-pthread"}
+        linkoptions {"-pthread"}
+        
+    filter {}
     
     defines {"KTT_LIBRARY", "KTT_TESTS"}
     linkAllLibraries()

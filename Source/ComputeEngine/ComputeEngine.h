@@ -69,7 +69,7 @@ public:
     virtual GlobalSizeType GetGlobalSizeType() const = 0;
 
     // Utility methods
-    virtual void SetCompilerOptions(const std::string& options) = 0;
+    virtual void SetCompilerOptions(const std::string& options, const bool overrideDefault = false) = 0;
     virtual void SetGlobalSizeType(const GlobalSizeType type) = 0;
     virtual void SetAutomaticGlobalSizeCorrection(const bool flag) = 0;
     virtual void SetKernelCacheCapacity(const uint64_t capacity) = 0;

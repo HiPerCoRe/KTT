@@ -17,7 +17,8 @@ class KernelDefinition;
 class KernelComputeData
 {
 public:
-    explicit KernelComputeData(const Kernel& kernel, const KernelDefinition& definition, const KernelConfiguration& configuration);
+    explicit KernelComputeData(const Kernel& kernel, const KernelDefinition& definition, const KernelConfiguration& configuration,
+        const KernelDimensions& dimensions);
 
     void SetGlobalSize(const DimensionVector& globalSize);
     void SetLocalSize(const DimensionVector& localSize);

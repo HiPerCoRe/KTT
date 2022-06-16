@@ -324,9 +324,10 @@ void ComputeLayer::ClearComputeEngineData()
     }
 }
 
-void ComputeLayer::AddData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode)
+void ComputeLayer::AddData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+    const KernelRunMode mode)
 {
-    m_Data[kernel.GetId()] = std::make_unique<ComputeLayerData>(kernel, configuration, mode);
+    m_Data[kernel.GetId()] = std::make_unique<ComputeLayerData>(kernel, configuration, dimensions, mode);
 }
 
 void ComputeLayer::ClearData(const KernelId id)

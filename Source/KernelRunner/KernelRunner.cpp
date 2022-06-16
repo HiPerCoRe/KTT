@@ -20,8 +20,8 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
     m_ProfilingFlag(false)
 {}
 
-KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
-    const std::vector<BufferOutputDescriptor>& output, const bool manageBuffers)
+KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+    const KernelRunMode mode, const std::vector<BufferOutputDescriptor>& output, const bool manageBuffers)
 {
     m_Engine.EnsureThreadContext();
 
@@ -42,7 +42,7 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
 
     Logger::LogInfo("Running kernel " + kernel.GetName() + " with configuration: " + configuration.GetString());
     auto launcher = GetKernelLauncher(kernel);
-    KernelResult result = RunKernelInternal(kernel, configuration, mode, launcher, output);
+    KernelResult result = RunKernelInternal(kernel, configuration, dimensions, mode, launcher, output);
     ValidateResult(kernel, result, mode);
 
     if (manageBuffers)
@@ -163,10 +163,11 @@ void KernelRunner::SetReferenceComputation(const ArgumentId id, ReferenceComputa
     m_Validator->SetReferenceComputation(id, computation);
 }
 
-void KernelRunner::SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration)
+void KernelRunner::SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions)
 {
     PrepareValidationData(id);
-    m_Validator->SetReferenceKernel(id, kernel, configuration);
+    m_Validator->SetReferenceKernel(id, kernel, configuration, dimensions);
 }
 
 void KernelRunner::ClearReferenceResult(const Kernel& kernel)
@@ -219,9 +220,10 @@ KernelLauncher KernelRunner::GetKernelLauncher(const Kernel& kernel)
 }
 
 KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration,
-    const KernelRunMode mode, KernelLauncher launcher, const std::vector<BufferOutputDescriptor>& output)
+    const KernelDimensions& dimensions, const KernelRunMode mode, KernelLauncher launcher,
+    const std::vector<BufferOutputDescriptor>& output)
 {
-    m_ComputeLayer->AddData(kernel, configuration, mode);
+    m_ComputeLayer->AddData(kernel, configuration, dimensions, mode);
     const KernelId id = kernel.GetId();
 
     auto activator = std::make_unique<KernelActivator>(*m_ComputeLayer, id);

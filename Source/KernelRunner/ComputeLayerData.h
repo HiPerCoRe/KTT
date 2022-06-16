@@ -18,7 +18,8 @@ namespace ktt
 class ComputeLayerData
 {
 public:
-    explicit ComputeLayerData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode runMode);
+    explicit ComputeLayerData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+        const KernelRunMode runMode);
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void AddPartialResult(const ComputationResult& result);

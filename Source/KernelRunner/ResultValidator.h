@@ -28,7 +28,8 @@ public:
     void SetValidationRange(const ArgumentId id, const size_t range);
     void SetValueComparator(const ArgumentId id, ValueComparator comparator);
     void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
-    void SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration);
+    void SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration,
+        const KernelDimensions& dimensions);
     bool HasValidationData(const ArgumentId id) const;
     void RemoveValidationData(const ArgumentId id);
     void RemoveDataWithReferenceKernel(const KernelId id);

@@ -18,7 +18,8 @@ void InitializePythonTuner(py::module_& module)
         .def
         (
             "AddKernelDefinition",
-            &ktt::Tuner::AddKernelDefinition,
+            py::overload_cast<const std::string&, const std::string&, const ktt::DimensionVector&, const ktt::DimensionVector&,
+                const std::vector<std::string>&>(&ktt::Tuner::AddKernelDefinition),
             py::arg("name"),
             py::arg("source"),
             py::arg("globalSize"),
@@ -27,12 +28,29 @@ void InitializePythonTuner(py::module_& module)
         )
         .def
         (
+            "AddKernelDefinition",
+            py::overload_cast<const std::string&, const std::string&, const std::vector<std::string>&>(&ktt::Tuner::AddKernelDefinition),
+            py::arg("name"),
+            py::arg("source"),
+            py::arg("typeNames") = std::vector<std::string>{}
+        )
+        .def
+        (
             "AddKernelDefinitionFromFile",
-            &ktt::Tuner::AddKernelDefinitionFromFile,
+            py::overload_cast<const std::string&, const std::string&, const ktt::DimensionVector&, const ktt::DimensionVector&,
+            const std::vector<std::string>&>(&ktt::Tuner::AddKernelDefinitionFromFile),
             py::arg("name"),
             py::arg("filePath"),
             py::arg("globalSize"),
             py::arg("localSize"),
+            py::arg("typeNames") = std::vector<std::string>{}
+        )
+        .def
+        (
+            "AddKernelDefinitionFromFile",
+            py::overload_cast<const std::string&, const std::string&, const std::vector<std::string>&>(&ktt::Tuner::AddKernelDefinitionFromFile),
+            py::arg("name"),
+            py::arg("filePath"),
             py::arg("typeNames") = std::vector<std::string>{}
         )
         .def
@@ -203,7 +221,10 @@ void InitializePythonTuner(py::module_& module)
         )
         .def("RemoveArgument", &ktt::Tuner::RemoveArgument)
         .def("SetReadOnlyArgumentCache", &ktt::Tuner::SetReadOnlyArgumentCache)
-        .def("Run", &ktt::Tuner::Run)
+        .def("Run", py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&,
+            const std::vector<ktt::BufferOutputDescriptor>&>(&ktt::Tuner::Run))
+        .def("Run", py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&, const ktt::KernelDimensions&,
+            const std::vector<ktt::BufferOutputDescriptor>&>(&ktt::Tuner::Run))
         .def("SetProfiling", &ktt::Tuner::SetProfiling)
         .def("SetProfilingCounters", &ktt::Tuner::SetProfilingCounters)
         .def("SetValidationMethod", &ktt::Tuner::SetValidationMethod)
@@ -225,15 +246,49 @@ void InitializePythonTuner(py::module_& module)
                 tuner.SetReferenceComputation(id, actualReference);
             }
         )
-        .def("SetReferenceKernel", &ktt::Tuner::SetReferenceKernel)
-        .def("Tune", py::overload_cast<const ktt::KernelId>(&ktt::Tuner::Tune), py::call_guard<py::gil_scoped_release>())
-        .def("Tune", py::overload_cast<const ktt::KernelId, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune), py::call_guard<py::gil_scoped_release>())
+        .def
+        (
+            "SetReferenceKernel",
+            &ktt::Tuner::SetReferenceKernel,
+            py::arg("id"),
+            py::arg("referenceId"),
+            py::arg("configuration"),
+            py::arg("dimensions") = ktt::KernelDimensions{}
+        )
+        .def
+        (
+            "Tune",
+            py::overload_cast<const ktt::KernelId, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune),
+            py::call_guard<py::gil_scoped_release>(),
+            py::arg("id"),
+            py::arg("stopCondition") = nullptr
+        )
+        .def
+        (
+            "Tune",
+            py::overload_cast<const ktt::KernelId, const ktt::KernelDimensions&, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune),
+            py::call_guard<py::gil_scoped_release>(),
+            py::arg("id"),
+            py::arg("dimensions"),
+            py::arg("stopCondition") = nullptr
+        )
         .def
         (
             "TuneIteration",
-            &ktt::Tuner::TuneIteration,
+            py::overload_cast<const ktt::KernelId, const std::vector<ktt::BufferOutputDescriptor>&, const bool>(&ktt::Tuner::TuneIteration),
             py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
+            py::arg("output"),
+            py::arg("recomputeReference") = false
+        )
+        .def
+        (
+            "TuneIteration",
+            py::overload_cast<const ktt::KernelId, const ktt::KernelDimensions&, const std::vector<ktt::BufferOutputDescriptor>&,
+                const bool>(&ktt::Tuner::TuneIteration),
+            py::call_guard<py::gil_scoped_release>(),
+            py::arg("id"),
+            py::arg("dimensions"),
             py::arg("output"),
             py::arg("recomputeReference") = false
         )
@@ -247,7 +302,9 @@ void InitializePythonTuner(py::module_& module)
             py::arg("iterations") = 0
         )
         .def("SetSearcher", &ktt::Tuner::SetSearcher)
-        .def("ClearData", &ktt::Tuner::ClearData)
+        .def("InitializeConfigurationData", &ktt::Tuner::InitializeConfigurationData)
+        .def("ClearConfigurationData", &ktt::Tuner::ClearConfigurationData)
+        .def("ClearData", &ktt::Tuner::ClearConfigurationData)
         .def("GetConfigurationsCount", &ktt::Tuner::GetConfigurationsCount)
         .def("GetBestConfiguration", &ktt::Tuner::GetBestConfiguration)
         .def("CreateConfiguration", &ktt::Tuner::CreateConfiguration)
@@ -281,7 +338,13 @@ void InitializePythonTuner(py::module_& module)
         .def("SynchronizeQueue", &ktt::Tuner::SynchronizeQueue)
         .def("SynchronizeQueues", &ktt::Tuner::SynchronizeQueues)
         .def("SynchronizeDevice", &ktt::Tuner::SynchronizeDevice)
-        .def("SetCompilerOptions", &ktt::Tuner::SetCompilerOptions)
+        .def
+        (
+            "SetCompilerOptions",
+            &ktt::Tuner::SetCompilerOptions,
+            py::arg("options"),
+            py::arg("overrideDefault") = false
+        )
         .def("SetGlobalSizeType", &ktt::Tuner::SetGlobalSizeType)
         .def("SetAutomaticGlobalSizeCorrection", &ktt::Tuner::SetAutomaticGlobalSizeCorrection)
         .def("SetKernelCacheCapacity", &ktt::Tuner::SetKernelCacheCapacity)

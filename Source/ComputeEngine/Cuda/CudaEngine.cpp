@@ -706,13 +706,18 @@ GlobalSizeType CudaEngine::GetGlobalSizeType() const
     return m_Configuration.GetGlobalSizeType();
 }
 
-void CudaEngine::SetCompilerOptions(const std::string& options)
+void CudaEngine::SetCompilerOptions(const std::string& options, const bool overrideDefault)
 {
-    std::string finalOptions = GetDefaultCompilerOptions();
+    std::string finalOptions = options;
 
-    if (!options.empty())
+    if (!overrideDefault)
     {
-        finalOptions += " " + options;
+        if (!finalOptions.empty())
+        {
+            finalOptions += " ";
+        }
+
+        finalOptions += GetDefaultCompilerOptions();
     }
 
     m_Configuration.SetCompilerOptions(finalOptions);

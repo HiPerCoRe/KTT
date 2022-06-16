@@ -8,7 +8,8 @@
 namespace ktt
 {
 
-ComputeLayerData::ComputeLayerData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode runMode) :
+ComputeLayerData::ComputeLayerData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+    const KernelRunMode runMode) :
     m_Kernel(kernel),
     m_Configuration(configuration),
     m_RunMode(runMode),
@@ -17,7 +18,7 @@ ComputeLayerData::ComputeLayerData(const Kernel& kernel, const KernelConfigurati
     for (const auto* definition : kernel.GetDefinitions())
     {
         const auto id = definition->GetId();
-        m_ComputeData.insert({id, KernelComputeData(kernel, *definition, configuration)});
+        m_ComputeData.insert({id, KernelComputeData(kernel, *definition, configuration, dimensions)});
     }
 }
 

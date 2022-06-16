@@ -14,7 +14,8 @@ TuningRunner::TuningRunner(KernelRunner& kernelRunner) :
     m_ConfigurationManager(std::make_unique<ConfigurationManager>())
 {}
 
-std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_ptr<StopCondition> stopCondition)
+std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelDimensions& dimensions,
+    std::unique_ptr<StopCondition> stopCondition)
 {
     Logger::LogInfo("Starting offline tuning for kernel " + kernel.GetName());
     const auto id = kernel.GetId();
@@ -37,7 +38,7 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_p
     {
         do 
         {
-            result = TuneIteration(kernel, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false);
+            result = TuneIteration(kernel, dimensions, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false);
         }
         while (result.HasRemainingProfilingRuns());
 
@@ -69,7 +70,7 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_p
     return results;
 }
 
-KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMode mode,
+KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimensions& dimensions, const KernelRunMode mode,
     const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
 {
     if (recomputeReference)
@@ -101,7 +102,7 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
             + " for kernel " + kernel.GetName());
     }
 
-    KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, mode, output);
+    KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, dimensions, mode, output);
 
     if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns() && !m_ConfigurationManager->IsDataProcessed(id))
     {
@@ -183,7 +184,12 @@ void TuningRunner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> sear
     m_ConfigurationManager->SetSearcher(id, std::move(searcher));
 }
 
-void TuningRunner::ClearData(const KernelId id, const bool clearSearcher)
+void TuningRunner::InitializeConfigurationData(const Kernel& kernel)
+{
+    m_ConfigurationManager->InitializeData(kernel);
+}
+
+void TuningRunner::ClearConfigurationData(const KernelId id, const bool clearSearcher)
 {
     m_ConfigurationManager->ClearData(id, clearSearcher);
 }

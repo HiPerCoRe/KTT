@@ -40,6 +40,12 @@ KernelDefinitionId Tuner::AddKernelDefinition(const std::string& name, const std
     }
 }
 
+KernelDefinitionId Tuner::AddKernelDefinition(const std::string& name, const std::string& source,
+    const std::vector<std::string>& typeNames)
+{
+    return AddKernelDefinition(name, source, DimensionVector(), DimensionVector(), typeNames);
+}
+
 KernelDefinitionId Tuner::AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
     const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames)
 {
@@ -52,6 +58,12 @@ KernelDefinitionId Tuner::AddKernelDefinitionFromFile(const std::string& name, c
         TunerCore::Log(LoggingLevel::Error, exception.what());
         return InvalidKernelDefinitionId;
     }
+}
+
+KernelDefinitionId Tuner::AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
+    const std::vector<std::string>& typeNames)
+{
+    return AddKernelDefinitionFromFile(name, filePath, DimensionVector(), DimensionVector(), typeNames);
 }
 
 KernelDefinitionId Tuner::GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames) const
@@ -223,6 +235,18 @@ void Tuner::AddGenericConstraint(const KernelId id, const std::vector<std::strin
     }
 }
 
+void Tuner::AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script)
+{
+    try
+    {
+        m_Tuner->AddScriptConstraint(id, parameters, script);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)
 {
     try
@@ -290,9 +314,15 @@ void Tuner::SetReadOnlyArgumentCache(const bool flag)
 KernelResult Tuner::Run(const KernelId id, const KernelConfiguration& configuration,
     const std::vector<BufferOutputDescriptor>& output)
 {
+    return Run(id, configuration, {}, output);
+}
+
+KernelResult Tuner::Run(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+    const std::vector<BufferOutputDescriptor>& output)
+{
     try
     {
-        return m_Tuner->RunKernel(id, configuration, output);
+        return m_Tuner->RunKernel(id, configuration, dimensions, output);
     }
     catch (const KttException& exception)
     {
@@ -373,11 +403,12 @@ void Tuner::SetReferenceComputation(const ArgumentId id, ReferenceComputation co
     }
 }
 
-void Tuner::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration)
+void Tuner::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions)
 {
     try
     {
-        m_Tuner->SetReferenceKernel(id, referenceId, configuration);
+        m_Tuner->SetReferenceKernel(id, referenceId, configuration, dimensions);
     }
     catch (const KttException& exception)
     {
@@ -385,16 +416,17 @@ void Tuner::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, 
     }
 }
 
-std::vector<KernelResult> Tuner::Tune(const KernelId id)
+std::vector<KernelResult> Tuner::Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
-    return Tune(id, nullptr);
+    return Tune(id, {}, std::move(stopCondition));
 }
 
-std::vector<KernelResult> Tuner::Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+std::vector<KernelResult> Tuner::Tune(const KernelId id, const KernelDimensions& dimensions,
+    std::unique_ptr<StopCondition> stopCondition)
 {
     try
     {
-        return m_Tuner->TuneKernel(id, std::move(stopCondition));
+        return m_Tuner->TuneKernel(id, dimensions, std::move(stopCondition));
     }
     catch (const KttException& exception)
     {
@@ -406,9 +438,15 @@ std::vector<KernelResult> Tuner::Tune(const KernelId id, std::unique_ptr<StopCon
 KernelResult Tuner::TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
     const bool recomputeReference)
 {
+    return TuneIteration(id, {}, output, recomputeReference);
+}
+
+KernelResult Tuner::TuneIteration(const KernelId id, const KernelDimensions& dimensions,
+    const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
+{
     try
     {
-        return m_Tuner->TuneKernelIteration(id, output, recomputeReference);
+        return m_Tuner->TuneKernelIteration(id, dimensions, output, recomputeReference);
     }
     catch (const KttException& exception)
     {
@@ -443,16 +481,33 @@ void Tuner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
     }
 }
 
-void Tuner::ClearData(const KernelId id)
+void Tuner::InitializeConfigurationData(const KernelId id)
 {
     try
     {
-        m_Tuner->ClearData(id);
+        m_Tuner->InitializeConfigurationData(id);
     }
     catch (const KttException& exception)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
     }
+}
+
+void Tuner::ClearConfigurationData(const KernelId id)
+{
+    try
+    {
+        m_Tuner->ClearConfigurationData(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::ClearData(const KernelId id)
+{
+    ClearConfigurationData(id);
 }
 
 uint64_t Tuner::GetConfigurationsCount(const KernelId id) const
@@ -661,11 +716,11 @@ void Tuner::SetProfilingCounters(const std::vector<std::string>& counters)
     }
 }
 
-void Tuner::SetCompilerOptions(const std::string& options)
+void Tuner::SetCompilerOptions(const std::string& options, const bool overrideDefault)
 {
     try
     {
-        m_Tuner->SetCompilerOptions(options);
+        m_Tuner->SetCompilerOptions(options, overrideDefault);
     }
     catch (const KttException& exception)
     {

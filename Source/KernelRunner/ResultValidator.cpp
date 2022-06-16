@@ -59,10 +59,11 @@ void ResultValidator::SetReferenceComputation(const ArgumentId id, ReferenceComp
     m_ValidationData[id]->SetReferenceComputation(computation);
 }
 
-void ResultValidator::SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration)
+void ResultValidator::SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions)
 {
     KttAssert(HasValidationData(id), "Validation data not found");
-    m_ValidationData[id]->SetReferenceKernel(kernel, configuration);
+    m_ValidationData[id]->SetReferenceKernel(kernel, configuration, dimensions);
 }
 
 bool ResultValidator::HasValidationData(const ArgumentId id) const

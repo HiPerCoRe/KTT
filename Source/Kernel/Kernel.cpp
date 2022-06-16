@@ -39,6 +39,12 @@ void Kernel::AddGenericConstraint(const std::vector<std::string>& parameterNames
     m_Constraints.emplace_back(parameters, function);
 }
 
+void Kernel::AddScriptConstraint(const std::vector<std::string>& parameterNames, const std::string& script)
+{
+    const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, true);
+    m_Constraints.emplace_back(parameters, script);
+}
+
 void Kernel::AddThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier)
 {
     for (const auto& name : modifier.GetParameters())
@@ -247,14 +253,48 @@ void Kernel::EnumerateNeighbourConfigurations(const KernelConfiguration& configu
     EnumerateNeighbours(configuration, nullptr, std::set<const KernelParameter*>{}, initialSets, enumerator, initialQueue);
 }
 
-DimensionVector Kernel::GetModifiedGlobalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const
+DimensionVector Kernel::GetModifiedSize(const KernelDefinitionId id, const ModifierType type,
+    const std::vector<ParameterPair>& pairs) const
 {
-    return GetModifiedSize(id, ModifierType::Global, pairs);
+    KttAssert(HasDefinition(id), "Invalid definition id");
+    const auto& definition = GetDefinition(id);
+    const auto& defaultSize = type == ModifierType::Global ? definition.GetGlobalSize() : definition.GetLocalSize();
+    return GetModifiedSize(id, defaultSize, type, pairs);
 }
 
-DimensionVector Kernel::GetModifiedLocalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const
+DimensionVector Kernel::GetModifiedSize(const KernelDefinitionId id, const DimensionVector& originalSize, const ModifierType type,
+    const std::vector<ParameterPair>& pairs) const
 {
-    return GetModifiedSize(id, ModifierType::Local, pairs);
+    KttAssert(HasDefinition(id), "Invalid definition id");
+
+    if (!ContainsKey(m_Modifiers, type))
+    {
+        return originalSize;
+    }
+
+    const auto& modifiersPair = *m_Modifiers.find(type);
+    const auto& specificModifiers = modifiersPair.second;
+    DimensionVector result;
+
+    for (int i = 0; i <= static_cast<int>(ModifierDimension::Z); ++i)
+    {
+        const auto dimension = static_cast<ModifierDimension>(i);
+        size_t dimensionSize = originalSize.GetSize(dimension);
+
+        if (ContainsKey(specificModifiers, dimension))
+        {
+            const auto& pair = *specificModifiers.find(dimension);
+
+            for (const auto& modifier : pair.second)
+            {
+                dimensionSize = static_cast<size_t>(modifier.GetModifiedSize(id, static_cast<uint64_t>(dimensionSize), pairs));
+            }
+        }
+
+        result.SetSize(dimension, dimensionSize);
+    }
+
+    return result;
 }
 
 std::vector<const KernelParameter*> Kernel::PreprocessConstraintParameters(const std::vector<std::string>& parameterNames,
@@ -316,43 +356,6 @@ const KernelParameter& Kernel::GetParamater(const std::string& name) const
     }
 
     throw KttException("Kernel parameter with name " + name + " does not exist");
-}
-
-DimensionVector Kernel::GetModifiedSize(const KernelDefinitionId id, const ModifierType type,
-    const std::vector<ParameterPair>& pairs) const
-{
-    KttAssert(HasDefinition(id), "Invalid definition id");
-    const auto& definition = GetDefinition(id);
-    const auto& defaultSize = type == ModifierType::Global ? definition.GetGlobalSize() : definition.GetLocalSize();
-
-    if (!ContainsKey(m_Modifiers, type))
-    {
-        return defaultSize;
-    }
-
-    const auto& modifiersPair = *m_Modifiers.find(type);
-    const auto& specificModifiers = modifiersPair.second;
-    DimensionVector result;
-
-    for (int i = 0; i <= static_cast<int>(ModifierDimension::Z); ++i)
-    {
-        const auto dimension = static_cast<ModifierDimension>(i);
-        size_t dimensionSize = defaultSize.GetSize(dimension);
-
-        if (ContainsKey(specificModifiers, dimension))
-        {
-            const auto& pair = *specificModifiers.find(dimension);
-
-            for (const auto& modifier : pair.second)
-            {
-                dimensionSize = static_cast<size_t>(modifier.GetModifiedSize(id, static_cast<uint64_t>(dimensionSize), pairs));
-            }
-        }
-
-        result.SetSize(dimension, dimensionSize);
-    }
-
-    return result;
 }
 
 void Kernel::EnumerateNeighbours(const KernelConfiguration& configuration, const KernelParameter* neighbourParameter,
