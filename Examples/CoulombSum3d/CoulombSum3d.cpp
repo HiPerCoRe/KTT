@@ -41,6 +41,8 @@ const bool useWideParameters = false;
 
 int main(int argc, char** argv)
 {
+    py::scoped_interpreter guard{};
+
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
     std::string kernelFile = defaultKernelFile;
@@ -72,7 +74,7 @@ int main(int argc, char** argv)
 
     if constexpr (!useProfiling)
     {
-        atoms = 256;
+        atoms = 64;
     }
     else
     {
@@ -109,6 +111,8 @@ int main(int argc, char** argv)
         atomInfo[4 * i + 3] = atomInfoW[i];
     }
 
+    //ktt::Tuner& tuner = *(new ktt::Tuner(platformIndex, deviceIndex, computeApi));
+    {
     ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
     tuner.SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
@@ -231,14 +235,16 @@ int main(int argc, char** argv)
         tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
 
-    //tuner.SetSearcher(kernel, std::make_unique<ktt::ProfileBasedSearcher>((void*)(&tuner), kernel, "1070-coulomb_output_DT.sav"));
-
-    py::scoped_interpreter guard{};
     py::module_ searcher = py::module_::import("ProfileSearcherExecutor");
-    py::object searcherInstance = searcher.attr("executeSearcher")(&tuner, kernel, "1070-coulomb_output_DT.sav");
+    py::gil_scoped_acquire acquire;
+    searcher.attr("executeSearcher")(&tuner, kernel, "1070-coulomb_output_DT.sav");
+    
 
     const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
+
+    //delete &tuner;
+    }
 
     return 0;
 }
