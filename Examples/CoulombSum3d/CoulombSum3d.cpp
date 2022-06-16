@@ -5,11 +5,7 @@
 
 #include <Ktt.h>
 
-#include <pybind11/pybind11.h>
-#include <pybind11/embed.h>
-
-namespace py = pybind11;
-
+#include <../ProfileSearcher/ProfileBasedSearcher.h>
 
 #if defined(_MSC_VER)
 const std::string kernelPrefix = "";
@@ -41,7 +37,7 @@ const bool useWideParameters = false;
 
 int main(int argc, char** argv)
 {
-    py::scoped_interpreter guard{};
+    py::scoped_interpreter guard{}; //TODO force KTT to create singleton for the interpreter
 
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
@@ -111,8 +107,6 @@ int main(int argc, char** argv)
         atomInfo[4 * i + 3] = atomInfoW[i];
     }
 
-    //ktt::Tuner& tuner = *(new ktt::Tuner(platformIndex, deviceIndex, computeApi));
-    {
     ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
     tuner.SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
@@ -235,16 +229,10 @@ int main(int argc, char** argv)
         tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
 
-    py::module_ searcher = py::module_::import("ProfileSearcherExecutor");
-    py::gil_scoped_acquire acquire;
-    searcher.attr("executeSearcher")(&tuner, kernel, "1070-coulomb_output_DT.sav");
-    
+    SetProfileBasedSearcher(tuner, kernel, "../../ProfileSearcher/models/1070-coulomb_output_DT.sav");
 
     const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
-
-    //delete &tuner;
-    }
 
     return 0;
 }
