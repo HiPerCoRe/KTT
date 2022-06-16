@@ -28,6 +28,7 @@ public:
     void AddParameter(const KernelParameter& parameter);
     void AddConstraint(const std::vector<std::string>& parameterNames, ConstraintFunction function);
     void AddGenericConstraint(const std::vector<std::string>& parameterNames, GenericConstraintFunction function);
+    void AddScriptConstraint(const std::vector<std::string>& parameterNames, const std::string& script);
     void AddThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier);
     void SetProfiledDefinitions(const std::vector<const KernelDefinition*>& definitions);
     void SetLauncher(KernelLauncher launcher);

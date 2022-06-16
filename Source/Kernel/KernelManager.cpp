@@ -111,6 +111,12 @@ void KernelManager::AddGenericConstraint(const KernelId id, const std::vector<st
     kernel.AddGenericConstraint(parameters, function);
 }
 
+void KernelManager::AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script)
+{
+    auto& kernel = GetKernel(id);
+    kernel.AddScriptConstraint(parameters, script);
+}
+
 void KernelManager::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters,  ModifierFunction function)
 {

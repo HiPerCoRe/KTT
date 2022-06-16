@@ -1,4 +1,11 @@
+#ifdef KTT_PYTHON
+#include <pybind11/stl.h>
+#endif // KTT_PYTHON
+
+#include <Api/KttException.h>
 #include <Kernel/KernelConstraint.h>
+#include <Python/PythonInterpreter.h>
+#include <Utility/Logger/Logger.h>
 #include <Utility/StlHelpers.h>
 
 namespace ktt
@@ -26,6 +33,22 @@ KernelConstraint::KernelConstraint(const std::vector<const KernelParameter*>& pa
     {
         m_ParameterNames.push_back(parameter->GetName());
     }
+}
+
+KernelConstraint::KernelConstraint(const std::vector<const KernelParameter*>& parameters, const std::string& script) :
+    m_Parameters(parameters),
+    m_Function(nullptr),
+    m_GenericFunction(nullptr),
+    m_Script(script)
+{
+#ifndef KTT_PYTHON
+    throw KttException("Usage of script-based kernel constraints requires compilation of Python backend");
+#else
+    for (const auto* parameter : parameters)
+    {
+        m_ParameterNames.push_back(parameter->GetName());
+    }
+#endif // KTT_PYTHON
 }
 
 const std::vector<const KernelParameter*>& KernelConstraint::GetParameters() const
@@ -70,6 +93,11 @@ bool KernelConstraint::IsFulfilled(const std::vector<const ParameterValue*>& val
         return m_GenericFunction(values);
     }
 
+    if (!m_Script.empty())
+    {
+        return EvaluateScript(values);
+    }
+
     m_ValuesCache.clear();
 
     for (const auto& value : values)
@@ -78,6 +106,36 @@ bool KernelConstraint::IsFulfilled(const std::vector<const ParameterValue*>& val
     }
 
     return m_Function(m_ValuesCache);
+}
+
+bool KernelConstraint::EvaluateScript([[maybe_unused]] const std::vector<const ParameterValue*>& values) const
+{
+#ifdef KTT_PYTHON
+    auto& interpreter = PythonInterpreter::GetInterpreter();
+    pybind11::dict locals;
+    bool result = false;
+
+    try
+    {
+        size_t valueIndex = 0;
+
+        for (const auto& name : m_ParameterNames)
+        {
+            locals[name.c_str()] = *values[valueIndex];
+            ++valueIndex;
+        }
+
+        result = interpreter.Evaluate(m_Script, locals);
+    }
+    catch (const pybind11::error_already_set& exception)
+    {
+        Logger::LogError(exception.what());
+    }
+
+    return result;
+#else
+    return false;
+#endif // KTT_PYTHON
 }
 
 } // namespace ktt
