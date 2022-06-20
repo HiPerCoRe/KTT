@@ -5,8 +5,6 @@
 
 #include <Ktt.h>
 
-#include <../ProfileSearcher/ProfileBasedSearcher.h>
-
 #if defined(_MSC_VER)
 const std::string kernelPrefix = "";
 #else
@@ -37,8 +35,6 @@ const bool useWideParameters = false;
 
 int main(int argc, char** argv)
 {
-    py::scoped_interpreter guard{}; //TODO force KTT to create singleton for the interpreter
-
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
     std::string kernelFile = defaultKernelFile;
@@ -70,7 +66,7 @@ int main(int argc, char** argv)
 
     if constexpr (!useProfiling)
     {
-        atoms = 64;
+        atoms = 256;
     }
     else
     {
@@ -229,7 +225,7 @@ int main(int argc, char** argv)
         tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
 
-    SetProfileBasedSearcher(tuner, kernel, "../../ProfileSearcher/models/1070-coulomb_output_DT.sav");
+    tuner.SetProfileBasedSearcher(kernel, "../../ProfileSearcher/models/1070-coulomb_output_DT.sav");
 
     const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);

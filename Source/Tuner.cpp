@@ -1,7 +1,12 @@
+#ifdef KTT_PYTHON
+#include <pybind11/stl.h>
+#endif // KTT_PYTHON
+
 #include <Api/KttException.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Tuner.h>
 #include <TunerCore.h>
+#include <Python/PythonInterpreter.h>
 
 namespace ktt
 {
@@ -479,6 +484,17 @@ void Tuner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
     }
+}
+
+void Tuner::SetProfileBasedSearcher(const ktt::KernelId id, const std::string& modelPath) 
+{
+#ifndef KTT_PYTHON
+    throw KttException("Usage of profile-based searcher requires compilation of Python backend");
+#else
+    PythonInterpreter::GetInterpreter();
+    pybind11::module_ searcher = pybind11::module_::import("ProfileBasedSearcher");
+    searcher.attr("executeSearcher")(this, id, modelPath);
+#endif // KTT_PYTHON
 }
 
 void Tuner::InitializeConfigurationData(const KernelId id)
