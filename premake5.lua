@@ -650,7 +650,6 @@ project "CoulombSum3dCuda"
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
-    linkPython()
 
 project "NbodyCuda"
     kind "ConsoleApp"

@@ -46,13 +46,13 @@ DeviceInfo CudaDevice::GetInfo() const
     const int workGroupSize = GetAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
     result.SetMaxWorkGroupSize(static_cast<uint64_t>(workGroupSize));
 
-    int computeUnits = GetAttribute(CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT);
+    const unsigned int computeUnits = GetAttribute(CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT);
     result.SetMaxComputeUnits(static_cast<uint32_t>(computeUnits));
 
-    int computeCapabilityMajor = GetAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
+    const unsigned int computeCapabilityMajor = GetAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
     result.SetCUDAComputeCapabilityMajor(computeCapabilityMajor);
 
-    int computeCapabilityMinor = GetAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
+    const unsigned int computeCapabilityMinor = GetAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
     result.SetCUDAComputeCapabilityMinor(computeCapabilityMinor);
 
     return result;

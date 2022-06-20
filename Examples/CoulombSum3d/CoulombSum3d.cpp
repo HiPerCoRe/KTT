@@ -15,6 +15,7 @@ const std::string kernelPrefix = "../";
     const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cu";
     const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3dReference.cu";
     const auto computeApi = ktt::ComputeApi::CUDA;
+    const std::string defaultMLModel = "../../ProfileSearcher/models/1070-coulomb_output_DT.sav";
 #elif KTT_OPENCL_EXAMPLE
     const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cl";
     const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3dReference.cl";
@@ -225,7 +226,9 @@ int main(int argc, char** argv)
         tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
 
-    tuner.SetProfileBasedSearcher(kernel, "../../ProfileSearcher/models/1070-coulomb_output_DT.sav");
+#if KTT_CUDA_EXAMPLE
+    tuner.SetProfileBasedSearcher(kernel, defaultMLModel);
+#endif
 
     const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);

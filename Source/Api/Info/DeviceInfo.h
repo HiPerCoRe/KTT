@@ -181,8 +181,8 @@ private:
     uint64_t m_MaxConstantBufferSize;
     uint64_t m_MaxWorkGroupSize;
     uint32_t m_MaxComputeUnits;
-    unsigned int m_CudaComputeCapabilityMajor;
-    unsigned int m_CudaComputeCapabilityMinor;
+    uint32_t m_CudaComputeCapabilityMajor;
+    uint32_t m_CudaComputeCapabilityMinor;
 };
 
 } // namespace ktt
