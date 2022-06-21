@@ -561,7 +561,6 @@ project "CoulombSum3dOpenCl"
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
-    linkPython()
 
 project "CoulombSum3dIterativeOpenCl"
     kind "ConsoleApp"
