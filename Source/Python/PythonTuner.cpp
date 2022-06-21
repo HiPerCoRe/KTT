@@ -302,6 +302,7 @@ void InitializePythonTuner(py::module_& module)
             py::arg("iterations") = 0
         )
         .def("SetSearcher", &ktt::Tuner::SetSearcher)
+        .def("SetProfileBasedSearcher", &ktt::Tuner::SetProfileBasedSearcher)
         .def("InitializeConfigurationData", &ktt::Tuner::InitializeConfigurationData)
         .def("ClearConfigurationData", &ktt::Tuner::ClearConfigurationData)
         .def("ClearData", &ktt::Tuner::ClearConfigurationData)

@@ -8,10 +8,12 @@
 
 #include <Utility/DisableCopyMove.h>
 
+#include <Ktt.h>
+
 namespace ktt
 {
 
-class PythonInterpreter : public DisableCopyMove
+class KTT_VISIBILITY_HIDDEN PythonInterpreter : public DisableCopyMove
 {
 public:
     static PythonInterpreter& GetInterpreter();

@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     const int m = 1024;
 
     // New NVidia GPUs have max.workgroup size of 1024
-    const int maxWorkGroupSize = 1024;
+    const uint64_t maxWorkGroupSize = 1024;
 
     // Kernel dimensions
     const ktt::DimensionVector ndRangeDim1D(m, 1);
