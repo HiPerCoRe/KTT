@@ -6,7 +6,10 @@
 #include <Utility/ErrorHandling/Assert.h>
 #include <Tuner.h>
 #include <TunerCore.h>
+
+#ifdef KTT_PYTHON
 #include <Python/PythonInterpreter.h>
+#endif // KTT_PYTHON
 
 namespace ktt
 {
@@ -486,15 +489,26 @@ void Tuner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
     }
 }
 
-void Tuner::SetProfileBasedSearcher(const ktt::KernelId id, const std::string& modelPath) 
+void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_unused]] const std::string& modelPath)
 {
-#ifndef KTT_PYTHON
-    throw KttException("Usage of profile-based searcher requires compilation of Python backend");
-#else
-    PythonInterpreter::GetInterpreter();
-    pybind11::module_ searcher = pybind11::module_::import("ProfileBasedSearcher");
-    searcher.attr("executeSearcher")(this, id, modelPath);
-#endif // KTT_PYTHON
+    try
+    {
+        #ifndef KTT_PYTHON
+        throw KttException("Usage of profile-based searcher requires compilation of Python backend");
+        #else
+        PythonInterpreter::GetInterpreter();
+        pybind11::module_ searcher = pybind11::module_::import("ProfileBasedSearcher");
+        searcher.attr("executeSearcher")(this, id, modelPath);
+        #endif // KTT_PYTHON
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+    catch (const pybind11::error_already_set& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
 }
 
 void Tuner::InitializeConfigurationData(const KernelId id)

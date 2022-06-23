@@ -611,12 +611,12 @@ public:
       */
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
 
-    /** @fn void SetProfileBasedSearcher(const ktt::KernelId id, const std::string& modelPath)
+    /** @fn void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath)
       * Sets profile-based searcher to be used during kernel tuning. This is special method for profile-based searcher, for other searchers, use SetSearcher.
       * @param id Id of kernel for which searcher will be set.
       * @param modelPath Path to a ML model file containing trained model for the tuned kernel.
       */
-    void SetProfileBasedSearcher(const ktt::KernelId id, const std::string& modelPath);
+    void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath);
 
     /** @fn void InitializeConfigurationData(const KernelId id)
       * Generates configuration space and initializes searcher for the specified kernel.

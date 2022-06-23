@@ -7,8 +7,7 @@
 #include <pybind11/embed.h>
 
 #include <Utility/DisableCopyMove.h>
-
-#include <Ktt.h>
+#include <KttPlatform.h>
 
 namespace ktt
 {
