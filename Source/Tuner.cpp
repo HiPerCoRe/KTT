@@ -505,10 +505,12 @@ void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
     }
+    #ifdef KTT_PYTHON
     catch (const pybind11::error_already_set& exception)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
     }
+    #endif // KTT_PYTHON
 }
 
 void Tuner::InitializeConfigurationData(const KernelId id)
