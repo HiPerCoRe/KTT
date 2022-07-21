@@ -83,12 +83,12 @@ uint32_t DeviceInfo::GetMaxComputeUnits() const
     return m_MaxComputeUnits;
 }
 
-unsigned int DeviceInfo::GetCUDAComputeCapabilityMajor() const
+uint32_t DeviceInfo::GetCudaComputeCapabilityMajor() const
 {
     return m_CudaComputeCapabilityMajor;
 }
 
-unsigned int DeviceInfo::GetCUDAComputeCapabilityMinor() const
+uint32_t DeviceInfo::GetCudaComputeCapabilityMinor() const
 {
     return m_CudaComputeCapabilityMinor;
 }
@@ -152,14 +152,14 @@ void DeviceInfo::SetMaxComputeUnits(const uint32_t maxComputeUnits)
     m_MaxComputeUnits = maxComputeUnits;
 }
 
-void DeviceInfo::SetCUDAComputeCapabilityMajor(const unsigned int cudaComputeCapabilityMajor)
+void DeviceInfo::SetCudaComputeCapabilityMajor(const uint32_t capabilityMajor)
 {
-    m_CudaComputeCapabilityMajor = cudaComputeCapabilityMajor;
+    m_CudaComputeCapabilityMajor = capabilityMajor;
 }
 
-void DeviceInfo::SetCUDAComputeCapabilityMinor(const unsigned int cudaComputeCapabilityMinor)
+void DeviceInfo::SetCudaComputeCapabilityMinor(const uint32_t capabilityMinor)
 {
-    m_CudaComputeCapabilityMinor = cudaComputeCapabilityMinor;
+    m_CudaComputeCapabilityMinor = capabilityMinor;
 }
 
 } // namespace ktt

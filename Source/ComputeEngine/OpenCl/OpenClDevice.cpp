@@ -65,8 +65,8 @@ DeviceInfo OpenClDevice::GetInfo() const
     const auto maxComputeUnits = GetInfoWithType<uint32_t>(CL_DEVICE_MAX_COMPUTE_UNITS);
     result.SetMaxComputeUnits(maxComputeUnits);
 
-    result.SetCUDAComputeCapabilityMajor(0);
-    result.SetCUDAComputeCapabilityMinor(0);
+    result.SetCudaComputeCapabilityMajor(0);
+    result.SetCudaComputeCapabilityMinor(0);
 
     return result;
 }

@@ -804,8 +804,8 @@ class PyProfilingSearcher(ktt.Searcher):
 
     def Configure(self, tuner, modelFile):
         self.tuner = tuner
-        self.ccMajor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMajor()
-        self.ccMinor = tuner.GetCurrentDeviceInfo().GetCUDAComputeCapabilityMinor()
+        self.ccMajor = tuner.GetCurrentDeviceInfo().GetCudaComputeCapabilityMajor()
+        self.ccMinor = tuner.GetCurrentDeviceInfo().GetCudaComputeCapabilityMinor()
         self.cc = self.ccMajor + round(0.1 * self.ccMinor, 1)
         self.multiprocessors = tuner.GetCurrentDeviceInfo().GetMaxComputeUnits()
 

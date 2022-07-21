@@ -92,17 +92,17 @@ public:
       */
     uint32_t GetMaxComputeUnits() const;
 
-    /** @fn size_t getCUDAComputeCapabilityMajor() const
-      * Getter for CUDA compute capability.
-      * @return Compute capability (major) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+    /** @fn uint32_t GetCudaComputeCapabilityMajor() const
+      * Getter for CUDA compute capability major.
+      * @return Major compute capability of NVIDIA GPUs with CUDA compute API, zero otherwise.
       */
-    unsigned int GetCUDAComputeCapabilityMajor() const;
+    uint32_t GetCudaComputeCapabilityMajor() const;
 
-    /** @fn size_t getCUDAComputeCapabilityMajor() const
-      * Getter for CUDA compute capability.
-      * @return Compute capability (minor) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+    /** @fn uint32_t GetCudaComputeCapabilityMinor() const
+      * Getter for CUDA compute capability minor.
+      * @return Minor compute capability of NVIDIA GPUs with CUDA compute API, zero otherwise.
       */
-    unsigned int GetCUDAComputeCapabilityMinor() const;
+    uint32_t GetCudaComputeCapabilityMinor() const;
 
     /** @fn std::string GetString() const
       * Converts device info to string.
@@ -158,17 +158,17 @@ public:
       */
     void SetMaxComputeUnits(const uint32_t maxComputeUnits);
 
-    /** @fn void setCUDAComputeCapabilityMajor(const unsigned int cudaComputeCapabilityMajor) const
-      * Setter for CUDA compute capability.
-      * @param Compute capability (major) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+    /** @fn void SetCudaComputeCapabilityMajor(const uint32_t capabilityMajor)
+      * Setter for CUDA compute capability major.
+      * @param capabilityMajor Major compute capability of NVIDIA GPUs with CUDA compute API, zero otherwise.
       */
-    void SetCUDAComputeCapabilityMajor(const unsigned int cudaComputeCapabilityMajor);
+    void SetCudaComputeCapabilityMajor(const uint32_t capabilityMajor);
 
-    /** @fn void setCUDAComputeCapabilityMinor(const unsigned int cudaComputeCapabilityMajor) const
-      * Setter for CUDA compute capability.
-      * @param Compute capability (minor) of NVIDIA GPUs with CUDA compute API, zero otherwise.
+    /** @fn void SetCudaComputeCapabilityMinor(const uint32_t capabilityMinor)
+      * Setter for CUDA compute capability minor.
+      * @param capabilityMinor Minor compute capability of NVIDIA GPUs with CUDA compute API, zero otherwise.
       */
-    void SetCUDAComputeCapabilityMinor(const unsigned int cudaComputeCapabilityMinor);
+    void SetCudaComputeCapabilityMinor(const uint32_t capabilityMinor);
 
 private:
     DeviceIndex m_Index;
