@@ -10,7 +10,6 @@
 #include <Output/Serializer/XmlSerializer.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Output/TunerMetadata.h>
-#include <TuningLoader/TuningLoader.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 #include <Utility/FileSystem.h>
@@ -170,13 +169,6 @@ void TunerCore::RemoveArgument(const ArgumentId id)
 void TunerCore::SetReadOnlyArgumentCache(const bool flag)
 {
     m_KernelRunner->SetReadOnlyArgumentCache(flag);
-}
-
-void TunerCore::RunTuningFile(const std::string& file)
-{
-    TuningLoader loader;
-    loader.LoadTuningDescription(file);
-    loader.ApplyCommands();
 }
 
 KernelResult TunerCore::RunKernel(const KernelId id, const KernelConfiguration& configuration,

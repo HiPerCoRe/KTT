@@ -1,9 +1,25 @@
-#include <Output/JsonConverters.h>
-#include <TuningLoader/JsonCommandConverters.h>
-#include <Utility/ErrorHandling/Assert.h>
+#include <KttLoaderAssert.h>
+#include <JsonCommandConverters.h>
 
 namespace ktt
 {
+
+void to_json(json& j, const DimensionVector& vector)
+{
+    j = json
+    {
+        {"X", vector.GetSizeX()},
+        {"Y", vector.GetSizeY()},
+        {"Z", vector.GetSizeZ()}
+    };
+}
+
+void from_json(const json& j, DimensionVector& vector)
+{
+    vector.SetSizeX(j.at("X").get<size_t>());
+    vector.SetSizeY(j.at("Y").get<size_t>());
+    vector.SetSizeZ(j.at("Z").get<size_t>());
+}
 
 void from_json(const json& j, AddArgumentCommand& command)
 {
@@ -194,10 +210,10 @@ void from_json(const json& j, ParameterCommand& command)
             break;
         }
         default:
-            KttError("Unhandled parameter value type");
+            KttLoaderError("Unhandled parameter value type");
         }
 
-        command = ParameterCommand(name, finalValues);
+        command = ParameterCommand(valueType, name, finalValues);
         return;
     }
 
@@ -264,10 +280,10 @@ void from_json(const json& j, ParameterCommand& command)
         break;
     }
     default:
-        KttError("Unhandled parameter value type");
+        KttLoaderError("Unhandled parameter value type");
     }
 
-    command = ParameterCommand(name, finalValues);
+    command = ParameterCommand(valueType, name, finalValues);
 }
 
 void from_json(const json& j, TimeUnitCommand& command)

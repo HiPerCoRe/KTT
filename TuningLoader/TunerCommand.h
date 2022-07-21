@@ -1,7 +1,7 @@
 #pragma once
 
-#include <TuningLoader/CommandPriority.h>
-#include <TuningLoader/TunerContext.h>
+#include <CommandPriority.h>
+#include <TunerContext.h>
 #include <Tuner.h>
 
 namespace ktt

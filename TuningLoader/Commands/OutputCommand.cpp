@@ -1,4 +1,4 @@
-#include <TuningLoader/Commands/OutputCommand.h>
+#include <Commands/OutputCommand.h>
 
 namespace ktt
 {

@@ -3,18 +3,20 @@
 #include <fstream>
 
 #include <Api/KttException.h>
-#include <TuningLoader/Commands/AddArgumentCommand.h>
-#include <TuningLoader/Commands/AddKernelCommand.h>
-#include <TuningLoader/Commands/CompilerOptionsCommand.h>
-#include <TuningLoader/Commands/ConstraintCommand.h>
-#include <TuningLoader/Commands/CreateTunerCommand.h>
-#include <TuningLoader/Commands/ModifierCommand.h>
-#include <TuningLoader/Commands/OutputCommand.h>
-#include <TuningLoader/Commands/ParameterCommand.h>
-#include <TuningLoader/Commands/TimeUnitCommand.h>
-#include <TuningLoader/Commands/TuneCommand.h>
-#include <TuningLoader/JsonCommandConverters.h>
-#include <TuningLoader/TuningLoader.h>
+#include <Commands/AddArgumentCommand.h>
+#include <Commands/AddKernelCommand.h>
+#include <Commands/CompilerOptionsCommand.h>
+#include <Commands/ConstraintCommand.h>
+#include <Commands/CreateTunerCommand.h>
+#include <Commands/ModifierCommand.h>
+#include <Commands/OutputCommand.h>
+#include <Commands/ParameterCommand.h>
+#include <Commands/TimeUnitCommand.h>
+#include <Commands/TuneCommand.h>
+#include <JsonCommandConverters.h>
+#include <TunerCommand.h>
+#include <TunerContext.h>
+#include <TuningLoader.h>
 
 namespace ktt
 {
@@ -23,7 +25,9 @@ TuningLoader::TuningLoader() :
     m_Context(std::make_unique<TunerContext>())
 {}
 
-void TuningLoader::LoadTuningDescription(const std::string& file)
+TuningLoader::~TuningLoader() = default;
+
+void TuningLoader::LoadTuningFile(const std::string& file)
 {
     std::ifstream inputStream(file);
 
@@ -118,7 +122,7 @@ void TuningLoader::LoadTuningDescription(const std::string& file)
     m_Commands.push_back(std::make_unique<TuneCommand>());
 }
 
-void TuningLoader::ApplyCommands()
+void TuningLoader::ExecuteCommands()
 {
     std::stable_sort(m_Commands.begin(), m_Commands.end(), [](const auto& left, const auto& right)
     {
@@ -129,8 +133,6 @@ void TuningLoader::ApplyCommands()
     {
         command->Execute(*m_Context);
     }
-
-    m_Commands.clear();
 }
 
 } // namespace ktt

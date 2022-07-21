@@ -1,6 +1,6 @@
 #pragma once
 
-#include <TuningLoader/TunerCommand.h>
+#include <TunerCommand.h>
 
 namespace ktt
 {

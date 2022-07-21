@@ -295,6 +295,12 @@ newoption
 
 newoption
 {
+    trigger = "tuning-loader",
+    description = "Enables compilation of tuning loader and tuning launcher"
+}
+
+newoption
+{
     trigger = "outdir",
     value = "path",
     description = "Specifies output directory for generated project files"
@@ -398,6 +404,38 @@ project "Ktt"
     defines {"KTT_LIBRARY"}
     targetname("ktt")
     linkAllLibraries()
+
+-- Tuning loader and launcher
+if _OPTIONS["tuning-loader"] then
+
+project "KttTuningLoader"
+    kind "SharedLib"
+    
+    files
+    {
+        "TuningLoader/**",
+        "Libraries/Json-3.9.1/**"
+    }
+    
+    removefiles {"TuningLoader/TuningLauncher.cpp"}
+    
+    includedirs
+    {
+        "TuningLoader",
+        "Libraries/Json-3.9.1",
+        "Source"
+    }
+    
+    defines {"KTT_LOADER_LIBRARY"}
+    links {"ktt"}
+
+project "KttTuningLauncher"
+    kind "ConsoleApp"
+    files {"TuningLoader/TuningLauncher.cpp"}
+    includedirs {"TuningLoader"}
+    links {"KttTuningLoader"}
+    
+end -- _OPTIONS["tuning-loader"]
 
 -- Tutorials configuration 
 if not _OPTIONS["no-tutorials"] then

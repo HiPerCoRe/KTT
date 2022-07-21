@@ -1,6 +1,6 @@
 #include <filesystem>
 
-#include <TuningLoader/Commands/AddKernelCommand.h>
+#include <Commands/AddKernelCommand.h>
 
 namespace ktt
 {

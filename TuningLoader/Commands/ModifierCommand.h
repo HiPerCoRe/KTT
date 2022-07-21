@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <TuningLoader/TunerCommand.h>
+#include <TunerCommand.h>
 
 namespace ktt
 {

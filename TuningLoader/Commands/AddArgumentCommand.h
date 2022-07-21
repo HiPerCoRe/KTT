@@ -1,7 +1,7 @@
 #pragma once
 
-#include <TuningLoader/ArgumentFillType.h>
-#include <TuningLoader/TunerCommand.h>
+#include <ArgumentFillType.h>
+#include <TunerCommand.h>
 
 namespace ktt
 {

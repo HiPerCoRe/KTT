@@ -409,8 +409,6 @@ public:
       */
     void SetReadOnlyArgumentCache(const bool flag);
 
-    static void RunTuningFile(const std::string& file);
-
     /** @fn KernelResult Run(const KernelId id, const KernelConfiguration& configuration,
       * const std::vector<BufferOutputDescriptor>& output)
       * Runs kernel using the specified configuration.

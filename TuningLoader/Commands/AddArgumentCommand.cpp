@@ -1,7 +1,7 @@
 #include <random>
 
-#include <TuningLoader/Commands/AddArgumentCommand.h>
-#include <Utility/ErrorHandling/Assert.h>
+#include <Commands/AddArgumentCommand.h>
+#include <KttLoaderAssert.h>
 
 namespace ktt
 {
@@ -21,7 +21,7 @@ void AddArgumentCommand::Execute(TunerContext& context)
 {
     if (m_MemoryType == ArgumentMemoryType::Scalar)
     {
-        KttAssert(m_Type == ArgumentDataType::Int || m_Type == ArgumentDataType::Float, "Unsupported data type");
+        KttLoaderAssert(m_Type == ArgumentDataType::Int || m_Type == ArgumentDataType::Float, "Unsupported data type");
         ArgumentId id;
 
         if (m_Type == ArgumentDataType::Int)
@@ -38,7 +38,7 @@ void AddArgumentCommand::Execute(TunerContext& context)
         return;
     }
 
-    KttAssert(m_MemoryType == ArgumentMemoryType::Vector, "Unsupported memory type");
+    KttLoaderAssert(m_MemoryType == ArgumentMemoryType::Vector, "Unsupported memory type");
     std::vector<float> input(m_Size);
 
     switch (m_FillType)
@@ -67,7 +67,7 @@ void AddArgumentCommand::Execute(TunerContext& context)
         break;
     }
     default:
-        KttError("Unhandled fill type");
+        KttLoaderError("Unhandled fill type");
     }
 
     const auto id = context.GetTuner().AddArgumentVector<float>(input, m_AccessType);

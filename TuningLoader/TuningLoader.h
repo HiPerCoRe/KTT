@@ -4,19 +4,22 @@
 #include <string>
 #include <vector>
 
-#include <TuningLoader/TunerCommand.h>
-#include <TuningLoader/TunerContext.h>
+#include <TuningLoaderPlatform.h>
 
 namespace ktt
 {
 
-class TuningLoader
+class TunerCommand;
+class TunerContext;
+
+class KTT_LOADER_API TuningLoader
 {
 public:
     TuningLoader();
+    ~TuningLoader();
 
-    void LoadTuningDescription(const std::string& file);
-    void ApplyCommands();
+    void LoadTuningFile(const std::string& file);
+    void ExecuteCommands();
 
 private:
     std::unique_ptr<TunerContext> m_Context;

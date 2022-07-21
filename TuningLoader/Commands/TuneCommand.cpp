@@ -1,4 +1,4 @@
-#include <TuningLoader/Commands/TuneCommand.h>
+#include <Commands/TuneCommand.h>
 
 namespace ktt
 {

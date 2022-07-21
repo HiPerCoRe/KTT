@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include <Tuner.h>
+#include <Ktt.h>
 
 namespace ktt
 {
