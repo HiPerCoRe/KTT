@@ -1,0 +1,153 @@
+{
+  "ConfigurationSpace": {
+    "TuningParameters": [
+      {
+        "Name": "INNER_UNROLL_FACTOR",
+        "Type": "UnsignedInt",
+        "Values": [0, 1, 2, 4, 8, 16, 32]
+      },
+      {
+        "Name": "USE_CONSTANT_MEMORY",
+        "Type": "UnsignedInt",
+        "Values": [0, 1]
+      },
+      {
+        "Name": "VECTOR_TYPE",
+        "Type": "UnsignedInt",
+        "Values": [1, 2, 4, 8]
+      },
+      {
+        "Name": "USE_SOA",
+        "Type": "UnsignedInt",
+        "Values": [0, 1, 2]
+      },
+      {
+        "Name": "OUTER_UNROLL_FACTOR",
+        "Type": "UnsignedInt",
+        "Values": [1, 2, 4, 8]
+      },
+      {
+        "Name": "WORK_GROUP_SIZE_X",
+        "Type": "UnsignedInt",
+        "Values": [4, 8, 16, 32]
+      },
+      {
+        "Name": "WORK_GROUP_SIZE_Y",
+        "Type": "UnsignedInt",
+        "Values": [1, 2, 4, 8, 16, 32]
+      }
+    ],
+    "Conditions": [
+      {
+        "Parameters": ["VECTOR_TYPE", "USE_SOA"],
+        "Expression": "VECTOR_TYPE > 1 or USE_SOA != 2"
+      }
+    ]
+  },
+  "Search": {
+  },
+  "General": {
+    "TimeUnit": "Microseconds",
+    "OutputFile": "CoulombSum2dOutput",
+    "OutputFormat": "JSON"
+  },
+  "KernelSpecification": {
+    "Language": "OpenCL",
+    "CompilerOptions": "-cl-fast-relaxed-math",
+    "KernelName": "directCoulombSum",
+    "KernelFile": "CoulombSum2d.cl",
+    "GlobalSize": {
+      "X": 512,
+      "Y": 512,
+      "Z": 1
+    },
+    "Modifiers": [
+      {
+        "Type": "Global",
+        "Dimension": "X",
+        "Parameter": "OUTER_UNROLL_FACTOR",
+        "Action": "Divide"
+      },
+      {
+        "Type": "Local",
+        "Dimension": "X",
+        "Parameter": "WORK_GROUP_SIZE_X",
+        "Action": "Multiply"
+      },
+      {
+        "Type": "Local",
+        "Dimension": "Y",
+        "Parameter": "WORK_GROUP_SIZE_Y",
+        "Action": "Multiply"
+      }
+    ],
+    "Arguments": [
+      {
+        "Type": "Float",
+        "Size": 16000,
+        "FillType": "Random",
+        "FillValue": 40.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector",
+        "Order": 0
+      },
+      {
+        "Type": "Float",
+        "Size": 4000,
+        "FillType": "Random",
+        "FillValue": 40.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector",
+        "Order": 1
+      },
+      {
+        "Type": "Float",
+        "Size": 4000,
+        "FillType": "Random",
+        "FillValue": 40.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector",
+        "Order": 2
+      },
+      {
+        "Type": "Float",
+        "Size": 4000,
+        "FillType": "Random",
+        "FillValue": 40.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector",
+        "Order": 3
+      },
+      {
+        "Type": "Float",
+        "Size": 4000,
+        "FillType": "Random",
+        "FillValue": 1.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector",
+        "Order": 4
+      },
+      {
+        "Type": "Int",
+        "FillValue": 4000,
+        "MemoryType": "Scalar",
+        "Order": 5
+      },
+      {
+        "Type": "Float",
+        "FillValue": 0.5,
+        "MemoryType": "Scalar",
+        "Order": 6
+      },
+      {
+        "Type": "Float",
+        "Size": 262144,
+        "FillType": "Constant",
+        "FillValue": 0.0,
+        "AccessType": "ReadWrite",
+        "MemoryType": "Vector",
+        "Order": 7
+      }
+    ]
+  }
+}
