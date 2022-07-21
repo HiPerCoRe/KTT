@@ -23,6 +23,10 @@ enum class ParameterValueType
       */
     Double,
 
+    /** Parameter has 64-bit floating-point type.
+      */
+    Float = Double,
+
     /** Parameter has boolean type.
       */
     Bool,

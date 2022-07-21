@@ -48,6 +48,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ParameterValueType,
     {ParameterValueType::Int, "Int"},
     {ParameterValueType::UnsignedInt, "UnsignedInt"},
     {ParameterValueType::Double, "Double"},
+    {ParameterValueType::Float, "Float"},
     {ParameterValueType::Bool, "Bool"},
     {ParameterValueType::String, "String"}
 });
