@@ -15,7 +15,7 @@ const std::string kernelPrefix = "../";
     const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cu";
     const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3dReference.cu";
     const auto computeApi = ktt::ComputeApi::CUDA;
-    const std::string defaultMLModel = "../../ProfileSearcher/models/1070-coulomb_output_DT.sav";
+    const std::string defaultMlModel = kernelPrefix + "../Examples/CoulombSum3d/Models/1070-coulomb_output_DT.sav";
 #elif KTT_OPENCL_EXAMPLE
     const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cl";
     const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3dReference.cl";
@@ -33,6 +33,9 @@ const bool useDenseParameters = false;
 
 // Add wider ranges of tuning parameters (useWideParameters  = true).
 const bool useWideParameters = false;
+
+// Toggle usage of profile-based searcher
+const bool useProfileSearcher = true;
 
 int main(int argc, char** argv)
 {
@@ -227,7 +230,10 @@ int main(int argc, char** argv)
     }
 
 #if KTT_CUDA_EXAMPLE
-    tuner.SetProfileBasedSearcher(kernel, defaultMLModel);
+    if constexpr (useProfileSearcher)
+    {
+        tuner.SetProfileBasedSearcher(kernel, defaultMlModel);
+    }
 #endif
 
     const auto results = tuner.Tune(kernel);

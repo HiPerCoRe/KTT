@@ -22,6 +22,18 @@ std::string LoadFileToString(const std::string& filePath)
     return stream.str();
 }
 
+void SaveStringToFile(const std::string& filePath, const std::string& output)
+{
+    std::ofstream file(filePath);
+
+    if (!file.is_open())
+    {
+        throw KttException("Unable to open file: " + filePath);
+    }
+
+    file << output;
+}
+
 std::string GetFileExtension(const OutputFormat format)
 {
     switch (format)

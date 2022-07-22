@@ -4,10 +4,12 @@
 
 #include <Api/KttException.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/FileSystem.h>
 #include <Tuner.h>
 #include <TunerCore.h>
 
 #ifdef KTT_PYTHON
+#include <Api/Searcher/ProfileBasedSearcher.h>
 #include <Python/PythonInterpreter.h>
 #endif // KTT_PYTHON
 
@@ -497,7 +499,8 @@ void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_
         throw KttException("Usage of profile-based searcher requires compilation of Python backend");
         #else
         PythonInterpreter::GetInterpreter();
-        pybind11::module_ searcher = pybind11::module_::import("ProfileBasedSearcher");
+        SaveStringToFile(ProfileBasedSearcherFile, ProfileBasedSearcherModule);
+        pybind11::module_ searcher = pybind11::module_::import(ProfileBasedSearcherName.c_str());
         searcher.attr("executeSearcher")(this, id, modelPath);
         #endif // KTT_PYTHON
     }

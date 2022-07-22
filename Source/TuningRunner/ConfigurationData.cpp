@@ -44,7 +44,15 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
         return false;
     }
 
-    m_SearcherActive = m_Searcher.CalculateNextConfiguration(previousResult);
+    try
+    {
+        m_SearcherActive = m_Searcher.CalculateNextConfiguration(previousResult);
+    }
+    catch (const std::runtime_error& error)
+    {
+        Logger::LogError(error.what());
+        m_SearcherActive = false;
+    }
 
     if (!m_SearcherActive)
     {
