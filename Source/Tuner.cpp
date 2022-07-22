@@ -491,15 +491,20 @@ void Tuner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
     }
 }
 
-void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_unused]] const std::string& modelPath)
+void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_unused]] const std::string& modelPath,
+    [[maybe_unused]] const bool useBuiltinModule)
 {
     try
     {
         #ifndef KTT_PYTHON
         throw KttException("Usage of profile-based searcher requires compilation of Python backend");
         #else
+        if (useBuiltinModule)
+        {
+            SaveStringToFile(ProfileBasedSearcherFile, ProfileBasedSearcherModule);
+        }
+
         PythonInterpreter::GetInterpreter();
-        SaveStringToFile(ProfileBasedSearcherFile, ProfileBasedSearcherModule);
         pybind11::module_ searcher = pybind11::module_::import(ProfileBasedSearcherName.c_str());
         searcher.attr("executeSearcher")(this, id, modelPath);
         #endif // KTT_PYTHON

@@ -102,6 +102,7 @@ void InitializePythonEnums(py::module_& module)
         .value("Int", ktt::ParameterValueType::Int)
         .value("UnsignedInt", ktt::ParameterValueType::UnsignedInt)
         .value("Double", ktt::ParameterValueType::Double)
+        .value("Float", ktt::ParameterValueType::Float)
         .value("Bool", ktt::ParameterValueType::Bool)
         .value("String", ktt::ParameterValueType::String);
 

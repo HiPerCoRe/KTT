@@ -221,6 +221,10 @@ ParameterValueType ParameterValueTypeFromString(const std::string& string)
     {
         return ParameterValueType::Double;
     }
+    else if (string == "Float")
+    {
+        return ParameterValueType::Float;
+    }
     else if (string == "Bool")
     {
         return ParameterValueType::Bool;
