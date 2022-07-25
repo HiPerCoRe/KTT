@@ -267,6 +267,21 @@ public:
     void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
         const ModifierDimension dimension, const std::string& parameter, const ModifierAction action);
 
+    /** @fn void void AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds,
+      * const ModifierType type, const ModifierDimension dimension, const std::string& script)
+      * Adds thread modifier function for the specified kernel. Thread modifiers are useful in cases when kernel parameters affect
+      * number of required kernel threads. If multiple thread modifiers are specified for the same type and dimension, they are applied
+      * in order of their addition. This version of thread modifier requires inclusion of Python backend.
+      * @param id Id of kernel for which the modifier will be set.
+      * @param definitionIds Kernel definitions whose thread sizes will be affected by the thread modifier.
+      * @param type Type of the thread modifier. See ::ModifierType for more information.
+      * @param dimension Dimension which will be affected by the modifier. See ::ModifierDimension for more information.
+      * @param script Python script which will be executed to evaluate the constraint. The values of the tuning parameters can be
+      * utilized by the script. The default thread size can be accessed from script through variable named "defaultSize".
+      */
+    void AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+        const ModifierDimension dimension, const std::string& script);
+
     /** @fn void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
       * Adds constraint for the specified kernel. Constraints are used to prevent generating of configurations with conflicting
       * combinations of parameter values.
@@ -298,7 +313,8 @@ public:
       * @param parameters Names of kernel parameters which will be affected by the constraint. Note that constraints can only be
       * added between parameters which belong into the same group. The corresponding parameters must be added to the tuner with
       * AddParameter() before calling this method.
-      * @param script Python script which will be executed to evaluate the constraint.
+      * @param script Python script which will be executed to evaluate the constraint. The values of the specified parameters
+      * can be utilized by the script.
       */
     void AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script);
 

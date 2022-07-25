@@ -113,6 +113,12 @@ void TunerCore::AddThreadModifier(const KernelId id, const std::vector<KernelDef
     m_KernelManager->AddThreadModifier(id, definitionIds, type, dimension, parameters, function);
 }
 
+void TunerCore::AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+    const ModifierDimension dimension, const std::string& script)
+{
+    m_KernelManager->AddScriptThreadModifier(id, definitionIds, type, dimension, script);
+}
+
 void TunerCore::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)
 {
     if (definitionIds.size() > 1 && !m_ComputeEngine->SupportsMultiInstanceProfiling())

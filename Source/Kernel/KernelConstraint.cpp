@@ -125,7 +125,7 @@ bool KernelConstraint::EvaluateScript([[maybe_unused]] const std::vector<const P
             ++valueIndex;
         }
 
-        result = interpreter.Evaluate(m_Script, locals);
+        result = interpreter.Evaluate<bool>(m_Script, locals);
     }
     catch (const pybind11::error_already_set& exception)
     {

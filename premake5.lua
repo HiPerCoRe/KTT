@@ -408,6 +408,10 @@ project "Ktt"
 -- Tuning loader and launcher
 if _OPTIONS["tuning-loader"] then
 
+if not _OPTIONS["python"] then
+    error("Tuning loader depends on KTT Python integration (specified with --python option).")
+end
+
 project "KttTuningLoader"
     kind "SharedLib"
     

@@ -17,8 +17,10 @@ class KTT_VISIBILITY_HIDDEN PythonInterpreter : public DisableCopyMove
 public:
     static PythonInterpreter& GetInterpreter();
 
-    bool Evaluate(const std::string& expression);
-    bool Evaluate(const std::string& expression, pybind11::dict& locals);
+    template <typename T>
+    T Evaluate(const std::string& expression);
+    template <typename T>
+    T Evaluate(const std::string& expression, pybind11::dict& locals);
 
     void Execute(const std::string& script);
     void Execute(const std::string& script, pybind11::dict& locals);
@@ -31,5 +33,7 @@ private:
 };
 
 } // namespace ktt
+
+#include <Python/PythonInterpreter.inl>
 
 #endif // KTT_PYTHON

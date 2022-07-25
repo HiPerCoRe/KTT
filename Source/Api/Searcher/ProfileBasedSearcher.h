@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef KTT_PYTHON
+
 #include <string>
 
 namespace ktt
@@ -930,3 +932,5 @@ inline const std::string ProfileBasedSearcherModule =
     "";
 
 } // namespace ktt
+
+#endif // KTT_PYTHON

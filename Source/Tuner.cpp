@@ -221,6 +221,19 @@ void Tuner::AddThreadModifier(const KernelId id, const std::vector<KernelDefinit
     AddThreadModifier(id, definitionIds, type, dimension, std::vector<std::string>{parameter}, function);
 }
 
+void Tuner::AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+    const ModifierDimension dimension, const std::string& script)
+{
+    try
+    {
+        m_Tuner->AddScriptThreadModifier(id, definitionIds, type, dimension, script);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
 {
     try

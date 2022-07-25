@@ -34,6 +34,8 @@ public:
     void AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script);
     void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
         const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function);
+    void AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+        const ModifierDimension dimension, const std::string& script);
     void SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds);
     void SetLauncher(const KernelId id, KernelLauncher launcher);
 

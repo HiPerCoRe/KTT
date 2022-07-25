@@ -125,6 +125,14 @@ void KernelManager::AddThreadModifier(const KernelId id, const std::vector<Kerne
     kernel.AddThreadModifier(type, dimension, modifier);
 }
 
+void KernelManager::AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+    const ModifierDimension dimension, const std::string& script)
+{
+    auto& kernel = GetKernel(id);
+    const ThreadModifier modifier(definitionIds, script);
+    kernel.AddThreadModifier(type, dimension, modifier);
+}
+
 void KernelManager::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)
 {
     auto& kernel = GetKernel(id);
