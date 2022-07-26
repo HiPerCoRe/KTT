@@ -3,24 +3,30 @@
 namespace ktt
 {
 
-ModifierCommand::ModifierCommand(const ModifierType type, const ModifierDimension dimension, const std::string& parameter,
-    const ModifierAction action) :
+ModifierCommand::ModifierCommand(const ModifierType type, const std::map<ModifierDimension, std::string>& scripts) :
     m_Type(type),
-    m_Dimension(dimension),
-    m_Parameter(parameter),
-    m_Action(action)
+    m_Scripts(scripts)
 {}
 
 void ModifierCommand::Execute(TunerContext& context)
 {
     const KernelId id = context.GetKernelId();
     const KernelDefinitionId definitionId = context.GetKernelDefinitionId();
-    context.GetTuner().AddThreadModifier(id, {definitionId}, m_Type, m_Dimension, m_Parameter, m_Action);
+
+    for (const auto& script : m_Scripts)
+    {
+        context.GetTuner().AddScriptThreadModifier(id, {definitionId}, m_Type, script.first, script.second);
+    }
 }
 
 CommandPriority ModifierCommand::GetPriority() const
 {
     return CommandPriority::ModifierDefinition;
+}
+
+void ModifierCommand::SetType(const ModifierType type)
+{
+    m_Type = type;
 }
 
 } // namespace ktt

@@ -19,25 +19,13 @@
     "Language": "CUDA",
     "KernelName": "vectorAddition",
     "KernelFile": "CudaKernel.cu",
+    "SharedMemory": 0,
     "GlobalSize": {
-      "X": 1048576,
-      "Y": 1,
-      "Z": 1
+      "X": "1048576 // multiply_block_size"
     },
-    "Modifiers": [
-      {
-        "Type": "Local",
-        "Dimension": "X",
-        "Parameter": "multiply_block_size",
-        "Action": "Multiply"
-      },
-      {
-        "Type": "Global",
-        "Dimension": "X",
-        "Parameter": "multiply_block_size",
-        "Action": "Divide"
-      }
-    ],
+    "LocalSize": {
+      "X": "multiply_block_size"
+    },
     "Arguments": [
       {
         "Type": "Float",

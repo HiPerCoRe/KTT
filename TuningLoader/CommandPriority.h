@@ -9,6 +9,7 @@ enum class CommandPriority
     General,
     KernelCreation,
     ArgumentAddition,
+    SharedMemoryAddition,
     ParameterDefinition,
     ConstraintDefinition,
     ModifierDefinition,

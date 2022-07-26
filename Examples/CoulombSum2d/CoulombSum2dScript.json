@@ -57,30 +57,13 @@
     "KernelName": "directCoulombSum",
     "KernelFile": "CoulombSum2d.cl",
     "GlobalSize": {
-      "X": 512,
-      "Y": 512,
-      "Z": 1
+      "X": "512 // OUTER_UNROLL_FACTOR",
+      "Y": "512"
     },
-    "Modifiers": [
-      {
-        "Type": "Global",
-        "Dimension": "X",
-        "Parameter": "OUTER_UNROLL_FACTOR",
-        "Action": "Divide"
-      },
-      {
-        "Type": "Local",
-        "Dimension": "X",
-        "Parameter": "WORK_GROUP_SIZE_X",
-        "Action": "Multiply"
-      },
-      {
-        "Type": "Local",
-        "Dimension": "Y",
-        "Parameter": "WORK_GROUP_SIZE_Y",
-        "Action": "Multiply"
-      }
-    ],
+    "LocalSize": {
+      "X": "WORK_GROUP_SIZE_X",
+      "Y": "WORK_GROUP_SIZE_Y"
+    },
     "Arguments": [
       {
         "Type": "Float",

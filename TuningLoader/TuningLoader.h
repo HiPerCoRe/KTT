@@ -1,5 +1,6 @@
 #pragma once
 
+#include <istream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -24,6 +25,8 @@ public:
 private:
     std::unique_ptr<TunerContext> m_Context;
     std::vector<std::unique_ptr<TunerCommand>> m_Commands;
+
+    void DeserializeCommands(std::istream& stream);
 };
 
 } // namespace ktt

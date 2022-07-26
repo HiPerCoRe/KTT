@@ -67,10 +67,7 @@ void from_json(const json& j, AddKernelCommand& command)
     std::string file;
     j.at("KernelFile").get_to(file);
 
-    DimensionVector globalSize;
-    j.at("GlobalSize").get_to(globalSize);
-
-    command = AddKernelCommand(name, file, globalSize);
+    command = AddKernelCommand(name, file);
 }
 
 void from_json(const json& j, CompilerOptionsCommand& command)
@@ -101,19 +98,24 @@ void from_json(const json& j, CreateTunerCommand& command)
 
 void from_json(const json& j, ModifierCommand& command)
 {
-    ModifierType type;
-    j.at("Type").get_to(type);
+    std::map<ModifierDimension, std::string> scripts;
 
-    ModifierDimension dimension;
-    j.at("Dimension").get_to(dimension);
+    if (j.contains("X"))
+    {
+        scripts[ModifierDimension::X] = j.at("X").get<std::string>();
+    }
 
-    std::string parameter;
-    j.at("Parameter").get_to(parameter);
+    if (j.contains("Y"))
+    {
+        scripts[ModifierDimension::Y] = j.at("Y").get<std::string>();
+    }
 
-    ModifierAction action;
-    j.at("Action").get_to(action);
+    if (j.contains("Z"))
+    {
+        scripts[ModifierDimension::Z] = j.at("Z").get<std::string>();
+    }
 
-    command = ModifierCommand(type, dimension, parameter, action);
+    command = ModifierCommand(ModifierType::Global, scripts);
 }
 
 void from_json(const json& j, OutputCommand& command)
@@ -121,8 +123,12 @@ void from_json(const json& j, OutputCommand& command)
     std::string file;
     j.at("OutputFile").get_to(file);
 
-    OutputFormat format;
-    j.at("OutputFormat").get_to(format);
+    OutputFormat format = OutputFormat::JSON;
+
+    if (j.contains("OutputFormat"))
+    {
+        j.at("OutputFormat").get_to(format);
+    }
 
     command = OutputCommand(file, format);
 }
@@ -284,6 +290,14 @@ void from_json(const json& j, ParameterCommand& command)
     }
 
     command = ParameterCommand(valueType, name, finalValues);
+}
+
+void from_json(const json& j, SharedMemoryCommand& command)
+{
+    size_t memorySize = 0;
+    j.at("SharedMemory").get_to(memorySize);
+
+    command = SharedMemoryCommand(memorySize);
 }
 
 void from_json(const json& j, TimeUnitCommand& command)

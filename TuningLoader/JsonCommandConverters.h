@@ -10,6 +10,7 @@
 #include <Commands/ModifierCommand.h>
 #include <Commands/OutputCommand.h>
 #include <Commands/ParameterCommand.h>
+#include <Commands/SharedMemoryCommand.h>
 #include <Commands/TimeUnitCommand.h>
 #include <ArgumentFillType.h>
 
@@ -121,6 +122,7 @@ void from_json(const json& j, CreateTunerCommand& command);
 void from_json(const json& j, ModifierCommand& command);
 void from_json(const json& j, OutputCommand& command);
 void from_json(const json& j, ParameterCommand& command);
+void from_json(const json& j, SharedMemoryCommand& command);
 void from_json(const json& j, TimeUnitCommand& command);
 
 } // namespace ktt
