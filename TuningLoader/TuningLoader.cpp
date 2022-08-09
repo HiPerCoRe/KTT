@@ -146,7 +146,6 @@ void TuningLoader::DeserializeCommands(std::istream& stream)
     }
 
     m_Commands.push_back(std::make_unique<TuneCommand>());
-    Tuner::SetLoggingLevel(LoggingLevel::Debug);
 }
 
 } // namespace ktt
