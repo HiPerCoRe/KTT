@@ -128,11 +128,6 @@ void TuningLoader::DeserializeCommands(std::istream& stream)
     {
         auto argumentCommands = kernelSpecification["Arguments"].get<std::vector<AddArgumentCommand>>();
 
-        std::sort(argumentCommands.begin(), argumentCommands.end(), [](const auto& left, const auto& right)
-            {
-                return left.GetOrder() < right.GetOrder();
-            });
-
         for (const auto& command : argumentCommands)
         {
             m_Commands.push_back(std::make_unique<AddArgumentCommand>(command));

@@ -52,11 +52,8 @@ void from_json(const json& j, AddArgumentCommand& command)
 
     float fillValue;
     j.at("FillValue").get_to(fillValue);
-    
-    size_t order;
-    j.at("Order").get_to(order);
 
-    command = AddArgumentCommand(memoryType, type, size, accessType, fillType, fillValue, order);
+    command = AddArgumentCommand(memoryType, type, size, accessType, fillType, fillValue);
 }
 
 void from_json(const json& j, AddKernelCommand& command)

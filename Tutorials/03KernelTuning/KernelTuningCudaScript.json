@@ -33,8 +33,7 @@
         "FillType": "Ascending",
         "FillValue": 1.0,
         "AccessType": "ReadOnly",
-        "MemoryType": "Vector",
-        "Order": 0
+        "MemoryType": "Vector"
       },
       {
         "Type": "Float",
@@ -42,8 +41,7 @@
         "FillType": "Ascending",
         "FillValue": 2.0,
         "AccessType": "ReadOnly",
-        "MemoryType": "Vector",
-        "Order": 1
+        "MemoryType": "Vector"
       },
       {
         "Type": "Float",
@@ -51,14 +49,12 @@
         "FillType": "Constant",
         "FillValue": 0.0,
         "AccessType": "WriteOnly",
-        "MemoryType": "Vector",
-        "Order": 2
+        "MemoryType": "Vector"
       },
       {
         "Type": "Float",
         "FillValue": 3.0,
-        "MemoryType": "Scalar",
-        "Order": 3
+        "MemoryType": "Scalar"
       }
     ]
   }

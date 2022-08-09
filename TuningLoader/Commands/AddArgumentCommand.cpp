@@ -7,14 +7,13 @@ namespace ktt
 {
 
 AddArgumentCommand::AddArgumentCommand(const ArgumentMemoryType memoryType, const ArgumentDataType dataType, const size_t size,
-    const ArgumentAccessType accessType, const ArgumentFillType fillType, const float fillValue, const size_t order) :
+    const ArgumentAccessType accessType, const ArgumentFillType fillType, const float fillValue) :
     m_MemoryType(memoryType),
     m_Type(dataType),
     m_Size(size),
     m_AccessType(accessType),
     m_FillType(fillType),
-    m_FillValue(fillValue),
-    m_Order(order)
+    m_FillValue(fillValue)
 {}
 
 void AddArgumentCommand::Execute(TunerContext& context)
@@ -78,11 +77,6 @@ void AddArgumentCommand::Execute(TunerContext& context)
 CommandPriority AddArgumentCommand::GetPriority() const
 {
     return CommandPriority::ArgumentAddition;
-}
-
-size_t AddArgumentCommand::GetOrder() const
-{
-    return m_Order;
 }
 
 } // namespace ktt

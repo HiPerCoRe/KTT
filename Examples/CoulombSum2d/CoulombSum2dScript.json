@@ -71,8 +71,7 @@
         "FillType": "Random",
         "FillValue": 40.0,
         "AccessType": "ReadOnly",
-        "MemoryType": "Vector",
-        "Order": 0
+        "MemoryType": "Vector"
       },
       {
         "Type": "Float",
@@ -80,8 +79,7 @@
         "FillType": "Random",
         "FillValue": 40.0,
         "AccessType": "ReadOnly",
-        "MemoryType": "Vector",
-        "Order": 1
+        "MemoryType": "Vector"
       },
       {
         "Type": "Float",
@@ -89,8 +87,7 @@
         "FillType": "Random",
         "FillValue": 40.0,
         "AccessType": "ReadOnly",
-        "MemoryType": "Vector",
-        "Order": 2
+        "MemoryType": "Vector"
       },
       {
         "Type": "Float",
@@ -98,8 +95,7 @@
         "FillType": "Random",
         "FillValue": 40.0,
         "AccessType": "ReadOnly",
-        "MemoryType": "Vector",
-        "Order": 3
+        "MemoryType": "Vector"
       },
       {
         "Type": "Float",
@@ -107,20 +103,17 @@
         "FillType": "Random",
         "FillValue": 1.0,
         "AccessType": "ReadOnly",
-        "MemoryType": "Vector",
-        "Order": 4
+        "MemoryType": "Vector"
       },
       {
         "Type": "Int",
         "FillValue": 4000,
-        "MemoryType": "Scalar",
-        "Order": 5
+        "MemoryType": "Scalar"
       },
       {
         "Type": "Float",
         "FillValue": 0.5,
-        "MemoryType": "Scalar",
-        "Order": 6
+        "MemoryType": "Scalar"
       },
       {
         "Type": "Float",
@@ -128,8 +121,7 @@
         "FillType": "Constant",
         "FillValue": 0.0,
         "AccessType": "ReadWrite",
-        "MemoryType": "Vector",
-        "Order": 7
+        "MemoryType": "Vector"
       }
     ]
   }
