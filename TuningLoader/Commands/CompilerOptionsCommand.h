@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include <TunerCommand.h>
 
@@ -11,13 +12,13 @@ class CompilerOptionsCommand : public TunerCommand
 {
 public:
     CompilerOptionsCommand() = default;
-    explicit CompilerOptionsCommand(const std::string& options);
+    explicit CompilerOptionsCommand(const std::vector<std::string>& options);
 
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
 
 private:
-    std::string m_Options;
+    std::vector<std::string> m_Options;
 };
 
 } // namespace ktt

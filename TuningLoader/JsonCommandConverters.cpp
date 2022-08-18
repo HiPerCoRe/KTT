@@ -69,7 +69,7 @@ void from_json(const json& j, AddKernelCommand& command)
 
 void from_json(const json& j, CompilerOptionsCommand& command)
 {
-    std::string options;
+    std::vector<std::string> options;
     j.at("CompilerOptions").get_to(options);
 
     command = CompilerOptionsCommand(options);

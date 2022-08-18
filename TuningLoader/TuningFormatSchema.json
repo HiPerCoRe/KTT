@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", 
+  "$id": "https://github.com/HiPerCoRe/KTT/blob/development/TuningLoader/TuningFormatSchema.json", 
+  "title": "Tuning format",
+  "description": "A description of a tuning problem which can be loaded by an autotuning framework",
+  "type": "object",
+  "required": [
+    "ConfigurationSpace",
+    "KernelSpecification"
+  ],
+  "properties": {
+    "ConfigurationSpace": {
+      "type": "object",
+      "required": [
+        "TuningParameters"
+      ],
+      "properties": {
+        "TuningParameters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "Name",
+              "Type",
+              "Values"
+            ],
+            "properties": {
+              "Name": {
+                "type": "string"
+              },
+              "Type": {
+                "type": "string",
+                "examples": [
+                  "UnsignedInt"
+                ]
+              },
+              "Values": {
+                "type": "array",
+                "default": [],
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "Conditions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "Parameters",
+              "Expression"
+            ],
+            "properties": {
+              "Parameters": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                }
+              },
+              "Expression": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+	},
+    "Search": {
+      "type": "object",
+      "required": [
+      ],
+      "properties": {
+      }
+    },
+    "General": {
+      "type": "object",
+      "properties": {
+        "TimeUnit": {
+          "type": "string",
+          "examples": [
+            "Microseconds"
+          ]
+        },
+        "OutputFile": {
+          "type": "string",
+          "examples": [
+            "CoulombSum2dOutput"
+          ]
+        },
+        "OutputFormat": {
+          "type": "string",
+          "examples": [
+            "JSON"
+          ]
+        }
+      }
+    },
+    "KernelSpecification": {
+      "type": "object",
+      "required": [
+        "Language",
+        "KernelName",
+        "KernelFile",
+        "GlobalSize",
+        "LocalSize"
+      ],
+      "properties": {
+        "Language": {
+          "type": "string",
+          "examples": [
+            "OpenCL"
+          ]
+        },
+        "CompilerOptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "KernelName": {
+          "type": "string"
+        },
+        "KernelFile": {
+          "type": "string"
+        },
+        "GlobalSize": {
+          "type": "object",
+          "required": [
+            "X"
+          ],
+          "properties": {
+            "X": {
+              "type": "string"
+            },
+            "Y": {
+              "type": "string"
+            },
+            "Z": {
+              "type": "string"
+            }
+          }
+        },
+        "LocalSize": {
+          "type": "object",
+          "required": [
+            "X"
+          ],
+          "properties": {
+            "X": {
+              "type": "string"
+            },
+            "Y": {
+              "type": "string"
+            },
+            "Z": {
+              "type": "string"
+            }
+          }
+        },
+        "Arguments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "Type"
+            ],
+            "properties": {
+              "Type": {
+                "type": "string",
+                "examples": [
+                  "Float"
+                ]
+              },
+              "Size": {
+                "type": "integer",
+                "examples": [
+                  16000
+                ]
+              },
+              "FillType": {
+                "type": "string",
+                "default": "",
+                "examples": [
+                  "Random"
+                ]
+              },
+              "FillValue": {
+                "type": "number",
+                "examples": [
+                  40
+                ]
+              },
+              "AccessType": {
+                "type": "string",
+                "examples": [
+                  "ReadOnly"
+                ]
+              },
+              "MemoryType": {
+                "type": "string",
+                "examples": [
+                  "Vector"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

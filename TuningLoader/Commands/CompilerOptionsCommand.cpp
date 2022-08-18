@@ -3,13 +3,25 @@
 namespace ktt
 {
 
-CompilerOptionsCommand::CompilerOptionsCommand(const std::string& options) :
+CompilerOptionsCommand::CompilerOptionsCommand(const std::vector<std::string>& options) :
     m_Options(options)
 {}
 
 void CompilerOptionsCommand::Execute(TunerContext& context)
 {
-    context.GetTuner().SetCompilerOptions(m_Options);
+    std::string finalOptions;
+
+    for (const auto& option : m_Options)
+    {
+        finalOptions += option;
+
+        if (&option != &m_Options.back())
+        {
+            finalOptions += " ";
+        }
+    }
+
+    context.GetTuner().SetCompilerOptions(finalOptions);
 }
 
 CommandPriority CompilerOptionsCommand::GetPriority() const

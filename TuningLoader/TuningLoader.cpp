@@ -85,12 +85,6 @@ void TuningLoader::DeserializeCommands(std::istream& stream)
             m_Commands.push_back(std::make_unique<TimeUnitCommand>(timeUnitCommand));
         }
 
-        if (general.contains("CompilerOptions"))
-        {
-            auto compilerOptionsCommand = general.get<CompilerOptionsCommand>();
-            m_Commands.push_back(std::make_unique<CompilerOptionsCommand>(compilerOptionsCommand));
-        }
-
         if (general.contains("OutputFile"))
         {
             auto outputCommand = general.get<OutputCommand>();
@@ -122,6 +116,12 @@ void TuningLoader::DeserializeCommands(std::istream& stream)
         auto modifierCommand = kernelSpecification["LocalSize"].get<ModifierCommand>();
         modifierCommand.SetType(ModifierType::Local);
         m_Commands.push_back(std::make_unique<ModifierCommand>(modifierCommand));
+    }
+
+    if (kernelSpecification.contains("CompilerOptions"))
+    {
+        auto compilerOptionsCommand = kernelSpecification.get<CompilerOptionsCommand>();
+        m_Commands.push_back(std::make_unique<CompilerOptionsCommand>(compilerOptionsCommand));
     }
 
     if (kernelSpecification.contains("Arguments"))

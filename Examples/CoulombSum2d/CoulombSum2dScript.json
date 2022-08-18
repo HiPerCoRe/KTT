@@ -53,7 +53,7 @@
   },
   "KernelSpecification": {
     "Language": "OpenCL",
-    "CompilerOptions": "-cl-fast-relaxed-math",
+    "CompilerOptions": ["-cl-fast-relaxed-math"],
     "KernelName": "directCoulombSum",
     "KernelFile": "CoulombSum2d.cl",
     "GlobalSize": {
