@@ -164,6 +164,19 @@ void Tuner::SetLauncher(const KernelId id, KernelLauncher launcher)
     }
 }
 
+void Tuner::AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
+    const std::string& group)
+{
+    try
+    {
+        m_Tuner->AddScriptParameter(id, name, valueType, valueScript, group);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
 {

@@ -15,6 +15,8 @@ class KernelParameter
 {
 public:
     explicit KernelParameter(const std::string& name, const std::vector<ParameterValue>& values, const std::string& group);
+    explicit KernelParameter(const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
+        const std::string& group);
 
     const std::string& GetName() const;
     const std::string& GetGroup() const;
@@ -32,6 +34,8 @@ private:
     std::string m_Name;
     std::string m_Group;
     std::vector<ParameterValue> m_Values;
+
+    static std::vector<ParameterValue> GetValuesFromScript(const ParameterValueType valueType, const std::string& valueScript);
 };
 
 } // namespace ktt

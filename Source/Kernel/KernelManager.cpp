@@ -99,6 +99,13 @@ void KernelManager::AddParameter(const KernelId id, const std::string& name, con
     kernel.AddParameter(KernelParameter(name, values, group));
 }
 
+void KernelManager::AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
+    const std::string& group)
+{
+    auto& kernel = GetKernel(id);
+    kernel.AddParameter(KernelParameter(name, valueType, valueScript, group));
+}
+
 void KernelManager::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
 {
     auto& kernel = GetKernel(id);

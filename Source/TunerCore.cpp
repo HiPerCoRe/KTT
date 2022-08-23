@@ -92,6 +92,12 @@ void TunerCore::AddParameter(const KernelId id, const std::string& name, const s
     m_KernelManager->AddParameter(id, name, values, group);
 }
 
+void TunerCore::AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
+    const std::string& group)
+{
+    m_KernelManager->AddScriptParameter(id, name, valueType, valueScript, group);
+}
+
 void TunerCore::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
 {
     m_KernelManager->AddConstraint(id, parameters, function);

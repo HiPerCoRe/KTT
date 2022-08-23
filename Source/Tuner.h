@@ -230,6 +230,23 @@ public:
     template <typename T>
     void AddParameter(const KernelId id, const std::string& name, const std::vector<T>& values, const std::string& group = "");
 
+    /** @fn void AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType,
+      * const std::string& valueScript, const std::string& group = "")
+      * Adds new parameter for the specified kernel, providing parameter name, value type and a script which generates list of allowed
+      * values. Parameters will be added to the kernel source code as preprocessor definitions. During the tuning process, tuner will
+      * generate configurations for combinations of kernel parameters and their values.
+      * @param id Id of kernel for which the parameter will be added.
+      * @param name Name of a parameter. Parameter names for a single kernel must be unique.
+      * @param valueType Type of parameter values.
+      * @param valueScript Python script which will be executed to generate a list of parameter values. The values of the tuning parameters
+      * can be utilized by the script. The default thread size can be accessed from script through variable named "defaultSize".
+      * @param group Optional group inside which the parameter will be added. Tuning configurations are generated separately for each
+      * group. This is useful when kernels contain groups of parameters that can be tuned independently. In this way, the total number
+      * of generated configurations can be significantly reduced.
+      */
+    void AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
+        const std::string& group = "");
+
     /** @fn void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
       * const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
       * Adds thread modifier function for the specified kernel. The function receives thread size in the specified dimension and

@@ -125,6 +125,9 @@
         "KernelFile": {
           "type": "string"
         },
+        "SharedMemory": {
+          "type": "integer"
+        },
         "GlobalSize": {
           "type": "object",
           "required": [
@@ -167,6 +170,9 @@
               "Type"
             ],
             "properties": {
+              "Name": {
+                "type": "string"
+              }
               "Type": {
                 "type": "string",
                 "examples": [
