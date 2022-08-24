@@ -3,8 +3,8 @@
     "TuningParameters": [
       {
         "Name": "multiply_block_size",
-        "Type": "UnsignedInt",
-        "Values": [32, 64, 128, 256]
+        "Type": "uint",
+        "Values": "[32, 64, 128, 256]"
       }
     ]
   },

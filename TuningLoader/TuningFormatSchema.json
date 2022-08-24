@@ -31,15 +31,11 @@
               "Type": {
                 "type": "string",
                 "examples": [
-                  "UnsignedInt"
+                  "uint"
                 ]
               },
               "Values": {
-                "type": "array",
-                "default": [],
-                "items": {
-                  "type": "integer"
-                }
+                "type": "string"
               }
             }
           }

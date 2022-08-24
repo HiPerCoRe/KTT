@@ -3,38 +3,38 @@
     "TuningParameters": [
       {
         "Name": "INNER_UNROLL_FACTOR",
-        "Type": "UnsignedInt",
-        "Values": [0, 1, 2, 4, 8, 16, 32]
+        "Type": "uint",
+        "Values": "[0, 1, 2, 4, 8, 16, 32]"
       },
       {
         "Name": "USE_CONSTANT_MEMORY",
-        "Type": "UnsignedInt",
-        "Values": [0, 1]
+        "Type": "uint",
+        "Values": "[0, 1]"
       },
       {
         "Name": "VECTOR_TYPE",
-        "Type": "UnsignedInt",
-        "Values": [1, 2, 4, 8]
+        "Type": "uint",
+        "Values": "[1, 2, 4, 8]"
       },
       {
         "Name": "USE_SOA",
-        "Type": "UnsignedInt",
-        "Values": [0, 1, 2]
+        "Type": "uint",
+        "Values": "[0, 1, 2]"
       },
       {
         "Name": "OUTER_UNROLL_FACTOR",
-        "Type": "UnsignedInt",
-        "Values": [1, 2, 4, 8]
+        "Type": "uint",
+        "Values": "[1, 2, 4, 8]"
       },
       {
         "Name": "WORK_GROUP_SIZE_X",
-        "Type": "UnsignedInt",
-        "Values": [4, 8, 16, 32]
+        "Type": "uint",
+        "Values": "[4, 8, 16, 32]"
       },
       {
         "Name": "WORK_GROUP_SIZE_Y",
-        "Type": "UnsignedInt",
-        "Values": [1, 2, 4, 8, 16, 32]
+        "Type": "uint",
+        "Values": "[1, 2, 4, 8, 16, 32]"
       }
     ],
     "Conditions": [

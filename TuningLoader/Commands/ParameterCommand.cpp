@@ -4,86 +4,48 @@
 namespace ktt
 {
 
-ParameterCommand::ParameterCommand(const ParameterValueType valueType, const std::string& name, const std::vector<ParameterValue>& values) :
-    m_ValueType(valueType),
+ParameterCommand::ParameterCommand(const std::string& name, const std::string& valueType, const std::string& valueScript) :
     m_Name(name),
-    m_Values(values)
+    m_ValueScript(valueScript),
+    m_ValueType(GetValueTypeFromString(valueType))
 {}
 
 void ParameterCommand::Execute(TunerContext& context)
 {
     const KernelId id = context.GetKernelId();
-
-    switch (m_ValueType)
-    {
-    case ParameterValueType::Int:
-    {
-        std::vector<int64_t> values;
-
-        for (const auto& value : m_Values)
-        {
-            values.push_back(std::get<int64_t>(value));
-        }
-
-        context.GetTuner().AddParameter(id, m_Name, values);
-        break;
-    }
-    case ParameterValueType::UnsignedInt:
-    {
-        std::vector<uint64_t> values;
-
-        for (const auto& value : m_Values)
-        {
-            values.push_back(std::get<uint64_t>(value));
-        }
-
-        context.GetTuner().AddParameter(id, m_Name, values);
-        break;
-    }
-    case ParameterValueType::Double:
-    {
-        std::vector<double> values;
-
-        for (const auto& value : m_Values)
-        {
-            values.push_back(std::get<double>(value));
-        }
-
-        context.GetTuner().AddParameter(id, m_Name, values);
-        break;
-    }
-    case ParameterValueType::Bool:
-    {
-        std::vector<bool> values;
-
-        for (const auto& value : m_Values)
-        {
-            values.push_back(std::get<bool>(value));
-        }
-
-        context.GetTuner().AddParameter(id, m_Name, values);
-        break;
-    }
-    case ParameterValueType::String:
-    {
-        std::vector<std::string> values;
-
-        for (const auto& value : m_Values)
-        {
-            values.push_back(std::get<std::string>(value));
-        }
-
-        context.GetTuner().AddParameter(id, m_Name, values);
-        break;
-    }
-    default:
-        KttLoaderError("Unhandled parameter value type");
-    }
+    context.GetTuner().AddScriptParameter(id, m_Name, m_ValueType, m_ValueScript);
 }
 
 CommandPriority ParameterCommand::GetPriority() const
 {
     return CommandPriority::ParameterDefinition;
+}
+
+ParameterValueType ParameterCommand::GetValueTypeFromString(const std::string& valueType)
+{
+    if (valueType == "int")
+    {
+        return ParameterValueType::Int;
+    }
+    else if (valueType == "uint")
+    {
+        return ParameterValueType::UnsignedInt;
+    }
+    else if (valueType == "float" || valueType == "double")
+    {
+        return ParameterValueType::Double;
+    }
+    else if (valueType == "bool")
+    {
+        return ParameterValueType::Bool;
+    }
+    else if (valueType == "string")
+    {
+        return ParameterValueType::String;
+    }
+
+    KttLoaderError("Unhandled parameter value type");
+    return ParameterValueType::UnsignedInt;
 }
 
 } // namespace ktt
