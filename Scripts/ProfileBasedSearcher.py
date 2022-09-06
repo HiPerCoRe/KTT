@@ -797,6 +797,7 @@ class PyProfilingSearcher(ktt.Searcher):
         for i in range(0, BATCH) :
             self.preselectedBatch.append(self.GetRandomConfiguration())
         self.currentConfiguration = self.preselectedBatch[0]
+        self.preselectedBatch.pop(0)
 
         tp = self.currentConfiguration.GetPairs()
         for p in tp :
@@ -812,6 +813,18 @@ class PyProfilingSearcher(ktt.Searcher):
         self.profilingCountersModel = readPCList(modelFile + ".pc")
         self.model = loadMLModel(modelFile)
 
+    def GetUniqueConfigurations(self, configurations):
+        uniqueConfigurations = []
+        indicesConfigurations = []
+        uniqueIndicesConfigurations = []
+        for c in configurations:
+            indicesConfigurations.append(self.GetIndex(c))
+        uniqueIndicesConfigurations = list(set(indicesConfigurations))
+
+        for i in uniqueIndicesConfigurations:
+            uniqueConfigurations.append(self.GetConfiguration(i))
+        return uniqueConfigurations
+
     def CalculateNextConfiguration(self, previousResult):
         # select the new configuration
         if len(self.preselectedBatch) > 0:
@@ -819,8 +832,18 @@ class PyProfilingSearcher(ktt.Searcher):
             if (self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration) :
                 self.bestDuration = previousResult.GetKernelDuration()
                 self.bestConf = self.currentConfiguration
+                if VERBOSE == 3:
+                    print("Found new best configuration ", self.bestDuration, self.bestConf, flush = True)
+            if VERBOSE == 3:
+                print("PreselectedBatch has ", len(self.preselectedBatch), " remaining items:")
+                ind = []
+                for c in self.preselectedBatch :
+                    ind.append(self.GetIndex(c))
+                print(ind, flush = True)
             self.currentConfiguration = self.preselectedBatch.pop(0)
         else :
+            if VERBOSE == 3:
+                print("Preselected batch empty, running profiling.", flush = True)
             if self.bestDuration != -1 :
                 # we run the fastest one once again, but with profiling
                 self.currentConfiguration = self.bestConf
@@ -851,7 +874,8 @@ class PyProfilingSearcher(ktt.Searcher):
                 candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)
                 for i in range (0, 10) :
                     candidates.append(self.GetRandomConfiguration())
-                print("Profile-based searcher: evaluating model for " + str(len(candidates)) + " candidates...")
+                candidates = self.GetUniqueConfigurations(candidates)
+                print("Profile-based searcher: evaluating model for " + str(len(candidates)) + " candidates...", flush = True)
 
                 # get tuning space from candidates
                 candidatesTuningSpace = []
@@ -873,10 +897,28 @@ class PyProfilingSearcher(ktt.Searcher):
                 scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
 
                 # select next batch
-                for i in range(0, BATCH) :
-                    idx = weightedRandomSearchStep(scoreDistrib, len(candidates))
-                    self.preselectedBatch.append(candidates[idx])
+                selectedIndices = []
+                if len(candidates) > BATCH :
+                    numInBatch = 0
+                    while numInBatch < BATCH:
+                        idx = weightedRandomSearchStep(scoreDistrib, len(candidates))
+                        if selectedIndices == [] or idx not in selectedIndices:
+                        #check if we have not chosen the same configuration in previous iterations
+                            self.preselectedBatch.append(candidates[idx])
+                            selectedIndices.append(idx)
+                            numInBatch = numInBatch + 1
+                else:
+                    for i in range(0, len(candidates)):
+                        self.preselectedBatch.append(candidates[i])
+
+                if VERBOSE == 3:
+                    print("Turning off profiling, new batch selected with length ", len(self.preselectedBatch), " with configurations ")
+                ind = []
+                for c in self.preselectedBatch :
+                    ind.append(self.GetIndex(c))
+                print(ind, flush = True)
                 self.currentConfiguration = self.preselectedBatch[0]
+                self.preselectedBatch.pop(0)
                 self.bestConf = None
                 self.tuner.SetProfiling(False)
 

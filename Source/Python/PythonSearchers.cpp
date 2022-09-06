@@ -42,6 +42,7 @@ void InitializePythonSearchers(py::module_& module)
         .def("CalculateNextConfiguration", &ktt::Searcher::CalculateNextConfiguration)
         .def("GetCurrentConfiguration", &ktt::Searcher::GetCurrentConfiguration)
         .def("GetIndex", &ktt::Searcher::GetIndex)
+        .def("GetConfiguration", &ktt::Searcher::GetConfiguration)
         .def("GetRandomConfiguration", &ktt::Searcher::GetRandomConfiguration)
         .def
         (
