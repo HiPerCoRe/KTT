@@ -30,9 +30,7 @@
               },
               "Type": {
                 "type": "string",
-                "examples": [
-                  "uint"
-                ]
+                "enum": ["int", "uint", "float", "bool", "string"]
               },
               "Values": {
                 "type": "string"
@@ -75,21 +73,17 @@
       "properties": {
         "TimeUnit": {
           "type": "string",
-          "examples": [
-            "Microseconds"
-          ]
+          "enum": ["Nanoseconds", "Microseconds", "Milliseconds", "Seconds"]
         },
         "OutputFile": {
           "type": "string",
           "examples": [
-            "CoulombSum2dOutput"
+            "ReductionOutput"
           ]
         },
         "OutputFormat": {
           "type": "string",
-          "examples": [
-            "JSON"
-          ]
+          "enum": ["JSON", "XML"]
         }
       }
     },
@@ -105,9 +99,7 @@
       "properties": {
         "Language": {
           "type": "string",
-          "examples": [
-            "OpenCL"
-          ]
+          "enum": ["OpenCL", "CUDA", "Vulkan"]
         },
         "CompilerOptions": {
           "type": "array",
@@ -163,17 +155,16 @@
           "items": {
             "type": "object",
             "required": [
-              "Type"
+              "Type",
+              "MemoryType"
             ],
             "properties": {
               "Name": {
                 "type": "string"
-              }
+              },
               "Type": {
                 "type": "string",
-                "examples": [
-                  "Float"
-                ]
+                "enum": ["bool", "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64", "half", "half2", "half4", "half8", "half16", "float", "float2", "float4", "float8", "float16", "double", "double2", "double4", "double8", "double16", "custom"]
               },
               "Size": {
                 "type": "integer",
@@ -196,15 +187,11 @@
               },
               "AccessType": {
                 "type": "string",
-                "examples": [
-                  "ReadOnly"
-                ]
+                "enum": ["ReadOnly", "WriteOnly", "ReadWrite"]
               },
               "MemoryType": {
                 "type": "string",
-                "examples": [
-                  "Vector"
-                ]
+                "enum": ["Scalar", "Vector", "Local", "Symbol"]
               }
             }
           }
