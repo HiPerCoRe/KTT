@@ -28,7 +28,7 @@
     },
     "Arguments": [
       {
-        "Type": "Float",
+        "Type": "float",
         "Size": 1048576,
         "FillType": "Ascending",
         "FillValue": 1.0,
@@ -36,7 +36,7 @@
         "MemoryType": "Vector"
       },
       {
-        "Type": "Float",
+        "Type": "float",
         "Size": 1048576,
         "FillType": "Ascending",
         "FillValue": 2.0,
@@ -44,7 +44,7 @@
         "MemoryType": "Vector"
       },
       {
-        "Type": "Float",
+        "Type": "float",
         "Size": 1048576,
         "FillType": "Constant",
         "FillValue": 0.0,
@@ -52,7 +52,7 @@
         "MemoryType": "Vector"
       },
       {
-        "Type": "Float",
+        "Type": "float",
         "FillValue": 3.0,
         "MemoryType": "Scalar"
       }

@@ -66,7 +66,7 @@
     },
     "Arguments": [
       {
-        "Type": "Float",
+        "Type": "float",
         "Size": 16000,
         "FillType": "Random",
         "FillValue": 40.0,
@@ -74,7 +74,7 @@
         "MemoryType": "Vector"
       },
       {
-        "Type": "Float",
+        "Type": "float",
         "Size": 4000,
         "FillType": "Random",
         "FillValue": 40.0,
@@ -82,7 +82,7 @@
         "MemoryType": "Vector"
       },
       {
-        "Type": "Float",
+        "Type": "float",
         "Size": 4000,
         "FillType": "Random",
         "FillValue": 40.0,
@@ -90,7 +90,7 @@
         "MemoryType": "Vector"
       },
       {
-        "Type": "Float",
+        "Type": "float",
         "Size": 4000,
         "FillType": "Random",
         "FillValue": 40.0,
@@ -98,7 +98,7 @@
         "MemoryType": "Vector"
       },
       {
-        "Type": "Float",
+        "Type": "float",
         "Size": 4000,
         "FillType": "Random",
         "FillValue": 1.0,
@@ -106,17 +106,17 @@
         "MemoryType": "Vector"
       },
       {
-        "Type": "Int",
+        "Type": "int32",
         "FillValue": 4000,
         "MemoryType": "Scalar"
       },
       {
-        "Type": "Float",
+        "Type": "float",
         "FillValue": 0.5,
         "MemoryType": "Scalar"
       },
       {
-        "Type": "Float",
+        "Type": "float",
         "Size": 262144,
         "FillType": "Constant",
         "FillValue": 0.0,
