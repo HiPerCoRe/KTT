@@ -7,6 +7,7 @@
 #include <Commands/CompilerOptionsCommand.h>
 #include <Commands/ConstraintCommand.h>
 #include <Commands/CreateTunerCommand.h>
+#include <Commands/LoggingLevelCommand.h>
 #include <Commands/ModifierCommand.h>
 #include <Commands/OutputCommand.h>
 #include <Commands/ParameterCommand.h>
@@ -78,6 +79,15 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ComputeApi,
     {ComputeApi::Vulkan, "Vulkan"}
 });
 
+NLOHMANN_JSON_SERIALIZE_ENUM(LoggingLevel,
+{
+    {LoggingLevel::Off, "Off"},
+    {LoggingLevel::Error, "Error"},
+    {LoggingLevel::Warning, "Warning"},
+    {LoggingLevel::Info, "Info"},
+    {LoggingLevel::Debug, "Debug"}
+});
+
 NLOHMANN_JSON_SERIALIZE_ENUM(ModifierAction,
 {
     {ModifierAction::Add, "Add"},
@@ -132,6 +142,7 @@ void from_json(const json& j, AddKernelCommand& command);
 void from_json(const json& j, CompilerOptionsCommand& command);
 void from_json(const json& j, ConstraintCommand& command);
 void from_json(const json& j, CreateTunerCommand& command);
+void from_json(const json& j, LoggingLevelCommand& command);
 void from_json(const json& j, ModifierCommand& command);
 void from_json(const json& j, OutputCommand& command);
 void from_json(const json& j, ParameterCommand& command);

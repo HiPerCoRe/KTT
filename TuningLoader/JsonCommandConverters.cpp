@@ -93,6 +93,13 @@ void from_json(const json& j, CreateTunerCommand& command)
     command = CreateTunerCommand(api);
 }
 
+void from_json(const json& j, LoggingLevelCommand& command)
+{
+    LoggingLevel level;
+    j.at("LoggingLevel").get_to(level);
+    command = LoggingLevelCommand(level);
+}
+
 void from_json(const json& j, ModifierCommand& command)
 {
     std::map<ModifierDimension, std::string> scripts;

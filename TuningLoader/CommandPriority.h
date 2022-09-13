@@ -5,6 +5,7 @@ namespace ktt
 
 enum class CommandPriority
 {
+    Logging,
     TunerCreation,
     General,
     KernelCreation,

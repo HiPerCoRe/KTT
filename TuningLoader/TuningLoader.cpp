@@ -79,6 +79,12 @@ void TuningLoader::DeserializeCommands(std::istream& stream)
     {
         auto& general = input["General"];
 
+        if (general.contains("LoggingLevel"))
+        {
+            auto loggingLevelCommand = general.get<LoggingLevelCommand>();
+            m_Commands.push_back(std::make_unique<LoggingLevelCommand>(loggingLevelCommand));
+        }
+
         if (general.contains("TimeUnit"))
         {
             auto timeUnitCommand = general.get<TimeUnitCommand>();
@@ -94,7 +100,7 @@ void TuningLoader::DeserializeCommands(std::istream& stream)
 
     if (!input.contains("KernelSpecification"))
     {
-        throw KttException("The provided tuning file does not contain kernel specification, so tuning cannot be launched");
+        throw KttException("The provided tuning file does not contain kernel specification, so the tuning cannot be launched");
     }
 
     auto& kernelSpecification = input["KernelSpecification"];

@@ -71,6 +71,13 @@
     "General": {
       "type": "object",
       "properties": {
+        "FormatVersion": {
+          "type": "integer"
+        },
+        "LoggingLevel": {
+          "type": "string",
+          "enum": ["Off", "Error", "Warning", "Info", "Debug"]
+        },
         "TimeUnit": {
           "type": "string",
           "enum": ["Nanoseconds", "Microseconds", "Milliseconds", "Seconds"]
