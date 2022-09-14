@@ -84,9 +84,7 @@
         },
         "OutputFile": {
           "type": "string",
-          "examples": [
-            "ReductionOutput"
-          ]
+          "examples": ["ReductionOutput", "Results"]
         },
         "OutputFormat": {
           "type": "string",
@@ -181,22 +179,19 @@
               },
               "Size": {
                 "type": "integer",
-                "examples": [
-                  16000
-                ]
+                "examples": [720, 26000]
+              },
+              "TypeSize": {
+                "type": "integer",
+                "examples": [4, 16]
               },
               "FillType": {
                 "type": "string",
-                "default": "",
-                "examples": [
-                  "Random"
-                ]
+                "enum": ["Constant", "Random", "Generator", "BinaryRaw", "BinaryHDF"]
               },
               "FillValue": {
                 "type": "number",
-                "examples": [
-                  40
-                ]
+                "examples": [40, 1]
               },
               "AccessType": {
                 "type": "string",

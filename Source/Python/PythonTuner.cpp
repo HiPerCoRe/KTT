@@ -140,6 +140,16 @@ void InitializePythonTuner(py::module_& module)
             py::arg("values"),
             py::arg("group") = std::string()
         )
+        .def
+        (
+            "AddScriptParameter",
+            &ktt::Tuner::AddScriptParameter,
+            py::arg("id"),
+            py::arg("name"),
+            py::arg("valueType"),
+            py::arg("valueScript"),
+            py::arg("group") = std::string()
+        )
         .def("AddThreadModifier", py::overload_cast<const ktt::KernelId, const std::vector<ktt::KernelDefinitionId>&, const ktt::ModifierType,
             const ktt::ModifierDimension, const std::vector<std::string>&, ktt::ModifierFunction>(&ktt::Tuner::AddThreadModifier))
         .def("AddThreadModifier", py::overload_cast<const ktt::KernelId, const std::vector<ktt::KernelDefinitionId>&, const ktt::ModifierType,

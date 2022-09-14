@@ -31,7 +31,7 @@
       {
         "Type": "float",
         "Size": 1048576,
-        "FillType": "Ascending",
+        "FillType": "Constant",
         "FillValue": 1.0,
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
@@ -39,7 +39,7 @@
       {
         "Type": "float",
         "Size": 1048576,
-        "FillType": "Ascending",
+        "FillType": "Constant",
         "FillValue": 2.0,
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"

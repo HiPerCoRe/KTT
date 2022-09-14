@@ -6,8 +6,10 @@ namespace ktt
 enum class ArgumentFillType
 {
     Constant,
-    Ascending,
-    Random
+    Random,
+    Generator,
+    BinaryRaw,
+    BinaryHDF
 };
 
 } // namespace ktt

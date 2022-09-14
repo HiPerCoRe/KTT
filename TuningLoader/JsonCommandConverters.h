@@ -23,8 +23,10 @@ using json = nlohmann::json;
 NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentFillType,
 {
     {ArgumentFillType::Constant, "Constant"},
-    {ArgumentFillType::Ascending, "Ascending"},
-    {ArgumentFillType::Random, "Random"}
+    {ArgumentFillType::Random, "Random"},
+    {ArgumentFillType::Generator, "Generator"},
+    {ArgumentFillType::BinaryRaw, "BinaryRaw"},
+    {ArgumentFillType::BinaryHDF, "BinaryHDF"}
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentAccessType,

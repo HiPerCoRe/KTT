@@ -45,14 +45,6 @@ void AddArgumentCommand::Execute(TunerContext& context)
     case ArgumentFillType::Constant:
         input.assign(m_Size, m_FillValue);
         break;
-    case ArgumentFillType::Ascending:
-        for (size_t i = 0; i < m_Size; ++i)
-        {
-            auto value = m_FillValue;
-            input[i] = value;
-            ++value;
-        }
-        break;
     case ArgumentFillType::Random:
     {
         std::random_device device;
