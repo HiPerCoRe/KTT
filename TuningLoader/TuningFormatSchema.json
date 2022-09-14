@@ -120,6 +120,12 @@
         "KernelFile": {
           "type": "string"
         },
+        "KernelTypeNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "SharedMemory": {
           "type": "integer"
         },

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include <TunerCommand.h>
 
@@ -11,7 +12,7 @@ class AddKernelCommand : public TunerCommand
 {
 public:
     AddKernelCommand() = default;
-    explicit AddKernelCommand(const std::string& name, const std::string& file);
+    explicit AddKernelCommand(const std::string& name, const std::string& file, const std::vector<std::string>& typeNames = {});
 
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
@@ -19,6 +20,7 @@ public:
 private:
     std::string m_Name;
     std::string m_File;
+    std::vector<std::string> m_TypeNames;
 };
 
 } // namespace ktt

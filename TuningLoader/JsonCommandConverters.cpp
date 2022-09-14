@@ -64,7 +64,14 @@ void from_json(const json& j, AddKernelCommand& command)
     std::string file;
     j.at("KernelFile").get_to(file);
 
-    command = AddKernelCommand(name, file);
+    std::vector<std::string> typeNames;
+
+    if (j.contains("KernelTypeNames"))
+    {
+        j.at("KernelTypeNames").get_to(typeNames);
+    }
+
+    command = AddKernelCommand(name, file, typeNames);
 }
 
 void from_json(const json& j, CompilerOptionsCommand& command)

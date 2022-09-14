@@ -104,8 +104,19 @@ void TuningLoader::DeserializeCommands(std::istream& stream)
     }
 
     auto& kernelSpecification = input["KernelSpecification"];
+
+    if (!kernelSpecification.contains("Language"))
+    {
+        throw KttException("The kernel specification does not contain the used kernel language (CUDA, OpenCL, etc.)");
+    }
+
     auto createTunerCommand = kernelSpecification.get<CreateTunerCommand>();
     m_Commands.push_back(std::make_unique<CreateTunerCommand>(createTunerCommand));
+
+    if (!kernelSpecification.contains("KernelName") || !kernelSpecification.contains("KernelFile"))
+    {
+        throw KttException("The kernel specification does not contain proper kernel description (kernel name and file)");
+    }
 
     auto addKernelCommand = kernelSpecification.get<AddKernelCommand>();
     m_Commands.push_back(std::make_unique<AddKernelCommand>(addKernelCommand));
