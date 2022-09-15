@@ -88,6 +88,11 @@ std::vector<KernelArgument*> KernelArgumentManager::GetArguments(const std::vect
     return result;
 }
 
+void KernelArgumentManager::SaveArgument(const ArgumentId id, const std::string& file) const
+{
+    GetArgument(id).SaveData(file);
+}
+
 ArgumentId KernelArgumentManager::AddArgument(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
     const ArgumentManagementType managementType, const std::string& symbolName)

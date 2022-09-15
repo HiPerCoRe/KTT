@@ -29,7 +29,6 @@
                 "type": "string"
               },
               "Type": {
-                "type": "string",
                 "enum": ["int", "uint", "float", "bool", "string"]
               },
               "Values": {
@@ -75,11 +74,9 @@
           "type": "integer"
         },
         "LoggingLevel": {
-          "type": "string",
           "enum": ["Off", "Error", "Warning", "Info", "Debug"]
         },
         "TimeUnit": {
-          "type": "string",
           "enum": ["Nanoseconds", "Microseconds", "Milliseconds", "Seconds"]
         },
         "OutputFile": {
@@ -87,7 +84,6 @@
           "examples": ["ReductionOutput", "Results"]
         },
         "OutputFormat": {
-          "type": "string",
           "enum": ["JSON", "XML"]
         }
       }
@@ -103,7 +99,6 @@
       ],
       "properties": {
         "Language": {
-          "type": "string",
           "enum": ["OpenCL", "CUDA", "Vulkan"]
         },
         "CompilerOptions": {
@@ -174,7 +169,6 @@
                 "type": "string"
               },
               "Type": {
-                "type": "string",
                 "enum": ["bool", "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64", "half", "half2", "half4", "half8", "half16", "float", "float2", "float4", "float8", "float16", "double", "double2", "double4", "double8", "double16", "custom"]
               },
               "Size": {
@@ -186,19 +180,16 @@
                 "examples": [4, 16]
               },
               "FillType": {
-                "type": "string",
-                "enum": ["Constant", "Random", "Generator", "BinaryRaw", "BinaryHDF"]
+                "enum": ["Constant", "Random", "Generator", "Script", "BinaryRaw", "BinaryHDF"]
               },
               "FillValue": {
                 "type": "number",
                 "examples": [40, 1]
               },
               "AccessType": {
-                "type": "string",
                 "enum": ["ReadOnly", "WriteOnly", "ReadWrite"]
               },
               "MemoryType": {
-                "type": "string",
                 "enum": ["Scalar", "Vector", "Local", "Symbol"]
               }
             }

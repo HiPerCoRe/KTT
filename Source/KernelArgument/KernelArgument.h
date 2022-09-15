@@ -39,6 +39,7 @@ public:
     size_t GetDataSize() const;
     const void* GetData() const;
     void* GetData();
+    void SaveData(const std::string& file) const;
     bool HasOwnedData() const;
     bool HasUserBuffer() const;
 

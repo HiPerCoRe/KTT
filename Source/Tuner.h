@@ -409,6 +409,32 @@ public:
     ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
         const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation);
 
+    /** @fn ArgumentId AddArgumentVectorFromFile(const std::string& filePath, const ArgumentDataType dataType, const size_t elementSize,
+      * const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation = ArgumentMemoryLocation::Device,
+      * const ArgumentManagementType managementType = ArgumentManagementType::Framework)
+      * Adds new vector argument to the tuner. Loads the argument data from the specified binary file.
+      * @param filePath Path to the file from which argument data will be loaded.
+      * @param dataType Type of the argument data.
+      * @param elementSize Size of a single element inside the argument in bytes (e.g., 4 for 32-bit float).
+      * @param accessType Access type specifies whether argument is used for input or output. See ::ArgumentAccessType for more
+      * information.
+      * @param memoryLocation Memory location specifies whether argument data will be accessed from device or host memory during its
+      * usage by compute API. See ::ArgumentMemoryLocation for more information.
+      * @param managementType Management type specifies who is responsible for creating, managing data and destroying compute API buffer
+      * corresponding to the argument. See ::ArgumentManagementType for more information.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
+    ArgumentId AddArgumentVectorFromFile(const std::string& filePath, const ArgumentDataType dataType, const size_t elementSize,
+        const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation = ArgumentMemoryLocation::Device,
+        const ArgumentManagementType managementType = ArgumentManagementType::Framework);
+
+    /** @fn void SaveArgumentVector(const ArgumentId id, const std::string& filePath)
+      * Saves the data of the specified vector argument into raw binary file.
+      * @param id Id of vector argument that will be saved.
+      * @param filePath Path to the file where argument data will be saved.
+      */
+    void SaveArgumentVector(const ArgumentId id, const std::string& filePath);
+
     /** @fn template <typename T> ArgumentId AddArgumentScalar(const T& data);
       * Adds new scalar argument to the tuner. All scalar arguments are read-only.
       * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.

@@ -29,6 +29,7 @@ public:
     const KernelArgument& GetArgument(const ArgumentId id) const;
     KernelArgument& GetArgument(const ArgumentId id);
     std::vector<KernelArgument*> GetArguments(const std::vector<ArgumentId>& ids);
+    void SaveArgument(const ArgumentId id, const std::string& file) const;
 
 private:
     IdGenerator<ArgumentId> m_IdGenerator;

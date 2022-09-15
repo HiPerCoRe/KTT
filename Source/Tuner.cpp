@@ -309,6 +309,34 @@ ArgumentId Tuner::AddArgumentVector(ComputeBuffer buffer, const size_t bufferSiz
     }
 }
 
+ArgumentId Tuner::AddArgumentVectorFromFile(const std::string& filePath, const ArgumentDataType dataType, const size_t elementSize,
+    const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation, const ArgumentManagementType managementType)
+{
+    try
+    {
+        const auto data = LoadFileToBinary(filePath);
+        return AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector,
+            managementType, data.data(), data.size());
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidArgumentId;
+    }
+}
+
+void Tuner::SaveArgumentVector(const ArgumentId id, const std::string& filePath)
+{
+    try
+    {
+        m_Tuner->SaveArgument(id, filePath);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize)
 {
     try

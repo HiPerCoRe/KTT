@@ -178,6 +178,11 @@ void TunerCore::RemoveArgument(const ArgumentId id)
     m_ArgumentManager->RemoveArgument(id);
 }
 
+void TunerCore::SaveArgument(const ArgumentId id, const std::string& file) const
+{
+    m_ArgumentManager->SaveArgument(id, file);
+}
+
 void TunerCore::SetReadOnlyArgumentCache(const bool flag)
 {
     m_KernelRunner->SetReadOnlyArgumentCache(flag);

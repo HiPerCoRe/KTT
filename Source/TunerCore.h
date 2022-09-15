@@ -60,6 +60,7 @@ public:
     ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
     void RemoveArgument(const ArgumentId id);
+    void SaveArgument(const ArgumentId id, const std::string& file) const;
     void SetReadOnlyArgumentCache(const bool flag);
 
     // Kernel running and validation

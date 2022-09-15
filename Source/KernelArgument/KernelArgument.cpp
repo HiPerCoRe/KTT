@@ -3,6 +3,7 @@
 #include <Api/KttException.h>
 #include <KernelArgument/KernelArgument.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/FileSystem.h>
 
 namespace ktt
 {
@@ -157,6 +158,21 @@ const void* KernelArgument::GetData() const
 void* KernelArgument::GetData()
 {
     return const_cast<void*>(static_cast<const KernelArgument*>(this)->GetData());
+}
+
+void KernelArgument::SaveData(const std::string& file) const
+{
+    if (m_MemoryType != ArgumentMemoryType::Vector)
+    {
+        throw KttException("Only vector arguments can be saved into a file");
+    }
+
+    if (HasUserBuffer())
+    {
+        throw KttException("User-owned vector arguments cannot be saved into a file");
+    }
+
+    SaveBinaryToFile(file, GetData(), GetDataSize());
 }
 
 bool KernelArgument::HasOwnedData() const

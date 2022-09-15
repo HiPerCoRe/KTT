@@ -177,6 +177,18 @@ void InitializePythonTuner(py::module_& module)
             const ktt::ArgumentManagementType, const bool>(&ktt::Tuner::AddArgumentVector<float>))
         .def("AddArgumentVectorDouble", py::overload_cast<std::vector<double>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation,
             const ktt::ArgumentManagementType, const bool>(&ktt::Tuner::AddArgumentVector<double>))
+        .def
+        (
+            "AddArgumentVectorFromFile",
+            &ktt::Tuner::AddArgumentVectorFromFile,
+            py::arg("filePath"),
+            py::arg("dataType"),
+            py::arg("elementSize"),
+            py::arg("accessType"),
+            py::arg("memoryLocation") = ktt::ArgumentMemoryLocation::Device,
+            py::arg("managementType") = ktt::ArgumentManagementType::Framework
+        )
+        .def("SaveArgumentVector", &ktt::Tuner::SaveArgumentVector)
         .def("AddArgumentScalarChar", &ktt::Tuner::AddArgumentScalar<int8_t>)
         .def("AddArgumentScalarShort", &ktt::Tuner::AddArgumentScalar<int16_t>)
         .def("AddArgumentScalarInt", &ktt::Tuner::AddArgumentScalar<int32_t>)

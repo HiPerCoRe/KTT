@@ -25,6 +25,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentFillType,
     {ArgumentFillType::Constant, "Constant"},
     {ArgumentFillType::Random, "Random"},
     {ArgumentFillType::Generator, "Generator"},
+    {ArgumentFillType::Script, "Script"},
     {ArgumentFillType::BinaryRaw, "BinaryRaw"},
     {ArgumentFillType::BinaryHDF, "BinaryHDF"}
 });
