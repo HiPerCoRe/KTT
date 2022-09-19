@@ -39,8 +39,9 @@
       {
         "Type": "float",
         "Size": 1048576,
-        "FillType": "Constant",
-        "FillValue": 2.0,
+        "TypeSize": 4,
+        "FillType": "BinaryRaw",
+        "DataFile": "ArgumentData.bin",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },

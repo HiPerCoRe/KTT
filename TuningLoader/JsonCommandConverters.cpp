@@ -36,6 +36,13 @@ void from_json(const json& j, AddArgumentCommand& command)
         j.at("Size").get_to(size);
     }
 
+    size_t typeSize = 0;
+
+    if (j.contains("TypeSize"))
+    {
+        j.at("TypeSize").get_to(typeSize);
+    }
+
     ArgumentAccessType accessType = ArgumentAccessType::ReadWrite;
 
     if (j.contains("AccessType"))
@@ -50,10 +57,20 @@ void from_json(const json& j, AddArgumentCommand& command)
         j.at("FillType").get_to(fillType);
     }
 
-    float fillValue;
-    j.at("FillValue").get_to(fillValue);
+    if (fillType == ArgumentFillType::Constant || fillType == ArgumentFillType::Random)
+    {
+        float fillValue;
+        j.at("FillValue").get_to(fillValue);
 
-    command = AddArgumentCommand(memoryType, type, size, accessType, fillType, fillValue);
+        command = AddArgumentCommand(memoryType, type, size, typeSize, accessType, fillType, fillValue);
+    }
+    else if (fillType == ArgumentFillType::BinaryRaw)
+    {
+        std::string dataFile;
+        j.at("DataFile").get_to(dataFile);
+
+        command = AddArgumentCommand(memoryType, type, size, typeSize, accessType, dataFile);
+    }
 }
 
 void from_json(const json& j, AddKernelCommand& command)

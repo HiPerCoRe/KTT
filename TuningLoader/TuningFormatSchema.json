@@ -184,7 +184,10 @@
               },
               "FillValue": {
                 "type": "number",
-                "examples": [40, 1]
+                "examples": [40, 1.0]
+              },
+              "DataFile": {
+                "type": "string"
               },
               "AccessType": {
                 "enum": ["ReadOnly", "WriteOnly", "ReadWrite"]

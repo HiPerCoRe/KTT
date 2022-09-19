@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <random>
 
 #include <Commands/AddArgumentCommand.h>
@@ -7,46 +8,83 @@ namespace ktt
 {
 
 AddArgumentCommand::AddArgumentCommand(const ArgumentMemoryType memoryType, const ArgumentDataType dataType, const size_t size,
-    const ArgumentAccessType accessType, const ArgumentFillType fillType, const float fillValue) :
+    const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType, const float fillValue) :
     m_MemoryType(memoryType),
     m_Type(dataType),
     m_Size(size),
+    m_TypeSize(typeSize),
     m_AccessType(accessType),
     m_FillType(fillType),
     m_FillValue(fillValue)
 {}
 
+AddArgumentCommand::AddArgumentCommand(const ArgumentMemoryType memoryType, const ArgumentDataType dataType, const size_t size,
+    const size_t typeSize, const ArgumentAccessType accessType, const std::string& dataFile) :
+    m_MemoryType(memoryType),
+    m_Type(dataType),
+    m_TypeSize(typeSize),
+    m_Size(size),
+    m_AccessType(accessType),
+    m_FillType(ArgumentFillType::BinaryRaw),
+    m_FillValue(0.0f),
+    m_DataFile(dataFile)
+{}
+
 void AddArgumentCommand::Execute(TunerContext& context)
 {
-    if (m_MemoryType == ArgumentMemoryType::Scalar)
-    {
-        KttLoaderAssert(m_Type == ArgumentDataType::Int || m_Type == ArgumentDataType::Float, "Unsupported data type");
-        ArgumentId id;
+    ArgumentId id = InvalidArgumentId;
 
-        if (m_Type == ArgumentDataType::Int)
-        {
-            id = context.GetTuner().AddArgumentScalar(static_cast<int>(m_FillValue));
-        }
-        else
-        {
-            id = context.GetTuner().AddArgumentScalar(m_FillValue);
-        }
-        
-        context.GetArguments().push_back(id);
-        context.GetTuner().SetArguments(context.GetKernelDefinitionId(), context.GetArguments());
+    switch (m_MemoryType)
+    {
+    case ArgumentMemoryType::Scalar:
+        id = SubmitScalarArgument(context);
+        break;
+    case ArgumentMemoryType::Vector:
+        id = SubmitVectorArgument(context);
+        break;
+    case ArgumentMemoryType::Local:
+        throw KttException("Unsupported memory type (local)");
+    case ArgumentMemoryType::Symbol:
+        throw KttException("Unsupported memory type (symbol)");
+    default:
+        KttLoaderError("Unhandled memory type");
         return;
     }
 
-    KttLoaderAssert(m_MemoryType == ArgumentMemoryType::Vector, "Unsupported memory type");
-    std::vector<float> input(m_Size);
+    context.GetArguments().push_back(id);
+    context.GetTuner().SetArguments(context.GetKernelDefinitionId(), context.GetArguments());
+}
 
+CommandPriority AddArgumentCommand::GetPriority() const
+{
+    return CommandPriority::ArgumentAddition;
+}
+
+ArgumentId AddArgumentCommand::SubmitScalarArgument(TunerContext& context) const
+{
+    KttLoaderAssert(m_Type == ArgumentDataType::Int || m_Type == ArgumentDataType::Float, "Unsupported data type");
+
+    if (m_Type == ArgumentDataType::Int)
+    {
+        return context.GetTuner().AddArgumentScalar(static_cast<int>(m_FillValue));
+    }
+    
+    return context.GetTuner().AddArgumentScalar(m_FillValue);
+}
+
+ArgumentId AddArgumentCommand::SubmitVectorArgument(TunerContext& context) const
+{
     switch (m_FillType)
     {
     case ArgumentFillType::Constant:
+    {
+        std::vector<float> input(m_Size);
         input.assign(m_Size, m_FillValue);
-        break;
+        return context.GetTuner().AddArgumentVector<float>(input, m_AccessType);
+    }
     case ArgumentFillType::Random:
     {
+        std::vector<float> input(m_Size);
         std::random_device device;
         std::default_random_engine engine(device());
         std::uniform_real_distribution<float> distribution(0.0f, m_FillValue);
@@ -55,20 +93,19 @@ void AddArgumentCommand::Execute(TunerContext& context)
         {
             input[i] = distribution(engine);
         }
-        break;
+
+        return context.GetTuner().AddArgumentVector<float>(input, m_AccessType);
+    }
+    case ArgumentFillType::BinaryRaw:
+    {
+        std::filesystem::path path(context.GetWorkingDirectory());
+        path.append(m_DataFile);
+        return context.GetTuner().AddArgumentVectorFromFile(path.string(), m_Type, m_TypeSize, m_AccessType);
     }
     default:
         KttLoaderError("Unhandled fill type");
+        return InvalidArgumentId;
     }
-
-    const auto id = context.GetTuner().AddArgumentVector<float>(input, m_AccessType);
-    context.GetArguments().push_back(id);
-    context.GetTuner().SetArguments(context.GetKernelDefinitionId(), context.GetArguments());
-}
-
-CommandPriority AddArgumentCommand::GetPriority() const
-{
-    return CommandPriority::ArgumentAddition;
 }
 
 } // namespace ktt
