@@ -8,8 +8,6 @@
       }
     ]
   },
-  "Search": {
-  },
   "General": {
     "LoggingLevel": "Debug",
     "TimeUnit": "Microseconds",

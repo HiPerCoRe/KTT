@@ -25,7 +25,7 @@ void AddKernelCommand::Execute(TunerContext& context)
 
 CommandPriority AddKernelCommand::GetPriority() const
 {
-    return CommandPriority::KernelCreation;
+    return CommandPriority::Kernel;
 }
 
 } // namespace ktt

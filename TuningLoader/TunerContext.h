@@ -14,6 +14,7 @@ public:
 
     void SetWorkingDirectory(const std::string& directory);
     void SetTuner(std::unique_ptr<Tuner> tuner);
+    void SetStopCondition(std::unique_ptr<StopCondition> condition);
     void SetKernelDefinitionId(const KernelDefinitionId id);
     void SetKernelId(const KernelId id);
     void SetArguments(const std::vector<ArgumentId>& arguments);
@@ -21,6 +22,7 @@ public:
 
     const std::string& GetWorkingDirectory() const;
     Tuner& GetTuner();
+    std::unique_ptr<StopCondition> RetrieveStopCondition();
     KernelDefinitionId GetKernelDefinitionId() const;
     KernelId GetKernelId() const;
     std::vector<ArgumentId>& GetArguments();
@@ -30,6 +32,7 @@ public:
 private:
     std::string m_WorkingDirectory;
     std::unique_ptr<Tuner> m_Tuner;
+    std::unique_ptr<StopCondition> m_StopCondition;
     KernelDefinitionId m_DefinitionId;
     KernelId m_KernelId;
     std::vector<ArgumentId> m_Arguments;

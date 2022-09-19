@@ -21,7 +21,7 @@ void ModifierCommand::Execute(TunerContext& context)
 
 CommandPriority ModifierCommand::GetPriority() const
 {
-    return CommandPriority::ModifierDefinition;
+    return CommandPriority::Modifier;
 }
 
 void ModifierCommand::SetType(const ModifierType type)

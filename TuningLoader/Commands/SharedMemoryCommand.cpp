@@ -18,7 +18,7 @@ void SharedMemoryCommand::Execute(TunerContext& context)
 
 CommandPriority SharedMemoryCommand::GetPriority() const
 {
-    return CommandPriority::SharedMemoryAddition;
+    return CommandPriority::SharedMemory;
 }
 
 } // namespace ktt

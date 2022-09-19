@@ -5,6 +5,7 @@ namespace ktt
 
 TunerContext::TunerContext() :
     m_Tuner(nullptr),
+    m_StopCondition(nullptr),
     m_DefinitionId(InvalidKernelDefinitionId),
     m_KernelId(InvalidKernelDefinitionId)
 {}
@@ -17,6 +18,11 @@ void TunerContext::SetWorkingDirectory(const std::string& directory)
 void TunerContext::SetTuner(std::unique_ptr<Tuner> tuner)
 {
     m_Tuner = std::move(tuner);
+}
+
+void TunerContext::SetStopCondition(std::unique_ptr<StopCondition> condition)
+{
+    m_StopCondition = std::move(condition);
 }
 
 void TunerContext::SetKernelDefinitionId(const KernelDefinitionId id)
@@ -47,6 +53,11 @@ const std::string& TunerContext::GetWorkingDirectory() const
 Tuner& TunerContext::GetTuner()
 {
     return *m_Tuner;
+}
+
+std::unique_ptr<StopCondition> TunerContext::RetrieveStopCondition()
+{
+    return std::move(m_StopCondition);
 }
 
 KernelDefinitionId TunerContext::GetKernelDefinitionId() const

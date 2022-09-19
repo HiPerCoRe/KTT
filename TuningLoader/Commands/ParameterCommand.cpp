@@ -18,7 +18,7 @@ void ParameterCommand::Execute(TunerContext& context)
 
 CommandPriority ParameterCommand::GetPriority() const
 {
-    return CommandPriority::ParameterDefinition;
+    return CommandPriority::TuningParameter;
 }
 
 ParameterValueType ParameterCommand::GetValueTypeFromString(const std::string& valueType)

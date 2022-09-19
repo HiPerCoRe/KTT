@@ -12,8 +12,10 @@
 #include <Commands/OutputCommand.h>
 #include <Commands/ParameterCommand.h>
 #include <Commands/SharedMemoryCommand.h>
+#include <Commands/StopConditionCommand.h>
 #include <Commands/TimeUnitCommand.h>
 #include <ArgumentFillType.h>
+#include <StopConditionType.h>
 
 namespace ktt
 {
@@ -129,6 +131,13 @@ NLOHMANN_JSON_SERIALIZE_ENUM(OutputFormat,
     {OutputFormat::XML, "XML"}
 });
 
+NLOHMANN_JSON_SERIALIZE_ENUM(StopConditionType,
+{
+    {StopConditionType::TuningDuration, "TuningDuration"},
+    {StopConditionType::ConfigurationCount, "ConfigurationCount"},
+    {StopConditionType::ConfigurationFraction, "ConfigurationFraction"}
+});
+
 NLOHMANN_JSON_SERIALIZE_ENUM(TimeUnit,
 {
     {TimeUnit::Nanoseconds, "Nanoseconds"},
@@ -150,6 +159,7 @@ void from_json(const json& j, ModifierCommand& command);
 void from_json(const json& j, OutputCommand& command);
 void from_json(const json& j, ParameterCommand& command);
 void from_json(const json& j, SharedMemoryCommand& command);
+void from_json(const json& j, StopConditionCommand& command);
 void from_json(const json& j, TimeUnitCommand& command);
 
 } // namespace ktt

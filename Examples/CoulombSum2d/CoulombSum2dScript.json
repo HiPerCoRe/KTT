@@ -44,7 +44,9 @@
       }
     ]
   },
-  "Search": {
+  "Budget": {
+    "Type": "TuningDuration",
+    "BudgetValue": 60
   },
   "General": {
     "TimeUnit": "Microseconds",

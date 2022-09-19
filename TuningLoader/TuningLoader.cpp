@@ -75,6 +75,13 @@ void TuningLoader::DeserializeCommands(std::istream& stream)
         }
     }
 
+    if (input.contains("Budget"))
+    {
+        auto& budget = input["Budget"];
+        auto stopConditionCommand = budget.get<StopConditionCommand>();
+        m_Commands.push_back(std::make_unique<StopConditionCommand>(stopConditionCommand));
+    }
+
     if (input.contains("General"))
     {
         auto& general = input["General"];

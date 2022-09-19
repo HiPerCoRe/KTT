@@ -6,14 +6,15 @@ namespace ktt
 enum class CommandPriority
 {
     Logging,
-    TunerCreation,
+    Initialization,
     General,
-    KernelCreation,
-    ArgumentAddition,
-    SharedMemoryAddition,
-    ParameterDefinition,
-    ConstraintDefinition,
-    ModifierDefinition,
+    Kernel,
+    KernelArgument,
+    SharedMemory,
+    TuningParameter,
+    Constraint,
+    Modifier,
+    StopCondition,
     Tuning,
     Output
 };

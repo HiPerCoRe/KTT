@@ -57,7 +57,7 @@ void AddArgumentCommand::Execute(TunerContext& context)
 
 CommandPriority AddArgumentCommand::GetPriority() const
 {
-    return CommandPriority::ArgumentAddition;
+    return CommandPriority::KernelArgument;
 }
 
 ArgumentId AddArgumentCommand::SubmitScalarArgument(TunerContext& context) const

@@ -16,7 +16,7 @@ void ConstraintCommand::Execute(TunerContext& context)
 
 CommandPriority ConstraintCommand::GetPriority() const
 {
-    return CommandPriority::ConstraintDefinition;
+    return CommandPriority::Constraint;
 }
 
 } // namespace ktt

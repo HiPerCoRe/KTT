@@ -183,6 +183,17 @@ void from_json(const json& j, SharedMemoryCommand& command)
     command = SharedMemoryCommand(memorySize);
 }
 
+void from_json(const json& j, StopConditionCommand& command)
+{
+    StopConditionType type;
+    j.at("Type").get_to(type);
+
+    double budget;
+    j.at("BudgetValue").get_to(budget);
+
+    command = StopConditionCommand(type, budget);
+}
+
 void from_json(const json& j, TimeUnitCommand& command)
 {
     TimeUnit unit;

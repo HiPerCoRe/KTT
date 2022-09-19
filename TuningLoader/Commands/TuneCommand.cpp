@@ -6,7 +6,7 @@ namespace ktt
 void TuneCommand::Execute(TunerContext& context)
 {
     const auto id = context.GetKernelId();
-    auto results = context.GetTuner().Tune(id);
+    auto results = context.GetTuner().Tune(id, context.RetrieveStopCondition());
     context.SetResults(results);
 }
 

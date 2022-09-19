@@ -63,8 +63,45 @@
     "Search": {
       "type": "object",
       "required": [
+        "Name"
       ],
       "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Attributes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "Name",
+              "Value"
+            ],
+            "properties": {
+              "Name": {
+                "type": "string"
+              },
+              "Value": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Budget": {
+      "type": "object",
+      "required": [
+        "Type",
+        "BudgetValue"
+      ],
+      "properties": {
+        "Type": {
+          "enum": ["TuningDuration", "ConfigurationCount", "ConfigurationFraction"]
+        },
+        "BudgetValue": {
+          "type": "number"
+        },
       }
     },
     "General": {
