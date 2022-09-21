@@ -14,6 +14,7 @@ enum class CommandPriority
     TuningParameter,
     Constraint,
     Modifier,
+    Searcher,
     StopCondition,
     Tuning,
     Output

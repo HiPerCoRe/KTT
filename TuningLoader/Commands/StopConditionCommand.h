@@ -1,6 +1,6 @@
 #pragma once
 
-#include <StopConditionType.h>
+#include <Deserialization/StopConditionType.h>
 #include <TunerCommand.h>
 
 namespace ktt

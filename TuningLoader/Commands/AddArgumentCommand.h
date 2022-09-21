@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <ArgumentFillType.h>
+#include <Deserialization/ArgumentFillType.h>
 #include <TunerCommand.h>
 
 namespace ktt

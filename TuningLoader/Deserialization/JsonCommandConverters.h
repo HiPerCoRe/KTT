@@ -11,26 +11,19 @@
 #include <Commands/ModifierCommand.h>
 #include <Commands/OutputCommand.h>
 #include <Commands/ParameterCommand.h>
+#include <Commands/SearcherCommand.h>
 #include <Commands/SharedMemoryCommand.h>
 #include <Commands/StopConditionCommand.h>
 #include <Commands/TimeUnitCommand.h>
-#include <ArgumentFillType.h>
-#include <StopConditionType.h>
+#include <Deserialization/ArgumentFillType.h>
+#include <Deserialization/SearcherAttribute.h>
+#include <Deserialization/SearcherType.h>
+#include <Deserialization/StopConditionType.h>
 
 namespace ktt
 {
 
 using json = nlohmann::json;
-
-NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentFillType,
-{
-    {ArgumentFillType::Constant, "Constant"},
-    {ArgumentFillType::Random, "Random"},
-    {ArgumentFillType::Generator, "Generator"},
-    {ArgumentFillType::Script, "Script"},
-    {ArgumentFillType::BinaryRaw, "BinaryRaw"},
-    {ArgumentFillType::BinaryHDF, "BinaryHDF"}
-});
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentAccessType,
 {
@@ -67,6 +60,16 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentDataType,
     {ArgumentDataType::Custom, "double8"},
     {ArgumentDataType::Custom, "double16"},
     {ArgumentDataType::Custom, "custom"}
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentFillType,
+{
+    {ArgumentFillType::Constant, "Constant"},
+    {ArgumentFillType::Random, "Random"},
+    {ArgumentFillType::Generator, "Generator"},
+    {ArgumentFillType::Script, "Script"},
+    {ArgumentFillType::BinaryRaw, "BinaryRaw"},
+    {ArgumentFillType::BinaryHDF, "BinaryHDF"}
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ArgumentMemoryType,
@@ -115,6 +118,12 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ModifierType,
     {ModifierType::Local, "Local"}
 });
 
+NLOHMANN_JSON_SERIALIZE_ENUM(OutputFormat,
+{
+    {OutputFormat::JSON, "JSON"},
+    {OutputFormat::XML, "XML"}
+});
+
 NLOHMANN_JSON_SERIALIZE_ENUM(ParameterValueType,
 {
     {ParameterValueType::Int, "Int"},
@@ -125,10 +134,12 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ParameterValueType,
     {ParameterValueType::String, "String"}
 });
 
-NLOHMANN_JSON_SERIALIZE_ENUM(OutputFormat,
+NLOHMANN_JSON_SERIALIZE_ENUM(SearcherType,
 {
-    {OutputFormat::JSON, "JSON"},
-    {OutputFormat::XML, "XML"}
+    {SearcherType::Deterministic, "Deterministic"},
+    {SearcherType::Random, "Random"},
+    {SearcherType::MCMC, "MCMC"},
+    {SearcherType::ProfileBased, "ProfileBased"}
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(StopConditionType,
@@ -149,6 +160,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(TimeUnit,
 void to_json(json& j, const DimensionVector& vector);
 void from_json(const json& j, DimensionVector& vector);
 
+void from_json(const json& j, SearcherAttribute& attribute);
 void from_json(const json& j, AddArgumentCommand& command);
 void from_json(const json& j, AddKernelCommand& command);
 void from_json(const json& j, CompilerOptionsCommand& command);
@@ -158,6 +170,7 @@ void from_json(const json& j, LoggingLevelCommand& command);
 void from_json(const json& j, ModifierCommand& command);
 void from_json(const json& j, OutputCommand& command);
 void from_json(const json& j, ParameterCommand& command);
+void from_json(const json& j, SearcherCommand& command);
 void from_json(const json& j, SharedMemoryCommand& command);
 void from_json(const json& j, StopConditionCommand& command);
 void from_json(const json& j, TimeUnitCommand& command);

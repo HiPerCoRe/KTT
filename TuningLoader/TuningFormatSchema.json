@@ -82,7 +82,7 @@
                 "type": "string"
               },
               "Value": {
-                "type": "object"
+                "type": "string"
               }
             }
           }

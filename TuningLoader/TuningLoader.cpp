@@ -4,7 +4,7 @@
 
 #include <Api/KttException.h>
 #include <Commands/TuneCommand.h>
-#include <JsonCommandConverters.h>
+#include <Deserialization/JsonCommandConverters.h>
 #include <TunerCommand.h>
 #include <TunerContext.h>
 #include <TuningLoader.h>
@@ -80,6 +80,13 @@ void TuningLoader::DeserializeCommands(std::istream& stream)
         auto& budget = input["Budget"];
         auto stopConditionCommand = budget.get<StopConditionCommand>();
         m_Commands.push_back(std::make_unique<StopConditionCommand>(stopConditionCommand));
+    }
+
+    if (input.contains("Search"))
+    {
+        auto& search = input["Search"];
+        auto searcherCommand = search.get<SearcherCommand>();
+        m_Commands.push_back(std::make_unique<SearcherCommand>(searcherCommand));
     }
 
     if (input.contains("General"))

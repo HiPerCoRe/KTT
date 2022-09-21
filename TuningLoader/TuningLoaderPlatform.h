@@ -3,9 +3,6 @@
   */
 #pragma once
 
-#include <cstdint>
-#include <string>
-
 #ifndef KTT_LOADER_API
 #if defined(_MSC_VER)
     #pragma warning(disable : 4251) // Irrelevant MSVC warning as long as exported classes have no public attributes.

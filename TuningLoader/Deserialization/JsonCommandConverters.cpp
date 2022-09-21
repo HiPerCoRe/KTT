@@ -1,5 +1,5 @@
+#include <Deserialization/JsonCommandConverters.h>
 #include <KttLoaderAssert.h>
-#include <JsonCommandConverters.h>
 
 namespace ktt
 {
@@ -19,6 +19,13 @@ void from_json(const json& j, DimensionVector& vector)
     vector.SetSizeX(j.at("X").get<size_t>());
     vector.SetSizeY(j.at("Y").get<size_t>());
     vector.SetSizeZ(j.at("Z").get<size_t>());
+}
+
+void from_json(const json& j, SearcherAttribute& attribute)
+{
+    const auto name = j.at("Name").get<std::string>();
+    const auto value = j.at("Value").get<std::string>();
+    attribute = SearcherAttribute(name, value);
 }
 
 void from_json(const json& j, AddArgumentCommand& command)
@@ -173,6 +180,24 @@ void from_json(const json& j, ParameterCommand& command)
     j.at("Values").get_to(valueScript);
 
     command = ParameterCommand(name, valueType, valueScript);
+}
+
+void from_json(const json& j, SearcherCommand& command)
+{
+    const auto type = j.at("Name").get<SearcherType>();
+    std::map<std::string, std::string> attributes;
+
+    if (j.contains("Attributes"))
+    {
+        const auto attributesArray = j.at("Attributes").get<std::vector<SearcherAttribute>>();
+
+        for (const auto& attribute : attributesArray)
+        {
+            attributes.insert(attribute.GeneratePair());
+        }
+    }
+
+    command = SearcherCommand(type, attributes);
 }
 
 void from_json(const json& j, SharedMemoryCommand& command)
