@@ -22,6 +22,12 @@ public:
     ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
         const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName = "");
+    ArgumentId AddArgumentWithOwnedDataFromFile(const size_t elementSize, const ArgumentDataType dataType,
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+        const ArgumentManagementType managementType, const std::string& file);
+    ArgumentId AddArgumentWithOwnedDataFromGenerator(const size_t elementSize, const ArgumentDataType dataType,
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+        const ArgumentManagementType managementType, const std::string& generatorFunction, const size_t dataSize);
     ArgumentId AddUserArgument(const size_t elementSize, const ArgumentDataType dataType, const ArgumentMemoryLocation memoryLocation,
         const ArgumentAccessType accessType, const size_t dataSize);
     void RemoveArgument(const ArgumentId id);

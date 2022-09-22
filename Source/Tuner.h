@@ -428,6 +428,29 @@ public:
         const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation = ArgumentMemoryLocation::Device,
         const ArgumentManagementType managementType = ArgumentManagementType::Framework);
 
+    /** @fn ArgumentId AddArgumentVectorFromGenerator(const std::string& generatorFunction, const ArgumentDataType dataType,
+      * const size_t bufferSize, const size_t elementSize, const ArgumentAccessType accessType,
+      * const ArgumentMemoryLocation memoryLocation = ArgumentMemoryLocation::Device,
+      * const ArgumentManagementType managementType = ArgumentManagementType::Framework)
+      * Adds new vector argument to the tuner. Generates the argument data from the specified Python script.
+      * @param generatorFunction Python function which generates the elements inside the argument. It is called once per each element
+      * index, with the index value being stored in a Python local variable named 'i'.
+      * @param dataType Type of the argument data.
+      * @param bufferSize Size of the generated buffer in bytes.
+      * @param elementSize Size of a single element inside the argument in bytes (e.g., 4 for 32-bit float).
+      * @param accessType Access type specifies whether argument is used for input or output. See ::ArgumentAccessType for more
+      * information.
+      * @param memoryLocation Memory location specifies whether argument data will be accessed from device or host memory during its
+      * usage by compute API. See ::ArgumentMemoryLocation for more information.
+      * @param managementType Management type specifies who is responsible for creating, managing data and destroying compute API buffer
+      * corresponding to the argument. See ::ArgumentManagementType for more information.
+      * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
+      */
+    ArgumentId AddArgumentVectorFromGenerator(const std::string& generatorFunction, const ArgumentDataType dataType,
+        const size_t bufferSize, const size_t elementSize, const ArgumentAccessType accessType,
+        const ArgumentMemoryLocation memoryLocation = ArgumentMemoryLocation::Device,
+        const ArgumentManagementType managementType = ArgumentManagementType::Framework);
+
     /** @fn void SaveArgumentVector(const ArgumentId id, const std::string& filePath)
       * Saves the data of the specified vector argument into raw binary file.
       * @param id Id of vector argument that will be saved.

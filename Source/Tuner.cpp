@@ -314,9 +314,24 @@ ArgumentId Tuner::AddArgumentVectorFromFile(const std::string& filePath, const A
 {
     try
     {
-        const auto data = LoadFileToBinary(filePath);
-        return AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector,
-            managementType, data.data(), data.size());
+        return m_Tuner->AddArgumentWithOwnedDataFromFile(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector,
+            managementType, filePath);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidArgumentId;
+    }
+}
+
+ArgumentId Tuner::AddArgumentVectorFromGenerator(const std::string& generatorFunction, const ArgumentDataType dataType,
+    const size_t bufferSize, const size_t elementSize, const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation,
+    const ArgumentManagementType managementType)
+{
+    try
+    {
+        return m_Tuner->AddArgumentWithOwnedDataFromGenerator(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector,
+            managementType, generatorFunction, bufferSize);
     }
     catch (const KttException& exception)
     {

@@ -32,6 +32,26 @@ ArgumentId KernelArgumentManager::AddArgumentWithOwnedData(const size_t elementS
     return id;
 }
 
+ArgumentId KernelArgumentManager::AddArgumentWithOwnedDataFromFile(const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+    const ArgumentManagementType managementType, const std::string& file)
+{
+    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType, managementType);
+    auto& argument = GetArgument(id);
+    argument.SetOwnedDataFromFile(file);
+    return id;
+}
+
+ArgumentId KernelArgumentManager::AddArgumentWithOwnedDataFromGenerator(const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+    const ArgumentManagementType managementType, const std::string& generatorFunction, const size_t dataSize)
+{
+    const auto id = AddArgument(elementSize, dataType, memoryLocation, accessType, memoryType, managementType);
+    auto& argument = GetArgument(id);
+    argument.SetOwnedDataFromGenerator(generatorFunction, dataSize);
+    return id;
+}
+
 ArgumentId KernelArgumentManager::AddUserArgument(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize)
 {

@@ -156,6 +156,22 @@ ArgumentId TunerCore::AddArgumentWithOwnedData(const size_t elementSize, const A
         managementType, data, dataSize, symbolName);
 }
 
+ArgumentId TunerCore::AddArgumentWithOwnedDataFromFile(const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+    const ArgumentManagementType managementType, const std::string& file)
+{
+    return m_ArgumentManager->AddArgumentWithOwnedDataFromFile(elementSize, dataType, memoryLocation, accessType, memoryType,
+        managementType, file);
+}
+
+ArgumentId TunerCore::AddArgumentWithOwnedDataFromGenerator(const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+    const ArgumentManagementType managementType, const std::string& generatorFunction, const size_t dataSize)
+{
+    return m_ArgumentManager->AddArgumentWithOwnedDataFromGenerator(elementSize, dataType, memoryLocation, accessType, memoryType,
+        managementType, generatorFunction, dataSize);
+}
+
 ArgumentId TunerCore::AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize)
 {
