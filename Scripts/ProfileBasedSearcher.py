@@ -832,9 +832,9 @@ class PyProfilingSearcher(ktt.Searcher):
             if (self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration) :
                 self.bestDuration = previousResult.GetKernelDuration()
                 self.bestConf = self.currentConfiguration
-                if VERBOSE == 3:
+                if VERBOSE > 2:
                     print("Found new best configuration ", self.bestDuration, self.bestConf, flush = True)
-            if VERBOSE == 3:
+            if VERBOSE > 2:
                 print("PreselectedBatch has ", len(self.preselectedBatch), " remaining items:")
                 ind = []
                 for c in self.preselectedBatch :
@@ -842,7 +842,7 @@ class PyProfilingSearcher(ktt.Searcher):
                 print(ind, flush = True)
             self.currentConfiguration = self.preselectedBatch.pop(0)
         else :
-            if VERBOSE == 3:
+            if VERBOSE > 2:
                 print("Preselected batch empty, running profiling.", flush = True)
             if self.bestDuration != -1 :
                 # we run the fastest one once again, but with profiling
