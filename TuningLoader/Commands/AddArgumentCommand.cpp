@@ -19,15 +19,15 @@ AddArgumentCommand::AddArgumentCommand(const ArgumentMemoryType memoryType, cons
 {}
 
 AddArgumentCommand::AddArgumentCommand(const ArgumentMemoryType memoryType, const ArgumentDataType dataType, const size_t size,
-    const size_t typeSize, const ArgumentAccessType accessType, const std::string& dataFile) :
+    const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType, const std::string& dataSource) :
     m_MemoryType(memoryType),
     m_Type(dataType),
     m_TypeSize(typeSize),
     m_Size(size),
     m_AccessType(accessType),
-    m_FillType(ArgumentFillType::BinaryRaw),
+    m_FillType(fillType),
     m_FillValue(0.0f),
-    m_DataFile(dataFile)
+    m_DataSource(dataSource)
 {}
 
 void AddArgumentCommand::Execute(TunerContext& context)
@@ -96,10 +96,14 @@ ArgumentId AddArgumentCommand::SubmitVectorArgument(TunerContext& context) const
 
         return context.GetTuner().AddArgumentVector<float>(input, m_AccessType);
     }
+    case ArgumentFillType::Generator:
+    {
+        return context.GetTuner().AddArgumentVectorFromGenerator(m_DataSource, m_Type, m_Size * m_TypeSize, m_TypeSize, m_AccessType);
+    }
     case ArgumentFillType::BinaryRaw:
     {
         std::filesystem::path path(context.GetWorkingDirectory());
-        path.append(m_DataFile);
+        path.append(m_DataSource);
         return context.GetTuner().AddArgumentVectorFromFile(path.string(), m_Type, m_TypeSize, m_AccessType);
     }
     default:

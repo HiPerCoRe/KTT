@@ -223,7 +223,7 @@
                 "type": "number",
                 "examples": [40, 1.0]
               },
-              "DataFile": {
+              "DataSource": {
                 "type": "string"
               },
               "AccessType": {

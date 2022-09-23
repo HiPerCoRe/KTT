@@ -15,7 +15,7 @@ public:
     explicit AddArgumentCommand(const ArgumentMemoryType memoryType, const ArgumentDataType dataType, const size_t size,
         const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType, const float fillValue);
     explicit AddArgumentCommand(const ArgumentMemoryType memoryType, const ArgumentDataType dataType, const size_t size,
-        const size_t typeSize, const ArgumentAccessType accessType, const std::string& dataFile);
+        const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType, const std::string& dataSource);
 
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
@@ -28,7 +28,7 @@ private:
     ArgumentAccessType m_AccessType;
     ArgumentFillType m_FillType;
     float m_FillValue;
-    std::string m_DataFile;
+    std::string m_DataSource;
 
     ArgumentId SubmitScalarArgument(TunerContext& context) const;
     ArgumentId SubmitVectorArgument(TunerContext& context) const;

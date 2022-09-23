@@ -71,12 +71,12 @@ void from_json(const json& j, AddArgumentCommand& command)
 
         command = AddArgumentCommand(memoryType, type, size, typeSize, accessType, fillType, fillValue);
     }
-    else if (fillType == ArgumentFillType::BinaryRaw)
+    else if (fillType == ArgumentFillType::BinaryRaw || fillType == ArgumentFillType::Generator)
     {
-        std::string dataFile;
-        j.at("DataFile").get_to(dataFile);
+        std::string dataSource;
+        j.at("DataSource").get_to(dataSource);
 
-        command = AddArgumentCommand(memoryType, type, size, typeSize, accessType, dataFile);
+        command = AddArgumentCommand(memoryType, type, size, typeSize, accessType, fillType, dataSource);
     }
 }
 

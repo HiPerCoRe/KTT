@@ -29,8 +29,9 @@
       {
         "Type": "float",
         "Size": 1048576,
-        "FillType": "Constant",
-        "FillValue": 1.0,
+        "TypeSize": 4,
+        "FillType": "Generator",
+        "DataSource": "i",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
@@ -39,7 +40,7 @@
         "Size": 1048576,
         "TypeSize": 4,
         "FillType": "BinaryRaw",
-        "DataFile": "ArgumentData.bin",
+        "DataSource": "ArgumentData.bin",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
