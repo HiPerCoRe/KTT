@@ -1,6 +1,6 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#", 
-  "$id": "https://github.com/HiPerCoRe/KTT/blob/development/TuningLoader/TuningFormatSchema.json", 
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/HiPerCoRe/KTT/blob/development/TuningLoader/TuningFormatSchema.json",
   "title": "Tuning format",
   "description": "A description of a tuning problem which can be loaded by an autotuning framework",
   "type": "object",
@@ -49,7 +49,7 @@
               "Parameters": {
                 "type": "array",
                 "items": {
-                  "type": "string",
+                  "type": "string"
                 }
               },
               "Expression": {
@@ -101,7 +101,7 @@
         },
         "BudgetValue": {
           "type": "number"
-        },
+        }
       }
     },
     "General": {

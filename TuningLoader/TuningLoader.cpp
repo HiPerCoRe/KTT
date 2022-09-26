@@ -1,6 +1,10 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <sstream>
+
+#include <json-schema.hpp>
 
 #include <Api/KttException.h>
 #include <Commands/TuneCommand.h>
@@ -8,9 +12,12 @@
 #include <TunerCommand.h>
 #include <TunerContext.h>
 #include <TuningLoader.h>
+#include <TuningSchema.h>
 
 namespace ktt
 {
+
+using nlohmann::json_schema::json_validator;
 
 TuningLoader::TuningLoader() :
     m_Context(std::make_unique<TunerContext>())
@@ -29,7 +36,17 @@ void TuningLoader::LoadTuningFile(const std::string& file)
 
     const std::string directory = std::filesystem::path(file).parent_path().string();
     m_Context->SetWorkingDirectory(directory);
-    DeserializeCommands(inputStream);
+
+    std::stringstream stream;
+    stream << inputStream.rdbuf();
+    const std::string tuningScript = stream.str();
+
+    if (!ValidateFormat(tuningScript))
+    {
+        throw KttException("Tuning file validation failed");
+    }
+
+    DeserializeCommands(tuningScript);
 
     std::stable_sort(m_Commands.begin(), m_Commands.end(), [](const auto& left, const auto& right)
     {
@@ -45,10 +62,9 @@ void TuningLoader::ExecuteCommands()
     }
 }
 
-void TuningLoader::DeserializeCommands(std::istream& stream)
+void TuningLoader::DeserializeCommands(const std::string& tuningScript)
 {
-    json input;
-    stream >> input;
+    json input = json::parse(tuningScript);
 
     if (input.contains("ConfigurationSpace"))
     {
@@ -172,6 +188,35 @@ void TuningLoader::DeserializeCommands(std::istream& stream)
     }
 
     m_Commands.push_back(std::make_unique<TuneCommand>());
+}
+
+bool TuningLoader::ValidateFormat(const std::string& tuningScript)
+{
+    json_validator valitor;
+
+    try
+    {
+        valitor.set_root_schema(TuningSchema);
+    }
+    catch (const std::exception& exception)
+    {
+        std::cerr << "Validation of schema failed: " << exception.what() << std::endl;
+        return false;
+    }
+
+    json input = json::parse(tuningScript);
+
+    try
+    {
+        valitor.validate(input);
+    }
+    catch (const std::exception& exception)
+    {
+        std::cerr << "Validation of the provided JSON tuning file failed: " << exception.what();
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace ktt

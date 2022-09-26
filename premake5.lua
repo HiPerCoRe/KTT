@@ -418,7 +418,8 @@ project "KttTuningLoader"
     files
     {
         "TuningLoader/**",
-        "Libraries/Json-3.9.1/**"
+        "Libraries/Json-3.9.1/**",
+        "Libraries/JsonSchemaValidator-2.1.0/**"
     }
     
     removefiles {"TuningLoader/TuningLauncher.cpp"}
@@ -427,6 +428,7 @@ project "KttTuningLoader"
     {
         "TuningLoader",
         "Libraries/Json-3.9.1",
+        "Libraries/JsonSchemaValidator-2.1.0",
         "Source"
     }
     

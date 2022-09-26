@@ -26,7 +26,8 @@ private:
     std::unique_ptr<TunerContext> m_Context;
     std::vector<std::unique_ptr<TunerCommand>> m_Commands;
 
-    void DeserializeCommands(std::istream& stream);
+    void DeserializeCommands(const std::string& tuningScript);
+    static bool ValidateFormat(const std::string& tuningScript);
 };
 
 } // namespace ktt
