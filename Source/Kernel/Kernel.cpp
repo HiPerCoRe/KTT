@@ -1,6 +1,9 @@
 #include <algorithm>
 
 #include <Api/KttException.h>
+#include <Kernel/KernelConstraint/BasicConstraint.h>
+#include <Kernel/KernelConstraint/GenericConstraint.h>
+#include <Kernel/KernelConstraint/ScriptConstraint.h>
 #include <Kernel/Kernel.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/StlHelpers.h>
@@ -30,19 +33,19 @@ void Kernel::AddParameter(const KernelParameter& parameter)
 void Kernel::AddConstraint(const std::vector<std::string>& parameterNames, ConstraintFunction function)
 {
     const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, false);
-    m_Constraints.emplace_back(parameters, function);
+    m_Constraints.push_back(std::make_unique<BasicConstraint>(parameters, function));
 }
 
 void Kernel::AddGenericConstraint(const std::vector<std::string>& parameterNames, GenericConstraintFunction function)
 {
     const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, true);
-    m_Constraints.emplace_back(parameters, function);
+    m_Constraints.push_back(std::make_unique<GenericConstraint>(parameters, function));
 }
 
 void Kernel::AddScriptConstraint(const std::vector<std::string>& parameterNames, const std::string& script)
 {
     const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, true);
-    m_Constraints.emplace_back(parameters, script);
+    m_Constraints.push_back(std::make_unique<ScriptConstraint>(parameters, script));
 }
 
 void Kernel::AddThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier)
@@ -136,9 +139,16 @@ const std::set<KernelParameter>& Kernel::GetParameters() const
     return m_Parameters;
 }
 
-const std::vector<KernelConstraint>& Kernel::GetConstraints() const
+std::vector<const KernelConstraint*> Kernel::GetConstraints() const
 {
-    return m_Constraints;
+    std::vector<const KernelConstraint*> constraints;
+
+    for (const auto& constraint : m_Constraints)
+    {
+        constraints.push_back(constraint.get());
+    }
+
+    return constraints;
 }
 
 std::vector<KernelArgument*> Kernel::GetVectorArguments() const
@@ -330,13 +340,13 @@ std::vector<const KernelConstraint*> Kernel::GetConstraintsForParameters(const s
 {
     std::vector<const KernelConstraint*> result;
 
-    for (const auto& constraint : GetConstraints())
+    for (const auto& constraint : m_Constraints)
     {
         for (const auto* parameter : parameters)
         {
-            if (constraint.AffectsParameter(parameter->GetName()))
+            if (constraint->AffectsParameter(parameter->GetName()))
             {
-                result.push_back(&constraint);
+                result.push_back(constraint.get());
                 break;
             }
         }

@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <Kernel/KernelConstraint.h>
+#include <Kernel/KernelConstraint/KernelConstraint.h>
 #include <Kernel/KernelParameter.h>
 
 namespace ktt

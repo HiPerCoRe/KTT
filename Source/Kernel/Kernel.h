@@ -8,8 +8,8 @@
 #include <vector>
 
 #include <Api/Configuration/KernelConfiguration.h>
+#include <Kernel/KernelConstraint/KernelConstraint.h>
 #include <Kernel/KernelDefinition.h>
-#include <Kernel/KernelConstraint.h>
 #include <Kernel/KernelParameter.h>
 #include <Kernel/KernelParameterGroup.h>
 #include <Kernel/ModifierDimension.h>
@@ -40,7 +40,7 @@ public:
     const std::vector<const KernelDefinition*>& GetDefinitions() const;
     const std::vector<const KernelDefinition*>& GetProfiledDefinitions() const;
     const std::set<KernelParameter>& GetParameters() const;
-    const std::vector<KernelConstraint>& GetConstraints() const;
+    std::vector<const KernelConstraint*> GetConstraints() const;
     std::vector<KernelArgument*> GetVectorArguments() const;
     KernelLauncher GetLauncher() const;
 
@@ -64,7 +64,7 @@ private:
     std::vector<const KernelDefinition*> m_Definitions;
     std::vector<const KernelDefinition*> m_ProfiledDefinitions;
     std::set<KernelParameter> m_Parameters;
-    std::vector<KernelConstraint> m_Constraints;
+    std::vector<std::unique_ptr<KernelConstraint>> m_Constraints;
     std::map<ModifierType, std::map<ModifierDimension, std::vector<ThreadModifier>>> m_Modifiers;
     KernelLauncher m_Launcher;
 
