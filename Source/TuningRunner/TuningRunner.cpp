@@ -118,7 +118,7 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimen
 }
 
 std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<KernelResult>& results,
-    const uint64_t iterations)
+    std::unique_ptr<StopCondition> stopCondition)
 {
     Logger::LogInfo("Starting simulated tuning for kernel " + kernel.GetName());
     const auto id = kernel.GetId();
@@ -130,16 +130,21 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
 
     uint64_t passedIterations = 0;
     std::vector<KernelResult> output;
+    const uint64_t configurationCount = m_ConfigurationManager->GetTotalConfigurationsCount(id);
+
+    if (stopCondition != nullptr)
+    {
+        stopCondition->Initialize(configurationCount);
+    }
 
     while (!m_ConfigurationManager->IsDataProcessed(id))
     {
-        if (iterations != 0 && passedIterations >= iterations)
+        if (stopCondition != nullptr && stopCondition->IsFulfilled())
         {
             break;
         }
 
         const auto currentConfiguration = m_ConfigurationManager->GetCurrentConfiguration(id);
-        const uint64_t configurationCount = iterations != 0 ? iterations : m_ConfigurationManager->GetTotalConfigurationsCount(id);
         KernelResult result;
 
         try
@@ -162,8 +167,6 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
             result.SetStatus(ResultStatus::ComputationFailed);
         }
 
-        ++passedIterations;
-
         const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
         {
             m_ConfigurationManager->CalculateNextConfiguration(id, result);
@@ -171,6 +174,13 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
 
         result.SetSearcherOverhead(searcherOverhead);
         output.push_back(result);
+        ++passedIterations;
+
+        if (stopCondition != nullptr)
+        {
+            stopCondition->Update(result);
+            Logger::LogInfo(stopCondition->GetStatusString());
+        }
     }
 
     Logger::LogInfo("Ending simulated tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "

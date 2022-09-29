@@ -187,7 +187,8 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
         m_Commands.push_back(std::make_unique<SharedMemoryCommand>(sharedMemoryCommand));
     }
 
-    m_Commands.push_back(std::make_unique<TuneCommand>());
+    const auto tuneCommand = kernelSpecification.get<TuneCommand>();
+    m_Commands.push_back(std::make_unique<TuneCommand>(tuneCommand));
 }
 
 bool TuningLoader::ValidateFormat(const std::string& tuningScript)

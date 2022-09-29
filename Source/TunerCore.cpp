@@ -263,10 +263,10 @@ KernelResult TunerCore::TuneKernelIteration(const KernelId id, const KernelDimen
 }
 
 std::vector<KernelResult> TunerCore::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
-    const uint64_t iterations)
+    std::unique_ptr<StopCondition> stopCondition)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_TuningRunner->SimulateTuning(kernel, results, iterations);
+    return m_TuningRunner->SimulateTuning(kernel, results, std::move(stopCondition));
 }
 
 void TunerCore::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)

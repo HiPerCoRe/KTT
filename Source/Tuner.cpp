@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 #endif // KTT_PYTHON
 
+#include <Api/StopCondition/ConfigurationCount.h>
 #include <Api/KttException.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/FileSystem.h>
@@ -537,9 +538,16 @@ KernelResult Tuner::TuneIteration(const KernelId id, const KernelDimensions& dim
 std::vector<KernelResult> Tuner::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
     const uint64_t iterations)
 {
+    const uint64_t configurationCount = iterations == 0 ? std::numeric_limits<uint64_t>::max() : iterations;
+    return SimulateTuning(id, results, std::make_unique<ConfigurationCount>(configurationCount));
+}
+
+std::vector<KernelResult> Tuner::SimulateTuning(const KernelId id, const std::vector<KernelResult>& results,
+    std::unique_ptr<StopCondition> stopCondition)
+{
     try
     {
-        return m_Tuner->SimulateKernelTuning(id, results, iterations);
+        return m_Tuner->SimulateKernelTuning(id, results, std::move(stopCondition));
     }
     catch (const KttException& exception)
     {

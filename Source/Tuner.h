@@ -683,8 +683,24 @@ public:
       * @param iterations Number of iterations performed. If equal to 0, search of the entire tuning space is performed.
       * @return Vector of results for configurations chosen by the searcher during simulated tuning.
       */
-    std::vector<KernelResult> SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
-        const uint64_t iterations = 0);
+    [[deprecated("Use SimulateTuning() method instead.")]] std::vector<KernelResult> SimulateKernelTuning(const KernelId id,
+        const std::vector<KernelResult>& results, const uint64_t iterations = 0);
+
+    /** @fn std::vector<KernelResult> SimulateTuning(const KernelId id, const std::vector<KernelResult>& results,
+      * std::unique_ptr<StopCondition> stopCondition = nullptr)
+      * Performs simulated tuning process for the specified kernel. The kernel is not tuned, execution times are read from the
+      * provided results. Creates configuration space based on combinations of provided kernel parameters and constraints. The
+      * configurations will be launched in order that depends on specified Searcher. This method can be used to test behaviour
+      * and performance of newly implemented searchers. The provided results should correspond to the results that were created
+      * by the same kernel during regular tuning.
+      * @param id Id of the kernel for simulated tuning.
+      * @param results Results from which the kernel execution times will be retrieved.
+      * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, simulated
+      * tuning will end when all configurations are explored. See StopCondition for more information.
+      * @return Vector of results for configurations chosen by the searcher during simulated tuning.
+      */
+    std::vector<KernelResult> SimulateTuning(const KernelId id, const std::vector<KernelResult>& results,
+        std::unique_ptr<StopCondition> stopCondition = nullptr);
 
     /** @fn void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
       * Sets searcher which will be used during kernel tuning. If no searcher is specified, DeterministicSearcher will be used.

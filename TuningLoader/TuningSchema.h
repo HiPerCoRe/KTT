@@ -168,6 +168,9 @@ R"(
         "SharedMemory": {
           "type": "integer"
         },
+        "SimulationInput": {
+          "type": "string"
+        },
         "GlobalSize": {
           "type": "object",
           "required": [

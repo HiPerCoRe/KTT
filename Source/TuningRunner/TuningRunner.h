@@ -21,7 +21,8 @@ public:
     std::vector<KernelResult> Tune(const Kernel& kernel, const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition);
     KernelResult TuneIteration(const Kernel& kernel, const KernelDimensions& dimensions, const KernelRunMode mode,
         const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference);
-    std::vector<KernelResult> SimulateTuning(const Kernel& kernel, const std::vector<KernelResult>& results, const uint64_t iterations);
+    std::vector<KernelResult> SimulateTuning(const Kernel& kernel, const std::vector<KernelResult>& results,
+        std::unique_ptr<StopCondition> stopCondition);
 
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     void InitializeConfigurationData(const Kernel& kernel);

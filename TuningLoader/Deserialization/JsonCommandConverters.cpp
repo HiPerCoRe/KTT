@@ -227,4 +227,13 @@ void from_json(const json& j, TimeUnitCommand& command)
     command = TimeUnitCommand(unit);
 }
 
+void from_json(const json& j, TuneCommand& command)
+{
+    if (j.contains("SimulationInput"))
+    {
+        const auto simulationInput = j.at("SimulationInput").get<std::string>();
+        command = TuneCommand(simulationInput);
+    }
+}
+
 } // namespace ktt

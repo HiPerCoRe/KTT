@@ -15,6 +15,7 @@
 #include <Commands/SharedMemoryCommand.h>
 #include <Commands/StopConditionCommand.h>
 #include <Commands/TimeUnitCommand.h>
+#include <Commands/TuneCommand.h>
 #include <Deserialization/ArgumentFillType.h>
 #include <Deserialization/SearcherAttribute.h>
 #include <Deserialization/SearcherType.h>
@@ -174,5 +175,6 @@ void from_json(const json& j, SearcherCommand& command);
 void from_json(const json& j, SharedMemoryCommand& command);
 void from_json(const json& j, StopConditionCommand& command);
 void from_json(const json& j, TimeUnitCommand& command);
+void from_json(const json& j, TuneCommand& command);
 
 } // namespace ktt
