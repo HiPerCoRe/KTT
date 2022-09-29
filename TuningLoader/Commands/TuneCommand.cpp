@@ -1,5 +1,3 @@
-#include <filesystem>
-
 #include <Commands/TuneCommand.h>
 
 namespace ktt
@@ -21,9 +19,8 @@ void TuneCommand::Execute(TunerContext& context)
     }
     else
     {
-        std::filesystem::path path(context.GetWorkingDirectory());
-        path.append(m_SimulationInput);
-        const auto input = tuner.LoadResults(path.string(), OutputFormat::JSON);
+        const auto filePath = context.GetFullPath(m_SimulationInput);
+        const auto input = tuner.LoadResults(filePath, OutputFormat::JSON);
         results = tuner.SimulateTuning(id, input, context.RetrieveStopCondition());
     }
 

@@ -188,6 +188,18 @@ void InitializePythonTuner(py::module_& module)
             py::arg("memoryLocation") = ktt::ArgumentMemoryLocation::Device,
             py::arg("managementType") = ktt::ArgumentManagementType::Framework
         )
+        .def
+        (
+            "AddArgumentVectorFromGenerator",
+            &ktt::Tuner::AddArgumentVectorFromGenerator,
+            py::arg("generatorFunction"),
+            py::arg("dataType"),
+            py::arg("bufferSize"),
+            py::arg("elementSize"),
+            py::arg("accessType"),
+            py::arg("memoryLocation") = ktt::ArgumentMemoryLocation::Device,
+            py::arg("managementType") = ktt::ArgumentManagementType::Framework
+        )
         .def("SaveArgumentVector", &ktt::Tuner::SaveArgumentVector)
         .def("AddArgumentScalarChar", &ktt::Tuner::AddArgumentScalar<int8_t>)
         .def("AddArgumentScalarShort", &ktt::Tuner::AddArgumentScalar<int16_t>)
@@ -318,16 +330,21 @@ void InitializePythonTuner(py::module_& module)
         )
         .def
         (
-            "SimulateKernelTuning",
-            &ktt::Tuner::SimulateKernelTuning,
+            "SimulateTuning",
+            &ktt::Tuner::SimulateTuning,
             py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
             py::arg("results"),
-            py::arg("iterations") = 0
+            py::arg("stopCondition") = nullptr
         )
         .def("SetSearcher", &ktt::Tuner::SetSearcher)
         .def("SetProfileBasedSearcher", &ktt::Tuner::SetProfileBasedSearcher)
-        .def("InitializeConfigurationData", &ktt::Tuner::InitializeConfigurationData)
+        .def
+        (
+            "InitializeConfigurationData",
+            &ktt::Tuner::InitializeConfigurationData,
+            py::call_guard<py::gil_scoped_release>()
+        )
         .def("ClearConfigurationData", &ktt::Tuner::ClearConfigurationData)
         .def("ClearData", &ktt::Tuner::ClearConfigurationData)
         .def("GetConfigurationsCount", &ktt::Tuner::GetConfigurationsCount)

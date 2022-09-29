@@ -21,6 +21,7 @@ public:
     void SetResults(const std::vector<KernelResult> results);
 
     const std::string& GetWorkingDirectory() const;
+    std::string GetFullPath(const std::string& relativePath) const;
     Tuner& GetTuner();
     std::unique_ptr<StopCondition> RetrieveStopCondition();
     KernelDefinitionId GetKernelDefinitionId() const;

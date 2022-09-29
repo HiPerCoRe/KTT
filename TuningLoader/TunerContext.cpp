@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include <TunerContext.h>
 
 namespace ktt
@@ -48,6 +50,13 @@ void TunerContext::SetResults(const std::vector<KernelResult> results)
 const std::string& TunerContext::GetWorkingDirectory() const
 {
     return m_WorkingDirectory;
+}
+
+std::string TunerContext::GetFullPath(const std::string& relativePath) const
+{
+    std::filesystem::path path(GetWorkingDirectory());
+    path.append(relativePath);
+    return path.string();
 }
 
 Tuner& TunerContext::GetTuner()

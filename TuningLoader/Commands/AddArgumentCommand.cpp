@@ -1,4 +1,3 @@
-#include <filesystem>
 #include <random>
 
 #include <Commands/AddArgumentCommand.h>
@@ -102,9 +101,8 @@ ArgumentId AddArgumentCommand::SubmitVectorArgument(TunerContext& context) const
     }
     case ArgumentFillType::BinaryRaw:
     {
-        std::filesystem::path path(context.GetWorkingDirectory());
-        path.append(m_DataSource);
-        return context.GetTuner().AddArgumentVectorFromFile(path.string(), m_Type, m_TypeSize, m_AccessType);
+        const auto path = context.GetFullPath(m_DataSource);
+        return context.GetTuner().AddArgumentVectorFromFile(path, m_Type, m_TypeSize, m_AccessType);
     }
     default:
         KttLoaderError("Unhandled fill type");
