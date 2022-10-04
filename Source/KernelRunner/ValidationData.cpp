@@ -20,7 +20,8 @@ ValidationData::ValidationData(KernelRunner& kernelRunner, const KernelArgument&
     m_ValidationRange(static_cast<size_t>(argument.GetNumberOfElements())),
     m_Comparator(nullptr),
     m_ReferenceComputation(nullptr),
-    m_ReferenceKernel(nullptr)
+    m_ReferenceKernel(nullptr),
+    m_ReferenceArgument(nullptr)
 {
     const auto id = argument.GetId();
 
@@ -52,14 +53,34 @@ void ValidationData::SetValueComparator(ValueComparator comparator)
 
 void ValidationData::SetReferenceComputation(ReferenceComputation computation)
 {
+    ResetReferenceData();
     m_ReferenceComputation = computation;
 }
 
 void ValidationData::SetReferenceKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions)
 {
+    ResetReferenceData();
     m_ReferenceKernel = &kernel;
     m_ReferenceConfiguration = configuration;
     m_ReferenceDimensions = dimensions;
+}
+
+void ValidationData::SetReferenceArgument(const KernelArgument& argument)
+{
+    const auto id = argument.GetId();
+
+    if (argument.GetMemoryType() != ArgumentMemoryType::Vector)
+    {
+        throw KttException("Kernel argument with id " + std::to_string(id) + " is not a vector and cannot be used as a reference argument");
+    }
+
+    if (argument.GetOwnership() == ArgumentOwnership::User)
+    {
+        throw KttException("Kernel argument with id " + std::to_string(id) + " has user ownership and cannot be used as a reference argument");
+    }
+
+    ResetReferenceData();
+    m_ReferenceArgument = &argument;
 }
 
 size_t ValidationData::GetValidationRange() const
@@ -86,6 +107,11 @@ bool ValidationData::HasReferenceComputation() const
 bool ValidationData::HasReferenceKernel() const
 {
     return m_ReferenceKernel != nullptr;
+}
+
+bool ValidationData::HasReferenceArgument() const
+{
+    return m_ReferenceArgument != nullptr;
 }
 
 KernelId ValidationData::GetReferenceKernelId() const
@@ -123,8 +149,8 @@ void ValidationData::ClearReferenceResults()
 
 bool ValidationData::HasReferenceResults() const
 {
-    return (HasReferenceComputation() && !m_ReferenceResult.empty())
-        || (HasReferenceKernel() && !m_ReferenceKernelResult.empty());
+    return (HasReferenceComputation() && !m_ReferenceResult.empty()) || (HasReferenceKernel() && !m_ReferenceKernelResult.empty())
+        || HasReferenceArgument();
 }
 
 void ValidationData::ComputeReferenceWithFunction()
@@ -152,6 +178,16 @@ void ValidationData::ComputeReferenceWithKernel()
         {descriptor});
 
     m_KernelRunner.SetProfiling(profiling);
+}
+
+void ValidationData::ResetReferenceData()
+{
+    ClearReferenceResults();
+    m_ReferenceComputation = nullptr;
+    m_ReferenceKernel = nullptr;
+    m_ReferenceConfiguration = KernelConfiguration();
+    m_ReferenceDimensions.clear();
+    m_ReferenceArgument = nullptr;
 }
 
 } // namespace ktt

@@ -35,6 +35,7 @@ public:
     ArgumentAccessType GetAccessType() const;
     ArgumentMemoryType GetMemoryType() const;
     ArgumentManagementType GetManagementType() const;
+    ArgumentOwnership GetOwnership() const;
     const std::string& GetSymbolName() const;
 
     uint64_t GetNumberOfElements() const;

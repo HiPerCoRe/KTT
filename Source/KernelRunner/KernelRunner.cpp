@@ -170,6 +170,12 @@ void KernelRunner::SetReferenceKernel(const ArgumentId id, const Kernel& kernel,
     m_Validator->SetReferenceKernel(id, kernel, configuration, dimensions);
 }
 
+void KernelRunner::SetReferenceArgument(const ArgumentId id, const KernelArgument& argument)
+{
+    PrepareValidationData(id);
+    m_Validator->SetReferenceArgument(id, argument);
+}
+
 void KernelRunner::ClearReferenceResult(const Kernel& kernel)
 {
     m_Validator->ClearReferenceResult(kernel);

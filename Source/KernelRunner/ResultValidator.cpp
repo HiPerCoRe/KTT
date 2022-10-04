@@ -66,6 +66,12 @@ void ResultValidator::SetReferenceKernel(const ArgumentId id, const Kernel& kern
     m_ValidationData[id]->SetReferenceKernel(kernel, configuration, dimensions);
 }
 
+void ResultValidator::SetReferenceArgument(const ArgumentId id, const KernelArgument& argument)
+{
+    KttAssert(HasValidationData(id), "Validation data not found");
+    m_ValidationData[id]->SetReferenceArgument(argument);
+}
+
 bool ResultValidator::HasValidationData(const ArgumentId id) const
 {
     return ContainsKey(m_ValidationData, id);
@@ -200,38 +206,13 @@ bool ResultValidator::ValidateArgument(const KernelArgument& argument) const
     BufferOutputDescriptor descriptor(argument.GetId(), argumentData.data(), bufferSize);
     m_KernelRunner.DownloadBuffers({descriptor});
 
-    bool result = true;
-
     if (validationData.HasValueComparator())
     {
-        if (validationData.HasReferenceComputation())
-        {
-            result &= ValidateResultWithComparator(argument, argumentData.data(), validationData.GetReferenceResult<void>(),
-                validationRange, validationData.GetValueComparator());
-        }
-
-        if (validationData.HasReferenceKernel())
-        {
-            result &= ValidateResultWithComparator(argument, argumentData.data(), validationData.GetReferenceKernelResult<void>(),
-                validationRange, validationData.GetValueComparator());
-        }
-
-        return result;
+        return ValidateResultWithComparator(argument, argumentData.data(), validationData.GetReferenceResult<void>(),
+            validationRange, validationData.GetValueComparator());
     }
 
-    if (validationData.HasReferenceComputation())
-    {
-        result &= ValidateResultWithMethod(argument, argumentData.data(), validationData.GetReferenceResult<void>(),
-            validationRange);
-    }
-
-    if (validationData.HasReferenceKernel())
-    {
-        result &= ValidateResultWithMethod(argument, argumentData.data(), validationData.GetReferenceKernelResult<void>(),
-            validationRange);
-    }
-
-    return result;
+    return ValidateResultWithMethod(argument, argumentData.data(), validationData.GetReferenceResult<void>(), validationRange);
 }
 
 bool ResultValidator::ValidateResultWithMethod(const KernelArgument& argument, const void* result, const void* reference,

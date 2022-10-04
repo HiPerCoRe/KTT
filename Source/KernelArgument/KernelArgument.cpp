@@ -241,6 +241,11 @@ ArgumentManagementType KernelArgument::GetManagementType() const
     return m_ManagementType;
 }
 
+ArgumentOwnership KernelArgument::GetOwnership() const
+{
+    return m_Ownership;
+}
+
 const std::string& KernelArgument::GetSymbolName() const
 {
     return m_SymbolName;

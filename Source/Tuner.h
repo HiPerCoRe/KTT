@@ -605,6 +605,14 @@ public:
     void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
         const KernelDimensions& dimensions = {});
 
+    /** @fn void SetReferenceArgument(const ArgumentId id, const ArgumentId referenceId)
+      * Sets reference argument for the specified argument. Reference argument data will be compared to tuned kernel output in order
+      * to ensure correctness of computation.
+      * @param id Id of argument for which the reference argument will be set. Only not read-only vector arguments can be validated.
+      * @param referenceId Id of the reference argument. Only vector arguments can be set as a reference.
+      */
+    void SetReferenceArgument(const ArgumentId id, const ArgumentId referenceId);
+
     /** @fn std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr)
       * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
       * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning

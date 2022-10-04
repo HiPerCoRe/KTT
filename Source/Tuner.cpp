@@ -496,6 +496,18 @@ void Tuner::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, 
     }
 }
 
+void Tuner::SetReferenceArgument(const ArgumentId id, const ArgumentId referenceId)
+{
+    try
+    {
+        m_Tuner->SetReferenceArgument(id, referenceId);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 std::vector<KernelResult> Tuner::Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
     return Tune(id, {}, std::move(stopCondition));

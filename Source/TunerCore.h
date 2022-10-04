@@ -80,6 +80,7 @@ public:
     void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
     void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
         const KernelDimensions& dimensions);
+    void SetReferenceArgument(const ArgumentId id, const ArgumentId referenceId);
 
     // Kernel tuning and configurations
     std::vector<KernelResult> TuneKernel(const KernelId id, const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition);

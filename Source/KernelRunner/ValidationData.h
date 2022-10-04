@@ -23,12 +23,14 @@ public:
     void SetValueComparator(ValueComparator comparator);
     void SetReferenceComputation(ReferenceComputation computation);
     void SetReferenceKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions);
-    
+    void SetReferenceArgument(const KernelArgument& argument);
+
     size_t GetValidationRange() const;
     ValueComparator GetValueComparator() const;
     bool HasValueComparator() const;
     bool HasReferenceComputation() const;
     bool HasReferenceKernel() const;
+    bool HasReferenceArgument() const;
     KernelId GetReferenceKernelId() const;
 
     void ComputeReferenceResults();
@@ -37,9 +39,6 @@ public:
 
     template <typename T>
     const T* GetReferenceResult() const;
-
-    template <typename T>
-    const T* GetReferenceKernelResult() const;
 
 private:
     KernelRunner& m_KernelRunner;
@@ -52,9 +51,20 @@ private:
     KernelConfiguration m_ReferenceConfiguration;
     KernelDimensions m_ReferenceDimensions;
     std::vector<uint8_t> m_ReferenceKernelResult;
+    const KernelArgument* m_ReferenceArgument;
 
     void ComputeReferenceWithFunction();
     void ComputeReferenceWithKernel();
+    void ResetReferenceData();
+
+    template <typename T>
+    const T* GetReferenceComputationResult() const;
+
+    template <typename T>
+    const T* GetReferenceKernelResult() const;
+
+    template <typename T>
+    const T* GetReferenceArgumentResult() const;
 };
 
 } // namespace ktt

@@ -248,6 +248,12 @@ void TunerCore::SetReferenceKernel(const ArgumentId id, const KernelId reference
     m_KernelRunner->SetReferenceKernel(id, kernel, configuration, dimensions);
 }
 
+void TunerCore::SetReferenceArgument(const ArgumentId id, const ArgumentId referenceId)
+{
+    const auto& referenceArgument = m_ArgumentManager->GetArgument(referenceId);
+    m_KernelRunner->SetReferenceArgument(id, referenceArgument);
+}
+
 std::vector<KernelResult> TunerCore::TuneKernel(const KernelId id, const KernelDimensions& dimensions,
     std::unique_ptr<StopCondition> stopCondition)
 {
