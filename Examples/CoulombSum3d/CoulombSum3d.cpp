@@ -206,15 +206,18 @@ int main(int argc, char** argv)
     else
     {
         // Not implemented in CUDA
-        tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
+        //tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
         tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "VECTOR_SIZE", std::vector<uint64_t>{1});
     }
 
     auto lt = [](const std::vector<uint64_t>& vector) {return vector.at(0) < vector.at(1);};
     tuner.AddConstraint(kernel, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"}, lt);
-    auto vec = [](const std::vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1;};
-    tuner.AddConstraint(kernel, {"USE_SOA", "VECTOR_SIZE"}, vec);
+    if constexpr (computeApi == ktt::ComputeApi::OpenCL)
+    {
+        auto vec = [](const std::vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1;};
+        tuner.AddConstraint(kernel, {"USE_SOA", "VECTOR_SIZE"}, vec);
+    }
     auto par = [](const std::vector<uint64_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
     tuner.AddConstraint(kernel, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, par);
 
