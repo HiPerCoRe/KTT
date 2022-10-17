@@ -364,7 +364,8 @@ workspace "Ktt"
         symbols "Off"
     
     filter "action:vs*"
-        buildoptions {"/Zc:__cplusplus", "/permissive-"}
+        conformancemode "On"
+        buildoptions {"/Zc:__cplusplus"}
     
     filter {}
     
