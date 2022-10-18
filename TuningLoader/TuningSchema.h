@@ -117,7 +117,7 @@ R"(
       "type": "object",
       "properties": {
         "FormatVersion": {
-          "type": "integer"
+          "type": "string"
         },
         "LoggingLevel": {
           "enum": ["Off", "Error", "Warning", "Info", "Debug"]
@@ -130,7 +130,7 @@ R"(
           "examples": ["ReductionOutput", "Results"]
         },
         "OutputFormat": {
-          "enum": ["JSON", "XML"]
+          "enum": ["JSON", "XML", "HDF5"]
         }
       }
     },
