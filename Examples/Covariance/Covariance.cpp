@@ -164,18 +164,18 @@ int main(int argc, char** argv)
     // simpler and commonly tuned space in CLBlast (plus our new parameters).
     // KERNEL: 1 - reference kernels, 0 - edited reference kernels, 2 - use GEMM as third kernel
     tuner.AddParameter(kernel, "KERNEL", std::vector<uint64_t>{1, 0, 2});
-    tuner.AddParameter(kernel, "MWG", std::vector<uint64_t>{16, 32, 64 /* , 128 */});
-    tuner.AddParameter(kernel, "NWG", std::vector<uint64_t>{16, 32, 64 /* , 128 */});
-    tuner.AddParameter(kernel, "KWG", std::vector<uint64_t>{/* 16,  */ 32});
+    tuner.AddParameter(kernel, "MWG", std::vector<uint64_t>{16, 32, 64, 128 });
+    tuner.AddParameter(kernel, "NWG", std::vector<uint64_t>{16, 32, 64, 128 });
+    tuner.AddParameter(kernel, "KWG", std::vector<uint64_t>{ 16, 32});
     tuner.AddParameter(kernel, "MDIMC", std::vector<uint64_t>{8, 16, 32});
     tuner.AddParameter(kernel, "NDIMC", std::vector<uint64_t>{8, 16, 32});
     tuner.AddParameter(kernel, "MDIMA", std::vector<uint64_t>{8, 16, 32});
     tuner.AddParameter(kernel, "NDIMB", std::vector<uint64_t>{8, 16, 32});
-    tuner.AddParameter(kernel, "KWI", std::vector<uint64_t>{2 /* , 8 */});
-    tuner.AddParameter(kernel, "VWM", std::vector<uint64_t>{1, 2, 4 /* , 8 */});
-    tuner.AddParameter(kernel, "VWN", std::vector<uint64_t>{1, 2, 4 /* , 8 */});
-    tuner.AddParameter(kernel, "STRM", std::vector<uint64_t>{0 /* , 1 */});
-    tuner.AddParameter(kernel, "STRN", std::vector<uint64_t>{0 /* , 1 */});
+    tuner.AddParameter(kernel, "KWI", std::vector<uint64_t>{2, 8 });
+    tuner.AddParameter(kernel, "VWM", std::vector<uint64_t>{1, 2, 4, 8 });
+    tuner.AddParameter(kernel, "VWN", std::vector<uint64_t>{1, 2, 4, 8 });
+    tuner.AddParameter(kernel, "STRM", std::vector<uint64_t>{0, 1 });
+    tuner.AddParameter(kernel, "STRN", std::vector<uint64_t>{0, 1 });
     tuner.AddParameter(kernel, "SA", std::vector<uint64_t>{0, 1});
     tuner.AddParameter(kernel, "SB", std::vector<uint64_t>{0, 1});
     tuner.AddParameter(kernel, "SYMMETRIC", std::vector<uint64_t>{0, 1});
