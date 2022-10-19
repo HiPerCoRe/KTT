@@ -15,7 +15,7 @@
 namespace ktt
 {
 
-KernelArgument::KernelArgument(const ArgumentId id, const size_t elementSize, const ArgumentDataType dataType,
+KernelArgument::KernelArgument(const ArgumentId& id, const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
     const ArgumentManagementType managementType, const std::string& symbolName) :
     m_Id(id),
@@ -206,7 +206,7 @@ void KernelArgument::SetUserBuffer(const size_t dataSize)
     m_ReferencedData = nullptr;
 }
 
-ArgumentId KernelArgument::GetId() const
+const ArgumentId& KernelArgument::GetId() const
 {
     return m_Id;
 }

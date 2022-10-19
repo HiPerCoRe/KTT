@@ -23,8 +23,8 @@ public:
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void AddPartialResult(const ComputationResult& result);
-    void AddArgumentOverride(const ArgumentId id, const KernelArgument& argument);
-    void SwapArguments(const KernelDefinitionId id, const ArgumentId first, const ArgumentId second);
+    void AddArgumentOverride(const ArgumentId& id, const KernelArgument& argument);
+    void SwapArguments(const KernelDefinitionId id, const ArgumentId& first, const ArgumentId& second);
     void ChangeArguments(const KernelDefinitionId id, std::vector<KernelArgument*>& arguments);
 
     bool IsProfilingEnabled(const KernelDefinitionId id) const;

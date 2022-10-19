@@ -34,15 +34,15 @@ public:
 
     void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void SetValidationMode(const ValidationMode mode);
-    void SetValidationRange(const ArgumentId id, const size_t range);
-    void SetValueComparator(const ArgumentId id, ValueComparator comparator);
-    void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
-    void SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration,
+    void SetValidationRange(const ArgumentId& id, const size_t range);
+    void SetValueComparator(const ArgumentId& id, ValueComparator comparator);
+    void SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation);
+    void SetReferenceKernel(const ArgumentId& id, const Kernel& kernel, const KernelConfiguration& configuration,
         const KernelDimensions& dimensions);
-    void SetReferenceArgument(const ArgumentId id, const KernelArgument& argument);
+    void SetReferenceArgument(const ArgumentId& id, const KernelArgument& argument);
     void ClearReferenceResult(const Kernel& kernel);
     void RemoveKernelData(const KernelId id);
-    void RemoveValidationData(const ArgumentId id);
+    void RemoveValidationData(const ArgumentId& id);
 
 private:
     std::unique_ptr<ComputeLayer> m_ComputeLayer;
@@ -57,7 +57,7 @@ private:
         const KernelRunMode mode, KernelLauncher launcher, const std::vector<BufferOutputDescriptor>& output);
     Nanoseconds RunLauncher(KernelLauncher launcher);
 
-    void PrepareValidationData(const ArgumentId id);
+    void PrepareValidationData(const ArgumentId& id);
     void ValidateResult(const Kernel& kernel, KernelResult& result, const KernelRunMode mode);
     static ResultStatus GetStatusFromException(const ExceptionReason reason);
 };

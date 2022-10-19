@@ -16,7 +16,7 @@ namespace ktt
 CudaDeviceBuffer::CudaDeviceBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator) :
     CudaBuffer(argument, generator)
 {
-    Logger::LogDebug("Initializing CUDA device buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing CUDA device buffer with id " + m_Argument.GetId());
     KttAssert(GetMemoryLocation() == ArgumentMemoryLocation::Device, "Argument memory location mismatch");
     CheckError(cuMemAlloc(&m_Buffer, m_BufferSize), "cuMemAlloc");
 }
@@ -24,7 +24,7 @@ CudaDeviceBuffer::CudaDeviceBuffer(KernelArgument& argument, IdGenerator<Transfe
 CudaDeviceBuffer::CudaDeviceBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator, ComputeBuffer userBuffer) :
     CudaBuffer(argument, generator, userBuffer)
 {
-    Logger::LogDebug("Initializing CUDA device buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing CUDA device buffer with id " + m_Argument.GetId());
     KttAssert(GetMemoryLocation() == ArgumentMemoryLocation::Device, "Argument memory location mismatch");
 
     if (userBuffer == nullptr)
@@ -37,7 +37,7 @@ CudaDeviceBuffer::CudaDeviceBuffer(KernelArgument& argument, IdGenerator<Transfe
 
 CudaDeviceBuffer::~CudaDeviceBuffer()
 {
-    Logger::LogDebug("Releasing CUDA device buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Releasing CUDA device buffer with id " + m_Argument.GetId());
 
     if (m_UserOwned)
     {
@@ -50,7 +50,7 @@ CudaDeviceBuffer::~CudaDeviceBuffer()
 std::unique_ptr<CudaTransferAction> CudaDeviceBuffer::UploadData(const CudaStream& stream, const void* source,
     const size_t dataSize)
 {
-    Logger::LogDebug("Uploading data into CUDA device buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Uploading data into CUDA device buffer with id " + m_Argument.GetId());
 
     if (m_BufferSize < dataSize)
     {
@@ -70,7 +70,7 @@ std::unique_ptr<CudaTransferAction> CudaDeviceBuffer::UploadData(const CudaStrea
 std::unique_ptr<CudaTransferAction> CudaDeviceBuffer::DownloadData(const CudaStream& stream, void* destination,
     const size_t dataSize) const
 {
-    Logger::LogDebug("Downloading data from CUDA device buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Downloading data from CUDA device buffer with id " + m_Argument.GetId());
 
     if (m_BufferSize < dataSize)
     {
@@ -90,8 +90,8 @@ std::unique_ptr<CudaTransferAction> CudaDeviceBuffer::DownloadData(const CudaStr
 std::unique_ptr<CudaTransferAction> CudaDeviceBuffer::CopyData(const CudaStream& stream, const CudaBuffer& source,
     const size_t dataSize)
 {
-    Logger::LogDebug("Copying data into CUDA device buffer with id " + std::to_string(m_Argument.GetId())
-        + " from buffer with id " + std::to_string(source.GetArgumentId()));
+    Logger::LogDebug("Copying data into CUDA device buffer with id " + m_Argument.GetId() + " from buffer with id "
+        + source.GetArgumentId());
 
     if (m_BufferSize < dataSize)
     {
@@ -115,7 +115,7 @@ std::unique_ptr<CudaTransferAction> CudaDeviceBuffer::CopyData(const CudaStream&
 
 void CudaDeviceBuffer::Resize(const size_t newSize, const bool preserveData)
 {
-    Logger::LogDebug("Resizing CUDA device buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Resizing CUDA device buffer with id " + m_Argument.GetId());
 
     if (m_UserOwned)
     {

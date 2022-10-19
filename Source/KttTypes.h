@@ -47,7 +47,7 @@ using KernelId = uint64_t;
 /** @typedef ArgumentId
   * Data type for referencing kernel arguments in KTT.
   */
-using ArgumentId = uint64_t;
+using ArgumentId = std::string;
 
 /** @typedef ParameterValue
   * Data type for referencing parameter values in KTT.

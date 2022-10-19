@@ -17,15 +17,15 @@ namespace ktt
 class KTT_API BufferOutputDescriptor
 {
 public:
-    /** @fn explicit BufferOutputDescriptor(const ArgumentId id, void* outputDestination)
+    /** @fn explicit BufferOutputDescriptor(const ArgumentId& id, void* outputDestination)
       * Constructor, which creates new output descriptor object for specified kernel argument.
       * @param id Id of vector argument which will be retrieved.
       * @param outputDestination Pointer to destination where vector argument data will be copied. Destination buffer size
       * needs to be equal or greater than argument size.
       */
-    explicit BufferOutputDescriptor(const ArgumentId id, void* outputDestination);
+    explicit BufferOutputDescriptor(const ArgumentId& id, void* outputDestination);
 
-    /** @fn explicit BufferOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSize)
+    /** @fn explicit BufferOutputDescriptor(const ArgumentId& id, void* outputDestination, const size_t outputSize)
       * Constructor, which creates new output descriptor object for specified kernel argument.
       * @param id Id of vector argument which will be retrieved.
       * @param outputDestination Pointer to destination where vector argument data will be copied. Destination buffer size
@@ -33,13 +33,13 @@ public:
       * @param outputSize Size of output in bytes which will be copied to specified destination, starting with the first
       * byte in argument.
       */
-    explicit BufferOutputDescriptor(const ArgumentId id, void* outputDestination, const size_t outputSize);
+    explicit BufferOutputDescriptor(const ArgumentId& id, void* outputDestination, const size_t outputSize);
 
-    /** @fn ArgumentId GetArgumentId() const
+    /** @fn const ArgumentId& GetArgumentId() const
       * Getter for id of argument tied to output descriptor.
       * @return Id of argument tied to output descriptor.
       */
-    ArgumentId GetArgumentId() const;
+    const ArgumentId& GetArgumentId() const;
 
     /** @fn void* GetOutputDestination() const
       * Getter for pointer to destination buffer tied to output descriptor.

@@ -69,7 +69,7 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
         {
             if (!kernel.HasLauncher() && !argument->HasUserBuffer())
             {
-                Logger::LogWarning("Kernel argument with id " + std::to_string(id) + " has buffer managed by user, but its "
+                Logger::LogWarning("Kernel argument with id " + id + " has buffer managed by user, but its "
                     + "associated kernel " + kernel.GetName() + " does not have a launcher defined by user");
             }
 
@@ -145,32 +145,32 @@ void KernelRunner::SetValidationMode(const ValidationMode mode)
     m_Validator->SetValidationMode(mode);
 }
 
-void KernelRunner::SetValidationRange(const ArgumentId id, const size_t range)
+void KernelRunner::SetValidationRange(const ArgumentId& id, const size_t range)
 {
     PrepareValidationData(id);
     m_Validator->SetValidationRange(id, range);
 }
 
-void KernelRunner::SetValueComparator(const ArgumentId id, ValueComparator comparator)
+void KernelRunner::SetValueComparator(const ArgumentId& id, ValueComparator comparator)
 {
     PrepareValidationData(id);
     m_Validator->SetValueComparator(id, comparator);
 }
 
-void KernelRunner::SetReferenceComputation(const ArgumentId id, ReferenceComputation computation)
+void KernelRunner::SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation)
 {
     PrepareValidationData(id);
     m_Validator->SetReferenceComputation(id, computation);
 }
 
-void KernelRunner::SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration,
+void KernelRunner::SetReferenceKernel(const ArgumentId& id, const Kernel& kernel, const KernelConfiguration& configuration,
     const KernelDimensions& dimensions)
 {
     PrepareValidationData(id);
     m_Validator->SetReferenceKernel(id, kernel, configuration, dimensions);
 }
 
-void KernelRunner::SetReferenceArgument(const ArgumentId id, const KernelArgument& argument)
+void KernelRunner::SetReferenceArgument(const ArgumentId& id, const KernelArgument& argument)
 {
     PrepareValidationData(id);
     m_Validator->SetReferenceArgument(id, argument);
@@ -187,7 +187,7 @@ void KernelRunner::RemoveKernelData(const KernelId id)
     m_Validator->RemoveDataWithReferenceKernel(id);
 }
 
-void KernelRunner::RemoveValidationData(const ArgumentId id)
+void KernelRunner::RemoveValidationData(const ArgumentId& id)
 {
     m_Validator->RemoveValidationData(id);
 }
@@ -272,7 +272,7 @@ Nanoseconds KernelRunner::RunLauncher(KernelLauncher launcher)
     return timer.GetElapsedTime();
 }
 
-void KernelRunner::PrepareValidationData(const ArgumentId id)
+void KernelRunner::PrepareValidationData(const ArgumentId& id)
 {
     if (!m_Validator->HasValidationData(id))
     {

@@ -24,7 +24,7 @@ VulkanBuffer::VulkanBuffer(KernelArgument& kernelArgument, IdGenerator<TransferA
     m_Allocator(allocator.GetAllocator()),
     m_BufferSize(static_cast<VkDeviceSize>(kernelArgument.GetDataSize()))
 {
-    Logger::LogDebug("Initializing Vulkan buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing Vulkan buffer with id " + m_Argument.GetId());
 
     const VkBufferCreateInfo bufferInfo =
     {
@@ -46,13 +46,13 @@ VulkanBuffer::VulkanBuffer(KernelArgument& kernelArgument, IdGenerator<TransferA
 
 VulkanBuffer::~VulkanBuffer()
 {
-    Logger::LogDebug("Releasing Vulkan buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Releasing Vulkan buffer with id " + m_Argument.GetId());
     vmaDestroyBuffer(m_Allocator, m_Buffer, m_Allocation);
 }
 
 std::unique_ptr<VulkanTransferAction> VulkanBuffer::UploadData(const void* source, const VkDeviceSize dataSize)
 {
-    Logger::LogDebug("Uploading data into Vulkan buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Uploading data into Vulkan buffer with id " + m_Argument.GetId());
 
     if (m_BufferSize < dataSize)
     {
@@ -77,7 +77,7 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::UploadData(const void* sourc
 
 std::unique_ptr<VulkanTransferAction> VulkanBuffer::DownloadData(void* target, const VkDeviceSize dataSize)
 {
-    Logger::LogDebug("Downloading data from Vulkan buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Downloading data from Vulkan buffer with id " + m_Argument.GetId());
 
     if (m_BufferSize < dataSize)
     {
@@ -130,7 +130,7 @@ KernelArgument& VulkanBuffer::GetArgument() const
     return m_Argument;
 }
 
-ArgumentId VulkanBuffer::GetArgumentId() const
+const ArgumentId& VulkanBuffer::GetArgumentId() const
 {
     return m_Argument.GetId();
 }
@@ -153,8 +153,7 @@ VkDeviceSize VulkanBuffer::GetSize() const
 std::unique_ptr<VulkanTransferAction> VulkanBuffer::CopyDataInternal(const VulkanQueue& queue, VulkanQueryPool& queryPool,
     const VulkanBuffer& source, const VkDeviceSize dataSize, std::unique_ptr<VulkanTransferAction> action)
 {
-    Logger::LogDebug("Copying data into Vulkan buffer with id " + std::to_string(m_Argument.GetId())
-        + " from buffer with id " + std::to_string(source.GetArgumentId()));
+    Logger::LogDebug("Copying data into Vulkan buffer with id " + m_Argument.GetId() + " from buffer with id " + source.GetArgumentId());
 
     if (m_BufferSize < dataSize)
     {

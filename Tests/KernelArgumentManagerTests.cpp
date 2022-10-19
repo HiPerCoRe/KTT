@@ -13,7 +13,7 @@ TEST_CASE("Argument addition, retrieval and delete", "KernelArgumentManager")
         ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryType::Vector,
         ktt::ArgumentManagementType::Framework, data.data(), data.size() * sizeof(float));
 
-    REQUIRE(id == 0);
+    REQUIRE(id == "0");
     ktt::KernelArgument& argument = manager.GetArgument(id);
     REQUIRE(argument.GetMemoryType() == ktt::ArgumentMemoryType::Vector);
     REQUIRE(argument.GetDataType() == ktt::ArgumentDataType::Float);

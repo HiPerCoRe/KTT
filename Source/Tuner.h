@@ -344,20 +344,23 @@ public:
       */
     void SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds);
 
-    /** @fn template <typename T> ArgumentId AddArgumentVector(const std::vector<T>& data, const ArgumentAccessType accessType)
+    /** @fn template <typename T> ArgumentId AddArgumentVector(const std::vector<T>& data, const ArgumentAccessType accessType,
+      * const ArgumentId& customId = "")
       * Adds new vector argument to the tuner. Makes copy of argument data, so the source data vector remains unaffected by tuner
       * operations. Argument data will be accessed from device memory during its usage by compute API. The compute API buffer
       * will be automatically created and managed by the KTT framework.
       * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.
       * @param accessType Access type specifies whether argument is used for input or output. See ::ArgumentAccessType for more
       * information.
+      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
     template <typename T>
-    ArgumentId AddArgumentVector(const std::vector<T>& data, const ArgumentAccessType accessType);
+    ArgumentId AddArgumentVector(const std::vector<T>& data, const ArgumentAccessType accessType, const ArgumentId& customId = "");
 
     /** @fn template <typename T> ArgumentId AddArgumentVector(std::vector<T>& data, const ArgumentAccessType accessType,
-      * const ArgumentMemoryLocation memoryLocation, const ArgumentManagementType managementType, const bool referenceUserData)
+      * const ArgumentMemoryLocation memoryLocation, const ArgumentManagementType managementType, const bool referenceUserData,
+      * const ArgumentId& customId = "")
       * Adds new vector argument to the tuner. Allows wide range of argument customization options.
       * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.
       * @param accessType Access type specifies whether argument is used for input or output. See ::ArgumentAccessType for more
@@ -369,14 +372,15 @@ public:
       * @param referenceUserData If set to true, tuner will store reference to source data and will access it directly during buffer
       * operations. This results in lower memory overhead, but relies on a user to keep data in the source vector valid. If set to
       * false, copy of the data will be made by the tuner.
+      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
     template <typename T>
     ArgumentId AddArgumentVector(std::vector<T>& data, const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation,
-        const ArgumentManagementType managementType, const bool referenceUserData);
+        const ArgumentManagementType managementType, const bool referenceUserData, const ArgumentId& customId = "");
 
     /** @fn template <typename T> ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize,
-      * const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation)
+      * const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation, const ArgumentId& customId = "")
       * Adds new vector argument to the tuner. The argument buffer is created and managed by user and depending on the compute API,
       * can be either CUdeviceptr or cl_mem handle. The tuner will not destroy the argument.
       * @param buffer User-provided memory buffer.
@@ -385,14 +389,15 @@ public:
       * information.
       * @param memoryLocation Memory location specifies whether argument data will be accessed from device or host memory during its
       * usage by compute API. See ::ArgumentMemoryLocation for more information.
+      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
     template <typename T>
     ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const ArgumentAccessType accessType,
-        const ArgumentMemoryLocation memoryLocation);
+        const ArgumentMemoryLocation memoryLocation, const ArgumentId& customId = "");
 
     /** @fn ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
-      * const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation)
+      * const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation, const ArgumentId& customId = "")
       * Adds new vector argument to the tuner. The argument buffer is created and managed by user and depending on the compute API, can
       * be either CUdeviceptr or cl_mem handle. The tuner will not destroy the argument. This method can be utilized when templated
       * version of argument addition cannot be used. When using validation for arguments added through this method, value comparator
@@ -404,14 +409,15 @@ public:
       * information.
       * @param memoryLocation Memory location specifies whether argument data will be accessed from device or host memory during its
       * usage by compute API. See ::ArgumentMemoryLocation for more information.
+      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
     ArgumentId AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
-        const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation);
+        const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation, const ArgumentId& customId = "");
 
     /** @fn ArgumentId AddArgumentVectorFromFile(const std::string& filePath, const ArgumentDataType dataType, const size_t elementSize,
       * const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation = ArgumentMemoryLocation::Device,
-      * const ArgumentManagementType managementType = ArgumentManagementType::Framework)
+      * const ArgumentManagementType managementType = ArgumentManagementType::Framework, const ArgumentId& customId = "")
       * Adds new vector argument to the tuner. Loads the argument data from the specified binary file.
       * @param filePath Path to the file from which argument data will be loaded.
       * @param dataType Type of the argument data.
@@ -422,16 +428,17 @@ public:
       * usage by compute API. See ::ArgumentMemoryLocation for more information.
       * @param managementType Management type specifies who is responsible for creating, managing data and destroying compute API buffer
       * corresponding to the argument. See ::ArgumentManagementType for more information.
+      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
     ArgumentId AddArgumentVectorFromFile(const std::string& filePath, const ArgumentDataType dataType, const size_t elementSize,
         const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation = ArgumentMemoryLocation::Device,
-        const ArgumentManagementType managementType = ArgumentManagementType::Framework);
+        const ArgumentManagementType managementType = ArgumentManagementType::Framework, const ArgumentId& customId = "");
 
     /** @fn ArgumentId AddArgumentVectorFromGenerator(const std::string& generatorFunction, const ArgumentDataType dataType,
       * const size_t bufferSize, const size_t elementSize, const ArgumentAccessType accessType,
       * const ArgumentMemoryLocation memoryLocation = ArgumentMemoryLocation::Device,
-      * const ArgumentManagementType managementType = ArgumentManagementType::Framework)
+      * const ArgumentManagementType managementType = ArgumentManagementType::Framework, const ArgumentId& customId = "")
       * Adds new vector argument to the tuner. Generates the argument data from the specified Python script.
       * @param generatorFunction Python function which generates the elements inside the argument. It is called once per each element
       * index, with the index value being stored in a Python local variable named 'i'.
@@ -444,65 +451,70 @@ public:
       * usage by compute API. See ::ArgumentMemoryLocation for more information.
       * @param managementType Management type specifies who is responsible for creating, managing data and destroying compute API buffer
       * corresponding to the argument. See ::ArgumentManagementType for more information.
+      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
     ArgumentId AddArgumentVectorFromGenerator(const std::string& generatorFunction, const ArgumentDataType dataType,
         const size_t bufferSize, const size_t elementSize, const ArgumentAccessType accessType,
         const ArgumentMemoryLocation memoryLocation = ArgumentMemoryLocation::Device,
-        const ArgumentManagementType managementType = ArgumentManagementType::Framework);
+        const ArgumentManagementType managementType = ArgumentManagementType::Framework, const ArgumentId& customId = "");
 
-    /** @fn void SaveArgumentVector(const ArgumentId id, const std::string& filePath)
+    /** @fn void SaveArgumentVector(const ArgumentId& id, const std::string& filePath)
       * Saves the data of the specified vector argument into raw binary file.
       * @param id Id of vector argument that will be saved.
       * @param filePath Path to the file where argument data will be saved.
       */
-    void SaveArgumentVector(const ArgumentId id, const std::string& filePath);
+    void SaveArgumentVector(const ArgumentId& id, const std::string& filePath);
 
-    /** @fn template <typename T> ArgumentId AddArgumentScalar(const T& data);
+    /** @fn template <typename T> ArgumentId AddArgumentScalar(const T& data, const ArgumentId& customId = "");
       * Adds new scalar argument to the tuner. All scalar arguments are read-only.
       * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.
+      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
     template <typename T>
-    ArgumentId AddArgumentScalar(const T& data);
+    ArgumentId AddArgumentScalar(const T& data, const ArgumentId& customId = "");
 
-    /** @fn ArgumentId AddArgumentScalar(const void* data, const size_t dataSize)
+    /** @fn ArgumentId AddArgumentScalar(const void* data, const size_t dataSize, const ArgumentId& customId = "")
       * Adds new scalar argument to the tuner. All scalar arguments are read-only. This method can be utilized when templated version
       * of scalar argument addition cannot be used.
       * @param data Pointer to memory with kernel argument data.
       * @param dataSize Size of data in bytes (e.g., 4 for 32-bit float).
+      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
-    ArgumentId AddArgumentScalar(const void* data, const size_t dataSize);
+    ArgumentId AddArgumentScalar(const void* data, const size_t dataSize, const ArgumentId& customId = "");
 
-    /** @fn template <typename T> ArgumentId AddArgumentLocal(const size_t localMemorySize)
+    /** @fn template <typename T> ArgumentId AddArgumentLocal(const size_t localMemorySize, const ArgumentId& customId = "")
       * Adds new local memory (shared memory in CUDA) argument to the tuner. All local memory arguments are read-only and cannot be
       * initialized from host memory. In case of CUDA API usage, local memory arguments cannot be directly set as kernel function
       * arguments. Setting a local memory argument to kernel in CUDA means that corresponding amount of memory will be allocated for
       * kernel to use. In that case, all local memory argument ids should be specified at the end of the vector when calling
       * SetArguments() method.
       * @param localMemorySize Size of kernel argument in bytes.
+      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
     template <typename T>
-    ArgumentId AddArgumentLocal(const size_t localMemorySize);
+    ArgumentId AddArgumentLocal(const size_t localMemorySize, const ArgumentId& customId = "");
 
-    /** @fn template <typename T> ArgumentId AddArgumentSymbol(const T& data, const std::string& symbolName = "")
+    /** @fn template <typename T> ArgumentId AddArgumentSymbol(const T& data, const ArgumentId& customId = "", const std::string& symbolName = "")
       * Adds new symbol argument to the tuner.
       * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.
       * @param symbolName Name of the corresponding symbol in kernel source code. Only utilized when tuner is using CUDA API. The symbol
       * name must be unique.
+      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
     template <typename T>
-    ArgumentId AddArgumentSymbol(const T& data, const std::string& symbolName = "");
+    ArgumentId AddArgumentSymbol(const T& data, const ArgumentId& customId = "", const std::string& symbolName = "");
 
-    /** @fn void RemoveArgument(const ArgumentId id)
+    /** @fn void RemoveArgument(const ArgumentId& id)
       * Removes argument with the specified id from the tuner. Note that argument can only be removed if it is not associated with
       * any kernel definition.
       * @param id Id of the argument which will be removed.
       */
-    void RemoveArgument(const ArgumentId id);
+    void RemoveArgument(const ArgumentId& id);
 
     /** @fn void SetReadOnlyArgumentCache(const bool flag)
       * Toggles caching of read-only kernel arguments which have management type set to framework. This can significantly speed up
@@ -564,14 +576,14 @@ public:
       */
     void SetValidationMode(const ValidationMode mode);
 
-    /** @fn void SetValidationRange(const ArgumentId id, const size_t range)
+    /** @fn void SetValidationRange(const ArgumentId& id, const size_t range)
       * Sets validation range for the specified argument. The entire argument is validated by default.
       * @param id Id of argument for which the validation range will be set. Only not read-only vector arguments can be validated.
       * @param range Number of argument elements which will be validated, starting from the first element.
       */
-    void SetValidationRange(const ArgumentId id, const size_t range);
+    void SetValidationRange(const ArgumentId& id, const size_t range);
 
-    /** @fn void SetValueComparator(const ArgumentId id, ValueComparator comparator);
+    /** @fn void SetValueComparator(const ArgumentId& id, ValueComparator comparator);
       * Sets value comparator for the specified kernel argument. Arguments with custom data type cannot be compared using built-in
       * comparison operators and require user to provide a comparator. Comparator can also be optionally added for arguments with
       * built-in data types.
@@ -579,9 +591,9 @@ public:
       * @param comparator Function which receives two elements with data type matching the type of specified kernel argument and
       * returns true if the elements are equal. Returns false otherwise.
       */
-    void SetValueComparator(const ArgumentId id, ValueComparator comparator);
+    void SetValueComparator(const ArgumentId& id, ValueComparator comparator);
 
-    /** @fn void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation)
+    /** @fn void SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation)
       * Sets reference computation for the specified argument. Reference computation output will be compared to tuned kernel output
       * in order to ensure correctness of computation.
       * @param id Id of argument for which reference computation will be set. Only not read-only vector arguments can be validated.
@@ -589,9 +601,9 @@ public:
       * of buffer matches the size of kernel argument in bytes. If a custom validation range was set, the size of buffer matches
       * the specified range.
       */
-    void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
+    void SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation);
 
-    /** @fn void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
+    /** @fn void SetReferenceKernel(const ArgumentId& id, const KernelId referenceId, const KernelConfiguration& configuration,
       * const KernelDimensions& dimensions = {})
       * Sets reference kernel for the specified argument. Reference kernel output will be compared to tuned kernel output in order
       * to ensure correctness of computation. Reference kernel uses only specified configuration.
@@ -602,16 +614,16 @@ public:
       * @param dimensions Global and local sizes with which the reference kernel will be launched. If no dimensions are specified
       * for some definition, the sizes specified during its addition will be used.
       */
-    void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
+    void SetReferenceKernel(const ArgumentId& id, const KernelId referenceId, const KernelConfiguration& configuration,
         const KernelDimensions& dimensions = {});
 
-    /** @fn void SetReferenceArgument(const ArgumentId id, const ArgumentId referenceId)
+    /** @fn void SetReferenceArgument(const ArgumentId& id, const ArgumentId& referenceId)
       * Sets reference argument for the specified argument. Reference argument data will be compared to tuned kernel output in order
       * to ensure correctness of computation.
       * @param id Id of argument for which the reference argument will be set. Only not read-only vector arguments can be validated.
       * @param referenceId Id of the reference argument. Only vector arguments can be set as a reference.
       */
-    void SetReferenceArgument(const ArgumentId id, const ArgumentId referenceId);
+    void SetReferenceArgument(const ArgumentId& id, const ArgumentId& referenceId);
 
     /** @fn std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr)
       * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
@@ -969,12 +981,14 @@ private:
 
     KTT_VIRTUAL_API ArgumentId AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, void* data, const size_t dataSize);
+        const ArgumentManagementType managementType, void* data, const size_t dataSize, const ArgumentId& customId = "");
     KTT_VIRTUAL_API ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName = "");
+        const ArgumentManagementType managementType, const void* data, const size_t dataSize, const ArgumentId& customId = "",
+        const std::string& symbolName = "");
     KTT_VIRTUAL_API ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
-        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize,
+        const ArgumentId& customId = "");
     KTT_VIRTUAL_API void AddParameterInternal(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values,
         const std::string& group);
 

@@ -156,7 +156,7 @@ TransferActionId VulkanEngine::UploadArgument(KernelArgument& kernelArgument, co
     timer.Start();
 
     const auto id = kernelArgument.GetId();
-    Logger::LogDebug("Uploading buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Uploading buffer for argument with id " + id);
 
     if (queueId >= static_cast<QueueId>(m_Queues.size()))
     {
@@ -165,12 +165,12 @@ TransferActionId VulkanEngine::UploadArgument(KernelArgument& kernelArgument, co
 
     if (ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+        throw KttException("Buffer for argument with id " + id + " already exists");
     }
 
     if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
     {
-        throw KttException("Argument with id " + std::to_string(id) + " is not a vector and cannot be uploaded into buffer");
+        throw KttException("Argument with id " + id + " is not a vector and cannot be uploaded into buffer");
     }
 
     auto stagingBuffer = std::make_unique<VulkanBuffer>(kernelArgument, m_TransferIdGenerator, *m_Device, *m_Allocator,
@@ -192,19 +192,19 @@ TransferActionId VulkanEngine::UploadArgument(KernelArgument& kernelArgument, co
     return actionId;
 }
 
-TransferActionId VulkanEngine::UpdateArgument([[maybe_unused]] const ArgumentId id, [[maybe_unused]] const QueueId queueId,
+TransferActionId VulkanEngine::UpdateArgument([[maybe_unused]] const ArgumentId& id, [[maybe_unused]] const QueueId queueId,
     [[maybe_unused]] const void* data, [[maybe_unused]] const size_t dataSize)
 {
     throw KttException("Support for argument update is not yet available for Vulkan backend");
 }
 
-TransferActionId VulkanEngine::DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
+TransferActionId VulkanEngine::DownloadArgument(const ArgumentId& id, const QueueId queueId, void* destination,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
-    Logger::LogDebug("Downloading buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Downloading buffer for argument with id " + id);
 
     if (queueId >= static_cast<QueueId>(m_Queues.size()))
     {
@@ -213,7 +213,7 @@ TransferActionId VulkanEngine::DownloadArgument(const ArgumentId id, const Queue
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
@@ -242,8 +242,8 @@ TransferActionId VulkanEngine::DownloadArgument(const ArgumentId id, const Queue
     return actionId;
 }
 
-TransferActionId VulkanEngine::CopyArgument([[maybe_unused]] const ArgumentId destination, [[maybe_unused]] const QueueId queueId,
-    [[maybe_unused]] const ArgumentId source, [[maybe_unused]] const size_t dataSize)
+TransferActionId VulkanEngine::CopyArgument([[maybe_unused]] const ArgumentId& destination, [[maybe_unused]] const QueueId queueId,
+    [[maybe_unused]] const ArgumentId& source, [[maybe_unused]] const size_t dataSize)
 {
     throw KttException("Support for argument copy is not yet available for Vulkan backend");
 }
@@ -263,13 +263,13 @@ TransferResult VulkanEngine::WaitForTransferAction(const TransferActionId id)
     return result;
 }
 
-void VulkanEngine::ResizeArgument([[maybe_unused]] const ArgumentId id, [[maybe_unused]] const size_t newSize,
+void VulkanEngine::ResizeArgument([[maybe_unused]] const ArgumentId& id, [[maybe_unused]] const size_t newSize,
     [[maybe_unused]] const bool preserveData)
 {
     throw KttException("Support for argument resize is not yet available for Vulkan backend");
 }
 
-void VulkanEngine::GetUnifiedMemoryBufferHandle([[maybe_unused]] const ArgumentId id, [[maybe_unused]] UnifiedBufferMemory& handle)
+void VulkanEngine::GetUnifiedMemoryBufferHandle([[maybe_unused]] const ArgumentId& id, [[maybe_unused]] UnifiedBufferMemory& handle)
 {
     throw KttException("Support for unified memory buffers is not yet available for Vulkan backend");
 }
@@ -279,7 +279,7 @@ void VulkanEngine::AddCustomBuffer([[maybe_unused]] KernelArgument& kernelArgume
     throw KttException("Support for custom buffers is not yet available for Vulkan backend");
 }
 
-void VulkanEngine::ClearBuffer(const ArgumentId id)
+void VulkanEngine::ClearBuffer(const ArgumentId& id)
 {
     m_Buffers.erase(id);
 }
@@ -289,7 +289,7 @@ void VulkanEngine::ClearBuffers()
     m_Buffers.clear();
 }
 
-bool VulkanEngine::HasBuffer(const ArgumentId id)
+bool VulkanEngine::HasBuffer(const ArgumentId& id)
 {
     return ContainsKey(m_Buffers, id);
 }
@@ -468,7 +468,7 @@ VulkanBuffer* VulkanEngine::GetPipelineArgument(KernelArgument& argument)
 
         if (!ContainsKey(m_Buffers, id))
         {
-            throw KttException("Buffer corresponding to kernel argument with id " + std::to_string(id) + " was not found");
+            throw KttException("Buffer corresponding to kernel argument with id " + id + " was not found");
         }
 
         return m_Buffers[id].get();

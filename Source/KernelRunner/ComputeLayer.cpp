@@ -156,18 +156,18 @@ void ComputeLayer::ChangeArguments(const KernelDefinitionId id, const std::vecto
     GetData().ChangeArguments(id, newArguments);
 }
 
-void ComputeLayer::SwapArguments(const KernelDefinitionId id, const ArgumentId first, const ArgumentId second)
+void ComputeLayer::SwapArguments(const KernelDefinitionId id, const ArgumentId& first, const ArgumentId& second)
 {
     GetData().SwapArguments(id, first, second);
 }
 
-void ComputeLayer::UpdateScalarArgument(const ArgumentId id, const void* data)
+void ComputeLayer::UpdateScalarArgument(const ArgumentId& id, const void* data)
 {
     const auto& argument = m_ArgumentManager.GetArgument(id);
 
     if (argument.GetMemoryType() != ArgumentMemoryType::Scalar)
     {
-        throw KttException("Argument with id " + std::to_string(id) + " is not a scalar argument");
+        throw KttException("Argument with id " + id + " is not a scalar argument");
     }
 
     auto argumentOverride = argument;
@@ -175,13 +175,13 @@ void ComputeLayer::UpdateScalarArgument(const ArgumentId id, const void* data)
     GetData().AddArgumentOverride(id, argumentOverride);
 }
 
-void ComputeLayer::UpdateLocalArgument(const ArgumentId id, const size_t dataSize)
+void ComputeLayer::UpdateLocalArgument(const ArgumentId& id, const size_t dataSize)
 {
     const auto& argument = m_ArgumentManager.GetArgument(id);
 
     if (argument.GetMemoryType() != ArgumentMemoryType::Local)
     {
-        throw KttException("Argument with id " + std::to_string(id) + " is not a local memory argument");
+        throw KttException("Argument with id " + id + " is not a local memory argument");
     }
 
     auto argumentOverride = argument;
@@ -189,7 +189,7 @@ void ComputeLayer::UpdateLocalArgument(const ArgumentId id, const size_t dataSiz
     GetData().AddArgumentOverride(id, argumentOverride);
 }
 
-void ComputeLayer::UploadBuffer(const ArgumentId id)
+void ComputeLayer::UploadBuffer(const ArgumentId& id)
 {
     Timer timer;
     timer.Start();
@@ -201,13 +201,13 @@ void ComputeLayer::UploadBuffer(const ArgumentId id)
     GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
-TransferActionId ComputeLayer::UploadBufferAsync(const ArgumentId id, const QueueId queue)
+TransferActionId ComputeLayer::UploadBufferAsync(const ArgumentId& id, const QueueId queue)
 {
     auto& argument = m_ArgumentManager.GetArgument(id);
     return m_ComputeEngine.UploadArgument(argument, queue);
 }
 
-void ComputeLayer::DownloadBuffer(const ArgumentId id, void* destination, const size_t dataSize)
+void ComputeLayer::DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize)
 {
     Timer timer;
     timer.Start();
@@ -219,13 +219,13 @@ void ComputeLayer::DownloadBuffer(const ArgumentId id, void* destination, const 
     GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
-TransferActionId ComputeLayer::DownloadBufferAsync(const ArgumentId id, const QueueId queue, void* destination,
+TransferActionId ComputeLayer::DownloadBufferAsync(const ArgumentId& id, const QueueId queue, void* destination,
     const size_t dataSize)
 {
     return m_ComputeEngine.DownloadArgument(id, queue, destination, dataSize);
 }
 
-void ComputeLayer::UpdateBuffer(const ArgumentId id, const void* data, const size_t dataSize)
+void ComputeLayer::UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize)
 {
     Timer timer;
     timer.Start();
@@ -237,13 +237,13 @@ void ComputeLayer::UpdateBuffer(const ArgumentId id, const void* data, const siz
     GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
-TransferActionId ComputeLayer::UpdateBufferAsync(const ArgumentId id, const QueueId queue, const void* data,
+TransferActionId ComputeLayer::UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
     const size_t dataSize)
 {
     return m_ComputeEngine.UpdateArgument(id, queue, data, dataSize);
 }
 
-void ComputeLayer::CopyBuffer(const ArgumentId destination, const ArgumentId source, const size_t dataSize)
+void ComputeLayer::CopyBuffer(const ArgumentId& destination, const ArgumentId& source, const size_t dataSize)
 {
     Timer timer;
     timer.Start();
@@ -255,7 +255,7 @@ void ComputeLayer::CopyBuffer(const ArgumentId destination, const ArgumentId sou
     GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
-TransferActionId ComputeLayer::CopyBufferAsync(const ArgumentId destination, const ArgumentId source, const QueueId queue,
+TransferActionId ComputeLayer::CopyBufferAsync(const ArgumentId& destination, const ArgumentId& source, const QueueId queue,
     const size_t dataSize)
 {
     return m_ComputeEngine.CopyArgument(destination, queue, source, dataSize);
@@ -266,7 +266,7 @@ void ComputeLayer::WaitForTransferAction(const TransferActionId id)
     m_ComputeEngine.WaitForTransferAction(id);
 }
 
-void ComputeLayer::ResizeBuffer(const ArgumentId id, const size_t newDataSize, const bool preserveData)
+void ComputeLayer::ResizeBuffer(const ArgumentId& id, const size_t newDataSize, const bool preserveData)
 {
     Timer timer;
     timer.Start();
@@ -277,7 +277,7 @@ void ComputeLayer::ResizeBuffer(const ArgumentId id, const size_t newDataSize, c
     GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
-void ComputeLayer::ClearBuffer(const ArgumentId id)
+void ComputeLayer::ClearBuffer(const ArgumentId& id)
 {
     Timer timer;
     timer.Start();
@@ -288,12 +288,12 @@ void ComputeLayer::ClearBuffer(const ArgumentId id)
     GetData().IncreaseOverhead(timer.GetElapsedTime());
 }
 
-bool ComputeLayer::HasBuffer(const ArgumentId id)
+bool ComputeLayer::HasBuffer(const ArgumentId& id)
 {
     return m_ComputeEngine.HasBuffer(id);
 }
 
-void ComputeLayer::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& memoryHandle)
+void ComputeLayer::GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBufferMemory& memoryHandle)
 {
     m_ComputeEngine.GetUnifiedMemoryBufferHandle(id, memoryHandle);
 }

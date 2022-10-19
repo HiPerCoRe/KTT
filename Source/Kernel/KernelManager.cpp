@@ -200,7 +200,7 @@ KernelDefinitionId KernelManager::GetDefinitionId(const std::string& name, const
     return iterator->first;
 }
 
-bool KernelManager::IsArgumentUsed(const ArgumentId id) const
+bool KernelManager::IsArgumentUsed(const ArgumentId& id) const
 {
     for (const auto& definition : m_Definitions)
     {

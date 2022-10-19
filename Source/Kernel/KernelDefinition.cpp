@@ -15,7 +15,7 @@ KernelDefinition::KernelDefinition(const KernelDefinitionId id, const std::strin
     m_LocalSize(localSize)
 {}
 
-void KernelDefinition::SetArguments(const std::vector<KernelArgument*> arguments)
+void KernelDefinition::SetArguments(const std::vector<KernelArgument*>& arguments)
 {
     if (!ContainsUniqueElements(arguments))
     {
@@ -65,7 +65,7 @@ std::vector<KernelArgument*> KernelDefinition::GetVectorArguments() const
     return KernelArgument::GetArgumentsWithMemoryType(m_Arguments, ArgumentMemoryType::Vector);
 }
 
-bool KernelDefinition::HasArgument(const ArgumentId id) const
+bool KernelDefinition::HasArgument(const ArgumentId& id) const
 {
     return ContainsElementIf(m_Arguments, [id](const auto* argument)
     {

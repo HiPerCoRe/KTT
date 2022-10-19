@@ -365,7 +365,7 @@ TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, cons
     timer.Start();
 
     const auto id = kernelArgument.GetId();
-    Logger::LogDebug("Uploading buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Uploading buffer for argument with id " + id);
 
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -374,12 +374,12 @@ TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, cons
 
     if (ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+        throw KttException("Buffer for argument with id " + id + " already exists");
     }
 
     if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
     {
-        throw KttException("Argument with id " + std::to_string(id) + " is not a vector and cannot be uploaded into buffer");
+        throw KttException("Argument with id " + id + " is not a vector and cannot be uploaded into buffer");
     }
 
     auto buffer = CreateBuffer(kernelArgument);
@@ -395,13 +395,13 @@ TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, cons
     return actionId;
 }
 
-TransferActionId CudaEngine::UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
+TransferActionId CudaEngine::UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
-    Logger::LogDebug("Updating buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Updating buffer for argument with id " + id);
 
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -410,7 +410,7 @@ TransferActionId CudaEngine::UpdateArgument(const ArgumentId id, const QueueId q
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
@@ -430,13 +430,13 @@ TransferActionId CudaEngine::UpdateArgument(const ArgumentId id, const QueueId q
     return actionId;
 }
 
-TransferActionId CudaEngine::DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
+TransferActionId CudaEngine::DownloadArgument(const ArgumentId& id, const QueueId queueId, void* destination,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
-    Logger::LogDebug("Downloading buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Downloading buffer for argument with id " + id);
 
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -445,7 +445,7 @@ TransferActionId CudaEngine::DownloadArgument(const ArgumentId id, const QueueId
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
@@ -465,14 +465,14 @@ TransferActionId CudaEngine::DownloadArgument(const ArgumentId id, const QueueId
     return actionId;
 }
 
-TransferActionId CudaEngine::CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
+TransferActionId CudaEngine::CopyArgument(const ArgumentId& destination, const QueueId queueId, const ArgumentId& source,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
-    Logger::LogDebug("Copying buffer for argument with id " + std::to_string(source) + " into buffer for argument with id "
-        + std::to_string(destination));
+    Logger::LogDebug("Copying buffer for argument with id " + source + " into buffer for argument with id "
+        + destination);
 
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -481,12 +481,12 @@ TransferActionId CudaEngine::CopyArgument(const ArgumentId destination, const Qu
 
     if (!ContainsKey(m_Buffers, destination))
     {
-        throw KttException("Copy destination buffer for argument with id " + std::to_string(destination) + " was not found");
+        throw KttException("Copy destination buffer for argument with id " + destination + " was not found");
     }
 
     if (!ContainsKey(m_Buffers, source))
     {
-        throw KttException("Copy source buffer for argument with id " + std::to_string(source) + " was not found");
+        throw KttException("Copy source buffer for argument with id " + source + " was not found");
     }
 
     auto& destinationBuffer = *m_Buffers[destination];
@@ -523,31 +523,31 @@ TransferResult CudaEngine::WaitForTransferAction(const TransferActionId id)
     return result;
 }
 
-void CudaEngine::ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
+void CudaEngine::ResizeArgument(const ArgumentId& id, const size_t newSize, const bool preserveData)
 {
-    Logger::LogDebug("Resizing buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Resizing buffer for argument with id " + id);
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
     buffer.Resize(newSize, preserveData);
 }
 
-void CudaEngine::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle)
+void CudaEngine::GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBufferMemory& handle)
 {
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
 
     if (buffer.GetMemoryLocation() != ArgumentMemoryLocation::Unified)
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " is not unified memory buffer");
+        throw KttException("Buffer for argument with id " + id + " is not unified memory buffer");
     }
 
     handle = reinterpret_cast<UnifiedBufferMemory>(*buffer.GetBuffer());
@@ -559,14 +559,14 @@ void CudaEngine::AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer b
 
     if (ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+        throw KttException("Buffer for argument with id " + id + " already exists");
     }
 
     auto userBuffer = CreateUserBuffer(kernelArgument, buffer);
     m_Buffers[id] = std::move(userBuffer);
 }
 
-void CudaEngine::ClearBuffer(const ArgumentId id)
+void CudaEngine::ClearBuffer(const ArgumentId& id)
 {
     m_Buffers.erase(id);
 }
@@ -576,7 +576,7 @@ void CudaEngine::ClearBuffers()
     m_Buffers.clear();
 }
 
-bool CudaEngine::HasBuffer(const ArgumentId id)
+bool CudaEngine::HasBuffer(const ArgumentId& id)
 {
     return ContainsKey(m_Buffers, id);
 }
@@ -800,7 +800,7 @@ CUdeviceptr* CudaEngine::GetKernelArgument(KernelArgument& argument)
 
         if (!ContainsKey(m_Buffers, id))
         {
-            throw KttException("Buffer corresponding to kernel argument with id " + std::to_string(id) + " was not found");
+            throw KttException("Buffer corresponding to kernel argument with id " + id + " was not found");
         }
 
         return m_Buffers[id]->GetBuffer();

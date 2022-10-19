@@ -32,7 +32,7 @@ void ComputeLayerData::AddPartialResult(const ComputationResult& result)
     m_PartialResults.push_back(result);
 }
 
-void ComputeLayerData::AddArgumentOverride(const ArgumentId id, const KernelArgument& argument)
+void ComputeLayerData::AddArgumentOverride(const ArgumentId& id, const KernelArgument& argument)
 {
     std::map<KernelDefinitionId, size_t> argumentIndices;
 
@@ -55,7 +55,7 @@ void ComputeLayerData::AddArgumentOverride(const ArgumentId id, const KernelArgu
     }
 }
 
-void ComputeLayerData::SwapArguments(const KernelDefinitionId id, const ArgumentId first, const ArgumentId second)
+void ComputeLayerData::SwapArguments(const KernelDefinitionId id, const ArgumentId& first, const ArgumentId& second)
 {
     if (!ContainsKey(m_ComputeData, id))
     {
@@ -76,7 +76,7 @@ void ComputeLayerData::ChangeArguments(const KernelDefinitionId id, std::vector<
 
     for (size_t i = 0; i < arguments.size(); ++i)
     {
-        const auto argumentId = arguments[i]->GetId();
+        const auto& argumentId = arguments[i]->GetId();
 
         if (ContainsKey(m_ArgumentOverrides, argumentId))
         {
