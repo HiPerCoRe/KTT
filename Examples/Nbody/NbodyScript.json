@@ -67,8 +67,9 @@
     "CompilerOptions": ["-use_fast_math"],
     "KernelName": "nbody_kernel",
     "KernelFile": "Nbody.cu",
+    "GlobalSizeType": "OpenCL",
     "GlobalSize": {
-      "X": "(128 * 1024 + WORK_GROUP_SIZE_X - 1) // WORK_GROUP_SIZE_X",
+      "X": "128 * 1024 // OUTER_UNROLL_FACTOR",
       "Y": "1",
       "Z": "1"
     },
@@ -145,7 +146,7 @@
         "MemoryType": "Vector",
         "AccessType": "ReadOnly",
         "FillType": "Random",
-        "FillValue": 1.0
+        "FillValue": 20.0
       },
       {
         "Name": "oldVelX",

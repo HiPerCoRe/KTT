@@ -165,6 +165,9 @@ R"(
             "type": "string"
           }
         },
+        "GlobalSizeType": {
+          "enum": ["OpenCL", "CUDA", "Vulkan"]
+        },
         "SharedMemory": {
           "type": "integer"
         },

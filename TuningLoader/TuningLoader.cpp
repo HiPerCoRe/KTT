@@ -151,6 +151,12 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
     auto addKernelCommand = kernelSpecification.get<AddKernelCommand>();
     m_Commands.push_back(std::make_unique<AddKernelCommand>(addKernelCommand));
 
+    if (kernelSpecification.contains("GlobalSizeType"))
+    {
+        auto sizeTypeCommand = kernelSpecification.get<SizeTypeCommand>();
+        m_Commands.push_back(std::make_unique<SizeTypeCommand>(sizeTypeCommand));
+    }
+
     if (kernelSpecification.contains("GlobalSize"))
     {
         auto modifierCommand = kernelSpecification["GlobalSize"].get<ModifierCommand>();

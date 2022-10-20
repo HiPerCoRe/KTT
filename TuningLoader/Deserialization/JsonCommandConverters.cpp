@@ -208,6 +208,13 @@ void from_json(const json& j, SharedMemoryCommand& command)
     command = SharedMemoryCommand(memorySize);
 }
 
+void from_json(const json& j, SizeTypeCommand& command)
+{
+    const auto type = j.at("GlobalSizeType").get<GlobalSizeType>();
+
+    command = SizeTypeCommand(type);
+}
+
 void from_json(const json& j, StopConditionCommand& command)
 {
     StopConditionType type;

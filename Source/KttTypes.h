@@ -153,7 +153,7 @@ inline const KernelId InvalidKernelId = std::numeric_limits<KernelId>::max();
 
 /** Argument id returned by argument addition methods in case of an error.
   */
-inline const ArgumentId InvalidArgumentId = std::numeric_limits<ArgumentId>::max();
+inline const ArgumentId InvalidArgumentId = ArgumentId();
 
 /** Invalid duration used during initialization and in case of an error.
   */
