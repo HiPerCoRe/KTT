@@ -199,11 +199,11 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
 
 bool TuningLoader::ValidateFormat(const std::string& tuningScript)
 {
-    json_validator valitor;
+    json_validator validator;
 
     try
     {
-        valitor.set_root_schema(TuningSchema);
+        validator.set_root_schema(TuningSchema);
     }
     catch (const std::exception& exception)
     {
@@ -215,7 +215,7 @@ bool TuningLoader::ValidateFormat(const std::string& tuningScript)
 
     try
     {
-        valitor.validate(input);
+        validator.validate(input);
     }
     catch (const std::exception& exception)
     {

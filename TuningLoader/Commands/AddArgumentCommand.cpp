@@ -6,8 +6,10 @@
 namespace ktt
 {
 
-AddArgumentCommand::AddArgumentCommand(const ArgumentMemoryType memoryType, const ArgumentDataType dataType, const size_t elementCount,
-    const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType, const float fillValue) :
+AddArgumentCommand::AddArgumentCommand(const ArgumentId& id, const ArgumentMemoryType memoryType, const ArgumentDataType dataType,
+    const size_t elementCount, const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType,
+    const float fillValue) :
+    m_Id(id),
     m_MemoryType(memoryType),
     m_Type(dataType),
     m_ElementCount(elementCount),
@@ -17,8 +19,10 @@ AddArgumentCommand::AddArgumentCommand(const ArgumentMemoryType memoryType, cons
     m_FillValue(fillValue)
 {}
 
-AddArgumentCommand::AddArgumentCommand(const ArgumentMemoryType memoryType, const ArgumentDataType dataType, const size_t elementCount,
-    const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType, const std::string& dataSource) :
+AddArgumentCommand::AddArgumentCommand(const ArgumentId& id, const ArgumentMemoryType memoryType, const ArgumentDataType dataType,
+    const size_t elementCount, const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType,
+    const std::string& dataSource) :
+    m_Id(id),
     m_MemoryType(memoryType),
     m_Type(dataType),
     m_ElementCount(elementCount),
@@ -65,10 +69,10 @@ ArgumentId AddArgumentCommand::SubmitScalarArgument(TunerContext& context) const
 
     if (m_Type == ArgumentDataType::Int)
     {
-        return context.GetTuner().AddArgumentScalar(static_cast<int>(m_FillValue));
+        return context.GetTuner().AddArgumentScalar(static_cast<int>(m_FillValue), m_Id);
     }
     
-    return context.GetTuner().AddArgumentScalar(m_FillValue);
+    return context.GetTuner().AddArgumentScalar(m_FillValue, m_Id);
 }
 
 ArgumentId AddArgumentCommand::SubmitVectorArgument(TunerContext& context) const
@@ -79,7 +83,7 @@ ArgumentId AddArgumentCommand::SubmitVectorArgument(TunerContext& context) const
     {
         std::vector<float> input(m_ElementCount);
         input.assign(m_ElementCount, m_FillValue);
-        return context.GetTuner().AddArgumentVector<float>(input, m_AccessType);
+        return context.GetTuner().AddArgumentVector<float>(input, m_AccessType, m_Id);
     }
     case ArgumentFillType::Random:
     {
@@ -93,16 +97,18 @@ ArgumentId AddArgumentCommand::SubmitVectorArgument(TunerContext& context) const
             input[i] = distribution(engine);
         }
 
-        return context.GetTuner().AddArgumentVector<float>(input, m_AccessType);
+        return context.GetTuner().AddArgumentVector<float>(input, m_AccessType, m_Id);
     }
     case ArgumentFillType::Generator:
     {
-        return context.GetTuner().AddArgumentVectorFromGenerator(m_DataSource, m_Type, m_ElementCount * m_ElementSize, m_ElementCount, m_AccessType);
+        return context.GetTuner().AddArgumentVectorFromGenerator(m_DataSource, m_Type, m_ElementCount * m_ElementSize, m_ElementCount,
+            m_AccessType, ArgumentMemoryLocation::Device, ArgumentManagementType::Framework, m_Id);
     }
     case ArgumentFillType::BinaryRaw:
     {
         const auto path = context.GetFullPath(m_DataSource);
-        return context.GetTuner().AddArgumentVectorFromFile(path, m_Type, m_ElementSize, m_AccessType);
+        return context.GetTuner().AddArgumentVectorFromFile(path, m_Type, m_ElementSize, m_AccessType, ArgumentMemoryLocation::Device,
+            ArgumentManagementType::Framework, m_Id);
     }
     default:
         KttLoaderError("Unhandled fill type");
