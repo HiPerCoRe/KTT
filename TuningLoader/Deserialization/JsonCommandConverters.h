@@ -17,6 +17,7 @@
 #include <Commands/StopConditionCommand.h>
 #include <Commands/TimeUnitCommand.h>
 #include <Commands/TuneCommand.h>
+#include <Commands/ValidationCommand.h>
 #include <Deserialization/ArgumentFillType.h>
 #include <Deserialization/SearcherAttribute.h>
 #include <Deserialization/SearcherType.h>
@@ -185,5 +186,6 @@ void from_json(const json& j, SizeTypeCommand& command);
 void from_json(const json& j, StopConditionCommand& command);
 void from_json(const json& j, TimeUnitCommand& command);
 void from_json(const json& j, TuneCommand& command);
+void from_json(const json& j, ValidationCommand& command);
 
 } // namespace ktt

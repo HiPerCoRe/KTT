@@ -16,7 +16,8 @@ AddArgumentCommand::AddArgumentCommand(const ArgumentId& id, const ArgumentMemor
     m_ElementSize(typeSize),
     m_AccessType(accessType),
     m_FillType(fillType),
-    m_FillValue(fillValue)
+    m_FillValue(fillValue),
+    m_IsReference(false)
 {}
 
 AddArgumentCommand::AddArgumentCommand(const ArgumentId& id, const ArgumentMemoryType memoryType, const ArgumentDataType dataType,
@@ -30,7 +31,8 @@ AddArgumentCommand::AddArgumentCommand(const ArgumentId& id, const ArgumentMemor
     m_AccessType(accessType),
     m_FillType(fillType),
     m_FillValue(0.0f),
-    m_DataSource(dataSource)
+    m_DataSource(dataSource),
+    m_IsReference(false)
 {}
 
 void AddArgumentCommand::Execute(TunerContext& context)
@@ -54,13 +56,25 @@ void AddArgumentCommand::Execute(TunerContext& context)
         return;
     }
 
-    context.GetArguments().push_back(id);
-    context.GetTuner().SetArguments(context.GetKernelDefinitionId(), context.GetArguments());
+    if (!m_IsReference)
+    {
+        context.GetArguments().push_back(id);
+        context.GetTuner().SetArguments(context.GetKernelDefinitionId(), context.GetArguments());
+    }
+    else
+    {
+        context.GetReferenceArguments().push_back(id);
+    }
 }
 
 CommandPriority AddArgumentCommand::GetPriority() const
 {
     return CommandPriority::KernelArgument;
+}
+
+void AddArgumentCommand::SetReferenceFlag()
+{
+    m_IsReference = true;
 }
 
 ArgumentId AddArgumentCommand::SubmitScalarArgument(TunerContext& context) const
@@ -101,7 +115,7 @@ ArgumentId AddArgumentCommand::SubmitVectorArgument(TunerContext& context) const
     }
     case ArgumentFillType::Generator:
     {
-        return context.GetTuner().AddArgumentVectorFromGenerator(m_DataSource, m_Type, m_ElementCount * m_ElementSize, m_ElementCount,
+        return context.GetTuner().AddArgumentVectorFromGenerator(m_DataSource, m_Type, m_ElementCount * m_ElementSize, m_ElementSize,
             m_AccessType, ArgumentMemoryLocation::Device, ArgumentManagementType::Framework, m_Id);
     }
     case ArgumentFillType::BinaryRaw:

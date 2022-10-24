@@ -27,6 +27,7 @@
     },
     "Arguments": [
       {
+        "Name": "a",
         "Type": "float",
         "Size": 1048576,
         "TypeSize": 4,
@@ -36,6 +37,7 @@
         "MemoryType": "Vector"
       },
       {
+        "Name": "b",
         "Type": "float",
         "Size": 1048576,
         "TypeSize": 4,
@@ -45,6 +47,7 @@
         "MemoryType": "Vector"
       },
       {
+        "Name": "result",
         "Type": "float",
         "Size": 1048576,
         "FillType": "Constant",
@@ -53,10 +56,31 @@
         "MemoryType": "Vector"
       },
       {
+        "Name": "scalar",
         "Type": "float",
         "FillValue": 3.0,
         "MemoryType": "Scalar"
       }
-    ]
+    ],
+    "ReferenceData": {
+      "ReferenceArguments": [
+        {
+          "Name": "reference",
+          "Type": "float",
+          "Size": 1048576,
+          "TypeSize": 4,
+          "FillType": "Generator",
+          "DataSource": "2 * i + 3",
+          "AccessType": "ReadOnly",
+          "MemoryType": "Vector"
+        }
+      ],
+      "ValidationPairs": [
+        {
+          "ReferenceName": "reference",
+          "TargetName": "result"
+        }
+      ]
+    }
   }
 }

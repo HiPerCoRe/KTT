@@ -22,6 +22,8 @@ public:
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
 
+    void SetReferenceFlag();
+
 private:
     ArgumentId m_Id;
     ArgumentMemoryType m_MemoryType;
@@ -32,6 +34,7 @@ private:
     ArgumentFillType m_FillType;
     float m_FillValue;
     std::string m_DataSource;
+    bool m_IsReference;
 
     ArgumentId SubmitScalarArgument(TunerContext& context) const;
     ArgumentId SubmitVectorArgument(TunerContext& context) const;

@@ -187,6 +187,25 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
         }
     }
 
+    if (kernelSpecification.contains("ReferenceData"))
+    {
+        auto& referenceData = kernelSpecification["ReferenceData"];
+        auto argumentCommands = referenceData["ReferenceArguments"].get<std::vector<AddArgumentCommand>>();
+
+        for (auto& command : argumentCommands)
+        {
+            command.SetReferenceFlag();
+            m_Commands.push_back(std::make_unique<AddArgumentCommand>(command));
+        }
+
+        auto validationCommands = referenceData["ValidationPairs"].get<std::vector<ValidationCommand>>();
+
+        for (const auto& command : validationCommands)
+        {
+            m_Commands.push_back(std::make_unique<ValidationCommand>(command));
+        }
+    }
+
     if (kernelSpecification.contains("SharedMemory"))
     {
         const auto sharedMemoryCommand = kernelSpecification.get<SharedMemoryCommand>();

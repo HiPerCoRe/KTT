@@ -250,4 +250,12 @@ void from_json(const json& j, TuneCommand& command)
     }
 }
 
+void from_json(const json& j, ValidationCommand& command)
+{
+    const auto reference = j.at("ReferenceName").get<ArgumentId>();
+    const auto target = j.at("TargetName").get<ArgumentId>();
+
+    command = ValidationCommand(target, reference);
+}
+
 } // namespace ktt

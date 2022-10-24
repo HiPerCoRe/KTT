@@ -8,7 +8,7 @@ namespace ktt
 inline const nlohmann::json TuningSchema =
 R"(
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "https://github.com/HiPerCoRe/KTT/blob/development/TuningLoader/TuningFormatSchema.json",
     "title": "Tuning format",
     "description": "A description of a tuning problem which can be loaded by an autotuning framework",
@@ -332,6 +332,36 @@ R"(
                                     "Local",
                                     "Symbol"
                                 ]
+                            }
+                        }
+                    }
+                },
+                "ReferenceData": {
+                    "type": "object",
+                    "required": [
+                        "ReferenceArguments",
+                        "ValidationPairs"
+                    ],
+                    "properties": {
+                        "ReferenceArguments": {
+                            "type": "array"
+                        },
+                        "ValidationPairs": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": [
+                                    "ReferenceName",
+                                    "TargetName"
+                                ],
+                                "properties": {
+                                    "ReferenceName": {
+                                        "type": "string"
+                                    },
+                                    "TargetName": {
+                                        "type": "string"
+                                    }
+                                }
                             }
                         }
                     }

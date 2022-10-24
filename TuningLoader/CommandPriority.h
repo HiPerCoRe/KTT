@@ -16,6 +16,7 @@ enum class CommandPriority
     Modifier,
     Searcher,
     StopCondition,
+    Validation,
     Tuning,
     Output
 };
