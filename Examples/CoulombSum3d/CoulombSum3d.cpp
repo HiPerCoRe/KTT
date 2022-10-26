@@ -206,7 +206,7 @@ int main(int argc, char** argv)
     else
     {
         // Not implemented in CUDA
-        //tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
+        tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
         tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "VECTOR_SIZE", std::vector<uint64_t>{1});
     }
@@ -241,6 +241,7 @@ int main(int argc, char** argv)
 
     const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
+    tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::XML);
 
     return 0;
 }

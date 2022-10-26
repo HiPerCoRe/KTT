@@ -35,7 +35,7 @@ inline const std::string ProfileBasedSearcherModule =
     "np.printoptions(precision=5, suppress=True)\n" +
     "\n" +
     "# verbosity level (0, 1, 2, 3)\n" +
-    "VERBOSE = 0\n" +
+    "VERBOSE = 3\n" +
     "\n" +
     "# all constant used by the searcher\n" +
     "# CORR_SHIFT: value added to correlation (positive forces to search parameters with weak correlation but strong variation)\n" +
@@ -563,8 +563,8 @@ inline const std::string ProfileBasedSearcherModule =
     "                if newScoreDistrib[i] > 0.0 :\n" +
     "                    newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)\n" +
     "            newScoreDistrib[i] = newScoreDistrib[i]**EXP\n" +
-    "            if newScoreDistrib[i] == 0.0 :\n" +
-    "                newScoreDistrib[i] = 0.0001\n" +
+    "        if newScoreDistrib[i] == 0.0 :\n" +
+    "            newScoreDistrib[i] = 0.0001\n" +
     "\n" +
     "        # if was 0, set to 0 (explored)\n" +
     "        if scoreDistrib[i] == 0.0 :\n" +
@@ -631,8 +631,8 @@ inline const std::string ProfileBasedSearcherModule =
     "                if newScoreDistrib[i] > 0.0 :\n" +
     "                    newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)\n" +
     "            newScoreDistrib[i] = newScoreDistrib[i]**EXP\n" +
-    "            if newScoreDistrib[i] == 0.0 :\n" +
-    "                newScoreDistrib[i] = 0.0001\n" +
+    "        if newScoreDistrib[i] == 0.0 :\n" +
+    "            newScoreDistrib[i] = 0.0001\n" +
     "\n" +
     "        # if was 0, set to 0 (explored)\n" +
     "        if scoreDistrib[i] == 0.0 :\n" +
@@ -764,8 +764,8 @@ inline const std::string ProfileBasedSearcherModule =
     "                if newScoreDistrib[i] > 0.0 :\n" +
     "                    newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)\n" +
     "            newScoreDistrib[i] = newScoreDistrib[i]**EXP\n" +
-    "            if newScoreDistrib[i] == 0.0 :\n" +
-    "                newScoreDistrib[i] = 0.0001\n" +
+    "        if newScoreDistrib[i] == 0.0 :\n" +
+    "            newScoreDistrib[i] = 0.0001\n" +
     "\n" +
     "        # if was 0, set to 0 (explored)\n" +
     "        if scoreDistrib[i] == 0.0 :\n" +
