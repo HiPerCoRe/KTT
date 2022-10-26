@@ -4,31 +4,39 @@
 namespace ktt
 {
 
-StopConditionCommand::StopConditionCommand(const StopConditionType type, const double budgetValue) :
-    m_Type(type),
-    m_BudgetValue(budgetValue)
+StopConditionCommand::StopConditionCommand(const std::vector<StopConditionType>& types, const std::vector<double>& budgets) :
+    m_Types(types),
+    m_Budgets(budgets)
 {}
 
 void StopConditionCommand::Execute(TunerContext& context)
 {
-    std::unique_ptr<StopCondition> condition;
+    std::vector<std::shared_ptr<StopCondition>> conditions;
 
-    switch (m_Type)
+    for (size_t i = 0; i < m_Types.size(); ++i)
     {
-    case StopConditionType::TuningDuration:
-        condition = std::make_unique<TuningDuration>(m_BudgetValue);
-        break;
-    case StopConditionType::ConfigurationCount:
-        condition = std::make_unique<ConfigurationCount>(static_cast<uint64_t>(m_BudgetValue));
-        break;
-    case StopConditionType::ConfigurationFraction:
-        condition = std::make_unique<ConfigurationFraction>(m_BudgetValue);
-        break;
-    default:
-        KttLoaderError("Unhandled stop condition type");
+        std::shared_ptr<StopCondition> condition;
+
+        switch (m_Types[i])
+        {
+        case StopConditionType::TuningDuration:
+            condition = std::make_unique<TuningDuration>(m_Budgets[i]);
+            break;
+        case StopConditionType::ConfigurationCount:
+            condition = std::make_unique<ConfigurationCount>(static_cast<uint64_t>(m_Budgets[i]));
+            break;
+        case StopConditionType::ConfigurationFraction:
+            condition = std::make_unique<ConfigurationFraction>(m_Budgets[i]);
+            break;
+        default:
+            KttLoaderError("Unhandled stop condition type");
+        }
+
+        conditions.push_back(condition);
     }
 
-    context.SetStopCondition(std::move(condition));
+    auto unionCondition = std::make_unique<UnionCondition>(conditions);
+    context.SetStopCondition(std::move(unionCondition));
 }
 
 CommandPriority StopConditionCommand::GetPriority() const

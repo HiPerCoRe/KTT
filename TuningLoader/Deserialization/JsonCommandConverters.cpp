@@ -224,13 +224,23 @@ void from_json(const json& j, SizeTypeCommand& command)
 
 void from_json(const json& j, StopConditionCommand& command)
 {
-    StopConditionType type;
-    j.at("Type").get_to(type);
+    std::vector<StopConditionType> types;
 
-    double budget;
-    j.at("BudgetValue").get_to(budget);
+    for (auto it = j.begin(); it != j.end(); ++it)
+    {
+        const auto type = it.value()["Type"].get<StopConditionType>();
+        types.push_back(type);
+    }
 
-    command = StopConditionCommand(type, budget);
+    std::vector<double> budgets;
+
+    for (auto it = j.begin(); it != j.end(); ++it)
+    {
+        const auto value = it.value()["BudgetValue"].get<double>();
+        budgets.push_back(value);
+    }
+
+    command = StopConditionCommand(types, budgets);
 }
 
 void from_json(const json& j, TimeUnitCommand& command)

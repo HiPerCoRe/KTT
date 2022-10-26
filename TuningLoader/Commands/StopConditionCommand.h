@@ -1,6 +1,8 @@
 #pragma once
 
-#include <Deserialization/StopConditionType.h>
+#include <vector>
+
+#include <Deserialization/StopConditionEntry.h>
 #include <TunerCommand.h>
 
 namespace ktt
@@ -10,14 +12,14 @@ class StopConditionCommand : public TunerCommand
 {
 public:
     StopConditionCommand() = default;
-    explicit StopConditionCommand(const StopConditionType type, const double budgetValue);
+    explicit StopConditionCommand(const std::vector<StopConditionType>&types, const std::vector<double>& budgets);
 
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
 
 private:
-    StopConditionType m_Type;
-    double m_BudgetValue;
+    std::vector<StopConditionType> m_Types;
+    std::vector<double> m_Budgets;
 };
 
 } // namespace ktt

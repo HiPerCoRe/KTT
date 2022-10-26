@@ -105,21 +105,24 @@ R"(
             }
         },
         "Budget": {
-            "type": "object",
-            "required": [
-                "Type",
-                "BudgetValue"
-            ],
-            "properties": {
-                "Type": {
-                    "enum": [
-                        "TuningDuration",
-                        "ConfigurationCount",
-                        "ConfigurationFraction"
-                    ]
-                },
-                "BudgetValue": {
-                    "type": "number"
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "Type",
+                    "BudgetValue"
+                ],
+                "properties": {
+                    "Type": {
+                        "enum": [
+                            "TuningDuration",
+                            "ConfigurationCount",
+                            "ConfigurationFraction"
+                        ]
+                    },
+                    "BudgetValue": {
+                        "type": "number"
+                    }
                 }
             }
         },
