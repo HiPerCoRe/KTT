@@ -137,15 +137,16 @@ void TunerCore::SetProfiledDefinitions(const KernelId id, const std::vector<Kern
 
 ArgumentId TunerCore::AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, void* data, const size_t dataSize)
+    const ArgumentManagementType managementType, void* data, const size_t dataSize, const ArgumentId& customId)
 {
     return m_ArgumentManager->AddArgumentWithReferencedData(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, data, dataSize);
+        managementType, data, dataSize, customId);
 }
 
 ArgumentId TunerCore::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const ArgumentId& customId,
+    const std::string& symbolName)
 {
     if (memoryType == ArgumentMemoryType::Symbol && symbolName.empty() && m_ComputeEngine->GetComputeApi() == ComputeApi::CUDA)
     {
@@ -153,40 +154,40 @@ ArgumentId TunerCore::AddArgumentWithOwnedData(const size_t elementSize, const A
     }
 
     return m_ArgumentManager->AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, data, dataSize, symbolName);
+        managementType, data, dataSize, symbolName, customId);
 }
 
 ArgumentId TunerCore::AddArgumentWithOwnedDataFromFile(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const std::string& file)
+    const ArgumentManagementType managementType, const std::string& file, const ArgumentId& customId)
 {
     return m_ArgumentManager->AddArgumentWithOwnedDataFromFile(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, file);
+        managementType, file, customId);
 }
 
 ArgumentId TunerCore::AddArgumentWithOwnedDataFromGenerator(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const std::string& generatorFunction, const size_t dataSize)
+    const ArgumentManagementType managementType, const std::string& generatorFunction, const size_t dataSize, const ArgumentId& customId)
 {
     return m_ArgumentManager->AddArgumentWithOwnedDataFromGenerator(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, generatorFunction, dataSize);
+        managementType, generatorFunction, dataSize, customId);
 }
 
 ArgumentId TunerCore::AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
-    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize)
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize,
+    const ArgumentId& customId)
 {
-    const ArgumentId id = m_ArgumentManager->AddUserArgument(elementSize, dataType, memoryLocation, accessType, dataSize);
+    const ArgumentId& id = m_ArgumentManager->AddUserArgument(elementSize, dataType, memoryLocation, accessType, dataSize, customId);
     auto& argument = m_ArgumentManager->GetArgument(id);
     m_ComputeEngine->AddCustomBuffer(argument, buffer);
     return id;
 }
 
-void TunerCore::RemoveArgument(const ArgumentId id)
+void TunerCore::RemoveArgument(const ArgumentId& id)
 {
     if (m_KernelManager->IsArgumentUsed(id))
     {
-        throw KttException("Argument with id " + std::to_string(id) +
-            " cannot be removed because it is still referenced by at least one kernel definition");
+        throw KttException("Argument with id " + id + " cannot be removed because it is still referenced by at least one kernel definition");
     }
 
     m_KernelRunner->RemoveValidationData(id);
@@ -194,7 +195,7 @@ void TunerCore::RemoveArgument(const ArgumentId id)
     m_ArgumentManager->RemoveArgument(id);
 }
 
-void TunerCore::SaveArgument(const ArgumentId id, const std::string& file) const
+void TunerCore::SaveArgument(const ArgumentId& id, const std::string& file) const
 {
     m_ArgumentManager->SaveArgument(id, file);
 }
@@ -226,29 +227,29 @@ void TunerCore::SetValidationMode(const ValidationMode mode)
     m_KernelRunner->SetValidationMode(mode);
 }
 
-void TunerCore::SetValidationRange(const ArgumentId id, const size_t range)
+void TunerCore::SetValidationRange(const ArgumentId& id, const size_t range)
 {
     m_KernelRunner->SetValidationRange(id, range);
 }
 
-void TunerCore::SetValueComparator(const ArgumentId id, ValueComparator comparator)
+void TunerCore::SetValueComparator(const ArgumentId& id, ValueComparator comparator)
 {
     m_KernelRunner->SetValueComparator(id, comparator);
 }
 
-void TunerCore::SetReferenceComputation(const ArgumentId id, ReferenceComputation computation)
+void TunerCore::SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation)
 {
     m_KernelRunner->SetReferenceComputation(id, computation);
 }
 
-void TunerCore::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
+void TunerCore::SetReferenceKernel(const ArgumentId& id, const KernelId referenceId, const KernelConfiguration& configuration,
     const KernelDimensions& dimensions)
 {
     const auto& kernel = m_KernelManager->GetKernel(referenceId);
     m_KernelRunner->SetReferenceKernel(id, kernel, configuration, dimensions);
 }
 
-void TunerCore::SetReferenceArgument(const ArgumentId id, const ArgumentId referenceId)
+void TunerCore::SetReferenceArgument(const ArgumentId& id, const ArgumentId& referenceId)
 {
     const auto& referenceArgument = m_ArgumentManager->GetArgument(referenceId);
     m_KernelRunner->SetReferenceArgument(id, referenceArgument);

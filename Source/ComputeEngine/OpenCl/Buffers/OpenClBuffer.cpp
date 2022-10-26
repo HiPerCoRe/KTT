@@ -25,7 +25,7 @@ OpenClBuffer::OpenClBuffer(KernelArgument& argument, IdGenerator<TransferActionI
     m_UserOwned(true)
 {}
 
-ArgumentId OpenClBuffer::GetArgumentId() const
+const ArgumentId& OpenClBuffer::GetArgumentId() const
 {
     return m_Argument.GetId();
 }

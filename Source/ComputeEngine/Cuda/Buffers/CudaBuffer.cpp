@@ -32,7 +32,7 @@ CUdeviceptr* CudaBuffer::GetBuffer()
     return &m_Buffer;
 }
 
-ArgumentId CudaBuffer::GetArgumentId() const
+const ArgumentId& CudaBuffer::GetArgumentId() const
 {
     return m_Argument.GetId();
 }

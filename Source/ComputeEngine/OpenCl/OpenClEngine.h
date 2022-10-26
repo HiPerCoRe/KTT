@@ -49,19 +49,19 @@ public:
 
     // Buffer methods
     TransferActionId UploadArgument(KernelArgument& kernelArgument, const QueueId queueId) override;
-    TransferActionId UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
+    TransferActionId UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
         const size_t dataSize) override;
-    TransferActionId DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
+    TransferActionId DownloadArgument(const ArgumentId& id, const QueueId queueId, void* destination,
         const size_t dataSize) override;
-    TransferActionId CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
+    TransferActionId CopyArgument(const ArgumentId& destination, const QueueId queueId, const ArgumentId& source,
         const size_t dataSize) override;
     TransferResult WaitForTransferAction(const TransferActionId id) override;
-    void ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) override;
-    void GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle) override;
+    void ResizeArgument(const ArgumentId& id, const size_t newSize, const bool preserveData) override;
+    void GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBufferMemory& handle) override;
     void AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer buffer) override;
-    void ClearBuffer(const ArgumentId id) override;
+    void ClearBuffer(const ArgumentId& id) override;
     void ClearBuffers() override;
-    bool HasBuffer(const ArgumentId id) override;
+    bool HasBuffer(const ArgumentId& id) override;
 
     // Queue methods
     QueueId AddComputeQueue(ComputeQueue queue) override;

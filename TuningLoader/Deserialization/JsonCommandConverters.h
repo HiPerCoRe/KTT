@@ -13,9 +13,11 @@
 #include <Commands/ParameterCommand.h>
 #include <Commands/SearcherCommand.h>
 #include <Commands/SharedMemoryCommand.h>
+#include <Commands/SizeTypeCommand.h>
 #include <Commands/StopConditionCommand.h>
 #include <Commands/TimeUnitCommand.h>
 #include <Commands/TuneCommand.h>
+#include <Commands/ValidationCommand.h>
 #include <Deserialization/ArgumentFillType.h>
 #include <Deserialization/SearcherAttribute.h>
 #include <Deserialization/SearcherType.h>
@@ -86,6 +88,13 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ComputeApi,
     {ComputeApi::OpenCL, "OpenCL"},
     {ComputeApi::CUDA, "CUDA"},
     {ComputeApi::Vulkan, "Vulkan"}
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(GlobalSizeType,
+{
+    {GlobalSizeType::OpenCL, "OpenCL"},
+    {GlobalSizeType::CUDA, "CUDA"},
+    {GlobalSizeType::Vulkan, "Vulkan"}
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(LoggingLevel,
@@ -173,8 +182,10 @@ void from_json(const json& j, OutputCommand& command);
 void from_json(const json& j, ParameterCommand& command);
 void from_json(const json& j, SearcherCommand& command);
 void from_json(const json& j, SharedMemoryCommand& command);
+void from_json(const json& j, SizeTypeCommand& command);
 void from_json(const json& j, StopConditionCommand& command);
 void from_json(const json& j, TimeUnitCommand& command);
 void from_json(const json& j, TuneCommand& command);
+void from_json(const json& j, ValidationCommand& command);
 
 } // namespace ktt

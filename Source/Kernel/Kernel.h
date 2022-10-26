@@ -2,11 +2,11 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <queue>
 #include <set>
 #include <string>
 #include <vector>
-#include <memory>
 
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Kernel/KernelConstraint/KernelConstraint.h>

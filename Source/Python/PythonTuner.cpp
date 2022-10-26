@@ -159,24 +159,126 @@ void InitializePythonTuner(py::module_& module)
         .def("AddGenericConstraint", &ktt::Tuner::AddGenericConstraint)
         .def("AddScriptConstraint", &ktt::Tuner::AddScriptConstraint)
         .def("SetProfiledDefinitions", &ktt::Tuner::SetProfiledDefinitions)
-        .def("AddArgumentVectorChar", py::overload_cast<const std::vector<int8_t>&, const ktt::ArgumentAccessType>(&ktt::Tuner::AddArgumentVector<int8_t>))
-        .def("AddArgumentVectorShort", py::overload_cast<const std::vector<int16_t>&, const ktt::ArgumentAccessType>(&ktt::Tuner::AddArgumentVector<int16_t>))
-        .def("AddArgumentVectorInt", py::overload_cast<const std::vector<int32_t>&, const ktt::ArgumentAccessType>(&ktt::Tuner::AddArgumentVector<int32_t>))
-        .def("AddArgumentVectorLong", py::overload_cast<const std::vector<int64_t>&, const ktt::ArgumentAccessType>(&ktt::Tuner::AddArgumentVector<int64_t>))
-        .def("AddArgumentVectorFloat", py::overload_cast<const std::vector<float>&, const ktt::ArgumentAccessType>(&ktt::Tuner::AddArgumentVector<float>))
-        .def("AddArgumentVectorDouble", py::overload_cast<const std::vector<double>&, const ktt::ArgumentAccessType>(&ktt::Tuner::AddArgumentVector<double>))
-        .def("AddArgumentVectorChar", py::overload_cast<std::vector<int8_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation,
-            const ktt::ArgumentManagementType, const bool>(&ktt::Tuner::AddArgumentVector<int8_t>))
-        .def("AddArgumentVectorShort", py::overload_cast<std::vector<int16_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation,
-            const ktt::ArgumentManagementType, const bool>(&ktt::Tuner::AddArgumentVector<int16_t>))
-        .def("AddArgumentVectorInt", py::overload_cast<std::vector<int32_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation,
-            const ktt::ArgumentManagementType, const bool>(&ktt::Tuner::AddArgumentVector<int32_t>))
-        .def("AddArgumentVectorLong", py::overload_cast<std::vector<int64_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation,
-            const ktt::ArgumentManagementType, const bool>(&ktt::Tuner::AddArgumentVector<int64_t>))
-        .def("AddArgumentVectorFloat", py::overload_cast<std::vector<float>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation,
-            const ktt::ArgumentManagementType, const bool>(&ktt::Tuner::AddArgumentVector<float>))
-        .def("AddArgumentVectorDouble", py::overload_cast<std::vector<double>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation,
-            const ktt::ArgumentManagementType, const bool>(&ktt::Tuner::AddArgumentVector<double>))
+        .def
+        (
+            "AddArgumentVectorChar",
+            py::overload_cast<const std::vector<int8_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<int8_t>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentVectorShort",
+            py::overload_cast<const std::vector<int16_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<int16_t>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentVectorInt",
+            py::overload_cast<const std::vector<int32_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<int32_t>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+            .def
+        (
+            "AddArgumentVectorLong",
+            py::overload_cast<const std::vector<int64_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<int64_t>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentVectorFloat",
+            py::overload_cast<const std::vector<float>&, const ktt::ArgumentAccessType, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<float>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentVectorDouble",
+            py::overload_cast<const std::vector<double>&, const ktt::ArgumentAccessType, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<double>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentVectorChar",
+            py::overload_cast<std::vector<int8_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation, const ktt::ArgumentManagementType,
+                const bool, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<int8_t>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("memoryLocation"),
+            py::arg("managementType"),
+            py::arg("referenceUserData"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentVectorShort",
+            py::overload_cast<std::vector<int16_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation, const ktt::ArgumentManagementType,
+                const bool, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<int16_t>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("memoryLocation"),
+            py::arg("managementType"),
+            py::arg("referenceUserData"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentVectorInt",
+            py::overload_cast<std::vector<int32_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation, const ktt::ArgumentManagementType,
+                const bool, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<int32_t>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("memoryLocation"),
+            py::arg("managementType"),
+            py::arg("referenceUserData"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentVectorLong",
+            py::overload_cast<std::vector<int64_t>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation, const ktt::ArgumentManagementType,
+                const bool, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<int64_t>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("memoryLocation"),
+            py::arg("managementType"),
+            py::arg("referenceUserData"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentVectorFloat",
+            py::overload_cast<std::vector<float>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation, const ktt::ArgumentManagementType,
+                const bool, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<float>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("memoryLocation"),
+            py::arg("managementType"),
+            py::arg("referenceUserData"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentVectorDouble",
+            py::overload_cast<std::vector<double>&, const ktt::ArgumentAccessType, const ktt::ArgumentMemoryLocation, const ktt::ArgumentManagementType,
+                const bool, const ktt::ArgumentId&>(&ktt::Tuner::AddArgumentVector<double>),
+            py::arg("data"),
+            py::arg("accessType"),
+            py::arg("memoryLocation"),
+            py::arg("managementType"),
+            py::arg("referenceUserData"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
         .def
         (
             "AddArgumentVectorFromFile",
@@ -186,7 +288,8 @@ void InitializePythonTuner(py::module_& module)
             py::arg("elementSize"),
             py::arg("accessType"),
             py::arg("memoryLocation") = ktt::ArgumentMemoryLocation::Device,
-            py::arg("managementType") = ktt::ArgumentManagementType::Framework
+            py::arg("managementType") = ktt::ArgumentManagementType::Framework,
+            py::arg("customId") = ktt::ArgumentId()
         )
         .def
         (
@@ -198,62 +301,141 @@ void InitializePythonTuner(py::module_& module)
             py::arg("elementSize"),
             py::arg("accessType"),
             py::arg("memoryLocation") = ktt::ArgumentMemoryLocation::Device,
-            py::arg("managementType") = ktt::ArgumentManagementType::Framework
+            py::arg("managementType") = ktt::ArgumentManagementType::Framework,
+            py::arg("customId") = ktt::ArgumentId()
         )
         .def("SaveArgumentVector", &ktt::Tuner::SaveArgumentVector)
-        .def("AddArgumentScalarChar", &ktt::Tuner::AddArgumentScalar<int8_t>)
-        .def("AddArgumentScalarShort", &ktt::Tuner::AddArgumentScalar<int16_t>)
-        .def("AddArgumentScalarInt", &ktt::Tuner::AddArgumentScalar<int32_t>)
-        .def("AddArgumentScalarLong", &ktt::Tuner::AddArgumentScalar<int64_t>)
-        .def("AddArgumentScalarFloat", &ktt::Tuner::AddArgumentScalar<float>)
-        .def("AddArgumentScalarDouble", &ktt::Tuner::AddArgumentScalar<double>)
-        .def("AddArgumentLocalChar", &ktt::Tuner::AddArgumentLocal<int8_t>)
-        .def("AddArgumentLocalShort", &ktt::Tuner::AddArgumentLocal<int16_t>)
-        .def("AddArgumentLocalInt", &ktt::Tuner::AddArgumentLocal<int32_t>)
-        .def("AddArgumentLocalLong", &ktt::Tuner::AddArgumentLocal<int64_t>)
-        .def("AddArgumentLocalFloat", &ktt::Tuner::AddArgumentLocal<float>)
-        .def("AddArgumentLocalDouble", &ktt::Tuner::AddArgumentLocal<double>)
+        .def
+        (
+            "AddArgumentScalarChar",
+            &ktt::Tuner::AddArgumentScalar<int8_t>,
+            py::arg("data"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentScalarShort",
+            &ktt::Tuner::AddArgumentScalar<int16_t>,
+            py::arg("data"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentScalarInt",
+            &ktt::Tuner::AddArgumentScalar<int32_t>,
+            py::arg("data"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentScalarLong",
+            &ktt::Tuner::AddArgumentScalar<int64_t>,
+            py::arg("data"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentScalarFloat",
+            &ktt::Tuner::AddArgumentScalar<float>,
+            py::arg("data"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentScalarDouble",
+            &ktt::Tuner::AddArgumentScalar<double>,
+            py::arg("data"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentLocalChar",
+            &ktt::Tuner::AddArgumentLocal<int8_t>,
+            py::arg("localMemorySize"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentLocalShort",
+            &ktt::Tuner::AddArgumentLocal<int16_t>,
+            py::arg("localMemorySize"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentLocalInt",
+            &ktt::Tuner::AddArgumentLocal<int32_t>,
+            py::arg("localMemorySize"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentLocalLong",
+            &ktt::Tuner::AddArgumentLocal<int64_t>,
+            py::arg("localMemorySize"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentLocalFloat",
+            &ktt::Tuner::AddArgumentLocal<float>,
+            py::arg("localMemorySize"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
+        .def
+        (
+            "AddArgumentLocalDouble",
+            &ktt::Tuner::AddArgumentLocal<double>,
+            py::arg("localMemorySize"),
+            py::arg("customId") = ktt::ArgumentId()
+        )
         .def
         (
             "AddArgumentSymbolChar",
             &ktt::Tuner::AddArgumentSymbol<int8_t>,
             py::arg("data"),
-            py::arg("symbolName") = std::string()
+            py::arg("symbolName") = std::string(),
+            py::arg("customId") = ktt::ArgumentId()
         )
         .def
         (
             "AddArgumentSymbolShort",
             &ktt::Tuner::AddArgumentSymbol<int16_t>,
             py::arg("data"),
-            py::arg("symbolName") = std::string()
+            py::arg("symbolName") = std::string(),
+            py::arg("customId") = ktt::ArgumentId()
         )
         .def
         (
             "AddArgumentSymbolInt",
             &ktt::Tuner::AddArgumentSymbol<int32_t>,
             py::arg("data"),
-            py::arg("symbolName") = std::string()
+            py::arg("symbolName") = std::string(),
+            py::arg("customId") = ktt::ArgumentId()
         )
         .def
         (
             "AddArgumentSymbolLong",
             &ktt::Tuner::AddArgumentSymbol<int64_t>,
             py::arg("data"),
-            py::arg("symbolName") = std::string()
+            py::arg("symbolName") = std::string(),
+            py::arg("customId") = ktt::ArgumentId()
         )
         .def
         (
             "AddArgumentSymbolFloat",
             &ktt::Tuner::AddArgumentSymbol<float>,
             py::arg("data"),
-            py::arg("symbolName") = std::string()
+            py::arg("symbolName") = std::string(),
+            py::arg("customId") = ktt::ArgumentId()
         )
         .def
         (
             "AddArgumentSymbolDouble",
             &ktt::Tuner::AddArgumentSymbol<double>,
             py::arg("data"),
-            py::arg("symbolName") = std::string()
+            py::arg("symbolName") = std::string(),
+            py::arg("customId") = ktt::ArgumentId()
         )
         .def("RemoveArgument", &ktt::Tuner::RemoveArgument)
         .def("SetReadOnlyArgumentCache", &ktt::Tuner::SetReadOnlyArgumentCache)

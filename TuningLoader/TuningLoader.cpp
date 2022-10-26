@@ -151,6 +151,12 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
     auto addKernelCommand = kernelSpecification.get<AddKernelCommand>();
     m_Commands.push_back(std::make_unique<AddKernelCommand>(addKernelCommand));
 
+    if (kernelSpecification.contains("GlobalSizeType"))
+    {
+        auto sizeTypeCommand = kernelSpecification.get<SizeTypeCommand>();
+        m_Commands.push_back(std::make_unique<SizeTypeCommand>(sizeTypeCommand));
+    }
+
     if (kernelSpecification.contains("GlobalSize"))
     {
         auto modifierCommand = kernelSpecification["GlobalSize"].get<ModifierCommand>();
@@ -181,6 +187,25 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
         }
     }
 
+    if (kernelSpecification.contains("ReferenceData"))
+    {
+        auto& referenceData = kernelSpecification["ReferenceData"];
+        auto argumentCommands = referenceData["ReferenceArguments"].get<std::vector<AddArgumentCommand>>();
+
+        for (auto& command : argumentCommands)
+        {
+            command.SetReferenceFlag();
+            m_Commands.push_back(std::make_unique<AddArgumentCommand>(command));
+        }
+
+        auto validationCommands = referenceData["ValidationPairs"].get<std::vector<ValidationCommand>>();
+
+        for (const auto& command : validationCommands)
+        {
+            m_Commands.push_back(std::make_unique<ValidationCommand>(command));
+        }
+    }
+
     if (kernelSpecification.contains("SharedMemory"))
     {
         const auto sharedMemoryCommand = kernelSpecification.get<SharedMemoryCommand>();
@@ -193,11 +218,11 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
 
 bool TuningLoader::ValidateFormat(const std::string& tuningScript)
 {
-    json_validator valitor;
+    json_validator validator;
 
     try
     {
-        valitor.set_root_schema(TuningSchema);
+        validator.set_root_schema(TuningSchema);
     }
     catch (const std::exception& exception)
     {
@@ -209,7 +234,7 @@ bool TuningLoader::ValidateFormat(const std::string& tuningScript)
 
     try
     {
-        valitor.validate(input);
+        validator.validate(input);
     }
     catch (const std::exception& exception)
     {

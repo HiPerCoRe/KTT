@@ -24,18 +24,19 @@ void Tuner::AddParameter(const KernelId id, const std::string& name, const std::
 }
 
 template <typename T>
-ArgumentId Tuner::AddArgumentVector(const std::vector<T>& data, const ArgumentAccessType accessType)
+ArgumentId Tuner::AddArgumentVector(const std::vector<T>& data, const ArgumentAccessType accessType, const ArgumentId& customId)
 {
     const size_t elementSize = sizeof(T);
     const ArgumentDataType dataType = DeriveArgumentDataType<T>();
 
     return AddArgumentWithOwnedData(elementSize, dataType, ArgumentMemoryLocation::Device, accessType, ArgumentMemoryType::Vector,
-        ArgumentManagementType::Framework, data.data(), data.size() * elementSize);
+        ArgumentManagementType::Framework, data.data(), data.size() * elementSize, customId);
 }
 
 template <typename T>
 ArgumentId Tuner::AddArgumentVector(std::vector<T>& data, const ArgumentAccessType accessType,
-    const ArgumentMemoryLocation memoryLocation, const ArgumentManagementType managementType, const bool referenceUserData)
+    const ArgumentMemoryLocation memoryLocation, const ArgumentManagementType managementType, const bool referenceUserData,
+    const ArgumentId& customId)
 {
     const size_t elementSize = sizeof(T);
     const size_t dataSize = data.size() * elementSize;
@@ -44,45 +45,45 @@ ArgumentId Tuner::AddArgumentVector(std::vector<T>& data, const ArgumentAccessTy
     if (referenceUserData)
     {
         return AddArgumentWithReferencedData(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector,
-            managementType, data.data(), dataSize);
+            managementType, data.data(), dataSize, customId);
     }
 
     return AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector, managementType,
-        data.data(), dataSize);
+        data.data(), dataSize, customId);
 }
 
 template <typename T>
 ArgumentId Tuner::AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const ArgumentAccessType accessType,
-    const ArgumentMemoryLocation memoryLocation)
+    const ArgumentMemoryLocation memoryLocation, const ArgumentId& customId)
 {
     const size_t elementSize = sizeof(T);
     const ArgumentDataType dataType = DeriveArgumentDataType<T>();
 
-    return AddUserArgument(buffer, elementSize, dataType, memoryLocation, accessType, bufferSize);
+    return AddUserArgument(buffer, elementSize, dataType, memoryLocation, accessType, bufferSize, customId);
 }
 
 template <typename T>
-ArgumentId Tuner::AddArgumentScalar(const T& data)
+ArgumentId Tuner::AddArgumentScalar(const T& data, const ArgumentId& customId)
 {
     const ArgumentDataType dataType = DeriveArgumentDataType<T>();
     return AddArgumentWithOwnedData(sizeof(T), dataType, ArgumentMemoryLocation::Undefined, ArgumentAccessType::ReadOnly,
-        ArgumentMemoryType::Scalar, ArgumentManagementType::Framework, &data, sizeof(T));
+        ArgumentMemoryType::Scalar, ArgumentManagementType::Framework, &data, sizeof(T), customId);
 }
 
 template <typename T>
-ArgumentId Tuner::AddArgumentLocal(const size_t localMemorySize)
+ArgumentId Tuner::AddArgumentLocal(const size_t localMemorySize, const ArgumentId& customId)
 {
     const ArgumentDataType dataType = DeriveArgumentDataType<T>();
     return AddArgumentWithOwnedData(sizeof(T), dataType, ArgumentMemoryLocation::Undefined, ArgumentAccessType::ReadOnly,
-        ArgumentMemoryType::Local, ArgumentManagementType::Framework, nullptr, localMemorySize);
+        ArgumentMemoryType::Local, ArgumentManagementType::Framework, nullptr, localMemorySize, customId);
 }
 
 template <typename T>
-ArgumentId Tuner::AddArgumentSymbol(const T& data, const std::string& symbolName)
+ArgumentId Tuner::AddArgumentSymbol(const T& data, const ArgumentId& customId, const std::string& symbolName)
 {
     const ArgumentDataType dataType = DeriveArgumentDataType<T>();
     return AddArgumentWithOwnedData(sizeof(T), dataType, ArgumentMemoryLocation::Undefined, ArgumentAccessType::ReadOnly,
-        ArgumentMemoryType::Symbol, ArgumentManagementType::Framework, &data, sizeof(T), symbolName);
+        ArgumentMemoryType::Symbol, ArgumentManagementType::Framework, &data, sizeof(T), customId, symbolName);
 }
 
 template <typename T>

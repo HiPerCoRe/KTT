@@ -281,7 +281,7 @@ TransferActionId OpenClEngine::UploadArgument(KernelArgument& kernelArgument, co
     timer.Start();
 
     const auto id = kernelArgument.GetId();
-    Logger::LogDebug("Uploading buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Uploading buffer for argument with id " + id);
 
     if (!ContainsKey(m_Queues, queueId))
     {
@@ -290,12 +290,12 @@ TransferActionId OpenClEngine::UploadArgument(KernelArgument& kernelArgument, co
 
     if (ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+        throw KttException("Buffer for argument with id " + id + " already exists");
     }
 
     if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
     {
-        throw KttException("Argument with id " + std::to_string(id) + " is not a vector and cannot be uploaded into buffer");
+        throw KttException("Argument with id " + id + " is not a vector and cannot be uploaded into buffer");
     }
 
     auto buffer = CreateBuffer(kernelArgument);
@@ -312,13 +312,13 @@ TransferActionId OpenClEngine::UploadArgument(KernelArgument& kernelArgument, co
     return actionId;
 }
 
-TransferActionId OpenClEngine::UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
+TransferActionId OpenClEngine::UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
-    Logger::LogDebug("Updating buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Updating buffer for argument with id " + id);
 
     if (!ContainsKey(m_Queues, queueId))
     {
@@ -327,7 +327,7 @@ TransferActionId OpenClEngine::UpdateArgument(const ArgumentId id, const QueueId
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
@@ -347,13 +347,13 @@ TransferActionId OpenClEngine::UpdateArgument(const ArgumentId id, const QueueId
     return actionId;
 }
 
-TransferActionId OpenClEngine::DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
+TransferActionId OpenClEngine::DownloadArgument(const ArgumentId& id, const QueueId queueId, void* destination,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
-    Logger::LogDebug("Downloading buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Downloading buffer for argument with id " + id);
 
     if (!ContainsKey(m_Queues, queueId))
     {
@@ -362,7 +362,7 @@ TransferActionId OpenClEngine::DownloadArgument(const ArgumentId id, const Queue
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
@@ -382,14 +382,14 @@ TransferActionId OpenClEngine::DownloadArgument(const ArgumentId id, const Queue
     return actionId;
 }
 
-TransferActionId OpenClEngine::CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
+TransferActionId OpenClEngine::CopyArgument(const ArgumentId& destination, const QueueId queueId, const ArgumentId& source,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
-    Logger::LogDebug("Copying buffer for argument with id " + std::to_string(source) + " into buffer for argument with id "
-        + std::to_string(destination));
+    Logger::LogDebug("Copying buffer for argument with id " + source + " into buffer for argument with id "
+        + destination);
 
     if (!ContainsKey(m_Queues, queueId))
     {
@@ -398,12 +398,12 @@ TransferActionId OpenClEngine::CopyArgument(const ArgumentId destination, const 
 
     if (!ContainsKey(m_Buffers, destination))
     {
-        throw KttException("Copy destination buffer for argument with id " + std::to_string(destination) + " was not found");
+        throw KttException("Copy destination buffer for argument with id " + destination + " was not found");
     }
 
     if (!ContainsKey(m_Buffers, source))
     {
-        throw KttException("Copy source buffer for argument with id " + std::to_string(source) + " was not found");
+        throw KttException("Copy source buffer for argument with id " + source + " was not found");
     }
 
     auto& destinationBuffer = *m_Buffers[destination];
@@ -440,31 +440,31 @@ TransferResult OpenClEngine::WaitForTransferAction(const TransferActionId id)
     return result;
 }
 
-void OpenClEngine::ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
+void OpenClEngine::ResizeArgument(const ArgumentId& id, const size_t newSize, const bool preserveData)
 {
-    Logger::LogDebug("Resizing buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Resizing buffer for argument with id " + id);
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
     buffer.Resize(*m_Queues[GetDefaultQueue()], newSize, preserveData);
 }
 
-void OpenClEngine::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle)
+void OpenClEngine::GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBufferMemory& handle)
 {
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
 
     if (buffer.GetMemoryLocation() != ArgumentMemoryLocation::Unified)
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " is not unified memory buffer");
+        throw KttException("Buffer for argument with id " + id + " is not unified memory buffer");
     }
 
     handle = buffer.GetRawBuffer();
@@ -476,14 +476,14 @@ void OpenClEngine::AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer
 
     if (ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+        throw KttException("Buffer for argument with id " + id + " already exists");
     }
 
     auto userBuffer = CreateUserBuffer(kernelArgument, buffer);
     m_Buffers[id] = std::move(userBuffer);
 }
 
-void OpenClEngine::ClearBuffer(const ArgumentId id)
+void OpenClEngine::ClearBuffer(const ArgumentId& id)
 {
     m_Buffers.erase(id);
 }
@@ -493,7 +493,7 @@ void OpenClEngine::ClearBuffers()
     m_Buffers.clear();
 }
 
-bool OpenClEngine::HasBuffer(const ArgumentId id)
+bool OpenClEngine::HasBuffer(const ArgumentId& id)
 {
     return ContainsKey(m_Buffers, id);
 }
@@ -703,7 +703,7 @@ void OpenClEngine::SetKernelArgument(OpenClKernel& kernel, const KernelArgument&
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer corresponding to kernel argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer corresponding to kernel argument with id " + id + " was not found");
     }
 
     kernel.SetArgument(*m_Buffers[id]);

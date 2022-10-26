@@ -16,7 +16,7 @@ namespace ktt
 CudaUnifiedBuffer::CudaUnifiedBuffer(KernelArgument& argument, IdGenerator<TransferActionId>& generator) :
     CudaBuffer(argument, generator)
 {
-    Logger::LogDebug("Initializing CUDA unified buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing CUDA unified buffer with id " + m_Argument.GetId());
     KttAssert(GetMemoryLocation() == ArgumentMemoryLocation::Unified, "Argument memory location mismatch");
     CheckError(cuMemAllocManaged(&m_Buffer, m_BufferSize, CU_MEM_ATTACH_GLOBAL), "cuMemAllocManaged");
 }
@@ -25,7 +25,7 @@ CudaUnifiedBuffer::CudaUnifiedBuffer(KernelArgument& argument, IdGenerator<Trans
     ComputeBuffer userBuffer) :
     CudaBuffer(argument, generator, userBuffer)
 {
-    Logger::LogDebug("Initializing CUDA unified buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing CUDA unified buffer with id " + m_Argument.GetId());
     KttAssert(GetMemoryLocation() == ArgumentMemoryLocation::Unified, "Argument memory location mismatch");
 
     if (userBuffer == nullptr)
@@ -38,7 +38,7 @@ CudaUnifiedBuffer::CudaUnifiedBuffer(KernelArgument& argument, IdGenerator<Trans
 
 CudaUnifiedBuffer::~CudaUnifiedBuffer()
 {
-    Logger::LogDebug("Releasing CUDA unified buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Releasing CUDA unified buffer with id " + m_Argument.GetId());
 
     if (m_UserOwned)
     {
@@ -51,7 +51,7 @@ CudaUnifiedBuffer::~CudaUnifiedBuffer()
 std::unique_ptr<CudaTransferAction> CudaUnifiedBuffer::UploadData(const CudaStream& stream, const void* source,
     const size_t dataSize)
 {
-    Logger::LogDebug("Uploading data into CUDA unified buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Uploading data into CUDA unified buffer with id " + m_Argument.GetId());
 
     if (m_BufferSize < dataSize)
     {
@@ -71,7 +71,7 @@ std::unique_ptr<CudaTransferAction> CudaUnifiedBuffer::UploadData(const CudaStre
 std::unique_ptr<CudaTransferAction> CudaUnifiedBuffer::DownloadData(const CudaStream& stream, void* destination,
     const size_t dataSize) const
 {
-    Logger::LogDebug("Downloading data from CUDA unified buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Downloading data from CUDA unified buffer with id " + m_Argument.GetId());
 
     if (m_BufferSize < dataSize)
     {
@@ -91,8 +91,8 @@ std::unique_ptr<CudaTransferAction> CudaUnifiedBuffer::DownloadData(const CudaSt
 std::unique_ptr<CudaTransferAction> CudaUnifiedBuffer::CopyData(const CudaStream& stream, const CudaBuffer& source,
     const size_t dataSize)
 {
-    Logger::LogDebug("Copying data into CUDA unified buffer with id " + std::to_string(m_Argument.GetId())
-        + " from buffer with id " + std::to_string(source.GetArgumentId()));
+    Logger::LogDebug("Copying data into CUDA unified buffer with id " + m_Argument.GetId() + " from buffer with id "
+        + source.GetArgumentId());
 
     if (m_BufferSize < dataSize)
     {
@@ -116,7 +116,7 @@ std::unique_ptr<CudaTransferAction> CudaUnifiedBuffer::CopyData(const CudaStream
 
 void CudaUnifiedBuffer::Resize(const size_t newSize, const bool preserveData)
 {
-    Logger::LogDebug("Resizing CUDA unified buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Resizing CUDA unified buffer with id " + m_Argument.GetId());
 
     if (m_UserOwned)
     {

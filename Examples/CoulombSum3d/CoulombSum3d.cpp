@@ -202,6 +202,9 @@ int main(int argc, char** argv)
         tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "VECTOR_SIZE", std::vector<uint64_t>{1, 2 , 4, 8, 16});
+
+        auto vec = [](const std::vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1; };
+        tuner.AddConstraint(kernel, { "USE_SOA", "VECTOR_SIZE" }, vec);
     }
     else
     {
@@ -213,11 +216,7 @@ int main(int argc, char** argv)
 
     auto lt = [](const std::vector<uint64_t>& vector) {return vector.at(0) < vector.at(1);};
     tuner.AddConstraint(kernel, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"}, lt);
-    if constexpr (computeApi == ktt::ComputeApi::OpenCL)
-    {
-        auto vec = [](const std::vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1;};
-        tuner.AddConstraint(kernel, {"USE_SOA", "VECTOR_SIZE"}, vec);
-    }
+
     auto par = [](const std::vector<uint64_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
     tuner.AddConstraint(kernel, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, par);
 

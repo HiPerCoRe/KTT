@@ -53,7 +53,7 @@ void KernelComputeData::UpdateArgumentAtIndex(const size_t index, KernelArgument
     m_Arguments[index] = &argument;
 }
 
-void KernelComputeData::SwapArguments(const ArgumentId first, const ArgumentId second)
+void KernelComputeData::SwapArguments(const ArgumentId& first, const ArgumentId& second)
 {
     const size_t invalidIndex = std::numeric_limits<size_t>::max();
     size_t firstIndex = invalidIndex;
@@ -73,8 +73,8 @@ void KernelComputeData::SwapArguments(const ArgumentId first, const ArgumentId s
 
     if (firstIndex == invalidIndex || secondIndex == invalidIndex)
     {
-        throw KttException("One of the arguments with ids " + std::to_string(first) + " and " + std::to_string(second)
-            + " is not associated with kernel definition " + m_Name);
+        throw KttException("One of the arguments with ids " + first + " and " + second + " is not associated with kernel definition "
+            + m_Name);
     }
 
     std::swap(m_Arguments[firstIndex], m_Arguments[secondIndex]);
@@ -138,7 +138,7 @@ const KernelConfiguration& KernelComputeData::GetConfiguration() const
     return *m_Configuration;
 }
 
-size_t KernelComputeData::GetArgumentIndex(const ArgumentId id) const
+size_t KernelComputeData::GetArgumentIndex(const ArgumentId& id) const
 {
     for (size_t i = 0; i < m_Arguments.size(); ++i)
     {

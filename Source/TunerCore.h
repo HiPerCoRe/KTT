@@ -53,20 +53,23 @@ public:
     // Argument management
     ArgumentId AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, void* data, const size_t dataSize);
+        const ArgumentManagementType managementType, void* data, const size_t dataSize, const ArgumentId& customId = "");
     ArgumentId AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName = "");
+        const ArgumentManagementType managementType, const void* data, const size_t dataSize, const ArgumentId& customId = "",
+        const std::string& symbolName = "");
     ArgumentId AddArgumentWithOwnedDataFromFile(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const std::string& file);
+        const ArgumentManagementType managementType, const std::string& file, const ArgumentId& customId = "");
     ArgumentId AddArgumentWithOwnedDataFromGenerator(const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-        const ArgumentManagementType managementType, const std::string& generatorFunction, const size_t dataSize);
+        const ArgumentManagementType managementType, const std::string& generatorFunction, const size_t dataSize,
+        const ArgumentId& customId = "");
     ArgumentId AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
-        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize);
-    void RemoveArgument(const ArgumentId id);
-    void SaveArgument(const ArgumentId id, const std::string& file) const;
+        const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize,
+        const ArgumentId& customId = "");
+    void RemoveArgument(const ArgumentId& id);
+    void SaveArgument(const ArgumentId& id, const std::string& file) const;
     void SetReadOnlyArgumentCache(const bool flag);
 
     // Kernel running and validation
@@ -75,12 +78,12 @@ public:
     void SetProfiling(const bool flag);
     void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void SetValidationMode(const ValidationMode mode);
-    void SetValidationRange(const ArgumentId id, const size_t range);
-    void SetValueComparator(const ArgumentId id, ValueComparator comparator);
-    void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
-    void SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
+    void SetValidationRange(const ArgumentId& id, const size_t range);
+    void SetValueComparator(const ArgumentId& id, ValueComparator comparator);
+    void SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation);
+    void SetReferenceKernel(const ArgumentId& id, const KernelId referenceId, const KernelConfiguration& configuration,
         const KernelDimensions& dimensions);
-    void SetReferenceArgument(const ArgumentId id, const ArgumentId referenceId);
+    void SetReferenceArgument(const ArgumentId& id, const ArgumentId& referenceId);
 
     // Kernel tuning and configurations
     std::vector<KernelResult> TuneKernel(const KernelId id, const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition);

@@ -35,7 +35,7 @@ public:
 
     VkBuffer GetBuffer() const;
     KernelArgument& GetArgument() const;
-    ArgumentId GetArgumentId() const;
+    const ArgumentId& GetArgumentId() const;
     ArgumentAccessType GetAccessType() const;
     ArgumentMemoryLocation GetMemoryLocation() const;
     VkDeviceSize GetSize() const;

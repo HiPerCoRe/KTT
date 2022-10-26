@@ -30,6 +30,13 @@ void from_json(const json& j, SearcherAttribute& attribute)
 
 void from_json(const json& j, AddArgumentCommand& command)
 {
+    ArgumentId id = InvalidArgumentId;
+
+    if (j.contains("Name"))
+    {
+        j.at("Name").get_to(id);
+    }
+
     ArgumentMemoryType memoryType;
     j.at("MemoryType").get_to(memoryType);
 
@@ -69,14 +76,14 @@ void from_json(const json& j, AddArgumentCommand& command)
         float fillValue;
         j.at("FillValue").get_to(fillValue);
 
-        command = AddArgumentCommand(memoryType, type, size, typeSize, accessType, fillType, fillValue);
+        command = AddArgumentCommand(id, memoryType, type, size, typeSize, accessType, fillType, fillValue);
     }
     else if (fillType == ArgumentFillType::BinaryRaw || fillType == ArgumentFillType::Generator)
     {
         std::string dataSource;
         j.at("DataSource").get_to(dataSource);
 
-        command = AddArgumentCommand(memoryType, type, size, typeSize, accessType, fillType, dataSource);
+        command = AddArgumentCommand(id, memoryType, type, size, typeSize, accessType, fillType, dataSource);
     }
 }
 
@@ -208,6 +215,13 @@ void from_json(const json& j, SharedMemoryCommand& command)
     command = SharedMemoryCommand(memorySize);
 }
 
+void from_json(const json& j, SizeTypeCommand& command)
+{
+    const auto type = j.at("GlobalSizeType").get<GlobalSizeType>();
+
+    command = SizeTypeCommand(type);
+}
+
 void from_json(const json& j, StopConditionCommand& command)
 {
     StopConditionType type;
@@ -234,6 +248,14 @@ void from_json(const json& j, TuneCommand& command)
         const auto simulationInput = j.at("SimulationInput").get<std::string>();
         command = TuneCommand(simulationInput);
     }
+}
+
+void from_json(const json& j, ValidationCommand& command)
+{
+    const auto reference = j.at("ReferenceName").get<ArgumentId>();
+    const auto target = j.at("TargetName").get<ArgumentId>();
+
+    command = ValidationCommand(target, reference);
 }
 
 } // namespace ktt

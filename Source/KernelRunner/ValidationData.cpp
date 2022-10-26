@@ -27,12 +27,12 @@ ValidationData::ValidationData(KernelRunner& kernelRunner, const KernelArgument&
 
     if (argument.GetMemoryType() != ArgumentMemoryType::Vector)
     {
-        throw KttException("Kernel argument with id " + std::to_string(id) + " is not a vector and cannot be validated");
+        throw KttException("Kernel argument with id " + id + " is not a vector and cannot be validated");
     }
 
     if (argument.GetAccessType() == ArgumentAccessType::ReadOnly)
     {
-        throw KttException("Kernel argument with id " + std::to_string(id) + " is read-only and cannot be validated");
+        throw KttException("Kernel argument with id " + id + " is read-only and cannot be validated");
     }
 }
 
@@ -71,12 +71,12 @@ void ValidationData::SetReferenceArgument(const KernelArgument& argument)
 
     if (argument.GetMemoryType() != ArgumentMemoryType::Vector)
     {
-        throw KttException("Kernel argument with id " + std::to_string(id) + " is not a vector and cannot be used as a reference argument");
+        throw KttException("Kernel argument with id " + id + " is not a vector and cannot be used as a reference argument");
     }
 
     if (argument.GetOwnership() == ArgumentOwnership::User)
     {
-        throw KttException("Kernel argument with id " + std::to_string(id) + " has user ownership and cannot be used as a reference argument");
+        throw KttException("Kernel argument with id " + id + " has user ownership and cannot be used as a reference argument");
     }
 
     ResetReferenceData();
@@ -137,7 +137,7 @@ void ValidationData::ComputeReferenceResults()
 
     const auto& time = TimeConfiguration::GetInstance();
     const uint64_t elapsedTime = time.ConvertFromNanoseconds(referenceComputationTime);
-    Logger::LogInfo("Reference result for argument with id " + std::to_string(m_Argument.GetId()) + " was computed in "
+    Logger::LogInfo("Reference result for argument with id " + m_Argument.GetId() + " was computed in "
         + std::to_string(elapsedTime) + time.GetUnitTag());
 }
 
@@ -156,7 +156,7 @@ bool ValidationData::HasReferenceResults() const
 void ValidationData::ComputeReferenceWithFunction()
 {
     KttAssert(HasReferenceComputation(), "Reference can be computed only with valid reference computation");
-    Logger::LogInfo("Computing reference computation result for argument with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogInfo("Computing reference computation result for argument with id " + m_Argument.GetId());
     
     const size_t referenceSize = m_ValidationRange * m_Argument.GetElementSize();
     m_ReferenceResult.resize(referenceSize);
@@ -166,7 +166,7 @@ void ValidationData::ComputeReferenceWithFunction()
 void ValidationData::ComputeReferenceWithKernel()
 {
     KttAssert(HasReferenceKernel(), "Reference can be computed only with valid reference kernel");
-    Logger::LogInfo("Computing reference kernel result for argument with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogInfo("Computing reference kernel result for argument with id " + m_Argument.GetId());
 
     const bool profiling = m_KernelRunner.IsProfilingActive();
     m_KernelRunner.SetProfiling(false);

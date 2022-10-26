@@ -297,11 +297,11 @@ void Tuner::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDe
 }
 
 ArgumentId Tuner::AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
-    const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation)
+    const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation, const ArgumentId& customId)
 {
     try
     {
-        return AddUserArgument(buffer, elementSize, ArgumentDataType::Custom, memoryLocation, accessType, bufferSize);
+        return AddUserArgument(buffer, elementSize, ArgumentDataType::Custom, memoryLocation, accessType, bufferSize, customId);
     }
     catch (const KttException& exception)
     {
@@ -311,12 +311,13 @@ ArgumentId Tuner::AddArgumentVector(ComputeBuffer buffer, const size_t bufferSiz
 }
 
 ArgumentId Tuner::AddArgumentVectorFromFile(const std::string& filePath, const ArgumentDataType dataType, const size_t elementSize,
-    const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation, const ArgumentManagementType managementType)
+    const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation, const ArgumentManagementType managementType,
+    const ArgumentId& customId)
 {
     try
     {
         return m_Tuner->AddArgumentWithOwnedDataFromFile(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector,
-            managementType, filePath);
+            managementType, filePath, customId);
     }
     catch (const KttException& exception)
     {
@@ -327,12 +328,12 @@ ArgumentId Tuner::AddArgumentVectorFromFile(const std::string& filePath, const A
 
 ArgumentId Tuner::AddArgumentVectorFromGenerator(const std::string& generatorFunction, const ArgumentDataType dataType,
     const size_t bufferSize, const size_t elementSize, const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation,
-    const ArgumentManagementType managementType)
+    const ArgumentManagementType managementType, const ArgumentId& customId)
 {
     try
     {
         return m_Tuner->AddArgumentWithOwnedDataFromGenerator(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector,
-            managementType, generatorFunction, bufferSize);
+            managementType, generatorFunction, bufferSize, customId);
     }
     catch (const KttException& exception)
     {
@@ -341,7 +342,7 @@ ArgumentId Tuner::AddArgumentVectorFromGenerator(const std::string& generatorFun
     }
 }
 
-void Tuner::SaveArgumentVector(const ArgumentId id, const std::string& filePath)
+void Tuner::SaveArgumentVector(const ArgumentId& id, const std::string& filePath)
 {
     try
     {
@@ -353,12 +354,13 @@ void Tuner::SaveArgumentVector(const ArgumentId id, const std::string& filePath)
     }
 }
 
-ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize)
+ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize, const ArgumentId& customId)
 {
     try
     {
         return AddArgumentWithOwnedData(dataSize, ArgumentDataType::Custom, ArgumentMemoryLocation::Undefined,
-            ArgumentAccessType::ReadOnly, ArgumentMemoryType::Scalar, ArgumentManagementType::Framework, data, dataSize);
+            ArgumentAccessType::ReadOnly, ArgumentMemoryType::Scalar, ArgumentManagementType::Framework, data, dataSize,
+            customId);
     }
     catch (const KttException& exception)
     {
@@ -367,7 +369,7 @@ ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize)
     }
 }
 
-void Tuner::RemoveArgument(const ArgumentId id)
+void Tuner::RemoveArgument(const ArgumentId& id)
 {
     try
     {
@@ -447,7 +449,7 @@ void Tuner::SetValidationMode(const ValidationMode mode)
     }
 }
 
-void Tuner::SetValidationRange(const ArgumentId id, const size_t range)
+void Tuner::SetValidationRange(const ArgumentId& id, const size_t range)
 {
     try
     {
@@ -459,7 +461,7 @@ void Tuner::SetValidationRange(const ArgumentId id, const size_t range)
     }
 }
 
-void Tuner::SetValueComparator(const ArgumentId id, ValueComparator comparator)
+void Tuner::SetValueComparator(const ArgumentId& id, ValueComparator comparator)
 {
     try
     {
@@ -471,7 +473,7 @@ void Tuner::SetValueComparator(const ArgumentId id, ValueComparator comparator)
     }
 }
 
-void Tuner::SetReferenceComputation(const ArgumentId id, ReferenceComputation computation)
+void Tuner::SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation)
 {
     try
     {
@@ -483,7 +485,7 @@ void Tuner::SetReferenceComputation(const ArgumentId id, ReferenceComputation co
     }
 }
 
-void Tuner::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration,
+void Tuner::SetReferenceKernel(const ArgumentId& id, const KernelId referenceId, const KernelConfiguration& configuration,
     const KernelDimensions& dimensions)
 {
     try
@@ -496,7 +498,7 @@ void Tuner::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, 
     }
 }
 
-void Tuner::SetReferenceArgument(const ArgumentId id, const ArgumentId referenceId)
+void Tuner::SetReferenceArgument(const ArgumentId& id, const ArgumentId& referenceId)
 {
     try
     {
@@ -954,12 +956,12 @@ void Tuner::SetLoggingTarget(const std::string& filePath)
 
 ArgumentId Tuner::AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, void* data, const size_t dataSize)
+    const ArgumentManagementType managementType, void* data, const size_t dataSize, const ArgumentId& customId)
 {
     try
     {
         return m_Tuner->AddArgumentWithReferencedData(elementSize, dataType, memoryLocation, accessType, memoryType, managementType,
-            data, dataSize);
+            data, dataSize, customId);
     }
     catch (const KttException& exception)
     {
@@ -970,12 +972,13 @@ ArgumentId Tuner::AddArgumentWithReferencedData(const size_t elementSize, const 
 
 ArgumentId Tuner::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const ArgumentId& customId,
+    const std::string& symbolName)
 {
     try
     {
         return m_Tuner->AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, memoryType, managementType,
-            data, dataSize, symbolName);
+            data, dataSize, customId, symbolName);
     }
     catch (const KttException& exception)
     {
@@ -985,11 +988,11 @@ ArgumentId Tuner::AddArgumentWithOwnedData(const size_t elementSize, const Argum
 }
 
 ArgumentId Tuner::AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
-    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize)
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize, const ArgumentId& customId)
 {
     try
     {
-        return m_Tuner->AddUserArgument(buffer, elementSize, dataType, memoryLocation, accessType, dataSize);
+        return m_Tuner->AddUserArgument(buffer, elementSize, dataType, memoryLocation, accessType, dataSize, customId);
     }
     catch (const KttException& exception)
     {

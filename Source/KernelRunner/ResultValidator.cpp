@@ -41,43 +41,43 @@ void ResultValidator::InitializeValidationData(const KernelArgument& argument)
     m_ValidationData[argument.GetId()] = std::make_unique<ValidationData>(m_KernelRunner, argument);
 }
 
-void ResultValidator::SetValidationRange(const ArgumentId id, const size_t range)
+void ResultValidator::SetValidationRange(const ArgumentId& id, const size_t range)
 {
     KttAssert(HasValidationData(id), "Validation data not found");
     m_ValidationData[id]->SetValidationRange(range);
 }
 
-void ResultValidator::SetValueComparator(const ArgumentId id, ValueComparator comparator)
+void ResultValidator::SetValueComparator(const ArgumentId& id, ValueComparator comparator)
 {
     KttAssert(HasValidationData(id), "Validation data not found");
     m_ValidationData[id]->SetValueComparator(comparator);
 }
 
-void ResultValidator::SetReferenceComputation(const ArgumentId id, ReferenceComputation computation)
+void ResultValidator::SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation)
 {
     KttAssert(HasValidationData(id), "Validation data not found");
     m_ValidationData[id]->SetReferenceComputation(computation);
 }
 
-void ResultValidator::SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration,
+void ResultValidator::SetReferenceKernel(const ArgumentId& id, const Kernel& kernel, const KernelConfiguration& configuration,
     const KernelDimensions& dimensions)
 {
     KttAssert(HasValidationData(id), "Validation data not found");
     m_ValidationData[id]->SetReferenceKernel(kernel, configuration, dimensions);
 }
 
-void ResultValidator::SetReferenceArgument(const ArgumentId id, const KernelArgument& argument)
+void ResultValidator::SetReferenceArgument(const ArgumentId& id, const KernelArgument& argument)
 {
     KttAssert(HasValidationData(id), "Validation data not found");
     m_ValidationData[id]->SetReferenceArgument(argument);
 }
 
-bool ResultValidator::HasValidationData(const ArgumentId id) const
+bool ResultValidator::HasValidationData(const ArgumentId& id) const
 {
     return ContainsKey(m_ValidationData, id);
 }
 
-void ResultValidator::RemoveValidationData(const ArgumentId id)
+void ResultValidator::RemoveValidationData(const ArgumentId& id)
 {
     m_ValidationData.erase(id);
 }
@@ -108,7 +108,7 @@ void ResultValidator::ComputeReferenceResult(const Kernel& kernel, const KernelR
     }
 }
 
-void ResultValidator::ComputeReferenceResult(const ArgumentId id)
+void ResultValidator::ComputeReferenceResult(const ArgumentId& id)
 {
     KttAssert(HasValidationData(id), "Validation data not found");
     m_ValidationData[id]->ComputeReferenceResults();
@@ -127,7 +127,7 @@ void ResultValidator::ClearReferenceResult(const Kernel& kernel)
     }
 }
 
-void ResultValidator::ClearReferenceResult(const ArgumentId id)
+void ResultValidator::ClearReferenceResult(const ArgumentId& id)
 {
     KttAssert(HasValidationData(id), "Validation data not found");
     m_ValidationData[id]->ClearReferenceResults();
@@ -150,7 +150,7 @@ bool ResultValidator::HasReferenceResult(const Kernel& kernel) const
     return result;
 }
 
-bool ResultValidator::HasReferenceResult(const ArgumentId id) const
+bool ResultValidator::HasReferenceResult(const ArgumentId& id) const
 {
     KttAssert(HasValidationData(id), "Validation data not found");
     return m_ValidationData.find(id)->second->HasReferenceResults();
@@ -260,7 +260,7 @@ bool ResultValidator::ValidateResultWithComparator(const KernelArgument& argumen
     {
         if (!comparator(reinterpret_cast<const uint8_t*>(result) + i, reinterpret_cast<const uint8_t*>(referenceResult) + i))
         {
-            Logger::LogWarning("Results differ for argument with id: " + std::to_string(argument.GetId()) + " at index "
+            Logger::LogWarning("Results differ for argument with id: " + argument.GetId() + " at index "
                 + std::to_string(i / elementSize));
             return false;
         }

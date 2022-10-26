@@ -34,7 +34,7 @@ public:
 
     const CUdeviceptr* GetBuffer() const;
     CUdeviceptr* GetBuffer();
-    ArgumentId GetArgumentId() const;
+    const ArgumentId& GetArgumentId() const;
     ArgumentAccessType GetAccessType() const;
     ArgumentMemoryLocation GetMemoryLocation() const;
     size_t GetSize() const;
