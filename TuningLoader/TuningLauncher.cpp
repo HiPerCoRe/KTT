@@ -1,4 +1,6 @@
 #include <iostream>
+#include <map>
+#include <regex>
 #include <string>
 
 #include <TuningLoader.h>
@@ -15,8 +17,22 @@ int main(int argc, char** argv)
 
     try
     {
+        std::map<std::string, std::string> parameters;
+
+        for (size_t i = 2; i < static_cast<size_t>(argc); ++i)
+        {
+            const std::string token = argv[i];
+            std::vector<std::string> parameterTokens;
+
+            std::regex separator("=");
+            std::sregex_token_iterator iterator(token.begin(), token.end(), separator, -1);
+            std::copy(iterator, std::sregex_token_iterator(), std::back_inserter(parameterTokens));
+
+            parameters[parameterTokens[0]] = parameterTokens[1];
+        }
+
         ktt::TuningLoader loader;
-        loader.LoadTuningFile(path);
+        loader.LoadTuningFile(path, parameters);
         loader.ExecuteCommands();
     }
     catch (const std::exception& exception)
