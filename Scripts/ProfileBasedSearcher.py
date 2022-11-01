@@ -550,8 +550,8 @@ def scoreTuningConfigurations(changeImportance, tuningparamsNames, actualConf, t
                 if newScoreDistrib[i] > 0.0 :
                     newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
             newScoreDistrib[i] = newScoreDistrib[i]**EXP
-            if newScoreDistrib[i] == 0.0 :
-                newScoreDistrib[i] = 0.0001
+        if newScoreDistrib[i] == 0.0 :
+            newScoreDistrib[i] = 0.0001
 
         # if was 0, set to 0 (explored)
         if scoreDistrib[i] == 0.0 :
@@ -618,8 +618,8 @@ def scoreTuningConfigurationsExact(changeImportance, tuningparamsNames, actualCo
                 if newScoreDistrib[i] > 0.0 :
                     newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
             newScoreDistrib[i] = newScoreDistrib[i]**EXP
-            if newScoreDistrib[i] == 0.0 :
-                newScoreDistrib[i] = 0.0001
+        if newScoreDistrib[i] == 0.0 :
+            newScoreDistrib[i] = 0.0001
 
         # if was 0, set to 0 (explored)
         if scoreDistrib[i] == 0.0 :
@@ -743,7 +743,7 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actu
         print("scoreDistrib interval: ", minScore, maxScore)
     for i in range(0, len(tuningSpace)) :
         if newScoreDistrib[i] < CUTOFF :
-            newScoreDistrib[i] = 0.0
+            newScoreDistrib[i] = 0.0001
         else :
             if newScoreDistrib[i] < 0.0 :
                 newScoreDistrib[i] = 1.0 - (newScoreDistrib[i] / minScore)
@@ -751,8 +751,8 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actu
                 if newScoreDistrib[i] > 0.0 :
                     newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
             newScoreDistrib[i] = newScoreDistrib[i]**EXP
-            if newScoreDistrib[i] == 0.0 :
-                newScoreDistrib[i] = 0.0001
+        if newScoreDistrib[i] == 0.0 :
+            newScoreDistrib[i] = 0.0001
 
         # if was 0, set to 0 (explored)
         if scoreDistrib[i] == 0.0 :
@@ -827,7 +827,7 @@ class PyProfilingSearcher(ktt.Searcher):
 
     def CalculateNextConfiguration(self, previousResult):
         # select the new configuration
-        if len(self.preselectedBatch) > 0:
+        if len(self.preselectedBatch) > 0 and len(previousResult.GetResults()) > 0:
             # we are testing current batch
             if (self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration) :
                 self.bestDuration = previousResult.GetKernelDuration()
@@ -871,10 +871,17 @@ class PyProfilingSearcher(ktt.Searcher):
                         exit(1)
 
                 # select candidate configurations according to position of the best one plus some random sample
-                candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)
-                for i in range (0, 10) :
-                    candidates.append(self.GetRandomConfiguration())
-                candidates = self.GetUniqueConfigurations(candidates)
+                #candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)
+                candidates = []
+                count = 0
+                noAddRandomConfigurations = self.GetUnexploredConfigurationsCount()
+                while count < noAddRandomConfigurations:
+                    for i in range (count, noAddRandomConfigurations) :
+                        candidates.append(self.GetRandomConfiguration())
+                    candidates = self.GetUniqueConfigurations(candidates)
+                    count = len(candidates)
+
+
                 print("Profile-based searcher: evaluating model for " + str(len(candidates)) + " candidates...", flush = True)
 
                 # get tuning space from candidates
@@ -894,6 +901,8 @@ class PyProfilingSearcher(ktt.Searcher):
                 scoreDistrib = [1.0]*len(candidates)
                 bottlenecks = analyzeBottlenecks(pcNames, pcVals, 6.1, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)
                 changes = computeChanges(bottlenecks, self.profilingCountersModel, self.cc)
+                if VERBOSE > 2:
+                    print(self.tuningParamsNames)
                 scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
 
                 # select next batch
