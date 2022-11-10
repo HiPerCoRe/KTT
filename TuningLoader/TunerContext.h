@@ -28,8 +28,6 @@ public:
     KernelId GetKernelId() const;
     std::vector<ArgumentId>& GetArguments();
     const std::vector<ArgumentId>& GetArguments() const;
-    std::vector<ArgumentId>& GetReferenceArguments();
-    const std::vector<ArgumentId>& GetReferenceArguments() const;
     const std::vector<KernelResult>& GetResults() const;
 
 private:
@@ -39,7 +37,6 @@ private:
     KernelDefinitionId m_DefinitionId;
     KernelId m_KernelId;
     std::vector<ArgumentId> m_Arguments;
-    std::vector<ArgumentId> m_ReferenceArguments;
     std::vector<KernelResult> m_Results;
 };
 

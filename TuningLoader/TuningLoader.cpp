@@ -179,9 +179,11 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
         m_Commands.push_back(std::make_unique<CompilerOptionsCommand>(compilerOptionsCommand));
     }
 
+    std::vector<AddArgumentCommand> argumentCommands;
+
     if (kernelSpecification.contains("Arguments"))
     {
-        auto argumentCommands = kernelSpecification["Arguments"].get<std::vector<AddArgumentCommand>>();
+        argumentCommands = kernelSpecification["Arguments"].get<std::vector<AddArgumentCommand>>();
 
         for (const auto& command : argumentCommands)
         {
@@ -189,21 +191,13 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
         }
     }
 
-    if (kernelSpecification.contains("ReferenceData"))
+    if (kernelSpecification.contains("ReferenceArguments"))
     {
-        auto& referenceData = kernelSpecification["ReferenceData"];
-        auto argumentCommands = referenceData["ReferenceArguments"].get<std::vector<AddArgumentCommand>>();
+        auto validationCommands = kernelSpecification["ReferenceArguments"].get<std::vector<ValidationCommand>>();
 
-        for (auto& command : argumentCommands)
+        for (auto& command : validationCommands)
         {
-            command.SetReferenceFlag();
-            m_Commands.push_back(std::make_unique<AddArgumentCommand>(command));
-        }
-
-        auto validationCommands = referenceData["ValidationPairs"].get<std::vector<ValidationCommand>>();
-
-        for (const auto& command : validationCommands)
-        {
+            command.SetReferenceProperties(argumentCommands);
             m_Commands.push_back(std::make_unique<ValidationCommand>(command));
         }
     }

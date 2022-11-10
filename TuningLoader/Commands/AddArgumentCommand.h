@@ -22,7 +22,8 @@ public:
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
 
-    void SetReferenceFlag();
+    void SetReferenceProperties(const AddArgumentCommand& other);
+    const ArgumentId& GetId() const;
 
 private:
     ArgumentId m_Id;

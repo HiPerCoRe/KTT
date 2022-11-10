@@ -44,10 +44,12 @@
       }
     ]
   },
-  "Budget": {
-    "Type": "TuningDuration",
-    "BudgetValue": 60
-  },
+  "Budget": [
+    {
+      "Type": "TuningDuration",
+      "BudgetValue": 60
+    }
+  ],
   "General": {
     "TimeUnit": "Microseconds",
     "OutputFile": "CoulombSum2dOutput",

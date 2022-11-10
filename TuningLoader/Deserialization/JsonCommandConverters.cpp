@@ -37,11 +37,19 @@ void from_json(const json& j, AddArgumentCommand& command)
         j.at("Name").get_to(id);
     }
 
-    ArgumentMemoryType memoryType;
-    j.at("MemoryType").get_to(memoryType);
+    ArgumentMemoryType memoryType = ArgumentMemoryType::Vector;
 
-    ArgumentDataType type;
-    j.at("Type").get_to(type);
+    if (j.contains("MemoryType"))
+    {
+        j.at("MemoryType").get_to(memoryType);
+    }
+
+    ArgumentDataType type = ArgumentDataType::Float;
+
+    if (j.contains("Type"))
+    {
+        j.at("Type").get_to(type);
+    }
 
     size_t size = 0;
 
@@ -262,8 +270,8 @@ void from_json(const json& j, TuneCommand& command)
 
 void from_json(const json& j, ValidationCommand& command)
 {
-    const auto reference = j.at("ReferenceName").get<ArgumentId>();
     const auto target = j.at("TargetName").get<ArgumentId>();
+    const auto reference = j.get<AddArgumentCommand>();
 
     command = ValidationCommand(target, reference);
 }

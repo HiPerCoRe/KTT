@@ -89,16 +89,6 @@ const std::vector<ArgumentId>& TunerContext::GetArguments() const
     return m_Arguments;
 }
 
-std::vector<ArgumentId>& TunerContext::GetReferenceArguments()
-{
-    return m_ReferenceArguments;
-}
-
-const std::vector<ArgumentId>& TunerContext::GetReferenceArguments() const
-{
-    return m_ReferenceArguments;
-}
-
 const std::vector<KernelResult>& TunerContext::GetResults() const
 {
     return m_Results;

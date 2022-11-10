@@ -5,6 +5,25 @@
 
 #include <TuningLoader.h>
 
+std::map<std::string, std::string> ParseParameters(const int argc, char** argv)
+{
+    std::map<std::string, std::string> parameters;
+
+    for (size_t i = 2; i < static_cast<size_t>(argc); ++i)
+    {
+        const std::string token = argv[i];
+        std::vector<std::string> parameterTokens;
+
+        std::regex separator("=");
+        std::sregex_token_iterator iterator(token.begin(), token.end(), separator, -1);
+        std::copy(iterator, std::sregex_token_iterator(), std::back_inserter(parameterTokens));
+
+        parameters[parameterTokens[0]] = parameterTokens[1];
+    }
+
+    return parameters;
+}
+
 int main(int argc, char** argv)
 {
     if (argc < 2)
@@ -13,23 +32,10 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const std::string path = argv[1];
-
     try
     {
-        std::map<std::string, std::string> parameters;
-
-        for (size_t i = 2; i < static_cast<size_t>(argc); ++i)
-        {
-            const std::string token = argv[i];
-            std::vector<std::string> parameterTokens;
-
-            std::regex separator("=");
-            std::sregex_token_iterator iterator(token.begin(), token.end(), separator, -1);
-            std::copy(iterator, std::sregex_token_iterator(), std::back_inserter(parameterTokens));
-
-            parameters[parameterTokens[0]] = parameterTokens[1];
-        }
+        const std::string path = argv[1];
+        const std::map<std::string, std::string> parameters = ParseParameters(argc, argv);
 
         ktt::TuningLoader loader;
         loader.LoadTuningFile(path, parameters);
