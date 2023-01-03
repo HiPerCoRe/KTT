@@ -150,6 +150,16 @@ bool VulkanEngine::SupportsMultiInstanceProfiling() const
     return false;
 }
 
+bool VulkanEngine::IsProfilingActive() const
+{
+    return false;
+}
+
+void VulkanEngine::SetProfiling(const bool profiling)
+{
+    throw KttException("Profiling is not yet supported for Vulkan backend");
+}
+
 TransferActionId VulkanEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
 {
     Timer timer;

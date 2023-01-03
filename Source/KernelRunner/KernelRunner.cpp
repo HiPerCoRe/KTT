@@ -16,8 +16,8 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
     m_Validator(std::make_unique<ResultValidator>(*this)),
     m_Engine(engine),
     m_ArgumentManager(argumentManager),
-    m_ReadOnlyCacheFlag(true),
-    m_ProfilingFlag(false)
+    m_ReadOnlyCacheFlag(true)
+    //m_ProfilingFlag(false)
 {}
 
 KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
@@ -127,12 +127,14 @@ void KernelRunner::SetReadOnlyArgumentCache(const bool flag)
 
 void KernelRunner::SetProfiling(const bool flag)
 {
-    m_ProfilingFlag = flag;
+    //m_ProfilingFlag = flag;
+    m_Engine.SetProfiling(flag);
 }
 
 bool KernelRunner::IsProfilingActive() const
 {
-    return m_ProfilingFlag;
+    //return m_ProfilingFlag;
+    return m_Engine.IsProfilingActive();
 }
 
 void KernelRunner::SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)

@@ -298,6 +298,12 @@ void ComputeLayer::GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBuf
     m_ComputeEngine.GetUnifiedMemoryBufferHandle(id, memoryHandle);
 }
 
+bool ComputeLayer::GetProfiling(const KernelId id) 
+{
+    //return GetData().IsProfilingEnabled(id);
+    return m_ComputeEngine.IsProfilingActive();
+}
+
 void ComputeLayer::SetActiveKernel(const KernelId id)
 {
     KttAssert(m_ActiveKernel == InvalidKernelId, "Unpaired call to set / clear active kernel");

@@ -341,6 +341,14 @@ public:
       * @param memoryHandle Location where the memory handle will be stored.
       */
     virtual void GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBufferMemory& memoryHandle) = 0;
+
+    /** @fn virtual void GetProfiling() = 0
+      * Signals whether profiling is activated in the kernel
+      * @param id Id of queried kernel.
+      */
+    virtual bool GetProfiling(const KernelId id) = 0;
+
+//    virtual bool GetKernelProfiling
 };
 
 } // namespace ktt

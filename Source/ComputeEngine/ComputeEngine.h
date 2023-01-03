@@ -35,6 +35,9 @@ public:
     virtual bool HasAccurateRemainingProfilingRuns() const = 0;
     virtual bool SupportsMultiInstanceProfiling() const = 0;
 
+    virtual bool IsProfilingActive() const = 0;
+    virtual void SetProfiling(const bool profiling) = 0;
+
     // Buffer methods
     virtual TransferActionId UploadArgument(KernelArgument& kernelArgument, const QueueId queueId) = 0;
     virtual TransferActionId UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,

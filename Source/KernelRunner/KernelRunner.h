@@ -50,7 +50,7 @@ private:
     ComputeEngine& m_Engine;
     KernelArgumentManager& m_ArgumentManager;
     bool m_ReadOnlyCacheFlag;
-    bool m_ProfilingFlag;
+    //bool m_ProfilingFlag;
 
     KernelLauncher GetKernelLauncher(const Kernel& kernel);
     KernelResult RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,

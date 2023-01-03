@@ -76,6 +76,7 @@ public:
     KernelResult RunKernel(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
         const std::vector<BufferOutputDescriptor>& output);
     void SetProfiling(const bool flag);
+    bool GetProfiling();
     void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void SetValidationMode(const ValidationMode mode);
     void SetValidationRange(const ArgumentId& id, const size_t range);

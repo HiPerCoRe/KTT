@@ -217,6 +217,12 @@ void TunerCore::SetProfiling(const bool flag)
     m_KernelRunner->SetProfiling(flag);
 }
 
+bool TunerCore::GetProfiling()
+{
+    return m_KernelRunner->IsProfilingActive();
+}
+
+
 void TunerCore::SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
     m_KernelRunner->SetValidationMethod(method, toleranceThreshold);

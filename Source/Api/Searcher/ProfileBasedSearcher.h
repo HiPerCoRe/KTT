@@ -413,6 +413,7 @@ inline const std::string ProfileBasedSearcherModule =
     "    changeImportance = [0.0]*len(countersNames)\n" +
     "\n" +
     "    # memory-subsystem related counters\n" +
+    "    print (countersNames)\n" +
     "    if cc < 7.0 :\n" +
     "        changeImportance[countersNames.index('dram_read_transactions')] = - bottlenecks['bnDRAMRead']\n" +
     "        changeImportance[countersNames.index('dram_write_transactions')] = - bottlenecks['bnDRAMWrite']\n" +
@@ -839,20 +840,26 @@ inline const std::string ProfileBasedSearcherModule =
     "        return uniqueConfigurations\n" +
     "\n" +
     "    def CalculateNextConfiguration(self, previousResult):\n" +
+    "        if (previousResult.IsValid()) and ((self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration)) :\n" +
+    "            self.bestDuration = previousResult.GetKernelDuration()\n" +
+    "            self.bestConf = self.currentConfiguration\n" +
+    "            if VERBOSE > 2:\n" +
+    "                print(\"Found new best configuration \", self.bestDuration, self.bestConf, flush = True)\n" +
+    "        if VERBOSE > 2:\n" +
+    "            print(\"PreselectedBatch has \", len(self.preselectedBatch), \" remaining items:\")\n" +
+    "            ind = []\n" +
+    "            for c in self.preselectedBatch :\n" +
+    "                ind.append(self.GetIndex(c))\n" +
+    "            print(ind, flush = True)\n" +
     "        # select the new configuration\n" +
     "        if len(self.preselectedBatch) > 0:\n" +
     "            # we are testing current batch\n" +
-    "            if (self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration) :\n" +
-    "                self.bestDuration = previousResult.GetKernelDuration()\n" +
-    "                self.bestConf = self.currentConfiguration\n" +
-    "                if VERBOSE > 2:\n" +
-    "                    print(\"Found new best configuration \", self.bestDuration, self.bestConf, flush = True)\n" +
-    "            if VERBOSE > 2:\n" +
-    "                print(\"PreselectedBatch has \", len(self.preselectedBatch), \" remaining items:\")\n" +
-    "                ind = []\n" +
-    "                for c in self.preselectedBatch :\n" +
-    "                    ind.append(self.GetIndex(c))\n" +
-    "                print(ind, flush = True)\n" +
+    "            self.currentConfiguration = self.preselectedBatch.pop(0)\n" +
+    "        elif self.bestConf == None:\n" +
+    "            if VERBOSE > 1:\n"
+    "                print(\"Preselected batch contained invalid configurations only, generating random one.\")\n" +
+    "            for i in range(0, BATCH) :\n" +
+    "                self.preselectedBatch.append(self.GetRandomConfiguration())\n" +
     "            self.currentConfiguration = self.preselectedBatch.pop(0)\n" +
     "        else :\n" +
     "            if VERBOSE > 2:\n" +
@@ -905,7 +912,7 @@ inline const std::string ProfileBasedSearcherModule =
     "\n" +
     "                # score the configurations\n" +
     "                scoreDistrib = [1.0]*len(candidates)\n" +
-    "                bottlenecks = analyzeBottlenecks(pcNames, pcVals, 6.1, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)\n" +
+    "                bottlenecks = analyzeBottlenecks(pcNames, pcVals, 7.5, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)\n" +
     "                changes = computeChanges(bottlenecks, self.profilingCountersModel, self.cc)\n" +
     "                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)\n" +
     "\n" +

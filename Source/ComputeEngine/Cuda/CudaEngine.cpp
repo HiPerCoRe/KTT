@@ -359,6 +359,16 @@ bool CudaEngine::SupportsMultiInstanceProfiling() const
 #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
+bool CudaEngine::IsProfilingActive() const
+{
+    return m_Configuration.IsProfilingActive();
+}
+
+void CudaEngine::SetProfiling(const bool profiling)
+{
+    m_Configuration.SetProfiling(profiling);
+}
+
 TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
 {
     Timer timer;

@@ -425,6 +425,12 @@ void Tuner::SetProfiling(const bool flag)
     }
 }
 
+bool Tuner::GetProfiling()
+{
+    return m_Tuner->GetProfiling();
+}
+
+
 void Tuner::SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
     try

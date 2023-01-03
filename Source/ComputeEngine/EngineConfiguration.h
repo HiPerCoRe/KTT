@@ -21,10 +21,14 @@ public:
     GlobalSizeType GetGlobalSizeType() const;
     bool GetGlobalSizeCorrection() const;
 
+    bool IsProfilingActive() const;
+    void SetProfiling(const bool profiling);
+
 private:
     std::string m_CompilerOptions;
     GlobalSizeType m_GlobalSizeType;
     bool m_GlobalSizeCorrection;
+    bool m_ProfilingFlag;
 };
 
 } // namespace ktt

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include <Ktt.h>
 
@@ -14,12 +15,13 @@ const std::string kernelPrefix = "../";
 
 #if KTT_CUDA_EXAMPLE
     const auto computeApi = ktt::ComputeApi::CUDA;
+    const std::string defaultMlModel = kernelPrefix + "../Examples/AtfSamples/Models/3090-AtfGemm_output_DT.sav";
 #elif KTT_OPENCL_EXAMPLE
     const auto computeApi = ktt::ComputeApi::OpenCL;
 #endif
 
 // Toggle kernel profiling.
-const bool useProfiling = true;
+const bool useProfiling = false;
 
 std::vector<uint64_t> ParameterRange(const uint64_t max)
 {
@@ -74,9 +76,10 @@ int main(int argc, char** argv)
     }
     else if constexpr (activeSample == AtfSampleType::GEMM)
     {
-        inputSize1 = 10;
+        /*inputSize1 = 10;
         inputSize2 = 500;
-        inputSize3 = 64;
+        inputSize3 = 64;*/
+        inputSize1 = inputSize2 = inputSize3 = 2048;
     }
     else if constexpr (activeSample == AtfSampleType::CCSD)
     {
@@ -294,8 +297,11 @@ int main(int argc, char** argv)
 
             const size_t newIntResSize = resSize * ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "NUM_WG_R_1");
             interface.ResizeBuffer(intResId, newIntResSize, false);
-
-            if constexpr (computeApi == ktt::ComputeApi::CUDA && useProfiling)
+            if (useProfiling || interface.GetProfiling(definition))
+                std::cout << "Will profile\n";
+            else
+                std::cout << "Will not profile\n";
+            if (computeApi == ktt::ComputeApi::CUDA && (useProfiling || interface.GetProfiling(definition)))
                 interface.RunKernelWithProfiling(definition);
             else
                 interface.RunKernel(definition);
@@ -838,8 +844,13 @@ int main(int argc, char** argv)
         printf("Executing with profiling switched ON.\n");
         tuner.SetProfiling(true);
     }
+#ifdef KTT_CUDA_EXAMPLE
+    tuner.SetProfileBasedSearcher(kernel, defaultMlModel);
+#else
     tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
+#endif
     auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(100));
+    tuner.SaveResults(results, "AtfOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "AtfOutput", ktt::OutputFormat::XML);
     return 0;
 }

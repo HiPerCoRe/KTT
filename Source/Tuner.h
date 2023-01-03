@@ -559,6 +559,12 @@ public:
       */
     void SetProfiling(const bool flag);
 
+    /** @fn bool GetProfiling()
+     * Returns whether profiling is switched on.
+     * @return true if KTT is set to collect profiling metrics, false otherwise.
+     */
+    bool GetProfiling();
+
     /** @fn void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
       * Sets validation method and tolerance threshold for floating-point argument validation. Default validation method is side
       * by side comparison. Default tolerance threshold is 1e-4.
