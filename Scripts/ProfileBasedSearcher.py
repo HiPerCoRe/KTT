@@ -22,7 +22,7 @@ import pyktt as ktt
 np.printoptions(precision=5, suppress=True)
 
 # verbosity level (0, 1, 2, 3)
-VERBOSE = 0
+VERBOSE = 3
 
 # all constant used by the searcher
 # CORR_SHIFT: value added to correlation (positive forces to search parameters with weak correlation but strong variation)
@@ -550,8 +550,8 @@ def scoreTuningConfigurations(changeImportance, tuningparamsNames, actualConf, t
                 if newScoreDistrib[i] > 0.0 :
                     newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
             newScoreDistrib[i] = newScoreDistrib[i]**EXP
-            if newScoreDistrib[i] == 0.0 :
-                newScoreDistrib[i] = 0.0001
+        if newScoreDistrib[i] == 0.0 :
+            newScoreDistrib[i] = 0.0001
 
         # if was 0, set to 0 (explored)
         if scoreDistrib[i] == 0.0 :
@@ -618,8 +618,8 @@ def scoreTuningConfigurationsExact(changeImportance, tuningparamsNames, actualCo
                 if newScoreDistrib[i] > 0.0 :
                     newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
             newScoreDistrib[i] = newScoreDistrib[i]**EXP
-            if newScoreDistrib[i] == 0.0 :
-                newScoreDistrib[i] = 0.0001
+        if newScoreDistrib[i] == 0.0 :
+            newScoreDistrib[i] = 0.0001
 
         # if was 0, set to 0 (explored)
         if scoreDistrib[i] == 0.0 :
@@ -751,8 +751,8 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actu
                 if newScoreDistrib[i] > 0.0 :
                     newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
             newScoreDistrib[i] = newScoreDistrib[i]**EXP
-            if newScoreDistrib[i] == 0.0 :
-                newScoreDistrib[i] = 0.0001
+        if newScoreDistrib[i] == 0.0 :
+            newScoreDistrib[i] = 0.0001
 
         # if was 0, set to 0 (explored)
         if scoreDistrib[i] == 0.0 :
@@ -826,20 +826,26 @@ class PyProfilingSearcher(ktt.Searcher):
         return uniqueConfigurations
 
     def CalculateNextConfiguration(self, previousResult):
+        if (previousResult.IsValid()) and ((self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration)) :
+            self.bestDuration = previousResult.GetKernelDuration()
+            self.bestConf = self.currentConfiguration
+            if VERBOSE > 2:
+                print("Found new best configuration ", self.bestDuration, self.bestConf, flush = True)
+        if VERBOSE > 2:
+            print("PreselectedBatch has ", len(self.preselectedBatch), " remaining items:")
+            ind = []
+            for c in self.preselectedBatch :
+                ind.append(self.GetIndex(c))
+            print(ind, flush = True)
         # select the new configuration
         if len(self.preselectedBatch) > 0:
             # we are testing current batch
-            if (self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration) :
-                self.bestDuration = previousResult.GetKernelDuration()
-                self.bestConf = self.currentConfiguration
-                if VERBOSE > 2:
-                    print("Found new best configuration ", self.bestDuration, self.bestConf, flush = True)
-            if VERBOSE > 2:
-                print("PreselectedBatch has ", len(self.preselectedBatch), " remaining items:")
-                ind = []
-                for c in self.preselectedBatch :
-                    ind.append(self.GetIndex(c))
-                print(ind, flush = True)
+            self.currentConfiguration = self.preselectedBatch.pop(0)
+        elif self.bestConf == None:
+            if VERBOSE > 1:\n"
+                print("Preselected batch contained invalid configurations only, generating random one.")
+            for i in range(0, BATCH) :
+                self.preselectedBatch.append(self.GetRandomConfiguration())
             self.currentConfiguration = self.preselectedBatch.pop(0)
         else :
             if VERBOSE > 2:
@@ -892,8 +898,8 @@ class PyProfilingSearcher(ktt.Searcher):
 
                 # score the configurations
                 scoreDistrib = [1.0]*len(candidates)
-                bottlenecks = analyzeBottlenecks(pcNames, pcVals, 6.1, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)
-                changes = computeChanges(bottlenecks, self.profilingCountersModel, self.cc)
+                bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)
+                changes = computeChanges(bottlenecks, self.profilingCountersModel, 6.1)
                 scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
 
                 # select next batch

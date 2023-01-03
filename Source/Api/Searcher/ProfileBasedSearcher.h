@@ -413,7 +413,6 @@ inline const std::string ProfileBasedSearcherModule =
     "    changeImportance = [0.0]*len(countersNames)\n" +
     "\n" +
     "    # memory-subsystem related counters\n" +
-    "    print (countersNames)\n" +
     "    if cc < 7.0 :\n" +
     "        changeImportance[countersNames.index('dram_read_transactions')] = - bottlenecks['bnDRAMRead']\n" +
     "        changeImportance[countersNames.index('dram_write_transactions')] = - bottlenecks['bnDRAMWrite']\n" +
@@ -912,8 +911,8 @@ inline const std::string ProfileBasedSearcherModule =
     "\n" +
     "                # score the configurations\n" +
     "                scoreDistrib = [1.0]*len(candidates)\n" +
-    "                bottlenecks = analyzeBottlenecks(pcNames, pcVals, 7.5, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)\n" +
-    "                changes = computeChanges(bottlenecks, self.profilingCountersModel, self.cc)\n" +
+    "                bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)\n" +
+    "                changes = computeChanges(bottlenecks, self.profilingCountersModel, 6.1)\n" +
     "                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)\n" +
     "\n" +
     "                # select next batch\n" +
