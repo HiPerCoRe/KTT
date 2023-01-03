@@ -101,6 +101,13 @@ public:
       */
     uint64_t GetConfigurationsCount() const;
 
+    /**
+     * @fn uint64_t GetUnexploredConfigurationsCount() const
+     * Return number of unexplored kernel configurations
+     * @return Number of unexplored kernel configurations
+     */
+    uint64_t GetUnexploredConfigurationsCount() const;
+
     /** @fn const std::set<uint64_t>& GetExploredIndices() const
       * Returns indices of already explored configurations.
       * @return Indices of already explored configurations.

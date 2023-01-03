@@ -50,6 +50,7 @@
         "Name": "result",
         "Type": "float",
         "Size": 1048576,
+        "TypeSize": 4,
         "FillType": "Constant",
         "FillValue": 0.0,
         "AccessType": "WriteOnly",
@@ -62,25 +63,13 @@
         "MemoryType": "Scalar"
       }
     ],
-    "ReferenceData": {
-      "ReferenceArguments": [
-        {
-          "Name": "reference",
-          "Type": "float",
-          "Size": 1048576,
-          "TypeSize": 4,
-          "FillType": "Generator",
-          "DataSource": "2 * i + 3",
-          "AccessType": "ReadOnly",
-          "MemoryType": "Vector"
-        }
-      ],
-      "ValidationPairs": [
-        {
-          "ReferenceName": "reference",
-          "TargetName": "result"
-        }
-      ]
-    }
+    "ReferenceArguments": [
+      {
+        "Name": "reference",
+        "FillType": "Generator",
+        "DataSource": "2 * i + 3",
+        "TargetName": "result"
+      }
+    ]
   }
 }

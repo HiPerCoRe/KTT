@@ -53,6 +53,7 @@ void InitializePythonSearchers(py::module_& module)
             py::arg("maxNeighbours") = 3
         )
         .def("GetConfigurationsCount", &ktt::Searcher::GetConfigurationsCount)
+        .def("GetUnexploredConfigurationsCount", &ktt::Searcher::GetUnexploredConfigurationsCount)
         .def("GetExploredIndices", &ktt::Searcher::GetExploredIndices, py::return_value_policy::reference)
         .def("IsInitialized", &ktt::Searcher::IsInitialized);
 

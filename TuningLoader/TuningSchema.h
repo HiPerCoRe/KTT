@@ -339,33 +339,39 @@ R"(
                         }
                     }
                 },
-                "ReferenceData": {
-                    "type": "object",
+                "ReferenceArguments": {
+                    "type": "array",
                     "required": [
-                        "ReferenceArguments",
-                        "ValidationPairs"
+                        "Name",
+                        "TargetName",
+                        "FillType"
                     ],
                     "properties": {
-                        "ReferenceArguments": {
-                            "type": "array"
+                        "Name": {
+                            "type": "string"
                         },
-                        "ValidationPairs": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "required": [
-                                    "ReferenceName",
-                                    "TargetName"
-                                ],
-                                "properties": {
-                                    "ReferenceName": {
-                                        "type": "string"
-                                    },
-                                    "TargetName": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
+                        "TargetName": {
+                            "type": "string"
+                        },
+                        "FillType": {
+                            "enum": [
+                                "Constant",
+                                "Random",
+                                "Generator",
+                                "Script",
+                                "BinaryRaw",
+                                "BinaryHDF"
+                            ]
+                        },
+                        "FillValue": {
+                            "type": "number",
+                            "examples": [
+                                40,
+                                1.0
+                            ]
+                        },
+                        "DataSource": {
+                            "type": "string"
                         }
                     }
                 }

@@ -61,10 +61,6 @@ void AddArgumentCommand::Execute(TunerContext& context)
         context.GetArguments().push_back(id);
         context.GetTuner().SetArguments(context.GetKernelDefinitionId(), context.GetArguments());
     }
-    else
-    {
-        context.GetReferenceArguments().push_back(id);
-    }
 }
 
 CommandPriority AddArgumentCommand::GetPriority() const
@@ -72,9 +68,19 @@ CommandPriority AddArgumentCommand::GetPriority() const
     return CommandPriority::KernelArgument;
 }
 
-void AddArgumentCommand::SetReferenceFlag()
+void AddArgumentCommand::SetReferenceProperties(const AddArgumentCommand& other)
 {
+    m_MemoryType = other.m_MemoryType;
+    m_Type = other.m_Type;
+    m_ElementCount = other.m_ElementCount;
+    m_ElementSize = other.m_ElementSize;
+    m_AccessType = other.m_AccessType;
     m_IsReference = true;
+}
+
+const ArgumentId& AddArgumentCommand::GetId() const
+{
+    return m_Id;
 }
 
 ArgumentId AddArgumentCommand::SubmitScalarArgument(TunerContext& context) const

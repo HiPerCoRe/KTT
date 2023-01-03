@@ -9,13 +9,11 @@ autotuning convergence on GPUs. JPDC, vol. 160, 2021.
 '''
 
 import random
-import math
-from operator import add
 import csv
 import pickle
 import numpy as np
-import pandas as pd
-import sys
+import signal
+import pdb
 
 import pyktt as ktt
 
@@ -23,6 +21,9 @@ np.printoptions(precision=5, suppress=True)
 
 # verbosity level (0, 1, 2, 3)
 VERBOSE = 3
+if VERBOSE > 2:
+    signal.signal(signal.SIGINT, lambda sig, frame: pdb.Pdb().set_trace(frame))
+    #pdb.Pdb().set_trace()
 
 # all constant used by the searcher
 # CORR_SHIFT: value added to correlation (positive forces to search parameters with weak correlation but strong variation)
@@ -119,9 +120,9 @@ def loadModels(modelFiles) :
         TPassignments[tuningparamsNames[j]] = TPassignmentsUnsorted[tuningparamsNames[j]]
     return [tuningparamsNames, TPassignments, conditionsAllModels, PCassignmentsAllModels, counters]
 
-def prepareForModelsEvaluation(TPassignments, conditionsAllModels, tuningSpace) :
+#def prepareForModelsEvaluation(TPassignments, conditionsAllModels, tuningSpace) :
 
-        applicableModelsOrder = prepareForModelsEvaluation(tuningparamsAssignments, conditions, configurationsData)
+ #       applicableModelsOrder = prepareForModelsEvaluation(tuningparamsAssignments, conditions, configurationsData)
 
 def loadCompleteMapping(tuningSpace, rangeT, rangeC) :
     tuningSpace.seek(0)
@@ -240,8 +241,8 @@ def analyzeBottlenecks (countersNames, countersData, cc, multiprocessors, cores)
         bnSMRead = (SMldTrans / (SMldTrans + SMstTrans)) * (SMutil / 10.0)
         bnSMWrite = (SMstTrans / (SMldTrans + SMstTrans)) * (SMutil / 10.0)
     else:
-        bnSMRead = 0;
-        bnSMWrite = 0;
+        bnSMRead = 0
+        bnSMWrite = 0
     bottlenecks['bnSMRead'] = bnSMRead
     bottlenecks['bnSMWrite'] = bnSMWrite
 
@@ -542,7 +543,7 @@ def scoreTuningConfigurations(changeImportance, tuningparamsNames, actualConf, t
         print("scoreDistrib interval: ", minScore, maxScore)
     for i in range(0, len(tuningSpace)) :
         if newScoreDistrib[i] < CUTOFF :
-            newScoreDistrib[i] = 0.0
+            newScoreDistrib[i] = 0.0001
         else :
             if newScoreDistrib[i] < 0.0 :
                 newScoreDistrib[i] = 1.0 - (newScoreDistrib[i] / minScore)
@@ -550,7 +551,7 @@ def scoreTuningConfigurations(changeImportance, tuningparamsNames, actualConf, t
                 if newScoreDistrib[i] > 0.0 :
                     newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
             newScoreDistrib[i] = newScoreDistrib[i]**EXP
-        if newScoreDistrib[i] == 0.0 :
+        if newScoreDistrib[i] < 0.0001 :
             newScoreDistrib[i] = 0.0001
 
         # if was 0, set to 0 (explored)
@@ -602,7 +603,7 @@ def scoreTuningConfigurationsExact(changeImportance, tuningparamsNames, actualCo
                 try:
                     newScoreDistrib[i] = newScoreDistrib[i] + changeImportance[j] * (myPC[j] - actualPC[j]) / (myPC[j]+actualPC[j])
                 except ZeroDivisionError :
-                        newScoreDistrib[i] = newScoreDistrib[i] + 0.0
+                    newScoreDistrib[i] = newScoreDistrib[i] + 0.0
 
     minScore = min(newScoreDistrib)
     maxScore = max(newScoreDistrib)
@@ -618,7 +619,7 @@ def scoreTuningConfigurationsExact(changeImportance, tuningparamsNames, actualCo
                 if newScoreDistrib[i] > 0.0 :
                     newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
             newScoreDistrib[i] = newScoreDistrib[i]**EXP
-        if newScoreDistrib[i] == 0.0 :
+        if newScoreDistrib[i] < 0.0001 :
             newScoreDistrib[i] = 0.0001
 
         # if was 0, set to 0 (explored)
@@ -720,7 +721,6 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actu
                 uniformScoreDistrib[i] = 0.0
         return uniformScoreDistrib
 
-    cmIdx = 0
 
     #################################################### Using ML predictor
     predictedMyPC = loaded_model.predict(tuningSpace)
@@ -743,7 +743,7 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actu
         print("scoreDistrib interval: ", minScore, maxScore)
     for i in range(0, len(tuningSpace)) :
         if newScoreDistrib[i] < CUTOFF :
-            newScoreDistrib[i] = 0.0
+            newScoreDistrib[i] = 0.0001
         else :
             if newScoreDistrib[i] < 0.0 :
                 newScoreDistrib[i] = 1.0 - (newScoreDistrib[i] / minScore)
@@ -751,7 +751,7 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actu
                 if newScoreDistrib[i] > 0.0 :
                     newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
             newScoreDistrib[i] = newScoreDistrib[i]**EXP
-        if newScoreDistrib[i] == 0.0 :
+        if newScoreDistrib[i] < 0.0001 :
             newScoreDistrib[i] = 0.0001
 
         # if was 0, set to 0 (explored)
@@ -797,7 +797,9 @@ class PyProfilingSearcher(ktt.Searcher):
         for i in range(0, BATCH) :
             self.preselectedBatch.append(self.GetRandomConfiguration())
         self.currentConfiguration = self.preselectedBatch[0]
-        self.preselectedBatch.pop(0)
+        if BATCH > 1:
+            #if BATCH==1, we need to keep the only configuration in batch, so that the profiling can be run on it. otherwise, we end up with an empty batch with nothing to profile.
+            self.preselectedBatch.pop(0)
 
         tp = self.currentConfiguration.GetPairs()
         for p in tp :
@@ -842,7 +844,7 @@ class PyProfilingSearcher(ktt.Searcher):
             # we are testing current batch
             self.currentConfiguration = self.preselectedBatch.pop(0)
         elif self.bestConf == None:
-            if VERBOSE > 1:\n"
+            if VERBOSE > 1:
                 print("Preselected batch contained invalid configurations only, generating random one.")
             for i in range(0, BATCH) :
                 self.preselectedBatch.append(self.GetRandomConfiguration())
@@ -877,10 +879,17 @@ class PyProfilingSearcher(ktt.Searcher):
                         exit(1)
 
                 # select candidate configurations according to position of the best one plus some random sample
-                candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)
-                for i in range (0, 10) :
-                    candidates.append(self.GetRandomConfiguration())
-                candidates = self.GetUniqueConfigurations(candidates)
+                #candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)
+                candidates = [] #TODO this version ignores neighrbours, test also with GetNeighbourConfigurations + GetRandomConfiguration
+                count = 0
+                noAddRandomConfigurations = self.GetUnexploredConfigurationsCount()
+                while count < noAddRandomConfigurations:
+                    for i in range (count, noAddRandomConfigurations) :
+                        candidates.append(self.GetRandomConfiguration())
+                    candidates = self.GetUniqueConfigurations(candidates)
+                    count = len(candidates)
+
+
                 print("Profile-based searcher: evaluating model for " + str(len(candidates)) + " candidates...", flush = True)
 
                 # get tuning space from candidates
@@ -896,35 +905,45 @@ class PyProfilingSearcher(ktt.Searcher):
                 for p in tp :
                     myTuningSpace.append(p.GetValue())
 
+                if VERBOSE > 2:
+                    print("Candidates space done", flush = True)
+
                 # score the configurations
                 scoreDistrib = [1.0]*len(candidates)
                 bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)
                 changes = computeChanges(bottlenecks, self.profilingCountersModel, 6.1)
+                if VERBOSE > 2:
+                    print(self.tuningParamsNames)
                 scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
+
+                if VERBOSE > 2:
+                    print("Scoring of the candidates done.", flush = True)
 
                 # select next batch
                 selectedIndices = []
                 if len(candidates) > BATCH :
                     numInBatch = 0
-                    while numInBatch < BATCH:
+                    while numInBatch < BATCH :
                         idx = weightedRandomSearchStep(scoreDistrib, len(candidates))
-                        if selectedIndices == [] or idx not in selectedIndices:
                         #check if we have not chosen the same configuration in previous iterations
+                        if selectedIndices == [] or idx not in selectedIndices:
                             self.preselectedBatch.append(candidates[idx])
                             selectedIndices.append(idx)
                             numInBatch = numInBatch + 1
+                            scoreDistrib[idx] = 0.0
                 else:
                     for i in range(0, len(candidates)):
                         self.preselectedBatch.append(candidates[i])
 
                 if VERBOSE == 3:
                     print("Turning off profiling, new batch selected with length ", len(self.preselectedBatch), " with configurations ")
-                ind = []
-                for c in self.preselectedBatch :
-                    ind.append(self.GetIndex(c))
-                print(ind, flush = True)
+                    ind = []
+                    for c in self.preselectedBatch :
+                        ind.append(self.GetIndex(c))
+                    print(ind, flush = True)
                 self.currentConfiguration = self.preselectedBatch[0]
-                self.preselectedBatch.pop(0)
+                if BATCH > 1:
+                    self.preselectedBatch.pop(0)
                 self.bestConf = None
                 self.tuner.SetProfiling(False)
 

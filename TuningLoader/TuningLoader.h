@@ -1,6 +1,7 @@
 #pragma once
 
 #include <istream>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -19,7 +20,7 @@ public:
     TuningLoader();
     ~TuningLoader();
 
-    void LoadTuningFile(const std::string& file);
+    void LoadTuningFile(const std::string& file, const std::map<std::string, std::string>& parameters = {});
     void ExecuteCommands();
 
 private:
@@ -28,6 +29,7 @@ private:
 
     void DeserializeCommands(const std::string& tuningScript);
     static bool ValidateFormat(const std::string& tuningScript);
+    static std::string InjectParameters(const std::string& file, const std::map<std::string, std::string>& parameters);
 };
 
 } // namespace ktt

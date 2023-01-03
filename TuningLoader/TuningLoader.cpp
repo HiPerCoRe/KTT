@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <sstream>
 
 #include <json-schema.hpp>
@@ -25,7 +26,7 @@ TuningLoader::TuningLoader() :
 
 TuningLoader::~TuningLoader() = default;
 
-void TuningLoader::LoadTuningFile(const std::string& file)
+void TuningLoader::LoadTuningFile(const std::string& file, const std::map<std::string, std::string>& parameters)
 {
     std::ifstream inputStream(file);
 
@@ -39,7 +40,8 @@ void TuningLoader::LoadTuningFile(const std::string& file)
 
     std::stringstream stream;
     stream << inputStream.rdbuf();
-    const std::string tuningScript = stream.str();
+    std::string tuningScript = stream.str();
+    tuningScript = InjectParameters(tuningScript, parameters);
 
     if (!ValidateFormat(tuningScript))
     {
@@ -177,9 +179,11 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
         m_Commands.push_back(std::make_unique<CompilerOptionsCommand>(compilerOptionsCommand));
     }
 
+    std::vector<AddArgumentCommand> argumentCommands;
+
     if (kernelSpecification.contains("Arguments"))
     {
-        auto argumentCommands = kernelSpecification["Arguments"].get<std::vector<AddArgumentCommand>>();
+        argumentCommands = kernelSpecification["Arguments"].get<std::vector<AddArgumentCommand>>();
 
         for (const auto& command : argumentCommands)
         {
@@ -187,21 +191,13 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
         }
     }
 
-    if (kernelSpecification.contains("ReferenceData"))
+    if (kernelSpecification.contains("ReferenceArguments"))
     {
-        auto& referenceData = kernelSpecification["ReferenceData"];
-        auto argumentCommands = referenceData["ReferenceArguments"].get<std::vector<AddArgumentCommand>>();
+        auto validationCommands = kernelSpecification["ReferenceArguments"].get<std::vector<ValidationCommand>>();
 
-        for (auto& command : argumentCommands)
+        for (auto& command : validationCommands)
         {
-            command.SetReferenceFlag();
-            m_Commands.push_back(std::make_unique<AddArgumentCommand>(command));
-        }
-
-        auto validationCommands = referenceData["ValidationPairs"].get<std::vector<ValidationCommand>>();
-
-        for (const auto& command : validationCommands)
-        {
+            command.SetReferenceProperties(argumentCommands);
             m_Commands.push_back(std::make_unique<ValidationCommand>(command));
         }
     }
@@ -243,6 +239,19 @@ bool TuningLoader::ValidateFormat(const std::string& tuningScript)
     }
 
     return true;
+}
+
+std::string TuningLoader::InjectParameters(const std::string& file, const std::map<std::string, std::string>& parameters)
+{
+    std::string output = file;
+
+    for (const auto& pair : parameters)
+    {
+        std::regex symbolicek("\\$" + pair.first);
+        output = std::regex_replace(output, symbolicek, pair.second);
+    }
+
+    return output;
 }
 
 } // namespace ktt
