@@ -256,7 +256,7 @@ def analyzeBottlenecks (countersNames, countersData, cc, multiprocessors, cores)
 
     # analyze global parallelism
     if cc < 7.0 :
-        smEfficiency = countersData[countersNames.index("sm_efficiency")]
+        smEfficiency = 100.0 #countersData[countersNames.index("sm_efficiency")] #commented-out as with driver 515.65.01 and CUDA 11.7, sm_efficiency shows weird behaviour
     else :
         smEfficiency = countersData[countersNames.index("smsp__cycles_active.avg.pct_of_peak_sustained_elapsed")]
     bnGparal = (100.0 - smEfficiency) / 100.0
@@ -736,6 +736,10 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actu
     res = np.nan_to_num(res)
     newScoreDistrib = res.sum(axis=1)
 
+    if VERBOSE > 2 :
+        for i in range(0, len(tuningSpace)) :
+            print(tuningSpace[i], ": ", newScoreDistrib[i])
+
 
     minScore = min(newScoreDistrib)
     maxScore = max(newScoreDistrib)
@@ -865,7 +869,7 @@ class PyProfilingSearcher(ktt.Searcher):
                 localSize = previousResult.GetResults()[0].GetLocalSize()
                 profilingCountersRun = previousResult.GetResults()[0].GetProfilingData().GetCounters() #FIXME this supposes there is no composition profiled
                 pcNames = ["Global size", "Local size"]
-                pcVals = [globalSize.GetTotalSize(), localSize.GetTotalSize()]
+                pcVals = [globalSize.GetTotalSize()*localSize.GetTotalSize(), localSize.GetTotalSize()]
                 for pd in profilingCountersRun :
                     pcNames.append(pd.GetName())
                     if (pd.GetType() == ktt.ProfilingCounterType.Int) :
@@ -909,6 +913,8 @@ class PyProfilingSearcher(ktt.Searcher):
                     print("Candidates space done", flush = True)
 
                 # score the configurations
+                #print("pcNames", pcNames)
+                #print("pcVals", pcVals)
                 scoreDistrib = [1.0]*len(candidates)
                 bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)
                 changes = computeChanges(bottlenecks, self.profilingCountersModel, 6.1)

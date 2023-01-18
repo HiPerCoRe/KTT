@@ -269,7 +269,7 @@ std::string() +
 "\n" +
 "    # analyze global parallelism\n" +
 "    if cc < 7.0 :\n" +
-"        smEfficiency = countersData[countersNames.index(\"sm_efficiency\")]\n" +
+"        smEfficiency = 100.0 #countersData[countersNames.index(\"sm_efficiency\")] #commented-out as with driver 515.65.01 and CUDA 11.7, sm_efficiency shows weird behaviour\n" +
 "    else :\n" +
 "        smEfficiency = countersData[countersNames.index(\"smsp__cycles_active.avg.pct_of_peak_sustained_elapsed\")]\n" +
 "    bnGparal = (100.0 - smEfficiency) / 100.0\n" +
@@ -749,6 +749,10 @@ std::string() +
 "    res = np.nan_to_num(res)\n" +
 "    newScoreDistrib = res.sum(axis=1)\n" +
 "\n" +
+"    if VERBOSE > 2 :\n" +
+"        for i in range(0, len(tuningSpace)) :\n" +
+"            print(tuningSpace[i], \": \", newScoreDistrib[i])\n" +
+"\n" +
 "\n" +
 "    minScore = min(newScoreDistrib)\n" +
 "    maxScore = max(newScoreDistrib)\n" +
@@ -878,7 +882,7 @@ std::string() +
 "                localSize = previousResult.GetResults()[0].GetLocalSize()\n" +
 "                profilingCountersRun = previousResult.GetResults()[0].GetProfilingData().GetCounters() #FIXME this supposes there is no composition profiled\n" +
 "                pcNames = [\"Global size\", \"Local size\"]\n" +
-"                pcVals = [globalSize.GetTotalSize(), localSize.GetTotalSize()]\n" +
+"                pcVals = [globalSize.GetTotalSize()*localSize.GetTotalSize(), localSize.GetTotalSize()]\n" +
 "                for pd in profilingCountersRun :\n" +
 "                    pcNames.append(pd.GetName())\n" +
 "                    if (pd.GetType() == ktt.ProfilingCounterType.Int) :\n" +
@@ -922,6 +926,8 @@ std::string() +
 "                    print(\"Candidates space done\", flush = True)\n" +
 "\n" +
 "                # score the configurations\n" +
+"                #print(\"pcNames\", pcNames)\n" +
+"                #print(\"pcVals\", pcVals)\n" +
 "                scoreDistrib = [1.0]*len(candidates)\n" +
 "                bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)\n" +
 "                changes = computeChanges(bottlenecks, self.profilingCountersModel, 6.1)\n" +
