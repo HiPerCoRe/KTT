@@ -2,8 +2,9 @@ KTT - Kernel Tuning Toolkit
 ===========================
 <img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogo.png" width="425" height="150"/>
 
-KTT is an autotuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 2.1 which introduces
-API bindings for Python and new onboarding guide is now available.
+KTT is an autotuning framework for **OpenCL**, **CUDA** kernels and **GLSL** compute shaders. It primarily focus to
+GPU accelerators, but can be used to auto-tune also code for different devices (e.g., CPUs) when OpenCL is utilized. 
+Version 2.1 which introduces API bindings for Python and new onboarding guide is now available.
 
 Main features
 -------------
@@ -67,6 +68,7 @@ systems are Linux and Windows.
       and Vulkan SDK
     - Command line build tool [Premake 5](https://premake.github.io/download)
     - (Optional) Python 3 with NumPy for Python bindings support
+    - (Optional) NVIDIA CUPTI, or AMD GPU Performance API for profiling and profile-based searcher
     
 * Build under Linux (inside KTT root folder):
     - ensure that path to vendor SDK is correctly set in the environment variables
@@ -92,11 +94,11 @@ systems are Linux and Windows.
     - `--no-cuda` disables the inclusion of CUDA API during compilation, only affects Nvidia platform
     - `--no-opencl` disables the inclusion of OpenCL API during compilation
 
-* KTT and applications that utilize it rely on external dynamic (shared) libraries to work correctly. There are
-  multiple ways to provide access to these libraries, e.g., copying a given library inside the application folder or adding the
-  containing folder to the library path (example for Linux: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/shared/library).
+* KTT rely on external dynamic (shared) libraries to work correctly. There are
+  multiple ways to provide access to these libraries, e.g., copying a given library inside the application folder or adding the containing 
+  folder to the library path (example for Linux: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/shared/library).
   Libraries which are bundled with device drivers are usually visible by default. The list of libraries currently utilized
-  by KTT:
+  by KTT (typically nor all libraries are required, depending on settings of the premake5 execution):
     - `OpenCL` distributed with specific device drivers (OpenCL only)
     - `cuda` distributed with specific device drivers (CUDA only)
     - `nvrtc` distributed with specific device drivers (CUDA only)
@@ -106,6 +108,18 @@ systems are Linux and Windows.
     - `GPUPerfAPICL` bundled with KTT distribution (AMD OpenCL profiling only)
     - `vulkan` distributed with specific device drivers (Vulkan only)
     - `shaderc_shared` bundled with Vulkan SDK (Vulkan only)
+
+Using KTT in user's applications
+--------------------------------
+Applications using KTT need to link KTT dynamic library and include KTT headers. 
+
+* Application has to include Ktt.h (located in KTT/Source folder)
+* During application build, KTT headers have to be available, e.g., by copying them into standard headers location, or by passing their 
+  position to the compiler (by, e.g., -Ilocation_of_my_KTT/Source with g++)
+* During application build, KTT library has to be linked, e.g., by -lktt, or -Llocation_of_my_KTT/Build/x86_64_Release/ -lktt. KTT dynamic
+  library can be also copied into standard location of dynamic libraries (e.g., /usr/lib).
+* During application execution, KTT library have to be available (e.g., located in the application's folder, in standard location for dynamic
+  libraries, or any place included in corresponding environmental variable, such as LD_LIBRARY_PATH)
     
 Python bindings
 ---------------
