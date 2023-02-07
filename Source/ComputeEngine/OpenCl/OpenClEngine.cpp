@@ -285,7 +285,8 @@ void OpenClEngine::SetProfiling(const bool profiling)
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     m_Configuration.SetProfiling(profiling);
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    if (profiling)
+        throw KttException("Support for kernel profiling is not included in this version of KTT framework");
 #endif
 }
 

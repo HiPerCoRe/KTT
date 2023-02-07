@@ -69,8 +69,8 @@ int main(int argc, char** argv)
     }
 
     // Total NDRange size matches number of grid points
-    const ktt::DimensionVector ndRangeDimensions(numberOfBodies);
-    const ktt::DimensionVector workGroupDimensions;
+    const ktt::DimensionVector ndRangeDimensions(numberOfBodies, 1);
+    const ktt::DimensionVector workGroupDimensions(1, 1);
     const ktt::DimensionVector referenceWorkGroupDimensions(64);
 
     const float timeDelta = 0.001f;
@@ -147,7 +147,7 @@ int main(int argc, char** argv)
     // Multiply work-group size in dimensions x and y by two parameters that follow (effectively setting work-group size to parameters' values)
     if constexpr (!useDenseParameters && !useWideParameters)
     {
-        tuner.AddParameter(kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{64, 128, 256, 512});
+        tuner.AddParameter(kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{16, 32, 64, 128, 256, 512});
     }
     else if constexpr (!useWideParameters)
     {
@@ -160,6 +160,12 @@ int main(int argc, char** argv)
     }
 
     tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+        ktt::ModifierAction::Multiply);
+
+    tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8, 16});
+    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+        ktt::ModifierAction::Multiply);
+    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
         ktt::ModifierAction::Multiply);
 
     if constexpr (!useWideParameters)
@@ -178,6 +184,9 @@ int main(int argc, char** argv)
     {
         tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
         tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0});
+        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0});
+
     }
     else
     {
@@ -190,7 +199,7 @@ int main(int argc, char** argv)
 
     if constexpr (computeApi == ktt::ComputeApi::OpenCL)
     {
-        tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0, 1});
+        tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
         tuner.AddParameter(kernel, "VECTOR_TYPE", std::vector<uint64_t>{1, 2, 4, 8, 16});
     }
     else
@@ -225,6 +234,8 @@ int main(int argc, char** argv)
     tuner.AddConstraint(kernel, {"INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2"}, lteq256);
     auto vectorizedSoA = [](const std::vector<uint64_t>& vector) {return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1);};
     tuner.AddConstraint(kernel, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
+    auto blockSize = [](const std::vector<uint64_t>& vector) {return (vector.at(0) * vector.at(1) >= 64) && (vector.at(0) * vector.at(1) <= 1024);};
+    tuner.AddConstraint(kernel, std::vector<std::string>{"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, blockSize);
 
     // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
     tuner.SetArguments(definition, std::vector<ktt::ArgumentId>{deltaTimeId,
@@ -243,6 +254,7 @@ int main(int argc, char** argv)
 
     const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "NbodyOutput", ktt::OutputFormat::JSON);
+    tuner.SaveResults(results, "NbodyOutput", ktt::OutputFormat::XML);
 
     return 0;
 }

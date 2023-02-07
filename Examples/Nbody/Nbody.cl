@@ -192,10 +192,10 @@ __kernel void nbody_kernel(float timeDelta,
 	int n)
 {
 	// buffers for bodies info processed by the work group
-	__local vector bufferPosX[WORK_GROUP_SIZE_X];
-	__local vector bufferPosY[WORK_GROUP_SIZE_X];
-	__local vector bufferPosZ[WORK_GROUP_SIZE_X];
-	__local vector bufferMass[WORK_GROUP_SIZE_X];
+	__local vector bufferPosX[WORK_GROUP_SIZE_Y][WORK_GROUP_SIZE_X];
+	__local vector bufferPosY[WORK_GROUP_SIZE_Y][WORK_GROUP_SIZE_X];
+	__local vector bufferPosZ[WORK_GROUP_SIZE_Y][WORK_GROUP_SIZE_X];
+	__local vector bufferMass[WORK_GROUP_SIZE_Y][WORK_GROUP_SIZE_X];
 	
     // each thread holds a position/mass of the body it represents
     float bodyPos[OUTER_UNROLL_FACTOR][3];
@@ -217,12 +217,16 @@ __kernel void nbody_kernel(float timeDelta,
 		bodyPos, bodyVel, &bodyMass); // values to be filled
 	
 	int blocks = n / (WORK_GROUP_SIZE_X * VECTOR_TYPE); // each calculates effect of WORK_GROUP_SIZE_X atoms to currect, i.e. thread's, one
+
+    int start = (blocks * get_local_id(1)) / get_local_size(1);
+    int end = (blocks * (get_local_id(1)+1)) / get_local_size(1);
+
 	// start the calculation, process whole blocks
-	for (int i = 0; i < blocks; i++) {
+	for (int i = start; i < end; i++) {
 		#if LOCAL_MEM == 1 
 			// load new values to buffer.
 			// We know that all threads can be used now, so no condition is necessary
-			fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX, bufferPosY, bufferPosZ, bufferMass, i * WORK_GROUP_SIZE_X);
+			fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX[get_local_id(1)], bufferPosY[get_local_id(1)], bufferPosZ[get_local_id(1)], bufferMass[get_local_id(1)], i * WORK_GROUP_SIZE_X);
 			barrier(CLK_LOCAL_MEM_FENCE);
 		#endif // LOCAL_MEM == 1 
 			// calculate the acceleration between the thread body and each other body loaded to buffer
@@ -236,7 +240,7 @@ __kernel void nbody_kernel(float timeDelta,
 			for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
 				#if LOCAL_MEM == 1
 					updateAcc(bodyAcc[j], bodyPos[j],
-						bufferPosX[index], bufferPosY[index], bufferPosZ[index], bufferMass[index],
+						bufferPosX[get_local_id(1)][index], bufferPosY[get_local_id(1)][index], bufferPosZ[get_local_id(1)][index], bufferMass[get_local_id(1)][index],
 						softeningSqr);
 				#else // LOCAL_MEM != 1
 					updateAccGM(bodyAcc[j], bodyPos[j],
@@ -252,31 +256,58 @@ __kernel void nbody_kernel(float timeDelta,
 
 	}
 	
-	// sum elements of acceleration vector, if any
-	float resAccX, resAccY, resAccZ;
-	int index = get_global_id(0) * OUTER_UNROLL_FACTOR;
-    #if INNER_UNROLL_FACTOR2 > 0
-	# pragma unroll INNER_UNROLL_FACTOR2
+    #if WORK_GROUP_SIZE_Y > 1
+    // reduce bodyAcc
+    __local vector bodyAccSh[OUTER_UNROLL_FACTOR][3][WORK_GROUP_SIZE_Y][WORK_GROUP_SIZE_X];
+    for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
+        bodyAccSh[j][0][get_local_id(1)][get_local_id(0)] = bodyAcc[j][0];
+        bodyAccSh[j][1][get_local_id(1)][get_local_id(0)] = bodyAcc[j][1];
+        bodyAccSh[j][2][get_local_id(1)][get_local_id(0)] = bodyAcc[j][2];
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
+    if (get_local_id(1) == 0) {
+        for (int i = 1; i < WORK_GROUP_SIZE_Y; i++) {
+            for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
+                bodyAccSh[j][0][0][get_local_id(0)] += bodyAccSh[j][0][i][get_local_id(0)];
+                bodyAccSh[j][1][0][get_local_id(0)] += bodyAccSh[j][1][i][get_local_id(0)];
+                bodyAccSh[j][2][0][get_local_id(0)] += bodyAccSh[j][2][i][get_local_id(0)];
+            }
+        }
+        for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
+            bodyAcc[j][0] = bodyAccSh[j][0][0][get_local_id(0)];
+            bodyAcc[j][1] = bodyAccSh[j][1][0][get_local_id(0)];
+            bodyAcc[j][2] = bodyAccSh[j][2][0][get_local_id(0)];
+        }
+    }
     #endif
-	for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
-		resAccX = resAccY = resAccZ = 0.f;
-		for (int i = 0; i < VECTOR_TYPE; i++) 
-		{
-			resAccX += ((float*)&bodyAcc[j][0])[i];
-			resAccY += ((float*)&bodyAcc[j][1])[i];
-			resAccZ += ((float*)&bodyAcc[j][2])[i];
-		}
+
+    if (get_local_id(1) == 0) {
+    	// sum elements of acceleration vector, if any
+	    float resAccX, resAccY, resAccZ;
+    	int index = get_global_id(0) * OUTER_UNROLL_FACTOR;
+        #if INNER_UNROLL_FACTOR2 > 0
+    	# pragma unroll INNER_UNROLL_FACTOR2
+        #endif
+    	for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
+	    	resAccX = resAccY = resAccZ = 0.f;
+		    for (int i = 0; i < VECTOR_TYPE; i++) 
+    		{
+	    		resAccX += ((float*)&bodyAcc[j][0])[i];
+		    	resAccY += ((float*)&bodyAcc[j][1])[i];
+			    resAccZ += ((float*)&bodyAcc[j][2])[i];
+    		}
 			
-		// 'export' result
-		// calculate resulting position 	
-		float resPosX = bodyPos[j][0] + timeDelta * bodyVel[j][0] + damping * timeDelta * timeDelta * resAccX;
-		float resPosY = bodyPos[j][1] + timeDelta * bodyVel[j][1] + damping * timeDelta * timeDelta * resAccY;
-		float resPosZ = bodyPos[j][2] + timeDelta * bodyVel[j][2] + damping * timeDelta * timeDelta * resAccZ;
-		newBodyInfo[index + j] = (float4)(resPosX, resPosY, resPosZ, bodyMass[j]);
-		// calculate resulting velocity	
-		float resVelX = bodyVel[j][0] + timeDelta * resAccX;
-		float resVelY = bodyVel[j][1] + timeDelta * resAccY;
-		float resVelZ = bodyVel[j][2] + timeDelta * resAccZ;
-		newVel[index + j] = (float4)(resVelX, resVelY, resVelZ, 0.f);
-	}
+	    	// 'export' result
+		    // calculate resulting position 	
+    		float resPosX = bodyPos[j][0] + timeDelta * bodyVel[j][0] + damping * timeDelta * timeDelta * resAccX;
+	    	float resPosY = bodyPos[j][1] + timeDelta * bodyVel[j][1] + damping * timeDelta * timeDelta * resAccY;
+		    float resPosZ = bodyPos[j][2] + timeDelta * bodyVel[j][2] + damping * timeDelta * timeDelta * resAccZ;
+    		newBodyInfo[index + j] = (float4)(resPosX, resPosY, resPosZ, bodyMass[j]);
+	    	// calculate resulting velocity	
+		    float resVelX = bodyVel[j][0] + timeDelta * resAccX;
+    		float resVelY = bodyVel[j][1] + timeDelta * resAccY;
+	    	float resVelZ = bodyVel[j][2] + timeDelta * resAccZ;
+		    newVel[index + j] = (float4)(resVelX, resVelY, resVelZ, 0.f);
+    	}
+    }
 }
