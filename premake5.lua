@@ -92,9 +92,9 @@ function linkLibrariesNvidia()
     includedirs {"$(CUDA_PATH)/include"}
         
     if os.target() == "linux" then
-        libdirs {"$(CUDA_PATH)/lib64"}
+        libdirs {"$(CUDA_PATH)/lib64", "$(CUDA_PATH)/lib64/stubs"}
     else
-        libdirs {"$(CUDA_PATH)/lib/x64"}
+        libdirs {"$(CUDA_PATH)/lib/x64", "$(CUDA_PATH)/lib/x64/stubs"}
     end
     
     if not _OPTIONS["no-opencl"] then
