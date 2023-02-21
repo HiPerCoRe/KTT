@@ -1,3 +1,9 @@
+# Tutorial demonstrating usage of KTT in python and passing user-defined
+# python-implemented stop-condition and searcher into KTT
+# Users are recommended to start with KTT Introductory guide
+# at https://github.com/HiPerCoRe/KTT/blob/master/OnboardingGuide.md
+# before reading the tutorial's code.
+
 import sys
 import numpy as np
 import pyktt as ktt
@@ -21,7 +27,7 @@ class PyConfigurationFraction(ktt.StopCondition):
 
     def GetStatusString(self):
         return "Current fraction of explored configurations: " + str(self.currentCount / self.totalCount) + " / " + str(self.fraction)
-    
+
     fraction = 0.0
     currentCount = 0
     totalCount = 0
@@ -34,22 +40,22 @@ class PyRandomSearcher(ktt.Searcher):
 
     def OnInitialize(self):
         self.currentConfiguration = self.GetRandomConfiguration()
-        
+
     def CalculateNextConfiguration(self, previousResult):
         self.currentConfiguration = self.GetRandomConfiguration()
         return True
-        
+
     def GetCurrentConfiguration(self):
         return self.currentConfiguration
 
     currentConfiguration = ktt.KernelConfiguration()
-    
+
 def main():
     deviceIndex = 0
     kernelFile = "./CudaKernel.cu"
 
     argc = len(sys.argv)
-    
+
     if argc >= 2:
         deviceIndex = sys.argv[1]
 
@@ -59,16 +65,16 @@ def main():
     numberOfElements = 1024 * 1024
     gridDimensions = ktt.DimensionVector(numberOfElements)
     blockDimensions = ktt.DimensionVector()
-    
+
     a = np.arange(1.0, numberOfElements + 1, dtype = np.single)
     b = np.arange(1.0, numberOfElements + 1, dtype = np.single)
     result = np.zeros(numberOfElements, dtype = np.single)
     scalarValue = np.single(3.0)
-    
+
     tuner = ktt.Tuner(0, deviceIndex, ktt.ComputeApi.CUDA)
 
     definition = tuner.AddKernelDefinitionFromFile("vectorAddition", kernelFile, gridDimensions, blockDimensions)
-    
+
     aId = tuner.AddArgumentVectorFloat(a, ktt.ArgumentAccessType.ReadOnly)
     bId = tuner.AddArgumentVectorFloat(b, ktt.ArgumentAccessType.ReadOnly)
     resultId = tuner.AddArgumentVectorFloat(result, ktt.ArgumentAccessType.WriteOnly)
@@ -76,7 +82,7 @@ def main():
     tuner.SetArguments(definition, [aId, bId, resultId, scalarId])
 
     kernel = tuner.CreateSimpleKernel("Addition", definition)
-    
+
     tuner.AddParameter(kernel, "multiply_block_size", [32, 64, 128, 256])
     tuner.AddThreadModifier(kernel, [definition], ktt.ModifierType.Local, ktt.ModifierDimension.X, "multiply_block_size",
         ktt.ModifierAction.Multiply)
@@ -85,9 +91,9 @@ def main():
 
     # Make tuner user the searcher implemented in Python.
     tuner.SetSearcher(kernel, PyRandomSearcher())
-    
+
     tuner.SetTimeUnit(ktt.TimeUnit.Microseconds)
-    
+
     # Begin tuning utilizing the stop condition implemented in Python.
     results = tuner.Tune(kernel, PyConfigurationFraction(0.4))
     tuner.SaveResults(results, "TuningOutput", ktt.OutputFormat.JSON)
