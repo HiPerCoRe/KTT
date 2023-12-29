@@ -15,7 +15,8 @@ const std::string kernelPrefix = "../";
 
 #if KTT_CUDA_EXAMPLE
     const auto computeApi = ktt::ComputeApi::CUDA;
-    const std::string defaultMlModel = kernelPrefix + "../Examples/AtfSamples/Models/3090-AtfGemm_output_DT.sav";
+    //const std::string defaultMlModel = kernelPrefix + "../Examples/AtfSamples/Models/2080Ti-AtfGEMM_output_DT.sav"; //GEMM is composition, which cannot be fully profiled in KTT (only the first kernel is profiled & navigated, which does not work well)
+    const std::string defaultMlModel = kernelPrefix + "../Examples/AtfSamples/Models/2080Ti-AtfConvolution_output_DT.sav";
 #elif KTT_OPENCL_EXAMPLE
     const auto computeApi = ktt::ComputeApi::OpenCL;
 #endif
@@ -43,7 +44,7 @@ enum class AtfSampleType
     PRL
 };
 
-constexpr AtfSampleType activeSample = AtfSampleType::GEMM;
+constexpr AtfSampleType activeSample = AtfSampleType::Convolution;
 const std::string kernelPath = kernelPrefix + "../Examples/AtfSamples/";
 
 int main(int argc, char** argv)
@@ -134,6 +135,7 @@ int main(int argc, char** argv)
 
     ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
     tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+    tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
     ktt::KernelDefinitionId definition;
     ktt::KernelDefinitionId definition2;
     ktt::KernelId kernel;
@@ -845,11 +847,12 @@ int main(int argc, char** argv)
         tuner.SetProfiling(true);
     }
 #ifdef KTT_CUDA_EXAMPLE
-    tuner.SetProfileBasedSearcher(kernel, defaultMlModel);
+    //tuner.SetProfileBasedSearcher(kernel, defaultMlModel);
+    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
 #else
     tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
 #endif
-    auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(100));
+    auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(2));
     tuner.SaveResults(results, "AtfOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "AtfOutput", ktt::OutputFormat::XML);
     return 0;
