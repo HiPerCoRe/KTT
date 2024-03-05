@@ -14,6 +14,7 @@ import pickle
 import numpy as np
 import signal
 import pdb
+import json
 
 import pyktt as ktt
 
@@ -768,24 +769,19 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actu
     return newScoreDistrib
 
 # auxiliary functions
-def readPCList (filename) :
-    ret = []
-    pcListFile = open(filename, 'r')
-    if pcListFile.readline().rstrip() != 'Profiling counter' :
-        print('Malformed PC list file!')
-        return ret
-    for line in pcListFile.readlines():
-        ret.append(line.rstrip())
-    pcListFile.close()
+def loadMLModelMetadata (filename) :
+    metadata = {}
+    with open(filename, 'r') as metadataFile:
+        metadata = json.load(metadataFile)
 
-    return ret
+    return metadata
 
 class PyProfilingSearcher(ktt.Searcher):
     ccMajor = 0
     ccMinor = 0
     cc = 0
     multiprocessors = 0
-    profilingCountersModel = 0
+    modelMetadata = 0
     bestDuration = -1
     bestConf = None
     preselectedBatch = []
@@ -816,7 +812,7 @@ class PyProfilingSearcher(ktt.Searcher):
         self.cc = self.ccMajor + round(0.1 * self.ccMinor, 1)
         self.multiprocessors = tuner.GetCurrentDeviceInfo().GetMaxComputeUnits()
 
-        self.profilingCountersModel = readPCList(modelFile + ".pc")
+        self.modelMetadata = loadMLModelMetadata(modelFile + ".metadata.json")
         self.model = loadMLModel(modelFile)
 
     def GetUniqueConfigurations(self, configurations):
@@ -919,11 +915,13 @@ class PyProfilingSearcher(ktt.Searcher):
                 # score the configurations
                 #print("pcNames", pcNames)
                 #print("pcVals", pcVals)
+
                 scoreDistrib = [1.0]*len(candidates)
                 bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)
-                changes = computeChanges(bottlenecks, self.profilingCountersModel, 7.5)
+                changes = computeChanges(bottlenecks, self.modelMetadata['pc'], self.modelMetadata['cc'])
                 if VERBOSE > 2:
                     print(self.tuningParamsNames)
+                    print(self.modelMetadata['tp'])
                 scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
 
                 if VERBOSE > 2:

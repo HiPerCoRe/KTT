@@ -27,6 +27,7 @@ std::string() +
 "import numpy as np\n" +
 "import signal\n" +
 "import pdb\n" +
+"import json\n" +
 "\n" +
 "import pyktt as ktt\n" +
 "\n" +
@@ -781,24 +782,19 @@ std::string() +
 "    return newScoreDistrib\n" +
 "\n" +
 "# auxiliary functions\n" +
-"def readPCList (filename) :\n" +
-"    ret = []\n" +
-"    pcListFile = open(filename, 'r')\n" +
-"    if pcListFile.readline().rstrip() != 'Profiling counter' :\n" +
-"        print('Malformed PC list file!')\n" +
-"        return ret\n" +
-"    for line in pcListFile.readlines():\n" +
-"        ret.append(line.rstrip())\n" +
-"    pcListFile.close()\n" +
+"def loadMLModelMetadata (filename) :\n" +
+"    metadata = {}\n" +
+"    with open(filename, 'r') as metadataFile:\n" +
+"        metadata = json.load(metadataFile)\n" +
 "\n" +
-"    return ret\n" +
+"    return metadata\n" +
 "\n" +
 "class PyProfilingSearcher(ktt.Searcher):\n" +
 "    ccMajor = 0\n" +
 "    ccMinor = 0\n" +
 "    cc = 0\n" +
 "    multiprocessors = 0\n" +
-"    profilingCountersModel = 0\n" +
+"    modelMetadata = 0\n" +
 "    bestDuration = -1\n" +
 "    bestConf = None\n" +
 "    preselectedBatch = []\n" +
@@ -829,7 +825,7 @@ std::string() +
 "        self.cc = self.ccMajor + round(0.1 * self.ccMinor, 1)\n" +
 "        self.multiprocessors = tuner.GetCurrentDeviceInfo().GetMaxComputeUnits()\n" +
 "\n" +
-"        self.profilingCountersModel = readPCList(modelFile + \".pc\")\n" +
+"        self.modelMetadata = loadMLModelMetadata(modelFile + \".metadata.json\")\n" +
 "        self.model = loadMLModel(modelFile)\n" +
 "\n" +
 "    def GetUniqueConfigurations(self, configurations):\n" +
@@ -932,11 +928,13 @@ std::string() +
 "                # score the configurations\n" +
 "                #print(\"pcNames\", pcNames)\n" +
 "                #print(\"pcVals\", pcVals)\n" +
+"\n" +
 "                scoreDistrib = [1.0]*len(candidates)\n" +
 "                bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)\n" +
-"                changes = computeChanges(bottlenecks, self.profilingCountersModel, 7.5)\n" +
+"                changes = computeChanges(bottlenecks, self.modelMetadata['pc'], self.modelMetadata['cc'])\n" +
 "                if VERBOSE > 2:\n" +
 "                    print(self.tuningParamsNames)\n" +
+"                    print(self.modelMetadata['tp'])\n" +
 "                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)\n" +
 "\n" +
 "                if VERBOSE > 2:\n" +
@@ -971,6 +969,41 @@ std::string() +
 "                self.tuner.SetProfiling(False)\n" +
 "\n" +
 "        return True\n" +
+"\n" +
+"    def GetCurrentConfiguration(self):\n" +
+"        return self.currentConfiguration\n" +
+"\n" +
+"    def convertSM2Cores(self):\n" +
+"        smToCoresDict = {\n" +
+"            0x30: 192,\n" +
+"            0x32: 192,\n" +
+"            0x35: 192,\n" +
+"            0x37: 192,\n" +
+"            0x50: 128,\n" +
+"            0x52: 128,\n" +
+"            0x53: 128,\n" +
+"            0x60: 64,\n" +
+"            0x61: 128,\n" +
+"            0x62: 128,\n" +
+"            0x70: 64,\n" +
+"            0x72: 64,\n" +
+"            0x75: 64,\n" +
+"            0x80: 64,\n" +
+"            0x86: 64\n" +
+"        }\n" +
+"        defaultSM = 64\n" +
+"\n" +
+"        compact = (self.ccMajor << 4) + self.ccMinor\n" +
+"        if compact in smToCoresDict:\n" +
+"            return smToCoresDict[compact]\n" +
+"        else:\n" +
+"            print(\"Warning: unknown number of cores for SM \" + str(self.ccMajor) + \".\" + str(self.ccMinor) + \", using default value of \" + str(defaultSM))\n" +
+"            return defaultSM\n" +
+"\n" +
+"def executeSearcher(tuner, kernel, model):\n" +
+"    searcher = PyProfilingSearcher()\n" +
+"    tuner.SetSearcher(kernel, searcher)\n" +
+"    searcher.Configure(tuner, model)\n" +
 "\n" +
 "    def GetCurrentConfiguration(self):\n" +
 "        return self.currentConfiguration\n" +
