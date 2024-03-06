@@ -712,7 +712,7 @@ std::string() +
 "    return pickle.load(open(trainedKnowledgeBase, 'rb'))\n" +
 "\n" +
 "########################### Temp function\n" +
-"def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actualConf, tuningSpace, scoreDistrib, loaded_model):\n" +
+"def scoreTuningConfigurationsPredictor(changeImportance, tuningParametersReorderingFromSearchSpaceToModel, actualConf, tuningSpace, scoreDistrib, loaded_model):\n" +
 "    def mulfunc(a, b, c):\n" +
 "        if (a * (b - c)) > 0.0:\n" +
 "            return 1.0\n" +
@@ -725,7 +725,8 @@ std::string() +
 "    actualPC = []\n" +
 "\n" +
 "    # Using ML predictor\n" +
-"    predictedPC = loaded_model.predict([actualConf])\n" +
+"    reorderedActualConf = reorderList(actualConf, tuningParametersReorderingFromSearchSpaceToModel)\n" +
+"    predictedPC = loaded_model.predict([reorderedActualConf])\n" +
 "    actualPC = list(predictedPC.flatten())\n" +
 "\n" +
 "    if len(actualPC) == 0 :\n" +
@@ -737,7 +738,8 @@ std::string() +
 "\n" +
 "\n" +
 "    #################################################### Using ML predictor\n" +
-"    predictedMyPC = loaded_model.predict(tuningSpace)\n" +
+"    reorderedTuningSpace = reorderTuningSpace(tuningSpace, tuningParametersReorderingFromSearchSpaceToModel)\n" +
+"    predictedMyPC = loaded_model.predict(reorderedTuningSpace)\n" +
 "    predictedMyPC1 = np.array(predictedMyPC)\n" +
 "    actualPC1 = np.array(actualPC)\n" +
 "    n = len(changeImportance) - len(actualPC1)\n" +
@@ -789,6 +791,15 @@ std::string() +
 "\n" +
 "    return metadata\n" +
 "\n" +
+"def reorderList(data, reorderingIndices) :\n" +
+"    return [x for _, x in sorted(zip(reorderingIndices, data))]\n" +
+"\n" +
+"def reorderTuningSpace(data, reorderingIndices) :\n" +
+"    reorderedData = []\n" +
+"    for row in data:\n" +
+"        reorderedData.append(reorderList(row, reorderingIndices))\n" +
+"    return reorderedData\n" +
+"\n" +
 "class PyProfilingSearcher(ktt.Searcher):\n" +
 "    ccMajor = 0\n" +
 "    ccMinor = 0\n" +
@@ -802,6 +813,7 @@ std::string() +
 "    currentConfiguration = ktt.KernelConfiguration()\n" +
 "    tuner = None\n" +
 "    model = None\n" +
+"    tuningParametersReorderingFromSearchSpaceToModel = 0\n" +
 "\n" +
 "    def __init__(self):\n" +
 "        ktt.Searcher.__init__(self)\n" +
@@ -817,6 +829,11 @@ std::string() +
 "        tp = self.currentConfiguration.GetPairs()\n" +
 "        for p in tp :\n" +
 "            self.tuningParamsNames.append(p.GetName())\n" +
+"        self.tuningParametersReorderingFromSearchSpaceToModel = []\n" +
+"        for tp in self.tuningParamsNames:\n" +
+"            self.tuningParametersReorderingFromSearchSpaceToModel.append(self.modelMetadata['tp'].index(tp))\n" +
+"        if VERBOSE > 2:\n" +
+"            print(\"tuning parameters reordering list \", self.tuningParametersReorderingFromSearchSpaceToModel)\n" +
 "\n" +
 "    def Configure(self, tuner, modelFile):\n" +
 "        self.tuner = tuner\n" +
@@ -935,7 +952,7 @@ std::string() +
 "                if VERBOSE > 2:\n" +
 "                    print(self.tuningParamsNames)\n" +
 "                    print(self.modelMetadata['tp'])\n" +
-"                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)\n" +
+"                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParametersReorderingFromSearchSpaceToModel, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)\n" +
 "\n" +
 "                if VERBOSE > 2:\n" +
 "                    print(\"Scoring of the candidates done.\", flush = True)\n" +
@@ -969,41 +986,6 @@ std::string() +
 "                self.tuner.SetProfiling(False)\n" +
 "\n" +
 "        return True\n" +
-"\n" +
-"    def GetCurrentConfiguration(self):\n" +
-"        return self.currentConfiguration\n" +
-"\n" +
-"    def convertSM2Cores(self):\n" +
-"        smToCoresDict = {\n" +
-"            0x30: 192,\n" +
-"            0x32: 192,\n" +
-"            0x35: 192,\n" +
-"            0x37: 192,\n" +
-"            0x50: 128,\n" +
-"            0x52: 128,\n" +
-"            0x53: 128,\n" +
-"            0x60: 64,\n" +
-"            0x61: 128,\n" +
-"            0x62: 128,\n" +
-"            0x70: 64,\n" +
-"            0x72: 64,\n" +
-"            0x75: 64,\n" +
-"            0x80: 64,\n" +
-"            0x86: 64\n" +
-"        }\n" +
-"        defaultSM = 64\n" +
-"\n" +
-"        compact = (self.ccMajor << 4) + self.ccMinor\n" +
-"        if compact in smToCoresDict:\n" +
-"            return smToCoresDict[compact]\n" +
-"        else:\n" +
-"            print(\"Warning: unknown number of cores for SM \" + str(self.ccMajor) + \".\" + str(self.ccMinor) + \", using default value of \" + str(defaultSM))\n" +
-"            return defaultSM\n" +
-"\n" +
-"def executeSearcher(tuner, kernel, model):\n" +
-"    searcher = PyProfilingSearcher()\n" +
-"    tuner.SetSearcher(kernel, searcher)\n" +
-"    searcher.Configure(tuner, model)\n" +
 "\n" +
 "    def GetCurrentConfiguration(self):\n" +
 "        return self.currentConfiguration\n" +

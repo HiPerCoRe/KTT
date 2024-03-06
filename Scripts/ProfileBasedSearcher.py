@@ -699,7 +699,7 @@ def loadMLModel(trainedKnowledgeBase):
     return pickle.load(open(trainedKnowledgeBase, 'rb'))
 
 ########################### Temp function
-def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actualConf, tuningSpace, scoreDistrib, loaded_model):
+def scoreTuningConfigurationsPredictor(changeImportance, tuningParametersReorderingFromSearchSpaceToModel, actualConf, tuningSpace, scoreDistrib, loaded_model):
     def mulfunc(a, b, c):
         if (a * (b - c)) > 0.0:
             return 1.0
@@ -712,7 +712,8 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actu
     actualPC = []
 
     # Using ML predictor
-    predictedPC = loaded_model.predict([actualConf])
+    reorderedActualConf = reorderList(actualConf, tuningParametersReorderingFromSearchSpaceToModel)
+    predictedPC = loaded_model.predict([reorderedActualConf])
     actualPC = list(predictedPC.flatten())
 
     if len(actualPC) == 0 :
@@ -724,7 +725,8 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actu
 
 
     #################################################### Using ML predictor
-    predictedMyPC = loaded_model.predict(tuningSpace)
+    reorderedTuningSpace = reorderTuningSpace(tuningSpace, tuningParametersReorderingFromSearchSpaceToModel)
+    predictedMyPC = loaded_model.predict(reorderedTuningSpace)
     predictedMyPC1 = np.array(predictedMyPC)
     actualPC1 = np.array(actualPC)
     n = len(changeImportance) - len(actualPC1)
@@ -776,6 +778,15 @@ def loadMLModelMetadata (filename) :
 
     return metadata
 
+def reorderList(data, reorderingIndices) :
+    return [x for _, x in sorted(zip(reorderingIndices, data))]
+
+def reorderTuningSpace(data, reorderingIndices) :
+    reorderedData = []
+    for row in data:
+        reorderedData.append(reorderList(row, reorderingIndices))
+    return reorderedData
+
 class PyProfilingSearcher(ktt.Searcher):
     ccMajor = 0
     ccMinor = 0
@@ -789,6 +800,7 @@ class PyProfilingSearcher(ktt.Searcher):
     currentConfiguration = ktt.KernelConfiguration()
     tuner = None
     model = None
+    tuningParametersReorderingFromSearchSpaceToModel = 0
 
     def __init__(self):
         ktt.Searcher.__init__(self)
@@ -804,6 +816,11 @@ class PyProfilingSearcher(ktt.Searcher):
         tp = self.currentConfiguration.GetPairs()
         for p in tp :
             self.tuningParamsNames.append(p.GetName())
+        self.tuningParametersReorderingFromSearchSpaceToModel = []
+        for tp in self.tuningParamsNames:
+            self.tuningParametersReorderingFromSearchSpaceToModel.append(self.modelMetadata['tp'].index(tp))
+        if VERBOSE > 2:
+            print("tuning parameters reordering list ", self.tuningParametersReorderingFromSearchSpaceToModel)
 
     def Configure(self, tuner, modelFile):
         self.tuner = tuner
@@ -922,7 +939,7 @@ class PyProfilingSearcher(ktt.Searcher):
                 if VERBOSE > 2:
                     print(self.tuningParamsNames)
                     print(self.modelMetadata['tp'])
-                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
+                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParametersReorderingFromSearchSpaceToModel, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
 
                 if VERBOSE > 2:
                     print("Scoring of the candidates done.", flush = True)
