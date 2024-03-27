@@ -66,16 +66,7 @@ int main(int argc, char** argv)
 
     // Declare and initialize data
     const int gridSize = 256;
-    int atoms;
-
-    if constexpr (!useProfiling)
-    {
-        atoms = 256;
-    }
-    else
-    {
-        atoms = 64; /* faster execution of slowly profiled kernel */
-    }
+    int atoms = 64;
 
     const ktt::DimensionVector referenceNdRangeDimensions(gridSize / 16, gridSize / 16, gridSize);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
@@ -230,6 +221,7 @@ int main(int argc, char** argv)
         tuner.SetReferenceKernel(gridId, referenceKernel, ktt::KernelConfiguration());
         tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
+    tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
 
 #if KTT_CUDA_EXAMPLE
     if constexpr (useProfileSearcher)
