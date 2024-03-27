@@ -15,7 +15,7 @@ const std::string kernelPrefix = "../";
     const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cu";
     const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3dReference.cu";
     const auto computeApi = ktt::ComputeApi::CUDA;
-    const std::string defaultMlModel = kernelPrefix + "../Examples/CoulombSum3d/Models/1070-coulomb_output_DT.sav";
+    const std::string defaultMlModel = kernelPrefix + "../Examples/CoulombSum3d/Models/2080-coulomb_output_DT.sav";
 #elif KTT_OPENCL_EXAMPLE
     const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cl";
     const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3dReference.cl";
