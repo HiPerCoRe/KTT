@@ -809,9 +809,7 @@ class PyProfilingSearcher(ktt.Searcher):
         for i in range(0, BATCH) :
             self.preselectedBatch.append(self.GetRandomConfiguration())
         self.currentConfiguration = self.preselectedBatch[0]
-        if BATCH > 1:
-            #if BATCH==1, we need to keep the only configuration in batch, so that the profiling can be run on it. otherwise, we end up with an empty batch with nothing to profile.
-            self.preselectedBatch.pop(0)
+        self.preselectedBatch.pop(0)
 
         tp = self.currentConfiguration.GetPairs()
         for p in tp :
@@ -967,8 +965,7 @@ class PyProfilingSearcher(ktt.Searcher):
                         ind.append(self.GetIndex(c))
                     print(ind, flush = True)
                 self.currentConfiguration = self.preselectedBatch[0]
-                if BATCH > 1:
-                    self.preselectedBatch.pop(0)
+                self.preselectedBatch.pop(0)
                 self.bestConf = None
                 self.tuner.SetProfiling(False)
 
