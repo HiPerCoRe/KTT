@@ -10,7 +10,7 @@ namespace ktt
 inline const std::string ProfileBasedSearcherName = "ProfileBasedSearcher";
 inline const std::string ProfileBasedSearcherFile = "ProfileBasedSearcher.py";
 inline const std::string ProfileBasedSearcherModule =
-std::string() +
+td::string() +
 "#!/usr/bin/env python  -W ignore::DeprecationWarning\n" +
 "\n" +
 "'''\n" +
@@ -50,11 +50,17 @@ std::string() +
 "# REACT_TO_INST_BOTTLENECKS: minimal instructions bottlenecks, which affects scoring of tuning configurations\n" +
 "# CUTOFF: maximal score of configurations, which are discarded from tuning space\n" +
 "# BATCH: number of configuration from which the fastest one is profiled\n" +
+"# NEIGHBOR_SIZE: number of neighboring configurations that are used for batch selection\n" +
+"# RANDOM_SIZE: number of random configurations that are used for batch selection\n" +
+"# NEIGHBOR_DISTANCE: distance between configurations (how many TP have different values) that are still considered neighbors\n" +
 "CORR_SHIFT = 0.0\n" +
 "EXP = 8\n" +
 "REACT_TO_INST_BOTTLENECKS = 0.7\n" +
 "CUTOFF = -0.25\n" +
 "BATCH = 2\n" +
+"NEIGHBOR_SIZE = 100\n" +
+"RANDOM_SIZE = 10\n" +
+"NEIGHBOR_DISTANCE = 2\n" +
 "\n" +
 "########################### auxiliary functions ################################\n" +
 "\n" +
@@ -834,8 +840,12 @@ std::string() +
 "        ktt.Searcher.__init__(self)\n" +
 "\n" +
 "    def OnInitialize(self):\n" +
-"        for i in range(0, BATCH) :\n" +
-"            self.preselectedBatch.append(self.GetRandomConfiguration())\n" +
+"        count = 0\n" +
+"        while count < BATCH:\n" +
+"            for i in range (count, BATCH) :\n" +
+"                self.preselectedBatch.append(self.GetRandomConfiguration())\n" +
+"            self.preselectedBatch = self.GetUniqueConfigurations(self.preselectedBatch)\n" +
+"            count = len(self.preselectedBatch)\n" +
 "        if VERBOSE > 0:\n" +
 "            print(\"[Profile-based searcher info] Batch initialized with configurations \", getConfigurationIndices(self, self.preselectedBatch))\n" +
 "\n" +
@@ -928,19 +938,18 @@ std::string() +
 "                        exit(1)\n" +
 "\n" +
 "                # select candidate configurations according to position of the best one plus some random sample\n" +
-"                #candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)\n" +
-"                #candidates = [] #TODO this version ignores neighrbours, test also with GetNeighbourConfigurations + GetRandomConfiguration\n" +
-"                #count = 0\n" +
-"                #noAddRandomConfigurations = max(100, self.GetUnexploredConfigurationsCount())\n" +
-"                #while count < noAddRandomConfigurations:\n" +
-"                #    for i in range (count, noAddRandomConfigurations) :\n" +
-"                #        candidates.append(self.GetRandomConfiguration())\n" +
-"                #    candidates = self.GetUniqueConfigurations(candidates)\n" +
-"                #    count = len(candidates)\n" +
-"                noAddRandomConfigurations = min(100, self.GetUnexploredConfigurationsCount())\n" +
-"                candidates = []\n" +
-"                for i in range (0, noAddRandomConfigurations) :\n" +
-"                    candidates.append(self.GetRandomConfiguration())\n" +
+"                candidates = self.GetNeighbourConfigurations(self.bestConf, NEIGHBOR_DISTANCE, NEIGHBOR_SIZE)\n" +
+"                # make sure we don't have repeating configurations in the candidates list\n" +
+"                candidates = self.GetUniqueConfigurations(candidates)\n" +
+"                # batch size needs to decrease at the end of the searc, as we don't have enough unexplored configurations\n" +
+"                maxPossibleBatchSize = min(NEIGHBOR_SIZE, self.GetUnexploredConfigurationsCount())\n" +
+"                # add random configurations to fill up the batch\n" +
+"                count = len(candidates)\n" +
+"                while count < maxPossibleBatchSize:\n" +
+"                    for i in range (count, maxPossibleBatchSize) :\n" +
+"                        candidates.append(self.GetRandomConfiguration())\n" +
+"                    candidates = self.GetUniqueConfigurations(candidates)\n" +
+"                    count = len(candidates)\n" +
 "\n" +
 "\n" +
 "                if VERBOSE > 1:\n" +
