@@ -38,46 +38,28 @@ std::string() +
 "# REACT_TO_INST_BOTTLENECKS: minimal instructions bottlenecks, which affects scoring of tuning configurations\n" +
 "# CUTOFF: maximal score of configurations, which are discarded from tuning space\n" +
 "# BATCH: number of configuration from which the fastest one is profiled\n" +
+"# NEIGHBOR_SIZE: number of neighboring configurations that are used for batch selection\n" +
+"# RANDOM_SIZE: number of random configurations that are used for batch selection\n" +
+"# NEIGHBOR_DISTANCE: distance between configurations (how many TP have different values) that are still considered neighbors\n" +
 "CORR_SHIFT = 0.0\n" +
 "EXP = 8\n" +
 "REACT_TO_INST_BOTTLENECKS = 0.7\n" +
 "CUTOFF = -0.25\n" +
 "BATCH = 2\n" +
+"NEIGHBOR_SIZE = 100\n" +
+"RANDOM_SIZE = 10\n" +
+"NEIGHBOR_DISTANCE = 2\n" +
 "\n" +
-"########################### auxiliary functions ################################\n" +
+"########################### loading models functions ################################\n" +
 "\n" +
-"def loadStatisticsCounters(stat):\n" +
-"    stat.seek(0, 0)\n" +
-"    counters = []\n" +
-"    words = stat.readline().split(',')\n" +
-"    for i in range(1,len(words)) :\n" +
-"        counters.append(words[i].rstrip())\n" +
+"def loadMLModel(trainedKnowledgeBase):\n" +
+"    return pickle.load(open(trainedKnowledgeBase, 'rb'))\n" +
 "\n" +
-"    return counters\n" +
-"\n" +
-"def loadStatistics (stat, tuningParams, profCounters):\n" +
-"    stat.seek(0, 0)\n" +
-"    # check headers\n" +
-"    words = stat.readline().split(',')\n" +
-"    for i in range(1,len(profCounters)+1):\n" +
-"        if profCounters[i-1] != words[i].rstrip():\n" +
-"            print(\"Error, mismatch tuning parameters: expected \" + profCounters[i-1] + \", but have \" + words[i])\n" +
-"            exit()\n" +
-"\n" +
-"    # load data\n" +
-"    statistics = {}\n" +
-"    for line in stat.readlines():\n" +
-"        words = line.split(',')\n" +
-"        if len(words) <= 1: break\n" +
-"        if not words[0] in tuningParams:\n" +
-"            print(\"Error, unknown tuning parameter \" + words[0])\n" +
-"            exit()\n" +
-"        row = []\n" +
-"        for j in range(1, len(words)):\n" +
-"            row.append(float(words[j]))\n" +
-"        statistics[words[0]] = row\n" +
-"\n" +
-"    return statistics\n" +
+"def loadMLModelMetadata (filename) :\n" +
+"    metadata = {}\n" +
+"    with open(filename, 'r') as metadataFile:\n" +
+"        metadata = json.load(metadataFile)\n" +
+"    return metadata\n" +
 "\n" +
 "def loadCompleteMappingCounters(tuningSpace, rangeC) :\n" +
 "    words = tuningSpace.readline().split(',')\n" +
@@ -91,45 +73,6 @@ std::string() +
 "\n" +
 "    return counters\n" +
 "\n" +
-"def loadModels(modelFiles) :\n" +
-"    tuningparamsNames = []\n" +
-"    TPassignmentsUnsorted = {}\n" +
-"    TPassignments = {}\n" +
-"    conditionsAllModels = []\n" +
-"    PCassignments = {}\n" +
-"    PCassignmentsAllModels = []\n" +
-"    #read all the models\n" +
-"    for m in modelFiles :\n" +
-"        counters = []\n" +
-"        with open(m) as modelFile:\n" +
-"            modelReader = csv.reader(modelFile, delimiter = ',')\n" +
-"            lc = 0\n" +
-"            afterCondition = False\n" +
-"            for row in modelReader:\n" +
-"                #skip the first line\n" +
-"                if lc == 0:\n" +
-"                    lc = 1\n" +
-"                    continue\n" +
-"                elif row[0] != \"Condition\" and not afterCondition:\n" +
-"                    tuningparamsNames.append(row[0])\n" +
-"                    TPassignmentsUnsorted[row[0]] = row[1]\n" +
-"                elif row[0] == \"Condition\":\n" +
-"                    condition = row[1]\n" +
-"                    afterCondition = True\n" +
-"                else :\n" +
-"                    PCassignments[row[0]] = row[1]\n" +
-"                    counters.append(row[0])\n" +
-"                lc = lc+1\n" +
-"        conditionsAllModels.append(condition)\n" +
-"        PCassignmentsAllModels.append(PCassignments)\n" +
-"    #\"sort\" TPassignments to correspond with the order of tuningparamsNames\n" +
-"    for j in range(0, len(tuningparamsNames)) :\n" +
-"        TPassignments[tuningparamsNames[j]] = TPassignmentsUnsorted[tuningparamsNames[j]]\n" +
-"    return [tuningparamsNames, TPassignments, conditionsAllModels, PCassignmentsAllModels, counters]\n" +
-"\n" +
-"#def prepareForModelsEvaluation(TPassignments, conditionsAllModels, tuningSpace) :\n" +
-"\n" +
-" #       applicableModelsOrder = prepareForModelsEvaluation(tuningparamsAssignments, conditions, configurationsData)\n" +
 "\n" +
 "def loadCompleteMapping(tuningSpace, rangeT, rangeC) :\n" +
 "    tuningSpace.seek(0)\n" +
@@ -163,14 +106,6 @@ std::string() +
 "        space.append(spaceRow)\n" +
 "\n" +
 "    return space\n" +
-"\n" +
-"def setComputeBound():\n" +
-"    global REACT_TO_INST_BOTTLENECKS\n" +
-"    REACT_TO_INST_BOTTLENECKS = 0.5\n" +
-"\n" +
-"def setMemoryBound():\n" +
-"    global REACT_TO_INST_BOTTLENECKS\n" +
-"    REACT_TO_INST_BOTTLENECKS = 0.7\n" +
 "\n" +
 "\n" +
 "####################### GPU arch. dependent functions ##########################\n" +
@@ -486,90 +421,6 @@ std::string() +
 "\n" +
 "###################### GPU arch. independent functions #########################\n" +
 "\n" +
-"# scoreTuningConfigurationsStats\n" +
-"# scores all tuning configurations according to required changes of profiling\n" +
-"# counters and expected effect of the tuning parameters to profiling counters\n" +
-"# GPU independent\n" +
-"# This version uses offline computed statistics (average corr and var)\n" +
-"\n" +
-"def scoreTuningConfigurations(changeImportance, tuningparamsNames, actualConf, tuningSpace, correlations, variations, scoreDistrib):\n" +
-"    newScoreDistrib = [0.0] * len(tuningSpace)\n" +
-"\n" +
-"    # get maximal variations (could be moved)\n" +
-"    maxVariations = [0.0] * len(variations[tuningparamsNames[0]])\n" +
-"    for i in range(0, len(variations[tuningparamsNames[0]])) :\n" +
-"        for j in range(0, len(tuningparamsNames)) :\n" +
-"            maxVariations[i] = max(maxVariations[i], variations[tuningparamsNames[j]][i])\n" +
-"\n" +
-"    # compute changes size and direction of tuning parameters\n" +
-"    changes = []\n" +
-"    for i in range(0, len(tuningparamsNames)) :\n" +
-"        var = 0.0\n" +
-"        corr = 0.0\n" +
-"        for j in range(0, len(changeImportance)) :\n" +
-"            if maxVariations[j] > 0.0 :\n" +
-"                tmp = abs(changeImportance[j]) * variations[tuningparamsNames[i]][j] / maxVariations[j]\n" +
-"            else :\n" +
-"                tmp = 0.0\n" +
-"            if tmp != 0.0:\n" +
-"                var = var + tmp\n" +
-"                sign = 1.0\n" +
-"                if (changeImportance[j] < 0) :\n" +
-"                    sign = -1.0\n" +
-"                corr = corr + (correlations[tuningparamsNames[i]][j] + CORR_SHIFT)/(1.0 + CORR_SHIFT) * sign * tmp\n" +
-"        if (var > 0.0) :\n" +
-"            corr = corr / abs(var)\n" +
-"        else :\n" +
-"            corr = 0.0\n" +
-"        change = []\n" +
-"        change.append(var)\n" +
-"        change.append(corr)\n" +
-"        changes.append(change)\n" +
-"    if VERBOSE > 1 :\n" +
-"        print(\"[Profile-based searcher details] changes:\", changes)\n" +
-"\n" +
-"    # compute scores according to proposed changes\n" +
-"    # for each point in tuning space\n" +
-"    for i in range(0, len(tuningSpace)) :\n" +
-"        # for each tuning parameter\n" +
-"        for j in range(0, len(tuningSpace[0])) :\n" +
-"            # direction from actual configuration\n" +
-"            direction = tuningSpace[i][j] - actualConf[j]\n" +
-"            #print(tuningData[i][1], actualConf)\n" +
-"            if direction > 0 :\n" +
-"                direction = 1\n" +
-"            if direction < 0 :\n" +
-"                direction = -1\n" +
-"            s = direction * changes[j][0] * changes[j][1]\n" +
-"            #print(i, direction, changes[j], s)\n" +
-"            newScoreDistrib[i] = newScoreDistrib[i] + s\n" +
-"\n" +
-"    minScore = min(newScoreDistrib)\n" +
-"    maxScore = max(newScoreDistrib)\n" +
-"    if VERBOSE > 1 :\n" +
-"        print(\"[Profile-based searcher details] scoreDistrib interval: \", minScore, maxScore)\n" +
-"    for i in range(0, len(tuningSpace)) :\n" +
-"        if newScoreDistrib[i] < CUTOFF :\n" +
-"            newScoreDistrib[i] = 0.0001\n" +
-"        else :\n" +
-"            if newScoreDistrib[i] < 0.0 :\n" +
-"                newScoreDistrib[i] = 1.0 - (newScoreDistrib[i] / minScore)\n" +
-"            else :\n" +
-"                if newScoreDistrib[i] > 0.0 :\n" +
-"                    newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)\n" +
-"            newScoreDistrib[i] = newScoreDistrib[i]**EXP\n" +
-"        if newScoreDistrib[i] < 0.0001 :\n" +
-"            newScoreDistrib[i] = 0.0001\n" +
-"\n" +
-"        # if was 0, set to 0 (explored)\n" +
-"        if scoreDistrib[i] == 0.0 :\n" +
-"            newScoreDistrib[i] = 0.0\n" +
-"\n" +
-"    if VERBOSE > 2 :\n" +
-"        print(\"[Profile-based searcher debug] newScoreDistrib:\", newScoreDistrib)\n" +
-"\n" +
-"    return newScoreDistrib\n" +
-"\n" +
 "# scoreTuningConfigurationsExact\n" +
 "# scores all tuning configurations according to required changes of profiling\n" +
 "# counters and expected effect of the tuning parameters to profiling counters\n" +
@@ -639,72 +490,11 @@ std::string() +
 "    return newScoreDistrib\n" +
 "\n" +
 "\n" +
-"# makePredictions\n" +
-"# calculates predicted PC values for all tuning configurations and returns them as completeMapping\n" +
-"# first, it encodes the values of tuning parameters\n" +
-"# second, it finds the suitable models of profiling counters by evaluating the conditions. as there are multiple non-linear models, one for each combination of values of binary parameters, we need to find which one is applicable to this tuning configuration and its combination fo values of binary parameters. tis is true if the conditionsAllModels is satisfied\n" +
-"# third, it calculates the predicted values of profiling counters\n" +
-"\n" +
-"def makePredictions(tuningSpace, TPassignments, conditionsAllModels, PCassignmentsAllModels):\n" +
-"\n" +
-"    completeMapping = []\n" +
-"    # for each tuning configuration\n" +
-"    for i in range(0, len(tuningSpace)) :\n" +
-"        #evaluate the predictions for all tuning configurations\n" +
-"        #encode tuning parameters, the order of TP is the same, we sorted earlier\n" +
-"        k = list(TPassignments)\n" +
-"        for j in range(0, len(k)) :\n" +
-"            exec(TPassignments[k[j]].replace(k[j], str(tuningSpace[i][j])))\n" +
-"        applicableModel = -1\n" +
-"        for j in range(0, len(conditionsAllModels)) :\n" +
-"            #find the first model where the condition is satisfied\n" +
-"            if (eval(conditionsAllModels[j])) :\n" +
-"                applicableModel = j\n" +
-"                break\n" +
-"\n" +
-"        if (applicableModel == -1):\n" +
-"            #we have not found an applicable model\n" +
-"            continue\n" +
-"\n" +
-"        #evaluate the prediction formulas\n" +
-"        #TODO this implementation assumes the same order of PC\n" +
-"        PCassignments = PCassignmentsAllModels[applicableModel]\n" +
-"        k = list(PCassignments)\n" +
-"        myPC = []\n" +
-"        for j in range(0, len(k)) :\n" +
-"            myPC.append(eval(PCassignments[k[j]]))\n" +
-"        completeMapping.append([tuningSpace[i], myPC])\n" +
-"\n" +
-"    return completeMapping\n" +
-"\n" +
-"# randomSearchStep\n" +
-"# perform one step of random search (without memory)\n" +
-"\n" +
-"def randomSearchStep(tuningSpaceSize) :\n" +
-"    return int(random.random() * tuningSpaceSize)\n" +
-"\n" +
-"# weightedRandomSearchStep\n" +
-"# perform one step of random search using weighted probability based on\n" +
-"# profiling counters\n" +
-"\n" +
-"def weightedRandomSearchStep(scoreDistrib, tuningSpaceSize) :\n" +
-"    if (sum(scoreDistrib) == 0.0) :\n" +
-"        print(\"Weighted search error: no more tuning configurations.\")\n" +
-"        return randomSearchStep(tuningSpaceSize)\n" +
-"\n" +
-"    rnd = random.random() * sum(scoreDistrib)\n" +
-"    idx = 0\n" +
-"    tmp = 0.0\n" +
-"    for j in range (0, tuningSpaceSize):\n" +
-"        tmp = tmp + scoreDistrib[j]\n" +
-"        if rnd < tmp : break\n" +
-"        idx = idx + 1\n" +
-"    return idx\n" +
-"\n" +
-"def loadMLModel(trainedKnowledgeBase):\n" +
-"    return pickle.load(open(trainedKnowledgeBase, 'rb'))\n" +
-"\n" +
-"########################### Temp function\n" +
+"# scoreTuningConfigurationsPredictor\n" +
+"# scores all tuning configurations according to required changes of profiling\n" +
+"# counters and expected effect of the tuning parameters to profiling counters\n" +
+"# GPU independent\n" +
+"# This version uses predictor based on ML model\n" +
 "def scoreTuningConfigurationsPredictor(changeImportance, tuningParametersReorderingFromSearchSpaceToModel, actualConf, tuningSpace, scoreDistrib, loaded_model):\n" +
 "    def mulfunc(a, b, c):\n" +
 "        if (a * (b - c)) > 0.0:\n" +
@@ -731,6 +521,8 @@ std::string() +
 "\n" +
 "\n" +
 "    #################################################### Using ML predictor\n" +
+"    #reorder the tuning space data so that they are in the correct order\n" +
+"    # TP from tuning space and T from model might be in different order, thus reordering is necessary\n" +
 "    reorderedTuningSpace = reorderTuningSpace(tuningSpace, tuningParametersReorderingFromSearchSpaceToModel)\n" +
 "    predictedMyPC = loaded_model.predict(reorderedTuningSpace)\n" +
 "    predictedMyPC1 = np.array(predictedMyPC)\n" +
@@ -779,13 +571,37 @@ std::string() +
 "\n" +
 "    return newScoreDistrib\n" +
 "\n" +
-"# auxiliary functions\n" +
-"def loadMLModelMetadata (filename) :\n" +
-"    metadata = {}\n" +
-"    with open(filename, 'r') as metadataFile:\n" +
-"        metadata = json.load(metadataFile)\n" +
+"# randomSearchStep\n" +
+"# perform one step of random search (without memory)\n" +
+"def randomSearchStep(tuningSpaceSize) :\n" +
+"    return int(random.random() * tuningSpaceSize)\n" +
 "\n" +
-"    return metadata\n" +
+"# weightedRandomSearchStep\n" +
+"# perform one step of random search using weighted probability based on\n" +
+"# profiling counters\n" +
+"def weightedRandomSearchStep(scoreDistrib, tuningSpaceSize) :\n" +
+"    if (sum(scoreDistrib) == 0.0) :\n" +
+"        print(\"Weighted search error: no more tuning configurations.\")\n" +
+"        return randomSearchStep(tuningSpaceSize)\n" +
+"\n" +
+"    rnd = random.random() * sum(scoreDistrib)\n" +
+"    idx = 0\n" +
+"    tmp = 0.0\n" +
+"    for j in range (0, tuningSpaceSize):\n" +
+"        tmp = tmp + scoreDistrib[j]\n" +
+"        if rnd < tmp : break\n" +
+"        idx = idx + 1\n" +
+"    return idx\n" +
+"\n" +
+"####################### auxiliary functions ##########################\n" +
+"\n" +
+"def setComputeBound():\n" +
+"    global REACT_TO_INST_BOTTLENECKS\n" +
+"    REACT_TO_INST_BOTTLENECKS = 0.5\n" +
+"\n" +
+"def setMemoryBound():\n" +
+"    global REACT_TO_INST_BOTTLENECKS\n" +
+"    REACT_TO_INST_BOTTLENECKS = 0.7\n" +
 "\n" +
 "def reorderList(data, reorderingIndices) :\n" +
 "    return [x for _, x in sorted(zip(reorderingIndices, data))]\n" +
@@ -803,6 +619,8 @@ std::string() +
 "    return ind\n" +
 "\n" +
 "\n" +
+"####################### searcher class ##########################\n" +
+"\n" +
 "class PyProfilingSearcher(ktt.Searcher):\n" +
 "    ccMajor = 0\n" +
 "    ccMinor = 0\n" +
@@ -816,22 +634,31 @@ std::string() +
 "    currentConfiguration = ktt.KernelConfiguration()\n" +
 "    tuner = None\n" +
 "    model = None\n" +
+"    # sometimes, the order of tuning parameters in the search space (as generated by KTT) differs from the order of tuning parameters in the saved ML model\n" +
+"    #therefore, we need to reorder them to align, so that the model works with the correctly ordered data\n" +
 "    tuningParametersReorderingFromSearchSpaceToModel = 0\n" +
 "\n" +
 "    def __init__(self):\n" +
 "        ktt.Searcher.__init__(self)\n" +
 "\n" +
 "    def OnInitialize(self):\n" +
-"        for i in range(0, BATCH) :\n" +
-"            self.preselectedBatch.append(self.GetRandomConfiguration())\n" +
+"\n" +
+"        # initialize the batch, make sure it includes unique, i.e. non-repeating configurations\n" +
+"        count = 0\n" +
+"        while count < BATCH:\n" +
+"            for i in range (count, BATCH) :\n" +
+"                self.preselectedBatch.append(self.GetRandomConfiguration())\n" +
+"            self.preselectedBatch = self.GetUniqueConfigurations(self.preselectedBatch)\n" +
+"            count = len(self.preselectedBatch)\n" +
 "        if VERBOSE > 0:\n" +
 "            print(\"[Profile-based searcher info] Batch initialized with configurations \", getConfigurationIndices(self, self.preselectedBatch))\n" +
 "\n" +
-"        self.currentConfiguration = self.preselectedBatch[0]\n" +
+"        # select configuration and remove it from he batch\n" +
+"        self.currentConfiguration = self.preselectedBatch.pop(0)\n" +
 "        if VERBOSE > 0:\n" +
 "            print(\"[Profile-based searcher info] Selected configuration \" + str(self.GetIndex(self.currentConfiguration)), flush = True)\n" +
-"        self.preselectedBatch.pop(0)\n" +
 "\n" +
+"        # determine the difference in the order of TP from search space and from the model\n" +
 "        tp = self.currentConfiguration.GetPairs()\n" +
 "        for p in tp :\n" +
 "            self.tuningParamsNames.append(p.GetName())\n" +
@@ -853,6 +680,8 @@ std::string() +
 "        self.modelMetadata = loadMLModelMetadata(modelFile + \".metadata.json\")\n" +
 "        self.model = loadMLModel(modelFile)\n" +
 "\n" +
+"# GetUniqueConfigurations\n" +
+"# takes a list and returns a list that does not contain repeating configurations\n" +
 "    def GetUniqueConfigurations(self, configurations):\n" +
 "        uniqueConfigurations = []\n" +
 "        indicesConfigurations = []\n" +
@@ -865,6 +694,8 @@ std::string() +
 "            uniqueConfigurations.append(self.GetConfiguration(i))\n" +
 "        return uniqueConfigurations\n" +
 "\n" +
+"# CalculateNextConfiguration\n" +
+"# determines the next configuration that KTT subsequently runs or profiles\n" +
 "    def CalculateNextConfiguration(self, previousResult):\n" +
 "        if (previousResult.IsValid()) and ((self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration)) :\n" +
 "            self.bestDuration = previousResult.GetKernelDuration()\n" +
@@ -872,18 +703,29 @@ std::string() +
 "            if VERBOSE > 1:\n" +
 "                print(\"[Profile-based searcher details] Found new best configuration\", self.GetIndex(self.bestConf), \"with kernel time\", self.bestDuration/1000, \"us\", flush = True)\n" +
 "\n" +
-"        # select the new configuration\n" +
+"        # if we still have configurations in the batch\n" +
 "        if len(self.preselectedBatch) > 0:\n" +
-"            # we are testing current batch\n" +
 "            if VERBOSE > 1:\n" +
 "                print(\"[Profile-based searcher details] PreselectedBatch has\", len(self.preselectedBatch), \"remaining items:\", getConfigurationIndices(self, self.preselectedBatch), flush = True)\n" +
+"            # just take one from the top and run that\n" +
 "            self.currentConfiguration = self.preselectedBatch.pop(0)\n" +
+"        # if we have an empty batch and we don't have any best configuration from it (invalid configurations, failed compilation, runtime, or validation)\n" +
 "        elif self.bestConf == None:\n" +
 "            if VERBOSE > 1:\n" +
 "                print(\"[Profile-based searcher details] Preselected batch contained invalid configurations only, generating random one.\")\n" +
-"            for i in range(0, BATCH) :\n" +
-"                self.preselectedBatch.append(self.GetRandomConfiguration())\n" +
+"            # initialize the batch, make sure it includes unique, i.e. non-repeating configurations\n" +
+"            count = 0\n" +
+"            maxBatchSize = min(BATCH, self.GetUnexploredConfigurationsCount())\n" +
+"            while count < maxBatchSize:\n" +
+"                for i in range (count, maxBatchSize) :\n" +
+"                    self.preselectedBatch.append(self.GetRandomConfiguration())\n" +
+"                self.preselectedBatch = self.GetUniqueConfigurations(self.preselectedBatch)\n" +
+"                count = len(self.preselectedBatch)\n" +
+"            if VERBOSE > 0:\n" +
+"                print(\"[Profile-based searcher info] Batch generated with configurations \", getConfigurationIndices(self, self.preselectedBatch))\n" +
+"            # select configuration and remove it from batch\n" +
 "            self.currentConfiguration = self.preselectedBatch.pop(0)\n" +
+"        # if we have an empty batch and we have the fastest configuration from it\n" +
 "        else:\n" +
 "            if VERBOSE > 1:\n" +
 "                print(\"[Profile-based searcher details] Preselected batch empty\", flush = True)\n" +
@@ -894,6 +736,7 @@ std::string() +
 "                self.tuner.SetProfiling(True)\n" +
 "                if VERBOSE > 0 :\n" +
 "                    print(\"[Profile-based searcher info] Running profiling for the best configuration from the batch, configuration\", str(self.GetIndex(self.currentConfiguration)), flush = True)\n" +
+"            # this happens when the fastest configuration is the last one, e.g. with BATCH == 1, then we just take profiling info from the last run\n" +
 "            else :\n" +
 "                # get PCs from the last tuning run\n" +
 "                if len(previousResult.GetResults()) > 1:\n" +
@@ -915,26 +758,26 @@ std::string() +
 "                        print(\"Fatal error, unsupported PC value passed to profile-based searcher!\")\n" +
 "                        exit(1)\n" +
 "\n" +
+"                # candidates pool generation\n" +
 "                # select candidate configurations according to position of the best one plus some random sample\n" +
-"                #candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)\n" +
-"                #candidates = [] #TODO this version ignores neighrbours, test also with GetNeighbourConfigurations + GetRandomConfiguration\n" +
-"                #count = 0\n" +
-"                #noAddRandomConfigurations = max(100, self.GetUnexploredConfigurationsCount())\n" +
-"                #while count < noAddRandomConfigurations:\n" +
-"                #    for i in range (count, noAddRandomConfigurations) :\n" +
-"                #        candidates.append(self.GetRandomConfiguration())\n" +
-"                #    candidates = self.GetUniqueConfigurations(candidates)\n" +
-"                #    count = len(candidates)\n" +
-"                noAddRandomConfigurations = min(100, self.GetUnexploredConfigurationsCount())\n" +
-"                candidates = []\n" +
-"                for i in range (0, noAddRandomConfigurations) :\n" +
-"                    candidates.append(self.GetRandomConfiguration())\n" +
+"                candidates = self.GetNeighbourConfigurations(self.bestConf, NEIGHBOR_DISTANCE, NEIGHBOR_SIZE)\n" +
+"                # make sure we don't have repeating configurations in the candidates list\n" +
+"                candidates = self.GetUniqueConfigurations(candidates)\n" +
+"                # number of candidates needs to decrease at the end of the search, as we don't have enough unexplored configurations\n" +
+"                maxPossibleCandidatesSize = min(len(candidates) + RANDOM_SIZE, self.GetUnexploredConfigurationsCount())\n" +
+"                # add random configurations to fill up the candidates pool\n" +
+"                count = len(candidates)\n" +
+"                while count < maxPossibleCandidatesSize:\n" +
+"                    for i in range (count, maxPossibleCandidatesSize) :\n" +
+"                        candidates.append(self.GetRandomConfiguration())\n" +
+"                    candidates = self.GetUniqueConfigurations(candidates)\n" +
+"                    count = len(candidates)\n" +
 "\n" +
 "\n" +
 "                if VERBOSE > 1:\n" +
 "                    print(\"[Profile-based searcher details] Evaluating model for\", str(len(candidates)), \"candidates...\", flush = True)\n" +
 "\n" +
-"                # get tuning space from candidates\n" +
+"                # create a small tuning space from candidates\n" +
 "                candidatesTuningSpace = []\n" +
 "                for c in candidates :\n" +
 "                    tp = c.GetPairs()\n" +
@@ -949,9 +792,6 @@ std::string() +
 "\n" +
 "\n" +
 "                # score the configurations\n" +
-"                #print(\"pcNames\", pcNames)\n" +
-"                #print(\"pcVals\", pcVals)\n" +
-"\n" +
 "                scoreDistrib = [1.0]*len(candidates)\n" +
 "                bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)\n" +
 "                changes = computeChanges(bottlenecks, self.modelMetadata['pc'], self.modelMetadata['cc'])\n" +
@@ -962,6 +802,7 @@ std::string() +
 "\n" +
 "                # select next batch\n" +
 "                selectedIndices = []\n" +
+"                # if we have more candidates than BATCH, use weightedRandom to choose from them, biasing with score\n" +
 "                if len(candidates) > BATCH :\n" +
 "                    numInBatch = 0\n" +
 "                    while numInBatch < BATCH :\n" +
@@ -972,14 +813,16 @@ std::string() +
 "                            selectedIndices.append(idx)\n" +
 "                            numInBatch = numInBatch + 1\n" +
 "                            scoreDistrib[idx] = 0.0\n" +
+"                # if we have less candidates than BATCH, just put them all in batch\n" +
 "                else:\n" +
 "                    for i in range(0, len(candidates)):\n" +
 "                        self.preselectedBatch.append(candidates[i])\n" +
 "\n" +
 "                if VERBOSE > 0:\n" +
 "                    print(\"[Profile-based searcher info] Turning off profiling, new batch selected with length\", len(self.preselectedBatch), \"containing configurations:\", getConfigurationIndices(self, self.preselectedBatch), flush = True)\n" +
-"                self.currentConfiguration = self.preselectedBatch[0]\n" +
-"                self.preselectedBatch.pop(0)\n" +
+"\n" +
+"                # select configuration and remove it from batch\n" +
+"                self.currentConfiguration = self.preselectedBatch.pop(0)\n" +
 "                self.bestConf = None\n" +
 "                self.tuner.SetProfiling(False)\n" +
 "\n" +
