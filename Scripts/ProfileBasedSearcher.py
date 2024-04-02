@@ -49,7 +49,16 @@ NEIGHBOR_SIZE = 100
 RANDOM_SIZE = 10
 NEIGHBOR_DISTANCE = 2
 
-########################### auxiliary functions ################################
+########################### loading models functions ################################
+
+def loadMLModel(trainedKnowledgeBase):
+    return pickle.load(open(trainedKnowledgeBase, 'rb'))
+
+def loadMLModelMetadata (filename) :
+    metadata = {}
+    with open(filename, 'r') as metadataFile:
+        metadata = json.load(metadataFile)
+    return metadata
 
 def loadCompleteMappingCounters(tuningSpace, rangeC) :
     words = tuningSpace.readline().split(',')
@@ -96,14 +105,6 @@ def loadCompleteMapping(tuningSpace, rangeT, rangeC) :
         space.append(spaceRow)
 
     return space
-
-def setComputeBound():
-    global REACT_TO_INST_BOTTLENECKS
-    REACT_TO_INST_BOTTLENECKS = 0.5
-
-def setMemoryBound():
-    global REACT_TO_INST_BOTTLENECKS
-    REACT_TO_INST_BOTTLENECKS = 0.7
 
 
 ####################### GPU arch. dependent functions ##########################
@@ -488,35 +489,11 @@ def scoreTuningConfigurationsExact(changeImportance, tuningparamsNames, actualCo
     return newScoreDistrib
 
 
-
-# randomSearchStep
-# perform one step of random search (without memory)
-
-def randomSearchStep(tuningSpaceSize) :
-    return int(random.random() * tuningSpaceSize)
-
-# weightedRandomSearchStep
-# perform one step of random search using weighted probability based on
-# profiling counters
-
-def weightedRandomSearchStep(scoreDistrib, tuningSpaceSize) :
-    if (sum(scoreDistrib) == 0.0) :
-        print("Weighted search error: no more tuning configurations.")
-        return randomSearchStep(tuningSpaceSize)
-
-    rnd = random.random() * sum(scoreDistrib)
-    idx = 0
-    tmp = 0.0
-    for j in range (0, tuningSpaceSize):
-        tmp = tmp + scoreDistrib[j]
-        if rnd < tmp : break
-        idx = idx + 1
-    return idx
-
-def loadMLModel(trainedKnowledgeBase):
-    return pickle.load(open(trainedKnowledgeBase, 'rb'))
-
-########################### Temp function
+# scoreTuningConfigurationsPredictor
+# scores all tuning configurations according to required changes of profiling
+# counters and expected effect of the tuning parameters to profiling counters
+# GPU independent
+# This version uses predictor based on ML model
 def scoreTuningConfigurationsPredictor(changeImportance, tuningParametersReorderingFromSearchSpaceToModel, actualConf, tuningSpace, scoreDistrib, loaded_model):
     def mulfunc(a, b, c):
         if (a * (b - c)) > 0.0:
@@ -591,13 +568,37 @@ def scoreTuningConfigurationsPredictor(changeImportance, tuningParametersReorder
 
     return newScoreDistrib
 
-# auxiliary functions
-def loadMLModelMetadata (filename) :
-    metadata = {}
-    with open(filename, 'r') as metadataFile:
-        metadata = json.load(metadataFile)
+# randomSearchStep
+# perform one step of random search (without memory)
+def randomSearchStep(tuningSpaceSize) :
+    return int(random.random() * tuningSpaceSize)
 
-    return metadata
+# weightedRandomSearchStep
+# perform one step of random search using weighted probability based on
+# profiling counters
+def weightedRandomSearchStep(scoreDistrib, tuningSpaceSize) :
+    if (sum(scoreDistrib) == 0.0) :
+        print("Weighted search error: no more tuning configurations.")
+        return randomSearchStep(tuningSpaceSize)
+
+    rnd = random.random() * sum(scoreDistrib)
+    idx = 0
+    tmp = 0.0
+    for j in range (0, tuningSpaceSize):
+        tmp = tmp + scoreDistrib[j]
+        if rnd < tmp : break
+        idx = idx + 1
+    return idx
+
+####################### auxiliary functions ##########################
+
+def setComputeBound():
+    global REACT_TO_INST_BOTTLENECKS
+    REACT_TO_INST_BOTTLENECKS = 0.5
+
+def setMemoryBound():
+    global REACT_TO_INST_BOTTLENECKS
+    REACT_TO_INST_BOTTLENECKS = 0.7
 
 def reorderList(data, reorderingIndices) :
     return [x for _, x in sorted(zip(reorderingIndices, data))]
@@ -614,6 +615,8 @@ def getConfigurationIndices(self, configurations) :
         ind.append(self.GetIndex(c))
     return ind
 
+
+####################### searcher class ##########################
 
 class PyProfilingSearcher(ktt.Searcher):
     ccMajor = 0
