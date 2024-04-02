@@ -700,8 +700,17 @@ class PyProfilingSearcher(ktt.Searcher):
         elif self.bestConf == None:
             if VERBOSE > 1:
                 print("[Profile-based searcher details] Preselected batch contained invalid configurations only, generating random one.")
-            for i in range(0, BATCH) :
-                self.preselectedBatch.append(self.GetRandomConfiguration())
+            # initialize the batch, make sure it includes unique, i.e. non-repeating configurations
+            count = 0
+            maxBatchSize = min(BATCH, self.GetUnexploredConfigurationsCount())
+            while count < maxBatchSize:
+                for i in range (count, maxBatchSize) :
+                    self.preselectedBatch.append(self.GetRandomConfiguration())
+                self.preselectedBatch = self.GetUniqueConfigurations(self.preselectedBatch)
+                count = len(self.preselectedBatch)
+            if VERBOSE > 0:
+                print("[Profile-based searcher info] Batch generated with configurations ", getConfigurationIndices(self, self.preselectedBatch))
+            # select configuration and remove it from batch
             self.currentConfiguration = self.preselectedBatch.pop(0)
         else:
             if VERBOSE > 1:
