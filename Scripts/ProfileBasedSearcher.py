@@ -51,39 +51,6 @@ NEIGHBOR_DISTANCE = 2
 
 ########################### auxiliary functions ################################
 
-def loadStatisticsCounters(stat):
-    stat.seek(0, 0)
-    counters = []
-    words = stat.readline().split(',')
-    for i in range(1,len(words)) :
-        counters.append(words[i].rstrip())
-
-    return counters
-
-def loadStatistics (stat, tuningParams, profCounters):
-    stat.seek(0, 0)
-    # check headers
-    words = stat.readline().split(',')
-    for i in range(1,len(profCounters)+1):
-        if profCounters[i-1] != words[i].rstrip():
-            print("Error, mismatch tuning parameters: expected " + profCounters[i-1] + ", but have " + words[i])
-            exit()
-
-    # load data
-    statistics = {}
-    for line in stat.readlines():
-        words = line.split(',')
-        if len(words) <= 1: break
-        if not words[0] in tuningParams:
-            print("Error, unknown tuning parameter " + words[0])
-            exit()
-        row = []
-        for j in range(1, len(words)):
-            row.append(float(words[j]))
-        statistics[words[0]] = row
-
-    return statistics
-
 def loadCompleteMappingCounters(tuningSpace, rangeC) :
     words = tuningSpace.readline().split(',')
     counters = []
@@ -96,45 +63,6 @@ def loadCompleteMappingCounters(tuningSpace, rangeC) :
 
     return counters
 
-def loadModels(modelFiles) :
-    tuningparamsNames = []
-    TPassignmentsUnsorted = {}
-    TPassignments = {}
-    conditionsAllModels = []
-    PCassignments = {}
-    PCassignmentsAllModels = []
-    #read all the models
-    for m in modelFiles :
-        counters = []
-        with open(m) as modelFile:
-            modelReader = csv.reader(modelFile, delimiter = ',')
-            lc = 0
-            afterCondition = False
-            for row in modelReader:
-                #skip the first line
-                if lc == 0:
-                    lc = 1
-                    continue
-                elif row[0] != "Condition" and not afterCondition:
-                    tuningparamsNames.append(row[0])
-                    TPassignmentsUnsorted[row[0]] = row[1]
-                elif row[0] == "Condition":
-                    condition = row[1]
-                    afterCondition = True
-                else :
-                    PCassignments[row[0]] = row[1]
-                    counters.append(row[0])
-                lc = lc+1
-        conditionsAllModels.append(condition)
-        PCassignmentsAllModels.append(PCassignments)
-    #"sort" TPassignments to correspond with the order of tuningparamsNames
-    for j in range(0, len(tuningparamsNames)) :
-        TPassignments[tuningparamsNames[j]] = TPassignmentsUnsorted[tuningparamsNames[j]]
-    return [tuningparamsNames, TPassignments, conditionsAllModels, PCassignmentsAllModels, counters]
-
-#def prepareForModelsEvaluation(TPassignments, conditionsAllModels, tuningSpace) :
-
- #       applicableModelsOrder = prepareForModelsEvaluation(tuningparamsAssignments, conditions, configurationsData)
 
 def loadCompleteMapping(tuningSpace, rangeT, rangeC) :
     tuningSpace.seek(0)
@@ -491,90 +419,6 @@ def computeChanges(bottlenecks, countersNames, cc):
 
 ###################### GPU arch. independent functions #########################
 
-# scoreTuningConfigurationsStats
-# scores all tuning configurations according to required changes of profiling
-# counters and expected effect of the tuning parameters to profiling counters
-# GPU independent
-# This version uses offline computed statistics (average corr and var)
-
-def scoreTuningConfigurations(changeImportance, tuningparamsNames, actualConf, tuningSpace, correlations, variations, scoreDistrib):
-    newScoreDistrib = [0.0] * len(tuningSpace)
-
-    # get maximal variations (could be moved)
-    maxVariations = [0.0] * len(variations[tuningparamsNames[0]])
-    for i in range(0, len(variations[tuningparamsNames[0]])) :
-        for j in range(0, len(tuningparamsNames)) :
-            maxVariations[i] = max(maxVariations[i], variations[tuningparamsNames[j]][i])
-
-    # compute changes size and direction of tuning parameters
-    changes = []
-    for i in range(0, len(tuningparamsNames)) :
-        var = 0.0
-        corr = 0.0
-        for j in range(0, len(changeImportance)) :
-            if maxVariations[j] > 0.0 :
-                tmp = abs(changeImportance[j]) * variations[tuningparamsNames[i]][j] / maxVariations[j]
-            else :
-                tmp = 0.0
-            if tmp != 0.0:
-                var = var + tmp
-                sign = 1.0
-                if (changeImportance[j] < 0) :
-                    sign = -1.0
-                corr = corr + (correlations[tuningparamsNames[i]][j] + CORR_SHIFT)/(1.0 + CORR_SHIFT) * sign * tmp
-        if (var > 0.0) :
-            corr = corr / abs(var)
-        else :
-            corr = 0.0
-        change = []
-        change.append(var)
-        change.append(corr)
-        changes.append(change)
-    if VERBOSE > 1 :
-        print("[Profile-based searcher details] changes:", changes)
-
-    # compute scores according to proposed changes
-    # for each point in tuning space
-    for i in range(0, len(tuningSpace)) :
-        # for each tuning parameter
-        for j in range(0, len(tuningSpace[0])) :
-            # direction from actual configuration
-            direction = tuningSpace[i][j] - actualConf[j]
-            #print(tuningData[i][1], actualConf)
-            if direction > 0 :
-                direction = 1
-            if direction < 0 :
-                direction = -1
-            s = direction * changes[j][0] * changes[j][1]
-            #print(i, direction, changes[j], s)
-            newScoreDistrib[i] = newScoreDistrib[i] + s
-
-    minScore = min(newScoreDistrib)
-    maxScore = max(newScoreDistrib)
-    if VERBOSE > 1 :
-        print("[Profile-based searcher details] scoreDistrib interval: ", minScore, maxScore)
-    for i in range(0, len(tuningSpace)) :
-        if newScoreDistrib[i] < CUTOFF :
-            newScoreDistrib[i] = 0.0001
-        else :
-            if newScoreDistrib[i] < 0.0 :
-                newScoreDistrib[i] = 1.0 - (newScoreDistrib[i] / minScore)
-            else :
-                if newScoreDistrib[i] > 0.0 :
-                    newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
-            newScoreDistrib[i] = newScoreDistrib[i]**EXP
-        if newScoreDistrib[i] < 0.0001 :
-            newScoreDistrib[i] = 0.0001
-
-        # if was 0, set to 0 (explored)
-        if scoreDistrib[i] == 0.0 :
-            newScoreDistrib[i] = 0.0
-
-    if VERBOSE > 2 :
-        print("[Profile-based searcher debug] newScoreDistrib:", newScoreDistrib)
-
-    return newScoreDistrib
-
 # scoreTuningConfigurationsExact
 # scores all tuning configurations according to required changes of profiling
 # counters and expected effect of the tuning parameters to profiling counters
@@ -644,43 +488,6 @@ def scoreTuningConfigurationsExact(changeImportance, tuningparamsNames, actualCo
     return newScoreDistrib
 
 
-# makePredictions
-# calculates predicted PC values for all tuning configurations and returns them as completeMapping
-# first, it encodes the values of tuning parameters
-# second, it finds the suitable models of profiling counters by evaluating the conditions. as there are multiple non-linear models, one for each combination of values of binary parameters, we need to find which one is applicable to this tuning configuration and its combination fo values of binary parameters. tis is true if the conditionsAllModels is satisfied
-# third, it calculates the predicted values of profiling counters
-
-def makePredictions(tuningSpace, TPassignments, conditionsAllModels, PCassignmentsAllModels):
-
-    completeMapping = []
-    # for each tuning configuration
-    for i in range(0, len(tuningSpace)) :
-        #evaluate the predictions for all tuning configurations
-        #encode tuning parameters, the order of TP is the same, we sorted earlier
-        k = list(TPassignments)
-        for j in range(0, len(k)) :
-            exec(TPassignments[k[j]].replace(k[j], str(tuningSpace[i][j])))
-        applicableModel = -1
-        for j in range(0, len(conditionsAllModels)) :
-            #find the first model where the condition is satisfied
-            if (eval(conditionsAllModels[j])) :
-                applicableModel = j
-                break
-
-        if (applicableModel == -1):
-            #we have not found an applicable model
-            continue
-
-        #evaluate the prediction formulas
-        #TODO this implementation assumes the same order of PC
-        PCassignments = PCassignmentsAllModels[applicableModel]
-        k = list(PCassignments)
-        myPC = []
-        for j in range(0, len(k)) :
-            myPC.append(eval(PCassignments[k[j]]))
-        completeMapping.append([tuningSpace[i], myPC])
-
-    return completeMapping
 
 # randomSearchStep
 # perform one step of random search (without memory)
@@ -928,12 +735,12 @@ class PyProfilingSearcher(ktt.Searcher):
                 candidates = self.GetNeighbourConfigurations(self.bestConf, NEIGHBOR_DISTANCE, NEIGHBOR_SIZE)
                 # make sure we don't have repeating configurations in the candidates list
                 candidates = self.GetUniqueConfigurations(candidates)
-                # batch size needs to decrease at the end of the searc, as we don't have enough unexplored configurations
-                maxPossibleBatchSize = min(NEIGHBOR_SIZE, self.GetUnexploredConfigurationsCount())
-                # add random configurations to fill up the batch
+                # number of candidates needs to decrease at the end of the search, as we don't have enough unexplored configurations
+                maxPossibleCandidatesSize = min(len(candidates) + RANDOM_SIZE, self.GetUnexploredConfigurationsCount())
+                # add random configurations to fill up the candidates pool
                 count = len(candidates)
-                while count < maxPossibleBatchSize:
-                    for i in range (count, maxPossibleBatchSize) :
+                while count < maxPossibleCandidatesSize:
+                    for i in range (count, maxPossibleCandidatesSize) :
                         candidates.append(self.GetRandomConfiguration())
                     candidates = self.GetUniqueConfigurations(candidates)
                     count = len(candidates)
@@ -957,9 +764,6 @@ class PyProfilingSearcher(ktt.Searcher):
 
 
                 # score the configurations
-                #print("pcNames", pcNames)
-                #print("pcVals", pcVals)
-
                 scoreDistrib = [1.0]*len(candidates)
                 bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)
                 changes = computeChanges(bottlenecks, self.modelMetadata['pc'], self.modelMetadata['cc'])
