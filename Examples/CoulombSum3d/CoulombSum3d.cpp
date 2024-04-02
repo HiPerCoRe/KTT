@@ -150,7 +150,8 @@ int main(int argc, char** argv)
 
     if constexpr (!useDenseParameters && !useWideParameters)
     {
-        tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8});
+        //tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8});
+        tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{2,4});
     }
     else if constexpr (!useWideParameters)
     {
@@ -169,7 +170,8 @@ int main(int argc, char** argv)
 
     if constexpr (!useDenseParameters && !useWideParameters)
     {
-        tuner.AddParameter(kernel, "Z_ITERATIONS", std::vector<uint64_t>{1, 2, 4, 8, 16, 32});
+        //tuner.AddParameter(kernel, "Z_ITERATIONS", std::vector<uint64_t>{1, 2, 4, 8, 16, 32});
+        tuner.AddParameter(kernel, "Z_ITERATIONS", std::vector<uint64_t>{1, 2});
     }
     else
     {
@@ -181,7 +183,8 @@ int main(int argc, char** argv)
 
     if constexpr (!useDenseParameters && !useWideParameters)
     {
-        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+        //tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR", std::vector<uint64_t>{0});
     }
     else
     {
@@ -201,7 +204,8 @@ int main(int argc, char** argv)
     {
         // Not implemented in CUDA
         tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
-        tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
+        //tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
+        tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0});
         tuner.AddParameter(kernel, "VECTOR_SIZE", std::vector<uint64_t>{1});
     }
 
@@ -226,7 +230,7 @@ int main(int argc, char** argv)
 #if KTT_CUDA_EXAMPLE
     if constexpr (useProfileSearcher)
     {
-        tuner.SetProfileBasedSearcher(kernel, defaultMlModel);
+        tuner.SetProfileBasedSearcher(kernel, defaultMlModel, false);
     }
 #endif
 
