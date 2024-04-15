@@ -103,6 +103,7 @@ std::vector<ParameterValue> KernelParameter::GetValuesFromScript([[maybe_unused]
     throw KttException("Usage of script-based kernel parameters requires compilation of Python backend");
 #else
     auto& interpreter = PythonInterpreter::GetInterpreter();
+    pybind11::gil_scoped_acquire acquire;
     std::vector<ParameterValue> result;
 
     try
@@ -171,7 +172,13 @@ std::vector<ParameterValue> KernelParameter::GetValuesFromScript([[maybe_unused]
     catch (const pybind11::error_already_set& exception)
     {
         Logger::LogError(exception.what());
+        interpreter.ReleaseInterpreter();
     }
+    catch (const std::exception &e) {
+        Logger::LogError(e.what());
+        interpreter.ReleaseInterpreter();
+    }
+    interpreter.ReleaseInterpreter();
 
     return result;
 #endif // KTT_PYTHON

@@ -28,6 +28,7 @@ bool ScriptConstraint::IsFulfilled([[maybe_unused]] const std::vector<const Para
 {
 #ifdef KTT_PYTHON
     auto& interpreter = PythonInterpreter::GetInterpreter();
+    pybind11::gil_scoped_acquire acquire;
     pybind11::dict locals;
     bool result = false;
 
@@ -46,7 +47,14 @@ bool ScriptConstraint::IsFulfilled([[maybe_unused]] const std::vector<const Para
     catch (const pybind11::error_already_set& exception)
     {
         Logger::LogError(exception.what());
+        interpreter.ReleaseInterpreter();
     }
+    catch (const std::exception &e) {
+        Logger::LogError(e.what());
+        interpreter.ReleaseInterpreter();
+    }
+
+    interpreter.ReleaseInterpreter();
 
     return result;
 #else
