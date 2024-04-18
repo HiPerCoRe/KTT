@@ -66,8 +66,8 @@ int main(int argc, char **argv)
 
     if constexpr (!useProfiling)
     {
-        width = 8192;
-        height = 8192;
+        width = 4096; //8192;
+        height = 4096; //8192;
     }
     else
     {
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     
     // Constraint tuning space
     auto xConstraint = [] (const std::vector<uint64_t>& v) { return (v[0] == v[1]); };
-    auto yConstraint = [] (const std::vector<uint64_t>& v) { return (v[1] <= v[0]); };
+    auto yConstraint = [] (const std::vector<uint64_t>& v) { return ((v[1] <= v[0]) && (v[0] % v[1] == 0)); };
     auto tConstraint = [] (const std::vector<uint64_t>& v) { return (!v[0] || (v[1] <= v[2]*v[3])); };
     auto pConstraint = [] (const std::vector<uint64_t>& v) { return (v[0] || !v[1]); };
     auto vlConstraint = [] (const std::vector<uint64_t>& v) { return (!v[0] || v[1] == 1); };
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
 
     // Perform tuning
     const auto results = tuner.Tune(kernel);
-    tuner.SaveResults(results, "TranspositionOutput.csv", ktt::OutputFormat::JSON);
+    tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::XML);
 
     return 0;
 }
