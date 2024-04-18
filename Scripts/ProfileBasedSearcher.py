@@ -884,14 +884,18 @@ class PyProfilingSearcher(ktt.Searcher):
 
                 # select candidate configurations according to position of the best one plus some random sample
                 #candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)
-                candidates = [] #TODO this version ignores neighrbours, test also with GetNeighbourConfigurations + GetRandomConfiguration
-                count = 0
-                noAddRandomConfigurations = self.GetUnexploredConfigurationsCount()
-                while count < noAddRandomConfigurations:
-                    for i in range (count, noAddRandomConfigurations) :
-                        candidates.append(self.GetRandomConfiguration())
-                    candidates = self.GetUniqueConfigurations(candidates)
-                    count = len(candidates)
+                #candidates = [] #TODO this version ignores neighrbours, test also with GetNeighbourConfigurations + GetRandomConfiguration
+                #count = 0
+                #noAddRandomConfigurations = max(100, self.GetUnexploredConfigurationsCount())
+                #while count < noAddRandomConfigurations:
+                #    for i in range (count, noAddRandomConfigurations) :
+                #        candidates.append(self.GetRandomConfiguration())
+                #    candidates = self.GetUniqueConfigurations(candidates)
+                #    count = len(candidates)
+                noAddRandomConfigurations = min(100, self.GetUnexploredConfigurationsCount())
+                candidates = []
+                for i in range (0, noAddRandomConfigurations) :
+                    candidates.append(self.GetRandomConfiguration())
 
 
                 print("Profile-based searcher: evaluating model for " + str(len(candidates)) + " candidates...", flush = True)
@@ -917,7 +921,7 @@ class PyProfilingSearcher(ktt.Searcher):
                 #print("pcVals", pcVals)
                 scoreDistrib = [1.0]*len(candidates)
                 bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)
-                changes = computeChanges(bottlenecks, self.profilingCountersModel, 6.1)
+                changes = computeChanges(bottlenecks, self.profilingCountersModel, 7.5)
                 if VERBOSE > 2:
                     print(self.tuningParamsNames)
                 scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)

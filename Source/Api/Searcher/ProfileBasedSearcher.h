@@ -897,14 +897,18 @@ std::string() +
 "\n" +
 "                # select candidate configurations according to position of the best one plus some random sample\n" +
 "                #candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)\n" +
-"                candidates = [] #TODO this version ignores neighrbours, test also with GetNeighbourConfigurations + GetRandomConfiguration\n" +
-"                count = 0\n" +
-"                noAddRandomConfigurations = self.GetUnexploredConfigurationsCount()\n" +
-"                while count < noAddRandomConfigurations:\n" +
-"                    for i in range (count, noAddRandomConfigurations) :\n" +
-"                        candidates.append(self.GetRandomConfiguration())\n" +
-"                    candidates = self.GetUniqueConfigurations(candidates)\n" +
-"                    count = len(candidates)\n" +
+"                #candidates = [] #TODO this version ignores neighrbours, test also with GetNeighbourConfigurations + GetRandomConfiguration\n" +
+"                #count = 0\n" +
+"                #noAddRandomConfigurations = max(100, self.GetUnexploredConfigurationsCount())\n" +
+"                #while count < noAddRandomConfigurations:\n" +
+"                #    for i in range (count, noAddRandomConfigurations) :\n" +
+"                #        candidates.append(self.GetRandomConfiguration())\n" +
+"                #    candidates = self.GetUniqueConfigurations(candidates)\n" +
+"                #    count = len(candidates)\n" +
+"                noAddRandomConfigurations = min(100, self.GetUnexploredConfigurationsCount())\n" +
+"                candidates = []\n" +
+"                for i in range (0, noAddRandomConfigurations) :\n" +
+"                    candidates.append(self.GetRandomConfiguration())\n" +
 "\n" +
 "\n" +
 "                print(\"Profile-based searcher: evaluating model for \" + str(len(candidates)) + \" candidates...\", flush = True)\n" +
@@ -930,7 +934,7 @@ std::string() +
 "                #print(\"pcVals\", pcVals)\n" +
 "                scoreDistrib = [1.0]*len(candidates)\n" +
 "                bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)\n" +
-"                changes = computeChanges(bottlenecks, self.profilingCountersModel, 6.1)\n" +
+"                changes = computeChanges(bottlenecks, self.profilingCountersModel, 7.5)\n" +
 "                if VERBOSE > 2:\n" +
 "                    print(self.tuningParamsNames)\n" +
 "                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)\n" +
