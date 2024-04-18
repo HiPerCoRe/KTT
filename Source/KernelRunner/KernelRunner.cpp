@@ -237,10 +237,13 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
     auto activator = std::make_unique<KernelActivator>(*m_ComputeLayer, id);
     KernelResult result(kernel.GetName(), configuration);
 
+    Timer timer;
+    timer.Start();
     try
     {
         const Nanoseconds duration = RunLauncher(launcher);
         result = m_ComputeLayer->GenerateResult(id, duration);
+        timer.Stop();
     }
     catch (const KttException& exception)
     {
@@ -248,6 +251,10 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
         
         m_ComputeLayer->SynchronizeDevice();
         m_ComputeLayer->ClearComputeEngineData();
+
+        timer.Stop();
+
+        result.SetFailedKernelOverhead(timer.GetElapsedTime());
 
         const auto reason = exception.GetReason();
         result.SetStatus(GetStatusFromException(reason));
@@ -260,6 +267,7 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
 
     result.SetDataMovementOverhead(result.GetDataMovementOverhead() + dataOverhead);
     m_ComputeLayer->ClearData(id);
+
     return result;
 }
 

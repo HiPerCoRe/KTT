@@ -8,6 +8,7 @@ KernelResult::KernelResult() :
     m_DataMovementOverhead(InvalidDuration),
     m_ValidationOverhead(InvalidDuration),
     m_SearcherOverhead(InvalidDuration),
+    m_FailedKernelOverhead(InvalidDuration),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
@@ -18,6 +19,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     m_DataMovementOverhead(0),
     m_ValidationOverhead(0),
     m_SearcherOverhead(0),
+    m_FailedKernelOverhead(0),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
@@ -30,6 +32,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     m_DataMovementOverhead(0),
     m_ValidationOverhead(0),
     m_SearcherOverhead(0),
+    m_FailedKernelOverhead(0),
     m_Status(ResultStatus::Ok)
 {}
 
@@ -61,6 +64,11 @@ void KernelResult::SetValidationOverhead(const Nanoseconds overhead)
 void KernelResult::SetSearcherOverhead(const Nanoseconds overhead)
 {
     m_SearcherOverhead = overhead;
+}
+
+void KernelResult::SetFailedKernelOverhead(const Nanoseconds overhead)
+{
+    m_FailedKernelOverhead = overhead;
 }
 
 const std::string& KernelResult::GetKernelName() const
@@ -132,6 +140,11 @@ Nanoseconds KernelResult::GetSearcherOverhead() const
     return m_SearcherOverhead;
 }
 
+Nanoseconds KernelResult::GetFailedKernelOverhead() const
+{
+    return m_FailedKernelOverhead;
+}
+
 Nanoseconds KernelResult::GetTotalDuration() const
 {
     const Nanoseconds duration = m_ExtraDuration + GetKernelDuration();
@@ -140,7 +153,7 @@ Nanoseconds KernelResult::GetTotalDuration() const
 
 Nanoseconds KernelResult::GetTotalOverhead() const
 {
-    const Nanoseconds overhead = m_DataMovementOverhead + m_ValidationOverhead + m_SearcherOverhead + GetKernelOverhead();
+    const Nanoseconds overhead = m_DataMovementOverhead + m_ValidationOverhead + m_SearcherOverhead + GetKernelOverhead() + m_FailedKernelOverhead;
     return overhead;
 }
 

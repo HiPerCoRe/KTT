@@ -78,6 +78,12 @@ public:
       */
     void SetSearcherOverhead(const Nanoseconds overhead);
 
+    /** @fn void SetFailedKernelOverhead(const Nanoseconds overhead)
+      * Sets duration of failed (uncompilable) kernel creation.
+      * @param overhead Duration of KTT/compiler spent on preparation of kernel which cannot be executed.
+      */
+    void SetFailedKernelOverhead(const Nanoseconds overhead);
+
     /** @fn const std::string& GetKernelName() const
       * Returns name of a kernel tied to the result.
       * @return Name of a kernel tied to the result.
@@ -144,6 +150,12 @@ public:
       */
     Nanoseconds GetSearcherOverhead() const;
 
+    /** @fn Nanoseconds GetFailedKernelOverhead() const
+      * Retrieves duration of failed (uncompilable) kernel creation.
+      * @return Duration of KTT/compiler spent on preparation of kernel which cannot be executed.
+      */
+    Nanoseconds GetFailedKernelOverhead() const;
+
     /** @fn Nanoseconds GetTotalDuration() const
       * Retrieves the sum of kernel duration and extra duration.
       * @return Sum of kernel duration and extra duration.
@@ -177,6 +189,7 @@ private:
     Nanoseconds m_DataMovementOverhead;
     Nanoseconds m_ValidationOverhead;
     Nanoseconds m_SearcherOverhead;
+    Nanoseconds m_FailedKernelOverhead;
     ResultStatus m_Status;
 };
 
