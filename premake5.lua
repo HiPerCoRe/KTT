@@ -730,6 +730,13 @@ project "TransposeCuda"
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
+project "KernelTunerConvolutionCuda"
+    kind "ConsoleApp"
+    files {"Examples/KernelTunerConvolution/*.cpp", "Examples/KernelTunerConvolution/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
 end -- cudaProjects
     
 end -- _OPTIONS["no-examples"]
