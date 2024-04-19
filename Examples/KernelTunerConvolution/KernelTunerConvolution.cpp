@@ -75,8 +75,8 @@ int main(int argc, char** argv)
     }
     else
     {
-        kSizeX = 2048;
-        kSizeY = 2048;
+        kSizeX = 4096;
+        kSizeY = 4096;
     }
 
     const ktt::DimensionVector ndRangeDimensions(kSizeX, kSizeY);

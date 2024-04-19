@@ -32,15 +32,19 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
     }
 
     std::vector<KernelResult> results;
-    KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
+//    KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
 
     while (!m_ConfigurationManager->IsDataProcessed(id))
     {
+        KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
+        KernelResult multiResult(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
         do 
         {
+            multiResult.FuseProfilingTimes(result);
             result = TuneIteration(kernel, dimensions, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false);
         }
         while (result.HasRemainingProfilingRuns());
+        result.FuseProfilingTimes(multiResult);
 
         const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
         {

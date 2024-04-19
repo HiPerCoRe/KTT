@@ -84,6 +84,12 @@ public:
       */
     void SetFailedKernelOverhead(const Nanoseconds overhead);
 
+    /** @fn void SetProfilingRunsOverhead(const Nanoseconds overhead)
+      * Sets time of kernels executed to collect performance counters.
+      * @param Duration of kernels executed just to collect performance counters.
+      */
+    void SetProfilingRunsOverhead(const Nanoseconds overhead);
+
     /** @fn const std::string& GetKernelName() const
       * Returns name of a kernel tied to the result.
       * @return Name of a kernel tied to the result.
@@ -156,6 +162,12 @@ public:
       */
     Nanoseconds GetFailedKernelOverhead() const;
 
+    /** @fn Nanoseconds GetProfilingRunsOverhead() const
+      * Retrieves duration of kernels execute to collect performance counters.
+      * @return Duration of kernels executed just to collect performance counters.
+      */
+    Nanoseconds GetProfilingRunsOverhead() const;
+
     /** @fn Nanoseconds GetTotalDuration() const
       * Retrieves the sum of kernel duration and extra duration.
       * @return Sum of kernel duration and extra duration.
@@ -181,6 +193,10 @@ public:
       */
     bool HasRemainingProfilingRuns() const;
 
+    /** @fn void 
+      */
+    void FuseProfilingTimes(const KernelResult& previousResult);
+
 private:
     KernelConfiguration m_Configuration;
     std::vector<ComputationResult> m_Results;
@@ -190,6 +206,7 @@ private:
     Nanoseconds m_ValidationOverhead;
     Nanoseconds m_SearcherOverhead;
     Nanoseconds m_FailedKernelOverhead;
+    Nanoseconds m_ProfilingRunsOverhead;
     ResultStatus m_Status;
 };
 

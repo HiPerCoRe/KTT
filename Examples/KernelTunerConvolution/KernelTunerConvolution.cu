@@ -1,3 +1,5 @@
+// This example is adopted from KernelTuner (https://github.com/KernelTuner/kernel_tuner)
+
 #define input_height (IMAGE_HEIGHT + HFS*2)
 #define input_width (IMAGE_WIDTH + HFS*2)
 
@@ -42,9 +44,6 @@
         int by = blockIdx.y * BLOCK_SIZE_Y * TILE_SIZE_Y;
         int bx = blockIdx.x * BLOCK_SIZE_X * TILE_SIZE_X;
 
-        //if (bx == 0 && by == 0 && tx == 0 && ty == 0)
-        //    printf("XXX %i %i %i %i\n", gridDim.x, gridDim.y, blockDim.x, blockDim.y);
-
         //shared memory to hold all input data need by this thread block
         __shared__ float sh_input[BLOCK_SIZE_Y*TILE_SIZE_Y+HFS*2][shared_mem_width];
 
@@ -58,8 +57,6 @@
                 int x = bx+j;
                 if (y < input_height && x < input_width) {
                     sh_input[i][j] = LDG(input, y*input_width+x);
-                    //if (blockIdx.x == gridDim.x-1 && blockIdx.y == 0)
-                    //    printf("XXX %i (%i %i %i) -> %i %i : %f\n", y*input_width+x, x, y, input_width, j, i, sh_input[i][j]);
                 }
                 #else
                 sh_input[i][j] = LDG(input, (by+i)*input_width + (bx+j));
@@ -87,7 +84,7 @@
                 for (int yi=0; yi<TILE_SIZE_Y; yi++) {   
                     #pragma unroll
                     for (int xi=0; xi<TILE_SIZE_X; xi++) {
-                        sum[yi][xi] += sh_input[ty+yi*BLOCK_SIZE_Y+i][tx+xi*BLOCK_SIZE_X+j] * filter[i*(HFS*2+1)+j];
+                        sum[yi][xi] += sh_input[ty+yi*BLOCK_SIZE_Y+i][tx+xi*BLOCK_SIZE_X+j] * filter[i*(HFS*2+1)+j]; //TODO: faster with d_filter, but KTT has to move data from host to constant array
                     }
                 }
             }

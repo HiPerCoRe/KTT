@@ -9,6 +9,7 @@ KernelResult::KernelResult() :
     m_ValidationOverhead(InvalidDuration),
     m_SearcherOverhead(InvalidDuration),
     m_FailedKernelOverhead(InvalidDuration),
+    m_ProfilingRunsOverhead(InvalidDuration),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
@@ -20,6 +21,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     m_ValidationOverhead(0),
     m_SearcherOverhead(0),
     m_FailedKernelOverhead(0),
+    m_ProfilingRunsOverhead(0),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
@@ -33,6 +35,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     m_ValidationOverhead(0),
     m_SearcherOverhead(0),
     m_FailedKernelOverhead(0),
+    m_ProfilingRunsOverhead(0),
     m_Status(ResultStatus::Ok)
 {}
 
@@ -69,6 +72,11 @@ void KernelResult::SetSearcherOverhead(const Nanoseconds overhead)
 void KernelResult::SetFailedKernelOverhead(const Nanoseconds overhead)
 {
     m_FailedKernelOverhead = overhead;
+}
+
+void KernelResult::SetProfilingRunsOverhead(const Nanoseconds overhead)
+{
+    m_ProfilingRunsOverhead = overhead;
 }
 
 const std::string& KernelResult::GetKernelName() const
@@ -145,6 +153,11 @@ Nanoseconds KernelResult::GetFailedKernelOverhead() const
     return m_FailedKernelOverhead;
 }
 
+Nanoseconds KernelResult::GetProfilingRunsOverhead() const
+{
+    return m_ProfilingRunsOverhead;
+}
+
 Nanoseconds KernelResult::GetTotalDuration() const
 {
     const Nanoseconds duration = m_ExtraDuration + GetKernelDuration();
@@ -153,7 +166,7 @@ Nanoseconds KernelResult::GetTotalDuration() const
 
 Nanoseconds KernelResult::GetTotalOverhead() const
 {
-    const Nanoseconds overhead = m_DataMovementOverhead + m_ValidationOverhead + m_SearcherOverhead + GetKernelOverhead() + m_FailedKernelOverhead;
+    const Nanoseconds overhead = m_DataMovementOverhead + m_ValidationOverhead + m_SearcherOverhead + GetKernelOverhead() + m_FailedKernelOverhead + m_ProfilingRunsOverhead;
     return overhead;
 }
 
@@ -173,6 +186,18 @@ bool KernelResult::HasRemainingProfilingRuns() const
     }
 
     return false;
+}
+
+void KernelResult::FuseProfilingTimes(const KernelResult& previousResult)
+{
+    m_ProfilingRunsOverhead += previousResult.GetKernelDuration();
+    m_ProfilingRunsOverhead += previousResult.GetKernelOverhead();
+    m_ProfilingRunsOverhead += previousResult.GetProfilingRunsOverhead();
+    m_ExtraDuration += previousResult.GetExtraDuration();
+    m_DataMovementOverhead += previousResult.GetDataMovementOverhead();
+    m_ValidationOverhead += previousResult.GetValidationOverhead();
+    m_SearcherOverhead += previousResult.GetSearcherOverhead();
+    m_FailedKernelOverhead += previousResult.GetFailedKernelOverhead();
 }
 
 } // namespace ktt
