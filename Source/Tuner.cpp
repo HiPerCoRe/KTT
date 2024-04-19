@@ -601,9 +601,12 @@ void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_
             SaveStringToFile(ProfileBasedSearcherFile, ProfileBasedSearcherModule);
         }
 
-        PythonInterpreter::GetInterpreter();
+        auto& interpreter = PythonInterpreter::GetInterpreter();
+        pybind11::gil_scoped_acquire acquire;
         pybind11::module_ searcher = pybind11::module_::import(ProfileBasedSearcherName.c_str());
         searcher.attr("executeSearcher")(this, id, modelPath);
+        interpreter.ReleaseInterpreter();
+
         #endif // KTT_PYTHON
     }
     catch (const KttException& exception)

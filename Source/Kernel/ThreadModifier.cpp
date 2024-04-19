@@ -63,6 +63,7 @@ uint64_t ThreadModifier::EvaluateScript([[maybe_unused]] const uint64_t original
 {
 #ifdef KTT_PYTHON
     auto& interpreter = PythonInterpreter::GetInterpreter();
+    pybind11::gil_scoped_acquire acquire;
     pybind11::dict locals;
     uint64_t result = 1;
 
@@ -80,7 +81,9 @@ uint64_t ThreadModifier::EvaluateScript([[maybe_unused]] const uint64_t original
     catch (const pybind11::error_already_set& exception)
     {
         Logger::LogError(exception.what());
+        interpreter.ReleaseInterpreter();
     }
+    interpreter.ReleaseInterpreter();
 
     return result;
 #else

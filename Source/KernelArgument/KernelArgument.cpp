@@ -99,6 +99,7 @@ void KernelArgument::SetOwnedDataFromGenerator([[maybe_unused]] const std::strin
     throw KttException("Usage of kernel arguments filled from generator function requires compilation of Python backend");
 #else
     auto& interpreter = PythonInterpreter::GetInterpreter();
+    pybind11::gil_scoped_acquire acquire;
     std::vector<uint8_t> data(dataSize);
     const size_t numberOfElements = dataSize / m_ElementSize;
     pybind11::dict locals;
@@ -186,9 +187,12 @@ void KernelArgument::SetOwnedDataFromGenerator([[maybe_unused]] const std::strin
         catch (const pybind11::error_already_set& exception)
         {
             Logger::LogError(exception.what());
+            interpreter.ReleaseInterpreter();
         }
+        
     }
 
+    interpreter.ReleaseInterpreter();
     SetOwnedData(data.data(), data.size());
 #endif // KTT_PYTHON
 }

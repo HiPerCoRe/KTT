@@ -1,15 +1,3 @@
-#pragma once
-
-#ifdef KTT_PYTHON
-
-#include <string>
-
-namespace ktt
-{
-
-inline const std::string ProfileBasedSearcherName = "ProfileBasedSearcher";
-inline const std::string ProfileBasedSearcherFile = "ProfileBasedSearcher.py";
-inline const std::string ProfileBasedSearcherModule =
 std::string() +
 "#!/usr/bin/env python  -W ignore::DeprecationWarning\n" +
 "\n" +
@@ -875,6 +863,3 @@ std::string() +
 "    tuner.SetSearcher(kernel, searcher)\n" +
 "    searcher.Configure(tuner, model)\n" +
 "";
-} // namespace ktt
-
-#endif // KTT_PYTHON

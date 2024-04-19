@@ -14,14 +14,20 @@ import pickle
 import numpy as np
 import signal
 import pdb
+import json
+import warnings
 
 import pyktt as ktt
 
 np.printoptions(precision=5, suppress=True)
 
 # verbosity level (0, 1, 2, 3)
-VERBOSE = 3
-if VERBOSE > 2:
+# 0 - nothing
+# 1 - info
+# 2 - more info
+# 3 - debug
+VERBOSE = 2
+if VERBOSE == 3:
     signal.signal(signal.SIGINT, lambda sig, frame: pdb.Pdb().set_trace(frame))
     #pdb.Pdb().set_trace()
 
@@ -31,46 +37,28 @@ if VERBOSE > 2:
 # REACT_TO_INST_BOTTLENECKS: minimal instructions bottlenecks, which affects scoring of tuning configurations
 # CUTOFF: maximal score of configurations, which are discarded from tuning space
 # BATCH: number of configuration from which the fastest one is profiled
+# NEIGHBOR_SIZE: number of neighboring configurations that are used for batch selection
+# RANDOM_SIZE: number of random configurations that are used for batch selection
+# NEIGHBOR_DISTANCE: distance between configurations (how many TP have different values) that are still considered neighbors
 CORR_SHIFT = 0.0
 EXP = 8
 REACT_TO_INST_BOTTLENECKS = 0.7
 CUTOFF = -0.25
-BATCH = 5
+BATCH = 2
+NEIGHBOR_SIZE = 100
+RANDOM_SIZE = 10
+NEIGHBOR_DISTANCE = 2
 
-########################### auxiliary functions ################################
+########################### loading models functions ################################
 
-def loadStatisticsCounters(stat):
-    stat.seek(0, 0)
-    counters = []
-    words = stat.readline().split(',')
-    for i in range(1,len(words)) :
-        counters.append(words[i].rstrip())
+def loadMLModel(trainedKnowledgeBase):
+    return pickle.load(open(trainedKnowledgeBase, 'rb'))
 
-    return counters
-
-def loadStatistics (stat, tuningParams, profCounters):
-    stat.seek(0, 0)
-    # check headers
-    words = stat.readline().split(',')
-    for i in range(1,len(profCounters)+1):
-        if profCounters[i-1] != words[i].rstrip():
-            print("Error, mismatch tuning parameters: expected " + profCounters[i-1] + ", but have " + words[i])
-            exit()
-
-    # load data
-    statistics = {}
-    for line in stat.readlines():
-        words = line.split(',')
-        if len(words) <= 1: break
-        if not words[0] in tuningParams:
-            print("Error, unknown tuning parameter " + words[0])
-            exit()
-        row = []
-        for j in range(1, len(words)):
-            row.append(float(words[j]))
-        statistics[words[0]] = row
-
-    return statistics
+def loadMLModelMetadata (filename) :
+    metadata = {}
+    with open(filename, 'r') as metadataFile:
+        metadata = json.load(metadataFile)
+    return metadata
 
 def loadCompleteMappingCounters(tuningSpace, rangeC) :
     words = tuningSpace.readline().split(',')
@@ -84,45 +72,6 @@ def loadCompleteMappingCounters(tuningSpace, rangeC) :
 
     return counters
 
-def loadModels(modelFiles) :
-    tuningparamsNames = []
-    TPassignmentsUnsorted = {}
-    TPassignments = {}
-    conditionsAllModels = []
-    PCassignments = {}
-    PCassignmentsAllModels = []
-    #read all the models
-    for m in modelFiles :
-        counters = []
-        with open(m) as modelFile:
-            modelReader = csv.reader(modelFile, delimiter = ',')
-            lc = 0
-            afterCondition = False
-            for row in modelReader:
-                #skip the first line
-                if lc == 0:
-                    lc = 1
-                    continue
-                elif row[0] != "Condition" and not afterCondition:
-                    tuningparamsNames.append(row[0])
-                    TPassignmentsUnsorted[row[0]] = row[1]
-                elif row[0] == "Condition":
-                    condition = row[1]
-                    afterCondition = True
-                else :
-                    PCassignments[row[0]] = row[1]
-                    counters.append(row[0])
-                lc = lc+1
-        conditionsAllModels.append(condition)
-        PCassignmentsAllModels.append(PCassignments)
-    #"sort" TPassignments to correspond with the order of tuningparamsNames
-    for j in range(0, len(tuningparamsNames)) :
-        TPassignments[tuningparamsNames[j]] = TPassignmentsUnsorted[tuningparamsNames[j]]
-    return [tuningparamsNames, TPassignments, conditionsAllModels, PCassignmentsAllModels, counters]
-
-#def prepareForModelsEvaluation(TPassignments, conditionsAllModels, tuningSpace) :
-
- #       applicableModelsOrder = prepareForModelsEvaluation(tuningparamsAssignments, conditions, configurationsData)
 
 def loadCompleteMapping(tuningSpace, rangeT, rangeC) :
     tuningSpace.seek(0)
@@ -156,14 +105,6 @@ def loadCompleteMapping(tuningSpace, rangeT, rangeC) :
         space.append(spaceRow)
 
     return space
-
-def setComputeBound():
-    global REACT_TO_INST_BOTTLENECKS
-    REACT_TO_INST_BOTTLENECKS = 0.5
-
-def setMemoryBound():
-    global REACT_TO_INST_BOTTLENECKS
-    REACT_TO_INST_BOTTLENECKS = 0.7
 
 
 ####################### GPU arch. dependent functions ##########################
@@ -384,7 +325,7 @@ def analyzeBottlenecks (countersNames, countersData, cc, multiprocessors, cores)
     bottlenecks['bnInstIssue'] = bnInstIssue
 
     if VERBOSE > 1 :
-        print("bottlenecks", bottlenecks)
+        print("[Profile-based searcher details] bottlenecks:", bottlenecks)
 
     return bottlenecks
 
@@ -473,95 +414,11 @@ def computeChanges(bottlenecks, countersNames, cc):
     #changeImportance[countersNames.index('Local size')] = - bottlenecks['bnTailEffect'] / 2
 
     if VERBOSE > 1 :
-        print("changeImportance", changeImportance)
+        print("[Profile-based searcher details] changeImportance:", changeImportance)
 
     return changeImportance
 
 ###################### GPU arch. independent functions #########################
-
-# scoreTuningConfigurationsStats
-# scores all tuning configurations according to required changes of profiling
-# counters and expected effect of the tuning parameters to profiling counters
-# GPU independent
-# This version uses offline computed statistics (average corr and var)
-
-def scoreTuningConfigurations(changeImportance, tuningparamsNames, actualConf, tuningSpace, correlations, variations, scoreDistrib):
-    newScoreDistrib = [0.0] * len(tuningSpace)
-
-    # get maximal variations (could be moved)
-    maxVariations = [0.0] * len(variations[tuningparamsNames[0]])
-    for i in range(0, len(variations[tuningparamsNames[0]])) :
-        for j in range(0, len(tuningparamsNames)) :
-            maxVariations[i] = max(maxVariations[i], variations[tuningparamsNames[j]][i])
-
-    # compute changes size and direction of tuning parameters
-    changes = []
-    for i in range(0, len(tuningparamsNames)) :
-        var = 0.0
-        corr = 0.0
-        for j in range(0, len(changeImportance)) :
-            if maxVariations[j] > 0.0 :
-                tmp = abs(changeImportance[j]) * variations[tuningparamsNames[i]][j] / maxVariations[j]
-            else :
-                tmp = 0.0
-            if tmp != 0.0:
-                var = var + tmp
-                sign = 1.0
-                if (changeImportance[j] < 0) :
-                    sign = -1.0
-                corr = corr + (correlations[tuningparamsNames[i]][j] + CORR_SHIFT)/(1.0 + CORR_SHIFT) * sign * tmp
-        if (var > 0.0) :
-            corr = corr / abs(var)
-        else :
-            corr = 0.0
-        change = []
-        change.append(var)
-        change.append(corr)
-        changes.append(change)
-    if VERBOSE > 1 :
-        print("changes", changes)
-
-    # compute scores according to proposed changes
-    # for each point in tuning space
-    for i in range(0, len(tuningSpace)) :
-        # for each tuning parameter
-        for j in range(0, len(tuningSpace[0])) :
-            # direction from actual configuration
-            direction = tuningSpace[i][j] - actualConf[j]
-            #print(tuningData[i][1], actualConf)
-            if direction > 0 :
-                direction = 1
-            if direction < 0 :
-                direction = -1
-            s = direction * changes[j][0] * changes[j][1]
-            #print(i, direction, changes[j], s)
-            newScoreDistrib[i] = newScoreDistrib[i] + s
-
-    minScore = min(newScoreDistrib)
-    maxScore = max(newScoreDistrib)
-    if VERBOSE > 0 :
-        print("scoreDistrib interval: ", minScore, maxScore)
-    for i in range(0, len(tuningSpace)) :
-        if newScoreDistrib[i] < CUTOFF :
-            newScoreDistrib[i] = 0.0001
-        else :
-            if newScoreDistrib[i] < 0.0 :
-                newScoreDistrib[i] = 1.0 - (newScoreDistrib[i] / minScore)
-            else :
-                if newScoreDistrib[i] > 0.0 :
-                    newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
-            newScoreDistrib[i] = newScoreDistrib[i]**EXP
-        if newScoreDistrib[i] < 0.0001 :
-            newScoreDistrib[i] = 0.0001
-
-        # if was 0, set to 0 (explored)
-        if scoreDistrib[i] == 0.0 :
-            newScoreDistrib[i] = 0.0
-
-    if VERBOSE > 2 :
-        print("newScoreDistrib", newScoreDistrib)
-
-    return newScoreDistrib
 
 # scoreTuningConfigurationsExact
 # scores all tuning configurations according to required changes of profiling
@@ -607,8 +464,8 @@ def scoreTuningConfigurationsExact(changeImportance, tuningparamsNames, actualCo
 
     minScore = min(newScoreDistrib)
     maxScore = max(newScoreDistrib)
-    if VERBOSE > 0 :
-        print("scoreDistrib interval: ", minScore, maxScore)
+    if VERBOSE > 1 :
+        print("[Profile-based searcher details] scoreDistrib interval: ", minScore, maxScore)
     for i in range(0, len(tuningSpace)) :
         if newScoreDistrib[i] < CUTOFF :
             newScoreDistrib[i] = 0.0
@@ -627,59 +484,100 @@ def scoreTuningConfigurationsExact(changeImportance, tuningparamsNames, actualCo
             newScoreDistrib[i] = 0.0
 
     if VERBOSE > 2 :
-        print("newScoreDistrib", newScoreDistrib)
+        print("[Profile-based searcher debug] newScoreDistrib", newScoreDistrib)
 
     return newScoreDistrib
 
 
-# makePredictions
-# calculates predicted PC values for all tuning configurations and returns them as completeMapping
-# first, it encodes the values of tuning parameters
-# second, it finds the suitable models of profiling counters by evaluating the conditions. as there are multiple non-linear models, one for each combination of values of binary parameters, we need to find which one is applicable to this tuning configuration and its combination fo values of binary parameters. tis is true if the conditionsAllModels is satisfied
-# third, it calculates the predicted values of profiling counters
+# scoreTuningConfigurationsPredictor
+# scores all tuning configurations according to required changes of profiling
+# counters and expected effect of the tuning parameters to profiling counters
+# GPU independent
+# This version uses predictor based on ML model
+def scoreTuningConfigurationsPredictor(changeImportance, tuningParametersReorderingFromSearchSpaceToModel, actualConf, tuningSpace, scoreDistrib, loaded_model):
+    def mulfunc(a, b, c):
+        if (a * (b - c)) > 0.0:
+            return 1.0
+        if (a * (b - c)) < 0.0:
+            return -1.0
+        else:
+            return 0.0
 
-def makePredictions(tuningSpace, TPassignments, conditionsAllModels, PCassignmentsAllModels):
+    newScoreDistrib = [0.0] * len(tuningSpace)
+    actualPC = []
 
-    completeMapping = []
-    # for each tuning configuration
+    # Using ML predictor
+    reorderedActualConf = reorderList(actualConf, tuningParametersReorderingFromSearchSpaceToModel)
+    predictedPC = loaded_model.predict([reorderedActualConf])
+    actualPC = list(predictedPC.flatten())
+
+    if len(actualPC) == 0 :
+        for i in range(0, len(tuningSpace)) :
+            uniformScoreDistrib = [1.0] * len(tuningSpace)
+            if scoreDistrib[i] == 0.0 :
+                uniformScoreDistrib[i] = 0.0
+        return uniformScoreDistrib
+
+
+    #################################################### Using ML predictor
+    #reorder the tuning space data so that they are in the correct order
+    # TP from tuning space and T from model might be in different order, thus reordering is necessary
+    reorderedTuningSpace = reorderTuningSpace(tuningSpace, tuningParametersReorderingFromSearchSpaceToModel)
+    predictedMyPC = loaded_model.predict(reorderedTuningSpace)
+    predictedMyPC1 = np.array(predictedMyPC)
+    actualPC1 = np.array(actualPC)
+    n = len(changeImportance) - len(actualPC1)
+    changeImportance = changeImportance[:len(changeImportance)-n]
+    changeImportance1 = np.array(changeImportance)
+
+    vfunc = np.vectorize(mulfunc)
+    if VERBOSE < 3:
+        # supressing the warning about dividing with zero
+        # nan that results from that is converted to number just below
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            mul = vfunc(changeImportance1, predictedMyPC1, actualPC1)
+            res = np.array(mul * abs(changeImportance1 * 2.0 * (predictedMyPC1 - actualPC1) / (predictedMyPC1+actualPC1)))
+    else:
+        mul = vfunc(changeImportance1, predictedMyPC1, actualPC1)
+        res = np.array(mul * abs(changeImportance1 * 2.0 * (predictedMyPC1 - actualPC1) / (predictedMyPC1+actualPC1)))
+    res = np.nan_to_num(res)
+    newScoreDistrib = res.sum(axis=1)
+
+    minScore = min(newScoreDistrib)
+    maxScore = max(newScoreDistrib)
+    if VERBOSE > 1 :
+        print("[Profile-based searcher details] scoreDistrib interval: ", minScore, maxScore)
     for i in range(0, len(tuningSpace)) :
-        #evaluate the predictions for all tuning configurations
-        #encode tuning parameters, the order of TP is the same, we sorted earlier
-        k = list(TPassignments)
-        for j in range(0, len(k)) :
-            exec(TPassignments[k[j]].replace(k[j], str(tuningSpace[i][j])))
-        applicableModel = -1
-        for j in range(0, len(conditionsAllModels)) :
-            #find the first model where the condition is satisfied
-            if (eval(conditionsAllModels[j])) :
-                applicableModel = j
-                break
+        if newScoreDistrib[i] < CUTOFF :
+            newScoreDistrib[i] = 0.0001
+        else :
+            if newScoreDistrib[i] < 0.0 :
+                newScoreDistrib[i] = 1.0 - (newScoreDistrib[i] / minScore)
+            else :
+                if newScoreDistrib[i] > 0.0 :
+                    newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
+            newScoreDistrib[i] = newScoreDistrib[i]**EXP
+        if newScoreDistrib[i] < 0.0001 :
+            newScoreDistrib[i] = 0.0001
 
-        if (applicableModel == -1):
-            #we have not found an applicable model
-            continue
+        # if was 0, set to 0 (explored)
+        if scoreDistrib[i] == 0.0 :
+            newScoreDistrib[i] = 0.0
 
-        #evaluate the prediction formulas
-        #TODO this implementation assumes the same order of PC
-        PCassignments = PCassignmentsAllModels[applicableModel]
-        k = list(PCassignments)
-        myPC = []
-        for j in range(0, len(k)) :
-            myPC.append(eval(PCassignments[k[j]]))
-        completeMapping.append([tuningSpace[i], myPC])
+    if VERBOSE > 2 :
+        print("[Profile-based searcher debug] Predictor newScoreDistrib:", newScoreDistrib)
 
-    return completeMapping
+    return newScoreDistrib
 
 # randomSearchStep
 # perform one step of random search (without memory)
-
 def randomSearchStep(tuningSpaceSize) :
     return int(random.random() * tuningSpaceSize)
 
 # weightedRandomSearchStep
 # perform one step of random search using weighted probability based on
 # profiling counters
-
 def weightedRandomSearchStep(scoreDistrib, tuningSpaceSize) :
     if (sum(scoreDistrib) == 0.0) :
         print("Weighted search error: no more tuning configurations.")
@@ -694,98 +592,40 @@ def weightedRandomSearchStep(scoreDistrib, tuningSpaceSize) :
         idx = idx + 1
     return idx
 
-def loadMLModel(trainedKnowledgeBase):
-    return pickle.load(open(trainedKnowledgeBase, 'rb'))
+####################### auxiliary functions ##########################
 
-########################### Temp function
-def scoreTuningConfigurationsPredictor(changeImportance, tuningparamsNames, actualConf, tuningSpace, scoreDistrib, loaded_model):
-    def mulfunc(a, b, c):
-        if (a * (b - c)) > 0.0:
-            return 1.0
-        if (a * (b - c)) < 0.0:
-            return -1.0
-        else:
-            return 0.0
+def setComputeBound():
+    global REACT_TO_INST_BOTTLENECKS
+    REACT_TO_INST_BOTTLENECKS = 0.5
 
-    newScoreDistrib = [0.0] * len(tuningSpace)
-    actualPC = []
+def setMemoryBound():
+    global REACT_TO_INST_BOTTLENECKS
+    REACT_TO_INST_BOTTLENECKS = 0.7
 
-    # Using ML predictor
-    predictedPC = loaded_model.predict([actualConf])
-    actualPC = list(predictedPC.flatten())
+def reorderList(data, reorderingIndices) :
+    return [x for _, x in sorted(zip(reorderingIndices, data))]
 
-    if len(actualPC) == 0 :
-        for i in range(0, len(tuningSpace)) :
-            uniformScoreDistrib = [1.0] * len(tuningSpace)
-            if scoreDistrib[i] == 0.0 :
-                uniformScoreDistrib[i] = 0.0
-        return uniformScoreDistrib
+def reorderTuningSpace(data, reorderingIndices) :
+    reorderedData = []
+    for row in data:
+        reorderedData.append(reorderList(row, reorderingIndices))
+    return reorderedData
+
+def getConfigurationIndices(self, configurations) :
+    ind = []
+    for c in configurations :
+        ind.append(self.GetIndex(c))
+    return ind
 
 
-    #################################################### Using ML predictor
-    predictedMyPC = loaded_model.predict(tuningSpace)
-    predictedMyPC1 = np.array(predictedMyPC)
-    actualPC1 = np.array(actualPC)
-    n = len(changeImportance) - len(actualPC1)
-    changeImportance = changeImportance[:len(changeImportance)-n]
-    changeImportance1 = np.array(changeImportance)
-
-    vfunc = np.vectorize(mulfunc)
-    mul = vfunc(changeImportance1, predictedMyPC1, actualPC1)
-    res = np.array(mul * abs(changeImportance1 * 2.0 * (predictedMyPC1 - actualPC1) / (predictedMyPC1+actualPC1)))
-    res = np.nan_to_num(res)
-    newScoreDistrib = res.sum(axis=1)
-
-    if VERBOSE > 2 :
-        for i in range(0, len(tuningSpace)) :
-            print(tuningSpace[i], ": ", newScoreDistrib[i])
-
-
-    minScore = min(newScoreDistrib)
-    maxScore = max(newScoreDistrib)
-    if VERBOSE > 0 :
-        print("scoreDistrib interval: ", minScore, maxScore)
-    for i in range(0, len(tuningSpace)) :
-        if newScoreDistrib[i] < CUTOFF :
-            newScoreDistrib[i] = 0.0001
-        else :
-            if newScoreDistrib[i] < 0.0 :
-                newScoreDistrib[i] = 1.0 - (newScoreDistrib[i] / minScore)
-            else :
-                if newScoreDistrib[i] > 0.0 :
-                    newScoreDistrib[i] = 1.0 + (newScoreDistrib[i] / maxScore)
-            newScoreDistrib[i] = newScoreDistrib[i]**EXP
-        if newScoreDistrib[i] < 0.0001 :
-            newScoreDistrib[i] = 0.0001
-
-        # if was 0, set to 0 (explored)
-        if scoreDistrib[i] == 0.0 :
-            newScoreDistrib[i] = 0.0
-
-    if VERBOSE > 2 :
-        print("Predictro newScoreDistrib", newScoreDistrib)
-
-    return newScoreDistrib
-
-# auxiliary functions
-def readPCList (filename) :
-    ret = []
-    pcListFile = open(filename, 'r')
-    if pcListFile.readline().rstrip() != 'Profiling counter' :
-        print('Malformed PC list file!')
-        return ret
-    for line in pcListFile.readlines():
-        ret.append(line.rstrip())
-    pcListFile.close()
-
-    return ret
+####################### searcher class ##########################
 
 class PyProfilingSearcher(ktt.Searcher):
     ccMajor = 0
     ccMinor = 0
     cc = 0
     multiprocessors = 0
-    profilingCountersModel = 0
+    modelMetadata = 0
     bestDuration = -1
     bestConf = None
     preselectedBatch = []
@@ -793,21 +633,41 @@ class PyProfilingSearcher(ktt.Searcher):
     currentConfiguration = ktt.KernelConfiguration()
     tuner = None
     model = None
+    # sometimes, the order of tuning parameters in the search space (as generated by KTT) differs from the order of tuning parameters in the saved ML model
+    #therefore, we need to reorder them to align, so that the model works with the correctly ordered data
+    tuningParametersReorderingFromSearchSpaceToModel = 0
 
     def __init__(self):
         ktt.Searcher.__init__(self)
 
     def OnInitialize(self):
-        for i in range(0, BATCH) :
-            self.preselectedBatch.append(self.GetRandomConfiguration())
-        self.currentConfiguration = self.preselectedBatch[0]
-        if BATCH > 1:
-            #if BATCH==1, we need to keep the only configuration in batch, so that the profiling can be run on it. otherwise, we end up with an empty batch with nothing to profile.
-            self.preselectedBatch.pop(0)
 
+        # initialize the batch, make sure it includes unique, i.e. non-repeating configurations
+        count = 0
+        while count < BATCH:
+            for i in range (count, BATCH) :
+                self.preselectedBatch.append(self.GetRandomConfiguration())
+            self.preselectedBatch = self.GetUniqueConfigurations(self.preselectedBatch)
+            count = len(self.preselectedBatch)
+        if VERBOSE > 0:
+            print("[Profile-based searcher info] Batch initialized with configurations ", getConfigurationIndices(self, self.preselectedBatch))
+
+        # select configuration and remove it from he batch
+        self.currentConfiguration = self.preselectedBatch.pop(0)
+        if VERBOSE > 0:
+            print("[Profile-based searcher info] Selected configuration " + str(self.GetIndex(self.currentConfiguration)), flush = True)
+
+        # determine the difference in the order of TP from search space and from the model
         tp = self.currentConfiguration.GetPairs()
         for p in tp :
             self.tuningParamsNames.append(p.GetName())
+        self.tuningParametersReorderingFromSearchSpaceToModel = []
+        for tp in self.tuningParamsNames:
+            self.tuningParametersReorderingFromSearchSpaceToModel.append(self.modelMetadata['tp'].index(tp))
+        if VERBOSE > 2:
+            print("[Profile-based searcher debug] Tuning parameters in the search space:", self.tuningParamsNames)
+            print("[Profile-based searcher debug] Tuning parameters in the model:", self.modelMetadata['tp'])
+            print("[Profile-based searcher debug] Tuning parameters reordering list", self.tuningParametersReorderingFromSearchSpaceToModel)
 
     def Configure(self, tuner, modelFile):
         self.tuner = tuner
@@ -816,9 +676,11 @@ class PyProfilingSearcher(ktt.Searcher):
         self.cc = self.ccMajor + round(0.1 * self.ccMinor, 1)
         self.multiprocessors = tuner.GetCurrentDeviceInfo().GetMaxComputeUnits()
 
-        self.profilingCountersModel = readPCList(modelFile + ".pc")
+        self.modelMetadata = loadMLModelMetadata(modelFile + ".metadata.json")
         self.model = loadMLModel(modelFile)
 
+# GetUniqueConfigurations
+# takes a list and returns a list that does not contain repeating configurations
     def GetUniqueConfigurations(self, configurations):
         uniqueConfigurations = []
         indicesConfigurations = []
@@ -831,40 +693,53 @@ class PyProfilingSearcher(ktt.Searcher):
             uniqueConfigurations.append(self.GetConfiguration(i))
         return uniqueConfigurations
 
+# CalculateNextConfiguration
+# determines the next configuration that KTT subsequently runs or profiles
     def CalculateNextConfiguration(self, previousResult):
         if (previousResult.IsValid()) and ((self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration)) :
             self.bestDuration = previousResult.GetKernelDuration()
             self.bestConf = self.currentConfiguration
-            if VERBOSE > 2:
-                print("Found new best configuration ", self.bestDuration, self.bestConf, flush = True)
-        if VERBOSE > 2:
-            print("PreselectedBatch has ", len(self.preselectedBatch), " remaining items:")
-            ind = []
-            for c in self.preselectedBatch :
-                ind.append(self.GetIndex(c))
-            print(ind, flush = True)
-        # select the new configuration
+            if VERBOSE > 1:
+                print("[Profile-based searcher details] Found new best configuration", self.GetIndex(self.bestConf), "with kernel time", self.bestDuration/1000, "us", flush = True)
+
+        # if we still have configurations in the batch
         if len(self.preselectedBatch) > 0:
-            # we are testing current batch
+            if VERBOSE > 1:
+                print("[Profile-based searcher details] PreselectedBatch has", len(self.preselectedBatch), "remaining items:", getConfigurationIndices(self, self.preselectedBatch), flush = True)
+            # just take one from the top and run that
             self.currentConfiguration = self.preselectedBatch.pop(0)
+        # if we have an empty batch and we don't have any best configuration from it (invalid configurations, failed compilation, runtime, or validation)
         elif self.bestConf == None:
             if VERBOSE > 1:
-                print("Preselected batch contained invalid configurations only, generating random one.")
-            for i in range(0, BATCH) :
-                self.preselectedBatch.append(self.GetRandomConfiguration())
+                print("[Profile-based searcher details] Preselected batch contained invalid configurations only, generating random one.")
+            # initialize the batch, make sure it includes unique, i.e. non-repeating configurations
+            count = 0
+            maxBatchSize = min(BATCH, self.GetUnexploredConfigurationsCount())
+            while count < maxBatchSize:
+                for i in range (count, maxBatchSize) :
+                    self.preselectedBatch.append(self.GetRandomConfiguration())
+                self.preselectedBatch = self.GetUniqueConfigurations(self.preselectedBatch)
+                count = len(self.preselectedBatch)
+            if VERBOSE > 0:
+                print("[Profile-based searcher info] Batch generated with configurations ", getConfigurationIndices(self, self.preselectedBatch))
+            # select configuration and remove it from batch
             self.currentConfiguration = self.preselectedBatch.pop(0)
-        else :
-            if VERBOSE > 2:
-                print("Preselected batch empty, running profiling.", flush = True)
+        # if we have an empty batch and we have the fastest configuration from it
+        else:
+            if VERBOSE > 1:
+                print("[Profile-based searcher details] Preselected batch empty", flush = True)
             if self.bestDuration != -1 :
                 # we run the fastest one once again, but with profiling
                 self.currentConfiguration = self.bestConf
                 self.bestDuration = -1
                 self.tuner.SetProfiling(True)
+                if VERBOSE > 0 :
+                    print("[Profile-based searcher info] Running profiling for the best configuration from the batch, configuration", str(self.GetIndex(self.currentConfiguration)), flush = True)
+            # this happens when the fastest configuration is the last one, e.g. with BATCH == 1, then we just take profiling info from the last run
             else :
                 # get PCs from the last tuning run
                 if len(previousResult.GetResults()) > 1:
-                    print("Warning: this version of profile-based searcher does not support searching kernels collections. Using counters from kernels 0 only.")
+                    print("Profile-based searcher warning: this version of profile-based searcher does not support searching kernels collections. Using counters from kernels 0 only.")
                 globalSize = previousResult.GetResults()[0].GetGlobalSize()
                 localSize = previousResult.GetResults()[0].GetLocalSize()
                 profilingCountersRun = previousResult.GetResults()[0].GetProfilingData().GetCounters() #FIXME this supposes there is no composition profiled
@@ -882,25 +757,26 @@ class PyProfilingSearcher(ktt.Searcher):
                         print("Fatal error, unsupported PC value passed to profile-based searcher!")
                         exit(1)
 
+                # candidates pool generation
                 # select candidate configurations according to position of the best one plus some random sample
-                #candidates = self.GetNeighbourConfigurations(self.bestConf, 2, 100)
-                #candidates = [] #TODO this version ignores neighrbours, test also with GetNeighbourConfigurations + GetRandomConfiguration
-                #count = 0
-                #noAddRandomConfigurations = max(100, self.GetUnexploredConfigurationsCount())
-                #while count < noAddRandomConfigurations:
-                #    for i in range (count, noAddRandomConfigurations) :
-                #        candidates.append(self.GetRandomConfiguration())
-                #    candidates = self.GetUniqueConfigurations(candidates)
-                #    count = len(candidates)
-                noAddRandomConfigurations = min(100, self.GetUnexploredConfigurationsCount())
-                candidates = []
-                for i in range (0, noAddRandomConfigurations) :
-                    candidates.append(self.GetRandomConfiguration())
+                candidates = self.GetNeighbourConfigurations(self.bestConf, NEIGHBOR_DISTANCE, NEIGHBOR_SIZE)
+                # make sure we don't have repeating configurations in the candidates list
+                candidates = self.GetUniqueConfigurations(candidates)
+                # number of candidates needs to decrease at the end of the search, as we don't have enough unexplored configurations
+                maxPossibleCandidatesSize = min(len(candidates) + RANDOM_SIZE, self.GetUnexploredConfigurationsCount())
+                # add random configurations to fill up the candidates pool
+                count = len(candidates)
+                while count < maxPossibleCandidatesSize:
+                    for i in range (count, maxPossibleCandidatesSize) :
+                        candidates.append(self.GetRandomConfiguration())
+                    candidates = self.GetUniqueConfigurations(candidates)
+                    count = len(candidates)
 
 
-                print("Profile-based searcher: evaluating model for " + str(len(candidates)) + " candidates...", flush = True)
+                if VERBOSE > 1:
+                    print("[Profile-based searcher details] Evaluating model for", str(len(candidates)), "candidates...", flush = True)
 
-                # get tuning space from candidates
+                # create a small tuning space from candidates
                 candidatesTuningSpace = []
                 for c in candidates :
                     tp = c.GetPairs()
@@ -913,24 +789,19 @@ class PyProfilingSearcher(ktt.Searcher):
                 for p in tp :
                     myTuningSpace.append(p.GetValue())
 
-                if VERBOSE > 2:
-                    print("Candidates space done", flush = True)
 
                 # score the configurations
-                #print("pcNames", pcNames)
-                #print("pcVals", pcVals)
                 scoreDistrib = [1.0]*len(candidates)
                 bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)
-                changes = computeChanges(bottlenecks, self.profilingCountersModel, 7.5)
-                if VERBOSE > 2:
-                    print(self.tuningParamsNames)
-                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParamsNames, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
+                changes = computeChanges(bottlenecks, self.modelMetadata['pc'], self.modelMetadata['cc'])
+                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParametersReorderingFromSearchSpaceToModel, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)
 
                 if VERBOSE > 2:
-                    print("Scoring of the candidates done.", flush = True)
+                    print("[Profile-based searcher debug] Scoring of the candidates done.", flush = True)
 
                 # select next batch
                 selectedIndices = []
+                # if we have more candidates than BATCH, use weightedRandom to choose from them, biasing with score
                 if len(candidates) > BATCH :
                     numInBatch = 0
                     while numInBatch < BATCH :
@@ -941,19 +812,16 @@ class PyProfilingSearcher(ktt.Searcher):
                             selectedIndices.append(idx)
                             numInBatch = numInBatch + 1
                             scoreDistrib[idx] = 0.0
+                # if we have less candidates than BATCH, just put them all in batch
                 else:
                     for i in range(0, len(candidates)):
                         self.preselectedBatch.append(candidates[i])
 
-                if VERBOSE == 3:
-                    print("Turning off profiling, new batch selected with length ", len(self.preselectedBatch), " with configurations ")
-                    ind = []
-                    for c in self.preselectedBatch :
-                        ind.append(self.GetIndex(c))
-                    print(ind, flush = True)
-                self.currentConfiguration = self.preselectedBatch[0]
-                if BATCH > 1:
-                    self.preselectedBatch.pop(0)
+                if VERBOSE > 0:
+                    print("[Profile-based searcher info] Turning off profiling, new batch selected with length", len(self.preselectedBatch), "containing configurations:", getConfigurationIndices(self, self.preselectedBatch), flush = True)
+
+                # select configuration and remove it from batch
+                self.currentConfiguration = self.preselectedBatch.pop(0)
                 self.bestConf = None
                 self.tuner.SetProfiling(False)
 

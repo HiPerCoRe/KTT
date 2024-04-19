@@ -47,6 +47,8 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
     try
     {
         m_SearcherActive = m_Searcher.CalculateNextConfiguration(previousResult);
+        const auto& currentConfiguration = GetCurrentConfiguration();
+        Logger::LogInfo("Searcher selected configuration " + std::to_string(GetIndexForConfiguration(currentConfiguration)) + ": " + currentConfiguration.GetString());
     }
     catch (const std::runtime_error& error)
     {
@@ -261,6 +263,7 @@ void ConfigurationData::InitializeConfigurations()
     m_BestConfiguration = {initialBest, InvalidDuration};
     m_SearcherActive = true;
     m_Searcher.Initialize(*this);
+    Logger::LogInfo("Searcher selected configuration " + std::to_string(GetIndexForConfiguration(m_Searcher.GetCurrentConfiguration())) + ": " + m_Searcher.GetCurrentConfiguration().GetString());
 }
 
 void ConfigurationData::UpdateBestConfiguration(const KernelResult& previousResult)

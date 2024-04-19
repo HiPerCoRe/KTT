@@ -40,7 +40,10 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
         });
     }
 
-    Logger::LogInfo("Running kernel " + kernel.GetName() + " with configuration: " + configuration.GetString());
+    if (IsProfilingActive())
+        Logger::LogInfo("Profiling kernel " + kernel.GetName() + " with configuration: " + configuration.GetString());
+    else
+        Logger::LogInfo("Running kernel " + kernel.GetName() + " with configuration: " + configuration.GetString());
     auto launcher = GetKernelLauncher(kernel);
     KernelResult result = RunKernelInternal(kernel, configuration, dimensions, mode, launcher, output);
     ValidateResult(kernel, result, mode);
