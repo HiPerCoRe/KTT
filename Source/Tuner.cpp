@@ -603,7 +603,7 @@ void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_
         auto& interpreter = PythonInterpreter::GetInterpreter();
         pybind11::gil_scoped_acquire acquire;
         pybind11::module_ searcher = pybind11::module_::import(ProfileBasedSearcherName.c_str());
-        searcher.attr("executeSearcher")(this, id, modelPath, batchSize, neighborSize, randomSize);
+        searcher.attr("executeSearcher")(this, id, modelPath, batchSize, neighborSize, randomSize, this->GetLoggingLevel());
         interpreter.ReleaseInterpreter();
 
         #endif // KTT_PYTHON
