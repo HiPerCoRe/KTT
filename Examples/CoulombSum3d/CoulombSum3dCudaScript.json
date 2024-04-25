@@ -1,0 +1,173 @@
+{
+  "ConfigurationSpace": {
+    "TuningParameters": [
+      {
+        "Name": "WORK_GROUP_SIZE_X",
+        "Type": "uint",
+        "Values": "[16, 32]"
+      },
+      {
+        "Name": "WORK_GROUP_SIZE_Y",
+        "Type": "uint",
+        "Values": "[1, 2, 4, 8]"
+      },
+      {
+        "Name": "WORK_GROUP_SIZE_Z",
+        "Type": "uint",
+        "Values": "[1]"
+      },
+      {
+        "Name": "Z_ITERATIONS",
+        "Type": "uint",
+        "Values": "[1, 2, 4, 8, 16, 32]"
+      },
+      {
+        "Name": "INNER_UNROLL_FACTOR",
+        "Type": "uint",
+        "Values": "[0, 1, 2, 4, 8, 16, 32]"
+      },
+      {
+        "Name": "USE_CONSTANT_MEMORY",
+        "Type": "uint",
+        "Values": "[0]"
+      },
+      {
+        "Name": "USE_SOA",
+        "Type": "uint",
+        "Values": "[0, 1]"
+      },
+      {
+        "Name": "VECTOR_SIZE",
+        "Type": "uint",
+        "Values": "[1]"
+      }
+    ],
+    "Conditions" : [
+      {
+        "Parameters" : ["INNER_UNROLL_FACTOR", "Z_ITERATIONS"],
+        "Expression": "INNER_UNROLL_FACTOR < Z_ITERATIONS"
+      },
+      {
+        "Parameters" : ["WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"],
+        "Expression": "WORK_GROUP_SIZE_X * WORK_GROUP_SIZE_Y >= 64"
+      }
+    ]
+  },
+  "Search" : {
+    "Name": "ProfileBased",
+    "Attributes" : [
+      {
+        "Name" : "modelPath",
+        "Value" : "../../Examples/CoulombSum3d/Models/2080-coulomb_output_DT.sav"
+      },
+      {
+        "Name" : "batchSize",
+        "Value" : "10"
+      }
+    ]
+  },
+  "General": {
+    "LoggingLevel": "Info",
+    "TimeUnit": "Microseconds",
+    "OutputFile": "CoulombSumTuningOutput",
+    "OutputFormat": "JSON"
+  },
+  "KernelSpecification": {
+    "Language": "CUDA",
+    "KernelName": "directCoulombSum",
+    "KernelFile": "CoulombSum3d.cu",
+    "CompilerOptions": ["-use_fast_math"],
+    "SharedMemory": 0,
+    "GlobalSize": {
+      "X": "256 // WORK_GROUP_SIZE_X",
+      "Y": "256 // WORK_GROUP_SIZE_Y",
+      "Z": "256 // Z_ITERATIONS"
+    },
+    "GlobalSizeType": "CUDA",
+    "LocalSize": {
+      "X": "WORK_GROUP_SIZE_X",
+      "Y": "WORK_GROUP_SIZE_Y",
+      "Z": "1"
+    },
+    "Arguments": [
+      {
+        "Name": "atomInfo",
+        "Type": "float",
+        "Size": 256,
+        "FillType": "Constant",
+        "FillValue": 0.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Name": "atomInfoX",
+        "Type": "float",
+        "Size": 64,
+        "FillType": "Random",
+        "FillValue" : 20.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Name": "atomInfoY",
+        "Type": "float",
+        "Size": 64,
+        "FillType": "Random",
+        "FillValue": 20.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Name": "atomInfoZ",
+        "Type": "float",
+        "Size": 64,
+        "FillType": "Random",
+        "FillValue": 20.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Name": "atomInfoW",
+        "Type": "float",
+        "Size": 64,
+        "FillType": "Random",
+        "FillValue": 0.5,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Name": "atoms",
+        "Type": "int32",
+        "FillType": "Constant",
+        "FillValue": 64,
+        "MemoryType": "Scalar"
+      },
+      {
+        "Name": "gridSpacing",
+        "Type": "float",
+        "FillType": "Constant",
+        "FillValue": 0.5,
+        "MemoryType": "Scalar"
+      },
+      {
+        "Name": "gridDimensions",
+        "Type": "int32",
+        "FillType": "Constant",
+        "FillValue": 256,
+        "MemoryType": "Scalar"
+      },
+      {
+        "Name": "grid",
+        "Type": "float",
+        "Size": 16777216,
+        "TypeSize": 4,
+        "FillType": "Constant",
+        "FillValue": 0.0,
+        "AccessType": "WriteOnly",
+        "MemoryType": "Vector"
+      }
+
+
+    ]
+  }
+}

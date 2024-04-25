@@ -27,27 +27,20 @@ std::string() +
 "# 1 - info\n" +
 "# 2 - more info\n" +
 "# 3 - debug\n" +
-"VERBOSE = 2\n" +
-"if VERBOSE == 3:\n" +
-"    signal.signal(signal.SIGINT, lambda sig, frame: pdb.Pdb().set_trace(frame))\n" +
-"    #pdb.Pdb().set_trace()\n" +
 "\n" +
 "# all constant used by the searcher\n" +
 "# CORR_SHIFT: value added to correlation (positive forces to search parameters with weak correlation but strong variation)\n" +
 "# EXP: exponent used to prioritize configurations with high score (probab = score ^ EXP, where score is in <0, 1> )\n" +
 "# REACT_TO_INST_BOTTLENECKS: minimal instructions bottlenecks, which affects scoring of tuning configurations\n" +
 "# CUTOFF: maximal score of configurations, which are discarded from tuning space\n" +
-"# BATCH: number of configuration from which the fastest one is profiled\n" +
-"# NEIGHBOR_SIZE: number of neighboring configurations that are used for batch selection\n" +
-"# RANDOM_SIZE: number of random configurations that are used for batch selection\n" +
+"# BATCH: number of configuration from which the fastest one is profiled, set in KTT\n" +
+"# NEIGHBOR_SIZE: number of neighboring configurations that are used for batch selection, set in KTT\n" +
+"# RANDOM_SIZE: number of random configurations that are used for batch selection, set in KTT\n" +
 "# NEIGHBOR_DISTANCE: distance between configurations (how many TP have different values) that are still considered neighbors\n" +
 "CORR_SHIFT = 0.0\n" +
 "EXP = 8\n" +
 "REACT_TO_INST_BOTTLENECKS = 0.7\n" +
 "CUTOFF = -0.25\n" +
-"BATCH = 2\n" +
-"NEIGHBOR_SIZE = 100\n" +
-"RANDOM_SIZE = 10\n" +
 "NEIGHBOR_DISTANCE = 2\n" +
 "\n" +
 "########################### loading models functions ################################\n" +
@@ -55,7 +48,7 @@ std::string() +
 "def loadMLModel(trainedKnowledgeBase):\n" +
 "    return pickle.load(open(trainedKnowledgeBase, 'rb'))\n" +
 "\n" +
-"def loadMLModelMetadata (filename) :\n" +
+"def loadMLModelMetadata(filename) :\n" +
 "    metadata = {}\n" +
 "    with open(filename, 'r') as metadataFile:\n" +
 "        metadata = json.load(metadataFile)\n" +
@@ -115,7 +108,7 @@ std::string() +
 "# in interval <0, 1>\n" +
 "# GPU dependent, implemented for CUDA compute capabilities 3.0 - 7.5\n" +
 "\n" +
-"def analyzeBottlenecks (countersNames, countersData, cc, multiprocessors, cores):\n" +
+"def analyzeBottlenecks (countersNames, countersData, cc, multiprocessors, cores, verbose):\n" +
 "    bottlenecks = {}\n" +
 "    # analyze global memory\n" +
 "    if cc < 7.0 :\n" +
@@ -325,7 +318,7 @@ std::string() +
 "    #bnInstIssue = (100.0 - instrSlotUtil) / 100 * max(spUtilApprox/instrUtilFitted, dpUtilApprox/instrUtilFitted, sfuUtil/instrUtilFitted/10.0, cfUtilApprox/instrUtilFitted, ldstUtilApprox/instrUtilFitted, texFuUtil/instrUtilFitted/10.0, intUtilApprox/instrUtilFitted, miscUtilApprox/instrUtilFitted, bconvUtilApprox/instrUtilFitted)\n" +
 "    bottlenecks['bnInstIssue'] = bnInstIssue\n" +
 "\n" +
-"    if VERBOSE > 1 :\n" +
+"    if verbose > 1 :\n" +
 "        print(\"[Profile-based searcher details] bottlenecks:\", bottlenecks)\n" +
 "\n" +
 "    return bottlenecks\n" +
@@ -338,7 +331,7 @@ std::string() +
 "# Note: this function is separated from analyzeBottlenecks in order to manage\n" +
 "# portability across arch. easily (computed bottlenecks are arch. independent)\n" +
 "\n" +
-"def computeChanges(bottlenecks, countersNames, cc):\n" +
+"def computeChanges(bottlenecks, countersNames, cc, verbose):\n" +
 "    # set how important is to change particular profiling counters\n" +
 "    changeImportance = [0.0]*len(countersNames)\n" +
 "\n" +
@@ -414,7 +407,7 @@ std::string() +
 "    changeImportance[countersNames.index('Global size')] = bottlenecks['bnThreads']#bottlenecks['bnTailEffect'] + bottlenecks['bnThreads']\n" +
 "    #changeImportance[countersNames.index('Local size')] = - bottlenecks['bnTailEffect'] / 2\n" +
 "\n" +
-"    if VERBOSE > 1 :\n" +
+"    if verbose > 1 :\n" +
 "        print(\"[Profile-based searcher details] changeImportance:\", changeImportance)\n" +
 "\n" +
 "    return changeImportance\n" +
@@ -427,7 +420,7 @@ std::string() +
 "# GPU independent\n" +
 "# This version uses completely computed offline space\n" +
 "\n" +
-"def scoreTuningConfigurationsExact(changeImportance, tuningparamsNames, actualConf, tuningSpace, completeMapping, scoreDistrib):\n" +
+"def scoreTuningConfigurationsExact(changeImportance, tuningparamsNames, actualConf, tuningSpace, completeMapping, scoreDistrib, verbose):\n" +
 "    newScoreDistrib = [0.0] * len(tuningSpace)\n" +
 "    #search index of actualConf in completeMapping (some conf. can be missing, therefore, we need to check tuning parameters)\n" +
 "    actualPC = []\n" +
@@ -465,7 +458,7 @@ std::string() +
 "\n" +
 "    minScore = min(newScoreDistrib)\n" +
 "    maxScore = max(newScoreDistrib)\n" +
-"    if VERBOSE > 1 :\n" +
+"    if verbose > 1 :\n" +
 "        print(\"[Profile-based searcher details] scoreDistrib interval: \", minScore, maxScore)\n" +
 "    for i in range(0, len(tuningSpace)) :\n" +
 "        if newScoreDistrib[i] < CUTOFF :\n" +
@@ -484,7 +477,7 @@ std::string() +
 "        if scoreDistrib[i] == 0.0 :\n" +
 "            newScoreDistrib[i] = 0.0\n" +
 "\n" +
-"    if VERBOSE > 2 :\n" +
+"    if verbose > 2 :\n" +
 "        print(\"[Profile-based searcher debug] newScoreDistrib\", newScoreDistrib)\n" +
 "\n" +
 "    return newScoreDistrib\n" +
@@ -495,7 +488,7 @@ std::string() +
 "# counters and expected effect of the tuning parameters to profiling counters\n" +
 "# GPU independent\n" +
 "# This version uses predictor based on ML model\n" +
-"def scoreTuningConfigurationsPredictor(changeImportance, tuningParametersReorderingFromSearchSpaceToModel, actualConf, tuningSpace, scoreDistrib, loaded_model):\n" +
+"def scoreTuningConfigurationsPredictor(changeImportance, tuningParametersReorderingFromSearchSpaceToModel, actualConf, tuningSpace, scoreDistrib, loaded_model, verbose):\n" +
 "    def mulfunc(a, b, c):\n" +
 "        if (a * (b - c)) > 0.0:\n" +
 "            return 1.0\n" +
@@ -532,7 +525,7 @@ std::string() +
 "    changeImportance1 = np.array(changeImportance)\n" +
 "\n" +
 "    vfunc = np.vectorize(mulfunc)\n" +
-"    if VERBOSE < 3:\n" +
+"    if verbose < 3:\n" +
 "        # supressing the warning about dividing with zero\n" +
 "        # nan that results from that is converted to number just below\n" +
 "        with warnings.catch_warnings():\n" +
@@ -547,7 +540,7 @@ std::string() +
 "\n" +
 "    minScore = min(newScoreDistrib)\n" +
 "    maxScore = max(newScoreDistrib)\n" +
-"    if VERBOSE > 1 :\n" +
+"    if verbose > 1 :\n" +
 "        print(\"[Profile-based searcher details] scoreDistrib interval: \", minScore, maxScore)\n" +
 "    for i in range(0, len(tuningSpace)) :\n" +
 "        if newScoreDistrib[i] < CUTOFF :\n" +
@@ -566,7 +559,7 @@ std::string() +
 "        if scoreDistrib[i] == 0.0 :\n" +
 "            newScoreDistrib[i] = 0.0\n" +
 "\n" +
-"    if VERBOSE > 2 :\n" +
+"    if verbose > 2 :\n" +
 "        print(\"[Profile-based searcher debug] Predictor newScoreDistrib:\", newScoreDistrib)\n" +
 "\n" +
 "    return newScoreDistrib\n" +
@@ -634,6 +627,10 @@ std::string() +
 "    currentConfiguration = ktt.KernelConfiguration()\n" +
 "    tuner = None\n" +
 "    model = None\n" +
+"    batchSize = -1\n" +
+"    neighborSize = -1\n" +
+"    randomSize = -1\n" +
+"    verbose = 0\n" +
 "    # sometimes, the order of tuning parameters in the search space (as generated by KTT) differs from the order of tuning parameters in the saved ML model\n" +
 "    #therefore, we need to reorder them to align, so that the model works with the correctly ordered data\n" +
 "    tuningParametersReorderingFromSearchSpaceToModel = 0\n" +
@@ -645,17 +642,17 @@ std::string() +
 "\n" +
 "        # initialize the batch, make sure it includes unique, i.e. non-repeating configurations\n" +
 "        count = 0\n" +
-"        while count < BATCH:\n" +
-"            for i in range (count, BATCH) :\n" +
+"        while count < self.batchSize:\n" +
+"            for i in range (count, self.batchSize) :\n" +
 "                self.preselectedBatch.append(self.GetRandomConfiguration())\n" +
 "            self.preselectedBatch = self.GetUniqueConfigurations(self.preselectedBatch)\n" +
 "            count = len(self.preselectedBatch)\n" +
-"        if VERBOSE > 0:\n" +
+"        if self.verbose > 0:\n" +
 "            print(\"[Profile-based searcher info] Batch initialized with configurations \", getConfigurationIndices(self, self.preselectedBatch))\n" +
 "\n" +
 "        # select configuration and remove it from he batch\n" +
 "        self.currentConfiguration = self.preselectedBatch.pop(0)\n" +
-"        if VERBOSE > 0:\n" +
+"        if self.verbose > 0:\n" +
 "            print(\"[Profile-based searcher info] Selected configuration \" + str(self.GetIndex(self.currentConfiguration)), flush = True)\n" +
 "\n" +
 "        # determine the difference in the order of TP from search space and from the model\n" +
@@ -665,12 +662,12 @@ std::string() +
 "        self.tuningParametersReorderingFromSearchSpaceToModel = []\n" +
 "        for tp in self.tuningParamsNames:\n" +
 "            self.tuningParametersReorderingFromSearchSpaceToModel.append(self.modelMetadata['tp'].index(tp))\n" +
-"        if VERBOSE > 2:\n" +
+"        if self.verbose > 2:\n" +
 "            print(\"[Profile-based searcher debug] Tuning parameters in the search space:\", self.tuningParamsNames)\n" +
 "            print(\"[Profile-based searcher debug] Tuning parameters in the model:\", self.modelMetadata['tp'])\n" +
 "            print(\"[Profile-based searcher debug] Tuning parameters reordering list\", self.tuningParametersReorderingFromSearchSpaceToModel)\n" +
 "\n" +
-"    def Configure(self, tuner, modelFile):\n" +
+"    def Configure(self, tuner, modelFile, batchSize, neighborSize, randomSize, logLevel):\n" +
 "        self.tuner = tuner\n" +
 "        self.ccMajor = tuner.GetCurrentDeviceInfo().GetCudaComputeCapabilityMajor()\n" +
 "        self.ccMinor = tuner.GetCurrentDeviceInfo().GetCudaComputeCapabilityMinor()\n" +
@@ -679,6 +676,26 @@ std::string() +
 "\n" +
 "        self.modelMetadata = loadMLModelMetadata(modelFile + \".metadata.json\")\n" +
 "        self.model = loadMLModel(modelFile)\n" +
+"        self.batchSize = batchSize\n" +
+"        self.neighborSize = neighborSize\n" +
+"        self.randomSize = randomSize\n" +
+"\n" +
+"        if (str(logLevel) == \"LoggingLevel.Off\"):\n" +
+"            self.verbose = 0\n" +
+"        if (str(logLevel) == \"LoggingLevel.Info\"):\n" +
+"            self.verbose = 1\n" +
+"        if (str(logLevel) == \"LoggingLevel.Warning\" or str(logLevel) == \"LoggingLevel.Error\"):\n" +
+"            self.verbose = 2\n" +
+"        if (str(logLevel) == \"LoggingLevel.Debug\"):\n" +
+"            self.verbose = 3\n" +
+"\n" +
+"        if self.verbose > 0:\n" +
+"            print(\"[Profile-based searcher info] Loaded model file\", modelFile)\n" +
+"            print(\"[Profile-based searcher info] Batch size set to\", batchSize)\n" +
+"            print(\"[Profile-based searcher info] Neighbor size set to\", neighborSize)\n" +
+"            print(\"[Profile-based searcher info] Random size set to\", randomSize)\n" +
+"            print(\"[Profile-based searcher info] Log level set to\", logLevel)\n" +
+"\n" +
 "\n" +
 "# GetUniqueConfigurations\n" +
 "# takes a list and returns a list that does not contain repeating configurations\n" +
@@ -700,43 +717,43 @@ std::string() +
 "        if (previousResult.IsValid()) and ((self.bestConf == None) or (previousResult.GetKernelDuration() < self.bestDuration)) :\n" +
 "            self.bestDuration = previousResult.GetKernelDuration()\n" +
 "            self.bestConf = self.currentConfiguration\n" +
-"            if VERBOSE > 1:\n" +
+"            if self.verbose > 1:\n" +
 "                print(\"[Profile-based searcher details] Found new best configuration\", self.GetIndex(self.bestConf), \"with kernel time\", self.bestDuration/1000, \"us\", flush = True)\n" +
 "\n" +
 "        # if we still have configurations in the batch\n" +
 "        if len(self.preselectedBatch) > 0:\n" +
-"            if VERBOSE > 1:\n" +
+"            if self.verbose > 1:\n" +
 "                print(\"[Profile-based searcher details] PreselectedBatch has\", len(self.preselectedBatch), \"remaining items:\", getConfigurationIndices(self, self.preselectedBatch), flush = True)\n" +
 "            # just take one from the top and run that\n" +
 "            self.currentConfiguration = self.preselectedBatch.pop(0)\n" +
 "        # if we have an empty batch and we don't have any best configuration from it (invalid configurations, failed compilation, runtime, or validation)\n" +
 "        elif self.bestConf == None:\n" +
-"            if VERBOSE > 1:\n" +
+"            if self.verbose > 1:\n" +
 "                print(\"[Profile-based searcher details] Preselected batch contained invalid configurations only, generating random one.\")\n" +
 "            # initialize the batch, make sure it includes unique, i.e. non-repeating configurations\n" +
 "            count = 0\n" +
-"            maxBatchSize = min(BATCH, self.GetUnexploredConfigurationsCount())\n" +
+"            maxBatchSize = min(self.batchSize, self.GetUnexploredConfigurationsCount())\n" +
 "            while count < maxBatchSize:\n" +
 "                for i in range (count, maxBatchSize) :\n" +
 "                    self.preselectedBatch.append(self.GetRandomConfiguration())\n" +
 "                self.preselectedBatch = self.GetUniqueConfigurations(self.preselectedBatch)\n" +
 "                count = len(self.preselectedBatch)\n" +
-"            if VERBOSE > 0:\n" +
+"            if self.verbose > 0:\n" +
 "                print(\"[Profile-based searcher info] Batch generated with configurations \", getConfigurationIndices(self, self.preselectedBatch))\n" +
 "            # select configuration and remove it from batch\n" +
 "            self.currentConfiguration = self.preselectedBatch.pop(0)\n" +
 "        # if we have an empty batch and we have the fastest configuration from it\n" +
 "        else:\n" +
-"            if VERBOSE > 1:\n" +
+"            if self.verbose > 1:\n" +
 "                print(\"[Profile-based searcher details] Preselected batch empty\", flush = True)\n" +
 "            if self.bestDuration != -1 :\n" +
 "                # we run the fastest one once again, but with profiling\n" +
 "                self.currentConfiguration = self.bestConf\n" +
 "                self.bestDuration = -1\n" +
 "                self.tuner.SetProfiling(True)\n" +
-"                if VERBOSE > 0 :\n" +
+"                if self.verbose > 0 :\n" +
 "                    print(\"[Profile-based searcher info] Running profiling for the best configuration from the batch, configuration\", str(self.GetIndex(self.currentConfiguration)), flush = True)\n" +
-"            # this happens when the fastest configuration is the last one, e.g. with BATCH == 1, then we just take profiling info from the last run\n" +
+"            # this happens when the fastest configuration is the last one, e.g. with batchSize == 1, then we just take profiling info from the last run\n" +
 "            else :\n" +
 "                # get PCs from the last tuning run\n" +
 "                if len(previousResult.GetResults()) > 1:\n" +
@@ -760,11 +777,11 @@ std::string() +
 "\n" +
 "                # candidates pool generation\n" +
 "                # select candidate configurations according to position of the best one plus some random sample\n" +
-"                candidates = self.GetNeighbourConfigurations(self.bestConf, NEIGHBOR_DISTANCE, NEIGHBOR_SIZE)\n" +
+"                candidates = self.GetNeighbourConfigurations(self.bestConf, NEIGHBOR_DISTANCE, self.neighborSize)\n" +
 "                # make sure we don't have repeating configurations in the candidates list\n" +
 "                candidates = self.GetUniqueConfigurations(candidates)\n" +
 "                # number of candidates needs to decrease at the end of the search, as we don't have enough unexplored configurations\n" +
-"                maxPossibleCandidatesSize = min(len(candidates) + RANDOM_SIZE, self.GetUnexploredConfigurationsCount())\n" +
+"                maxPossibleCandidatesSize = min(len(candidates) + self.randomSize, self.GetUnexploredConfigurationsCount())\n" +
 "                # add random configurations to fill up the candidates pool\n" +
 "                count = len(candidates)\n" +
 "                while count < maxPossibleCandidatesSize:\n" +
@@ -774,7 +791,7 @@ std::string() +
 "                    count = len(candidates)\n" +
 "\n" +
 "\n" +
-"                if VERBOSE > 1:\n" +
+"                if self.verbose > 1:\n" +
 "                    print(\"[Profile-based searcher details] Evaluating model for\", str(len(candidates)), \"candidates...\", flush = True)\n" +
 "\n" +
 "                # create a small tuning space from candidates\n" +
@@ -793,19 +810,19 @@ std::string() +
 "\n" +
 "                # score the configurations\n" +
 "                scoreDistrib = [1.0]*len(candidates)\n" +
-"                bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors)\n" +
-"                changes = computeChanges(bottlenecks, self.modelMetadata['pc'], self.modelMetadata['cc'])\n" +
-"                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParametersReorderingFromSearchSpaceToModel, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model)\n" +
+"                bottlenecks = analyzeBottlenecks(pcNames, pcVals, self.cc, self.multiprocessors, self.convertSM2Cores() * self.multiprocessors, self.verbose)\n" +
+"                changes = computeChanges(bottlenecks, self.modelMetadata['pc'], self.modelMetadata['cc'], self.verbose)\n" +
+"                scoreDistrib = scoreTuningConfigurationsPredictor(changes, self.tuningParametersReorderingFromSearchSpaceToModel, myTuningSpace, candidatesTuningSpace, scoreDistrib, self.model, self.verbose)\n" +
 "\n" +
-"                if VERBOSE > 2:\n" +
+"                if self.verbose > 2:\n" +
 "                    print(\"[Profile-based searcher debug] Scoring of the candidates done.\", flush = True)\n" +
 "\n" +
 "                # select next batch\n" +
 "                selectedIndices = []\n" +
-"                # if we have more candidates than BATCH, use weightedRandom to choose from them, biasing with score\n" +
-"                if len(candidates) > BATCH :\n" +
+"                # if we have more candidates than batchSize, use weightedRandom to choose from them, biasing with score\n" +
+"                if len(candidates) > self.batchSize :\n" +
 "                    numInBatch = 0\n" +
-"                    while numInBatch < BATCH :\n" +
+"                    while numInBatch < self.batchSize :\n" +
 "                        idx = weightedRandomSearchStep(scoreDistrib, len(candidates))\n" +
 "                        #check if we have not chosen the same configuration in previous iterations\n" +
 "                        if selectedIndices == [] or idx not in selectedIndices:\n" +
@@ -813,12 +830,12 @@ std::string() +
 "                            selectedIndices.append(idx)\n" +
 "                            numInBatch = numInBatch + 1\n" +
 "                            scoreDistrib[idx] = 0.0\n" +
-"                # if we have less candidates than BATCH, just put them all in batch\n" +
+"                # if we have less candidates than batchSize, just put them all in batch\n" +
 "                else:\n" +
 "                    for i in range(0, len(candidates)):\n" +
 "                        self.preselectedBatch.append(candidates[i])\n" +
 "\n" +
-"                if VERBOSE > 0:\n" +
+"                if self.verbose > 0:\n" +
 "                    print(\"[Profile-based searcher info] Turning off profiling, new batch selected with length\", len(self.preselectedBatch), \"containing configurations:\", getConfigurationIndices(self, self.preselectedBatch), flush = True)\n" +
 "\n" +
 "                # select configuration and remove it from batch\n" +
@@ -858,8 +875,8 @@ std::string() +
 "            print(\"Warning: unknown number of cores for SM \" + str(self.ccMajor) + \".\" + str(self.ccMinor) + \", using default value of \" + str(defaultSM))\n" +
 "            return defaultSM\n" +
 "\n" +
-"def executeSearcher(tuner, kernel, model):\n" +
+"def executeSearcher(tuner, kernel, model, batchSize, neighborSize, randomSize, logLevel):\n" +
 "    searcher = PyProfilingSearcher()\n" +
 "    tuner.SetSearcher(kernel, searcher)\n" +
-"    searcher.Configure(tuner, model)\n" +
+"    searcher.Configure(tuner, model, batchSize, neighborSize, randomSize, logLevel)\n" +
 "";

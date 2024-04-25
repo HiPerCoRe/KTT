@@ -25,8 +25,20 @@ void SearcherCommand::Execute(TunerContext& context)
         searcher = std::make_unique<McmcSearcher>();
         break;
     case SearcherType::ProfileBased:
-        context.GetTuner().SetProfileBasedSearcher(context.GetKernelId(), m_Attributes["modelPath"]);
-        return;
+        {
+          // if default values needs to be changed, do it also in Source/Tuner.cpp
+          uint batchSize = 5;
+          if (m_Attributes.count("batchSize") > 0)
+            batchSize = std::stoul(m_Attributes["batchSize"]);
+          uint neighborSize = 100;
+          if (m_Attributes.count("neighborSize") > 0)
+            neighborSize = std::stoul(m_Attributes["neighborSize"]);
+          uint randomSize = 10;
+          if (m_Attributes.count("randomSize") > 0)
+            randomSize = std::stoul(m_Attributes["randomSize"]);
+          context.GetTuner().SetProfileBasedSearcher(context.GetKernelId(), m_Attributes["modelPath"], false, batchSize, neighborSize, randomSize);
+          return;
+        }
     default:
         KttLoaderError("Unhandled searcher type");
     }

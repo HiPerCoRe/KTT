@@ -588,8 +588,7 @@ void Tuner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
     }
 }
 
-void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_unused]] const std::string& modelPath,
-    [[maybe_unused]] const bool useBuiltinModule)
+void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_unused]] const std::string& modelPath, [[maybe_unused]] const bool useBuiltinModule, [[maybe_unused]] const uint batchSize, [[maybe_unused]] const uint neighborSize, [[maybe_unused]] const uint randomSize)
 {
     try
     {
@@ -604,7 +603,7 @@ void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_
         auto& interpreter = PythonInterpreter::GetInterpreter();
         pybind11::gil_scoped_acquire acquire;
         pybind11::module_ searcher = pybind11::module_::import(ProfileBasedSearcherName.c_str());
-        searcher.attr("executeSearcher")(this, id, modelPath);
+        searcher.attr("executeSearcher")(this, id, modelPath, batchSize, neighborSize, randomSize, this->GetLoggingLevel());
         interpreter.ReleaseInterpreter();
 
         #endif // KTT_PYTHON

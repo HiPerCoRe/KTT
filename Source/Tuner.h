@@ -741,8 +741,11 @@ public:
       * @param modelPath Path to a ML model file containing trained model for the tuned kernel.
       * @param useBuiltinModule Toggles usage of built-in profile-based searcher module. If set to false, the built-in module will not be used,
       * making it possible to use externally modified version of module which is useful for debugging.
+      * @param batchSize number of configuration from which the fastest one is profiled. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
+      * @param neighborSize number of neighboring configurations that are used for batch selection. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
+      * randomSize number of random configurations that are used for batch selection. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
       */
-    void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true);
+    void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10);
 
     /** @fn void InitializeConfigurationData(const KernelId id)
       * Generates configuration space and initializes searcher for the specified kernel.
