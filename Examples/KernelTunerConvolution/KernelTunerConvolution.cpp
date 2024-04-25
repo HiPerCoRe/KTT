@@ -14,18 +14,20 @@ const std::string kernelPrefix = "../";
 #if KTT_CUDA_EXAMPLE
     const std::string defaultKernelFile = kernelPrefix + "../Examples/KernelTunerConvolution/KernelTunerConvolution.cu";
     const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/KernelTunerConvolution/KernelTunerConvolutionReference.cu";
+    const std::string defaultMlModel = kernelPrefix + "../Examples/KernelTunerConvolution/Models/2080-KTConvolutionOutput_DT.sav";
     const auto computeApi = ktt::ComputeApi::CUDA;
 #elif KTT_OPENCL_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/KernelTunerConvolution/KernelTunerConvolution.cl";
-    const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/KernelTunerConvolution/KernelTunerConvolutionReference.cl";
     const auto computeApi = ktt::ComputeApi::OpenCL;
 #endif
 
 // Toggle rapid test (e.g., disable output validation).
-const bool rapidTest = false;
+const bool rapidTest = true;
 
 // Toggle kernel profiling.
 const bool useProfiling = false;
+
+// Toggle usage of profile-based searcher
+const bool useProfileSearcher = true;
 
 // Settings (synchronise these with kernel source files)
 const int HFS = 7; // Half filter size
@@ -182,7 +184,15 @@ int main(int argc, char** argv)
     }
 
     // Launch kernel tuning
-    const auto results = tuner.Tune(kernel);
+    //tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
+    if constexpr (useProfileSearcher)
+    {
+        tuner.SetProfileBasedSearcher(kernel, defaultMlModel, false);
+    }
+    else
+        tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
+    const auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(600));
+    //const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "KTConvolutionOutput", ktt::OutputFormat::XML);
     tuner.SaveResults(results, "KTConvolutionOutput", ktt::OutputFormat::JSON);
 

@@ -84,7 +84,7 @@
                 for (int yi=0; yi<TILE_SIZE_Y; yi++) {   
                     #pragma unroll
                     for (int xi=0; xi<TILE_SIZE_X; xi++) {
-                        sum[yi][xi] += sh_input[ty+yi*BLOCK_SIZE_Y+i][tx+xi*BLOCK_SIZE_X+j] * filter[i*(HFS*2+1)+j]; //TODO: faster with d_filter, but KTT has to move data from host to constant array
+                        sum[yi][xi] += sh_input[ty+yi*BLOCK_SIZE_Y+i][tx+xi*BLOCK_SIZE_X+j] * d_filter[i*(HFS*2+1)+j]; //TODO: faster with d_filter, but KTT has to move data from host to constant array
                     }
                 }
             }

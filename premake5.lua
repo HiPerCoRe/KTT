@@ -737,6 +737,13 @@ project "KernelTunerConvolutionCuda"
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
+project "KernelTunerPnpolyCuda"
+    kind "ConsoleApp"
+    files {"Examples/KernelTunerPnpoly/*.cpp", "Examples/KernelTunerPnpoly/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
 end -- cudaProjects
     
 end -- _OPTIONS["no-examples"]
