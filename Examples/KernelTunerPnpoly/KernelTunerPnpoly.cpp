@@ -14,7 +14,7 @@ const std::string kernelPrefix = "../";
 #if KTT_CUDA_EXAMPLE
     const std::string defaultKernelFile = kernelPrefix + "../Examples/KernelTunerPnpoly/KernelTunerPnpoly.cu";
     const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/KernelTunerPnpoly/KernelTunerPnpolyReference.cu";
-    const std::string defaultMlModel = kernelPrefix + "../Examples/KernelTunerPnpoly/Models/3090-KTPnpolyOutput_DT.sav";
+    const std::string defaultMlModel = kernelPrefix + "../Examples/KernelTunerPnpoly/Models/2080-KTPnpolyOutput_DT.sav";
     const auto computeApi = ktt::ComputeApi::CUDA;
 #elif KTT_OPENCL_EXAMPLE
     const auto computeApi = ktt::ComputeApi::OpenCL;
@@ -162,8 +162,8 @@ int main(int argc, char** argv)
     {
         tuner.SetProfileBasedSearcher(kernel, defaultMlModel, false);
     }
-    //else
-    //    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
+    else
+        tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
     const auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(600));
     //const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "KTPnpolyOutput", ktt::OutputFormat::XML);
