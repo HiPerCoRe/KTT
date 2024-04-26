@@ -1,15 +1,15 @@
 {
-    "cc": 7.5,
+    "cc": 8.6,
     "tp": [
         "BLOCK_SIZE_X",
         "BLOCK_SIZE_Y",
         "TILE_SIZE_X",
         "TILE_SIZE_Y",
-        "READ_ONLY",
+        "PADDING",
         "IMAGE_WIDTH",
         "IMAGE_HEIGHT",
         "HFS",
-        "PADDING"
+        "READ_ONLY"
     ],
     "pc": [
         "Global size",
