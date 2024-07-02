@@ -121,6 +121,14 @@ void from_json(const json& j, CompilerOptionsCommand& command)
     command = CompilerOptionsCommand(options);
 }
 
+void from_json(const json& j, ProfilingCommand& command)
+{
+    bool profilingOn;
+    j.at("Profiling").get_to(profilingOn);
+
+    command = ProfilingCommand(profilingOn);
+}
+
 void from_json(const json& j, ConstraintCommand& command)
 {
     std::vector<std::string> parameters;

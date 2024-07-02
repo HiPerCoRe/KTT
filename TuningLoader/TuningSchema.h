@@ -187,6 +187,9 @@ R"(
                         "type": "string"
                     }
                 },
+                "Profiling": {
+                    "type": "boolean"
+                },
                 "KernelName": {
                     "type": "string"
                 },
