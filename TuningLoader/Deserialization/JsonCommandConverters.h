@@ -5,6 +5,7 @@
 #include <Commands/AddArgumentCommand.h>
 #include <Commands/AddKernelCommand.h>
 #include <Commands/CompilerOptionsCommand.h>
+#include <Commands/ProfilingCommand.h>
 #include <Commands/ConstraintCommand.h>
 #include <Commands/CreateTunerCommand.h>
 #include <Commands/LoggingLevelCommand.h>
@@ -174,6 +175,7 @@ void from_json(const json& j, SearcherAttribute& attribute);
 void from_json(const json& j, AddArgumentCommand& command);
 void from_json(const json& j, AddKernelCommand& command);
 void from_json(const json& j, CompilerOptionsCommand& command);
+void from_json(const json& j, ProfilingCommand& command);
 void from_json(const json& j, ConstraintCommand& command);
 void from_json(const json& j, CreateTunerCommand& command);
 void from_json(const json& j, LoggingLevelCommand& command);

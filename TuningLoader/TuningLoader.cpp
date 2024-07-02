@@ -179,6 +179,12 @@ void TuningLoader::DeserializeCommands(const std::string& tuningScript)
         m_Commands.push_back(std::make_unique<CompilerOptionsCommand>(compilerOptionsCommand));
     }
 
+    if (kernelSpecification.contains("Profiling"))
+    {
+      auto profilingCommand = kernelSpecification.get<ProfilingCommand>();
+      m_Commands.push_back(std::make_unique<ProfilingCommand>(profilingCommand));
+    }
+
     std::vector<AddArgumentCommand> argumentCommands;
 
     if (kernelSpecification.contains("Arguments"))
