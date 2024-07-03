@@ -174,6 +174,20 @@ R"(
                 "LocalSize"
             ],
             "properties": {
+                "Device": {
+                    "type": "object",
+                    "properties": {
+                        "PlatformId": {
+                            "type": "integer"
+                        },
+                        "DeviceId": {
+                            "type": "integer"
+                        },
+                        "Name": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "Language": {
                     "enum": [
                         "OpenCL",

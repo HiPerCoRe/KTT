@@ -142,9 +142,19 @@ void from_json(const json& j, ConstraintCommand& command)
 
 void from_json(const json& j, CreateTunerCommand& command)
 {
+    PlatformIndex platformId = 0;
+    DeviceIndex deviceId = 0;
     ComputeApi api;
+    if (j.contains("Device"))
+    {
+      if (j.at("Device").contains("PlatformId"))
+          j.at("Device").at("PlatformId").get_to(platformId);
+      if (j.at("Device").contains("DeviceId"))
+          j.at("Device").at("DeviceId").get_to(deviceId);
+    }
     j.at("Language").get_to(api);
-    command = CreateTunerCommand(api);
+    command = CreateTunerCommand(platformId, deviceId, api);
+
 }
 
 void from_json(const json& j, LoggingLevelCommand& command)
