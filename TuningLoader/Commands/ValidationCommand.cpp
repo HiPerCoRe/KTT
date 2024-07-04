@@ -3,14 +3,17 @@
 namespace ktt
 {
 
-ValidationCommand::ValidationCommand(const ArgumentId& referenceId, const AddArgumentCommand& command) :
+ValidationCommand::ValidationCommand(const ArgumentId& referenceId, const AddArgumentCommand& command, const ValidationMethod validationMethod, const double validationThreshold) :
     m_ReferencedId(referenceId),
-    m_ArgumentCommand(command)
+    m_ArgumentCommand(command),
+    m_ValidationMethod(validationMethod),
+    m_ValidationThreshold(validationThreshold)
 {}
 
 void ValidationCommand::Execute(TunerContext& context)
 {
     m_ArgumentCommand.Execute(context);
+    context.GetTuner().SetValidationMethod(m_ValidationMethod, m_ValidationThreshold);
     context.GetTuner().SetReferenceArgument(m_ArgumentCommand.GetId(), m_ReferencedId);
 }
 

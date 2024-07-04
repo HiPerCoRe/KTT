@@ -290,8 +290,21 @@ void from_json(const json& j, ValidationCommand& command)
 {
     const auto target = j.at("TargetName").get<ArgumentId>();
     const auto reference = j.get<AddArgumentCommand>();
+    ValidationMethod method = ValidationMethod::SideBySideComparison;
+    double threshold = 1e-4;
 
-    command = ValidationCommand(target, reference);
+
+    if (j.contains("ValidationMethod"))
+    {
+        j.at("ValidationMethod").get_to(method);
+    }
+    if (j.contains("ValidationThreshold"))
+    {
+        j.at("ValidationThreshold").get_to(threshold);
+    }
+
+    command = ValidationCommand(target, reference, method, threshold);
+
 }
 
 } // namespace ktt
