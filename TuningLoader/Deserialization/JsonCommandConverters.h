@@ -168,6 +168,13 @@ NLOHMANN_JSON_SERIALIZE_ENUM(TimeUnit,
     {TimeUnit::Seconds, "Seconds"}
 });
 
+NLOHMANN_JSON_SERIALIZE_ENUM(ValidationMethod,
+{
+    {ValidationMethod::AbsoluteDifference, "AbsoluteDifference"},
+    {ValidationMethod::SideBySideComparison, "SideBySideComparison"},
+    {ValidationMethod::SideBySideRelativeComparison, "SideBySideRelativeComparison"}
+});
+
 void to_json(json& j, const DimensionVector& vector);
 void from_json(const json& j, DimensionVector& vector);
 

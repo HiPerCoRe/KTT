@@ -389,6 +389,16 @@ R"(
                         },
                         "DataSource": {
                             "type": "string"
+                        },
+                        "ValidationMethod": {
+                            "enum": [
+                                "AbsoluteDifference",
+                                "SideBySideComparison",
+                                "SideBySideRelativeComparison"
+                            ]
+                        },
+                        "ValidationThreshold": {
+                            "type": "number"
                         }
                     }
                 }
