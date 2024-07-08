@@ -358,47 +358,49 @@ R"(
                 },
                 "ReferenceArguments": {
                     "type": "array",
-                    "required": [
-                        "Name",
-                        "TargetName",
-                        "FillType"
-                    ],
-                    "properties": {
-                        "Name": {
-                            "type": "string"
-                        },
-                        "TargetName": {
-                            "type": "string"
-                        },
-                        "FillType": {
-                            "enum": [
-                                "Constant",
-                                "Random",
-                                "Generator",
-                                "Script",
-                                "BinaryRaw",
-                                "BinaryHDF"
-                            ]
-                        },
-                        "FillValue": {
-                            "type": "number",
-                            "examples": [
-                                40,
-                                1.0
-                            ]
-                        },
-                        "DataSource": {
-                            "type": "string"
-                        },
-                        "ValidationMethod": {
-                            "enum": [
-                                "AbsoluteDifference",
-                                "SideBySideComparison",
-                                "SideBySideRelativeComparison"
-                            ]
-                        },
-                        "ValidationThreshold": {
-                            "type": "number"
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "Name",
+                            "TargetName",
+                            "FillType"
+                        ],
+                        "properties": {
+                            "Name": {
+                                "type": "string"
+                            },
+                            "TargetName": {
+                                "type": "string"
+                            },
+                            "FillType": {
+                                "enum": [
+                                    "Constant",
+                                    "Random",
+                                    "Generator",
+                                    "Script",
+                                    "BinaryRaw",
+                                    "BinaryHDF"
+                                ]
+                            },
+                            "FillValue": {
+                                "type": "number"
+                            },
+                            "DataSource": {
+                                "type": "string"
+                            },
+                            "RandomSeed": {
+                                "type": "integer"
+                            },
+                            "ValidationMethod": {
+                                "enum": [
+                                    "AbsoluteDifference",
+                                    "SideBySideComparison",
+                                    "SideBySideRelativeComparison"
+                                ]
+                            },
+                            "ValidationThreshold": {
+                                "type": "number"
+                            }
                         }
                     }
                 }
