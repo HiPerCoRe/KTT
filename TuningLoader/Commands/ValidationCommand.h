@@ -12,7 +12,7 @@ class ValidationCommand : public TunerCommand
 {
 public:
     ValidationCommand() = default;
-    explicit ValidationCommand(const ArgumentId& referenceId, const AddArgumentCommand& command);
+    explicit ValidationCommand(const ArgumentId& referenceId, const AddArgumentCommand& command, const ValidationMethod validationMethod, const double validationThreshold);
 
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
@@ -22,6 +22,8 @@ public:
 private:
     ArgumentId m_ReferencedId;
     AddArgumentCommand m_ArgumentCommand;
+    ValidationMethod m_ValidationMethod;
+    double m_ValidationThreshold;
 };
 
 } // namespace ktt

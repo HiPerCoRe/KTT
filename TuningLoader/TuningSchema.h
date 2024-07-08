@@ -174,6 +174,20 @@ R"(
                 "LocalSize"
             ],
             "properties": {
+                "Device": {
+                    "type": "object",
+                    "properties": {
+                        "PlatformId": {
+                            "type": "integer"
+                        },
+                        "DeviceId": {
+                            "type": "integer"
+                        },
+                        "Name": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "Language": {
                     "enum": [
                         "OpenCL",
@@ -186,6 +200,9 @@ R"(
                     "items": {
                         "type": "string"
                     }
+                },
+                "Profiling": {
+                    "type": "boolean"
                 },
                 "KernelName": {
                     "type": "string"
@@ -372,6 +389,16 @@ R"(
                         },
                         "DataSource": {
                             "type": "string"
+                        },
+                        "ValidationMethod": {
+                            "enum": [
+                                "AbsoluteDifference",
+                                "SideBySideComparison",
+                                "SideBySideRelativeComparison"
+                            ]
+                        },
+                        "ValidationThreshold": {
+                            "type": "number"
                         }
                     }
                 }

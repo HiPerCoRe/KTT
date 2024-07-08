@@ -121,6 +121,14 @@ void from_json(const json& j, CompilerOptionsCommand& command)
     command = CompilerOptionsCommand(options);
 }
 
+void from_json(const json& j, ProfilingCommand& command)
+{
+    bool profilingOn;
+    j.at("Profiling").get_to(profilingOn);
+
+    command = ProfilingCommand(profilingOn);
+}
+
 void from_json(const json& j, ConstraintCommand& command)
 {
     std::vector<std::string> parameters;
@@ -134,9 +142,19 @@ void from_json(const json& j, ConstraintCommand& command)
 
 void from_json(const json& j, CreateTunerCommand& command)
 {
+    PlatformIndex platformId = 0;
+    DeviceIndex deviceId = 0;
     ComputeApi api;
+    if (j.contains("Device"))
+    {
+      if (j.at("Device").contains("PlatformId"))
+          j.at("Device").at("PlatformId").get_to(platformId);
+      if (j.at("Device").contains("DeviceId"))
+          j.at("Device").at("DeviceId").get_to(deviceId);
+    }
     j.at("Language").get_to(api);
-    command = CreateTunerCommand(api);
+    command = CreateTunerCommand(platformId, deviceId, api);
+
 }
 
 void from_json(const json& j, LoggingLevelCommand& command)
@@ -272,8 +290,21 @@ void from_json(const json& j, ValidationCommand& command)
 {
     const auto target = j.at("TargetName").get<ArgumentId>();
     const auto reference = j.get<AddArgumentCommand>();
+    ValidationMethod method = ValidationMethod::SideBySideComparison;
+    double threshold = 1e-4;
 
-    command = ValidationCommand(target, reference);
+
+    if (j.contains("ValidationMethod"))
+    {
+        j.at("ValidationMethod").get_to(method);
+    }
+    if (j.contains("ValidationThreshold"))
+    {
+        j.at("ValidationThreshold").get_to(threshold);
+    }
+
+    command = ValidationCommand(target, reference, method, threshold);
+
 }
 
 } // namespace ktt
