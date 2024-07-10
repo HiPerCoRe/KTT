@@ -46,7 +46,7 @@ print("Creating " + method + " models for " + problem + " for different GPUs, ta
 # (processor_name, computing_capability, no of multiprocessors, no of cuda cores, no of profiling_counters)
 processors = [["680", 3.0, 8, 1536, 35], ["750", 5.0, 4, 512, 41], ["1070", 6.1, 15, 1920, 43], ["2080", 7.5, 46, 2944, 38]]
 # (problem_name, tuning_parameters, boundary)
-problemsGeneral = [["coulomb", 8, '--compute_bound'], ["mtran", 9, '--memory_bound'], ["gemm-reduced", 15, '--compute_bound'], ["nbody", 8, '--compute_bound'], ["conv", 10, "--compute_bound"]]
+problemsGeneral = [["coulomb", 8, '--compute_bound'], ["mtran", 9, '--memory_bound'], ["gemm-reduced", 15, '--compute_bound'], ["nbody", 8, '--compute_bound'], ["conv", 10, "--compute_bound"], ["vectorAdd", 1, "--memory_bound"]]
 problemsGemm = [["gemm-reduced", 15, '--compute_bound'], ["gemm-128-128-128", 15, '--compute_bound'], ["gemm-16-4096-4096", 15, '--memory_bound'], ["gemm-4096-16-4096", 15, '--memory_bound'], ["gemm-4096-4096-16", 15, '--compute_bound']]
 problemsFrom = [["gemm-reduced", 15]]
 
