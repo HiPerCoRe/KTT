@@ -16,7 +16,6 @@ Options:
 
 import os
 from sklearn.inspection import partial_dependence
-from sklearn.inspection import plot_partial_dependence
 # To use this experimental feature, we need to explicitly ask for it:
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.datasets import fetch_california_housing
