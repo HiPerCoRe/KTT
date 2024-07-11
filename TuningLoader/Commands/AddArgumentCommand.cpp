@@ -5,10 +5,9 @@
 
 namespace ktt
 {
-
 AddArgumentCommand::AddArgumentCommand(const ArgumentId& id, const ArgumentMemoryType memoryType, const ArgumentDataType dataType,
     const size_t elementCount, const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType,
-    const float fillValue) :
+    const float fillValue, const float randomSeed) :
     m_Id(id),
     m_MemoryType(memoryType),
     m_Type(dataType),
@@ -17,6 +16,7 @@ AddArgumentCommand::AddArgumentCommand(const ArgumentId& id, const ArgumentMemor
     m_AccessType(accessType),
     m_FillType(fillType),
     m_FillValue(fillValue),
+    m_RandomSeed(randomSeed),
     m_IsReference(false)
 {}
 
@@ -32,6 +32,7 @@ AddArgumentCommand::AddArgumentCommand(const ArgumentId& id, const ArgumentMemor
     m_FillType(fillType),
     m_FillValue(0.0f),
     m_DataSource(dataSource),
+    m_RandomSeed(std::nanf("")),
     m_IsReference(false)
 {}
 
@@ -109,7 +110,11 @@ ArgumentId AddArgumentCommand::SubmitVectorArgument(TunerContext& context) const
     {
         std::vector<float> input(m_ElementCount);
         std::random_device device;
-        std::default_random_engine engine(device());
+        std::default_random_engine engine;
+        if (std::isnan(m_RandomSeed))
+            engine = std::default_random_engine(device());
+        else
+            engine = std::default_random_engine(m_RandomSeed);
         std::uniform_real_distribution<float> distribution(0.0f, m_FillValue);
 
         for (size_t i = 0; i < m_ElementCount; ++i)

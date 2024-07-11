@@ -14,7 +14,7 @@ public:
     AddArgumentCommand() = default;
     explicit AddArgumentCommand(const ArgumentId& id, const ArgumentMemoryType memoryType, const ArgumentDataType dataType,
         const size_t elementCount, const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType,
-        const float fillValue);
+        const float fillValue, const float randomSeed = std::nanf(""));
     explicit AddArgumentCommand(const ArgumentId& id, const ArgumentMemoryType memoryType, const ArgumentDataType dataType,
         const size_t elementCount, const size_t typeSize, const ArgumentAccessType accessType, const ArgumentFillType fillType,
         const std::string& dataSource);
@@ -35,6 +35,7 @@ private:
     ArgumentFillType m_FillType;
     float m_FillValue;
     std::string m_DataSource;
+    float m_RandomSeed;
     bool m_IsReference;
 
     ArgumentId SubmitScalarArgument(TunerContext& context) const;

@@ -79,12 +79,28 @@ void from_json(const json& j, AddArgumentCommand& command)
         j.at("FillType").get_to(fillType);
     }
 
-    if (fillType == ArgumentFillType::Constant || fillType == ArgumentFillType::Random)
+    if (fillType == ArgumentFillType::Constant)
     {
         float fillValue;
         j.at("FillValue").get_to(fillValue);
 
         command = AddArgumentCommand(id, memoryType, type, size, typeSize, accessType, fillType, fillValue);
+    }
+    else if (fillType == ArgumentFillType::Random)
+    {
+        float fillValue;
+        j.at("FillValue").get_to(fillValue);
+
+        int randomSeed;
+        if (j.contains("RandomSeed"))
+        {
+            j.at("RandomSeed").get_to(randomSeed);
+            command = AddArgumentCommand(id, memoryType, type, size, typeSize, accessType, fillType, fillValue, randomSeed);
+        }
+        else
+        {
+            command = AddArgumentCommand(id, memoryType, type, size, typeSize, accessType, fillType, fillValue);
+        }
     }
     else if (fillType == ArgumentFillType::BinaryRaw || fillType == ArgumentFillType::Generator)
     {

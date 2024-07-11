@@ -338,6 +338,9 @@ R"(
                             "DataSource": {
                                 "type": "string"
                             },
+                            "RandomSeed": {
+                                "type": "integer"
+                            },
                             "AccessType": {
                                 "enum": [
                                     "ReadOnly",
@@ -390,6 +393,9 @@ R"(
                         "DataSource": {
                             "type": "string"
                         },
+                        "RandomSeed": {
+                            "type": "integer"
+                        }
                         "ValidationMethod": {
                             "enum": [
                                 "AbsoluteDifference",
