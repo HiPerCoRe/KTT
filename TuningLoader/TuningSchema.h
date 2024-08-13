@@ -9,7 +9,7 @@ inline const nlohmann::json TuningSchema =
 R"(
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://github.com/HiPerCoRe/KTT/blob/development/TuningLoader/TuningFormatSchema.json",
+    "$id": "https://github.com/odgaard/TuningSchema/blob/main/TuningSchema.json",
     "title": "Tuning format",
     "description": "A description of a tuning problem which can be loaded by an autotuning framework",
     "type": "object",
@@ -203,18 +203,12 @@ R"(
                 },
                 "Profiling": {
                     "type": "boolean"
-                },
+                },                    
                 "KernelName": {
                     "type": "string"
                 },
                 "KernelFile": {
                     "type": "string"
-                },
-                "KernelTypeNames": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "GlobalSizeType": {
                     "enum": [
@@ -361,50 +355,53 @@ R"(
                 },
                 "ReferenceArguments": {
                     "type": "array",
-                    "required": [
-                        "Name",
-                        "TargetName",
-                        "FillType"
-                    ],
-                    "properties": {
-                        "Name": {
-                            "type": "string"
-                        },
-                        "TargetName": {
-                            "type": "string"
-                        },
-                        "FillType": {
-                            "enum": [
-                                "Constant",
-                                "Random",
-                                "Generator",
-                                "Script",
-                                "BinaryRaw",
-                                "BinaryHDF"
-                            ]
-                        },
-                        "FillValue": {
-                            "type": "number",
-                            "examples": [
-                                40,
-                                1.0
-                            ]
-                        },
-                        "DataSource": {
-                            "type": "string"
-                        },
-                        "RandomSeed": {
-                            "type": "integer"
-                        }
-                        "ValidationMethod": {
-                            "enum": [
-                                "AbsoluteDifference",
-                                "SideBySideComparison",
-                                "SideBySideRelativeComparison"
-                            ]
-                        },
-                        "ValidationThreshold": {
-                            "type": "number"
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "Name",
+                            "TargetName",
+                            "FillType"
+                        ],
+                        "properties": {
+                            "Name": {
+                                "type": "string"
+                            },
+                            "TargetName": {
+                                "type": "string"
+                            },
+                            "FillType": {
+                                "enum": [
+                                    "Constant",
+                                    "Random",
+                                    "Generator",
+                                    "Script",
+                                    "BinaryRaw",
+                                    "BinaryHDF"
+                                ]
+                            },
+                            "FillValue": {
+                                "type": "number",
+                                "examples": [
+                                    40,
+                                    1.0
+                                ]
+                            },
+                            "DataSource": {
+                                "type": "string"
+                            },
+                            "RandomSeed": {
+                                "type": "integer"
+                            },
+                            "ValidationMethod": {
+                                "enum": [
+                                    "AbsoluteDifference",
+                                    "SideBySideComparison",
+                                    "SideBySideRelativeComparison"
+                                ]
+                            },
+                            "ValidationThreshold": {
+                                "type": "number"
+                            }
                         }
                     }
                 }
