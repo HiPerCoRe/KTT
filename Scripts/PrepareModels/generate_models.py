@@ -15,6 +15,7 @@ Options:
 
 from docopt import docopt
 import os
+import sys
 
 def generateModel(method, problFrom, gpuFrom, input_dir, output_directory) :
     command = "mkdir -p " + output_directory
@@ -26,7 +27,7 @@ def generateModel(method, problFrom, gpuFrom, input_dir, output_directory) :
     else:
         input_directory = input_dir + "/" +  problFrom[0]
     if method == "decision-tree":
-        command = "python3 ./generate_decision_tree_model.py -i " + input_directory + "/" + gpuFrom[0] + "-" + problFrom[0] + "_output.csv "
+        command = "python3 " + script_directory + "/" + "generate_decision_tree_model.py -i " + input_directory + "/" + gpuFrom[0] + "-" + problFrom[0] + "_output.csv "
         command = command + "-t 4:" + str(4+problFrom[1]) + " -c 2,3," + str(4+problFrom[1]) + ":" + str(4+problFrom[1]+gpuFrom[4])
         command = command + " --cc " + str(gpuFrom[1])
         print ("Executing " + command)
@@ -40,6 +41,7 @@ method = "decision-tree"
 problem = arguments['<problem>']
 input_dir = arguments['--input-dir']
 output_directory = arguments['--output-dir']
+script_directory = os.path.dirname(os.path.realpath(sys.argv[0]))
 
 print("Creating " + method + " models for " + problem + " for different GPUs, taking training data from " + input_dir + ", saving them in " + output_directory)
 
