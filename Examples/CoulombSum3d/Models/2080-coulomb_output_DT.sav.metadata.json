@@ -3,12 +3,12 @@
     "tp": [
         "WORK_GROUP_SIZE_X",
         "WORK_GROUP_SIZE_Y",
-        "WORK_GROUP_SIZE_Z",
-        "Z_ITERATIONS",
         "INNER_UNROLL_FACTOR",
+        "Z_ITERATIONS",
         "USE_SOA",
         "USE_CONSTANT_MEMORY",
-        "VECTOR_SIZE"
+        "VECTOR_SIZE",
+        "WORK_GROUP_SIZE_Z"
     ],
     "pc": [
         "Global size",

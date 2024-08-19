@@ -54,30 +54,20 @@
     ]
   },
   "Search" : {
-    "Name": "ProfileBased",
-    "Attributes" : [
-      {
-        "Name" : "modelPath",
-        "Value" : "../../Examples/CoulombSum3d/Models/2080-coulomb_output_DT.sav"
-      },
-      {
-        "Name" : "batchSize",
-        "Value" : "10"
-      }
-    ]
+    "Name": "Deterministic"
   },
   "General": {
     "LoggingLevel": "Info",
     "TimeUnit": "Microseconds",
     "OutputFile": "CoulombSumTuningOutput",
-    "OutputFormat": "JSON"
+    "OutputFormat": "XML"
   },
   "KernelSpecification": {
     "Language": "CUDA",
     "KernelName": "directCoulombSum",
     "KernelFile": "CoulombSum3d.cu",
     "CompilerOptions": ["-use_fast_math"],
-    "SimulationInput": "coulomb_2080_full_search_space",
+    "Profiling": true,
     "SharedMemory": 0,
     "GlobalSize": {
       "X": "256 // WORK_GROUP_SIZE_X",
