@@ -38,13 +38,16 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
     {
         KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
         KernelResult multiResult(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
+        int iter = 0;
         do 
         {
-            multiResult.FuseProfilingTimes(result);
             result = TuneIteration(kernel, dimensions, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false);
+            multiResult.FuseProfilingTimes(result, (iter == 0));
+            iter++;
         }
         while (result.HasRemainingProfilingRuns());
-        result.FuseProfilingTimes(multiResult);
+        if (iter > 1) //do not copy the same result twice
+            result.CopyProfilingTimes(multiResult);
 
         const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
         {

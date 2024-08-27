@@ -126,6 +126,12 @@ public:
       */
     Nanoseconds GetKernelOverhead() const;
 
+    /** @fn Nanoseconds GetKernelCompilationOverhead() const
+      * Retrieves total kernel compilation overhead from the partial results.
+      * @return Total kernel compilation overhead from the partial results.
+      */
+    Nanoseconds GetKernelCompilationOverhead() const;
+
     /** @fn Nanoseconds GetExtraDuration() const
       * Retrieves duration of a kernel launcher. The duration of buffer transfers performed within the launcher is not included.
       * @return Kernel launcher duration.
@@ -163,10 +169,30 @@ public:
     Nanoseconds GetFailedKernelOverhead() const;
 
     /** @fn Nanoseconds GetProfilingRunsOverhead() const
-      * Retrieves duration of kernels execute to collect performance counters.
-      * @return Duration of kernels executed just to collect performance counters.
+      * Retrieves duration and overhead of kernels executed to collect performance counters.
+      * @return Duration of kernels executed just to collect performance 
+      * counters.
       */
     Nanoseconds GetProfilingRunsOverhead() const;
+
+    /** @fn Nanoseconds GetProfilingOverhead() const
+      * Retrieves duration of all non-kernel operations performed during collection performance counters (e.g., data movements for extra kernel runs).
+      * @return Duration operations different than kernel execution needed to coollect performance counters.
+      */
+    Nanoseconds GetProfilingOverhead() const;
+
+    /** @fn Nanoseconds GetProfilingTotalOverhead() const
+      * Retrieves duration and overhead of all operations needed to collect performance counters.
+      * @return Duration of operations required just to collect performance
+      * counters.
+      */
+    Nanoseconds GetProfilingTotalOverhead() const;
+
+    /** @fn Nanoseconds GetCompilationOverhead() const
+      * Retrieves duration of kernels compilation.
+      * @return Duration of kernels compilation.
+      */
+    Nanoseconds GetCompilationOverhead() const;
 
     /** @fn Nanoseconds GetTotalDuration() const
       * Retrieves the sum of kernel duration and extra duration.
@@ -193,9 +219,18 @@ public:
       */
     bool HasRemainingProfilingRuns() const;
 
-    /** @fn void 
+    /** @fn void FuseProfilingTimes(const KernelResult& previousResult)
+     * Fuse overhead times collected from multiple profiling executions
+     * @param previousResult result of the previous run
+     * @param first sets whether the first instance of the kernel configuration was computed (we need to fuse overhead time, but do not count it as overhead of profiling).
       */
-    void FuseProfilingTimes(const KernelResult& previousResult);
+    void FuseProfilingTimes(const KernelResult& previousResult, bool first);
+
+    /** @fn void CopyProfilingTimes(const KernelResult& originalResult)
+     * Copy overhead times collected from another KernelResult instance
+     * @param originalResult source of overhead times
+      */
+    void CopyProfilingTimes(const KernelResult& originalResult);
 
 private:
     KernelConfiguration m_Configuration;
@@ -207,6 +242,8 @@ private:
     Nanoseconds m_SearcherOverhead;
     Nanoseconds m_FailedKernelOverhead;
     Nanoseconds m_ProfilingRunsOverhead;
+    Nanoseconds m_ProfilingOverhead;
+    Nanoseconds m_CompilationOverhead;
     ResultStatus m_Status;
 };
 

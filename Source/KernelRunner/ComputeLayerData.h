@@ -22,6 +22,7 @@ public:
         const KernelRunMode runMode);
 
     void IncreaseOverhead(const Nanoseconds overhead);
+    void IncreaseCompilationOverhead(const Nanoseconds overhead);
     void AddPartialResult(const ComputationResult& result);
     void AddArgumentOverride(const ArgumentId& id, const KernelArgument& argument);
     void SwapArguments(const KernelDefinitionId id, const ArgumentId& first, const ArgumentId& second);
@@ -42,6 +43,7 @@ private:
     const KernelConfiguration& m_Configuration;
     KernelRunMode m_RunMode;
     Nanoseconds m_DataOverhead;
+    Nanoseconds m_CompilationOverhead;
 
     Nanoseconds CalculateLauncherOverhead() const;
 };

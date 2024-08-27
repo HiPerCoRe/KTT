@@ -140,6 +140,7 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
     auto action = kernel->Launch(queue, data.GetGlobalSize(), data.GetLocalSize());
 
     action->IncreaseOverhead(timer.GetElapsedTime());
+    action->IncreaseCompilationOverhead(timer.GetElapsedTime());
     action->SetComputeId(data.GetUniqueIdentifier());
     const auto id = action->GetId();
     m_ComputeActions[id] = std::move(action);
@@ -218,7 +219,7 @@ ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const Ke
     FillProfilingData(id, result);
     timer.Stop();
 
-    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime());
+    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime(), result.GetCompilationOverhead());
     return result;
 #else
     throw KttException("Support for kernel profiling is not included in this version of KTT framework");

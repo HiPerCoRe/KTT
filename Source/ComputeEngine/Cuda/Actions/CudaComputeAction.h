@@ -22,6 +22,7 @@ public:
         const DimensionVector& globalSize, const DimensionVector& localSize);
 
     void IncreaseOverhead(const Nanoseconds overhead);
+    void IncreaseCompilationOverhead(const Nanoseconds overhead);
     void SetComputeId(const KernelComputeId& id);
     void SetPowerUsage(const uint32_t powerUsage);
     void WaitForFinish();
@@ -33,6 +34,7 @@ public:
     CUevent GetEndEvent() const;
     Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
+    Nanoseconds GetCompilationOverhead() const;
     const KernelComputeId& GetComputeId() const;
     ComputationResult GenerateResult() const;
 
@@ -43,6 +45,7 @@ private:
     std::unique_ptr<CudaEvent> m_StartEvent;
     std::unique_ptr<CudaEvent> m_EndEvent;
     Nanoseconds m_Overhead;
+    Nanoseconds m_CompilationOverhead;
     KernelComputeId m_ComputeId;
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;

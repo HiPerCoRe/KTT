@@ -8,13 +8,15 @@ namespace ktt
 
 ComputationResult::ComputationResult() :
     m_Duration(InvalidDuration),
-    m_Overhead(InvalidDuration)
+    m_Overhead(InvalidDuration),
+    m_CompilationOverhead(InvalidDuration)
 {}
 
 ComputationResult::ComputationResult(const std::string& kernelFunction) :
     m_KernelFunction(kernelFunction),
     m_Duration(InvalidDuration),
-    m_Overhead(InvalidDuration)
+    m_Overhead(InvalidDuration),
+    m_CompilationOverhead(InvalidDuration)
 {}
 
 ComputationResult::ComputationResult(const ComputationResult& other) :
@@ -23,6 +25,7 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     m_LocalSize(other.m_LocalSize),
     m_Duration(other.m_Duration),
     m_Overhead(other.m_Overhead),
+    m_CompilationOverhead(other.m_CompilationOverhead),
     m_PowerUsage(other.m_PowerUsage)
 {
     if (other.HasCompilationData())
@@ -36,10 +39,11 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     }
 }
 
-void ComputationResult::SetDurationData(const Nanoseconds duration, const Nanoseconds overhead)
+void ComputationResult::SetDurationData(const Nanoseconds duration, const Nanoseconds overhead, const Nanoseconds compilationOverhead)
 {
     m_Duration = duration;
     m_Overhead = overhead;
+    m_CompilationOverhead = compilationOverhead;
 }
 
 void ComputationResult::SetSizeData(const DimensionVector& globalSize, const DimensionVector& localSize)
@@ -86,6 +90,11 @@ Nanoseconds ComputationResult::GetDuration() const
 Nanoseconds ComputationResult::GetOverhead() const
 {
     return m_Overhead;
+}
+
+Nanoseconds ComputationResult::GetCompilationOverhead() const
+{
+    return m_CompilationOverhead;
 }
 
 bool ComputationResult::HasCompilationData() const

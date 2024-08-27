@@ -82,6 +82,7 @@ ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, cons
     auto action = pipeline->DispatchShader(queue, *m_CommandPool, *m_QueryPool, data.GetGlobalSize(), scalarArguments);
 
     action->IncreaseOverhead(timer.GetElapsedTime());
+    action->IncreaseCompilationOverhead(timer.GetElapsedTime()); //TODO check we are really measuring compilation time here
     action->SetComputeId(data.GetUniqueIdentifier());
     const auto id = action->GetId();
     m_ComputeActions[id] = std::move(action);

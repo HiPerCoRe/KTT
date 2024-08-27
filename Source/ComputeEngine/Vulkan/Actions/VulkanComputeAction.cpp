@@ -22,6 +22,7 @@ VulkanComputeAction::VulkanComputeAction(const ComputeActionId id, const QueueId
     m_Pipeline(pipeline),
     m_QueryPool(queryPool),
     m_Overhead(0),
+    m_CompilationOverhead(0),
     m_GlobalSize(globalSize),
     m_LocalSize(localSize)
 {
@@ -40,6 +41,11 @@ VulkanComputeAction::VulkanComputeAction(const ComputeActionId id, const QueueId
 void VulkanComputeAction::IncreaseOverhead(const Nanoseconds overhead)
 {
     m_Overhead += overhead;
+}
+
+void VulkanComputeAction::IncreaseCompilationOverhead(const Nanoseconds overhead)
+{
+    m_CompilationOverhead += overhead;
 }
 
 void VulkanComputeAction::SetComputeId(const KernelComputeId& id)
@@ -98,6 +104,11 @@ Nanoseconds VulkanComputeAction::GetOverhead() const
     return m_Overhead;
 }
 
+Nanoseconds VulkanComputeAction::GetCompilationOverhead() const
+{
+    return m_CompilationOverhead;
+}
+
 const KernelComputeId& VulkanComputeAction::GetComputeId() const
 {
     return m_ComputeId;
@@ -108,11 +119,12 @@ ComputationResult VulkanComputeAction::GenerateResult() const
     ComputationResult result(m_Pipeline->GetName());
     const Nanoseconds duration = GetDuration();
     const Nanoseconds overhead = GetOverhead();
+    const Nanoseconds compilationOverhead = GetCompilationOverhead();
 
     // Todo: generate compilation data from pipeline
     std::unique_ptr<KernelCompilationData> compilationData = nullptr;
 
-    result.SetDurationData(duration, overhead);
+    result.SetDurationData(duration, overhead, compilationOverhead);
     result.SetSizeData(m_GlobalSize, m_LocalSize);
     result.SetCompilationData(std::move(compilationData));
 

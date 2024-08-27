@@ -45,8 +45,9 @@ public:
       * Fills duration data for the result.
       * @param duration Raw kernel duration, usually reported by the underlying compute API.
       * @param overhead Overhead related to kernel launch such as kernel function compilation.
+      * @param compilationOverhead Overhead related purely to kernel function compilation.
       */
-    void SetDurationData(const Nanoseconds duration, const Nanoseconds overhead);
+    void SetDurationData(const Nanoseconds duration, const Nanoseconds overhead, const Nanoseconds compilationOverhead);
 
     /** @fn void SetSizeData(const DimensionVector& globalSize, const DimensionVector& localSize)
       * Fills thread size data for the result.
@@ -102,6 +103,12 @@ public:
       * @return Kernel overhead.
       */
     Nanoseconds GetOverhead() const;
+
+    /** @fn Nanoseconds GetCompilationOverhead() const
+      * Returns overhead related to kernel function compilation.
+      * @return Kernel overhead.
+      */
+    Nanoseconds GetCompilationOverhead() const;
 
     /** @fn bool HasCompilationData() const
       * Checks whether result contains valid compilation data.
@@ -164,6 +171,7 @@ private:
     DimensionVector m_LocalSize;
     Nanoseconds m_Duration;
     Nanoseconds m_Overhead;
+    Nanoseconds m_CompilationOverhead;
     std::unique_ptr<KernelCompilationData> m_CompilationData;
     std::unique_ptr<KernelProfilingData> m_ProfilingData;
     std::optional<uint32_t> m_PowerUsage;

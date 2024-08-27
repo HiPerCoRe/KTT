@@ -252,6 +252,7 @@ void to_json(json& j, const ComputationResult& result)
         {"KernelFunction", result.GetKernelFunction()},
         {"Duration", time.ConvertFromNanosecondsDouble(result.GetDuration())},
         {"Overhead", time.ConvertFromNanosecondsDouble(result.GetOverhead())},
+        {"CompilationOverhead", time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead())},
         {"GlobalSize", result.GetGlobalSize()},
         {"LocalSize", result.GetLocalSize()}
     };
@@ -289,7 +290,11 @@ void from_json(const json& j, ComputationResult& result)
     j.at("Overhead").get_to(overhead);
     const Nanoseconds overheadNs = time.ConvertToNanosecondsDouble(overhead);
 
-    result.SetDurationData(durationNs, overheadNs);
+    double compilationOverhead;
+    j.at("CompilationOverhead").get_to(compilationOverhead);
+    const Nanoseconds overheadCompNs = time.ConvertToNanosecondsDouble(compilationOverhead);
+
+    result.SetDurationData(durationNs, overheadNs, overheadCompNs);
 
     DimensionVector globalSize;
     j.at("GlobalSize").get_to(globalSize);
@@ -339,6 +344,8 @@ void to_json(json& j, const KernelResult& result)
         {"DataMovementOverhead", time.ConvertFromNanosecondsDouble(result.GetDataMovementOverhead())},
         {"ValidationOverhead", time.ConvertFromNanosecondsDouble(result.GetValidationOverhead())},
         {"SearcherOverhead", time.ConvertFromNanosecondsDouble(result.GetSearcherOverhead())},
+        {"CompilationOverhead", time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead())},
+        {"ProfilingOverhead", time.ConvertFromNanosecondsDouble(result.GetProfilingTotalOverhead())},
         {"Configuration", result.GetConfiguration()},
         {"ComputationResults", result.GetResults()}
     };

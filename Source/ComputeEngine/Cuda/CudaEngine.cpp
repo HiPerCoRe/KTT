@@ -149,6 +149,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
 #endif // KTT_POWER_USAGE_NVML
 
     action->IncreaseOverhead(timer.GetElapsedTime());
+    action->IncreaseCompilationOverhead(timer.GetElapsedTime());
     action->SetComputeId(data.GetUniqueIdentifier());
     const auto id = action->GetId();
     m_ComputeActions[id] = std::move(action);
@@ -236,7 +237,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     FillProfilingData(id, result);
     timer.Stop();
 
-    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime());
+    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime(), result.getCompilationOverhead());
     return result;
 
 #elif KTT_PROFILING_CUPTI
@@ -276,7 +277,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     FillProfilingData(id, result);
     timer.Stop();
 
-    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime());
+    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime(), result.GetCompilationOverhead());
     return result;
 
 #else
@@ -955,7 +956,7 @@ void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult&
             profiledKernelOverhead = result.GetDuration() - instance.GetKernelDuration();
         }
 
-        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead);
+        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead, result.GetCompilationOverhead());
         m_CuptiInstances.erase(id);
     }
 
@@ -988,7 +989,7 @@ void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult&
             profiledKernelOverhead = result.GetDuration() - instance.GetKernelDuration();
         }
 
-        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead);
+        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead, result.GetCompilationOverhead());
         m_CuptiInstances.erase(id);
     }
 

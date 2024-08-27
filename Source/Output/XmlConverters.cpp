@@ -561,6 +561,7 @@ void AppendComputationResult(pugi::xml_node parent, const ComputationResult& res
     node.append_attribute("KernelFunction").set_value(result.GetKernelFunction().c_str());
     node.append_attribute("Duration").set_value(time.ConvertFromNanosecondsDouble(result.GetDuration()), xmlFloatingPointPrecision);
     node.append_attribute("Overhead").set_value(time.ConvertFromNanosecondsDouble(result.GetOverhead()), xmlFloatingPointPrecision);
+    node.append_attribute("CompilationOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead()), xmlFloatingPointPrecision);
     AppendVector(node, result.GetGlobalSize(), "GlobalSize");
     AppendVector(node, result.GetLocalSize(), "LocalSize");
 
@@ -591,7 +592,9 @@ ComputationResult ParseComputationResult(const pugi::xml_node node)
     const Nanoseconds durationNs = time.ConvertToNanosecondsDouble(duration);
     const double overhead = node.attribute("Overhead").as_double();
     const Nanoseconds overheadNs = time.ConvertToNanosecondsDouble(overhead);
-    result.SetDurationData(durationNs, overheadNs);
+    const double compilationOverhead = node.attribute("CompilationOverhead").as_double();
+    const Nanoseconds overheadCompNs = time.ConvertToNanosecondsDouble(compilationOverhead);
+    result.SetDurationData(durationNs, overheadNs, overheadCompNs);
 
     const DimensionVector globalSize = ParseVector(node, "GlobalSize");
     const DimensionVector localSize = ParseVector(node, "LocalSize");
@@ -644,6 +647,10 @@ void AppendKernelResult(pugi::xml_node parent, const KernelResult& result)
     node.append_attribute("ValidationOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetValidationOverhead()),
         xmlFloatingPointPrecision);
     node.append_attribute("SearcherOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetSearcherOverhead()),
+        xmlFloatingPointPrecision);
+    node.append_attribute("CompilationOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead()),
+        xmlFloatingPointPrecision);
+    node.append_attribute("ProfilingOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetProfilingTotalOverhead()),
         xmlFloatingPointPrecision);
     AppendConfiguration(node, result.GetConfiguration());
 

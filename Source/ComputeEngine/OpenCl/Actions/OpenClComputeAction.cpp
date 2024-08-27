@@ -15,6 +15,7 @@ OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, const QueueId
     m_QueueId(queueId),
     m_Kernel(kernel),
     m_Overhead(0),
+    m_CompilationOverhead(0),
     m_GlobalSize(globalSize),
     m_LocalSize(localSize)
 {
@@ -28,6 +29,11 @@ OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, const QueueId
 void OpenClComputeAction::IncreaseOverhead(const Nanoseconds overhead)
 {
     m_Overhead += overhead;
+}
+
+void OpenClComputeAction::IncreaseCompilationOverhead(const Nanoseconds overhead)
+{
+    m_CompilationOverhead += overhead;
 }
 
 void OpenClComputeAction::SetComputeId(const KernelComputeId& id)
@@ -76,6 +82,11 @@ Nanoseconds OpenClComputeAction::GetOverhead() const
     return m_Overhead;
 }
 
+Nanoseconds OpenClComputeAction::GetCompilationOverhead() const
+{
+    return m_CompilationOverhead;
+}
+
 const KernelComputeId& OpenClComputeAction::GetComputeId() const
 {
     return m_ComputeId;
@@ -86,9 +97,10 @@ ComputationResult OpenClComputeAction::GenerateResult() const
     ComputationResult result(m_Kernel->GetName());
     const Nanoseconds duration = GetDuration();
     const Nanoseconds overhead = GetOverhead();
+    const Nanoseconds compilationOverhead = GetCompilationOverhead();
     std::unique_ptr<KernelCompilationData> compilationData = m_Kernel->GenerateCompilationData();
 
-    result.SetDurationData(duration, overhead);
+    result.SetDurationData(duration, overhead, compilationOverhead);
     result.SetSizeData(m_GlobalSize, m_LocalSize);
     result.SetCompilationData(std::move(compilationData));
 
