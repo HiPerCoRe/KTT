@@ -67,7 +67,7 @@
     "KernelName": "directCoulombSum",
     "KernelFile": "CoulombSum3d.cu",
     "CompilerOptions": ["-use_fast_math"],
-    "Profiling": true,
+    "Profiling": false,
     "SharedMemory": 0,
     "GlobalSize": {
       "X": "256 // WORK_GROUP_SIZE_X",
