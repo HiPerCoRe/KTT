@@ -9,17 +9,7 @@
     ]
   },
   "Search": {
-    "Name": "ProfileBased",
-    "Attributes": [
-      {
-        "Name": "modelPath",
-        "Value": "/home/janka/KTT/Tutorials/03KernelTuning/2080-vectorAdd_output_DT.sav"
-      },
-      {
-        "Name": "batchSize",
-        "Value": "1"
-      }
-    ]
+    "Name": "Random"
   },
   "General": {
     "LoggingLevel": "Debug",
@@ -29,7 +19,6 @@
   },
   "KernelSpecification": {
     "Language": "CUDA",
-    "SimulationInput": "/home/janka/KTT/Tutorials/03KernelTuning/SimulationInput",
     "KernelName": "vectorAddition",
     "KernelFile": "CudaKernel.cu",
     "SharedMemory": 0,

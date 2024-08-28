@@ -36,7 +36,7 @@ void SearcherCommand::Execute(TunerContext& context)
           uint randomSize = 10;
           if (m_Attributes.count("randomSize") > 0)
             randomSize = std::stoul(m_Attributes["randomSize"]);
-          context.GetTuner().SetProfileBasedSearcher(context.GetKernelId(), m_Attributes["modelPath"], false, batchSize, neighborSize, randomSize);
+          context.GetTuner().SetProfileBasedSearcher(context.GetKernelId(), m_Attributes["modelPath"], true, batchSize, neighborSize, randomSize);
           return;
         }
     default:
