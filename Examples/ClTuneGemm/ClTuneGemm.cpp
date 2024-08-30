@@ -28,7 +28,7 @@ const bool rapidTest = false;
 const bool useProfiling = false;
 
 // Reduced tuning parameters set, taken from CLTune.
-const bool useReducedSet = false;
+const bool useReducedSet = true;
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
 bool IsMultiple(const size_t a, const size_t b)

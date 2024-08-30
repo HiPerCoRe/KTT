@@ -1,0 +1,189 @@
+{
+  "ConfigurationSpace": {
+    "TuningParameters": [
+      {
+        "Name": "MWG",
+        "Type": "uint",
+        "Values": "[16, 32, 64]"
+      },
+      {
+        "Name": "NWG",
+        "Type": "uint",
+        "Values": "[16, 32, 64]"
+      },
+      {
+        "Name": "KWG",
+        "Type": "uint",
+        "Values": "[32]"
+      },
+      {
+        "Name": "MDIMC",
+        "Type": "uint",
+        "Values": "[8, 16, 32]"
+      },
+      {
+        "Name": "NDIMC",
+        "Type": "uint",
+        "Values": "[8, 16, 32]"
+      },
+      {
+        "Name": "MDIMA",
+        "Type": "uint",
+        "Values": "[8, 16, 32]"
+      },
+      {
+        "Name": "NDIMB",
+        "Type": "uint",
+        "Values": "[8, 16, 32]"
+      },
+      {
+        "Name": "KWI",
+        "Type": "uint",
+        "Values": "[2]"
+      },
+      {
+        "Name": "VWM",
+        "Type": "uint",
+        "Values": "[1, 2, 4]"
+      },
+      {
+        "Name": "VWN",
+        "Type": "uint",
+        "Values": "[1, 2, 4]"
+      },
+      {
+        "Name": "STRM",
+        "Type": "uint",
+        "Values": "[0]"
+      },
+      {
+        "Name": "STRN",
+        "Type": "uint",
+        "Values": "[0]"
+      },
+      {
+        "Name": "SA",
+        "Type": "uint",
+        "Values": "[0, 1]"
+      },
+      {
+        "Name": "SB",
+        "Type": "uint",
+        "Values": "[0, 1]"
+      },
+      {
+        "Name": "PRECISION",
+        "Type": "uint",
+        "Values": "[32]"
+      }
+    ],
+    "Conditions" : [
+      {
+        "Parameters" : ["KWG", "KWI"],
+        "Expression": "(KWG//KWI)*KWI == KWG"
+      },
+      {
+        "Parameters" : ["MWG", "MDIMC", "VWM"],
+        "Expression": "(MWG // (MDIMC*VWM)) * (MDIMC*VWM) == MWG"
+      },
+      {
+        "Parameters" : ["NWG", "NDIMC", "VWN"],
+        "Expression": "((NWG // (NDIMC*VWN)) * (NDIMC*VWN)) == NWG"
+      },
+      {
+        "Parameters" : ["MWG", "MDIMA", "VWM"],
+        "Expression": "(MWG // (MDIMA*VWM)) * (MDIMA*VWM) == MWG"
+      },
+      {
+        "Parameters" : ["NWG", "NDIMB", "VWN"],
+        "Expression": "(NWG // (NDIMB*VWN)) * (NDIMB*VWN) == NWG"
+      },
+      {
+        "Parameters" : ["KWG", "MDIMC", "NDIMC", "MDIMA"],
+        "Expression": "(KWG // ((MDIMC*NDIMC)//MDIMA)) * ((MDIMC*NDIMC)//MDIMA) == KWG"
+      },
+{
+        "Parameters" : ["KWG", "MDIMC", "NDIMC", "NDIMB"],
+        "Expression": "(KWG // ((MDIMC*NDIMC)//NDIMB)) * ((MDIMC*NDIMC)//NDIMB) == KWG"
+      }
+    ]
+  },
+  "Search" : {
+    "Name": "Deterministic"
+  },
+  "General": {
+    "LoggingLevel": "Info",
+    "TimeUnit": "Microseconds",
+    "OutputFile": "clTuneGemmTuningOutput",
+    "OutputFormat": "XML"
+  },
+  "KernelSpecification": {
+    "Language": "CUDA",
+    "KernelName": "gemm_fast",
+    "KernelFile": "ClTuneGemm.cu",
+    "CompilerOptions": [""],
+    "Profiling": false,
+    "GlobalSize": {
+      "X": "2048 * MDIMC // MWG",
+      "Y": "2048 * NDIMC // NWG",
+      "Z": "1"
+    },
+    "GlobalSizeType": "OpenCL",
+    "LocalSize": {
+      "X": "MDIMC",
+      "Y": "NDIMC",
+      "Z": "1"
+    },
+    "Arguments": [
+      {
+        "Name": "sizeM",
+        "Type": "int32",
+        "FillType": "Constant",
+        "FillValue": 2048,
+        "MemoryType": "Scalar"
+      },
+      {
+        "Name": "sizeN",
+        "Type": "int32",
+        "FillType": "Constant",
+        "FillValue": 2048,
+        "MemoryType": "Scalar"
+      },
+      {
+        "Name": "sizeK",
+        "Type": "int32",
+        "FillType": "Constant",
+        "FillValue": 2048,
+        "MemoryType": "Scalar"
+      },
+            {
+        "Name": "matA",
+        "Type": "float",
+        "Size": 4194304,
+        "FillType": "Random",
+        "FillValue": 1.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Name": "matB",
+        "Type": "float",
+        "Size": 4194304,
+        "FillType": "Random",
+        "FillValue" : 1.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Name": "matC",
+        "Type": "float",
+        "Size": 4194304,
+        "TypeSize": 4,
+        "FillType": "Constant",
+        "FillValue": 0.0,
+        "AccessType": "WriteOnly",
+        "MemoryType": "Vector"
+      }
+    ]
+  }
+}
