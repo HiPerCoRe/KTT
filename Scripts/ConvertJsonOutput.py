@@ -35,10 +35,9 @@ for ktt_result in ktt_output["Results"]:
     # TODO PowerUsage also possible
     converted_result["objectives"] = ["TotalDuration"]
     converted_result["times"] = dict()
-    # compilation time can be also calculated as sum of "Overhead" in all ComputationResults, it's just easier to do it this way in case of multiple kernel functions within one application
-    converted_result["times"]["compilation_time"] = ktt_result["TotalOverhead"] - ktt_result["DataMovementOverhead"] - ktt_result["SearcherOverhead"] - ktt_result["ValidationOverhead"]
+    converted_result["times"]["compilation_time"] = ktt_result["CompilationOverhead"]
     converted_result["times"]["runtimes"] = [ktt_result["TotalDuration"]]
-    converted_result["times"]["framework"] = ktt_result["DataMovementOverhead"]
+    converted_result["times"]["framework"] = ktt_result["DataMovementOverhead"] + ktt_result["ProfilingOverhead"]
     converted_result["times"]["search_algorithm"] = ktt_result["SearcherOverhead"]
     converted_result["times"]["validation"] = ktt_result["ValidationOverhead"]
     # timeout, compile, runtime, correctness, constraints, correct
