@@ -14,7 +14,7 @@ void ValidationCommand::Execute(TunerContext& context)
 {
     m_ArgumentCommand.Execute(context);
     context.GetTuner().SetValidationMethod(m_ValidationMethod, m_ValidationThreshold);
-    context.GetTuner().SetReferenceArgument(m_ArgumentCommand.GetId(), m_ReferencedId);
+    context.GetTuner().SetReferenceArgument(m_ReferencedId, m_ArgumentCommand.GetId());
 }
 
 CommandPriority ValidationCommand::GetPriority() const

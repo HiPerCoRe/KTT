@@ -12,7 +12,7 @@
     "Name": "Random"
   },
   "General": {
-    "LoggingLevel": "Debug",
+    "LoggingLevel": "Info",
     "TimeUnit": "Microseconds",
     "OutputFile": "TuningOutput",
     "OutputFormat": "JSON"
@@ -71,7 +71,9 @@
         "Name": "reference",
         "FillType": "Generator",
         "DataSource": "2 * i + 3",
-        "TargetName": "result"
+        "TargetName": "result",
+        "ValidationMethod": "SideBySideComparison",
+        "ValidationThreshold": 0.1
       }
     ]
   }
