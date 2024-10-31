@@ -6,16 +6,16 @@ int main() {
     // problem sizes has to agree with sizes defined in JSON
     const int cells = 256;
     const int a = 64;
-    const float gs = 0.5;
+    const float gs = 0.49; //XXX no grid point should overlap with an atom
 
     float *grid = (float*)calloc(cells*cells*cells, sizeof(float));
     float *atoms = (float*)malloc(a*4*sizeof(float));
 
     // generator data has to agree with Generators in JSON
     for (int i = 0; i < a; i++) {
-        atoms[i*4 + 0] = (float)i*0.1f;
-        atoms[i*4 + 1] = (float)i*0.15f;
-        atoms[i*4 + 2] = (float)i*0.2f;
+        atoms[i*4 + 0] = 1.0f + (float)i*0.1f;
+        atoms[i*4 + 1] = 1.0f + (float)i*0.15f;
+        atoms[i*4 + 2] = 1.0f + (float)i*0.2f;
         atoms[i*4 + 3] = (float)(i%10)*0.1f;
     }
 

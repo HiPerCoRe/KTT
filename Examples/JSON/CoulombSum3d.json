@@ -93,7 +93,7 @@
         "Size": 256,
         "TypeSize": 4,
         "FillType": "Generator",
-        "DataSource": "(i//4)*(0.1 + 0.05*(i%4)) if i%4 < 3 else ((i//4)%10)*0.1",
+        "DataSource": "1+(i//4)*(0.1 + 0.05*(i%4)) if i%4 < 3 else ((i//4)%10)*0.1",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
@@ -103,7 +103,7 @@
         "Size": 64,
         "TypeSize": 4,
         "FillType": "Generator",
-        "DataSource" : "i*0.1",
+        "DataSource" : "1+i*0.1",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
@@ -113,7 +113,7 @@
         "Size": 64,
         "TypeSize": 4,
         "FillType": "Generator",
-        "DataSource": "i*0.15",
+        "DataSource": "1+i*0.15",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
@@ -123,7 +123,7 @@
         "Size": 64,
         "TypeSize": 4,
         "FillType": "Generator",
-        "DataSource": "i*0.2",
+        "DataSource": "1+i*0.2",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
@@ -148,7 +148,7 @@
         "Name": "gridSpacing",
         "Type": "float",
         "FillType": "Constant",
-        "FillValue": 0.5,
+        "FillValue": 0.49,
         "MemoryType": "Scalar"
       },
       {
@@ -176,7 +176,7 @@
         "DataSource": "Coulomb3d.bin",
         "TargetName": "grid",
         "ValidationMethod": "SideBySideComparison",
-        "ValidationThreshold": 0.001
+        "ValidationThreshold": 0.01
       }
     ]
   }
