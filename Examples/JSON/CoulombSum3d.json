@@ -54,8 +54,14 @@
     ]
   },
   "Search" : {
-    "Name": "Deterministic"
+    "Name": "Random"
   },
+  "Budget": [
+    {
+      "Type": "ConfigurationCount",
+      "BudgetValue": 10
+    }
+  ],
   "General": {
     "LoggingLevel": "Info",
     "TimeUnit": "Microseconds",
@@ -85,8 +91,9 @@
         "Name": "atomInfo",
         "Type": "float",
         "Size": 256,
-        "FillType": "Constant",
-        "FillValue": 0.0,
+        "TypeSize": 4,
+        "FillType": "Generator",
+        "DataSource": "(i//4)*(0.1 + 0.05*(i%4)) if i%4 < 3 else ((i//4)%10)*0.1",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
@@ -94,8 +101,9 @@
         "Name": "atomInfoX",
         "Type": "float",
         "Size": 64,
-        "FillType": "Random",
-        "FillValue" : 20.0,
+        "TypeSize": 4,
+        "FillType": "Generator",
+        "DataSource" : "i*0.1",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
@@ -103,8 +111,9 @@
         "Name": "atomInfoY",
         "Type": "float",
         "Size": 64,
-        "FillType": "Random",
-        "FillValue": 20.0,
+        "TypeSize": 4,
+        "FillType": "Generator",
+        "DataSource": "i*0.15",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
@@ -112,8 +121,9 @@
         "Name": "atomInfoZ",
         "Type": "float",
         "Size": 64,
-        "FillType": "Random",
-        "FillValue": 20.0,
+        "TypeSize": 4,
+        "FillType": "Generator",
+        "DataSource": "i*0.2",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
@@ -121,8 +131,9 @@
         "Name": "atomInfoW",
         "Type": "float",
         "Size": 64,
-        "FillType": "Random",
-        "FillValue": 0.5,
+        "TypeSize": 4,
+        "FillType": "Generator",
+        "DataSource": "(i%10)*0.1",
         "AccessType": "ReadOnly",
         "MemoryType": "Vector"
       },
@@ -157,8 +168,16 @@
         "AccessType": "WriteOnly",
         "MemoryType": "Vector"
       }
-
-
+    ],
+    "ReferenceArguments": [
+      {
+        "Name": "reference",
+        "FillType": "BinaryRaw",
+        "DataSource": "Coulomb3d.bin",
+        "TargetName": "grid",
+        "ValidationMethod": "SideBySideComparison",
+        "ValidationThreshold": 0.001
+      }
     ]
   }
 }
