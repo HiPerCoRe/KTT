@@ -110,7 +110,7 @@ function linkLibrariesNvidia()
         
         if _OPTIONS["power-usage"] then
             defines {"KTT_POWER_USAGE_NVML"}
-            links {"nvml"}
+            links {"nvidia-ml"}
         end
         
         if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" or _OPTIONS["power-usage"] then

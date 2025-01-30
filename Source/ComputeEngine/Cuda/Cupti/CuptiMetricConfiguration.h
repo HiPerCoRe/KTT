@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <stdint.h>
 
 namespace ktt
 {

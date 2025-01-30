@@ -35,7 +35,7 @@ const bool useDenseParameters = false;
 const bool useWideParameters = false;
 
 // Toggle usage of profile-based searcher
-const bool useProfileSearcher = true;
+const bool useProfileSearcher = false;
 
 int main(int argc, char** argv)
 {
