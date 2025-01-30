@@ -23,6 +23,8 @@
 #include <ComputeEngine/Cuda/Nvml/NvmlPowerSubscription.h>
 #endif // KTT_POWER_USAGE_NVML
 
+#include <iostream> //FIXME
+
 namespace ktt
 {
 
@@ -139,11 +141,16 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
 
 #if defined(KTT_POWER_USAGE_NVML)
     auto subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
+    uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
+    std::cout << "XXX energyBegin " << energyBegin << "\n";
 #endif // KTT_POWER_USAGE_NVML
     
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
 
 #if defined(KTT_POWER_USAGE_NVML)
+    uint64_t energyEnd = m_PowerManager->GetTotalDeviceEnergy();
+    std::cout << "XXX energyEnd " << energyEnd << "\n";
+    std::cout << "YYY energyDiff " << energyEnd-energyBegin << "\n";
     const uint32_t powerUsage = m_PowerManager->GetPowerUsage();
     action->SetPowerUsage(powerUsage);
 #endif // KTT_POWER_USAGE_NVML
@@ -168,6 +175,7 @@ ComputationResult CudaEngine::WaitForComputeAction(const ComputeActionId id)
     auto result = action.GenerateResult();
 
     m_ComputeActions.erase(id);
+
     return result;
 }
 

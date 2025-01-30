@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 
     // Declare and initialize data
     const int gridSize = 256;
-    int atoms = 64;
+    int atoms = 64*512;
 
     const ktt::DimensionVector referenceNdRangeDimensions(gridSize / 16, gridSize / 16, gridSize);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
@@ -234,7 +234,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-    const auto results = tuner.Tune(kernel);
+    const auto results = tuner.Tune(kernel);//, std::make_unique<ktt::ConfigurationCount>(5));
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::XML);
 

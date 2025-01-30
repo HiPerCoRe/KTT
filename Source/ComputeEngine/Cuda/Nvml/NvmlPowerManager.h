@@ -25,6 +25,7 @@ public:
     void StartCollection();
     void EndCollection();
     uint32_t GetPowerUsage() const;
+    uint64_t GetTotalDeviceEnergy() const;
 
 private:
     const CudaContext& m_Context;

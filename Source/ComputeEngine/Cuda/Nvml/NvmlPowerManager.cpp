@@ -61,6 +61,14 @@ uint32_t NvmlPowerManager::GetPowerUsage() const
     return sum / static_cast<uint32_t>(m_PowerSamples.size());
 }
 
+uint64_t NvmlPowerManager::GetTotalDeviceEnergy() const
+{
+    m_Context.Synchronize();
+    long long unsigned int energy;
+    CheckError(nvmlDeviceGetTotalEnergyConsumption(m_Device, &energy), "nvmlDeviceGetTotalEnergyConsumption");
+    return energy;
+}
+
 void NvmlPowerManager::CollectPowerSamples()
 {
     uint32_t initialValue;
