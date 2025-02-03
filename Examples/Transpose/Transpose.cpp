@@ -201,8 +201,9 @@ int main(int argc, char **argv)
     }
 
     // Perform tuning
-    const auto results = tuner.Tune(kernel);
+    const auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(100));
     tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::XML);
+    tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::JSON);
 
     return 0;
 }

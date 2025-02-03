@@ -13,7 +13,7 @@ extern "C" __global__ void mtran(
     const int width,
     const int height)
 {
-	__shared__ float tile[TILE_SIZE_Y][TILE_SIZE_X+PADD_LOCAL];
+    __shared__ float tile[TILE_SIZE_Y][TILE_SIZE_X+PADD_LOCAL];
     int lx = threadIdx.x;
     int ly = threadIdx.y;
 #if DIAGONAL_MAP == 0
@@ -35,7 +35,7 @@ extern "C" __global__ void mtran(
     int tly = id/TILE_SIZE_Y;
     for (int i = tly; i < TILE_SIZE_X; i += (WORK_GROUP_SIZE_X*WORK_GROUP_SIZE_Y)/TILE_SIZE_Y)
     {
-	    output[(gx*TILE_SIZE_X+i)*width + gy*TILE_SIZE_Y + tlx] = tile[tlx][i];
+        output[(gx*TILE_SIZE_X+i)*width + gy*TILE_SIZE_Y + tlx] = tile[tlx][i];
     }
 }
 #else

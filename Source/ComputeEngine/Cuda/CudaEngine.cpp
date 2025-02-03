@@ -146,6 +146,8 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
 #endif // KTT_POWER_USAGE_NVML
     
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+    for (int i = 0; i < 999; i++)
+        kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
 
 #if defined(KTT_POWER_USAGE_NVML)
     uint64_t energyEnd = m_PowerManager->GetTotalDeviceEnergy();
