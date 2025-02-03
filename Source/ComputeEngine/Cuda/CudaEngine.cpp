@@ -23,8 +23,6 @@
 #include <ComputeEngine/Cuda/Nvml/NvmlPowerSubscription.h>
 #endif // KTT_POWER_USAGE_NVML
 
-#include <iostream> //FIXME
-
 namespace ktt
 {
 
@@ -107,7 +105,7 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<Que
 #endif // KTT_POWER_USAGE_NVML
 }
 
-ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId)
+ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
 {
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -140,23 +138,29 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     timer.Stop();
 
 #if defined(KTT_POWER_USAGE_NVML)
-    auto subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
-    uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
-    std::cout << "XXX energyBegin " << energyBegin << "\n";
+    if (powerMeasurementAllowed) {
+        auto subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
+        //uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
+    }
 #endif // KTT_POWER_USAGE_NVML
     
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
-#if defined(KTT_POWER_USAGE_NVML) and defined(KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL)
-    for (int i = 0; i < KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL-1; i++)
-#endif
-        kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+#if defined(KTT_POWER_USAGE_NVML) 
+#if defined(KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL)
+    if (powerMeasurementAllowed) {
+        for (int i = 0; i < KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL-1; i++)
+            kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+    }
+#endif // KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL
+#endif // KTT_POWER_USAGE_NVML
+
 
 #if defined(KTT_POWER_USAGE_NVML)
-    uint64_t energyEnd = m_PowerManager->GetTotalDeviceEnergy();
-    std::cout << "XXX energyEnd " << energyEnd << "\n";
-    std::cout << "YYY energyDiff " << energyEnd-energyBegin << "\n";
-    const uint32_t powerUsage = m_PowerManager->GetPowerUsage();
-    action->SetPowerUsage(powerUsage);
+    if (powerMeasurementAllowed) {
+        //uint64_t energyEnd = m_PowerManager->GetTotalDeviceEnergy();
+        const uint32_t powerUsage = m_PowerManager->GetPowerUsage();
+        action->SetPowerUsage(powerUsage);
+    }
 #endif // KTT_POWER_USAGE_NVML
 
     action->IncreaseOverhead(timer.GetElapsedTime());
@@ -218,9 +222,11 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     timer.Start();
 
     const auto id = data.GetUniqueIdentifier();
+    bool newProfiling = false;
 
     if (!IsProfilingSessionActive(id))
     {
+        newProfiling = true;
         InitializeProfiling(id);
     }
 
@@ -234,7 +240,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
 
     timer.Stop();
 
-    const auto actionId = RunKernelAsync(data, queueId);
+    const auto actionId = RunKernelAsync(data, queueId, newProfiling);
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime());
     ComputationResult result = WaitForComputeAction(actionId);
@@ -258,9 +264,11 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     timer.Start();
 
     const auto id = data.GetUniqueIdentifier();
+    bool newProfiling = false;
 
     if (!IsProfilingSessionActive(id))
     {
+        newProfiling = true;
         InitializeProfiling(id);
     }
 
@@ -274,7 +282,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
 
     timer.Stop();
 
-    const auto actionId = RunKernelAsync(data, queueId);
+    const auto actionId = RunKernelAsync(data, queueId, newProfiling);
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime()); 
     ComputationResult result = WaitForComputeAction(actionId);

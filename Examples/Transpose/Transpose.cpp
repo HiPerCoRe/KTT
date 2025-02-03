@@ -25,7 +25,7 @@ const std::string kernelPrefix = "../";
 const bool rapidTest = false;
 
 // Toggle kernel profiling.
-const bool useProfiling = false;
+const bool useProfiling = true;
 
 // Add denser values to tuning parameters (useDenseParameters = true).
 const bool useDenseParameters = false;
@@ -97,6 +97,7 @@ int main(int argc, char **argv)
     ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
     tuner.SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+    //tuner.SetLoggingLevel(ktt::LoggingLevel::Debug);
 
     if constexpr (useProfiling)
     {
@@ -201,7 +202,7 @@ int main(int argc, char **argv)
     }
 
     // Perform tuning
-    const auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(100));
+    const auto results = tuner.Tune(kernel/*, std::make_unique<ktt::ConfigurationCount>(1)*/);
     tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::XML);
     tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::JSON);
 

@@ -22,7 +22,7 @@ public:
     virtual ~ComputeEngine() = default;
 
     // Kernel methods
-    virtual ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) = 0;
+    virtual ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = true) = 0;
     virtual ComputationResult WaitForComputeAction(const ComputeActionId id) = 0;
     virtual void ClearData(const KernelComputeId& id) = 0;
     virtual void ClearKernelData(const std::string& kernelName) = 0;

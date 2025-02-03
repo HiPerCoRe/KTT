@@ -34,7 +34,7 @@ public:
     explicit OpenClEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
 
     // Kernel methods
-    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) override;
+    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = false) override;
     ComputationResult WaitForComputeAction(const ComputeActionId id) override;
     void ClearData(const KernelComputeId& id) override;
     void ClearKernelData(const std::string& kernelName) override;

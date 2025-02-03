@@ -52,7 +52,7 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
     m_DeviceInfo = GetDeviceInfo(0)[m_DeviceIndex];
 }
 
-ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId)
+ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
 {
     if (queueId >= static_cast<QueueId>(m_Queues.size()))
     {

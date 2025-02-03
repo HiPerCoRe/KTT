@@ -105,7 +105,7 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer, std::vector
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId)
+ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
 {
     if (!ContainsKey(m_Queues, queueId))
     {
