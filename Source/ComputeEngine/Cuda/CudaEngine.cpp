@@ -255,7 +255,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     FillProfilingData(id, result);
     timer.Stop();
 
-    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime(), result.getCompilationOverhead());
+    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime(), result.GetCompilationOverhead());
     return result;
 
 #elif KTT_PROFILING_CUPTI
