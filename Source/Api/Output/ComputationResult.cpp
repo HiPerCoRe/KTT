@@ -37,6 +37,11 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     {
         m_ProfilingData = std::make_unique<KernelProfilingData>(*other.m_ProfilingData);
     }
+
+    if (other.HasPowerData())
+    {
+        m_PowerUsage = other.GetPowerUsage();
+    }
 }
 
 void ComputationResult::SetDurationData(const Nanoseconds duration, const Nanoseconds overhead, const Nanoseconds compilationOverhead)
