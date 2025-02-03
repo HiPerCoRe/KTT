@@ -66,13 +66,13 @@ int main(int argc, char **argv)
 
     if constexpr (!useProfiling)
     {
-        width = 4096; //8192;
-        height = 4096; //8192;
+        width = 8192;
+        height = 8192;
     }
     else
     {
-        width = 4096;
-        height = 4096;
+        width = 4096*2;
+        height = 4096*2;
     }
 
     const ktt::DimensionVector ndRangeDimensions(width, height);
