@@ -253,5 +253,18 @@ void KernelResult::CopyProfilingTimes(const KernelResult& originalResult)
     m_FailedKernelOverhead = originalResult.GetFailedKernelOverhead();
 }
 
+void KernelResult::TransferPowerData(const KernelResult& previousResult) 
+{
+    int size = m_Results.size();
+    int prevSize = previousResult.GetResults().size();
+    if (size < prevSize)
+       for (int i = size; i < prevSize; i++)
+           m_Results.push_back(previousResult.GetResults()[i]);
+    for (int i = 0; i < prevSize; i++) {
+        if (previousResult.GetResults()[i].HasPowerData())
+            m_Results[i].SetPowerUsage(
+                previousResult.GetResults()[i].GetPowerUsage());
+    }
+}
 
 } // namespace ktt

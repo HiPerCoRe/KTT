@@ -232,6 +232,12 @@ public:
       */
     void CopyProfilingTimes(const KernelResult& originalResult);
 
+    /** @fn void TransferPowerData(const KernelResult& previousResult)
+     * Transfer power data collected from previous execution
+     * @param previousResult result of the previous run
+      */
+    void TransferPowerData(const KernelResult& previousResult);
+
 private:
     KernelConfiguration m_Configuration;
     std::vector<ComputationResult> m_Results;
