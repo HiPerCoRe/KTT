@@ -138,8 +138,9 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     timer.Stop();
 
 #if defined(KTT_POWER_USAGE_NVML)
+    std::unique_ptr<NvmlPowerSubscription> subscription;
     if (powerMeasurementAllowed) {
-        auto subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
+        subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
         //uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
     }
 #endif // KTT_POWER_USAGE_NVML
