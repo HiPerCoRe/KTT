@@ -59,6 +59,6 @@ for kr in res.findall('KernelResult') :
         cd = cr.find('CompilationData')
         print(cd.attrib['MaxWorkGroupSize'] + ',' + cd.attrib['LocalMemorySize'] + ',' + cd.attrib['PrivateMemorySize'] + ',' + cd.attrib['ConstantMemorySize'] + ',' + cd.attrib['RegistersCount'], end = '')
         if 'PowerUsage' in cr.attrib :
-            print(',' + cr.attrib['PowerUsage'] + ',' + vr.attrib['EnergyConsumption'])
+            print(',' + cr.attrib['PowerUsage'] + ',' + cr.attrib['EnergyConsumption'])
         else :
             print('') #add newline
