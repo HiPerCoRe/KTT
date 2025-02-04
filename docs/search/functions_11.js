@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['_7ecomputeinterface_0',['~ComputeInterface',['../classktt_1_1_compute_interface.html#a907624fb3ca339bfba2e7ea9866c5f69',1,'ktt::ComputeInterface']]],
-  ['_7esearcher_1',['~Searcher',['../classktt_1_1_searcher.html#a6b12def7ae2d28bed61f1f75689c4d49',1,'ktt::Searcher']]],
-  ['_7estopcondition_2',['~StopCondition',['../classktt_1_1_stop_condition.html#a03174c2a6251dc4ee72d02a767d86d79',1,'ktt::StopCondition']]],
-  ['_7etuner_3',['~Tuner',['../classktt_1_1_tuner.html#a09198b07768176d263dbee8a6c54b377',1,'ktt::Tuner']]]
+  ['waitforcomputeaction_0',['waitforcomputeaction',['../classktt_1_1_tuner.html#a42bfecb3a7da093420dcff86ff3a235f',1,'ktt::Tuner::WaitForComputeAction()'],['../classktt_1_1_compute_interface.html#a4dcdbd900b888751626bd6fe0194d615',1,'ktt::ComputeInterface::WaitForComputeAction()']]],
+  ['waitfortransferaction_1',['waitfortransferaction',['../classktt_1_1_tuner.html#a32e8f697b84556c3164575897f7f891a',1,'ktt::Tuner::WaitForTransferAction()'],['../classktt_1_1_compute_interface.html#a2dc0fb83da544686a16c7a079afe9c05',1,'ktt::ComputeInterface::WaitForTransferAction()']]],
+  ['what_2',['what',['../classktt_1_1_ktt_exception.html#ada9eeeda3a8152e72f1d01c40b2d4608',1,'ktt::KttException']]]
 ];

@@ -1,0 +1,80 @@
+{
+  "ConfigurationSpace": {
+    "TuningParameters": [
+      {
+        "Name": "multiply_block_size",
+        "Type": "uint",
+        "Values": "[32, 64, 128, 256]"
+      }
+    ]
+  },
+  "Search": {
+    "Name": "Random"
+  },
+  "General": {
+    "LoggingLevel": "Info",
+    "TimeUnit": "Microseconds",
+    "OutputFile": "TuningOutput",
+    "OutputFormat": "JSON"
+  },
+  "KernelSpecification": {
+    "Language": "CUDA",
+    "KernelName": "vectorAddition",
+    "KernelFile": "CudaKernel.cu",
+    "SharedMemory": 0,
+    "GlobalSize": {
+      "X": "1048576 // multiply_block_size"
+    },
+    "LocalSize": {
+      "X": "multiply_block_size"
+    },
+    "Arguments": [
+      {
+        "Name": "a",
+        "Type": "float",
+        "Size": 1048576,
+        "TypeSize": 4,
+        "FillType": "Generator",
+        "DataSource": "i",
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Name": "b",
+        "Type": "float",
+        "Size": 1048576,
+        "TypeSize": 4,
+        "FillType": "BinaryRaw",
+        "DataSource": "ArgumentData.bin",
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Name": "result",
+        "Type": "float",
+        "Size": 1048576,
+        "TypeSize": 4,
+        "FillType": "Constant",
+        "FillValue": 0.0,
+        "AccessType": "WriteOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Name": "scalar",
+        "Type": "float",
+        "FillValue": 3.0,
+        "MemoryType": "Scalar"
+      }
+    ],
+    "ReferenceArguments": [
+      {
+        "Name": "reference",
+        "FillType": "Generator",
+        "DataSource": "2 * i + 3",
+        "TargetName": "result",
+        "ValidationMethod": "SideBySideComparison",
+        "ValidationThreshold": 0.1
+      }
+    ]
+  }
+}

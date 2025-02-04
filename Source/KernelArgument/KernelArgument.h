@@ -18,27 +18,31 @@ namespace ktt
 class KernelArgument
 {
 public:
-    explicit KernelArgument(const ArgumentId id, const size_t elementSize, const ArgumentDataType dataType,
+    explicit KernelArgument(const ArgumentId& id, const size_t elementSize, const ArgumentDataType dataType,
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
         const ArgumentManagementType managementType, const std::string& symbolName = "");
 
     void SetReferencedData(void* data, const size_t dataSize);
     void SetOwnedData(const void* data, const size_t dataSize);
+    void SetOwnedDataFromFile(const std::string& file);
+    void SetOwnedDataFromGenerator(const std::string& generatorFunction, const size_t dataSize);
     void SetUserBuffer(const size_t dataSize);
 
-    ArgumentId GetId() const;
+    const ArgumentId& GetId() const;
     size_t GetElementSize() const;
     ArgumentDataType GetDataType() const;
     ArgumentMemoryLocation GetMemoryLocation() const;
     ArgumentAccessType GetAccessType() const;
     ArgumentMemoryType GetMemoryType() const;
     ArgumentManagementType GetManagementType() const;
+    ArgumentOwnership GetOwnership() const;
     const std::string& GetSymbolName() const;
 
     uint64_t GetNumberOfElements() const;
     size_t GetDataSize() const;
     const void* GetData() const;
     void* GetData();
+    void SaveData(const std::string& file) const;
     bool HasOwnedData() const;
     bool HasUserBuffer() const;
 

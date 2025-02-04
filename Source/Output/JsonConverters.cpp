@@ -52,16 +52,28 @@ void to_json(json& j, const ParameterPair& pair)
     j = json
     {
         {"Name", pair.GetName()},
-        {"IsDouble", pair.HasValueDouble()}
+        {"ValueType", pair.GetValueType()}
     };
 
-    if (pair.HasValueDouble())
+    switch (pair.GetValueType())
     {
-        j["Value"] = pair.GetValueDouble();
-    }
-    else
-    {
-        j["Value"] = pair.GetValue();
+    case ParameterValueType::Int:
+        j["Value"] = std::get<int64_t>(pair.GetValue());
+        break;
+    case ParameterValueType::UnsignedInt:
+        j["Value"] = pair.GetValueUint();
+        break;
+    case ParameterValueType::Double:
+        j["Value"] = std::get<double>(pair.GetValue());
+        break;
+    case ParameterValueType::Bool:
+        j["Value"] = std::get<bool>(pair.GetValue());
+        break;
+    case ParameterValueType::String:
+        j["Value"] = pair.GetValueString();
+        break;
+    default:
+        KttError("Unhandled parameter value type");
     }
 }
 
@@ -70,20 +82,48 @@ void from_json(const json& j, ParameterPair& pair)
     std::string name;
     j.at("Name").get_to(name);
 
-    bool isDouble;
-    j.at("IsDouble").get_to(isDouble);
+    ParameterValueType valueType;
+    j.at("ValueType").get_to(valueType);
 
-    if (isDouble)
+    switch (valueType)
     {
-        double value;
-        j.at("Value").get_to(value);
-        pair = ParameterPair(name, value);
+    case ParameterValueType::Int:
+    {
+        int64_t valueInt;
+        j.at("Value").get_to(valueInt);
+        pair = ParameterPair(name, valueInt);
+        break;
     }
-    else
+    case ParameterValueType::UnsignedInt:
     {
-        uint64_t value;
-        j.at("Value").get_to(value);
-        pair = ParameterPair(name, value);
+        uint64_t valueUint;
+        j.at("Value").get_to(valueUint);
+        pair = ParameterPair(name, valueUint);
+        break;
+    }
+    case ParameterValueType::Double:
+    {
+        double valueDouble;
+        j.at("Value").get_to(valueDouble);
+        pair = ParameterPair(name, valueDouble);
+        break;
+    }
+    case ParameterValueType::Bool:
+    {
+        bool valueBool;
+        j.at("Value").get_to(valueBool);
+        pair = ParameterPair(name, valueBool);
+        break;
+    }
+    case ParameterValueType::String:
+    {
+        std::string valueString;
+        j.at("Value").get_to(valueString);
+        pair = ParameterPair(name, valueString);
+        break;
+    }
+    default:
+        KttError("Unhandled parameter value type");
     }
 }
 
@@ -212,6 +252,7 @@ void to_json(json& j, const ComputationResult& result)
         {"KernelFunction", result.GetKernelFunction()},
         {"Duration", time.ConvertFromNanosecondsDouble(result.GetDuration())},
         {"Overhead", time.ConvertFromNanosecondsDouble(result.GetOverhead())},
+        {"CompilationOverhead", time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead())},
         {"GlobalSize", result.GetGlobalSize()},
         {"LocalSize", result.GetLocalSize()}
     };
@@ -224,6 +265,12 @@ void to_json(json& j, const ComputationResult& result)
     if (result.HasProfilingData())
     {
         j["ProfilingData"] = result.GetProfilingData();
+    }
+
+    if (result.HasPowerData())
+    {
+        j["PowerUsage"] = result.GetPowerUsage();
+        j["EnergyConsumption"] = result.GetEnergyConsumption();
     }
 }
 
@@ -243,7 +290,11 @@ void from_json(const json& j, ComputationResult& result)
     j.at("Overhead").get_to(overhead);
     const Nanoseconds overheadNs = time.ConvertToNanosecondsDouble(overhead);
 
-    result.SetDurationData(durationNs, overheadNs);
+    double compilationOverhead;
+    j.at("CompilationOverhead").get_to(compilationOverhead);
+    const Nanoseconds overheadCompNs = time.ConvertToNanosecondsDouble(compilationOverhead);
+
+    result.SetDurationData(durationNs, overheadNs, overheadCompNs);
 
     DimensionVector globalSize;
     j.at("GlobalSize").get_to(globalSize);
@@ -270,6 +321,13 @@ void from_json(const json& j, ComputationResult& result)
         auto uniqueData = std::make_unique<KernelProfilingData>(data);
         result.SetProfilingData(std::move(uniqueData));
     }
+
+    if (j.contains("PowerUsage"))
+    {
+        uint32_t powerUsage;
+        j.at("PowerUsage").get_to(powerUsage);
+        result.SetPowerUsage(powerUsage);
+    }
 }
 
 void to_json(json& j, const KernelResult& result)
@@ -283,7 +341,11 @@ void to_json(json& j, const KernelResult& result)
         {"TotalDuration", time.ConvertFromNanosecondsDouble(result.GetTotalDuration())},
         {"TotalOverhead", time.ConvertFromNanosecondsDouble(result.GetTotalOverhead())},
         {"ExtraDuration", time.ConvertFromNanosecondsDouble(result.GetExtraDuration())},
-        {"ExtraOverhead", time.ConvertFromNanosecondsDouble(result.GetExtraOverhead())},
+        {"DataMovementOverhead", time.ConvertFromNanosecondsDouble(result.GetDataMovementOverhead())},
+        {"ValidationOverhead", time.ConvertFromNanosecondsDouble(result.GetValidationOverhead())},
+        {"SearcherOverhead", time.ConvertFromNanosecondsDouble(result.GetSearcherOverhead())},
+        {"CompilationOverhead", time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead())},
+        {"ProfilingOverhead", time.ConvertFromNanosecondsDouble(result.GetProfilingTotalOverhead())},
         {"Configuration", result.GetConfiguration()},
         {"ComputationResults", result.GetResults()}
     };
@@ -313,10 +375,20 @@ void from_json(const json& j, KernelResult& result)
     const Nanoseconds extraDurationNs = time.ConvertToNanosecondsDouble(extraDuration);
     result.SetExtraDuration(extraDurationNs);
 
-    double extraOverhead;
-    j.at("ExtraOverhead").get_to(extraOverhead);
-    const Nanoseconds extraOverheadNs = time.ConvertToNanosecondsDouble(extraOverhead);
-    result.SetExtraOverhead(extraOverheadNs);
+    double dataMovementOverhead;
+    j.at("DataMovementOverhead").get_to(dataMovementOverhead);
+    const Nanoseconds dataMovementOverheadNs = time.ConvertToNanosecondsDouble(dataMovementOverhead);
+    result.SetDataMovementOverhead(dataMovementOverheadNs);
+
+    double validationOverhead;
+    j.at("ValidationOverhead").get_to(validationOverhead);
+    const Nanoseconds validationOverheadNs = time.ConvertToNanosecondsDouble(validationOverhead);
+    result.SetValidationOverhead(validationOverheadNs);
+
+    double searcherOverhead;
+    j.at("SearcherOverhead").get_to(searcherOverhead);
+    const Nanoseconds searcherOverheadNs = time.ConvertToNanosecondsDouble(searcherOverhead);
+    result.SetSearcherOverhead(searcherOverheadNs);
 }
 
 } // namespace ktt

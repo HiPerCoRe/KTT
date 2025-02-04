@@ -44,7 +44,17 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
         return false;
     }
 
-    m_SearcherActive = m_Searcher.CalculateNextConfiguration(previousResult);
+    try
+    {
+        m_SearcherActive = m_Searcher.CalculateNextConfiguration(previousResult);
+        const auto& currentConfiguration = GetCurrentConfiguration();
+        Logger::LogInfo("Searcher selected configuration " + std::to_string(GetIndexForConfiguration(currentConfiguration)) + ": " + currentConfiguration.GetString());
+    }
+    catch (const std::runtime_error& error)
+    {
+        Logger::LogError(error.what());
+        m_SearcherActive = false;
+    }
 
     if (!m_SearcherActive)
     {
@@ -52,6 +62,17 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
     }
 
     return m_SearcherActive;
+}
+
+void ConfigurationData::ListConfigurations() const
+{
+    Logger::LogInfo("Listing all configurations for kernel " + m_Kernel.GetName());
+
+    for (uint64_t index = 0; index < GetTotalConfigurationsCount(); ++index)
+    {
+        KernelConfiguration configuration = GetConfigurationForIndex(index);
+        Logger::LogInfo("Configuration " + std::to_string(index) + ": " + configuration.GetString());
+    }
 }
 
 KernelConfiguration ConfigurationData::GetConfigurationForIndex(const uint64_t index) const
@@ -242,6 +263,7 @@ void ConfigurationData::InitializeConfigurations()
     m_BestConfiguration = {initialBest, InvalidDuration};
     m_SearcherActive = true;
     m_Searcher.Initialize(*this);
+    Logger::LogInfo("Searcher selected configuration " + std::to_string(GetIndexForConfiguration(m_Searcher.GetCurrentConfiguration())) + ": " + m_Searcher.GetCurrentConfiguration().GetString());
 }
 
 void ConfigurationData::UpdateBestConfiguration(const KernelResult& previousResult)

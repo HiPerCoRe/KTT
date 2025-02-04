@@ -18,12 +18,14 @@ namespace ktt
 class ComputeLayerData
 {
 public:
-    explicit ComputeLayerData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode runMode);
+    explicit ComputeLayerData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+        const KernelRunMode runMode);
 
     void IncreaseOverhead(const Nanoseconds overhead);
+    void IncreaseCompilationOverhead(const Nanoseconds overhead);
     void AddPartialResult(const ComputationResult& result);
-    void AddArgumentOverride(const ArgumentId id, const KernelArgument& argument);
-    void SwapArguments(const KernelDefinitionId id, const ArgumentId first, const ArgumentId second);
+    void AddArgumentOverride(const ArgumentId& id, const KernelArgument& argument);
+    void SwapArguments(const KernelDefinitionId id, const ArgumentId& first, const ArgumentId& second);
     void ChangeArguments(const KernelDefinitionId id, std::vector<KernelArgument*>& arguments);
 
     bool IsProfilingEnabled(const KernelDefinitionId id) const;
@@ -40,7 +42,8 @@ private:
     const Kernel& m_Kernel;
     const KernelConfiguration& m_Configuration;
     KernelRunMode m_RunMode;
-    Nanoseconds m_Overhead;
+    Nanoseconds m_DataOverhead;
+    Nanoseconds m_CompilationOverhead;
 
     Nanoseconds CalculateLauncherOverhead() const;
 };

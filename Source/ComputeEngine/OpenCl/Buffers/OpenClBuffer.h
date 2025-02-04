@@ -36,7 +36,7 @@ public:
     virtual cl_mem GetBuffer() const = 0;
     virtual void* GetRawBuffer() = 0;
 
-    ArgumentId GetArgumentId() const;
+    const ArgumentId& GetArgumentId() const;
     ArgumentAccessType GetAccessType() const;
     ArgumentMemoryLocation GetMemoryLocation() const;
     size_t GetSize() const;

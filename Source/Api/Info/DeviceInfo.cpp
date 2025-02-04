@@ -12,7 +12,9 @@ DeviceInfo::DeviceInfo(const DeviceIndex index, const std::string& name) :
     m_LocalMemorySize(0),
     m_MaxConstantBufferSize(0),
     m_MaxWorkGroupSize(0),
-    m_MaxComputeUnits(0)
+    m_MaxComputeUnits(0),
+    m_CudaComputeCapabilityMajor(0),
+    m_CudaComputeCapabilityMinor(0)
 {}
 
 DeviceIndex DeviceInfo::GetIndex() const
@@ -81,6 +83,16 @@ uint32_t DeviceInfo::GetMaxComputeUnits() const
     return m_MaxComputeUnits;
 }
 
+uint32_t DeviceInfo::GetCudaComputeCapabilityMajor() const
+{
+    return m_CudaComputeCapabilityMajor;
+}
+
+uint32_t DeviceInfo::GetCudaComputeCapabilityMinor() const
+{
+    return m_CudaComputeCapabilityMinor;
+}
+
 std::string DeviceInfo::GetString() const
 {
     std::string result;
@@ -95,6 +107,7 @@ std::string DeviceInfo::GetString() const
     result += "Maximum work-group size: " + std::to_string(m_MaxWorkGroupSize) + "\n";
     result += "Maximum parallel compute units: " + std::to_string(m_MaxComputeUnits) + "\n";
     result += "Extensions: " + m_Extensions + "\n";
+    result += "CUDA compute capability: " + std::to_string(m_CudaComputeCapabilityMajor) + "." + std::to_string(m_CudaComputeCapabilityMinor) + "\n";
 
     return result;
 }
@@ -137,6 +150,16 @@ void DeviceInfo::SetMaxWorkGroupSize(const uint64_t maxWorkGroupSize)
 void DeviceInfo::SetMaxComputeUnits(const uint32_t maxComputeUnits)
 {
     m_MaxComputeUnits = maxComputeUnits;
+}
+
+void DeviceInfo::SetCudaComputeCapabilityMajor(const uint32_t capabilityMajor)
+{
+    m_CudaComputeCapabilityMajor = capabilityMajor;
+}
+
+void DeviceInfo::SetCudaComputeCapabilityMinor(const uint32_t capabilityMinor)
+{
+    m_CudaComputeCapabilityMinor = capabilityMinor;
 }
 
 } // namespace ktt

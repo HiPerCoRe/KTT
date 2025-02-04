@@ -1,13 +1,21 @@
 #include <cstring>
 
+#ifdef KTT_PYTHON
+#include <pybind11/stl.h>
+#endif // KTT_PYTHON
+
 #include <Api/KttException.h>
 #include <KernelArgument/KernelArgument.h>
+#include <Python/PythonInterpreter.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/External/half.hpp>
+#include <Utility/Logger/Logger.h>
+#include <Utility/FileSystem.h>
 
 namespace ktt
 {
 
-KernelArgument::KernelArgument(const ArgumentId id, const size_t elementSize, const ArgumentDataType dataType,
+KernelArgument::KernelArgument(const ArgumentId& id, const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
     const ArgumentManagementType managementType, const std::string& symbolName) :
     m_Id(id),
@@ -26,6 +34,11 @@ KernelArgument::KernelArgument(const ArgumentId id, const size_t elementSize, co
         "Non-vector arguments must have undefined memory location");
     KttAssert(m_MemoryType != ArgumentMemoryType::Vector || m_MemoryLocation != ArgumentMemoryLocation::Undefined,
         "Vector arguments must have defined memory location");
+
+    if (m_ElementSize == 0)
+    {
+        throw KttException("Kernel argument element size must be greater than zero");
+    }
 
     if (!m_SymbolName.empty())
     {
@@ -53,7 +66,7 @@ void KernelArgument::SetReferencedData(void* data, const size_t dataSize)
 
 void KernelArgument::SetOwnedData(const void* data, const size_t dataSize)
 {
-    if (dataSize == 0)
+    if (dataSize == 0 && GetMemoryType() != ArgumentMemoryType::Local)
     {
         throw KttException("Kernel argument cannot be initialized with number of elements equal to zero");
     }
@@ -74,6 +87,116 @@ void KernelArgument::SetOwnedData(const void* data, const size_t dataSize)
     }
 }
 
+void KernelArgument::SetOwnedDataFromFile(const std::string& file)
+{
+    const auto data = LoadFileToBinary(file);
+    SetOwnedData(data.data(), data.size());
+}
+
+void KernelArgument::SetOwnedDataFromGenerator([[maybe_unused]] const std::string& generatorFunction, [[maybe_unused]] const size_t dataSize)
+{
+#ifndef KTT_PYTHON
+    throw KttException("Usage of kernel arguments filled from generator function requires compilation of Python backend");
+#else
+    auto& interpreter = PythonInterpreter::GetInterpreter();
+    pybind11::gil_scoped_acquire acquire;
+    std::vector<uint8_t> data(dataSize);
+    const size_t numberOfElements = dataSize / m_ElementSize;
+    pybind11::dict locals;
+
+    for (size_t i = 0; i < numberOfElements; ++i)
+    {
+        locals["i"] = i;
+
+        try
+        {
+            switch (m_DataType)
+            {
+            case ArgumentDataType::Char:
+            {
+                const auto element = interpreter.Evaluate<int8_t>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::UnsignedChar:
+            {
+                const auto element = interpreter.Evaluate<uint8_t>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::Short:
+            {
+                const auto element = interpreter.Evaluate<int16_t>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::UnsignedShort:
+            {
+                const auto element = interpreter.Evaluate<uint16_t>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::Int:
+            {
+                const auto element = interpreter.Evaluate<int32_t>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::UnsignedInt:
+            {
+                const auto element = interpreter.Evaluate<uint32_t>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::Long:
+            {
+                const auto element = interpreter.Evaluate<int64_t>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::UnsignedLong:
+            {
+                const auto element = interpreter.Evaluate<uint64_t>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::Half:
+            {
+                const auto element = interpreter.Evaluate<half_float::half>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::Float:
+            {
+                const auto element = interpreter.Evaluate<float>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::Double:
+            {
+                const auto element = interpreter.Evaluate<double>(generatorFunction, locals);
+                std::memcpy(data.data() + m_ElementSize * i, &element, m_ElementSize);
+                break;
+            }
+            case ArgumentDataType::Custom:
+                throw KttException("Generator functions are not supported for arguments with a custom data type");
+            default:
+                KttError("Unhandled argument data type");
+            }
+        }
+        catch (const pybind11::error_already_set& exception)
+        {
+            Logger::LogError(exception.what());
+            interpreter.ReleaseInterpreter();
+        }
+        
+    }
+
+    interpreter.ReleaseInterpreter();
+    SetOwnedData(data.data(), data.size());
+#endif // KTT_PYTHON
+}
+
 void KernelArgument::SetUserBuffer(const size_t dataSize)
 {
     if (dataSize == 0)
@@ -87,7 +210,7 @@ void KernelArgument::SetUserBuffer(const size_t dataSize)
     m_ReferencedData = nullptr;
 }
 
-ArgumentId KernelArgument::GetId() const
+const ArgumentId& KernelArgument::GetId() const
 {
     return m_Id;
 }
@@ -120,6 +243,11 @@ ArgumentMemoryType KernelArgument::GetMemoryType() const
 ArgumentManagementType KernelArgument::GetManagementType() const
 {
     return m_ManagementType;
+}
+
+ArgumentOwnership KernelArgument::GetOwnership() const
+{
+    return m_Ownership;
 }
 
 const std::string& KernelArgument::GetSymbolName() const
@@ -157,6 +285,21 @@ const void* KernelArgument::GetData() const
 void* KernelArgument::GetData()
 {
     return const_cast<void*>(static_cast<const KernelArgument*>(this)->GetData());
+}
+
+void KernelArgument::SaveData(const std::string& file) const
+{
+    if (m_MemoryType != ArgumentMemoryType::Vector)
+    {
+        throw KttException("Only vector arguments can be saved into a file");
+    }
+
+    if (HasUserBuffer())
+    {
+        throw KttException("User-owned vector arguments cannot be saved into a file");
+    }
+
+    SaveBinaryToFile(file, GetData(), GetDataSize());
 }
 
 bool KernelArgument::HasOwnedData() const

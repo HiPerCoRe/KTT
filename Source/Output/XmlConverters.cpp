@@ -77,6 +77,26 @@ std::string ResultStatusToString(const ResultStatus status)
     }
 }
 
+std::string ParameterValueTypeToString(const ParameterValueType type)
+{
+    switch (type)
+    {
+    case ParameterValueType::Int:
+        return "Int";
+    case ParameterValueType::UnsignedInt:
+        return "UnsignedInt";
+    case ParameterValueType::Double:
+        return "Double";
+    case ParameterValueType::Bool:
+        return "Bool";
+    case ParameterValueType::String:
+        return "String";
+    default:
+        KttError("Unhandled value");
+        return "";
+    }
+}
+
 std::string ProfilingCounterTypeToString(const ProfilingCounterType type)
 {
     switch (type)
@@ -187,6 +207,37 @@ ResultStatus ResultStatusFromString(const std::string& string)
     return ResultStatus::Ok;
 }
 
+ParameterValueType ParameterValueTypeFromString(const std::string& string)
+{
+    if (string == "Int")
+    {
+        return ParameterValueType::Int;
+    }
+    else if (string == "UnsignedInt")
+    {
+        return ParameterValueType::UnsignedInt;
+    }
+    else if (string == "Double")
+    {
+        return ParameterValueType::Double;
+    }
+    else if (string == "Float")
+    {
+        return ParameterValueType::Float;
+    }
+    else if (string == "Bool")
+    {
+        return ParameterValueType::Bool;
+    }
+    else if (string == "String")
+    {
+        return ParameterValueType::String;
+    }
+
+    KttError("Invalid string value");
+    return ParameterValueType::Int;
+}
+
 ProfilingCounterType ProfilingCounterTypeFromString(const std::string& string)
 {
     if (string == "Int")
@@ -272,35 +323,74 @@ UserData ParseUserData(const pugi::xml_node node)
 void AppendPair(pugi::xml_node parent, const ParameterPair& pair)
 {
     pugi::xml_node node = parent.append_child("Pair");
-    node.append_attribute("IsDouble").set_value(pair.HasValueDouble());
+    node.append_attribute("ValueType").set_value(ParameterValueTypeToString(pair.GetValueType()).c_str());
     node.append_attribute("Name").set_value(pair.GetName().c_str());
     pugi::xml_attribute value = node.append_attribute("Value");
 
-    if (pair.HasValueDouble())
+    switch (pair.GetValueType())
     {
-        value.set_value(pair.GetValueDouble(), xmlFloatingPointPrecision);
-    }
-    else
-    {
-        value.set_value(pair.GetValue());
+    case ParameterValueType::Int:
+        value.set_value(std::get<int64_t>(pair.GetValue()));
+        break;
+    case ParameterValueType::UnsignedInt:
+        value.set_value(pair.GetValueUint());
+        break;
+    case ParameterValueType::Double:
+        value.set_value(std::get<double>(pair.GetValue()), xmlFloatingPointPrecision);
+        break;
+    case ParameterValueType::Bool:
+        value.set_value(std::get<bool>(pair.GetValue()));
+        break;
+    case ParameterValueType::String:
+        value.set_value(pair.GetString().c_str());
+        break;
+    default:
+        KttError("Unhandled parameter value type");
     }
 }
 
 ParameterPair ParsePair(const pugi::xml_node node)
 {
     const std::string name = node.attribute("Name").value();
-    const bool isDouble = node.attribute("IsDouble").as_bool();
+    const ParameterValueType valueType = ParameterValueTypeFromString(node.attribute("ValueType").value());
+    
+    const pugi::xml_attribute value = node.attribute("Value");
     ParameterPair pair;
 
-    if (isDouble)
+    switch (valueType)
     {
-        const double value = node.attribute("Value").as_double();
-        pair = ParameterPair(name, value);
+    case ParameterValueType::Int:
+    {
+        const int64_t valueInt = value.as_llong();
+        pair = ParameterPair(name, valueInt);
+        break;
     }
-    else
+    case ParameterValueType::UnsignedInt:
     {
-        const uint64_t value = node.attribute("Value").as_ullong();
-        pair = ParameterPair(name, value);
+        const uint64_t valueUint = value.as_ullong();
+        pair = ParameterPair(name, valueUint);
+        break;
+    }
+    case ParameterValueType::Double:
+    {
+        const double valueDouble = value.as_double();
+        pair = ParameterPair(name, valueDouble);
+        break;
+    }
+    case ParameterValueType::Bool:
+    {
+        const bool valueBool = value.as_bool();
+        pair = ParameterPair(name, valueBool);
+        break;
+    }
+    case ParameterValueType::String:
+    {
+        const std::string valueString = value.as_string();
+        pair = ParameterPair(name, valueString);
+        break;
+    }
+    default:
+        KttError("Unhandled parameter value type");
     }
 
     return pair;
@@ -471,6 +561,7 @@ void AppendComputationResult(pugi::xml_node parent, const ComputationResult& res
     node.append_attribute("KernelFunction").set_value(result.GetKernelFunction().c_str());
     node.append_attribute("Duration").set_value(time.ConvertFromNanosecondsDouble(result.GetDuration()), xmlFloatingPointPrecision);
     node.append_attribute("Overhead").set_value(time.ConvertFromNanosecondsDouble(result.GetOverhead()), xmlFloatingPointPrecision);
+    node.append_attribute("CompilationOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead()), xmlFloatingPointPrecision);
     AppendVector(node, result.GetGlobalSize(), "GlobalSize");
     AppendVector(node, result.GetLocalSize(), "LocalSize");
 
@@ -482,6 +573,12 @@ void AppendComputationResult(pugi::xml_node parent, const ComputationResult& res
     if (result.HasProfilingData())
     {
         AppendProfilingData(node, result.GetProfilingData());
+    }
+
+    if (result.HasPowerData())
+    {
+        node.append_attribute("PowerUsage").set_value(result.GetPowerUsage());
+        node.append_attribute("EnergyConsumption").set_value(result.GetEnergyConsumption(), xmlFloatingPointPrecision);
     }
 }
 
@@ -495,7 +592,9 @@ ComputationResult ParseComputationResult(const pugi::xml_node node)
     const Nanoseconds durationNs = time.ConvertToNanosecondsDouble(duration);
     const double overhead = node.attribute("Overhead").as_double();
     const Nanoseconds overheadNs = time.ConvertToNanosecondsDouble(overhead);
-    result.SetDurationData(durationNs, overheadNs);
+    const double compilationOverhead = node.attribute("CompilationOverhead").as_double();
+    const Nanoseconds overheadCompNs = time.ConvertToNanosecondsDouble(compilationOverhead);
+    result.SetDurationData(durationNs, overheadNs, overheadCompNs);
 
     const DimensionVector globalSize = ParseVector(node, "GlobalSize");
     const DimensionVector localSize = ParseVector(node, "LocalSize");
@@ -519,6 +618,14 @@ ComputationResult ParseComputationResult(const pugi::xml_node node)
         result.SetProfilingData(std::move(uniqueData));
     }
 
+    const auto powerUsage = node.attribute("PowerUsage");
+
+    if (!powerUsage.empty())
+    {
+        const uint32_t powerUsageValue = powerUsage.as_uint();
+        result.SetPowerUsage(powerUsageValue);
+    }
+
     return result;
 }
 
@@ -535,7 +642,15 @@ void AppendKernelResult(pugi::xml_node parent, const KernelResult& result)
         xmlFloatingPointPrecision);
     node.append_attribute("ExtraDuration").set_value(time.ConvertFromNanosecondsDouble(result.GetExtraDuration()),
         xmlFloatingPointPrecision);
-    node.append_attribute("ExtraOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetExtraOverhead()),
+    node.append_attribute("DataMovementOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetDataMovementOverhead()),
+        xmlFloatingPointPrecision);
+    node.append_attribute("ValidationOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetValidationOverhead()),
+        xmlFloatingPointPrecision);
+    node.append_attribute("SearcherOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetSearcherOverhead()),
+        xmlFloatingPointPrecision);
+    node.append_attribute("CompilationOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead()),
+        xmlFloatingPointPrecision);
+    node.append_attribute("ProfilingOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetProfilingTotalOverhead()),
         xmlFloatingPointPrecision);
     AppendConfiguration(node, result.GetConfiguration());
 
@@ -570,9 +685,17 @@ KernelResult ParseKernelResult(const pugi::xml_node node)
     const Nanoseconds extraDurationNs = time.ConvertToNanosecondsDouble(extraDuration);
     result.SetExtraDuration(extraDurationNs);
 
-    const double extraOverhead = node.attribute("ExtraOverhead").as_double();
-    const Nanoseconds extraOverheadNs = time.ConvertToNanosecondsDouble(extraOverhead);
-    result.SetExtraOverhead(extraOverheadNs);
+    const double dataMovementOverhead = node.attribute("DataMovementOverhead").as_double();
+    const Nanoseconds dataMovementOverheadNs = time.ConvertToNanosecondsDouble(dataMovementOverhead);
+    result.SetDataMovementOverhead(dataMovementOverheadNs);
+
+    const double validationOverhead = node.attribute("ValidationOverhead").as_double();
+    const Nanoseconds validationOverheadNs = time.ConvertToNanosecondsDouble(validationOverhead);
+    result.SetValidationOverhead(validationOverheadNs);
+
+    const double searcherOverhead = node.attribute("SearcherOverhead").as_double();
+    const Nanoseconds searcherOverheadNs = time.ConvertToNanosecondsDouble(searcherOverhead);
+    result.SetSearcherOverhead(searcherOverheadNs);
 
     return result;
 }

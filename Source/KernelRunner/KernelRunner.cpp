@@ -5,6 +5,7 @@
 #include <KernelRunner/KernelRunner.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/Timer/ScopeTimer.h>
 #include <Utility/Timer/Timer.h>
 
 namespace ktt
@@ -15,12 +16,12 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
     m_Validator(std::make_unique<ResultValidator>(*this)),
     m_Engine(engine),
     m_ArgumentManager(argumentManager),
-    m_ReadOnlyCacheFlag(true),
-    m_ProfilingFlag(false)
+    m_ReadOnlyCacheFlag(true)
+    //m_ProfilingFlag(false)
 {}
 
-KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelRunMode mode,
-    const std::vector<BufferOutputDescriptor>& output, const bool manageBuffers)
+KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+    const KernelRunMode mode, const std::vector<BufferOutputDescriptor>& output, const bool manageBuffers)
 {
     m_Engine.EnsureThreadContext();
 
@@ -29,21 +30,33 @@ KernelResult KernelRunner::RunKernel(const Kernel& kernel, const KernelConfigura
         m_Validator->ComputeReferenceResult(kernel, mode);
     }
 
+    Nanoseconds dataOverhead = 0;
+
     if (manageBuffers)
     {
-        SetupBuffers(kernel);
+        dataOverhead += RunScopeTimer([this, &kernel]()
+        {
+            SetupBuffers(kernel);
+        });
     }
 
-    Logger::LogInfo("Running kernel " + kernel.GetName() + " with configuration: " + configuration.GetString());
+    if (IsProfilingActive())
+        Logger::LogInfo("Profiling kernel " + kernel.GetName() + " with configuration: " + configuration.GetString());
+    else
+        Logger::LogInfo("Running kernel " + kernel.GetName() + " with configuration: " + configuration.GetString());
     auto launcher = GetKernelLauncher(kernel);
-    KernelResult result = RunKernelInternal(kernel, configuration, mode, launcher, output);
+    KernelResult result = RunKernelInternal(kernel, configuration, dimensions, mode, launcher, output);
     ValidateResult(kernel, result, mode);
 
     if (manageBuffers)
     {
-        CleanupBuffers(kernel);
+        dataOverhead += RunScopeTimer([this, &kernel]()
+        {
+            CleanupBuffers(kernel);
+        });
     }
 
+    result.SetDataMovementOverhead(result.GetDataMovementOverhead() + dataOverhead);
     return result;
 }
 
@@ -59,7 +72,7 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
         {
             if (!kernel.HasLauncher() && !argument->HasUserBuffer())
             {
-                Logger::LogWarning("Kernel argument with id " + std::to_string(id) + " has buffer managed by user, but its "
+                Logger::LogWarning("Kernel argument with id " + id + " has buffer managed by user, but its "
                     + "associated kernel " + kernel.GetName() + " does not have a launcher defined by user");
             }
 
@@ -117,12 +130,14 @@ void KernelRunner::SetReadOnlyArgumentCache(const bool flag)
 
 void KernelRunner::SetProfiling(const bool flag)
 {
-    m_ProfilingFlag = flag;
+    //m_ProfilingFlag = flag;
+    m_Engine.SetProfiling(flag);
 }
 
 bool KernelRunner::IsProfilingActive() const
 {
-    return m_ProfilingFlag;
+    //return m_ProfilingFlag;
+    return m_Engine.IsProfilingActive();
 }
 
 void KernelRunner::SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
@@ -135,28 +150,35 @@ void KernelRunner::SetValidationMode(const ValidationMode mode)
     m_Validator->SetValidationMode(mode);
 }
 
-void KernelRunner::SetValidationRange(const ArgumentId id, const size_t range)
+void KernelRunner::SetValidationRange(const ArgumentId& id, const size_t range)
 {
     PrepareValidationData(id);
     m_Validator->SetValidationRange(id, range);
 }
 
-void KernelRunner::SetValueComparator(const ArgumentId id, ValueComparator comparator)
+void KernelRunner::SetValueComparator(const ArgumentId& id, ValueComparator comparator)
 {
     PrepareValidationData(id);
     m_Validator->SetValueComparator(id, comparator);
 }
 
-void KernelRunner::SetReferenceComputation(const ArgumentId id, ReferenceComputation computation)
+void KernelRunner::SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation)
 {
     PrepareValidationData(id);
     m_Validator->SetReferenceComputation(id, computation);
 }
 
-void KernelRunner::SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration)
+void KernelRunner::SetReferenceKernel(const ArgumentId& id, const Kernel& kernel, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions)
 {
     PrepareValidationData(id);
-    m_Validator->SetReferenceKernel(id, kernel, configuration);
+    m_Validator->SetReferenceKernel(id, kernel, configuration, dimensions);
+}
+
+void KernelRunner::SetReferenceArgument(const ArgumentId& id, const KernelArgument& argument)
+{
+    PrepareValidationData(id);
+    m_Validator->SetReferenceArgument(id, argument);
 }
 
 void KernelRunner::ClearReferenceResult(const Kernel& kernel)
@@ -170,7 +192,7 @@ void KernelRunner::RemoveKernelData(const KernelId id)
     m_Validator->RemoveDataWithReferenceKernel(id);
 }
 
-void KernelRunner::RemoveValidationData(const ArgumentId id)
+void KernelRunner::RemoveValidationData(const ArgumentId& id)
 {
     m_Validator->RemoveValidationData(id);
 }
@@ -209,18 +231,22 @@ KernelLauncher KernelRunner::GetKernelLauncher(const Kernel& kernel)
 }
 
 KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration,
-    const KernelRunMode mode, KernelLauncher launcher, const std::vector<BufferOutputDescriptor>& output)
+    const KernelDimensions& dimensions, const KernelRunMode mode, KernelLauncher launcher,
+    const std::vector<BufferOutputDescriptor>& output)
 {
-    m_ComputeLayer->AddData(kernel, configuration, mode);
+    m_ComputeLayer->AddData(kernel, configuration, dimensions, mode);
     const KernelId id = kernel.GetId();
 
     auto activator = std::make_unique<KernelActivator>(*m_ComputeLayer, id);
     KernelResult result(kernel.GetName(), configuration);
 
+    Timer timer;
+    timer.Start();
     try
     {
         const Nanoseconds duration = RunLauncher(launcher);
         result = m_ComputeLayer->GenerateResult(id, duration);
+        timer.Stop();
     }
     catch (const KttException& exception)
     {
@@ -229,11 +255,20 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
         m_ComputeLayer->SynchronizeDevice();
         m_ComputeLayer->ClearComputeEngineData();
 
+        timer.Stop();
+
+        result.SetFailedKernelOverhead(timer.GetElapsedTime());
+
         const auto reason = exception.GetReason();
         result.SetStatus(GetStatusFromException(reason));
     }
 
-    DownloadBuffers(output);
+    const Nanoseconds dataOverhead = RunScopeTimer([this, &output]()
+    {
+        DownloadBuffers(output);
+    });
+
+    result.SetDataMovementOverhead(result.GetDataMovementOverhead() + dataOverhead);
     m_ComputeLayer->ClearData(id);
 
     return result;
@@ -250,7 +285,7 @@ Nanoseconds KernelRunner::RunLauncher(KernelLauncher launcher)
     return timer.GetElapsedTime();
 }
 
-void KernelRunner::PrepareValidationData(const ArgumentId id)
+void KernelRunner::PrepareValidationData(const ArgumentId& id)
 {
     if (!m_Validator->HasValidationData(id))
     {
@@ -266,7 +301,14 @@ void KernelRunner::ValidateResult(const Kernel& kernel, KernelResult& result, co
         return;
     }
 
-    const bool validResult = m_Validator->ValidateArguments(kernel, mode);
+    bool validResult = false;
+
+    const Nanoseconds validationOverhead = RunScopeTimer([this, &kernel, mode, &validResult]()
+    {
+        validResult = m_Validator->ValidateArguments(kernel, mode);
+    });
+
+    result.SetValidationOverhead(validationOverhead);
     const auto& time = TimeConfiguration::GetInstance();
     const uint64_t duration = time.ConvertFromNanoseconds(result.GetTotalDuration());
     const uint64_t kernelDuration = time.ConvertFromNanoseconds(result.GetKernelDuration());

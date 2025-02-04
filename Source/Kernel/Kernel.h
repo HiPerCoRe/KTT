@@ -2,14 +2,15 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <queue>
 #include <set>
 #include <string>
 #include <vector>
 
 #include <Api/Configuration/KernelConfiguration.h>
+#include <Kernel/KernelConstraint/KernelConstraint.h>
 #include <Kernel/KernelDefinition.h>
-#include <Kernel/KernelConstraint.h>
 #include <Kernel/KernelParameter.h>
 #include <Kernel/KernelParameterGroup.h>
 #include <Kernel/ModifierDimension.h>
@@ -27,6 +28,8 @@ public:
 
     void AddParameter(const KernelParameter& parameter);
     void AddConstraint(const std::vector<std::string>& parameterNames, ConstraintFunction function);
+    void AddGenericConstraint(const std::vector<std::string>& parameterNames, GenericConstraintFunction function);
+    void AddScriptConstraint(const std::vector<std::string>& parameterNames, const std::string& script);
     void AddThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier);
     void SetProfiledDefinitions(const std::vector<const KernelDefinition*>& definitions);
     void SetLauncher(KernelLauncher launcher);
@@ -38,7 +41,7 @@ public:
     const std::vector<const KernelDefinition*>& GetDefinitions() const;
     const std::vector<const KernelDefinition*>& GetProfiledDefinitions() const;
     const std::set<KernelParameter>& GetParameters() const;
-    const std::vector<KernelConstraint>& GetConstraints() const;
+    std::vector<const KernelConstraint*> GetConstraints() const;
     std::vector<KernelArgument*> GetVectorArguments() const;
     KernelLauncher GetLauncher() const;
 
@@ -52,8 +55,9 @@ public:
     void EnumerateNeighbourConfigurations(const KernelConfiguration& configuration,
         std::function<bool(const KernelConfiguration&, const uint64_t)> enumerator) const;
 
-    DimensionVector GetModifiedGlobalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const;
-    DimensionVector GetModifiedLocalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const;
+    DimensionVector GetModifiedSize(const KernelDefinitionId id, const ModifierType type, const std::vector<ParameterPair>& pairs) const;
+    DimensionVector GetModifiedSize(const KernelDefinitionId id, const DimensionVector& originalSize, const ModifierType type,
+        const std::vector<ParameterPair>& pairs) const;
 
 private:
     KernelId m_Id;
@@ -61,14 +65,14 @@ private:
     std::vector<const KernelDefinition*> m_Definitions;
     std::vector<const KernelDefinition*> m_ProfiledDefinitions;
     std::set<KernelParameter> m_Parameters;
-    std::vector<KernelConstraint> m_Constraints;
+    std::vector<std::unique_ptr<KernelConstraint>> m_Constraints;
     std::map<ModifierType, std::map<ModifierDimension, std::vector<ThreadModifier>>> m_Modifiers;
     KernelLauncher m_Launcher;
 
+    std::vector<const KernelParameter*> PreprocessConstraintParameters(const std::vector<std::string>& parameterNames,
+        const bool genericConstraint) const;
     std::vector<const KernelConstraint*> GetConstraintsForParameters(const std::vector<const KernelParameter*>& parameters) const;
     const KernelParameter& GetParamater(const std::string& name) const;
-    DimensionVector GetModifiedSize(const KernelDefinitionId id, const ModifierType type,
-        const std::vector<ParameterPair>& pairs) const;
     void EnumerateNeighbours(const KernelConfiguration& configuration, const KernelParameter* neighbourParameter,
         const std::set<const KernelParameter*>& enumeratedParameters, std::set<std::set<const KernelParameter*>>& enumeratedSets,
         std::function<bool(const KernelConfiguration&, const uint64_t)> enumerator,

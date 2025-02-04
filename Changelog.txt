@@ -1,3 +1,12 @@
+Version 2.2 (4/2/2025
+* Tuning can be configured in JSON file and tuning session can be loaded and
+executed from that file.
+* Implemented profile-based searcher navigating tuning space via hardware performance counters
+* NVML backend for kernel power measurement on CUDA
+* More detailed overhead measurement
+* Enriched tuning parameter types
+* Improved logging
+
 Version 2.1 (25/1/2022)
 * Introduced KTT Python bindings making it possible to utilize KTT API in Python
 * Added onboarding guide for KTT which describes core KTT features and their usage

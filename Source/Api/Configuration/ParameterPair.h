@@ -8,7 +8,9 @@
 #include <variant>
 #include <vector>
 
+#include <Kernel/ParameterValueType.h>
 #include <KttPlatform.h>
+#include <KttTypes.h>
 
 namespace ktt
 {
@@ -20,35 +22,22 @@ class KTT_API ParameterPair
 {
 public:
     /** @fn ParameterPair()
-      * Constructor which creates empty parameter pair.
+      * Constructor which creates an empty parameter pair.
       */
     ParameterPair();
 
-    /** @fn explicit ParameterPair(const std::string& name, const uint64_t value)
-      * Constructor which creates parameter pair for integer parameter.
+    /** @fn explicit ParameterPair(const std::string& name, const ParameterValue& value)
+      * Constructor which creates a parameter pair with the specified value.
       * @param name Name of a kernel parameter tied to the pair.
       * @param value Value of a parameter.
       */
-    explicit ParameterPair(const std::string& name, const uint64_t value);
+    explicit ParameterPair(const std::string& name, const ParameterValue& value);
 
-    /** @fn explicit ParameterPair(const std::string& name, const double value)
-      * Constructor which creates parameter pair for floating-point parameter.
-      * @param name Name of a kernel parameter tied to the pair.
-      * @param value Value of a parameter.
+    /** @fn void SetValue(const ParameterValue& value)
+      * Setter for parameter value.
+      * @param value New value of a parameter.
       */
-    explicit ParameterPair(const std::string& name, const double value);
-
-    /** @fn void SetValue(const uint64_t value)
-      * Setter for value of an integer parameter.
-      * @param value New value of an integer parameter.
-      */
-    void SetValue(const uint64_t value);
-
-    /** @fn void SetValue(const double value)
-      * Setter for value of a floating-point parameter.
-      * @param value New value of a floating-point parameter.
-      */
-    void SetValue(const double value);
+    void SetValue(const ParameterValue& value);
 
     /** @fn const std::string& GetName() const
       * Returns name of a parameter.
@@ -68,23 +57,23 @@ public:
       */
     std::string GetValueString() const;
 
-    /** @fn uint64_t GetValue() const
-      * Returns integer representation of parameter value.
-      * @return Integer representation of parameter value.
+    /** @fn const ParameterValue& GetValue() const
+      * Returns parameter pair value.
+      * @return Parameter pair value.
       */
-    uint64_t GetValue() const;
+    const ParameterValue& GetValue() const;
 
-    /** @fn double GetValueDouble() const
-      * Returns floating-point representation of parameter value.
-      * @return Floating-point representation of parameter value.
+    /** @fn uint64_t GetValueUint() const
+      * Returns unsigned integer representation of parameter pair value.
+      * @return Unsigned integer representation of parameter pair value.
       */
-    double GetValueDouble() const;
+    uint64_t GetValueUint() const;
 
-    /** @fn bool HasValueDouble() const
-      * Checks if parameter value was specified as floating-point.
-      * @return True if parameter value was specified as floating-point, false otherwise.
+    /** @fn ParameterValueType GetValueType() const
+      * Returns type of the parameter pair value.
+      * @return Type of the parameter pair value.
       */
-    bool HasValueDouble() const;
+    ParameterValueType GetValueType() const;
 
     /** @fn bool HasSameValue(const ParameterPair& other) const
       * Checks if parameter value is same as other parameter value.
@@ -92,6 +81,12 @@ public:
       * @return True if the values are same, false otherwise.
       */
     bool HasSameValue(const ParameterPair& other) const;
+
+    /** @fn static ParameterValueType GetTypeFromValue(const ParameterValue& value)
+      * Returns type of the specified parameter value.
+      * @return Type of the specified parameter value.
+      */
+    static ParameterValueType GetTypeFromValue(const ParameterValue& value);
 
     /** @fn template <typename T> static T GetParameterValue(const std::vector<ParameterPair>& pairs, const std::string& name)
       * Returns value of the specified parameter from parameter pairs.
@@ -114,7 +109,7 @@ public:
 
 private:
     std::string m_Name;
-    std::variant<uint64_t, double> m_Value;
+    ParameterValue m_Value;
 };
 
 } // namespace ktt

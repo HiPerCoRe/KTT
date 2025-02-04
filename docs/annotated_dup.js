@@ -25,6 +25,7 @@ var annotated_dup =
       [ "Searcher", "classktt_1_1_searcher.html", "classktt_1_1_searcher" ],
       [ "StopCondition", "classktt_1_1_stop_condition.html", "classktt_1_1_stop_condition" ],
       [ "Tuner", "classktt_1_1_tuner.html", "classktt_1_1_tuner" ],
-      [ "TuningDuration", "classktt_1_1_tuning_duration.html", "classktt_1_1_tuning_duration" ]
+      [ "TuningDuration", "classktt_1_1_tuning_duration.html", "classktt_1_1_tuning_duration" ],
+      [ "UnionCondition", "classktt_1_1_union_condition.html", "classktt_1_1_union_condition" ]
     ] ]
 ];

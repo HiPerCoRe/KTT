@@ -143,6 +143,33 @@ void CheckError(const NVPA_Status value, const std::string& function, const std:
 
 #endif // KTT_PROFILING_CUPTI
 
+#if defined(KTT_POWER_USAGE_NVML)
+
+std::string GetEnumName(const nvmlReturn_t value)
+{
+    const char* name = nvmlErrorString(value);
+    return name;
+}
+
+void CheckError(const nvmlReturn_t value, const std::string& function, const std::string& info)
+{
+    if (value == NVML_SUCCESS)
+    {
+        return;
+    }
+
+    std::string message = "CUDA NVML encountered error " + GetEnumName(value) + " in function " + function;
+
+    if (!info.empty())
+    {
+        message += ", additional info: " + info;
+    }
+
+    throw KttException(message);
+}
+
+#endif // KTT_POWER_USAGE_NVML
+
 } // namespace ktt
 
 #endif // KTT_API_CUDA

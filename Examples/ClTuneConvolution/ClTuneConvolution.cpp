@@ -159,7 +159,7 @@ int main(int argc, char** argv)
     if constexpr (!useDenseParameters && !useWideParameters)
     {
         blockRange = {8, 16, 32, 64};
-        wptRange = {1, 2, 4, 8};
+        wptRange = {1, 2, 4, 8, 16};
     }
     else if constexpr (!useWideParameters)
     {
@@ -178,7 +178,8 @@ int main(int argc, char** argv)
     tuner.AddParameter(kernel, "WPTX", wptRange);
     tuner.AddParameter(kernel, "WPTY", wptRange);
     tuner.AddParameter(kernel, "VECTOR", std::vector<uint64_t>{1, 2, 4});
-    tuner.AddParameter(kernel, "UNROLL_FACTOR", std::vector<uint64_t>{1, static_cast<uint64_t>(FS)});
+    tuner.AddParameter(kernel, "UNROLL_FACTOR1", std::vector<uint64_t>{0, 1, static_cast<uint64_t>(FS)});
+    tuner.AddParameter(kernel, "UNROLL_FACTOR2", std::vector<uint64_t>{0, 1, static_cast<uint64_t>(FS)});
     tuner.AddParameter(kernel, "PADDING", std::vector<uint64_t>{0, 1});
 
     // Introduces a helper parameter to compute the proper number of threads for the LOCAL == 2 case.

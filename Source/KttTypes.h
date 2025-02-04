@@ -12,6 +12,8 @@
 #include <variant>
 #include <vector>
 
+#include <Api/Configuration/DimensionVector.h>
+
 namespace ktt
 {
 
@@ -45,12 +47,22 @@ using KernelId = uint64_t;
 /** @typedef ArgumentId
   * Data type for referencing kernel arguments in KTT.
   */
-using ArgumentId = uint64_t;
+using ArgumentId = std::string;
+
+/** @typedef ParameterValue
+  * Data type for referencing parameter values in KTT.
+  */
+using ParameterValue = std::variant<int64_t, uint64_t, double, bool, std::string>;
+
+/** @typedef KernelDimensions
+  * Global and local size for each kernel definition can be specified during kernel tuning and running.
+  */
+using KernelDimensions = std::map<KernelDefinitionId, std::pair<DimensionVector /*globalSize*/, DimensionVector /*localSize*/>>;
 
 /** @typedef ParameterInput
   * Data type used for creating and retrieving specific kernel configurations from KTT.
   */
-using ParameterInput = std::vector<std::pair<std::string, std::variant<uint64_t, double>>>;
+using ParameterInput = std::vector<std::pair<std::string, ParameterValue>>;
 
 /** @typedef UserData
   * Custom user data which can be saved or loaded together with tuning results.
@@ -83,9 +95,14 @@ using TransferActionId = uint64_t;
 using ModifierFunction = std::function<uint64_t(const uint64_t /*defaultSize*/, const std::vector<uint64_t>& /*parameterValues*/)>;
 
 /** @typedef ConstraintFunction
-  * Definition of kernel constraint function.
+  * Definition of a kernel constraint function. This is an older version of constraint function which supports only unsigned integer parameters.
   */
 using ConstraintFunction = std::function<bool(const std::vector<uint64_t>& /*parameterValues*/)>;
+
+/** @typedef GenericConstraintFunction
+  * Definition of a kernel constraint function. This is a newer version of constraint function which supports parameters with different data types.
+  */
+using GenericConstraintFunction = std::function<bool(const std::vector<const ParameterValue*>& /*parameterValues*/)>;
 
 /** @typedef KernelLauncher
   * Definition of kernel launch function.
@@ -136,7 +153,7 @@ inline const KernelId InvalidKernelId = std::numeric_limits<KernelId>::max();
 
 /** Argument id returned by argument addition methods in case of an error.
   */
-inline const ArgumentId InvalidArgumentId = std::numeric_limits<ArgumentId>::max();
+inline const ArgumentId InvalidArgumentId = ArgumentId();
 
 /** Invalid duration used during initialization and in case of an error.
   */

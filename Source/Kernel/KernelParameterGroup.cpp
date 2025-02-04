@@ -14,6 +14,7 @@ KernelParameterGroup::KernelParameterGroup(const std::string& name, const std::v
     m_Constraints(constraints)
 {
     KttAssert(!parameters.empty(), "Kernel parameter group must have at least one parameter");
+    m_ValuesCache.reserve(m_Parameters.size());
 }
 
 const std::string& KernelParameterGroup::GetName() const
@@ -159,9 +160,7 @@ void KernelParameterGroup::ComputeIndices(const size_t currentIndex, const std::
         return;
     }
 
-    const auto& parameterValues = parameters[currentIndex]->GetValues();
-
-    for (size_t i = 0; i < parameterValues.size(); ++i)
+    for (size_t i = 0; i < parameters[currentIndex]->GetValuesCount(); ++i)
     {
         std::vector<size_t> newIndices = indices;
         newIndices.push_back(i);
@@ -170,7 +169,7 @@ void KernelParameterGroup::ComputeIndices(const size_t currentIndex, const std::
 
         for (const auto* constraint : evaluationLevels.find(currentIndex)->second)
         {
-            std::vector<uint64_t> values;
+            m_ValuesCache.clear();
 
             for (const auto* parameter : constraint->GetParameters())
             {
@@ -178,13 +177,13 @@ void KernelParameterGroup::ComputeIndices(const size_t currentIndex, const std::
                 {
                     if (parameter == parameters[index])
                     {
-                        values.push_back(parameter->GetValues()[newIndices[index]]);
+                        m_ValuesCache.push_back(&parameter->GetValues()[newIndices[index]]);
                         break;
                     }
                 }
             }
 
-            constraintsFulfilled &= constraint->IsFulfilled(values);
+            constraintsFulfilled &= constraint->IsFulfilled(m_ValuesCache);
         }
 
         if (constraintsFulfilled)

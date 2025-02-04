@@ -1,3 +1,9 @@
+// KTT tutorial demonstrating importing external instance of compute API
+// and objects
+// Users are recommended to start with KTT Introductory guide
+// at https://github.com/HiPerCoRe/KTT/blob/master/OnboardingGuide.md
+// before reading the tutorial's code.
+
 #include <iostream>
 #include <string>
 #include <vector>

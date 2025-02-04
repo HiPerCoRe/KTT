@@ -9,7 +9,8 @@ EngineConfiguration::EngineConfiguration() :
 
 EngineConfiguration::EngineConfiguration(const GlobalSizeType sizeType) :
     m_GlobalSizeType(sizeType),
-    m_GlobalSizeCorrection(false)
+    m_GlobalSizeCorrection(false),
+    m_ProfilingFlag(false)
 {}
 
 void EngineConfiguration::SetCompilerOptions(const std::string& options)
@@ -40,6 +41,16 @@ GlobalSizeType EngineConfiguration::GetGlobalSizeType() const
 bool EngineConfiguration::GetGlobalSizeCorrection() const
 {
     return m_GlobalSizeCorrection;
+}
+
+void EngineConfiguration::SetProfiling(const bool profiling)
+{
+    m_ProfilingFlag = profiling;
+}
+
+bool EngineConfiguration::IsProfilingActive() const
+{
+    return m_ProfilingFlag;
 }
 
 } // namespace ktt

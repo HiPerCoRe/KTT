@@ -17,7 +17,7 @@ CudaHostBuffer::CudaHostBuffer(KernelArgument& argument, IdGenerator<TransferAct
     CudaBuffer(argument, generator),
     m_RawBuffer(nullptr)
 {
-    Logger::LogDebug("Initializing CUDA host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing CUDA host buffer with id " + m_Argument.GetId());
     KttAssert(GetMemoryLocation() == ArgumentMemoryLocation::Host || GetMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy,
         "Argument memory location mismatch");
 
@@ -38,7 +38,7 @@ CudaHostBuffer::CudaHostBuffer(KernelArgument& argument, IdGenerator<TransferAct
     CudaBuffer(argument, generator, userBuffer),
     m_RawBuffer(nullptr)
 {
-    Logger::LogDebug("Initializing CUDA host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing CUDA host buffer with id " + m_Argument.GetId());
     KttAssert(GetMemoryLocation() == ArgumentMemoryLocation::Host || GetMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy,
         "Argument memory location mismatch");
 
@@ -52,7 +52,7 @@ CudaHostBuffer::CudaHostBuffer(KernelArgument& argument, IdGenerator<TransferAct
 
 CudaHostBuffer::~CudaHostBuffer()
 {
-    Logger::LogDebug("Releasing CUDA host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Releasing CUDA host buffer with id " + m_Argument.GetId());
 
     if (m_UserOwned)
     {
@@ -72,7 +72,7 @@ CudaHostBuffer::~CudaHostBuffer()
 std::unique_ptr<CudaTransferAction> CudaHostBuffer::UploadData(const CudaStream& stream, const void* source,
     const size_t dataSize)
 {
-    Logger::LogDebug("Uploading data into CUDA host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Uploading data into CUDA host buffer with id " + m_Argument.GetId());
 
     if (m_BufferSize < dataSize)
     {
@@ -92,7 +92,7 @@ std::unique_ptr<CudaTransferAction> CudaHostBuffer::UploadData(const CudaStream&
 std::unique_ptr<CudaTransferAction> CudaHostBuffer::DownloadData(const CudaStream& stream, void* destination,
     const size_t dataSize) const
 {
-    Logger::LogDebug("Downloading data from CUDA host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Downloading data from CUDA host buffer with id " + m_Argument.GetId());
 
     if (m_BufferSize < dataSize)
     {
@@ -112,8 +112,8 @@ std::unique_ptr<CudaTransferAction> CudaHostBuffer::DownloadData(const CudaStrea
 std::unique_ptr<CudaTransferAction> CudaHostBuffer::CopyData(const CudaStream& stream, const CudaBuffer& source,
     const size_t dataSize)
 {
-    Logger::LogDebug("Copying data into CUDA host buffer with id " + std::to_string(m_Argument.GetId())
-        + " from buffer with id " + std::to_string(source.GetArgumentId()));
+    Logger::LogDebug("Copying data into CUDA host buffer with id " + m_Argument.GetId() + " from buffer with id "
+        + source.GetArgumentId());
 
     if (m_BufferSize < dataSize)
     {
@@ -137,7 +137,7 @@ std::unique_ptr<CudaTransferAction> CudaHostBuffer::CopyData(const CudaStream& s
 
 void CudaHostBuffer::Resize(const size_t newSize, const bool preserveData)
 {
-    Logger::LogDebug("Resizing CUDA host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Resizing CUDA host buffer with id " + m_Argument.GetId());
 
     if (m_UserOwned)
     {

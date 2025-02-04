@@ -1,23 +1,22 @@
 KTT - Kernel Tuning Toolkit
 ===========================
-<img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogo.png" width="425" height="150"/>
+<img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogoColor.png" width="425" height="150"/>
 
-KTT is an autotuning framework for OpenCL, CUDA kernels and GLSL compute shaders. Version 2.1 which introduces
-API bindings for Python and new onboarding guide is now available.
+KTT is an autotuning framework for **OpenCL**, **CUDA** kernels and experimental support for **GLSL** compute shaders. It primarily focus to
+GPU accelerators, but can be used to auto-tune also code for different devices (e.g., CPUs) when OpenCL is utilized. KTT core is implemented in C++, but version 2.2 allows its usage from Python or loading autotuning configurations from JSON files. The C++ core brings high performance, low latency, and allows dynamic tuning (i.e., autotuning during application runtime).
 
 Main features
 -------------
-* Ability to define kernel tuning parameters such as kernel thread sizes, vector data types and loop unroll factors
-to optimize computation for a particular device.
-* Support for iterative kernel launches and composite kernels.
+* Ability to define kernel tuning parameters such as kernel thread block sizes, vector data types and loop unroll factors to optimize computation for a particular device.
+* Support for iterative kernel launches and composite kernels, allowing sharing tuning parameters among multiple kernels (e.g., layout of intermediate date).
 * Support for multiple compute queues and asynchronous operations.
-* Support for online auto-tuning - kernel tuning combined with regular kernel running.
+* Support for dynamic auto-tuning - kernel tuning combined with regular kernel running.
 * Ability to automatically ensure the correctness of tuned computation with reference kernel or C++ function.
-* Support for multiple compute APIs, switching between CUDA, OpenCL and Vulkan requires only minor changes in C++ code
-(e.g., changing the kernel source file), no library recompilation is needed.
-* Public API available in C++ (native) and Python (bindings).
-* Many customization options, including support for kernel arguments with user-defined data types, ability to change
-kernel compiler flags and more.
+* Support for multiple compute APIs, switching between CUDA, OpenCL and Vulkan requires only minor changes in C++ code (e.g., changing the kernel source file), no library recompilation is needed.
+* Public API available in C++ (native) and Python (bindings), tuning configuration can be loaded from JSON, allowing interoperability with other autotuning frameworks (so far [Kernel Tuner](https://github.com/KernelTuner/kernel_tuner)).
+* Advanced profile-based searcher, laveraging hardware performance counters and machine learning to navigate tuning spaces quickly.
+* Mearuring energy consumption with CUDA devices.
+* Many customization options, including support for kernel arguments with user-defined data types, ability to change kernel compiler flags and more.
 
 Getting started
 ---------------
@@ -67,6 +66,7 @@ systems are Linux and Windows.
       and Vulkan SDK
     - Command line build tool [Premake 5](https://premake.github.io/download)
     - (Optional) Python 3 with NumPy for Python bindings support
+    - (Optional) NVIDIA CUPTI, or AMD GPU Performance API for profiling and profile-based searcher
     
 * Build under Linux (inside KTT root folder):
     - ensure that path to vendor SDK is correctly set in the environment variables
@@ -81,22 +81,26 @@ systems are Linux and Windows.
     - open generated solution file and build the project inside Visual Studio
 
 * The following build options are available:
-    - `--outdir=path` specifies custom build directory, default build directory is `Build`
-    - `--platform=vendor` specifies SDK used for building KTT, useful when multiple SDKs are installed
-    - `--profiling=library` enables compilation of kernel profiling functionality using specified library
-    - `--vulkan` enables compilation of experimental Vulkan backend
-    - `--python` enables compilation of Python bindings
-    - `--no-examples` disables compilation of examples
-    - `--no-tutorials` disables compilation of tutorials
-    - `--tests` enables compilation of unit tests
-    - `--no-cuda` disables the inclusion of CUDA API during compilation, only affects Nvidia platform
-    - `--no-opencl` disables the inclusion of OpenCL API during compilation
+    - `--outdir=path` Specifies custom build directory. The default build directory is `Build`.
+    - `--platform=vendor` Specifies SDK used for building KTT. May be useful when multiple SDKs are installed.
+    - `--profiling=library` Enables compilation of kernel profiling functionality using the specified library.
+    - `--power-usage` Enables compilation of device power usage collection functionality. This feature is currently supported only on Nvidia platform.
+    - `--vulkan` Enables compilation of experimental Vulkan backend.
+    - `--python` Enables compilation of Python bindings.
+    - `--tuning-loader` Enables compilation of tuning loader, loading tuning settings from JSON.
+    - `--power-usage` Enables measuring power and energy consumption.
+    - `--power-usage-repeats=repeats` Experimental. Sets how many times are kernel repeated to obtain reliable power measurement (the kernel runtime should be around 1/10s).
+    - `--no-examples` Disables compilation of examples.
+    - `--no-tutorials` Disables compilation of tutorials.
+    - `--tests` Enables compilation of unit tests.
+    - `--no-cuda` Disables the inclusion of CUDA API during compilation. Only affects Nvidia platform.
+    - `--no-opencl` Disables the inclusion of OpenCL API during compilation.
 
-* KTT and applications that utilize it rely on external dynamic (shared) libraries to work correctly. There are
-  multiple ways to provide access to these libraries, e.g., copying a given library inside the application folder or adding the
-  containing folder to the library path (example for Linux: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/shared/library).
+* KTT rely on external dynamic (shared) libraries to work correctly. There are
+  multiple ways to provide access to these libraries, e.g., copying a given library inside the application folder or adding the containing 
+  folder to the library path (example for Linux: `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/shared/library`).
   Libraries which are bundled with device drivers are usually visible by default. The list of libraries currently utilized
-  by KTT:
+  by KTT (typically nor all libraries are required, depending on settings of the premake5 execution):
     - `OpenCL` distributed with specific device drivers (OpenCL only)
     - `cuda` distributed with specific device drivers (CUDA only)
     - `nvrtc` distributed with specific device drivers (CUDA only)
@@ -106,6 +110,18 @@ systems are Linux and Windows.
     - `GPUPerfAPICL` bundled with KTT distribution (AMD OpenCL profiling only)
     - `vulkan` distributed with specific device drivers (Vulkan only)
     - `shaderc_shared` bundled with Vulkan SDK (Vulkan only)
+
+Using KTT in user's applications
+--------------------------------
+Applications using KTT need to link KTT dynamic library and include KTT headers. 
+
+* Application has to include `Ktt.h` (located in `KTT/Source` folder)
+* During application build, KTT headers have to be available, e.g., by copying them into standard headers location, or by passing their 
+  position to the compiler (by, e.g., `-Ilocation_of_my_KTT/Source` with g++)
+* During application build, KTT library has to be linked, e.g., by `-lktt`, or `-Llocation_of_my_KTT/Build/x86_64_Release/ -lktt`. KTT dynamic
+  library can be also copied into standard location of dynamic libraries (e.g., `/usr/lib`).
+* During application execution, KTT library have to be available (e.g., located in the application's folder, in standard location for dynamic
+  libraries, or any place included in corresponding environmental variable, such as `LD_LIBRARY_PATH`)
     
 Python bindings
 ---------------
@@ -123,6 +139,8 @@ structure is completely rewritten from scratch. The ClTuneGemm and ClTuneConvolu
 KTT search space generation and tuning configuration storage techniques are derived from [ATF project](https://dl.acm.org/doi/10.1145/3427093).
 Due to differences in API and available framework features, certain modifications were made to the original ATF algorithms. The examples stored
 in AtfSamples folder are adopted from ATF.
+
+We develop unified JSON input for tuning configurations and output of tuning results with [Kernel Tuner](https://github.com/KernelTuner/kernel_tuner). Unifying input and output allows interoperability between our tuners.
 
 How to cite
 -----------

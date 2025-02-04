@@ -1,6 +1,8 @@
 var classktt_1_1_device_info =
 [
     [ "DeviceInfo", "classktt_1_1_device_info.html#a1c2302c00b2b32f1524ee1c961db4541", null ],
+    [ "GetCudaComputeCapabilityMajor", "classktt_1_1_device_info.html#a4bbced330d07dd26abd9fb75db72a4fd", null ],
+    [ "GetCudaComputeCapabilityMinor", "classktt_1_1_device_info.html#a6a627dad636871bf4a9b78fa7c39222d", null ],
     [ "GetDeviceType", "classktt_1_1_device_info.html#ada297188614d02e7f0a56be80b66195a", null ],
     [ "GetDeviceTypeString", "classktt_1_1_device_info.html#a8975df22a6ca7ac94c8306969ed057dc", null ],
     [ "GetExtensions", "classktt_1_1_device_info.html#a1c4ac471ce324ce40e8dbbc5b262ec72", null ],
@@ -13,6 +15,8 @@ var classktt_1_1_device_info =
     [ "GetName", "classktt_1_1_device_info.html#a5d2cd6fc287fd4ba033c02482a3123c0", null ],
     [ "GetString", "classktt_1_1_device_info.html#ae3854df8444dbb599cb6bc5e533c6c78", null ],
     [ "GetVendor", "classktt_1_1_device_info.html#a36bf9ec1e6410e5e1dac84e87165b4e5", null ],
+    [ "SetCudaComputeCapabilityMajor", "classktt_1_1_device_info.html#a0664efcdca3053ad85f22318c16fdbd3", null ],
+    [ "SetCudaComputeCapabilityMinor", "classktt_1_1_device_info.html#ab793cd8726bd0f2995e78e1836e4db73", null ],
     [ "SetDeviceType", "classktt_1_1_device_info.html#a31ad37db18d4241525454239b4a1bd00", null ],
     [ "SetExtensions", "classktt_1_1_device_info.html#a6242a7047532cbc7d47a9417bd60b0b8", null ],
     [ "SetGlobalMemorySize", "classktt_1_1_device_info.html#aa903ae3bed5a25d4595ddc5374b0c5cc", null ],

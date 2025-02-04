@@ -4,6 +4,7 @@
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <TuningRunner/TuningRunner.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/Timer/ScopeTimer.h>
 
 namespace ktt
 {
@@ -13,11 +14,16 @@ TuningRunner::TuningRunner(KernelRunner& kernelRunner) :
     m_ConfigurationManager(std::make_unique<ConfigurationManager>())
 {}
 
-std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_ptr<StopCondition> stopCondition)
+std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelDimensions& dimensions,
+    std::unique_ptr<StopCondition> stopCondition)
 {
     Logger::LogInfo("Starting offline tuning for kernel " + kernel.GetName());
-    m_ConfigurationManager->InitializeData(kernel);
     const auto id = kernel.GetId();
+
+    if (!m_ConfigurationManager->HasData(id))
+    {
+        m_ConfigurationManager->InitializeData(kernel);
+    }
 
     if (stopCondition != nullptr)
     {
@@ -26,40 +32,56 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, std::unique_p
     }
 
     std::vector<KernelResult> results;
-    KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
+//    KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
 
     while (!m_ConfigurationManager->IsDataProcessed(id))
     {
+        KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
+        KernelResult multiResult(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
+        int iter = 0;
         do 
         {
-            result = TuneIteration(kernel, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false);
+            result = TuneIteration(kernel, dimensions, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false);
+            multiResult.FuseProfilingTimes(result, (iter == 0));
+	    multiResult.TransferPowerData(result);
+            iter++;
         }
         while (result.HasRemainingProfilingRuns());
-
-        results.push_back(result);
-
-        if (stopCondition != nullptr)
+        if (iter > 1) //do not copy the same result twice
         {
-            stopCondition->Update(result);
-            Logger::LogInfo(stopCondition->GetStatusString());
-
-            if (stopCondition->IsFulfilled())
-            {
-                break;
-            }
+            result.CopyProfilingTimes(multiResult);
+            result.TransferPowerData(multiResult);
         }
 
-        m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
+        {
+            m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        });
+
+        result.SetSearcherOverhead(searcherOverhead);
+        results.push_back(result);
+
+        if (stopCondition == nullptr)
+        {
+            continue;
+        }
+
+        stopCondition->Update(result);
+        Logger::LogInfo(stopCondition->GetStatusString());
+
+        if (stopCondition->IsFulfilled())
+        {
+            break;
+        }
     }
 
     Logger::LogInfo("Ending offline tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
         + std::to_string(results.size()));
     m_KernelRunner.ClearReferenceResult(kernel);
-    m_ConfigurationManager->ClearData(id);
     return results;
 }
 
-KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMode mode,
+KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimensions& dimensions, const KernelRunMode mode,
     const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
 {
     if (recomputeReference)
@@ -91,18 +113,23 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelRunMo
             + " for kernel " + kernel.GetName());
     }
 
-    KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, mode, output);
+    KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, dimensions, mode, output);
 
     if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns() && !m_ConfigurationManager->IsDataProcessed(id))
     {
-        m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
+        {
+            m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        });
+
+        result.SetSearcherOverhead(searcherOverhead);
     }
 
     return result;
 }
 
 std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, const std::vector<KernelResult>& results,
-    const uint64_t iterations)
+    std::unique_ptr<StopCondition> stopCondition)
 {
     Logger::LogInfo("Starting simulated tuning for kernel " + kernel.GetName());
     const auto id = kernel.GetId();
@@ -114,16 +141,21 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
 
     uint64_t passedIterations = 0;
     std::vector<KernelResult> output;
+    const uint64_t configurationCount = m_ConfigurationManager->GetTotalConfigurationsCount(id);
+
+    if (stopCondition != nullptr)
+    {
+        stopCondition->Initialize(configurationCount);
+    }
 
     while (!m_ConfigurationManager->IsDataProcessed(id))
     {
-        if (iterations != 0 && passedIterations >= iterations)
+        if (stopCondition != nullptr && stopCondition->IsFulfilled())
         {
             break;
         }
 
         const auto currentConfiguration = m_ConfigurationManager->GetCurrentConfiguration(id);
-        const uint64_t configurationCount = iterations != 0 ? iterations : m_ConfigurationManager->GetTotalConfigurationsCount(id);
         KernelResult result;
 
         try
@@ -146,9 +178,20 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
             result.SetStatus(ResultStatus::ComputationFailed);
         }
 
-        ++passedIterations;
-        m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
+        {
+            m_ConfigurationManager->CalculateNextConfiguration(id, result);
+        });
+
+        result.SetSearcherOverhead(searcherOverhead);
         output.push_back(result);
+        ++passedIterations;
+
+        if (stopCondition != nullptr)
+        {
+            stopCondition->Update(result);
+            Logger::LogInfo(stopCondition->GetStatusString());
+        }
     }
 
     Logger::LogInfo("Ending simulated tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
@@ -162,9 +205,19 @@ void TuningRunner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> sear
     m_ConfigurationManager->SetSearcher(id, std::move(searcher));
 }
 
-void TuningRunner::ClearData(const KernelId id, const bool clearSearcher)
+void TuningRunner::InitializeConfigurationData(const Kernel& kernel)
+{
+    m_ConfigurationManager->InitializeData(kernel);
+}
+
+void TuningRunner::ClearConfigurationData(const KernelId id, const bool clearSearcher)
 {
     m_ConfigurationManager->ClearData(id, clearSearcher);
+}
+
+uint64_t TuningRunner::GetConfigurationsCount(const KernelId id) const
+{
+    return m_ConfigurationManager->GetTotalConfigurationsCount(id);
 }
 
 KernelConfiguration TuningRunner::GetBestConfiguration(const KernelId id) const

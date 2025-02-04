@@ -18,6 +18,8 @@ public:
     void SetLoggingTarget(std::ostream& target);
     void SetLoggingTarget(const std::string& file);
 
+    LoggingLevel GetLoggingLevel() const;
+
     void Log(const LoggingLevel level, const std::string& message) const;
     static void LogError(const std::string& message);
     static void LogWarning(const std::string& message);

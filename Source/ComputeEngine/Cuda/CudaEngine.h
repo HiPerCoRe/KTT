@@ -26,6 +26,10 @@
 #include <ComputeEngine/Cuda/Cupti/CuptiProfiler.h>
 #endif // KTT_PROFILING_CUPTI
 
+#ifdef KTT_POWER_USAGE_NVML
+#include <ComputeEngine/Cuda/Nvml/NvmlPowerManager.h>
+#endif // KTT_POWER_USAGE_NVML
+
 namespace ktt
 {
 
@@ -36,7 +40,7 @@ public:
     explicit CudaEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
 
     // Kernel methods
-    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId) override;
+    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = true) override;
     ComputationResult WaitForComputeAction(const ComputeActionId id) override;
     void ClearData(const KernelComputeId& id) override;
     void ClearKernelData(const std::string& kernelName) override;
@@ -48,22 +52,24 @@ public:
     uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) override;
     bool HasAccurateRemainingProfilingRuns() const override;
     bool SupportsMultiInstanceProfiling() const override;
+    bool IsProfilingActive() const override;
+    void SetProfiling(const bool profiling) override;
 
     // Buffer methods
     TransferActionId UploadArgument(KernelArgument& kernelArgument, const QueueId queueId) override;
-    TransferActionId UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
+    TransferActionId UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
         const size_t dataSize) override;
-    TransferActionId DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
+    TransferActionId DownloadArgument(const ArgumentId& id, const QueueId queueId, void* destination,
         const size_t dataSize) override;
-    TransferActionId CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
+    TransferActionId CopyArgument(const ArgumentId& destination, const QueueId queueId, const ArgumentId& source,
         const size_t dataSize) override;
     TransferResult WaitForTransferAction(const TransferActionId id) override;
-    void ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData) override;
-    void GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle) override;
+    void ResizeArgument(const ArgumentId& id, const size_t newSize, const bool preserveData) override;
+    void GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBufferMemory& handle) override;
     void AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer buffer) override;
-    void ClearBuffer(const ArgumentId id) override;
+    void ClearBuffer(const ArgumentId& id) override;
     void ClearBuffers() override;
-    bool HasBuffer(const ArgumentId id) override;
+    bool HasBuffer(const ArgumentId& id) override;
 
     // Queue methods
     QueueId AddComputeQueue(ComputeQueue queue) override;
@@ -83,7 +89,7 @@ public:
     GlobalSizeType GetGlobalSizeType() const override;
 
     // Utility methods
-    void SetCompilerOptions(const std::string& options) override;
+    void SetCompilerOptions(const std::string& options, const bool overrideDefault = false) override;
     void SetGlobalSizeType(const GlobalSizeType type) override;
     void SetAutomaticGlobalSizeCorrection(const bool flag) override;
     void SetKernelCacheCapacity(const uint64_t capacity) override;
@@ -111,6 +117,10 @@ private:
     std::unique_ptr<CuptiMetricInterface> m_MetricInterface;
     std::map<KernelComputeId, std::unique_ptr<CuptiInstance>> m_CuptiInstances;
 #endif // KTT_PROFILING_CUPTI
+
+#ifdef KTT_POWER_USAGE_NVML
+    std::unique_ptr<NvmlPowerManager> m_PowerManager;
+#endif // KTT_POWER_USAGE_NVML
 
     std::shared_ptr<CudaKernel> LoadKernel(const KernelComputeData& data);
     std::vector<CUdeviceptr*> GetKernelArguments(const std::vector<KernelArgument*>& arguments);

@@ -8,13 +8,15 @@ namespace ktt
 
 ComputationResult::ComputationResult() :
     m_Duration(InvalidDuration),
-    m_Overhead(InvalidDuration)
+    m_Overhead(InvalidDuration),
+    m_CompilationOverhead(InvalidDuration)
 {}
 
 ComputationResult::ComputationResult(const std::string& kernelFunction) :
     m_KernelFunction(kernelFunction),
     m_Duration(InvalidDuration),
-    m_Overhead(InvalidDuration)
+    m_Overhead(InvalidDuration),
+    m_CompilationOverhead(InvalidDuration)
 {}
 
 ComputationResult::ComputationResult(const ComputationResult& other) :
@@ -22,7 +24,9 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     m_GlobalSize(other.m_GlobalSize),
     m_LocalSize(other.m_LocalSize),
     m_Duration(other.m_Duration),
-    m_Overhead(other.m_Overhead)
+    m_Overhead(other.m_Overhead),
+    m_CompilationOverhead(other.m_CompilationOverhead),
+    m_PowerUsage(other.m_PowerUsage)
 {
     if (other.HasCompilationData())
     {
@@ -33,12 +37,18 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     {
         m_ProfilingData = std::make_unique<KernelProfilingData>(*other.m_ProfilingData);
     }
+
+    if (other.HasPowerData())
+    {
+        m_PowerUsage = other.GetPowerUsage();
+    }
 }
 
-void ComputationResult::SetDurationData(const Nanoseconds duration, const Nanoseconds overhead)
+void ComputationResult::SetDurationData(const Nanoseconds duration, const Nanoseconds overhead, const Nanoseconds compilationOverhead)
 {
     m_Duration = duration;
     m_Overhead = overhead;
+    m_CompilationOverhead = compilationOverhead;
 }
 
 void ComputationResult::SetSizeData(const DimensionVector& globalSize, const DimensionVector& localSize)
@@ -55,6 +65,11 @@ void ComputationResult::SetCompilationData(std::unique_ptr<KernelCompilationData
 void ComputationResult::SetProfilingData(std::unique_ptr<KernelProfilingData> data)
 {
     m_ProfilingData = std::move(data);
+}
+
+void ComputationResult::SetPowerUsage(const uint32_t powerUsage)
+{
+    m_PowerUsage = powerUsage;
 }
 
 const std::string& ComputationResult::GetKernelFunction() const
@@ -80,6 +95,11 @@ Nanoseconds ComputationResult::GetDuration() const
 Nanoseconds ComputationResult::GetOverhead() const
 {
     return m_Overhead;
+}
+
+Nanoseconds ComputationResult::GetCompilationOverhead() const
+{
+    return m_CompilationOverhead;
 }
 
 bool ComputationResult::HasCompilationData() const
@@ -122,6 +142,28 @@ bool ComputationResult::HasRemainingProfilingRuns() const
     return GetProfilingData().HasRemainingProfilingRuns();
 }
 
+bool ComputationResult::HasPowerData() const
+{
+    return m_PowerUsage.has_value();
+}
+
+uint32_t ComputationResult::GetPowerUsage() const
+{
+    if (!HasPowerData())
+    {
+        throw KttException("Power usage can only be retrieved after prior check that it exists");
+    }
+
+    return m_PowerUsage.value();
+}
+
+double ComputationResult::GetEnergyConsumption() const
+{
+    const double powerUsageWatts = static_cast<double>(GetPowerUsage()) / 1'000.0;
+    const double durationSeconds = static_cast<double>(GetDuration()) / 1'000'000'000.0;
+    return powerUsageWatts * durationSeconds;
+}
+
 ComputationResult& ComputationResult::operator=(const ComputationResult& other)
 {
     m_KernelFunction = other.m_KernelFunction;
@@ -129,6 +171,7 @@ ComputationResult& ComputationResult::operator=(const ComputationResult& other)
     m_Overhead = other.m_Overhead;
     m_GlobalSize = other.m_GlobalSize;
     m_LocalSize = other.m_LocalSize;
+    m_PowerUsage = other.m_PowerUsage;
 
     if (other.HasCompilationData())
     {

@@ -7,5 +7,5 @@ var searchData=
   ['validationmode_2eh_4',['ValidationMode.h',['../_validation_mode_8h.html',1,'']]],
   ['valuecomparator_5',['ValueComparator',['../namespacektt.html#ab2cf30aab952f8ea4366979237f9e1e9',1,'ktt']]],
   ['vector_6',['Vector',['../namespacektt.html#a9bff4519ba4718c5713c139e61058771a57dea6f5039281b7fee517fc43bf3110',1,'ktt']]],
-  ['vulkan_7',['Vulkan',['../namespacektt.html#a9738ef47337610739add496ce522de0aa38625270231b647116c80bcbc4f9d1d8',1,'ktt::Vulkan()'],['../namespacektt.html#a16e643cd2325370c79affaeee8ef85f0a38625270231b647116c80bcbc4f9d1d8',1,'ktt::Vulkan()']]]
+  ['vulkan_7',['vulkan',['../namespacektt.html#a9738ef47337610739add496ce522de0aa38625270231b647116c80bcbc4f9d1d8',1,'ktt::Vulkan'],['../namespacektt.html#a16e643cd2325370c79affaeee8ef85f0a38625270231b647116c80bcbc4f9d1d8',1,'ktt::Vulkan']]]
 ];

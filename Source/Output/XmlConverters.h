@@ -16,12 +16,14 @@ std::string ComputeApiToString(const ComputeApi api);
 std::string GlobalSizeTypeToString(const GlobalSizeType sizeType);
 std::string TimeUnitToString(const TimeUnit unit);
 std::string ResultStatusToString(const ResultStatus status);
+std::string ParameterValueTypeToString(const ParameterValueType type);
 std::string ProfilingCounterTypeToString(const ProfilingCounterType type);
 
 ComputeApi ComputeApiFromString(const std::string& string);
 GlobalSizeType GlobalSizeTypeFromString(const std::string& string);
 TimeUnit TimeUnitFromString(const std::string& string);
 ResultStatus ResultStatusFromString(const std::string& string);
+ParameterValueType ParameterValueTypeFromString(const std::string& string);
 ProfilingCounterType ProfilingCounterTypeFromString(const std::string& string);
 
 void AppendMetadata(pugi::xml_node parent, const TunerMetadata& metadata);

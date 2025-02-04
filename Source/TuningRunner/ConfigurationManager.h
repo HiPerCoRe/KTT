@@ -23,6 +23,7 @@ public:
     void InitializeData(const Kernel& kernel);
     void ClearData(const KernelId id, const bool clearSearcher = false);
     bool CalculateNextConfiguration(const KernelId id, const KernelResult& previousResult);
+    void ListConfigurations(const KernelId id) const;
 
     bool HasData(const KernelId id) const;
     bool IsDataProcessed(const KernelId id) const;

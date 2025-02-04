@@ -92,9 +92,9 @@ function linkLibrariesNvidia()
     includedirs {"$(CUDA_PATH)/include"}
         
     if os.target() == "linux" then
-        libdirs {"$(CUDA_PATH)/lib64"}
+        libdirs {"$(CUDA_PATH)/lib64", "$(CUDA_PATH)/lib64/stubs"}
     else
-        libdirs {"$(CUDA_PATH)/lib/x64"}
+        libdirs {"$(CUDA_PATH)/lib/x64", "$(CUDA_PATH)/lib/x64/stubs"}
     end
     
     if not _OPTIONS["no-opencl"] then
@@ -108,7 +108,15 @@ function linkLibrariesNvidia()
         links {"cuda", "nvrtc"}
         cudaProjects = true
         
-        if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" then
+        if _OPTIONS["power-usage"] then
+            defines {"KTT_POWER_USAGE_NVML"}
+	    if _OPTIONS["power-usage-repeats"] then
+                defines {"KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL=" .. _OPTIONS["power-usage-repeats"]}
+            end
+            links {"nvidia-ml"}
+        end
+        
+        if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" or _OPTIONS["power-usage"] then
             includedirs {"$(CUDA_PATH)/extras/CUPTI/include"}
             libdirs {"$(CUDA_PATH)/extras/CUPTI/lib64"}
             links {"cupti"}
@@ -278,8 +286,26 @@ newoption
 
 newoption
 {
+    trigger = "power-usage",
+    description = "Enables compilation of device power usage collection functionality"
+}
+
+newoption
+{       
+    trigger = "power-usage-repeats",
+    description = "EXPERIMENTAL set number of repeated kernel executions to better measure power usage of short running kernels. Warning: no data sanitization between kernel calls."
+}        
+
+newoption
+{
     trigger = "python",
     description = "Enables compilation of Python bindings"
+}
+
+newoption
+{
+    trigger = "tuning-loader",
+    description = "Enables compilation of tuning loader and tuning launcher"
 }
 
 newoption
@@ -347,8 +373,9 @@ workspace "Ktt"
         symbols "Off"
     
     filter "action:vs*"
-        buildoptions {"/Zc:__cplusplus", "/permissive-"}
-        
+        conformancemode "On"
+        buildoptions {"/Zc:__cplusplus"}
+    
     filter {}
     
     targetdir(buildPath .. "/%{cfg.platform}_%{cfg.buildcfg}")
@@ -387,6 +414,44 @@ project "Ktt"
     defines {"KTT_LIBRARY"}
     targetname("ktt")
     linkAllLibraries()
+
+-- Tuning loader and launcher
+if _OPTIONS["tuning-loader"] then
+
+if not _OPTIONS["python"] then
+    error("Tuning loader depends on KTT Python integration (specified with --python option).")
+end
+
+project "KttTuningLoader"
+    kind "SharedLib"
+    
+    files
+    {
+        "TuningLoader/**",
+        "Libraries/Json-3.9.1/**",
+        "Libraries/JsonSchemaValidator-2.1.0/**"
+    }
+    
+    removefiles {"TuningLoader/TuningLauncher.cpp"}
+    
+    includedirs
+    {
+        "TuningLoader",
+        "Libraries/Json-3.9.1",
+        "Libraries/JsonSchemaValidator-2.1.0",
+        "Source"
+    }
+    
+    defines {"KTT_LOADER_LIBRARY"}
+    links {"ktt"}
+
+project "KttTuningLauncher"
+    kind "ConsoleApp"
+    files {"TuningLoader/TuningLauncher.cpp"}
+    includedirs {"TuningLoader"}
+    links {"KttTuningLoader"}
+    
+end -- _OPTIONS["tuning-loader"]
 
 -- Tutorials configuration 
 if not _OPTIONS["no-tutorials"] then
@@ -674,6 +739,62 @@ project "TransposeCuda"
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
+project "KernelTunerConvolutionCuda"
+    kind "ConsoleApp"
+    files {"Examples/KernelTunerConvolution/*.cpp", "Examples/KernelTunerConvolution/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
+project "KernelTunerPnpolyCuda"
+    kind "ConsoleApp"
+    files {"Examples/KernelTunerPnpoly/*.cpp", "Examples/KernelTunerPnpoly/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
+
 end -- cudaProjects
     
 end -- _OPTIONS["no-examples"]
+
+-- Unit tests configuration   
+if _OPTIONS["tests"] then
+
+project "Tests"
+    kind "ConsoleApp"
+    
+    files
+    {
+        "Tests/**",
+        "Source/**",
+        "Libraries/Catch-2.13.8/**",
+        "Libraries/CTPL-Ahajha/**",
+        "Libraries/date-3/**",
+        "Libraries/Json-3.9.1/**",
+        "Libraries/pugixml-1.11.4/**"
+    }
+    
+    includedirs
+    {
+        "Source",
+        "Libraries/Catch-2.13.8",
+        "Libraries/CTPL-Ahajha",
+        "Libraries/date-3",
+        "Libraries/Json-3.9.1",
+        "Libraries/pugixml-1.11.4"
+    }
+    
+    if _OPTIONS["no-opencl"] then
+        removefiles {"Tests/OpenClEngineTests.cpp", "Tests/Kernels/SimpleOpenClKernel.cl"}
+    end
+    
+    filter "action:gmake*"
+        buildoptions {"-pthread"}
+        linkoptions {"-pthread"}
+        
+    filter {}
+    
+    defines {"KTT_LIBRARY", "KTT_TESTS"}
+    linkAllLibraries()
+    
+end -- _OPTIONS["tests"]

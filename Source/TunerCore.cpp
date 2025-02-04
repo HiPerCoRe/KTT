@@ -77,7 +77,7 @@ KernelId TunerCore::CreateKernel(const std::string& name, const std::vector<Kern
 
 void TunerCore::RemoveKernel(const KernelId id)
 {
-    m_TuningRunner->ClearData(id, true);
+    m_TuningRunner->ClearConfigurationData(id, true);
     m_KernelRunner->RemoveKernelData(id);
     m_KernelManager->RemoveKernel(id);
 }
@@ -87,14 +87,15 @@ void TunerCore::SetLauncher(const KernelId id, KernelLauncher launcher)
     m_KernelManager->SetLauncher(id, launcher);
 }
 
-void TunerCore::AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group)
+void TunerCore::AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group)
 {
     m_KernelManager->AddParameter(id, name, values, group);
 }
 
-void TunerCore::AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group)
+void TunerCore::AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
+    const std::string& group)
 {
-    m_KernelManager->AddParameter(id, name, values, group);
+    m_KernelManager->AddScriptParameter(id, name, valueType, valueScript, group);
 }
 
 void TunerCore::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
@@ -102,10 +103,26 @@ void TunerCore::AddConstraint(const KernelId id, const std::vector<std::string>&
     m_KernelManager->AddConstraint(id, parameters, function);
 }
 
+void TunerCore::AddGenericConstraint(const KernelId id, const std::vector<std::string>& parameters, GenericConstraintFunction function)
+{
+    m_KernelManager->AddGenericConstraint(id, parameters, function);
+}
+
+void TunerCore::AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script)
+{
+    m_KernelManager->AddScriptConstraint(id, parameters, script);
+}
+
 void TunerCore::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
 {
     m_KernelManager->AddThreadModifier(id, definitionIds, type, dimension, parameters, function);
+}
+
+void TunerCore::AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+    const ModifierDimension dimension, const std::string& script)
+{
+    m_KernelManager->AddScriptThreadModifier(id, definitionIds, type, dimension, script);
 }
 
 void TunerCore::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds)
@@ -120,15 +137,16 @@ void TunerCore::SetProfiledDefinitions(const KernelId id, const std::vector<Kern
 
 ArgumentId TunerCore::AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, void* data, const size_t dataSize)
+    const ArgumentManagementType managementType, void* data, const size_t dataSize, const ArgumentId& customId)
 {
     return m_ArgumentManager->AddArgumentWithReferencedData(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, data, dataSize);
+        managementType, data, dataSize, customId);
 }
 
 ArgumentId TunerCore::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const ArgumentId& customId,
+    const std::string& symbolName)
 {
     if (memoryType == ArgumentMemoryType::Symbol && symbolName.empty() && m_ComputeEngine->GetComputeApi() == ComputeApi::CUDA)
     {
@@ -136,24 +154,40 @@ ArgumentId TunerCore::AddArgumentWithOwnedData(const size_t elementSize, const A
     }
 
     return m_ArgumentManager->AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, memoryType,
-        managementType, data, dataSize, symbolName);
+        managementType, data, dataSize, symbolName, customId);
+}
+
+ArgumentId TunerCore::AddArgumentWithOwnedDataFromFile(const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+    const ArgumentManagementType managementType, const std::string& file, const ArgumentId& customId)
+{
+    return m_ArgumentManager->AddArgumentWithOwnedDataFromFile(elementSize, dataType, memoryLocation, accessType, memoryType,
+        managementType, file, customId);
+}
+
+ArgumentId TunerCore::AddArgumentWithOwnedDataFromGenerator(const size_t elementSize, const ArgumentDataType dataType,
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
+    const ArgumentManagementType managementType, const std::string& generatorFunction, const size_t dataSize, const ArgumentId& customId)
+{
+    return m_ArgumentManager->AddArgumentWithOwnedDataFromGenerator(elementSize, dataType, memoryLocation, accessType, memoryType,
+        managementType, generatorFunction, dataSize, customId);
 }
 
 ArgumentId TunerCore::AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
-    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize)
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize,
+    const ArgumentId& customId)
 {
-    const ArgumentId id = m_ArgumentManager->AddUserArgument(elementSize, dataType, memoryLocation, accessType, dataSize);
+    const ArgumentId& id = m_ArgumentManager->AddUserArgument(elementSize, dataType, memoryLocation, accessType, dataSize, customId);
     auto& argument = m_ArgumentManager->GetArgument(id);
     m_ComputeEngine->AddCustomBuffer(argument, buffer);
     return id;
 }
 
-void TunerCore::RemoveArgument(const ArgumentId id)
+void TunerCore::RemoveArgument(const ArgumentId& id)
 {
     if (m_KernelManager->IsArgumentUsed(id))
     {
-        throw KttException("Argument with id " + std::to_string(id) +
-            " cannot be removed because it is still referenced by at least one kernel definition");
+        throw KttException("Argument with id " + id + " cannot be removed because it is still referenced by at least one kernel definition");
     }
 
     m_KernelRunner->RemoveValidationData(id);
@@ -161,22 +195,33 @@ void TunerCore::RemoveArgument(const ArgumentId id)
     m_ArgumentManager->RemoveArgument(id);
 }
 
+void TunerCore::SaveArgument(const ArgumentId& id, const std::string& file) const
+{
+    m_ArgumentManager->SaveArgument(id, file);
+}
+
 void TunerCore::SetReadOnlyArgumentCache(const bool flag)
 {
     m_KernelRunner->SetReadOnlyArgumentCache(flag);
 }
 
-KernelResult TunerCore::RunKernel(const KernelId id, const KernelConfiguration& configuration,
+KernelResult TunerCore::RunKernel(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
     const std::vector<BufferOutputDescriptor>& output)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_KernelRunner->RunKernel(kernel, configuration, KernelRunMode::Running, output);
+    return m_KernelRunner->RunKernel(kernel, configuration, dimensions, KernelRunMode::Running, output);
 }
 
 void TunerCore::SetProfiling(const bool flag)
 {
     m_KernelRunner->SetProfiling(flag);
 }
+
+bool TunerCore::GetProfiling()
+{
+    return m_KernelRunner->IsProfilingActive();
+}
+
 
 void TunerCore::SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
@@ -188,44 +233,53 @@ void TunerCore::SetValidationMode(const ValidationMode mode)
     m_KernelRunner->SetValidationMode(mode);
 }
 
-void TunerCore::SetValidationRange(const ArgumentId id, const size_t range)
+void TunerCore::SetValidationRange(const ArgumentId& id, const size_t range)
 {
     m_KernelRunner->SetValidationRange(id, range);
 }
 
-void TunerCore::SetValueComparator(const ArgumentId id, ValueComparator comparator)
+void TunerCore::SetValueComparator(const ArgumentId& id, ValueComparator comparator)
 {
     m_KernelRunner->SetValueComparator(id, comparator);
 }
 
-void TunerCore::SetReferenceComputation(const ArgumentId id, ReferenceComputation computation)
+void TunerCore::SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation)
 {
     m_KernelRunner->SetReferenceComputation(id, computation);
 }
 
-void TunerCore::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration)
+void TunerCore::SetReferenceKernel(const ArgumentId& id, const KernelId referenceId, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions)
 {
     const auto& kernel = m_KernelManager->GetKernel(referenceId);
-    m_KernelRunner->SetReferenceKernel(id, kernel, configuration);
+    m_KernelRunner->SetReferenceKernel(id, kernel, configuration, dimensions);
 }
 
-std::vector<KernelResult> TunerCore::TuneKernel(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+void TunerCore::SetReferenceArgument(const ArgumentId& id, const ArgumentId& referenceId)
 {
-    const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_TuningRunner->Tune(kernel, std::move(stopCondition));
+    const auto& referenceArgument = m_ArgumentManager->GetArgument(referenceId);
+    m_KernelRunner->SetReferenceArgument(id, referenceArgument);
 }
 
-KernelResult TunerCore::TuneKernelIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
+std::vector<KernelResult> TunerCore::TuneKernel(const KernelId id, const KernelDimensions& dimensions,
+    std::unique_ptr<StopCondition> stopCondition)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_TuningRunner->TuneIteration(kernel, KernelRunMode::OnlineTuning, output, recomputeReference);
+    return m_TuningRunner->Tune(kernel, dimensions, std::move(stopCondition));
+}
+
+KernelResult TunerCore::TuneKernelIteration(const KernelId id, const KernelDimensions& dimensions,
+    const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
+{
+    const auto& kernel = m_KernelManager->GetKernel(id);
+    return m_TuningRunner->TuneIteration(kernel, dimensions, KernelRunMode::OnlineTuning, output, recomputeReference);
 }
 
 std::vector<KernelResult> TunerCore::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
-    const uint64_t iterations)
+    std::unique_ptr<StopCondition> stopCondition)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_TuningRunner->SimulateTuning(kernel, results, iterations);
+    return m_TuningRunner->SimulateTuning(kernel, results, std::move(stopCondition));
 }
 
 void TunerCore::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
@@ -233,9 +287,20 @@ void TunerCore::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searche
     m_TuningRunner->SetSearcher(id, std::move(searcher));
 }
 
-void TunerCore::ClearData(const KernelId id)
+void TunerCore::InitializeConfigurationData(const KernelId id)
 {
-    m_TuningRunner->ClearData(id);
+    const auto& kernel = m_KernelManager->GetKernel(id);
+    m_TuningRunner->InitializeConfigurationData(kernel);
+}
+
+void TunerCore::ClearConfigurationData(const KernelId id)
+{
+    m_TuningRunner->ClearConfigurationData(id);
+}
+
+uint64_t TunerCore::GetConfigurationsCount(const KernelId id) const
+{
+    return m_TuningRunner->GetConfigurationsCount(id);
 }
 
 KernelConfiguration TunerCore::GetBestConfiguration(const KernelId id) const
@@ -357,9 +422,9 @@ void TunerCore::SetProfilingCounters(const std::vector<std::string>& counters)
     m_ComputeEngine->SetProfilingCounters(counters);
 }
 
-void TunerCore::SetCompilerOptions(const std::string& options)
+void TunerCore::SetCompilerOptions(const std::string& options, const bool overrideDefault)
 {
-    m_ComputeEngine->SetCompilerOptions(options);
+    m_ComputeEngine->SetCompilerOptions(options, overrideDefault);
 }
 
 void TunerCore::SetGlobalSizeType(const GlobalSizeType type)
@@ -405,6 +470,11 @@ void TunerCore::SetLoggingTarget(std::ostream& target)
 void TunerCore::SetLoggingTarget(const std::string& file)
 {
     Logger::GetLogger().SetLoggingTarget(file);
+}
+
+LoggingLevel TunerCore::GetLoggingLevel()
+{
+    return Logger::GetLogger().GetLoggingLevel();
 }
 
 void TunerCore::Log(const LoggingLevel level, const std::string& message)

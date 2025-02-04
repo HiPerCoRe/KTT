@@ -22,7 +22,7 @@ OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, IdGenerator<Transfe
     OpenClBuffer(argument, generator, context),
     m_RawBuffer(nullptr)
 {
-    Logger::LogDebug("Initializing OpenCL host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing OpenCL host buffer with id " + m_Argument.GetId());
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Host
         || argument.GetMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy, "Argument memory location mismatch");
 
@@ -46,7 +46,7 @@ OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, IdGenerator<Transfe
     OpenClBuffer(argument, generator),
     m_RawBuffer(nullptr)
 {
-    Logger::LogDebug("Initializing OpenCL host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Initializing OpenCL host buffer with id " + m_Argument.GetId());
     KttAssert(argument.GetMemoryLocation() == ArgumentMemoryLocation::Host
         || argument.GetMemoryLocation() == ArgumentMemoryLocation::HostZeroCopy, "Argument memory location mismatch");
 
@@ -71,7 +71,7 @@ OpenClHostBuffer::OpenClHostBuffer(KernelArgument& argument, IdGenerator<Transfe
 
 OpenClHostBuffer::~OpenClHostBuffer()
 {
-    Logger::LogDebug("Releasing OpenCL host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Releasing OpenCL host buffer with id " + m_Argument.GetId());
 
     if (m_UserOwned)
     {
@@ -84,7 +84,7 @@ OpenClHostBuffer::~OpenClHostBuffer()
 std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::UploadData(const OpenClCommandQueue& queue, const void* source,
     const size_t dataSize)
 {
-    Logger::LogDebug("Uploading data into OpenCL host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Uploading data into OpenCL host buffer with id " + m_Argument.GetId());
 
     if (m_BufferSize < dataSize)
     {
@@ -119,7 +119,7 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::UploadData(const OpenClC
 std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::DownloadData(const OpenClCommandQueue& queue, void* destination,
     const size_t dataSize) const
 {
-    Logger::LogDebug("Downloading data from OpenCL host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Downloading data from OpenCL host buffer with id " + m_Argument.GetId());
 
     if (m_BufferSize < dataSize)
     {
@@ -154,8 +154,8 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::DownloadData(const OpenC
 std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::CopyData(const OpenClCommandQueue& queue, const OpenClBuffer& source,
     const size_t dataSize)
 {
-    Logger::LogDebug("Copying data into OpenCL host buffer with id " + std::to_string(m_Argument.GetId())
-        + " from buffer with id " + std::to_string(source.GetArgumentId()));
+    Logger::LogDebug("Copying data into OpenCL host buffer with id " + m_Argument.GetId() + " from buffer with id "
+        + source.GetArgumentId());
 
     if (m_BufferSize < dataSize)
     {
@@ -180,7 +180,7 @@ std::unique_ptr<OpenClTransferAction> OpenClHostBuffer::CopyData(const OpenClCom
 
 void OpenClHostBuffer::Resize(const OpenClCommandQueue& queue, const size_t newSize, const bool preserveData)
 {
-    Logger::LogDebug("Resizing OpenCL host buffer with id " + std::to_string(m_Argument.GetId()));
+    Logger::LogDebug("Resizing OpenCL host buffer with id " + m_Argument.GetId());
 
     if (m_UserOwned)
     {

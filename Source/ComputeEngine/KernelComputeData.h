@@ -17,12 +17,13 @@ class KernelDefinition;
 class KernelComputeData
 {
 public:
-    explicit KernelComputeData(const Kernel& kernel, const KernelDefinition& definition, const KernelConfiguration& configuration);
+    explicit KernelComputeData(const Kernel& kernel, const KernelDefinition& definition, const KernelConfiguration& configuration,
+        const KernelDimensions& dimensions);
 
     void SetGlobalSize(const DimensionVector& globalSize);
     void SetLocalSize(const DimensionVector& localSize);
     void UpdateArgumentAtIndex(const size_t index, KernelArgument& argument);
-    void SwapArguments(const ArgumentId first, const ArgumentId second);
+    void SwapArguments(const ArgumentId& first, const ArgumentId& second);
     void SetArguments(const std::vector<KernelArgument*> arguments);
 
     const std::string& GetName() const;
@@ -34,7 +35,7 @@ public:
     const DimensionVector& GetGlobalSize() const;
     const DimensionVector& GetLocalSize() const;
     const KernelConfiguration& GetConfiguration() const;
-    size_t GetArgumentIndex(const ArgumentId id) const;
+    size_t GetArgumentIndex(const ArgumentId& id) const;
     const std::vector<KernelArgument*>& GetArguments() const;
 
 private:

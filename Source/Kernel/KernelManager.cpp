@@ -93,16 +93,17 @@ void KernelManager::RemoveKernel(const KernelId id)
     }
 }
 
-void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group)
+void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group)
 {
     auto& kernel = GetKernel(id);
     kernel.AddParameter(KernelParameter(name, values, group));
 }
 
-void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group)
+void KernelManager::AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
+    const std::string& group)
 {
     auto& kernel = GetKernel(id);
-    kernel.AddParameter(KernelParameter(name, values, group));
+    kernel.AddParameter(KernelParameter(name, valueType, valueScript, group));
 }
 
 void KernelManager::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
@@ -111,11 +112,31 @@ void KernelManager::AddConstraint(const KernelId id, const std::vector<std::stri
     kernel.AddConstraint(parameters, function);
 }
 
+void KernelManager::AddGenericConstraint(const KernelId id, const std::vector<std::string>& parameters, GenericConstraintFunction function)
+{
+    auto& kernel = GetKernel(id);
+    kernel.AddGenericConstraint(parameters, function);
+}
+
+void KernelManager::AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script)
+{
+    auto& kernel = GetKernel(id);
+    kernel.AddScriptConstraint(parameters, script);
+}
+
 void KernelManager::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters,  ModifierFunction function)
 {
     auto& kernel = GetKernel(id);
     const ThreadModifier modifier(parameters, definitionIds, function);
+    kernel.AddThreadModifier(type, dimension, modifier);
+}
+
+void KernelManager::AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+    const ModifierDimension dimension, const std::string& script)
+{
+    auto& kernel = GetKernel(id);
+    const ThreadModifier modifier(definitionIds, script);
     kernel.AddThreadModifier(type, dimension, modifier);
 }
 
@@ -179,7 +200,7 @@ KernelDefinitionId KernelManager::GetDefinitionId(const std::string& name, const
     return iterator->first;
 }
 
-bool KernelManager::IsArgumentUsed(const ArgumentId id) const
+bool KernelManager::IsArgumentUsed(const ArgumentId& id) const
 {
     for (const auto& definition : m_Definitions)
     {

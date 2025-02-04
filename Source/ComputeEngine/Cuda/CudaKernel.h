@@ -36,6 +36,7 @@ public:
     const std::string& GetName() const;
     CUfunction GetKernel() const;
     CUmodule GetModule() const;
+    uint64_t GetAttribute(const CUfunction_attribute attribute) const;
 
 private:
     std::string m_Name;
@@ -45,7 +46,6 @@ private:
     CUfunction m_Kernel;
     CUmodule m_Module;
 
-    uint64_t GetAttribute(const CUfunction_attribute attribute) const;
     DimensionVector AdjustGlobalSize(const DimensionVector& globalSize, const DimensionVector& localSize) const;
 };
 

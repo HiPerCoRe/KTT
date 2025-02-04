@@ -279,10 +279,10 @@ __global__ void nbody_kernel(float timeDelta,
     int n)
 {
     // buffers for bodies info processed by the work group
-    __shared__ vector bufferPosX[WORK_GROUP_SIZE_X];
-    __shared__ vector bufferPosY[WORK_GROUP_SIZE_X];
-    __shared__ vector bufferPosZ[WORK_GROUP_SIZE_X];
-    __shared__ vector bufferMass[WORK_GROUP_SIZE_X];
+    __shared__ vector bufferPosX[WORK_GROUP_SIZE_Y][WORK_GROUP_SIZE_X];
+    __shared__ vector bufferPosY[WORK_GROUP_SIZE_Y][WORK_GROUP_SIZE_X];
+    __shared__ vector bufferPosZ[WORK_GROUP_SIZE_Y][WORK_GROUP_SIZE_X];
+    __shared__ vector bufferMass[WORK_GROUP_SIZE_Y][WORK_GROUP_SIZE_X];
 	
     // each thread holds a position/mass of the body it represents
     float bodyPos[OUTER_UNROLL_FACTOR][3];
@@ -310,15 +310,20 @@ __global__ void nbody_kernel(float timeDelta,
 		bodyPos, bodyVel, bodyMass); // values to be filled
 	
 	int blocks = n / (WORK_GROUP_SIZE_X * VECTOR_TYPE); // each calculates effect of WORK_GROUP_SIZE_X atoms to currect, i.e. thread's, one
+
+    int start = (blocks * threadIdx.y) / blockDim.y;
+    int end = (blocks * (threadIdx.y+1)) / blockDim.y;
+    //if (threadIdx.x == 0 && blockIdx.x == 0) printf("%i: %i %i\n", threadIdx.y, start, end);
+
 	// start the calculation, process whole blocks
-	for (int i = 0; i < blocks; i++) {
+	for (int i = start; i < end; i++) {
 		#if LOCAL_MEM == 1 
 			// load new values to buffer.
 			// We know that all threads can be used now, so no condition is necessary
-			fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX, bufferPosY, bufferPosZ, bufferMass, i * WORK_GROUP_SIZE_X);
+			fillBuffers(oldBodyInfo, oldPosX, oldPosY, oldPosZ, mass, bufferPosX[threadIdx.y], bufferPosY[threadIdx.y], bufferPosZ[threadIdx.y], bufferMass[threadIdx.y], i * WORK_GROUP_SIZE_X);
 			__syncthreads();
 		#endif // LOCAL_MEM == 1 
-			// calculate the acceleration between the thread body and each other body loaded to buffer
+		// calculate the acceleration between the thread body and each other body loaded to buffer
         #if INNER_UNROLL_FACTOR1 > 0
 		# pragma unroll INNER_UNROLL_FACTOR1
         #endif
@@ -329,7 +334,7 @@ __global__ void nbody_kernel(float timeDelta,
 			for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
 				#if LOCAL_MEM == 1
 					updateAcc(bodyAcc[j], bodyPos[j],
-						bufferPosX[index], bufferPosY[index], bufferPosZ[index], bufferMass[index],
+						bufferPosX[threadIdx.y][index], bufferPosY[threadIdx.y][index], bufferPosZ[threadIdx.y][index], bufferMass[threadIdx.y][index],
 						softeningSqr);
 				#else // LOCAL_MEM != 1
 					updateAccGM(bodyAcc[j], bodyPos[j],
@@ -344,32 +349,62 @@ __global__ void nbody_kernel(float timeDelta,
         #endif
 
 	}
-	
-	// sum elements of acceleration vector, if any
-	float resAccX, resAccY, resAccZ;
-	int index = (blockIdx.x*blockDim.x + threadIdx.x) * OUTER_UNROLL_FACTOR;
-    #if INNER_UNROLL_FACTOR2 > 0
-	# pragma unroll INNER_UNROLL_FACTOR2
+
+    #if WORK_GROUP_SIZE_Y > 1
+    // reduce bodyAcc
+    //if (threadIdx.x == 0 && blockIdx.x == 0) printf("%i: %f %f %f\n", threadIdx.y, bodyAcc[0][0], bodyAcc[0][1], bodyAcc[0][2]);
+    __shared__ vector bodyAccSh[OUTER_UNROLL_FACTOR][3][WORK_GROUP_SIZE_Y][WORK_GROUP_SIZE_X];
+    for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
+        bodyAccSh[j][0][threadIdx.y][threadIdx.x] = bodyAcc[j][0];
+        bodyAccSh[j][1][threadIdx.y][threadIdx.x] = bodyAcc[j][1];
+        bodyAccSh[j][2][threadIdx.y][threadIdx.x] = bodyAcc[j][2];
+    }
+    __syncthreads();
+    if (threadIdx.y == 0) {
+        for (int i = 1; i < WORK_GROUP_SIZE_Y; i++) {
+            for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
+                bodyAccSh[j][0][0][threadIdx.x] += bodyAccSh[j][0][i][threadIdx.x];
+                bodyAccSh[j][1][0][threadIdx.x] += bodyAccSh[j][1][i][threadIdx.x];
+                bodyAccSh[j][2][0][threadIdx.x] += bodyAccSh[j][2][i][threadIdx.x];
+            }
+        }
+        for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
+            bodyAcc[j][0] = bodyAccSh[j][0][0][threadIdx.x];
+            bodyAcc[j][1] = bodyAccSh[j][1][0][threadIdx.x];
+            bodyAcc[j][2] = bodyAccSh[j][2][0][threadIdx.x];
+        }
+    }
     #endif
-	for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
-		resAccX = resAccY = resAccZ = 0.f;
-		for (int i = 0; i < VECTOR_TYPE; i++) 
-		{
-			resAccX += ((float*)&bodyAcc[j][0])[i];
-			resAccY += ((float*)&bodyAcc[j][1])[i];
-			resAccZ += ((float*)&bodyAcc[j][2])[i];
-		}
+	
+    if (threadIdx.y == 0) {
+        //if (threadIdx.x == 0 && blockIdx.x == 0) printf("sum %i: %f %f %f\n", threadIdx.y, bodyAcc[0][0], bodyAcc[0][1], bodyAcc[0][2]);
+    	// sum elements of acceleration vector, if any
+	    float resAccX, resAccY, resAccZ;
+    	int index = (blockIdx.x*blockDim.x + threadIdx.x) * OUTER_UNROLL_FACTOR;
+        #if INNER_UNROLL_FACTOR2 > 0
+    	# pragma unroll INNER_UNROLL_FACTOR2
+        #endif
+    	for (int j = 0; j < OUTER_UNROLL_FACTOR; ++j) {
+	    	resAccX = resAccY = resAccZ = 0.f;
+		    for (int i = 0; i < VECTOR_TYPE; i++) 
+    		{
+	    		resAccX += ((float*)&bodyAcc[j][0])[i];
+		    	resAccY += ((float*)&bodyAcc[j][1])[i];
+			    resAccZ += ((float*)&bodyAcc[j][2])[i];
+    		}
 			
-		// 'export' result
-		// calculate resulting position 	
-		float resPosX = bodyPos[j][0] + timeDelta * bodyVel[j][0] + damping * timeDelta * timeDelta * resAccX;
-		float resPosY = bodyPos[j][1] + timeDelta * bodyVel[j][1] + damping * timeDelta * timeDelta * resAccY;
-		float resPosZ = bodyPos[j][2] + timeDelta * bodyVel[j][2] + damping * timeDelta * timeDelta * resAccZ;
-		newBodyInfo[index + j] = make_float4(resPosX, resPosY, resPosZ, bodyMass[j]);
-		// calculate resulting velocity	
-		float resVelX = bodyVel[j][0] + timeDelta * resAccX;
-		float resVelY = bodyVel[j][1] + timeDelta * resAccY;
-		float resVelZ = bodyVel[j][2] + timeDelta * resAccZ;
-		newVel[index + j] = make_float4(resVelX, resVelY, resVelZ, 0.f);
-	}
+	    	// 'export' result
+		    // calculate resulting position 	
+    		float resPosX = bodyPos[j][0] + timeDelta * bodyVel[j][0] + damping * timeDelta * timeDelta * resAccX;
+	    	float resPosY = bodyPos[j][1] + timeDelta * bodyVel[j][1] + damping * timeDelta * timeDelta * resAccY;
+		    float resPosZ = bodyPos[j][2] + timeDelta * bodyVel[j][2] + damping * timeDelta * timeDelta * resAccZ;
+    		newBodyInfo[index + j] = make_float4(resPosX, resPosY, resPosZ, bodyMass[j]);
+	    	// calculate resulting velocity	
+		    float resVelX = bodyVel[j][0] + timeDelta * resAccX;
+    		float resVelY = bodyVel[j][1] + timeDelta * resAccY;
+	    	float resVelZ = bodyVel[j][2] + timeDelta * resAccZ;
+		    newVel[index + j] = make_float4(resVelX, resVelY, resVelZ, 0.f);
+    	}
+    }
 }
+

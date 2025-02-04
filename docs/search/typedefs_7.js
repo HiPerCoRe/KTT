@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['queueid_0',['QueueId',['../namespacektt.html#a42a11ff66d2e2aef76699a88f6602b0b',1,'ktt']]]
+  ['parameterinput_0',['ParameterInput',['../namespacektt.html#aef951ec46e383694c8512ddaa6b200d6',1,'ktt']]],
+  ['parametervalue_1',['ParameterValue',['../namespacektt.html#a5fd7b754d3a4580838423d9363393101',1,'ktt']]],
+  ['platformindex_2',['PlatformIndex',['../namespacektt.html#ace6bcecdbf444cc8adffa172168f8a47',1,'ktt']]]
 ];

@@ -1,6 +1,9 @@
 #include <algorithm>
 
 #include <Api/KttException.h>
+#include <Kernel/KernelConstraint/BasicConstraint.h>
+#include <Kernel/KernelConstraint/GenericConstraint.h>
+#include <Kernel/KernelConstraint/ScriptConstraint.h>
 #include <Kernel/Kernel.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/StlHelpers.h>
@@ -29,30 +32,20 @@ void Kernel::AddParameter(const KernelParameter& parameter)
 
 void Kernel::AddConstraint(const std::vector<std::string>& parameterNames, ConstraintFunction function)
 {
-    std::vector<const KernelParameter*> parameters;
-    std::set<std::string> usedGroups;
+    const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, false);
+    m_Constraints.push_back(std::make_unique<BasicConstraint>(parameters, function));
+}
 
-    for (const auto& name : parameterNames)
-    {
-        const auto& parameter = GetParamater(name);
+void Kernel::AddGenericConstraint(const std::vector<std::string>& parameterNames, GenericConstraintFunction function)
+{
+    const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, true);
+    m_Constraints.push_back(std::make_unique<GenericConstraint>(parameters, function));
+}
 
-        if (parameter.HasValuesDouble())
-        {
-            throw KttException("Kernel parameter with name " + name
-                + " has floating-point values and cannot be used by kernel constraints");
-        }
-
-        usedGroups.insert(parameter.GetGroup());
-
-        if (usedGroups.size() > 1)
-        {
-            throw KttException("Constraint can only be added between parameters that belong to the same group");
-        }
-
-        parameters.push_back(&parameter);
-    }
-
-    m_Constraints.emplace_back(parameters, function);
+void Kernel::AddScriptConstraint(const std::vector<std::string>& parameterNames, const std::string& script)
+{
+    const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, true);
+    m_Constraints.push_back(std::make_unique<ScriptConstraint>(parameters, script));
 }
 
 void Kernel::AddThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier)
@@ -61,10 +54,10 @@ void Kernel::AddThreadModifier(const ModifierType type, const ModifierDimension 
     {
         const auto& parameter = GetParamater(name);
 
-        if (parameter.HasValuesDouble())
+        if (parameter.GetValueType() != ParameterValueType::UnsignedInt)
         {
             throw KttException("Kernel parameter with name " + name
-                + " has floating-point values and cannot be used by thread modifiers");
+                + " does not have unsigned integer values and cannot be used by thread modifiers");
         }
     }
 
@@ -146,9 +139,16 @@ const std::set<KernelParameter>& Kernel::GetParameters() const
     return m_Parameters;
 }
 
-const std::vector<KernelConstraint>& Kernel::GetConstraints() const
+std::vector<const KernelConstraint*> Kernel::GetConstraints() const
 {
-    return m_Constraints;
+    std::vector<const KernelConstraint*> constraints;
+
+    for (const auto& constraint : m_Constraints)
+    {
+        constraints.push_back(constraint.get());
+    }
+
+    return constraints;
 }
 
 std::vector<KernelArgument*> Kernel::GetVectorArguments() const
@@ -211,24 +211,12 @@ KernelConfiguration Kernel::CreateConfiguration(const ParameterInput& parameters
     {
         const auto& parameter = GetParamater(pair.first);
 
-        if (parameter.HasValuesDouble())
+        if (parameter.GetValueType() != ParameterPair::GetTypeFromValue(pair.second))
         {
-            if (!std::holds_alternative<double>(pair.second))
-            {
-                throw KttException("Value type mismatch for parameter with name " + pair.first);
-            }
-
-            pairs.emplace_back(parameter.GetName(), std::get<double>(pair.second));
+            throw KttException("Value type mismatch for parameter with name " + pair.first);
         }
-        else
-        {
-            if (!std::holds_alternative<uint64_t>(pair.second))
-            {
-                throw KttException("Value type mismatch for parameter with name " + pair.first);
-            }
 
-            pairs.emplace_back(parameter.GetName(), std::get<uint64_t>(pair.second));
-        }
+        pairs.emplace_back(parameter.GetName(), pair.second);
     }
 
     for (const auto& parameter : m_Parameters)
@@ -243,7 +231,6 @@ KernelConfiguration Kernel::CreateConfiguration(const ParameterInput& parameters
             pairs.push_back(parameter.GeneratePair(0));
         }
     }
-
 
     return KernelConfiguration(pairs);
 }
@@ -276,27 +263,90 @@ void Kernel::EnumerateNeighbourConfigurations(const KernelConfiguration& configu
     EnumerateNeighbours(configuration, nullptr, std::set<const KernelParameter*>{}, initialSets, enumerator, initialQueue);
 }
 
-DimensionVector Kernel::GetModifiedGlobalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const
+DimensionVector Kernel::GetModifiedSize(const KernelDefinitionId id, const ModifierType type,
+    const std::vector<ParameterPair>& pairs) const
 {
-    return GetModifiedSize(id, ModifierType::Global, pairs);
+    KttAssert(HasDefinition(id), "Invalid definition id");
+    const auto& definition = GetDefinition(id);
+    const auto& defaultSize = type == ModifierType::Global ? definition.GetGlobalSize() : definition.GetLocalSize();
+    return GetModifiedSize(id, defaultSize, type, pairs);
 }
 
-DimensionVector Kernel::GetModifiedLocalSize(const KernelDefinitionId id, const std::vector<ParameterPair>& pairs) const
+DimensionVector Kernel::GetModifiedSize(const KernelDefinitionId id, const DimensionVector& originalSize, const ModifierType type,
+    const std::vector<ParameterPair>& pairs) const
 {
-    return GetModifiedSize(id, ModifierType::Local, pairs);
+    KttAssert(HasDefinition(id), "Invalid definition id");
+
+    if (!ContainsKey(m_Modifiers, type))
+    {
+        return originalSize;
+    }
+
+    const auto& modifiersPair = *m_Modifiers.find(type);
+    const auto& specificModifiers = modifiersPair.second;
+    DimensionVector result;
+
+    for (int i = 0; i <= static_cast<int>(ModifierDimension::Z); ++i)
+    {
+        const auto dimension = static_cast<ModifierDimension>(i);
+        size_t dimensionSize = originalSize.GetSize(dimension);
+
+        if (ContainsKey(specificModifiers, dimension))
+        {
+            const auto& pair = *specificModifiers.find(dimension);
+
+            for (const auto& modifier : pair.second)
+            {
+                dimensionSize = static_cast<size_t>(modifier.GetModifiedSize(id, static_cast<uint64_t>(dimensionSize), pairs));
+            }
+        }
+
+        result.SetSize(dimension, dimensionSize);
+    }
+
+    return result;
+}
+
+std::vector<const KernelParameter*> Kernel::PreprocessConstraintParameters(const std::vector<std::string>& parameterNames,
+    const bool genericConstraint) const
+{
+    std::vector<const KernelParameter*> parameters;
+    std::set<std::string> usedGroups;
+
+    for (const auto& name : parameterNames)
+    {
+        const auto& parameter = GetParamater(name);
+
+        if (!genericConstraint && parameter.GetValueType() != ParameterValueType::UnsignedInt)
+        {
+            throw KttException("Kernel parameter with name " + name
+                + " does not have unsigned integer values and cannot be used by non-generic kernel constraints");
+        }
+
+        usedGroups.insert(parameter.GetGroup());
+
+        if (usedGroups.size() > 1)
+        {
+            throw KttException("Constraint can only be added between parameters that belong to the same group");
+        }
+
+        parameters.push_back(&parameter);
+    }
+
+    return parameters;
 }
 
 std::vector<const KernelConstraint*> Kernel::GetConstraintsForParameters(const std::vector<const KernelParameter*>& parameters) const
 {
     std::vector<const KernelConstraint*> result;
 
-    for (const auto& constraint : GetConstraints())
+    for (const auto& constraint : m_Constraints)
     {
         for (const auto* parameter : parameters)
         {
-            if (constraint.AffectsParameter(parameter->GetName()))
+            if (constraint->AffectsParameter(parameter->GetName()))
             {
-                result.push_back(&constraint);
+                result.push_back(constraint.get());
                 break;
             }
         }
@@ -316,43 +366,6 @@ const KernelParameter& Kernel::GetParamater(const std::string& name) const
     }
 
     throw KttException("Kernel parameter with name " + name + " does not exist");
-}
-
-DimensionVector Kernel::GetModifiedSize(const KernelDefinitionId id, const ModifierType type,
-    const std::vector<ParameterPair>& pairs) const
-{
-    KttAssert(HasDefinition(id), "Invalid definition id");
-    const auto& definition = GetDefinition(id);
-    const auto& defaultSize = type == ModifierType::Global ? definition.GetGlobalSize() : definition.GetLocalSize();
-
-    if (!ContainsKey(m_Modifiers, type))
-    {
-        return defaultSize;
-    }
-
-    const auto& modifiersPair = *m_Modifiers.find(type);
-    const auto& specificModifiers = modifiersPair.second;
-    DimensionVector result;
-
-    for (int i = 0; i <= static_cast<int>(ModifierDimension::Z); ++i)
-    {
-        const auto dimension = static_cast<ModifierDimension>(i);
-        size_t dimensionSize = defaultSize.GetSize(dimension);
-
-        if (ContainsKey(specificModifiers, dimension))
-        {
-            const auto& pair = *specificModifiers.find(dimension);
-
-            for (const auto& modifier : pair.second)
-            {
-                dimensionSize = static_cast<size_t>(modifier.GetModifiedSize(id, static_cast<uint64_t>(dimensionSize), pairs));
-            }
-        }
-
-        result.SetSize(dimension, dimensionSize);
-    }
-
-    return result;
 }
 
 void Kernel::EnumerateNeighbours(const KernelConfiguration& configuration, const KernelParameter* neighbourParameter,

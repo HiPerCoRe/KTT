@@ -38,6 +38,7 @@ public:
 
     const std::string& GetName() const;
     cl_kernel GetKernel() const;
+    uint64_t GetAttribute(const cl_kernel_work_group_info attribute) const;
 
 private:
     std::string m_Name;
@@ -51,7 +52,6 @@ private:
     void SetKernelArgumentVectorSvm(const void* buffer);
     void SetKernelArgumentScalar(const void* value, const size_t size);
     void SetKernelArgumentLocal(const size_t size);
-    uint64_t GetAttribute(const cl_kernel_work_group_info attribute) const;
     DimensionVector AdjustGlobalSize(const DimensionVector& globalSize, const DimensionVector& localSize) const;
 };
 

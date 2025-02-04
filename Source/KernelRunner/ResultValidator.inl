@@ -39,7 +39,7 @@ bool ResultValidator::ValidateResultInner(const KernelArgument& argument, const 
     {
         if (result[i] != reference[i])
         {
-            Logger::LogWarning("Results differ for argument with id " + std::to_string(argument.GetId()) + " at index " + std::to_string(i)
+            Logger::LogWarning("Results differ for argument with id " + argument.GetId() + " at index " + std::to_string(i)
                 + ", reference value: " + std::to_string(reference[i]) + ", result value: " + std::to_string(result[i])
                 + ", difference: " + std::to_string(std::fabs(result[i] - reference[i])));
             return false;
@@ -61,7 +61,7 @@ bool ResultValidator::ValidateAbsoluteDifference(const KernelArgument& argument,
 
     if (difference > m_ToleranceThreshold)
     {
-        Logger::LogWarning("Results differ for argument with id " + std::to_string(argument.GetId()) + ", absolute difference is "
+        Logger::LogWarning("Results differ for argument with id " + argument.GetId() + ", absolute difference is "
             + std::to_string(difference));
         return false;
     }
@@ -78,7 +78,7 @@ bool ResultValidator::ValidateSideBySide(const KernelArgument& argument, const T
 
         if (difference > m_ToleranceThreshold)
         {
-            Logger::LogWarning("Results differ for argument with id " + std::to_string(argument.GetId()) + " at index " + std::to_string(i)
+            Logger::LogWarning("Results differ for argument with id " + argument.GetId() + " at index " + std::to_string(i)
                 + ", reference value: " + std::to_string(reference[i]) + ", result value: " + std::to_string(result[i])
                 + ", difference: " + std::to_string(difference));
             return false;
@@ -98,7 +98,7 @@ bool ResultValidator::ValidateSideBySideRelative(const KernelArgument& argument,
 
         if (difference > 1e-4 && relativeDifference > m_ToleranceThreshold)
         {
-            Logger::LogWarning("Results differ for argument with id " + std::to_string(argument.GetId()) + " at index " + std::to_string(i)
+            Logger::LogWarning("Results differ for argument with id " + argument.GetId() + " at index " + std::to_string(i)
                 + ", reference value: " + std::to_string(reference[i]) + ", result value: " + std::to_string(result[i])
                 + ", relative difference: " + std::to_string(relativeDifference));
             return false;

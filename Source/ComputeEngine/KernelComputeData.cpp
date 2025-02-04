@@ -7,11 +7,13 @@
 #include <Kernel/Kernel.h>
 #include <Kernel/KernelDefinition.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/StlHelpers.h>
 
 namespace ktt
 {
 
-KernelComputeData::KernelComputeData(const Kernel& kernel, const KernelDefinition& definition, const KernelConfiguration& configuration) :
+KernelComputeData::KernelComputeData(const Kernel& kernel, const KernelDefinition& definition, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions) :
     m_Name(definition.GetName()),
     m_DefaultSource(definition.GetSource()),
     m_ConfigurationPrefix(configuration.GeneratePrefix()),
@@ -19,8 +21,20 @@ KernelComputeData::KernelComputeData(const Kernel& kernel, const KernelDefinitio
     m_Configuration(&configuration),
     m_Arguments(definition.GetArguments())
 {
-    m_GlobalSize = kernel.GetModifiedGlobalSize(definition.GetId(), configuration.GetPairs());
-    m_LocalSize = kernel.GetModifiedLocalSize(definition.GetId(), configuration.GetPairs());
+    const auto id = definition.GetId();
+    const auto& pairs = configuration.GetPairs();
+
+    if (ContainsKey(dimensions, id))
+    {
+        const auto& pair = dimensions.find(id)->second;
+        m_GlobalSize = kernel.GetModifiedSize(id, pair.first, ModifierType::Global, pairs);
+        m_LocalSize = kernel.GetModifiedSize(id, pair.second, ModifierType::Local, pairs);
+    }
+    else
+    {
+        m_GlobalSize = kernel.GetModifiedSize(id, ModifierType::Global, pairs);
+        m_LocalSize = kernel.GetModifiedSize(id, ModifierType::Local, pairs);
+    }
 }
 
 void KernelComputeData::SetGlobalSize(const DimensionVector& globalSize)
@@ -39,7 +53,7 @@ void KernelComputeData::UpdateArgumentAtIndex(const size_t index, KernelArgument
     m_Arguments[index] = &argument;
 }
 
-void KernelComputeData::SwapArguments(const ArgumentId first, const ArgumentId second)
+void KernelComputeData::SwapArguments(const ArgumentId& first, const ArgumentId& second)
 {
     const size_t invalidIndex = std::numeric_limits<size_t>::max();
     size_t firstIndex = invalidIndex;
@@ -59,8 +73,8 @@ void KernelComputeData::SwapArguments(const ArgumentId first, const ArgumentId s
 
     if (firstIndex == invalidIndex || secondIndex == invalidIndex)
     {
-        throw KttException("One of the arguments with ids " + std::to_string(first) + " and " + std::to_string(second)
-            + " is not associated with kernel definition " + m_Name);
+        throw KttException("One of the arguments with ids " + first + " and " + second + " is not associated with kernel definition "
+            + m_Name);
     }
 
     std::swap(m_Arguments[firstIndex], m_Arguments[secondIndex]);
@@ -124,7 +138,7 @@ const KernelConfiguration& KernelComputeData::GetConfiguration() const
     return *m_Configuration;
 }
 
-size_t KernelComputeData::GetArgumentIndex(const ArgumentId id) const
+size_t KernelComputeData::GetArgumentIndex(const ArgumentId& id) const
 {
     for (size_t i = 0; i < m_Arguments.size(); ++i)
     {

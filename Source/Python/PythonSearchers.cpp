@@ -42,6 +42,7 @@ void InitializePythonSearchers(py::module_& module)
         .def("CalculateNextConfiguration", &ktt::Searcher::CalculateNextConfiguration)
         .def("GetCurrentConfiguration", &ktt::Searcher::GetCurrentConfiguration)
         .def("GetIndex", &ktt::Searcher::GetIndex)
+        .def("GetConfiguration", &ktt::Searcher::GetConfiguration)
         .def("GetRandomConfiguration", &ktt::Searcher::GetRandomConfiguration)
         .def
         (
@@ -52,6 +53,7 @@ void InitializePythonSearchers(py::module_& module)
             py::arg("maxNeighbours") = 3
         )
         .def("GetConfigurationsCount", &ktt::Searcher::GetConfigurationsCount)
+        .def("GetUnexploredConfigurationsCount", &ktt::Searcher::GetUnexploredConfigurationsCount)
         .def("GetExploredIndices", &ktt::Searcher::GetExploredIndices, py::return_value_policy::reference)
         .def("IsInitialized", &ktt::Searcher::IsInitialized);
 

@@ -10,6 +10,7 @@
 #include <ComputeEngine/Cuda/CudaProgram.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
 #include <KernelArgument/KernelArgument.h>
+#include <Utility/Logger/Logger.h>
 #include <Utility/StringUtility.h>
 
 namespace ktt
@@ -30,6 +31,9 @@ CudaProgram::~CudaProgram()
 
 void CudaProgram::Build(const std::string& compilerOptions) const
 {
+    const std::string logCompilerOptions = compilerOptions.empty() ? "empty" : compilerOptions;
+    Logger::LogDebug("Building CUDA program with name " + m_Name + " and options: " + logCompilerOptions);
+
     CheckError(nvrtcAddNameExpression(m_Program, m_Name.c_str()), "nvrtcAddNameExpression");
     
     for (const auto* argument : m_SymbolArguments)

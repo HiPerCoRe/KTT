@@ -98,6 +98,14 @@ void InitializePythonEnums(py::module_& module)
         .value("JSON", ktt::OutputFormat::JSON)
         .value("XML", ktt::OutputFormat::XML);
 
+    py::enum_<ktt::ParameterValueType>(module, "ParameterValueType")
+        .value("Int", ktt::ParameterValueType::Int)
+        .value("UnsignedInt", ktt::ParameterValueType::UnsignedInt)
+        .value("Double", ktt::ParameterValueType::Double)
+        .value("Float", ktt::ParameterValueType::Float)
+        .value("Bool", ktt::ParameterValueType::Bool)
+        .value("String", ktt::ParameterValueType::String);
+
     py::enum_<ktt::ProfilingCounterType>(module, "ProfilingCounterType")
         .value("Int", ktt::ProfilingCounterType::Int)
         .value("UnsignedInt", ktt::ProfilingCounterType::UnsignedInt)

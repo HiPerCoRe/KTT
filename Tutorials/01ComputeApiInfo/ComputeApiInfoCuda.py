@@ -1,3 +1,8 @@
+# KTT tutorial demonstrating simple platform info print
+# Users are recommended to start with KTT Introductory guide
+# at https://github.com/HiPerCoRe/KTT/blob/master/OnboardingGuide.md
+# before reading the tutorial's code.
+
 import pyktt as ktt
 
 def main():

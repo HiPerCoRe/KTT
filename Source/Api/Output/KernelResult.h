@@ -49,16 +49,46 @@ public:
     void SetStatus(const ResultStatus status);
 
     /** @fn void SetExtraDuration(const Nanoseconds duration)
-      * Sets extra duration. This includes for example duration of custom kernel launcher minus the duration of buffer transfers.
-      * @param duration Extra computation duration.
+      * Sets duration of a kernel launcher. The duration of buffer transfers performed within the launcher is not included.
+      * @param duration Kernel launcher duration.
       */
     void SetExtraDuration(const Nanoseconds duration);
 
     /** @fn void SetExtraOverhead(const Nanoseconds overhead)
-      * Sets extra overhead. This includes for example duration of buffer transfers performed in custom kernel launcher.
-      * @param overhead Extra computation overhead.
+      * Sets duration of buffer transfers (e.g., between host and device memory).
+      * @param overhead Duration of buffer transfers.
       */
-    void SetExtraOverhead(const Nanoseconds overhead);
+    [[deprecated("Use SetDataMovementOverhead() instead.")]] void SetExtraOverhead(const Nanoseconds overhead);
+
+    /** @fn void SetDataMovementOverhead(const Nanoseconds overhead)
+      * Sets duration of buffer transfers (e.g., between host and device memory).
+      * @param overhead Duration of buffer transfers.
+      */
+    void SetDataMovementOverhead(const Nanoseconds overhead);
+
+    /** @fn void SetValidationOverhead(const Nanoseconds overhead)
+      * Sets duration of kernel output validation.
+      * @param overhead Duration of kernel output validation.
+      */
+    void SetValidationOverhead(const Nanoseconds overhead);
+
+    /** @fn void SetSearcherOverhead(const Nanoseconds overhead)
+      * Sets duration of searcher finding the next configuration to run.
+      * @param overhead Duration of searcher finding the next configuration to run.
+      */
+    void SetSearcherOverhead(const Nanoseconds overhead);
+
+    /** @fn void SetFailedKernelOverhead(const Nanoseconds overhead)
+      * Sets duration of failed (uncompilable) kernel creation.
+      * @param overhead Duration of KTT/compiler spent on preparation of kernel which cannot be executed.
+      */
+    void SetFailedKernelOverhead(const Nanoseconds overhead);
+
+    /** @fn void SetProfilingRunsOverhead(const Nanoseconds overhead)
+      * Sets time of kernels executed to collect performance counters.
+      * @param overhead Duration of kernels executed just to collect performance counters.
+      */
+    void SetProfilingRunsOverhead(const Nanoseconds overhead);
 
     /** @fn const std::string& GetKernelName() const
       * Returns name of a kernel tied to the result.
@@ -96,19 +126,73 @@ public:
       */
     Nanoseconds GetKernelOverhead() const;
 
+    /** @fn Nanoseconds GetKernelCompilationOverhead() const
+      * Retrieves total kernel compilation overhead from the partial results.
+      * @return Total kernel compilation overhead from the partial results.
+      */
+    Nanoseconds GetKernelCompilationOverhead() const;
+
     /** @fn Nanoseconds GetExtraDuration() const
-      * Retrieves extra kernel result duration. This includes for example duration of custom kernel launcher minus the duration
-      * of buffer transfers.
-      * @return Extra kernel result duration.
+      * Retrieves duration of a kernel launcher. The duration of buffer transfers performed within the launcher is not included.
+      * @return Kernel launcher duration.
       */
     Nanoseconds GetExtraDuration() const;
 
     /** @fn Nanoseconds GetExtraOverhead() const
-      * Retrieves extra kernel result overhead. This includes for example duration of buffer transfers performed in custom kernel
-      * launcher.
-      * @return Extra kernel result overhead.
+      * Retrieves duration of buffer transfers (e.g., between host and device memory).
+      * @return Duration of buffer transfers.
       */
-    Nanoseconds GetExtraOverhead() const;
+    [[deprecated("Use GetDataMovementOverhead() instead.")]] Nanoseconds GetExtraOverhead() const;
+
+    /** @fn Nanoseconds GetDataMovementOverhead() const
+      * Retrieves duration of buffer transfers (e.g., between host and device memory).
+      * @return Duration of buffer transfers.
+      */
+    Nanoseconds GetDataMovementOverhead() const;
+
+    /** @fn Nanoseconds GetValidationOverhead() const
+      * Retrieves duration of kernel output validation.
+      * @return Duration of kernel output validation.
+      */
+    Nanoseconds GetValidationOverhead() const;
+
+    /** @fn Nanoseconds GetSearcherOverhead() const
+      * Retrieves duration of searcher finding the next configuration to run.
+      * @return Duration of searcher finding the next configuration to run.
+      */
+    Nanoseconds GetSearcherOverhead() const;
+
+    /** @fn Nanoseconds GetFailedKernelOverhead() const
+      * Retrieves duration of failed (uncompilable) kernel creation.
+      * @return Duration of KTT/compiler spent on preparation of kernel which cannot be executed.
+      */
+    Nanoseconds GetFailedKernelOverhead() const;
+
+    /** @fn Nanoseconds GetProfilingRunsOverhead() const
+      * Retrieves duration and overhead of kernels executed to collect performance counters.
+      * @return Duration of kernels executed just to collect performance 
+      * counters.
+      */
+    Nanoseconds GetProfilingRunsOverhead() const;
+
+    /** @fn Nanoseconds GetProfilingOverhead() const
+      * Retrieves duration of all non-kernel operations performed during collection performance counters (e.g., data movements for extra kernel runs).
+      * @return Duration operations different than kernel execution needed to coollect performance counters.
+      */
+    Nanoseconds GetProfilingOverhead() const;
+
+    /** @fn Nanoseconds GetProfilingTotalOverhead() const
+      * Retrieves duration and overhead of all operations needed to collect performance counters.
+      * @return Duration of operations required just to collect performance
+      * counters.
+      */
+    Nanoseconds GetProfilingTotalOverhead() const;
+
+    /** @fn Nanoseconds GetCompilationOverhead() const
+      * Retrieves duration of kernels compilation.
+      * @return Duration of kernels compilation.
+      */
+    Nanoseconds GetCompilationOverhead() const;
 
     /** @fn Nanoseconds GetTotalDuration() const
       * Retrieves the sum of kernel duration and extra duration.
@@ -117,8 +201,8 @@ public:
     Nanoseconds GetTotalDuration() const;
 
     /** @fn Nanoseconds GetTotalOverhead() const
-      * Retrieves the sum of kernel overhead and extra overhead.
-      * @return Sum of kernel overhead and extra overhead.
+      * Retrieves the sum of kernel, data movement, validation and searcher overhead.
+      * @return The sum of kernel, data movement, validation and searcher overhead.
       */
     Nanoseconds GetTotalOverhead() const;
 
@@ -135,12 +219,37 @@ public:
       */
     bool HasRemainingProfilingRuns() const;
 
+    /** @fn void FuseProfilingTimes(const KernelResult& previousResult)
+     * Fuse overhead times collected from multiple profiling executions
+     * @param previousResult result of the previous run
+     * @param first sets whether the first instance of the kernel configuration was computed (we need to fuse overhead time, but do not count it as overhead of profiling).
+      */
+    void FuseProfilingTimes(const KernelResult& previousResult, bool first);
+
+    /** @fn void CopyProfilingTimes(const KernelResult& originalResult)
+     * Copy overhead times collected from another KernelResult instance
+     * @param originalResult source of overhead times
+      */
+    void CopyProfilingTimes(const KernelResult& originalResult);
+
+    /** @fn void TransferPowerData(const KernelResult& previousResult)
+     * Transfer power data collected from previous execution
+     * @param previousResult result of the previous run
+      */
+    void TransferPowerData(const KernelResult& previousResult);
+
 private:
     KernelConfiguration m_Configuration;
     std::vector<ComputationResult> m_Results;
     std::string m_KernelName;
     Nanoseconds m_ExtraDuration;
-    Nanoseconds m_ExtraOverhead;
+    Nanoseconds m_DataMovementOverhead;
+    Nanoseconds m_ValidationOverhead;
+    Nanoseconds m_SearcherOverhead;
+    Nanoseconds m_FailedKernelOverhead;
+    Nanoseconds m_ProfilingRunsOverhead;
+    Nanoseconds m_ProfilingOverhead;
+    Nanoseconds m_CompilationOverhead;
     ResultStatus m_Status;
 };
 

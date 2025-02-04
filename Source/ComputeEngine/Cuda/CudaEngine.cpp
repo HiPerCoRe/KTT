@@ -19,6 +19,10 @@
 #include <ComputeEngine/Cuda/Cupti/CuptiPass.h>
 #endif // KTT_PROFILING_CUPTI
 
+#ifdef KTT_POWER_USAGE_NVML
+#include <ComputeEngine/Cuda/Nvml/NvmlPowerSubscription.h>
+#endif // KTT_POWER_USAGE_NVML
+
 namespace ktt
 {
 
@@ -54,6 +58,10 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 #if defined(KTT_PROFILING_CUPTI)
     InitializeCupti();
 #endif // KTT_PROFILING_CUPTI
+
+#if defined(KTT_POWER_USAGE_NVML)
+    m_PowerManager = std::make_unique<NvmlPowerManager>(*m_Context, m_DeviceIndex);
+#endif // KTT_POWER_USAGE_NVML
 }
 
 CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
@@ -91,9 +99,13 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<Que
 #if defined(KTT_PROFILING_CUPTI)
     InitializeCupti();
 #endif // KTT_PROFILING_CUPTI
+
+#if defined(KTT_POWER_USAGE_NVML)
+    m_PowerManager = std::make_unique<NvmlPowerManager>(*m_Context, m_DeviceIndex);
+#endif // KTT_POWER_USAGE_NVML
 }
 
-ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId)
+ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
 {
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -114,13 +126,46 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     auto kernel = LoadKernel(data);
     std::vector<CUdeviceptr*> arguments = GetKernelArguments(data.GetArguments());
     const size_t sharedMemorySize = GetSharedMemorySize(data.GetArguments());
+    const size_t totalSharedMemorySize = sharedMemorySize + kernel->GetAttribute(CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES);
+
+    if (totalSharedMemorySize > m_DeviceInfo.GetLocalMemorySize())
+    {
+        throw KttException("Shared memory usage of " + std::to_string(totalSharedMemorySize) + " bytes exceeds current device limit",
+            ExceptionReason::DeviceLimitsExceeded);
+    }
 
     const auto& stream = *m_Streams[queueId];
     timer.Stop();
 
+#if defined(KTT_POWER_USAGE_NVML)
+    std::unique_ptr<NvmlPowerSubscription> subscription;
+    if (powerMeasurementAllowed) {
+        subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
+        //uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
+    }
+#endif // KTT_POWER_USAGE_NVML
+    
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+#if defined(KTT_POWER_USAGE_NVML) 
+#if defined(KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL)
+    if (powerMeasurementAllowed) {
+        for (int i = 0; i < KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL-1; i++)
+            kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+    }
+#endif // KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL
+#endif // KTT_POWER_USAGE_NVML
+
+
+#if defined(KTT_POWER_USAGE_NVML)
+    if (powerMeasurementAllowed) {
+        //uint64_t energyEnd = m_PowerManager->GetTotalDeviceEnergy();
+        const uint32_t powerUsage = m_PowerManager->GetPowerUsage();
+        action->SetPowerUsage(powerUsage);
+    }
+#endif // KTT_POWER_USAGE_NVML
 
     action->IncreaseOverhead(timer.GetElapsedTime());
+    action->IncreaseCompilationOverhead(timer.GetElapsedTime());
     action->SetComputeId(data.GetUniqueIdentifier());
     const auto id = action->GetId();
     m_ComputeActions[id] = std::move(action);
@@ -139,6 +184,7 @@ ComputationResult CudaEngine::WaitForComputeAction(const ComputeActionId id)
     auto result = action.GenerateResult();
 
     m_ComputeActions.erase(id);
+
     return result;
 }
 
@@ -177,9 +223,11 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     timer.Start();
 
     const auto id = data.GetUniqueIdentifier();
+    bool newProfiling = false;
 
     if (!IsProfilingSessionActive(id))
     {
+        newProfiling = true;
         InitializeProfiling(id);
     }
 
@@ -193,7 +241,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
 
     timer.Stop();
 
-    const auto actionId = RunKernelAsync(data, queueId);
+    const auto actionId = RunKernelAsync(data, queueId, newProfiling);
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime());
     ComputationResult result = WaitForComputeAction(actionId);
@@ -208,7 +256,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     FillProfilingData(id, result);
     timer.Stop();
 
-    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime());
+    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime(), result.GetCompilationOverhead());
     return result;
 
 #elif KTT_PROFILING_CUPTI
@@ -217,9 +265,11 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     timer.Start();
 
     const auto id = data.GetUniqueIdentifier();
+    bool newProfiling = false;
 
     if (!IsProfilingSessionActive(id))
     {
+        newProfiling = true;
         InitializeProfiling(id);
     }
 
@@ -233,7 +283,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
 
     timer.Stop();
 
-    const auto actionId = RunKernelAsync(data, queueId);
+    const auto actionId = RunKernelAsync(data, queueId, newProfiling);
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime()); 
     ComputationResult result = WaitForComputeAction(actionId);
@@ -248,7 +298,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     FillProfilingData(id, result);
     timer.Stop();
 
-    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime());
+    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime(), result.GetCompilationOverhead());
     return result;
 
 #else
@@ -331,13 +381,23 @@ bool CudaEngine::SupportsMultiInstanceProfiling() const
 #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
+bool CudaEngine::IsProfilingActive() const
+{
+    return m_Configuration.IsProfilingActive();
+}
+
+void CudaEngine::SetProfiling(const bool profiling)
+{
+    m_Configuration.SetProfiling(profiling);
+}
+
 TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
 {
     Timer timer;
     timer.Start();
 
     const auto id = kernelArgument.GetId();
-    Logger::LogDebug("Uploading buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Uploading buffer for argument with id " + id);
 
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -346,12 +406,12 @@ TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, cons
 
     if (ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+        throw KttException("Buffer for argument with id " + id + " already exists");
     }
 
     if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
     {
-        throw KttException("Argument with id " + std::to_string(id) + " is not a vector and cannot be uploaded into buffer");
+        throw KttException("Argument with id " + id + " is not a vector and cannot be uploaded into buffer");
     }
 
     auto buffer = CreateBuffer(kernelArgument);
@@ -367,13 +427,13 @@ TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, cons
     return actionId;
 }
 
-TransferActionId CudaEngine::UpdateArgument(const ArgumentId id, const QueueId queueId, const void* data,
+TransferActionId CudaEngine::UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
-    Logger::LogDebug("Updating buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Updating buffer for argument with id " + id);
 
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -382,7 +442,7 @@ TransferActionId CudaEngine::UpdateArgument(const ArgumentId id, const QueueId q
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
@@ -402,13 +462,13 @@ TransferActionId CudaEngine::UpdateArgument(const ArgumentId id, const QueueId q
     return actionId;
 }
 
-TransferActionId CudaEngine::DownloadArgument(const ArgumentId id, const QueueId queueId, void* destination,
+TransferActionId CudaEngine::DownloadArgument(const ArgumentId& id, const QueueId queueId, void* destination,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
-    Logger::LogDebug("Downloading buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Downloading buffer for argument with id " + id);
 
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -417,7 +477,7 @@ TransferActionId CudaEngine::DownloadArgument(const ArgumentId id, const QueueId
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
@@ -437,14 +497,14 @@ TransferActionId CudaEngine::DownloadArgument(const ArgumentId id, const QueueId
     return actionId;
 }
 
-TransferActionId CudaEngine::CopyArgument(const ArgumentId destination, const QueueId queueId, const ArgumentId source,
+TransferActionId CudaEngine::CopyArgument(const ArgumentId& destination, const QueueId queueId, const ArgumentId& source,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
-    Logger::LogDebug("Copying buffer for argument with id " + std::to_string(source) + " into buffer for argument with id "
-        + std::to_string(destination));
+    Logger::LogDebug("Copying buffer for argument with id " + source + " into buffer for argument with id "
+        + destination);
 
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -453,12 +513,12 @@ TransferActionId CudaEngine::CopyArgument(const ArgumentId destination, const Qu
 
     if (!ContainsKey(m_Buffers, destination))
     {
-        throw KttException("Copy destination buffer for argument with id " + std::to_string(destination) + " was not found");
+        throw KttException("Copy destination buffer for argument with id " + destination + " was not found");
     }
 
     if (!ContainsKey(m_Buffers, source))
     {
-        throw KttException("Copy source buffer for argument with id " + std::to_string(source) + " was not found");
+        throw KttException("Copy source buffer for argument with id " + source + " was not found");
     }
 
     auto& destinationBuffer = *m_Buffers[destination];
@@ -495,31 +555,31 @@ TransferResult CudaEngine::WaitForTransferAction(const TransferActionId id)
     return result;
 }
 
-void CudaEngine::ResizeArgument(const ArgumentId id, const size_t newSize, const bool preserveData)
+void CudaEngine::ResizeArgument(const ArgumentId& id, const size_t newSize, const bool preserveData)
 {
-    Logger::LogDebug("Resizing buffer for argument with id " + std::to_string(id));
+    Logger::LogDebug("Resizing buffer for argument with id " + id);
 
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
     buffer.Resize(newSize, preserveData);
 }
 
-void CudaEngine::GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& handle)
+void CudaEngine::GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBufferMemory& handle)
 {
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " was not found");
+        throw KttException("Buffer for argument with id " + id + " was not found");
     }
 
     auto& buffer = *m_Buffers[id];
 
     if (buffer.GetMemoryLocation() != ArgumentMemoryLocation::Unified)
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " is not unified memory buffer");
+        throw KttException("Buffer for argument with id " + id + " is not unified memory buffer");
     }
 
     handle = reinterpret_cast<UnifiedBufferMemory>(*buffer.GetBuffer());
@@ -531,14 +591,14 @@ void CudaEngine::AddCustomBuffer(KernelArgument& kernelArgument, ComputeBuffer b
 
     if (ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + std::to_string(id) + " already exists");
+        throw KttException("Buffer for argument with id " + id + " already exists");
     }
 
     auto userBuffer = CreateUserBuffer(kernelArgument, buffer);
     m_Buffers[id] = std::move(userBuffer);
 }
 
-void CudaEngine::ClearBuffer(const ArgumentId id)
+void CudaEngine::ClearBuffer(const ArgumentId& id)
 {
     m_Buffers.erase(id);
 }
@@ -548,7 +608,7 @@ void CudaEngine::ClearBuffers()
     m_Buffers.clear();
 }
 
-bool CudaEngine::HasBuffer(const ArgumentId id)
+bool CudaEngine::HasBuffer(const ArgumentId& id)
 {
     return ContainsKey(m_Buffers, id);
 }
@@ -678,13 +738,18 @@ GlobalSizeType CudaEngine::GetGlobalSizeType() const
     return m_Configuration.GetGlobalSizeType();
 }
 
-void CudaEngine::SetCompilerOptions(const std::string& options)
+void CudaEngine::SetCompilerOptions(const std::string& options, const bool overrideDefault)
 {
-    std::string finalOptions = GetDefaultCompilerOptions();
+    std::string finalOptions = options;
 
-    if (!options.empty())
+    if (!overrideDefault)
     {
-        finalOptions += " " + options;
+        if (!finalOptions.empty())
+        {
+            finalOptions += " ";
+        }
+
+        finalOptions += GetDefaultCompilerOptions();
     }
 
     m_Configuration.SetCompilerOptions(finalOptions);
@@ -767,7 +832,7 @@ CUdeviceptr* CudaEngine::GetKernelArgument(KernelArgument& argument)
 
         if (!ContainsKey(m_Buffers, id))
         {
-            throw KttException("Buffer corresponding to kernel argument with id " + std::to_string(id) + " was not found");
+            throw KttException("Buffer corresponding to kernel argument with id " + id + " was not found");
         }
 
         return m_Buffers[id]->GetBuffer();
@@ -912,7 +977,7 @@ void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult&
             profiledKernelOverhead = result.GetDuration() - instance.GetKernelDuration();
         }
 
-        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead);
+        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead, result.GetCompilationOverhead());
         m_CuptiInstances.erase(id);
     }
 
@@ -945,7 +1010,7 @@ void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult&
             profiledKernelOverhead = result.GetDuration() - instance.GetKernelDuration();
         }
 
-        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead);
+        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead() + profiledKernelOverhead, result.GetCompilationOverhead());
         m_CuptiInstances.erase(id);
     }
 

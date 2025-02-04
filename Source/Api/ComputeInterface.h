@@ -183,37 +183,37 @@ public:
       */
     virtual void ChangeArguments(const KernelDefinitionId id, const std::vector<ArgumentId>& arguments) = 0;
 
-    /** @fn virtual void SwapArguments(const KernelDefinitionId id, const ArgumentId first, const ArgumentId second) = 0
+    /** @fn virtual void SwapArguments(const KernelDefinitionId id, const ArgumentId& first, const ArgumentId& second) = 0
       * Swaps positions of kernel arguments for the specified kernel definition under currently launched kernel.
       * @param id Id of kernel definition for which the arguments will be swapped. The specified definition must be included
       * in the currently launched kernel.
       * @param first Id of the first argument which will be swapped.
       * @param second Id of the second argument which will be swapped.
       */
-    virtual void SwapArguments(const KernelDefinitionId id, const ArgumentId first, const ArgumentId second) = 0;
+    virtual void SwapArguments(const KernelDefinitionId id, const ArgumentId& first, const ArgumentId& second) = 0;
 
-    /** @fn virtual void UpdateScalarArgument(const ArgumentId id, const void* data) = 0
+    /** @fn virtual void UpdateScalarArgument(const ArgumentId& id, const void* data) = 0
       * Updates the specified scalar argument under currently launched kernel.
       * @param id Id of scalar argument which will be updated.
       * @param data Pointer to new data for scalar argument. The data must have matching kernel argument data type.
       */
-    virtual void UpdateScalarArgument(const ArgumentId id, const void* data) = 0;
+    virtual void UpdateScalarArgument(const ArgumentId& id, const void* data) = 0;
 
-    /** @fn virtual void UpdateLocalArgument(const ArgumentId id, const size_t dataSize) = 0
+    /** @fn virtual void UpdateLocalArgument(const ArgumentId& id, const size_t dataSize) = 0
       * Updates the specified local memory argument under currently launched kernel.
       * @param id Id of local memory argument which will be updated.
       * @param dataSize New size in bytes for the argument.
       */
-    virtual void UpdateLocalArgument(const ArgumentId id, const size_t dataSize) = 0;
+    virtual void UpdateLocalArgument(const ArgumentId& id, const size_t dataSize) = 0;
 
-    /** @fn virtual void UploadBuffer(const ArgumentId id) = 0
+    /** @fn virtual void UploadBuffer(const ArgumentId& id) = 0
       * Uploads the specified vector argument into compute buffer. This method should be used mainly with arguments with
       * ::ArgumentManagementType set to User.
       * @param id Id of vector argument which will be uploaded.
       */
-    virtual void UploadBuffer(const ArgumentId id) = 0;
+    virtual void UploadBuffer(const ArgumentId& id) = 0;
 
-    /** @fn virtual TransferActionId UploadBufferAsync(const ArgumentId id, const QueueId queue) = 0
+    /** @fn virtual TransferActionId UploadBufferAsync(const ArgumentId& id, const QueueId queue) = 0
       * Uploads the specified vector argument into compute buffer. The data will be transferred asynchronously in the specified
       * queue.
       * @param id Id of vector argument which will be uploaded.
@@ -222,9 +222,9 @@ public:
       * e.g., WaitForTransferAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded transfer
       * durations may occur.
       */
-    virtual TransferActionId UploadBufferAsync(const ArgumentId id, const QueueId queue) = 0;
+    virtual TransferActionId UploadBufferAsync(const ArgumentId& id, const QueueId queue) = 0;
 
-    /** @fn virtual void DownloadBuffer(const ArgumentId id, void* destination, const size_t dataSize = 0) = 0
+    /** @fn virtual void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0) = 0
       * Downloads the specified vector argument from compute buffer.
       * @param id Id of vector argument which will be downloaded.
       * @param destination Buffer where the argument data will be downloaded. Its size must be equal or greater than the specified
@@ -232,9 +232,9 @@ public:
       * @param dataSize Size in bytes of buffer portion which will be downloaded to specified destination, starting with the first
       * byte. If zero, the entire buffer will be downloaded.
       */
-    virtual void DownloadBuffer(const ArgumentId id, void* destination, const size_t dataSize = 0) = 0;
+    virtual void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0) = 0;
 
-    /** @fn virtual TransferActionId DownloadBufferAsync(const ArgumentId id, const QueueId queue, void* destination,
+    /** @fn virtual TransferActionId DownloadBufferAsync(const ArgumentId& id, const QueueId queue, void* destination,
       * const size_t dataSize) = 0
       * Downloads the specified vector argument from compute buffer. The data will be transferred asynchronously in the specified
       * queue.
@@ -248,10 +248,10 @@ public:
       * e.g., WaitForTransferAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded transfer
       * durations may occur.
       */
-    virtual TransferActionId DownloadBufferAsync(const ArgumentId id, const QueueId queue, void* destination,
+    virtual TransferActionId DownloadBufferAsync(const ArgumentId& id, const QueueId queue, void* destination,
         const size_t dataSize = 0) = 0;
 
-    /** @fn virtual void UpdateBuffer(const ArgumentId id, const void* data, const size_t dataSize = 0) = 0
+    /** @fn virtual void UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize = 0) = 0
       * Updates data in compute buffer of the specified vector argument.
       * @param id Id of vector argument which will be updated.
       * @param data Pointer to new data for vector argument. Its size must be equal or greater than the specified data size.
@@ -259,9 +259,9 @@ public:
       * @param dataSize Size in bytes of buffer portion which will be updated, starting with the first byte. If zero, the entire
       * buffer will be updated.
       */
-    virtual void UpdateBuffer(const ArgumentId id, const void* data, const size_t dataSize = 0) = 0;
+    virtual void UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize = 0) = 0;
 
-    /** @fn virtual TransferActionId UpdateBufferAsync(const ArgumentId id, const QueueId queue, const void* data,
+    /** @fn virtual TransferActionId UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
       * const size_t dataSize) = 0
       * Updates data in compute buffer of the specified vector argument. The data will be transferred asynchronously in the
       * specified queue.
@@ -275,19 +275,19 @@ public:
       * e.g., WaitForTransferAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded transfer
       * durations may occur.
       */
-    virtual TransferActionId UpdateBufferAsync(const ArgumentId id, const QueueId queue, const void* data,
+    virtual TransferActionId UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
         const size_t dataSize = 0) = 0;
 
-    /** @fn virtual void CopyBuffer(const ArgumentId destination, const ArgumentId source, const size_t dataSize = 0) = 0
+    /** @fn virtual void CopyBuffer(const ArgumentId& destination, const ArgumentId& source, const size_t dataSize = 0) = 0
       * Copies part of the compute buffer of source vector argument to compute buffer of destination vector argument.
       * @param destination Id of destination vector argument.
       * @param source Id of source vector argument.
       * @param dataSize Size in bytes of buffer portion which will be copied to destination buffer, starting with the first byte.
       * If zero, the entire buffer will be copied.
       */
-    virtual void CopyBuffer(const ArgumentId destination, const ArgumentId source, const size_t dataSize = 0) = 0;
+    virtual void CopyBuffer(const ArgumentId& destination, const ArgumentId& source, const size_t dataSize = 0) = 0;
 
-    /** @fn virtual TransferActionId CopyBufferAsync(const ArgumentId destination, const ArgumentId source, const QueueId queue,
+    /** @fn virtual TransferActionId CopyBufferAsync(const ArgumentId& destination, const ArgumentId& source, const QueueId queue,
       * const size_t dataSize) = 0
       * Copies part of the compute buffer of source vector argument to compute buffer of destination vector argument. The data
       * will be transferred asynchronously in the specified queue.
@@ -300,7 +300,7 @@ public:
       * e.g., WaitForTransferAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded transfer
       * durations may occur.
       */
-    virtual TransferActionId CopyBufferAsync(const ArgumentId destination, const ArgumentId source, const QueueId queue,
+    virtual TransferActionId CopyBufferAsync(const ArgumentId& destination, const ArgumentId& source, const QueueId queue,
         const size_t dataSize = 0) = 0;
 
     /** @fn virtual void WaitForTransferAction(const TransferActionId id) = 0
@@ -309,29 +309,29 @@ public:
       */
     virtual void WaitForTransferAction(const TransferActionId id) = 0;
 
-    /** @fn virtual void ResizeBuffer(const ArgumentId id, const size_t newDataSize, const bool preserveData) = 0
+    /** @fn virtual void ResizeBuffer(const ArgumentId& id, const size_t newDataSize, const bool preserveData) = 0
       * Resizes compute buffer for the specified vector argument.
       * @param id Id of vector argument whose buffer will be resized.
       * @param newDataSize Size in bytes for the resized buffer.
       * @param preserveData If true, data from the old buffer will be copied into resized buffer. If false, the old data will be discarded.
       */
-    virtual void ResizeBuffer(const ArgumentId id, const size_t newDataSize, const bool preserveData) = 0;
+    virtual void ResizeBuffer(const ArgumentId& id, const size_t newDataSize, const bool preserveData) = 0;
 
-    /** @fn virtual void ClearBuffer(const ArgumentId id) = 0
+    /** @fn virtual void ClearBuffer(const ArgumentId& id) = 0
       * Removes compute buffer for the specified vector argument. This method should be used mainly with arguments with
       * ::ArgumentManagementType set to User.
       * @param id Id of vector argument whose buffer will be removed.
       */
-    virtual void ClearBuffer(const ArgumentId id) = 0;
+    virtual void ClearBuffer(const ArgumentId& id) = 0;
 
-    /** @fn virtual bool HasBuffer(const ArgumentId id) = 0
+    /** @fn virtual bool HasBuffer(const ArgumentId& id) = 0
       * Checks whether compute buffer for the specified vector argument exists.
       * @param id Id of vector argument to check.
       * @return True if the buffer for argument exists. False otherwise.
       */
-    virtual bool HasBuffer(const ArgumentId id) = 0;
+    virtual bool HasBuffer(const ArgumentId& id) = 0;
 
-    /** @fn virtual void GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& memoryHandle) = 0
+    /** @fn virtual void GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBufferMemory& memoryHandle) = 0
       * Retrieves memory handle for the specified unified memory argument. The handle can be used to manipulate argument memory
       * on host side. Example usage:
       *     ktt::UnifiedBufferMemory memory;
@@ -340,7 +340,15 @@ public:
       * @param id Id of vector argument whose memory handle will be retrieved.
       * @param memoryHandle Location where the memory handle will be stored.
       */
-    virtual void GetUnifiedMemoryBufferHandle(const ArgumentId id, UnifiedBufferMemory& memoryHandle) = 0;
+    virtual void GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBufferMemory& memoryHandle) = 0;
+
+    /** @fn virtual void GetProfiling() = 0
+      * Signals whether profiling is activated in the kernel
+      * @param id Id of queried kernel.
+      */
+    virtual bool GetProfiling(const KernelId id) = 0;
+
+//    virtual bool GetKernelProfiling
 };
 
 } // namespace ktt

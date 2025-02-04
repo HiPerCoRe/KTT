@@ -30,6 +30,11 @@ void Logger::SetLoggingTarget(const std::string& file)
     m_FileValid = true;
 }
 
+LoggingLevel Logger::GetLoggingLevel() const
+{
+    return m_Level;
+}
+
 void Logger::Log(const LoggingLevel level, const std::string& message) const
 {
     if (static_cast<int>(m_Level) < static_cast<int>(level))

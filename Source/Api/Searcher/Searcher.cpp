@@ -40,6 +40,11 @@ uint64_t Searcher::GetConfigurationsCount() const
     return m_Data->GetTotalConfigurationsCount();
 }
 
+uint64_t Searcher::GetUnexploredConfigurationsCount() const
+{
+  return m_Data->GetTotalConfigurationsCount() - m_Data->GetExploredConfigurations().size();
+}
+
 const std::set<uint64_t>& Searcher::GetExploredIndices() const
 {
     return m_Data->GetExploredConfigurations();

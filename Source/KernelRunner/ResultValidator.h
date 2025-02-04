@@ -25,20 +25,22 @@ public:
     void SetValidationMode(const ValidationMode mode);
 
     void InitializeValidationData(const KernelArgument& argument);
-    void SetValidationRange(const ArgumentId id, const size_t range);
-    void SetValueComparator(const ArgumentId id, ValueComparator comparator);
-    void SetReferenceComputation(const ArgumentId id, ReferenceComputation computation);
-    void SetReferenceKernel(const ArgumentId id, const Kernel& kernel, const KernelConfiguration& configuration);
-    bool HasValidationData(const ArgumentId id) const;
-    void RemoveValidationData(const ArgumentId id);
+    void SetValidationRange(const ArgumentId& id, const size_t range);
+    void SetValueComparator(const ArgumentId& id, ValueComparator comparator);
+    void SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation);
+    void SetReferenceKernel(const ArgumentId& id, const Kernel& kernel, const KernelConfiguration& configuration,
+        const KernelDimensions& dimensions);
+    void SetReferenceArgument(const ArgumentId& id, const KernelArgument& argument);
+    bool HasValidationData(const ArgumentId& id) const;
+    void RemoveValidationData(const ArgumentId& id);
     void RemoveDataWithReferenceKernel(const KernelId id);
 
     void ComputeReferenceResult(const Kernel& kernel, const KernelRunMode runMode);
-    void ComputeReferenceResult(const ArgumentId id);
+    void ComputeReferenceResult(const ArgumentId& id);
     void ClearReferenceResult(const Kernel& kernel);
-    void ClearReferenceResult(const ArgumentId id);
+    void ClearReferenceResult(const ArgumentId& id);
     bool HasReferenceResult(const Kernel& kernel) const;
-    bool HasReferenceResult(const ArgumentId id) const;
+    bool HasReferenceResult(const ArgumentId& id) const;
 
     bool ValidateArguments(const Kernel& kernel, const KernelRunMode runMode) const;
 

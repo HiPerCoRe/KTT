@@ -1,7 +1,18 @@
+#ifdef KTT_PYTHON
+#include <pybind11/stl.h>
+#endif // KTT_PYTHON
+
+#include <Api/StopCondition/ConfigurationCount.h>
 #include <Api/KttException.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/FileSystem.h>
 #include <Tuner.h>
 #include <TunerCore.h>
+
+#ifdef KTT_PYTHON
+#include <Api/Searcher/ProfileBasedSearcher.h>
+#include <Python/PythonInterpreter.h>
+#endif // KTT_PYTHON
 
 namespace ktt
 {
@@ -40,6 +51,12 @@ KernelDefinitionId Tuner::AddKernelDefinition(const std::string& name, const std
     }
 }
 
+KernelDefinitionId Tuner::AddKernelDefinition(const std::string& name, const std::string& source,
+    const std::vector<std::string>& typeNames)
+{
+    return AddKernelDefinition(name, source, DimensionVector(), DimensionVector(), typeNames);
+}
+
 KernelDefinitionId Tuner::AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
     const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames)
 {
@@ -52,6 +69,12 @@ KernelDefinitionId Tuner::AddKernelDefinitionFromFile(const std::string& name, c
         TunerCore::Log(LoggingLevel::Error, exception.what());
         return InvalidKernelDefinitionId;
     }
+}
+
+KernelDefinitionId Tuner::AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
+    const std::vector<std::string>& typeNames)
+{
+    return AddKernelDefinitionFromFile(name, filePath, DimensionVector(), DimensionVector(), typeNames);
 }
 
 KernelDefinitionId Tuner::GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames) const
@@ -142,23 +165,12 @@ void Tuner::SetLauncher(const KernelId id, KernelLauncher launcher)
     }
 }
 
-void Tuner::AddParameter(const KernelId id, const std::string& name, const std::vector<uint64_t>& values, const std::string& group)
+void Tuner::AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
+    const std::string& group)
 {
     try
     {
-        m_Tuner->AddParameter(id, name, values, group);
-    }
-    catch (const KttException& exception)
-    {
-        TunerCore::Log(LoggingLevel::Error, exception.what());
-    }
-}
-
-void Tuner::AddParameter(const KernelId id, const std::string& name, const std::vector<double>& values, const std::string& group)
-{
-    try
-    {
-        m_Tuner->AddParameter(id, name, values, group);
+        m_Tuner->AddScriptParameter(id, name, valueType, valueScript, group);
     }
     catch (const KttException& exception)
     {
@@ -223,11 +235,48 @@ void Tuner::AddThreadModifier(const KernelId id, const std::vector<KernelDefinit
     AddThreadModifier(id, definitionIds, type, dimension, std::vector<std::string>{parameter}, function);
 }
 
+void Tuner::AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
+    const ModifierDimension dimension, const std::string& script)
+{
+    try
+    {
+        m_Tuner->AddScriptThreadModifier(id, definitionIds, type, dimension, script);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
 {
     try
     {
         m_Tuner->AddConstraint(id, parameters, function);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::AddGenericConstraint(const KernelId id, const std::vector<std::string>& parameters, GenericConstraintFunction function)
+{
+    try
+    {
+        m_Tuner->AddGenericConstraint(id, parameters, function);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script)
+{
+    try
+    {
+        m_Tuner->AddScriptConstraint(id, parameters, script);
     }
     catch (const KttException& exception)
     {
@@ -248,11 +297,11 @@ void Tuner::SetProfiledDefinitions(const KernelId id, const std::vector<KernelDe
 }
 
 ArgumentId Tuner::AddArgumentVector(ComputeBuffer buffer, const size_t bufferSize, const size_t elementSize,
-    const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation)
+    const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation, const ArgumentId& customId)
 {
     try
     {
-        return AddUserArgument(buffer, elementSize, ArgumentDataType::Custom, memoryLocation, accessType, bufferSize);
+        return AddUserArgument(buffer, elementSize, ArgumentDataType::Custom, memoryLocation, accessType, bufferSize, customId);
     }
     catch (const KttException& exception)
     {
@@ -261,12 +310,57 @@ ArgumentId Tuner::AddArgumentVector(ComputeBuffer buffer, const size_t bufferSiz
     }
 }
 
-ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize)
+ArgumentId Tuner::AddArgumentVectorFromFile(const std::string& filePath, const ArgumentDataType dataType, const size_t elementSize,
+    const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation, const ArgumentManagementType managementType,
+    const ArgumentId& customId)
+{
+    try
+    {
+        return m_Tuner->AddArgumentWithOwnedDataFromFile(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector,
+            managementType, filePath, customId);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidArgumentId;
+    }
+}
+
+ArgumentId Tuner::AddArgumentVectorFromGenerator(const std::string& generatorFunction, const ArgumentDataType dataType,
+    const size_t bufferSize, const size_t elementSize, const ArgumentAccessType accessType, const ArgumentMemoryLocation memoryLocation,
+    const ArgumentManagementType managementType, const ArgumentId& customId)
+{
+    try
+    {
+        return m_Tuner->AddArgumentWithOwnedDataFromGenerator(elementSize, dataType, memoryLocation, accessType, ArgumentMemoryType::Vector,
+            managementType, generatorFunction, bufferSize, customId);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidArgumentId;
+    }
+}
+
+void Tuner::SaveArgumentVector(const ArgumentId& id, const std::string& filePath)
+{
+    try
+    {
+        m_Tuner->SaveArgument(id, filePath);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize, const ArgumentId& customId)
 {
     try
     {
         return AddArgumentWithOwnedData(dataSize, ArgumentDataType::Custom, ArgumentMemoryLocation::Undefined,
-            ArgumentAccessType::ReadOnly, ArgumentMemoryType::Scalar, ArgumentManagementType::Framework, data, dataSize);
+            ArgumentAccessType::ReadOnly, ArgumentMemoryType::Scalar, ArgumentManagementType::Framework, data, dataSize,
+            customId);
     }
     catch (const KttException& exception)
     {
@@ -275,7 +369,7 @@ ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize)
     }
 }
 
-void Tuner::RemoveArgument(const ArgumentId id)
+void Tuner::RemoveArgument(const ArgumentId& id)
 {
     try
     {
@@ -302,9 +396,15 @@ void Tuner::SetReadOnlyArgumentCache(const bool flag)
 KernelResult Tuner::Run(const KernelId id, const KernelConfiguration& configuration,
     const std::vector<BufferOutputDescriptor>& output)
 {
+    return Run(id, configuration, {}, output);
+}
+
+KernelResult Tuner::Run(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+    const std::vector<BufferOutputDescriptor>& output)
+{
     try
     {
-        return m_Tuner->RunKernel(id, configuration, output);
+        return m_Tuner->RunKernel(id, configuration, dimensions, output);
     }
     catch (const KttException& exception)
     {
@@ -324,6 +424,12 @@ void Tuner::SetProfiling(const bool flag)
         TunerCore::Log(LoggingLevel::Error, exception.what());
     }
 }
+
+bool Tuner::GetProfiling()
+{
+    return m_Tuner->GetProfiling();
+}
+
 
 void Tuner::SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
@@ -349,7 +455,7 @@ void Tuner::SetValidationMode(const ValidationMode mode)
     }
 }
 
-void Tuner::SetValidationRange(const ArgumentId id, const size_t range)
+void Tuner::SetValidationRange(const ArgumentId& id, const size_t range)
 {
     try
     {
@@ -361,7 +467,7 @@ void Tuner::SetValidationRange(const ArgumentId id, const size_t range)
     }
 }
 
-void Tuner::SetValueComparator(const ArgumentId id, ValueComparator comparator)
+void Tuner::SetValueComparator(const ArgumentId& id, ValueComparator comparator)
 {
     try
     {
@@ -373,7 +479,7 @@ void Tuner::SetValueComparator(const ArgumentId id, ValueComparator comparator)
     }
 }
 
-void Tuner::SetReferenceComputation(const ArgumentId id, ReferenceComputation computation)
+void Tuner::SetReferenceComputation(const ArgumentId& id, ReferenceComputation computation)
 {
     try
     {
@@ -385,11 +491,12 @@ void Tuner::SetReferenceComputation(const ArgumentId id, ReferenceComputation co
     }
 }
 
-void Tuner::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, const KernelConfiguration& configuration)
+void Tuner::SetReferenceKernel(const ArgumentId& id, const KernelId referenceId, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions)
 {
     try
     {
-        m_Tuner->SetReferenceKernel(id, referenceId, configuration);
+        m_Tuner->SetReferenceKernel(id, referenceId, configuration, dimensions);
     }
     catch (const KttException& exception)
     {
@@ -397,16 +504,29 @@ void Tuner::SetReferenceKernel(const ArgumentId id, const KernelId referenceId, 
     }
 }
 
-std::vector<KernelResult> Tuner::Tune(const KernelId id)
+void Tuner::SetReferenceArgument(const ArgumentId& id, const ArgumentId& referenceId)
 {
-    return Tune(id, nullptr);
+    try
+    {
+        m_Tuner->SetReferenceArgument(id, referenceId);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
 }
 
 std::vector<KernelResult> Tuner::Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
 {
+    return Tune(id, {}, std::move(stopCondition));
+}
+
+std::vector<KernelResult> Tuner::Tune(const KernelId id, const KernelDimensions& dimensions,
+    std::unique_ptr<StopCondition> stopCondition)
+{
     try
     {
-        return m_Tuner->TuneKernel(id, std::move(stopCondition));
+        return m_Tuner->TuneKernel(id, dimensions, std::move(stopCondition));
     }
     catch (const KttException& exception)
     {
@@ -418,9 +538,15 @@ std::vector<KernelResult> Tuner::Tune(const KernelId id, std::unique_ptr<StopCon
 KernelResult Tuner::TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
     const bool recomputeReference)
 {
+    return TuneIteration(id, {}, output, recomputeReference);
+}
+
+KernelResult Tuner::TuneIteration(const KernelId id, const KernelDimensions& dimensions,
+    const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
+{
     try
     {
-        return m_Tuner->TuneKernelIteration(id, output, recomputeReference);
+        return m_Tuner->TuneKernelIteration(id, dimensions, output, recomputeReference);
     }
     catch (const KttException& exception)
     {
@@ -432,9 +558,16 @@ KernelResult Tuner::TuneIteration(const KernelId id, const std::vector<BufferOut
 std::vector<KernelResult> Tuner::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
     const uint64_t iterations)
 {
+    const uint64_t configurationCount = iterations == 0 ? std::numeric_limits<uint64_t>::max() : iterations;
+    return SimulateTuning(id, results, std::make_unique<ConfigurationCount>(configurationCount));
+}
+
+std::vector<KernelResult> Tuner::SimulateTuning(const KernelId id, const std::vector<KernelResult>& results,
+    std::unique_ptr<StopCondition> stopCondition)
+{
     try
     {
-        return m_Tuner->SimulateKernelTuning(id, results, iterations);
+        return m_Tuner->SimulateKernelTuning(id, results, std::move(stopCondition));
     }
     catch (const KttException& exception)
     {
@@ -455,15 +588,77 @@ void Tuner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
     }
 }
 
-void Tuner::ClearData(const KernelId id)
+void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_unused]] const std::string& modelPath, [[maybe_unused]] const bool useBuiltinModule, [[maybe_unused]] const uint batchSize, [[maybe_unused]] const uint neighborSize, [[maybe_unused]] const uint randomSize)
 {
     try
     {
-        m_Tuner->ClearData(id);
+        #ifndef KTT_PYTHON
+        throw KttException("Usage of profile-based searcher requires compilation of Python backend");
+        #else
+        if (useBuiltinModule)
+        {
+            SaveStringToFile(ProfileBasedSearcherFile, ProfileBasedSearcherModule);
+        }
+
+        auto& interpreter = PythonInterpreter::GetInterpreter();
+        pybind11::gil_scoped_acquire acquire;
+        pybind11::module_ searcher = pybind11::module_::import(ProfileBasedSearcherName.c_str());
+        searcher.attr("executeSearcher")(this, id, modelPath, batchSize, neighborSize, randomSize, this->GetLoggingLevel());
+        interpreter.ReleaseInterpreter();
+
+        #endif // KTT_PYTHON
     }
     catch (const KttException& exception)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+    #ifdef KTT_PYTHON
+    catch (const pybind11::error_already_set& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+    #endif // KTT_PYTHON
+}
+
+void Tuner::InitializeConfigurationData(const KernelId id)
+{
+    try
+    {
+        m_Tuner->InitializeConfigurationData(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::ClearConfigurationData(const KernelId id)
+{
+    try
+    {
+        m_Tuner->ClearConfigurationData(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::ClearData(const KernelId id)
+{
+    ClearConfigurationData(id);
+}
+
+uint64_t Tuner::GetConfigurationsCount(const KernelId id) const
+{
+    try
+    {
+        return m_Tuner->GetConfigurationsCount(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return 0;
     }
 }
 
@@ -660,11 +855,11 @@ void Tuner::SetProfilingCounters(const std::vector<std::string>& counters)
     }
 }
 
-void Tuner::SetCompilerOptions(const std::string& options)
+void Tuner::SetCompilerOptions(const std::string& options, const bool overrideDefault)
 {
     try
     {
-        m_Tuner->SetCompilerOptions(options);
+        m_Tuner->SetCompilerOptions(options, overrideDefault);
     }
     catch (const KttException& exception)
     {
@@ -752,6 +947,11 @@ void Tuner::SetLoggingLevel(const LoggingLevel level)
     TunerCore::SetLoggingLevel(level);
 }
 
+LoggingLevel Tuner::GetLoggingLevel()
+{
+    return TunerCore::GetLoggingLevel();
+}
+
 void Tuner::SetLoggingTarget(std::ostream& outputTarget)
 {
     TunerCore::SetLoggingTarget(outputTarget);
@@ -764,12 +964,12 @@ void Tuner::SetLoggingTarget(const std::string& filePath)
 
 ArgumentId Tuner::AddArgumentWithReferencedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, void* data, const size_t dataSize)
+    const ArgumentManagementType managementType, void* data, const size_t dataSize, const ArgumentId& customId)
 {
     try
     {
         return m_Tuner->AddArgumentWithReferencedData(elementSize, dataType, memoryLocation, accessType, memoryType, managementType,
-            data, dataSize);
+            data, dataSize, customId);
     }
     catch (const KttException& exception)
     {
@@ -780,12 +980,13 @@ ArgumentId Tuner::AddArgumentWithReferencedData(const size_t elementSize, const 
 
 ArgumentId Tuner::AddArgumentWithOwnedData(const size_t elementSize, const ArgumentDataType dataType,
     const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const ArgumentMemoryType memoryType,
-    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const std::string& symbolName)
+    const ArgumentManagementType managementType, const void* data, const size_t dataSize, const ArgumentId& customId,
+    const std::string& symbolName)
 {
     try
     {
         return m_Tuner->AddArgumentWithOwnedData(elementSize, dataType, memoryLocation, accessType, memoryType, managementType,
-            data, dataSize, symbolName);
+            data, dataSize, customId, symbolName);
     }
     catch (const KttException& exception)
     {
@@ -795,16 +996,29 @@ ArgumentId Tuner::AddArgumentWithOwnedData(const size_t elementSize, const Argum
 }
 
 ArgumentId Tuner::AddUserArgument(ComputeBuffer buffer, const size_t elementSize, const ArgumentDataType dataType,
-    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize)
+    const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize, const ArgumentId& customId)
 {
     try
     {
-        return m_Tuner->AddUserArgument(buffer, elementSize, dataType, memoryLocation, accessType, dataSize);
+        return m_Tuner->AddUserArgument(buffer, elementSize, dataType, memoryLocation, accessType, dataSize, customId);
     }
     catch (const KttException& exception)
     {
         TunerCore::Log(LoggingLevel::Error, exception.what());
         return InvalidArgumentId;
+    }
+}
+
+void Tuner::AddParameterInternal(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values,
+    const std::string& group)
+{
+    try
+    {
+        m_Tuner->AddParameter(id, name, values, group);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
     }
 }
 

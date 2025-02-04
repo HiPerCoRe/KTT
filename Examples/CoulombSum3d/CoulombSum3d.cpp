@@ -15,6 +15,7 @@ const std::string kernelPrefix = "../";
     const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cu";
     const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3dReference.cu";
     const auto computeApi = ktt::ComputeApi::CUDA;
+    const std::string defaultMlModel = kernelPrefix + "../Examples/CoulombSum3d/Models/2080-coulomb_output_DT.sav";
 #elif KTT_OPENCL_EXAMPLE
     const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cl";
     const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3dReference.cl";
@@ -25,13 +26,16 @@ const std::string kernelPrefix = "../";
 const bool rapidTest = false;
 
 // Toggle kernel profiling.
-const bool useProfiling = false;
+const bool useProfiling = true;
 
 // Add denser values to tuning parameters (useDenseParameters = true).
 const bool useDenseParameters = false;
 
 // Add wider ranges of tuning parameters (useWideParameters  = true).
 const bool useWideParameters = false;
+
+// Toggle usage of profile-based searcher
+const bool useProfileSearcher = false;
 
 int main(int argc, char** argv)
 {
@@ -62,16 +66,7 @@ int main(int argc, char** argv)
 
     // Declare and initialize data
     const int gridSize = 256;
-    int atoms;
-
-    if constexpr (!useProfiling)
-    {
-        atoms = 4000;
-    }
-    else
-    {
-        atoms = 64; /* faster execution of slowly profiled kernel */
-    }
+    int atoms = 64;
 
     const ktt::DimensionVector referenceNdRangeDimensions(gridSize / 16, gridSize / 16, gridSize);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
@@ -156,6 +151,7 @@ int main(int argc, char** argv)
     if constexpr (!useDenseParameters && !useWideParameters)
     {
         tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8});
+        //tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{2,4});
     }
     else if constexpr (!useWideParameters)
     {
@@ -175,6 +171,7 @@ int main(int argc, char** argv)
     if constexpr (!useDenseParameters && !useWideParameters)
     {
         tuner.AddParameter(kernel, "Z_ITERATIONS", std::vector<uint64_t>{1, 2, 4, 8, 16, 32});
+        //tuner.AddParameter(kernel, "Z_ITERATIONS", std::vector<uint64_t>{1, 2});
     }
     else
     {
@@ -187,6 +184,7 @@ int main(int argc, char** argv)
     if constexpr (!useDenseParameters && !useWideParameters)
     {
         tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+        //tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR", std::vector<uint64_t>{0});
     }
     else
     {
@@ -198,19 +196,22 @@ int main(int argc, char** argv)
         tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "VECTOR_SIZE", std::vector<uint64_t>{1, 2 , 4, 8, 16});
+
+        auto vec = [](const std::vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1; };
+        tuner.AddConstraint(kernel, { "USE_SOA", "VECTOR_SIZE" }, vec);
     }
     else
     {
         // Not implemented in CUDA
         tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
         tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
+        //tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0});
         tuner.AddParameter(kernel, "VECTOR_SIZE", std::vector<uint64_t>{1});
     }
 
     auto lt = [](const std::vector<uint64_t>& vector) {return vector.at(0) < vector.at(1);};
     tuner.AddConstraint(kernel, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"}, lt);
-    auto vec = [](const std::vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1;};
-    tuner.AddConstraint(kernel, {"USE_SOA", "VECTOR_SIZE"}, vec);
+
     auto par = [](const std::vector<uint64_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
     tuner.AddConstraint(kernel, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, par);
 
@@ -224,9 +225,18 @@ int main(int argc, char** argv)
         tuner.SetReferenceKernel(gridId, referenceKernel, ktt::KernelConfiguration());
         tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
+    tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
 
-    const auto results = tuner.Tune(kernel);
+#if KTT_CUDA_EXAMPLE
+    if constexpr (useProfileSearcher)
+    {
+        tuner.SetProfileBasedSearcher(kernel, defaultMlModel, false);
+    }
+#endif
+
+    const auto results = tuner.Tune(kernel/*, std::make_unique<ktt::ConfigurationCount>(1)*/);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
+    tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::XML);
 
     return 0;
 }

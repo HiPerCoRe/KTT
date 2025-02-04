@@ -250,9 +250,9 @@ protected:
         process_attributes<Extra...>::init(extra..., rec);
 
         {
-            constexpr bool has_kw_only_args = any_of<std::is_same<kw_only, Extra>...>::value,
-                           has_pos_only_args = any_of<std::is_same<pos_only, Extra>...>::value,
-                           has_arg_annotations = any_of<is_keyword<Extra>...>::value;
+            [[maybe_unused]] constexpr bool has_kw_only_args = any_of<std::is_same<kw_only, Extra>...>::value;
+            [[maybe_unused]] constexpr bool has_pos_only_args = any_of<std::is_same<pos_only, Extra>...>::value;
+            [[maybe_unused]] constexpr bool has_arg_annotations = any_of<is_keyword<Extra>...>::value;
             static_assert(has_arg_annotations || !has_kw_only_args, "py::kw_only requires the use of argument annotations");
             static_assert(has_arg_annotations || !has_pos_only_args, "py::pos_only requires the use of argument annotations (for docstrings and aligning the annotations to the argument)");
 

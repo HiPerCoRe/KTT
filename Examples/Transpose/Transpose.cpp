@@ -25,7 +25,7 @@ const std::string kernelPrefix = "../";
 const bool rapidTest = false;
 
 // Toggle kernel profiling.
-const bool useProfiling = false;
+const bool useProfiling = true;
 
 // Add denser values to tuning parameters (useDenseParameters = true).
 const bool useDenseParameters = false;
@@ -71,8 +71,8 @@ int main(int argc, char **argv)
     }
     else
     {
-        width = 4096;
-        height = 4096;
+        width = 4096*2;
+        height = 4096*2;
     }
 
     const ktt::DimensionVector ndRangeDimensions(width, height);
@@ -97,6 +97,7 @@ int main(int argc, char **argv)
     ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
     tuner.SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+    //tuner.SetLoggingLevel(ktt::LoggingLevel::Debug);
 
     if constexpr (useProfiling)
     {
@@ -159,7 +160,7 @@ int main(int argc, char **argv)
     
     // Constraint tuning space
     auto xConstraint = [] (const std::vector<uint64_t>& v) { return (v[0] == v[1]); };
-    auto yConstraint = [] (const std::vector<uint64_t>& v) { return (v[1] <= v[0]); };
+    auto yConstraint = [] (const std::vector<uint64_t>& v) { return ((v[1] <= v[0]) && (v[0] % v[1] == 0)); };
     auto tConstraint = [] (const std::vector<uint64_t>& v) { return (!v[0] || (v[1] <= v[2]*v[3])); };
     auto pConstraint = [] (const std::vector<uint64_t>& v) { return (v[0] || !v[1]); };
     auto vlConstraint = [] (const std::vector<uint64_t>& v) { return (!v[0] || v[1] == 1); };
@@ -201,8 +202,9 @@ int main(int argc, char **argv)
     }
 
     // Perform tuning
-    const auto results = tuner.Tune(kernel);
-    tuner.SaveResults(results, "TranspositionOutput.csv", ktt::OutputFormat::JSON);
+    const auto results = tuner.Tune(kernel/*, std::make_unique<ktt::ConfigurationCount>(1)*/);
+    tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::XML);
+    tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::JSON);
 
     return 0;
 }
