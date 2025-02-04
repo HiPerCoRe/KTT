@@ -86,7 +86,7 @@ public:
 
     /** @fn void SetProfilingRunsOverhead(const Nanoseconds overhead)
       * Sets time of kernels executed to collect performance counters.
-      * @param Duration of kernels executed just to collect performance counters.
+      * @param overhead Duration of kernels executed just to collect performance counters.
       */
     void SetProfilingRunsOverhead(const Nanoseconds overhead);
 

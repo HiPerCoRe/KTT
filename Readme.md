@@ -2,23 +2,21 @@ KTT - Kernel Tuning Toolkit
 ===========================
 <img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogo.png" width="425" height="150"/>
 
-KTT is an autotuning framework for **OpenCL**, **CUDA** kernels and **GLSL** compute shaders. It primarily focus to
-GPU accelerators, but can be used to auto-tune also code for different devices (e.g., CPUs) when OpenCL is utilized. 
-Version 2.1 which introduces API bindings for Python and new onboarding guide is now available.
+KTT is an autotuning framework for **OpenCL**, **CUDA** kernels and experimental support for **GLSL** compute shaders. It primarily focus to
+GPU accelerators, but can be used to auto-tune also code for different devices (e.g., CPUs) when OpenCL is utilized. KTT core is implemented in C++, but version 2.2 allows its usage from Python or loading autotuning configurations from JSON files. The C++ core brings high performance, low latency, and allows dynamic tuning (i.e., autotuning during application runtime).
 
 Main features
 -------------
-* Ability to define kernel tuning parameters such as kernel thread sizes, vector data types and loop unroll factors
-to optimize computation for a particular device.
-* Support for iterative kernel launches and composite kernels.
+* Ability to define kernel tuning parameters such as kernel thread block sizes, vector data types and loop unroll factors to optimize computation for a particular device.
+* Support for iterative kernel launches and composite kernels, allowing sharing tuning parameters among multiple kernels (e.g., layout of intermediate date).
 * Support for multiple compute queues and asynchronous operations.
-* Support for online auto-tuning - kernel tuning combined with regular kernel running.
+* Support for dynamic auto-tuning - kernel tuning combined with regular kernel running.
 * Ability to automatically ensure the correctness of tuned computation with reference kernel or C++ function.
-* Support for multiple compute APIs, switching between CUDA, OpenCL and Vulkan requires only minor changes in C++ code
-(e.g., changing the kernel source file), no library recompilation is needed.
-* Public API available in C++ (native) and Python (bindings).
-* Many customization options, including support for kernel arguments with user-defined data types, ability to change
-kernel compiler flags and more.
+* Support for multiple compute APIs, switching between CUDA, OpenCL and Vulkan requires only minor changes in C++ code (e.g., changing the kernel source file), no library recompilation is needed.
+* Public API available in C++ (native) and Python (bindings), tuning configuration can be loaded from JSON, allowing interoperability with other autotuning frameworks (so far [Kernel Tuner](https://github.com/KernelTuner/kernel_tuner)).
+* Advanced profile-based searcher, laveraging hardware performance counters and machine learning to navigate tuning spaces quickly.
+* Mearuring energy consumption with CUDA devices.
+* Many customization options, including support for kernel arguments with user-defined data types, ability to change kernel compiler flags and more.
 
 Getting started
 ---------------
@@ -89,6 +87,9 @@ systems are Linux and Windows.
     - `--power-usage` Enables compilation of device power usage collection functionality. This feature is currently supported only on Nvidia platform.
     - `--vulkan` Enables compilation of experimental Vulkan backend.
     - `--python` Enables compilation of Python bindings.
+    - `--tuning-loader` Enables compilation of tuning loader, loading tuning settings from JSON.
+    - `--power-usage` Enables measuring power and energy consumption.
+    - `--power-usage-repeats=repeats` Experimental. Sets how many times are kernel repeated to obtain reliable power measurement (the kernel runtime should be around 1/10s).
     - `--no-examples` Disables compilation of examples.
     - `--no-tutorials` Disables compilation of tutorials.
     - `--tests` Enables compilation of unit tests.
@@ -138,6 +139,8 @@ structure is completely rewritten from scratch. The ClTuneGemm and ClTuneConvolu
 KTT search space generation and tuning configuration storage techniques are derived from [ATF project](https://dl.acm.org/doi/10.1145/3427093).
 Due to differences in API and available framework features, certain modifications were made to the original ATF algorithms. The examples stored
 in AtfSamples folder are adopted from ATF.
+
+We develop unified JSON input for tuning configurations and output of tuning results with [Kernel Tuner](https://github.com/KernelTuner/kernel_tuner). Unifying input and output allows interoperability between our tuners.
 
 How to cite
 -----------
