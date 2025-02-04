@@ -26,7 +26,8 @@ var hierarchy =
       [ "ktt::ConfigurationCount", "classktt_1_1_configuration_count.html", null ],
       [ "ktt::ConfigurationDuration", "classktt_1_1_configuration_duration.html", null ],
       [ "ktt::ConfigurationFraction", "classktt_1_1_configuration_fraction.html", null ],
-      [ "ktt::TuningDuration", "classktt_1_1_tuning_duration.html", null ]
+      [ "ktt::TuningDuration", "classktt_1_1_tuning_duration.html", null ],
+      [ "ktt::UnionCondition", "classktt_1_1_union_condition.html", null ]
     ] ],
     [ "ktt::Tuner", "classktt_1_1_tuner.html", null ]
 ];

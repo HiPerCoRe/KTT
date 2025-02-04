@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['nanoseconds_0',['Nanoseconds',['../namespacektt.html#a69f2894ba0d3d4a800a74961572a7461',1,'ktt']]]
+  ['modifierfunction_0',['ModifierFunction',['../namespacektt.html#ad8b6453e21ff3d1bf4208886d9af8810',1,'ktt']]]
 ];

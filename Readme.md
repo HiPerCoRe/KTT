@@ -1,6 +1,6 @@
 KTT - Kernel Tuning Toolkit
 ===========================
-<img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogo.png" width="425" height="150"/>
+<img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogoColor.png" width="425" height="150"/>
 
 KTT is an autotuning framework for **OpenCL**, **CUDA** kernels and experimental support for **GLSL** compute shaders. It primarily focus to
 GPU accelerators, but can be used to auto-tune also code for different devices (e.g., CPUs) when OpenCL is utilized. KTT core is implemented in C++, but version 2.2 allows its usage from Python or loading autotuning configurations from JSON files. The C++ core brings high performance, low latency, and allows dynamic tuning (i.e., autotuning during application runtime).
