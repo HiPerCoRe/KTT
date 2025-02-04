@@ -25,7 +25,11 @@ for kr in res.findall('KernelResult') :
             for ct in cts.findall('Counter') :
                 print(ct.attrib['Name'], end = ',')
         break
-print('Maximum work-group size,Local memory size,Private memory size,Constant memory size,Registers count')
+print('Maximum work-group size,Local memory size,Private memory size,Constant memory size,Registers count', end = '')
+if 'PowerUsage' in cr.attrib :
+    print(',Power,Energy')
+else :
+    print('')
 
 # Extract data into CSV
 for kr in res.findall('KernelResult') :
@@ -53,4 +57,8 @@ for kr in res.findall('KernelResult') :
                 print(ct.attrib['Value'], end = ',')
 
         cd = cr.find('CompilationData')
-        print(cd.attrib['MaxWorkGroupSize'] + ',' + cd.attrib['LocalMemorySize'] + ',' + cd.attrib['PrivateMemorySize'] + ',' + cd.attrib['ConstantMemorySize'] + ',' + cd.attrib['RegistersCount'])
+        print(cd.attrib['MaxWorkGroupSize'] + ',' + cd.attrib['LocalMemorySize'] + ',' + cd.attrib['PrivateMemorySize'] + ',' + cd.attrib['ConstantMemorySize'] + ',' + cd.attrib['RegistersCount'], end = '')
+        if 'PowerUsage' in cr.attrib :
+            print(',' + cr.attrib['PowerUsage'] + ',' + vr.attrib['EnergyConsumption'])
+        else :
+            print('') #add newline
