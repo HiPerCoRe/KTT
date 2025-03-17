@@ -665,6 +665,12 @@ project "TransposeOpenCl"
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
+project "DummyOpenCl"
+    kind "ConsoleApp"
+    files {"Examples/Dummy/*.cpp", "Examples/Dummy/*.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+    links {"ktt"}
 end -- openClProjects
     
 if cudaProjects then
@@ -753,6 +759,12 @@ project "KernelTunerPnpolyCuda"
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
+project "DummyCuda"
+    kind "ConsoleApp"
+    files {"Examples/Dummy/*.cpp", "Examples/Dummy/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
 end -- cudaProjects
     
 end -- _OPTIONS["no-examples"]
