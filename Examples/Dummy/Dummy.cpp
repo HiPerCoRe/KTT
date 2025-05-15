@@ -27,7 +27,7 @@ const std::string kernelPrefix = "../";
 #endif
 
 // Toggle kernel profiling.
-const bool useProfiling = false;
+const bool useProfiling = true;
 
 int main(int argc, char** argv)
 {
@@ -117,6 +117,7 @@ int main(int argc, char** argv)
 
     tuner.AddParameter(kernel, "DUMMY_1", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8});
     tuner.AddParameter(kernel, "DUMMY_2", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8});
+    tuner.AddParameter(kernel, "DUMMY_3", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8});
 
     tuner.SetArguments(definition, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridDim, gridId});
 
