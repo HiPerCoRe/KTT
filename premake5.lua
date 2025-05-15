@@ -765,6 +765,13 @@ project "DummyCuda"
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
+
+project "MicrobenchmarksCuda"
+    kind "ConsoleApp"
+    files {"Examples/Microbenchmarks/*.cpp", "Examples/Microbenchmarks/*.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+    links {"ktt"}
 end -- cudaProjects
     
 end -- _OPTIONS["no-examples"]
