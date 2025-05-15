@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     const ktt::ArgumentId repeatsId = tuner.AddArgumentScalar(repeats);
 
     tuner.AddParameter(kernelMemstress, "BLOCK", 
-        std::vector<uint64_t>{/*64, 128, */256/*, 512, 1024*/});
+        std::vector<uint64_t>{64, 128, 256, 512, 1024});
     /*tuner.AddParameter(kernelMemstress, "OPS_PER_THREAD", 
         std::vector<uint64_t>{1, 2, 4, 8, 16, 32});*/
     tuner.AddThreadModifier(kernelMemstress, {defMemstress},

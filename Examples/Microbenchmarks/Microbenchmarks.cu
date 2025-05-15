@@ -7,7 +7,7 @@ extern "C" __global__ void stressMem(const int* __restrict__ input, int* __restr
 
     for (int i = 0; i < repeats; i++) {
         res += input[id];
-        id = (id + gridDim.x*BLOCK + 11*256)&(dataSize-1);
+        id = (id + gridDim.x*BLOCK + 59*256)&(dataSize-1);
         //id = (id+BLOCK*11)&(dataSize-1);
     }
 
