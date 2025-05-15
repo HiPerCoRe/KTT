@@ -4,7 +4,7 @@ extern "C" __global__ void directCoulombSum(const float4* atomInfo, const float*
     int yIndex = blockIdx.y*blockDim.y + threadIdx.y;
     int zIndex = (blockIdx.z*blockDim.z + threadIdx.z) * Z_ITERATIONS;
 
-    if ((xIndex >= gridSize) || (yIndex >= gridSize) || (xIndex >= gridSize))
+    if ((xIndex >= gridSize) || (yIndex >= gridSize) || (zIndex >= gridSize))
         return;
         
     int sliceOffset = gridSize * gridSize;

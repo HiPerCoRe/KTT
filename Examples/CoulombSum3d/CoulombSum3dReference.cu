@@ -4,7 +4,7 @@ extern "C" __global__ void directCoulombSumReference(float4* atomInfo, int numbe
     int yIndex = blockIdx.y*blockDim.y + threadIdx.y;
     int zIndex = blockIdx.z*blockDim.z + threadIdx.z;
     
-    if ((xIndex >= gridSize) || (yIndex >= gridSize) || (xIndex >= gridSize))
+    if ((xIndex >= gridSize) || (yIndex >= gridSize) || (zIndex >= gridSize))
         return;
 
 	int outIndex = blockDim.y*gridDim.y * blockDim.x*gridDim.x * zIndex + blockDim.x*gridDim.x * yIndex + xIndex;

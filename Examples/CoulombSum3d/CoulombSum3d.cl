@@ -33,7 +33,7 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS float4* atomInfo, MEMORY_TYPE_SOA
     int yIndex = get_global_id(1);
     int zIndex = get_global_id(2)*Z_ITERATIONS;
 
-    if ((xIndex >= gridSize) || (yIndex >= gridSize) || (xIndex >= gridSize))
+    if ((xIndex >= gridSize) || (yIndex >= gridSize) || (zIndex >= gridSize))
         return;
         
     int sliceOffset = gridSize * gridSize;
