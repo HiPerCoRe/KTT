@@ -8,8 +8,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <cassert>
-
+#include <algorithm>
 #include <Ktt.h>
 
 #if defined(_MSC_VER)
@@ -27,7 +26,7 @@ const std::string kernelPrefix = "../";
 #endif
 
 // Toggle kernel profiling.
-const bool useProfiling = true;
+const bool useProfiling = false;
 
 const ktt::KernelResult& getBestResult(const std::vector<ktt::KernelResult>& res) {
     ktt::Nanoseconds bestTime = res[0].GetKernelDuration();
@@ -62,17 +61,18 @@ int main(int argc, char** argv)
     }
 
     // Declare and initialize data
-    const int kernelSize = 1024*1024*128;
-    const int dataRealSize = 1024*1024*1024; // memory footprint
-    const long long int copyDataSize = (long long int)(1024*1024*1024)*100; //XXX transfered data = dataRealSize*copyDataSize, data must be big, or we are measuring just kernel overhead otherwise
+    const int kernelSize = 1024*1024*32;
+    const int touchedDataSize = 1024*1024*1024; // memory footprint
+    const long long int copyDataSize = (long long int)(1024*1024*1024)*10; 
     const int repeats = copyDataSize/kernelSize;
-    assert(copyDataSize%kernelSize == 0);
+
+    const long long int sumTransferred = (long long int)(kernelSize) * (long long int)(repeats+1) * 4; //XXX +1 for writes
 
     const ktt::DimensionVector ndRangeDimensions(kernelSize);
     const ktt::DimensionVector workGroupDimensions(1);
 
-    std::vector<int> input(dataRealSize/4);
-    std::vector<int> output(dataRealSize/4);
+    std::vector<int> input(touchedDataSize/4);
+    std::vector<int> output(std::max(touchedDataSize/4, kernelSize));
 
     ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
     tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
@@ -95,11 +95,11 @@ int main(int argc, char** argv)
         ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId outputId = tuner.AddArgumentVector(output, 
         ktt::ArgumentAccessType::WriteOnly);
-    const ktt::ArgumentId sizeId = tuner.AddArgumentScalar(dataRealSize/4);
+    const ktt::ArgumentId sizeId = tuner.AddArgumentScalar(touchedDataSize/4);
     const ktt::ArgumentId repeatsId = tuner.AddArgumentScalar(repeats);
 
     tuner.AddParameter(kernelMemstress, "BLOCK", 
-        std::vector<uint64_t>{64, 128, 256, 512, 1024});
+        std::vector<uint64_t>{/*64, 128, */256/*, 512, 1024*/});
     /*tuner.AddParameter(kernelMemstress, "OPS_PER_THREAD", 
         std::vector<uint64_t>{1, 2, 4, 8, 16, 32});*/
     tuner.AddThreadModifier(kernelMemstress, {defMemstress},
@@ -124,10 +124,11 @@ int main(int argc, char** argv)
     std::cout << "Mem stress test performed.\n";
     std::cout << "Fastest kernel conf: "
         << bestTime.GetConfiguration().GetString() << "\n"
-        << "Fastest kernel time and energy: " 
+        << "Fastest kernel time, energy, and power: " 
         << bestTime.GetKernelDuration() << "ns, "
-        << bestTime.GetResults()[0].GetEnergyConsumption()*1000 << "mj\n"
-        << "performance: " << copyDataSize / bestTime.GetKernelDuration() 
+        << bestTime.GetResults()[0].GetEnergyConsumption()*1000 << "mJ, "
+        << bestTime.GetResults()[0].GetPowerUsage() << "mW\n"
+        << "performance: " << sumTransferred / bestTime.GetKernelDuration()
         << "GB/s\n";
 
     return 0;
