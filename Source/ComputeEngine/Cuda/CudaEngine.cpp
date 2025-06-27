@@ -161,6 +161,12 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         //uint64_t energyEnd = m_PowerManager->GetTotalDeviceEnergy();
         const uint32_t powerUsage = m_PowerManager->GetPowerUsage();
         action->SetPowerUsage(powerUsage);
+        const uint32_t temperature = m_PowerManager->GetTemperature();
+        action->SetTemperature(temperature);
+        const uint32_t smFrequency = m_PowerManager->GetSMFrequency();
+        action->SetSMFrequency(smFrequency);
+        const uint32_t memFrequency = m_PowerManager->GetMemoryFrequency();
+        action->SetMemoryFrequency(memFrequency);
     }
 #endif // KTT_POWER_USAGE_NVML
 

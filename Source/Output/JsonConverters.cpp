@@ -272,6 +272,21 @@ void to_json(json& j, const ComputationResult& result)
         j["PowerUsage"] = result.GetPowerUsage();
         j["EnergyConsumption"] = result.GetEnergyConsumption();
     }
+
+    if (result.HasTemperatureData())
+    {
+        j["Temperature"] = result.GetTemperature();
+    }
+
+    if (result.HasSMFrequencyData())
+    {
+        j["SMFrequency"] = result.GetSMFrequency();
+    }
+
+    if (result.HasMemoryFrequencyData())
+    {
+        j["MemoryFrequency"] = result.GetMemoryFrequency();
+    }
 }
 
 void from_json(const json& j, ComputationResult& result)
@@ -327,6 +342,27 @@ void from_json(const json& j, ComputationResult& result)
         uint32_t powerUsage;
         j.at("PowerUsage").get_to(powerUsage);
         result.SetPowerUsage(powerUsage);
+    }
+
+    if (j.contains("Temperature"))
+    {
+        uint32_t temperature;
+	j.at("Temperature").get_to(temperature);
+	result.SetTemperature(temperature);
+    }
+
+    if (j.contains("SMFrequency"))
+    {
+        uint32_t frequency;
+        j.at("SMFrequency").get_to(frequency);
+        result.SetSMFrequency(frequency);
+    }
+
+    if (j.contains("MemoryFrequency"))
+    {
+        uint32_t frequency;
+        j.at("MemoryFrequency").get_to(frequency);
+        result.SetMemoryFrequency(frequency);
     }
 }
 

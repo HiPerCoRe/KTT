@@ -264,6 +264,15 @@ void KernelResult::TransferPowerData(const KernelResult& previousResult)
         if (previousResult.GetResults()[i].HasPowerData())
             m_Results[i].SetPowerUsage(
                 previousResult.GetResults()[i].GetPowerUsage());
+	if (previousResult.GetResults()[i].HasTemperatureData())
+            m_Results[i].SetTemperature(
+                previousResult.GetResults()[i].GetTemperature());
+	if (previousResult.GetResults()[i].HasSMFrequencyData())
+            m_Results[i].SetSMFrequency(
+                previousResult.GetResults()[i].GetSMFrequency());
+        if (previousResult.GetResults()[i].HasMemoryFrequencyData())
+            m_Results[i].SetMemoryFrequency(
+                previousResult.GetResults()[i].GetMemoryFrequency());
     }
 }
 
