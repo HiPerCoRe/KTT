@@ -25,6 +25,9 @@ public:
     void IncreaseCompilationOverhead(const Nanoseconds overhead);
     void SetComputeId(const KernelComputeId& id);
     void SetPowerUsage(const uint32_t powerUsage);
+    void SetTemperature(const uint32_t temperature);
+    void SetSMFrequency(const uint32_t smFrequency);
+    void SetMemoryFrequency(const uint32_t memoryFrequency);
     void WaitForFinish();
 
     ComputeActionId GetId() const;
@@ -50,6 +53,9 @@ private:
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;
     std::optional<uint32_t> m_PowerUsage;
+    std::optional<uint32_t> m_Temperature;
+    std::optional<uint32_t> m_SMFrequency;
+    std::optional<uint32_t> m_MemoryFrequency;
 };
 
 } // namespace ktt

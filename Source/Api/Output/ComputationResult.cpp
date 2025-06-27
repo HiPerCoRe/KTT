@@ -26,7 +26,10 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     m_Duration(other.m_Duration),
     m_Overhead(other.m_Overhead),
     m_CompilationOverhead(other.m_CompilationOverhead),
-    m_PowerUsage(other.m_PowerUsage)
+    m_PowerUsage(other.m_PowerUsage),
+    m_Temperature(other.m_Temperature),
+    m_SMFrequency(other.m_SMFrequency),
+    m_MemFrequency(other.m_MemFrequency)
 {
     if (other.HasCompilationData())
     {
@@ -41,6 +44,21 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     if (other.HasPowerData())
     {
         m_PowerUsage = other.GetPowerUsage();
+    }
+
+    if (other.HasTemperatureData())
+    {
+        m_Temperature = other.GetTemperature();
+    }
+
+    if (other.HasSMFrequencyData())
+    {
+        m_SMFrequency = other.GetSMFrequency();
+    }
+
+    if (other.HasMemoryFrequencyData())
+    {
+        m_MemFrequency = other.GetMemoryFrequency();
     }
 }
 
@@ -70,6 +88,21 @@ void ComputationResult::SetProfilingData(std::unique_ptr<KernelProfilingData> da
 void ComputationResult::SetPowerUsage(const uint32_t powerUsage)
 {
     m_PowerUsage = powerUsage;
+}
+
+void ComputationResult::SetTemperature(const uint32_t temperature)
+{
+    m_Temperature = temperature;
+}
+
+void ComputationResult::SetSMFrequency(const uint32_t frequency)
+{
+    m_SMFrequency = frequency;
+}
+
+void ComputationResult::SetMemoryFrequency(const uint32_t frequency)
+{
+    m_MemFrequency = frequency;
 }
 
 const std::string& ComputationResult::GetKernelFunction() const
@@ -147,6 +180,21 @@ bool ComputationResult::HasPowerData() const
     return m_PowerUsage.has_value();
 }
 
+bool ComputationResult::HasTemperatureData() const
+{   
+    return m_Temperature.has_value();
+}
+
+bool ComputationResult::HasSMFrequencyData() const
+{
+    return m_SMFrequency.has_value();
+}
+
+bool ComputationResult::HasMemoryFrequencyData() const
+{
+    return m_MemFrequency.has_value();
+}
+
 uint32_t ComputationResult::GetPowerUsage() const
 {
     if (!HasPowerData())
@@ -155,6 +203,36 @@ uint32_t ComputationResult::GetPowerUsage() const
     }
 
     return m_PowerUsage.value();
+}
+
+uint32_t ComputationResult::GetTemperature() const
+{   
+    if (!HasTemperatureData())
+    {
+        throw KttException("Temperature can only be retrieved after prior check that it exists");
+    }
+
+    return m_Temperature.value();
+}
+
+uint32_t ComputationResult::GetSMFrequency() const
+{
+    if (!HasSMFrequencyData())
+    {
+        throw KttException("SM frequency can only be retrieved after prior check that it exists");
+    }
+
+    return m_SMFrequency.value();
+}
+
+uint32_t ComputationResult::GetMemoryFrequency() const
+{
+    if (!HasMemoryFrequencyData())
+    {
+        throw KttException("Memory frequency can only be retrieved after prior check that it exists");
+    }
+
+    return m_MemFrequency.value();
 }
 
 double ComputationResult::GetEnergyConsumption() const
@@ -172,6 +250,9 @@ ComputationResult& ComputationResult::operator=(const ComputationResult& other)
     m_GlobalSize = other.m_GlobalSize;
     m_LocalSize = other.m_LocalSize;
     m_PowerUsage = other.m_PowerUsage;
+    m_Temperature = other.m_Temperature;
+    m_SMFrequency = other.m_SMFrequency;
+    m_MemFrequency = other.m_MemFrequency;
 
     if (other.HasCompilationData())
     {

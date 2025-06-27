@@ -20,6 +20,9 @@ NvmlPowerManager::NvmlPowerManager(const CudaContext& context, const DeviceIndex
     CheckError(nvmlInit_v2(), "nvmlInit_v2");
     CheckError(nvmlDeviceGetHandleByIndex(device, &m_Device), "nvmlDeviceGetHandleByIndex");
     m_PowerSamples.reserve(samplingFrequency);
+    m_TempSamples.reserve(samplingFrequency);
+    m_SMFreqSamples.reserve(samplingFrequency);
+    m_MemFreqSamples.reserve(samplingFrequency);
 }
 
 NvmlPowerManager::~NvmlPowerManager()
@@ -32,6 +35,9 @@ void NvmlPowerManager::StartCollection()
     m_Context.Synchronize();
 
     m_PowerSamples.clear();
+    m_TempSamples.clear();
+    m_SMFreqSamples.clear();
+    m_MemFreqSamples.clear();
     m_StopFlag = false;
     
     m_Future = m_Pool.push([this]()
@@ -69,11 +75,56 @@ uint64_t NvmlPowerManager::GetTotalDeviceEnergy() const
     return energy;
 }
 
+uint32_t NvmlPowerManager::GetTemperature() const
+{
+    Logger::LogDebug("Generating average temperatures from number of samples: " + std::to_string(m_TempSamples.size()));
+
+    if (m_TempSamples.empty())
+    {
+        return 0;
+    }
+
+    const uint32_t sum = std::accumulate(m_TempSamples.cbegin(), m_TempSamples.cend(), 0);
+    return sum / static_cast<uint32_t>(m_TempSamples.size());
+}
+
+uint32_t NvmlPowerManager::GetSMFrequency() const
+{
+    Logger::LogDebug("Generating average SM frequency from number of samples: " + std::to_string(m_SMFreqSamples.size()));
+
+    if (m_SMFreqSamples.empty())
+    {
+        return 0;
+    }
+
+    const uint32_t sum = std::accumulate(m_SMFreqSamples.cbegin(), m_SMFreqSamples.cend(), 0);
+    return sum / static_cast<uint32_t>(m_SMFreqSamples.size());
+}
+
+uint32_t NvmlPowerManager::GetMemoryFrequency() const
+{
+    Logger::LogDebug("Generating average memory frequency from number of samples: " + std::to_string(m_SMFreqSamples.size()));
+
+    if (m_MemFreqSamples.empty())
+    {
+        return 0;
+    }
+
+    const uint32_t sum = std::accumulate(m_MemFreqSamples.cbegin(), m_MemFreqSamples.cend(), 0);
+    return sum / static_cast<uint32_t>(m_MemFreqSamples.size());
+}
+
 void NvmlPowerManager::CollectPowerSamples()
 {
     uint32_t initialValue;
     CheckError(nvmlDeviceGetPowerUsage(m_Device, &initialValue), "nvmlDeviceGetPowerUsage");
     m_PowerSamples.push_back(initialValue);
+    CheckError(nvmlDeviceGetTemperature(m_Device, NVML_TEMPERATURE_GPU, &initialValue), "nvmlDeviceGetTemperature");
+    m_TempSamples.push_back(initialValue);
+    CheckError(nvmlDeviceGetClockInfo(m_Device, NVML_CLOCK_SM, &initialValue), "nvmlDeviceGetClockInfo");
+    m_SMFreqSamples.push_back(initialValue);
+    CheckError(nvmlDeviceGetClockInfo(m_Device, NVML_CLOCK_MEM, &initialValue), "nvmlDeviceGetClockInfo");
+    m_MemFreqSamples.push_back(initialValue);
 
     Timer timer;
     timer.Start();
@@ -90,6 +141,20 @@ void NvmlPowerManager::CollectPowerSamples()
         uint32_t value;
         CheckError(nvmlDeviceGetPowerUsage(m_Device, &value), "nvmlDeviceGetPowerUsage");
         m_PowerSamples.push_back(value);
+
+	uint32_t temp;
+	CheckError(nvmlDeviceGetTemperature(m_Device, NVML_TEMPERATURE_GPU, &temp), "nvmlDeviceGetTemperature");
+	m_TempSamples.push_back(temp);
+
+	/*uint32_t fan;
+	if (nvmlDeviceGetFanSpeed(m_Device, &fan) == NVML_ERROR_NOT_SUPPORTED)
+	    fan = 0;*/
+
+	uint32_t smClk, memClk;
+	CheckError(nvmlDeviceGetClockInfo(m_Device, NVML_CLOCK_SM, &smClk), "nvmlDeviceGetClockInfo");
+	CheckError(nvmlDeviceGetClockInfo(m_Device, NVML_CLOCK_MEM, &memClk), "nvmlDeviceGetClockInfo");
+	m_SMFreqSamples.push_back(smClk);
+	m_MemFreqSamples.push_back(memClk);
     }
 
     timer.Stop();

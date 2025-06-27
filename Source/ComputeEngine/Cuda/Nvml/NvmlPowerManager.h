@@ -26,6 +26,9 @@ public:
     void EndCollection();
     uint32_t GetPowerUsage() const;
     uint64_t GetTotalDeviceEnergy() const;
+    uint32_t GetTemperature() const;
+    uint32_t GetSMFrequency() const;
+    uint32_t GetMemoryFrequency() const;
 
 private:
     const CudaContext& m_Context;
@@ -34,6 +37,9 @@ private:
     std::future<void> m_Future;
     std::atomic<bool> m_StopFlag;
     std::vector<uint32_t> m_PowerSamples;
+    std::vector<uint32_t> m_TempSamples;
+    std::vector<uint32_t> m_SMFreqSamples;
+    std::vector<uint32_t> m_MemFreqSamples;
     Nanoseconds m_SamplingInterval;
 
     void CollectPowerSamples();

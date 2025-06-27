@@ -48,6 +48,21 @@ void CudaComputeAction::SetPowerUsage(const uint32_t powerUsage)
     m_PowerUsage = powerUsage;
 }
 
+void CudaComputeAction::SetTemperature(const uint32_t temperature)
+{
+    m_Temperature = temperature;
+}
+
+void CudaComputeAction::SetSMFrequency(const uint32_t smFrequency)
+{
+    m_SMFrequency = smFrequency;
+}
+
+void CudaComputeAction::SetMemoryFrequency(const uint32_t memoryFrequency)
+{
+    m_MemoryFrequency = memoryFrequency;
+}
+
 void CudaComputeAction::WaitForFinish()
 {
     Logger::LogDebug("Waiting for CUDA kernel compute action with id " + std::to_string(m_Id));
@@ -114,6 +129,21 @@ ComputationResult CudaComputeAction::GenerateResult() const
     if (m_PowerUsage.has_value())
     {
         result.SetPowerUsage(m_PowerUsage.value());
+    }
+
+    if (m_Temperature.has_value())
+    {
+        result.SetTemperature(m_Temperature.value());
+    }
+
+    if (m_SMFrequency.has_value())
+    {
+        result.SetSMFrequency(m_SMFrequency.value());
+    }
+
+    if (m_MemoryFrequency.has_value())
+    {
+        result.SetMemoryFrequency(m_MemoryFrequency.value());
     }
 
     return result;

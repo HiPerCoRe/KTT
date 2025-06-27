@@ -580,6 +580,21 @@ void AppendComputationResult(pugi::xml_node parent, const ComputationResult& res
         node.append_attribute("PowerUsage").set_value(result.GetPowerUsage());
         node.append_attribute("EnergyConsumption").set_value(result.GetEnergyConsumption(), xmlFloatingPointPrecision);
     }
+
+    if (result.HasTemperatureData())
+    {
+        node.append_attribute("Temperature").set_value(result.GetTemperature());
+    }
+
+    if (result.HasSMFrequencyData())
+    {
+        node.append_attribute("SMFrequency").set_value(result.GetSMFrequency());
+    }
+
+    if (result.HasMemoryFrequencyData())
+    {
+        node.append_attribute("MemoryFrequency").set_value(result.GetMemoryFrequency());
+    }
 }
 
 ComputationResult ParseComputationResult(const pugi::xml_node node)
@@ -624,6 +639,30 @@ ComputationResult ParseComputationResult(const pugi::xml_node node)
     {
         const uint32_t powerUsageValue = powerUsage.as_uint();
         result.SetPowerUsage(powerUsageValue);
+    }
+
+    const auto temperature = node.attribute("Temperature");
+
+    if (!temperature.empty())
+    {
+        const uint32_t temperatureValue = temperature.as_uint();
+	result.SetTemperature(temperatureValue);
+    }
+
+    const auto smFrequency = node.attribute("SMFrequency");
+
+    if (!smFrequency.empty())
+    {
+        const uint32_t smFrequencyValue = smFrequency.as_uint();
+        result.SetSMFrequency(smFrequencyValue);
+    }
+
+    const auto memoryFrequency = node.attribute("MemoryFrequency");
+
+    if (!memoryFrequency.empty())
+    {
+        const uint32_t memoryFrequencyValue = memoryFrequency.as_uint();
+        result.SetMemoryFrequency(memoryFrequencyValue);
     }
 
     return result;

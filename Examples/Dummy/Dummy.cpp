@@ -27,7 +27,7 @@ const std::string kernelPrefix = "../";
 #endif
 
 // Toggle kernel profiling.
-const bool useProfiling = true;
+const bool useProfiling = false;
 
 int main(int argc, char** argv)
 {
