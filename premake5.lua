@@ -150,19 +150,21 @@ function linkComputeLibraries()
         end
     end
 
+    local retVal = false
+
     if linkLibrariesAmd() then
-        return true
+        retVal = true
     end
     
     if linkLibrariesIntel() then
-        return true
+        retVal = true
     end
     
     if linkLibrariesNvidia() then
-        return true
+        retVal = true
     end
     
-    return false
+    return retVal
 end
 
 function linkVulkan()
@@ -417,10 +419,9 @@ project "Ktt"
 
 -- Tuning loader and launcher
 if _OPTIONS["tuning-loader"] then
-
-if not _OPTIONS["python"] then
-    error("Tuning loader depends on KTT Python integration (specified with --python option).")
-end
+    if not _OPTIONS["python"] then
+        error("Tuning loader depends on KTT Python integration (specified with --python option).")
+    end
 
 project "KttTuningLoader"
     kind "SharedLib"
