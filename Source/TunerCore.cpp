@@ -7,6 +7,7 @@
 #include <Output/Deserializer/JsonDeserializer.h>
 #include <Output/Deserializer/XmlDeserializer.h>
 #include <Output/Serializer/JsonSerializer.h>
+#include <Output/Serializer/JsonT4Serializer.h>
 #include <Output/Serializer/XmlSerializer.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Output/TunerMetadata.h>
@@ -564,6 +565,8 @@ std::unique_ptr<Serializer> TunerCore::CreateSerializer(const OutputFormat forma
     {
     case OutputFormat::JSON:
         return std::make_unique<JsonSerializer>();
+    case OutputFormat::JSON_T4:
+        return std::make_unique<JsonT4Serializer>();
     case OutputFormat::XML:
         return std::make_unique<XmlSerializer>();
     default:

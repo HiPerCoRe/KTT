@@ -132,6 +132,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ModifierType,
 NLOHMANN_JSON_SERIALIZE_ENUM(OutputFormat,
 {
     {OutputFormat::JSON, "JSON"},
+    {OutputFormat::JSON_T4, "JSON_T4"},
     {OutputFormat::XML, "XML"}
 });
 

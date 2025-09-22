@@ -14,6 +14,10 @@ enum class OutputFormat
     /** Tuner output has JSON format.
       */
     JSON,
+    
+    /** Tuner output in JSON format compatible with other autotuning tools.
+      */
+    JSON_T4,
 
     /** Tuner output has XML format.
       */
