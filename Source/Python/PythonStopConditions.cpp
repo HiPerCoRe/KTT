@@ -35,23 +35,23 @@ public:
 
 void InitializePythonStopConditions(py::module_& module)
 {
-    py::class_<ktt::StopCondition, PyStopCondition>(module, "StopCondition")
+    py::class_<ktt::StopCondition, PyStopCondition, py::smart_holder>(module, "StopCondition")
         .def(py::init<>())
         .def("IsFulfilled", &ktt::StopCondition::IsFulfilled)
         .def("Initialize", &ktt::StopCondition::Initialize)
         .def("Update", &ktt::StopCondition::Update)
         .def("GetStatusString", &ktt::StopCondition::GetStatusString);
 
-    py::class_<ktt::ConfigurationCount, ktt::StopCondition>(module, "ConfigurationCount")
+    py::class_<ktt::ConfigurationCount, ktt::StopCondition, py::smart_holder>(module, "ConfigurationCount")
         .def(py::init<const uint64_t>());
 
-    py::class_<ktt::ConfigurationDuration, ktt::StopCondition>(module, "ConfigurationDuration")
+    py::class_<ktt::ConfigurationDuration, ktt::StopCondition, py::smart_holder>(module, "ConfigurationDuration")
         .def(py::init<const double>());
 
-    py::class_<ktt::ConfigurationFraction, ktt::StopCondition>(module, "ConfigurationFraction")
+    py::class_<ktt::ConfigurationFraction, ktt::StopCondition, py::smart_holder>(module, "ConfigurationFraction")
         .def(py::init<const double>());
 
-    py::class_<ktt::TuningDuration, ktt::StopCondition>(module, "TuningDuration")
+    py::class_<ktt::TuningDuration, ktt::StopCondition, py::smart_holder>(module, "TuningDuration")
         .def(py::init<const double>());
 }
 

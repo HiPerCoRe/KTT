@@ -11,7 +11,7 @@ namespace py = pybind11;
 
 void InitializePythonDataHolders(py::module_& module)
 {
-    py::class_<ktt::DimensionVector>(module, "DimensionVector")
+    py::class_<ktt::DimensionVector, py::smart_holder>(module, "DimensionVector")
         .def(py::init<>())
         .def(py::init<const size_t>())
         .def(py::init<const size_t, const size_t>())
@@ -36,7 +36,7 @@ void InitializePythonDataHolders(py::module_& module)
         .def(py::self != py::self)
         .def("__repr__", &ktt::DimensionVector::GetString);
 
-    py::class_<ktt::ParameterPair>(module, "ParameterPair")
+    py::class_<ktt::ParameterPair, py::smart_holder>(module, "ParameterPair")
         .def(py::init<>())
         .def(py::init<const std::string&, const ktt::ParameterValue&>())
         .def("SetValue", &ktt::ParameterPair::SetValue)
@@ -62,7 +62,7 @@ void InitializePythonDataHolders(py::module_& module)
         .def_static("GetParameterValuesString", &ktt::ParameterPair::GetParameterValues<std::string>)
         .def("__repr__", &ktt::ParameterPair::GetString);
 
-    py::class_<ktt::KernelConfiguration>(module, "KernelConfiguration")
+    py::class_<ktt::KernelConfiguration, py::smart_holder>(module, "KernelConfiguration")
         .def(py::init<>())
         .def(py::init<const std::vector<ktt::ParameterPair>&>())
         .def("GetPairs", &ktt::KernelConfiguration::GetPairs, py::return_value_policy::reference)
@@ -75,7 +75,7 @@ void InitializePythonDataHolders(py::module_& module)
         .def(py::self != py::self)
         .def("__repr__", &ktt::KernelConfiguration::GetString);
 
-    py::class_<ktt::DeviceInfo>(module, "DeviceInfo")
+    py::class_<ktt::DeviceInfo, py::smart_holder>(module, "DeviceInfo")
         .def(py::init<const ktt::DeviceIndex, const std::string&>())
         .def("GetIndex", &ktt::DeviceInfo::GetIndex)
         .def("GetName", &ktt::DeviceInfo::GetName, py::return_value_policy::reference)
@@ -103,7 +103,7 @@ void InitializePythonDataHolders(py::module_& module)
         .def("SetCudaComputeCapabilityMinor", &ktt::DeviceInfo::SetCudaComputeCapabilityMinor)
         .def("__repr__", &ktt::DeviceInfo::GetString);
 
-    py::class_<ktt::PlatformInfo>(module, "PlatformInfo")
+    py::class_<ktt::PlatformInfo, py::smart_holder>(module, "PlatformInfo")
         .def(py::init<const ktt::PlatformIndex, const std::string&>())
         .def("GetIndex", &ktt::PlatformInfo::GetIndex)
         .def("GetName", &ktt::PlatformInfo::GetName, py::return_value_policy::reference)
@@ -116,7 +116,7 @@ void InitializePythonDataHolders(py::module_& module)
         .def("SetExtensions", &ktt::PlatformInfo::SetExtensions)
         .def("__repr__", &ktt::PlatformInfo::GetString);
 
-    py::class_<ktt::BufferOutputDescriptor>(module, "BufferOutputDescriptor")
+    py::class_<ktt::BufferOutputDescriptor, py::smart_holder>(module, "BufferOutputDescriptor")
         .def
         (
             py::init([](const ktt::ArgumentId id, py::buffer buffer)
@@ -137,7 +137,7 @@ void InitializePythonDataHolders(py::module_& module)
         .def("GetOutputDestination", &ktt::BufferOutputDescriptor::GetOutputDestination)
         .def("GetOutputSize", &ktt::BufferOutputDescriptor::GetOutputSize);
 
-    py::class_<ktt::KernelCompilationData>(module, "KernelCompilationData")
+    py::class_<ktt::KernelCompilationData, py::smart_holder>(module, "KernelCompilationData")
         .def(py::init<>())
         .def_readwrite("m_MaxWorkGroupSize", &ktt::KernelCompilationData::m_MaxWorkGroupSize)
         .def_readwrite("m_LocalMemorySize", &ktt::KernelCompilationData::m_LocalMemorySize)
@@ -145,7 +145,7 @@ void InitializePythonDataHolders(py::module_& module)
         .def_readwrite("m_ConstantMemorySize", &ktt::KernelCompilationData::m_ConstantMemorySize)
         .def_readwrite("m_RegistersCount", &ktt::KernelCompilationData::m_RegistersCount);
 
-    py::class_<ktt::KernelProfilingCounter>(module, "KernelProfilingCounter")
+    py::class_<ktt::KernelProfilingCounter, py::smart_holder>(module, "KernelProfilingCounter")
         .def(py::init<>())
         .def(py::init<const std::string&, const ktt::ProfilingCounterType, const int64_t>())
         .def(py::init<const std::string&, const ktt::ProfilingCounterType, const uint64_t>())
@@ -159,7 +159,7 @@ void InitializePythonDataHolders(py::module_& module)
         .def(py::self != py::self)
         .def(py::self < py::self);
 
-    py::class_<ktt::KernelProfilingData>(module, "KernelProfilingData")
+    py::class_<ktt::KernelProfilingData, py::smart_holder>(module, "KernelProfilingData")
         .def(py::init<>())
         .def(py::init<const uint64_t>())
         .def(py::init<const std::vector<ktt::KernelProfilingCounter>&>())
@@ -173,7 +173,7 @@ void InitializePythonDataHolders(py::module_& module)
         .def("GetRemainingProfilingRuns", &ktt::KernelProfilingData::GetRemainingProfilingRuns)
         .def("DecreaseRemainingProfilingRuns", &ktt::KernelProfilingData::DecreaseRemainingProfilingRuns);
 
-    py::class_<ktt::ComputationResult>(module, "ComputationResult")
+    py::class_<ktt::ComputationResult, py::smart_holder>(module, "ComputationResult")
         .def(py::init<>())
         .def(py::init<const std::string&>())
         .def(py::init<const ktt::ComputationResult&>())
@@ -181,22 +181,33 @@ void InitializePythonDataHolders(py::module_& module)
         .def("SetSizeData", &ktt::ComputationResult::SetSizeData)
         .def("SetCompilationData", &ktt::ComputationResult::SetCompilationData)
         .def("SetProfilingData", &ktt::ComputationResult::SetProfilingData)
+	.def("SetPowerUsage", &ktt::ComputationResult::SetPowerUsage)
+	.def("SetTemperature", &ktt::ComputationResult::SetTemperature)
+	.def("SetSMFrequency", &ktt::ComputationResult::SetSMFrequency)
+	.def("SetMemoryFrequency", &ktt::ComputationResult::SetMemoryFrequency)
         .def("GetKernelFunction", &ktt::ComputationResult::GetKernelFunction, py::return_value_policy::reference)
         .def("GetGlobalSize", &ktt::ComputationResult::GetGlobalSize, py::return_value_policy::reference)
         .def("GetLocalSize", &ktt::ComputationResult::GetLocalSize, py::return_value_policy::reference)
         .def("GetDuration", &ktt::ComputationResult::GetDuration)
         .def("GetOverhead", &ktt::ComputationResult::GetOverhead)
+	.def("GetCompilationOverhead", &ktt::ComputationResult::GetCompilationOverhead)
         .def("HasCompilationData", &ktt::ComputationResult::HasCompilationData)
         .def("GetCompilationData", &ktt::ComputationResult::GetCompilationData, py::return_value_policy::reference)
         .def("HasProfilingData", &ktt::ComputationResult::HasProfilingData)
         .def("GetProfilingData", &ktt::ComputationResult::GetProfilingData, py::return_value_policy::reference)
         .def("HasRemainingProfilingRuns", &ktt::ComputationResult::HasRemainingProfilingRuns)
         .def("HasPowerData", &ktt::ComputationResult::HasPowerData)
+	.def("HasTemperatureData", &ktt::ComputationResult::HasTemperatureData)
+	.def("HasSMFrequencyData", &ktt::ComputationResult::HasSMFrequencyData)
+	.def("HasMemoryFrequencyData", &ktt::ComputationResult::HasMemoryFrequencyData)
         .def("GetPowerUsage", &ktt::ComputationResult::GetPowerUsage)
+	.def("GetTemperature", &ktt::ComputationResult::GetTemperature)
+	.def("GetSMFrequency", &ktt::ComputationResult::GetSMFrequency)
+	.def("GetMemoryFrequency", &ktt::ComputationResult::GetMemoryFrequency)
         .def("GetEnergyConsumption", &ktt::ComputationResult::GetEnergyConsumption)
         .def("assign", &ktt::ComputationResult::operator=);
 
-    py::class_<ktt::KernelResult>(module, "KernelResult")
+    py::class_<ktt::KernelResult, py::smart_holder>(module, "KernelResult")
         .def(py::init<>())
         .def(py::init<const std::string&, const ktt::KernelConfiguration&>())
         .def(py::init<const std::string&, const ktt::KernelConfiguration&, const std::vector<ktt::ComputationResult>&>())

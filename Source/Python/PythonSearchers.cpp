@@ -7,7 +7,7 @@
 
 namespace py = pybind11;
 
-class KTT_VISIBILITY_HIDDEN PySearcher : public ktt::Searcher, public py::trampoline_self_life_support
+class KTT_VISIBILITY_HIDDEN PySearcher : public ktt::Searcher, public py::trampoline_self_life_support 
 {
 public:
     using Searcher::Searcher;
@@ -35,7 +35,7 @@ public:
 
 void InitializePythonSearchers(py::module_& module)
 {
-    py::class_<ktt::Searcher, PySearcher>(module, "Searcher")
+    py::class_<ktt::Searcher, PySearcher, py::smart_holder>(module, "Searcher")
         .def(py::init<>())
         .def("OnInitialize", &ktt::Searcher::OnInitialize)
         .def("OnReset", &ktt::Searcher::OnReset)
@@ -57,13 +57,13 @@ void InitializePythonSearchers(py::module_& module)
         .def("GetExploredIndices", &ktt::Searcher::GetExploredIndices, py::return_value_policy::reference)
         .def("IsInitialized", &ktt::Searcher::IsInitialized);
 
-    py::class_<ktt::DeterministicSearcher, ktt::Searcher>(module, "DeterministicSearcher")
+    py::class_<ktt::DeterministicSearcher, ktt::Searcher, py::smart_holder>(module, "DeterministicSearcher")
         .def(py::init<>());
 
-    py::class_<ktt::McmcSearcher, ktt::Searcher>(module, "McmcSearcher")
+    py::class_<ktt::McmcSearcher, ktt::Searcher, py::smart_holder>(module, "McmcSearcher")
         .def(py::init<const ktt::KernelConfiguration&>(), py::arg("start") = ktt::KernelConfiguration());
 
-    py::class_<ktt::RandomSearcher, ktt::Searcher>(module, "RandomSearcher")
+    py::class_<ktt::RandomSearcher, ktt::Searcher, py::smart_holder>(module, "RandomSearcher")
         .def(py::init<>());
 }
 

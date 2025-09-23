@@ -12,7 +12,7 @@ namespace py = pybind11;
 
 void InitializePythonTuner(py::module_& module)
 {
-    py::class_<ktt::Tuner>(module, "Tuner")
+    py::class_<ktt::Tuner, py::smart_holder>(module, "Tuner")
         .def(py::init<const ktt::PlatformIndex, const ktt::DeviceIndex, const ktt::ComputeApi>())
         .def(py::init<const ktt::PlatformIndex, const ktt::DeviceIndex, const ktt::ComputeApi, const uint32_t>())
         .def

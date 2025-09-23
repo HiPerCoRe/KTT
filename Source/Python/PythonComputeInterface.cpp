@@ -11,7 +11,7 @@ namespace py = pybind11;
 
 void InitializePythonComputeInterface(py::module_& module)
 {
-    py::class_<ktt::ComputeInterface>(module, "ComputeInterface")
+    py::class_<ktt::ComputeInterface, py::smart_holder>(module, "ComputeInterface")
         .def("RunKernel", py::overload_cast<const ktt::KernelDefinitionId>(&ktt::ComputeInterface::RunKernel))
         .def("RunKernel", py::overload_cast<const ktt::KernelDefinitionId, const ktt::DimensionVector&,
             const ktt::DimensionVector&>(&ktt::ComputeInterface::RunKernel))
