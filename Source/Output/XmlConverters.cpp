@@ -674,6 +674,7 @@ void AppendKernelResult(pugi::xml_node parent, const KernelResult& result)
 
     pugi::xml_node node = parent.append_child("KernelResult");
     node.append_attribute("KernelName").set_value(result.GetKernelName().c_str());
+    node.append_attribute("Timestamp").set_value(result.GetTimestamp().c_str());
     node.append_attribute("Status").set_value(ResultStatusToString(result.GetStatus()).c_str());
     node.append_attribute("TotalDuration").set_value(time.ConvertFromNanosecondsDouble(result.GetTotalDuration()),
         xmlFloatingPointPrecision);
@@ -704,6 +705,7 @@ void AppendKernelResult(pugi::xml_node parent, const KernelResult& result)
 KernelResult ParseKernelResult(const pugi::xml_node node)
 {
     const std::string kernelName = node.attribute("KernelName").value();
+    const std::string timestamp = node.attribute("Timestamp").value();
     const KernelConfiguration configuration = ParseConfiguration(node.child("Configuration"));
 
     std::vector<ComputationResult> results;
@@ -713,7 +715,7 @@ KernelResult ParseKernelResult(const pugi::xml_node node)
         results.push_back(ParseComputationResult(computationResult));
     }
 
-    KernelResult result(kernelName, configuration, results);
+    KernelResult result(kernelName, configuration, results, timestamp);
 
     const ResultStatus status = ResultStatusFromString(node.attribute("Status").value());
     result.SetStatus(status);

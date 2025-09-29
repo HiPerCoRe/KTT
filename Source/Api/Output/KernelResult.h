@@ -29,8 +29,9 @@ public:
       * Constructor which creates kernel result for the specified kernel and configuration.
       * @param kernelName Name of a kernel tied to the result.
       * @param configuration Configuration tied to the result.
+      * @param timestamp Timestamp tied to this kernel run.
       */
-    explicit KernelResult(const std::string& kernelName, const KernelConfiguration& configuration);
+    explicit KernelResult(const std::string& kernelName, const KernelConfiguration& configuration, const std::string& timestamp);
 
     /** @fn explicit KernelResult(const std::string& kernelName, const KernelConfiguration& configuration,
       * const std::vector<ComputationResult>& results)
@@ -38,9 +39,10 @@ public:
       * @param kernelName Name of a kernel tied to the result.
       * @param configuration Configuration tied to the result.
       * @param results Partial results from all kernel definition runs under the kernel launch.
+      * @param timestamp Timestamp tied to the kernel run.
       */
     explicit KernelResult(const std::string& kernelName, const KernelConfiguration& configuration,
-        const std::vector<ComputationResult>& results);
+        const std::vector<ComputationResult>& results, const std::string& timestamp);
 
     /** @fn void SetStatus(const ResultStatus status)
       * Sets kernel results status.
@@ -101,6 +103,12 @@ public:
       * @return Partial results from computations. See ComputationResult for more information.
       */
     const std::vector<ComputationResult>& GetResults() const;
+
+    /** @fn const std::string GetTimestamp() const
+     * Returns the timestamp corresponding to the kernel run
+     * @return Timestamp of the kernel run
+     */
+    const std::string& GetTimestamp() const;
 
     /** @fn const KernelConfiguration& GetConfiguration() const
       * Retrieves kernel configuration tied to the result.
@@ -242,6 +250,7 @@ private:
     KernelConfiguration m_Configuration;
     std::vector<ComputationResult> m_Results;
     std::string m_KernelName;
+    std::string m_Timestamp;
     Nanoseconds m_ExtraDuration;
     Nanoseconds m_DataMovementOverhead;
     Nanoseconds m_ValidationOverhead;

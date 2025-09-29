@@ -5,6 +5,7 @@
 #include <TuningRunner/TuningRunner.h>
 #include <Utility/Logger/Logger.h>
 #include <Utility/Timer/ScopeTimer.h>
+#include <Utility/Timer/Timestamp.h>
 
 namespace ktt
 {
@@ -36,8 +37,8 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
 
     while (!m_ConfigurationManager->IsDataProcessed(id))
     {
-        KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
-        KernelResult multiResult(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
+        KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id), "");
+        KernelResult multiResult(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id), ktt::Timestamp::GetTimestamp());
         int iter = 0;
         do 
         {
@@ -174,7 +175,7 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
         catch (const KttException& error)
         {
             Logger::LogWarning(std::string("Kernel run failed, reason: ") + error.what());
-            result = KernelResult(kernel.GetName(), currentConfiguration);
+            result = KernelResult(kernel.GetName(), currentConfiguration, "");
             result.SetStatus(ResultStatus::ComputationFailed);
         }
 

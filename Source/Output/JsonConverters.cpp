@@ -383,7 +383,8 @@ void to_json(json& j, const KernelResult& result)
         {"CompilationOverhead", time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead())},
         {"ProfilingOverhead", time.ConvertFromNanosecondsDouble(result.GetProfilingTotalOverhead())},
         {"Configuration", result.GetConfiguration()},
-        {"ComputationResults", result.GetResults()}
+        {"ComputationResults", result.GetResults()},
+        {"Timestamp", result.GetTimestamp()}
     };
 }
 
@@ -398,7 +399,10 @@ void from_json(const json& j, KernelResult& result)
     std::vector<ComputationResult> results;
     j.at("ComputationResults").get_to(results);
 
-    result = KernelResult(kernelName, configuration, results);
+    std::string timestamp;
+    j.at("Timestamp").get_to(timestamp);
+
+    result = KernelResult(kernelName, configuration, results, timestamp);
 
     ResultStatus status;
     j.at("Status").get_to(status);

@@ -42,7 +42,7 @@ void to_json(json& j, const as_T4<KernelResult>& result)
 {
     const auto& time = TimeConfiguration::GetInstance();
 
-    const auto& timestamp = "";   
+    const auto& timestamp = result.v.GetTimestamp();
 
     const auto& configuration = result.v.GetConfiguration();
 
