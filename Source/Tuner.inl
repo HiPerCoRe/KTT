@@ -17,7 +17,7 @@ void Tuner::AddParameter(const KernelId id, const std::string& name, const std::
 
     for (const auto& value : values)
     {
-        parameterValues.push_back(value);
+        parameterValues.emplace_back(value);
     }
 
     AddParameterInternal(id, name, parameterValues, group);
