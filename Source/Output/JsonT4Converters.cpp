@@ -1,24 +1,128 @@
+#include<string>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
-#include <Output/JsonConverters.h>
+#include <Output/JsonT4Converters.h>
 #include <Utility/ErrorHandling/Assert.h>
 
 namespace ktt
 {
+
+void to_json(json& j, const as_T4<KernelConfiguration>& configuration)
+{
+    j = json::object();
+    const std::vector<ParameterPair>& pairs = configuration.v.GetPairs();
+    for (const auto& pair : pairs) {
+        std::string value;
+
+        switch (pair.GetValueType())
+        {
+            case ParameterValueType::Int:
+                value = std::to_string(std::get<int64_t>(pair.GetValue()));
+                break;
+            case ParameterValueType::UnsignedInt:
+                value = std::to_string(pair.GetValueUint());
+                break;
+            case ParameterValueType::Double:
+                value = std::to_string(std::get<double>(pair.GetValue()));
+                break;
+            case ParameterValueType::Bool:
+                value = std::to_string(std::get<bool>(pair.GetValue()));
+                break;
+            case ParameterValueType::String:
+                value = pair.GetValueString();
+                break;
+            default:
+                KttError("Unhandled parameter value type");
+        }
+
+        j[pair.GetName()] = value;
+    }
+}
     
-void to_json(json& j, const TunerMetadata& metadata)
+void to_json(json& j, const as_T4<KernelResult>& result)
+{
+    const auto& time = TimeConfiguration::GetInstance();
+
+    const auto& timestamp = result.v.GetTimestamp();
+
+    const auto& configuration = result.v.GetConfiguration();
+
+    
+    uint correct = 0;
+    if (result.v.GetStatus() == ResultStatus::ValidationFailed)
+        correct = 0;
+    else correct = 1;
+
+    j = json::object();
+    j["timestamp"] = timestamp;
+    json j_configuration;
+    to_json(j_configuration,as_T4(configuration));
+    j["configuration"] = j_configuration;
+    j["times"] = json::object();
+    j["times"]["compilation"] = time.ConvertFromNanosecondsDouble(result.v.GetCompilationOverhead());
+    j["times"]["framework"] = time.ConvertFromNanosecondsDouble(result.v.GetDataMovementOverhead()) + time.ConvertFromNanosecondsDouble(result.v.GetProfilingTotalOverhead());
+    j["times"]["search_algorithm"] = time.ConvertFromNanosecondsDouble(result.v.GetSearcherOverhead());
+    j["times"]["validation"] = time.ConvertFromNanosecondsDouble(result.v.GetValidationOverhead());
+    j["times"]["runtimes"] = json::array({time.ConvertFromNanosecondsDouble(result.v.GetTotalDuration())});
+    j["invalidity"] = as_T4(result.v.GetStatus());
+    j["correctness"] = correct;
+    j["objectives"] = json::array({"time"});
+    j["measurements"] = json::array();
+    j["measurements"].push_back({{"name","time"}, {"value",time.ConvertFromNanosecondsDouble(result.v.GetTotalDuration())}, {"unit",""}});
+    
+
+    const std::vector<ComputationResult>& compResults = result.v.GetResults();
+    if (compResults[0].HasProfilingData()) {
+        const std::vector<KernelProfilingCounter>& counters = compResults[0].GetProfilingData().GetCounters();
+        for (const auto& counter : counters) {
+            json j_counter = json::object();
+            to_json(j_counter, as_T4(counter));
+            j["measurements"].push_back(j_counter);
+        }
+    }
+
+}
+
+void to_json(json& j, const as_T4<KernelProfilingCounter>& counter)
 {
     j = json
     {
-        {"ComputeApi", metadata.GetComputeApi()},
-        {"GlobalSizeType", metadata.GetGlobalSizeType()},
-        {"Platform", metadata.GetPlatformName()},
-        {"Device", metadata.GetDeviceName()},
-        {"KttVersion", metadata.GetKttVersion()},
-        {"Timestamp", metadata.GetTimestamp()},
-        {"TimeUnit", metadata.GetTimeUnit()},
+        {"name", counter.v.GetName()},
     };
+
+    switch (counter.v.GetType())
+    {
+    case ProfilingCounterType::Int:
+        j["value"] = counter.v.GetValueInt();
+        break;
+    case ProfilingCounterType::UnsignedInt:
+    case ProfilingCounterType::Throughput:
+    case ProfilingCounterType::UtilizationLevel:
+        j["value"] = counter.v.GetValueUint();
+        break;
+    case ProfilingCounterType::Double:
+    case ProfilingCounterType::Percent:
+        j["value"] = counter.v.GetValueDouble();
+        break;
+    default:
+        KttError("Unhandled profiling counter type value");
+    }
+    j["unit"] = "";
 }
 
+void to_json(json& j, const as_T4<TunerMetadata>& metadata)
+{
+    j = json
+    {
+        {"compute_api", metadata.v.GetComputeApi()},
+        {"platform", metadata.v.GetPlatformName()},
+        {"device", metadata.v.GetDeviceName()},
+        {"autotuner", "KTT"},
+        {"autotuner_version", metadata.v.GetKttVersion()},
+        {"timestamp", metadata.v.GetTimestamp()},
+        {"timeunit", as_T4(metadata.v.GetTimeUnit())},
+    };
+}
+/*
 void from_json(const json& j, TunerMetadata& metadata)
 {
     metadata.SetComputeApi(j.at("ComputeApi").get<ComputeApi>());
@@ -47,35 +151,6 @@ void from_json(const json& j, DimensionVector& vector)
     vector.SetSizeZ(j.at("Z").get<size_t>());
 }
 
-void to_json(json& j, const ParameterPair& pair)
-{
-    j = json
-    {
-        {"Name", pair.GetName()},
-        {"ValueType", pair.GetValueType()}
-    };
-
-    switch (pair.GetValueType())
-    {
-    case ParameterValueType::Int:
-        j["Value"] = std::get<int64_t>(pair.GetValue());
-        break;
-    case ParameterValueType::UnsignedInt:
-        j["Value"] = pair.GetValueUint();
-        break;
-    case ParameterValueType::Double:
-        j["Value"] = std::get<double>(pair.GetValue());
-        break;
-    case ParameterValueType::Bool:
-        j["Value"] = std::get<bool>(pair.GetValue());
-        break;
-    case ParameterValueType::String:
-        j["Value"] = pair.GetValueString();
-        break;
-    default:
-        KttError("Unhandled parameter value type");
-    }
-}
 
 void from_json(const json& j, ParameterPair& pair)
 {
@@ -127,10 +202,6 @@ void from_json(const json& j, ParameterPair& pair)
     }
 }
 
-void to_json(json& j, const KernelConfiguration& configuration)
-{
-    j = json(configuration.GetPairs());
-}
 
 void from_json(const json& j, KernelConfiguration& configuration)
 {
@@ -272,21 +343,6 @@ void to_json(json& j, const ComputationResult& result)
         j["PowerUsage"] = result.GetPowerUsage();
         j["EnergyConsumption"] = result.GetEnergyConsumption();
     }
-
-    if (result.HasTemperatureData())
-    {
-        j["Temperature"] = result.GetTemperature();
-    }
-
-    if (result.HasSMFrequencyData())
-    {
-        j["SMFrequency"] = result.GetSMFrequency();
-    }
-
-    if (result.HasMemoryFrequencyData())
-    {
-        j["MemoryFrequency"] = result.GetMemoryFrequency();
-    }
 }
 
 void from_json(const json& j, ComputationResult& result)
@@ -326,6 +382,8 @@ void from_json(const json& j, ComputationResult& result)
 
         auto uniqueData = std::make_unique<KernelCompilationData>(data);
         result.SetCompilationData(std::move(uniqueData));
+    };
+
     }
 
     if (j.contains("ProfilingData"))
@@ -343,50 +401,8 @@ void from_json(const json& j, ComputationResult& result)
         j.at("PowerUsage").get_to(powerUsage);
         result.SetPowerUsage(powerUsage);
     }
-
-    if (j.contains("Temperature"))
-    {
-        uint32_t temperature;
-	j.at("Temperature").get_to(temperature);
-	result.SetTemperature(temperature);
-    }
-
-    if (j.contains("SMFrequency"))
-    {
-        uint32_t frequency;
-        j.at("SMFrequency").get_to(frequency);
-        result.SetSMFrequency(frequency);
-    }
-
-    if (j.contains("MemoryFrequency"))
-    {
-        uint32_t frequency;
-        j.at("MemoryFrequency").get_to(frequency);
-        result.SetMemoryFrequency(frequency);
-    }
 }
 
-void to_json(json& j, const KernelResult& result)
-{
-    const auto& time = TimeConfiguration::GetInstance();
-
-    j = json
-    {
-        {"KernelName", result.GetKernelName()},
-        {"Status", result.GetStatus()},
-        {"TotalDuration", time.ConvertFromNanosecondsDouble(result.GetTotalDuration())},
-        {"TotalOverhead", time.ConvertFromNanosecondsDouble(result.GetTotalOverhead())},
-        {"ExtraDuration", time.ConvertFromNanosecondsDouble(result.GetExtraDuration())},
-        {"DataMovementOverhead", time.ConvertFromNanosecondsDouble(result.GetDataMovementOverhead())},
-        {"ValidationOverhead", time.ConvertFromNanosecondsDouble(result.GetValidationOverhead())},
-        {"SearcherOverhead", time.ConvertFromNanosecondsDouble(result.GetSearcherOverhead())},
-        {"CompilationOverhead", time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead())},
-        {"ProfilingOverhead", time.ConvertFromNanosecondsDouble(result.GetProfilingTotalOverhead())},
-        {"Configuration", result.GetConfiguration()},
-        {"ComputationResults", result.GetResults()},
-        {"Timestamp", result.GetTimestamp()}
-    };
-}
 
 void from_json(const json& j, KernelResult& result)
 {
@@ -399,10 +415,7 @@ void from_json(const json& j, KernelResult& result)
     std::vector<ComputationResult> results;
     j.at("ComputationResults").get_to(results);
 
-    std::string timestamp;
-    j.at("Timestamp").get_to(timestamp);
-
-    result = KernelResult(kernelName, configuration, results, timestamp);
+    result = KernelResult(kernelName, configuration, results);
 
     ResultStatus status;
     j.at("Status").get_to(status);
@@ -430,5 +443,5 @@ void from_json(const json& j, KernelResult& result)
     const Nanoseconds searcherOverheadNs = time.ConvertToNanosecondsDouble(searcherOverhead);
     result.SetSearcherOverhead(searcherOverheadNs);
 }
-
+*/
 } // namespace ktt

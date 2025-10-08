@@ -74,6 +74,7 @@ std::string GetFileExtension(const OutputFormat format)
     switch (format)
     {
     case OutputFormat::JSON:
+    case OutputFormat::JSON_T4:
         return ".json";
     case OutputFormat::XML:
         return ".xml";

@@ -4,6 +4,7 @@
 #include <KernelRunner/ComputeLayerData.h>
 #include <Utility/StlHelpers.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/Timer/Timestamp.h>
 
 namespace ktt
 {
@@ -123,7 +124,7 @@ const KernelComputeData& ComputeLayerData::GetComputeData(const KernelDefinition
 
 KernelResult ComputeLayerData::GenerateResult(const Nanoseconds launcherDuration) const
 {
-    KernelResult result(m_Kernel.GetName(), m_Configuration, m_PartialResults);
+    KernelResult result(m_Kernel.GetName(), m_Configuration, m_PartialResults, ktt::Timestamp::GetTimestamp());
     const Nanoseconds launcherOverhead = CalculateLauncherOverhead();
     KttAssert(launcherDuration >= launcherOverhead, "Launcher overhead must be lower than its total duration");
     const Nanoseconds actualLauncherDuration = launcherDuration - launcherOverhead;

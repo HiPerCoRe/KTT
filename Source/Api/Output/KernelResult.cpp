@@ -4,6 +4,7 @@ namespace ktt
 {
 
 KernelResult::KernelResult() :
+    m_Timestamp(""),
     m_ExtraDuration(InvalidDuration),
     m_DataMovementOverhead(InvalidDuration),
     m_ValidationOverhead(InvalidDuration),
@@ -15,9 +16,10 @@ KernelResult::KernelResult() :
     m_Status(ResultStatus::ComputationFailed)
 {}
 
-KernelResult::KernelResult(const std::string& kernelName, const KernelConfiguration& configuration) :
+KernelResult::KernelResult(const std::string& kernelName, const KernelConfiguration& configuration, const std::string& timestamp) :
     m_Configuration(configuration),
     m_KernelName(kernelName),
+    m_Timestamp(timestamp),
     m_ExtraDuration(0),
     m_DataMovementOverhead(0),
     m_ValidationOverhead(0),
@@ -30,10 +32,11 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
 {}
 
 KernelResult::KernelResult(const std::string& kernelName, const KernelConfiguration& configuration,
-    const std::vector<ComputationResult>& results) :
+    const std::vector<ComputationResult>& results, const std::string& timestamp) :
     m_Configuration(configuration),
     m_Results(results),
     m_KernelName(kernelName),
+    m_Timestamp(timestamp),
     m_ExtraDuration(0),
     m_DataMovementOverhead(0),
     m_ValidationOverhead(0),
@@ -93,6 +96,10 @@ const std::string& KernelResult::GetKernelName() const
 const std::vector<ComputationResult>& KernelResult::GetResults() const
 {
     return m_Results;
+}
+const std::string& KernelResult::GetTimestamp() const
+{
+    return m_Timestamp;
 }
 
 const KernelConfiguration& KernelResult::GetConfiguration() const

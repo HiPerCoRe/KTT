@@ -1,4 +1,6 @@
 #include <string>
+#include <sstream>
+#include <date.h>
 
 #include <Api/KttException.h>
 #include <KernelRunner/KernelActivator.h>
@@ -7,6 +9,7 @@
 #include <Utility/Logger/Logger.h>
 #include <Utility/Timer/ScopeTimer.h>
 #include <Utility/Timer/Timer.h>
+#include <Utility/Timer/Timestamp.h>
 
 namespace ktt
 {
@@ -238,7 +241,7 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
     const KernelId id = kernel.GetId();
 
     auto activator = std::make_unique<KernelActivator>(*m_ComputeLayer, id);
-    KernelResult result(kernel.GetName(), configuration);
+    KernelResult result(kernel.GetName(), configuration, "");
 
     Timer timer;
     timer.Start();
