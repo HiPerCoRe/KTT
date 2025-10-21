@@ -159,6 +159,7 @@ R"(
                 "OutputFormat": {
                     "enum": [
                         "JSON",
+                        "JSON_T4",
                         "XML"
                     ]
                 }
