@@ -26,7 +26,7 @@ const std::string kernelPrefix = "../";
 const bool rapidTest = false;
 
 // Toggle kernel profiling.
-const bool useProfiling = true;
+const bool useProfiling = false;
 
 // Add denser values to tuning parameters (useDenseParameters = true).
 const bool useDenseParameters = false;
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 
     // Declare and initialize data
     const int gridSize = 256;
-    int atoms = 64;
+    int atoms = 4096;
 
     const ktt::DimensionVector referenceNdRangeDimensions(gridSize / 16, gridSize / 16, gridSize);
     const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);

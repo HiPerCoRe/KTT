@@ -110,8 +110,8 @@ function linkLibrariesNvidia()
         
         if _OPTIONS["power-usage"] then
             defines {"KTT_POWER_USAGE_NVML"}
-	    if _OPTIONS["power-usage-repeats"] then
-                defines {"KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL=" .. _OPTIONS["power-usage-repeats"]}
+	    if _OPTIONS["power-usage-mintime"] then
+                defines {"KTT_POWER_USAGE_NVML_KERNEL_MINTIME=" .. _OPTIONS["power-usage-mintime"]}
             end
             links {"nvidia-ml"}
         end
@@ -294,8 +294,8 @@ newoption
 
 newoption
 {       
-    trigger = "power-usage-repeats",
-    description = "EXPERIMENTAL set number of repeated kernel executions to better measure power usage of short running kernels. Warning: no data sanitization between kernel calls."
+    trigger = "power-usage-mintime",
+    description = "Sets how long is the kernel repeated to obtain reliable power measurement, in miliseconds. THIS IS AN EXPERIMENTAL FEATURE, enforcing repeating the kernel without cleaning or changing input/output."
 }        
 
 newoption

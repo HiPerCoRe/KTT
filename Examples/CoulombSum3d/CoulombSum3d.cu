@@ -43,5 +43,5 @@ extern "C" __global__ void directCoulombSum(const float4* atomInfo, const float*
 
     for (int i = 0; i < Z_ITERATIONS; i++)
         if (zIndex + i < gridSize)
-            energyGrid[outIndex + sliceOffset*i] += energyValue[i];
+            energyGrid[outIndex + sliceOffset*i] = energyValue[i];
 }

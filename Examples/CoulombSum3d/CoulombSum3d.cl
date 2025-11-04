@@ -73,15 +73,15 @@ __kernel void directCoulombSum(MEMORY_TYPE_AOS float4* atomInfo, MEMORY_TYPE_SOA
     for (int i = 0; i < Z_ITERATIONS; i++)
         if (zIndex + i < gridSize) {
             #if VECTOR_SIZE == 1
-            energyGrid[outIndex + sliceOffset*i] += energyValue[i];
+            energyGrid[outIndex + sliceOffset*i] = energyValue[i];
             #elif VECTOR_SIZE == 2
-            energyGrid[outIndex + sliceOffset*i] += energyValue[i].x + energyValue[i].y;
+            energyGrid[outIndex + sliceOffset*i] = energyValue[i].x + energyValue[i].y;
             #elif VECTOR_SIZE == 4
-            energyGrid[outIndex + sliceOffset*i] += energyValue[i].x + energyValue[i].y + energyValue[i].z + energyValue[i].w;
+            energyGrid[outIndex + sliceOffset*i] = energyValue[i].x + energyValue[i].y + energyValue[i].z + energyValue[i].w;
             #elif VECTOR_SIZE == 8
-            energyGrid[outIndex + sliceOffset*i] += energyValue[i].s0 + energyValue[i].s1 + energyValue[i].s2 + energyValue[i].s3 + energyValue[i].s4 + energyValue[i].s5 + energyValue[i].s6 + energyValue[i].s7;
+            energyGrid[outIndex + sliceOffset*i] = energyValue[i].s0 + energyValue[i].s1 + energyValue[i].s2 + energyValue[i].s3 + energyValue[i].s4 + energyValue[i].s5 + energyValue[i].s6 + energyValue[i].s7;
             #elif VECTOR_SIZE == 16
-            energyGrid[outIndex + sliceOffset*i] += energyValue[i].s0 + energyValue[i].s1 + energyValue[i].s2 + energyValue[i].s3 + energyValue[i].s4 + energyValue[i].s5 + energyValue[i].s6 + energyValue[i].s7 + energyValue[i].s8 + energyValue[i].s9 + energyValue[i].sa + energyValue[i].sb + energyValue[i].sc + energyValue[i].sd + energyValue[i].se + energyValue[i].sf;
+            energyGrid[outIndex + sliceOffset*i] = energyValue[i].s0 + energyValue[i].s1 + energyValue[i].s2 + energyValue[i].s3 + energyValue[i].s4 + energyValue[i].s5 + energyValue[i].s6 + energyValue[i].s7 + energyValue[i].s8 + energyValue[i].s9 + energyValue[i].sa + energyValue[i].sb + energyValue[i].sc + energyValue[i].sd + energyValue[i].se + energyValue[i].sf;
             #endif
         }
 }

@@ -24,5 +24,5 @@ __kernel void directCoulombSumReference(__global float4* atomInfo, int numberOfA
         energyValue += atomInfo[i].w * partialResult;
     }
 
-    energyGrid[outIndex] += energyValue;
+    energyGrid[outIndex] = energyValue;
 }

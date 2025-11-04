@@ -143,14 +143,20 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
         //uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
     }
+#if defined(KTT_POWER_USAGE_NVML_KERNEL_MINTIME)
+    Timer pwrTimer;
+    pwrTimer.Start();
+#endif // KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL
 #endif // KTT_POWER_USAGE_NVML
     
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
 #if defined(KTT_POWER_USAGE_NVML) 
-#if defined(KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL)
+#if defined(KTT_POWER_USAGE_NVML_KERNEL_MINTIME)
     if (powerMeasurementAllowed) {
-        for (int i = 0; i < KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL-1; i++)
+        while (pwrTimer.GetCheckpointTime() < KTT_POWER_USAGE_NVML_KERNEL_MINTIME*1000000) {
             kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+        }
+        pwrTimer.Stop();
     }
 #endif // KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL
 #endif // KTT_POWER_USAGE_NVML
@@ -158,6 +164,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
 
 #if defined(KTT_POWER_USAGE_NVML)
     if (powerMeasurementAllowed) {
+        action->WaitForFinish(); //XXX enforcing sync here to get better power result
         //uint64_t energyEnd = m_PowerManager->GetTotalDeviceEnergy();
         const uint32_t powerUsage = m_PowerManager->GetPowerUsage();
         action->SetPowerUsage(powerUsage);

@@ -31,7 +31,7 @@ const bool useProfiling = false;
 const ktt::KernelResult& getBestResult(const std::vector<ktt::KernelResult>& res) {
     ktt::Nanoseconds bestTime = res[0].GetKernelDuration();
     int bestIdx = 0;
-    for (int i = 0; i < res.size(); i++)
+    for (unsigned int i = 0; i < res.size(); i++)
         if (res[i].GetKernelDuration() < bestTime) {
             bestTime = res[i].GetKernelDuration();
             bestIdx = i;

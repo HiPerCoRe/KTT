@@ -24,5 +24,5 @@ extern "C" __global__ void directCoulombSumReference(float4* atomInfo, int numbe
         energyValue += atomInfo[i].w * partialResult;
     }
 
-    energyGrid[outIndex] += energyValue;
+    energyGrid[outIndex] = energyValue;
 }
