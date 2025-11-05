@@ -28,6 +28,7 @@ public:
     void SetTemperature(const uint32_t temperature);
     void SetSMFrequency(const uint32_t smFrequency);
     void SetMemoryFrequency(const uint32_t memoryFrequency);
+    void SetDurationFromMultirun(const Nanoseconds duration);
     void WaitForFinish();
 
     ComputeActionId GetId() const;
@@ -56,6 +57,7 @@ private:
     std::optional<uint32_t> m_Temperature;
     std::optional<uint32_t> m_SMFrequency;
     std::optional<uint32_t> m_MemoryFrequency;
+    std::optional<Nanoseconds> m_MultirunDuration;
 };
 
 } // namespace ktt

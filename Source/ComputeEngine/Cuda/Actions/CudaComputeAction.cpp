@@ -63,6 +63,11 @@ void CudaComputeAction::SetMemoryFrequency(const uint32_t memoryFrequency)
     m_MemoryFrequency = memoryFrequency;
 }
 
+void CudaComputeAction::SetDurationFromMultirun(const Nanoseconds duration)
+{
+    m_MultirunDuration = duration;
+}
+
 void CudaComputeAction::WaitForFinish()
 {
     Logger::LogDebug("Waiting for CUDA kernel compute action with id " + std::to_string(m_Id));
@@ -117,7 +122,11 @@ const KernelComputeId& CudaComputeAction::GetComputeId() const
 ComputationResult CudaComputeAction::GenerateResult() const
 {
     ComputationResult result(m_Kernel->GetName());
-    const Nanoseconds duration = GetDuration();
+    Nanoseconds duration;
+    if (m_MultirunDuration.has_value())
+        duration = m_MultirunDuration.value();
+    else
+        duration = GetDuration();
     const Nanoseconds overhead = GetOverhead();
     const Nanoseconds compilationOverhead = GetCompilationOverhead();
     std::unique_ptr<KernelCompilationData> compilationData = m_Kernel->GenerateCompilationData();
