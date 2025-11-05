@@ -153,7 +153,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
 #if defined(KTT_POWER_USAGE_NVML) 
 #if defined(KTT_POWER_USAGE_NVML_KERNEL_MINTIME)
     if (powerMeasurementAllowed) {
-        while (pwrTimer.GetCheckpointTime() < KTT_POWER_USAGE_NVML_KERNEL_MINTIME*1000000) {
+        while (pwrTimer.GetCheckpointTime() < (long long)KTT_POWER_USAGE_NVML_KERNEL_MINTIME*(long long)1000000) {
             kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
         }
         pwrTimer.Stop();
