@@ -90,7 +90,7 @@ void ComputationResult::SetPowerUsage(const uint32_t powerUsage)
     m_PowerUsage = powerUsage;
 }
 
-void ComputationResult::SetTemperature(const uint32_t temperature)
+void ComputationResult::SetTemperature(const double temperature)
 {
     m_Temperature = temperature;
 }
@@ -205,7 +205,7 @@ uint32_t ComputationResult::GetPowerUsage() const
     return m_PowerUsage.value();
 }
 
-uint32_t ComputationResult::GetTemperature() const
+double ComputationResult::GetTemperature() const
 {   
     if (!HasTemperatureData())
     {

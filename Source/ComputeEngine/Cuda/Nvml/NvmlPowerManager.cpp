@@ -75,7 +75,7 @@ uint64_t NvmlPowerManager::GetTotalDeviceEnergy() const
     return energy;
 }
 
-uint32_t NvmlPowerManager::GetTemperature() const
+double NvmlPowerManager::GetTemperature() const
 {
     Logger::LogDebug("Generating average temperatures from number of samples: " + std::to_string(m_TempSamples.size()));
 
@@ -84,8 +84,8 @@ uint32_t NvmlPowerManager::GetTemperature() const
         return 0;
     }
 
-    const uint32_t sum = std::accumulate(m_TempSamples.cbegin(), m_TempSamples.cend(), 0);
-    return sum / static_cast<uint32_t>(m_TempSamples.size());
+    const double sum = std::accumulate(m_TempSamples.cbegin(), m_TempSamples.cend(), 0);
+    return sum / static_cast<double>(m_TempSamples.size());
 }
 
 uint32_t NvmlPowerManager::GetSMFrequency() const

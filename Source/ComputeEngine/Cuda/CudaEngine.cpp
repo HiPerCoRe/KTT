@@ -1,5 +1,7 @@
 #ifdef KTT_API_CUDA
 
+#include <numeric>
+
 #include <Api/KttException.h>
 #include <ComputeEngine/Cuda/Buffers/CudaDeviceBuffer.h>
 #include <ComputeEngine/Cuda/Buffers/CudaHostBuffer.h>
@@ -146,6 +148,10 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
 #if defined(KTT_POWER_USAGE_NVML_KERNEL_MINTIME)
     Timer pwrTimer;
     pwrTimer.Start();
+    std::vector<uint32_t> sumPwr;
+    std::vector<double> sumTemp;
+    std::vector<uint32_t> sumSMFreq;
+    std::vector<uint32_t> sumMemFreq;
 #endif // KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL
 #endif // KTT_POWER_USAGE_NVML
     
@@ -156,6 +162,10 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         unsigned long long execs = 1;
         while (pwrTimer.GetCheckpointTime() < (long long)KTT_POWER_USAGE_NVML_KERNEL_MINTIME*(long long)1000000) {
             kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+            sumPwr.push_back(m_PowerManager->GetPowerUsage());
+            sumTemp.push_back(m_PowerManager->GetTemperature());
+            sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
+            sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
             execs++;
         }
         pwrTimer.Stop();
@@ -168,14 +178,26 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
 #if defined(KTT_POWER_USAGE_NVML)
     if (powerMeasurementAllowed) {
         action->WaitForFinish(); //XXX enforcing sync here to get better power result
+        sumPwr.push_back(m_PowerManager->GetPowerUsage());
+        sumTemp.push_back(m_PowerManager->GetTemperature());
+        sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
+        sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
         //uint64_t energyEnd = m_PowerManager->GetTotalDeviceEnergy();
-        const uint32_t powerUsage = m_PowerManager->GetPowerUsage();
+        /*const uint32_t powerUsage = m_PowerManager->GetPowerUsage();
         action->SetPowerUsage(powerUsage);
-        const uint32_t temperature = m_PowerManager->GetTemperature();
+        const double temperature = m_PowerManager->GetTemperature();
         action->SetTemperature(temperature);
         const uint32_t smFrequency = m_PowerManager->GetSMFrequency();
         action->SetSMFrequency(smFrequency);
         const uint32_t memFrequency = m_PowerManager->GetMemoryFrequency();
+        action->SetMemoryFrequency(memFrequency);*/
+        const uint32_t powerUsage = static_cast<uint32_t>(std::accumulate(sumPwr.cbegin(), sumPwr.cend(), 0)) / static_cast<uint32_t>(sumPwr.size());
+        action->SetPowerUsage(powerUsage);
+        const double temperature = std::accumulate(sumTemp.cbegin(), sumTemp.cend(), 0) / static_cast<double>(sumTemp.size());
+        action->SetTemperature(temperature);
+        const uint32_t smFrequency = static_cast<uint32_t>(std::accumulate(sumSMFreq.cbegin(), sumSMFreq.cend(), 0)) / static_cast<uint32_t>(sumSMFreq.size());
+        action->SetSMFrequency(smFrequency);
+        const uint32_t memFrequency = static_cast<uint32_t>(std::accumulate(sumMemFreq.cbegin(), sumMemFreq.cend(), 0)) / static_cast<uint32_t>(sumMemFreq.size());
         action->SetMemoryFrequency(memFrequency);
     }
 #endif // KTT_POWER_USAGE_NVML

@@ -26,7 +26,7 @@ public:
     void EndCollection();
     uint32_t GetPowerUsage() const;
     uint64_t GetTotalDeviceEnergy() const;
-    uint32_t GetTemperature() const;
+    double GetTemperature() const;
     uint32_t GetSMFrequency() const;
     uint32_t GetMemoryFrequency() const;
 

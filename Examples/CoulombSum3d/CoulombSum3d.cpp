@@ -101,6 +101,7 @@ int main(int argc, char** argv)
     ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
     tuner.SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+    //tuner.SetLoggingLevel(ktt::LoggingLevel::Debug);
 
     if constexpr (computeApi == ktt::ComputeApi::OpenCL)
     {
@@ -234,7 +235,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-    const auto results = tuner.Tune(kernel/*, std::make_unique<ktt::ConfigurationCount>(1)*/);
+    const auto results = tuner.Tune(kernel/*, std::make_unique<ktt::ConfigurationCount>(2)*/);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::XML);
 

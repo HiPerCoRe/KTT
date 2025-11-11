@@ -48,7 +48,7 @@ void CudaComputeAction::SetPowerUsage(const uint32_t powerUsage)
     m_PowerUsage = powerUsage;
 }
 
-void CudaComputeAction::SetTemperature(const uint32_t temperature)
+void CudaComputeAction::SetTemperature(const double temperature)
 {
     m_Temperature = temperature;
 }

@@ -25,7 +25,7 @@ public:
     void IncreaseCompilationOverhead(const Nanoseconds overhead);
     void SetComputeId(const KernelComputeId& id);
     void SetPowerUsage(const uint32_t powerUsage);
-    void SetTemperature(const uint32_t temperature);
+    void SetTemperature(const double temperature);
     void SetSMFrequency(const uint32_t smFrequency);
     void SetMemoryFrequency(const uint32_t memoryFrequency);
     void SetDurationFromMultirun(const Nanoseconds duration);
@@ -54,7 +54,7 @@ private:
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;
     std::optional<uint32_t> m_PowerUsage;
-    std::optional<uint32_t> m_Temperature;
+    std::optional<double> m_Temperature;
     std::optional<uint32_t> m_SMFrequency;
     std::optional<uint32_t> m_MemoryFrequency;
     std::optional<Nanoseconds> m_MultirunDuration;
