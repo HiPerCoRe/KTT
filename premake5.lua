@@ -84,17 +84,20 @@ end
 function linkLibrariesNvidia()
     local path = os.getenv("CUDA_PATH")
     
-    if not path then
+    if not path and not _OPTIONS["cuda-pkg-mgr-install"] then
         return false
     end
     
     defines {"KTT_PLATFORM_NVIDIA"}
-    includedirs {"$(CUDA_PATH)/include"}
-        
-    if os.target() == "linux" then
-        libdirs {"$(CUDA_PATH)/lib64", "$(CUDA_PATH)/lib64/stubs"}
-    else
-        libdirs {"$(CUDA_PATH)/lib/x64", "$(CUDA_PATH)/lib/x64/stubs"}
+    
+    if not _OPTIONS["cuda-pkg-mgr-install"] then
+        includedirs {"$(CUDA_PATH)/include"}
+            
+        if os.target() == "linux" then
+            libdirs {"$(CUDA_PATH)/lib64", "$(CUDA_PATH)/lib64/stubs"}
+        else
+            libdirs {"$(CUDA_PATH)/lib/x64", "$(CUDA_PATH)/lib/x64/stubs"}
+        end
     end
     
     if not _OPTIONS["no-opencl"] then
@@ -116,19 +119,23 @@ function linkLibrariesNvidia()
             links {"nvidia-ml"}
         end
         
-        if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" or _OPTIONS["power-usage"] then
-            includedirs {"$(CUDA_PATH)/extras/CUPTI/include"}
-            libdirs {"$(CUDA_PATH)/extras/CUPTI/lib64"}
-            links {"cupti"}
-        end
-        
-        if _OPTIONS["profiling"] == "cupti-legacy" then
-            defines {"KTT_PROFILING_CUPTI_LEGACY"}
-            
-            if os.target() == "windows" then
-                libdirs {"$(CUDA_PATH)/extras/CUPTI/libx64"}
+        if not _OPTIONS["cuda-pkg-mgr-install"] then
+            if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" or _OPTIONS["power-usage"] then
+                includedirs {"$(CUDA_PATH)/extras/CUPTI/include"}
+                libdirs {"$(CUDA_PATH)/extras/CUPTI/lib64"}
+                links {"cupti"}
             end
-        elseif _OPTIONS["profiling"] == "cupti" then
+            
+            if _OPTIONS["profiling"] == "cupti-legacy" then
+                defines {"KTT_PROFILING_CUPTI_LEGACY"}
+                
+                if os.target() == "windows" then
+                    libdirs {"$(CUDA_PATH)/extras/CUPTI/libx64"}
+                end
+            end
+        end
+
+        if _OPTIONS["profiling"] == "cupti" then
             defines {"KTT_PROFILING_CUPTI"}
             links {"nvperf_host", "nvperf_target"}
         end
@@ -343,6 +350,12 @@ newoption
 {
     trigger = "no-tutorials",
     description = "Disables compilation of tutorials"
+}
+
+newoption
+{
+    trigger = "cuda-pkg-mgr-install",
+    description = "Configures KTT to use CUDA installed by a package manager. Doesn't require CUDA_PATH to be set.",
 }
 
 -- Project configuration
