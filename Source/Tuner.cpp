@@ -721,6 +721,21 @@ void Tuner::SetTimeUnit(const TimeUnit unit)
     TunerCore::SetTimeUnit(unit);
 }
 
+KernelResult Tuner::GetBestResult(const std::vector<KernelResult>& results) const
+{   
+    try
+    {
+        return m_Tuner->GetBestResult(results);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        static KernelResult voidResult;
+        return voidResult;
+    }
+}
+
+
 void Tuner::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format,
     const UserData& data) const
 {

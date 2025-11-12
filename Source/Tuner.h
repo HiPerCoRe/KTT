@@ -815,6 +815,13 @@ public:
       */
     static void SetTimeUnit(const TimeUnit unit);
 
+    /** @fn KernelResult GetBestResult(const std::vector<KernelResult>& results) const
+      * Get best kernel result.
+      * @param results Results which will be searched.
+      */
+    KernelResult GetBestResult(const std::vector<KernelResult>& results) const;
+
+
     /** @fn void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format,
       * const UserData& data = {}) const
       * Saves specified kernel results to the specified file.

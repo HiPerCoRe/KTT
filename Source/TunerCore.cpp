@@ -339,6 +339,23 @@ void TunerCore::SetTimeUnit(const TimeUnit unit)
     TimeConfiguration::GetInstance().SetTimeUnit(unit);
 }
 
+KernelResult TunerCore::GetBestResult(const std::vector<KernelResult>& results) const
+{
+    if (results.empty())
+    {
+        throw KttException("Unable to select the best result because input vector is empty");
+    }
+
+    ktt::Nanoseconds bestTime = results[0].GetKernelDuration();
+    int bestIdx = 0;
+    for (unsigned int i = 0; i < results.size(); i++)
+        if (results[i].GetKernelDuration() < bestTime) {
+            bestTime = results[i].GetKernelDuration();
+            bestIdx = i;
+        }
+    return results[bestIdx];
+}
+
 void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format,
     const UserData& data) const
 {

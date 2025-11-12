@@ -100,6 +100,7 @@ public:
     KernelConfiguration CreateConfiguration(const KernelId id, const ParameterInput& parameters) const;
     std::string GetKernelSource(const KernelId id, const KernelConfiguration& configuration) const;
     std::string GetKernelDefinitionSource(const KernelDefinitionId id, const KernelConfiguration& configuration) const;
+    KernelResult GetBestResult(const std::vector<KernelResult>& results) const;
 
     // Result printing
     static void SetTimeUnit(const TimeUnit unit);
