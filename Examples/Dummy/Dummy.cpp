@@ -9,6 +9,9 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <chrono>
+#include <thread>
+#include <stdlib.h>
 
 #include <Ktt.h>
 
@@ -25,6 +28,11 @@ const std::string kernelPrefix = "../";
     const std::string defaultKernelFile = kernelPrefix + "../Examples/Dummy/Dummy.cl";
     const auto computeApi = ktt::ComputeApi::OpenCL;
 #endif
+
+// Sleep in the manipulator (can be randomized to 0, sleepDuration)
+// (makes power measurement more challenging due to changes in GPU temperature)
+const unsigned int sleepDuration = 1000;
+const bool randomizeSleep = true;
 
 // Toggle kernel profiling.
 const bool useProfiling = false;
@@ -104,6 +112,15 @@ int main(int argc, char** argv)
     const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, ndRangeDimensions, workGroupDimensions);
 
     const ktt::KernelId kernel = tuner.CreateSimpleKernel("CoulombSum", definition);
+
+    tuner.SetLauncher(kernel, [definition](ktt::ComputeInterface& interface)
+    {
+        uint64_t sleep = sleepDuration;
+        if (randomizeSleep)
+            sleep = (sleep*rand())/RAND_MAX;
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
+        interface.RunKernel(definition);
+    });
 
     const ktt::ArgumentId aiId = tuner.AddArgumentVector(atomInfo, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId aixId = tuner.AddArgumentVector(atomInfoX, ktt::ArgumentAccessType::ReadOnly);
