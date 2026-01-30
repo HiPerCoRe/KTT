@@ -59,15 +59,15 @@
   "General": {
     "LoggingLevel": "Info",
     "TimeUnit": "Microseconds",
-    "OutputFile": "CoulombSumTuningOutput",
-    "OutputFormat": "XML"
+    "OutputFile": "CoulombSumFullSearchSpace.t4",
+    "OutputFormat": "JSON_T4"
   },
   "KernelSpecification": {
     "Language": "CUDA",
     "KernelName": "directCoulombSum",
     "KernelFile": "CoulombSum3d.cu",
     "CompilerOptions": ["-use_fast_math"],
-    "Profiling": false,
+    "Profiling": true,
     "SharedMemory": 0,
     "GlobalSize": {
       "X": "256 // WORK_GROUP_SIZE_X",
@@ -157,8 +157,6 @@
         "AccessType": "WriteOnly",
         "MemoryType": "Vector"
       }
-
-
     ]
   }
 }

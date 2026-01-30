@@ -13,6 +13,7 @@ public:
 
     virtual void Execute(TunerContext& context) override;
     virtual CommandPriority GetPriority() const override;
+    OutputFormat DetectOutputFormat(std::string filePath);
 
 private:
     std::string m_SimulationInput;

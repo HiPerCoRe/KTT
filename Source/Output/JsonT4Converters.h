@@ -14,26 +14,45 @@ using json = nlohmann::json;
 
 template <typename T>
     struct as_T4 {
-        const T& v;
-        explicit as_T4(const T& vv) : v(vv) {}
+        T& v;
+        explicit as_T4(T& vv) : v(vv) {}
     };
 
 template <typename T>
-    inline void to_json(nlohmann::json& j, const as_T4<std::vector<T>>& w) {
+    inline void to_json(nlohmann::json& j, const as_T4<const std::vector<T>>& w) {
         j = json::array();
         for (const auto& elem : w.v) {
             json j_elem;
-            to_json(j_elem, as_T4<T>(elem));
+            to_json(j_elem, as_T4<const T>(elem));
             j.push_back(j_elem);
         }
     }
 
-void to_json(json& j, const as_T4<KernelResult>& result);
-void to_json(json& j, const as_T4<KernelConfiguration>& configuration);
-void to_json(json& j, const as_T4<KernelProfilingCounter>& counter);
-void to_json(json& j, const as_T4<TunerMetadata>& metadata);
+void to_json(json& j, const as_T4<const KernelResult>& result);
+void to_json(json& j, const as_T4<const KernelConfiguration>& configuration);
+void to_json(json& j, const as_T4<const KernelProfilingCounter>& counter);
+void to_json(json& j, const as_T4<const TunerMetadata>& metadata);
 
-inline void to_json(json& j, const as_T4<ResultStatus>& w) {
+template <typename T>
+	inline void from_json(const nlohmann::json& j, as_T4<std::vector<T>>& w) {
+		w.v.clear();
+		w.v.reserve(j.size());
+
+		for (const auto& j_elem : j) {
+			T elem;
+            auto elemWrapper = as_T4(elem);
+			from_json(j_elem, elemWrapper);
+			w.v.push_back(std::move(elem));
+		}
+	}
+
+
+void from_json(const json& j, as_T4<KernelResult>& result);
+void from_json(const json& j, as_T4<KernelConfiguration>& configuration);
+void from_json(const json& j, as_T4<KernelProfilingCounter>& counter);
+void from_json(const json& j, as_T4<TunerMetadata>& metadata);
+
+inline void to_json(json& j, const as_T4<const ResultStatus>& w) {
     switch (w.v) {
         case ResultStatus::Ok: j = "correct"; break;
         case ResultStatus::ComputationFailed: j = "runtime"; break;
@@ -43,7 +62,23 @@ inline void to_json(json& j, const as_T4<ResultStatus>& w) {
     }
 }
 
-inline void to_json(json& j, const as_T4<TimeUnit>& w) {
+inline void from_json(const json& j, as_T4<ResultStatus>& w) {
+    const std::string& s = j.get_ref<const std::string&>();
+    if (s == "correct") {
+        w.v = ResultStatus::Ok;
+    } else if (s == "runtime") {
+        w.v = ResultStatus::ComputationFailed;
+    } else if (s == "correctness") {
+        w.v = ResultStatus::ValidationFailed;
+    } else if (s == "compile") {
+        w.v = ResultStatus::CompilationFailed;
+    } else {
+        throw KttException("During deserialization of json file, unknown ResultStatus string was detected: " + s);
+    }
+}
+
+
+inline void to_json(json& j, const as_T4<const TimeUnit>& w) {
     switch (w.v) {
         case TimeUnit::Nanoseconds: j = "nanoseconds"; break;
         case TimeUnit::Microseconds: j = "microseconds"; break;
@@ -52,47 +87,27 @@ inline void to_json(json& j, const as_T4<TimeUnit>& w) {
     }
 }
 
+inline void from_json(const json& j, as_T4<TimeUnit>& w) {
+    const std::string& s = j.get_ref<const std::string&>();
+    if (s == "nanoseconds") {
+        w.v = TimeUnit::Nanoseconds;
+    } else if (s == "microseconds") {
+        w.v = TimeUnit::Microseconds;
+    } else if (s == "milliseconds") {
+        w.v = TimeUnit::Milliseconds;
+    } else if (s == "seconds") {
+        w.v = TimeUnit::Seconds;
+    } else {
+        throw KttException("During deserialization of json file, unknown TimeUnit string was detected: " + s);
+    }
+}
+
+
 NLOHMANN_JSON_SERIALIZE_ENUM(ComputeApi,
 {
     {ComputeApi::OpenCL, "OpenCL"},
     {ComputeApi::CUDA, "CUDA"},
     {ComputeApi::Vulkan, "Vulkan"}
-});
-/*
-NLOHMANN_JSON_SERIALIZE_ENUM(GlobalSizeType,
-{
-    {GlobalSizeType::OpenCL, "OpenCL"},
-    {GlobalSizeType::CUDA, "CUDA"},
-    {GlobalSizeType::Vulkan, "Vulkan"}
-});
-
-NLOHMANN_JSON_SERIALIZE_ENUM(TimeUnit,
-{
-    {TimeUnit::Nanoseconds, "Nanoseconds"},
-    {TimeUnit::Microseconds, "Microseconds"},
-    {TimeUnit::Milliseconds, "Milliseconds"},
-    {TimeUnit::Seconds, "Seconds"}
-});
-
-NLOHMANN_JSON_SERIALIZE_ENUM(ResultStatus,
-{
-    {ResultStatus::Ok, "correct"},
-    {ResultStatus::ComputationFailed, "runtime"},
-    {ResultStatus::ValidationFailed, "correctness"},
-    {ResultStatus::CompilationFailed, "compile"},
-    {ResultStatus::DeviceLimitsExceeded, "runtime"}
-    // timeout is marked as ComputationFailed in KTT
-    // constraints os marked as CompilationFailed in KTT
-});
-
-NLOHMANN_JSON_SERIALIZE_ENUM(ParameterValueType,
-{
-    {ParameterValueType::Int, "Int"},
-    {ParameterValueType::UnsignedInt, "UnsignedInt"},
-    {ParameterValueType::Double, "Double"},
-    {ParameterValueType::Float, "Float"},
-    {ParameterValueType::Bool, "Bool"},
-    {ParameterValueType::String, "String"
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ProfilingCounterType,
@@ -105,28 +120,4 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ProfilingCounterType,
     {ProfilingCounterType::UtilizationLevel, "UtilizationLevel"}
 });
 
-void to_json(json& j, const TunerMetadata& metadata);
-void from_json(const json& j, TunerMetadata& metadata);
-
-void from_json(const json& j, ParameterPair& pair);
-
-void to_json(json& j, const DimensionVector& vector);
-void from_json(const json& j, DimensionVector& vector);
-
-void from_json(const json& j, KernelConfiguration& configuration);
-
-void to_json(json& j, const KernelProfilingCounter& counter);
-void from_json(const json& j, KernelProfilingCounter& counter);
-
-void to_json(json& j, const KernelCompilationData& data);
-void from_json(const json& j, KernelCompilationData& data);
-
-void to_json(json& j, const KernelProfilingData& data);
-void from_json(const json& j, KernelProfilingData& data);
-
-void to_json(json& j, const ComputationResult& result);
-void from_json(const json& j, ComputationResult& result);
-
-void from_json(const json& j, KernelResult& result);
-*/
 } // namespace ktt

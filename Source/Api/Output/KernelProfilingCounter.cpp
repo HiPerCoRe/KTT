@@ -1,5 +1,6 @@
 #include <Api/Output/KernelProfilingCounter.h>
 #include <Api/KttException.h>
+#include <Utility/ErrorHandling/Assert.h>
 
 namespace ktt
 {
@@ -30,6 +31,28 @@ const std::string& KernelProfilingCounter::GetName() const
 ProfilingCounterType KernelProfilingCounter::GetType() const
 {
     return m_Type;
+}
+
+const std::string KernelProfilingCounter::GetTypeString() const
+{
+    switch (m_Type)
+    {
+    case ProfilingCounterType::Int:
+        return "Int";
+    case ProfilingCounterType::UnsignedInt:
+        return "UnsignedInt";
+    case ProfilingCounterType::Throughput:
+        return "Throughput";
+    case ProfilingCounterType::UtilizationLevel:
+        return "UtilizationLevel";
+    case ProfilingCounterType::Double:
+        return "Double";
+    case ProfilingCounterType::Percent:
+        return "Percent";
+    default:
+        KttError("Unhandled value of ProfilingCounterType");
+        return "";
+    }
 }
 
 int64_t KernelProfilingCounter::GetValueInt() const
