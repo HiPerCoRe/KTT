@@ -37,7 +37,47 @@ void to_json(json& j, const as_T4<const KernelConfiguration>& configuration)
         j[pair.GetName()] = value;
     }
 }
-    
+
+void from_json(const json& j, as_T4<KernelConfiguration>& configuration)
+{
+    std::vector<ParameterPair> pairs;
+    for (auto it = j.begin(); it != j.end(); ++it) {
+        ParameterPair pair;
+        std::string name = it.key();
+        std::string valueStr;
+
+        try {
+            valueStr = it.value().get<std::string>();
+            if (valueStr == "true" || valueStr == "false") {
+                pair = ParameterPair(name, valueStr == "true");
+            }
+                // detect floating-point numbers (presence of '.' or exponent)
+            else if (valueStr.find('.') != std::string::npos ||
+                    valueStr.find('e') != std::string::npos ||
+                    valueStr.find('E') != std::string::npos) {
+                pair = ParameterPair(name, std::stod(valueStr));
+            }
+            // detect unsigned integers
+            else if (!valueStr.empty() && valueStr.find_first_not_of("0123456789") == std::string::npos) {
+                pair = ParameterPair(name, static_cast<uint64_t>(std::stoull(valueStr)));
+            }
+            // fallback: signed integer
+            else {
+                pair = ParameterPair(name, static_cast<int64_t>(std::stoll(valueStr)));
+            }
+        } catch (const std::invalid_argument&) {
+            pair = ParameterPair(name, valueStr);
+        } catch (const std::out_of_range&) {
+            pair = ParameterPair(name, valueStr);
+        }
+        catch (const nlohmann::json::type_error& e) {
+            KttError("JSON type error while parsing");
+        }
+        pairs.push_back(pair);
+    }
+    configuration.v = KernelConfiguration(pairs);
+}
+
 void to_json(json& j, const as_T4<const KernelResult>& result)
 {
     const auto& time = TimeConfiguration::GetInstance();
@@ -85,6 +125,91 @@ void to_json(json& j, const as_T4<const KernelResult>& result)
 
 }
 
+void from_json(const json& j, as_T4<KernelResult>& result)
+{
+    std::string kernelName = "";
+
+    std::string timestamp;
+    j.at("timestamp").get_to(timestamp);
+
+    KernelConfiguration configuration;
+    auto configurationWrapper = as_T4(configuration);
+    from_json(j.at("configuration"), configurationWrapper);
+
+    const auto& time = TimeConfiguration::GetInstance();
+
+    std::vector<ComputationResult> results;
+    ComputationResult computationResult;
+
+    double duration;
+    j.at("times").at("runtimes")[0].get_to(duration);
+    const Nanoseconds durationNs = time.ConvertToNanosecondsDouble(duration);
+
+    double compilationOverhead;
+    j.at("times").at("compilation").get_to(compilationOverhead);
+    const Nanoseconds compilationOverheadNs = time.ConvertToNanosecondsDouble(compilationOverhead);
+
+    double dataMovementOverhead;
+    if (j.at("times").contains("data"))
+        j.at("times").at("data").get_to(dataMovementOverhead);
+    else
+        j.at("times").at("framework").get_to(dataMovementOverhead);
+    const Nanoseconds dataMovementOverheadNs = time.ConvertToNanosecondsDouble(dataMovementOverhead);
+
+    double kernelOverhead = 0.0;
+    if (j.at("times").contains("kernel_overhead"))
+        j.at("times").at("kernel_overhead").get_to(kernelOverhead);
+    const Nanoseconds kernelOverheadNs = time.ConvertToNanosecondsDouble(kernelOverhead);
+
+    double profilingRunsOverhead = 0.0;
+    if (j.at("times").contains("profiling_runs"))
+        j.at("times").at("profiling_runs").get_to(profilingRunsOverhead);
+    const Nanoseconds profilingRunsOverheadNs = time.ConvertToNanosecondsDouble(profilingRunsOverhead);
+
+    double profilingOverhead = 0.0;
+    if (j.at("times").contains("profiling_overhead"))
+        j.at("times").at("profiling_overhead").get_to(profilingOverhead);
+    const Nanoseconds profilingOverheadNs = time.ConvertToNanosecondsDouble(profilingOverhead);
+
+    double validationOverhead;
+    j.at("times").at("validation").get_to(validationOverhead);
+    const Nanoseconds validationOverheadNs = time.ConvertToNanosecondsDouble(validationOverhead);
+
+    // search_overhead is measured again in simulated tuning, so we are not deserializing it
+
+    computationResult.SetDurationData(durationNs, kernelOverheadNs, compilationOverheadNs);
+    if (j.at("measurements").size() > 1) {
+        json j_measurements = j.at("measurements");
+        //remove "time" measurement
+        j_measurements.erase(j_measurements.begin());
+        std::vector<KernelProfilingCounter> counters;
+
+        for (const auto& j_counter : j_measurements) {
+            KernelProfilingCounter counter;
+            auto counterWrapper = as_T4(counter);
+            from_json(j_counter, counterWrapper);
+            counters.push_back(counter);
+        }
+        KernelProfilingData profilingData(counters);
+        auto uniqueData = std::make_unique<KernelProfilingData>(profilingData);
+        computationResult.SetProfilingData(std::move(uniqueData));
+    }
+
+    results.push_back(computationResult);
+
+    result.v = KernelResult(kernelName, configuration, results, timestamp);
+    result.v.SetDataMovementOverhead(dataMovementOverheadNs);
+    result.v.SetProfilingRunsOverhead(profilingRunsOverheadNs);
+    result.v.SetProfilingOverhead(profilingOverheadNs);
+    result.v.SetValidationOverhead(validationOverheadNs);
+
+    ResultStatus status;
+    auto statusWrapper = as_T4(status);
+    from_json(j.at("invalidity"), statusWrapper);
+    result.v.SetStatus(status);
+
+}
+
 void to_json(json& j, const as_T4<const KernelProfilingCounter>& counter)
 {
     j = json
@@ -113,6 +238,39 @@ void to_json(json& j, const as_T4<const KernelProfilingCounter>& counter)
     }
 }
 
+void from_json(const json& j, as_T4<KernelProfilingCounter>& counter)
+{
+    std::string name;
+    j.at("name").get_to(name);
+
+    ProfilingCounterType type;
+    j.at("type").get_to(type);
+
+    switch (type)
+    {
+    case ProfilingCounterType::Int:
+        int64_t valueInt;
+        j.at("value").get_to(valueInt);
+        counter.v = KernelProfilingCounter(name, type, valueInt);
+        break;
+    case ProfilingCounterType::UnsignedInt:
+    case ProfilingCounterType::Throughput:
+    case ProfilingCounterType::UtilizationLevel:
+        uint64_t valueUint;
+        j.at("value").get_to(valueUint);
+        counter.v = KernelProfilingCounter(name, type, valueUint);
+        break;
+    case ProfilingCounterType::Double:
+    case ProfilingCounterType::Percent:
+        double valueDouble;
+        j.at("value").get_to(valueDouble);
+        counter.v = KernelProfilingCounter(name, type, valueDouble);
+        break;
+    default:
+        KttError("Unhandled profiling counter type value");
+    }
+}
+
 void to_json(json& j, const as_T4<const TunerMetadata>& metadata)
 {
     j = json
@@ -129,6 +287,19 @@ void to_json(json& j, const as_T4<const TunerMetadata>& metadata)
     to_json(j_timeunit, as_T4(timeunit));
     j["timeunit"] = j_timeunit;
 }
+
+void from_json(const json& j, as_T4<TunerMetadata>& metadata)
+{
+    metadata.v.SetComputeApi(j.at("compute_api").get<ComputeApi>());
+    metadata.v.SetPlatformName(j.at("platform").get<std::string>());
+    metadata.v.SetDeviceName(j.at("device").get<std::string>());
+    metadata.v.SetTimestamp(j.at("timestamp").get<std::string>());
+    TimeUnit timeunit;
+    auto wrapper = as_T4(timeunit);
+    from_json(j.at("timeunit"), wrapper);
+    metadata.v.SetTimeUnit(timeunit);
+}
+
 /*
 void from_json(const json& j, TunerMetadata& metadata)
 {
