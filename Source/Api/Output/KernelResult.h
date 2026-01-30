@@ -92,6 +92,12 @@ public:
       */
     void SetProfilingRunsOverhead(const Nanoseconds overhead);
 
+    /** @fn void SetProfilingOverhead(const Nanoseconds overhead)
+      * Sets time of additional overhead (data movement and extra duration) to collect performance counters.
+      * @param overhead Additional overhead of kernels executed just to collect performance counters.
+      */
+    void SetProfilingOverhead(const Nanoseconds overhead);
+
     /** @fn const std::string& GetKernelName() const
       * Returns name of a kernel tied to the result.
       * @return Name of a kernel tied to the result.

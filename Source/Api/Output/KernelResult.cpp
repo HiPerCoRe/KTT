@@ -88,6 +88,11 @@ void KernelResult::SetProfilingRunsOverhead(const Nanoseconds overhead)
     m_ProfilingRunsOverhead = overhead;
 }
 
+void KernelResult::SetProfilingOverhead(const Nanoseconds overhead)
+{
+    m_ProfilingOverhead = overhead;
+}
+
 const std::string& KernelResult::GetKernelName() const
 {
     return m_KernelName;

@@ -6,7 +6,7 @@
 namespace ktt
 {
 
-void to_json(json& j, const as_T4<KernelConfiguration>& configuration)
+void to_json(json& j, const as_T4<const KernelConfiguration>& configuration)
 {
     j = json::object();
     const std::vector<ParameterPair>& pairs = configuration.v.GetPairs();
@@ -38,7 +38,7 @@ void to_json(json& j, const as_T4<KernelConfiguration>& configuration)
     }
 }
     
-void to_json(json& j, const as_T4<KernelResult>& result)
+void to_json(json& j, const as_T4<const KernelResult>& result)
 {
     const auto& time = TimeConfiguration::GetInstance();
 
@@ -46,7 +46,6 @@ void to_json(json& j, const as_T4<KernelResult>& result)
 
     const auto& configuration = result.v.GetConfiguration();
 
-    
     uint correct = 0;
     if (result.v.GetStatus() == ResultStatus::ValidationFailed)
         correct = 0;
@@ -59,16 +58,20 @@ void to_json(json& j, const as_T4<KernelResult>& result)
     j["configuration"] = j_configuration;
     j["times"] = json::object();
     j["times"]["compilation"] = time.ConvertFromNanosecondsDouble(result.v.GetCompilationOverhead());
-    j["times"]["framework"] = time.ConvertFromNanosecondsDouble(result.v.GetDataMovementOverhead()) + time.ConvertFromNanosecondsDouble(result.v.GetProfilingTotalOverhead());
+    j["times"]["data"] = time.ConvertFromNanosecondsDouble(result.v.GetDataMovementOverhead());
+    j["times"]["profiling_runs"] = time.ConvertFromNanosecondsDouble(result.v.GetProfilingRunsOverhead());
+    j["times"]["profiling_overhead"] = time.ConvertFromNanosecondsDouble(result.v.GetProfilingOverhead());
+    j["times"]["kernel_overhead"] = time.ConvertFromNanosecondsDouble(result.v.GetKernelOverhead());
+    j["times"]["framework"] = time.ConvertFromNanosecondsDouble(result.v.GetDataMovementOverhead()) + time.ConvertFromNanosecondsDouble(result.v.GetProfilingTotalOverhead()) + time.ConvertFromNanosecondsDouble(result.v.GetKernelOverhead());
     j["times"]["search_algorithm"] = time.ConvertFromNanosecondsDouble(result.v.GetSearcherOverhead());
     j["times"]["validation"] = time.ConvertFromNanosecondsDouble(result.v.GetValidationOverhead());
     j["times"]["runtimes"] = json::array({time.ConvertFromNanosecondsDouble(result.v.GetTotalDuration())});
-    j["invalidity"] = as_T4(result.v.GetStatus());
+    const ResultStatus& resultStatus = result.v.GetStatus();
+    to_json(j["invalidity"], as_T4(resultStatus));
     j["correctness"] = correct;
     j["objectives"] = json::array({"time"});
     j["measurements"] = json::array();
     j["measurements"].push_back({{"name","time"}, {"value",time.ConvertFromNanosecondsDouble(result.v.GetTotalDuration())}, {"unit",""}});
-    
 
     const std::vector<ComputationResult>& compResults = result.v.GetResults();
     if (compResults[0].HasProfilingData()) {
@@ -82,11 +85,13 @@ void to_json(json& j, const as_T4<KernelResult>& result)
 
 }
 
-void to_json(json& j, const as_T4<KernelProfilingCounter>& counter)
+void to_json(json& j, const as_T4<const KernelProfilingCounter>& counter)
 {
     j = json
     {
         {"name", counter.v.GetName()},
+        {"type", counter.v.GetTypeString()},
+        {"unit", ""}
     };
 
     switch (counter.v.GetType())
@@ -106,10 +111,9 @@ void to_json(json& j, const as_T4<KernelProfilingCounter>& counter)
     default:
         KttError("Unhandled profiling counter type value");
     }
-    j["unit"] = "";
 }
 
-void to_json(json& j, const as_T4<TunerMetadata>& metadata)
+void to_json(json& j, const as_T4<const TunerMetadata>& metadata)
 {
     j = json
     {
@@ -118,9 +122,12 @@ void to_json(json& j, const as_T4<TunerMetadata>& metadata)
         {"device", metadata.v.GetDeviceName()},
         {"autotuner", "KTT"},
         {"autotuner_version", metadata.v.GetKttVersion()},
-        {"timestamp", metadata.v.GetTimestamp()},
-        {"timeunit", as_T4(metadata.v.GetTimeUnit())},
+        {"timestamp", metadata.v.GetTimestamp()}
     };
+    json j_timeunit;
+    const TimeUnit timeunit = metadata.v.GetTimeUnit();
+    to_json(j_timeunit, as_T4(timeunit));
+    j["timeunit"] = j_timeunit;
 }
 /*
 void from_json(const json& j, TunerMetadata& metadata)

@@ -61,6 +61,12 @@ public:
       */
     ProfilingCounterType GetType() const;
 
+    /** @fn const std::string& GetTypeString() const
+      * Getter for the string with the type of a profiling counter. This string is used is serialization and deserialization of output.
+      * @return String with the type of a profiling counter. See ::ProfilingCounterType for more information.
+      */
+    const std::string GetTypeString() const;
+
     /** @fn int64_t GetValueInt() const
       * Getter for integer value of a profiling counter. Should be used if counter type is Int.
       * @return Integer value of a profiling counter.

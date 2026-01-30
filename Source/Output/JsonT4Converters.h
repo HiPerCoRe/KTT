@@ -14,26 +14,26 @@ using json = nlohmann::json;
 
 template <typename T>
     struct as_T4 {
-        const T& v;
-        explicit as_T4(const T& vv) : v(vv) {}
+        T& v;
+        explicit as_T4(T& vv) : v(vv) {}
     };
 
 template <typename T>
-    inline void to_json(nlohmann::json& j, const as_T4<std::vector<T>>& w) {
+    inline void to_json(nlohmann::json& j, const as_T4<const std::vector<T>>& w) {
         j = json::array();
         for (const auto& elem : w.v) {
             json j_elem;
-            to_json(j_elem, as_T4<T>(elem));
+            to_json(j_elem, as_T4<const T>(elem));
             j.push_back(j_elem);
         }
     }
 
-void to_json(json& j, const as_T4<KernelResult>& result);
-void to_json(json& j, const as_T4<KernelConfiguration>& configuration);
-void to_json(json& j, const as_T4<KernelProfilingCounter>& counter);
-void to_json(json& j, const as_T4<TunerMetadata>& metadata);
+void to_json(json& j, const as_T4<const KernelResult>& result);
+void to_json(json& j, const as_T4<const KernelConfiguration>& configuration);
+void to_json(json& j, const as_T4<const KernelProfilingCounter>& counter);
+void to_json(json& j, const as_T4<const TunerMetadata>& metadata);
 
-inline void to_json(json& j, const as_T4<ResultStatus>& w) {
+inline void to_json(json& j, const as_T4<const ResultStatus>& w) {
     switch (w.v) {
         case ResultStatus::Ok: j = "correct"; break;
         case ResultStatus::ComputationFailed: j = "runtime"; break;
@@ -43,7 +43,7 @@ inline void to_json(json& j, const as_T4<ResultStatus>& w) {
     }
 }
 
-inline void to_json(json& j, const as_T4<TimeUnit>& w) {
+inline void to_json(json& j, const as_T4<const TimeUnit>& w) {
     switch (w.v) {
         case TimeUnit::Nanoseconds: j = "nanoseconds"; break;
         case TimeUnit::Microseconds: j = "microseconds"; break;
