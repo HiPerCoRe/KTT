@@ -419,7 +419,7 @@ GlobalSizeType VulkanEngine::GetGlobalSizeType() const
 
 void VulkanEngine::SetCompilerOptions(const std::string& options, [[maybe_unused]] const bool overrideDefault)
 {
-    m_Configuration.SetCompilerOptions(options);
+    m_Configuration.SetStaticCompilerOptions(options);
     ClearKernelCache();
 }
 

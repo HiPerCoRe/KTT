@@ -26,7 +26,7 @@ public:
       */
     ParameterPair();
 
-    /** @fn explicit ParameterPair(const std::string& name, const ParameterValue& value)
+    /** @fn explicit ParameterPair(const std::string& name, const ParameterValue& value, const bool isCompilerParameter = false)
       * Constructor which creates a parameter pair with the specified value.
       * @param name Name of a kernel parameter tied to the pair.
       * @param value Value of a parameter.

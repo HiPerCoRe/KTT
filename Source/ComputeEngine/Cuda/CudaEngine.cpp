@@ -792,7 +792,7 @@ void CudaEngine::SetCompilerOptions(const std::string& options, const bool overr
         finalOptions += GetDefaultCompilerOptions();
     }
 
-    m_Configuration.SetCompilerOptions(finalOptions);
+    m_Configuration.SetStaticCompilerOptions(finalOptions);
     ClearKernelCache();
 }
 
