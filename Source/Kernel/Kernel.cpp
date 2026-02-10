@@ -216,7 +216,7 @@ KernelConfiguration Kernel::CreateConfiguration(const ParameterInput& parameters
             throw KttException("Value type mismatch for parameter with name " + pair.first);
         }
 
-        pairs.emplace_back(parameter.GetName(), pair.second);
+        pairs.emplace_back(parameter.GetName(), pair.second, parameter.IsCompilerParameter());
     }
 
     for (const auto& parameter : m_Parameters)

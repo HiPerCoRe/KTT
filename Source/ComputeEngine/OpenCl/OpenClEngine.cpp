@@ -120,6 +120,8 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
             ExceptionReason::DeviceLimitsExceeded);
     }
 
+    m_Configuration.SetTuningCompilerOptions(data.GetCompilerOptions());
+
     Timer timer;
     timer.Start();
 
@@ -650,7 +652,7 @@ GlobalSizeType OpenClEngine::GetGlobalSizeType() const
 
 void OpenClEngine::SetCompilerOptions(const std::string& options, [[maybe_unused]] const bool overrideDefault)
 {
-    m_Configuration.SetCompilerOptions(options);
+    m_Configuration.SetStaticCompilerOptions(options);
     ClearKernelCache();
 }
 
@@ -687,6 +689,9 @@ std::shared_ptr<OpenClKernel> OpenClEngine::LoadKernel(const KernelComputeData& 
     }
 
     auto program = std::make_unique<OpenClProgram>(*m_Context, data.GetSource());
+    // TODO remove
+    Logger::LogInfo( "|" + data.GetCompilerOptions() + "|" );
+    Logger::LogInfo( "|" + m_Configuration.GetCompilerOptions() + "|" );
     program->Build(m_Configuration.GetCompilerOptions());
     auto kernel = std::make_shared<OpenClKernel>(std::move(program), data.GetName(), m_ComputeIdGenerator, m_Configuration);
 

@@ -11,9 +11,10 @@ ParameterPair::ParameterPair() :
     m_Value(static_cast<uint64_t>(0))
 {}
 
-ParameterPair::ParameterPair(const std::string& name, const ParameterValue& value) :
+ParameterPair::ParameterPair(const std::string& name, const ParameterValue& value, const bool isCompilerParameter) :
     m_Name(name),
-    m_Value(value)
+    m_Value(value),
+    m_IsCompilerParameter(isCompilerParameter)
 {}
 
 void ParameterPair::SetValue(const ParameterValue& value)
@@ -70,6 +71,11 @@ uint64_t ParameterPair::GetValueUint() const
 ParameterValueType ParameterPair::GetValueType() const
 {
     return GetTypeFromValue(m_Value);
+}
+
+bool ParameterPair::IsCompilerParameter() const
+{
+    return m_IsCompilerParameter;
 }
 
 bool ParameterPair::HasSameValue(const ParameterPair& other) const

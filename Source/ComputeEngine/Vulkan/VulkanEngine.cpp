@@ -67,6 +67,8 @@ ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, cons
             ExceptionReason::DeviceLimitsExceeded);
     }
 
+    m_Configuration.SetTuningCompilerOptions(data.GetCompilerOptions());
+
     Timer timer;
     timer.Start();
 

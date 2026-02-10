@@ -321,6 +321,7 @@ void KernelRunner::ValidateResult(const Kernel& kernel, KernelResult& result, co
     {
         Logger::LogInfo("Kernel run completed successfully in " + std::to_string(duration) + tag
             + ", kernel duration was " + std::to_string(kernelDuration) + tag);
+        Logger::LogInfo("\n"); //TODO remove
         return;
     }
 

@@ -38,7 +38,8 @@ public:
     KernelId CreateKernel(const std::string& name, const std::vector<KernelDefinitionId>& definitionIds, KernelLauncher launcher);
     void RemoveKernel(const KernelId id);
     void SetLauncher(const KernelId id, KernelLauncher launcher);
-    void AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group);
+    void AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group,
+        const bool isCompilerParameter);
     void AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
         const std::string& group);
     void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function);

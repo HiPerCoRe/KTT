@@ -43,9 +43,16 @@ public:
 
     /** @fn std::string GeneratePrefix() const
       * Generates kernel source preprocessor definitions from configuration.
+      * Parameters where IsCompilerParameter() is true are excluded.
       * @return Kernel source preprocessor definitions.
       */
     std::string GeneratePrefix() const;
+
+    /** @fn std::string GetCompilerOptions() const
+      * Returns compiler options for parameters where IsCompilerParameter() is true.
+      * @return Compiler options for current configuration.
+      */
+    std::string GetCompilerOptions() const;
 
     /** @fn std::string GetString() const
       * Converts configuration to string.

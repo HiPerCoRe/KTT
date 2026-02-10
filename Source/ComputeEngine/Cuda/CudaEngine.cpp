@@ -122,6 +122,8 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             ExceptionReason::DeviceLimitsExceeded);
     }
 
+    m_Configuration.SetTuningCompilerOptions(data.GetCompilerOptions());
+
     Timer timer;
     timer.Start();
 
