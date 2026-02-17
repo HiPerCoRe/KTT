@@ -211,7 +211,7 @@ KernelConfiguration Kernel::CreateConfiguration(const ParameterInput& parameters
     {
         const auto& parameter = GetParamater(pair.first);
 
-        if (parameter.GetValueType() != ParameterPair::GetTypeFromValue(pair.second))
+        if (ParameterPair::GetTypeFromValue(parameter.GetValues()[0]) != ParameterPair::GetTypeFromValue(pair.second))
         {
             throw KttException("Value type mismatch for parameter with name " + pair.first);
         }

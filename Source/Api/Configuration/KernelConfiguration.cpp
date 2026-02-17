@@ -48,11 +48,11 @@ std::string KernelConfiguration::GetCompilerOptions() const
             continue;
         }
 
-        if (pair.GetValueType() == ParameterValueType::String)
+        if (std::holds_alternative<std::string>(pair.GetValue()))
         {
             result += " " + pair.GetName() + "=" + pair.GetValueString();
         }
-        else if (pair.GetValueType() == ParameterValueType::Bool && std::get<bool>(pair.GetValue()))
+        else if (std::holds_alternative<bool>(pair.GetValue()) && std::get<bool>(pair.GetValue()))
         {
             result += " " + pair.GetName();
         }

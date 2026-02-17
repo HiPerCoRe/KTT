@@ -47,6 +47,10 @@ std::string ParameterPair::GetValueString() const
         return std::get<bool>(m_Value) ? "true" : "false";
     case ParameterValueType::String:
         return std::get<std::string>(m_Value);
+    case ParameterValueType::CompilerParameter:
+        if (std::holds_alternative<std::string>(m_Value))
+            return std::get<std::string>(m_Value);
+        return std::get<bool>(m_Value) ? "set" : "notSet";
     default:
         KttError("Unhandled parameter value type");
         return "";
@@ -70,6 +74,10 @@ uint64_t ParameterPair::GetValueUint() const
 
 ParameterValueType ParameterPair::GetValueType() const
 {
+    if (this->IsCompilerParameter())
+    {
+        return ParameterValueType::CompilerParameter;
+    }
     return GetTypeFromValue(m_Value);
 }
 
@@ -96,6 +104,8 @@ bool ParameterPair::HasSameValue(const ParameterPair& other) const
     case ParameterValueType::Bool:
         return std::get<bool>(m_Value) == std::get<bool>(other.GetValue());
     case ParameterValueType::String:
+        return GetValueString() == other.GetValueString();
+    case ParameterValueType::CompilerParameter:
         return GetValueString() == other.GetValueString();
     default:
         KttError("Unhandled parameter value type");

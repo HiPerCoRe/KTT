@@ -32,9 +32,8 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<Para
 }
 
 KernelParameter::KernelParameter(const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
-    const std::string& group) :
-    // TODO IsCompilerParameter
-    KernelParameter(name, GetValuesFromScript(valueType, valueScript), group, false)
+    const std::string& group, const bool isCompilerParameter) :
+    KernelParameter(name, GetValuesFromScript(valueType, valueScript), group, isCompilerParameter)
 {}
 
 const std::string& KernelParameter::GetName() const
@@ -59,6 +58,10 @@ const std::vector<ParameterValue>& KernelParameter::GetValues() const
 
 ParameterValueType KernelParameter::GetValueType() const
 {
+    if (this->IsCompilerParameter())
+    {
+        return ParameterValueType::CompilerParameter;
+    }
     return ParameterPair::GetTypeFromValue(m_Values[0]);
 }
 

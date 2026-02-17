@@ -33,7 +33,11 @@ enum class ParameterValueType
 
     /** Parameter has string type.
       */
-    String
+    String,
+
+    /** Parameter is a compiler parameter.
+      */
+    CompilerParameter
 };
 
 } // namespace ktt

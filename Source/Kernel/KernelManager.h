@@ -31,7 +31,7 @@ public:
     void AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group,
         const bool isCompilerParameter);
     void AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
-        const std::string& group);
+        const std::string& group, const bool isCompilerParameter);
     void AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function);
     void AddGenericConstraint(const KernelId id, const std::vector<std::string>& parameters, GenericConstraintFunction function);
     void AddScriptConstraint(const KernelId id, const std::vector<std::string>& parameters, const std::string& script);
