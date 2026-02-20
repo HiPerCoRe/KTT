@@ -53,8 +53,9 @@ protected:
     void InitReference() override 
     {
         const int tileSize = 16;
-        InitReferenceKernelDefault("mtranReference", ktt::DimensionVector(m_width/tileSize, m_height/tileSize), ktt::DimensionVector(tileSize, tileSize),
-                                   {m_dstId, m_srcId, m_widthId, m_heightId}, {m_dstId});
+        InitReferenceKernelDefault("mtranReference", ktt::DimensionVector(m_width/tileSize, m_height/tileSize), 
+                                   ktt::DimensionVector(tileSize, tileSize), {m_dstId, m_srcId, m_widthId, m_heightId}, 
+                                   {m_dstId});
         cout << "Reference init done\n";
     }
     

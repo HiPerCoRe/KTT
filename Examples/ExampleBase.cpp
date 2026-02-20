@@ -31,12 +31,15 @@ void ExampleBase::Run()
     m_tuner.SaveResults(results, "Output", ktt::OutputFormat::JSON);
 }
 
-ExampleBase::ExampleBase(int argc, char** argv, 
-                 int defaultProblemSize, 
-                 string exampleFolderPath,
-                 string defaultKernelFileBaseName, 
-                 bool rapidTest,
-                 bool useProfiling):
+ExampleBase::ExampleBase(
+    int argc,
+    char** argv, 
+    int defaultProblemSize, 
+    string exampleFolderPath,
+    string defaultKernelFileBaseName,
+    bool rapidTest,
+    bool useProfiling
+):
     #if KTT_CUDA_EXAMPLE
     m_computeApi(ktt::ComputeApi::CUDA),
     #elif KTT_OPENCL_EXAMPLE
@@ -71,7 +74,7 @@ ExampleBase::ExampleBase(int argc, char** argv,
     }
   
     // Create tuner object for chosen platform and device
-    m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+    m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     m_tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
 
 }
