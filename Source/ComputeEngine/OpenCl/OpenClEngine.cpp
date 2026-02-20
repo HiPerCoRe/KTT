@@ -107,6 +107,8 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer, std::vector
 
 ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
 {
+    // Silence warning about unused parameter (placeholder for future power measurement)
+    (void)powerMeasurementAllowed;
     if (!ContainsKey(m_Queues, queueId))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));

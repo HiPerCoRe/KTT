@@ -109,6 +109,8 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<Que
 
 ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
 {
+    // Silence warning about unused parameter when KTT_POWER_USAGE_NVML is not defined
+    (void)powerMeasurementAllowed;
     if (!ContainsKey(m_Streams, queueId))
     {
         throw KttException("Invalid stream index: " + std::to_string(queueId));

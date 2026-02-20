@@ -25,6 +25,7 @@ function linkLibrariesAmd()
     end
     
     defines {"KTT_API_OPENCL"}
+    defines {"CL_TARGET_OPENCL_VERSION=300"}
     links {"OpenCL"}
     openClProjects = true
     
@@ -75,6 +76,7 @@ function linkLibrariesIntel()
     end
     
     defines {"KTT_API_OPENCL"}
+    defines {"CL_TARGET_OPENCL_VERSION=300"}
     links {"OpenCL"}
     openClProjects = true
     
@@ -99,6 +101,7 @@ function linkLibrariesNvidia()
     
     if not _OPTIONS["no-opencl"] then
         defines {"KTT_API_OPENCL"}
+        defines {"CL_TARGET_OPENCL_VERSION=300"}
         links {"OpenCL"}
         openClProjects = true
     end

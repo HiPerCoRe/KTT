@@ -6,6 +6,7 @@ namespace ktt
 
 void JsonT4Serializer::SerializeResults(const TunerMetadata& metadata, const std::vector<KernelResult>& results, const UserData& data, std::ostream& target)
 {
+    (void)data; // parameter currently unused
     json j_metadata;
     to_json(j_metadata, as_T4(metadata));
     json j_results;
