@@ -598,49 +598,49 @@ if openClProjects then
 
 project "AtfSamplesOpenCl"
     kind "ConsoleApp"
-    files {"Examples/AtfSamples/*.cpp", "Examples/AtfSamples/*.cl"}
+    files {"Examples/*.cpp", "Examples/AtfSamples/*.cpp", "Examples/AtfSamples/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "BicgOpenCl"
     kind "ConsoleApp"
-    files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cl"}
+    files {"Examples/*.cpp", "Examples/Bicg/*.cpp", "Examples/Bicg/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "ClTuneConvolutionOpenCl"
     kind "ConsoleApp"
-    files {"Examples/ClTuneConvolution/*.cpp", "Examples/ClTuneConvolution/*.cl"}
+    files {"Examples/*.cpp", "Examples/ClTuneConvolution/*.cpp", "Examples/ClTuneConvolution/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "ClTuneGemmOpenCl"
     kind "ConsoleApp"
-    files {"Examples/ClTuneGemm/*.cpp", "Examples/ClTuneGemm/*.cl"}
+    files {"Examples/*.cpp", "Examples/ClTuneGemm/*.cpp", "Examples/ClTuneGemm/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "Convolution3dOpenCl"
     kind "ConsoleApp"
-    files {"Examples/Convolution3d/*.cpp", "Examples/Convolution3d/*.cl"}
+    files {"Examples/*.cpp", "Examples/Convolution3d/*.cpp", "Examples/Convolution3d/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "CoulombSum2dOpenCl"
     kind "ConsoleApp"
-    files {"Examples/CoulombSum2d/*.cpp", "Examples/CoulombSum2d/*.cl"}
+    files {"Examples/*.cpp", "Examples/CoulombSum2d/*.cpp", "Examples/CoulombSum2d/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "CoulombSum3dOpenCl"
     kind "ConsoleApp"
-    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cl"}
+    files {"Examples/*.cpp", "Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
@@ -648,49 +648,49 @@ project "CoulombSum3dOpenCl"
 
 project "CoulombSum3dIterativeOpenCl"
     kind "ConsoleApp"
-    files {"Examples/CoulombSum3dIterative/*.cpp", "Examples/CoulombSum3dIterative/*.cl"}
+    files {"Examples/*.cpp", "Examples/CoulombSum3dIterative/*.cpp", "Examples/CoulombSum3dIterative/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "CovarianceOpenCl"
     kind "ConsoleApp"
-    files {"Examples/Covariance/*.cpp", "Examples/Covariance/*.cl"}
+    files {"Examples/*.cpp", "Examples/Covariance/*.cpp", "Examples/Covariance/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "NbodyOpenCl"
     kind "ConsoleApp"
-    files {"Examples/Nbody/*.cpp", "Examples/Nbody/*.cl"}
+    files {"Examples/*.cpp", "Examples/Nbody/*.cpp", "Examples/Nbody/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "ReductionOpenCl"
     kind "ConsoleApp"
-    files {"Examples/Reduction/*.cpp", "Examples/Reduction/*.cl"}
+    files {"Examples/*.cpp", "Examples/Reduction/*.cpp", "Examples/Reduction/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "SortOpenCl"
     kind "ConsoleApp"
-    files {"Examples/Sort/*.cpp", "Examples/Sort/*.cl"}
+    files {"Examples/*.cpp", "Examples/Sort/*.cpp", "Examples/Sort/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "Sort2OpenCl"
     kind "ConsoleApp"
-    files {"Examples/Sort2/*.cpp", "Examples/Sort2/*.cl"}
+    files {"Examples/*.cpp", "Examples/Sort2/*.cpp", "Examples/Sort2/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
 
 project "TransposeOpenCl"
     kind "ConsoleApp"
-    files {"Examples/Transpose/*.cpp", "Examples/Transpose/*.cl"}
+    files {"Examples/*.cpp", "Examples/Transpose/*.cpp", "Examples/Transpose/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
@@ -707,35 +707,35 @@ if cudaProjects then
 
 project "AtfSamplesCuda"
     kind "ConsoleApp"
-    files {"Examples/AtfSamples/*.cpp", "Examples/AtfSamples/*.cu"}
+    files {"Examples/*.cpp", "Examples/AtfSamples/*.cpp", "Examples/AtfSamples/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "BicgCuda"
     kind "ConsoleApp"
-    files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cu"}
+    files {"Examples/*.cpp", "Examples/Bicg/*.cpp", "Examples/Bicg/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "ClTuneConvolutionCuda"
     kind "ConsoleApp"
-    files {"Examples/ClTuneConvolution/*.cpp", "Examples/ClTuneConvolution/*.cu"}
+    files {"Examples/*.cpp", "Examples/ClTuneConvolution/*.cpp", "Examples/ClTuneConvolution/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "ClTuneGemmCuda"
     kind "ConsoleApp"
-    files {"Examples/ClTuneGemm/*.cpp", "Examples/ClTuneGemm/*.cu"}
+    files {"Examples/*.cpp", "Examples/ClTuneGemm/*.cpp", "Examples/ClTuneGemm/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "CoulombSum3dCuda"
     kind "ConsoleApp"
-    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cu"}
+    files {"Examples/*.cpp", "Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
@@ -743,49 +743,49 @@ project "CoulombSum3dCuda"
 
 project "NbodyCuda"
     kind "ConsoleApp"
-    files {"Examples/Nbody/*.cpp", "Examples/Nbody/*.cu"}
+    files {"Examples/*.cpp", "Examples/Nbody/*.cpp", "Examples/Nbody/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "ReductionCuda"
     kind "ConsoleApp"
-    files {"Examples/Reduction/*.cpp", "Examples/Reduction/*.cu"}
+    files {"Examples/*.cpp", "Examples/Reduction/*.cpp", "Examples/Reduction/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "SortCuda"
     kind "ConsoleApp"
-    files {"Examples/Sort/*.cpp", "Examples/Sort/*.cu"}
+    files {"Examples/*.cpp", "Examples/Sort/*.cpp", "Examples/Sort/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "Sort2Cuda"
     kind "ConsoleApp"
-    files {"Examples/Sort2/*.cpp", "Examples/Sort2/*.cu"}
+    files {"Examples/*.cpp", "Examples/Sort2/*.cpp", "Examples/Sort2/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "TransposeCuda"
     kind "ConsoleApp"
-    files {"Examples/Transpose/*.cpp", "Examples/Transpose/*.cu"}
+    files {"Examples/*.cpp", "Examples/Transpose/*.cpp", "Examples/Transpose/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "KernelTunerConvolutionCuda"
     kind "ConsoleApp"
-    files {"Examples/KernelTunerConvolution/*.cpp", "Examples/KernelTunerConvolution/*.cu"}
+    files {"Examples/*.cpp", "Examples/KernelTunerConvolution/*.cpp", "Examples/KernelTunerConvolution/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "KernelTunerPnpolyCuda"
     kind "ConsoleApp"
-    files {"Examples/KernelTunerPnpoly/*.cpp", "Examples/KernelTunerPnpoly/*.cu"}
+    files {"Examples/*.cpp", "Examples/KernelTunerPnpoly/*.cpp", "Examples/KernelTunerPnpoly/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
