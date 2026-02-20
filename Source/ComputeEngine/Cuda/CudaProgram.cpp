@@ -13,6 +13,14 @@
 #include <Utility/Logger/Logger.h>
 #include <Utility/StringUtility.h>
 
+//#define KTT_EXPERIMENTAL_SLEEP_AFTER_COMPILATION
+
+#ifdef KTT_EXPERIMENTAL_SLEEP_AFTER_COMPILATION
+#include <chrono>
+#include <thread>
+#include <random>
+#endif
+
 namespace ktt
 {
 
@@ -62,6 +70,21 @@ void CudaProgram::Build(const std::string& compilerOptions) const
 
     const std::string buildInfo = GetBuildInfo();
     CheckError(result, "nvrtcCompileProgram", buildInfo, ExceptionReason::CompilerError);
+
+#ifdef KTT_EXPERIMENTAL_SLEEP_AFTER_COMPILATION
+    // Random sleep after compilation
+    #ifndef KTT_SLEEP_MIN_MS
+    #define KTT_SLEEP_MIN_MS 0
+    #endif
+    #ifndef KTT_SLEEP_MAX_MS
+    #define KTT_SLEEP_MAX_MS 1000
+    #endif
+    static thread_local std::mt19937 generator(std::random_device{}());
+    std::uniform_int_distribution<int> distribution(KTT_SLEEP_MIN_MS, KTT_SLEEP_MAX_MS);
+    int sleepMs = distribution(generator);
+    Logger::LogDebug("Sleeping for " + std::to_string(sleepMs) + " ms after compilation of CUDA program " + m_Name);
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleepMs));
+#endif
 }
 
 void CudaProgram::InitializeSymbolData(const CudaKernel& kernel) const
