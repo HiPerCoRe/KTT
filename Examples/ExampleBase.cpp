@@ -2,7 +2,6 @@
 #include <Ktt.h>
 #include <vector>
 #include "ExampleBase.h"
-#include "KttTypes.h"
 
 using namespace std;
 
@@ -26,7 +25,7 @@ string ExampleBase::GetKernelFilePath(string exampleFolderPath, string baseName)
 void ExampleBase::Run() 
 {
     // Perform tuning
-    const auto results = m_tuner.Tune(m_kernel/*, make_unique<ktt::ConfigurationCount>(1)*/);
+    const auto results = m_tuner.Tune(m_kernel, GetStopCondition());
     m_tuner.SaveResults(results, "Output", ktt::OutputFormat::XML);
     m_tuner.SaveResults(results, "Output", ktt::OutputFormat::JSON);
 }
@@ -84,6 +83,19 @@ void ExampleBase::PostInitialize()
     InitData();
     InitKernels();
     InitTuningParameters();
+    InitSearcher();
+}
+
+void ExampleBase::InitSearcher() 
+{
+    // Not necessary, since DS is the default. Demonstrates how a searcher can be set.
+    // TODO: Should be empty?
+    m_tuner.SetSearcher(m_kernel, std::make_unique<ktt::DeterministicSearcher>());
+}
+
+unique_ptr<ktt::StopCondition> ExampleBase::GetStopCondition() 
+{
+    return nullptr;
 }
 
 void ExampleBase::FillBuffers(const vector<vector<float>*> &buffers) 

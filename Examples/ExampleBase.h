@@ -45,6 +45,9 @@ protected:
     virtual void InitData() = 0;
     virtual void InitKernels() = 0;
     virtual void InitTuningParameters() = 0;
+    virtual void InitSearcher();
+
+    virtual std::unique_ptr<ktt::StopCondition> GetStopCondition();
 
     void FillBuffers(const std::vector<std::vector<float>*> &buffers);
 
