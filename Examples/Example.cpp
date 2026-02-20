@@ -1,19 +1,22 @@
 #include <assert.h>
 #include <Ktt.h>
+#include <vector>
 #include "Example.h"
 
-std::string getKernelFilePath(std:: string exampleFolderPath, std::string baseName)
+using namespace std;
+
+string getKernelFilePath( string exampleFolderPath, string baseName)
 {
 #if defined(_MSC_VER)
-    const std::string kernelPrefix = "";
+    const string kernelPrefix = "";
 #else
-    const std::string kernelPrefix = "../";
+    const string kernelPrefix = "../";
 #endif
 
 #if KTT_CUDA_EXAMPLE
-    const std::string defaultKernelFileSuffix = ".cu";
+    const string defaultKernelFileSuffix = ".cu";
 #elif KTT_OPENCL_EXAMPLE
-    const std::string defaultKernelFileSuffix = ".cl";
+    const string defaultKernelFileSuffix = ".cl";
 #endif
 
     return kernelPrefix + exampleFolderPath + "/" + baseName + defaultKernelFileSuffix;
@@ -22,16 +25,16 @@ std::string getKernelFilePath(std:: string exampleFolderPath, std::string baseNa
 void Example::Run() 
 {
     // Perform tuning
-    const auto results = m_tuner.Tune(m_kernel/*, std::make_unique<ktt::ConfigurationCount>(1)*/);
-    m_tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::XML);
-    m_tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::JSON);
+    const auto results = m_tuner.Tune(m_kernel/*, make_unique<ktt::ConfigurationCount>(1)*/);
+    m_tuner.SaveResults(results, "Output", ktt::OutputFormat::XML);
+    m_tuner.SaveResults(results, "Output", ktt::OutputFormat::JSON);
 }
 
 Example::Example(int argc, char** argv, 
                  int defaultProblemSize, 
-                 std::string exampleFolderPath,
-                 std::string defaultKernelFileBaseName, 
-                 std::string defaultReferenceKernelFileBaseName,
+                 string exampleFolderPath,
+                 string defaultKernelFileBaseName, 
+                 string defaultReferenceKernelFileBaseName,
                  bool rapidTest,
                  bool useProfiling):
     #if KTT_CUDA_EXAMPLE
@@ -42,8 +45,8 @@ Example::Example(int argc, char** argv,
     m_rapidTest(rapidTest),
     m_useProfiling(useProfiling),
     m_tuner(
-        argc >= 2 ? std::stoul(std::string(argv[1])) : 0, // Get platform index.
-        argc >= 3 ? std::stoul(std::string(argv[2])) : 0, // Get device index.
+        argc >= 2 ? stoul(string(argv[1])) : 0, // Get platform index.
+        argc >= 3 ? stoul(string(argv[2])) : 0, // Get device index.
         m_computeApi
     )
 {
@@ -58,13 +61,13 @@ Example::Example(int argc, char** argv,
     m_kernelFile = getKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
     if (argc >= 5)
     {
-        m_kernelFile = std::string(argv[4]);
+        m_kernelFile = string(argv[4]);
     }
 
     m_referenceKernelFile = getKernelFilePath(exampleFolderPath, defaultReferenceKernelFileBaseName);
     if (argc >= 6)
     {
-        m_referenceKernelFile = std::string(argv[5]);
+        m_referenceKernelFile = string(argv[5]);
     }
 
     if (m_useProfiling)
@@ -77,9 +80,40 @@ Example::Example(int argc, char** argv,
     m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     m_tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
 
-    InitData();
-    InitKernels();
-    InitReference();
-    InitKernelArguments();
-    InitTuningParameters();
+}
+
+void Example::InitData()
+{
+    assert(false && "Method from Example must be implemented");
+}
+
+void Example::InitKernels() 
+{
+    assert(false && "Method from Example must be implemented");
+}
+
+void Example::InitReference() 
+{
+    assert(false && "Method from Example must be implemented");
+}
+
+void Example::InitKernelArguments() 
+{
+    assert(false && "Method from Example must be implemented");
+}
+
+void Example::InitTuningParameters() 
+{
+    assert(false && "Method from Example must be implemented");
+}
+
+void Example::InitReferenceDefault(vector<ktt::ArgumentId> outputArguments, ktt::KernelId refKernel) 
+{
+    if (!m_rapidTest)
+    {
+        for (auto arg : outputArguments) {
+            m_tuner.SetReferenceKernel(arg, refKernel, ktt::KernelConfiguration());
+        }
+        m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001);
+    }
 }
