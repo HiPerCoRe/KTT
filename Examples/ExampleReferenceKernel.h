@@ -1,4 +1,4 @@
-#include <Ktt.h>
+#pragma once
 #include "ExampleBase.h"
 
 class ExampleReferenceKernel : public ExampleBase 
