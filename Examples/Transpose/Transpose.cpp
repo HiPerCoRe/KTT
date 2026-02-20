@@ -1,5 +1,4 @@
 #include "../ExampleReferenceKernel.h"
-#include <iostream>
 
 using namespace std;
 
@@ -35,7 +34,6 @@ protected:
         m_src.resize(m_width * m_height);
 
         FillBuffers({&m_src});
-        cout << "Data init done\n";
     }
 
     void InitKernels() override
@@ -47,7 +45,6 @@ protected:
         
         InitKernelDefault("mtran", "Transposition", ktt::DimensionVector(m_width, m_height),
                           {m_dstId, m_srcId, m_widthId, m_heightId});
-        cout << "Kernel init done\n";
     }
 
     void InitReference() override 
@@ -56,7 +53,6 @@ protected:
         InitReferenceKernelDefault("mtranReference", ktt::DimensionVector(m_width/tileSize, m_height/tileSize), 
                                    ktt::DimensionVector(tileSize, tileSize), {m_dstId, m_srcId, m_widthId, m_heightId}, 
                                    {m_dstId});
-        cout << "Reference init done\n";
     }
     
     void InitTuningParameters() override 
@@ -114,7 +110,6 @@ protected:
 
         auto wgSize = [](const vector<uint64_t>& v) {return v[0]*v[1] >= 32;};
         m_tuner.AddConstraint(m_kernel, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, wgSize);
-        cout << "Init paremeters done\n";
     }
 };
 

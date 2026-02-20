@@ -2,13 +2,18 @@
 
 using namespace std;
 
-ExampleReferenceKernel::ExampleReferenceKernel(int argc, char** argv, 
-                 int defaultProblemSize, 
-                 string exampleFolderPath,
-                 string defaultKernelFileBaseName, 
-                 string defaultRefKernelFileBaseName,
-                 bool rapidTest,
-                 bool useProfiling): ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, rapidTest, useProfiling)
+ExampleReferenceKernel::ExampleReferenceKernel(
+    int argc, 
+    char** argv, 
+    int defaultProblemSize, 
+    string exampleFolderPath,
+    string defaultKernelFileBaseName, 
+    string defaultRefKernelFileBaseName,
+    bool rapidTest,
+    bool useProfiling
+): 
+    ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
+                rapidTest, useProfiling)
 {
     m_refKernelFile = GetKernelFilePath(exampleFolderPath, defaultRefKernelFileBaseName);
     if (argc >= 6)
