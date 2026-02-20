@@ -21,11 +21,15 @@ protected:
     ktt::Tuner m_tuner;
     int m_problemSize;
 
+    ktt::KernelDefinitionId m_definition;
+    ktt::KernelId m_kernel;
+
 
     Example(int argc, char** argv, int defaultProblemSize, std::string exampleFolderPath, 
             std::string defaultKernelFileBaseName, std::string defaultReferenceKernelFileBaseName = "",
             bool rapidTest = false, bool useProfiling = true);
 
+    virtual void InitData();
     virtual void InitKernels();
     virtual void InitReference();
     virtual void InitKernelArguments();

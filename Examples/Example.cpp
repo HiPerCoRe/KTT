@@ -19,6 +19,14 @@ std::string getKernelFilePath(std:: string exampleFolderPath, std::string baseNa
     return kernelPrefix + exampleFolderPath + "/" + baseName + defaultKernelFileSuffix;
 }
 
+void Example::Run() 
+{
+    // Perform tuning
+    const auto results = m_tuner.Tune(m_kernel/*, std::make_unique<ktt::ConfigurationCount>(1)*/);
+    m_tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::XML);
+    m_tuner.SaveResults(results, "TranspositionOutput", ktt::OutputFormat::JSON);
+}
+
 Example::Example(int argc, char** argv, 
                  int defaultProblemSize, 
                  std::string exampleFolderPath,
@@ -68,4 +76,10 @@ Example::Example(int argc, char** argv,
     // Create tuner object for chosen platform and device
     m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     m_tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+
+    InitData();
+    InitKernels();
+    InitReference();
+    InitKernelArguments();
+    InitTuningParameters();
 }
