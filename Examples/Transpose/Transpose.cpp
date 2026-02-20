@@ -8,7 +8,7 @@ using namespace std;
 
 
 class Transpose: public Example {
-public:
+protected:
     Transpose(int argc, char** argv, int defaultProblemSize, string exampleFolderPath, string defaultKernelFileBaseName, 
               string defaultReferenceKernelFileBaseName, bool rapidTest, bool useProfiling): 
         Example(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
@@ -18,7 +18,8 @@ public:
         m_height = m_width;
     }
 
-protected:
+    friend Example;
+
     vector<float> m_dst;
     vector<float> m_src;
 
@@ -37,7 +38,7 @@ protected:
         m_dst.resize(m_width * m_height);
         m_src.resize(m_width * m_height);
 
-        InitBuffers({&m_src});
+        FillBuffers({&m_src});
     }
 
     void InitKernels() override
@@ -122,6 +123,8 @@ protected:
 
 int main(int argc, char **argv)
 {
-    auto transpose = Transpose::Create<Transpose>(argc, argv, 16, "Examples/Transpose", "Transpose", "TransposeReference");
+    shared_ptr<Transpose> transpose = Transpose::Create<Transpose>(
+        argc, argv, 16, "Examples/Transpose", "Transpose", "TransposeReference"
+    );
     transpose->Run();
 }

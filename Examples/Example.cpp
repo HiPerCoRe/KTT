@@ -8,9 +8,9 @@ using namespace std;
 string getKernelFilePath( string exampleFolderPath, string baseName)
 {
 #if defined(_MSC_VER)
-    const string kernelPrefix = "";
-#else
     const string kernelPrefix = "../";
+#else
+    const string kernelPrefix = "../../";
 #endif
 
 #if KTT_CUDA_EXAMPLE
@@ -84,6 +84,15 @@ Example::Example(int argc, char** argv,
 
 }
 
+void Example::PostInitialize() 
+{
+    InitData();
+    InitKernels();
+    InitKernelArguments();
+    InitReference();
+    InitTuningParameters();
+}
+
 void Example::InitData()
 {
     assert(false && "Abstract method from Example must be implemented");
@@ -109,7 +118,7 @@ void Example::InitTuningParameters()
     assert(false && "Abstract method from Example must be implemented");
 }
 
-void Example::InitBuffers(const vector<vector<float>*> &buffers) 
+void Example::FillBuffers(const vector<vector<float>*> &buffers) 
 {
     random_device device;
     default_random_engine engine(device());

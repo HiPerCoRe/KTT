@@ -20,13 +20,9 @@ public:
             std::string defaultKernelFileBaseName, std::string defaultReferenceKernelFileBaseName = "",
             bool rapidTest = false, bool useProfiling = false)
     {
-        auto ex = std::make_unique<T>(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
-                                 defaultReferenceKernelFileBaseName, rapidTest, useProfiling);
-        ex->InitData();
-        ex->InitKernels();
-        ex->InitKernelArguments();
-        ex->InitReference();
-        ex->InitTuningParameters();
+        std::shared_ptr<T> ex(new T(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
+                                    defaultReferenceKernelFileBaseName, rapidTest, useProfiling));
+        ex->PostInitialize();
         return ex;
     }
 
@@ -48,13 +44,14 @@ protected:
     ktt::KernelDefinitionId m_definition;
     ktt::KernelId m_kernel;
 
+    virtual void PostInitialize();
     virtual void InitData();
     virtual void InitKernels();
     virtual void InitKernelArguments();
     virtual void InitReference();
     virtual void InitTuningParameters();
 
-    void InitBuffers(const std::vector<std::vector<float>*> &buffers);
+    void FillBuffers(const std::vector<std::vector<float>*> &buffers);
 
     void InitReferenceDefault(const std::vector<ktt::ArgumentId> &outputArguments, const ktt::KernelId refKernel);
 
