@@ -57,6 +57,8 @@ Example::Example(int argc, char** argv,
     {
       m_problemSize = atoi(argv[3]);
     }
+    m_width = m_problemSize * 1024 * 1024;
+    m_height = 1;
 
     m_kernelFile = getKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
     if (argc >= 5)
@@ -84,30 +86,63 @@ Example::Example(int argc, char** argv,
 
 void Example::InitData()
 {
-    assert(false && "Method from Example must be implemented");
+    assert(false && "Abstract method from Example must be implemented");
 }
 
 void Example::InitKernels() 
 {
-    assert(false && "Method from Example must be implemented");
+    assert(false && "Abstract method from Example must be implemented");
 }
 
 void Example::InitReference() 
 {
-    assert(false && "Method from Example must be implemented");
+    assert(false && "Abstract method from Example must be implemented");
 }
 
 void Example::InitKernelArguments() 
 {
-    assert(false && "Method from Example must be implemented");
+    assert(false && "Abstract method from Example must be implemented");
 }
 
 void Example::InitTuningParameters() 
 {
-    assert(false && "Method from Example must be implemented");
+    assert(false && "Abstract method from Example must be implemented");
 }
 
-void Example::InitReferenceDefault(vector<ktt::ArgumentId> outputArguments, ktt::KernelId refKernel) 
+void Example::InitBuffers(const vector<vector<float>*> &buffers) 
+{
+    random_device device;
+    default_random_engine engine(device());
+    uniform_real_distribution<float> distribution(0.0f, 10.0f);
+    for (vector<float> *buffer : buffers) 
+    {
+        for (size_t i = 0; i < buffer->size(); ++i) 
+        {
+           buffer->at(i) = distribution(engine); 
+        }
+    } 
+}
+
+void Example::InitKernelsDefault(const string &kernelFunctionName, const string &kernelName,
+                                 const ReferenceParameters *refParams)
+{
+    const ktt::DimensionVector ndRangeDimensions(m_width, m_height);
+
+    // Create m_kernel and configure input/output
+    m_definition = m_tuner.AddKernelDefinitionFromFile(kernelFunctionName, m_kernelFile, ndRangeDimensions,
+        ktt::DimensionVector(1, 1));
+    m_kernel = m_tuner.CreateSimpleKernel(kernelName, m_definition);
+    
+    if (refParams == nullptr) return;
+    const ktt::DimensionVector ndRangeDimensionsReference(m_width / refParams->workGroupWidth, m_height / refParams ->workGroupHeight);
+    const ktt::DimensionVector referenceWorkGroupDimensions(refParams->workGroupWidth, refParams->workGroupHeight);
+
+    refParams->definition = m_tuner.AddKernelDefinitionFromFile(refParams->functionName, m_referenceKernelFile,
+        ndRangeDimensionsReference, referenceWorkGroupDimensions);
+    refParams->kernel = m_tuner.CreateSimpleKernel(refParams->name, refParams->definition);
+}
+
+void Example::InitReferenceDefault(const vector<ktt::ArgumentId> &outputArguments, ktt::KernelId refKernel) 
 {
     if (!m_rapidTest)
     {

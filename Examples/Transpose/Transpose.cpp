@@ -12,16 +12,13 @@ public:
     Transpose(int argc, char** argv, int defaultProblemSize, string exampleFolderPath, string defaultKernelFileBaseName, 
               string defaultReferenceKernelFileBaseName, bool rapidTest, bool useProfiling): 
         Example(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
-                defaultReferenceKernelFileBaseName, rapidTest, useProfiling),
-        m_width(1024*static_cast<int>(sqrtf(m_problemSize))),
-        m_height(m_width)
+                defaultReferenceKernelFileBaseName, rapidTest, useProfiling)
     {
-        
+        m_width = 1024*static_cast<int>(sqrtf(m_problemSize));
+        m_height = m_width;
     }
 
 protected:
-    const int m_width;
-    const int m_height;
     vector<float> m_dst;
     vector<float> m_src;
 
@@ -40,37 +37,13 @@ protected:
         m_dst.resize(m_width * m_height);
         m_src.resize(m_width * m_height);
 
-        // Initialize data
-        random_device device;
-        default_random_engine engine(device());
-        uniform_real_distribution<float> distribution(0.0f, 10.0f);
-
-        for (int i = 0; i < m_width * m_height; ++i)
-        {
-            m_src[i] = distribution(engine);
-        }
+        InitBuffers({&m_src});
     }
 
     void InitKernels() override
     {
-        const ktt::DimensionVector ndRangeDimensions(m_width, m_height);
-        const ktt::DimensionVector ndRangeDimensionsReference(m_width / 16, m_height / 16);
-        const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
-
-        // Create m_kernel and configure input/output
-        m_definition = m_tuner.AddKernelDefinitionFromFile("mtran", m_kernelFile, ndRangeDimensions,
-            ktt::DimensionVector(1, 1));
-        m_referenceDefinition = m_tuner.AddKernelDefinitionFromFile("mtranReference", m_referenceKernelFile,
-            ndRangeDimensionsReference, referenceWorkGroupDimensions);
-        
-        m_kernel = m_tuner.CreateSimpleKernel("Transposition", m_definition);
-        m_referenceKernel = m_tuner.CreateSimpleKernel("TranspositionReference", m_referenceDefinition);
-
-    }
-
-    void InitReference() override 
-    {
-        InitReferenceDefault({m_dstId}, m_referenceKernel);
+        const ReferenceParameters refParams = {"mtranReference", "TranspositionReference", m_referenceDefinition, m_referenceKernel, 16, 16};
+        InitKernelsDefault("mtran", "Transposition", &refParams);
     }
     
     void InitKernelArguments() override 
@@ -82,6 +55,11 @@ protected:
         
         m_tuner.SetArguments(m_definition, {m_dstId, m_srcId, m_widthId, m_heightId});
         m_tuner.SetArguments(m_referenceDefinition, {m_dstId, m_srcId, m_widthId, m_heightId});
+    }
+
+    void InitReference() override 
+    {
+        InitReferenceDefault({m_dstId}, m_referenceKernel);
     }
     
     void InitTuningParameters() override 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Ktt.h>
-#include <memory>
 
 #ifndef RAND_MAX
 #define RAND_MAX UINT_MAX
@@ -25,8 +24,8 @@ public:
                                  defaultReferenceKernelFileBaseName, rapidTest, useProfiling);
         ex->InitData();
         ex->InitKernels();
-        ex->InitReference();
         ex->InitKernelArguments();
+        ex->InitReference();
         ex->InitTuningParameters();
         return ex;
     }
@@ -38,6 +37,9 @@ protected:
     // Toggle kernel profiling.
     const bool m_useProfiling;
 
+    int m_width;
+    int m_height;
+
     std::string m_kernelFile;
     std::string m_referenceKernelFile;
     ktt::Tuner m_tuner;
@@ -48,9 +50,24 @@ protected:
 
     virtual void InitData();
     virtual void InitKernels();
-    virtual void InitReference();
     virtual void InitKernelArguments();
+    virtual void InitReference();
     virtual void InitTuningParameters();
 
-    void InitReferenceDefault(std::vector<ktt::ArgumentId> outputArguments, ktt::KernelId refKernel);
+    void InitBuffers(const std::vector<std::vector<float>*> &buffers);
+
+    void InitReferenceDefault(const std::vector<ktt::ArgumentId> &outputArguments, const ktt::KernelId refKernel);
+
+    struct ReferenceParameters 
+    {
+        const std::string &functionName;
+        const std::string &name;
+        ktt::KernelDefinitionId &definition;
+        ktt::KernelId &kernel; 
+        
+        int workGroupWidth;
+        int workGroupHeight;
+    };
+    void InitKernelsDefault(const std::string &kernelFunctionName, const std::string &kernelName,
+                            const ReferenceParameters *refParams = nullptr);
 };
