@@ -17,13 +17,13 @@ protected:
     const bool m_useProfiling;
 
     std::string m_kernelFile;
+    std::string m_referenceKernelFile;
     ktt::Tuner m_tuner;
     int m_problemSize;
-    int m_bufferSize;
 
 
-    Example(int argc, char** argv, std::string exampleFolderPath, int defaultProblemSize, 
-            std::string defaultKernelFileBaseName, std::string defaultRererenceKernelFileBaseName = "",
+    Example(int argc, char** argv, int defaultProblemSize, std::string exampleFolderPath, 
+            std::string defaultKernelFileBaseName, std::string defaultReferenceKernelFileBaseName = "",
             bool rapidTest = false, bool useProfiling = true);
 
     virtual void InitKernels();

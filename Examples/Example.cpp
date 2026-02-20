@@ -2,28 +2,8 @@
 #include <Ktt.h>
 #include "Example.h"
 
-Example::Example(int argc, char** argv, 
-                 std::string exampleFolderPath, 
-                 int defaultProblemSize,
-                 std::string defaultKernelFileBaseName, 
-                 std::string defaultRererenceKernelFileBaseName,
-                 bool rapidTest,
-                 bool useProfiling):
-    #if KTT_CUDA_EXAMPLE
-    m_computeApi(ktt::ComputeApi::CUDA),
-    #elif KTT_OPENCL_EXAMPLE
-    m_computeApi(ktt::ComputeApi::OpenCL),
-    #endif
-    m_rapidTest(rapidTest),
-    m_useProfiling(useProfiling),
-    m_tuner(
-        argc >= 2 ? std::stoul(std::string(argv[1])) : 0,
-        argc >= 3 ? std::stoul(std::string(argv[2])) : 0,
-        m_computeApi
-    )
+std::string getKernelFilePath(std:: string exampleFolderPath, std::string baseName)
 {
-    assert(argv != NULL);
-
 #if defined(_MSC_VER)
     const std::string kernelPrefix = "";
 #else
@@ -36,16 +16,47 @@ Example::Example(int argc, char** argv,
     const std::string defaultKernelFileSuffix = ".cl";
 #endif
 
-    m_kernelFile = kernelPrefix + exampleFolderPath + "/" + defaultKernelFileBaseName + defaultKernelFileSuffix;
-    if (argc >= 4)
-    {
-        m_kernelFile = std::string(argv[3]);
-    }
+    return kernelPrefix + exampleFolderPath + "/" + baseName + defaultKernelFileSuffix;
+}
+
+Example::Example(int argc, char** argv, 
+                 int defaultProblemSize, 
+                 std::string exampleFolderPath,
+                 std::string defaultKernelFileBaseName, 
+                 std::string defaultReferenceKernelFileBaseName,
+                 bool rapidTest,
+                 bool useProfiling):
+    #if KTT_CUDA_EXAMPLE
+    m_computeApi(ktt::ComputeApi::CUDA),
+    #elif KTT_OPENCL_EXAMPLE
+    m_computeApi(ktt::ComputeApi::OpenCL),
+    #endif
+    m_rapidTest(rapidTest),
+    m_useProfiling(useProfiling),
+    m_tuner(
+        argc >= 2 ? std::stoul(std::string(argv[1])) : 0, // Get platform index.
+        argc >= 3 ? std::stoul(std::string(argv[2])) : 0, // Get device index.
+        m_computeApi
+    )
+{
+    assert(argv != NULL);
 
     m_problemSize = defaultProblemSize; // In MiB
+    if (argc >= 4)
+    {
+      m_problemSize = atoi(argv[3]);
+    }
+
+    m_kernelFile = getKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
     if (argc >= 5)
     {
-      m_problemSize = atoi(argv[4]);
+        m_kernelFile = std::string(argv[4]);
+    }
+
+    m_referenceKernelFile = getKernelFilePath(exampleFolderPath, defaultReferenceKernelFileBaseName);
+    if (argc >= 6)
+    {
+        m_referenceKernelFile = std::string(argv[5]);
     }
 
     if (m_useProfiling)
