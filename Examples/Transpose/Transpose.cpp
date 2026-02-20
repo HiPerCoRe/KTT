@@ -1,31 +1,27 @@
-#include <random>
-#include <string>
-#include <vector>
-
-#include "../Example.h"
+#include "../ExampleReferenceKernel.h"
+#include <iostream>
 
 using namespace std;
 
 
-class Transpose: public Example {
+class Transpose: public ExampleReferenceKernel {
 protected:
     Transpose(int argc, char** argv, int defaultProblemSize, string exampleFolderPath, string defaultKernelFileBaseName, 
               string defaultReferenceKernelFileBaseName, bool rapidTest, bool useProfiling): 
-        Example(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
+        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
                 defaultReferenceKernelFileBaseName, rapidTest, useProfiling)
     {
         m_width = 1024*static_cast<int>(sqrtf(m_problemSize));
         m_height = m_width;
     }
 
-    friend Example;
+    friend ExampleReferenceKernel;
+
+    int m_width, m_height;
 
     vector<float> m_dst;
     vector<float> m_src;
 
-    ktt::KernelDefinitionId m_referenceDefinition;
-    ktt::KernelId m_referenceKernel;
-    
     ktt::ArgumentId m_srcId;
     ktt::ArgumentId m_dstId;
     ktt::ArgumentId m_widthId;
@@ -39,28 +35,27 @@ protected:
         m_src.resize(m_width * m_height);
 
         FillBuffers({&m_src});
+        cout << "Data init done\n";
     }
 
     void InitKernels() override
-    {
-        const ReferenceParameters refParams = {"mtranReference", "TranspositionReference", m_referenceDefinition, m_referenceKernel, 16, 16};
-        InitKernelsDefault("mtran", "Transposition", &refParams);
-    }
-    
-    void InitKernelArguments() override 
     {
         m_srcId = m_tuner.AddArgumentVector(m_src, ktt::ArgumentAccessType::ReadOnly);
         m_dstId = m_tuner.AddArgumentVector(m_dst, ktt::ArgumentAccessType::WriteOnly);
         m_widthId = m_tuner.AddArgumentScalar(m_width);
         m_heightId = m_tuner.AddArgumentScalar(m_height);
         
-        m_tuner.SetArguments(m_definition, {m_dstId, m_srcId, m_widthId, m_heightId});
-        m_tuner.SetArguments(m_referenceDefinition, {m_dstId, m_srcId, m_widthId, m_heightId});
+        InitKernelDefault("mtran", "Transposition", ktt::DimensionVector(m_width, m_height),
+                          {m_dstId, m_srcId, m_widthId, m_heightId});
+        cout << "Kernel init done\n";
     }
 
     void InitReference() override 
     {
-        InitReferenceDefault({m_dstId}, m_referenceKernel);
+        const int tileSize = 16;
+        InitReferenceKernelDefault("mtranReference", ktt::DimensionVector(m_width/tileSize, m_height/tileSize), ktt::DimensionVector(tileSize, tileSize),
+                                   {m_dstId, m_srcId, m_widthId, m_heightId}, {m_dstId});
+        cout << "Reference init done\n";
     }
     
     void InitTuningParameters() override 
@@ -118,6 +113,7 @@ protected:
 
         auto wgSize = [](const vector<uint64_t>& v) {return v[0]*v[1] >= 32;};
         m_tuner.AddConstraint(m_kernel, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, wgSize);
+        cout << "Init paremeters done\n";
     }
 };
 

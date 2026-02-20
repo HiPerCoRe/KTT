@@ -1,11 +1,12 @@
 #include <assert.h>
 #include <Ktt.h>
 #include <vector>
-#include "Example.h"
+#include "ExampleBase.h"
+#include "KttTypes.h"
 
 using namespace std;
 
-string getKernelFilePath( string exampleFolderPath, string baseName)
+string ExampleBase::GetKernelFilePath(string exampleFolderPath, string baseName)
 {
 #if defined(_MSC_VER)
     const string kernelPrefix = "../";
@@ -22,7 +23,7 @@ string getKernelFilePath( string exampleFolderPath, string baseName)
     return kernelPrefix + exampleFolderPath + "/" + baseName + defaultKernelFileSuffix;
 }
 
-void Example::Run() 
+void ExampleBase::Run() 
 {
     // Perform tuning
     const auto results = m_tuner.Tune(m_kernel/*, make_unique<ktt::ConfigurationCount>(1)*/);
@@ -30,11 +31,10 @@ void Example::Run()
     m_tuner.SaveResults(results, "Output", ktt::OutputFormat::JSON);
 }
 
-Example::Example(int argc, char** argv, 
+ExampleBase::ExampleBase(int argc, char** argv, 
                  int defaultProblemSize, 
                  string exampleFolderPath,
                  string defaultKernelFileBaseName, 
-                 string defaultReferenceKernelFileBaseName,
                  bool rapidTest,
                  bool useProfiling):
     #if KTT_CUDA_EXAMPLE
@@ -57,19 +57,11 @@ Example::Example(int argc, char** argv,
     {
       m_problemSize = atoi(argv[3]);
     }
-    m_width = m_problemSize * 1024 * 1024;
-    m_height = 1;
 
-    m_kernelFile = getKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
+    m_kernelFile = GetKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
     if (argc >= 5)
     {
         m_kernelFile = string(argv[4]);
-    }
-
-    m_referenceKernelFile = getKernelFilePath(exampleFolderPath, defaultReferenceKernelFileBaseName);
-    if (argc >= 6)
-    {
-        m_referenceKernelFile = string(argv[5]);
     }
 
     if (m_useProfiling)
@@ -84,41 +76,14 @@ Example::Example(int argc, char** argv,
 
 }
 
-void Example::PostInitialize() 
+void ExampleBase::PostInitialize() 
 {
     InitData();
     InitKernels();
-    InitKernelArguments();
-    InitReference();
     InitTuningParameters();
 }
 
-void Example::InitData()
-{
-    assert(false && "Abstract method from Example must be implemented");
-}
-
-void Example::InitKernels() 
-{
-    assert(false && "Abstract method from Example must be implemented");
-}
-
-void Example::InitReference() 
-{
-    assert(false && "Abstract method from Example must be implemented");
-}
-
-void Example::InitKernelArguments() 
-{
-    assert(false && "Abstract method from Example must be implemented");
-}
-
-void Example::InitTuningParameters() 
-{
-    assert(false && "Abstract method from Example must be implemented");
-}
-
-void Example::FillBuffers(const vector<vector<float>*> &buffers) 
+void ExampleBase::FillBuffers(const vector<vector<float>*> &buffers) 
 {
     random_device device;
     default_random_engine engine(device());
@@ -132,32 +97,15 @@ void Example::FillBuffers(const vector<vector<float>*> &buffers)
     } 
 }
 
-void Example::InitKernelsDefault(const string &kernelFunctionName, const string &kernelName,
-                                 const ReferenceParameters *refParams)
+void ExampleBase::InitKernelDefault(const string &kernelFunctionName, const string &kernelName,
+                                 const ktt::DimensionVector &ndRangeDimensions, const vector<ktt::ArgumentId> &arguments)
 {
-    const ktt::DimensionVector ndRangeDimensions(m_width, m_height);
-
     // Create m_kernel and configure input/output
     m_definition = m_tuner.AddKernelDefinitionFromFile(kernelFunctionName, m_kernelFile, ndRangeDimensions,
         ktt::DimensionVector(1, 1));
+    m_tuner.SetArguments(m_definition, arguments);
+        
     m_kernel = m_tuner.CreateSimpleKernel(kernelName, m_definition);
     
-    if (refParams == nullptr) return;
-    const ktt::DimensionVector ndRangeDimensionsReference(m_width / refParams->workGroupWidth, m_height / refParams ->workGroupHeight);
-    const ktt::DimensionVector referenceWorkGroupDimensions(refParams->workGroupWidth, refParams->workGroupHeight);
-
-    refParams->definition = m_tuner.AddKernelDefinitionFromFile(refParams->functionName, m_referenceKernelFile,
-        ndRangeDimensionsReference, referenceWorkGroupDimensions);
-    refParams->kernel = m_tuner.CreateSimpleKernel(refParams->name, refParams->definition);
 }
 
-void Example::InitReferenceDefault(const vector<ktt::ArgumentId> &outputArguments, ktt::KernelId refKernel) 
-{
-    if (!m_rapidTest)
-    {
-        for (auto arg : outputArguments) {
-            m_tuner.SetReferenceKernel(arg, refKernel, ktt::KernelConfiguration());
-        }
-        m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001);
-    }
-}
