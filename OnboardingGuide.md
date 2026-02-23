@@ -295,11 +295,11 @@ const ktt::ArgumentId local2Id = tuner.AddArgumentLocal<int32_t>(8);
 #### Symbol arguments
 
 Symbol arguments were introduced to support CUDA variables marked as `__constant__` or `__device__`. The name of a symbol argument appearing
-inside a CUDA kernel source code has to be specified during argument addition to the tuner. Symbol arguments behave the same as scalars in
+inside a CUDA kernel source code can be specified during argument addition to the tuner. Symbol arguments behave the same as scalars in
 other APIs since they do not require special handling. In that case, the name of a symbol is ignored.
 
 ```cpp
-const ktt::ArgumentId symbolId = tuner.AddArgumentSymbol(42, "magicNumber");
+const ktt::ArgumentId symbolId = tuner.AddArgumentSymbol(42, "myArgumentId", "magicNumber");
 ```
 
 ----
