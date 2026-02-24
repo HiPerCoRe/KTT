@@ -735,7 +735,7 @@ public:
       */
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
 
-    /** @fn void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool exportModule = true)
+    /** @fn void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10)
       * Sets profile-based searcher to be used during kernel tuning. This is special method for profile-based searcher, for other searchers, use SetSearcher.
       * @param id Id of kernel for which searcher will be set.
       * @param modelPath Path to a ML model file containing trained model for the tuned kernel.
