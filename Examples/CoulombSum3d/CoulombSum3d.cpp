@@ -235,7 +235,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-    const auto results = tuner.Tune(kernel/*, std::make_unique<ktt::ConfigurationCount>(2)*/);
+    const auto results = tuner.Tune(kernel, std::make_unique<ktt::FailureFraction>(0.1, 10) /*std::make_unique<ktt::ConfigurationCount>(2)*/);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "CoulombSumOutput_T4", ktt::OutputFormat::JSON_T4);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::XML);
