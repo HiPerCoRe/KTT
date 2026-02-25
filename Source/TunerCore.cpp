@@ -4,6 +4,7 @@
 #include <ComputeEngine/Cuda/CudaEngine.h>
 #include <ComputeEngine/OpenCl/OpenClEngine.h>
 #include <ComputeEngine/Vulkan/VulkanEngine.h>
+#include <ComputeEngine/Cpp/CppEngine.h>
 #include <Output/Deserializer/JsonDeserializer.h>
 #include <Output/Deserializer/JsonT4Deserializer.h>
 #include <Output/Deserializer/XmlDeserializer.h>
@@ -532,6 +533,13 @@ void TunerCore::InitializeComputeEngine([[maybe_unused]] const PlatformIndex pla
         throw KttException("Support for Vulkan API is not included in this version of KTT framework");
         #endif // KTT_API_VULKAN
         break;
+    case ComputeApi::Cpp:
+        #ifdef KTT_API_CPP
+        m_ComputeEngine = std::make_unique<CppEngine>(platform, device, queueCount);
+        #else
+        throw KttException("Support for C++ API is not included in this version of KTT framework");
+        #endif // KTT_API_CPP
+        break;
     default:
         KttError("Unhandled compute API value");
     }
@@ -562,6 +570,13 @@ void TunerCore::InitializeComputeEngine(const ComputeApi api, [[maybe_unused]] c
         #else
         throw KttException("Support for Vulkan API is not included in this version of KTT framework");
         #endif // KTT_API_VULKAN
+        break;
+    case ComputeApi::Cpp:
+        #ifdef KTT_API_CPP
+        throw KttException("Support for user initializers is not yet available for C++ API");
+        #else
+        throw KttException("Support for C++ API is not included in this version of KTT framework");
+        #endif // KTT_API_CPP
         break;
     default:
         KttError("Unhandled compute API value");

@@ -2,8 +2,8 @@ KTT - Kernel Tuning Toolkit
 ===========================
 <img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogoColor.png" width="425" height="150"/>
 
-KTT is an autotuning framework for **OpenCL**, **CUDA** kernels and experimental support for **GLSL** compute shaders. It primarily focus to
-GPU accelerators, but can be used to auto-tune also code for different devices (e.g., CPUs) when OpenCL is utilized. KTT core is implemented in C++, but version 2.2 allows its usage from Python or loading autotuning configurations from JSON files. The C++ core brings high performance, low latency, and allows dynamic tuning (i.e., autotuning during application runtime).
+KTT is an autotuning framework for **OpenCL**, **CUDA** kernels, experimental support for **GLSL** compute shaders, and a **C++** backend for CPU execution. It primarily focus to
+GPU accelerators, but can be used to auto-tune also code for different devices (e.g., CPUs) when OpenCL or C++ backend is utilized. KTT core is implemented in C++, but version 2.2 allows its usage from Python or loading autotuning configurations from JSON files. The C++ core brings high performance, low latency, and allows dynamic tuning (i.e., autotuning during application runtime).
 
 Main features
 -------------
@@ -12,7 +12,7 @@ Main features
 * Support for multiple compute queues and asynchronous operations.
 * Support for dynamic auto-tuning - kernel tuning combined with regular kernel running.
 * Ability to automatically ensure the correctness of tuned computation with reference kernel or C++ function.
-* Support for multiple compute APIs, switching between CUDA, OpenCL and Vulkan requires only minor changes in C++ code (e.g., changing the kernel source file), no library recompilation is needed.
+* Support for multiple compute APIs, switching between CUDA, OpenCL, Vulkan and C++ requires only minor changes in C++ code (e.g., changing the kernel source file), no library recompilation is needed.
 * Public API available in C++ (native) and Python (bindings), tuning configuration can be loaded from JSON, allowing interoperability with other autotuning frameworks (so far [Kernel Tuner](https://github.com/KernelTuner/kernel_tuner)).
 * Advanced profile-based searcher, laveraging hardware performance counters and machine learning to navigate tuning spaces quickly.
 * Mearuring energy consumption with CUDA devices.
@@ -87,6 +87,7 @@ systems are Linux and Windows.
     - `--power-usage` Enables compilation of device power usage collection functionality. This feature is currently supported only on Nvidia platform.
     - `--power-usage-mintime=time` Sets how long is the kernel repeated to obtain reliable power measurement, in miliseconds. THIS IS AN EXPERIMENTAL FEATURE, enforcing repeating the kernel without cleaning or changing input/output.
     - `--vulkan` Enables compilation of experimental Vulkan backend.
+    - `--cpp` Enables compilation of C++ backend for CPU execution.
     - `--python` Enables compilation of Python bindings.
     - `--tuning-loader` Enables compilation of tuning loader, loading tuning settings from JSON.
     - `--no-examples` Disables compilation of examples.
