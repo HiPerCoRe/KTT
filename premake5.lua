@@ -819,6 +819,13 @@ project "CppTranspose"
     defines {"KTT_CPP_EXAMPLE"}
     links {"ktt"}
 
+project "CoulombSum3dCpp"
+    kind "ConsoleApp"
+    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cppkernel"}
+    includedirs {"Source"}
+    defines {"KTT_CPP_EXAMPLE"}
+    links {"ktt"}
+
 end -- cppProjects
     
 end -- _OPTIONS["no-examples"]
