@@ -53,4 +53,14 @@ bool EngineConfiguration::IsProfilingActive() const
     return m_ProfilingFlag;
 }
 
+void EngineConfiguration::SetDefaultCompilerOptions(const std::string& options)
+{
+    m_DefaultCompilerOptions = options;
+}
+
+const std::string& EngineConfiguration::GetDefaultCompilerOptions() const
+{
+    return m_DefaultCompilerOptions;
+}
+
 } // namespace ktt

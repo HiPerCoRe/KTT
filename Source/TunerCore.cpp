@@ -447,6 +447,11 @@ void TunerCore::SetCompilerOptions(const std::string& options, const bool overri
     m_ComputeEngine->SetCompilerOptions(options, overrideDefault);
 }
 
+void TunerCore::SetCompiler(const std::string& compiler)
+{
+    m_ComputeEngine->SetCompiler(compiler);
+}
+
 void TunerCore::SetGlobalSizeType(const GlobalSizeType type)
 {
     m_ComputeEngine->SetGlobalSizeType(type);

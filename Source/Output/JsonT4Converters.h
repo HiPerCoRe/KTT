@@ -107,7 +107,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ComputeApi,
 {
     {ComputeApi::OpenCL, "OpenCL"},
     {ComputeApi::CUDA, "CUDA"},
-    {ComputeApi::Vulkan, "Vulkan"}
+    {ComputeApi::Vulkan, "Vulkan"},
+    {ComputeApi::Cpp, "C++"}
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ProfilingCounterType,

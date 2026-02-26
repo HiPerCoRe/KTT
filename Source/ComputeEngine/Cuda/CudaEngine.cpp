@@ -790,6 +790,15 @@ void CudaEngine::SetCompilerOptions(const std::string& options, const bool overr
     ClearKernelCache();
 }
 
+void CudaEngine::SetCompiler(const std::string& compiler)
+{
+    // CUDA uses NVRTC (NVIDIA Runtime Compilation library), not an external compiler.
+    // The compiler is built into the CUDA driver and cannot be changed.
+    (void)compiler;
+    throw KttException("Setting a custom compiler is not supported for CUDA backend. "
+                       "CUDA uses the built-in NVRTC library for kernel compilation.");
+}
+
 void CudaEngine::SetGlobalSizeType(const GlobalSizeType type)
 {
     m_Configuration.SetGlobalSizeType(type);

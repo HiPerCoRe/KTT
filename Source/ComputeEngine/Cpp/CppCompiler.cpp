@@ -23,6 +23,7 @@ class CppCompiler::Impl
 {
 public:
     Impl()
+        : m_Compiler("g++")
     {
         // Determine temporary directory
         const char* tmpDir = std::getenv("TMPDIR");
@@ -32,6 +33,11 @@ public:
         }
         m_TempDir = fs::path(tmpDir) / "ktt_cpp_jit";
         fs::create_directories(m_TempDir);
+    }
+
+    void SetCompiler(const std::string& compiler)
+    {
+        m_Compiler = compiler;
     }
 
     ~Impl()
@@ -63,10 +69,10 @@ public:
         sourceFile << source;
         sourceFile.close();
 
-        // Compile with g++
+        // Compile with configured compiler
         // Only use essential flags here. Optimization flags (-O2, etc.) should be passed via compilerOptions.
         // Note: compilerOptions may include flags like -fopenmp that need to be passed to both compiler and linker
-        std::string command = "g++ -shared -fPIC -std=c++11 ";
+        std::string command = m_Compiler + " -shared -fPIC -std=c++11 ";
         command += compilerOptions;
         command += " -o ";
         command += libraryPath.string();
@@ -109,6 +115,7 @@ public:
 
 private:
     fs::path m_TempDir;
+    std::string m_Compiler;
 
     KernelFunction LoadLibrary(const fs::path& libraryPath, const std::string& kernelName)
     {
@@ -152,6 +159,11 @@ CppCompiler::KernelFunction CppCompiler::CompileKernel(const std::string& kernel
     const std::string& compilerOptions)
 {
     return m_Impl->CompileKernel(kernelName, source, compilerOptions);
+}
+
+void CppCompiler::SetCompiler(const std::string& compiler)
+{
+    m_Impl->SetCompiler(compiler);
 }
 
 } // namespace ktt

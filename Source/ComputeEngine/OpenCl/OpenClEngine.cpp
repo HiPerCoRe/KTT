@@ -656,6 +656,15 @@ void OpenClEngine::SetCompilerOptions(const std::string& options, [[maybe_unused
     ClearKernelCache();
 }
 
+void OpenClEngine::SetCompiler(const std::string& compiler)
+{
+    // OpenCL uses the device driver's built-in compiler via clBuildProgram().
+    // The compiler is determined by the OpenCL implementation and cannot be changed.
+    (void)compiler;
+    throw KttException("Setting a custom compiler is not supported for OpenCL backend. "
+                       "OpenCL uses the device driver's built-in compiler.");
+}
+
 void OpenClEngine::SetGlobalSizeType(const GlobalSizeType type)
 {
     m_Configuration.SetGlobalSizeType(type);

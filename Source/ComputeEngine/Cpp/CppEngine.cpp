@@ -8,6 +8,12 @@
 #include <Utility/StlHelpers.h>
 #include <Utility/StringUtility.h>
 #include <cstring>
+#include <future>
+#include <fstream>
+
+#ifdef __linux__
+#include <unistd.h>
+#endif
 
 namespace ktt
 {
@@ -19,8 +25,7 @@ CppEngine::CppEngine(const PlatformIndex platformIndex, const DeviceIndex device
     m_DeviceInfo(0, ""),
     m_KernelCache(10)
 {
-    // For CPU backend, we ignore platform and device indices for now.
-    // We could enumerate CPU cores as devices, but for simplicity we treat as single device.
+    // For CPU backend, we ignore platform and device indices.
     if (queueCount == 0)
     {
         throw KttException("Number of compute queues must be greater than zero");
@@ -46,8 +51,8 @@ CppEngine::CppEngine(const ComputeApiInitializer& initializer, std::vector<Queue
     (void)initializer;
     (void)assignedQueueIds;
     
-    // Custom initializer not supported yet for C++ backend.
-    throw KttException("Support for user initializers is not yet available for C++ API");
+    // Custom initializer not supported for C++ backend.
+    throw KttException("Support for user initializers is not available for C++ API");
 }
 
 ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
@@ -70,8 +75,11 @@ ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const Q
     const KernelComputeId computeId = data.GetUniqueIdentifier();
     m_ComputeActionToKernel[id] = computeId;
 
+    // Capture kernel name for the result
+    const std::string kernelName = data.GetName();
+
     // Launch kernel asynchronously
-    m_ComputeActions[id] = std::async(std::launch::async, [kernel, overhead]() {
+    m_ComputeActions[id] = std::async(std::launch::async, [kernel, overhead, kernelName]() {
         Timer timer;
         timer.Start();
 
@@ -79,7 +87,7 @@ ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const Q
         kernel->function(kernel->argumentPointers, kernel->argumentSizes);
 
         timer.Stop();
-        ComputationResult result;
+        ComputationResult result(kernelName);
         // overhead includes kernel loading and argument setup
         // compilation overhead is tracked separately in LoadKernel when compilation happens
         result.SetDurationData(timer.GetElapsedTime(), overhead, kernel->compilationOverhead);
@@ -166,7 +174,7 @@ void CppEngine::SetProfilingCounters(const std::vector<std::string>& counters)
 {
     // Silence unused parameter warning - profiling not supported for C++ backend
     (void)counters;
-    // No-op
+    throw KttException("Profiling is not supported for C++ backend");
 }
 
 bool CppEngine::IsProfilingSessionActive(const KernelComputeId& id)
@@ -202,7 +210,9 @@ void CppEngine::SetProfiling(const bool profiling)
 {
     // Silence unused parameter warning - profiling not supported for C++ backend
     (void)profiling;
-    // No-op
+    if (profiling) {
+        throw KttException("Profiling is not supported for C++ backend");
+    }
 }
 
 // Buffer methods
@@ -226,14 +236,14 @@ TransferActionId CppEngine::UploadArgument(KernelArgument& kernelArgument, const
     timer.Stop();
     const Nanoseconds overhead = timer.GetElapsedTime();
 
-    // Simulate transfer action
+    // Simulate transfer action using std::promise to avoid thread creation overhead
     const TransferActionId actionId = m_TransferIdGenerator.GenerateId();
-    m_TransferActions[actionId] = std::async(std::launch::async, [overhead]() {
-        TransferResult result;
-        result.SetDuration(0);
-        result.SetOverhead(overhead);
-        return result;
-    });
+    std::promise<TransferResult> promise;
+    TransferResult result;
+    result.SetDuration(0);
+    result.SetOverhead(overhead);
+    promise.set_value(result);
+    m_TransferActions[actionId] = promise.get_future();
     return actionId;
 }
 
@@ -260,12 +270,12 @@ TransferActionId CppEngine::UpdateArgument(const ArgumentId& id, const QueueId q
     const Nanoseconds overhead = timer.GetElapsedTime();
 
     const TransferActionId actionId = m_TransferIdGenerator.GenerateId();
-    m_TransferActions[actionId] = std::async(std::launch::async, [overhead]() {
-        TransferResult result;
-        result.SetDuration(0);
-        result.SetOverhead(overhead);
-        return result;
-    });
+    std::promise<TransferResult> promise;
+    TransferResult result;
+    result.SetDuration(0);
+    result.SetOverhead(overhead);
+    promise.set_value(result);
+    m_TransferActions[actionId] = promise.get_future();
     return actionId;
 }
 
@@ -292,12 +302,12 @@ TransferActionId CppEngine::DownloadArgument(const ArgumentId& id, const QueueId
     const Nanoseconds overhead = timer.GetElapsedTime();
 
     const TransferActionId actionId = m_TransferIdGenerator.GenerateId();
-    m_TransferActions[actionId] = std::async(std::launch::async, [overhead]() {
-        TransferResult result;
-        result.SetDuration(0);
-        result.SetOverhead(overhead);
-        return result;
-    });
+    std::promise<TransferResult> promise;
+    TransferResult result;
+    result.SetDuration(0);
+    result.SetOverhead(overhead);
+    promise.set_value(result);
+    m_TransferActions[actionId] = promise.get_future();
     return actionId;
 }
 
@@ -323,12 +333,12 @@ TransferActionId CppEngine::CopyArgument(const ArgumentId& destination, const Qu
     const Nanoseconds overhead = timer.GetElapsedTime();
 
     const TransferActionId actionId = m_TransferIdGenerator.GenerateId();
-    m_TransferActions[actionId] = std::async(std::launch::async, [overhead]() {
-        TransferResult result;
-        result.SetDuration(0);
-        result.SetOverhead(overhead);
-        return result;
-    });
+    std::promise<TransferResult> promise;
+    TransferResult result;
+    result.SetDuration(0);
+    result.SetOverhead(overhead);
+    promise.set_value(result);
+    m_TransferActions[actionId] = promise.get_future();
     return actionId;
 }
 
@@ -408,7 +418,7 @@ QueueId CppEngine::AddComputeQueue(ComputeQueue queue)
     (void)queue;
     
     // Not yet supported
-    throw KttException("Adding custom compute queues is not yet supported for C++ backend");
+    throw KttException("Adding custom compute queues is not supported for C++ backend");
 }
 
 void CppEngine::RemoveComputeQueue(const QueueId id)
@@ -446,16 +456,19 @@ void CppEngine::SynchronizeQueue(const QueueId queueId)
     (void)queueId;
     // For CPU backend, synchronization is immediate.
     // If we had pending actions per queue, we would wait for them.
+    Logger::LogWarning("Synchronizing queue is implicit on CPU.");
 }
 
 void CppEngine::SynchronizeQueues()
 {
     // No-op
+    Logger::LogWarning("Synchronizing queue is implicit on CPU.");
 }
 
 void CppEngine::SynchronizeDevice()
 {
     // No-op
+    Logger::LogWarning("Synchronizing device is implicit on CPU.");
 }
 
 // Information retrieval methods
@@ -472,10 +485,50 @@ std::vector<DeviceInfo> CppEngine::GetDeviceInfo(const PlatformIndex platformInd
     {
         return {};
     }
-    DeviceInfo info(0, "CPU");
-    info.SetVendor("Generic");
+
+    // Parse /proc/cpuinfo for CPU model and vendor
+    std::string cpuName = "CPU";
+    std::string vendor = "Generic";
+
+#ifdef __linux__
+    std::ifstream cpuinfo("/proc/cpuinfo");
+    std::string line;
+    while (std::getline(cpuinfo, line))
+    {
+        if (line.find("model name") == 0)
+        {
+            size_t pos = line.find(':');
+            if (pos != std::string::npos)
+            {
+                cpuName = line.substr(pos + 2);
+            }
+        }
+        if (line.find("vendor_id") == 0)
+        {
+            size_t pos = line.find(':');
+            if (pos != std::string::npos)
+            {
+                vendor = line.substr(pos + 2);
+            }
+        }
+    }
+#endif
+
+    // Get memory size
+    uint64_t memorySize = 0;
+#ifdef __linux__
+    long pages = sysconf(_SC_PHYS_PAGES);
+    long pageSize = sysconf(_SC_PAGE_SIZE);
+    if (pages > 0 && pageSize > 0)
+    {
+        memorySize = static_cast<uint64_t>(pages) * static_cast<uint64_t>(pageSize);
+    }
+#endif
+
+    DeviceInfo info(0, cpuName);
+    info.SetVendor(vendor);
     info.SetExtensions("C++");
-    info.SetGlobalMemorySize(0); // unknown
+    info.SetGlobalMemorySize(memorySize);
     info.SetLocalMemorySize(0);
     info.SetMaxWorkGroupSize(1024); // arbitrary
     info.SetMaxConstantBufferSize(0);
@@ -506,8 +559,25 @@ GlobalSizeType CppEngine::GetGlobalSizeType() const
 // Utility methods
 void CppEngine::SetCompilerOptions(const std::string& options, const bool overrideDefault)
 {
-    (void)overrideDefault;
-    m_Configuration.SetCompilerOptions(options);
+    std::string finalOptions = options;
+
+    if (!overrideDefault)
+    {
+        if (!finalOptions.empty())
+        {
+            finalOptions += " ";
+        }
+
+        finalOptions += m_Configuration.GetDefaultCompilerOptions();
+    }
+
+    m_Configuration.SetCompilerOptions(finalOptions);
+    ClearKernelCache();
+}
+
+void CppEngine::SetCompiler(const std::string& compiler)
+{
+    m_Compiler.SetCompiler(compiler);
     ClearKernelCache();
 }
 

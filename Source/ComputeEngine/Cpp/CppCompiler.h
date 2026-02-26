@@ -23,6 +23,10 @@ public:
     // compilerOptions: additional options for the compiler.
     KernelFunction CompileKernel(const std::string& kernelName, const std::string& source, const std::string& compilerOptions);
 
+    // Set the compiler executable to use (e.g., "g++", "clang++").
+    // Default is "g++".
+    void SetCompiler(const std::string& compiler);
+
 private:
     class Impl;
     std::unique_ptr<Impl> m_Impl;

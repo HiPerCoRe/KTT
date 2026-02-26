@@ -924,6 +924,14 @@ public:
       */
     void SetCompilerOptions(const std::string& options, const bool overrideDefault = false);
 
+    /** @fn void SetCompiler(const std::string& compiler)
+      * Sets the compiler executable to use for kernel compilation. This is only supported for the C++ backend.
+      * For CUDA, OpenCL, and Vulkan backends, this method will throw an exception since they use built-in compilers.
+      * Default compiler for C++ backend is "g++".
+      * @param compiler Path or name of the compiler executable (e.g., "g++", "clang++", "/usr/bin/clang++").
+      */
+    void SetCompiler(const std::string& compiler);
+
     /** @fn void SetGlobalSizeType(const GlobalSizeType type)
       * Sets global size specification type to specified compute API style. In OpenCL, NDrange size is specified as number
       * of work-items in a work-group multiplied by number of work-groups. In CUDA, grid size is specified as number of blocks.

@@ -139,6 +139,8 @@ int main()
         }
     }
 
+    tuner.SaveResults(results, "CppTranspose", ktt::OutputFormat::JSON);
+
     if (allPassed && !results.empty())
     {
         std::cout << "\nBest configuration: " << bestConfig << " with duration " << bestDuration << " us" << std::endl;

@@ -421,6 +421,15 @@ void VulkanEngine::SetCompilerOptions(const std::string& options, [[maybe_unused
     ClearKernelCache();
 }
 
+void VulkanEngine::SetCompiler(const std::string& compiler)
+{
+    // Vulkan uses the shaderc library for SPIR-V compilation.
+    // The compiler is linked at build time and cannot be changed at runtime.
+    (void)compiler;
+    throw KttException("Setting a custom compiler is not supported for Vulkan backend. "
+                       "Vulkan uses the linked shaderc library for kernel compilation.");
+}
+
 void VulkanEngine::SetGlobalSizeType(const GlobalSizeType type)
 {
     m_Configuration.SetGlobalSizeType(type);
