@@ -1,13 +1,21 @@
 #ifdef KTT_API_CPP
 
 #include <cstdlib>
-#include <dlfcn.h>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 #include <sys/stat.h>
+
+#if defined(_MSC_VER)
+#include <windows.h>
+#include <io.h>
+#define popen _popen
+#define pclose _pclose
+#else
+#include <dlfcn.h>
 #include <unistd.h>
+#endif
 
 #include <Api/KttException.h>
 #include <ComputeEngine/Cpp/CppCompiler.h>
@@ -23,15 +31,32 @@ class CppCompiler::Impl
 {
 public:
     Impl()
+#if defined(_MSC_VER)
+        : m_Compiler("cl")
+#else
         : m_Compiler("g++")
+#endif
     {
         // Determine temporary directory
+#if defined(_MSC_VER)
+        char tempPath[MAX_PATH];
+        DWORD result = GetTempPathA(MAX_PATH, tempPath);
+        if (result == 0 || result > MAX_PATH)
+        {
+            m_TempDir = fs::path("C:\\temp") / "ktt_cpp_jit";
+        }
+        else
+        {
+            m_TempDir = fs::path(tempPath) / "ktt_cpp_jit";
+        }
+#else
         const char* tmpDir = std::getenv("TMPDIR");
         if (tmpDir == nullptr)
         {
             tmpDir = "/tmp";
         }
         m_TempDir = fs::path(tmpDir) / "ktt_cpp_jit";
+#endif
         fs::create_directories(m_TempDir);
     }
 
@@ -51,7 +76,11 @@ public:
         // Create a unique filename based on kernel name and source hash
         std::string hash = std::to_string(std::hash<std::string>{}(source));
         fs::path sourcePath = m_TempDir / (kernelName + "_" + hash + ".cpp");
+#if defined(_MSC_VER)
+        fs::path libraryPath = m_TempDir / (kernelName + "_" + hash + ".dll");
+#else
         fs::path libraryPath = m_TempDir / (kernelName + "_" + hash + ".so");
+#endif
 
         // Check if library already exists (caching)
         if (fs::exists(libraryPath))
@@ -70,6 +99,27 @@ public:
         sourceFile.close();
 
         // Compile with configured compiler
+#if defined(_MSC_VER)
+        // MSVC compiler command
+        // /LD - create DLL
+        // /MD - use multi-threaded DLL runtime
+        // /std:c++17 - C++17 standard
+        // /EHsc - exception handling
+        // /Fe - output executable/library name
+        std::string command = m_Compiler + " /LD /MD /std:c++17 /EHsc ";
+        command += compilerOptions;
+        command += " /Fe:";
+        command += libraryPath.string();
+        command += " ";
+        command += sourcePath.string();
+        // Link with OpenMP if the flag is present in compilerOptions
+        if (compilerOptions.find("/openmp") != std::string::npos || compilerOptions.find("-fopenmp") != std::string::npos)
+        {
+            command += " /openmp";
+        }
+        command += " 2>&1";
+#else
+        // GCC/Clang compiler command
         // Only use essential flags here. Optimization flags (-O2, etc.) should be passed via compilerOptions.
         // Note: compilerOptions may include flags like -fopenmp that need to be passed to both compiler and linker
         std::string command = m_Compiler + " -shared -fPIC -std=c++11 ";
@@ -84,6 +134,7 @@ public:
             command += " -fopenmp";
         }
         command += " 2>&1";
+#endif
 
         Logger::LogDebug("Compiling kernel with command: " + command);
 
@@ -119,6 +170,37 @@ private:
 
     KernelFunction LoadLibrary(const fs::path& libraryPath, const std::string& kernelName)
     {
+#if defined(_MSC_VER)
+        HMODULE handle = LoadLibraryA(libraryPath.string().c_str());
+        if (!handle)
+        {
+            DWORD error = GetLastError();
+            throw KttException("Failed to load DLL: " + std::to_string(error));
+        }
+
+        // The kernel function signature: void (*)(void**, size_t*)
+        using RawFunc = void (*)(void**, size_t*);
+        RawFunc rawFunc = reinterpret_cast<RawFunc>(GetProcAddress(handle, kernelName.c_str()));
+        if (!rawFunc)
+        {
+            DWORD error = GetLastError();
+            FreeLibrary(handle);
+            throw KttException("Failed to find kernel symbol: " + kernelName + ", error: " + std::to_string(error));
+        }
+
+        // Wrap raw function into a std::function
+        // Note: we need to keep handle alive for the lifetime of the function.
+        // We'll capture handle in a shared_ptr to close later.
+        auto handlePtr = std::shared_ptr<HMODULE>(new HMODULE(handle), [](HMODULE* h) { FreeLibrary(*h); delete h; });
+
+        return [rawFunc, handlePtr](const std::vector<void*>& buffers, const std::vector<size_t>& sizes) {
+            // Convert vectors to raw arrays (temporary)
+            // The kernel signature is: void (*)(void** buffers, size_t* sizes)
+            // buffers contains pointers to vector arguments
+            // sizes contains buffer sizes followed by scalar argument values
+            rawFunc(const_cast<void**>(buffers.data()), const_cast<size_t*>(sizes.data()));
+        };
+#else
         void* handle = dlopen(libraryPath.c_str(), RTLD_LAZY);
         if (!handle)
         {
@@ -146,6 +228,7 @@ private:
             // sizes contains buffer sizes followed by scalar argument values
             rawFunc(const_cast<void**>(buffers.data()), const_cast<size_t*>(sizes.data()));
         };
+#endif
     }
 };
 

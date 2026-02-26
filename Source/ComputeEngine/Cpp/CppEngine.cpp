@@ -11,7 +11,10 @@
 #include <future>
 #include <fstream>
 
-#ifdef __linux__
+#if defined(_MSC_VER)
+#include <windows.h>
+#include <intrin.h>
+#else
 #include <unistd.h>
 #endif
 
@@ -490,7 +493,41 @@ std::vector<DeviceInfo> CppEngine::GetDeviceInfo(const PlatformIndex platformInd
     std::string cpuName = "CPU";
     std::string vendor = "Generic";
 
-#ifdef __linux__
+#if defined(_MSC_VER)
+    // Windows: Use CPUID to get processor info
+    int cpuInfo[4] = {-1};
+    char vendorString[13] = {0};
+    
+    // Get vendor string
+    __cpuid(cpuInfo, 0);
+    memcpy(vendorString, &cpuInfo[1], 4);
+    memcpy(vendorString + 4, &cpuInfo[3], 4);
+    memcpy(vendorString + 8, &cpuInfo[2], 4);
+    vendorString[12] = '\0';
+    vendor = vendorString;
+    
+    // Get brand string (CPU name) - requires CPUID with eax = 0x80000002, 0x80000003, 0x80000004
+    char brandString[49] = {0};
+    __cpuid(cpuInfo, 0x80000000);
+    unsigned int maxExtendedId = cpuInfo[0];
+    if (maxExtendedId >= 0x80000004)
+    {
+        __cpuid(cpuInfo, 0x80000002);
+        memcpy(brandString, cpuInfo, 16);
+        __cpuid(cpuInfo, 0x80000003);
+        memcpy(brandString + 16, cpuInfo, 16);
+        __cpuid(cpuInfo, 0x80000004);
+        memcpy(brandString + 32, cpuInfo, 16);
+        brandString[48] = '\0';
+        cpuName = brandString;
+        // Trim leading whitespace
+        size_t start = cpuName.find_first_not_of(" ");
+        if (start != std::string::npos)
+        {
+            cpuName = cpuName.substr(start);
+        }
+    }
+#else
     std::ifstream cpuinfo("/proc/cpuinfo");
     std::string line;
     while (std::getline(cpuinfo, line))
@@ -516,7 +553,15 @@ std::vector<DeviceInfo> CppEngine::GetDeviceInfo(const PlatformIndex platformInd
 
     // Get memory size
     uint64_t memorySize = 0;
-#ifdef __linux__
+#if defined(_MSC_VER)
+    // Windows: Use GlobalMemoryStatusEx
+    MEMORYSTATUSEX memStatus;
+    memStatus.dwLength = sizeof(memStatus);
+    if (GlobalMemoryStatusEx(&memStatus))
+    {
+        memorySize = memStatus.ullTotalPhys;
+    }
+#else
     long pages = sysconf(_SC_PHYS_PAGES);
     long pageSize = sysconf(_SC_PAGE_SIZE);
     if (pages > 0 && pageSize > 0)
