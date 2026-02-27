@@ -247,7 +247,7 @@ function linkAllLibraries()
     
     -- Allow usage of KTT with only Vulkan or C++ if no other compute API was explicitly specified by user
     if not librariesFound and (not _OPTIONS["vulkan"] or _OPTIONS["platform"]) and not _OPTIONS["cpp"] then
-        error("Compute API libraries were not found. Please ensure that path to the SDK is correctly set in the environment variables:\nOCL_ROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
+        error("Compute API libraries were not found. Please ensure that path to the SDK is correctly set in the environment variables:\nOCL_ROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia\nor add parameter --cpp to build C++ backend")
     end
     
     if _OPTIONS["vulkan"] then
