@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
     // Declare and initialize data
     const int gridSize = 256;
-    int atoms = 64;//4096;
+    int atoms = 256;//4096;
 
     const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
     const ktt::DimensionVector workGroupDimensions;
@@ -178,6 +178,7 @@ int main(int argc, char** argv)
         // otherwise, multiple profiling runs corrupt results
         tuner.SetReferenceComputation(gridId, [&atomInfoW, atomInfoX, &atomInfoY, &atomInfoZ, atoms, gridSpacing, gridSize](void* buffer){
             float* grid = static_cast<float*>(buffer);
+            #pragma omp parallel for
             for (int z = 0; z < gridSize; z++)
                 for (int y = 0; y < gridSize; y++)
                     for (int x = 0; x < gridSize; x++) 

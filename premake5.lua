@@ -147,6 +147,16 @@ function linkCpp()
     return true
 end
 
+-- Helper function to enable OpenMP support in a cross-platform manner
+function enableOpenMP()
+    filter "system:linux or system:macosx"
+        buildoptions {"-fopenmp"}
+        linkoptions {"-fopenmp"}
+    filter "system:windows"
+        buildoptions {"/openmp"}
+    filter {}
+end
+
 function linkComputeLibraries()
     if _OPTIONS["platform"] then
         if _OPTIONS["platform"] == "amd" then
@@ -637,6 +647,7 @@ project "CoulombSum3dOpenCl"
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
+    enableOpenMP()
 
 project "CoulombSum3dIterativeOpenCl"
     kind "ConsoleApp"
@@ -731,6 +742,7 @@ project "CoulombSum3dCuda"
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
+    enableOpenMP()
 
 project "NbodyCuda"
     kind "ConsoleApp"
@@ -825,6 +837,7 @@ project "CoulombSum3dCpp"
     includedirs {"Source"}
     defines {"KTT_CPP_EXAMPLE"}
     links {"ktt"}
+    enableOpenMP()
 
 end -- cppProjects
     
