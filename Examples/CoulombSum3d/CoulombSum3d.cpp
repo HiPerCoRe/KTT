@@ -188,7 +188,8 @@ int main(int argc, char** argv)
                         float gy = (float)y * gridSpacing;
                         float gz = (float)z * gridSpacing;
                         for (int a = 0; a < atoms; a++)
-                            e += atomInfoW[a] / sqrtf(powf(atomInfoX[a]-gx, 2) + powf32(atomInfoY[a]-gy, 2) + powf32(atomInfoZ[a]-gz, 2));
+                            e += atomInfoW[a] * (1.0f/sqrtf((atomInfoX[a]-gx)*(atomInfoX[a]-gx) + (atomInfoY[a]-gy)*(atomInfoY[a]-gy) 
+                                + (atomInfoZ[a]-gz)*(atomInfoZ[a]-gz)));
                         grid[z*gridSize*gridSize + y*gridSize + x] = e;
                     }
         });
@@ -229,7 +230,7 @@ int main(int argc, char** argv)
 
     if (!results.empty())
     {
-        std::cout << "\nBest configuration: " << bestConfig << " with duration " << bestDuration << " us (" << 1000.0*(double)atoms*(double)gridSize*(double)gridSize*(double)gridSize/bestDuration << "mevals/s)" << std::endl;
+        std::cout << "\nBest configuration: " << bestConfig << " with duration " << bestDuration << " us (" << (double)atoms*(double)gridSize*(double)gridSize*(double)gridSize/bestDuration << "mevals/s)" << std::endl;
     }
 
     return 0;
