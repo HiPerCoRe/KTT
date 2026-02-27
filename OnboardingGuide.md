@@ -12,7 +12,7 @@ Naturally, a batch script can be sufficient for autotuning in a simple use case.
 usage of an autotuning framework can be beneficial, as it can automatically handle memory objects, detect errors in autotuned
 kernels or perform autotuning during program runtime.
 
-Kernel Tuning Toolkit (KTT) is a framework that allows autotuning of compute kernels written in CUDA, OpenCL or Vulkan. It provides
+Kernel Tuning Toolkit (KTT) is a framework that allows autotuning of compute kernels written in CUDA, OpenCL, Vulkan or C++. It provides
 a unified interface for those APIs, handles communication between host (CPU) and accelerator (GPU, Xeon Phi, etc.), checks results
 and timing of tuned kernels, allows dynamic (online) tuning during program runtime, profiling of autotuned kernels and more. This
 functionality is exposed in the public API through which KTT can be integrated into user applications.
@@ -53,6 +53,11 @@ functionality is exposed in the public API through which KTT can be integrated i
     * [Lifetime of internal tuner structures](#lifetime-of-internal-tuner-structures)
 * [Python API](#python-api)
     * [Python limitations](#python-limitations)
+* [C++ backend](#c-backend)
+    * [C++ kernel signature](#c-kernel-signature)
+    * [C++ backend initialization](#c-backend-initialization)
+    * [Compiler options](#compiler-options)
+    * [C++ backend limitations](#c-backend-limitations)
 * [Feature parity across compute APIs](#feature-parity-across-compute-apis)
 
 ----
@@ -128,7 +133,7 @@ __kernel void computeStuff(__global float* input, int itemsPerThread, __global f
 The first step before we can utilize KTT is a creation of a tuner instance. The tuner is one of the major KTT classes and implements a large portion of
 autotuning logic. The KTT structures such as kernels, kernel arguments and tuning parameters are tied to a specific tuner instance.
 The simplest tuner constructor requires three parameters - index for a platform, index for a device and compute API that will be utilized (e.g., CUDA,
-OpenCL). The indices for platforms and devices are assigned by KTT. We can retrieve them through `PlatformInfo` and `DeviceInfo` structures. These
+OpenCL, C++). The indices for platforms and devices are assigned by KTT. We can retrieve them through `PlatformInfo` and `DeviceInfo` structures. These
 structures also contain other useful information such as a list of supported extensions, global memory size, a number of available compute units and
 more. Note that the assigned indices remain the same when autotuning applications are launched multiple times on the same computer. They only change
 when the hardware configuration changes (e.g., a new device is added, an old device is removed, a device driver is reinstalled). Also note, that the indices
@@ -681,11 +686,150 @@ with these methods.
 
 ----
 
+### C++ backend
+
+The C++ backend enables autotuning of CPU-based kernels written in standard C++. This backend is useful for tuning algorithms that run on the host CPU, leveraging
+multi-threading via OpenMP or other parallelization libraries. C++ kernels are compiled at runtime using a JIT (Just-In-Time) compilation approach.
+
+#### C++ kernel signature
+
+C++ kernels use a different signature compared to CUDA/OpenCL kernels. The kernel function must be declared with `extern "C"` linkage and accept two parameters:
+* `void** buffers` - An array of pointers to buffer data (vector arguments)
+* `size_t* sizes` - An array containing buffer sizes followed by scalar argument values
+
+The signature format is:
+```cpp
+extern "C" void kernelName(void** buffers, size_t* sizes)
+```
+
+The `buffers` array contains pointers to vector arguments in the order they were added via `SetArguments()`. The `sizes` array layout is:
+* First N entries: size in bytes for each vector argument (N = number of vector arguments)
+* Following entries: scalar values (cast to `size_t`) in the order they were added via `SetArguments()`
+
+**Example: SAXPY (Single-precision A*X Plus Y) with vector and scalar arguments**
+```cpp
+// Host code setup:
+//   tuner.AddArgumentVector(x, ktt::ArgumentAccessType::ReadOnly);  // arg 0
+//   tuner.AddArgumentVector(y, ktt::ArgumentAccessType::ReadWrite); // arg 1
+//   tuner.AddArgumentScalar(2.5f);                                   // arg 2 (alpha)
+//   tuner.SetArguments(definition, {x_id, y_id, alpha_id});
+
+// C++ kernel for SAXPY: y[i] = alpha * x[i] + y[i]
+// buffers[0] = x float* (read-only)
+// buffers[1] = y float* (read-write)
+// sizes[0] = x buffer size in bytes
+// sizes[1] = y buffer size in bytes
+// sizes[2] = alpha value (2.5f) passed as size_t, needs to be reinterpreted as float
+#include <cstddef>
+#include <cstdint>
+
+extern "C" void saxpy(void** buffers, size_t* sizes) {
+    // Get element count from first vector argument's size
+    size_t count = sizes[0] / sizeof(float);
+    
+    // Access vector arguments
+    const float* x = static_cast<const float*>(buffers[0]);
+    float* y = static_cast<float*>(buffers[1]);
+    
+    // Reinterpret the size_t scalar value as float
+    // The scalar was passed as size_t (64-bit), but contains the bit pattern of a float (32-bit)
+    // We take the lower 32 bits and reinterpret them as float
+    uint32_t alpha_bits = static_cast<uint32_t>(sizes[2] & 0xFFFFFFFF);
+    float alpha;
+    static_assert(sizeof(alpha) == sizeof(alpha_bits), "Size mismatch");
+    memcpy(&alpha, &alpha_bits, sizeof(float));
+    
+    // Perform SAXPY computation
+    for (size_t i = 0; i < count; ++i) {
+        y[i] = alpha * x[i] + y[i];
+    }
+}
+```
+
+**Important notes about scalar arguments:**
+* Scalar values are passed as `size_t` (64-bit unsigned integer) in the `sizes` array
+* For integer scalars, you can use them directly after casting
+* For floating-point scalars (float, double), you need to reinterpret the bits:
+  - For `float`: extract lower 32 bits (`sizes[N] & 0xFFFFFFFF`) and use `memcpy` or `reinterpret_cast`
+  - For `double`: use the full 64-bit value directly
+* The order of scalars in `sizes` matches the order they were added via `SetArguments()`
+
+#### C++ backend initialization
+
+To use the C++ backend, specify `ktt::ComputeApi::Cpp` during tuner creation:
+
+```cpp
+ktt::Tuner tuner(0, 0, ktt::ComputeApi::Cpp);
+```
+
+Note that for the C++ backend, platform and device indices are typically 0 since there is only one CPU platform.
+
+#### Compiler options
+
+The C++ backend supports setting compiler options via `SetCompilerOptions()`. This is useful for enabling optimizations or specifying OpenMP flags:
+
+```cpp
+tuner.SetCompilerOptions("-O3 -march=native -fopenmp");
+```
+
+You can also change the compiler executable (default is "g++" on Linux, "cl" on Windows):
+
+```cpp
+tuner.SetCompiler("clang++");
+```
+
+#### Queues and synchronization
+
+The C++ backend handles queues and synchronization differently from GPU backends:
+
+**Queue behavior:**
+* Queues are placeholder constructs in the C++ backend - they exist for API compatibility but have no effect on execution
+* All buffer operations (argument uploads, downloads, updates) are **synchronous** - they complete immediately using CPU memory copies
+* Kernel execution can be **asynchronous** when using `ComputeInterface::RunKernelAsync()` in custom launchers
+* Custom compute queues cannot be added via `ComputeApiInitializer`
+
+**Synchronization behavior:**
+* `SynchronizeQueue()`, `SynchronizeQueues()`, and `SynchronizeDevice()` are no-ops in the C++ backend (they log a warning but perform no actual synchronization)
+* When using `Tuner::Run()` or `Tuner::Tune()`, synchronization is handled internally - these methods return only after kernel execution completes
+* When using `ComputeInterface::RunKernelAsync()` in a custom launcher, you must call `ComputeInterface::WaitForComputeAction()` to wait for kernel completion
+* Since all data transfers are synchronous, no explicit synchronization is needed for buffer operations
+
+**Practical implications:**
+```cpp
+// Using Run() - synchronous, no explicit synchronization needed
+const auto result = tuner.Run(kernel, configuration);
+// Result is ready immediately
+
+// Using Tune() - synchronous, no explicit synchronization needed
+const auto results = tuner.Tune(kernel);
+// All configurations have completed
+
+// Using RunKernelAsync() in a custom launcher - requires explicit wait
+tuner.SetLauncher(kernel, [definition](ktt::ComputeInterface& interface) {
+    const auto actionId = interface.RunKernelAsync(definition, interface.GetDefaultQueue());
+    // Must wait for completion
+    interface.WaitForComputeAction(actionId);
+});
+```
+
+#### C++ backend limitations
+
+The C++ backend has the following limitations compared to GPU backends:
+* **Profiling metrics** - Hardware profiling counters are not supported (no equivalent to CUDA CUPTI or OpenCL profiling)
+* **Unified memory** - Not applicable for CPU execution
+* **Custom library initialization** - User-provided compute queues and buffers are not supported
+* **Local memory arguments** - Local/shared memory arguments are not applicable and should not be used
+* **Symbol arguments** - CUDA-style symbol arguments are not supported
+
+----
+
 ### Feature parity across compute APIs
 
-KTT framework aims to maintain feature parity across all of its supported compute APIs (OpenCL, CUDA and Vulkan). That means if a particular feature is supported in
-the KTT CUDA backend, it should also be available in OpenCL and Vulkan backends, provided that it is natively supported in those APIs. There are some exceptions
+KTT framework aims to maintain feature parity across all of its supported compute APIs (OpenCL, CUDA, Vulkan and C++). That means if a particular feature is supported in
+the KTT CUDA backend, it should also be available in OpenCL, Vulkan and C++ backends, provided that it is natively supported in those APIs. There are some exceptions
 to that:
+* C++ backend limitations - the C++ backend is designed for CPU execution and does not support profiling metrics, unified memory, or CUDA-style symbol arguments.
+Custom library initialization is also not supported. See the C++ backend section for more details.
 * Vulkan backend limitations - certain features are currently unsupported in Vulkan due to development time constraints. These include support for profiling metrics,
 unified and zero-copy buffers and a subset of advanced buffer handling methods. The support for these features may still be added at a later time.
 * Unified memory in OpenCL - the usage of unified OpenCL buffers requires OpenCL 2.0. Some devices (e.g., Nvidia GPUs) still do not support this OpenCL version.

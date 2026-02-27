@@ -48,7 +48,8 @@ void InitializePythonEnums(py::module_& module)
     py::enum_<ktt::ComputeApi>(module, "ComputeApi")
         .value("OpenCL", ktt::ComputeApi::OpenCL)
         .value("CUDA", ktt::ComputeApi::CUDA)
-        .value("Vulkan", ktt::ComputeApi::Vulkan);
+        .value("Vulkan", ktt::ComputeApi::Vulkan)
+        .value("Cpp", ktt::ComputeApi::Cpp);
 
     py::enum_<ktt::DeviceType>(module, "DeviceType")
         .value("CPU", ktt::DeviceType::CPU)
