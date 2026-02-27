@@ -61,9 +61,9 @@ int main()
 
     // Add arguments
     // Output matrix (transposed)
-    const ktt::ArgumentId argOutput = tuner.AddArgumentVector(outputMatrix, ktt::ArgumentAccessType::WriteOnly);
+    const ktt::ArgumentId argOutput = tuner.AddArgumentVector<float>(outputMatrix.data(), outputMatrix.size()*sizeof(outputMatrix[0]), ktt::ArgumentAccessType::WriteOnly, ktt::ArgumentMemoryLocation::Host);
     // Input matrix
-    const ktt::ArgumentId argInput = tuner.AddArgumentVector(inputMatrix, ktt::ArgumentAccessType::ReadOnly);
+    const ktt::ArgumentId argInput = tuner.AddArgumentVector<float>(inputMatrix.data(), inputMatrix.size()*sizeof(inputMatrix[0]), ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryLocation::Host);
     // Width parameter (scalar)
     const ktt::ArgumentId argWidth = tuner.AddArgumentScalar(matrixWidth);
     // Height parameter (scalar)
@@ -124,7 +124,7 @@ int main()
         std::string config = result.GetConfiguration().GetString();
         
         std::cout << "Configuration: " << config
-                  << " -> Duration: " << duration << " us"
+                  << " -> Duration: " << duration << " ns"
                   << " -> Status: " << (result.GetStatus() == ktt::ResultStatus::Ok ? "OK" : "FAILED")
                   << std::endl;
         
@@ -143,7 +143,8 @@ int main()
 
     if (allPassed && !results.empty())
     {
-        std::cout << "\nBest configuration: " << bestConfig << " with duration " << bestDuration << " us" << std::endl;
+        std::cout << "\nBest configuration: " << bestConfig << " with duration " << bestDuration << " ns (" 
+            << (double)elementCount*2.0*(double)sizeof(inputMatrix[0])/(double)bestDuration << "GB/s)"<< std::endl;
         std::cout << "C++ backend matrix transpose tuning test passed!" << std::endl;
         return 0;
     }

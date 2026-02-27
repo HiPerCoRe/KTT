@@ -217,7 +217,7 @@ int main(int argc, char** argv)
         std::string config = result.GetConfiguration().GetString();
         
         std::cout << "Configuration: " << config
-                  << " -> Duration: " << duration << " us"
+                  << " -> Duration: " << duration << " ns"
                   << " -> Status: " << (result.GetStatus() == ktt::ResultStatus::Ok ? "OK" : "FAILED")
                   << std::endl;
         
@@ -230,7 +230,7 @@ int main(int argc, char** argv)
 
     if (!results.empty())
     {
-        std::cout << "\nBest configuration: " << bestConfig << " with duration " << bestDuration << " us (" << (double)atoms*(double)gridSize*(double)gridSize*(double)gridSize/bestDuration << "mevals/s)" << std::endl;
+        std::cout << "\nBest configuration: " << bestConfig << " with duration " << bestDuration << " ns (" << 1000.0*(double)atoms*(double)gridSize*(double)gridSize*(double)gridSize/bestDuration << "mevals/s)" << std::endl;
     }
 
     return 0;
