@@ -66,7 +66,7 @@ public:
     void ClearBuffer(const ArgumentId& id) override;
     bool HasBuffer(const ArgumentId& id) override;
     void GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBufferMemory& memoryHandle) override;
-    bool GetProfiling(const KernelId id) override;
+    bool GetProfiling(const KernelDefinitionId id) override;
 
     void SetActiveKernel(const KernelId id);
     void ClearActiveKernel();

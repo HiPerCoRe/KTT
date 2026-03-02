@@ -107,6 +107,8 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer, std::vector
 
 ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
 {
+    // Silence warning about unused parameter (placeholder for future power measurement)
+    (void)powerMeasurementAllowed;
     if (!ContainsKey(m_Queues, queueId))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));
@@ -654,6 +656,15 @@ void OpenClEngine::SetCompilerOptions(const std::string& options, [[maybe_unused
 {
     m_Configuration.SetStaticCompilerOptions(options);
     ClearKernelCache();
+}
+
+void OpenClEngine::SetCompiler(const std::string& compiler)
+{
+    // OpenCL uses the device driver's built-in compiler via clBuildProgram().
+    // The compiler is determined by the OpenCL implementation and cannot be changed.
+    (void)compiler;
+    throw KttException("Setting a custom compiler is not supported for OpenCL backend. "
+                       "OpenCL uses the device driver's built-in compiler.");
 }
 
 void OpenClEngine::SetGlobalSizeType(const GlobalSizeType type)

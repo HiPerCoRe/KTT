@@ -58,6 +58,16 @@ public:
         m_ItemsMap.clear();
     }
 
+    void Remove(const KeyType& key)
+    {
+        auto it = m_ItemsMap.find(key);
+        if (it != m_ItemsMap.cend())
+        {
+            m_ItemsList.erase(it->second);
+            m_ItemsMap.erase(it);
+        }
+    }
+
     bool Exists(const KeyType& key) const
     {
         return m_ItemsMap.find(key) != m_ItemsMap.cend();

@@ -17,6 +17,8 @@ std::string ComputeApiToString(const ComputeApi api)
         return "CUDA";
     case ComputeApi::Vulkan:
         return "Vulkan";
+    case ComputeApi::Cpp:
+        return "C++";
     default:
         KttError("Unhandled value");
         return "";
@@ -132,6 +134,10 @@ ComputeApi ComputeApiFromString(const std::string& string)
     else if (string == "Vulkan")
     {
         return ComputeApi::Vulkan;
+    }
+    else if (string == "C++")
+    {
+        return ComputeApi::Cpp;
     }
 
     KttError("Invalid string value");

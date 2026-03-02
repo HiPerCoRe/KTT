@@ -298,10 +298,10 @@ void ComputeLayer::GetUnifiedMemoryBufferHandle(const ArgumentId& id, UnifiedBuf
     m_ComputeEngine.GetUnifiedMemoryBufferHandle(id, memoryHandle);
 }
 
-bool ComputeLayer::GetProfiling(const KernelId id) 
+bool ComputeLayer::GetProfiling(const KernelDefinitionId id)
 {
-    //return GetData().IsProfilingEnabled(id);
-    return m_ComputeEngine.IsProfilingActive();
+    // Check both global profiling flag and per-kernel profiling status
+    return m_ComputeEngine.IsProfilingActive() && GetData().IsProfilingEnabled(id);
 }
 
 void ComputeLayer::SetActiveKernel(const KernelId id)

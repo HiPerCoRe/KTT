@@ -6,6 +6,7 @@ namespace ktt
 
 std::pair<TunerMetadata, std::vector<KernelResult>> JsonT4Deserializer::DeserializeResults(UserData& data, std::istream& source)
 {
+    (void)data; // parameter currently unused
     json input;
     source >> input;
     

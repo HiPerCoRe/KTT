@@ -101,7 +101,7 @@ std::vector<KernelArgument*> KernelArgumentManager::GetArguments(const std::vect
 {
     std::vector<KernelArgument*> result;
 
-    for (const auto id : ids)
+    for (const auto& id : ids)
     {
         auto& argument = GetArgument(id);
         result.push_back(&argument);

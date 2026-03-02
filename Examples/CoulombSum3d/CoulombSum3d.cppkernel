@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <math.h>
+
+#define STRINGIFY(x) #x
+#define EXPAND_AND_STRINGIFY(x) STRINGIFY(x)
+
+#define DO_PRAGMA(x) _Pragma(#x)
+
+extern "C" void directCoulombSum(void** buffers, size_t* sizes) {
+    float* atomInfoX = static_cast<float*>(buffers[1]);
+    float* atomInfoY = static_cast<float*>(buffers[2]);
+    float* atomInfoZ = static_cast<float*>(buffers[3]);
+    float* atomInfoW = static_cast<float*>(buffers[4]);
+    float* grid = static_cast<float*>(buffers[5]);
+
+    int atoms = sizes[5];
+    float gridSpacing = *reinterpret_cast<float*>(&sizes[6]);
+    int gridSize = sizes[7];
+
+#if OMP_COLLAPSE == 0
+  #if OMP_SCHEDULING == 0
+  #pragma omp parallel for schedule(static)
+  #elif OMP_SCHEDULING == 1
+  #pragma omp parallel for schedule(dynamic)
+  #else // OMP_SCHEDULING
+  DO_PRAGMA(message("omp parallel for schedule(guided, " EXPAND_AND_STRINGIFY(OMP_SCHED_CHUNK) ")"))
+  #endif // OMP_SCHEDULING
+#else // OMP_COLLAPSE
+  #if OMP_SCHEDULING == 0
+  #pragma omp parallel for collapse(2) schedule(static)
+  #elif OMP_SCHEDULING == 1
+  #pragma omp parallel for collapse(2) schedule(dynamic)
+  #else // OMP_SCHEDULING
+  DO_PRAGMA(message("omp parallel for collapse(2) schedule(guided, " EXPAND_AND_STRINGIFY(OMP_SCHED_CHUNK) ")"))
+  #endif // OMP_SCHEDULING
+#endif
+    for (int z = 0; z < gridSize; z++)
+        for (int y = 0; y < gridSize; y++)
+#if TILE == 0
+            for (int x = 0; x < gridSize; x++) 
+#else
+            for (int x = 0; x < gridSize; x += TILE) 
+#endif
+            {
+                float e = 0.0f;
+                float gx = (float)x * gridSpacing;
+                float gy = (float)y * gridSpacing;
+                float gz = (float)z * gridSpacing;
+                for (int a = 0; a < atoms; a++)
+                {
+                    float dy = gy-atomInfoY[a];
+                    float dz = gz-atomInfoZ[a];
+#if TILE == 0
+                    float dx = gx-atomInfoX[a];
+                    e += atomInfoW[a] * (1.0f/sqrtf(dx*dx + dy*dy + dz*dz));
+                }
+                grid[z*gridSize*gridSize + y*gridSize + x] = e;
+#else
+                    for (xx = 0; xx < TILE; xx++)
+                    {
+                        float dx = (float)(x+xx)*gridSpacing - atomInfoX[a];
+                        float e = atomInfoW[a] * (1.0f/sqrtf(dx*dx + dy*dy + dz*dz));
+                        grid[z*gridSize*gridSize + y*gridSize + x+xx] += e;
+                    }
+                }
+#endif
+            }
+}

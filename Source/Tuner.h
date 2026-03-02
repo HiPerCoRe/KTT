@@ -536,9 +536,9 @@ public:
     /** @fn template <typename T> ArgumentId AddArgumentSymbol(const T& data, const ArgumentId& customId = "", const std::string& symbolName = "")
       * Adds new symbol argument to the tuner.
       * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.
+      * @param customId Custom argument id that can be specified instead of a default.
       * @param symbolName Name of the corresponding symbol in kernel source code. Only utilized when tuner is using CUDA API. The symbol
       * name must be unique.
-      * @param customId Custom argument id that can be specified instead of a default.
       * @return Id assigned to kernel argument by tuner. The id can be used in other API methods.
       */
     template <typename T>
@@ -770,7 +770,7 @@ public:
       */
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
 
-    /** @fn void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool exportModule = true)
+    /** @fn void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10)
       * Sets profile-based searcher to be used during kernel tuning. This is special method for profile-based searcher, for other searchers, use SetSearcher.
       * @param id Id of kernel for which searcher will be set.
       * @param modelPath Path to a ML model file containing trained model for the tuned kernel.
@@ -958,6 +958,14 @@ public:
       * options will be applied.
       */
     void SetCompilerOptions(const std::string& options, const bool overrideDefault = false);
+
+    /** @fn void SetCompiler(const std::string& compiler)
+      * Sets the compiler executable to use for kernel compilation. This is only supported for the C++ backend.
+      * For CUDA, OpenCL, and Vulkan backends, this method will throw an exception since they use built-in compilers.
+      * Default compiler for C++ backend is "g++".
+      * @param compiler Path or name of the compiler executable (e.g., "g++", "clang++", "/usr/bin/clang++").
+      */
+    void SetCompiler(const std::string& compiler);
 
     /** @fn void SetGlobalSizeType(const GlobalSizeType type)
       * Sets global size specification type to specified compute API style. In OpenCL, NDrange size is specified as number

@@ -2,6 +2,7 @@
 cudaProjects = false
 openClProjects = false
 vulkanProjects = false
+cppProjects = false
 
 -- Helper functions to find and link compute API headers and libraries
 function linkLibrariesAmd()
@@ -25,6 +26,7 @@ function linkLibrariesAmd()
     end
     
     defines {"KTT_API_OPENCL"}
+    defines {"CL_TARGET_OPENCL_VERSION=300"}
     links {"OpenCL"}
     openClProjects = true
     
@@ -75,6 +77,7 @@ function linkLibrariesIntel()
     end
     
     defines {"KTT_API_OPENCL"}
+    defines {"CL_TARGET_OPENCL_VERSION=300"}
     links {"OpenCL"}
     openClProjects = true
     
@@ -99,6 +102,7 @@ function linkLibrariesNvidia()
     
     if not _OPTIONS["no-opencl"] then
         defines {"KTT_API_OPENCL"}
+        defines {"CL_TARGET_OPENCL_VERSION=300"}
         links {"OpenCL"}
         openClProjects = true
     end
@@ -137,6 +141,22 @@ function linkLibrariesNvidia()
     return true
 end
 
+function linkCpp()
+    defines {"KTT_API_CPP"}
+    cppProjects = true
+    return true
+end
+
+-- Helper function to enable OpenMP support in a cross-platform manner
+function enableOpenMP()
+    filter "system:linux or system:macosx"
+        buildoptions {"-fopenmp"}
+        linkoptions {"-fopenmp"}
+    filter "system:windows"
+        buildoptions {"/openmp"}
+    filter {}
+end
+
 function linkComputeLibraries()
     if _OPTIONS["platform"] then
         if _OPTIONS["platform"] == "amd" then
@@ -151,6 +171,11 @@ function linkComputeLibraries()
     end
 
     local retVal = false
+
+    if _OPTIONS["cpp"] then
+        linkCpp()
+        retVal = true
+    end
 
     if linkLibrariesAmd() then
         retVal = true
@@ -230,9 +255,9 @@ end
 function linkAllLibraries()
     local librariesFound = linkComputeLibraries()
     
-    -- Allow usage of KTT with only Vulkan if no other compute API was explicitly specified by user
-    if not librariesFound and (not _OPTIONS["vulkan"] or _OPTIONS["platform"]) then
-        error("Compute API libraries were not found. Please ensure that path to the SDK is correctly set in the environment variables:\nOCL_ROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia")
+    -- Allow usage of KTT with only Vulkan or C++ if no other compute API was explicitly specified by user
+    if not librariesFound and (not _OPTIONS["vulkan"] or _OPTIONS["platform"]) and not _OPTIONS["cpp"] then
+        error("Compute API libraries were not found. Please ensure that path to the SDK is correctly set in the environment variables:\nOCL_ROOT for AMD\nINTELOCLSDKROOT for Intel\nCUDA_PATH for Nvidia\nor add parameter --cpp to build C++ backend")
     end
     
     if _OPTIONS["vulkan"] then
@@ -270,6 +295,12 @@ newoption
 {
     trigger = "vulkan",
     description = "Enables compilation of Vulkan backend"
+}
+
+newoption
+{
+    trigger = "cpp",
+    description = "Enables compilation of C++ backend (CPU execution)"
 }
 
 newoption
@@ -616,6 +647,7 @@ project "CoulombSum3dOpenCl"
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
+    enableOpenMP()
 
 project "CoulombSum3dIterativeOpenCl"
     kind "ConsoleApp"
@@ -710,6 +742,7 @@ project "CoulombSum3dCuda"
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
+    enableOpenMP()
 
 project "NbodyCuda"
     kind "ConsoleApp"
@@ -774,6 +807,39 @@ project "MicrobenchmarksCuda"
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 end -- cudaProjects
+
+if cppProjects then
+
+project "CppSimple"
+    kind "ConsoleApp"
+    files {"Examples/CppSimple/CppSimple.cpp"}
+    includedirs {"Source"}
+    defines {"KTT_CPP_EXAMPLE"}
+    links {"ktt"}
+
+project "CppSimpleZeroCopy"
+    kind "ConsoleApp"
+    files {"Examples/CppSimple/CppSimpleZeroCopy.cpp"}
+    includedirs {"Source"}
+    defines {"KTT_CPP_EXAMPLE"}
+    links {"ktt"}
+
+project "CppTranspose"
+    kind "ConsoleApp"
+    files {"Examples/CppTranspose/*.cpp"}
+    includedirs {"Source"}
+    defines {"KTT_CPP_EXAMPLE"}
+    links {"ktt"}
+
+project "CoulombSum3dCpp"
+    kind "ConsoleApp"
+    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cppkernel"}
+    includedirs {"Source"}
+    defines {"KTT_CPP_EXAMPLE"}
+    links {"ktt"}
+    enableOpenMP()
+
+end -- cppProjects
     
 end -- _OPTIONS["no-examples"]
 

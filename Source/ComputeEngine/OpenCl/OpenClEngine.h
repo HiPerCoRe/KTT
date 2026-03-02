@@ -89,6 +89,7 @@ public:
     void SetKernelCacheCapacity(const uint64_t capacity) override;
     void ClearKernelCache() override;
     void EnsureThreadContext() override;
+    void SetCompiler(const std::string& compiler) override;
 
 private:
     EngineConfiguration m_Configuration;

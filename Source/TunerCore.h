@@ -119,6 +119,7 @@ public:
     void SynchronizeDevice();
     void SetProfilingCounters(const std::vector<std::string>& counters);
     void SetCompilerOptions(const std::string& options, const bool overrideDefault = false);
+    void SetCompiler(const std::string& compiler);
     void SetGlobalSizeType(const GlobalSizeType type);
     void SetAutomaticGlobalSizeCorrection(const bool flag);
     void SetKernelCacheCapacity(const uint64_t capacity);
