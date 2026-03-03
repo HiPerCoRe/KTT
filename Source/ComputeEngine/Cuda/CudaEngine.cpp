@@ -160,19 +160,24 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
 #if defined(KTT_POWER_USAGE_NVML) 
 #if defined(KTT_POWER_USAGE_NVML_KERNEL_MINTIME)
+    action->WaitForFinish();
+    ktt::Nanoseconds bestDuration = action->GetDuration();
     if (powerMeasurementAllowed) {
         unsigned long long execs = 1;
         while (pwrTimer.GetCheckpointTime() < (long long)KTT_POWER_USAGE_NVML_KERNEL_MINTIME*(long long)1000000) {
-            kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+            auto a = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+            a->WaitForFinish();
+            if (a->GetDuration() < bestDuration)
+                bestDuration = a->GetDuration();
             sumPwr.push_back(m_PowerManager->GetPowerUsage());
             sumTemp.push_back(m_PowerManager->GetTemperature());
             sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
             sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
             execs++;
         }
-        action->WaitForFinish();
         pwrTimer.Stop();
-        action->SetDurationFromMultirun(pwrTimer.GetElapsedTime() / execs);
+        //action->SetDurationFromMultirun(pwrTimer.GetElapsedTime() / execs);
+        action->SetDurationFromMultirun(bestDuration);
     }
 #endif // KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL
 #endif // KTT_POWER_USAGE_NVML
