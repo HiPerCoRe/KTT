@@ -66,6 +66,7 @@ ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const Q
     Timer overheadTimer;
     overheadTimer.Start();
 
+    m_Configuration.SetTuningCompilerOptions(data.GetCompilerOptions());
     // Load kernel (cached)
     auto kernel = LoadKernel(data);
     // Set kernel arguments based on current buffers
@@ -616,7 +617,7 @@ void CppEngine::SetCompilerOptions(const std::string& options, const bool overri
         finalOptions += m_Configuration.GetDefaultCompilerOptions();
     }
 
-    m_Configuration.SetCompilerOptions(finalOptions);
+    m_Configuration.SetStaticCompilerOptions(finalOptions);
     ClearKernelCache();
 }
 
