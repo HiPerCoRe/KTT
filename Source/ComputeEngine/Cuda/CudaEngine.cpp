@@ -124,10 +124,10 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             ExceptionReason::DeviceLimitsExceeded);
     }
 
-    m_Configuration.SetTuningCompilerOptions(data.GetCompilerOptions());
-
     Timer timer;
     timer.Start();
+
+    m_Configuration.SetTuningCompilerOptions(data.GetCompilerOptions());
 
     auto kernel = LoadKernel(data);
     std::vector<CUdeviceptr*> arguments = GetKernelArguments(data.GetArguments());

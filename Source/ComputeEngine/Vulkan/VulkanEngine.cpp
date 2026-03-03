@@ -67,10 +67,10 @@ ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, cons
             ExceptionReason::DeviceLimitsExceeded);
     }
 
-    m_Configuration.SetTuningCompilerOptions(data.GetCompilerOptions());
-
     Timer timer;
     timer.Start();
+
+    m_Configuration.SetTuningCompilerOptions(data.GetCompilerOptions());
 
     auto pipeline = LoadPipeline(data);
     std::vector<VulkanBuffer*> pipelineArguments = GetPipelineArguments(data.GetArguments());
