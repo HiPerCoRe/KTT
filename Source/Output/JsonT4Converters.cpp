@@ -114,7 +114,7 @@ void to_json(json& j, const as_T4<const KernelResult>& result)
     j["measurements"].push_back({{"name","time"}, {"value",time.ConvertFromNanosecondsDouble(result.v.GetTotalDuration())}, {"unit",""}});
 
     const std::vector<ComputationResult>& compResults = result.v.GetResults();
-    if (compResults[0].HasProfilingData()) {
+    if (!compResults.empty() && compResults[0].HasProfilingData()) {
         const std::vector<KernelProfilingCounter>& counters = compResults[0].GetProfilingData().GetCounters();
         for (const auto& counter : counters) {
             json j_counter = json::object();
@@ -123,6 +123,29 @@ void to_json(json& j, const as_T4<const KernelResult>& result)
         }
     }
 
+    if (!compResults.empty() && compResults[0].HasCompilationData()) {
+        const KernelCompilationData& compilationData =  compResults[0].GetCompilationData();
+        const DimensionVector& globalSize = compResults[0].GetGlobalSize();
+        const DimensionVector& localSize = compResults[0].GetLocalSize();
+        json j_compilationData = json::object();
+        j["compilation_data"] = {
+            {"max_work_group_size", compilationData.m_MaxWorkGroupSize},
+            {"local_memory_size", compilationData.m_LocalMemorySize},
+            {"private_memory_size", compilationData.m_PrivateMemorySize},
+            {"constant_memory_size", compilationData.m_ConstantMemorySize},
+            {"registers", compilationData.m_RegistersCount},
+            {"global_size", {
+                {"x", globalSize.GetSizeX()},
+                {"y", globalSize.GetSizeY()},
+                {"z", globalSize.GetSizeZ()}
+            }},
+            {"local_size", {
+                {"x", localSize.GetSizeX()},
+                {"y", localSize.GetSizeY()},
+                {"z", localSize.GetSizeZ()}
+            }}
+        };
+    }
 }
 
 void from_json(const json& j, as_T4<KernelResult>& result)
@@ -193,6 +216,50 @@ void from_json(const json& j, as_T4<KernelResult>& result)
         KernelProfilingData profilingData(counters);
         auto uniqueData = std::make_unique<KernelProfilingData>(profilingData);
         computationResult.SetProfilingData(std::move(uniqueData));
+    }
+
+    if (j.contains("compilation_data"))
+    {
+        const auto& compilationDataJson = j["compilation_data"];
+
+        if (!compilationDataJson.contains("max_work_group_size") ||
+            !compilationDataJson.contains("local_memory_size") ||
+            !compilationDataJson.contains("private_memory_size") ||
+            !compilationDataJson.contains("constant_memory_size") ||
+            !compilationDataJson.contains("registers") ||
+            !compilationDataJson.contains("global_size") ||
+            !compilationDataJson.contains("local_size"))
+        {
+            KttError(
+                "Missing compilation data fields. Required fields: max_work_group_size, local_memory_size, private_memory_size, constant_memory_size, registers, global_size, local_size");
+        }
+
+        // Extract compilation data
+        KernelCompilationData compData;
+        compData.m_MaxWorkGroupSize = compilationDataJson["max_work_group_size"];
+        compData.m_LocalMemorySize = compilationDataJson["local_memory_size"];
+        compData.m_PrivateMemorySize = compilationDataJson["private_memory_size"];
+        compData.m_ConstantMemorySize = compilationDataJson["constant_memory_size"];
+        compData.m_RegistersCount = compilationDataJson["registers"];
+
+        // Extract global size
+        const auto& globalSizeJson = compilationDataJson["global_size"];
+        if (!globalSizeJson.contains("x") || !globalSizeJson.contains("y") || !globalSizeJson.contains("z"))
+        {
+            KttError("Missing global_size dimensions");
+        }
+        DimensionVector globalSize(globalSizeJson["x"], globalSizeJson["y"], globalSizeJson["z"]);
+
+        // Extract local size
+        const auto& localSizeJson = compilationDataJson["local_size"];
+        if (!localSizeJson.contains("x") || !localSizeJson.contains("y") || !localSizeJson.contains("z"))
+        {
+            KttError("Missing local_size dimensions");
+        }
+        DimensionVector localSize(localSizeJson["x"], localSizeJson["y"], localSizeJson["z"]);
+
+        computationResult.SetCompilationData(std::make_unique<KernelCompilationData>(compData));
+        computationResult.SetSizeData(globalSize, localSize);
     }
 
     results.push_back(computationResult);
