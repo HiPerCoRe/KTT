@@ -34,6 +34,8 @@ if 'SMFrequency' in cr.attrib :
     print(',SMFrequency', end = '')
 if 'MemoryFrequency' in cr.attrib :
     print(',MemoryFrequency', end = '')
+if 'FanSpeed' in cr.attrib :
+    print(',FanSpeed', end = '')
 print('')
 
 # Extract data into CSV
@@ -71,4 +73,6 @@ for kr in res.findall('KernelResult') :
             print(',' + cr.attrib['SMFrequency'], end = '')
         if 'MemoryFrequency' in cr.attrib :
             print(',' + cr.attrib['MemoryFrequency'], end = '')
+        if 'FanSpeed' in cr.attrib :
+            print(',' + cr.attrib['FanSpeed'], end = '')
         print('') #add newline
