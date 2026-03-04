@@ -29,6 +29,7 @@ public:
     double GetTemperature() const;
     uint32_t GetSMFrequency() const;
     uint32_t GetMemoryFrequency() const;
+    int32_t GetFanSpeed() const;
 
 private:
     const CudaContext& m_Context;
@@ -40,6 +41,7 @@ private:
     std::vector<uint32_t> m_TempSamples;
     std::vector<uint32_t> m_SMFreqSamples;
     std::vector<uint32_t> m_MemFreqSamples;
+    std::vector<int32_t> m_FanSpeedSamples;
     Nanoseconds m_SamplingInterval;
 
     void CollectPowerSamples();

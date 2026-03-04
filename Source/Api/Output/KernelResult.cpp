@@ -285,6 +285,9 @@ void KernelResult::TransferPowerData(const KernelResult& previousResult)
         if (previousResult.GetResults()[i].HasMemoryFrequencyData())
             m_Results[i].SetMemoryFrequency(
                 previousResult.GetResults()[i].GetMemoryFrequency());
+        if (previousResult.GetResults()[i].HasFanSpeedData())
+            m_Results[i].SetFanSpeed(
+                previousResult.GetResults()[i].GetFanSpeed());
     }
 }
 

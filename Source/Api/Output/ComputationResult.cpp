@@ -29,7 +29,8 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     m_PowerUsage(other.m_PowerUsage),
     m_Temperature(other.m_Temperature),
     m_SMFrequency(other.m_SMFrequency),
-    m_MemFrequency(other.m_MemFrequency)
+    m_MemFrequency(other.m_MemFrequency),
+    m_FanSpeed(other.m_FanSpeed)
 {
     if (other.HasCompilationData())
     {
@@ -59,6 +60,11 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     if (other.HasMemoryFrequencyData())
     {
         m_MemFrequency = other.GetMemoryFrequency();
+    }
+
+    if (other.HasFanSpeedData())
+    {
+        m_FanSpeed = other.GetFanSpeed();
     }
 }
 
@@ -103,6 +109,11 @@ void ComputationResult::SetSMFrequency(const uint32_t frequency)
 void ComputationResult::SetMemoryFrequency(const uint32_t frequency)
 {
     m_MemFrequency = frequency;
+}
+
+void ComputationResult::SetFanSpeed(const int32_t fanSpeed)
+{
+    m_FanSpeed = fanSpeed;
 }
 
 const std::string& ComputationResult::GetKernelFunction() const
@@ -195,6 +206,11 @@ bool ComputationResult::HasMemoryFrequencyData() const
     return m_MemFrequency.has_value();
 }
 
+bool ComputationResult::HasFanSpeedData() const
+{
+    return m_FanSpeed.has_value();
+}
+
 uint32_t ComputationResult::GetPowerUsage() const
 {
     if (!HasPowerData())
@@ -242,6 +258,16 @@ double ComputationResult::GetEnergyConsumption() const
     return powerUsageWatts * durationSeconds;
 }
 
+int32_t ComputationResult::GetFanSpeed() const
+{
+    if (!HasFanSpeedData())
+    {
+        throw KttException("Fan speed can only be retrieved after prior check that it exists");
+    }
+
+    return m_FanSpeed.value();
+}
+
 ComputationResult& ComputationResult::operator=(const ComputationResult& other)
 {
     m_KernelFunction = other.m_KernelFunction;
@@ -253,6 +279,7 @@ ComputationResult& ComputationResult::operator=(const ComputationResult& other)
     m_Temperature = other.m_Temperature;
     m_SMFrequency = other.m_SMFrequency;
     m_MemFrequency = other.m_MemFrequency;
+    m_FanSpeed = other.m_FanSpeed;
 
     if (other.HasCompilationData())
     {

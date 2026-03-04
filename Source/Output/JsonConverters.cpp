@@ -287,6 +287,11 @@ void to_json(json& j, const ComputationResult& result)
     {
         j["MemoryFrequency"] = result.GetMemoryFrequency();
     }
+
+    if (result.HasFanSpeedData())
+    {
+        j["FanSpeed"] = result.GetFanSpeed();
+    }
 }
 
 void from_json(const json& j, ComputationResult& result)
@@ -363,6 +368,13 @@ void from_json(const json& j, ComputationResult& result)
         uint32_t frequency;
         j.at("MemoryFrequency").get_to(frequency);
         result.SetMemoryFrequency(frequency);
+    }
+
+    if (j.contains("FanSpeed"))
+    {
+        int32_t fanSpeed;
+        j.at("FanSpeed").get_to(fanSpeed);
+        result.SetFanSpeed(fanSpeed);
     }
 }
 

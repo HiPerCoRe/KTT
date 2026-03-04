@@ -147,6 +147,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     std::vector<double> sumTemp;
     std::vector<uint32_t> sumSMFreq;
     std::vector<uint32_t> sumMemFreq;
+    std::vector<int32_t> sumFanSpeed;
     if (powerMeasurementAllowed) {
         subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
         //uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
@@ -168,6 +169,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             sumTemp.push_back(m_PowerManager->GetTemperature());
             sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
             sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
+            sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
             execs++;
         }
         action->WaitForFinish();
@@ -186,6 +188,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         sumTemp.push_back(m_PowerManager->GetTemperature());
         sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
         sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
+        sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
 #endif // not KTT_POWER_USAGE_NVML_KERNEL_MINTIME
         const uint32_t powerUsage = static_cast<uint32_t>(std::accumulate(sumPwr.cbegin(), sumPwr.cend(), 0)) / static_cast<uint32_t>(sumPwr.size());
         action->SetPowerUsage(powerUsage);
@@ -195,6 +198,14 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         action->SetSMFrequency(smFrequency);
         const uint32_t memFrequency = static_cast<uint32_t>(std::accumulate(sumMemFreq.cbegin(), sumMemFreq.cend(), 0)) / static_cast<uint32_t>(sumMemFreq.size());
         action->SetMemoryFrequency(memFrequency);
+        // Calculate average fan speed (if first sample is -1, fan speed is not supported)
+        int32_t fanSpeed = -1;
+        if (!sumFanSpeed.empty() && sumFanSpeed[0] != -1)
+        {
+            const int64_t fanSum = std::accumulate(sumFanSpeed.cbegin(), sumFanSpeed.cend(), static_cast<int64_t>(0));
+            fanSpeed = static_cast<int32_t>(fanSum / static_cast<int64_t>(sumFanSpeed.size()));
+        }
+        action->SetFanSpeed(fanSpeed);
     }
 #endif // KTT_POWER_USAGE_NVML
 

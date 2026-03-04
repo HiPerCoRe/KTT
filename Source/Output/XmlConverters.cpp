@@ -601,6 +601,11 @@ void AppendComputationResult(pugi::xml_node parent, const ComputationResult& res
     {
         node.append_attribute("MemoryFrequency").set_value(result.GetMemoryFrequency());
     }
+
+    if (result.HasFanSpeedData())
+    {
+        node.append_attribute("FanSpeed").set_value(result.GetFanSpeed());
+    }
 }
 
 ComputationResult ParseComputationResult(const pugi::xml_node node)
@@ -669,6 +674,14 @@ ComputationResult ParseComputationResult(const pugi::xml_node node)
     {
         const uint32_t memoryFrequencyValue = memoryFrequency.as_uint();
         result.SetMemoryFrequency(memoryFrequencyValue);
+    }
+
+    const auto fanSpeed = node.attribute("FanSpeed");
+
+    if (!fanSpeed.empty())
+    {
+        const int32_t fanSpeedValue = fanSpeed.as_int();
+        result.SetFanSpeed(fanSpeedValue);
     }
 
     return result;

@@ -23,6 +23,7 @@ NvmlPowerManager::NvmlPowerManager(const CudaContext& context, const DeviceIndex
     m_TempSamples.reserve(samplingFrequency);
     m_SMFreqSamples.reserve(samplingFrequency);
     m_MemFreqSamples.reserve(samplingFrequency);
+    m_FanSpeedSamples.reserve(samplingFrequency);
 }
 
 NvmlPowerManager::~NvmlPowerManager()
@@ -38,6 +39,7 @@ void NvmlPowerManager::StartCollection()
     m_TempSamples.clear();
     m_SMFreqSamples.clear();
     m_MemFreqSamples.clear();
+    m_FanSpeedSamples.clear();
     m_StopFlag = false;
     
     m_Future = m_Pool.push([this]()
@@ -114,6 +116,26 @@ uint32_t NvmlPowerManager::GetMemoryFrequency() const
     return sum / static_cast<uint32_t>(m_MemFreqSamples.size());
 }
 
+int32_t NvmlPowerManager::GetFanSpeed() const
+{
+    Logger::LogDebug("Generating average fan speed from number of samples: " + std::to_string(m_FanSpeedSamples.size()));
+
+    if (m_FanSpeedSamples.empty())
+    {
+        return -1;
+    }
+
+    // If first sample is -1, fan speed is not supported by the device
+    if (m_FanSpeedSamples[0] == -1)
+    {
+        return -1;
+    }
+
+    // Calculate average of all samples
+    const int64_t sum = std::accumulate(m_FanSpeedSamples.cbegin(), m_FanSpeedSamples.cend(), static_cast<int64_t>(0));
+    return static_cast<int32_t>(sum / static_cast<int64_t>(m_FanSpeedSamples.size()));
+}
+
 void NvmlPowerManager::CollectPowerSamples()
 {
     uint32_t initialValue;
@@ -125,6 +147,19 @@ void NvmlPowerManager::CollectPowerSamples()
     m_SMFreqSamples.push_back(initialValue);
     CheckError(nvmlDeviceGetClockInfo(m_Device, NVML_CLOCK_MEM, &initialValue), "nvmlDeviceGetClockInfo");
     m_MemFreqSamples.push_back(initialValue);
+
+    // Get fan speed, handle not supported case
+    uint32_t fanSpeed;
+    nvmlReturn_t fanResult = nvmlDeviceGetFanSpeed(m_Device, &fanSpeed);
+    if (fanResult == NVML_ERROR_NOT_SUPPORTED)
+    {
+        m_FanSpeedSamples.push_back(-1);
+    }
+    else
+    {
+        CheckError(fanResult, "nvmlDeviceGetFanSpeed");
+        m_FanSpeedSamples.push_back(static_cast<int32_t>(fanSpeed));
+    }
 
     Timer timer;
     timer.Start();
@@ -146,15 +181,24 @@ void NvmlPowerManager::CollectPowerSamples()
 	CheckError(nvmlDeviceGetTemperature(m_Device, NVML_TEMPERATURE_GPU, &temp), "nvmlDeviceGetTemperature");
 	m_TempSamples.push_back(temp);
 
-	/*uint32_t fan;
-	if (nvmlDeviceGetFanSpeed(m_Device, &fan) == NVML_ERROR_NOT_SUPPORTED)
-	    fan = 0;*/
-
 	uint32_t smClk, memClk;
 	CheckError(nvmlDeviceGetClockInfo(m_Device, NVML_CLOCK_SM, &smClk), "nvmlDeviceGetClockInfo");
 	CheckError(nvmlDeviceGetClockInfo(m_Device, NVML_CLOCK_MEM, &memClk), "nvmlDeviceGetClockInfo");
 	m_SMFreqSamples.push_back(smClk);
 	m_MemFreqSamples.push_back(memClk);
+
+	// Get fan speed, handle not supported case
+	uint32_t fanSpeed;
+	nvmlReturn_t fanResult = nvmlDeviceGetFanSpeed(m_Device, &fanSpeed);
+	if (fanResult == NVML_ERROR_NOT_SUPPORTED)
+	{
+	    m_FanSpeedSamples.push_back(-1);
+	}
+	else
+	{
+	    CheckError(fanResult, "nvmlDeviceGetFanSpeed");
+	    m_FanSpeedSamples.push_back(static_cast<int32_t>(fanSpeed));
+	}
     }
 
     timer.Stop();

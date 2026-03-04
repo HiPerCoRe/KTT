@@ -28,6 +28,7 @@ public:
     void SetTemperature(const double temperature);
     void SetSMFrequency(const uint32_t smFrequency);
     void SetMemoryFrequency(const uint32_t memoryFrequency);
+    void SetFanSpeed(const int32_t fanSpeed);
     void SetDurationFromMultirun(const Nanoseconds duration);
     void WaitForFinish();
 
@@ -57,6 +58,7 @@ private:
     std::optional<double> m_Temperature;
     std::optional<uint32_t> m_SMFrequency;
     std::optional<uint32_t> m_MemoryFrequency;
+    std::optional<int32_t> m_FanSpeed;
     std::optional<Nanoseconds> m_MultirunDuration;
 };
 
