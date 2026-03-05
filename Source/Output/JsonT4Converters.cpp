@@ -97,7 +97,7 @@ void to_json(json& j, const as_T4<const KernelResult>& result)
     to_json(j_configuration,as_T4(configuration));
     j["configuration"] = j_configuration;
     j["times"] = json::object();
-    j["times"]["compilation"] = time.ConvertFromNanosecondsDouble(result.v.GetCompilationOverhead());
+    j["times"]["compilation_time"] = time.ConvertFromNanosecondsDouble(result.v.GetCompilationOverhead());
     j["times"]["data"] = time.ConvertFromNanosecondsDouble(result.v.GetDataMovementOverhead());
     j["times"]["profiling_runs"] = time.ConvertFromNanosecondsDouble(result.v.GetProfilingRunsOverhead());
     j["times"]["profiling_overhead"] = time.ConvertFromNanosecondsDouble(result.v.GetProfilingOverhead());
@@ -169,7 +169,7 @@ void from_json(const json& j, as_T4<KernelResult>& result)
     const Nanoseconds durationNs = time.ConvertToNanosecondsDouble(duration);
 
     double compilationOverhead;
-    j.at("times").at("compilation").get_to(compilationOverhead);
+    j.at("times").at("compilation_time").get_to(compilationOverhead);
     const Nanoseconds compilationOverheadNs = time.ConvertToNanosecondsDouble(compilationOverhead);
 
     double dataMovementOverhead;
