@@ -43,6 +43,9 @@ CppEngine::CppEngine(const PlatformIndex platformIndex, const DeviceIndex device
 
     // Set device info
     m_DeviceInfo = DeviceInfo(0, "CPU");
+
+    // Set default compiler options
+    SetCompilerOptions("");
 }
 
 CppEngine::CppEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
@@ -614,7 +617,7 @@ void CppEngine::SetCompilerOptions(const std::string& options, const bool overri
             finalOptions += " ";
         }
 
-        finalOptions += m_Configuration.GetDefaultCompilerOptions();
+        finalOptions += GetDefaultCompilerOptions();
     }
 
     m_Configuration.SetStaticCompilerOptions(finalOptions);
@@ -799,6 +802,19 @@ void CppEngine::ClearQueueActions(const QueueId id)
     // Silence unused parameter warning - per-queue action tracking not implemented for C++ backend
     (void)id;
     // TODO: implement if we track per-queue actions
+}
+
+std::string CppEngine::GetDefaultCompilerOptions() const
+{
+    std::string result;
+
+#if defined(_MSC_VER)
+    result = " /std:c++17";
+#else
+    result = " -std=c++17";
+#endif
+
+    return result;
 }
 
 } // namespace ktt

@@ -25,13 +25,9 @@ public:
     bool IsProfilingActive() const;
     void SetProfiling(const bool profiling);
 
-    void SetDefaultCompilerOptions(const std::string& options);
-    const std::string& GetDefaultCompilerOptions() const;
-
 private:
     std::string m_StaticCompilerOptions;
     std::string m_TuningCompilerOptions;
-    std::string m_DefaultCompilerOptions;
     GlobalSizeType m_GlobalSizeType;
     bool m_GlobalSizeCorrection;
     bool m_ProfilingFlag;
