@@ -60,7 +60,8 @@ int main(int argc, char** argv)
 
     // Declare and initialize data
     const int gridSize = 256;
-    int atoms = 64;
+    //int atoms = 64;
+    int atoms = 1024;
 
     const ktt::DimensionVector ndRangeDimensions(gridSize / 32, gridSize / 4, gridSize);
     const ktt::DimensionVector workGroupDimensions(32, 4);
@@ -115,10 +116,10 @@ int main(int argc, char** argv)
 
     tuner.SetLauncher(kernel, [definition](ktt::ComputeInterface& interface)
     {
-        uint64_t sleep = sleepDuration;
+        /*uint64_t sleep = sleepDuration;
         if (randomizeSleep)
             sleep = (sleep*rand())/RAND_MAX;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleep));*/
         interface.RunKernel(definition);
     });
 
@@ -132,15 +133,17 @@ int main(int argc, char** argv)
     const ktt::ArgumentId gridDim = tuner.AddArgumentScalar(gridSize);
     const ktt::ArgumentId gridId = tuner.AddArgumentVector(energyGrid, ktt::ArgumentAccessType::WriteOnly);
 
-    tuner.AddParameter(kernel, "DUMMY_1", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8});
-    tuner.AddParameter(kernel, "DUMMY_2", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8});
-    tuner.AddParameter(kernel, "DUMMY_3", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8});
+    // Create a tuning space big enough to not be exhausted until TuningDuration
+    tuner.AddParameter(kernel, "DUMMY_1", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+    tuner.AddParameter(kernel, "DUMMY_2", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+    tuner.AddParameter(kernel, "DUMMY_3", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+    tuner.AddParameter(kernel, "DUMMY_4", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
 
     tuner.SetArguments(definition, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridDim, gridId});
 
     tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
 
-    const auto results = tuner.Tune(kernel/*, std::make_unique<ktt::ConfigurationCount>(1)*/);
+    const auto results = tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(600)); 
     tuner.SaveResults(results, "DummyOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "DummyOutput", ktt::OutputFormat::XML);
 
