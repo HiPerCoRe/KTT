@@ -25,6 +25,11 @@
 #include <ComputeEngine/Cuda/Nvml/NvmlPowerSubscription.h>
 #endif // KTT_POWER_USAGE_NVML
 
+#ifdef KTT_POWER_USAGE_NVML_KERNEL_MINTIME
+#define KTT_POWER_USAGE_NVML_KERNEL_MAXTIME (KTT_POWER_USAGE_NVML_KERNEL_MINTIME*10)
+#define KTT_POWER_USAGE_NVML_KERNEL_TEMP_DIFF 0.005
+#endif // KTT_POWER_USAGE_NVML_KERNEL_MINTIME
+
 namespace ktt
 {
 
@@ -163,9 +168,11 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
 #if defined(KTT_POWER_USAGE_NVML_KERNEL_MINTIME)
     action->WaitForFinish();
     ktt::Nanoseconds bestDuration = action->GetDuration();
+    int consideredIters = 0;
     if (powerMeasurementAllowed) {
         unsigned long long execs = 1;
-        while (pwrTimer.GetCheckpointTime() < (long long)KTT_POWER_USAGE_NVML_KERNEL_MINTIME*(long long)1000000) {
+        bool looping = true;
+        while (looping) {
             auto a = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
             a->WaitForFinish();
             if (a->GetDuration() < bestDuration)
@@ -176,6 +183,27 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
             sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
             execs++;
+
+            // decide whether loop or stop
+            if ((pwrTimer.GetCheckpointTime() < (long long)KTT_POWER_USAGE_NVML_KERNEL_MINTIME*(long long)1000000) || (consideredIters < 2)) {
+                consideredIters++;
+            }
+            else {
+                // the smallest amount of time already passed, check whether we are over the maximal budget
+                if (pwrTimer.GetCheckpointTime() > (long long)KTT_POWER_USAGE_NVML_KERNEL_MAXTIME*(long long)1000000) {
+                    Logger::LogWarning("The power measuring budget has been exhausted without reaching target precision.");
+                    looping = false;
+                }
+                else {
+                    // check whether we are precise enough
+                    looping = false;
+                    int powerAverage = std::accumulate(sumPwr.cend()-consideredIters, sumPwr.cend(), 0) / consideredIters;
+                    for (auto i = sumPwr.cend()-consideredIters; i != sumPwr.cend(); i++) {
+                        if ((double)std::abs((int)*i-powerAverage)/(double)powerAverage > KTT_POWER_USAGE_NVML_KERNEL_TEMP_DIFF)
+                            looping = true;
+                    }
+                }
+            }
         }
         pwrTimer.Stop();
         //action->SetDurationFromMultirun(pwrTimer.GetElapsedTime() / execs);
@@ -194,21 +222,21 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
         sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
         sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
+        int consideredIters = 1;
 #endif // not KTT_POWER_USAGE_NVML_KERNEL_MINTIME
-        const uint32_t powerUsage = static_cast<uint32_t>(std::accumulate(sumPwr.cbegin(), sumPwr.cend(), 0)) / static_cast<uint32_t>(sumPwr.size());
+        const uint32_t powerUsage = static_cast<uint32_t>(std::accumulate(sumPwr.cend()-consideredIters, sumPwr.cend(), 0)) / static_cast<uint32_t>(consideredIters);
         action->SetPowerUsage(powerUsage);
-        const double temperature = std::accumulate(sumTemp.cbegin(), sumTemp.cend(), 0) / static_cast<double>(sumTemp.size());
+        const double temperature = std::accumulate(sumTemp.cend()-consideredIters, sumTemp.cend(), 0) / static_cast<double>(consideredIters);
         action->SetTemperature(temperature);
-        const uint32_t smFrequency = static_cast<uint32_t>(std::accumulate(sumSMFreq.cbegin(), sumSMFreq.cend(), 0)) / static_cast<uint32_t>(sumSMFreq.size());
+        const uint32_t smFrequency = static_cast<uint32_t>(std::accumulate(sumSMFreq.cend()-consideredIters, sumSMFreq.cend(), 0)) / static_cast<uint32_t>(consideredIters);
         action->SetSMFrequency(smFrequency);
-        const uint32_t memFrequency = static_cast<uint32_t>(std::accumulate(sumMemFreq.cbegin(), sumMemFreq.cend(), 0)) / static_cast<uint32_t>(sumMemFreq.size());
+        const uint32_t memFrequency = static_cast<uint32_t>(std::accumulate(sumMemFreq.cend()-consideredIters, sumMemFreq.cend(), 0)) / static_cast<uint32_t>(consideredIters);
         action->SetMemoryFrequency(memFrequency);
         // Calculate average fan speed (if first sample is -1, fan speed is not supported)
         int32_t fanSpeed = -1;
         if (!sumFanSpeed.empty() && sumFanSpeed[0] != -1)
         {
-            const int64_t fanSum = std::accumulate(sumFanSpeed.cbegin(), sumFanSpeed.cend(), static_cast<int64_t>(0));
-            fanSpeed = static_cast<int32_t>(fanSum / static_cast<int64_t>(sumFanSpeed.size()));
+            fanSpeed = static_cast<int32_t>(std::accumulate(sumFanSpeed.cend()-consideredIters, sumFanSpeed.cend(), 0)) / static_cast<int32_t>(consideredIters);
         }
         action->SetFanSpeed(fanSpeed);
     }
