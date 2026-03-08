@@ -22,7 +22,7 @@ const std::string kernelPrefix = "../";
 #endif
 
 // Toggle rapid test (e.g., disable output validation).
-const bool rapidTest = false;
+const bool rapidTest = true;
 
 // Toggle kernel profiling.
 const bool useProfiling = false;
@@ -69,15 +69,15 @@ int main(int argc, char** argv)
 
     if constexpr (!useProfiling)
     {
-        kSizeM = 2048;
-        kSizeN = 2048;
-        kSizeK = 2048;
+        kSizeM = 4096;
+        kSizeN = 4096;
+        kSizeK = 4096;
     }
     else
     {
-        kSizeM = 2048 / 2;
-        kSizeN = 2048 / 2;
-        kSizeK = 2048 / 2;
+        kSizeM = 4096 / 2;
+        kSizeN = 4096 / 2;
+        kSizeK = 4096 / 2;
     }
 
     const ktt::DimensionVector ndRangeDimensions(kSizeM, kSizeN);
@@ -225,6 +225,14 @@ int main(int argc, char** argv)
         tuner.SetReferenceKernel(matCId, referenceKernel, ktt::KernelConfiguration());
     }
 
+
+    //Pre-heat GPU by 5 minutes of random searching tuning space
+    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
+    tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(300));
+    tuner.ClearConfigurationData(kernel);
+
+    //tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
+    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
     const auto results = tuner.Tune(kernel);
     tuner.SaveResults(results, "GemmOutput", ktt::OutputFormat::XML);
 
