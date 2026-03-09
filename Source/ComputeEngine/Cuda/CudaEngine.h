@@ -4,9 +4,11 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <Api/ComputeApiInitializer.h>
+#include <Api/Configuration/PowerMeasurementParameters.h>
 #include <ComputeEngine/Cuda/Actions/CudaComputeAction.h>
 #include <ComputeEngine/Cuda/Actions/CudaTransferAction.h>
 #include <ComputeEngine/Cuda/Buffers/CudaBuffer.h>
@@ -40,7 +42,8 @@ public:
     explicit CudaEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
 
     // Kernel methods
-    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = true) override;
+    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = true,
+        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt) override;
     ComputationResult WaitForComputeAction(const ComputeActionId id) override;
     void ClearData(const KernelComputeId& id) override;
     void ClearKernelData(const std::string& kernelName) override;

@@ -58,11 +58,19 @@ CppEngine::CppEngine(const ComputeApiInitializer& initializer, std::vector<Queue
     throw KttException("Support for user initializers is not available for C++ API");
 }
 
-ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
+ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,
+    const std::optional<PowerMeasurementParameters>& powerParams)
 {
     // Silence unused parameter warnings - queues are not used in C++ backend
     (void)queueId;
     (void)powerMeasurementAllowed;
+    (void)powerParams;
+
+    // C++ backend does not support power measurement
+    if (powerParams.has_value())
+    {
+        throw KttException("Power measurement is not supported for C++ backend. This feature is only available for CUDA with NVML.");
+    }
     Timer overheadTimer;
     overheadTimer.Start();
 

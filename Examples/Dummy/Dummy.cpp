@@ -1,7 +1,7 @@
 /******************************************************************************
  * This is a dummy example -- it uses fairy efficient version of 3D Coulomb sum
- * but does not tune anything. 
- * The reason of existence of this example is testing stability of time and 
+ * but does not tune anything.
+ * The reason of existence of this example is testing stability of time and
  * power measurement.
  */
 
@@ -36,6 +36,9 @@ const bool randomizeSleep = true;
 
 // Toggle kernel profiling.
 const bool useProfiling = false;
+
+// Toggle robust power measurement (requires KTT built with --power-usage option).
+const bool useRobustPowerMeasurement = true;
 
 int main(int argc, char** argv)
 {
@@ -143,7 +146,15 @@ int main(int argc, char** argv)
 
     tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
 
-    const auto results = tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(600)); 
+    // Configure robust power measurement parameters if enabled
+    std::optional<ktt::PowerMeasurementParameters> powerParams;
+    if constexpr (useRobustPowerMeasurement)
+    {
+        // Minimum 2000ms, maximum 20000ms, 0.5% tolerance
+        powerParams = ktt::PowerMeasurementParameters(2000, 20000, 0.005);
+    }
+
+    const auto results = tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(600), powerParams);
     tuner.SaveResults(results, "DummyOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "DummyOutput", ktt::OutputFormat::XML);
 

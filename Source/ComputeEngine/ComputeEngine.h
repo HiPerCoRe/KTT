@@ -1,8 +1,10 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
+#include <Api/Configuration/PowerMeasurementParameters.h>
 #include <Api/Info/DeviceInfo.h>
 #include <Api/Info/PlatformInfo.h>
 #include <Api/Output/ComputationResult.h>
@@ -22,7 +24,8 @@ public:
     virtual ~ComputeEngine() = default;
 
     // Kernel methods
-    virtual ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = true) = 0;
+    virtual ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = true,
+        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt) = 0;
     virtual ComputationResult WaitForComputeAction(const ComputeActionId id) = 0;
     virtual void ClearData(const KernelComputeId& id) = 0;
     virtual void ClearKernelData(const std::string& kernelName) = 0;

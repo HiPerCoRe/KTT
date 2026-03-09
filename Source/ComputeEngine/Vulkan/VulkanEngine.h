@@ -35,7 +35,8 @@ public:
     explicit VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCount);
 
     // Kernel methods
-    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = false) override;
+    ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = false,
+        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt) override;
     ComputationResult WaitForComputeAction(const ComputeActionId id) override;
     void ClearData(const KernelComputeId& id) override;
     void ClearKernelData(const std::string& kernelName) override;

@@ -52,8 +52,17 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
     m_DeviceInfo = GetDeviceInfo(0)[m_DeviceIndex];
 }
 
-ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
+ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,
+    const std::optional<PowerMeasurementParameters>& powerParams)
 {
+    (void)powerParams;
+
+    // Vulkan does not support power measurement
+    if (powerParams.has_value())
+    {
+        throw KttException("Power measurement is not supported for Vulkan backend. This feature is only available for CUDA with NVML.");
+    }
+
     if (queueId >= static_cast<QueueId>(m_Queues.size()))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));

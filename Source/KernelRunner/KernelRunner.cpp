@@ -143,6 +143,12 @@ bool KernelRunner::IsProfilingActive() const
     return m_Engine.IsProfilingActive();
 }
 
+void KernelRunner::SetPowerMeasurementParameters(const std::optional<PowerMeasurementParameters>& params)
+{
+    // Store the power params to be applied after kernel data is added to compute layer
+    m_PendingPowerParams = params;
+}
+
 void KernelRunner::SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
 {
     m_Validator->SetValidationMethod(method, toleranceThreshold);
@@ -241,6 +247,13 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
     const KernelId id = kernel.GetId();
 
     auto activator = std::make_unique<KernelActivator>(*m_ComputeLayer, id);
+    
+    // Apply any pending power measurement parameters now that kernel data is active
+    if (m_PendingPowerParams.has_value())
+    {
+        m_ComputeLayer->SetPowerMeasurementParameters(m_PendingPowerParams);
+        m_PendingPowerParams.reset();
+    }
     KernelResult result(kernel.GetName(), configuration, "");
 
     Timer timer;

@@ -87,9 +87,10 @@ public:
     void SetReferenceArgument(const ArgumentId& id, const ArgumentId& referenceId);
 
     // Kernel tuning and configurations
-    std::vector<KernelResult> TuneKernel(const KernelId id, const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition);
+    std::vector<KernelResult> TuneKernel(const KernelId id, const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition,
+        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
     KernelResult TuneKernelIteration(const KernelId id, const KernelDimensions& dimensions, const std::vector<BufferOutputDescriptor>& output,
-        const bool recomputeReference);
+        const bool recomputeReference, const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
     std::vector<KernelResult> SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
         std::unique_ptr<StopCondition> stopCondition);
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);

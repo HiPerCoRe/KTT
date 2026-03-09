@@ -4,6 +4,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -28,6 +29,7 @@
 #include <Output/OutputFormat.h>
 #include <Utility/Logger/LoggingLevel.h>
 #include <KttTypes.h>
+#include <Api/Configuration/PowerMeasurementParameters.h>
 
 // Data holders
 #include <Api/Configuration/DimensionVector.h>
@@ -631,20 +633,26 @@ public:
       */
     void SetReferenceArgument(const ArgumentId& id, const ArgumentId& referenceId);
 
-    /** @fn std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr)
+    /** @fn std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr,
+      * const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt)
       * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
       * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
       * will end either when all configurations are explored or when the specified stop condition is fulfilled.
       * @param id Id of the tuned kernel.
       * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
       * will end when all configurations are explored. See StopCondition for more information.
+      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
+      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
+      * Throws KttException if power measurement is requested but not supported.
       * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
       * more information.
       */
-    std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr);
+    std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr,
+        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
 
     /** @fn std::vector<KernelResult> Tune(const KernelId id, const KernelDimensions& dimensions,
-      * std::unique_ptr<StopCondition> stopCondition = nullptr)
+      * std::unique_ptr<StopCondition> stopCondition = nullptr,
+      * const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt)
       * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
       * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
       * will end either when all configurations are explored or when the specified stop condition is fulfilled.
@@ -653,14 +661,18 @@ public:
       * definition, the sizes specified during its addition will be used.
       * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
       * will end when all configurations are explored. See StopCondition for more information.
+      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
+      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
+      * Throws KttException if power measurement is requested but not supported.
       * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
       * more information.
       */
     std::vector<KernelResult> Tune(const KernelId id, const KernelDimensions& dimensions,
-        std::unique_ptr<StopCondition> stopCondition = nullptr);
+        std::unique_ptr<StopCondition> stopCondition = nullptr,
+        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
 
     /** @fn KernelResult TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
-      * const bool recomputeReference = false)
+      * const bool recomputeReference = false, const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt)
       * Performs one step of the tuning process for specified kernel. When this method is called for the kernel for the first time,
       * it creates configuration space based on combinations of provided kernel parameters and constraints. Each time this method
       * is called, it launches a single kernel configuration. If all configurations were already launched, it runs kernel using the
@@ -671,14 +683,18 @@ public:
       * more information.
       * @param recomputeReference Flag which controls whether recomputation of reference output should be performed or not. Useful
       * if kernel data between individual method invocations change.
+      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
+      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
+      * Throws KttException if power measurement is requested but not supported.
       * @return Result containing information about kernel computation in specific configuration. See KernelResult for more
       * information.
       */
     KernelResult TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
-        const bool recomputeReference = false);
+        const bool recomputeReference = false, const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
 
     /** @fn KernelResult TuneIteration(const KernelId id, const KernelDimensions& dimensions,
-      * const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference = false)
+      * const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference = false,
+      * const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt)
       * Performs one step of the tuning process for specified kernel. When this method is called for the kernel for the first time,
       * it creates configuration space based on combinations of provided kernel parameters and constraints. Each time this method
       * is called, it launches a single kernel configuration. If all configurations were already launched, it runs kernel using the
@@ -691,11 +707,14 @@ public:
       * more information.
       * @param recomputeReference Flag which controls whether recomputation of reference output should be performed or not. Useful
       * if kernel data between individual method invocations change.
+      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
+      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
+      * Throws KttException if power measurement is requested but not supported.
       * @return Result containing information about kernel computation in specific configuration. See KernelResult for more
       * information.
       */
     KernelResult TuneIteration(const KernelId id, const KernelDimensions& dimensions, const std::vector<BufferOutputDescriptor>& output,
-        const bool recomputeReference = false);
+        const bool recomputeReference = false, const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
 
     /** @fn std::vector<KernelResult> SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
       * const uint64_t iterations = 0)

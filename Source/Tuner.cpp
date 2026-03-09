@@ -516,17 +516,18 @@ void Tuner::SetReferenceArgument(const ArgumentId& id, const ArgumentId& referen
     }
 }
 
-std::vector<KernelResult> Tuner::Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition)
+std::vector<KernelResult> Tuner::Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition,
+    const std::optional<PowerMeasurementParameters>& powerParams)
 {
-    return Tune(id, {}, std::move(stopCondition));
+    return Tune(id, {}, std::move(stopCondition), powerParams);
 }
 
 std::vector<KernelResult> Tuner::Tune(const KernelId id, const KernelDimensions& dimensions,
-    std::unique_ptr<StopCondition> stopCondition)
+    std::unique_ptr<StopCondition> stopCondition, const std::optional<PowerMeasurementParameters>& powerParams)
 {
     try
     {
-        return m_Tuner->TuneKernel(id, dimensions, std::move(stopCondition));
+        return m_Tuner->TuneKernel(id, dimensions, std::move(stopCondition), powerParams);
     }
     catch (const KttException& exception)
     {
@@ -536,17 +537,18 @@ std::vector<KernelResult> Tuner::Tune(const KernelId id, const KernelDimensions&
 }
 
 KernelResult Tuner::TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
-    const bool recomputeReference)
+    const bool recomputeReference, const std::optional<PowerMeasurementParameters>& powerParams)
 {
-    return TuneIteration(id, {}, output, recomputeReference);
+    return TuneIteration(id, {}, output, recomputeReference, powerParams);
 }
 
 KernelResult Tuner::TuneIteration(const KernelId id, const KernelDimensions& dimensions,
-    const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
+    const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference,
+    const std::optional<PowerMeasurementParameters>& powerParams)
 {
     try
     {
-        return m_Tuner->TuneKernelIteration(id, dimensions, output, recomputeReference);
+        return m_Tuner->TuneKernelIteration(id, dimensions, output, recomputeReference, powerParams);
     }
     catch (const KttException& exception)
     {

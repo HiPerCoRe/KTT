@@ -1,8 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 
+#include <Api/Configuration/PowerMeasurementParameters.h>
 #include <Api/Output/BufferOutputDescriptor.h>
 #include <Api/Output/KernelResult.h>
 #include <Api/StopCondition/StopCondition.h>
@@ -18,9 +20,11 @@ class TuningRunner
 public:
     explicit TuningRunner(KernelRunner& kernelRunner);
 
-    std::vector<KernelResult> Tune(const Kernel& kernel, const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition);
+    std::vector<KernelResult> Tune(const Kernel& kernel, const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition,
+        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
     KernelResult TuneIteration(const Kernel& kernel, const KernelDimensions& dimensions, const KernelRunMode mode,
-        const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference);
+        const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference,
+        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
     std::vector<KernelResult> SimulateTuning(const Kernel& kernel, const std::vector<KernelResult>& results,
         std::unique_ptr<StopCondition> stopCondition);
 

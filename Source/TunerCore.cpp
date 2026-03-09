@@ -265,17 +265,18 @@ void TunerCore::SetReferenceArgument(const ArgumentId& id, const ArgumentId& ref
 }
 
 std::vector<KernelResult> TunerCore::TuneKernel(const KernelId id, const KernelDimensions& dimensions,
-    std::unique_ptr<StopCondition> stopCondition)
+    std::unique_ptr<StopCondition> stopCondition, const std::optional<PowerMeasurementParameters>& powerParams)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_TuningRunner->Tune(kernel, dimensions, std::move(stopCondition));
+    return m_TuningRunner->Tune(kernel, dimensions, std::move(stopCondition), powerParams);
 }
 
 KernelResult TunerCore::TuneKernelIteration(const KernelId id, const KernelDimensions& dimensions,
-    const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
+    const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference,
+    const std::optional<PowerMeasurementParameters>& powerParams)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_TuningRunner->TuneIteration(kernel, dimensions, KernelRunMode::OnlineTuning, output, recomputeReference);
+    return m_TuningRunner->TuneIteration(kernel, dimensions, KernelRunMode::OnlineTuning, output, recomputeReference, powerParams);
 }
 
 std::vector<KernelResult> TunerCore::SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,

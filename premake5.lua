@@ -114,9 +114,6 @@ function linkLibrariesNvidia()
         
         if _OPTIONS["power-usage"] then
             defines {"KTT_POWER_USAGE_NVML"}
-	    if _OPTIONS["power-usage-mintime"] then
-                defines {"KTT_POWER_USAGE_NVML_KERNEL_MINTIME=" .. _OPTIONS["power-usage-mintime"]}
-            end
             links {"nvidia-ml"}
         end
         

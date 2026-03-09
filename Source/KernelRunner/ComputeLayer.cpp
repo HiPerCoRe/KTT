@@ -30,7 +30,8 @@ void ComputeLayer::RunKernel(const KernelDefinitionId id, const DimensionVector&
 ComputeActionId ComputeLayer::RunKernelAsync(const KernelDefinitionId id, const QueueId queue)
 {
     const auto& data = GetComputeData(id);
-    return m_ComputeEngine.RunKernelAsync(data, queue);
+    const auto& powerParams = GetData().GetPowerMeasurementParameters();
+    return m_ComputeEngine.RunKernelAsync(data, queue, true, powerParams);
 }
 
 ComputeActionId ComputeLayer::RunKernelAsync(const KernelDefinitionId id, const QueueId queue, const DimensionVector& globalSize,
@@ -40,7 +41,8 @@ ComputeActionId ComputeLayer::RunKernelAsync(const KernelDefinitionId id, const 
     data.SetGlobalSize(globalSize);
     data.SetLocalSize(localSize);
 
-    return m_ComputeEngine.RunKernelAsync(data, queue);
+    const auto& powerParams = GetData().GetPowerMeasurementParameters();
+    return m_ComputeEngine.RunKernelAsync(data, queue, true, powerParams);
 }
 
 void ComputeLayer::WaitForComputeAction(const ComputeActionId id)
@@ -361,6 +363,11 @@ ComputeLayerData& ComputeLayer::GetData()
 const KernelComputeData& ComputeLayer::GetComputeData(const KernelDefinitionId id) const
 {
     return GetData().GetComputeData(id);
+}
+
+void ComputeLayer::SetPowerMeasurementParameters(const std::optional<PowerMeasurementParameters>& params)
+{
+    GetData().SetPowerMeasurementParameters(params);
 }
 
 } // namespace ktt

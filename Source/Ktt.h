@@ -18,3 +18,5 @@
 #include <Api/StopCondition/FailureFraction.h>
 
 #include <Api/ComputeInterface.h>
+
+#include <Api/Configuration/PowerMeasurementParameters.h>

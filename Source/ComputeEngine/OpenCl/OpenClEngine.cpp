@@ -105,10 +105,18 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer, std::vector
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
-ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
+ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,
+    const std::optional<PowerMeasurementParameters>& powerParams)
 {
     // Silence warning about unused parameter (placeholder for future power measurement)
     (void)powerMeasurementAllowed;
+    (void)powerParams;
+
+    // OpenCL does not support power measurement
+    if (powerParams.has_value())
+    {
+        throw KttException("Power measurement is not supported for OpenCL backend. This feature is only available for CUDA with NVML.");
+    }
     if (!ContainsKey(m_Queues, queueId))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));

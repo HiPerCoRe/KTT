@@ -16,7 +16,7 @@ TuningRunner::TuningRunner(KernelRunner& kernelRunner) :
 {}
 
 std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelDimensions& dimensions,
-    std::unique_ptr<StopCondition> stopCondition)
+    std::unique_ptr<StopCondition> stopCondition, const std::optional<PowerMeasurementParameters>& powerParams)
 {
     Logger::LogInfo("Starting offline tuning for kernel " + kernel.GetName());
     const auto id = kernel.GetId();
@@ -40,9 +40,9 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id), "");
         KernelResult multiResult(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id), ktt::Timestamp::GetTimestamp());
         int iter = 0;
-        do 
+        do
         {
-            result = TuneIteration(kernel, dimensions, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false);
+            result = TuneIteration(kernel, dimensions, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false, powerParams);
             multiResult.FuseProfilingTimes(result, (iter == 0));
 	    multiResult.TransferPowerData(result);
             iter++;
@@ -83,7 +83,8 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
 }
 
 KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimensions& dimensions, const KernelRunMode mode,
-    const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference)
+    const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference,
+    const std::optional<PowerMeasurementParameters>& powerParams)
 {
     if (recomputeReference)
     {
@@ -114,7 +115,10 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimen
             + " for kernel " + kernel.GetName());
     }
 
-    KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, dimensions, mode, output);
+    // Set power measurement parameters on compute layer data before running kernel
+    m_KernelRunner.SetPowerMeasurementParameters(powerParams);
+
+    KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, dimensions, mode, output, true);
 
     if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns() && !m_ConfigurationManager->IsDataProcessed(id))
     {

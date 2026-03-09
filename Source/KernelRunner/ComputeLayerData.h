@@ -1,9 +1,11 @@
 #pragma once
 
 #include <map>
+#include <optional>
 #include <vector>
 
 #include <Api/Configuration/KernelConfiguration.h>
+#include <Api/Configuration/PowerMeasurementParameters.h>
 #include <Api/Output/ComputationResult.h>
 #include <Api/Output/KernelResult.h>
 #include <ComputeEngine/KernelComputeData.h>
@@ -35,6 +37,9 @@ public:
     const KernelComputeData& GetComputeData(const KernelDefinitionId id) const;
     KernelResult GenerateResult(const Nanoseconds launcherDuration) const;
 
+    void SetPowerMeasurementParameters(const std::optional<PowerMeasurementParameters>& params);
+    const std::optional<PowerMeasurementParameters>& GetPowerMeasurementParameters() const;
+
 private:
     std::map<KernelDefinitionId, KernelComputeData> m_ComputeData;
     std::map<ArgumentId, KernelArgument> m_ArgumentOverrides;
@@ -44,6 +49,7 @@ private:
     KernelRunMode m_RunMode;
     Nanoseconds m_DataOverhead;
     Nanoseconds m_CompilationOverhead;
+    std::optional<PowerMeasurementParameters> m_PowerMeasurementParameters;
 
     Nanoseconds CalculateLauncherOverhead() const;
 };

@@ -156,4 +156,14 @@ Nanoseconds ComputeLayerData::CalculateLauncherOverhead() const
     return result;
 }
 
+void ComputeLayerData::SetPowerMeasurementParameters(const std::optional<PowerMeasurementParameters>& params)
+{
+    m_PowerMeasurementParameters = params;
+}
+
+const std::optional<PowerMeasurementParameters>& ComputeLayerData::GetPowerMeasurementParameters() const
+{
+    return m_PowerMeasurementParameters;
+}
+
 } // namespace ktt

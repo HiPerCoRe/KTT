@@ -25,10 +25,8 @@
 #include <ComputeEngine/Cuda/Nvml/NvmlPowerSubscription.h>
 #endif // KTT_POWER_USAGE_NVML
 
-#ifdef KTT_POWER_USAGE_NVML_KERNEL_MINTIME
-#define KTT_POWER_USAGE_NVML_KERNEL_MAXTIME (KTT_POWER_USAGE_NVML_KERNEL_MINTIME*10)
-#define KTT_POWER_USAGE_NVML_KERNEL_TEMP_DIFF 0.005
-#endif // KTT_POWER_USAGE_NVML_KERNEL_MINTIME
+#include <iostream>
+
 
 namespace ktt
 {
@@ -112,10 +110,19 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<Que
 #endif // KTT_POWER_USAGE_NVML
 }
 
-ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed)
+ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,
+    const std::optional<PowerMeasurementParameters>& powerParams)
 {
     // Silence warning about unused parameter when KTT_POWER_USAGE_NVML is not defined
     (void)powerMeasurementAllowed;
+    (void)powerParams;
+
+#ifndef KTT_POWER_USAGE_NVML
+    if (powerParams.has_value())
+    {
+        throw KttException("Power measurement is not supported. KTT must be built with --power-usage option and CUDA backend.");
+    }
+#endif
     if (!ContainsKey(m_Streams, queueId))
     {
         throw KttException("Invalid stream index: " + std::to_string(queueId));
@@ -157,21 +164,36 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
         //uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
     }
-#if defined(KTT_POWER_USAGE_NVML_KERNEL_MINTIME)
+    // Robust power measurement timer - only used when powerParams is provided
+#if defined(KTT_POWER_USAGE_NVML)
     Timer pwrTimer;
-    pwrTimer.Start();
-#endif // KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL
+    if (powerParams.has_value())
+    {
+        pwrTimer.Start();
+    }
+#endif // KTT_POWER_USAGE_NVML
 #endif // KTT_POWER_USAGE_NVML
     
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
-#if defined(KTT_POWER_USAGE_NVML) 
-#if defined(KTT_POWER_USAGE_NVML_KERNEL_MINTIME)
-    action->WaitForFinish();
-    ktt::Nanoseconds bestDuration = action->GetDuration();
-    int consideredIters = 0;
-    if (powerMeasurementAllowed) {
+#if defined(KTT_POWER_USAGE_NVML)
+    // Robust power measurement - run kernel multiple times until power stabilizes
+    // This is only done when powerParams is provided
+    if (powerMeasurementAllowed && powerParams.has_value())
+    {
+        action->WaitForFinish();
+        ktt::Nanoseconds bestDuration = action->GetDuration();
+        int consideredIters = 0;
         unsigned long long execs = 1;
         bool looping = true;
+        const auto& params = powerParams.value();
+        
+        // Collect first power sample after initial kernel execution
+        sumPwr.push_back(m_PowerManager->GetPowerUsage());
+        sumTemp.push_back(m_PowerManager->GetTemperature());
+        sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
+        sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
+        sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
+        
         while (looping) {
             auto a = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
             a->WaitForFinish();
@@ -185,45 +207,50 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             execs++;
 
             // decide whether loop or stop
-            if ((pwrTimer.GetCheckpointTime() < (long long)KTT_POWER_USAGE_NVML_KERNEL_MINTIME*(long long)1000000) || (consideredIters < 2)) {
+            // While we haven't reached minTime OR we have fewer than 2 considered iterations,
+            // we increment consideredIters and continue looping
+            if ((pwrTimer.GetCheckpointTime() < (unsigned long)params.minTimeMs * (unsigned long)1000000) || (consideredIters < 2)) {
                 consideredIters++;
             }
             else {
                 // the smallest amount of time already passed, check whether we are over the maximal budget
-                if (pwrTimer.GetCheckpointTime() > (long long)KTT_POWER_USAGE_NVML_KERNEL_MAXTIME*(long long)1000000) {
+                if (pwrTimer.GetCheckpointTime() > (unsigned long)params.maxTimeMs * (unsigned long)1000000) {
                     Logger::LogWarning("The power measuring budget has been exhausted without reaching target precision.");
                     looping = false;
                 }
                 else {
                     // check whether we are precise enough
+                    // Only check the last 'consideredIters' samples for stability
                     looping = false;
                     int powerAverage = std::accumulate(sumPwr.cend()-consideredIters, sumPwr.cend(), 0) / consideredIters;
                     for (auto i = sumPwr.cend()-consideredIters; i != sumPwr.cend(); i++) {
-                        if ((double)std::abs((int)*i-powerAverage)/(double)powerAverage > KTT_POWER_USAGE_NVML_KERNEL_TEMP_DIFF)
+                        if ((double)std::abs((int)*i-powerAverage)/(double)powerAverage > params.maxPowerDiff)
                             looping = true;
                     }
                 }
             }
         }
         pwrTimer.Stop();
-        //action->SetDurationFromMultirun(pwrTimer.GetElapsedTime() / execs);
         action->SetDurationFromMultirun(bestDuration);
+
+        Logger::LogInfo("Power has been measured from " + std::to_string(consideredIters) + " kernel runs (out of " + std::to_string(execs) + " runs)");
     }
-#endif // KTT_POWER_USAGE_NVML_KERNEL_REPS_EXPERIMENTAL
 #endif // KTT_POWER_USAGE_NVML
 
 
 #if defined(KTT_POWER_USAGE_NVML)
     if (powerMeasurementAllowed) {
-#if !defined (KTT_POWER_USAGE_NVML_KERNEL_MINTIME)
-        action->WaitForFinish(); //XXX enforcing sync here to get better power result
-        sumPwr.push_back(m_PowerManager->GetPowerUsage());
-        sumTemp.push_back(m_PowerManager->GetTemperature());
-        sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
-        sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
-        sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
-        int consideredIters = 1;
-#endif // not KTT_POWER_USAGE_NVML_KERNEL_MINTIME
+        // Simple power measurement (single execution) - used when powerParams is NOT provided
+        if (!powerParams.has_value())
+        {
+            action->WaitForFinish();
+            sumPwr.push_back(m_PowerManager->GetPowerUsage());
+            sumTemp.push_back(m_PowerManager->GetTemperature());
+            sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
+            sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
+            sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
+        }
+        int consideredIters = powerParams.has_value() ? static_cast<int>(sumPwr.size()) : 1;
         const uint32_t powerUsage = static_cast<uint32_t>(std::accumulate(sumPwr.cend()-consideredIters, sumPwr.cend(), 0)) / static_cast<uint32_t>(consideredIters);
         action->SetPowerUsage(powerUsage);
         const double temperature = std::accumulate(sumTemp.cend()-consideredIters, sumTemp.cend(), 0) / static_cast<double>(consideredIters);

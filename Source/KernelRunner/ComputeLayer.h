@@ -2,7 +2,9 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 
+#include <Api/Configuration/PowerMeasurementParameters.h>
 #include <Api/Output/KernelResult.h>
 #include <Api/ComputeInterface.h>
 #include <ComputeEngine/ComputeEngine.h>
@@ -77,6 +79,8 @@ public:
         const KernelRunMode mode);
     void ClearData(const KernelId id);
     KernelResult GenerateResult(const KernelId id, const Nanoseconds launcherDuration) const;
+
+    void SetPowerMeasurementParameters(const std::optional<PowerMeasurementParameters>& params);
 
 private:
     std::map<KernelId, std::unique_ptr<ComputeLayerData>> m_Data;
