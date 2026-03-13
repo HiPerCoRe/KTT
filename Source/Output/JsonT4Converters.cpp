@@ -11,30 +11,27 @@ void to_json(json& j, const as_T4<const KernelConfiguration>& configuration)
     j = json::object();
     const std::vector<ParameterPair>& pairs = configuration.v.GetPairs();
     for (const auto& pair : pairs) {
-        std::string value;
 
         switch (pair.GetValueType())
         {
             case ParameterValueType::Int:
-                value = std::to_string(std::get<int64_t>(pair.GetValue()));
+                j[pair.GetName()] = std::get<int64_t>(pair.GetValue());
                 break;
             case ParameterValueType::UnsignedInt:
-                value = std::to_string(pair.GetValueUint());
+                j[pair.GetName()] = pair.GetValueUint();
                 break;
             case ParameterValueType::Double:
-                value = std::to_string(std::get<double>(pair.GetValue()));
+                j[pair.GetName()] = std::get<double>(pair.GetValue());
                 break;
             case ParameterValueType::Bool:
-                value = std::to_string(std::get<bool>(pair.GetValue()));
+                j[pair.GetName()] = std::get<bool>(pair.GetValue());
                 break;
             case ParameterValueType::String:
-                value = pair.GetValueString();
+                j[pair.GetName()] = pair.GetValueString();
                 break;
             default:
                 KttError("Unhandled parameter value type");
         }
-
-        j[pair.GetName()] = value;
     }
 }
 
@@ -42,36 +39,34 @@ void from_json(const json& j, as_T4<KernelConfiguration>& configuration)
 {
     std::vector<ParameterPair> pairs;
     for (auto it = j.begin(); it != j.end(); ++it) {
-        ParameterPair pair;
         std::string name = it.key();
-        std::string valueStr;
+        const auto &jsonValue = it.value();
 
-        try {
-            valueStr = it.value().get<std::string>();
-            if (valueStr == "true" || valueStr == "false") {
-                pair = ParameterPair(name, valueStr == "true");
-            }
-                // detect floating-point numbers (presence of '.' or exponent)
-            else if (valueStr.find('.') != std::string::npos ||
-                    valueStr.find('e') != std::string::npos ||
-                    valueStr.find('E') != std::string::npos) {
-                pair = ParameterPair(name, std::stod(valueStr));
-            }
-            // detect unsigned integers
-            else if (!valueStr.empty() && valueStr.find_first_not_of("0123456789") == std::string::npos) {
-                pair = ParameterPair(name, static_cast<uint64_t>(std::stoull(valueStr)));
-            }
-            // fallback: signed integer
-            else {
-                pair = ParameterPair(name, static_cast<int64_t>(std::stoll(valueStr)));
-            }
-        } catch (const std::invalid_argument&) {
-            pair = ParameterPair(name, valueStr);
-        } catch (const std::out_of_range&) {
-            pair = ParameterPair(name, valueStr);
+        ParameterPair pair;
+
+        if (jsonValue.is_boolean())
+        {
+            pair = ParameterPair(name, jsonValue.get<bool>());
         }
-        catch (const nlohmann::json::type_error& e) {
-            KttError("JSON type error while parsing");
+        else if (jsonValue.is_number_float())
+        {
+            pair = ParameterPair(name, jsonValue.get<double>());
+        }
+        else if (jsonValue.is_number_unsigned())
+        {
+            pair = ParameterPair(name, jsonValue.get<uint64_t>());
+        }
+        else if (jsonValue.is_number_integer())
+        {
+            pair = ParameterPair(name, jsonValue.get<int64_t>());
+        }
+        else if (jsonValue.is_string())
+        {
+            pair = ParameterPair(name, jsonValue.get<std::string>());
+        }
+        else
+        {
+            KttError("Unsupported parameter value type in configuration");
         }
         pairs.push_back(pair);
     }
