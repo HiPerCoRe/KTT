@@ -184,7 +184,7 @@ void InitializePythonTuner(py::module_& module)
             py::arg("id"),
             py::arg("name"),
             py::arg("valueType"),
-            py::arg("valueScript"),
+            py::arg("valueScript")
         )
         .def("AddThreadModifier", py::overload_cast<const ktt::KernelId, const std::vector<ktt::KernelDefinitionId>&, const ktt::ModifierType,
             const ktt::ModifierDimension, const std::vector<std::string>&, ktt::ModifierFunction>(&ktt::Tuner::AddThreadModifier))
@@ -533,22 +533,25 @@ void InitializePythonTuner(py::module_& module)
         .def
         (
             "TuneOptions",
-            py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::TuneOptions),
+            py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&, std::unique_ptr<ktt::StopCondition>,
+                const std::optional<ktt::PreciseMeasurementParameters>&>(&ktt::Tuner::TuneOptions),
             py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
             py::arg("baseConfiguration"),
-            py::arg("stopCondition") = nullptr
+            py::arg("stopCondition") = nullptr,
+            py::arg("preciseParams") = std::nullopt
         )
         .def
         (
             "TuneOptions",
             py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&, const ktt::KernelDimensions&,
-                std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::TuneOptions),
+                std::unique_ptr<ktt::StopCondition>, const std::optional<ktt::PreciseMeasurementParameters>&>(&ktt::Tuner::TuneOptions),
             py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
             py::arg("baseConfiguration"),
             py::arg("dimensions"),
-            py::arg("stopCondition") = nullptr
+            py::arg("stopCondition") = nullptr,
+            py::arg("preciseParams") = std::nullopt
         )
         .def
         (

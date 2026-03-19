@@ -134,17 +134,29 @@ public:
       */
     Nanoseconds GetKernelDuration() const;
 
-    /** @fn Nanoseconds GetKernelOverhead() const
+    /** @fn Nanoseconds GetKernelOverheadFromCompResults() const
       * Retrieves total kernel overhead from the partial results.
       * @return Total kernel overhead from the partial results.
       */
+    Nanoseconds GetKernelOverheadFromCompResults() const;
+
+    /** @fn Nanoseconds GetKernelOverhead() const
+      * Retrieves total kernel overhead.
+      * @return Total kernel overhead.
+      */
     Nanoseconds GetKernelOverhead() const;
+
+    /** @fn Nanoseconds GetKernelOverheadFirstPass() const
+      * Retrieves kernel overhead of the first pass under the same configuration.
+      * @return Kernel overhead of the first pass under the same configuration.
+      */
+    Nanoseconds GetKernelOverheadFirstPass() const;
 
     /** @fn Nanoseconds GetKernelCompilationOverhead() const
       * Retrieves total kernel compilation overhead from the partial results.
       * @return Total kernel compilation overhead from the partial results.
       */
-    Nanoseconds GetKernelCompilationOverhead() const;
+    Nanoseconds GetCompilationOverheadFromCompResults() const;
 
     /** @fn Nanoseconds GetExtraDuration() const
       * Retrieves duration of a kernel launcher. The duration of buffer transfers performed within the launcher is not included.
@@ -189,9 +201,22 @@ public:
       */
     Nanoseconds GetProfilingRunsOverhead() const;
 
+    
+    /** @fn Nanoseconds GetProfilingInfrastructureOverhead() const
+      * Retrieves duration of CUPTI initialization and data collection, but without data movement and extra duration, for all profiling passes.
+      * @return Duration of profiling infrastructure, but without data movement and extra duration.
+      */
+    Nanoseconds GetProfilingInfrastructureOverhead() const;
+
+    /** @fn Nanoseconds GetProfilingOverheadFromCompResults() const
+      * Retrieves duration of all non-kernel operations performed during collection performance counters (e.g., data movements for extra kernel runs) from the partial results.
+      * @return Duration of operations different than kernel execution needed to collect performance counters from the partial results.
+      */
+    Nanoseconds GetProfilingOverheadFromCompResults() const;
+
     /** @fn Nanoseconds GetProfilingOverhead() const
-      * Retrieves duration of all non-kernel operations performed during collection performance counters (e.g., data movements for extra kernel runs).
-      * @return Duration operations different than kernel execution needed to coollect performance counters.
+      * Retrieves duration of all non-kernel operations performed during collection performance counters (e.g., CUPTI infrastructure and data movements for extra kernel runs) for all profiling runs.
+      * @return Duration operations different than kernel execution needed to collect performance counters.
       */
     Nanoseconds GetProfilingOverhead() const;
 
@@ -219,6 +244,12 @@ public:
       * @return The sum of kernel, data movement, validation and searcher overhead.
       */
     Nanoseconds GetTotalOverhead() const;
+
+    /** @fn Nanoseconds ComputeTotalOverhead() const
+      * Computes the total overhead by summing up all individual overhead components.
+      * @return Total overhead.
+      */
+    Nanoseconds ComputeTotalOverhead() const;
 
     /** @fn bool IsValid() const
       * Checks whether kernel result is valid. I.e., its status has value Ok.
@@ -264,7 +295,11 @@ private:
     Nanoseconds m_FailedKernelOverhead;
     Nanoseconds m_ProfilingRunsOverhead;
     Nanoseconds m_ProfilingOverhead;
+    Nanoseconds m_ProfilingInfrastructureOverhead;
     Nanoseconds m_CompilationOverhead;
+    Nanoseconds m_KernelOverhead;
+    Nanoseconds m_KernelOverheadFirstPass;
+    Nanoseconds m_TotalOverhead;
     ResultStatus m_Status;
 };
 

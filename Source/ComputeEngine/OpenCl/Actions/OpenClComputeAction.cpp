@@ -16,6 +16,7 @@ OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, const QueueId
     m_Kernel(kernel),
     m_Overhead(0),
     m_CompilationOverhead(0),
+    m_ProfilingOverhead(0),
     m_GlobalSize(globalSize),
     m_LocalSize(localSize),
     m_DurationFromMultirun(std::nullopt),
@@ -36,6 +37,11 @@ void OpenClComputeAction::IncreaseOverhead(const Nanoseconds overhead)
 void OpenClComputeAction::IncreaseCompilationOverhead(const Nanoseconds overhead)
 {
     m_CompilationOverhead += overhead;
+}
+
+void OpenClComputeAction::IncreaseProfilingOverhead(const Nanoseconds overhead)
+{
+    m_ProfilingOverhead += overhead;
 }
 
 void OpenClComputeAction::SetComputeId(const KernelComputeId& id)
@@ -99,6 +105,11 @@ Nanoseconds OpenClComputeAction::GetCompilationOverhead() const
     return m_CompilationOverhead;
 }
 
+Nanoseconds OpenClComputeAction::GetProfilingOverhead() const
+{    
+    return m_ProfilingOverhead;
+}
+
 const KernelComputeId& OpenClComputeAction::GetComputeId() const
 {
     return m_ComputeId;
@@ -110,6 +121,7 @@ ComputationResult OpenClComputeAction::GenerateResult() const
     Nanoseconds duration = GetDuration();
     const Nanoseconds overhead = GetOverhead();
     const Nanoseconds compilationOverhead = GetCompilationOverhead();
+    const Nanoseconds profilingOverhead = GetProfilingOverhead();
     std::unique_ptr<KernelCompilationData> compilationData = m_Kernel->GenerateCompilationData();
 
     // Use duration from multirun if available
@@ -117,7 +129,7 @@ ComputationResult OpenClComputeAction::GenerateResult() const
         duration = m_DurationFromMultirun.value();
     }
 
-    result.SetDurationData(duration, overhead, compilationOverhead);
+    result.SetDurationData(duration, overhead, compilationOverhead, profilingOverhead);
     result.SetSizeData(m_GlobalSize, m_LocalSize);
     result.SetCompilationData(std::move(compilationData));
 
