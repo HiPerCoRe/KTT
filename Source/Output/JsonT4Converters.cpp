@@ -97,7 +97,7 @@ void to_json(json& j, const as_T4<const KernelResult>& result)
     j["times"]["profiling_runs"] = time.ConvertFromNanosecondsDouble(result.v.GetProfilingRunsOverhead());
     j["times"]["profiling_overhead"] = time.ConvertFromNanosecondsDouble(result.v.GetProfilingOverhead());
     j["times"]["kernel_overhead"] = time.ConvertFromNanosecondsDouble(result.v.GetKernelOverhead());
-    j["times"]["framework"] = time.ConvertFromNanosecondsDouble(result.v.GetDataMovementOverhead()) + time.ConvertFromNanosecondsDouble(result.v.GetProfilingTotalOverhead()) + time.ConvertFromNanosecondsDouble(result.v.GetKernelOverhead());
+    j["times"]["framework"] = time.ConvertFromNanosecondsDouble(result.v.GetTotalOverhead());
     j["times"]["search_algorithm"] = time.ConvertFromNanosecondsDouble(result.v.GetSearcherOverhead());
     j["times"]["validation"] = time.ConvertFromNanosecondsDouble(result.v.GetValidationOverhead());
     j["times"]["runtimes"] = json::array({time.ConvertFromNanosecondsDouble(result.v.GetTotalDuration())});
@@ -195,7 +195,7 @@ void from_json(const json& j, as_T4<KernelResult>& result)
 
     // search_overhead is measured again in simulated tuning, so we are not deserializing it
 
-    computationResult.SetDurationData(durationNs, kernelOverheadNs, compilationOverheadNs);
+    computationResult.SetDurationData(durationNs, kernelOverheadNs, compilationOverheadNs, profilingOverheadNs);
     if (j.at("measurements").size() > 1) {
         json j_measurements = j.at("measurements");
         //remove "time" measurement
@@ -262,7 +262,6 @@ void from_json(const json& j, as_T4<KernelResult>& result)
     result.v = KernelResult(kernelName, configuration, results, timestamp);
     result.v.SetDataMovementOverhead(dataMovementOverheadNs);
     result.v.SetProfilingRunsOverhead(profilingRunsOverheadNs);
-    result.v.SetProfilingOverhead(profilingOverheadNs);
     result.v.SetValidationOverhead(validationOverheadNs);
 
     ResultStatus status;

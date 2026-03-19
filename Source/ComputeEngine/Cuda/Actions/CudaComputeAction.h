@@ -23,6 +23,7 @@ public:
 
     void IncreaseOverhead(const Nanoseconds overhead);
     void IncreaseCompilationOverhead(const Nanoseconds overhead);
+    void IncreaseProfilingOverhead(const Nanoseconds overhead);
     void SetComputeId(const KernelComputeId& id);
     void SetPowerUsage(const uint32_t powerUsage);
     void SetTemperature(const double temperature);
@@ -41,6 +42,7 @@ public:
     Nanoseconds GetDuration() const;
     Nanoseconds GetOverhead() const;
     Nanoseconds GetCompilationOverhead() const;
+    Nanoseconds GetProfilingOverhead() const;
     const KernelComputeId& GetComputeId() const;
     ComputationResult GenerateResult() const;
 
@@ -52,6 +54,7 @@ private:
     std::unique_ptr<CudaEvent> m_EndEvent;
     Nanoseconds m_Overhead;
     Nanoseconds m_CompilationOverhead;
+    Nanoseconds m_ProfilingOverhead;
     KernelComputeId m_ComputeId;
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;
