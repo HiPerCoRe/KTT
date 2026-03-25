@@ -329,8 +329,8 @@ protected:
 
 int main(int argc, char **argv)
 {
-    shared_ptr<Convolution3d> convolution3d = Convolution3d::Create<Convolution3d>(argc, argv, 1, "../Examples/Convolution3d",
-        "/Convolution3dReference");
+    shared_ptr<Convolution3d> convolution3d = Convolution3d::Create<Convolution3d>(argc, argv, 1, "Examples/Convolution3d",
+        "Convolution3d");
 
     // Launch kernel tuning
     convolution3d->Run();
