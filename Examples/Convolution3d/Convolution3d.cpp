@@ -182,26 +182,26 @@ protected:
         // Modify XY NDRange size for all kernels
         auto globalModifier = [](const uint64_t size, const std::vector<uint64_t>& v)
         {
-            return (size * v[0] / (v[1] * v[2]));
+            return (size / (v[0] * v[1]));
         };
 
         m_tuner.AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Global,
-            ktt::ModifierDimension::X, {"TBX_XL", "TBX", "WPTX"}, globalModifier);
+            ktt::ModifierDimension::X, {"TBX", "WPTX"}, globalModifier);
         m_tuner.AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Global,
-            ktt::ModifierDimension::Y, {"TBY_XL", "TBY", "WPTY"}, globalModifier);
+            ktt::ModifierDimension::Y, {"TBY", "WPTY"}, globalModifier);
 
         // Modify Z NDRange size for Blocked kernel
         m_tuner.AddThreadModifier(m_kernel, {m_blockedDefinition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z,
-            {"TBZ_XL", "TBZ", "WPTZ"}, globalModifier);
+            {"TBZ", "WPTZ"}, globalModifier);
 
         // Modify Z NDRange size for Sliding plane kernel
         auto globalModifierZ = [](const uint64_t size, const std::vector<uint64_t>& v)
         {
-            return (size * v[0] / (v[1] * v[2] * v[3]));
+            return (size / (v[0] * v[1] * v[2]));
         };
 
         m_tuner.AddThreadModifier(m_kernel, {m_slidingPlaneDefinition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z,
-            {"TBZ_XL", "TBZ", "WPTZ", "Z_ITERATIONS"}, globalModifierZ);
+            {"TBZ", "WPTZ", "Z_ITERATIONS"}, globalModifierZ);
 
         // Modify workgroup size for all kernels
         m_tuner.AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Local,
