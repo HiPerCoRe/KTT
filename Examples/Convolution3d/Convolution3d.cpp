@@ -114,7 +114,7 @@ protected:
         const ktt::DimensionVector ndRangeDimensions(m_width, m_height, m_depth);
         const ktt::DimensionVector workGroupDimensions;
 
-        // Add 3 kernels to the m_tuner, one of them acts as reference kernel
+        // Add 3 kernels to the tuner, one of them acts as reference kernel
         m_blockedDefinition = m_tuner.AddKernelDefinitionFromFile("conv", m_kernelFile, ndRangeDimensions,
             workGroupDimensions);
         m_slidingPlaneDefinition = m_tuner.AddKernelDefinitionFromFile("conv2", m_kernelFile, ndRangeDimensions,
