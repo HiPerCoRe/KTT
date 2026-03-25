@@ -49,7 +49,7 @@ protected:
 
     virtual std::unique_ptr<ktt::StopCondition> GetStopCondition();
 
-    void FillBuffers(const std::vector<std::vector<float>*> &buffers);
+    void FillBuffers(const std::vector<std::vector<float>*> &buffers, float minimum = 0, float maximum = 10);
 
 
     void InitKernelDefault(const std::string &kernelFunctionName, const std::string &kernelName,

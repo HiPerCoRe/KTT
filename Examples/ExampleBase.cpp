@@ -98,11 +98,11 @@ unique_ptr<ktt::StopCondition> ExampleBase::GetStopCondition()
     return nullptr;
 }
 
-void ExampleBase::FillBuffers(const vector<vector<float>*> &buffers) 
+void ExampleBase::FillBuffers(const vector<vector<float>*> &buffers, float minimum, float maximum) 
 {
     random_device device;
     default_random_engine engine(device());
-    uniform_real_distribution<float> distribution(0.0f, 10.0f);
+    uniform_real_distribution<float> distribution(minimum, maximum);
     for (vector<float> *buffer : buffers) 
     {
         for (size_t i = 0; i < buffer->size(); ++i) 
