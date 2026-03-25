@@ -1,4 +1,5 @@
 #include "../ExampleReferenceKernel.h"
+#include <memory>
 
 using namespace std;
 
@@ -115,7 +116,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    shared_ptr<Transpose> transpose = Transpose::Create<Transpose>(
+    unique_ptr<Transpose> transpose = Transpose::Create<Transpose>(
         argc, argv, 16, "Examples/Transpose", "Transpose", "TransposeReference"
     );
     transpose->Run();
