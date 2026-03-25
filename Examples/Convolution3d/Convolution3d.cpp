@@ -23,6 +23,8 @@ protected:
         m_depth = cbrt(m_problemSize)*128;
     }
 
+    friend ExampleReferenceComputation;
+
     int m_width, m_height, m_depth;
     ktt::KernelDefinitionId m_blockedDefinition, m_slidingPlaneDefinition;
     vector<float> m_src, m_dest, m_coeff;
