@@ -27,7 +27,9 @@ protected:
 
     int m_width, m_height, m_depth;
     ktt::KernelDefinitionId m_blockedDefinition, m_slidingPlaneDefinition;
+    // Input and output vectors
     vector<float> m_src, m_dest, m_coeff;
+    // Needed as a member variable to be usable in InitReference
     ktt::ArgumentId m_destId;
 
     // Half-filter and filter size - m_hfs > 1 not supported for Sliding plane kernel
@@ -37,7 +39,6 @@ protected:
     // New NVidia GPUs have max.workgroup size of 1024
     // My Intel(R) HD Graphics Kabylake ULT GT2 has max of 512
     const unsigned m_maxWorkGroupSize = 1024;
-
     // Local memory size in bytes
     const unsigned m_maxLocalMemorySize = 32768;
 
@@ -108,6 +109,7 @@ protected:
             item = item / sum;
         }
     }
+
     virtual void InitKernels() 
     {
         // kernel dimensions
@@ -148,6 +150,7 @@ protected:
         m_tuner.SetArguments(m_blockedDefinition, {widthId, heightId, srcId, coeffId, m_destId});
         m_tuner.SetArguments(m_slidingPlaneDefinition, {widthId, heightId, depthId, srcId, coeffId, m_destId});
     }
+
     virtual void InitTuningParameters() 
     {
         // Add kernel parameters.
@@ -290,6 +293,7 @@ protected:
         auto slidingPlane = [](const std::vector<uint64_t>& v) { return v[0] == 1 || v[1] == 16; };
         m_tuner.AddConstraint(m_kernel, {"ALGORITHM", "Z_ITERATIONS"}, slidingPlane);
     }
+
     virtual void InitReference() 
     {
         m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
