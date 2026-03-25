@@ -341,7 +341,7 @@ inline void StoreResult(__global floatvec* dest, const int width, const int heig
   }
 }
 
-#if ALGORITHM == 1
+#if ALGORITHM == 0
 #  if LOCAL == 0
 __kernel void conv(const int width, const int height, const __global float* src, COEFFTYPE coeff,
                    __global floatvec* dest) {
@@ -440,9 +440,9 @@ __kernel void conv(const int width, const int height, const __global float* src,
   StoreResult(dest, width, height, acc, gid_x, gid_y, gid_z);
 }
 #  endif  // LOCAL == 2
-#endif    // ALGORITHM == 1
+#endif    // ALGORITHM == 0
 
-#if ALGORITHM == 2
+#if ALGORITHM == 1
 #  if LOCAL == 1
 inline void ShiftAndLoadNextValue(__local float* lmem, const int lmem_width, const int lmem_height,
                                   const __global float* src, const int src_width,
@@ -673,4 +673,4 @@ __kernel void conv2(const int width, const int height, const int depth, const __
   }
 }
 #  endif  // LOCAL == 2
-#endif    // ALGORITHM == 2
+#endif    // ALGORITHM == 1
