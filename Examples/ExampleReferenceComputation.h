@@ -1,7 +1,7 @@
 #pragma once
 #include "ExampleBase.h"
 
-class ExampleReferenceComputation : ExampleBase 
+class ExampleReferenceComputation : public ExampleBase 
 {
 public:
     using ExampleBase::ExampleBase;
