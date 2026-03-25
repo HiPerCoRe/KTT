@@ -57,9 +57,9 @@ protected:
     virtual void InitData() 
     {
         // Initialize data
-        std::random_device device;
-        std::default_random_engine engine(device());
-        std::uniform_real_distribution<float> distribution(0.0f, 3.0f);
+        random_device device;
+        default_random_engine engine(device());
+        uniform_real_distribution<float> distribution(0.0f, 3.0f);
 
         m_src.resize((m_depth + 2 * m_hfs) * (m_height + 2 * m_hfs) * (m_width + 2 * m_hfs));
         m_dest.resize(m_depth * m_height * m_width, 0.0f);
@@ -125,7 +125,7 @@ protected:
         m_kernel = m_tuner.CreateCompositeKernel("3D Convolution", {m_blockedDefinition, m_slidingPlaneDefinition},
             [this](ktt::ComputeInterface& interface)
         {
-            const std::vector<ktt::ParameterPair>& parameterValues = interface.GetCurrentConfiguration().GetPairs();
+            const vector<ktt::ParameterPair>& parameterValues = interface.GetCurrentConfiguration().GetPairs();
             const uint64_t algorithm = ktt::ParameterPair::GetParameterValue<uint64_t>(parameterValues, "ALGORITHM");
 
             if (algorithm == 0)
@@ -155,35 +155,35 @@ protected:
     {
         // Add kernel parameters.
         // 0 - Blocked kernel, 1 - Sliding plane kernel
-        m_tuner.AddParameter(m_kernel, "ALGORITHM", std::vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "TBX", std::vector<uint64_t>{8, 16, 32, 64});
-        m_tuner.AddParameter(m_kernel, "TBY", std::vector<uint64_t>{8, 16, 32, 64});
-        m_tuner.AddParameter(m_kernel, "TBZ", std::vector<uint64_t>{1, 2, 4, 8, 16, 32});
-        m_tuner.AddParameter(m_kernel, "LOCAL", std::vector<uint64_t>{0, 1, 2});
-        m_tuner.AddParameter(m_kernel, "WPTX", std::vector<uint64_t>{1, 2, 4, 8});
-        m_tuner.AddParameter(m_kernel, "WPTY", std::vector<uint64_t>{1, 2, 4, 8});
-        m_tuner.AddParameter(m_kernel, "WPTZ", std::vector<uint64_t>{1, 2, 4, 8});
-        m_tuner.AddParameter(m_kernel, "VECTOR", std::vector<uint64_t>{1, 2, 4});
-        m_tuner.AddParameter(m_kernel, "UNROLL_FACTOR", std::vector<uint64_t>{1, static_cast<uint64_t>(m_fs)});
-        m_tuner.AddParameter(m_kernel, "CONSTANT_COEFF", std::vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "CACHE_WORK_TO_REGS", std::vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "REVERSE_LOOP_ORDER", std::vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "REVERSE_LOOP_ORDER2", std::vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "REVERSE_LOOP_ORDER3", std::vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "PADDING", std::vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "Z_ITERATIONS", std::vector<uint64_t>{4, 8, 16, 32});
+        m_tuner.AddParameter(m_kernel, "ALGORITHM", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "TBX", vector<uint64_t>{8, 16, 32, 64});
+        m_tuner.AddParameter(m_kernel, "TBY", vector<uint64_t>{8, 16, 32, 64});
+        m_tuner.AddParameter(m_kernel, "TBZ", vector<uint64_t>{1, 2, 4, 8, 16, 32});
+        m_tuner.AddParameter(m_kernel, "LOCAL", vector<uint64_t>{0, 1, 2});
+        m_tuner.AddParameter(m_kernel, "WPTX", vector<uint64_t>{1, 2, 4, 8});
+        m_tuner.AddParameter(m_kernel, "WPTY", vector<uint64_t>{1, 2, 4, 8});
+        m_tuner.AddParameter(m_kernel, "WPTZ", vector<uint64_t>{1, 2, 4, 8});
+        m_tuner.AddParameter(m_kernel, "VECTOR", vector<uint64_t>{1, 2, 4});
+        m_tuner.AddParameter(m_kernel, "UNROLL_FACTOR", vector<uint64_t>{1, static_cast<uint64_t>(m_fs)});
+        m_tuner.AddParameter(m_kernel, "CONSTANT_COEFF", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "CACHE_WORK_TO_REGS", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "REVERSE_LOOP_ORDER", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "REVERSE_LOOP_ORDER2", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "REVERSE_LOOP_ORDER3", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "PADDING", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "Z_ITERATIONS", vector<uint64_t>{4, 8, 16, 32});
 
         // Introduces a helper parameter to compute the proper number of threads for the LOCAL == 2 case.
         // In this case, the workgroup size (TBX by TBY) is extra large (TBX_XL by TBY_XL) because it uses
         // extra (halo) threads only to load the padding to local memory - they don't compute.
-        std::vector<uint64_t> integers{1, 2, 3, 4, 8, 9, 10, 16, 17, 18, 32, 33, 34, 64, 65, 66};
+        vector<uint64_t> integers{1, 2, 3, 4, 8, 9, 10, 16, 17, 18, 32, 33, 34, 64, 65, 66};
 
         m_tuner.AddParameter(m_kernel, "TBX_XL", integers);
         m_tuner.AddParameter(m_kernel, "TBY_XL", integers);
         m_tuner.AddParameter(m_kernel, "TBZ_XL", integers);
 
         // Modify XY NDRange size for all kernels
-        auto globalModifier = [](const uint64_t size, const std::vector<uint64_t>& v)
+        auto globalModifier = [](const uint64_t size, const vector<uint64_t>& v)
         {
             return (size / (v[0] * v[1]));
         };
@@ -198,7 +198,7 @@ protected:
             {"TBZ", "WPTZ"}, globalModifier);
 
         // Modify Z NDRange size for Sliding plane kernel
-        auto globalModifierZ = [](const uint64_t size, const std::vector<uint64_t>& v)
+        auto globalModifierZ = [](const uint64_t size, const vector<uint64_t>& v)
         {
             return (size / (v[0] * v[1] * v[2]));
         };
@@ -215,7 +215,7 @@ protected:
             ktt::ModifierDimension::Z, "TBZ_XL", ktt::ModifierAction::Multiply);
 
         // For LOCAL == 2, extend block size by halo threads
-        auto HaloThreads = [this](const std::vector<uint64_t>& v)
+        auto HaloThreads = [this](const vector<uint64_t>& v)
         {
             if (v[0] == 2)
             {
@@ -232,11 +232,11 @@ protected:
         m_tuner.AddConstraint(m_kernel, {"LOCAL", "TBZ_XL", "TBZ", "WPTZ"}, HaloThreads);
 
         // Sets padding to zero in case local memory is not used
-        auto padding = [](const std::vector<uint64_t>& v) { return (v[0] != 0 || v[1] == 0); };
+        auto padding = [](const vector<uint64_t>& v) { return (v[0] != 0 || v[1] == 0); };
         m_tuner.AddConstraint(m_kernel, {"LOCAL", "PADDING"}, padding);
 
         // GPUs have max. workgroup size
-        auto maxWgSize = [this](const std::vector<uint64_t>& v)
+        auto maxWgSize = [this](const vector<uint64_t>& v)
         {
             return v[0] * v[1] * v[2] <= m_maxWorkGroupSize;
         };
@@ -244,7 +244,7 @@ protected:
         m_tuner.AddConstraint(m_kernel, {"TBX_XL", "TBY_XL", "TBZ_XL"}, maxWgSize);
 
         // GPUs have max. local memory size
-        auto maxLocalMemSize = [this](const std::vector<uint64_t>& v)
+        auto maxLocalMemSize = [this](const vector<uint64_t>& v)
         {
             const uint64_t haloXY = v[1] == 1 ? 2 * m_hfs : 0;
             const uint64_t haloZ = v[0] == 1 || v[1] == 1 ? 2 * m_hfs : 0;
@@ -255,11 +255,11 @@ protected:
         m_tuner.AddConstraint(m_kernel, {"ALGORITHM", "LOCAL", "PADDING", "TBX_XL", "WPTX", "TBY_XL", "WPTY", "TBZ_XL", "WPTZ"},
             maxLocalMemSize);
 
-        auto reverseCacheLoopsOrder = [](const std::vector<uint64_t>& v) { return v[0] == 1 || v[1] == 0; };
+        auto reverseCacheLoopsOrder = [](const vector<uint64_t>& v) { return v[0] == 1 || v[1] == 0; };
         m_tuner.AddConstraint(m_kernel, {"CACHE_WORK_TO_REGS", "REVERSE_LOOP_ORDER3"}, reverseCacheLoopsOrder);
 
         // Sets the constrains on the vector size
-        auto vectorConstraint = [this](const std::vector<uint64_t>& v)
+        auto vectorConstraint = [this](const vector<uint64_t>& v)
         {
             if (v[0] == 2)
             {
@@ -273,7 +273,7 @@ protected:
 
         m_tuner.AddConstraint(m_kernel, {"LOCAL", "VECTOR", "WPTX"}, vectorConstraint);
 
-        auto algorithm = [](const std::vector<uint64_t>& v)
+        auto algorithm = [](const vector<uint64_t>& v)
         {
             // Tune everything for Blocked kernel (ALGORITHM == 0)
             if (v[0] == 0)
@@ -290,7 +290,7 @@ protected:
         m_tuner.AddConstraint(m_kernel, {"ALGORITHM", "TBX", "TBY", "TBZ", "WPTX", "WPTY", "WPTZ", "LOCAL", "VECTOR", "UNROLL_FACTOR",
             "CONSTANT_COEFF", "CACHE_WORK_TO_REGS", "REVERSE_LOOP_ORDER", "REVERSE_LOOP_ORDER2", "REVERSE_LOOP_ORDER3"}, algorithm);
 
-        auto slidingPlane = [](const std::vector<uint64_t>& v) { return v[0] == 1 || v[1] == 16; };
+        auto slidingPlane = [](const vector<uint64_t>& v) { return v[0] == 1 || v[1] == 16; };
         m_tuner.AddConstraint(m_kernel, {"ALGORITHM", "Z_ITERATIONS"}, slidingPlane);
     }
 
