@@ -1,5 +1,7 @@
 #ifdef KTT_API_CUDA
 
+#include <algorithm>
+#include <cmath>
 #include <numeric>
 
 #include <Api/KttException.h>
@@ -230,7 +232,8 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     if (powerMeasurementAllowed && powerParams.has_value())
     {
         action->WaitForFinish();
-        ktt::Nanoseconds bestDuration = action->GetDuration();
+        std::vector<ktt::Nanoseconds> durationSamples;
+        durationSamples.push_back(action->GetDuration());
         int consideredIters = 0;
         unsigned long long execs = 1;
         bool looping = true;
@@ -246,8 +249,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         while (looping) {
             auto a = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
             a->WaitForFinish();
-            if (a->GetDuration() < bestDuration)
-                bestDuration = a->GetDuration();
+            durationSamples.push_back(a->GetDuration());
             sumPwr.push_back(m_PowerManager->GetPowerUsage());
             sumTemp.push_back(m_PowerManager->GetTemperature());
             sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
@@ -280,7 +282,36 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             }
         }
         pwrTimer.Stop();
-        action->SetDurationFromMultirun(bestDuration);
+
+        // Calculate duration based on selected method
+        ktt::Nanoseconds calculatedDuration = 0;
+        switch (params.durationCalculationMethod) {
+            case DurationCalculationMethod::Minimum:
+                calculatedDuration = *std::min_element(durationSamples.begin(), durationSamples.end());
+                break;
+            case DurationCalculationMethod::Median:
+                std::sort(durationSamples.begin(), durationSamples.end());
+                if (durationSamples.size() % 2 == 0) {
+                    calculatedDuration = (durationSamples[durationSamples.size() / 2 - 1] + durationSamples[durationSamples.size() / 2]) / 2;
+                } else {
+                    calculatedDuration = durationSamples[durationSamples.size() / 2];
+                }
+                break;
+            case DurationCalculationMethod::Average:
+                calculatedDuration = std::accumulate(durationSamples.begin(), durationSamples.end(), 0ULL) / durationSamples.size();
+                break;
+        }
+        action->SetDurationFromMultirun(calculatedDuration);
+
+        // Calculate standard deviation of all duration samples
+        double mean = static_cast<double>(std::accumulate(durationSamples.begin(), durationSamples.end(), 0ULL)) / durationSamples.size();
+        double varianceSum = 0.0;
+        for (const auto& sample : durationSamples) {
+            double diff = static_cast<double>(sample) - mean;
+            varianceSum += diff * diff;
+        }
+        double stdev = std::sqrt(varianceSum / durationSamples.size());
+        action->SetDurationStdev(stdev);
 
         Logger::LogInfo("Power has been measured from " + std::to_string(consideredIters) + " kernel runs (out of " + std::to_string(execs) + " runs)");
     }

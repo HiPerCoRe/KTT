@@ -73,6 +73,11 @@ void CudaComputeAction::SetDurationFromMultirun(const Nanoseconds duration)
     m_MultirunDuration = duration;
 }
 
+void CudaComputeAction::SetDurationStdev(const double durationStdev)
+{
+    m_DurationStdev = durationStdev;
+}
+
 void CudaComputeAction::WaitForFinish()
 {
     Logger::LogDebug("Waiting for CUDA kernel compute action with id " + std::to_string(m_Id));
@@ -163,6 +168,11 @@ ComputationResult CudaComputeAction::GenerateResult() const
     if (m_FanSpeed.has_value())
     {
         result.SetFanSpeed(m_FanSpeed.value());
+    }
+
+    if (m_DurationStdev.has_value())
+    {
+        result.SetDurationStdev(m_DurationStdev.value());
     }
 
     return result;

@@ -6,13 +6,16 @@ namespace ktt
 PowerMeasurementParameters::PowerMeasurementParameters() :
     minTimeMs(2000),
     maxTimeMs(20000),
-    maxPowerDiff(0.005)
+    maxPowerDiff(0.005),
+    durationCalculationMethod(DurationCalculationMethod::Minimum)
 {}
 
-PowerMeasurementParameters::PowerMeasurementParameters(uint64_t minTimeMs, uint64_t maxTimeMs, double maxPowerDiff) :
+PowerMeasurementParameters::PowerMeasurementParameters(uint64_t minTimeMs, uint64_t maxTimeMs, double maxPowerDiff,
+    DurationCalculationMethod durationCalculationMethod) :
     minTimeMs(minTimeMs),
     maxTimeMs(maxTimeMs),
-    maxPowerDiff(maxPowerDiff)
+    maxPowerDiff(maxPowerDiff),
+    durationCalculationMethod(durationCalculationMethod)
 {}
 
 bool PowerMeasurementParameters::IsValid() const

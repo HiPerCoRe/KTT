@@ -292,6 +292,11 @@ void to_json(json& j, const ComputationResult& result)
     {
         j["FanSpeed"] = result.GetFanSpeed();
     }
+
+    if (result.HasDurationStdevData())
+    {
+        j["DurationStdev"] = time.ConvertFromNanosecondsDouble(result.GetDurationStdev());
+    }
 }
 
 void from_json(const json& j, ComputationResult& result)

@@ -30,6 +30,7 @@ public:
     void SetMemoryFrequency(const uint32_t memoryFrequency);
     void SetFanSpeed(const int32_t fanSpeed);
     void SetDurationFromMultirun(const Nanoseconds duration);
+    void SetDurationStdev(const double durationStdev);
     void WaitForFinish();
 
     ComputeActionId GetId() const;
@@ -60,6 +61,7 @@ private:
     std::optional<uint32_t> m_MemoryFrequency;
     std::optional<int32_t> m_FanSpeed;
     std::optional<Nanoseconds> m_MultirunDuration;
+    std::optional<double> m_DurationStdev;
 };
 
 } // namespace ktt

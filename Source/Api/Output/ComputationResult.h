@@ -98,6 +98,12 @@ public:
       */
     void SetFanSpeed(const int32_t fanSpeed);
 
+    /** @fn void SetDurationStdev(const double durationStdev)
+      * Fills duration standard deviation for the result.
+      * @param durationStdev Standard deviation of kernel duration samples in nanoseconds.
+      */
+    void SetDurationStdev(const double durationStdev);
+
     /** @fn const std::string& GetKernelFunction() const
       * Returns name of a kernel function tied to the result.
       * @return Name of a kernel function tied to the result.
@@ -231,6 +237,18 @@ public:
       */
     double GetEnergyConsumption() const;
 
+    /** @fn bool HasDurationStdevData() const
+      * Checks whether result contains valid duration standard deviation data.
+      * @return True if duration standard deviation data is available. False otherwise.
+      */
+    bool HasDurationStdevData() const;
+
+    /** @fn double GetDurationStdev() const
+      * Retrieves duration standard deviation in nanoseconds. Should only be called after prior check for valid data.
+      * @return Duration standard deviation in nanoseconds.
+      */
+    double GetDurationStdev() const;
+
     /** @fn ComputationResult& operator=(const ComputationResult& other)
       * Copy assignment operator.
       * @param other Result from which the data will be copied.
@@ -251,6 +269,7 @@ private:
     std::optional<uint32_t> m_SMFrequency;
     std::optional<uint32_t> m_MemFrequency;
     std::optional<int32_t> m_FanSpeed;
+    std::optional<double> m_DurationStdev;
 };
 
 } // namespace ktt

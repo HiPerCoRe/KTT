@@ -139,6 +139,11 @@ void InitializePythonEnums(py::module_& module)
         .value("OfflineTuning", ktt::ValidationMode::OfflineTuning)
         .value("OnlineTuning", ktt::ValidationMode::OnlineTuning)
         .value("All", ktt::ValidationMode::All);
+
+    py::enum_<ktt::DurationCalculationMethod>(module, "DurationCalculationMethod")
+        .value("Minimum", ktt::DurationCalculationMethod::Minimum)
+        .value("Median", ktt::DurationCalculationMethod::Median)
+        .value("Average", ktt::DurationCalculationMethod::Average);
 }
 
 #endif // KTT_PYTHON

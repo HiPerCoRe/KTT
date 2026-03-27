@@ -201,13 +201,15 @@ void InitializePythonDataHolders(py::module_& module)
  .def("HasSMFrequencyData", &ktt::ComputationResult::HasSMFrequencyData)
  .def("HasMemoryFrequencyData", &ktt::ComputationResult::HasMemoryFrequencyData)
  .def("HasFanSpeedData", &ktt::ComputationResult::HasFanSpeedData)
-        .def("GetPowerUsage", &ktt::ComputationResult::GetPowerUsage)
+ .def("HasDurationStdevData", &ktt::ComputationResult::HasDurationStdevData)
+       .def("GetPowerUsage", &ktt::ComputationResult::GetPowerUsage)
  .def("GetTemperature", &ktt::ComputationResult::GetTemperature)
  .def("GetSMFrequency", &ktt::ComputationResult::GetSMFrequency)
  .def("GetMemoryFrequency", &ktt::ComputationResult::GetMemoryFrequency)
  .def("GetFanSpeed", &ktt::ComputationResult::GetFanSpeed)
-        .def("GetEnergyConsumption", &ktt::ComputationResult::GetEnergyConsumption)
-        .def("assign", &ktt::ComputationResult::operator=);
+ .def("GetDurationStdev", &ktt::ComputationResult::GetDurationStdev)
+       .def("GetEnergyConsumption", &ktt::ComputationResult::GetEnergyConsumption)
+       .def("assign", &ktt::ComputationResult::operator=);
 
     py::class_<ktt::KernelResult, py::smart_holder>(module, "KernelResult")
         .def(py::init<>())

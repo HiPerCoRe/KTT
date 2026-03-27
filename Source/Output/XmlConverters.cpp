@@ -606,6 +606,11 @@ void AppendComputationResult(pugi::xml_node parent, const ComputationResult& res
     {
         node.append_attribute("FanSpeed").set_value(result.GetFanSpeed());
     }
+
+    if (result.HasDurationStdevData())
+    {
+        node.append_attribute("DurationStdev").set_value(time.ConvertFromNanosecondsDouble(result.GetDurationStdev()), xmlFloatingPointPrecision);
+    }
 }
 
 ComputationResult ParseComputationResult(const pugi::xml_node node)
