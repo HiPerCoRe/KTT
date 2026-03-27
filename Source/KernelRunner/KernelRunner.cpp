@@ -284,7 +284,19 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
         DownloadBuffers(output);
     });
 
-    result.SetDataMovementOverhead(result.GetDataMovementOverhead() + dataOverhead);
+    // Measure and add L2 cache flush overhead during tuning
+    if (mode == KernelRunMode::OfflineTuning || mode == KernelRunMode::OnlineTuning)
+    {
+        const Nanoseconds flushOverhead = RunScopeTimer([this]()
+        {
+            m_Engine.FlushL2Cache(m_ComputeLayer->GetDefaultQueue());
+        });
+        result.SetDataMovementOverhead(result.GetDataMovementOverhead() + dataOverhead + flushOverhead);
+    }
+    else
+    {
+        result.SetDataMovementOverhead(result.GetDataMovementOverhead() + dataOverhead);
+    }
     m_ComputeLayer->ClearData(id);
 
     return result;

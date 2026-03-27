@@ -24,7 +24,9 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
     m_PlatformIndex(platformIndex),
     m_DeviceIndex(deviceIndex),
     m_DeviceInfo(0, ""),
-    m_KernelCache(10)
+    m_KernelCache(10),
+    m_L2CacheSize(0),
+    m_L2CacheBuffer(nullptr)
 {
     const auto platforms = OpenClPlatform::GetAllPlatforms();
 
@@ -44,6 +46,26 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
     const auto& device = devices[static_cast<size_t>(deviceIndex)];
     m_Context = std::make_unique<OpenClContext>(platform, device);
 
+    // Detect L2 cache size and allocate flush buffer
+    cl_ulong l2CacheSize = 0;
+    clGetDeviceInfo(device.GetId(), CL_DEVICE_GLOBAL_MEM_CACHE_SIZE, sizeof(l2CacheSize), &l2CacheSize, nullptr);
+    if (l2CacheSize > 0)
+    {
+        m_L2CacheSize = static_cast<size_t>(l2CacheSize);
+        cl_int error = CL_SUCCESS;
+        m_L2CacheBuffer = clCreateBuffer(m_Context->GetContext(), CL_MEM_READ_WRITE, m_L2CacheSize, nullptr, &error);
+        if (error != CL_SUCCESS)
+        {
+            Logger::LogWarning("Failed to allocate L2 cache flush buffer: " + std::to_string(error));
+            m_L2CacheSize = 0;
+            m_L2CacheBuffer = nullptr;
+        }
+        else
+        {
+            Logger::LogDebug("Allocated L2 cache flush buffer of size " + std::to_string(m_L2CacheSize));
+        }
+    }
+
     for (uint32_t i = 0; i < queueCount; ++i)
     {
         const QueueId id = m_QueueIdGenerator.GenerateId();
@@ -60,8 +82,12 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
 
 OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
     m_Configuration(GlobalSizeType::OpenCL),
+    m_PlatformIndex(0),
+    m_DeviceIndex(0),
     m_DeviceInfo(0, ""),
-    m_KernelCache(10)
+    m_KernelCache(10),
+    m_L2CacheSize(0),
+    m_L2CacheBuffer(nullptr)
 {
     m_Context = std::make_unique<OpenClContext>(initializer.GetContext());
 
@@ -88,6 +114,27 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer, std::vector
         }
     }
 
+    // Detect L2 cache size and allocate flush buffer
+    const auto& device = devices[static_cast<size_t>(m_DeviceIndex)];
+    cl_ulong l2CacheSize = 0;
+    clGetDeviceInfo(device.GetId(), CL_DEVICE_GLOBAL_MEM_CACHE_SIZE, sizeof(l2CacheSize), &l2CacheSize, nullptr);
+    if (l2CacheSize > 0)
+    {
+        m_L2CacheSize = static_cast<size_t>(l2CacheSize);
+        cl_int error = CL_SUCCESS;
+        m_L2CacheBuffer = clCreateBuffer(m_Context->GetContext(), CL_MEM_READ_WRITE, m_L2CacheSize, nullptr, &error);
+        if (error != CL_SUCCESS)
+        {
+            Logger::LogWarning("Failed to allocate L2 cache flush buffer: " + std::to_string(error));
+            m_L2CacheSize = 0;
+            m_L2CacheBuffer = nullptr;
+        }
+        else
+        {
+            Logger::LogDebug("Allocated L2 cache flush buffer of size " + std::to_string(m_L2CacheSize));
+        }
+    }
+
     const auto& queues = initializer.GetQueues();
 
     for (auto& queue : queues)
@@ -103,6 +150,38 @@ OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer, std::vector
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     InitializeGpa();
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
+}
+
+OpenClEngine::~OpenClEngine()
+{
+    if (m_L2CacheBuffer != nullptr)
+    {
+        clReleaseMemObject(m_L2CacheBuffer);
+    }
+}
+
+void OpenClEngine::FlushL2Cache(const QueueId queueId)
+{
+    if (m_L2CacheSize == 0 || m_L2CacheBuffer == nullptr)
+    {
+        return;
+    }
+
+    if (!ContainsKey(m_Queues, queueId))
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    OpenClCommandQueue& queue = *m_Queues[queueId];
+    const cl_command_queue clQueue = queue.GetQueue();
+    
+    // Fill buffer with zeros to flush L2 cache
+    const cl_int pattern = 0;
+    cl_int error = clEnqueueFillBuffer(clQueue, m_L2CacheBuffer, &pattern, sizeof(pattern), 0, m_L2CacheSize, 0, nullptr, nullptr);
+    if (error != CL_SUCCESS)
+    {
+        Logger::LogWarning("Failed to flush L2 cache: " + std::to_string(error));
+    }
 }
 
 ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,

@@ -35,7 +35,9 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     m_Configuration(GlobalSizeType::CUDA),
     m_DeviceIndex(deviceIndex),
     m_DeviceInfo(0, ""),
-    m_KernelCache(10)
+    m_KernelCache(10),
+    m_L2CacheSize(0),
+    m_L2CacheDevicePtr(0)
 {
     Logger::LogDebug("Initializing CUDA");
     CheckError(cuInit(0), "cuInit");
@@ -48,6 +50,16 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     }
 
     m_Context = std::make_unique<CudaContext>(devices[deviceIndex]);
+
+    // Detect L2 cache size and allocate flush buffer
+    int l2CacheSize = 0;
+    CheckError(cuDeviceGetAttribute(&l2CacheSize, CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE, m_Context->GetDevice()), "cuDeviceGetAttribute");
+    if (l2CacheSize > 0)
+    {
+        m_L2CacheSize = static_cast<size_t>(l2CacheSize);
+        CheckError(cuMemAlloc(&m_L2CacheDevicePtr, m_L2CacheSize), "cuMemAlloc");
+        Logger::LogDebug("Allocated L2 cache flush buffer of size " + std::to_string(m_L2CacheSize));
+    }
 
     for (uint32_t i = 0; i < queueCount; ++i)
     {
@@ -71,10 +83,23 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 
 CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
     m_Configuration(GlobalSizeType::CUDA),
+    m_DeviceIndex(0),
     m_DeviceInfo(0, ""),
-    m_KernelCache(10)
+    m_KernelCache(10),
+    m_L2CacheSize(0),
+    m_L2CacheDevicePtr(0)
 {
     m_Context = std::make_unique<CudaContext>(initializer.GetContext());
+
+    // Detect L2 cache size and allocate flush buffer
+    int l2CacheSize = 0;
+    CheckError(cuDeviceGetAttribute(&l2CacheSize, CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE, m_Context->GetDevice()), "cuDeviceGetAttribute");
+    if (l2CacheSize > 0)
+    {
+        m_L2CacheSize = static_cast<size_t>(l2CacheSize);
+        CheckError(cuMemAlloc(&m_L2CacheDevicePtr, m_L2CacheSize), "cuMemAlloc");
+        Logger::LogDebug("Allocated L2 cache flush buffer of size " + std::to_string(m_L2CacheSize));
+    }
 
     const auto devices = CudaDevice::GetAllDevices();
 
@@ -108,6 +133,30 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<Que
 #if defined(KTT_POWER_USAGE_NVML)
     m_PowerManager = std::make_unique<NvmlPowerManager>(*m_Context, m_DeviceIndex);
 #endif // KTT_POWER_USAGE_NVML
+}
+
+CudaEngine::~CudaEngine()
+{
+    if (m_L2CacheDevicePtr != 0)
+    {
+        CheckError(cuMemFree(m_L2CacheDevicePtr), "cuMemFree");
+    }
+}
+
+void CudaEngine::FlushL2Cache(const QueueId queueId)
+{
+    if (m_L2CacheSize == 0 || m_L2CacheDevicePtr == 0)
+    {
+        return;
+    }
+
+    if (!ContainsKey(m_Streams, queueId))
+    {
+        throw KttException("Invalid stream index: " + std::to_string(queueId));
+    }
+
+    CudaStream& stream = *m_Streams[queueId];
+    CheckError(cuMemsetD8Async(m_L2CacheDevicePtr, 0, m_L2CacheSize, stream.GetStream()), "cuMemsetD8Async");
 }
 
 ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,

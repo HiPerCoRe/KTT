@@ -32,6 +32,7 @@ class OpenClEngine : public ComputeEngine
 public:
     explicit OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount);
     explicit OpenClEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
+    ~OpenClEngine();
 
     // Kernel methods
     ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = false,
@@ -91,6 +92,7 @@ public:
     void ClearKernelCache() override;
     void EnsureThreadContext() override;
     void SetCompiler(const std::string& compiler) override;
+    void FlushL2Cache(const QueueId queueId) override;
 
 private:
     EngineConfiguration m_Configuration;
@@ -104,6 +106,8 @@ private:
     std::map<QueueId, std::unique_ptr<OpenClCommandQueue>> m_Queues;
     std::map<ArgumentId, std::unique_ptr<OpenClBuffer>> m_Buffers;
     LruCache<KernelComputeId, std::shared_ptr<OpenClKernel>> m_KernelCache;
+    size_t m_L2CacheSize;
+    cl_mem m_L2CacheBuffer;
     std::map<ComputeActionId, std::unique_ptr<OpenClComputeAction>> m_ComputeActions;
     std::map<TransferActionId, std::unique_ptr<OpenClTransferAction>> m_TransferActions;
 

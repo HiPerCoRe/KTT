@@ -40,6 +40,7 @@ class CudaEngine : public ComputeEngine
 public:
     explicit CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount);
     explicit CudaEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds);
+    ~CudaEngine();
 
     // Kernel methods
     ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = true,
@@ -99,6 +100,7 @@ public:
     void ClearKernelCache() override;
     void EnsureThreadContext() override;
     void SetCompiler(const std::string& compiler) override;
+    void FlushL2Cache(const QueueId queueId) override;
 
 private:
     EngineConfiguration m_Configuration;
@@ -111,6 +113,8 @@ private:
     std::map<QueueId, std::unique_ptr<CudaStream>> m_Streams;
     std::map<ArgumentId, std::unique_ptr<CudaBuffer>> m_Buffers;
     LruCache<KernelComputeId, std::shared_ptr<CudaKernel>> m_KernelCache;
+    size_t m_L2CacheSize;
+    CUdeviceptr m_L2CacheDevicePtr;
     std::map<ComputeActionId, std::unique_ptr<CudaComputeAction>> m_ComputeActions;
     std::map<TransferActionId, std::unique_ptr<CudaTransferAction>> m_TransferActions;
 

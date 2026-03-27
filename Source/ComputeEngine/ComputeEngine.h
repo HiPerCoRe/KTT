@@ -82,6 +82,9 @@ public:
     virtual void ClearKernelCache() = 0;
     virtual void EnsureThreadContext() = 0;
     virtual void SetCompiler(const std::string& compiler) = 0;
+
+    // L2 cache flushing
+    virtual void FlushL2Cache(const QueueId /*queueId*/) {}
 };
 
 } // namespace ktt
