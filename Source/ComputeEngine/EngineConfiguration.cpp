@@ -13,9 +13,14 @@ EngineConfiguration::EngineConfiguration(const GlobalSizeType sizeType) :
     m_ProfilingFlag(false)
 {}
 
-void EngineConfiguration::SetCompilerOptions(const std::string& options)
+void EngineConfiguration::SetStaticCompilerOptions(const std::string& options)
 {
-    m_CompilerOptions = options;
+    m_StaticCompilerOptions = options;
+}
+
+void EngineConfiguration::SetTuningCompilerOptions(const std::string& options)
+{
+    m_TuningCompilerOptions = options;
 }
 
 void EngineConfiguration::SetGlobalSizeType(const GlobalSizeType sizeType)
@@ -28,9 +33,9 @@ void EngineConfiguration::SetGlobalSizeCorrection(const bool sizeCorrection)
     m_GlobalSizeCorrection = sizeCorrection;
 }
 
-const std::string& EngineConfiguration::GetCompilerOptions() const
+std::string EngineConfiguration::GetCompilerOptions() const
 {
-    return m_CompilerOptions;
+    return m_StaticCompilerOptions + m_TuningCompilerOptions;
 }
 
 GlobalSizeType EngineConfiguration::GetGlobalSizeType() const
@@ -51,16 +56,6 @@ void EngineConfiguration::SetProfiling(const bool profiling)
 bool EngineConfiguration::IsProfilingActive() const
 {
     return m_ProfilingFlag;
-}
-
-void EngineConfiguration::SetDefaultCompilerOptions(const std::string& options)
-{
-    m_DefaultCompilerOptions = options;
-}
-
-const std::string& EngineConfiguration::GetDefaultCompilerOptions() const
-{
-    return m_DefaultCompilerOptions;
 }
 
 } // namespace ktt

@@ -221,6 +221,7 @@ private:
     std::unique_ptr<CppBuffer> CreateBuffer(KernelArgument& argument);
     std::unique_ptr<CppBuffer> CreateUserBuffer(KernelArgument& argument, ComputeBuffer buffer);
     void ClearQueueActions(const QueueId id);
+    std::string GetDefaultCompilerOptions() const;
 };
 
 } // namespace ktt

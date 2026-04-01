@@ -79,6 +79,8 @@ ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, cons
     Timer timer;
     timer.Start();
 
+    m_Configuration.SetTuningCompilerOptions(data.GetCompilerOptions());
+
     auto pipeline = LoadPipeline(data);
     std::vector<VulkanBuffer*> pipelineArguments = GetPipelineArguments(data.GetArguments());
     pipeline->BindArguments(pipelineArguments);
@@ -426,7 +428,7 @@ GlobalSizeType VulkanEngine::GetGlobalSizeType() const
 
 void VulkanEngine::SetCompilerOptions(const std::string& options, [[maybe_unused]] const bool overrideDefault)
 {
-    m_Configuration.SetCompilerOptions(options);
+    m_Configuration.SetStaticCompilerOptions(options);
     ClearKernelCache();
 }
 

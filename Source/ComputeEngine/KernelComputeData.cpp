@@ -19,7 +19,8 @@ KernelComputeData::KernelComputeData(const Kernel& kernel, const KernelDefinitio
     m_ConfigurationPrefix(configuration.GeneratePrefix()),
     m_TemplatedName(definition.GetTemplatedName()),
     m_Configuration(&configuration),
-    m_Arguments(definition.GetArguments())
+    m_Arguments(definition.GetArguments()),
+    m_CompilerOptions(configuration.GetCompilerOptions())
 {
     const auto id = definition.GetId();
     const auto& pairs = configuration.GetPairs();
@@ -154,6 +155,11 @@ size_t KernelComputeData::GetArgumentIndex(const ArgumentId& id) const
 const std::vector<KernelArgument*>& KernelComputeData::GetArguments() const
 {
     return m_Arguments;
+}
+
+const std::string& KernelComputeData::GetCompilerOptions() const
+{
+    return m_CompilerOptions;
 }
 
 } // namespace ktt

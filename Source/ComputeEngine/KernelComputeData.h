@@ -37,6 +37,7 @@ public:
     const KernelConfiguration& GetConfiguration() const;
     size_t GetArgumentIndex(const ArgumentId& id) const;
     const std::vector<KernelArgument*>& GetArguments() const;
+    const std::string& GetCompilerOptions() const;
 
 private:
     std::string m_Name;
@@ -47,6 +48,7 @@ private:
     DimensionVector m_LocalSize;
     const KernelConfiguration* m_Configuration;
     std::vector<KernelArgument*> m_Arguments;
+    std::string m_CompilerOptions;
 };
 
 } // namespace ktt

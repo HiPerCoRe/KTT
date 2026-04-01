@@ -28,7 +28,34 @@ std::string KernelConfiguration::GeneratePrefix() const
 
     for (const auto& pair : m_Pairs)
     {
-        result += std::string("#define ") + pair.GetString() + std::string("\n");
+        if (!pair.IsCompilerParameter())
+        {
+            result += std::string("#define ") + pair.GetString() + std::string("\n");
+        }
+    }
+
+    return result;
+}
+
+std::string KernelConfiguration::GetCompilerOptions() const
+{
+    std::string result;
+
+    for (const auto& pair : m_Pairs)
+    {
+        if (!pair.IsCompilerParameter())
+        {
+            continue;
+        }
+
+        if (std::holds_alternative<std::string>(pair.GetValue()))
+        {
+            result += " " + pair.GetName() + "=" + pair.GetValueString();
+        }
+        else if (std::holds_alternative<bool>(pair.GetValue()) && std::get<bool>(pair.GetValue()))
+        {
+            result += " " + pair.GetName();
+        }
     }
 
     return result;

@@ -13,23 +13,21 @@ public:
     EngineConfiguration();
     explicit EngineConfiguration(const GlobalSizeType sizeType);
 
-    void SetCompilerOptions(const std::string& options);
+    void SetStaticCompilerOptions(const std::string& options);
+    void SetTuningCompilerOptions(const std::string& options);
     void SetGlobalSizeType(const GlobalSizeType sizeType);
     void SetGlobalSizeCorrection(const bool sizeCorrection);
 
-    const std::string& GetCompilerOptions() const;
+    std::string GetCompilerOptions() const;
     GlobalSizeType GetGlobalSizeType() const;
     bool GetGlobalSizeCorrection() const;
 
     bool IsProfilingActive() const;
     void SetProfiling(const bool profiling);
 
-    void SetDefaultCompilerOptions(const std::string& options);
-    const std::string& GetDefaultCompilerOptions() const;
-
 private:
-    std::string m_CompilerOptions;
-    std::string m_DefaultCompilerOptions;
+    std::string m_StaticCompilerOptions;
+    std::string m_TuningCompilerOptions;
     GlobalSizeType m_GlobalSizeType;
     bool m_GlobalSizeCorrection;
     bool m_ProfilingFlag;

@@ -20,7 +20,8 @@ void Tuner::AddParameter(const KernelId id, const std::string& name, const std::
         parameterValues.emplace_back(value);
     }
 
-    AddParameterInternal(id, name, parameterValues, group);
+    bool isCompilerParameter = false;
+    AddParameterInternal(id, name, parameterValues, group, isCompilerParameter);
 }
 
 template <typename T>

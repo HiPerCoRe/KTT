@@ -190,6 +190,8 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     Timer timer;
     timer.Start();
 
+    m_Configuration.SetTuningCompilerOptions(data.GetCompilerOptions());
+
     auto kernel = LoadKernel(data);
     std::vector<CUdeviceptr*> arguments = GetKernelArguments(data.GetArguments());
     const size_t sharedMemorySize = GetSharedMemorySize(data.GetArguments());
@@ -937,7 +939,7 @@ void CudaEngine::SetCompilerOptions(const std::string& options, const bool overr
         finalOptions += GetDefaultCompilerOptions();
     }
 
-    m_Configuration.SetCompilerOptions(finalOptions);
+    m_Configuration.SetStaticCompilerOptions(finalOptions);
     ClearKernelCache();
 }
 

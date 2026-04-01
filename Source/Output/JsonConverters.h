@@ -51,7 +51,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ParameterValueType,
     {ParameterValueType::Double, "Double"},
     {ParameterValueType::Float, "Float"},
     {ParameterValueType::Bool, "Bool"},
-    {ParameterValueType::String, "String"}
+    {ParameterValueType::String, "String"},
+    {ParameterValueType::CompilerParameter, "CompilerParameter"}
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ProfilingCounterType,

@@ -232,6 +232,23 @@ public:
     template <typename T>
     void AddParameter(const KernelId id, const std::string& name, const std::vector<T>& values, const std::string& group = "");
 
+    /** @fn void AddCompilerParameter(const KernelId id, const std::string& name, const std::vector<std::string>& values = {},
+      * const std::string& group = "")
+      * Works exactly as AddParameter(), but for compiler parameters.
+      * Adds new compiler parameter for the specified kernel, providing parameter name and optionally list of allowed values.
+      * Parameters will be added to the compiler as compiler options.
+      * During the tuning process, tuner will generate configurations for combinations of kernel parameters and their values.
+      * @param id Id of kernel for which the parameter will be added.
+      * @param name Name of a parameter. Parameter names for a single kernel must be unique.
+      * @param values Optional allowed values for the parameter. Value type is a string. If left empty, parameter with be either
+      * included without any value or completely excluded.
+      * @param group Optional group inside which the parameter will be added. Tuning configurations are generated separately for each
+      * group. This is useful when kernels contain groups of parameters that can be tuned independently. In this way, the total number
+      * of generated configurations can be significantly reduced.
+      */
+    void AddCompilerParameter(const KernelId id, const std::string& name, const std::vector<std::string>& values = {},
+        const std::string& group = "");
+
     /** @fn void AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType,
       * const std::string& valueScript, const std::string& group = "")
       * Adds new parameter for the specified kernel, providing parameter name, value type and a script which generates list of allowed
@@ -247,6 +264,24 @@ public:
       * of generated configurations can be significantly reduced.
       */
     void AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
+        const std::string& group = "");
+
+    /** @fn void AddScriptCompilerParameter(const KernelId id, const std::string& name, const ParameterValueType valueType,
+      * const std::string& valueScript, const std::string& group = "")
+      * Works exactly as AddScriptParameter(), but for compiler parameters.
+      * Adds new compiler parameter for the specified kernel, providing parameter name, value type and a script which generates list of allowed
+      * values. Compiler parameters will be added as a compiler option. During the tuning process, tuner will
+      * generate configurations for combinations of kernel parameters and their values.
+      * @param id Id of kernel for which the parameter will be added.
+      * @param name Name of a parameter. Parameter names for a single kernel must be unique.
+      * @param valueType Type of parameter values.
+      * @param valueScript Python script which will be executed to generate a list of parameter values. The values of the tuning parameters
+      * can be utilized by the script. The default thread size can be accessed from script through variable named "defaultSize".
+      * @param group Optional group inside which the parameter will be added. Tuning configurations are generated separately for each
+      * group. This is useful when kernels contain groups of parameters that can be tuned independently. In this way, the total number
+      * of generated configurations can be significantly reduced.
+      */
+    void AddScriptCompilerParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
         const std::string& group = "");
 
     /** @fn void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
@@ -1033,7 +1068,7 @@ private:
         const ArgumentMemoryLocation memoryLocation, const ArgumentAccessType accessType, const size_t dataSize,
         const ArgumentId& customId = "");
     KTT_VIRTUAL_API void AddParameterInternal(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values,
-        const std::string& group);
+        const std::string& group, const bool isCompilerParameter);
 
     template <typename T>
     ArgumentDataType DeriveArgumentDataType() const;

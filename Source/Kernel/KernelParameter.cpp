@@ -13,10 +13,12 @@ namespace ktt
 
 static const std::string DefaultGroup = "KTTDefaultGroup";
 
-KernelParameter::KernelParameter(const std::string& name, const std::vector<ParameterValue>& values, const std::string& group) :
+KernelParameter::KernelParameter(const std::string& name, const std::vector<ParameterValue>& values, const std::string& group,
+    const bool isCompilerParameter) :
     m_Name(name),
     m_Group(group),
-    m_Values(values)
+    m_Values(values),
+    m_IsCompilerParameter(isCompilerParameter)
 {
     if (values.empty())
     {
@@ -30,8 +32,8 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<Para
 }
 
 KernelParameter::KernelParameter(const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
-    const std::string& group) :
-    KernelParameter(name, GetValuesFromScript(valueType, valueScript), group)
+    const std::string& group, const bool isCompilerParameter) :
+    KernelParameter(name, GetValuesFromScript(valueType, valueScript), group, isCompilerParameter)
 {}
 
 const std::string& KernelParameter::GetName() const
@@ -56,6 +58,10 @@ const std::vector<ParameterValue>& KernelParameter::GetValues() const
 
 ParameterValueType KernelParameter::GetValueType() const
 {
+    if (this->IsCompilerParameter())
+    {
+        return ParameterValueType::CompilerParameter;
+    }
     return ParameterPair::GetTypeFromValue(m_Values[0]);
 }
 
@@ -66,7 +72,7 @@ ParameterPair KernelParameter::GeneratePair(const size_t valueIndex) const
         throw KttException("Parameter value index is out of range");
     }
 
-    return ParameterPair(m_Name, m_Values[valueIndex]);
+    return ParameterPair(m_Name, m_Values[valueIndex], m_IsCompilerParameter);
 }
 
 std::vector<ParameterPair> KernelParameter::GeneratePairs() const
@@ -79,6 +85,11 @@ std::vector<ParameterPair> KernelParameter::GeneratePairs() const
     }
 
     return result;
+}
+
+bool KernelParameter::IsCompilerParameter() const
+{
+    return m_IsCompilerParameter;
 }
 
 bool KernelParameter::operator==(const KernelParameter& other) const

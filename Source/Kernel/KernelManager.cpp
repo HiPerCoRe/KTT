@@ -93,17 +93,18 @@ void KernelManager::RemoveKernel(const KernelId id)
     }
 }
 
-void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group)
+void KernelManager::AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, 
+    const std::string& group, const bool isCompilerParameter)
 {
     auto& kernel = GetKernel(id);
-    kernel.AddParameter(KernelParameter(name, values, group));
+    kernel.AddParameter(KernelParameter(name, values, group, isCompilerParameter));
 }
 
 void KernelManager::AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
-    const std::string& group)
+    const std::string& group, const bool isCompilerParameter)
 {
     auto& kernel = GetKernel(id);
-    kernel.AddParameter(KernelParameter(name, valueType, valueScript, group));
+    kernel.AddParameter(KernelParameter(name, valueType, valueScript, group, isCompilerParameter));
 }
 
 void KernelManager::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)

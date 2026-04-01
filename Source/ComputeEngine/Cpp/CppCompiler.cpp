@@ -99,42 +99,35 @@ public:
         sourceFile.close();
 
         // Compile with configured compiler
+        std::string command = m_Compiler + " " + compilerOptions;
+
 #if defined(_MSC_VER)
-        // MSVC compiler command
         // /LD - create DLL
         // /MD - use multi-threaded DLL runtime
-        // /std:c++17 - C++17 standard
         // /EHsc - exception handling
-        // /Fe - output executable/library name
-        std::string command = m_Compiler + " /LD /MD /std:c++17 /EHsc ";
-        command += compilerOptions;
-        command += " /Fe:";
-        command += libraryPath.string();
-        command += " ";
-        command += sourcePath.string();
+        command += " /LD /MD /EHsc";
+
+        // /Fe - output name
+        command += " /Fe:" + libraryPath.string();
+
         // Link with OpenMP if the flag is present in compilerOptions
-        if (compilerOptions.find("/openmp") != std::string::npos || compilerOptions.find("-fopenmp") != std::string::npos)
+        if (compilerOptions.find("/openmp") != std::string::npos)
         {
             command += " /openmp";
         }
-        command += " 2>&1";
 #else
-        // GCC/Clang compiler command
-        // Only use essential flags here. Optimization flags (-O2, etc.) should be passed via compilerOptions.
+        command += " -shared -fPIC";
+        command += " -o " + libraryPath.string();
         // Note: compilerOptions may include flags like -fopenmp that need to be passed to both compiler and linker
-        std::string command = m_Compiler + " -shared -fPIC -std=c++11 ";
-        command += compilerOptions;
-        command += " -o ";
-        command += libraryPath.string();
-        command += " ";
-        command += sourcePath.string();
         // Link with OpenMP if the flag is present in compilerOptions
         if (compilerOptions.find("-fopenmp") != std::string::npos)
         {
             command += " -fopenmp";
         }
-        command += " 2>&1";
 #endif
+
+        command += " " + sourcePath.string();
+        command += " 2>&1";
 
         Logger::LogDebug("Compiling kernel with command: " + command);
 

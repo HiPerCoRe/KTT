@@ -26,12 +26,13 @@ public:
       */
     ParameterPair();
 
-    /** @fn explicit ParameterPair(const std::string& name, const ParameterValue& value)
+    /** @fn explicit ParameterPair(const std::string& name, const ParameterValue& value, const bool isCompilerParameter = false)
       * Constructor which creates a parameter pair with the specified value.
       * @param name Name of a kernel parameter tied to the pair.
       * @param value Value of a parameter.
+      * @param isCompilerParameter If true, this paramater is a compiler option rather than in the program prefix.
       */
-    explicit ParameterPair(const std::string& name, const ParameterValue& value);
+    explicit ParameterPair(const std::string& name, const ParameterValue& value, const bool isCompilerParameter = false);
 
     /** @fn void SetValue(const ParameterValue& value)
       * Setter for parameter value.
@@ -75,6 +76,12 @@ public:
       */
     ParameterValueType GetValueType() const;
 
+    /** @fn bool IsCompilerParameter() const
+      * Returns whether this parameter is a compiler parameter
+      * @return True if parameter is a compiler parameter, false otherwise.
+      */
+    bool IsCompilerParameter() const;
+
     /** @fn bool HasSameValue(const ParameterPair& other) const
       * Checks if parameter value is same as other parameter value.
       * @param other Source for other value.
@@ -110,6 +117,7 @@ public:
 private:
     std::string m_Name;
     ParameterValue m_Value;
+    bool m_IsCompilerParameter;
 };
 
 } // namespace ktt

@@ -90,15 +90,16 @@ void TunerCore::SetLauncher(const KernelId id, KernelLauncher launcher)
     m_KernelManager->SetLauncher(id, launcher);
 }
 
-void TunerCore::AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group)
+void TunerCore::AddParameter(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values, const std::string& group,
+    const bool isCompilerParameter)
 {
-    m_KernelManager->AddParameter(id, name, values, group);
+    m_KernelManager->AddParameter(id, name, values, group, isCompilerParameter);
 }
 
 void TunerCore::AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
-    const std::string& group)
+    const std::string& group, const bool isCompilerParameter)
 {
-    m_KernelManager->AddScriptParameter(id, name, valueType, valueScript, group);
+    m_KernelManager->AddScriptParameter(id, name, valueType, valueScript, group, isCompilerParameter);
 }
 
 void TunerCore::AddConstraint(const KernelId id, const std::vector<std::string>& parameters, ConstraintFunction function)
