@@ -19,4 +19,4 @@
 
 #include <Api/ComputeInterface.h>
 
-#include <Api/Configuration/PowerMeasurementParameters.h>
+#include <Api/Configuration/PreciseMeasurementParameters.h>

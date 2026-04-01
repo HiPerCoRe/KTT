@@ -5,7 +5,7 @@
 #include <vector>
 
 #include <Api/Configuration/KernelConfiguration.h>
-#include <Api/Configuration/PowerMeasurementParameters.h>
+#include <Api/Configuration/PreciseMeasurementParameters.h>
 #include <Api/Output/ComputationResult.h>
 #include <Api/Output/KernelResult.h>
 #include <ComputeEngine/KernelComputeData.h>
@@ -37,8 +37,8 @@ public:
     const KernelComputeData& GetComputeData(const KernelDefinitionId id) const;
     KernelResult GenerateResult(const Nanoseconds launcherDuration) const;
 
-    void SetPowerMeasurementParameters(const std::optional<PowerMeasurementParameters>& params);
-    const std::optional<PowerMeasurementParameters>& GetPowerMeasurementParameters() const;
+    void SetPreciseMeasurementParameters(const std::optional<PreciseMeasurementParameters>& params);
+    const std::optional<PreciseMeasurementParameters>& GetPreciseMeasurementParameters() const;
 
 private:
     std::map<KernelDefinitionId, KernelComputeData> m_ComputeData;
@@ -49,7 +49,7 @@ private:
     KernelRunMode m_RunMode;
     Nanoseconds m_DataOverhead;
     Nanoseconds m_CompilationOverhead;
-    std::optional<PowerMeasurementParameters> m_PowerMeasurementParameters;
+    std::optional<PreciseMeasurementParameters> m_PreciseMeasurementParameters;
 
     Nanoseconds CalculateLauncherOverhead() const;
 };

@@ -4,7 +4,7 @@
 #include <optional>
 
 #include <Api/Configuration/KernelConfiguration.h>
-#include <Api/Configuration/PowerMeasurementParameters.h>
+#include <Api/Configuration/PreciseMeasurementParameters.h>
 #include <Api/Output/BufferOutputDescriptor.h>
 #include <Api/Output/KernelResult.h>
 #include <Api/ExceptionReason.h>
@@ -34,7 +34,7 @@ public:
     void SetProfiling(const bool flag);
     bool IsProfilingActive() const;
 
-    void SetPowerMeasurementParameters(const std::optional<PowerMeasurementParameters>& params);
+    void SetPreciseMeasurementParameters(const std::optional<PreciseMeasurementParameters>& params);
     void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold);
     void SetValidationMode(const ValidationMode mode);
     void SetValidationRange(const ArgumentId& id, const size_t range);
@@ -54,7 +54,7 @@ private:
     KernelArgumentManager& m_ArgumentManager;
     bool m_ReadOnlyCacheFlag;
     //bool m_ProfilingFlag;
-    std::optional<PowerMeasurementParameters> m_PendingPowerParams;
+    std::optional<PreciseMeasurementParameters> m_PendingPreciseParams;
 
     KernelLauncher GetKernelLauncher(const Kernel& kernel);
     KernelResult RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,

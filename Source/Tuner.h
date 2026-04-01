@@ -29,7 +29,7 @@
 #include <Output/OutputFormat.h>
 #include <Utility/Logger/LoggingLevel.h>
 #include <KttTypes.h>
-#include <Api/Configuration/PowerMeasurementParameters.h>
+#include <Api/Configuration/PreciseMeasurementParameters.h>
 
 // Data holders
 #include <Api/Configuration/DimensionVector.h>
@@ -669,7 +669,7 @@ public:
     void SetReferenceArgument(const ArgumentId& id, const ArgumentId& referenceId);
 
     /** @fn std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr,
-      * const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt)
+      * const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt)
       * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
       * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
       * will end either when all configurations are explored or when the specified stop condition is fulfilled.
@@ -683,11 +683,11 @@ public:
       * more information.
       */
     std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr,
-        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
+        const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
 
     /** @fn std::vector<KernelResult> Tune(const KernelId id, const KernelDimensions& dimensions,
       * std::unique_ptr<StopCondition> stopCondition = nullptr,
-      * const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt)
+      * const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt)
       * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
       * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
       * will end either when all configurations are explored or when the specified stop condition is fulfilled.
@@ -704,10 +704,10 @@ public:
       */
     std::vector<KernelResult> Tune(const KernelId id, const KernelDimensions& dimensions,
         std::unique_ptr<StopCondition> stopCondition = nullptr,
-        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
+        const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
 
     /** @fn KernelResult TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
-      * const bool recomputeReference = false, const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt)
+      * const bool recomputeReference = false, const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt)
       * Performs one step of the tuning process for specified kernel. When this method is called for the kernel for the first time,
       * it creates configuration space based on combinations of provided kernel parameters and constraints. Each time this method
       * is called, it launches a single kernel configuration. If all configurations were already launched, it runs kernel using the
@@ -725,11 +725,11 @@ public:
       * information.
       */
     KernelResult TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
-        const bool recomputeReference = false, const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
+        const bool recomputeReference = false, const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
 
     /** @fn KernelResult TuneIteration(const KernelId id, const KernelDimensions& dimensions,
       * const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference = false,
-      * const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt)
+      * const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt)
       * Performs one step of the tuning process for specified kernel. When this method is called for the kernel for the first time,
       * it creates configuration space based on combinations of provided kernel parameters and constraints. Each time this method
       * is called, it launches a single kernel configuration. If all configurations were already launched, it runs kernel using the
@@ -749,7 +749,7 @@ public:
       * information.
       */
     KernelResult TuneIteration(const KernelId id, const KernelDimensions& dimensions, const std::vector<BufferOutputDescriptor>& output,
-        const bool recomputeReference = false, const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt);
+        const bool recomputeReference = false, const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
 
     /** @fn std::vector<KernelResult> SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
       * const uint64_t iterations = 0)

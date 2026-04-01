@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include <Api/Configuration/PowerMeasurementParameters.h>
+#include <Api/Configuration/PreciseMeasurementParameters.h>
 #include <Api/Info/DeviceInfo.h>
 #include <Api/Info/PlatformInfo.h>
 #include <Api/Output/ComputationResult.h>
@@ -25,14 +25,14 @@ public:
 
     // Kernel methods
     virtual ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = true,
-        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt) = 0;
+        const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt) = 0;
     virtual ComputationResult WaitForComputeAction(const ComputeActionId id) = 0;
     virtual void ClearData(const KernelComputeId& id) = 0;
     virtual void ClearKernelData(const std::string& kernelName) = 0;
 
     // Profiling methods
     virtual ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId,
-        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt) = 0;
+        const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt) = 0;
     virtual void SetProfilingCounters(const std::vector<std::string>& counters) = 0;
     virtual bool IsProfilingSessionActive(const KernelComputeId& id) = 0;
     virtual uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) = 0;

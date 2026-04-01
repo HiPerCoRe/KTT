@@ -24,7 +24,9 @@ VulkanComputeAction::VulkanComputeAction(const ComputeActionId id, const QueueId
     m_Overhead(0),
     m_CompilationOverhead(0),
     m_GlobalSize(globalSize),
-    m_LocalSize(localSize)
+    m_LocalSize(localSize),
+    m_DurationFromMultirun(std::nullopt),
+    m_DurationStdev(std::nullopt)
 {
     Logger::LogDebug("Initializing Vulkan compute action with id " + std::to_string(id) + " for kernel with name "
         + pipeline->GetName());
@@ -51,6 +53,16 @@ void VulkanComputeAction::IncreaseCompilationOverhead(const Nanoseconds overhead
 void VulkanComputeAction::SetComputeId(const KernelComputeId& id)
 {
     m_ComputeId = id;
+}
+
+void VulkanComputeAction::SetDurationFromMultirun(const Nanoseconds duration)
+{
+    m_DurationFromMultirun = duration;
+}
+
+void VulkanComputeAction::SetDurationStdev(const double durationStdev)
+{
+    m_DurationStdev = durationStdev;
 }
 
 void VulkanComputeAction::WaitForFinish()
@@ -117,16 +129,26 @@ const KernelComputeId& VulkanComputeAction::GetComputeId() const
 ComputationResult VulkanComputeAction::GenerateResult() const
 {
     ComputationResult result(m_Pipeline->GetName());
-    const Nanoseconds duration = GetDuration();
+    Nanoseconds duration = GetDuration();
     const Nanoseconds overhead = GetOverhead();
     const Nanoseconds compilationOverhead = GetCompilationOverhead();
 
     // Todo: generate compilation data from pipeline
     std::unique_ptr<KernelCompilationData> compilationData = nullptr;
 
+    // Use duration from multirun if available
+    if (m_DurationFromMultirun.has_value()) {
+        duration = m_DurationFromMultirun.value();
+    }
+
     result.SetDurationData(duration, overhead, compilationOverhead);
     result.SetSizeData(m_GlobalSize, m_LocalSize);
     result.SetCompilationData(std::move(compilationData));
+
+    // Set duration standard deviation if available
+    if (m_DurationStdev.has_value()) {
+        result.SetDurationStdev(m_DurationStdev.value());
+    }
 
     return result;
 }

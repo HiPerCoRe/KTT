@@ -146,15 +146,15 @@ int main(int argc, char** argv)
 
     tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
 
-    // Configure robust power measurement parameters if enabled
-    std::optional<ktt::PowerMeasurementParameters> powerParams;
+    // Configure robust measurement parameters if enabled
+    std::optional<ktt::PreciseMeasurementParameters> preciseParams;
     if constexpr (useRobustPowerMeasurement)
     {
         // Minimum 2000ms, maximum 20000ms, 0.5% tolerance
-        powerParams = ktt::PowerMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
+        preciseParams = ktt::PreciseMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
     }
 
-    const auto results = tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(600), powerParams);
+    const auto results = tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(600), preciseParams);
     tuner.SaveResults(results, "DummyOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "DummyOutput", ktt::OutputFormat::XML);
 

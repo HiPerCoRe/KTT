@@ -16,6 +16,7 @@
 #include <Utility/Timer/Timer.h>
 #include <Utility/StlHelpers.h>
 #include <Utility/StringUtility.h>
+#include <Utility/MeasurementUtility.h>
 
 #ifdef KTT_PROFILING_CUPTI_LEGACY
 #include <ComputeEngine/Cuda/CuptiLegacy/CuptiSubscription.h>
@@ -162,17 +163,15 @@ void CudaEngine::FlushL2Cache(const QueueId queueId)
 }
 
 ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,
-    const std::optional<PowerMeasurementParameters>& powerParams)
+    const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
     // Silence warning about unused parameter when KTT_POWER_USAGE_NVML is not defined
     (void)powerMeasurementAllowed;
-    (void)powerParams;
+    (void)preciseParams;
 
 #ifndef KTT_POWER_USAGE_NVML
-    if (powerParams.has_value())
-    {
-        throw KttException("Power measurement is not supported. KTT must be built with --power-usage option and CUDA backend.");
-    }
+    // When power measurement is not available, preciseParams is used for stable timing only
+    // No exception is thrown - the parameters are used for timing stabilization
 #endif
     if (!ContainsKey(m_Streams, queueId))
     {
@@ -207,6 +206,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     timer.Stop();
 
 #if defined(KTT_POWER_USAGE_NVML)
+    // Power measurement is available - use full functionality
     std::unique_ptr<NvmlPowerSubscription> subscription;
     std::vector<uint32_t> sumPwr;
     std::vector<double> sumTemp;
@@ -217,21 +217,17 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
         //uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
     }
-    // Robust power measurement timer - only used when powerParams is provided
-#if defined(KTT_POWER_USAGE_NVML)
+    // Robust power measurement timer - only used when preciseParams is provided
     Timer pwrTimer;
-    if (powerParams.has_value())
+    if (powerMeasurementAllowed && preciseParams.has_value())
     {
         pwrTimer.Start();
     }
-#endif // KTT_POWER_USAGE_NVML
-#endif // KTT_POWER_USAGE_NVML
     
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
-#if defined(KTT_POWER_USAGE_NVML)
     // Robust power measurement - run kernel multiple times until power stabilizes
-    // This is only done when powerParams is provided
-    if (powerMeasurementAllowed && powerParams.has_value())
+    // This is only done when powerMeasurementAllowed and preciseParams is provided
+    if (powerMeasurementAllowed && preciseParams.has_value())
     {
         action->WaitForFinish();
         std::vector<ktt::Nanoseconds> durationSamples;
@@ -239,7 +235,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         int consideredIters = 0;
         unsigned long long execs = 1;
         bool looping = true;
-        const auto& params = powerParams.value();
+        const auto& params = preciseParams.value();
         
         // Collect first power sample after initial kernel execution
         sumPwr.push_back(m_PowerManager->GetPowerUsage());
@@ -285,45 +281,19 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         }
         pwrTimer.Stop();
 
-        // Calculate duration based on selected method
-        ktt::Nanoseconds calculatedDuration = 0;
-        switch (params.durationCalculationMethod) {
-            case DurationCalculationMethod::Minimum:
-                calculatedDuration = *std::min_element(durationSamples.begin(), durationSamples.end());
-                break;
-            case DurationCalculationMethod::Median:
-                std::sort(durationSamples.begin(), durationSamples.end());
-                if (durationSamples.size() % 2 == 0) {
-                    calculatedDuration = (durationSamples[durationSamples.size() / 2 - 1] + durationSamples[durationSamples.size() / 2]) / 2;
-                } else {
-                    calculatedDuration = durationSamples[durationSamples.size() / 2];
-                }
-                break;
-            case DurationCalculationMethod::Average:
-                calculatedDuration = std::accumulate(durationSamples.begin(), durationSamples.end(), 0ULL) / durationSamples.size();
-                break;
-        }
-        action->SetDurationFromMultirun(calculatedDuration);
-
-        // Calculate standard deviation of all duration samples
-        double mean = static_cast<double>(std::accumulate(durationSamples.begin(), durationSamples.end(), 0ULL)) / durationSamples.size();
-        double varianceSum = 0.0;
-        for (const auto& sample : durationSamples) {
-            double diff = static_cast<double>(sample) - mean;
-            varianceSum += diff * diff;
-        }
-        double stdev = std::sqrt(varianceSum / durationSamples.size());
-        action->SetDurationStdev(stdev);
+        // Calculate duration and standard deviation using utility methods
+        const auto measurementResult = PreciseMeasurementParameters::ComputeDurationAndStdev(
+            durationSamples, params.durationCalculationMethod);
+        
+        action->SetDurationFromMultirun(measurementResult.duration);
+        action->SetDurationStdev(measurementResult.standardDeviation);
 
         Logger::LogInfo("Power has been measured from " + std::to_string(consideredIters) + " kernel runs (out of " + std::to_string(execs) + " runs)");
     }
-#endif // KTT_POWER_USAGE_NVML
 
-
-#if defined(KTT_POWER_USAGE_NVML)
     if (powerMeasurementAllowed) {
-        // Simple power measurement (single execution) - used when powerParams is NOT provided
-        if (!powerParams.has_value())
+        // Simple power measurement (single execution) - used when preciseParams is NOT provided
+        if (!preciseParams.has_value())
         {
             action->WaitForFinish();
             sumPwr.push_back(m_PowerManager->GetPowerUsage());
@@ -332,7 +302,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
             sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
         }
-        int consideredIters = powerParams.has_value() ? static_cast<int>(sumPwr.size()) : 1;
+        int consideredIters = preciseParams.has_value() ? static_cast<int>(sumPwr.size()) : 1;
         const uint32_t powerUsage = static_cast<uint32_t>(std::accumulate(sumPwr.cend()-consideredIters, sumPwr.cend(), 0)) / static_cast<uint32_t>(consideredIters);
         action->SetPowerUsage(powerUsage);
         const double temperature = std::accumulate(sumTemp.cend()-consideredIters, sumTemp.cend(), 0) / static_cast<double>(consideredIters);
@@ -348,6 +318,26 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             fanSpeed = static_cast<int32_t>(std::accumulate(sumFanSpeed.cend()-consideredIters, sumFanSpeed.cend(), 0)) / static_cast<int32_t>(consideredIters);
         }
         action->SetFanSpeed(fanSpeed);
+    }
+#else
+    // Power measurement is NOT available - use preciseParams for stable timing only
+    auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+    
+    if (preciseParams.has_value())
+    {
+        // Execute kernel multiple times for stable timing measurement using utility
+        const auto& params = preciseParams.value();
+        const auto result = MeasurementUtility::ExecuteWithStableTiming(
+            [&]() -> Nanoseconds {
+                auto a = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+                a->WaitForFinish();
+                return a->GetDuration();
+            },
+            params,
+            "CUDA");
+        
+        action->SetDurationFromMultirun(result.duration);
+        action->SetDurationStdev(result.standardDeviation);
     }
 #endif // KTT_POWER_USAGE_NVML
 
@@ -403,7 +393,7 @@ void CudaEngine::ClearKernelData(const std::string& kernelName)
 }
 
 ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
-    [[maybe_unused]] const QueueId queueId, [[maybe_unused]] const std::optional<PowerMeasurementParameters>& powerParams)
+    [[maybe_unused]] const QueueId queueId, [[maybe_unused]] const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
 #ifdef KTT_PROFILING_CUPTI_LEGACY
 
@@ -429,9 +419,9 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
 
     timer.Stop();
 
-    // On the first profiling run, pass powerParams to enable robust power measurement
-    // On subsequent runs, pass nullopt to avoid re-running power measurement
-    const auto actionId = RunKernelAsync(data, queueId, newProfiling, newProfiling ? powerParams : std::nullopt);
+    // On the first profiling run, pass preciseParams to enable robust measurement
+    // On subsequent runs, pass nullopt to avoid re-running measurement
+    const auto actionId = RunKernelAsync(data, queueId, newProfiling, newProfiling ? preciseParams : std::nullopt);
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime());
     ComputationResult result = WaitForComputeAction(actionId);
@@ -473,9 +463,9 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
 
     timer.Stop();
 
-    // On the first profiling run, pass powerParams to enable robust power measurement
-    // On subsequent runs, pass nullopt to avoid re-running power measurement
-    const auto actionId = RunKernelAsync(data, queueId, newProfiling, newProfiling ? powerParams : std::nullopt);
+    // On the first profiling run, pass preciseParams to enable robust measurement
+    // On subsequent runs, pass nullopt to avoid re-running measurement
+    const auto actionId = RunKernelAsync(data, queueId, newProfiling, newProfiling ? preciseParams : std::nullopt);
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime());
     ComputationResult result = WaitForComputeAction(actionId);

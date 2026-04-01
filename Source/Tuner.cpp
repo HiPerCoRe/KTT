@@ -532,17 +532,17 @@ void Tuner::SetReferenceArgument(const ArgumentId& id, const ArgumentId& referen
 }
 
 std::vector<KernelResult> Tuner::Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition,
-    const std::optional<PowerMeasurementParameters>& powerParams)
+    const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
-    return Tune(id, {}, std::move(stopCondition), powerParams);
+    return Tune(id, {}, std::move(stopCondition), preciseParams);
 }
 
 std::vector<KernelResult> Tuner::Tune(const KernelId id, const KernelDimensions& dimensions,
-    std::unique_ptr<StopCondition> stopCondition, const std::optional<PowerMeasurementParameters>& powerParams)
+    std::unique_ptr<StopCondition> stopCondition, const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
     try
     {
-        return m_Tuner->TuneKernel(id, dimensions, std::move(stopCondition), powerParams);
+        return m_Tuner->TuneKernel(id, dimensions, std::move(stopCondition), preciseParams);
     }
     catch (const KttException& exception)
     {
@@ -552,18 +552,18 @@ std::vector<KernelResult> Tuner::Tune(const KernelId id, const KernelDimensions&
 }
 
 KernelResult Tuner::TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
-    const bool recomputeReference, const std::optional<PowerMeasurementParameters>& powerParams)
+    const bool recomputeReference, const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
-    return TuneIteration(id, {}, output, recomputeReference, powerParams);
+    return TuneIteration(id, {}, output, recomputeReference, preciseParams);
 }
 
 KernelResult Tuner::TuneIteration(const KernelId id, const KernelDimensions& dimensions,
     const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference,
-    const std::optional<PowerMeasurementParameters>& powerParams)
+    const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
     try
     {
-        return m_Tuner->TuneKernelIteration(id, dimensions, output, recomputeReference, powerParams);
+        return m_Tuner->TuneKernelIteration(id, dimensions, output, recomputeReference, preciseParams);
     }
     catch (const KttException& exception)
     {

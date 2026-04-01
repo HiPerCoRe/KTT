@@ -143,10 +143,10 @@ bool KernelRunner::IsProfilingActive() const
     return m_Engine.IsProfilingActive();
 }
 
-void KernelRunner::SetPowerMeasurementParameters(const std::optional<PowerMeasurementParameters>& params)
+void KernelRunner::SetPreciseMeasurementParameters(const std::optional<PreciseMeasurementParameters>& params)
 {
-    // Store the power params to be applied after kernel data is added to compute layer
-    m_PendingPowerParams = params;
+    // Store the precise measurement params to be applied after kernel data is added to compute layer
+    m_PendingPreciseParams = params;
 }
 
 void KernelRunner::SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
@@ -248,11 +248,11 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
 
     auto activator = std::make_unique<KernelActivator>(*m_ComputeLayer, id);
     
-    // Apply any pending power measurement parameters now that kernel data is active
-    if (m_PendingPowerParams.has_value())
+    // Apply any pending precise measurement parameters now that kernel data is active
+    if (m_PendingPreciseParams.has_value())
     {
-        m_ComputeLayer->SetPowerMeasurementParameters(m_PendingPowerParams);
-        m_PendingPowerParams.reset();
+        m_ComputeLayer->SetPreciseMeasurementParameters(m_PendingPreciseParams);
+        m_PendingPreciseParams.reset();
     }
     KernelResult result(kernel.GetName(), configuration, "");
 

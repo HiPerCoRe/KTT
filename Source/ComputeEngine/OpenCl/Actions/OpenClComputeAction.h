@@ -3,6 +3,7 @@
 #ifdef KTT_API_OPENCL
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <Api/Output/ComputationResult.h>
@@ -23,6 +24,8 @@ public:
     void IncreaseCompilationOverhead(const Nanoseconds overhead);
     void SetComputeId(const KernelComputeId& id);
     void SetReleaseFlag();
+    void SetDurationFromMultirun(const Nanoseconds duration);
+    void SetDurationStdev(const double durationStdev);
     void WaitForFinish();
 
     ComputeActionId GetId() const;
@@ -45,6 +48,8 @@ private:
     KernelComputeId m_ComputeId;
     DimensionVector m_GlobalSize;
     DimensionVector m_LocalSize;
+    std::optional<Nanoseconds> m_DurationFromMultirun;
+    std::optional<double> m_DurationStdev;
 };
 
 } // namespace ktt

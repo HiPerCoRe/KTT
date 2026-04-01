@@ -30,7 +30,7 @@ const bool rapidTest = false;
 const bool useProfiling = false;
 
 // Toggle robust power measurement.
-const bool useRobustPowerMeasurement = false;
+const bool useRobustPowerMeasurement = true;
 
 // Toggle usage of profile-based searcher
 const bool useProfileSearcher = false;
@@ -209,15 +209,15 @@ int main(int argc, char** argv)
     }
 #endif
 
-    // Configure robust power measurement parameters if enabled
-    std::optional<ktt::PowerMeasurementParameters> powerParams;
+    // Configure robust measurement parameters if enabled
+    std::optional<ktt::PreciseMeasurementParameters> preciseParams;
     if constexpr (useRobustPowerMeasurement)
     {
         // Minimum 2000ms, maximum 20000ms, 0.5% tolerance
-        powerParams = ktt::PowerMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
+        preciseParams = ktt::PreciseMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
     }
 
-    const auto results = tuner.Tune(kernel, std::make_unique<ktt::FailureFraction>(0.1, 10) /*std::make_unique<ktt::ConfigurationCount>(2)*/, powerParams);
+    const auto results = tuner.Tune(kernel, std::make_unique<ktt::FailureFraction>(0.1, 10) /*std::make_unique<ktt::ConfigurationCount>(2)*/, preciseParams);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "CoulombSumOutput_T4", ktt::OutputFormat::JSON_T4);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::XML);

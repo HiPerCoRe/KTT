@@ -16,7 +16,7 @@ TuningRunner::TuningRunner(KernelRunner& kernelRunner) :
 {}
 
 std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelDimensions& dimensions,
-    std::unique_ptr<StopCondition> stopCondition, const std::optional<PowerMeasurementParameters>& powerParams)
+    std::unique_ptr<StopCondition> stopCondition, const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
     Logger::LogInfo("Starting offline tuning for kernel " + kernel.GetName());
     const auto id = kernel.GetId();
@@ -42,7 +42,7 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         int iter = 0;
         do
         {
-            result = TuneIteration(kernel, dimensions, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false, powerParams);
+            result = TuneIteration(kernel, dimensions, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false, preciseParams);
             multiResult.FuseProfilingTimes(result, (iter == 0));
 	    multiResult.TransferPowerData(result);
             iter++;
@@ -84,7 +84,7 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
 
 KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimensions& dimensions, const KernelRunMode mode,
     const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference,
-    const std::optional<PowerMeasurementParameters>& powerParams)
+    const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
     if (recomputeReference)
     {
@@ -115,8 +115,8 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimen
             + " for kernel " + kernel.GetName());
     }
 
-    // Set power measurement parameters on compute layer data before running kernel
-    m_KernelRunner.SetPowerMeasurementParameters(powerParams);
+    // Set precise measurement parameters on compute layer data before running kernel
+    m_KernelRunner.SetPreciseMeasurementParameters(preciseParams);
 
     KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, dimensions, mode, output, true);
 

@@ -17,7 +17,9 @@ OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, const QueueId
     m_Overhead(0),
     m_CompilationOverhead(0),
     m_GlobalSize(globalSize),
-    m_LocalSize(localSize)
+    m_LocalSize(localSize),
+    m_DurationFromMultirun(std::nullopt),
+    m_DurationStdev(std::nullopt)
 {
     Logger::LogDebug("Initializing OpenCL compute action with id " + std::to_string(id)
         + " for kernel with name " + kernel->GetName());
@@ -44,6 +46,16 @@ void OpenClComputeAction::SetComputeId(const KernelComputeId& id)
 void OpenClComputeAction::SetReleaseFlag()
 {
     m_Event->SetReleaseFlag();
+}
+
+void OpenClComputeAction::SetDurationFromMultirun(const Nanoseconds duration)
+{
+    m_DurationFromMultirun = duration;
+}
+
+void OpenClComputeAction::SetDurationStdev(const double durationStdev)
+{
+    m_DurationStdev = durationStdev;
 }
 
 void OpenClComputeAction::WaitForFinish()
@@ -95,14 +107,24 @@ const KernelComputeId& OpenClComputeAction::GetComputeId() const
 ComputationResult OpenClComputeAction::GenerateResult() const
 {
     ComputationResult result(m_Kernel->GetName());
-    const Nanoseconds duration = GetDuration();
+    Nanoseconds duration = GetDuration();
     const Nanoseconds overhead = GetOverhead();
     const Nanoseconds compilationOverhead = GetCompilationOverhead();
     std::unique_ptr<KernelCompilationData> compilationData = m_Kernel->GenerateCompilationData();
 
+    // Use duration from multirun if available
+    if (m_DurationFromMultirun.has_value()) {
+        duration = m_DurationFromMultirun.value();
+    }
+
     result.SetDurationData(duration, overhead, compilationOverhead);
     result.SetSizeData(m_GlobalSize, m_LocalSize);
     result.SetCompilationData(std::move(compilationData));
+
+    // Set duration standard deviation if available
+    if (m_DurationStdev.has_value()) {
+        result.SetDurationStdev(m_DurationStdev.value());
+    }
 
     return result;
 }

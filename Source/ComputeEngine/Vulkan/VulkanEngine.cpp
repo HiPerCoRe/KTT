@@ -8,6 +8,7 @@
 #include <Utility/Timer/Timer.h>
 #include <Utility/StlHelpers.h>
 #include <Utility/StringUtility.h>
+#include <Utility/MeasurementUtility.h>
 
 namespace ktt
 {
@@ -53,15 +54,10 @@ VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCo
 }
 
 ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,
-    const std::optional<PowerMeasurementParameters>& powerParams)
+    const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
-    (void)powerParams;
-
-    // Vulkan does not support power measurement
-    if (powerParams.has_value())
-    {
-        throw KttException("Power measurement is not supported for Vulkan backend. This feature is only available for CUDA with NVML.");
-    }
+    // Vulkan does not support power measurement, but preciseParams can be used for stable timing
+    // No exception is thrown - the parameters are used for timing stabilization if provided
 
     if (queueId >= static_cast<QueueId>(m_Queues.size()))
     {
@@ -91,6 +87,23 @@ ComputeActionId VulkanEngine::RunKernelAsync(const KernelComputeData& data, cons
     timer.Stop();
 
     auto action = pipeline->DispatchShader(queue, *m_CommandPool, *m_QueryPool, data.GetGlobalSize(), scalarArguments);
+
+    // Vulkan does not support power measurement, but preciseParams can be used for stable timing
+    if (preciseParams.has_value())
+    {
+        const auto& params = preciseParams.value();
+        const auto result = MeasurementUtility::ExecuteWithStableTiming(
+            [&]() -> Nanoseconds {
+                auto a = pipeline->DispatchShader(queue, *m_CommandPool, *m_QueryPool, data.GetGlobalSize(), scalarArguments);
+                a->WaitForFinish();
+                return a->GetDuration();
+            },
+            params,
+            "Vulkan");
+        
+        action->SetDurationFromMultirun(result.duration);
+        action->SetDurationStdev(result.standardDeviation);
+    }
 
     action->IncreaseOverhead(timer.GetElapsedTime());
     action->IncreaseCompilationOverhead(timer.GetElapsedTime()); //TODO check we are really measuring compilation time here
@@ -132,7 +145,7 @@ void VulkanEngine::ClearKernelData(const std::string& kernelName)
 }
 
 ComputationResult VulkanEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
-    [[maybe_unused]] const QueueId queueId, [[maybe_unused]] const std::optional<PowerMeasurementParameters>& powerParams)
+    [[maybe_unused]] const QueueId queueId, [[maybe_unused]] const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
     throw KttException("Profiling is not yet supported for Vulkan backend");
 }

@@ -12,7 +12,7 @@
 #include <functional>
 
 #include <Api/ComputeApiInitializer.h>
-#include <Api/Configuration/PowerMeasurementParameters.h>
+#include <Api/Configuration/PreciseMeasurementParameters.h>
 #include <ComputeEngine/ComputeEngine.h>
 #include <ComputeEngine/Cpp/CppCompiler.h>
 #include <ComputeEngine/EngineConfiguration.h>
@@ -30,14 +30,14 @@ public:
 
     // Kernel methods
     ComputeActionId RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed = false,
-        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt) override;
+        const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt) override;
     ComputationResult WaitForComputeAction(const ComputeActionId id) override;
     void ClearData(const KernelComputeId& id) override;
     void ClearKernelData(const std::string& kernelName) override;
 
     // Profiling methods
     ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId,
-        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt) override;
+        const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt) override;
     void SetProfilingCounters(const std::vector<std::string>& counters) override;
     bool IsProfilingSessionActive(const KernelComputeId& id) override;
     uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) override;

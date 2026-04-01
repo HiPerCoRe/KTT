@@ -7,9 +7,11 @@
 #include <Utility/Timer/Timer.h>
 #include <Utility/StlHelpers.h>
 #include <Utility/StringUtility.h>
+#include <Utility/MeasurementUtility.h>
 #include <cstring>
 #include <future>
 #include <fstream>
+#include <numeric>
 
 #if defined(_MSC_VER)
 #include <windows.h>
@@ -62,18 +64,14 @@ CppEngine::CppEngine(const ComputeApiInitializer& initializer, std::vector<Queue
 }
 
 ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,
-    const std::optional<PowerMeasurementParameters>& powerParams)
+    const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
     // Silence unused parameter warnings - queues are not used in C++ backend
     (void)queueId;
     (void)powerMeasurementAllowed;
-    (void)powerParams;
 
-    // C++ backend does not support power measurement
-    if (powerParams.has_value())
-    {
-        throw KttException("Power measurement is not supported for C++ backend. This feature is only available for CUDA with NVML.");
-    }
+    // C++ backend does not support power measurement, but preciseParams can be used for stable timing
+    // No exception is thrown - the parameters are used for timing stabilization if provided
     Timer overheadTimer;
     overheadTimer.Start();
 
@@ -94,7 +92,7 @@ ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const Q
     const std::string kernelName = data.GetName();
 
     // Launch kernel asynchronously
-    m_ComputeActions[id] = std::async(std::launch::async, [kernel, overhead, kernelName]() {
+    m_ComputeActions[id] = std::async(std::launch::async, [kernel, overhead, kernelName, preciseParams]() {
         Timer timer;
         timer.Start();
 
@@ -106,6 +104,24 @@ ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const Q
         // overhead includes kernel loading and argument setup
         // compilation overhead is tracked separately in LoadKernel when compilation happens
         result.SetDurationData(timer.GetElapsedTime(), overhead, kernel->compilationOverhead);
+
+        // C++ backend does not support power measurement, but preciseParams can be used for stable timing
+        if (preciseParams.has_value()) {
+            const auto& params = preciseParams.value();
+            const auto measurementResult = MeasurementUtility::ExecuteWithStableTiming(
+                [&]() -> Nanoseconds {
+                    Timer singleTimer;
+                    singleTimer.Start();
+                    kernel->function(kernel->argumentPointers, kernel->argumentSizes);
+                    singleTimer.Stop();
+                    return singleTimer.GetElapsedTime();
+                },
+                params,
+                "C++");
+            
+            result.SetDurationData(measurementResult.duration, overhead, kernel->compilationOverhead);
+        }
+
         return result;
     });
 
@@ -179,10 +195,11 @@ void CppEngine::ClearKernelData(const std::string& kernelName)
 
 // Profiling methods - not supported for CPU backend
 ComputationResult CppEngine::RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId,
-    [[maybe_unused]] const std::optional<PowerMeasurementParameters>& powerParams)
+    [[maybe_unused]] const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
     (void)data;
     (void)queueId;
+    (void)preciseParams;
     throw KttException("Profiling is not supported for C++ backend");
 }
 

@@ -3,6 +3,7 @@
 #ifdef KTT_API_VULKAN
 
 #include <memory>
+#include <optional>
 
 #include <Api//Configuration/DimensionVector.h>
 #include <Api/Output/ComputationResult.h>
@@ -27,6 +28,8 @@ public:
     void IncreaseOverhead(const Nanoseconds overhead);
     void IncreaseCompilationOverhead(const Nanoseconds overhead);
     void SetComputeId(const KernelComputeId& id);
+    void SetDurationFromMultirun(const Nanoseconds duration);
+    void SetDurationStdev(const double durationStdev);
     void WaitForFinish();
 
     ComputeActionId GetId() const;
@@ -56,6 +59,8 @@ private:
     DimensionVector m_LocalSize;
     uint32_t m_FirstQueryId;
     uint32_t m_SecondQueryId;
+    std::optional<Nanoseconds> m_DurationFromMultirun;
+    std::optional<double> m_DurationStdev;
 };
 
 } // namespace ktt

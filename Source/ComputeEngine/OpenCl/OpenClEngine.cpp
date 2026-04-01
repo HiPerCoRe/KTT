@@ -11,6 +11,9 @@
 #include <Utility/Timer/Timer.h>
 #include <Utility/StlHelpers.h>
 #include <Utility/StringUtility.h>
+#include <Utility/MeasurementUtility.h>
+#include <numeric>
+#include <cmath>
 
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
 #include <ComputeEngine/OpenCl/Gpa/GpaPass.h>
@@ -185,17 +188,13 @@ void OpenClEngine::FlushL2Cache(const QueueId queueId)
 }
 
 ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,
-    const std::optional<PowerMeasurementParameters>& powerParams)
+    const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
-    // Silence warning about unused parameter (placeholder for future power measurement)
+    // Silence warning about unused parameter
     (void)powerMeasurementAllowed;
-    (void)powerParams;
 
-    // OpenCL does not support power measurement
-    if (powerParams.has_value())
-    {
-        throw KttException("Power measurement is not supported for OpenCL backend. This feature is only available for CUDA with NVML.");
-    }
+    // OpenCL does not support power measurement, but preciseParams can be used for stable timing
+    // No exception is thrown - the parameters are used for timing stabilization if provided
     if (!ContainsKey(m_Queues, queueId))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));
@@ -229,6 +228,23 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
     timer.Stop();
 
     auto action = kernel->Launch(queue, data.GetGlobalSize(), data.GetLocalSize());
+
+    // OpenCL does not support power measurement, but preciseParams can be used for stable timing
+    if (preciseParams.has_value())
+    {
+        const auto& params = preciseParams.value();
+        const auto result = MeasurementUtility::ExecuteWithStableTiming(
+            [&]() -> Nanoseconds {
+                auto a = kernel->Launch(queue, data.GetGlobalSize(), data.GetLocalSize());
+                a->WaitForFinish();
+                return a->GetDuration();
+            },
+            params,
+            "OpenCL");
+        
+        action->SetDurationFromMultirun(result.duration);
+        action->SetDurationStdev(result.standardDeviation);
+    }
 
     action->IncreaseOverhead(timer.GetElapsedTime());
     action->IncreaseCompilationOverhead(timer.GetElapsedTime());
@@ -281,7 +297,7 @@ void OpenClEngine::ClearKernelData(const std::string& kernelName)
 }
 
 ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
-    [[maybe_unused]] const QueueId queueId, [[maybe_unused]] const std::optional<PowerMeasurementParameters>& powerParams)
+    [[maybe_unused]] const QueueId queueId, [[maybe_unused]] const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     Timer timer;

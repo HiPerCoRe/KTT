@@ -30,8 +30,8 @@ void ComputeLayer::RunKernel(const KernelDefinitionId id, const DimensionVector&
 ComputeActionId ComputeLayer::RunKernelAsync(const KernelDefinitionId id, const QueueId queue)
 {
     const auto& data = GetComputeData(id);
-    const auto& powerParams = GetData().GetPowerMeasurementParameters();
-    return m_ComputeEngine.RunKernelAsync(data, queue, true, powerParams);
+    const auto& preciseParams = GetData().GetPreciseMeasurementParameters();
+    return m_ComputeEngine.RunKernelAsync(data, queue, true, preciseParams);
 }
 
 ComputeActionId ComputeLayer::RunKernelAsync(const KernelDefinitionId id, const QueueId queue, const DimensionVector& globalSize,
@@ -41,8 +41,8 @@ ComputeActionId ComputeLayer::RunKernelAsync(const KernelDefinitionId id, const 
     data.SetGlobalSize(globalSize);
     data.SetLocalSize(localSize);
 
-    const auto& powerParams = GetData().GetPowerMeasurementParameters();
-    return m_ComputeEngine.RunKernelAsync(data, queue, true, powerParams);
+    const auto& preciseParams = GetData().GetPreciseMeasurementParameters();
+    return m_ComputeEngine.RunKernelAsync(data, queue, true, preciseParams);
 }
 
 void ComputeLayer::WaitForComputeAction(const ComputeActionId id)
@@ -59,8 +59,8 @@ void ComputeLayer::RunKernelWithProfiling(const KernelDefinitionId id)
     }
 
     const auto& data = GetComputeData(id);
-    const auto& powerParams = GetData().GetPowerMeasurementParameters();
-    const auto result = m_ComputeEngine.RunKernelWithProfiling(data, GetDefaultQueue(), powerParams);
+    const auto& preciseParams = GetData().GetPreciseMeasurementParameters();
+    const auto result = m_ComputeEngine.RunKernelWithProfiling(data, GetDefaultQueue(), preciseParams);
     GetData().AddPartialResult(result);
 }
 
@@ -76,8 +76,8 @@ void ComputeLayer::RunKernelWithProfiling(const KernelDefinitionId id, const Dim
     data.SetGlobalSize(globalSize);
     data.SetLocalSize(localSize);
 
-    const auto& powerParams = GetData().GetPowerMeasurementParameters();
-    const auto result = m_ComputeEngine.RunKernelWithProfiling(data, GetDefaultQueue(), powerParams);
+    const auto& preciseParams = GetData().GetPreciseMeasurementParameters();
+    const auto result = m_ComputeEngine.RunKernelWithProfiling(data, GetDefaultQueue(), preciseParams);
     GetData().AddPartialResult(result);
 }
 
@@ -367,9 +367,9 @@ const KernelComputeData& ComputeLayer::GetComputeData(const KernelDefinitionId i
     return GetData().GetComputeData(id);
 }
 
-void ComputeLayer::SetPowerMeasurementParameters(const std::optional<PowerMeasurementParameters>& params)
+void ComputeLayer::SetPreciseMeasurementParameters(const std::optional<PreciseMeasurementParameters>& params)
 {
-    GetData().SetPowerMeasurementParameters(params);
+    GetData().SetPreciseMeasurementParameters(params);
 }
 
 } // namespace ktt
