@@ -281,16 +281,18 @@ void OpenClEngine::ClearKernelData(const std::string& kernelName)
 }
 
 ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
-    [[maybe_unused]] const QueueId queueId)
+    [[maybe_unused]] const QueueId queueId, [[maybe_unused]] const std::optional<PowerMeasurementParameters>& powerParams)
 {
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     Timer timer;
     timer.Start();
 
     const auto id = data.GetUniqueIdentifier();
+    bool newProfiling = false;
 
     if (!IsProfilingSessionActive(id))
     {
+        newProfiling = true;
         InitializeProfiling(id);
     }
 
@@ -299,6 +301,9 @@ ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const Ke
 
     timer.Stop();
 
+    // Note: OpenCL does not support power measurement, so powerParams is ignored
+    // The parameter is kept for interface consistency with other compute engines
+    (void)powerParams;
     const auto actionId = RunKernelAsync(data, queueId);
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime());

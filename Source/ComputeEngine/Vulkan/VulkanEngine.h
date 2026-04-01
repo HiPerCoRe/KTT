@@ -4,9 +4,11 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <Api/ComputeApiInitializer.h>
+#include <Api/Configuration/PowerMeasurementParameters.h>
 #include <ComputeEngine/Vulkan/Actions/VulkanComputeAction.h>
 #include <ComputeEngine/Vulkan/Actions/VulkanTransferAction.h>
 #include <ComputeEngine/Vulkan/ShadercCompiler.h>
@@ -42,7 +44,8 @@ public:
     void ClearKernelData(const std::string& kernelName) override;
 
     // Profiling methods
-    ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId) override;
+    ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId,
+        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt) override;
     void SetProfilingCounters(const std::vector<std::string>& counters) override;
     bool IsProfilingSessionActive(const KernelComputeId& id) override;
     uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) override;

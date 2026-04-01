@@ -402,7 +402,8 @@ void CudaEngine::ClearKernelData(const std::string& kernelName)
 #endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 }
 
-ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data, [[maybe_unused]] const QueueId queueId)
+ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
+    [[maybe_unused]] const QueueId queueId, [[maybe_unused]] const std::optional<PowerMeasurementParameters>& powerParams)
 {
 #ifdef KTT_PROFILING_CUPTI_LEGACY
 
@@ -428,7 +429,9 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
 
     timer.Stop();
 
-    const auto actionId = RunKernelAsync(data, queueId, newProfiling);
+    // On the first profiling run, pass powerParams to enable robust power measurement
+    // On subsequent runs, pass nullopt to avoid re-running power measurement
+    const auto actionId = RunKernelAsync(data, queueId, newProfiling, newProfiling ? powerParams : std::nullopt);
     auto& action = *m_ComputeActions[actionId];
     action.IncreaseOverhead(timer.GetElapsedTime());
     ComputationResult result = WaitForComputeAction(actionId);
@@ -470,9 +473,11 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
 
     timer.Stop();
 
-    const auto actionId = RunKernelAsync(data, queueId, newProfiling);
+    // On the first profiling run, pass powerParams to enable robust power measurement
+    // On subsequent runs, pass nullopt to avoid re-running power measurement
+    const auto actionId = RunKernelAsync(data, queueId, newProfiling, newProfiling ? powerParams : std::nullopt);
     auto& action = *m_ComputeActions[actionId];
-    action.IncreaseOverhead(timer.GetElapsedTime()); 
+    action.IncreaseOverhead(timer.GetElapsedTime());
     ComputationResult result = WaitForComputeAction(actionId);
     
     if (!instance.HasValidKernelDuration())

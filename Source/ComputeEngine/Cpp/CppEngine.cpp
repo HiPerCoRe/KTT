@@ -178,7 +178,8 @@ void CppEngine::ClearKernelData(const std::string& kernelName)
 }
 
 // Profiling methods - not supported for CPU backend
-ComputationResult CppEngine::RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId)
+ComputationResult CppEngine::RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId,
+    [[maybe_unused]] const std::optional<PowerMeasurementParameters>& powerParams)
 {
     (void)data;
     (void)queueId;

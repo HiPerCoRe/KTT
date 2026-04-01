@@ -59,7 +59,8 @@ void ComputeLayer::RunKernelWithProfiling(const KernelDefinitionId id)
     }
 
     const auto& data = GetComputeData(id);
-    const auto result = m_ComputeEngine.RunKernelWithProfiling(data, GetDefaultQueue());
+    const auto& powerParams = GetData().GetPowerMeasurementParameters();
+    const auto result = m_ComputeEngine.RunKernelWithProfiling(data, GetDefaultQueue(), powerParams);
     GetData().AddPartialResult(result);
 }
 
@@ -75,7 +76,8 @@ void ComputeLayer::RunKernelWithProfiling(const KernelDefinitionId id, const Dim
     data.SetGlobalSize(globalSize);
     data.SetLocalSize(localSize);
 
-    const auto result = m_ComputeEngine.RunKernelWithProfiling(data, GetDefaultQueue());
+    const auto& powerParams = GetData().GetPowerMeasurementParameters();
+    const auto result = m_ComputeEngine.RunKernelWithProfiling(data, GetDefaultQueue(), powerParams);
     GetData().AddPartialResult(result);
 }
 

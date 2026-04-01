@@ -132,7 +132,7 @@ void VulkanEngine::ClearKernelData(const std::string& kernelName)
 }
 
 ComputationResult VulkanEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,
-    [[maybe_unused]] const QueueId queueId)
+    [[maybe_unused]] const QueueId queueId, [[maybe_unused]] const std::optional<PowerMeasurementParameters>& powerParams)
 {
     throw KttException("Profiling is not yet supported for Vulkan backend");
 }

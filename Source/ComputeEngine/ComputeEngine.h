@@ -31,7 +31,8 @@ public:
     virtual void ClearKernelData(const std::string& kernelName) = 0;
 
     // Profiling methods
-    virtual ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId) = 0;
+    virtual ComputationResult RunKernelWithProfiling(const KernelComputeData& data, const QueueId queueId,
+        const std::optional<PowerMeasurementParameters>& powerParams = std::nullopt) = 0;
     virtual void SetProfilingCounters(const std::vector<std::string>& counters) = 0;
     virtual bool IsProfilingSessionActive(const KernelComputeId& id) = 0;
     virtual uint64_t GetRemainingProfilingRuns(const KernelComputeId& id) = 0;
