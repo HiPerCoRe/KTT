@@ -29,6 +29,9 @@ const bool rapidTest = false;
 // Toggle kernel profiling.
 const bool useProfiling = false;
 
+// Toggle robust power measurement.
+const bool useRobustPowerMeasurement = false;
+
 // Toggle usage of profile-based searcher
 const bool useProfileSearcher = false;
 
@@ -106,7 +109,7 @@ int main(int argc, char** argv)
     }
     else
     {
-        tuner.SetCompilerOptions("-O3 -ffast-math -march=native -fopenmp");
+        tuner.SetCompilerOptions("-march=native -fopenmp");
     }
 
     const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, ndRangeDimensions, workGroupDimensions);
@@ -167,7 +170,9 @@ int main(int argc, char** argv)
         tuner.AddParameter(kernel, "OMP_SCHEDULING", std::vector<uint64_t>{0, 1, 2});
         tuner.AddParameter(kernel, "OMP_SCHED_CHUNK", std::vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
         tuner.AddParameter(kernel, "TILE_SIZE", std::vector<uint64_t>{0, 8, 16, 32, 64});
-
+        tuner.AddCompilerParameter(kernel, "-ffast-math", {});
+        tuner.AddCompilerParameter(kernel, "-O", {"0", "1", "2", "3"});
+        tuner.AddCompilerParameter(kernel, "-funroll-loops");
     }
 
     tuner.SetArguments(definition, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridDim, gridId});
@@ -204,7 +209,15 @@ int main(int argc, char** argv)
     }
 #endif
 
-    const auto results = tuner.Tune(kernel, std::make_unique<ktt::FailureFraction>(0.1, 10) /*std::make_unique<ktt::ConfigurationCount>(2)*/);
+    // Configure robust power measurement parameters if enabled
+    std::optional<ktt::PowerMeasurementParameters> powerParams;
+    if constexpr (useRobustPowerMeasurement)
+    {
+        // Minimum 2000ms, maximum 20000ms, 0.5% tolerance
+        powerParams = ktt::PowerMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
+    }
+
+    const auto results = tuner.Tune(kernel, std::make_unique<ktt::FailureFraction>(0.1, 10) /*std::make_unique<ktt::ConfigurationCount>(2)*/, powerParams);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "CoulombSumOutput_T4", ktt::OutputFormat::JSON_T4);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::XML);

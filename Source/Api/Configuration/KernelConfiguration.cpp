@@ -50,7 +50,7 @@ std::string KernelConfiguration::GetCompilerOptions() const
 
         if (std::holds_alternative<std::string>(pair.GetValue()))
         {
-            result += " " + pair.GetName() + "=" + pair.GetValueString();
+            result += " " + pair.GetName() + pair.GetValueString();
         }
         else if (std::holds_alternative<bool>(pair.GetValue()) && std::get<bool>(pair.GetValue()))
         {

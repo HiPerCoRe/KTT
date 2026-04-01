@@ -151,7 +151,7 @@ int main(int argc, char** argv)
     if constexpr (useRobustPowerMeasurement)
     {
         // Minimum 2000ms, maximum 20000ms, 0.5% tolerance
-        powerParams = ktt::PowerMeasurementParameters(2000, 20000, 0.005);
+        powerParams = ktt::PowerMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
     }
 
     const auto results = tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(600), powerParams);
