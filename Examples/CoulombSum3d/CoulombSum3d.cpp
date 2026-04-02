@@ -30,7 +30,7 @@ const bool rapidTest = false;
 const bool useProfiling = false;
 
 // Toggle robust power measurement.
-const bool useRobustPowerMeasurement = true;
+const bool useRobustPowerMeasurement = false;
 
 // Toggle usage of profile-based searcher
 const bool useProfileSearcher = false;
@@ -169,10 +169,12 @@ int main(int argc, char** argv)
         tuner.AddParameter(kernel, "OMP_COLLAPSE", std::vector<uint64_t>{0, 1});
         tuner.AddParameter(kernel, "OMP_SCHEDULING", std::vector<uint64_t>{0, 1, 2});
         tuner.AddParameter(kernel, "OMP_SCHED_CHUNK", std::vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
-        tuner.AddParameter(kernel, "TILE_SIZE", std::vector<uint64_t>{0, 8, 16, 32, 64});
+        tuner.AddParameter(kernel, "TILE", std::vector<uint64_t>{0, 8, 16, 32, 64});
         tuner.AddCompilerParameter(kernel, "-ffast-math", {});
-        tuner.AddCompilerParameter(kernel, "-O", {"0", "1", "2", "3"});
+        tuner.AddCompilerParameter(kernel, "-O", {"1", "2", "3"});
         tuner.AddCompilerParameter(kernel, "-funroll-loops");
+        auto schedchunk = [](const std::vector<uint64_t>& vector) {return vector.at(0) == 2 || vector.at(1) == 2; };
+        tuner.AddConstraint(kernel, { "OMP_SCHEDULING", "OMP_SCHED_CHUNK" }, schedchunk);
     }
 
     tuner.SetArguments(definition, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridDim, gridId});

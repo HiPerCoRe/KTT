@@ -56,7 +56,7 @@ extern "C" void directCoulombSum(void** buffers, size_t* sizes) {
                 }
                 grid[z*gridSize*gridSize + y*gridSize + x] = e;
 #else
-                    for (xx = 0; xx < TILE; xx++)
+                    for (int xx = 0; xx < TILE; xx++)
                     {
                         float dx = (float)(x+xx)*gridSpacing - atomInfoX[a];
                         float e = atomInfoW[a] * (1.0f/sqrtf(dx*dx + dy*dy + dz*dz));
