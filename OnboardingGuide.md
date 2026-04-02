@@ -438,23 +438,18 @@ the resulting option is `-arch=sm_70`.
 // CUDA-specific compiler options
 if (tuner.GetComputeApi() == ktt::ComputeApi::CUDA)
 {
-    tuner.AddCompilerParameter(kernel, "--ftz=true", {});
-    tuner.AddCompilerParameter(kernel, "--prec-div=true", {});
-    tuner.AddCompilerParameter(kernel, "--fmad=true", {});
+    tuner.AddCompilerParameter(kernel, "-use_fast_math", {});
     tuner.AddCompilerParameter(kernel, "-arch=", std::vector<std::string>{"sm_70", "sm_80", "sm_90"});
 }
 // OpenCL-specific compiler options
 else if (tuner.GetComputeApi() == ktt::ComputeApi::OpenCL)
 {
     tuner.AddCompilerParameter(kernel, "-cl-fast-relaxed-math", {});
-    tuner.AddCompilerParameter(kernel, "-cl-mad-enable", {});
-    tuner.AddCompilerParameter(kernel, "-cl-opt-disable", {});
 }
 // C++-specific compiler options (for C++ backend)
 else if (tuner.GetComputeApi() == ktt::ComputeApi::Cpp)
 {
     tuner.AddCompilerParameter(kernel, "-O", std::vector<std::string>{"0", "1", "2", "3"});
-    tuner.AddCompilerParameter(kernel, "-fopenmp", {});
 }
 ```
 
