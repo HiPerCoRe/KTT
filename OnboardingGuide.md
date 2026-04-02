@@ -33,6 +33,7 @@ functionality is exposed in the public API through which KTT can be integrated i
     * [Parameter constraints](#parameter-constraints)
     * [Parameter groups](#parameter-groups)
     * [Thread modifiers](#thread-modifiers)
+    * [Compiler parameters](#compiler-parameters)
 * [Output validation](#output-validation)
     * [Reference computation](#reference-computation)
     * [Reference kernel](#reference-kernel)
@@ -396,6 +397,76 @@ tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::Mo
     return defaultSize / parameters[0];
 });
 ```
+
+#### Compiler parameters
+
+In addition to regular tuning parameters that are passed to the kernel source code as preprocessor definitions, KTT also supports compiler parameters.
+These parameters are passed directly to the compiler as compiler flags/options rather than being injected into the kernel source code. This is useful for
+tuning compiler optimizations that can significantly affect kernel performance.
+
+Compiler parameters work similarly to regular parameters but use the [`AddCompilerParameter()`](Source/Tuner.h:249) method. The first argument is the kernel id,
+the second is the compiler switch name, and the third is a vector of possible values for that switch.
+
+There are two ways to use compiler parameters:
+
+**1. Binary switches** (present or absent):
+When an empty vector is passed as values, the parameter becomes a binary switch that is either included in the compiler command or not.
+
+```cpp
+// Binary compiler switches - either used or not used
+tuner.AddCompilerParameter(kernel, "-cl-mad-enable", {});     // OpenCL: enable multiply-add
+tuner.AddCompilerParameter(kernel, "-cl-fast-relaxed-math", {});  // OpenCL: fast math
+tuner.AddCompilerParameter(kernel, "--ftz=true", {});         // CUDA: flush denormals to zero
+tuner.AddCompilerParameter(kernel, "--fmad=true", {});        // CUDA: enable fused multiply-add
+```
+
+**2. Switches with values**:
+When the switch takes a value, include the `=` or `:` in the switch name and provide the possible values.
+
+```cpp
+// Compiler switches with values
+tuner.AddCompilerParameter(kernel, "-arch=", std::vector<std::string>{"sm_70", "sm_80", "sm_90"});  // CUDA: architecture
+tuner.AddCompilerParameter(kernel, "-O", std::vector<std::string>{"0", "1", "2", "3"});             // Optimization level
+```
+
+The resulting compiler options are constructed by concatenating the switch name with the value. For example, with `-arch=` and value `sm_70`,
+the resulting option is `-arch=sm_70`.
+
+**API-specific examples:**
+
+```cpp
+// CUDA-specific compiler options
+if (tuner.GetComputeApi() == ktt::ComputeApi::CUDA)
+{
+    tuner.AddCompilerParameter(kernel, "--ftz=true", {});
+    tuner.AddCompilerParameter(kernel, "--prec-div=true", {});
+    tuner.AddCompilerParameter(kernel, "--fmad=true", {});
+    tuner.AddCompilerParameter(kernel, "-arch=", std::vector<std::string>{"sm_70", "sm_80", "sm_90"});
+}
+// OpenCL-specific compiler options
+else if (tuner.GetComputeApi() == ktt::ComputeApi::OpenCL)
+{
+    tuner.AddCompilerParameter(kernel, "-cl-fast-relaxed-math", {});
+    tuner.AddCompilerParameter(kernel, "-cl-mad-enable", {});
+    tuner.AddCompilerParameter(kernel, "-cl-opt-disable", {});
+}
+// C++-specific compiler options (for C++ backend)
+else if (tuner.GetComputeApi() == ktt::ComputeApi::Cpp)
+{
+    tuner.AddCompilerParameter(kernel, "-O", std::vector<std::string>{"0", "1", "2", "3"});
+    tuner.AddCompilerParameter(kernel, "-fopenmp", {});
+}
+```
+
+It is also possible to use script-based compiler parameters with [`AddScriptCompilerParameter()`](Source/Tuner.h:284), similar to regular script parameters:
+
+```cpp
+// Use a Python script to generate compiler options dynamically
+tuner.AddScriptCompilerParameter(kernel, "-arch=", ktt::ParameterValueType::String,
+    "['sm_70', 'sm_80', 'sm_90']");
+```
+
+Compiler parameters can be combined with regular tuning parameters and constraints. They can also be placed in parameter groups to tune them independently.
 
 ----
 
