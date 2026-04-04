@@ -160,6 +160,7 @@ void CudaEngine::FlushL2Cache(const QueueId queueId)
 
     CudaStream& stream = *m_Streams[queueId];
     CheckError(cuMemsetD8Async(m_L2CacheDevicePtr, 0, m_L2CacheSize, stream.GetStream()), "cuMemsetD8Async");
+    CheckError(cuStreamSynchronize(stream.GetStream()), "cuStreamSynchronize");
 }
 
 ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,
