@@ -225,6 +225,8 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     }
     
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
+    // Track number of iterations for power measurement (default: 1 for simple measurement)
+    int consideredIters = 1;
     // Robust power measurement - run kernel multiple times until power stabilizes
     // This is only done when powerMeasurementAllowed and preciseParams is provided
     if (powerMeasurementAllowed && preciseParams.has_value())
@@ -232,7 +234,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         action->WaitForFinish();
         std::vector<ktt::Nanoseconds> durationSamples;
         durationSamples.push_back(action->GetDuration());
-        int consideredIters = 0;
+        consideredIters = 0;
         unsigned long long execs = 1;
         bool looping = true;
         const auto& params = preciseParams.value();
@@ -302,7 +304,6 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             sumMemFreq.push_back(m_PowerManager->GetMemoryFrequency());
             sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
         }
-        int consideredIters = preciseParams.has_value() ? static_cast<int>(sumPwr.size()) : 1;
         const uint32_t powerUsage = static_cast<uint32_t>(std::accumulate(sumPwr.cend()-consideredIters, sumPwr.cend(), 0)) / static_cast<uint32_t>(consideredIters);
         action->SetPowerUsage(powerUsage);
         const double temperature = std::accumulate(sumTemp.cend()-consideredIters, sumTemp.cend(), 0) / static_cast<double>(consideredIters);
