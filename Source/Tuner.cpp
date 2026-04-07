@@ -551,6 +551,27 @@ std::vector<KernelResult> Tuner::Tune(const KernelId id, const KernelDimensions&
     }
 }
 
+std::vector<KernelResult> Tuner::TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
+    std::unique_ptr<StopCondition> stopCondition, const std::optional<PreciseMeasurementParameters>& preciseParams)
+{
+    return TuneOptions(id, baseConfiguration, {}, std::move(stopCondition), preciseParams);
+}
+
+std::vector<KernelResult> Tuner::TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
+    const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition,
+    const std::optional<PreciseMeasurementParameters>& preciseParams)
+{
+    try
+    {
+        return m_Tuner->TuneOptions(id, baseConfiguration, dimensions, std::move(stopCondition), preciseParams);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return std::vector<KernelResult>{};
+    }
+}
+
 KernelResult Tuner::TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
     const bool recomputeReference, const std::optional<PreciseMeasurementParameters>& preciseParams)
 {

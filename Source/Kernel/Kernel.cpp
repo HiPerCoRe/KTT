@@ -241,7 +241,11 @@ std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
 
     for (const auto& parameter : m_Parameters)
     {
-        groupedParameters[parameter.GetGroup()].push_back(&parameter);
+        if (parameter.GetGroup() != "KTTSpecialOptionsGroup")
+        {
+            groupedParameters[parameter.GetGroup()].push_back(&parameter);
+        }
+
     }
 
     std::vector<KernelParameterGroup> result;
@@ -253,6 +257,30 @@ std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
     }
 
     return result;
+}
+
+std::vector<KernelParameterGroup> Kernel::GenerateSpecialOptionsGroups() const
+{
+    std::vector<const KernelParameter*> specialParameters;
+
+    for (const auto& parameter : m_Parameters)
+    {
+        if (parameter.GetGroup() == "KTTSpecialOptionsGroup")
+        {
+            specialParameters.push_back(&parameter);
+        }
+    }
+
+    if (specialParameters.empty())
+    {
+        return {};
+    }
+
+    const auto constraints = GetConstraintsForParameters(specialParameters);
+
+    return {
+        KernelParameterGroup("KTTSpecialOptionsGroup", specialParameters, constraints)
+    };
 }
 
 void Kernel::EnumerateNeighbourConfigurations(const KernelConfiguration& configuration,

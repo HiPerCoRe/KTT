@@ -14,11 +14,14 @@
 namespace ktt
 {
 
-ConfigurationData::ConfigurationData(Searcher& searcher, const Kernel& kernel) :
+ConfigurationData::ConfigurationData(Searcher& searcher, const Kernel& kernel, const bool isSpecialGroup,
+    const KernelConfiguration& baseConfiguration) :
     m_BestConfiguration({KernelConfiguration(), InvalidDuration}),
     m_Searcher(searcher),
     m_Kernel(kernel),
-    m_SearcherActive(false)
+    m_SearcherActive(false),
+    m_IsSpecialGroup(isSpecialGroup),
+    m_BaseConfiguration(baseConfiguration)
 {
     InitializeConfigurations();
 }
@@ -222,9 +225,14 @@ KernelConfiguration ConfigurationData::GetBestConfiguration() const
     return GetCurrentConfiguration();
 }
 
+bool ConfigurationData::IsSpecialGroup() const
+{
+    return m_IsSpecialGroup;
+}
+
 void ConfigurationData::InitializeConfigurations()
 {
-    const auto groups = m_Kernel.GenerateParameterGroups();
+    const auto groups = m_IsSpecialGroup ? m_Kernel.GenerateSpecialOptionsGroups() : m_Kernel.GenerateParameterGroups();
     Logger::LogInfo("Generating configurations for kernel " + m_Kernel.GetName());
 
     Timer timer;
@@ -253,7 +261,7 @@ void ConfigurationData::InitializeConfigurations()
     Logger::LogInfo("Total count of " + std::to_string(GetTotalConfigurationsCount()) + " configurations was generated in "
         + std::to_string(elapsedTime) + time.GetUnitTag());
 
-    KernelConfiguration initialBest;
+    KernelConfiguration initialBest = m_BaseConfiguration;
 
     for (const auto& forest : m_Forests)
     {

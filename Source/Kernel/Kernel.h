@@ -52,6 +52,7 @@ public:
 
     KernelConfiguration CreateConfiguration(const ParameterInput& parameters) const;
     std::vector<KernelParameterGroup> GenerateParameterGroups() const;
+    std::vector<KernelParameterGroup> GenerateSpecialOptionsGroups() const;
     void EnumerateNeighbourConfigurations(const KernelConfiguration& configuration,
         std::function<bool(const KernelConfiguration&, const uint64_t)> enumerator) const;
 
