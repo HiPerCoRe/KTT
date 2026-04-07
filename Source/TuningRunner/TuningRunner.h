@@ -22,6 +22,9 @@ public:
 
     std::vector<KernelResult> Tune(const Kernel& kernel, const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition,
         const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
+    std::vector<KernelResult> TuneOptions(const Kernel& kernel, const KernelConfiguration& baseConfiguration,
+        const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition,
+        const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
     KernelResult TuneIteration(const Kernel& kernel, const KernelDimensions& dimensions, const KernelRunMode mode,
         const std::vector<BufferOutputDescriptor>& output, const bool recomputeReference,
         const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);

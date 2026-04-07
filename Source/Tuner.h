@@ -706,6 +706,47 @@ public:
         std::unique_ptr<StopCondition> stopCondition = nullptr,
         const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
 
+    /** @fn std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr,
+      * const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt)
+      * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
+      * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
+      * will end either when all configurations are explored or when the specified stop condition is fulfilled.
+      * @param id Id of the tuned kernel.
+      * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
+      * will end when all configurations are explored. See StopCondition for more information.
+      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
+      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
+      * Throws KttException if power measurement is requested but not supported.
+      * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
+      * more information.
+      */
+    // TODO: TuneOptions description
+    std::vector<KernelResult> TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
+        std::unique_ptr<StopCondition> stopCondition = nullptr,
+        const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
+
+    /** @fn std::vector<KernelResult> Tune(const KernelId id, const KernelDimensions& dimensions,
+      * std::unique_ptr<StopCondition> stopCondition = nullptr,
+      * const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt)
+      * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
+      * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
+      * will end either when all configurations are explored or when the specified stop condition is fulfilled.
+      * @param id Id of the tuned kernel.
+      * @param dimensions Global and local sizes with which the kernel will be launched. If no dimensions are specified for some
+      * definition, the sizes specified during its addition will be used.
+      * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
+      * will end when all configurations are explored. See StopCondition for more information.
+      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
+      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
+      * Throws KttException if power measurement is requested but not supported.
+      * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
+      * more information.
+      */
+    std::vector<KernelResult> TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
+        const KernelDimensions& dimensions,
+        std::unique_ptr<StopCondition> stopCondition = nullptr,
+        const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
+
     /** @fn KernelResult TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,
       * const bool recomputeReference = false, const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt)
       * Performs one step of the tuning process for specified kernel. When this method is called for the kernel for the first time,
