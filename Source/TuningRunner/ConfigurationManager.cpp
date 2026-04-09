@@ -22,7 +22,7 @@ void ConfigurationManager::SetSearcher(const KernelId id, std::unique_ptr<Search
     m_Searchers[id] = std::move(searcher);
 }
 
-void ConfigurationManager::InitializeData(const Kernel& kernel, const bool isSpecialGroup,
+void ConfigurationManager::InitializeData(const Kernel& kernel, const bool isSeparateOptionsGroup,
     const KernelConfiguration& baseConfiguration)
 {
     const auto id = kernel.GetId();
@@ -33,7 +33,7 @@ void ConfigurationManager::InitializeData(const Kernel& kernel, const bool isSpe
         m_Searchers[id] = std::make_unique<DeterministicSearcher>();
     }
 
-    m_ConfigurationData[id] = std::make_unique<ConfigurationData>(*m_Searchers[id], kernel, isSpecialGroup, baseConfiguration);
+    m_ConfigurationData[id] = std::make_unique<ConfigurationData>(*m_Searchers[id], kernel, isSeparateOptionsGroup, baseConfiguration);
 }
 
 void ConfigurationManager::ClearData(const KernelId id, const bool clearSearcher)
