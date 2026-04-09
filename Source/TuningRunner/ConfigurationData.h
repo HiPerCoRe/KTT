@@ -17,7 +17,7 @@ namespace ktt
 class ConfigurationData
 {
 public:
-    explicit ConfigurationData(Searcher& searcher, const Kernel& kernel, const bool isSpecialGroup = false,
+    explicit ConfigurationData(Searcher& searcher, const Kernel& kernel, const bool isSeparateOptionsGroup = false,
         const KernelConfiguration& baseConfiguration = KernelConfiguration());
     ~ConfigurationData();
 
@@ -37,7 +37,7 @@ public:
     KernelConfiguration GetCurrentConfiguration() const;
     KernelConfiguration GetBestConfiguration() const;
 
-    bool IsSpecialGroup() const;
+    bool IsSeparateOptionsGroup() const;
 
 private:
     std::vector<std::unique_ptr<ConfigurationForest>> m_Forests;
@@ -47,7 +47,7 @@ private:
     Searcher& m_Searcher;
     const Kernel& m_Kernel;
     bool m_SearcherActive;
-    bool m_IsSpecialGroup;
+    bool m_IsSeparateOptionsGroup;
     KernelConfiguration m_BaseConfiguration;
 
     void InitializeConfigurations();

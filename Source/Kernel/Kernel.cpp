@@ -11,6 +11,8 @@
 namespace ktt
 {
 
+static const std::string SeparateCompilerOptionsGroup = "KTTSeparateCompilerOptionsGroup";
+
 Kernel::Kernel(const KernelId id, const std::string& name, const std::vector<const KernelDefinition*>& definitions) :
     m_Id(id),
     m_Name(name),
@@ -241,7 +243,7 @@ std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
 
     for (const auto& parameter : m_Parameters)
     {
-        if (parameter.GetGroup() == "KTTSpecialOptionsGroup")
+        if (parameter.GetGroup() == SeparateCompilerOptionsGroup)
         {
             parameter.SetTuning(false);
         }
@@ -259,13 +261,13 @@ std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
     return result;
 }
 
-std::vector<KernelParameterGroup> Kernel::GenerateSpecialOptionsGroups() const
+std::vector<KernelParameterGroup> Kernel::GenerateSeparateCompilerOptionsGroups() const
 {
     std::vector<const KernelParameter*> specialParameters;
 
     for (const auto& parameter : m_Parameters)
     {
-        if (parameter.GetGroup() == "KTTSpecialOptionsGroup")
+        if (parameter.GetGroup() == SeparateCompilerOptionsGroup)
         {
             parameter.SetTuning(true);
             specialParameters.push_back(&parameter);
@@ -280,7 +282,7 @@ std::vector<KernelParameterGroup> Kernel::GenerateSpecialOptionsGroups() const
     const auto constraints = GetConstraintsForParameters(specialParameters);
 
     return {
-        KernelParameterGroup("KTTSpecialOptionsGroup", specialParameters, constraints)
+        KernelParameterGroup(SeparateCompilerOptionsGroup, specialParameters, constraints)
     };
 }
 
