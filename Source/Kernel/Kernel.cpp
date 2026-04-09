@@ -241,11 +241,11 @@ std::vector<KernelParameterGroup> Kernel::GenerateParameterGroups() const
 
     for (const auto& parameter : m_Parameters)
     {
-        if (parameter.GetGroup() != "KTTSpecialOptionsGroup")
+        if (parameter.GetGroup() == "KTTSpecialOptionsGroup")
         {
-            groupedParameters[parameter.GetGroup()].push_back(&parameter);
+            parameter.SetTuning(false);
         }
-
+        groupedParameters[parameter.GetGroup()].push_back(&parameter);
     }
 
     std::vector<KernelParameterGroup> result;
@@ -267,6 +267,7 @@ std::vector<KernelParameterGroup> Kernel::GenerateSpecialOptionsGroups() const
     {
         if (parameter.GetGroup() == "KTTSpecialOptionsGroup")
         {
+            parameter.SetTuning(true);
             specialParameters.push_back(&parameter);
         }
     }
