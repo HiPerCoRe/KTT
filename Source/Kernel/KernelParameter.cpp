@@ -18,7 +18,8 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<Para
     m_Name(name),
     m_Group(group),
     m_Values(values),
-    m_IsCompilerParameter(isCompilerParameter)
+    m_IsCompilerParameter(isCompilerParameter),
+    m_IsTuned(true)
 {
     if (values.empty())
     {
@@ -48,7 +49,7 @@ const std::string& KernelParameter::GetGroup() const
 
 size_t KernelParameter::GetValuesCount() const
 {
-    return m_Values.size();
+    return m_IsTuned ? m_Values.size() : 1;
 }
 
 const std::vector<ParameterValue>& KernelParameter::GetValues() const
@@ -90,6 +91,16 @@ std::vector<ParameterPair> KernelParameter::GeneratePairs() const
 bool KernelParameter::IsCompilerParameter() const
 {
     return m_IsCompilerParameter;
+}
+
+bool KernelParameter::IsTuned() const
+{
+    return m_IsTuned;
+}
+
+void KernelParameter::SetTuning(const bool isTuned) const
+{
+    m_IsTuned = isTuned;
 }
 
 bool KernelParameter::operator==(const KernelParameter& other) const
