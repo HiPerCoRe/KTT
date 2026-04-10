@@ -169,6 +169,14 @@ void InitializePythonTuner(py::module_& module)
             py::arg("valueScript"),
             py::arg("group") = std::string()
         )
+        .def
+        (
+            "AddSeparateCompilerParameter",
+            &ktt::Tuner::AddSeparateCompilerParameter,
+            py::arg("id"),
+            py::arg("name"),
+            py::arg("values") = std::vector<std::string>{}
+        )
         .def("AddThreadModifier", py::overload_cast<const ktt::KernelId, const std::vector<ktt::KernelDefinitionId>&, const ktt::ModifierType,
             const ktt::ModifierDimension, const std::vector<std::string>&, ktt::ModifierFunction>(&ktt::Tuner::AddThreadModifier))
         .def("AddThreadModifier", py::overload_cast<const ktt::KernelId, const std::vector<ktt::KernelDefinitionId>&, const ktt::ModifierType,
@@ -506,6 +514,26 @@ void InitializePythonTuner(py::module_& module)
             py::overload_cast<const ktt::KernelId, const ktt::KernelDimensions&, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune),
             py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
+            py::arg("dimensions"),
+            py::arg("stopCondition") = nullptr
+        )
+        .def
+        (
+            "TuneOptions",
+            py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::TuneOptions),
+            py::call_guard<py::gil_scoped_release>(),
+            py::arg("id"),
+            py::arg("baseConfiguration"),
+            py::arg("stopCondition") = nullptr
+        )
+        .def
+        (
+            "TuneOptions",
+            py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&, const ktt::KernelDimensions&,
+                std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::TuneOptions),
+            py::call_guard<py::gil_scoped_release>(),
+            py::arg("id"),
+            py::arg("baseConfiguration"),
             py::arg("dimensions"),
             py::arg("stopCondition") = nullptr
         )
