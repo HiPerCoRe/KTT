@@ -81,9 +81,7 @@ int main(int argc, char** argv)
     // Add new kernel parameter. Specify parameter name and possible values. When kernel is tuned, the parameter value is added
     // to the beginning of kernel source as preprocessor definition. E.g., for value of this parameter equal to 32, it is added
     // as "#define multiply_work_group_size 32".
-    tuner.AddParameter(kernel, "multiply_work_group_size", std::vector<uint64_t>{32, 64});
-    tuner.AddCompilerParameter(kernel, "-cl-mad-enable", {});
-    tuner.AddCompilerParameter(kernel, "-cl-fast-relaxed-math", {}, "KTTSpecialOptionsGroup" );
+    tuner.AddParameter(kernel, "multiply_work_group_size", std::vector<uint64_t>{32, 64, 128, 256});
 
     // In this case, the parameter also affects work-group size. This is specified by adding a thread modifier. ModifierType specifies
     // that parameter affects work-group size of a kernel, ModifierAction specifies that work-group size is multiplied by value of the
@@ -102,15 +100,6 @@ int main(int argc, char** argv)
 
     // Save tuning results to JSON file.
     tuner.SaveResults(results, "TuningOutput", ktt::OutputFormat::JSON);
-
-
-    // just for testing purposes
-    std::cout << "\n=== Tuning Compiler Options Separately ===\n\n";
-
-    auto baseConfiguration = tuner.GetBestConfiguration(kernel);
-    const std::vector<ktt::KernelResult> optionsResults = tuner.TuneOptions(kernel, baseConfiguration);
-
-    std::cout << "Final config: " << tuner.GetBestConfiguration(kernel).GetString() << "\n";
 
     return 0;
 }

@@ -241,13 +241,23 @@ public:
       * @param id Id of kernel for which the parameter will be added.
       * @param name Name of a parameter. Parameter names for a single kernel must be unique.
       * @param values Optional allowed values for the parameter. Value type is a string. If left empty, parameter with be either
-      * included without any value or completely excluded.
+      * present without any value or completely excluded.
       * @param group Optional group inside which the parameter will be added. Tuning configurations are generated separately for each
       * group. This is useful when kernels contain groups of parameters that can be tuned independently. In this way, the total number
       * of generated configurations can be significantly reduced.
       */
     void AddCompilerParameter(const KernelId id, const std::string& name, const std::vector<std::string>& values = {},
         const std::string& group = "");
+
+    /** @fn void AddSeparateCompilerParameter(const KernelId id, const std::string& name, const std::vector<std::string>& values = {})
+      * Works like AddCompilerParameter(), but compiler options added through this function, will be tuned separately (after standard tuning).
+      * These compiler optinos can be tuned with TuneOptions() function.
+      * @param id Id of kernel for which the parameter will be added.
+      * @param name Name of a parameter. Parameter names for a single kernel must be unique.
+      * @param values Optional allowed values for the parameter. Value type is a string. If left empty, parameter with be either
+      * present without any value or completely excluded.
+      */
+    void AddSeparateCompilerParameter(const KernelId id, const std::string& name, const std::vector<std::string>& values = {});
 
     /** @fn void AddScriptParameter(const KernelId id, const std::string& name, const ParameterValueType valueType,
       * const std::string& valueScript, const std::string& group = "")
@@ -706,12 +716,13 @@ public:
         std::unique_ptr<StopCondition> stopCondition = nullptr,
         const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
 
-    /** @fn std::vector<KernelResult> Tune(const KernelId id, std::unique_ptr<StopCondition> stopCondition = nullptr,
+    /** @fn std::vector<KernelResult> TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
+      * std::unique_ptr<StopCondition> stopCondition = nullptr,
       * const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt)
-      * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
-      * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
-      * will end either when all configurations are explored or when the specified stop condition is fulfilled.
+      * Works simiraliry to Tune(), but is used for tuning compiler options separately.
+      * These options can be added through function AddSeparateCompilerParameter().
       * @param id Id of the tuned kernel.
+      * @param baseConfiguration Configuration on top of which compiler options will be tuned.
       * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
       * will end when all configurations are explored. See StopCondition for more information.
       * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
@@ -720,18 +731,17 @@ public:
       * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
       * more information.
       */
-    // TODO: TuneOptions description
     std::vector<KernelResult> TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
         std::unique_ptr<StopCondition> stopCondition = nullptr,
         const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
 
-    /** @fn std::vector<KernelResult> Tune(const KernelId id, const KernelDimensions& dimensions,
-      * std::unique_ptr<StopCondition> stopCondition = nullptr,
+    /** @fn std::vector<KernelResult> TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
+      * const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition = nullptr,
       * const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt)
-      * Performs the tuning process for specified kernel. Creates configuration space based on combinations of provided kernel
-      * parameters and constraints. The configurations will be launched in order that depends on the specified Searcher. Tuning
-      * will end either when all configurations are explored or when the specified stop condition is fulfilled.
+      * Works simiraliry to Tune(), but is used for tuning compiler options separately.
+      * These options can be added through function AddSeparateCompilerParameter().
       * @param id Id of the tuned kernel.
+      * @param baseConfiguration Configuration on top of which compiler options will be tuned.
       * @param dimensions Global and local sizes with which the kernel will be launched. If no dimensions are specified for some
       * definition, the sizes specified during its addition will be used.
       * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
@@ -743,8 +753,7 @@ public:
       * more information.
       */
     std::vector<KernelResult> TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
-        const KernelDimensions& dimensions,
-        std::unique_ptr<StopCondition> stopCondition = nullptr,
+        const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition = nullptr,
         const std::optional<PreciseMeasurementParameters>& preciseParams = std::nullopt);
 
     /** @fn KernelResult TuneIteration(const KernelId id, const std::vector<BufferOutputDescriptor>& output,

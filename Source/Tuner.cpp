@@ -1082,6 +1082,11 @@ void Tuner::AddCompilerParameter(const KernelId id, const std::string& name, con
     AddParameterInternal(id, name, parameterValues, group, isCompilerParameter);
 }
 
+void Tuner::AddSeparateCompilerParameter(const KernelId id, const std::string& name, const std::vector<std::string>& values)
+{
+    AddCompilerParameter(id, name, values, "KTTSeparateCompilerOptionsGroup");
+}
+
 void Tuner::AddParameterInternal(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values,
     const std::string& group, const bool isCompilerParameter)
 {
