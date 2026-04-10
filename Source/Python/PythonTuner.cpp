@@ -495,39 +495,46 @@ void InitializePythonTuner(py::module_& module)
         .def
         (
             "Tune",
-            py::overload_cast<const ktt::KernelId, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune),
+            py::overload_cast<const ktt::KernelId, std::unique_ptr<ktt::StopCondition>,
+                const std::optional<ktt::PreciseMeasurementParameters>&>(&ktt::Tuner::Tune),
             py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
-            py::arg("stopCondition") = nullptr
+            py::arg("stopCondition") = nullptr,
+            py::arg("preciseParams") = std::nullopt
         )
         .def
         (
             "Tune",
-            py::overload_cast<const ktt::KernelId, const ktt::KernelDimensions&, std::unique_ptr<ktt::StopCondition>>(&ktt::Tuner::Tune),
+            py::overload_cast<const ktt::KernelId, const ktt::KernelDimensions&, std::unique_ptr<ktt::StopCondition>,
+                const std::optional<ktt::PreciseMeasurementParameters>&>(&ktt::Tuner::Tune),
             py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
             py::arg("dimensions"),
-            py::arg("stopCondition") = nullptr
+            py::arg("stopCondition") = nullptr,
+            py::arg("preciseParams") = std::nullopt
         )
         .def
         (
             "TuneIteration",
-            py::overload_cast<const ktt::KernelId, const std::vector<ktt::BufferOutputDescriptor>&, const bool>(&ktt::Tuner::TuneIteration),
+            py::overload_cast<const ktt::KernelId, const std::vector<ktt::BufferOutputDescriptor>&, const bool,
+                const std::optional<ktt::PreciseMeasurementParameters>&>(&ktt::Tuner::TuneIteration),
             py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
             py::arg("output"),
-            py::arg("recomputeReference") = false
+            py::arg("recomputeReference") = false,
+            py::arg("preciseParams") = std::nullopt
         )
         .def
         (
             "TuneIteration",
             py::overload_cast<const ktt::KernelId, const ktt::KernelDimensions&, const std::vector<ktt::BufferOutputDescriptor>&,
-                const bool>(&ktt::Tuner::TuneIteration),
+                const bool, const std::optional<ktt::PreciseMeasurementParameters>&>(&ktt::Tuner::TuneIteration),
             py::call_guard<py::gil_scoped_release>(),
             py::arg("id"),
             py::arg("dimensions"),
             py::arg("output"),
-            py::arg("recomputeReference") = false
+            py::arg("recomputeReference") = false,
+            py::arg("preciseParams") = std::nullopt
         )
         .def
         (

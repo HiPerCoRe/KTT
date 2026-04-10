@@ -139,6 +139,19 @@ void InitializePythonDataHolders(py::module_& module)
         .def("GetOutputDestination", &ktt::BufferOutputDescriptor::GetOutputDestination)
         .def("GetOutputSize", &ktt::BufferOutputDescriptor::GetOutputSize);
 
+    py::class_<ktt::PreciseMeasurementParameters>(module, "PreciseMeasurementParameters")
+        .def(py::init<>())
+        .def(py::init<uint64_t, uint64_t, double, ktt::DurationCalculationMethod>(),
+            py::arg("minTimeMs"),
+            py::arg("maxTimeMs"),
+            py::arg("maxPowerDiff"),
+            py::arg("durationCalculationMethod") = ktt::DurationCalculationMethod::Minimum)
+        .def_readwrite("minTimeMs", &ktt::PreciseMeasurementParameters::minTimeMs)
+        .def_readwrite("maxTimeMs", &ktt::PreciseMeasurementParameters::maxTimeMs)
+        .def_readwrite("maxPowerDiff", &ktt::PreciseMeasurementParameters::maxPowerDiff)
+        .def_readwrite("durationCalculationMethod", &ktt::PreciseMeasurementParameters::durationCalculationMethod)
+        .def("IsValid", &ktt::PreciseMeasurementParameters::IsValid);
+
     py::class_<ktt::KernelCompilationData, py::smart_holder>(module, "KernelCompilationData")
         .def(py::init<>())
         .def_readwrite("m_MaxWorkGroupSize", &ktt::KernelCompilationData::m_MaxWorkGroupSize)
