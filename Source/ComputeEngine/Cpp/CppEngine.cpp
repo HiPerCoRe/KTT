@@ -155,7 +155,12 @@ void CppEngine::ClearData(const KernelComputeId& id)
     }
     for (const ComputeActionId actionId : toRemove)
     {
-        m_ComputeActions.erase(actionId);
+        auto it = m_ComputeActions.find(actionId);
+        if (it != m_ComputeActions.end())
+        {
+            it->second.wait();
+            m_ComputeActions.erase(it);
+        }
         m_ComputeActionToKernel.erase(actionId);
     }
 }
@@ -173,7 +178,12 @@ void CppEngine::ClearKernelData(const std::string& kernelName)
     }
     for (const ComputeActionId actionId : actionsToRemove)
     {
-        m_ComputeActions.erase(actionId);
+        auto it = m_ComputeActions.find(actionId);
+        if (it != m_ComputeActions.end())
+        {
+            it->second.wait();
+            m_ComputeActions.erase(it);
+        }
         m_ComputeActionToKernel.erase(actionId);
     }
 
@@ -506,24 +516,28 @@ std::vector<QueueId> CppEngine::GetAllQueues() const
     return result;
 }
 
-void CppEngine::SynchronizeQueue(const QueueId queueId)
+void CppEngine::SynchronizeQueue([[maybe_unused]] const QueueId queueId)
 {
-    (void)queueId;
-    // For CPU backend, synchronization is immediate.
-    // If we had pending actions per queue, we would wait for them.
-    Logger::LogWarning("Synchronizing queue is implicit on CPU.");
+    // C++ backend does not differentiate queues, so synchronize all pending actions
+    for (auto& pair : m_ComputeActions)
+    {
+        pair.second.wait();
+    }
+
+    for (auto& pair : m_TransferActions)
+    {
+        pair.second.wait();
+    }
 }
 
 void CppEngine::SynchronizeQueues()
 {
-    // No-op
-    Logger::LogWarning("Synchronizing queue is implicit on CPU.");
+    SynchronizeQueue(0);
 }
 
 void CppEngine::SynchronizeDevice()
 {
-    // No-op
-    Logger::LogWarning("Synchronizing device is implicit on CPU.");
+    SynchronizeQueue(0);
 }
 
 // Information retrieval methods
