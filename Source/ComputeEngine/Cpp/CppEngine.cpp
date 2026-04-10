@@ -120,6 +120,7 @@ ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const Q
                 "C++");
             
             result.SetDurationData(measurementResult.duration, overhead, kernel->compilationOverhead);
+            result.SetDurationStdev(measurementResult.standardDeviation);
         }
 
         return result;
@@ -293,11 +294,18 @@ TransferActionId CppEngine::UpdateArgument(const ArgumentId& id, const QueueId q
         throw KttException("Buffer with id " + id + " not found");
     }
     CppBuffer& buffer = it->second;
-    if (dataSize > buffer.size)
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = buffer.size;
+    }
+
+    if (actualDataSize > buffer.size)
     {
         throw KttException("Update data size exceeds buffer size");
     }
-    memcpy(buffer.data, data, dataSize);
+    memcpy(buffer.data, data, actualDataSize);
 
     timer.Stop();
     const Nanoseconds overhead = timer.GetElapsedTime();
@@ -325,11 +333,18 @@ TransferActionId CppEngine::DownloadArgument(const ArgumentId& id, const QueueId
         throw KttException("Buffer with id " + id + " not found");
     }
     CppBuffer& buffer = it->second;
-    if (dataSize > buffer.size)
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = buffer.size;
+    }
+
+    if (actualDataSize > buffer.size)
     {
         throw KttException("Download data size exceeds buffer size");
     }
-    memcpy(destination, buffer.data, dataSize);
+    memcpy(destination, buffer.data, actualDataSize);
 
     timer.Stop();
     const Nanoseconds overhead = timer.GetElapsedTime();
@@ -359,7 +374,14 @@ TransferActionId CppEngine::CopyArgument(const ArgumentId& destination, const Qu
     }
     CppBuffer& src = srcIt->second;
     CppBuffer& dst = dstIt->second;
-    size_t copySize = std::min({src.size, dst.size, dataSize});
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = src.size;
+    }
+
+    size_t copySize = std::min({src.size, dst.size, actualDataSize});
     memcpy(dst.data, src.data, copySize);
 
     timer.Stop();
