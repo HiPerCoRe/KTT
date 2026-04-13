@@ -30,6 +30,11 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<Para
     {
         m_Group = DefaultGroup;
     }
+
+    if (group == "KTTSeparateCompilerOptionsGroup")
+    {
+        m_DefaultValues = { values[0] };
+    }
 }
 
 KernelParameter::KernelParameter(const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
@@ -49,12 +54,12 @@ const std::string& KernelParameter::GetGroup() const
 
 size_t KernelParameter::GetValuesCount() const
 {
-    return m_IsTuned ? m_Values.size() : 1;
+    return m_IsTuned ? m_Values.size() : m_DefaultValues.size();
 }
 
 const std::vector<ParameterValue>& KernelParameter::GetValues() const
 {
-    return m_Values;
+    return m_IsTuned ? m_Values : m_DefaultValues;
 }
 
 ParameterValueType KernelParameter::GetValueType() const
