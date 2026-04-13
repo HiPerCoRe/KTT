@@ -769,34 +769,27 @@ void CppEngine::SetKernelArguments(CppKernel& kernel, const std::vector<KernelAr
     kernel.argumentSizes.clear();
     kernel.scalarValues.clear();
     
-    // First pass: count non-scalar arguments for pointers array
-    size_t nonScalarCount = 0;
-    for (const auto* arg : arguments)
-    {
-        if (arg != nullptr && arg->GetMemoryType() != ArgumentMemoryType::Scalar)
-        {
-            ++nonScalarCount;
-        }
-    }
-    
-    kernel.argumentPointers.reserve(nonScalarCount);
-    kernel.argumentSizes.reserve(arguments.size());
-    kernel.scalarValues.reserve(arguments.size());
-
     for (const auto* arg : arguments)
     {
         if (arg == nullptr)
         {
             throw KttException("Null kernel argument encountered");
         }
-        
-        const ArgumentId id = arg->GetId();
-        
-        // Handle scalar arguments - store their value directly
-        if (arg->GetMemoryType() == ArgumentMemoryType::Scalar)
+
+        const auto memoryType = arg->GetMemoryType();
+
+        // Local and symbol arguments have no hardware equivalent on CPU, skip them
+        if (memoryType == ArgumentMemoryType::Local || memoryType == ArgumentMemoryType::Symbol)
         {
-            // For scalar arguments, we store the value in scalarValues
-            // and put a pointer to it in argumentSizes
+            Logger::LogWarning("Argument " + arg->GetId() + " of type "
+                + (memoryType == ArgumentMemoryType::Local ? "Local" : "Symbol")
+                + " is ignored by C++ backend");
+            continue;
+        }
+
+        // Handle scalar arguments - store their value directly
+        if (memoryType == ArgumentMemoryType::Scalar)
+        {
             size_t scalarValue = 0;
             if (arg->GetDataSize() <= sizeof(size_t))
             {
@@ -808,6 +801,7 @@ void CppEngine::SetKernelArguments(CppKernel& kernel, const std::vector<KernelAr
         else
         {
             // Handle vector/buffer arguments
+            const ArgumentId id = arg->GetId();
             auto it = m_Buffers.find(id);
             if (it == m_Buffers.end())
             {
