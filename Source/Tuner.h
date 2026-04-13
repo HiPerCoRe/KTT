@@ -294,6 +294,19 @@ public:
     void AddScriptCompilerParameter(const KernelId id, const std::string& name, const ParameterValueType valueType, const std::string& valueScript,
         const std::string& group = "");
 
+    /** @fn void AddScriptSeparateCompilerParameter(const KernelId id, const std::string& name, const ParameterValueType valueType,
+      * const std::string& valueScript)
+      * Works similarily to AddScriptCompilerParameter(), but for compiler parameters that are tuned separately.
+      * For standard tuning, only its first value will be used. Other values can be tuned with TuneOptions.
+      * @param id Id of kernel for which the parameter will be added.
+      * @param name Name of a parameter. Parameter names for a single kernel must be unique.
+      * @param valueType Type of parameter values.
+      * @param valueScript Python script which will be executed to generate a list of parameter values. The values of the tuning parameters
+      * can be utilized by the script. The default thread size can be accessed from script through variable named "defaultSize".
+      */
+    void AddScriptSeparateCompilerParameter(const KernelId id, const std::string& name, const ParameterValueType valueType,
+        const std::string& valueScript);
+
     /** @fn void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
       * const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
       * Adds thread modifier function for the specified kernel. The function receives thread size in the specified dimension and

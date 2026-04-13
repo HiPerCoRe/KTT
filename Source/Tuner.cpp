@@ -193,6 +193,12 @@ void Tuner::AddScriptCompilerParameter(const KernelId id, const std::string& nam
     }
 }
 
+void Tuner::AddScriptSeparateCompilerParameter(const KernelId id, const std::string& name, const ParameterValueType valueType,
+    const std::string& valueScript)
+{
+    AddScriptCompilerParameter(id, name, valueType, valueScript, "KTTSeparateCompilerOptionsGroup");
+}
+
 void Tuner::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
 {

@@ -177,6 +177,15 @@ void InitializePythonTuner(py::module_& module)
             py::arg("name"),
             py::arg("values") = std::vector<std::string>{}
         )
+        .def
+        (
+            "AddScriptSepatateCompilerParameter",
+            &ktt::Tuner::AddScriptSeparateCompilerParameter,
+            py::arg("id"),
+            py::arg("name"),
+            py::arg("valueType"),
+            py::arg("valueScript"),
+        )
         .def("AddThreadModifier", py::overload_cast<const ktt::KernelId, const std::vector<ktt::KernelDefinitionId>&, const ktt::ModifierType,
             const ktt::ModifierDimension, const std::vector<std::string>&, ktt::ModifierFunction>(&ktt::Tuner::AddThreadModifier))
         .def("AddThreadModifier", py::overload_cast<const ktt::KernelId, const std::vector<ktt::KernelDefinitionId>&, const ktt::ModifierType,
