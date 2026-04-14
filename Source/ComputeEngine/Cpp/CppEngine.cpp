@@ -120,6 +120,7 @@ ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const Q
                 "C++");
             
             result.SetDurationData(measurementResult.duration, overhead, kernel->compilationOverhead);
+            result.SetDurationStdev(measurementResult.standardDeviation);
         }
 
         return result;
@@ -154,7 +155,12 @@ void CppEngine::ClearData(const KernelComputeId& id)
     }
     for (const ComputeActionId actionId : toRemove)
     {
-        m_ComputeActions.erase(actionId);
+        auto it = m_ComputeActions.find(actionId);
+        if (it != m_ComputeActions.end())
+        {
+            it->second.wait();
+            m_ComputeActions.erase(it);
+        }
         m_ComputeActionToKernel.erase(actionId);
     }
 }
@@ -172,7 +178,12 @@ void CppEngine::ClearKernelData(const std::string& kernelName)
     }
     for (const ComputeActionId actionId : actionsToRemove)
     {
-        m_ComputeActions.erase(actionId);
+        auto it = m_ComputeActions.find(actionId);
+        if (it != m_ComputeActions.end())
+        {
+            it->second.wait();
+            m_ComputeActions.erase(it);
+        }
         m_ComputeActionToKernel.erase(actionId);
     }
 
@@ -293,11 +304,18 @@ TransferActionId CppEngine::UpdateArgument(const ArgumentId& id, const QueueId q
         throw KttException("Buffer with id " + id + " not found");
     }
     CppBuffer& buffer = it->second;
-    if (dataSize > buffer.size)
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = buffer.size;
+    }
+
+    if (actualDataSize > buffer.size)
     {
         throw KttException("Update data size exceeds buffer size");
     }
-    memcpy(buffer.data, data, dataSize);
+    memcpy(buffer.data, data, actualDataSize);
 
     timer.Stop();
     const Nanoseconds overhead = timer.GetElapsedTime();
@@ -325,11 +343,18 @@ TransferActionId CppEngine::DownloadArgument(const ArgumentId& id, const QueueId
         throw KttException("Buffer with id " + id + " not found");
     }
     CppBuffer& buffer = it->second;
-    if (dataSize > buffer.size)
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = buffer.size;
+    }
+
+    if (actualDataSize > buffer.size)
     {
         throw KttException("Download data size exceeds buffer size");
     }
-    memcpy(destination, buffer.data, dataSize);
+    memcpy(destination, buffer.data, actualDataSize);
 
     timer.Stop();
     const Nanoseconds overhead = timer.GetElapsedTime();
@@ -359,7 +384,14 @@ TransferActionId CppEngine::CopyArgument(const ArgumentId& destination, const Qu
     }
     CppBuffer& src = srcIt->second;
     CppBuffer& dst = dstIt->second;
-    size_t copySize = std::min({src.size, dst.size, dataSize});
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = src.size;
+    }
+
+    size_t copySize = std::min({src.size, dst.size, actualDataSize});
     memcpy(dst.data, src.data, copySize);
 
     timer.Stop();
@@ -484,24 +516,28 @@ std::vector<QueueId> CppEngine::GetAllQueues() const
     return result;
 }
 
-void CppEngine::SynchronizeQueue(const QueueId queueId)
+void CppEngine::SynchronizeQueue([[maybe_unused]] const QueueId queueId)
 {
-    (void)queueId;
-    // For CPU backend, synchronization is immediate.
-    // If we had pending actions per queue, we would wait for them.
-    Logger::LogWarning("Synchronizing queue is implicit on CPU.");
+    // C++ backend does not differentiate queues, so synchronize all pending actions
+    for (auto& pair : m_ComputeActions)
+    {
+        pair.second.wait();
+    }
+
+    for (auto& pair : m_TransferActions)
+    {
+        pair.second.wait();
+    }
 }
 
 void CppEngine::SynchronizeQueues()
 {
-    // No-op
-    Logger::LogWarning("Synchronizing queue is implicit on CPU.");
+    SynchronizeQueue(0);
 }
 
 void CppEngine::SynchronizeDevice()
 {
-    // No-op
-    Logger::LogWarning("Synchronizing device is implicit on CPU.");
+    SynchronizeQueue(0);
 }
 
 // Information retrieval methods
@@ -733,34 +769,27 @@ void CppEngine::SetKernelArguments(CppKernel& kernel, const std::vector<KernelAr
     kernel.argumentSizes.clear();
     kernel.scalarValues.clear();
     
-    // First pass: count non-scalar arguments for pointers array
-    size_t nonScalarCount = 0;
-    for (const auto* arg : arguments)
-    {
-        if (arg != nullptr && arg->GetMemoryType() != ArgumentMemoryType::Scalar)
-        {
-            ++nonScalarCount;
-        }
-    }
-    
-    kernel.argumentPointers.reserve(nonScalarCount);
-    kernel.argumentSizes.reserve(arguments.size());
-    kernel.scalarValues.reserve(arguments.size());
-
     for (const auto* arg : arguments)
     {
         if (arg == nullptr)
         {
             throw KttException("Null kernel argument encountered");
         }
-        
-        const ArgumentId id = arg->GetId();
-        
-        // Handle scalar arguments - store their value directly
-        if (arg->GetMemoryType() == ArgumentMemoryType::Scalar)
+
+        const auto memoryType = arg->GetMemoryType();
+
+        // Local and symbol arguments have no hardware equivalent on CPU, skip them
+        if (memoryType == ArgumentMemoryType::Local || memoryType == ArgumentMemoryType::Symbol)
         {
-            // For scalar arguments, we store the value in scalarValues
-            // and put a pointer to it in argumentSizes
+            Logger::LogWarning("Argument " + arg->GetId() + " of type "
+                + (memoryType == ArgumentMemoryType::Local ? "Local" : "Symbol")
+                + " is ignored by C++ backend");
+            continue;
+        }
+
+        // Handle scalar arguments - store their value directly
+        if (memoryType == ArgumentMemoryType::Scalar)
+        {
             size_t scalarValue = 0;
             if (arg->GetDataSize() <= sizeof(size_t))
             {
@@ -772,6 +801,7 @@ void CppEngine::SetKernelArguments(CppKernel& kernel, const std::vector<KernelAr
         else
         {
             // Handle vector/buffer arguments
+            const ArgumentId id = arg->GetId();
             auto it = m_Buffers.find(id);
             if (it == m_Buffers.end())
             {
