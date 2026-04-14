@@ -565,6 +565,12 @@ project "06VectorArgumentCustomizationCuda"
     includedirs {"Source"}
     links {"ktt"}
 
+project "09AsyncPipeliningCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/09AsyncPipelining/AsyncPipeliningCuda.cpp", "Tutorials/09AsyncPipelining/Reduction.cu"}
+    includedirs {"Source"}
+    links {"ktt"}
+
 end -- cudaProjects
 
 if vulkanProjects then

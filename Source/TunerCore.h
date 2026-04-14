@@ -76,6 +76,16 @@ public:
     // Kernel running and validation
     KernelResult RunKernel(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
         const std::vector<BufferOutputDescriptor>& output);
+
+    // Asynchronous kernel execution
+    ComputeHandle RunKernelAsync(const KernelId id, const KernelConfiguration& configuration,
+        const KernelDimensions& dimensions, const QueueId queue);
+    KernelResult WaitForRun(const ComputeHandle handle, const std::vector<BufferOutputDescriptor>& output);
+
+    // Explicit buffer management
+    void UploadBuffer(const ArgumentId& id, const QueueId queue);
+    TransferActionId UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data, const size_t dataSize);
+    TransferActionId DownloadBufferAsync(const ArgumentId& id, const QueueId queue, void* destination, const size_t dataSize);
     void SetProfiling(const bool flag);
     bool GetProfiling();
     void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold);

@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <Api/KttException.h>
 #include <KernelRunner/ComputeLayer.h>
 #include <Utility/ErrorHandling/Assert.h>
@@ -11,7 +13,8 @@ namespace ktt
 ComputeLayer::ComputeLayer(ComputeEngine& engine, KernelArgumentManager& argumentManager) :
     m_ComputeEngine(engine),
     m_ArgumentManager(argumentManager),
-    m_ActiveKernel(InvalidKernelId)
+    m_ActiveKernel(InvalidKernelId),
+    m_TrackingActions(false)
 {}
 
 void ComputeLayer::RunKernel(const KernelDefinitionId id)
@@ -31,7 +34,14 @@ ComputeActionId ComputeLayer::RunKernelAsync(const KernelDefinitionId id, const 
 {
     const auto& data = GetComputeData(id);
     const auto& preciseParams = GetData().GetPreciseMeasurementParameters();
-    return m_ComputeEngine.RunKernelAsync(data, queue, true, preciseParams);
+    const auto actionId = m_ComputeEngine.RunKernelAsync(data, queue, true, preciseParams);
+
+    if (m_TrackingActions)
+    {
+        m_PendingComputeActions.push_back(actionId);
+    }
+
+    return actionId;
 }
 
 ComputeActionId ComputeLayer::RunKernelAsync(const KernelDefinitionId id, const QueueId queue, const DimensionVector& globalSize,
@@ -42,11 +52,28 @@ ComputeActionId ComputeLayer::RunKernelAsync(const KernelDefinitionId id, const 
     data.SetLocalSize(localSize);
 
     const auto& preciseParams = GetData().GetPreciseMeasurementParameters();
-    return m_ComputeEngine.RunKernelAsync(data, queue, true, preciseParams);
+    const auto actionId = m_ComputeEngine.RunKernelAsync(data, queue, true, preciseParams);
+
+    if (m_TrackingActions)
+    {
+        m_PendingComputeActions.push_back(actionId);
+    }
+
+    return actionId;
 }
 
 void ComputeLayer::WaitForComputeAction(const ComputeActionId id)
 {
+    if (m_TrackingActions)
+    {
+        auto it = std::find(m_PendingComputeActions.begin(), m_PendingComputeActions.end(), id);
+
+        if (it != m_PendingComputeActions.end())
+        {
+            m_PendingComputeActions.erase(it);
+        }
+    }
+
     const auto result = m_ComputeEngine.WaitForComputeAction(id);
     GetData().AddPartialResult(result);
 }
@@ -208,7 +235,14 @@ void ComputeLayer::UploadBuffer(const ArgumentId& id)
 TransferActionId ComputeLayer::UploadBufferAsync(const ArgumentId& id, const QueueId queue)
 {
     auto& argument = m_ArgumentManager.GetArgument(id);
-    return m_ComputeEngine.UploadArgument(argument, queue);
+    const auto actionId = m_ComputeEngine.UploadArgument(argument, queue);
+
+    if (m_TrackingActions)
+    {
+        m_PendingTransferActions.push_back(actionId);
+    }
+
+    return actionId;
 }
 
 void ComputeLayer::DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize)
@@ -226,7 +260,14 @@ void ComputeLayer::DownloadBuffer(const ArgumentId& id, void* destination, const
 TransferActionId ComputeLayer::DownloadBufferAsync(const ArgumentId& id, const QueueId queue, void* destination,
     const size_t dataSize)
 {
-    return m_ComputeEngine.DownloadArgument(id, queue, destination, dataSize);
+    const auto actionId = m_ComputeEngine.DownloadArgument(id, queue, destination, dataSize);
+
+    if (m_TrackingActions)
+    {
+        m_PendingTransferActions.push_back(actionId);
+    }
+
+    return actionId;
 }
 
 void ComputeLayer::UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize)
@@ -244,7 +285,14 @@ void ComputeLayer::UpdateBuffer(const ArgumentId& id, const void* data, const si
 TransferActionId ComputeLayer::UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
     const size_t dataSize)
 {
-    return m_ComputeEngine.UpdateArgument(id, queue, data, dataSize);
+    const auto actionId = m_ComputeEngine.UpdateArgument(id, queue, data, dataSize);
+
+    if (m_TrackingActions)
+    {
+        m_PendingTransferActions.push_back(actionId);
+    }
+
+    return actionId;
 }
 
 void ComputeLayer::CopyBuffer(const ArgumentId& destination, const ArgumentId& source, const size_t dataSize)
@@ -262,11 +310,28 @@ void ComputeLayer::CopyBuffer(const ArgumentId& destination, const ArgumentId& s
 TransferActionId ComputeLayer::CopyBufferAsync(const ArgumentId& destination, const ArgumentId& source, const QueueId queue,
     const size_t dataSize)
 {
-    return m_ComputeEngine.CopyArgument(destination, queue, source, dataSize);
+    const auto actionId = m_ComputeEngine.CopyArgument(destination, queue, source, dataSize);
+
+    if (m_TrackingActions)
+    {
+        m_PendingTransferActions.push_back(actionId);
+    }
+
+    return actionId;
 }
 
 void ComputeLayer::WaitForTransferAction(const TransferActionId id)
 {
+    if (m_TrackingActions)
+    {
+        auto it = std::find(m_PendingTransferActions.begin(), m_PendingTransferActions.end(), id);
+
+        if (it != m_PendingTransferActions.end())
+        {
+            m_PendingTransferActions.erase(it);
+        }
+    }
+
     m_ComputeEngine.WaitForTransferAction(id);
 }
 
@@ -370,6 +435,28 @@ const KernelComputeData& ComputeLayer::GetComputeData(const KernelDefinitionId i
 void ComputeLayer::SetPreciseMeasurementParameters(const std::optional<PreciseMeasurementParameters>& params)
 {
     GetData().SetPreciseMeasurementParameters(params);
+}
+
+void ComputeLayer::StartTrackingActions()
+{
+    m_TrackingActions = true;
+    m_PendingComputeActions.clear();
+    m_PendingTransferActions.clear();
+}
+
+void ComputeLayer::StopTrackingActions()
+{
+    m_TrackingActions = false;
+}
+
+const std::vector<ComputeActionId>& ComputeLayer::GetPendingComputeActions() const
+{
+    return m_PendingComputeActions;
+}
+
+const std::vector<TransferActionId>& ComputeLayer::GetPendingTransferActions() const
+{
+    return m_PendingTransferActions;
 }
 
 } // namespace ktt

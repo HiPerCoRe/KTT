@@ -89,6 +89,11 @@ using ComputeActionId = uint64_t;
   */
 using TransferActionId = uint64_t;
 
+/** @typedef ComputeHandle
+  * Data type for referencing asynchronous kernel execution operations in KTT.
+  */
+using ComputeHandle = uint64_t;
+
 /** @typedef ModifierFunction
   * Definition of kernel thread modifier function.
   */
@@ -158,5 +163,9 @@ inline const ArgumentId InvalidArgumentId = ArgumentId();
 /** Invalid duration used during initialization and in case of an error.
   */
 inline const Nanoseconds InvalidDuration = std::numeric_limits<Nanoseconds>::max();
+
+/** Compute handle returned by asynchronous kernel execution methods in case of an error.
+  */
+inline const ComputeHandle InvalidComputeHandle = std::numeric_limits<ComputeHandle>::max();
 
 } // namespace ktt

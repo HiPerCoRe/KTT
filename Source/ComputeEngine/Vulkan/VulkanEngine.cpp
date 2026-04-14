@@ -138,10 +138,22 @@ void VulkanEngine::ClearData(const KernelComputeId& id)
 
 void VulkanEngine::ClearKernelData(const std::string& kernelName)
 {
-    EraseIf(m_ComputeActions, [&kernelName](const auto& pair)
+    // Wait for all pending compute actions matching the kernel name before erasing them
+    std::vector<ComputeActionId> toWait;
+
+    for (const auto& pair : m_ComputeActions)
     {
-        return StartsWith(pair.second->GetComputeId(), kernelName);
-    });
+        if (StartsWith(pair.second->GetComputeId(), kernelName))
+        {
+            toWait.push_back(pair.first);
+        }
+    }
+
+    for (const auto actionId : toWait)
+    {
+        m_ComputeActions[actionId]->WaitForFinish();
+        m_ComputeActions.erase(actionId);
+    }
 }
 
 ComputationResult VulkanEngine::RunKernelWithProfiling([[maybe_unused]] const KernelComputeData& data,

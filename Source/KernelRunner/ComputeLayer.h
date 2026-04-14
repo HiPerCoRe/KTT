@@ -75,6 +75,11 @@ public:
     void ClearComputeEngineData(const KernelDefinitionId id);
     void ClearComputeEngineData();
 
+    void StartTrackingActions();
+    void StopTrackingActions();
+    const std::vector<ComputeActionId>& GetPendingComputeActions() const;
+    const std::vector<TransferActionId>& GetPendingTransferActions() const;
+
     void AddData(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
         const KernelRunMode mode);
     void ClearData(const KernelId id);
@@ -87,6 +92,9 @@ private:
     ComputeEngine& m_ComputeEngine;
     KernelArgumentManager& m_ArgumentManager;
     KernelId m_ActiveKernel;
+    bool m_TrackingActions;
+    std::vector<ComputeActionId> m_PendingComputeActions;
+    std::vector<TransferActionId> m_PendingTransferActions;
 
     const ComputeLayerData& GetData() const;
     ComputeLayerData& GetData();

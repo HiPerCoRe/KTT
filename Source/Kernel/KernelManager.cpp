@@ -17,16 +17,6 @@ KernelManager::KernelManager(KernelArgumentManager& argumentManager) :
 KernelDefinitionId KernelManager::AddKernelDefinition(const std::string& name, const std::string& source,
     const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames)
 {
-    const std::string templatedName = KernelDefinition::CreateTemplatedName(name, typeNames);
-
-    for (const auto& pair : m_Definitions)
-    {
-        if (pair.second->GetName() == name && pair.second->GetTemplatedName() == templatedName)
-        {
-            throw KttException("Kernel definition with name " + name + " already exists");
-        }
-    }
-
     const auto id = m_DefinitionIdGenerator.GenerateId();
     m_Definitions[id] = std::make_unique<KernelDefinition>(id, name, source, globalSize, localSize, typeNames);
     return id;

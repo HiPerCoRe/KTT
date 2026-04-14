@@ -111,7 +111,10 @@ public:
       * const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {})
       * Adds new kernel definition to the tuner. Requires specification of a kernel name, its source code and its global and
       * local thread sizes.
-      * @param name Name of a kernel function inside kernel source code. The name must be unique.
+      * @param name Name of a kernel function inside kernel source code. The name must correspond to a function in the source.
+      * Multiple definitions with the same name are allowed (e.g., for creating independent argument bindings for pipelining).
+      * Each definition receives a unique KernelDefinitionId regardless of the name. Definitions with the same name and
+      * configuration share the compiled kernel cache entry.
       * @param source Kernel source code written in the corresponding compute API language.
       * @param globalSize Dimensions for base kernel global size (e.g., grid size in CUDA, NDRange size in OpenCL).
       * @param localSize Dimensions for base kernel local size (e.g., block size in CUDA, work-group size in OpenCL).
@@ -124,7 +127,8 @@ public:
     /** @fn KernelDefinitionId AddKernelDefinition(const std::string& name, const std::string& source,
       * const std::vector<std::string>& typeNames = {})
       * Adds new kernel definition to the tuner. Requires specification of a kernel name and its source code.
-      * @param name Name of a kernel function inside kernel source code. The name must be unique.
+      * @param name Name of a kernel function inside kernel source code. The name must correspond to a function in the source.
+      * Multiple definitions with the same name are allowed. See the other overload for details.
       * @param source Kernel source code written in the corresponding compute API language.
       * @param typeNames Names of types which will be used to instantiate kernel template. Only supported in CUDA kernels.
       * @return Id assigned to kernel definition by the tuner. The id can be used in other API methods.
@@ -136,7 +140,8 @@ public:
       * const DimensionVector& globalSize, const DimensionVector& localSize, const std::vector<std::string>& typeNames = {})
       * Adds new kernel definition to the tuner. Requires specification of a kernel name, file path to its source code and its
       * global and local thread sizes.
-      * @param name Name of a kernel function inside kernel source code. The name must be unique.
+      * @param name Name of a kernel function inside kernel source code. The name must correspond to a function in the source.
+      * Multiple definitions with the same name are allowed. See AddKernelDefinition() for details.
       * @param filePath Path to file with kernel source code written in the corresponding compute API language.
       * @param globalSize Dimensions for base kernel global size (e.g., grid size in CUDA, NDRange size in OpenCL).
       * @param localSize Dimensions for base kernel local size (e.g., block size in CUDA, work-group size in OpenCL).
@@ -149,7 +154,8 @@ public:
     /** @fn KernelDefinitionId AddKernelDefinitionFromFile(const std::string& name, const std::string& filePath,
       * const std::vector<std::string>& typeNames = {})
       * Adds new kernel definition to the tuner. Requires specification of a kernel name and file path to its source code.
-      * @param name Name of a kernel function inside kernel source code. The name must be unique.
+      * @param name Name of a kernel function inside kernel source code. The name must correspond to a function in the source.
+      * Multiple definitions with the same name are allowed. See AddKernelDefinition() for details.
       * @param filePath Path to file with kernel source code written in the corresponding compute API language.
       * @param typeNames Names of types which will be used to instantiate kernel template. Only supported in CUDA kernels.
       * @return Id assigned to kernel definition by the tuner. The id can be used in other API methods.
@@ -158,7 +164,9 @@ public:
         const std::vector<std::string>& typeNames = {});
 
     /** @fn KernelDefinitionId GetKernelDefinitionId(const std::string& name, const std::vector<std::string>& typeNames = {}) const
-      * Retrieves kernel definition id from the tuner based on provided name and template arguments.
+      * Retrieves kernel definition id from the tuner based on provided name and template arguments. If multiple definitions
+      * share the same name, the first match is returned. Use the KernelDefinitionId returned by AddKernelDefinition() or
+      * AddKernelDefinitionFromFile() instead when multiple definitions with the same name exist.
       * @param name Name of a kernel definition.
       * @param typeNames Names of types which were used to instantiate kernel template. Only supported in CUDA kernels.
       * @return Id of the corresponding kernel definition. If no such definition exists, InvalidKernelDefinitionId will be returned.
@@ -608,6 +616,95 @@ public:
       */
     KernelResult Run(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
         const std::vector<BufferOutputDescriptor>& output);
+
+    /** @fn ComputeHandle RunAsync(const KernelId id, const KernelConfiguration& configuration, const QueueId queue)
+      * Submits kernel for asynchronous execution on the specified queue. The kernel is launched using the specified configuration.
+      * This is a lightweight execution path intended for post-tuning production runs. No validation, profiling, or power
+      * measurement is performed. Kernel arguments must be pre-uploaded to device memory before calling this method.
+      * For simple kernels (without user-defined launcher), the kernel launch is enqueued on the GPU and the method returns
+      * immediately. For kernels with a launcher, the launcher function executes synchronously on the calling thread and may
+      * enqueue GPU work. Use WaitForRun() to wait for completion and retrieve results.
+      * @param id Id of kernel which will be run.
+      * @param configuration Configuration under which the kernel will be launched. See KernelConfiguration for more information.
+      * @param queue Id of queue in which the kernel will be submitted.
+      * @return Handle for the asynchronous operation. Use WaitForRun() to block and retrieve results. Returns
+      * InvalidComputeHandle on error.
+      */
+    ComputeHandle RunAsync(const KernelId id, const KernelConfiguration& configuration, const QueueId queue);
+
+    /** @fn ComputeHandle RunAsync(const KernelId id, const KernelConfiguration& configuration,
+      * const KernelDimensions& dimensions, const QueueId queue)
+      * Submits kernel for asynchronous execution on the specified queue using provided dimensions.
+      * This is a lightweight execution path intended for post-tuning production runs. No validation, profiling, or power
+      * measurement is performed. Kernel arguments must be pre-uploaded to device memory before calling this method.
+      * For simple kernels (without user-defined launcher), the kernel launch is enqueued on the GPU and the method returns
+      * immediately. For kernels with a launcher, the launcher function executes synchronously on the calling thread and may
+      * enqueue GPU work. Use WaitForRun() to wait for completion and retrieve results.
+      * @param id Id of kernel which will be run.
+      * @param configuration Configuration under which the kernel will be launched. See KernelConfiguration for more information.
+      * @param dimensions Global and local sizes with which the kernel will be launched. If no dimensions are specified for some
+      * definition, the sizes specified during its addition will be used.
+      * @param queue Id of queue in which the kernel will be submitted.
+      * @return Handle for the asynchronous operation. Use WaitForRun() to block and retrieve results. Returns
+      * InvalidComputeHandle on error.
+      */
+    ComputeHandle RunAsync(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+        const QueueId queue);
+
+    /** @fn KernelResult WaitForRun(const ComputeHandle handle)
+      * Blocks until the asynchronous kernel execution identified by the handle completes.
+      * @param handle Handle returned by a previous RunAsync() call.
+      * @return Result containing information about kernel computation. See KernelResult for more information.
+      */
+    KernelResult WaitForRun(const ComputeHandle handle);
+
+    /** @fn KernelResult WaitForRun(const ComputeHandle handle, const std::vector<BufferOutputDescriptor>& output)
+      * Blocks until the asynchronous kernel execution identified by the handle completes, then downloads specified output
+      * buffers from device memory.
+      * @param handle Handle returned by a previous RunAsync() call.
+      * @param output User-provided memory locations for kernel arguments which should be retrieved. See BufferOutputDescriptor
+      * for more information.
+      * @return Result containing information about kernel computation. See KernelResult for more information.
+      */
+    KernelResult WaitForRun(const ComputeHandle handle, const std::vector<BufferOutputDescriptor>& output);
+
+    /** @fn void UploadBuffer(const ArgumentId& id, const QueueId queue)
+      * Uploads the specified vector argument into device buffer on the specified queue. If the buffer does not exist on the device,
+      * it is created and data is uploaded from the argument's host data. If the buffer already exists, its content is updated with
+      * the argument's current host data. This is a synchronous operation that blocks until the transfer completes.
+      * @param id Id of vector argument which will be uploaded.
+      * @param queue Id of queue in which the upload command will be submitted.
+      */
+    void UploadBuffer(const ArgumentId& id, const QueueId queue);
+
+    /** @fn TransferActionId UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
+      * const size_t dataSize = 0)
+      * Asynchronously updates the content of an existing device buffer with the provided host data. The buffer must have been
+      * previously created via UploadBuffer() or kernel execution. The transfer is enqueued on the specified queue and the method
+      * returns immediately. Use WaitForTransferAction() to block until completion, or rely on queue ordering if the subsequent
+      * operation is on the same queue.
+      * @param id Id of vector argument whose buffer will be updated.
+      * @param queue Id of queue in which the transfer command will be submitted.
+      * @param data Pointer to the host data to upload. Must remain valid until the transfer completes.
+      * @param dataSize Size in bytes of the data to upload. If zero, the entire buffer is updated.
+      * @return Id of asynchronous transfer action.
+      */
+    TransferActionId UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
+        const size_t dataSize = 0);
+
+    /** @fn TransferActionId DownloadBufferAsync(const ArgumentId& id, const QueueId queue, void* destination,
+      * const size_t dataSize = 0)
+      * Asynchronously downloads data from an existing device buffer into the provided host memory. The transfer is enqueued on the
+      * specified queue and the method returns immediately. Use WaitForTransferAction() to block until completion, or rely on queue
+      * ordering if the subsequent operation is on the same queue.
+      * @param id Id of vector argument whose buffer will be downloaded.
+      * @param queue Id of queue in which the transfer command will be submitted.
+      * @param destination Pointer to host memory where the data will be stored. Must remain valid until the transfer completes.
+      * @param dataSize Size in bytes of the data to download. If zero, the entire buffer is downloaded.
+      * @return Id of asynchronous transfer action.
+      */
+    TransferActionId DownloadBufferAsync(const ArgumentId& id, const QueueId queue, void* destination,
+        const size_t dataSize = 0);
 
     /** @fn void SetProfiling(const bool flag)
       * Toggles profiling of kernels inside the tuner. Profiled kernel runs generate profiling counters which can be used by

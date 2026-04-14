@@ -216,6 +216,46 @@ KernelResult TunerCore::RunKernel(const KernelId id, const KernelConfiguration& 
     return m_KernelRunner->RunKernel(kernel, configuration, dimensions, KernelRunMode::Running, output);
 }
 
+ComputeHandle TunerCore::RunKernelAsync(const KernelId id, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions, const QueueId queue)
+{
+    const auto& kernel = m_KernelManager->GetKernel(id);
+    return m_KernelRunner->RunKernelAsync(kernel, configuration, dimensions, queue);
+}
+
+KernelResult TunerCore::WaitForRun(const ComputeHandle handle, const std::vector<BufferOutputDescriptor>& output)
+{
+    return m_KernelRunner->WaitForRun(handle, output);
+}
+
+void TunerCore::UploadBuffer(const ArgumentId& id, const QueueId queue)
+{
+    auto& argument = m_ArgumentManager->GetArgument(id);
+
+    if (m_ComputeEngine->HasBuffer(id))
+    {
+        const auto actionId = m_ComputeEngine->UpdateArgument(id, queue, argument.GetData(), argument.GetDataSize());
+        m_ComputeEngine->WaitForTransferAction(actionId);
+    }
+    else
+    {
+        const auto actionId = m_ComputeEngine->UploadArgument(argument, queue);
+        m_ComputeEngine->WaitForTransferAction(actionId);
+    }
+}
+
+TransferActionId TunerCore::UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
+    const size_t dataSize)
+{
+    return m_ComputeEngine->UpdateArgument(id, queue, data, dataSize);
+}
+
+TransferActionId TunerCore::DownloadBufferAsync(const ArgumentId& id, const QueueId queue, void* destination,
+    const size_t dataSize)
+{
+    return m_ComputeEngine->DownloadArgument(id, queue, destination, dataSize);
+}
+
 void TunerCore::SetProfiling(const bool flag)
 {
     m_KernelRunner->SetProfiling(flag);

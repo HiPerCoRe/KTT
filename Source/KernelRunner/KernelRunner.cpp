@@ -3,10 +3,12 @@
 #include <date.h>
 
 #include <Api/KttException.h>
+#include <ComputeEngine/KernelComputeData.h>
 #include <KernelRunner/KernelActivator.h>
 #include <KernelRunner/KernelRunner.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Utility/Logger/Logger.h>
+#include <Utility/StlHelpers.h>
 #include <Utility/Timer/ScopeTimer.h>
 #include <Utility/Timer/Timer.h>
 #include <Utility/Timer/Timestamp.h>
@@ -124,6 +126,106 @@ void KernelRunner::DownloadBuffers(const std::vector<BufferOutputDescriptor>& ou
             descriptor.GetOutputDestination(), descriptor.GetOutputSize());
         m_Engine.WaitForTransferAction(id);
     }
+}
+
+ComputeHandle KernelRunner::RunKernelAsync(const Kernel& kernel, const KernelConfiguration& configuration,
+    const KernelDimensions& dimensions, const QueueId queue)
+{
+    m_Engine.EnsureThreadContext();
+
+    const ComputeHandle handle = m_HandleGenerator.GenerateId();
+    auto asyncData = std::make_unique<AsyncRunData>();
+    asyncData->handle = handle;
+    asyncData->kernelId = kernel.GetId();
+    asyncData->kernelName = kernel.GetName();
+    asyncData->configuration = configuration;
+    asyncData->hasLauncher = kernel.HasLauncher();
+
+    if (!kernel.HasLauncher())
+    {
+        if (kernel.IsComposite())
+        {
+            throw KttException("Composite kernel must have kernel launcher defined by user");
+        }
+
+        const auto& definition = kernel.GetPrimaryDefinition();
+        KernelComputeData computeData(kernel, definition, asyncData->configuration, dimensions);
+        asyncData->simpleComputeAction = m_Engine.RunKernelAsync(computeData, queue, false, std::nullopt);
+        asyncData->launcherDuration = 0;
+
+        Logger::LogInfo("Async launch of simple kernel " + kernel.GetName() + " with configuration: "
+            + configuration.GetString());
+    }
+    else
+    {
+        m_ComputeLayer->AddData(kernel, asyncData->configuration, dimensions, KernelRunMode::Running);
+
+        {
+            KernelActivator activator(*m_ComputeLayer, kernel.GetId());
+            m_ComputeLayer->StartTrackingActions();
+
+            Timer timer;
+            timer.Start();
+            KernelLauncher launcher = kernel.GetLauncher();
+            launcher(*m_ComputeLayer);
+            timer.Stop();
+
+            asyncData->launcherDuration = timer.GetElapsedTime();
+            m_ComputeLayer->StopTrackingActions();
+            asyncData->pendingComputeActions = m_ComputeLayer->GetPendingComputeActions();
+            asyncData->pendingTransferActions = m_ComputeLayer->GetPendingTransferActions();
+        }
+
+        Logger::LogInfo("Async launch of kernel " + kernel.GetName() + " with launcher, configuration: "
+            + configuration.GetString());
+    }
+
+    m_AsyncRuns[handle] = std::move(asyncData);
+    return handle;
+}
+
+KernelResult KernelRunner::WaitForRun(const ComputeHandle handle, const std::vector<BufferOutputDescriptor>& output)
+{
+    m_Engine.EnsureThreadContext();
+
+    if (!ContainsKey(m_AsyncRuns, handle))
+    {
+        throw KttException("Invalid compute handle: " + std::to_string(handle));
+    }
+
+    auto& asyncData = *m_AsyncRuns[handle];
+    KernelResult result;
+
+    if (!asyncData.hasLauncher)
+    {
+        ComputationResult computeResult = m_Engine.WaitForComputeAction(asyncData.simpleComputeAction);
+        result = KernelResult(asyncData.kernelName, asyncData.configuration,
+            std::vector<ComputationResult>{computeResult}, Timestamp::GetTimestamp());
+    }
+    else
+    {
+        m_ComputeLayer->SetActiveKernel(asyncData.kernelId);
+
+        for (const auto actionId : asyncData.pendingComputeActions)
+        {
+            m_ComputeLayer->WaitForComputeAction(actionId);
+        }
+
+        for (const auto actionId : asyncData.pendingTransferActions)
+        {
+            m_ComputeLayer->WaitForTransferAction(actionId);
+        }
+
+        result = m_ComputeLayer->GenerateResult(asyncData.kernelId, asyncData.launcherDuration);
+
+        m_ComputeLayer->ClearActiveKernel();
+        m_ComputeLayer->ClearData(asyncData.kernelId);
+    }
+
+    DownloadBuffers(output);
+
+    m_AsyncRuns.erase(handle);
+    return result;
 }
 
 void KernelRunner::SetReadOnlyArgumentCache(const bool flag)

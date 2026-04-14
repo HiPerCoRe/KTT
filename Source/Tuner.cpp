@@ -434,6 +434,83 @@ KernelResult Tuner::Run(const KernelId id, const KernelConfiguration& configurat
     }
 }
 
+ComputeHandle Tuner::RunAsync(const KernelId id, const KernelConfiguration& configuration, const QueueId queue)
+{
+    return RunAsync(id, configuration, {}, queue);
+}
+
+ComputeHandle Tuner::RunAsync(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
+    const QueueId queue)
+{
+    try
+    {
+        return m_Tuner->RunKernelAsync(id, configuration, dimensions, queue);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidComputeHandle;
+    }
+}
+
+KernelResult Tuner::WaitForRun(const ComputeHandle handle)
+{
+    return WaitForRun(handle, {});
+}
+
+KernelResult Tuner::WaitForRun(const ComputeHandle handle, const std::vector<BufferOutputDescriptor>& output)
+{
+    try
+    {
+        return m_Tuner->WaitForRun(handle, output);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return KernelResult();
+    }
+}
+
+void Tuner::UploadBuffer(const ArgumentId& id, const QueueId queue)
+{
+    try
+    {
+        m_Tuner->UploadBuffer(id, queue);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+TransferActionId Tuner::UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
+    const size_t dataSize)
+{
+    try
+    {
+        return m_Tuner->UpdateBufferAsync(id, queue, data, dataSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidDuration; // reuse as invalid transfer action id
+    }
+}
+
+TransferActionId Tuner::DownloadBufferAsync(const ArgumentId& id, const QueueId queue, void* destination,
+    const size_t dataSize)
+{
+    try
+    {
+        return m_Tuner->DownloadBufferAsync(id, queue, destination, dataSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return InvalidDuration;
+    }
+}
+
 void Tuner::SetProfiling(const bool flag)
 {
     try

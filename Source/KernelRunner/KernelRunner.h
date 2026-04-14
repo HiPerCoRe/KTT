@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <optional>
 
@@ -14,10 +15,28 @@
 #include <KernelRunner/ComputeLayer.h>
 #include <KernelRunner/KernelRunMode.h>
 #include <KernelRunner/ResultValidator.h>
+#include <Utility/IdGenerator.h>
 #include <KttTypes.h>
 
 namespace ktt
 {
+
+struct AsyncRunData
+{
+    ComputeHandle handle;
+    KernelId kernelId;
+    std::string kernelName;
+    KernelConfiguration configuration;
+    bool hasLauncher;
+    Nanoseconds launcherDuration;
+
+    // Simple kernel path
+    ComputeActionId simpleComputeAction;
+
+    // Launcher-based path
+    std::vector<ComputeActionId> pendingComputeActions;
+    std::vector<TransferActionId> pendingTransferActions;
+};
 
 class KernelRunner
 {
@@ -29,6 +48,10 @@ public:
     void SetupBuffers(const Kernel& kernel);
     void CleanupBuffers(const Kernel& kernel);
     void DownloadBuffers(const std::vector<BufferOutputDescriptor>& output);
+
+    ComputeHandle RunKernelAsync(const Kernel& kernel, const KernelConfiguration& configuration,
+        const KernelDimensions& dimensions, const QueueId queue);
+    KernelResult WaitForRun(const ComputeHandle handle, const std::vector<BufferOutputDescriptor>& output);
 
     void SetReadOnlyArgumentCache(const bool flag);
     void SetProfiling(const bool flag);
@@ -55,6 +78,8 @@ private:
     bool m_ReadOnlyCacheFlag;
     //bool m_ProfilingFlag;
     std::optional<PreciseMeasurementParameters> m_PendingPreciseParams;
+    std::map<ComputeHandle, std::unique_ptr<AsyncRunData>> m_AsyncRuns;
+    IdGenerator<ComputeHandle> m_HandleGenerator;
 
     KernelLauncher GetKernelLauncher(const Kernel& kernel);
     KernelResult RunKernelInternal(const Kernel& kernel, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
