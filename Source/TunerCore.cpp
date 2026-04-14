@@ -269,7 +269,15 @@ std::vector<KernelResult> TunerCore::TuneKernel(const KernelId id, const KernelD
     std::unique_ptr<StopCondition> stopCondition, const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
-    return m_TuningRunner->Tune(kernel, dimensions, std::move(stopCondition), preciseParams);
+    return m_TuningRunner->Tune(kernel, dimensions, std::move(stopCondition), preciseParams, false, {});
+}
+
+std::vector<KernelResult> TunerCore::TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
+    const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition,
+    const std::optional<PreciseMeasurementParameters>& preciseParams)
+{
+    const auto& kernel = m_KernelManager->GetKernel(id);
+    return m_TuningRunner->Tune(kernel, dimensions, std::move(stopCondition), preciseParams, true, baseConfiguration);
 }
 
 KernelResult TunerCore::TuneKernelIteration(const KernelId id, const KernelDimensions& dimensions,

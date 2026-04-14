@@ -20,7 +20,8 @@ public:
     ConfigurationManager();
 
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
-    void InitializeData(const Kernel& kernel);
+    void InitializeData(const Kernel& kernel, const bool isSeparateOptionsGroup = false,
+        const KernelConfiguration& baseConfiguration = KernelConfiguration());
     void ClearData(const KernelId id, const bool clearSearcher = false);
     bool CalculateNextConfiguration(const KernelId id, const KernelResult& previousResult);
     void ListConfigurations(const KernelId id) const;

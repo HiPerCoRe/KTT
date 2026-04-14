@@ -16,14 +16,27 @@ TuningRunner::TuningRunner(KernelRunner& kernelRunner) :
 {}
 
 std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelDimensions& dimensions,
-    std::unique_ptr<StopCondition> stopCondition, const std::optional<PreciseMeasurementParameters>& preciseParams)
+    std::unique_ptr<StopCondition> stopCondition, const std::optional<PreciseMeasurementParameters>& preciseParams,
+    const bool tuneOptions, const KernelConfiguration& baseConfiguration)
 {
-    Logger::LogInfo("Starting offline tuning for kernel " + kernel.GetName());
+    // When tuneOptions is true, only parameters provided by Tuner::AddSeparateCompilerParameter() are tuned;
+    // other parameters are provided by baseConfiguration and are not tuned.
+    // When tuneOptions is false, these separate compiler parameters are not tuned,
+    // and only their single default value is included in the tuning space.
+    const std::string tuningMode = tuneOptions ? "options" : "offline";
+
+    Logger::LogInfo("Starting " + tuningMode + " tuning for kernel " + kernel.GetName());
+
     const auto id = kernel.GetId();
+
+    if (tuneOptions)
+    {
+        m_ConfigurationManager->ClearData(id, true);
+    }
 
     if (!m_ConfigurationManager->HasData(id))
     {
-        m_ConfigurationManager->InitializeData(kernel);
+        m_ConfigurationManager->InitializeData(kernel, tuneOptions, baseConfiguration);
     }
 
     if (stopCondition != nullptr)
@@ -44,7 +57,7 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         {
             result = TuneIteration(kernel, dimensions, KernelRunMode::OfflineTuning, std::vector<BufferOutputDescriptor>{}, false, preciseParams);
             multiResult.FuseProfilingTimes(result, (iter == 0));
-	    multiResult.TransferPowerData(result);
+            multiResult.TransferPowerData(result);
             iter++;
         }
         while (result.HasRemainingProfilingRuns());
@@ -76,7 +89,7 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         }
     }
 
-    Logger::LogInfo("Ending offline tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
+    Logger::LogInfo("Ending " + tuningMode + " tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
         + std::to_string(results.size()));
     m_KernelRunner.ClearReferenceResult(kernel);
     return results;

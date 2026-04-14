@@ -18,7 +18,8 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<Para
     m_Name(name),
     m_Group(group),
     m_Values(values),
-    m_IsCompilerParameter(isCompilerParameter)
+    m_IsCompilerParameter(isCompilerParameter),
+    m_IsTuned(true)
 {
     if (values.empty())
     {
@@ -28,6 +29,11 @@ KernelParameter::KernelParameter(const std::string& name, const std::vector<Para
     if (group.empty())
     {
         m_Group = DefaultGroup;
+    }
+
+    if (group == "KTTSeparateCompilerOptionsGroup")
+    {
+        m_DefaultValues = { values[0] };
     }
 }
 
@@ -48,12 +54,12 @@ const std::string& KernelParameter::GetGroup() const
 
 size_t KernelParameter::GetValuesCount() const
 {
-    return m_Values.size();
+    return m_IsTuned ? m_Values.size() : m_DefaultValues.size();
 }
 
 const std::vector<ParameterValue>& KernelParameter::GetValues() const
 {
-    return m_Values;
+    return m_IsTuned ? m_Values : m_DefaultValues;
 }
 
 ParameterValueType KernelParameter::GetValueType() const
@@ -90,6 +96,16 @@ std::vector<ParameterPair> KernelParameter::GeneratePairs() const
 bool KernelParameter::IsCompilerParameter() const
 {
     return m_IsCompilerParameter;
+}
+
+bool KernelParameter::IsTuned() const
+{
+    return m_IsTuned;
+}
+
+void KernelParameter::SetTuning(const bool isTuned) const
+{
+    m_IsTuned = isTuned;
 }
 
 bool KernelParameter::operator==(const KernelParameter& other) const

@@ -193,6 +193,12 @@ void Tuner::AddScriptCompilerParameter(const KernelId id, const std::string& nam
     }
 }
 
+void Tuner::AddScriptSeparateCompilerParameter(const KernelId id, const std::string& name, const ParameterValueType valueType,
+    const std::string& valueScript)
+{
+    AddScriptCompilerParameter(id, name, valueType, valueScript, "KTTSeparateCompilerOptionsGroup");
+}
+
 void Tuner::AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
     const ModifierDimension dimension, const std::vector<std::string>& parameters, ModifierFunction function)
 {
@@ -543,6 +549,27 @@ std::vector<KernelResult> Tuner::Tune(const KernelId id, const KernelDimensions&
     try
     {
         return m_Tuner->TuneKernel(id, dimensions, std::move(stopCondition), preciseParams);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return std::vector<KernelResult>{};
+    }
+}
+
+std::vector<KernelResult> Tuner::TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
+    std::unique_ptr<StopCondition> stopCondition, const std::optional<PreciseMeasurementParameters>& preciseParams)
+{
+    return TuneOptions(id, baseConfiguration, {}, std::move(stopCondition), preciseParams);
+}
+
+std::vector<KernelResult> Tuner::TuneOptions(const KernelId id, const KernelConfiguration& baseConfiguration,
+    const KernelDimensions& dimensions, std::unique_ptr<StopCondition> stopCondition,
+    const std::optional<PreciseMeasurementParameters>& preciseParams)
+{
+    try
+    {
+        return m_Tuner->TuneOptions(id, baseConfiguration, dimensions, std::move(stopCondition), preciseParams);
     }
     catch (const KttException& exception)
     {
@@ -1059,6 +1086,11 @@ void Tuner::AddCompilerParameter(const KernelId id, const std::string& name, con
 
     bool isCompilerParameter = true;
     AddParameterInternal(id, name, parameterValues, group, isCompilerParameter);
+}
+
+void Tuner::AddSeparateCompilerParameter(const KernelId id, const std::string& name, const std::vector<std::string>& values)
+{
+    AddCompilerParameter(id, name, values, "KTTSeparateCompilerOptionsGroup");
 }
 
 void Tuner::AddParameterInternal(const KernelId id, const std::string& name, const std::vector<ParameterValue>& values,
