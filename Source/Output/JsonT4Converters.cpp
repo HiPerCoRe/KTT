@@ -11,30 +11,27 @@ void to_json(json& j, const as_T4<const KernelConfiguration>& configuration)
     j = json::object();
     const std::vector<ParameterPair>& pairs = configuration.v.GetPairs();
     for (const auto& pair : pairs) {
-        std::string value;
 
         switch (pair.GetValueType())
         {
             case ParameterValueType::Int:
-                value = std::to_string(std::get<int64_t>(pair.GetValue()));
+                j[pair.GetName()] = std::get<int64_t>(pair.GetValue());
                 break;
             case ParameterValueType::UnsignedInt:
-                value = std::to_string(pair.GetValueUint());
+                j[pair.GetName()] = pair.GetValueUint();
                 break;
             case ParameterValueType::Double:
-                value = std::to_string(std::get<double>(pair.GetValue()));
+                j[pair.GetName()] = std::get<double>(pair.GetValue());
                 break;
             case ParameterValueType::Bool:
-                value = std::to_string(std::get<bool>(pair.GetValue()));
+                j[pair.GetName()] = std::get<bool>(pair.GetValue());
                 break;
             case ParameterValueType::String:
-                value = pair.GetValueString();
+                j[pair.GetName()] = pair.GetValueString();
                 break;
             default:
                 KttError("Unhandled parameter value type");
         }
-
-        j[pair.GetName()] = value;
     }
 }
 
@@ -42,36 +39,34 @@ void from_json(const json& j, as_T4<KernelConfiguration>& configuration)
 {
     std::vector<ParameterPair> pairs;
     for (auto it = j.begin(); it != j.end(); ++it) {
-        ParameterPair pair;
         std::string name = it.key();
-        std::string valueStr;
+        const auto &jsonValue = it.value();
 
-        try {
-            valueStr = it.value().get<std::string>();
-            if (valueStr == "true" || valueStr == "false") {
-                pair = ParameterPair(name, valueStr == "true");
-            }
-                // detect floating-point numbers (presence of '.' or exponent)
-            else if (valueStr.find('.') != std::string::npos ||
-                    valueStr.find('e') != std::string::npos ||
-                    valueStr.find('E') != std::string::npos) {
-                pair = ParameterPair(name, std::stod(valueStr));
-            }
-            // detect unsigned integers
-            else if (!valueStr.empty() && valueStr.find_first_not_of("0123456789") == std::string::npos) {
-                pair = ParameterPair(name, static_cast<uint64_t>(std::stoull(valueStr)));
-            }
-            // fallback: signed integer
-            else {
-                pair = ParameterPair(name, static_cast<int64_t>(std::stoll(valueStr)));
-            }
-        } catch (const std::invalid_argument&) {
-            pair = ParameterPair(name, valueStr);
-        } catch (const std::out_of_range&) {
-            pair = ParameterPair(name, valueStr);
+        ParameterPair pair;
+
+        if (jsonValue.is_boolean())
+        {
+            pair = ParameterPair(name, jsonValue.get<bool>());
         }
-        catch (const nlohmann::json::type_error& e) {
-            KttError("JSON type error while parsing");
+        else if (jsonValue.is_number_float())
+        {
+            pair = ParameterPair(name, jsonValue.get<double>());
+        }
+        else if (jsonValue.is_number_unsigned())
+        {
+            pair = ParameterPair(name, jsonValue.get<uint64_t>());
+        }
+        else if (jsonValue.is_number_integer())
+        {
+            pair = ParameterPair(name, jsonValue.get<int64_t>());
+        }
+        else if (jsonValue.is_string())
+        {
+            pair = ParameterPair(name, jsonValue.get<std::string>());
+        }
+        else
+        {
+            KttError("Unsupported parameter value type in configuration");
         }
         pairs.push_back(pair);
     }
@@ -97,7 +92,7 @@ void to_json(json& j, const as_T4<const KernelResult>& result)
     to_json(j_configuration,as_T4(configuration));
     j["configuration"] = j_configuration;
     j["times"] = json::object();
-    j["times"]["compilation"] = time.ConvertFromNanosecondsDouble(result.v.GetCompilationOverhead());
+    j["times"]["compilation_time"] = time.ConvertFromNanosecondsDouble(result.v.GetCompilationOverhead());
     j["times"]["data"] = time.ConvertFromNanosecondsDouble(result.v.GetDataMovementOverhead());
     j["times"]["profiling_runs"] = time.ConvertFromNanosecondsDouble(result.v.GetProfilingRunsOverhead());
     j["times"]["profiling_overhead"] = time.ConvertFromNanosecondsDouble(result.v.GetProfilingOverhead());
@@ -114,7 +109,7 @@ void to_json(json& j, const as_T4<const KernelResult>& result)
     j["measurements"].push_back({{"name","time"}, {"value",time.ConvertFromNanosecondsDouble(result.v.GetTotalDuration())}, {"unit",""}});
 
     const std::vector<ComputationResult>& compResults = result.v.GetResults();
-    if (compResults[0].HasProfilingData()) {
+    if (!compResults.empty() && compResults[0].HasProfilingData()) {
         const std::vector<KernelProfilingCounter>& counters = compResults[0].GetProfilingData().GetCounters();
         for (const auto& counter : counters) {
             json j_counter = json::object();
@@ -123,6 +118,29 @@ void to_json(json& j, const as_T4<const KernelResult>& result)
         }
     }
 
+    if (!compResults.empty() && compResults[0].HasCompilationData()) {
+        const KernelCompilationData& compilationData =  compResults[0].GetCompilationData();
+        const DimensionVector& globalSize = compResults[0].GetGlobalSize();
+        const DimensionVector& localSize = compResults[0].GetLocalSize();
+        json j_compilationData = json::object();
+        j["compilation_data"] = {
+            {"max_work_group_size", compilationData.m_MaxWorkGroupSize},
+            {"local_memory_size", compilationData.m_LocalMemorySize},
+            {"private_memory_size", compilationData.m_PrivateMemorySize},
+            {"constant_memory_size", compilationData.m_ConstantMemorySize},
+            {"registers", compilationData.m_RegistersCount},
+            {"global_size", {
+                {"x", globalSize.GetSizeX()},
+                {"y", globalSize.GetSizeY()},
+                {"z", globalSize.GetSizeZ()}
+            }},
+            {"local_size", {
+                {"x", localSize.GetSizeX()},
+                {"y", localSize.GetSizeY()},
+                {"z", localSize.GetSizeZ()}
+            }}
+        };
+    }
 }
 
 void from_json(const json& j, as_T4<KernelResult>& result)
@@ -146,7 +164,7 @@ void from_json(const json& j, as_T4<KernelResult>& result)
     const Nanoseconds durationNs = time.ConvertToNanosecondsDouble(duration);
 
     double compilationOverhead;
-    j.at("times").at("compilation").get_to(compilationOverhead);
+    j.at("times").at("compilation_time").get_to(compilationOverhead);
     const Nanoseconds compilationOverheadNs = time.ConvertToNanosecondsDouble(compilationOverhead);
 
     double dataMovementOverhead;
@@ -193,6 +211,50 @@ void from_json(const json& j, as_T4<KernelResult>& result)
         KernelProfilingData profilingData(counters);
         auto uniqueData = std::make_unique<KernelProfilingData>(profilingData);
         computationResult.SetProfilingData(std::move(uniqueData));
+    }
+
+    if (j.contains("compilation_data"))
+    {
+        const auto& compilationDataJson = j["compilation_data"];
+
+        if (!compilationDataJson.contains("max_work_group_size") ||
+            !compilationDataJson.contains("local_memory_size") ||
+            !compilationDataJson.contains("private_memory_size") ||
+            !compilationDataJson.contains("constant_memory_size") ||
+            !compilationDataJson.contains("registers") ||
+            !compilationDataJson.contains("global_size") ||
+            !compilationDataJson.contains("local_size"))
+        {
+            KttError(
+                "Missing compilation data fields. Required fields: max_work_group_size, local_memory_size, private_memory_size, constant_memory_size, registers, global_size, local_size");
+        }
+
+        // Extract compilation data
+        KernelCompilationData compData;
+        compData.m_MaxWorkGroupSize = compilationDataJson["max_work_group_size"];
+        compData.m_LocalMemorySize = compilationDataJson["local_memory_size"];
+        compData.m_PrivateMemorySize = compilationDataJson["private_memory_size"];
+        compData.m_ConstantMemorySize = compilationDataJson["constant_memory_size"];
+        compData.m_RegistersCount = compilationDataJson["registers"];
+
+        // Extract global size
+        const auto& globalSizeJson = compilationDataJson["global_size"];
+        if (!globalSizeJson.contains("x") || !globalSizeJson.contains("y") || !globalSizeJson.contains("z"))
+        {
+            KttError("Missing global_size dimensions");
+        }
+        DimensionVector globalSize(globalSizeJson["x"], globalSizeJson["y"], globalSizeJson["z"]);
+
+        // Extract local size
+        const auto& localSizeJson = compilationDataJson["local_size"];
+        if (!localSizeJson.contains("x") || !localSizeJson.contains("y") || !localSizeJson.contains("z"))
+        {
+            KttError("Missing local_size dimensions");
+        }
+        DimensionVector localSize(localSizeJson["x"], localSizeJson["y"], localSizeJson["z"]);
+
+        computationResult.SetCompilationData(std::make_unique<KernelCompilationData>(compData));
+        computationResult.SetSizeData(globalSize, localSize);
     }
 
     results.push_back(computationResult);
