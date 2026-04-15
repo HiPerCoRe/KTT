@@ -699,9 +699,9 @@ public:
       * @param id Id of the tuned kernel.
       * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
       * will end when all configurations are explored. See StopCondition for more information.
-      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
-      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
-      * Throws KttException if power measurement is requested but not supported.
+      * @param preciseParams Optional parameters for precise measurement. If not provided, kernel is executed once per configuration.
+      * If provided, each configuration is executed multiple times for more stable timing data. When KTT is built with power
+      * measurement support (--power-usage, CUDA with NVML only), also collects power readings until they stabilize.
       * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
       * more information.
       */
@@ -719,9 +719,9 @@ public:
       * definition, the sizes specified during its addition will be used.
       * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
       * will end when all configurations are explored. See StopCondition for more information.
-      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
-      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
-      * Throws KttException if power measurement is requested but not supported.
+      * @param preciseParams Optional parameters for precise measurement. If not provided, kernel is executed once per configuration.
+      * If provided, each configuration is executed multiple times for more stable timing data. When KTT is built with power
+      * measurement support (--power-usage, CUDA with NVML only), also collects power readings until they stabilize.
       * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
       * more information.
       */
@@ -738,9 +738,9 @@ public:
       * @param baseConfiguration Configuration on top of which compiler options will be tuned.
       * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
       * will end when all configurations are explored. See StopCondition for more information.
-      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
-      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
-      * Throws KttException if power measurement is requested but not supported.
+      * @param preciseParams Optional parameters for precise measurement. If not provided, kernel is executed once per configuration.
+      * If provided, each configuration is executed multiple times for more stable timing data. When KTT is built with power
+      * measurement support (--power-usage, CUDA with NVML only), also collects power readings until they stabilize.
       * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
       * more information.
       */
@@ -759,9 +759,9 @@ public:
       * definition, the sizes specified during its addition will be used.
       * @param stopCondition Condition which decides whether to continue the tuning process. If no condition is provided, tuning
       * will end when all configurations are explored. See StopCondition for more information.
-      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
-      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
-      * Throws KttException if power measurement is requested but not supported.
+      * @param preciseParams Optional parameters for precise measurement. If not provided, kernel is executed once per configuration.
+      * If provided, each configuration is executed multiple times for more stable timing data. When KTT is built with power
+      * measurement support (--power-usage, CUDA with NVML only), also collects power readings until they stabilize.
       * @return Vector of results containing information about kernel computation in specific configuration. See KernelResult for
       * more information.
       */
@@ -781,9 +781,9 @@ public:
       * more information.
       * @param recomputeReference Flag which controls whether recomputation of reference output should be performed or not. Useful
       * if kernel data between individual method invocations change.
-      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
-      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
-      * Throws KttException if power measurement is requested but not supported.
+      * @param preciseParams Optional parameters for precise measurement. If not provided, kernel is executed once per configuration.
+      * If provided, each configuration is executed multiple times for more stable timing data. When KTT is built with power
+      * measurement support (--power-usage, CUDA with NVML only), also collects power readings until they stabilize.
       * @return Result containing information about kernel computation in specific configuration. See KernelResult for more
       * information.
       */
@@ -805,9 +805,9 @@ public:
       * more information.
       * @param recomputeReference Flag which controls whether recomputation of reference output should be performed or not. Useful
       * if kernel data between individual method invocations change.
-      * @param powerParams Optional parameters for robust power measurement. If not provided, kernel is executed once per configuration.
-      * If provided, robust power measurement is enabled (CUDA with NVML support only, requires --power-usage build option).
-      * Throws KttException if power measurement is requested but not supported.
+      * @param preciseParams Optional parameters for precise measurement. If not provided, kernel is executed once per configuration.
+      * If provided, each configuration is executed multiple times for more stable timing data. When KTT is built with power
+      * measurement support (--power-usage, CUDA with NVML only), also collects power readings until they stabilize.
       * @return Result containing information about kernel computation in specific configuration. See KernelResult for more
       * information.
       */
