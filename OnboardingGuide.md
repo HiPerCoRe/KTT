@@ -144,7 +144,8 @@ The code below demonstrates how information about all available OpenCL platforms
 for the first device on the first platform (both platform and device index is 0).
 
 ```cpp
-ktt::Tuner tuner(0, 0, ktt::ComputeApi::OpenCL);
+const auto computeApi = ktt::ComputeApi::OpenCL;
+ktt::Tuner tuner(0, 0, computeApi);
 
 std::vector<ktt::PlatformInfo> platforms = tuner.GetPlatformInfo();
 
@@ -300,11 +301,12 @@ const ktt::ArgumentId local2Id = tuner.AddArgumentLocal<int32_t>(8);
 
 #### Symbol arguments
 
-Symbol arguments were introduced to support CUDA variables marked as `__constant__` or `__device__`. The name of a symbol argument appearing
-inside a CUDA kernel source code can be specified during argument addition to the tuner. Symbol arguments behave the same as scalars in
-other APIs since they do not require special handling. In that case, the name of a symbol is ignored.
+Symbol arguments were introduced to support CUDA variables marked as `__constant__` or `__device__`. Symbol arguments behave the same as scalars
+in other APIs since they do not require special handling. In that case, the symbol name is ignored. The `AddArgumentSymbol` method takes the
+argument value, an optional custom argument id and an optional symbol name matching the corresponding variable name in CUDA kernel source code.
 
 ```cpp
+// AddArgumentSymbol(value, customArgumentId, symbolNameInKernelSource)
 const ktt::ArgumentId symbolId = tuner.AddArgumentSymbol(42, "myArgumentId", "magicNumber");
 ```
 
@@ -312,9 +314,10 @@ const ktt::ArgumentId symbolId = tuner.AddArgumentSymbol(42, "myArgumentId", "ma
 
 ### Tuning parameters
 
-Tuning parameters in KTT can be either unsigned integers or floats. When defining a new parameter, we need to specify its name (i.e., the name through
-which it can be referenced in kernel source) and values. With the addition of more tuning parameters, the size of tuning space grows exponentially as we
-need to explore all parameter combinations. KTT provides two features for users to slow down the tuning space growth.
+Tuning parameters in KTT support multiple value types: signed and unsigned 64-bit integers, doubles, booleans and strings. When defining a new parameter,
+we need to specify its name (i.e., the name through which it can be referenced in kernel source) and values. With the addition of more tuning parameters,
+the size of tuning space grows exponentially as we need to explore all parameter combinations. KTT provides two features for users to slow down the
+tuning space growth.
 
 ```cpp
 // We add 4 different parameters, the size of tuning space is 40 (5 * 2 * 4 * 1)
@@ -328,8 +331,9 @@ tuner.AddParameter(kernel, "float_value", std::vector<double>{1.0});
 
 The first option is tuning constraints. Through constraints, it is possible to tell the tuner to skip generating configurations for certain combinations
 of parameters. Parameter constraint is a function that receives values for the specified parameters on input and decides whether that combination is valid.
-We can choose which parameters are evaluated by a specific constraint. Note that currently, it is possible to add constraints only between integer
-parameters.
+We can choose which parameters are evaluated by a specific constraint. The basic `AddConstraint` method supports only unsigned integer parameters.
+For constraints involving parameters of other types, `AddGenericConstraint` can be used, which works with any parameter value type.
+Additionally, `AddScriptConstraint` allows defining constraints via Python scripts (requires Python backend).
 
 ```cpp
 // We add 3 different parameters, the size of tuning space is 40 (5 * 2 * 4)
@@ -435,19 +439,20 @@ the resulting option is `-arch=sm_70`.
 **API-specific examples:**
 
 ```cpp
+// computeApi variable was stored during tuner creation (see KTT initialization section)
 // CUDA-specific compiler options
-if (tuner.GetComputeApi() == ktt::ComputeApi::CUDA)
+if (computeApi == ktt::ComputeApi::CUDA)
 {
     tuner.AddCompilerParameter(kernel, "-use_fast_math", {});
     tuner.AddCompilerParameter(kernel, "-arch=", std::vector<std::string>{"sm_70", "sm_80", "sm_90"});
 }
 // OpenCL-specific compiler options
-else if (tuner.GetComputeApi() == ktt::ComputeApi::OpenCL)
+else if (computeApi == ktt::ComputeApi::OpenCL)
 {
     tuner.AddCompilerParameter(kernel, "-cl-fast-relaxed-math", {});
 }
 // C++-specific compiler options (for C++ backend)
-else if (tuner.GetComputeApi() == ktt::ComputeApi::Cpp)
+else if (computeApi == ktt::ComputeApi::Cpp)
 {
     tuner.AddCompilerParameter(kernel, "-O", std::vector<std::string>{"0", "1", "2", "3"});
 }
@@ -462,6 +467,30 @@ tuner.AddScriptCompilerParameter(kernel, "-arch=", ktt::ParameterValueType::Stri
 ```
 
 Compiler parameters can be combined with regular tuning parameters and constraints. They can also be placed in parameter groups to tune them independently.
+
+#### Separate compiler parameter tuning
+
+In some cases, it is beneficial to tune compiler parameters separately from regular tuning parameters. For example, one may first find the best
+combination of algorithmic tuning parameters and then fine-tune compiler options on top of the best configuration found. KTT supports this workflow
+through `AddSeparateCompilerParameter()` (and its script variant `AddScriptSeparateCompilerParameter()`). Parameters added with these methods are not
+included in the standard tuning space. During regular `Tune()`, only their first (default) value is used. After finding the best configuration, the separate
+compiler parameters can be tuned on top of it using `TuneOptions()`:
+
+```cpp
+// Add regular tuning parameters
+tuner.AddParameter(kernel, "block_size", std::vector<uint64_t>{32, 64, 128, 256});
+
+// Add compiler parameters to be tuned separately
+tuner.AddSeparateCompilerParameter(kernel, "-use_fast_math", {});
+tuner.AddSeparateCompilerParameter(kernel, "--fmad=", std::vector<std::string>{"true", "false"});
+
+// Phase 1: Tune regular parameters (separate compiler params use their first value)
+const auto results = tuner.Tune(kernel);
+const auto bestConfig = tuner.GetBestConfiguration(kernel);
+
+// Phase 2: Tune compiler options on top of the best configuration
+const auto optionResults = tuner.TuneOptions(kernel, bestConfig);
+```
 
 ----
 
@@ -623,7 +652,28 @@ In order to identify the best configuration accurately, it is necessary to launc
 kernel function execution times can be objectively compared. This means that tuned kernels should be launched on the target device in isolation.
 Launching multiple kernels concurrently while performing tuning may cause inaccuracies in collected data. Furthermore, if the size of kernel input is
 changed (e.g., during dynamic tuning), we should restart the tuning process from the beginning since the input size often affects the best configuration.
-It is the programmer's responsibility to ensure this. We can achieve the restart by calling the `ClearData` API method.
+It is the programmer's responsibility to ensure this. We can achieve the restart by calling the `ClearConfigurationData` API method.
+
+#### Precise measurement
+
+By default, each kernel configuration is executed once during tuning, and the resulting execution time is used for comparison. In some cases, a single
+measurement may not be representative due to noise or, in case of power measurement, sensitivity to processor temperature. KTT supports precise measurement through the `PreciseMeasurementParameters`
+structure, which can be passed as an optional parameter to `Tune`, `TuneIteration` and `TuneOptions` methods. When precise measurement is enabled, each
+configuration is executed multiple times for at least the specified minimum measurement time. The resulting kernel duration is then calculated from
+collected samples using the specified method (minimum, median or average). This provides more stable and reliable timing data for configuration
+comparison.
+
+When KTT is built with power measurement support (`--power-usage` build option, CUDA with NVML only), precise measurement additionally collects
+power readings and continues measuring until the readings stabilize within the specified tolerance or the maximum measurement time is exceeded.
+
+```cpp
+// Execute each configuration for at least 2 seconds, use minimum duration from samples
+ktt::PreciseMeasurementParameters params(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
+const std::vector<ktt::KernelResult> results = tuner.Tune(kernel, nullptr, params);
+
+// Also works with dynamic tuning
+const auto result = tuner.TuneIteration(kernel, {ktt::BufferOutputDescriptor(outputId, output.data())}, false, params);
+```
 
 ----
 
@@ -636,6 +686,9 @@ currently offers the following stop conditions:
 * ConfigurationDuration - tuning stops after a configuration with execution time below the specified threshold is found.
 * ConfigurationFraction - tuning stops after exploring the specified fraction of configuration space.
 * TuningDuration - tuning stops after the specified duration has passed.
+* FailureCount - tuning stops after reaching the specified number of failed kernel runs.
+* FailureFraction - tuning stops after the specified fraction of kernel runs has failed.
+* UnionCondition - combines multiple stop conditions; tuning stops when any of the combined conditions is fulfilled.
 
 The stop condition API is public, allowing users to create their own stop conditions. All of the built-in conditions are implemented in public API, so
 it is possible to modify them as well.
@@ -651,6 +704,9 @@ can have a different searcher. The following searchers are available in KTT API:
 * DeterministicSearcher - always explores configurations in the same order (provided that tuning parameters, order of their addition and their values were not changed).
 * RandomSearcher - explores configurations in random order.
 * McmcSearcher - utilizes Markov chain Monte Carlo method to predict well-performing configurations more accurately than random searcher.
+* ProfileBasedSearcher - uses a trained machine learning model to predict well-performing configurations. This searcher requires additional setup
+(a pre-trained model file and optional configuration of batch, neighbor, and random sizes) and is set via the dedicated `SetProfileBasedSearcher()`
+method rather than the generic `SetSearcher()`. Its detailed usage is beyond the scope of this guide.
 
 The searcher API is public so that users can implement their own searchers. The API also includes utility methods to simplify custom searcher
 implementation. These include a method to get random unexplored configuration or neighboring configurations (configurations that differ in a small
