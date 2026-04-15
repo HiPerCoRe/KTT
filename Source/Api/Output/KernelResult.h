@@ -25,7 +25,7 @@ public:
       */
     KernelResult();
 
-    /** @fn explicit KernelResult(const std::string& kernelName, const KernelConfiguration& configuration)
+    /** @fn explicit KernelResult(const std::string& kernelName, const KernelConfiguration& configuration, const std::string& timestamp)
       * Constructor which creates kernel result for the specified kernel and configuration.
       * @param kernelName Name of a kernel tied to the result.
       * @param configuration Configuration tied to the result.
@@ -34,7 +34,7 @@ public:
     explicit KernelResult(const std::string& kernelName, const KernelConfiguration& configuration, const std::string& timestamp);
 
     /** @fn explicit KernelResult(const std::string& kernelName, const KernelConfiguration& configuration,
-      * const std::vector<ComputationResult>& results)
+      * const std::vector<ComputationResult>& results, const std::string& timestamp)
       * Constructor which creates kernel result for the specified kernel and configuration. Also fills partial results.
       * @param kernelName Name of a kernel tied to the result.
       * @param configuration Configuration tied to the result.
@@ -110,7 +110,7 @@ public:
       */
     const std::vector<ComputationResult>& GetResults() const;
 
-    /** @fn const std::string GetTimestamp() const
+    /** @fn const std::string& GetTimestamp() const
      * Returns the timestamp corresponding to the kernel run
      * @return Timestamp of the kernel run
      */
