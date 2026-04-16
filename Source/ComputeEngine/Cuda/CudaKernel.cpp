@@ -10,6 +10,12 @@
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/Logger/Logger.h>
 
+//#define KTT_EXPERIMENTAL_CUBIN_DUMP
+
+#ifdef KTT_EXPERIMENTAL_CUBIN_DUMP
+#include <fstream>
+#endif
+
 namespace ktt
 {
 
@@ -27,6 +33,32 @@ CudaKernel::CudaKernel(IdGenerator<ComputeActionId>& generator, const EngineConf
 
     const std::string ptx = m_Program->GetPtxSource();
     CheckError(cuModuleLoadDataEx(&m_Module, ptx.data(), 0, nullptr, nullptr), "cuModuleLoadDataEx");
+
+#ifdef KTT_EXPERIMENTAL_CUBIN_DUMP
+    {
+        CUlinkState linkState;
+        CheckError(cuLinkCreate(0, nullptr, nullptr, &linkState), "cuLinkCreate");
+        CheckError(cuLinkAddData(linkState, CU_JIT_INPUT_PTX, (void*)ptx.data(), ptx.size() + 1,
+            nullptr, 0, nullptr, nullptr), "cuLinkAddData");
+
+        void* cubinData = nullptr;
+        size_t cubinSize = 0;
+        CheckError(cuLinkComplete(linkState, &cubinData, &cubinSize), "cuLinkComplete");
+
+        static uint64_t s_CubinCounter = 0;
+        const std::string cubinFilename = "kernel." + std::to_string(s_CubinCounter++) + ".cubin";
+
+        std::ofstream cubinFile(cubinFilename, std::ios::binary);
+
+        if (cubinFile.is_open())
+        {
+            cubinFile.write(static_cast<const char*>(cubinData), cubinSize);
+            Logger::LogInfo("Saved cubin to " + cubinFilename + " (" + std::to_string(cubinSize) + " bytes)");
+        }
+
+        CheckError(cuLinkDestroy(linkState), "cuLinkDestroy");
+    }
+#endif
 
     const std::string loweredName = m_Program->GetLoweredName();
     CheckError(cuModuleGetFunction(&m_Kernel, m_Module, loweredName.c_str()), "cuModuleGetFunction");
