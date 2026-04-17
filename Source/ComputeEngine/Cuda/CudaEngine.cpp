@@ -1162,15 +1162,7 @@ void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult&
 
     if (profilingData->IsValid())
     {
-        KttAssert(instance.HasValidKernelDuration(), "Kernel duration must be known before filling in profiling data");
-        uint64_t profiledKernelOverhead = 0;
-
-        if (result.GetDuration() > instance.GetKernelDuration())
-        {
-            profiledKernelOverhead = result.GetDuration() - instance.GetKernelDuration();
-        }
-
-        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead(), result.GetCompilationOverhead(), result.GetProfilingOverhead() + profiledKernelOverhead);
+        result.SetDurationData(result.GetDuration(), result.GetOverhead(), result.GetCompilationOverhead(), result.GetProfilingOverhead());
         m_CuptiInstances.erase(id);
     }
 
@@ -1196,14 +1188,7 @@ void CudaEngine::FillProfilingData(const KernelComputeId& id, ComputationResult&
 
     if (profilingData->IsValid())
     {
-        uint64_t profiledKernelOverhead = 0;
-
-        if (result.GetDuration() > instance.GetKernelDuration())
-        {
-            profiledKernelOverhead = result.GetDuration() - instance.GetKernelDuration();
-        }
-
-        result.SetDurationData(result.GetDuration() - profiledKernelOverhead, result.GetOverhead(), result.GetCompilationOverhead(), result.GetProfilingOverhead() + profiledKernelOverhead);
+        result.SetDurationData(result.GetDuration(), result.GetOverhead(), result.GetCompilationOverhead(), result.GetProfilingOverhead());
         m_CuptiInstances.erase(id);
     }
 

@@ -309,6 +309,10 @@ void KernelResult::FuseProfilingTimes(const KernelResult& previousResult, bool f
     if (first)
     {
         m_KernelOverheadFirstPass = m_KernelOverhead;
+        // we want to preserve the original results of the first pass, as these are done without profiling and thus contain the actual duration of the kernel execution
+        //moreover, these also contain the actual compilation and kernel overhead that contains actual compilation, not just loading cached version
+        // these durations (kernel, compilation and kernel overhead) are then copied into the result of the final pass, after accounting for all the overheads, especially the profiling related ones
+        m_Results = previousResult.GetResults();
     }
 
     if (!first)
@@ -326,6 +330,15 @@ void KernelResult::FuseProfilingTimes(const KernelResult& previousResult, bool f
 
 void KernelResult::CopyProfilingTimes(const KernelResult& originalResult)
 {
+    //copy kernel duration, kernel overhead and compilation overhead from the first pass of the kernel into the results of the final pass
+    //this ensures that the output files contain the actual kernel duration and compilation overhead
+    for (size_t i = 0; i < m_Results.size(); i++) {
+        m_Results[i].SetDurationData(
+            originalResult.m_Results[i].GetDuration(),
+            originalResult.m_Results[i].GetOverhead(),
+            originalResult.m_Results[i].GetCompilationOverhead(),
+            m_Results[i].GetProfilingOverhead()); // preserve last-pass value
+    }
     m_ProfilingRunsOverhead = originalResult.GetProfilingRunsOverhead();
     m_ProfilingOverhead = originalResult.GetProfilingOverhead();
     m_ProfilingInfrastructureOverhead = originalResult.GetProfilingInfrastructureOverhead();
