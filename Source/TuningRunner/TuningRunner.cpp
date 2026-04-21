@@ -73,6 +73,8 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         });
 
         result.SetSearcherOverhead(searcherOverhead);
+        //no need to explicitly recompute total overhead here, as it is computed on demand in GetTotalOverhead() method,
+        // now with an updated searcher overhead value
         results.push_back(result);
 
         if (stopCondition == nullptr)
