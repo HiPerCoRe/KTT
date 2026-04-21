@@ -17,7 +17,6 @@ KernelResult::KernelResult() :
     m_CompilationOverhead(InvalidDuration),
     m_KernelOverhead(InvalidDuration),
     m_KernelOverheadFirstPass(InvalidDuration),
-    m_TotalOverhead(InvalidDuration),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
@@ -36,7 +35,6 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     m_CompilationOverhead(0),
     m_KernelOverhead(0),
     m_KernelOverheadFirstPass(0),
-    m_TotalOverhead(0),
     m_Status(ResultStatus::ComputationFailed)
 {}
 
@@ -57,7 +55,6 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     m_CompilationOverhead(0),
     m_KernelOverhead(0),
     m_KernelOverheadFirstPass(0),
-    m_TotalOverhead(0),
     m_Status(ResultStatus::Ok)
 {}
 
@@ -249,24 +246,19 @@ Nanoseconds KernelResult::GetTotalDuration() const
 
 Nanoseconds KernelResult::GetTotalOverhead() const
 {
-    if (m_TotalOverhead != InvalidDuration && m_TotalOverhead > 0)
-    {
-        return m_TotalOverhead;
-    }
-
     Nanoseconds overhead = m_DataMovementOverhead + m_ValidationOverhead + m_SearcherOverhead + m_FailedKernelOverhead;
 
-    if (m_ProfilingRunsOverhead == 0) //without profiling
+    //either without profiling or the first pass of profiling
+    overhead += m_KernelOverheadFirstPass;
+
+    if (m_ProfilingRunsOverhead > 0) //with profiling
     {
-        overhead += GetKernelOverheadFromCompResults() + GetKernelOverhead(); // kernel overhead of a single pass, that includes compilation overhead
-    }
-    else //profiling
-    { 
-        overhead += GetProfilingOverheadFromCompResults() + m_ProfilingRunsOverhead; 
+        overhead += m_ProfilingInfrastructureOverhead + m_ProfilingRunsOverhead; 
         // GetProfilingInfrastructureOverhead() adds overhead of profiling infrastructure, but without data movement and extra duration
         //profilingRunsOverhead includes kernel overhead and kernel duration of extra passes
 
     }
+
     return overhead;
 }
 
@@ -294,6 +286,7 @@ void KernelResult::FuseProfilingTimes(const KernelResult& previousResult, bool f
     m_KernelOverhead += previousResult.GetKernelOverhead();
     m_CompilationOverhead += previousResult.GetCompilationOverheadFromCompResults();
     m_CompilationOverhead += previousResult.GetCompilationOverhead();
+
     m_ExtraDuration += previousResult.GetExtraDuration();
     m_DataMovementOverhead += previousResult.GetDataMovementOverhead();
     m_ValidationOverhead += previousResult.GetValidationOverhead();
@@ -304,7 +297,6 @@ void KernelResult::FuseProfilingTimes(const KernelResult& previousResult, bool f
     m_ProfilingOverhead += previousResult.GetProfilingOverhead();
     m_ProfilingInfrastructureOverhead += previousResult.GetProfilingOverheadFromCompResults();
     m_ProfilingInfrastructureOverhead += previousResult.GetProfilingInfrastructureOverhead();
-
 
     if (first)
     {
@@ -325,7 +317,6 @@ void KernelResult::FuseProfilingTimes(const KernelResult& previousResult, bool f
         m_ProfilingOverhead += previousResult.GetDataMovementOverhead();
         m_ProfilingOverhead += previousResult.GetExtraDuration();
     }
-
 }
 
 void KernelResult::CopyProfilingTimes(const KernelResult& originalResult)
@@ -350,7 +341,6 @@ void KernelResult::CopyProfilingTimes(const KernelResult& originalResult)
     m_ValidationOverhead = originalResult.GetValidationOverhead();
     m_SearcherOverhead = originalResult.GetSearcherOverhead();
     m_FailedKernelOverhead = originalResult.GetFailedKernelOverhead();
-    m_TotalOverhead = originalResult.GetTotalOverhead();
 }
 
 void KernelResult::TransferPowerData(const KernelResult& previousResult) 

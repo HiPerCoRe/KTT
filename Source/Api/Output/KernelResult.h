@@ -240,16 +240,10 @@ public:
     Nanoseconds GetTotalDuration() const;
 
     /** @fn Nanoseconds GetTotalOverhead() const
-      * Retrieves the sum of kernel, data movement, validation and searcher overhead.
-      * @return The sum of kernel, data movement, validation and searcher overhead.
+      * Retrieves the sum of kernel overhead, data movement, validation, searcher and profiling related overhead.
+      * @return The sum of kernel overhead, data movement, validation, searcher and profiling related overhead.
       */
     Nanoseconds GetTotalOverhead() const;
-
-    /** @fn Nanoseconds ComputeTotalOverhead() const
-      * Computes the total overhead by summing up all individual overhead components.
-      * @return Total overhead.
-      */
-    Nanoseconds ComputeTotalOverhead() const;
 
     /** @fn bool IsValid() const
       * Checks whether kernel result is valid. I.e., its status has value Ok.
@@ -293,13 +287,12 @@ private:
     Nanoseconds m_ValidationOverhead;
     Nanoseconds m_SearcherOverhead;
     Nanoseconds m_FailedKernelOverhead;
-    Nanoseconds m_ProfilingRunsOverhead;
-    Nanoseconds m_ProfilingOverhead;
-    Nanoseconds m_ProfilingInfrastructureOverhead;
+    Nanoseconds m_ProfilingRunsOverhead; //overhead of all profiling runs, including kernel overhead and kernel duration of extra passes
+    Nanoseconds m_ProfilingOverhead; //overhead of profiling infrastructure, with data movement and extra duration, for all profiling passes
+    Nanoseconds m_ProfilingInfrastructureOverhead; //overhead of profiling infrastructure, but without data movement and extra duration, for all profiling passes
     Nanoseconds m_CompilationOverhead;
     Nanoseconds m_KernelOverhead;
-    Nanoseconds m_KernelOverheadFirstPass;
-    Nanoseconds m_TotalOverhead;
+    Nanoseconds m_KernelOverheadFirstPass; //kernel overhead of the first pass (i.e. full compilation and run without profiling)
     ResultStatus m_Status;
 };
 
