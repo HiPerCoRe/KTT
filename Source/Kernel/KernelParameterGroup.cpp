@@ -22,6 +22,10 @@ struct ConstraintPointerComparator
 {
     bool operator()(const KernelConstraint* a, const KernelConstraint* b) const
     {
+        if (a == b)
+        {
+            return false;
+        }
         // First compare by number of parameters
         const size_t aSize = a->GetParameters().size();
         const size_t bSize = b->GetParameters().size();
@@ -44,7 +48,15 @@ struct ConstraintPointerComparator
         };
         const auto aNames = getSortedNames(a);
         const auto bNames = getSortedNames(b);
-        return aNames < bNames;
+        if (aNames != bNames)
+        {
+            return aNames < bNames;
+        }
+        // Distinct constraints can share the same parameter signature (e.g., two
+        // separately-added shared-memory limits over the same parameter set). Without
+        // a pointer tiebreaker, std::set treats them as equivalent and silently drops
+        // all but one, so the dropped constraints never restrict the tuning space.
+        return a < b;
     }
 };
 
