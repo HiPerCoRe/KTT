@@ -164,6 +164,12 @@ public:
       */
     Nanoseconds GetExtraDuration() const;
 
+    /** @fn Nanoseconds GetExtraDurationFirstPass() const
+      * Retrieves extra duration of a kernel launcher from the first (non-profiling) pass.
+      * @return Kernel launcher extra duration from the first pass.
+      */
+    Nanoseconds GetExtraDurationFirstPass() const;
+
     /** @fn Nanoseconds GetExtraOverhead() const
       * Retrieves duration of buffer transfers (e.g., between host and device memory).
       * @return Duration of buffer transfers.
@@ -287,12 +293,13 @@ private:
     Nanoseconds m_ValidationOverhead;
     Nanoseconds m_SearcherOverhead;
     Nanoseconds m_FailedKernelOverhead;
-    Nanoseconds m_ProfilingRunsOverhead; //overhead of all profiling runs, including kernel overhead and kernel duration of extra passes
-    Nanoseconds m_ProfilingOverhead; //overhead of profiling infrastructure, with data movement and extra duration, for all profiling passes
+    Nanoseconds m_ProfilingRunsOverhead; //overhead of all profiling runs, including kernel overhead and kernel duration and extra duration of extra passes
+    Nanoseconds m_ProfilingOverhead; //overhead of profiling infrastructure, with data movement and validation, for all profiling passes
     Nanoseconds m_ProfilingInfrastructureOverhead; //overhead of profiling infrastructure, but without data movement and extra duration, for all profiling passes
     Nanoseconds m_CompilationOverhead;
     Nanoseconds m_KernelOverhead;
     Nanoseconds m_KernelOverheadFirstPass; //kernel overhead of the first pass (i.e. full compilation and run without profiling)
+    Nanoseconds m_ExtraDurationFirstPass; //extra duration of the first pass 
     ResultStatus m_Status;
 };
 
