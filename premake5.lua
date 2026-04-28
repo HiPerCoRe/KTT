@@ -697,7 +697,7 @@ project "TransposeOpenCl"
 
 project "DummyOpenCl"
     kind "ConsoleApp"
-    files {"Examples/Dummy/*.cpp", "Examples/Dummy/*.cl"}
+    files {"Examples/*.cpp", "Examples/Dummy/*.cpp", "Examples/Dummy/*.cl"}
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
     links {"ktt"}
@@ -792,14 +792,14 @@ project "KernelTunerPnpolyCuda"
 
 project "DummyCuda"
     kind "ConsoleApp"
-    files {"Examples/Dummy/*.cpp", "Examples/Dummy/*.cu"}
+    files {"Examples/*.cpp", "Examples/Dummy/*.cpp", "Examples/Dummy/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
 
 project "MicrobenchmarksCuda"
     kind "ConsoleApp"
-    files {"Examples/Microbenchmarks/*.cpp", "Examples/Microbenchmarks/*.cu"}
+    files {"Examples/*.cpp", "Examples/Microbenchmarks/*.cpp", "Examples/Microbenchmarks/*.cu"}
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
     links {"ktt"}
@@ -809,28 +809,28 @@ if cppProjects then
 
 project "CppSimple"
     kind "ConsoleApp"
-    files {"Examples/CppSimple/CppSimple.cpp"}
+    files {"Examples/*.cpp", "Examples/CppSimple/CppSimple.cpp"}
     includedirs {"Source"}
     defines {"KTT_CPP_EXAMPLE"}
     links {"ktt"}
 
 project "CppSimpleZeroCopy"
     kind "ConsoleApp"
-    files {"Examples/CppSimple/CppSimpleZeroCopy.cpp"}
+    files {"Examples/*.cpp", "Examples/CppSimple/CppSimpleZeroCopy.cpp"}
     includedirs {"Source"}
     defines {"KTT_CPP_EXAMPLE"}
     links {"ktt"}
 
 project "CppTranspose"
     kind "ConsoleApp"
-    files {"Examples/CppTranspose/*.cpp"}
+    files {"Examples/*.cpp", "Examples/CppTranspose/*.cpp"}
     includedirs {"Source"}
     defines {"KTT_CPP_EXAMPLE"}
     links {"ktt"}
 
 project "CoulombSum3dCpp"
     kind "ConsoleApp"
-    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cppkernel"}
+    files {"Examples/*.cpp", "Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cppkernel"}
     includedirs {"Source"}
     defines {"KTT_CPP_EXAMPLE"}
     links {"ktt"}
