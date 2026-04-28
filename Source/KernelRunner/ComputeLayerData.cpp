@@ -151,6 +151,7 @@ Nanoseconds ComputeLayerData::CalculateLauncherOverhead() const
     {
         result += partialResult.GetDuration();
         result += partialResult.GetOverhead();
+        result += partialResult.GetProfilingOverhead();
     }
 
     return result;

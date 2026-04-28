@@ -61,9 +61,10 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
             iter++;
         }
         while (result.HasRemainingProfilingRuns());
+        //has to be called even if there are no profiling runs, as it copies data from the (first) pass from multiResult to result, which is needed for correct total overhead and total duration calculation  and for correct reporting in the output
+        result.CopyProfilingTimes(multiResult);
         if (iter > 1) //do not copy the same result twice
         {
-            result.CopyProfilingTimes(multiResult);
             result.TransferPowerData(multiResult);
         }
 
