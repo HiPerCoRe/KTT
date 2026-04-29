@@ -2,6 +2,8 @@
 
 #include "KttTypes.h"
 #include <Ktt.h>
+#include <random>
+#include <type_traits>
 
 #ifndef RAND_MAX
 #define RAND_MAX UINT_MAX
@@ -54,7 +56,16 @@ protected:
     {
         std::random_device device;
         std::default_random_engine engine(device());
-        std::uniform_real_distribution<T> distribution(minimum, maximum);
+
+        static_assert(std::is_arithmetic_v<T>,
+                  "FillBuffers accepts only numeric types");
+        using Dist = std::conditional_t<
+            std::is_floating_point_v<T>,
+            std::uniform_real_distribution<T>,
+            std::uniform_int_distribution<T>
+        >;
+        Dist distribution(minimum, maximum);
+
         for (std::vector<T> *buffer : buffers) 
         {
             for (size_t i = 0; i < buffer->size(); ++i) 
