@@ -23,6 +23,7 @@ BUILD_DIR="$SCRIPT_DIR/Build"
 BIN_DIR="$BUILD_DIR/x86_64_Release"
 EXAMPLE_DIR="$SCRIPT_DIR/Examples/$EXAMPLE_NAME"
 REF_VERSIONS_DIR="$SCRIPT_DIR/Examples/ReferenceVersions/$EXAMPLE_NAME"
+REF_OUTPUT_JSON="$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
 
 echo "=== $EXAMPLE_NAME Refactor Verification Script ==="
 echo ""
@@ -43,32 +44,33 @@ fi
 echo "Step 1: Generating build files with premake (reference-versions enabled)..."
 cd "$SCRIPT_DIR"
 
-# Clean previous build to ensure fresh generation
-rm -rf "$BUILD_DIR"
-
-premake5 gmake --reference-versions
+premake5 gmake --reference-versions --no-cuda --platform=amd --cpp
 
 echo "Step 2: Building ${EXAMPLE_NAME}OpenCl and ${EXAMPLE_NAME}ReferenceOpenCl..."
 cd "$BUILD_DIR"
-make > /dev/null 2>&1
+make > /dev/null
 
 # Step 3: Run reference version first
 echo ""
 echo "Step 3: Running reference $EXAMPLE_NAME example..."
-cd "$BIN_DIR"
-./${EXAMPLE_NAME}ReferenceOpenCl || true
-
-# Save reference version Output.json
-OUTPUT_JSON="$SCRIPT_DIR/Output.json"
-NAME_OUTPUT_JSON="$SCRIPT_DIR/${EXAMPLE_NAME}Output.json"
-
-if [ -f "$OUTPUT_JSON" ]; then
-    cp "$OUTPUT_JSON" "$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
-elif [ -f "$NAME_OUTPUT_JSON" ]; then
-    cp "$NAME_OUTPUT_JSON" "$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
+if [ -f "$REF_OUTPUT_JSON"]; then
+    echo "Output already found, skipping run..."
 else
-    echo "Error: Reference $EXAMPLE_NAME did not produce Output.json"
-    exit 1
+    cd "$BIN_DIR"
+    ./${EXAMPLE_NAME}ReferenceOpenCl || true
+
+    # Save reference version Output.json
+    OUTPUT_JSON="$SCRIPT_DIR/Output.json"
+    NAME_OUTPUT_JSON="$SCRIPT_DIR/${EXAMPLE_NAME}Output.json"
+
+    if [ -f "$OUTPUT_JSON" ]; then
+        cp "$OUTPUT_JSON" "$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
+    elif [ -f "$NAME_OUTPUT_JSON" ]; then
+        cp "$NAME_OUTPUT_JSON" "$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
+    else
+        echo "Error: Reference $EXAMPLE_NAME did not produce Output.json"
+        exit 1
+    fi
 fi
 
 # Step 4: Run refactored version
@@ -107,10 +109,10 @@ fi
 # Cleanup
 echo ""
 echo "Cleaning up..."
-rm -f "$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
-rm -f "$SCRIPT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
-rm -f "$SCRIPT_DIR/${EXAMPLE_NAME}Output.json"
-rm -f "$SCRIPT_DIR/Output.json"
+# rm "$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
+rm "$SCRIPT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
+rm "$SCRIPT_DIR/${EXAMPLE_NAME}Output.json"
+rm "$SCRIPT_DIR/Output.json"
 
 echo ""
 echo "Verification complete!"
