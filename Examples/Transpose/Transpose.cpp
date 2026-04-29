@@ -117,7 +117,7 @@ protected:
 int main(int argc, char **argv)
 {
     unique_ptr<Transpose> transpose = Transpose::Create<Transpose>(
-        argc, argv, 16, "Examples/Transpose", "Transpose", "TransposeReference"
+        argc, argv, 64, "Examples/Transpose", "Transpose", "TransposeReference"
     );
     transpose->Run();
 }
