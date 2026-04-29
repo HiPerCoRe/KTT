@@ -34,7 +34,7 @@ protected:
         m_dst.resize(m_width * m_height);
         m_src.resize(m_width * m_height);
 
-        FillBuffers({&m_src});
+        FillBuffers<float>({&m_src});
     }
 
     void InitKernels() override
