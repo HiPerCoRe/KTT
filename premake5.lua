@@ -382,30 +382,23 @@ newoption
 }
 
 -- Helper function to add example projects
-function addExampleProject(name, kernelExt, apiDefine, useRefVersions, enableOpenMP)
+function addExampleProject(name, kernelExt, apiDefine, useRefVersions, shouldEnableOpenMP)
     local projectName = name .. (useRefVersions and "Reference" or "") .. kernelExt
 
     local cppFiles
     if useRefVersions then
-        cppFiles = {"Examples/*.cpp", "Examples/ReferenceVersions/" .. name .. "/*.cpp"}
+        cppFiles = {"Examples/ReferenceVersions/" .. name .. "/*.cpp"}
     else
         cppFiles = {"Examples/*.cpp", "Examples/" .. name .. "/*.cpp"}
     end
 
-    local kernelFiles
-    if kernelExt == "OpenCl" then
-        kernelFiles = "Examples/" .. name .. "/*.cl"
-    else -- Cuda
-        kernelFiles = "Examples/" .. name .. "/*.cu"
-    end
-
     project(projectName)
         kind "ConsoleApp"
-        files {table.unpack(cppFiles), kernelFiles}
+        files {table.unpack(cppFiles)}
         includedirs {"Source"}
         defines {apiDefine}
         links {"ktt"}
-        if enableOpenMP then
+        if shouldEnableOpenMP then
             enableOpenMP()
         end
 end
