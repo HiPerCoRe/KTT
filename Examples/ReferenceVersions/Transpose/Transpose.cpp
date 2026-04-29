@@ -25,7 +25,7 @@ const std::string kernelPrefix = "../";
 const bool rapidTest = false;
 
 // Toggle kernel profiling.
-const bool useProfiling = true;
+const bool useProfiling = false;
 
 // Add denser values to tuning parameters (useDenseParameters = true).
 const bool useDenseParameters = false;
