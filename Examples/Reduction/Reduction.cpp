@@ -34,7 +34,7 @@ protected:
         const uint32_t sizeAlloc = ((m_size+16-1)/16)*16; // pad to the longest vector size
         m_src.resize(sizeAlloc);
         m_dest.resize(sizeAlloc);
-        FillBuffers({&m_src}, 0, 1000);
+        FillBuffers<float>({&m_src}, 0, 1000);
     }
 
     void InitKernels() override 
