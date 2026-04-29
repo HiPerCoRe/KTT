@@ -50,6 +50,10 @@ echo "Step 2: Building ${EXAMPLE_NAME}OpenCl and ${EXAMPLE_NAME}ReferenceOpenCl.
 cd "$BUILD_DIR"
 make > /dev/null
 
+OUTPUT_JSON="$BIN_DIR/Output.json"
+NAME_OUTPUT_JSON="$BIN_DIR/${EXAMPLE_NAME}Output.json"
+TRANSP_OUTPUT_JSON="$BIN_DIR/TranspositionOutput.json"
+
 # Step 3: Run reference version first
 echo ""
 echo "Step 3: Running reference $EXAMPLE_NAME example..."
@@ -57,16 +61,16 @@ if [ -f "$REF_OUTPUT_JSON" ]; then
     echo "Output already found, skipping run..."
 else
     cd "$BIN_DIR"
+    rm $BIN_DIR/*.json || true
     ./${EXAMPLE_NAME}ReferenceOpenCl || true
 
     # Save reference version Output.json
-    OUTPUT_JSON="$SCRIPT_DIR/Output.json"
-    NAME_OUTPUT_JSON="$SCRIPT_DIR/${EXAMPLE_NAME}Output.json"
-
     if [ -f "$OUTPUT_JSON" ]; then
         cp "$OUTPUT_JSON" "$REF_OUTPUT_JSON"
     elif [ -f "$NAME_OUTPUT_JSON" ]; then
         cp "$NAME_OUTPUT_JSON" "$REF_OUTPUT_JSON"
+    elif [ -f "$TRANSP_OUTPUT_JSON"] && [ "$EXAMPLE_NAME = Transpose" ] ; then
+        cp "$TRANSP_OUTPUT_JSON" "$REF_OUTPUT_JSON"
     else
         echo "Error: Reference $EXAMPLE_NAME did not produce Output.json"
         exit 1
@@ -77,6 +81,7 @@ fi
 echo ""
 echo "Step 4: Running refactored $EXAMPLE_NAME example..."
 cd "$BIN_DIR"
+rm $BIN_DIR/*.json || true
 ./${EXAMPLE_NAME}OpenCl || true
 
 # Save refactored version Output.json
