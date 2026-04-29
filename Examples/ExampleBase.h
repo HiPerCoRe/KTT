@@ -49,8 +49,20 @@ protected:
 
     virtual std::unique_ptr<ktt::StopCondition> GetStopCondition();
 
-    void FillBuffers(const std::vector<std::vector<float>*> &buffers, float minimum = 0, float maximum = 10);
-
+    template <typename T>
+    void FillBuffers(const std::vector<std::vector<T>*> &buffers, T minimum = 0, T maximum = 10) 
+    {
+        std::random_device device;
+        std::default_random_engine engine(device());
+        std::uniform_real_distribution<T> distribution(minimum, maximum);
+        for (std::vector<T> *buffer : buffers) 
+        {
+            for (size_t i = 0; i < buffer->size(); ++i) 
+            {
+            buffer->at(i) = distribution(engine); 
+            }
+        } 
+    }
 
     void InitKernelDefault(const std::string &kernelFunctionName, const std::string &kernelName,
                             const ktt::DimensionVector &ndRangeDimensions, const std::vector<ktt::ArgumentId> &arguments);
