@@ -53,7 +53,7 @@ make > /dev/null
 # Step 3: Run reference version first
 echo ""
 echo "Step 3: Running reference $EXAMPLE_NAME example..."
-if [ -f "$REF_OUTPUT_JSON"]; then
+if [ -f "$REF_OUTPUT_JSON" ]; then
     echo "Output already found, skipping run..."
 else
     cd "$BIN_DIR"
@@ -64,9 +64,9 @@ else
     NAME_OUTPUT_JSON="$SCRIPT_DIR/${EXAMPLE_NAME}Output.json"
 
     if [ -f "$OUTPUT_JSON" ]; then
-        cp "$OUTPUT_JSON" "$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
+        cp "$OUTPUT_JSON" "$REF_OUTPUT_JSON"
     elif [ -f "$NAME_OUTPUT_JSON" ]; then
-        cp "$NAME_OUTPUT_JSON" "$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
+        cp "$NAME_OUTPUT_JSON" "$REF_OUTPUT_JSON"
     else
         echo "Error: Reference $EXAMPLE_NAME did not produce Output.json"
         exit 1
@@ -95,7 +95,7 @@ cd "$SCRIPT_DIR"
 echo ""
 echo "Step 5: Comparing kernel configurations..."
 
-REFERENCE_OUTPUT="$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
+REFERENCE_OUTPUT="$REF_OUTPUT_JSON"
 REFACTORED_OUTPUT="$SCRIPT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
 
 if [ -f "$REFERENCE_OUTPUT" ] && [ -f "$REFACTORED_OUTPUT" ]; then
@@ -109,7 +109,7 @@ fi
 # Cleanup
 echo ""
 echo "Cleaning up..."
-# rm "$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
+# rm "$REF_OUTPUT_JSON"
 rm "$SCRIPT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
 rm "$SCRIPT_DIR/${EXAMPLE_NAME}Output.json"
 rm "$SCRIPT_DIR/Output.json"
