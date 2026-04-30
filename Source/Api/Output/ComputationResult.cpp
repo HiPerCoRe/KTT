@@ -10,7 +10,8 @@ ComputationResult::ComputationResult() :
     m_Duration(InvalidDuration),
     m_Overhead(InvalidDuration),
     m_CompilationOverhead(InvalidDuration),
-    m_ProfilingOverhead(InvalidDuration)
+    m_ProfilingOverhead(InvalidDuration),
+    m_PreciseMeasurementOverhead(InvalidDuration)
 {}
 
 ComputationResult::ComputationResult(const std::string& kernelFunction) :
@@ -18,7 +19,8 @@ ComputationResult::ComputationResult(const std::string& kernelFunction) :
     m_Duration(InvalidDuration),
     m_Overhead(InvalidDuration),
     m_CompilationOverhead(InvalidDuration),
-    m_ProfilingOverhead(InvalidDuration)
+    m_ProfilingOverhead(InvalidDuration),
+    m_PreciseMeasurementOverhead(InvalidDuration)
 {}
 
 ComputationResult::ComputationResult(const ComputationResult& other) :
@@ -29,6 +31,7 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     m_Overhead(other.m_Overhead),
     m_CompilationOverhead(other.m_CompilationOverhead),
     m_ProfilingOverhead(other.m_ProfilingOverhead),
+    m_PreciseMeasurementOverhead(other.m_PreciseMeasurementOverhead),
     m_PowerUsage(other.m_PowerUsage),
     m_Temperature(other.m_Temperature),
     m_SMFrequency(other.m_SMFrequency),
@@ -72,12 +75,13 @@ ComputationResult::ComputationResult(const ComputationResult& other) :
     }
 }
 
-void ComputationResult::SetDurationData(const Nanoseconds duration, const Nanoseconds overhead, const Nanoseconds compilationOverhead, const Nanoseconds profilingOverhead)
+void ComputationResult::SetDurationData(const Nanoseconds duration, const Nanoseconds overhead, const Nanoseconds compilationOverhead, const Nanoseconds profilingOverhead, const Nanoseconds preciseMeasurementOverhead)
 {
     m_Duration = duration;
     m_Overhead = overhead;
     m_CompilationOverhead = compilationOverhead;
     m_ProfilingOverhead = profilingOverhead;
+    m_PreciseMeasurementOverhead = preciseMeasurementOverhead;
 }
 
 void ComputationResult::SetSizeData(const DimensionVector& globalSize, const DimensionVector& localSize)
@@ -159,6 +163,11 @@ Nanoseconds ComputationResult::GetCompilationOverhead() const
 Nanoseconds ComputationResult::GetProfilingOverhead() const
 {
     return m_ProfilingOverhead;
+}
+
+Nanoseconds ComputationResult::GetPreciseMeasurementOverhead() const
+{
+    return m_PreciseMeasurementOverhead;
 }
 
 bool ComputationResult::HasCompilationData() const
@@ -304,6 +313,7 @@ ComputationResult& ComputationResult::operator=(const ComputationResult& other)
     m_Duration = other.m_Duration;
     m_Overhead = other.m_Overhead;
     m_ProfilingOverhead = other.m_ProfilingOverhead;
+    m_PreciseMeasurementOverhead = other.m_PreciseMeasurementOverhead;
     m_GlobalSize = other.m_GlobalSize;
     m_LocalSize = other.m_LocalSize;
     m_PowerUsage = other.m_PowerUsage;

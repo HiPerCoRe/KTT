@@ -17,6 +17,7 @@ OpenClComputeAction::OpenClComputeAction(const ComputeActionId id, const QueueId
     m_Overhead(0),
     m_CompilationOverhead(0),
     m_ProfilingOverhead(0),
+    m_PreciseMeasurementOverhead(0),
     m_GlobalSize(globalSize),
     m_LocalSize(localSize),
     m_DurationFromMultirun(std::nullopt),
@@ -42,6 +43,11 @@ void OpenClComputeAction::IncreaseCompilationOverhead(const Nanoseconds overhead
 void OpenClComputeAction::IncreaseProfilingOverhead(const Nanoseconds overhead)
 {
     m_ProfilingOverhead += overhead;
+}
+
+void OpenClComputeAction::IncreasePreciseMeasurementOverhead(const Nanoseconds overhead)
+{
+    m_PreciseMeasurementOverhead += overhead;
 }
 
 void OpenClComputeAction::SetComputeId(const KernelComputeId& id)
@@ -106,8 +112,13 @@ Nanoseconds OpenClComputeAction::GetCompilationOverhead() const
 }
 
 Nanoseconds OpenClComputeAction::GetProfilingOverhead() const
-{    
+{
     return m_ProfilingOverhead;
+}
+
+Nanoseconds OpenClComputeAction::GetPreciseMeasurementOverhead() const
+{
+    return m_PreciseMeasurementOverhead;
 }
 
 const KernelComputeId& OpenClComputeAction::GetComputeId() const
@@ -122,6 +133,7 @@ ComputationResult OpenClComputeAction::GenerateResult() const
     const Nanoseconds overhead = GetOverhead();
     const Nanoseconds compilationOverhead = GetCompilationOverhead();
     const Nanoseconds profilingOverhead = GetProfilingOverhead();
+    const Nanoseconds preciseMeasurementOverhead = GetPreciseMeasurementOverhead();
     std::unique_ptr<KernelCompilationData> compilationData = m_Kernel->GenerateCompilationData();
 
     // Use duration from multirun if available
@@ -129,7 +141,7 @@ ComputationResult OpenClComputeAction::GenerateResult() const
         duration = m_DurationFromMultirun.value();
     }
 
-    result.SetDurationData(duration, overhead, compilationOverhead, profilingOverhead);
+    result.SetDurationData(duration, overhead, compilationOverhead, profilingOverhead, preciseMeasurementOverhead);
     result.SetSizeData(m_GlobalSize, m_LocalSize);
     result.SetCompilationData(std::move(compilationData));
 

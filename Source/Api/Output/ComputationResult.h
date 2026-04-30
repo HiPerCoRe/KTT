@@ -47,8 +47,9 @@ public:
       * @param overhead Overhead related to kernel launch such as kernel function compilation.
       * @param compilationOverhead Overhead related purely to kernel function compilation.
       * @param profilingOverhead Overhead related to profiling data collection.
+      * @param preciseMeasurementOverhead Overhead of the precise multi-run measurement loop.
       */
-    void SetDurationData(const Nanoseconds duration, const Nanoseconds overhead, const Nanoseconds compilationOverhead, const Nanoseconds profilingOverhead = 0);
+    void SetDurationData(const Nanoseconds duration, const Nanoseconds overhead, const Nanoseconds compilationOverhead, const Nanoseconds profilingOverhead = 0, const Nanoseconds preciseMeasurementOverhead = 0);
 
     /** @fn void SetSizeData(const DimensionVector& globalSize, const DimensionVector& localSize)
       * Fills thread size data for the result.
@@ -146,6 +147,12 @@ public:
         * @return Profiling overhead.
         */
     Nanoseconds GetProfilingOverhead() const;
+
+    /** @fn Nanoseconds GetPreciseMeasurementOverhead() const
+      * Returns overhead of the precise multi-run measurement loop.
+      * @return Precise measurement overhead.
+      */
+    Nanoseconds GetPreciseMeasurementOverhead() const;
 
     /** @fn bool HasCompilationData() const
       * Checks whether result contains valid compilation data.
@@ -270,6 +277,7 @@ private:
     Nanoseconds m_Overhead;
     Nanoseconds m_CompilationOverhead;
     Nanoseconds m_ProfilingOverhead;
+    Nanoseconds m_PreciseMeasurementOverhead;
     std::unique_ptr<KernelCompilationData> m_CompilationData;
     std::unique_ptr<KernelProfilingData> m_ProfilingData;
     std::optional<uint32_t> m_PowerUsage;

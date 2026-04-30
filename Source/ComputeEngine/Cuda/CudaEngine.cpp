@@ -283,6 +283,11 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             }
         }
         pwrTimer.Stop();
+        // pwrTimer starts before the first kernel launch (line ~225), so the recorded
+        // overhead includes the initial execution and first NVML sample collection in
+        // addition to the stabilization while-loop. This is intentional: the entire
+        // precise-measurement block is treated as overhead.
+        action->IncreasePreciseMeasurementOverhead(pwrTimer.GetElapsedTime());
 
         // Calculate duration and standard deviation using utility methods
         const auto measurementResult = PreciseMeasurementParameters::ComputeDurationAndStdev(
@@ -327,7 +332,8 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     
     if (preciseParams.has_value())
     {
-        // Execute kernel multiple times for stable timing measurement using utility
+        Timer preciseMeasurementTimer;
+        preciseMeasurementTimer.Start();
         const auto& params = preciseParams.value();
         const auto result = MeasurementUtility::ExecuteWithStableTiming(
             [&]() -> Nanoseconds {
@@ -337,9 +343,11 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             },
             params,
             "CUDA");
-        
+
         action->SetDurationFromMultirun(result.duration);
         action->SetDurationStdev(result.standardDeviation);
+        preciseMeasurementTimer.Stop();
+        action->IncreasePreciseMeasurementOverhead(preciseMeasurementTimer.GetElapsedTime());
     }
 #endif // KTT_POWER_USAGE_NVML
 

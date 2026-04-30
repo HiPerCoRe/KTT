@@ -14,6 +14,7 @@ KernelResult::KernelResult() :
     m_ProfilingRunsOverhead(InvalidDuration),
     m_ProfilingOverhead(InvalidDuration),
     m_ProfilingInfrastructureOverhead(InvalidDuration),
+    m_PreciseMeasurementOverhead(InvalidDuration),
     m_CompilationOverhead(InvalidDuration),
     m_KernelOverhead(InvalidDuration),
     m_KernelOverheadFirstPass(InvalidDuration),
@@ -33,6 +34,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     m_ProfilingRunsOverhead(0),
     m_ProfilingOverhead(0),
     m_ProfilingInfrastructureOverhead(0),
+    m_PreciseMeasurementOverhead(0),
     m_CompilationOverhead(0),
     m_KernelOverhead(0),
     m_KernelOverheadFirstPass(0),
@@ -54,6 +56,7 @@ KernelResult::KernelResult(const std::string& kernelName, const KernelConfigurat
     m_ProfilingRunsOverhead(0),
     m_ProfilingOverhead(0),
     m_ProfilingInfrastructureOverhead(0),
+    m_PreciseMeasurementOverhead(0),
     m_CompilationOverhead(0),
     m_KernelOverhead(0),
     m_KernelOverheadFirstPass(0),
@@ -104,6 +107,11 @@ void KernelResult::SetProfilingRunsOverhead(const Nanoseconds overhead)
 void KernelResult::SetProfilingOverhead(const Nanoseconds overhead)
 {
     m_ProfilingOverhead = overhead;
+}
+
+void KernelResult::SetPreciseMeasurementOverhead(const Nanoseconds overhead)
+{
+    m_PreciseMeasurementOverhead = overhead;
 }
 
 const std::string& KernelResult::GetKernelName() const
@@ -226,6 +234,21 @@ Nanoseconds KernelResult::GetProfilingOverheadFromCompResults() const
     return overhead;
 }
 
+Nanoseconds KernelResult::GetPreciseMeasurementOverheadFromCompResults() const
+{
+    Nanoseconds overhead = 0;
+    for (const auto& result : m_Results)
+    {
+        overhead += result.GetPreciseMeasurementOverhead();
+    }
+    // if precise measurement overhead is present, the kernel duration ("official" result) is included in it, so we need to subtract it to avoid double counting
+    if (overhead > 0)
+    {
+        overhead -= GetKernelDuration();
+    }
+    return overhead;
+}
+
 Nanoseconds KernelResult::GetProfilingInfrastructureOverhead() const
 {
     return m_ProfilingInfrastructureOverhead;
@@ -234,6 +257,11 @@ Nanoseconds KernelResult::GetProfilingInfrastructureOverhead() const
 Nanoseconds KernelResult::GetProfilingOverhead() const
 {
     return m_ProfilingOverhead;
+}
+
+Nanoseconds KernelResult::GetPreciseMeasurementOverhead() const
+{
+    return m_PreciseMeasurementOverhead;
 }
 
 Nanoseconds KernelResult::GetProfilingTotalOverhead() const
@@ -254,7 +282,8 @@ Nanoseconds KernelResult::GetTotalDuration() const
 
 Nanoseconds KernelResult::GetTotalOverhead() const
 {
-    Nanoseconds overhead = m_DataMovementOverhead + m_ValidationOverhead + m_SearcherOverhead + m_FailedKernelOverhead;
+    Nanoseconds overhead = m_DataMovementOverhead + m_ValidationOverhead + m_SearcherOverhead
+                           + m_FailedKernelOverhead + m_PreciseMeasurementOverhead;
 
     //either without profiling or the first pass of profiling
     overhead += m_KernelOverheadFirstPass;
@@ -304,6 +333,8 @@ void KernelResult::FuseProfilingTimes(const KernelResult& previousResult, bool f
     m_ProfilingOverhead += previousResult.GetProfilingOverhead();
     m_ProfilingInfrastructureOverhead += previousResult.GetProfilingOverheadFromCompResults();
     m_ProfilingInfrastructureOverhead += previousResult.GetProfilingInfrastructureOverhead();
+    m_PreciseMeasurementOverhead += previousResult.GetPreciseMeasurementOverheadFromCompResults();
+    m_PreciseMeasurementOverhead += previousResult.GetPreciseMeasurementOverhead();
 
     if (first)
     {
@@ -357,6 +388,7 @@ void KernelResult::CopyProfilingTimes(const KernelResult& originalResult)
     m_ValidationOverhead = originalResult.GetValidationOverhead();
     m_SearcherOverhead = originalResult.GetSearcherOverhead();
     m_FailedKernelOverhead = originalResult.GetFailedKernelOverhead();
+    m_PreciseMeasurementOverhead = originalResult.GetPreciseMeasurementOverhead();
 }
 
 void KernelResult::TransferPowerData(const KernelResult& previousResult) 
