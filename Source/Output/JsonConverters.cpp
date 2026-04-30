@@ -417,6 +417,7 @@ void to_json(json& j, const KernelResult& result)
         {"SearcherOverhead", time.ConvertFromNanosecondsDouble(result.GetSearcherOverhead())},
         {"CompilationOverhead", time.ConvertFromNanosecondsDouble(result.GetCompilationOverhead())},
         {"ProfilingOverhead", time.ConvertFromNanosecondsDouble(result.GetProfilingTotalOverhead())},
+        {"PreciseMeasurementOverhead", time.ConvertFromNanosecondsDouble(result.GetPreciseMeasurementOverhead())},
         {"Configuration", result.GetConfiguration()},
         {"ComputationResults", result.GetResults()},
         {"Timestamp", result.GetTimestamp()}
@@ -464,6 +465,12 @@ void from_json(const json& j, KernelResult& result)
     j.at("SearcherOverhead").get_to(searcherOverhead);
     const Nanoseconds searcherOverheadNs = time.ConvertToNanosecondsDouble(searcherOverhead);
     result.SetSearcherOverhead(searcherOverheadNs);
+
+    double preciseMeasurementOverhead = 0.0;
+    if (j.contains("PreciseMeasurementOverhead"))
+        j.at("PreciseMeasurementOverhead").get_to(preciseMeasurementOverhead);
+    const Nanoseconds preciseMeasurementOverheadNs = time.ConvertToNanosecondsDouble(preciseMeasurementOverhead);
+    result.SetPreciseMeasurementOverhead(preciseMeasurementOverheadNs);
 }
 
 } // namespace ktt

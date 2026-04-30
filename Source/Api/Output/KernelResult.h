@@ -98,6 +98,12 @@ public:
       */
     void SetProfilingOverhead(const Nanoseconds overhead);
 
+    /** @fn void SetPreciseMeasurementOverhead(const Nanoseconds overhead)
+      * Sets duration of the precise multi-run measurement loop.
+      * @param overhead Duration of the precise multi-run measurement loop.
+      */
+    void SetPreciseMeasurementOverhead(const Nanoseconds overhead);
+
     /** @fn const std::string& GetKernelName() const
       * Returns name of a kernel tied to the result.
       * @return Name of a kernel tied to the result.
@@ -220,11 +226,23 @@ public:
       */
     Nanoseconds GetProfilingOverheadFromCompResults() const;
 
+    /** @fn Nanoseconds GetPreciseMeasurementOverheadFromCompResults() const
+      * Retrieves the sum of precise multi-run measurement overhead from the partial results.
+      * @return Sum of precise measurement overhead across all partial results.
+      */
+    Nanoseconds GetPreciseMeasurementOverheadFromCompResults() const;
+
     /** @fn Nanoseconds GetProfilingOverhead() const
       * Retrieves duration of all non-kernel operations performed during collection performance counters (e.g., CUPTI infrastructure and data movements for extra kernel runs) for all profiling runs.
       * @return Duration operations different than kernel execution needed to collect performance counters.
       */
     Nanoseconds GetProfilingOverhead() const;
+
+    /** @fn Nanoseconds GetPreciseMeasurementOverhead() const
+      * Retrieves duration of the precise multi-run measurement loop.
+      * @return Duration of the precise multi-run measurement loop.
+      */
+    Nanoseconds GetPreciseMeasurementOverhead() const;
 
     /** @fn Nanoseconds GetProfilingTotalOverhead() const
       * Retrieves duration and overhead of all operations needed to collect performance counters.
@@ -246,8 +264,10 @@ public:
     Nanoseconds GetTotalDuration() const;
 
     /** @fn Nanoseconds GetTotalOverhead() const
-      * Retrieves the sum of kernel overhead, data movement, validation, searcher and profiling related overhead.
-      * @return The sum of kernel overhead, data movement, validation, searcher and profiling related overhead.
+      * Retrieves the sum of kernel overhead, data movement, validation, searcher, precise
+      * measurement and profiling related overhead.
+      * @return The sum of kernel overhead, data movement, validation, searcher, precise
+      * measurement and profiling related overhead.
       */
     Nanoseconds GetTotalOverhead() const;
 
@@ -296,6 +316,7 @@ private:
     Nanoseconds m_ProfilingRunsOverhead; //overhead of all profiling runs, including kernel overhead and kernel duration and extra duration of extra passes
     Nanoseconds m_ProfilingOverhead; //overhead of profiling infrastructure, with data movement and validation, for all profiling passes
     Nanoseconds m_ProfilingInfrastructureOverhead; //overhead of profiling infrastructure, but without data movement and extra duration, for all profiling passes
+    Nanoseconds m_PreciseMeasurementOverhead; //overhead of the precise multi-run measurement loop, including all kernel executions performed within the loop
     Nanoseconds m_CompilationOverhead;
     Nanoseconds m_KernelOverhead;
     Nanoseconds m_KernelOverheadFirstPass; //kernel overhead of the first pass (i.e. full compilation and run without profiling)

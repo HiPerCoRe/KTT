@@ -100,6 +100,7 @@ void to_json(json& j, const as_T4<const KernelResult>& result)
     j["times"]["framework"] = time.ConvertFromNanosecondsDouble(result.v.GetTotalOverhead());
     j["times"]["search_algorithm"] = time.ConvertFromNanosecondsDouble(result.v.GetSearcherOverhead());
     j["times"]["validation"] = time.ConvertFromNanosecondsDouble(result.v.GetValidationOverhead());
+    j["times"]["precise_measurement"] = time.ConvertFromNanosecondsDouble(result.v.GetPreciseMeasurementOverhead());
     j["times"]["runtimes"] = json::array({time.ConvertFromNanosecondsDouble(result.v.GetTotalDuration())});
     const ResultStatus& resultStatus = result.v.GetStatus();
     to_json(j["invalidity"], as_T4(resultStatus));
@@ -193,6 +194,11 @@ void from_json(const json& j, as_T4<KernelResult>& result)
     j.at("times").at("validation").get_to(validationOverhead);
     const Nanoseconds validationOverheadNs = time.ConvertToNanosecondsDouble(validationOverhead);
 
+    double preciseMeasurementOverhead = 0.0;
+    if (j.at("times").contains("precise_measurement"))
+        j.at("times").at("precise_measurement").get_to(preciseMeasurementOverhead);
+    const Nanoseconds preciseMeasurementOverheadNs = time.ConvertToNanosecondsDouble(preciseMeasurementOverhead);
+
     // search_overhead is measured again in simulated tuning, so we are not deserializing it
 
     computationResult.SetDurationData(durationNs, kernelOverheadNs, compilationOverheadNs, profilingOverheadNs);
@@ -263,6 +269,7 @@ void from_json(const json& j, as_T4<KernelResult>& result)
     result.v.SetDataMovementOverhead(dataMovementOverheadNs);
     result.v.SetProfilingRunsOverhead(profilingRunsOverheadNs);
     result.v.SetValidationOverhead(validationOverheadNs);
+    result.v.SetPreciseMeasurementOverhead(preciseMeasurementOverheadNs);
 
     ResultStatus status;
     auto statusWrapper = as_T4(status);

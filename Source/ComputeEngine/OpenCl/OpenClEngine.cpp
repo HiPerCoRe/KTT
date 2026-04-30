@@ -232,6 +232,8 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
     // OpenCL does not support power measurement, but preciseParams can be used for stable timing
     if (preciseParams.has_value())
     {
+        Timer preciseMeasurementTimer;
+        preciseMeasurementTimer.Start();
         const auto& params = preciseParams.value();
         const auto result = MeasurementUtility::ExecuteWithStableTiming(
             [&]() -> Nanoseconds {
@@ -241,9 +243,11 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
             },
             params,
             "OpenCL");
-        
+
         action->SetDurationFromMultirun(result.duration);
         action->SetDurationStdev(result.standardDeviation);
+        preciseMeasurementTimer.Stop();
+        action->IncreasePreciseMeasurementOverhead(preciseMeasurementTimer.GetElapsedTime());
     }
 
     action->IncreaseOverhead(timer.GetElapsedTime());
