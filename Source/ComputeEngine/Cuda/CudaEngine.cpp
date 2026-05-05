@@ -40,6 +40,7 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
     m_DeviceInfo(0, ""),
     m_KernelCache(10),
     m_L2CacheSize(0),
+    m_defaultStackSize(1024),
     m_L2CacheDevicePtr(0)
 {
     Logger::LogDebug("Initializing CUDA");
@@ -93,6 +94,7 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<Que
     m_DeviceInfo(0, ""),
     m_KernelCache(10),
     m_L2CacheSize(0),
+    m_defaultStackSize(1024),
     m_L2CacheDevicePtr(0)
 {
     m_Context = std::make_unique<CudaContext>(initializer.GetContext());
@@ -106,6 +108,9 @@ CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<Que
         CheckError(cuMemAlloc(&m_L2CacheDevicePtr, m_L2CacheSize), "cuMemAlloc");
         Logger::LogDebug("Allocated L2 cache flush buffer of size " + std::to_string(m_L2CacheSize));
     }
+
+    CheckError(cuCtxGetLimit(&m_defaultStackSize, CU_LIMIT_STACK_SIZE), "cuCtxGetLimit");
+    Logger::LogDebug("Default stack size " + std::to_string(m_defaultStackSize));
 
     const auto devices = CudaDevice::GetAllDevices();
 
