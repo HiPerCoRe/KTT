@@ -149,8 +149,13 @@ Nanoseconds ComputeLayerData::CalculateLauncherOverhead() const
 
     for (const auto& partialResult : m_PartialResults)
     {
-        result += partialResult.GetDuration();
+        // if precise measurement is used, the duration of the run is included in the precise measurement overhead
+        // so, to avoid double counting, we only add the raw duration if precise measurement overhead is not present
+        if (partialResult.GetPreciseMeasurementOverhead() == 0)
+            result += partialResult.GetDuration();
         result += partialResult.GetOverhead();
+        result += partialResult.GetProfilingOverhead();
+        result += partialResult.GetPreciseMeasurementOverhead();
     }
 
     return result;

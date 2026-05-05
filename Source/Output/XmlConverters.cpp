@@ -716,6 +716,9 @@ void AppendKernelResult(pugi::xml_node parent, const KernelResult& result)
         xmlFloatingPointPrecision);
     node.append_attribute("ProfilingOverhead").set_value(time.ConvertFromNanosecondsDouble(result.GetProfilingTotalOverhead()),
         xmlFloatingPointPrecision);
+    node.append_attribute("PreciseMeasurementOverhead").set_value(
+        time.ConvertFromNanosecondsDouble(result.GetPreciseMeasurementOverhead()),
+        xmlFloatingPointPrecision);
     AppendConfiguration(node, result.GetConfiguration());
 
     pugi::xml_node computationResults = node.append_child("ComputationResults");
@@ -761,6 +764,10 @@ KernelResult ParseKernelResult(const pugi::xml_node node)
     const double searcherOverhead = node.attribute("SearcherOverhead").as_double();
     const Nanoseconds searcherOverheadNs = time.ConvertToNanosecondsDouble(searcherOverhead);
     result.SetSearcherOverhead(searcherOverheadNs);
+
+    const double preciseMeasurementOverhead = node.attribute("PreciseMeasurementOverhead").as_double();
+    const Nanoseconds preciseMeasurementOverheadNs = time.ConvertToNanosecondsDouble(preciseMeasurementOverhead);
+    result.SetPreciseMeasurementOverhead(preciseMeasurementOverheadNs);
 
     return result;
 }

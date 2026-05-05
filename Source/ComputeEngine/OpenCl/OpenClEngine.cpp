@@ -232,6 +232,8 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
     // OpenCL does not support power measurement, but preciseParams can be used for stable timing
     if (preciseParams.has_value())
     {
+        Timer preciseMeasurementTimer;
+        preciseMeasurementTimer.Start();
         const auto& params = preciseParams.value();
         const auto result = MeasurementUtility::ExecuteWithStableTiming(
             [&]() -> Nanoseconds {
@@ -241,9 +243,11 @@ ComputeActionId OpenClEngine::RunKernelAsync(const KernelComputeData& data, cons
             },
             params,
             "OpenCL");
-        
+
         action->SetDurationFromMultirun(result.duration);
         action->SetDurationStdev(result.standardDeviation);
+        preciseMeasurementTimer.Stop();
+        action->IncreasePreciseMeasurementOverhead(preciseMeasurementTimer.GetElapsedTime());
     }
 
     action->IncreaseOverhead(timer.GetElapsedTime());
@@ -322,7 +326,7 @@ ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const Ke
     (void)powerParams;
     const auto actionId = RunKernelAsync(data, queueId);
     auto& action = *m_ComputeActions[actionId];
-    action.IncreaseOverhead(timer.GetElapsedTime());
+    action.IncreaseProfilingOverhead(timer.GetElapsedTime());
 
     ComputationResult result = WaitForComputeAction(actionId);
 
@@ -331,7 +335,7 @@ ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const Ke
     FillProfilingData(id, result);
     timer.Stop();
 
-    result.SetDurationData(result.GetDuration(), result.GetOverhead() + timer.GetElapsedTime(), result.GetCompilationOverhead());
+    result.SetDurationData(result.GetDuration(), result.GetOverhead(), result.GetCompilationOverhead(), result.GetProfilingOverhead() + timer.GetElapsedTime());
     return result;
 #else
     throw KttException("Support for kernel profiling is not included in this version of KTT framework");

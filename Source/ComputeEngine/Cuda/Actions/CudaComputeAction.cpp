@@ -16,6 +16,8 @@ CudaComputeAction::CudaComputeAction(const ComputeActionId id, const QueueId que
     m_Kernel(kernel),
     m_Overhead(0),
     m_CompilationOverhead(0),
+    m_ProfilingOverhead(0),
+    m_PreciseMeasurementOverhead(0),
     m_GlobalSize(globalSize),
     m_LocalSize(localSize)
 {
@@ -37,6 +39,15 @@ void CudaComputeAction::IncreaseCompilationOverhead(const Nanoseconds overhead)
     m_CompilationOverhead += overhead;
 }
 
+void CudaComputeAction::IncreaseProfilingOverhead(const Nanoseconds overhead)
+{
+    m_ProfilingOverhead += overhead;
+}
+
+void CudaComputeAction::IncreasePreciseMeasurementOverhead(const Nanoseconds overhead)
+{
+    m_PreciseMeasurementOverhead += overhead;
+}
 
 void CudaComputeAction::SetComputeId(const KernelComputeId& id)
 {
@@ -124,6 +135,16 @@ Nanoseconds CudaComputeAction::GetCompilationOverhead() const
     return m_CompilationOverhead;
 }
 
+Nanoseconds CudaComputeAction::GetProfilingOverhead() const
+{
+    return m_ProfilingOverhead;
+}
+
+Nanoseconds CudaComputeAction::GetPreciseMeasurementOverhead() const
+{
+    return m_PreciseMeasurementOverhead;
+}
+
 const KernelComputeId& CudaComputeAction::GetComputeId() const
 {
     return m_ComputeId;
@@ -139,9 +160,11 @@ ComputationResult CudaComputeAction::GenerateResult() const
         duration = GetDuration();
     const Nanoseconds overhead = GetOverhead();
     const Nanoseconds compilationOverhead = GetCompilationOverhead();
+    const Nanoseconds profilingOverhead = GetProfilingOverhead();
+    const Nanoseconds preciseMeasurementOverhead = GetPreciseMeasurementOverhead();
     std::unique_ptr<KernelCompilationData> compilationData = m_Kernel->GenerateCompilationData();
 
-    result.SetDurationData(duration, overhead, compilationOverhead);
+    result.SetDurationData(duration, overhead, compilationOverhead, profilingOverhead, preciseMeasurementOverhead);
     result.SetSizeData(m_GlobalSize, m_LocalSize);
     result.SetCompilationData(std::move(compilationData));
     
