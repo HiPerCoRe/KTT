@@ -95,7 +95,7 @@ public:
     void ClearKernelCache() override;
     void EnsureThreadContext() override;
     void SetCompiler(const std::string& compiler) override;
-    void FlushL2Cache(const QueueId queueId) override;
+    void Sanitize(const QueueId queueId) override;
 
 private:
     EngineConfiguration m_Configuration;
