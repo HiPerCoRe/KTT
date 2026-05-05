@@ -64,6 +64,9 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
         Logger::LogDebug("Allocated L2 cache flush buffer of size " + std::to_string(m_L2CacheSize));
     }
 
+    CheckError(cuCtxGetLimit(&m_defaultStackSize, CU_LIMIT_STACK_SIZE), "cuCtxGetLimit");
+    Logger::LogDebug("Default stack size " + std::to_string(m_defaultStackSize));
+
     for (uint32_t i = 0; i < queueCount; ++i)
     {
         const QueueId id = m_QueueIdGenerator.GenerateId();
@@ -146,8 +149,10 @@ CudaEngine::~CudaEngine()
     }
 }
 
-void CudaEngine::FlushL2Cache(const QueueId queueId)
+void CudaEngine::Sanitize(const QueueId queueId)
 {
+    CheckError(cuCtxSetLimit(CU_LIMIT_STACK_SIZE, m_defaultStackSize), "cuCtxSetLimit");
+
     if (m_L2CacheSize == 0 || m_L2CacheDevicePtr == 0)
     {
         return;

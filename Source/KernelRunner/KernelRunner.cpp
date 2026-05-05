@@ -289,7 +289,7 @@ KernelResult KernelRunner::RunKernelInternal(const Kernel& kernel, const KernelC
     {
         const Nanoseconds flushOverhead = RunScopeTimer([this]()
         {
-            m_Engine.FlushL2Cache(m_ComputeLayer->GetDefaultQueue());
+            m_Engine.Sanitize(m_ComputeLayer->GetDefaultQueue());
         });
         result.SetDataMovementOverhead(result.GetDataMovementOverhead() + dataOverhead + flushOverhead);
     }

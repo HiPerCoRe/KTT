@@ -84,8 +84,8 @@ public:
     virtual void EnsureThreadContext() = 0;
     virtual void SetCompiler(const std::string& compiler) = 0;
 
-    // L2 cache flushing
-    virtual void FlushL2Cache(const QueueId /*queueId*/) {}
+    // Sanitizing processor to isolate measurements (L2 cache flushing etc.)
+    virtual void Sanitize(const QueueId /*queueId*/) {}
 };
 
 } // namespace ktt

@@ -101,7 +101,7 @@ public:
     void ClearKernelCache() override;
     void EnsureThreadContext() override;
     void SetCompiler(const std::string& compiler) override;
-    void FlushL2Cache(const QueueId queueId) override;
+    void Sanitize(const QueueId queueId) override;
 
 private:
     EngineConfiguration m_Configuration;
@@ -115,6 +115,7 @@ private:
     std::map<ArgumentId, std::unique_ptr<CudaBuffer>> m_Buffers;
     LruCache<KernelComputeId, std::shared_ptr<CudaKernel>> m_KernelCache;
     size_t m_L2CacheSize;
+    size_t  m_defaultStackSize;
     CUdeviceptr m_L2CacheDevicePtr;
     std::map<ComputeActionId, std::unique_ptr<CudaComputeAction>> m_ComputeActions;
     std::map<TransferActionId, std::unique_ptr<CudaTransferAction>> m_TransferActions;

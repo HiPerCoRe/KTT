@@ -163,7 +163,7 @@ OpenClEngine::~OpenClEngine()
     }
 }
 
-void OpenClEngine::FlushL2Cache(const QueueId queueId)
+void OpenClEngine::Sanitize(const QueueId queueId)
 {
     if (m_L2CacheSize == 0 || m_L2CacheBuffer == nullptr)
     {
