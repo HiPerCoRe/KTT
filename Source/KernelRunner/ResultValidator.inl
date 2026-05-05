@@ -59,7 +59,7 @@ bool ResultValidator::ValidateAbsoluteDifference(const KernelArgument& argument,
         difference += std::fabs(result[i] - reference[i]);
     }
 
-    if (difference > m_ToleranceThreshold)
+    if ((difference != difference) || (difference > m_ToleranceThreshold))
     {
         Logger::LogWarning("Results differ for argument with id " + argument.GetId() + ", absolute difference is "
             + std::to_string(difference));
@@ -76,7 +76,7 @@ bool ResultValidator::ValidateSideBySide(const KernelArgument& argument, const T
     {
         const T difference = std::fabs(result[i] - reference[i]);
 
-        if (difference > m_ToleranceThreshold)
+        if ((result[i] != result[i]) || (difference > m_ToleranceThreshold))
         {
             Logger::LogWarning("Results differ for argument with id " + argument.GetId() + " at index " + std::to_string(i)
                 + ", reference value: " + std::to_string(reference[i]) + ", result value: " + std::to_string(result[i])
@@ -96,7 +96,7 @@ bool ResultValidator::ValidateSideBySideRelative(const KernelArgument& argument,
         const T difference = std::fabs(result[i] - reference[i]);
         const T relativeDifference = difference / reference[i];
 
-        if (difference > 1e-4 && relativeDifference > m_ToleranceThreshold)
+        if ((result[i] != result[i]) || (difference > 1e-4 && relativeDifference > m_ToleranceThreshold))
         {
             Logger::LogWarning("Results differ for argument with id " + argument.GetId() + " at index " + std::to_string(i)
                 + ", reference value: " + std::to_string(reference[i]) + ", result value: " + std::to_string(result[i])
