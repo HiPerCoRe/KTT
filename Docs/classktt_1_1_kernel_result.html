@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Kernel Tuning Toolkit<span id="projectnumber">&#160;2.2</span>
+   <div id="projectname">Kernel Tuning Toolkit<span id="projectnumber">&#160;2.3</span>
    </div>
   </td>
     <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -108,10 +108,10 @@ $(document).ready(function(){initNavTree('classktt_1_1_kernel_result.html',''); 
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a9735a1357e010cc89061e6cbf404777d" id="r_a9735a1357e010cc89061e6cbf404777d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a9735a1357e010cc89061e6cbf404777d">KernelResult</a> ()</td></tr>
 <tr class="separator:a9735a1357e010cc89061e6cbf404777d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae6e6ba75f1db55df46e93ef745135e70" id="r_ae6e6ba75f1db55df46e93ef745135e70"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#ae6e6ba75f1db55df46e93ef745135e70">KernelResult</a> (const std::string &amp;kernelName, const <a class="el" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> &amp;configuration)</td></tr>
-<tr class="separator:ae6e6ba75f1db55df46e93ef745135e70"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec57eff202632e1a51cde6839a5f59a8" id="r_aec57eff202632e1a51cde6839a5f59a8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#aec57eff202632e1a51cde6839a5f59a8">KernelResult</a> (const std::string &amp;kernelName, const <a class="el" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> &amp;configuration, const std::vector&lt; <a class="el" href="classktt_1_1_computation_result.html">ComputationResult</a> &gt; &amp;results)</td></tr>
-<tr class="separator:aec57eff202632e1a51cde6839a5f59a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee9846413129624fcdf86364239c7a75" id="r_aee9846413129624fcdf86364239c7a75"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#aee9846413129624fcdf86364239c7a75">KernelResult</a> (const std::string &amp;kernelName, const <a class="el" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> &amp;configuration, const std::string &amp;timestamp)</td></tr>
+<tr class="separator:aee9846413129624fcdf86364239c7a75"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab27175c65d656bb69bf36980944fc593" id="r_ab27175c65d656bb69bf36980944fc593"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#ab27175c65d656bb69bf36980944fc593">KernelResult</a> (const std::string &amp;kernelName, const <a class="el" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> &amp;configuration, const std::vector&lt; <a class="el" href="classktt_1_1_computation_result.html">ComputationResult</a> &gt; &amp;results, const std::string &amp;timestamp)</td></tr>
+<tr class="separator:ab27175c65d656bb69bf36980944fc593"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac29366a0b1b5e9a9d0a18750c57f881e" id="r_ac29366a0b1b5e9a9d0a18750c57f881e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#ac29366a0b1b5e9a9d0a18750c57f881e">SetStatus</a> (const <a class="el" href="namespacektt.html#a7ffb69a1caa29577202f4b1590ace695">ResultStatus</a> status)</td></tr>
 <tr class="separator:ac29366a0b1b5e9a9d0a18750c57f881e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62d49b89c426b97283ffc72075bd36c7" id="r_a62d49b89c426b97283ffc72075bd36c7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a62d49b89c426b97283ffc72075bd36c7">SetExtraDuration</a> (const <a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> duration)</td></tr>
@@ -128,22 +128,34 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ada5e5e862b4ed11623dad836d5a0281f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e7ec96e318b5c6da5a05ed7432185d2" id="r_a5e7ec96e318b5c6da5a05ed7432185d2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a5e7ec96e318b5c6da5a05ed7432185d2">SetProfilingRunsOverhead</a> (const <a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> overhead)</td></tr>
 <tr class="separator:a5e7ec96e318b5c6da5a05ed7432185d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8287cd6fe37a873ec4603d22f62895c7" id="r_a8287cd6fe37a873ec4603d22f62895c7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a8287cd6fe37a873ec4603d22f62895c7">SetProfilingOverhead</a> (const <a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> overhead)</td></tr>
+<tr class="separator:a8287cd6fe37a873ec4603d22f62895c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae148239cbea3fd3876b5d597399cda1c" id="r_ae148239cbea3fd3876b5d597399cda1c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#ae148239cbea3fd3876b5d597399cda1c">SetPreciseMeasurementOverhead</a> (const <a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> overhead)</td></tr>
+<tr class="separator:ae148239cbea3fd3876b5d597399cda1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade0c3b9a58e9561e0bc008cd583cd351" id="r_ade0c3b9a58e9561e0bc008cd583cd351"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#ade0c3b9a58e9561e0bc008cd583cd351">GetKernelName</a> () const</td></tr>
 <tr class="separator:ade0c3b9a58e9561e0bc008cd583cd351"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36938e66c910dc9de499faeb6e5b573d" id="r_a36938e66c910dc9de499faeb6e5b573d"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classktt_1_1_computation_result.html">ComputationResult</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a36938e66c910dc9de499faeb6e5b573d">GetResults</a> () const</td></tr>
 <tr class="separator:a36938e66c910dc9de499faeb6e5b573d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5274180518583395cdd3a7018431af43" id="r_a5274180518583395cdd3a7018431af43"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a5274180518583395cdd3a7018431af43">GetTimestamp</a> () const</td></tr>
+<tr class="separator:a5274180518583395cdd3a7018431af43"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7004a0fd0766610281b6ffdf06411696" id="r_a7004a0fd0766610281b6ffdf06411696"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a7004a0fd0766610281b6ffdf06411696">GetConfiguration</a> () const</td></tr>
 <tr class="separator:a7004a0fd0766610281b6ffdf06411696"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65c5f8856417eed5bcc1592a0415a3d6" id="r_a65c5f8856417eed5bcc1592a0415a3d6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a7ffb69a1caa29577202f4b1590ace695">ResultStatus</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a65c5f8856417eed5bcc1592a0415a3d6">GetStatus</a> () const</td></tr>
 <tr class="separator:a65c5f8856417eed5bcc1592a0415a3d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8adbadb09278f0f2f9a3d5924e11f59" id="r_aa8adbadb09278f0f2f9a3d5924e11f59"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#aa8adbadb09278f0f2f9a3d5924e11f59">GetKernelDuration</a> () const</td></tr>
 <tr class="separator:aa8adbadb09278f0f2f9a3d5924e11f59"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5647a12686b5a4916e1adf7feb391bc5" id="r_a5647a12686b5a4916e1adf7feb391bc5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a5647a12686b5a4916e1adf7feb391bc5">GetKernelOverheadFromCompResults</a> () const</td></tr>
+<tr class="separator:a5647a12686b5a4916e1adf7feb391bc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a85655eb95f6a69d3989acf6aba64d810" id="r_a85655eb95f6a69d3989acf6aba64d810"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a85655eb95f6a69d3989acf6aba64d810">GetKernelOverhead</a> () const</td></tr>
 <tr class="separator:a85655eb95f6a69d3989acf6aba64d810"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79206d4b84025e78650af6daa93f3b77" id="r_a79206d4b84025e78650af6daa93f3b77"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a79206d4b84025e78650af6daa93f3b77">GetKernelCompilationOverhead</a> () const</td></tr>
-<tr class="separator:a79206d4b84025e78650af6daa93f3b77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a062a5ef5cc1e699f0bc567430f76c4a8" id="r_a062a5ef5cc1e699f0bc567430f76c4a8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a062a5ef5cc1e699f0bc567430f76c4a8">GetKernelOverheadFirstPass</a> () const</td></tr>
+<tr class="separator:a062a5ef5cc1e699f0bc567430f76c4a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08e52df4162f44f0264ab7213b9ac018" id="r_a08e52df4162f44f0264ab7213b9ac018"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a08e52df4162f44f0264ab7213b9ac018">GetCompilationOverheadFromCompResults</a> () const</td></tr>
+<tr class="separator:a08e52df4162f44f0264ab7213b9ac018"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc545615523a4dea055784660f8fe618" id="r_abc545615523a4dea055784660f8fe618"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#abc545615523a4dea055784660f8fe618">GetExtraDuration</a> () const</td></tr>
 <tr class="separator:abc545615523a4dea055784660f8fe618"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e5eddac2d65f88fde332a777f979999" id="r_a2e5eddac2d65f88fde332a777f979999"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a2e5eddac2d65f88fde332a777f979999">GetExtraDurationFirstPass</a> () const</td></tr>
+<tr class="separator:a2e5eddac2d65f88fde332a777f979999"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada777a7053bf09118204e846239d6e10" id="r_ada777a7053bf09118204e846239d6e10"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#ada777a7053bf09118204e846239d6e10">GetExtraOverhead</a> () const</td></tr>
 <tr class="separator:ada777a7053bf09118204e846239d6e10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0de59acb3292bb84f4ad0c5481326b36" id="r_a0de59acb3292bb84f4ad0c5481326b36"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a0de59acb3292bb84f4ad0c5481326b36">GetDataMovementOverhead</a> () const</td></tr>
@@ -156,8 +168,16 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aea7e411db0a7298b995f455781e064f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a688cd147cb62ffa49faf5f9d45b8e4fd" id="r_a688cd147cb62ffa49faf5f9d45b8e4fd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a688cd147cb62ffa49faf5f9d45b8e4fd">GetProfilingRunsOverhead</a> () const</td></tr>
 <tr class="separator:a688cd147cb62ffa49faf5f9d45b8e4fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1568ac0345c33ff07d9144e135e43467" id="r_a1568ac0345c33ff07d9144e135e43467"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a1568ac0345c33ff07d9144e135e43467">GetProfilingInfrastructureOverhead</a> () const</td></tr>
+<tr class="separator:a1568ac0345c33ff07d9144e135e43467"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2789ff96c5bc8793eafe42c62e7a6827" id="r_a2789ff96c5bc8793eafe42c62e7a6827"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a2789ff96c5bc8793eafe42c62e7a6827">GetProfilingOverheadFromCompResults</a> () const</td></tr>
+<tr class="separator:a2789ff96c5bc8793eafe42c62e7a6827"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bd8c7a929a558c9fd24384bcc4fbb0a" id="r_a8bd8c7a929a558c9fd24384bcc4fbb0a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a8bd8c7a929a558c9fd24384bcc4fbb0a">GetPreciseMeasurementOverheadFromCompResults</a> () const</td></tr>
+<tr class="separator:a8bd8c7a929a558c9fd24384bcc4fbb0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56ce4a112d5014c6a1d729c959f5187a" id="r_a56ce4a112d5014c6a1d729c959f5187a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a56ce4a112d5014c6a1d729c959f5187a">GetProfilingOverhead</a> () const</td></tr>
 <tr class="separator:a56ce4a112d5014c6a1d729c959f5187a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23c3e96eb496404f2b56fb89dbf2cfe2" id="r_a23c3e96eb496404f2b56fb89dbf2cfe2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a23c3e96eb496404f2b56fb89dbf2cfe2">GetPreciseMeasurementOverhead</a> () const</td></tr>
+<tr class="separator:a23c3e96eb496404f2b56fb89dbf2cfe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50ce7fe5f21a7f6776c885d58fb97554" id="r_a50ce7fe5f21a7f6776c885d58fb97554"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a50ce7fe5f21a7f6776c885d58fb97554">GetProfilingTotalOverhead</a> () const</td></tr>
 <tr class="separator:a50ce7fe5f21a7f6776c885d58fb97554"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ed2d36855d584353db42d5f3636d480" id="r_a0ed2d36855d584353db42d5f3636d480"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_result.html#a0ed2d36855d584353db42d5f3636d480">GetCompilationOverhead</a> () const</td></tr>
@@ -198,8 +218,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ae6e6ba75f1db55df46e93ef745135e70" name="ae6e6ba75f1db55df46e93ef745135e70"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae6e6ba75f1db55df46e93ef745135e70">&#9670;&#160;</a></span>KernelResult() <span class="overload">[2/3]</span></h2>
+<a id="aee9846413129624fcdf86364239c7a75" name="aee9846413129624fcdf86364239c7a75"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee9846413129624fcdf86364239c7a75">&#9670;&#160;</a></span>KernelResult() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -217,7 +237,13 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> &amp;&#160;</td>
-          <td class="paramname"><em>configuration</em>&#160;</td>
+          <td class="paramname"><em>configuration</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>timestamp</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -235,14 +261,15 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">kernelName</td><td>Name of a kernel tied to the result. </td></tr>
     <tr><td class="paramname">configuration</td><td>Configuration tied to the result. </td></tr>
+    <tr><td class="paramname">timestamp</td><td>Timestamp tied to this kernel run. </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="aec57eff202632e1a51cde6839a5f59a8" name="aec57eff202632e1a51cde6839a5f59a8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aec57eff202632e1a51cde6839a5f59a8">&#9670;&#160;</a></span>KernelResult() <span class="overload">[3/3]</span></h2>
+<a id="ab27175c65d656bb69bf36980944fc593" name="ab27175c65d656bb69bf36980944fc593"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab27175c65d656bb69bf36980944fc593">&#9670;&#160;</a></span>KernelResult() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -266,7 +293,13 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; <a class="el" href="classktt_1_1_computation_result.html">ComputationResult</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>results</em>&#160;</td>
+          <td class="paramname"><em>results</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>timestamp</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -285,6 +318,7 @@ Public Member Functions</h2></td></tr>
     <tr><td class="paramname">kernelName</td><td>Name of a kernel tied to the result. </td></tr>
     <tr><td class="paramname">configuration</td><td>Configuration tied to the result. </td></tr>
     <tr><td class="paramname">results</td><td>Partial results from all kernel definition runs under the kernel launch. </td></tr>
+    <tr><td class="paramname">timestamp</td><td>Timestamp tied to the kernel run. </td></tr>
   </table>
   </dd>
 </dl>
@@ -369,6 +403,24 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a08e52df4162f44f0264ab7213b9ac018" name="a08e52df4162f44f0264ab7213b9ac018"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08e52df4162f44f0264ab7213b9ac018">&#9670;&#160;</a></span>GetCompilationOverheadFromCompResults()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> ktt::KernelResult::GetCompilationOverheadFromCompResults </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Retrieves total kernel compilation overhead from the partial results. </p><dl class="section return"><dt>Returns</dt><dd>Total kernel compilation overhead from the partial results. </dd></dl>
+
+</div>
+</div>
 <a id="a7004a0fd0766610281b6ffdf06411696" name="a7004a0fd0766610281b6ffdf06411696"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7004a0fd0766610281b6ffdf06411696">&#9670;&#160;</a></span>GetConfiguration()</h2>
 
@@ -423,6 +475,24 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a2e5eddac2d65f88fde332a777f979999" name="a2e5eddac2d65f88fde332a777f979999"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e5eddac2d65f88fde332a777f979999">&#9670;&#160;</a></span>GetExtraDurationFirstPass()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> ktt::KernelResult::GetExtraDurationFirstPass </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Retrieves extra duration of a kernel launcher from the first (non-profiling) pass. </p><dl class="section return"><dt>Returns</dt><dd>Kernel launcher extra duration from the first pass. </dd></dl>
+
+</div>
+</div>
 <a id="ada777a7053bf09118204e846239d6e10" name="ada777a7053bf09118204e846239d6e10"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ada777a7053bf09118204e846239d6e10">&#9670;&#160;</a></span>GetExtraOverhead()</h2>
 
@@ -456,24 +526,6 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Retrieves duration of failed (uncompilable) kernel creation. </p><dl class="section return"><dt>Returns</dt><dd>Duration of KTT/compiler spent on preparation of kernel which cannot be executed. </dd></dl>
-
-</div>
-</div>
-<a id="a79206d4b84025e78650af6daa93f3b77" name="a79206d4b84025e78650af6daa93f3b77"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a79206d4b84025e78650af6daa93f3b77">&#9670;&#160;</a></span>GetKernelCompilationOverhead()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> ktt::KernelResult::GetKernelCompilationOverhead </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Retrieves total kernel compilation overhead from the partial results. </p><dl class="section return"><dt>Returns</dt><dd>Total kernel compilation overhead from the partial results. </dd></dl>
 
 </div>
 </div>
@@ -527,7 +579,97 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Retrieves total kernel overhead. </p><dl class="section return"><dt>Returns</dt><dd>Total kernel overhead. </dd></dl>
+
+</div>
+</div>
+<a id="a062a5ef5cc1e699f0bc567430f76c4a8" name="a062a5ef5cc1e699f0bc567430f76c4a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a062a5ef5cc1e699f0bc567430f76c4a8">&#9670;&#160;</a></span>GetKernelOverheadFirstPass()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> ktt::KernelResult::GetKernelOverheadFirstPass </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Retrieves kernel overhead of the first pass under the same configuration. </p><dl class="section return"><dt>Returns</dt><dd>Kernel overhead of the first pass under the same configuration. </dd></dl>
+
+</div>
+</div>
+<a id="a5647a12686b5a4916e1adf7feb391bc5" name="a5647a12686b5a4916e1adf7feb391bc5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5647a12686b5a4916e1adf7feb391bc5">&#9670;&#160;</a></span>GetKernelOverheadFromCompResults()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> ktt::KernelResult::GetKernelOverheadFromCompResults </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 <p>Retrieves total kernel overhead from the partial results. </p><dl class="section return"><dt>Returns</dt><dd>Total kernel overhead from the partial results. </dd></dl>
+
+</div>
+</div>
+<a id="a23c3e96eb496404f2b56fb89dbf2cfe2" name="a23c3e96eb496404f2b56fb89dbf2cfe2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23c3e96eb496404f2b56fb89dbf2cfe2">&#9670;&#160;</a></span>GetPreciseMeasurementOverhead()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> ktt::KernelResult::GetPreciseMeasurementOverhead </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Retrieves duration of the precise multi-run measurement loop. </p><dl class="section return"><dt>Returns</dt><dd>Duration of the precise multi-run measurement loop. </dd></dl>
+
+</div>
+</div>
+<a id="a8bd8c7a929a558c9fd24384bcc4fbb0a" name="a8bd8c7a929a558c9fd24384bcc4fbb0a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8bd8c7a929a558c9fd24384bcc4fbb0a">&#9670;&#160;</a></span>GetPreciseMeasurementOverheadFromCompResults()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> ktt::KernelResult::GetPreciseMeasurementOverheadFromCompResults </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Retrieves the sum of precise multi-run measurement overhead from the partial results. </p><dl class="section return"><dt>Returns</dt><dd>Sum of precise measurement overhead across all partial results. </dd></dl>
+
+</div>
+</div>
+<a id="a1568ac0345c33ff07d9144e135e43467" name="a1568ac0345c33ff07d9144e135e43467"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1568ac0345c33ff07d9144e135e43467">&#9670;&#160;</a></span>GetProfilingInfrastructureOverhead()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> ktt::KernelResult::GetProfilingInfrastructureOverhead </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Retrieves duration of CUPTI initialization and data collection, but without data movement and extra duration, for all profiling passes. </p><dl class="section return"><dt>Returns</dt><dd>Duration of profiling infrastructure, but without data movement and extra duration. </dd></dl>
 
 </div>
 </div>
@@ -545,7 +687,25 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Retrieves duration of all non-kernel operations performed during collection performance counters (e.g., data movements for extra kernel runs). </p><dl class="section return"><dt>Returns</dt><dd>Duration operations different than kernel execution needed to coollect performance counters. </dd></dl>
+<p>Retrieves duration of all non-kernel operations performed during collection performance counters (e.g., CUPTI infrastructure and data movements for extra kernel runs) for all profiling runs. </p><dl class="section return"><dt>Returns</dt><dd>Duration operations different than kernel execution needed to collect performance counters. </dd></dl>
+
+</div>
+</div>
+<a id="a2789ff96c5bc8793eafe42c62e7a6827" name="a2789ff96c5bc8793eafe42c62e7a6827"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2789ff96c5bc8793eafe42c62e7a6827">&#9670;&#160;</a></span>GetProfilingOverheadFromCompResults()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a> ktt::KernelResult::GetProfilingOverheadFromCompResults </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Retrieves duration of all non-kernel operations performed during collection performance counters (e.g., data movements for extra kernel runs) from the partial results. </p><dl class="section return"><dt>Returns</dt><dd>Duration of operations different than kernel execution needed to collect performance counters from the partial results. </dd></dl>
 
 </div>
 </div>
@@ -639,6 +799,24 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a5274180518583395cdd3a7018431af43" name="a5274180518583395cdd3a7018431af43"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5274180518583395cdd3a7018431af43">&#9670;&#160;</a></span>GetTimestamp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::string &amp; ktt::KernelResult::GetTimestamp </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Returns the timestamp corresponding to the kernel run </p><dl class="section return"><dt>Returns</dt><dd>Timestamp of the kernel run </dd></dl>
+
+</div>
+</div>
 <a id="a2c413a2a9e444f2370e244b9a2a216fe" name="a2c413a2a9e444f2370e244b9a2a216fe"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2c413a2a9e444f2370e244b9a2a216fe">&#9670;&#160;</a></span>GetTotalDuration()</h2>
 
@@ -671,7 +849,7 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Retrieves the sum of kernel, data movement, validation and searcher overhead. </p><dl class="section return"><dt>Returns</dt><dd>The sum of kernel, data movement, validation and searcher overhead. </dd></dl>
+<p>Retrieves the sum of kernel overhead, data movement, validation, searcher, precise measurement and profiling related overhead. </p><dl class="section return"><dt>Returns</dt><dd>The sum of kernel overhead, data movement, validation, searcher, precise measurement and profiling related overhead. </dd></dl>
 
 </div>
 </div>
@@ -819,6 +997,54 @@ Public Member Functions</h2></td></tr>
 <p>Sets duration of failed (uncompilable) kernel creation. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">overhead</td><td>Duration of KTT/compiler spent on preparation of kernel which cannot be executed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ae148239cbea3fd3876b5d597399cda1c" name="ae148239cbea3fd3876b5d597399cda1c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae148239cbea3fd3876b5d597399cda1c">&#9670;&#160;</a></span>SetPreciseMeasurementOverhead()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ktt::KernelResult::SetPreciseMeasurementOverhead </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td>
+          <td class="paramname"><em>overhead</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Sets duration of the precise multi-run measurement loop. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">overhead</td><td>Duration of the precise multi-run measurement loop. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a8287cd6fe37a873ec4603d22f62895c7" name="a8287cd6fe37a873ec4603d22f62895c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8287cd6fe37a873ec4603d22f62895c7">&#9670;&#160;</a></span>SetProfilingOverhead()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ktt::KernelResult::SetProfilingOverhead </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="namespacektt.html#a69f2894ba0d3d4a800a74961572a7461">Nanoseconds</a>&#160;</td>
+          <td class="paramname"><em>overhead</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Sets time of additional overhead (data movement and extra duration) to collect performance counters. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">overhead</td><td>Additional overhead of kernels executed just to collect performance counters. </td></tr>
   </table>
   </dd>
 </dl>

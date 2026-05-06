@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['local_0',['local',['../namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a509820290d57f333403f490dde7316f4',1,'ktt::Local'],['../namespacektt.html#a9bff4519ba4718c5713c139e61058771a509820290d57f333403f490dde7316f4',1,'ktt::Local']]],
-  ['long_1',['Long',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a8394f0347c184cf156ac5924dccb773b',1,'ktt']]]
+  ['json_0',['JSON',['../namespacektt.html#aa3395e2ad389eb11a09e94a5eb5e5b51a0ecd11c1d7a287401d148a23bbd7a2f8',1,'ktt']]],
+  ['json_5ft4_1',['JSON_T4',['../namespacektt.html#aa3395e2ad389eb11a09e94a5eb5e5b51afd87e280553d415f016bf5e5f82388a7',1,'ktt']]]
 ];

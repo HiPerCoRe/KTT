@@ -158,7 +158,7 @@ public:
       */
     Nanoseconds GetKernelOverheadFirstPass() const;
 
-    /** @fn Nanoseconds GetKernelCompilationOverhead() const
+    /** @fn Nanoseconds GetCompilationOverheadFromCompResults() const
       * Retrieves total kernel compilation overhead from the partial results.
       * @return Total kernel compilation overhead from the partial results.
       */

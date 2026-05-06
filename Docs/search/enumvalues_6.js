@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['half_0',['Half',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7ac48615a1bc4197056d522af276aa5a85',1,'ktt']]],
-  ['host_1',['Host',['../namespacektt.html#ac355e7acb6c66ab83a0238f94d880f62ac2ca16d048ec66e04bca283eab048ec2',1,'ktt']]],
-  ['hostzerocopy_2',['HostZeroCopy',['../namespacektt.html#ac355e7acb6c66ab83a0238f94d880f62a752a38606c366e4718d76c6f40c0cd7d',1,'ktt']]]
+  ['general_0',['General',['../namespacektt.html#aafca65fbebe616882f3343d1d37979fca0db377921f4ce762c62526131097968f',1,'ktt']]],
+  ['global_1',['Global',['../namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a4cc6684df7b4a92b1dec6fce3264fac8',1,'ktt']]],
+  ['gpu_2',['GPU',['../namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01a52f9ec21735243ad9917cda3ca077d32',1,'ktt']]]
 ];

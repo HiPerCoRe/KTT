@@ -1,4 +1,17 @@
-Version 2.2 (4/2/2025
+Version 2.3 (6/5/2026)
+* KTT supports autotuning of compiler switches
+* KTT can now autotune C/C++ kernels (initial implementation, does not support many features implemented for CUDA/OpenCL)
+* significantly improved measurement precision and quality: kernels can be repeated to reach a steady power state, GPU frequency, fan speed, and temperature are tracked, and the GPU is sanitized between kernel runs
+* improved and bug-fixed measurement of various overheads
+* new output JSON_T4 (compatible with other tuners)
+* two new stop conditions usable for development, allowing to stop tuning on kernel failures
+* deterministic creation of tuning space
+* fixed bug in constraint application
+* pybind updated to work on newer systems
+* small bugfixes and improvements to the documentation
+* timestamps added to output files
+
+Version 2.2 (4/2/2025)
 * Tuning can be configured in JSON file and tuning session can be loaded and
 executed from that file.
 * Implemented profile-based searcher navigating tuning space via hardware performance counters

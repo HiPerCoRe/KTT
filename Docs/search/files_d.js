@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['timeunit_2eh_0',['TimeUnit.h',['../_time_unit_8h.html',1,'']]],
-  ['tuner_2eh_1',['Tuner.h',['../_tuner_8h.html',1,'']]],
-  ['tuningduration_2eh_2',['TuningDuration.h',['../_tuning_duration_8h.html',1,'']]]
+  ['searcher_2eh_0',['Searcher.h',['../_searcher_8h.html',1,'']]],
+  ['stopcondition_2eh_1',['StopCondition.h',['../_stop_condition_8h.html',1,'']]]
 ];

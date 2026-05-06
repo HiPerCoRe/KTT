@@ -6,6 +6,7 @@ var classktt_1_1_kernel_profiling_counter =
     [ "KernelProfilingCounter", "classktt_1_1_kernel_profiling_counter.html#aaf6a73668395a8aa160476f5e0895291", null ],
     [ "GetName", "classktt_1_1_kernel_profiling_counter.html#a35ea235dae6d237dcffe77913ea5d8d6", null ],
     [ "GetType", "classktt_1_1_kernel_profiling_counter.html#a4dff75794d30fa5cd21de106d7f4d5a8", null ],
+    [ "GetTypeString", "classktt_1_1_kernel_profiling_counter.html#aabf55c2365156200cd9224e13d108090", null ],
     [ "GetValueDouble", "classktt_1_1_kernel_profiling_counter.html#a41fe747d9a80d48cac428a4013f44c65", null ],
     [ "GetValueInt", "classktt_1_1_kernel_profiling_counter.html#a9bd46a83e38739b0ac41c0f439475331", null ],
     [ "GetValueUint", "classktt_1_1_kernel_profiling_counter.html#a2e74a0754342eaaa59ecec2b59036d38", null ],

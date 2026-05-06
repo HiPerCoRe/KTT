@@ -4,6 +4,7 @@ var classktt_1_1_kernel_configuration =
     [ "KernelConfiguration", "classktt_1_1_kernel_configuration.html#aee63d61d9b9e9ab8c30b8e8160de0b31", null ],
     [ "GenerateNeighbours", "classktt_1_1_kernel_configuration.html#a8a3bd003aa6e264a497602688d589bc6", null ],
     [ "GeneratePrefix", "classktt_1_1_kernel_configuration.html#a2e97ef5d6ca155af04289536426078da", null ],
+    [ "GetCompilerOptions", "classktt_1_1_kernel_configuration.html#afab428abaceb46a34e6d77696e9fb6ee", null ],
     [ "GetPairs", "classktt_1_1_kernel_configuration.html#a25e068aeddea633414e923b3b01615d5", null ],
     [ "GetString", "classktt_1_1_kernel_configuration.html#a3a5a9d4ffa080cf0e5b6efe8024ef1b9", null ],
     [ "IsValid", "classktt_1_1_kernel_configuration.html#a9ed979305aafb0bb5eaf4aa14165c922", null ],
