@@ -6,6 +6,7 @@ var hierarchy =
     [ "ktt::ComputeInterface", "classktt_1_1_compute_interface.html", null ],
     [ "ktt::DeviceInfo", "classktt_1_1_device_info.html", null ],
     [ "ktt::DimensionVector", "classktt_1_1_dimension_vector.html", null ],
+    [ "ktt::DurationMeasurementResult", "structktt_1_1_duration_measurement_result.html", null ],
     [ "ktt::EnableBitfieldOperators< ValidationMode >", "structktt_1_1_enable_bitfield_operators_3_01_validation_mode_01_4.html", null ],
     [ "std::exception", null, [
       [ "ktt::KttException", "classktt_1_1_ktt_exception.html", null ]
@@ -17,6 +18,7 @@ var hierarchy =
     [ "ktt::KernelResult", "classktt_1_1_kernel_result.html", null ],
     [ "ktt::ParameterPair", "classktt_1_1_parameter_pair.html", null ],
     [ "ktt::PlatformInfo", "classktt_1_1_platform_info.html", null ],
+    [ "ktt::PreciseMeasurementParameters", "structktt_1_1_precise_measurement_parameters.html", null ],
     [ "ktt::Searcher", "classktt_1_1_searcher.html", [
       [ "ktt::DeterministicSearcher", "classktt_1_1_deterministic_searcher.html", null ],
       [ "ktt::McmcSearcher", "classktt_1_1_mcmc_searcher.html", null ],
@@ -26,6 +28,8 @@ var hierarchy =
       [ "ktt::ConfigurationCount", "classktt_1_1_configuration_count.html", null ],
       [ "ktt::ConfigurationDuration", "classktt_1_1_configuration_duration.html", null ],
       [ "ktt::ConfigurationFraction", "classktt_1_1_configuration_fraction.html", null ],
+      [ "ktt::FailureCount", "classktt_1_1_failure_count.html", null ],
+      [ "ktt::FailureFraction", "classktt_1_1_failure_fraction.html", null ],
       [ "ktt::TuningDuration", "classktt_1_1_tuning_duration.html", null ],
       [ "ktt::UnionCondition", "classktt_1_1_union_condition.html", null ]
     ] ],

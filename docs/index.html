@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Kernel Tuning Toolkit<span id="projectnumber">&#160;2.2</span>
+   <div id="projectname">Kernel Tuning Toolkit<span id="projectnumber">&#160;2.3</span>
    </div>
   </td>
     <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -98,8 +98,8 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
   <div class="headertitle"><div class="title">KTT - Kernel Tuning Toolkit </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md__readme"></a> <img src="https://github.com/HiPerCoRe/KTT/raw/master/Docs/Resources/KttLogoColor.png" alt="" width="425" height="150" class="inline"/></p>
-<p>KTT is an autotuning framework for <b>OpenCL</b>, <b>CUDA</b> kernels and experimental support for <b>GLSL</b> compute shaders. It primarily focus to GPU accelerators, but can be used to auto-tune also code for different devices (e.g., CPUs) when OpenCL is utilized. KTT core is implemented in C++, but version 2.2 allows its usage from Python or loading autotuning configurations from JSON files. The C++ core brings high performance, low latency, and allows dynamic tuning (i.e., autotuning during application runtime).</p>
+<div class="textblock"><p><a class="anchor" id="md__readme"></a> <img src="https://github.com/HiPerCoRe/KTT/blob/master/Docs/Resources/KttLogoColor.png" alt="" width="425" height="150" class="inline"/></p>
+<p>KTT is an autotuning framework for <b>OpenCL</b>, <b>CUDA</b> kernels, experimental support for <b>GLSL</b> compute shaders, and a <b>C++</b> backend for CPU execution. It primarily focus to GPU accelerators, but can be used to auto-tune also code for different devices (e.g., CPUs) when OpenCL or C++ backend is utilized. KTT core is implemented in C++, but version 2.3 allows its usage from Python or loading autotuning configurations from JSON files. The C++ core brings high performance, low latency, and allows dynamic tuning (i.e., autotuning during application runtime).</p>
 <h1>Main features </h1>
 <ul>
 <li>Ability to define kernel tuning parameters such as kernel thread block sizes, vector data types and loop unroll factors to optimize computation for a particular device.</li>
@@ -107,7 +107,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <li>Support for multiple compute queues and asynchronous operations.</li>
 <li>Support for dynamic auto-tuning - kernel tuning combined with regular kernel running.</li>
 <li>Ability to automatically ensure the correctness of tuned computation with reference kernel or C++ function.</li>
-<li>Support for multiple compute APIs, switching between CUDA, OpenCL and Vulkan requires only minor changes in C++ code (e.g., changing the kernel source file), no library recompilation is needed.</li>
+<li>Support for multiple compute APIs, switching between CUDA, OpenCL, Vulkan and C++ requires only minor changes in C++ code (e.g., changing the kernel source file), no library recompilation is needed.</li>
 <li>Public API available in C++ (native) and Python (bindings), tuning configuration can be loaded from JSON, allowing interoperability with other autotuning frameworks (so far <a href="https://github.com/KernelTuner/kernel_tuner">Kernel Tuner</a>).</li>
 <li>Advanced profile-based searcher, laveraging hardware performance counters and machine learning to navigate tuning spaces quickly.</li>
 <li>Mearuring energy consumption with CUDA devices.</li>
@@ -172,11 +172,11 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <li><code>--platform=vendor</code> Specifies SDK used for building KTT. May be useful when multiple SDKs are installed.</li>
 <li><code>--profiling=library</code> Enables compilation of kernel profiling functionality using the specified library.</li>
 <li><code>--power-usage</code> Enables compilation of device power usage collection functionality. This feature is currently supported only on Nvidia platform.</li>
+<li><code>--power-usage-mintime=time</code> Sets how long is the kernel repeated to obtain reliable power measurement, in miliseconds. THIS IS AN EXPERIMENTAL FEATURE, enforcing repeating the kernel without cleaning or changing input/output.</li>
 <li><code>--vulkan</code> Enables compilation of experimental Vulkan backend.</li>
+<li><code>--cpp</code> Enables compilation of C++ backend for CPU execution.</li>
 <li><code>--python</code> Enables compilation of Python bindings.</li>
 <li><code>--tuning-loader</code> Enables compilation of tuning loader, loading tuning settings from JSON.</li>
-<li><code>--power-usage</code> Enables measuring power and energy consumption.</li>
-<li><code>--power-usage-repeats=repeats</code> Experimental. Sets how many times are kernel repeated to obtain reliable power measurement (the kernel runtime should be around 1/10s).</li>
 <li><code>--no-examples</code> Disables compilation of examples.</li>
 <li><code>--no-tutorials</code> Disables compilation of tutorials.</li>
 <li><code>--tests</code> Enables compilation of unit tests.</li>

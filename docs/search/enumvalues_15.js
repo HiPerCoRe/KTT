@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['y_0',['Y',['../namespacektt.html#a47158e719571f19776b1dc4a1183eb39a57cec4137b614c87cb4e24a3d003a3e0',1,'ktt']]]
+  ['x_0',['X',['../namespacektt.html#a47158e719571f19776b1dc4a1183eb39a02129bb861061d1a052c592e2dc6b383',1,'ktt']]],
+  ['xml_1',['XML',['../namespacektt.html#aa3395e2ad389eb11a09e94a5eb5e5b51a3501bb093d363810b671059b9cfed3f8',1,'ktt']]]
 ];
