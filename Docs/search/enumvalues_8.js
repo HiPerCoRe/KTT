@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['json_0',['JSON',['../namespacektt.html#aa3395e2ad389eb11a09e94a5eb5e5b51a0ecd11c1d7a287401d148a23bbd7a2f8',1,'ktt']]]
+  ['info_0',['Info',['../namespacektt.html#a17afdb449e82292a32fba46ff7a54781a4059b0251f66a18cb56f544728796875',1,'ktt']]],
+  ['int_1',['int',['../namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282a1686a6c336b71b36d77354cea19a8b52',1,'ktt::Int'],['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a1686a6c336b71b36d77354cea19a8b52',1,'ktt::Int'],['../namespacektt.html#a40f044858e46ef8c9bb3878e16249a4ba1686a6c336b71b36d77354cea19a8b52',1,'ktt::Int']]]
 ];

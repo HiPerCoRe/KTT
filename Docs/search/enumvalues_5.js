@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['general_0',['General',['../namespacektt.html#aafca65fbebe616882f3343d1d37979fca0db377921f4ce762c62526131097968f',1,'ktt']]],
-  ['global_1',['Global',['../namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a4cc6684df7b4a92b1dec6fce3264fac8',1,'ktt']]],
-  ['gpu_2',['GPU',['../namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01a52f9ec21735243ad9917cda3ca077d32',1,'ktt']]]
+  ['float_0',['float',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a22ae0e2b89e5e3d477f988cc36d3272b',1,'ktt::Float'],['../namespacektt.html#a40f044858e46ef8c9bb3878e16249a4ba22ae0e2b89e5e3d477f988cc36d3272b',1,'ktt::Float']]],
+  ['framework_1',['Framework',['../namespacektt.html#a6c3eb24a8cdc991dd7b7274cc340852fa07782c22a88d1e82a09910124a9225a2',1,'ktt']]]
 ];

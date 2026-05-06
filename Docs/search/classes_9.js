@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['tuner_0',['Tuner',['../classktt_1_1_tuner.html',1,'ktt']]],
-  ['tuningduration_1',['TuningDuration',['../classktt_1_1_tuning_duration.html',1,'ktt']]]
+  ['searcher_0',['Searcher',['../classktt_1_1_searcher.html',1,'ktt']]],
+  ['stopcondition_1',['StopCondition',['../classktt_1_1_stop_condition.html',1,'ktt']]]
 ];

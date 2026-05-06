@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['info_0',['Info',['../namespacektt.html#a17afdb449e82292a32fba46ff7a54781a4059b0251f66a18cb56f544728796875',1,'ktt']]],
-  ['int_1',['int',['../namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282a1686a6c336b71b36d77354cea19a8b52',1,'ktt::Int'],['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a1686a6c336b71b36d77354cea19a8b52',1,'ktt::Int']]]
+  ['half_0',['Half',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7ac48615a1bc4197056d522af276aa5a85',1,'ktt']]],
+  ['host_1',['Host',['../namespacektt.html#ac355e7acb6c66ab83a0238f94d880f62ac2ca16d048ec66e04bca283eab048ec2',1,'ktt']]],
+  ['hostzerocopy_2',['HostZeroCopy',['../namespacektt.html#ac355e7acb6c66ab83a0238f94d880f62a752a38606c366e4718d76c6f40c0cd7d',1,'ktt']]]
 ];

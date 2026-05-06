@@ -1,9 +1,12 @@
 var searchData=
 [
-  ['debug_0',['Debug',['../namespacektt.html#a17afdb449e82292a32fba46ff7a54781aa603905470e2a5b8c13e96b579ef0dba',1,'ktt']]],
-  ['device_1',['Device',['../namespacektt.html#ac355e7acb6c66ab83a0238f94d880f62ae0ac20adce6ffee48c7151b070aa5737',1,'ktt']]],
-  ['devicelimitsexceeded_2',['devicelimitsexceeded',['../namespacektt.html#aafca65fbebe616882f3343d1d37979fca424d85ec05ce1ff1aabb2ebff7f67ac2',1,'ktt::DeviceLimitsExceeded'],['../namespacektt.html#a7ffb69a1caa29577202f4b1590ace695a424d85ec05ce1ff1aabb2ebff7f67ac2',1,'ktt::DeviceLimitsExceeded']]],
-  ['divide_3',['Divide',['../namespacektt.html#aa22e627ca88d7d508cd228c977bf4dd8a0b914e196182d02615487e9793ecff3d',1,'ktt']]],
-  ['divideceil_4',['DivideCeil',['../namespacektt.html#aa22e627ca88d7d508cd228c977bf4dd8a808677a21fe6878f6c83492bec6ec57f',1,'ktt']]],
-  ['double_5',['double',['../namespacektt.html#ae380b017e6b4aee36ed6598aa4a51282ad909d38d705ce75386dd86e611a82f5b',1,'ktt::Double'],['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7ad909d38d705ce75386dd86e611a82f5b',1,'ktt::Double']]]
+  ['char_0',['Char',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a8e95e84813830072b7516cfaa7dbc1a9',1,'ktt']]],
+  ['compilationfailed_1',['CompilationFailed',['../namespacektt.html#a7ffb69a1caa29577202f4b1590ace695a70c0a6f196573f739f6756850b866fda',1,'ktt']]],
+  ['compilererror_2',['CompilerError',['../namespacektt.html#aafca65fbebe616882f3343d1d37979fca9027a5aeb7743971341f4d6385244eb3',1,'ktt']]],
+  ['compilerparameter_3',['CompilerParameter',['../namespacektt.html#a40f044858e46ef8c9bb3878e16249a4ba809c9c3a362cc352e0a333b80d77a142',1,'ktt']]],
+  ['computationfailed_4',['ComputationFailed',['../namespacektt.html#a7ffb69a1caa29577202f4b1590ace695ac12871375c41d2ad6e44aeb147436c23',1,'ktt']]],
+  ['cpp_5',['Cpp',['../namespacektt.html#a9738ef47337610739add496ce522de0aadb4a39bf594c9fbcf318dd39ea19fed3',1,'ktt']]],
+  ['cpu_6',['CPU',['../namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01a2b55387dd066c5bac646ac61543d152d',1,'ktt']]],
+  ['cuda_7',['cuda',['../namespacektt.html#a9738ef47337610739add496ce522de0aaa33b7755e5f9b504d2d038eaca4ff28d',1,'ktt::CUDA'],['../namespacektt.html#a16e643cd2325370c79affaeee8ef85f0aa33b7755e5f9b504d2d038eaca4ff28d',1,'ktt::CUDA']]],
+  ['custom_8',['custom',['../namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01a90589c47f06eb971d548591f23c285af',1,'ktt::Custom'],['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a90589c47f06eb971d548591f23c285af',1,'ktt::Custom']]]
 ];

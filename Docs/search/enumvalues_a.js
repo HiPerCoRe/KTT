@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['microseconds_0',['Microseconds',['../namespacektt.html#a161b9af8714615ef2c1770b020ce1511a64068ed47d979c5efa036f027d656433',1,'ktt']]],
-  ['milliseconds_1',['Milliseconds',['../namespacektt.html#a161b9af8714615ef2c1770b020ce1511a38f246763036ccaeba7db6d563c4d821',1,'ktt']]],
-  ['multiply_2',['Multiply',['../namespacektt.html#aa22e627ca88d7d508cd228c977bf4dd8ae257376d913f3b53cbb4a9b19d770648',1,'ktt']]]
+  ['local_0',['local',['../namespacektt.html#ac5bc0a65f097bc3326d6497c0f3877b0a509820290d57f333403f490dde7316f4',1,'ktt::Local'],['../namespacektt.html#a9bff4519ba4718c5713c139e61058771a509820290d57f333403f490dde7316f4',1,'ktt::Local']]],
+  ['long_1',['Long',['../namespacektt.html#a79871821a23eee2b543fec77b52c54d7a8394f0347c184cf156ac5924dccb773b',1,'ktt']]]
 ];

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Kernel Tuning Toolkit<span id="projectnumber">&#160;2.2</span>
+   <div id="projectname">Kernel Tuning Toolkit<span id="projectnumber">&#160;2.3</span>
    </div>
   </td>
     <td>        <div id="MSearchBox" class="MSearchBoxInactive">
@@ -116,6 +116,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a9ed979305aafb0bb5eaf4aa14165c922"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e97ef5d6ca155af04289536426078da" id="r_a2e97ef5d6ca155af04289536426078da"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_configuration.html#a2e97ef5d6ca155af04289536426078da">GeneratePrefix</a> () const</td></tr>
 <tr class="separator:a2e97ef5d6ca155af04289536426078da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afab428abaceb46a34e6d77696e9fb6ee" id="r_afab428abaceb46a34e6d77696e9fb6ee"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_configuration.html#afab428abaceb46a34e6d77696e9fb6ee">GetCompilerOptions</a> () const</td></tr>
+<tr class="separator:afab428abaceb46a34e6d77696e9fb6ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a5a9d4ffa080cf0e5b6efe8024ef1b9" id="r_a3a5a9d4ffa080cf0e5b6efe8024ef1b9"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_configuration.html#a3a5a9d4ffa080cf0e5b6efe8024ef1b9">GetString</a> () const</td></tr>
 <tr class="separator:a3a5a9d4ffa080cf0e5b6efe8024ef1b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6ee2fd5153a7e5442ed9f36496db5dbd" id="r_a6ee2fd5153a7e5442ed9f36496db5dbd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_kernel_configuration.html#a6ee2fd5153a7e5442ed9f36496db5dbd">Merge</a> (const <a class="el" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> &amp;other)</td></tr>
@@ -231,7 +233,25 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Generates kernel source preprocessor definitions from configuration. </p><dl class="section return"><dt>Returns</dt><dd>Kernel source preprocessor definitions. </dd></dl>
+<p>Generates kernel source preprocessor definitions from configuration. Parameters where IsCompilerParameter() is true are excluded. </p><dl class="section return"><dt>Returns</dt><dd>Kernel source preprocessor definitions. </dd></dl>
+
+</div>
+</div>
+<a id="afab428abaceb46a34e6d77696e9fb6ee" name="afab428abaceb46a34e6d77696e9fb6ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afab428abaceb46a34e6d77696e9fb6ee">&#9670;&#160;</a></span>GetCompilerOptions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string ktt::KernelConfiguration::GetCompilerOptions </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Returns compiler options for parameters where IsCompilerParameter() is true. </p><dl class="section return"><dt>Returns</dt><dd>Compiler options for current configuration. </dd></dl>
 
 </div>
 </div>
