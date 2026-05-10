@@ -1,322 +1,207 @@
-#include <iostream>
-#include <random>
-#include <string>
-#include <vector>
+#include "../ExampleReferenceComputation.h"
+#include "Api/Searcher/RandomSearcher.h"
+#include "Api/Searcher/Searcher.h"
+#include "Api/StopCondition/ConfigurationCount.h"
+#include "Api/StopCondition/StopCondition.h"
+#include <memory>
 
-#include <Ktt.h>
+using namespace std;
 
-#if defined(_MSC_VER)
-const std::string kernelPrefix = "";
-#else
-const std::string kernelPrefix = "../";
-#endif
+class CoulombSum3d : public ExampleReferenceComputation {
+protected:
+    CoulombSum3d(int argc, char** argv, int defaultProblemSize, string exampleFolderPath,
+                 string defaultKernelFileBaseName, bool rapidTest, bool useProfiling) :
+        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath,
+                                    defaultKernelFileBaseName, rapidTest, useProfiling),
+        // Since CoulombSum3d has O(n³) complexity (gridPoints × atoms), scale grid dimensions
+        // with the cube root of problem size to keep total work proportional
+        m_gridWidth(static_cast<size_t>(cbrt(m_problemSize)) * 128),
+        m_gridHeight(static_cast<size_t>(cbrt(m_problemSize)) * 128),
+        m_gridDepth(static_cast<size_t>(cbrt(m_problemSize)) * 128),
+        m_ndRangeDimensions(m_gridWidth, m_gridHeight, m_gridDepth),
+        m_workGroupDimensions{1, 1, 1},
+        m_numberOfAtoms(256),
+        m_gridSpacing(0.5f)
+    {
+    }
 
-#if KTT_CUDA_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cu";
-    const auto computeApi = ktt::ComputeApi::CUDA;
-    const std::string defaultMlModel = kernelPrefix + "../Examples/CoulombSum3d/Models/2080-coulomb_output_DT.sav";
-#elif KTT_OPENCL_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cl";
-    const auto computeApi = ktt::ComputeApi::OpenCL;
-#elif KTT_CPP_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/CoulombSum3d/CoulombSum3d.cppkernel";
-    const auto computeApi = ktt::ComputeApi::Cpp;
-#endif
+    friend ExampleReferenceComputation;
 
-// Toggle rapid test (e.g., disable output validation).
-const bool rapidTest = false;
+    size_t m_gridWidth;
+    size_t m_gridHeight;
+    size_t m_gridDepth;
 
-// Toggle kernel profiling.
-const bool useProfiling = false;
+    // Total NDRange size matches number of grid points
+    const ktt::DimensionVector m_ndRangeDimensions;
+    const ktt::DimensionVector m_workGroupDimensions;
+    const ktt::DimensionVector m_referenceWorkGroupDimensions{16, 16, 16};
 
-// Toggle robust power measurement.
-const bool useRobustPowerMeasurement = false;
+    const int m_numberOfAtoms;
+    const float m_gridSpacing;
 
-// Toggle usage of profile-based searcher
-const bool useProfileSearcher = false;
+    vector<float> m_atomInfo;
+    vector<float> m_atomInfoX;
+    vector<float> m_atomInfoY;
+    vector<float> m_atomInfoZ;
+    vector<float> m_atomInfoW;
+    vector<float> m_energyGrid;
 
-// Toggle compiler parameter tuning mode.
-// - false: compiler flags are tuned together with kernel parameters via AddCompilerParameter
-// - true: compiler flags are tuned separately on top of the best kernel configuration via TuneOptions
-const bool separateCompilerTuning = true;
+    ktt::ArgumentId m_atomInfoId;
+    ktt::ArgumentId m_atomInfoXId;
+    ktt::ArgumentId m_atomInfoYId;
+    ktt::ArgumentId m_atomInfoZId;
+    ktt::ArgumentId m_atomInfoWId;
+    ktt::ArgumentId m_numberOfAtomsId;
+    ktt::ArgumentId m_gridSpacingId;
+    ktt::ArgumentId m_gridDimId;
+    ktt::ArgumentId m_energyGridId;
 
-int main(int argc, char** argv)
+    void InitData() override
+    {
+        // Declare data variables
+        const size_t numberOfGridPoints = m_gridWidth * m_gridHeight * m_gridDepth;
+        m_atomInfo.resize(4 * m_numberOfAtoms);
+        m_atomInfoX.resize(m_numberOfAtoms);
+        m_atomInfoY.resize(m_numberOfAtoms);
+        m_atomInfoZ.resize(m_numberOfAtoms);
+        m_atomInfoW.resize(m_numberOfAtoms);
+        m_energyGrid.resize(numberOfGridPoints, 0.0f);
+
+        FillBuffers<float>({&m_atomInfoX, &m_atomInfoY, &m_atomInfoZ}, 0.0f, 20.0f);
+        FillBuffers<float>({&m_atomInfoW}, 0.0f, 0.5f);
+
+        for (int i = 0; i < m_numberOfAtoms; ++i)
+        {
+            m_atomInfo[4 * i] = m_atomInfoX[i];
+            m_atomInfo[4 * i + 1] = m_atomInfoY[i];
+            m_atomInfo[4 * i + 2] = m_atomInfoZ[i];
+            m_atomInfo[4 * i + 3] = m_atomInfoW[i];
+        }
+    }
+
+    void InitKernels() override
+    {
+        // Add all kernel arguments
+        m_atomInfoId = m_tuner.AddArgumentVector(m_atomInfo, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoXId = m_tuner.AddArgumentVector(m_atomInfoX, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoYId = m_tuner.AddArgumentVector(m_atomInfoY, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoZId = m_tuner.AddArgumentVector(m_atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoWId = m_tuner.AddArgumentVector(m_atomInfoW, ktt::ArgumentAccessType::ReadOnly);
+        m_numberOfAtomsId = m_tuner.AddArgumentScalar(m_numberOfAtoms);
+        m_gridSpacingId = m_tuner.AddArgumentScalar(m_gridSpacing);
+        m_gridDimId = m_tuner.AddArgumentScalar(static_cast<int>(m_gridWidth));
+        m_energyGridId = m_tuner.AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::WriteOnly);
+
+        // Configure main kernel
+        InitKernelDefault("directCoulombSum", "CoulombSum", m_ndRangeDimensions,
+            {m_atomInfoId, m_atomInfoXId, m_atomInfoYId, m_atomInfoZId, m_atomInfoWId,
+             m_numberOfAtomsId, m_gridSpacingId, m_gridDimId, m_energyGridId});
+    }
+
+    void InitTuningParameters() override
+    {
+        UseFastMath();
+        UseOpenMP();
+
+        if (m_computeApi == ktt::ComputeApi::OpenCL || m_computeApi == ktt::ComputeApi::CUDA)
+        {
+            m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_X", vector<uint64_t>{16, 32});
+            m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+                ktt::ModifierAction::Multiply);
+            m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+                ktt::ModifierAction::DivideCeil);
+
+            m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_Y", vector<uint64_t>{1, 2, 4, 8});
+            m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+                ktt::ModifierAction::Multiply);
+            m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+                ktt::ModifierAction::DivideCeil);
+
+            m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_Z", vector<uint64_t>{1});
+            m_tuner.AddParameter(m_kernel, "Z_ITERATIONS", vector<uint64_t>{1, 2, 4, 8, 16, 32});
+            m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS",
+                ktt::ModifierAction::DivideCeil);
+
+            m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR", vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+
+            auto lt = [](const vector<uint64_t>& vector) {return vector.at(0) < vector.at(1);};
+            m_tuner.AddConstraint(m_kernel, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"}, lt);
+            auto par = [](const vector<uint64_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
+            m_tuner.AddConstraint(m_kernel, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, par);
+
+            if (m_computeApi == ktt::ComputeApi::OpenCL)
+            {
+                m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", vector<uint64_t>{0, 1});
+                m_tuner.AddParameter(m_kernel, "USE_SOA", vector<uint64_t>{0, 1});
+                m_tuner.AddParameter(m_kernel, "VECTOR_SIZE", vector<uint64_t>{1, 2 , 4, 8, 16});
+
+                auto vec = [](const vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1; };
+                m_tuner.AddConstraint(m_kernel, {"USE_SOA", "VECTOR_SIZE"}, vec);
+            }
+            else // CUDA
+            {
+                m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", vector<uint64_t>{0});
+                m_tuner.AddParameter(m_kernel, "USE_SOA", vector<uint64_t>{0, 1});
+                m_tuner.AddParameter(m_kernel, "VECTOR_SIZE", vector<uint64_t>{1});
+            }
+        }
+        else // CPP
+        {
+            m_tuner.AddParameter(m_kernel, "OMP_COLLAPSE", vector<uint64_t>{0, 1});
+            m_tuner.AddParameter(m_kernel, "OMP_SCHEDULING", vector<uint64_t>{0, 1, 2});
+            m_tuner.AddParameter(m_kernel, "OMP_SCHED_CHUNK", vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
+            m_tuner.AddParameter(m_kernel, "TILE", vector<uint64_t>{0, 8, 16, 32, 64});
+            m_tuner.AddCompilerParameter(m_kernel, "-ffast-math", {});
+            m_tuner.AddCompilerParameter(m_kernel, "-O", {"1", "2", "3"});
+            m_tuner.AddCompilerParameter(m_kernel, "-funroll-loops");
+            auto schedchunk = [](const vector<uint64_t>& vector) {return vector.at(0) == 2 || vector.at(1) == 2; };
+            m_tuner.AddConstraint(m_kernel, {"OMP_SCHEDULING", "OMP_SCHED_CHUNK"}, schedchunk);
+        }
+    }
+
+    void InitReference() override
+    {
+        if (!m_rapidTest)
+        {
+            //TODO: this is temporary hack, there should be composition of zeroizing and Coulomb kernel,
+            // otherwise, multiple profiling runs corrupt results
+            m_tuner.SetReferenceComputation(m_energyGridId, [this](void* buffer) {
+                float* grid = static_cast<float*>(buffer);
+
+                #pragma omp parallel for
+                for (size_t z = 0; z < m_gridDepth; z++)
+                    for (size_t y = 0; y < m_gridHeight; y++)
+                        for (size_t x = 0; x < m_gridWidth; x++)
+                        {
+                            float e = 0.0f;
+                            float gx = static_cast<float>(x) * m_gridSpacing;
+                            float gy = static_cast<float>(y) * m_gridSpacing;
+                            float gz = static_cast<float>(z) * m_gridSpacing;
+                            for (int a = 0; a < m_numberOfAtoms; a++)
+                                e += m_atomInfoW[a] * (1.0f / sqrtf((m_atomInfoX[a] - gx) * (m_atomInfoX[a] - gx) +
+                                    (m_atomInfoY[a] - gy) * (m_atomInfoY[a] - gy) +
+                                    (m_atomInfoZ[a] - gz) * (m_atomInfoZ[a] - gz)));
+                            grid[z * m_gridWidth * m_gridHeight + y * m_gridWidth + x] = e;
+                        }
+            });
+            m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
+        }
+    }
+
+    void InitSearcher() override {
+        m_tuner.SetSearcher(m_kernel, make_unique<ktt::RandomSearcher>());
+    }
+
+    unique_ptr<ktt::StopCondition> GetStopCondition() override {
+        return make_unique<ktt::ConfigurationCount>(100);
+    }
+};
+
+int main(int argc, char **argv)
 {
-    ktt::PlatformIndex platformIndex = 0;
-    ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = defaultKernelFile;
-
-    if (argc >= 2)
-    {
-        platformIndex = std::stoul(std::string(argv[1]));
-
-        if (argc >= 3)
-        {
-            deviceIndex = std::stoul(std::string(argv[2]));
-
-            if (argc >= 4)
-            {
-                kernelFile = std::string(argv[3]);
-            }
-        }
-    }
-
-    // Declare and initialize data
-    const int gridSize = 256;
-    int atoms = 256;//4096;
-
-    const ktt::DimensionVector ndRangeDimensions(gridSize, gridSize, gridSize);
-    const ktt::DimensionVector workGroupDimensions;
-
-    std::vector<float> atomInfoX(atoms);
-    std::vector<float> atomInfoY(atoms);
-    std::vector<float> atomInfoZ(atoms);
-    std::vector<float> atomInfoW(atoms);
-    std::vector<float> atomInfo(4 * atoms);
-    std::vector<float> energyGrid(gridSize * gridSize * gridSize, 0.0f);
-
-    // Initialize data
-    std::random_device device;
-    std::default_random_engine engine(device());
-    std::uniform_real_distribution<float> distribution(0.0f, 20.0f);
-    const float gridSpacing = 0.5f; // in Angstroms
-
-    for (int i = 0; i < atoms; ++i)
-    {
-        atomInfoX[i] = distribution(engine);
-        atomInfoY[i] = distribution(engine);
-        atomInfoZ[i] = distribution(engine);
-        atomInfoW[i] = distribution(engine) / 40.0f;
-        atomInfo[4 * i] = atomInfoX[i];
-        atomInfo[4 * i + 1] = atomInfoY[i];
-        atomInfo[4 * i + 2] = atomInfoZ[i];
-        atomInfo[4 * i + 3] = atomInfoW[i];
-    }
-
-    ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
-    tuner.SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
-    tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
-    //tuner.SetLoggingLevel(ktt::LoggingLevel::Debug);
-
-    if constexpr (computeApi == ktt::ComputeApi::OpenCL)
-    {
-        // Math optimization flags are broken into individual tunable compiler parameters below.
-    }
-    else if constexpr (computeApi == ktt::ComputeApi::CUDA)
-    {
-        tuner.SetCompilerOptions("-use_fast_math");
-
-        if constexpr (useProfiling)
-        {
-            printf("Executing with profiling switched ON.\n");
-            tuner.SetProfiling(true);
-        }
-    }
-    else
-    {
-        tuner.SetCompilerOptions("-march=native -fopenmp");
-    }
-
-    const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, ndRangeDimensions, workGroupDimensions);
-    const ktt::KernelId kernel = tuner.CreateSimpleKernel("CoulombSum", definition);
-
-    // Helper: routes compiler parameters either into the main tuning space (AddCompilerParameter)
-    // or into the separate post-tune options space (AddSeparateCompilerParameter), depending on
-    // the separateCompilerTuning flag.
-    const auto addCompilerParam = [&](const std::string& name, const std::vector<std::string>& values = {}) {
-        if (separateCompilerTuning)
-            tuner.AddSeparateCompilerParameter(kernel, name, values);
-        else
-            tuner.AddCompilerParameter(kernel, name, values);
-    };
-
-    const ktt::ArgumentId aiId = tuner.AddArgumentVector(atomInfo, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId aixId = tuner.AddArgumentVector(atomInfoX, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId aiyId = tuner.AddArgumentVector(atomInfoY, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId aizId = tuner.AddArgumentVector(atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId aiwId = tuner.AddArgumentVector(atomInfoW, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId aId = tuner.AddArgumentScalar(atoms);
-    const ktt::ArgumentId gsId = tuner.AddArgumentScalar(gridSpacing);
-    const ktt::ArgumentId gridDim = tuner.AddArgumentScalar(gridSize);
-    const ktt::ArgumentId gridId = tuner.AddArgumentVector(energyGrid, ktt::ArgumentAccessType::WriteOnly);
-
-    if constexpr (computeApi == ktt::ComputeApi::OpenCL || computeApi == ktt::ComputeApi::CUDA)
-    {
-        tuner.AddParameter(kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{16, 32});
-        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
-            ktt::ModifierAction::Multiply);
-        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
-            ktt::ModifierAction::DivideCeil);
-        tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8});
-        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
-            ktt::ModifierAction::Multiply);
-        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
-            ktt::ModifierAction::DivideCeil);
-        tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Z", std::vector<uint64_t>{1});
-        tuner.AddParameter(kernel, "Z_ITERATIONS", std::vector<uint64_t>{1, 2, 4, 8, 16, 32});
-        tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS",
-            ktt::ModifierAction::DivideCeil);    
-        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
-
-        auto lt = [](const std::vector<uint64_t>& vector) {return vector.at(0) < vector.at(1);};
-        tuner.AddConstraint(kernel, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"}, lt);
-        auto par = [](const std::vector<uint64_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
-        tuner.AddConstraint(kernel, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, par);
-
-        if constexpr (computeApi == ktt::ComputeApi::OpenCL)
-        {
-            tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0, 1});
-            tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
-            tuner.AddParameter(kernel, "VECTOR_SIZE", std::vector<uint64_t>{1, 2 , 4, 8, 16});
-
-            auto vec = [](const std::vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1; };
-            tuner.AddConstraint(kernel, { "USE_SOA", "VECTOR_SIZE" }, vec);
-
-            // Individual math optimization flags replacing the global -cl-fast-relaxed-math.
-            // -cl-fast-relaxed-math ≈ -cl-finite-math-only + -cl-unsafe-math-optimizations,
-            // where -cl-unsafe-math-optimizations implies -cl-mad-enable, -cl-no-signed-zeros,
-            // and -cl-denorms-are-zero. Tuning them individually reveals which subset is sufficient.
-            addCompilerParam("-cl-mad-enable");
-            addCompilerParam("-cl-no-signed-zeros");
-            addCompilerParam("-cl-finite-math-only");
-            addCompilerParam("-cl-denorms-are-zero");
-        }
-        else if constexpr (computeApi == ktt::ComputeApi::CUDA)
-        {
-            tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
-            tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
-            tuner.AddParameter(kernel, "VECTOR_SIZE", std::vector<uint64_t>{1});
-
-            // Register count limit: trades register file pressure for higher occupancy.
-            // Relevant here because energyValue[Z_ITERATIONS] can hold up to 32 floats,
-            // creating high register pressure at large Z_ITERATIONS values.
-            // 0 = unlimited (compiler decides), others force a ceiling.
-            addCompilerParam("--maxrregcount ", {"0", "32", "40", "48", "64"});
-        }
-    }
-    else // CPP
-    {
-        tuner.AddParameter(kernel, "OMP_COLLAPSE", std::vector<uint64_t>{0, 1});
-        tuner.AddParameter(kernel, "OMP_SCHEDULING", std::vector<uint64_t>{0, 1, 2});
-        tuner.AddParameter(kernel, "OMP_SCHED_CHUNK", std::vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
-        tuner.AddParameter(kernel, "TILE", std::vector<uint64_t>{0, 8, 16, 32, 64});
-        addCompilerParam("-ffast-math");
-        addCompilerParam("-O", {"1", "2", "3"});
-        addCompilerParam("-funroll-loops");
-        // Auto-vectorization of the inner atom loop (SIMD via AVX2/AVX512 enabled by -march=native).
-        addCompilerParam("-ftree-vectorize");
-        // Software prefetching of the atom SoA arrays in the inner loop (GCC-specific).
-        addCompilerParam("-fprefetch-loop-arrays");
-        // Allows the compiler to skip errno updates in math functions (lighter than -ffast-math,
-        // enables vectorization of sqrtf without full unsafe-math semantics).
-        addCompilerParam("-fno-math-errno");
-        auto schedchunk = [](const std::vector<uint64_t>& vector) {return vector.at(0) == 2 || vector.at(1) == 2; };
-        tuner.AddConstraint(kernel, { "OMP_SCHEDULING", "OMP_SCHED_CHUNK" }, schedchunk);
-    }
-
-    tuner.SetArguments(definition, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridDim, gridId});
-
-    if constexpr (!useProfiling && !rapidTest)
-    {
-        //TODO: this is temporary hack, there should be composition of zeroizing and Coulomb kernel,
-        // otherwise, multiple profiling runs corrupt results
-        tuner.SetReferenceComputation(gridId, [&atomInfoW, atomInfoX, &atomInfoY, &atomInfoZ, atoms, gridSpacing, gridSize](void* buffer){
-            float* grid = static_cast<float*>(buffer);
-            #pragma omp parallel for
-            for (int z = 0; z < gridSize; z++)
-                for (int y = 0; y < gridSize; y++)
-                    for (int x = 0; x < gridSize; x++) 
-                    {
-                        float e = 0.0f;
-                        float gx = (float)x * gridSpacing;
-                        float gy = (float)y * gridSpacing;
-                        float gz = (float)z * gridSpacing;
-                        for (int a = 0; a < atoms; a++)
-                            e += atomInfoW[a] * (1.0f/sqrtf((atomInfoX[a]-gx)*(atomInfoX[a]-gx) + (atomInfoY[a]-gy)*(atomInfoY[a]-gy) 
-                                + (atomInfoZ[a]-gz)*(atomInfoZ[a]-gz)));
-                        grid[z*gridSize*gridSize + y*gridSize + x] = e;
-                    }
-        });
-        tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
-    }
-    tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
-
-#if KTT_CUDA_EXAMPLE
-    if constexpr (useProfileSearcher)
-    {
-        tuner.SetProfileBasedSearcher(kernel, defaultMlModel, false);
-    }
-#endif
-
-    // Configure robust measurement parameters if enabled
-    std::optional<ktt::PreciseMeasurementParameters> preciseParams;
-    if constexpr (useRobustPowerMeasurement)
-    {
-        // Minimum 2000ms, maximum 20000ms, 0.5% tolerance
-        preciseParams = ktt::PreciseMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
-    }
-
-    const auto results = tuner.Tune(kernel, std::make_unique<ktt::FailureFraction>(0.1, 10) /*std::make_unique<ktt::ConfigurationCount>(2)*/, preciseParams);
-    tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
-    tuner.SaveResults(results, "CoulombSumOutput_T4", ktt::OutputFormat::JSON_T4);
-    tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::XML);
-
-    double bestDuration = std::numeric_limits<double>::max();
-    std::string bestConfig;
-    const ktt::KernelResult* bestResult = nullptr;
-    for (const auto& result : results)
-    {
-        double duration = result.GetTotalDuration();
-        std::string config = result.GetConfiguration().GetString();
-
-        std::cout << "Configuration: " << config
-                  << " -> Duration: " << duration << " ns"
-                  << " -> Status: " << (result.GetStatus() == ktt::ResultStatus::Ok ? "OK" : "FAILED")
-                  << std::endl;
-
-        if (result.GetStatus() == ktt::ResultStatus::Ok && duration < bestDuration)
-        {
-            bestDuration = duration;
-            bestConfig = config;
-            bestResult = &result;
-        }
-    }
-
-    if (!results.empty())
-    {
-        std::cout << "\nBest configuration: " << bestConfig << " with duration " << bestDuration << " ns (" << 1000.0*(double)atoms*(double)gridSize*(double)gridSize*(double)gridSize/bestDuration << "mevals/s)" << std::endl;
-    }
-
-    if (separateCompilerTuning && bestResult != nullptr)
-    {
-        std::cout << "\nTuning compiler options on top of best kernel configuration..." << std::endl;
-        const auto optResults = tuner.TuneOptions(kernel, bestResult->GetConfiguration());
-        tuner.SaveResults(optResults, "CoulombSumOptionsOutput", ktt::OutputFormat::JSON);
-
-        double bestOptDuration = std::numeric_limits<double>::max();
-        std::string bestOptConfig;
-        for (const auto& optResult : optResults)
-        {
-            double duration = optResult.GetTotalDuration();
-            std::string config = optResult.GetConfiguration().GetString();
-
-            std::cout << "Options configuration: " << config
-                      << " -> Duration: " << duration << " ns"
-                      << " -> Status: " << (optResult.GetStatus() == ktt::ResultStatus::Ok ? "OK" : "FAILED")
-                      << std::endl;
-
-            if (optResult.GetStatus() == ktt::ResultStatus::Ok && duration < bestOptDuration)
-            {
-                bestOptDuration = duration;
-                bestOptConfig = config;
-            }
-        }
-
-        if (!optResults.empty())
-        {
-            std::cout << "\nBest options configuration: " << bestOptConfig << " with duration " << bestOptDuration << " ns" << std::endl;
-        }
-    }
+    unique_ptr<CoulombSum3d> coulombSum3d = CoulombSum3d::Create<CoulombSum3d>(argc, argv, 8, "Examples/CoulombSum3d",
+        "CoulombSum3d");
+    coulombSum3d->Run();
 
     return 0;
 }
