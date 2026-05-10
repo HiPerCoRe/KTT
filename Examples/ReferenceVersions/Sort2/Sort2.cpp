@@ -275,7 +275,8 @@ int main(int argc, char** argv)
     tuner.AddParameter(kernel, "SCAN_BLOCK_SIZE", std::vector<uint64_t>{32, 64, 128, 256, 512, 1024});
     tuner.AddParameter(kernel, "SORT_VECTOR", std::vector<uint64_t>{2, 4, 8});
     tuner.AddParameter(kernel, "SCAN_VECTOR", std::vector<uint64_t>{2, 4, 8});
-    auto workGroupConstraint = [](const std::vector<uint64_t>& vector) {return (float)vector.at(1) / vector.at(0) == (float)vector.at(2) / vector.at(3);};
+    auto workGroupConstraint = [](const std::vector<uint64_t>& vector) {return (float)vector.at(1) / vector.at(0) == (float)vector.at(2) / vector.at(3) &&
+        !(vector.at(0) == 1024 && vector.at(1) == 1024 && vector.at(2) == 8 && vector.at(3) == 8);};
     tuner.AddConstraint(kernel, {"SORT_BLOCK_SIZE", "SCAN_BLOCK_SIZE", "SORT_VECTOR", "SCAN_VECTOR"}, workGroupConstraint);
 
     tuner.SetReferenceComputation(valuesOutId, [&valuesIn](void* buffer)
