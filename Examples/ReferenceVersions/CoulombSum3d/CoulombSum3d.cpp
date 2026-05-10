@@ -202,7 +202,7 @@ int main(int argc, char** argv)
         });
         tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
-    tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
+    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
 
 #if KTT_CUDA_EXAMPLE
     if constexpr (useProfileSearcher)
@@ -219,7 +219,7 @@ int main(int argc, char** argv)
         preciseParams = ktt::PreciseMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
     }
 
-    const auto results = tuner.Tune(kernel, std::make_unique<ktt::FailureFraction>(0.1, 10) /*std::make_unique<ktt::ConfigurationCount>(2)*/, preciseParams);
+    const auto results = tuner.Tune(kernel, /*std::make_unique<ktt::FailureFraction>(0.1, 10)*/ std::make_unique<ktt::ConfigurationCount>(100), preciseParams);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "CoulombSumOutput_T4", ktt::OutputFormat::JSON_T4);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::XML);
