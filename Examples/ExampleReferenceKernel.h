@@ -40,7 +40,8 @@ protected:
         const ktt::DimensionVector &ndRangeDimensions,
         const ktt::DimensionVector &workGroupDimensions,
         const std::vector<ktt::ArgumentId> &arguments,
-        const std::vector<ktt::ArgumentId> &outputArguments
+        const std::vector<ktt::ArgumentId> &outputArguments,
+        const float precision = 0.0001
     );
     void InitReferenceOutputsDefault(const std::vector<ktt::ArgumentId> &outputArguments);
 };

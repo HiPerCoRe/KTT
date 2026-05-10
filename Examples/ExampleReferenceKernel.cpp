@@ -33,7 +33,8 @@ void ExampleReferenceKernel::InitReferenceKernelDefault(
         const ktt::DimensionVector &ndRangeDimensions,
         const ktt::DimensionVector &workGroupDimensions,
         const vector<ktt::ArgumentId> &arguments,
-        const vector<ktt::ArgumentId> &outputArguments
+        const vector<ktt::ArgumentId> &outputArguments,
+        const float precision
     )
 {
     m_refDefinition = m_tuner.AddKernelDefinitionFromFile(refKernelName, m_refKernelFile,
@@ -46,6 +47,6 @@ void ExampleReferenceKernel::InitReferenceKernelDefault(
         for (auto arg : outputArguments) {
             m_tuner.SetReferenceKernel(arg, m_refKernel, ktt::KernelConfiguration());
         }
-        m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.0001);
+        m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, precision);
     }
 }
