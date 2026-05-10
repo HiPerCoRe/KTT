@@ -1,7 +1,7 @@
-#include <assert.h>
-#include <Ktt.h>
-#include <vector>
 #include "ExampleBase.h"
+#include <assert.h>
+#include <vector>
+#include <iostream>
 
 using namespace std;
 
@@ -22,12 +22,41 @@ string ExampleBase::GetKernelFilePath(string exampleFolderPath, string baseName)
     return kernelPrefix + exampleFolderPath + "/" + baseName + defaultKernelFileSuffix;
 }
 
-void ExampleBase::Run() 
+void ExampleBase::Run()
 {
     // Perform tuning
     const auto results = m_tuner.Tune(m_kernel, GetStopCondition());
     m_tuner.SaveResults(results, "Output", ktt::OutputFormat::XML);
     m_tuner.SaveResults(results, "Output", ktt::OutputFormat::JSON);
+
+    double bestDuration = numeric_limits<double>::max();
+    string bestConfig;
+    int successfulRuns = 0;
+    for (const auto& result : results)
+    {
+        double duration = result.GetTotalDuration();
+        string config = result.GetConfiguration().GetString();
+
+        cout << "Configuration: " << config
+             << " -> Duration: " << duration << " ns"
+             << " -> Status: " << (result.GetStatus() == ktt::ResultStatus::Ok ? "OK" : "FAILED")
+             << endl;
+
+        if (result.GetStatus() == ktt::ResultStatus::Ok)
+        {
+            successfulRuns++;
+            if (duration < bestDuration) {
+                bestDuration = duration;
+                bestConfig = config;
+            }
+        }
+    }
+
+    if (!results.empty())
+    {
+        cout << "\nBest configuration: " << bestConfig << " with duration " << bestDuration << " ns ("
+             << successfulRuns << "/" << results.size() << " successful runs)" << endl;
+    }
 }
 
 ExampleBase::ExampleBase(
