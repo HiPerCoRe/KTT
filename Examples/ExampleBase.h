@@ -18,7 +18,7 @@ public:
     void Run();
 
     template <class T>
-    static std::unique_ptr<T> Create(int argc, char** argv, int defaultProblemSize, std::string exampleFolderPath, 
+    static std::unique_ptr<T> Create(int argc, char** argv, int defaultProblemSize, std::string exampleFolderPath,
             std::string defaultKernelFileBaseName, bool rapidTest = false, bool useProfiling = false)
     {
         std::unique_ptr<T> ex(new T(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
@@ -50,6 +50,9 @@ protected:
     virtual void InitSearcher();
 
     virtual std::unique_ptr<ktt::StopCondition> GetStopCondition();
+
+    void UseFastMath();
+    void UseOpenMP();
 
     template <typename T>
     void FillBuffers(const std::vector<std::vector<T>*> &buffers, T minimum = 0, T maximum = 10) 

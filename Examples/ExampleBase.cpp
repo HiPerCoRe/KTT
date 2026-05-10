@@ -86,7 +86,27 @@ void ExampleBase::PostInitialize()
     InitSearcher();
 }
 
-void ExampleBase::InitSearcher() 
+void ExampleBase::UseFastMath()
+{
+    if (m_computeApi == ktt::ComputeApi::OpenCL)
+    {
+        m_tuner.SetCompilerOptions("-cl-fast-relaxed-math");
+    }
+    else if (m_computeApi == ktt::ComputeApi::CUDA)
+    {
+        m_tuner.SetCompilerOptions("-use_fast_math");
+    }
+}
+
+void ExampleBase::UseOpenMP()
+{
+    if (m_computeApi == ktt::ComputeApi::Cpp)
+    {
+        m_tuner.SetCompilerOptions("-march=native -fopenmp");
+    }
+}
+
+void ExampleBase::InitSearcher()
 {
     // Not necessary, since DS is the default. Demonstrates how a searcher can be set.
     // TODO: Should be empty?
