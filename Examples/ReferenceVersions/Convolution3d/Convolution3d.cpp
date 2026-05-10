@@ -1,3 +1,6 @@
+#include "Api/Searcher/RandomSearcher.h"
+#include "Api/StopCondition/ConfigurationCount.h"
+#include <cstdint>
 #include <iostream>
 #include <random>
 #include <string>
@@ -43,8 +46,8 @@ int main(int argc, char **argv)
 {
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = kernelPrefix + "../Examples/Convolution3d/Convolution3d.cl";
-    std::string referenceKernelFile = kernelPrefix + "../Examples/Convolution3d/Convolution3dReference.cl";
+    std::string kernelFile = kernelPrefix + "../Examples/ReferenceVersions/Convolution3d/Convolution3d.cl";
+    std::string referenceKernelFile = kernelPrefix + "../Examples/ReferenceVersions/Convolution3d/Convolution3dReference.cl";
 
     if (argc >= 2)
     {
@@ -233,6 +236,9 @@ int main(int argc, char **argv)
     tuner.AddConstraint(kernel, {"LOCAL", "TBY_XL", "TBY", "WPTY"}, HaloThreads);
     tuner.AddConstraint(kernel, {"LOCAL", "TBZ_XL", "TBZ", "WPTZ"}, HaloThreads);
 
+    auto noAlgorithmZero = [](const std::vector<uint64_t> &v) { return v[0] != 0; };
+    tuner.AddConstraint(kernel, {"ALGORITHM"}, noAlgorithmZero);
+
     // Sets padding to zero in case local memory is not used
     auto padding = [](const std::vector<uint64_t>& v) { return (v[0] != 0 || v[1] == 0); };
     tuner.AddConstraint(kernel, {"LOCAL", "PADDING"}, padding);
@@ -346,9 +352,10 @@ int main(int argc, char **argv)
         }
     });
 
+    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
     // Launch kernel tuning
-    const auto results = tuner.Tune(kernel);
-    tuner.SaveResults(results, "Convolution3dOutput", ktt::OutputFormat::XML);
+    const auto results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(400));
+    tuner.SaveResults(results, "Convolution3dOutput", ktt::OutputFormat::JSON);
 
     return 0;
 };
