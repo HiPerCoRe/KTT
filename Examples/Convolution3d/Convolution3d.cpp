@@ -54,7 +54,7 @@ protected:
         return (a / b) * b == a;
     }
 
-    virtual void InitData() 
+    void InitData() override
     {
         // Initialize data
         random_device device;
@@ -110,7 +110,7 @@ protected:
         }
     }
 
-    virtual void InitKernels() 
+    void InitKernels() override
     {
         // kernel dimensions
         const ktt::DimensionVector ndRangeDimensions(m_width, m_height, m_depth);
@@ -151,7 +151,7 @@ protected:
         m_tuner.SetArguments(m_slidingPlaneDefinition, {widthId, heightId, depthId, srcId, coeffId, m_destId});
     }
 
-    virtual void InitTuningParameters() 
+    void InitTuningParameters() override
     {
         // Add kernel parameters.
         // 0 - Blocked kernel, 1 - Sliding plane kernel
@@ -294,7 +294,7 @@ protected:
         m_tuner.AddConstraint(m_kernel, {"ALGORITHM", "Z_ITERATIONS"}, slidingPlane);
     }
 
-    virtual void InitReference() 
+    void InitReference() override
     {
         m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
         m_tuner.SetReferenceComputation(m_destId, [this](void* buffer)
@@ -328,6 +328,8 @@ protected:
             }
         });
     }
+
+    
 };
 
 
