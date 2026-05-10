@@ -53,6 +53,7 @@ make > /dev/null
 OUTPUT_JSON="$BIN_DIR/Output.json"
 NAME_OUTPUT_JSON="$BIN_DIR/${EXAMPLE_NAME}Output.json"
 TRANSP_OUTPUT_JSON="$BIN_DIR/TranspositionOutput.json"
+CSUM_3D_OUTPUT_JSON="$BIN_DIR/CoulombSumOutput.json"
 
 # Step 3: Run reference version first
 echo ""
@@ -69,8 +70,10 @@ else
         cp "$OUTPUT_JSON" "$REF_OUTPUT_JSON"
     elif [ -f "$NAME_OUTPUT_JSON" ]; then
         cp "$NAME_OUTPUT_JSON" "$REF_OUTPUT_JSON"
-    elif [ -f "$TRANSP_OUTPUT_JSON"] && [ "$EXAMPLE_NAME = Transpose" ] ; then
+    elif [ -f "$TRANSP_OUTPUT_JSON" ] && [ "$EXAMPLE_NAME = Transpose" ] ; then
         cp "$TRANSP_OUTPUT_JSON" "$REF_OUTPUT_JSON"
+    elif [ -f "$CSUM_3D_OUTPUT_JSON" ] && [ "$EXAMPLE_NAME = CoulombSum3d" ] ; then
+        cp "$CSUM_3D_OUTPUT_JSON" "$REF_OUTPUT_JSON"
     else
         echo "Error: Reference $EXAMPLE_NAME did not produce Output.json"
         exit 1
