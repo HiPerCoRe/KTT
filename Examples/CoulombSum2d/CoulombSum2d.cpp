@@ -1,145 +1,149 @@
-#include <iostream>
-#include <random>
-#include <string>
-#include <vector>
+#include "../ExampleReferenceKernel.h"
+#include "Api/Configuration/DimensionVector.h"
+#include "Api/StopCondition/ConfigurationCount.h"
+#include "Api/StopCondition/StopCondition.h"
+#include <memory>
 
-#include <Ktt.h>
+using namespace std;
 
-#if defined(_MSC_VER)
-const std::string kernelPrefix = "";
-#else
-const std::string kernelPrefix = "../";
-#endif
-
-int main(int argc, char** argv)
-{
-    // Initialize platform index, device index and paths to kernels.
-    ktt::PlatformIndex platformIndex = 0;
-    ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = kernelPrefix + "../Examples/CoulombSum2d/CoulombSum2d.cl";
-    std::string referenceKernelFile = kernelPrefix + "../Examples/CoulombSum2d/CoulombSum2dReference.cl";
-
-    if (argc >= 2)
+class CoulombSum2d : public ExampleReferenceKernel {
+protected:
+    CoulombSum2d(int argc, char** argv, int defaultProblemSize, string exampleFolderPath,
+                 string defaultKernelFileBaseName, string defaultRefKernelFileBaseName, bool rapidTest, bool useProfiling) :
+        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath,
+                               defaultKernelFileBaseName, defaultRefKernelFileBaseName,
+                               rapidTest, useProfiling),
+        // Since CoulombSum2d has O(n²) complexity (gridPoints × atoms), scale grid dimensions
+        // with the fourth root of problem size to keep total work proportional
+        m_gridWidth(static_cast<size_t>(sqrt(m_problemSize)) * 16),
+        m_gridHeight(static_cast<size_t>(sqrt(m_problemSize)) * 16),
+        m_ndRangeDimensions(m_gridWidth, m_gridHeight),
+        m_numberOfAtoms(4000)
     {
-        platformIndex = std::stoul(std::string(argv[1]));
+    }
 
-        if (argc >= 3)
+    friend ExampleReferenceKernel;
+
+    size_t m_gridWidth;
+    size_t m_gridHeight;
+
+    // Total NDRange size matches number of grid points
+    const ktt::DimensionVector m_ndRangeDimensions;
+    const ktt::DimensionVector m_workGroupDimensions{1, 1};
+
+    const float m_gridSpacing = 0.5f;
+    const int m_numberOfAtoms;
+
+    vector<float> m_atomInfo;
+    vector<float> m_atomInfoX;
+    vector<float> m_atomInfoY;
+    vector<float> m_atomInfoZ;
+    vector<float> m_atomInfoW;
+    vector<float> m_energyGrid;
+
+    ktt::ArgumentId m_atomInfoId;
+    ktt::ArgumentId m_atomInfoXId;
+    ktt::ArgumentId m_atomInfoYId;
+    ktt::ArgumentId m_atomInfoZId;
+    ktt::ArgumentId m_atomInfoWId;
+    ktt::ArgumentId m_numberOfAtomsId;
+    ktt::ArgumentId m_gridSpacingId;
+    ktt::ArgumentId m_energyGridId;
+
+    void InitData() override
+    {
+        // Declare data variables
+        const size_t numberOfGridPoints = m_gridWidth * m_gridHeight;
+        m_atomInfo.resize(4 * m_numberOfAtoms);
+        m_atomInfoX.resize(m_numberOfAtoms);
+        m_atomInfoY.resize(m_numberOfAtoms);
+        m_atomInfoZ.resize(m_numberOfAtoms);
+        m_atomInfoW.resize(m_numberOfAtoms);
+        m_energyGrid.resize(numberOfGridPoints, 0.0f);
+
+        FillBuffers<float>({&m_atomInfoX, &m_atomInfoY, &m_atomInfoZ}, 0.0f, 40.0f);
+        FillBuffers<float>({&m_atomInfoW}, 0.0f, 1.0f);
+
+        for (size_t i = 0; i < static_cast<size_t>(m_numberOfAtoms); ++i)
         {
-            deviceIndex = std::stoul(std::string(argv[2]));
-
-            if (argc >= 4)
-            {
-                kernelFile = std::string(argv[3]);
-
-                if (argc >= 5)
-                {
-                    referenceKernelFile = std::string(argv[4]);
-                }
-            }
+            m_atomInfo[4 * i] = m_atomInfoX[i];
+            m_atomInfo[4 * i + 1] = m_atomInfoY[i];
+            m_atomInfo[4 * i + 2] = m_atomInfoZ[i];
+            m_atomInfo[4 * i + 3] = m_atomInfoW[i];
         }
     }
 
-    // Declare kernel parameters.
-    const ktt::DimensionVector ndRangeDimensions(512, 512);
-    const ktt::DimensionVector workGroupDimensions;
-    const ktt::DimensionVector referenceWorkGroupDimensions(16, 16);
-    // Total NDRange size matches number of grid points.
-    const size_t numberOfGridPoints = ndRangeDimensions.GetSizeX() * ndRangeDimensions.GetSizeY();
-    // If higher than 4k, computations with constant memory enabled will be invalid on many devices due to constant memory capacity limit.
-    const int numberOfAtoms = 4000;
-
-    // Declare data variables.
-    const float gridSpacing = 0.5f;
-    std::vector<float> atomInfo(4 * numberOfAtoms);
-    std::vector<float> atomInfoX(numberOfAtoms);
-    std::vector<float> atomInfoY(numberOfAtoms);
-    std::vector<float> atomInfoZ(numberOfAtoms);
-    std::vector<float> atomInfoW(numberOfAtoms);
-    std::vector<float> energyGrid(numberOfGridPoints, 0.0f);
-
-    // Initialize data
-    std::random_device device;
-    std::default_random_engine engine(device());
-    std::uniform_real_distribution<float> distribution(0.0f, 40.0f);
-
-    for (size_t i = 0; i < static_cast<size_t>(numberOfAtoms); ++i)
+    void InitKernels() override
     {
-        atomInfoX[i] = distribution(engine);
-        atomInfoY[i] = distribution(engine);
-        atomInfoZ[i] = distribution(engine);
-        atomInfoW[i] = distribution(engine) / 40.0f;
+        // Add all kernel arguments
+        m_atomInfoId = m_tuner.AddArgumentVector(m_atomInfo, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoXId = m_tuner.AddArgumentVector(m_atomInfoX, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoYId = m_tuner.AddArgumentVector(m_atomInfoY, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoZId = m_tuner.AddArgumentVector(m_atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoWId = m_tuner.AddArgumentVector(m_atomInfoW, ktt::ArgumentAccessType::ReadOnly);
+        m_numberOfAtomsId = m_tuner.AddArgumentScalar(m_numberOfAtoms);
+        m_gridSpacingId = m_tuner.AddArgumentScalar(m_gridSpacing);
+        m_energyGridId = m_tuner.AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::ReadWrite);
 
-        atomInfo[4 * i] = atomInfoX[i];
-        atomInfo[4 * i + 1] = atomInfoY[i];
-        atomInfo[4 * i + 2] = atomInfoZ[i];
-        atomInfo[4 * i + 3] = atomInfoW[i];
+        // Configure main kernel
+        InitKernelDefault("directCoulombSum", "CoulombSum", m_ndRangeDimensions,
+            {m_atomInfoId, m_atomInfoXId, m_atomInfoYId, m_atomInfoZId, m_atomInfoWId,
+             m_numberOfAtomsId, m_gridSpacingId, m_energyGridId});
     }
 
-    ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeApi::OpenCL);
-    tuner.SetCompilerOptions("-cl-fast-relaxed-math");
-    tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+    void InitTuningParameters() override
+    {
+        UseFastMath();
 
-    // Add two kernels to tuner, one of the kernels acts as a reference kernel.
-    const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, ndRangeDimensions,
-        workGroupDimensions);
-    const ktt::KernelId kernel = tuner.CreateSimpleKernel("CoulombSum", definition);
+        m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR", vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+        m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "VECTOR_TYPE", vector<uint64_t>{1, 2, 4, 8});
+        m_tuner.AddParameter(m_kernel, "USE_SOA", vector<uint64_t>{0, 1, 2});
 
-    const ktt::KernelDefinitionId referenceDefinition = tuner.AddKernelDefinitionFromFile("directCoulombSumReference", referenceKernelFile,
-        ndRangeDimensions, referenceWorkGroupDimensions);
-    const ktt::KernelId referenceKernel = tuner.CreateSimpleKernel("CoulombSumReference", referenceDefinition);
+        // Using vectorized SoA only makes sense when vectors are longer than 1.
+        auto vectorizedSoA = [](const vector<uint64_t>& vector) {return vector[0] > 1 || vector[1] != 2;};
+        m_tuner.AddConstraint(m_kernel, {"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
 
-    // Add several parameters to tuned kernel, some of them utilize constraint function and thread modifiers.
-    tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
-    tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0, 1});
-    tuner.AddParameter(kernel, "VECTOR_TYPE", std::vector<uint64_t>{1, 2, 4, 8});
-    tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1, 2});
+        // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR.
+        m_tuner.AddParameter(m_kernel, "OUTER_UNROLL_FACTOR", vector<uint64_t>{1, 2, 4, 8});
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
+            ktt::ModifierAction::Divide);
 
-    // Using vectorized SoA only makes sense when vectors are longer than 1.
-    auto vectorizedSoA = [](const std::vector<size_t>& vector) {return vector[0] > 1 || vector[1] != 2;}; 
-    tuner.AddConstraint(kernel, {"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
+        // Multiply work-group size in dimensions x and y by the following parameters (effectively setting work-group size to their values).
+        m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_X", vector<uint64_t>{4, 8, 16, 32});
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+            ktt::ModifierAction::Multiply);
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+            ktt::ModifierAction::Divide);
 
-    // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR.
-    tuner.AddParameter(kernel, "OUTER_UNROLL_FACTOR", std::vector<uint64_t>{1, 2, 4, 8});
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
-        ktt::ModifierAction::Divide);
+        m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_Y", vector<uint64_t>{1, 2, 4, 8, 16, 32});
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+            ktt::ModifierAction::Multiply);
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+            ktt::ModifierAction::Divide);
+    }
 
-    // Multiply work-group size in dimensions x and y by the following parameters (effectively setting work-group size to their values).
-    tuner.AddParameter(kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{4, 8, 16, 32});
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
-        ktt::ModifierAction::Multiply);
-    tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8, 16, 32});
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
-        ktt::ModifierAction::Multiply);
+    void InitReference() override
+    {
+        const ktt::DimensionVector referenceWorkGroupDimensions{16, 16};
+        const ktt::DimensionVector referenceNdRangeDimensions{m_ndRangeDimensions.GetSizeX()/referenceWorkGroupDimensions.GetSizeX(),
+                                                              m_ndRangeDimensions.GetSizeY()/referenceWorkGroupDimensions.GetSizeY()};
+        // Configure reference kernel
+        InitReferenceKernelDefault("directCoulombSumReference", referenceNdRangeDimensions, referenceWorkGroupDimensions,
+            {m_atomInfoId, m_numberOfAtomsId, m_gridSpacingId, m_energyGridId},
+            {m_energyGridId}, 0.01);
+    }
 
-    // Add all kernel arguments.
-    ktt::ArgumentId atomInfoId = tuner.AddArgumentVector(atomInfo, ktt::ArgumentAccessType::ReadOnly);
-    ktt::ArgumentId atomInfoXId = tuner.AddArgumentVector(atomInfoX, ktt::ArgumentAccessType::ReadOnly);
-    ktt::ArgumentId atomInfoYId = tuner.AddArgumentVector(atomInfoY, ktt::ArgumentAccessType::ReadOnly);
-    ktt::ArgumentId atomInfoZId = tuner.AddArgumentVector(atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
-    ktt::ArgumentId atomInfoWId = tuner.AddArgumentVector(atomInfoW, ktt::ArgumentAccessType::ReadOnly);
-    ktt::ArgumentId numberOfAtomsId = tuner.AddArgumentScalar(numberOfAtoms);
-    ktt::ArgumentId gridSpacingId = tuner.AddArgumentScalar(gridSpacing);
-    ktt::ArgumentId energyGridId = tuner.AddArgumentVector(energyGrid, ktt::ArgumentAccessType::ReadWrite);
+    unique_ptr<ktt::StopCondition> GetStopCondition() override {
+        return make_unique<ktt::ConfigurationCount>(1000);
+    }
+};
 
-    // Set arguments for both tuned and reference kernel definitions, order of arguments is important.
-    tuner.SetArguments(definition, {atomInfoId, atomInfoXId, atomInfoYId, atomInfoZId, atomInfoWId, numberOfAtomsId, gridSpacingId,
-        energyGridId});
-    tuner.SetArguments(referenceDefinition, {atomInfoId, numberOfAtomsId, gridSpacingId, energyGridId});
-
-    // Set searcher to random.
-    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
-
-    // Specify custom tolerance threshold for validation of floating-point arguments. Default threshold is 1e-4.
-    tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
-
-    // Set reference kernel which validates results provided by the tuned kernel.
-    tuner.SetReferenceKernel(energyGridId, referenceKernel, ktt::KernelConfiguration());
-
-    // Launch kernel tuning, end after 1 minute.
-    const std::vector<ktt::KernelResult> results = tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(60.0));
-
-    // Save tuning results to JSON file.
-    tuner.SaveResults(results, "CoulombSum2dOutput", ktt::OutputFormat::JSON);
+int main(int argc, char **argv)
+{
+    unique_ptr<CoulombSum2d> coulombSum2d = CoulombSum2d::Create<CoulombSum2d>(argc, argv, 256, "Examples/CoulombSum2d",
+        "CoulombSum2d", "CoulombSum2dReference");
+    coulombSum2d->Run();
 
     return 0;
 }
