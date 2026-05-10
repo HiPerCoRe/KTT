@@ -152,7 +152,7 @@ void ExampleBase::InitKernelDefault(const string &kernelFunctionName, const stri
 {
     // Create m_kernel and configure input/output
     m_definition = m_tuner.AddKernelDefinitionFromFile(kernelFunctionName, m_kernelFile, ndRangeDimensions,
-        ktt::DimensionVector(1, 1));
+        ktt::DimensionVector());
     m_tuner.SetArguments(m_definition, arguments);
         
     m_kernel = m_tuner.CreateSimpleKernel(kernelName, m_definition);
