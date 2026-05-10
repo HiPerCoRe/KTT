@@ -1,3 +1,4 @@
+#include "Api/StopCondition/ConfigurationCount.h"
 #include <iostream>
 #include <random>
 #include <string>
@@ -136,7 +137,7 @@ int main(int argc, char** argv)
     tuner.SetReferenceKernel(energyGridId, referenceKernel, ktt::KernelConfiguration());
 
     // Launch kernel tuning, end after 1 minute.
-    const std::vector<ktt::KernelResult> results = tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(60.0));
+    const std::vector<ktt::KernelResult> results = tuner.Tune(kernel, std::make_unique<ktt::ConfigurationCount>(1000));
 
     // Save tuning results to JSON file.
     tuner.SaveResults(results, "CoulombSum2dOutput", ktt::OutputFormat::JSON);
