@@ -329,7 +329,15 @@ protected:
         });
     }
 
-    
+    void InitSearcher() override
+    {
+        m_tuner.SetSearcher(m_kernel, make_unique<ktt::RandomSearcher>());
+    }
+
+    unique_ptr<ktt::StopCondition> GetStopCondition() override
+    {
+        return make_unique<ktt::ConfigurationCount>(400);
+    }
 };
 
 
