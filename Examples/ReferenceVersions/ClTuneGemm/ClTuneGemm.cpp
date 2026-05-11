@@ -2,6 +2,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include<iostream>
 
 #include <Ktt.h>
 
@@ -22,13 +23,13 @@ const std::string kernelPrefix = "../";
 #endif
 
 // Toggle rapid test (e.g., disable output validation).
-const bool rapidTest = true;
+const bool rapidTest = false;
 
 // Toggle kernel profiling.
 const bool useProfiling = false;
 
 // Reduced tuning parameters set, taken from CLTune.
-const bool useReducedSet = true;
+const bool useReducedSet = false;
 
 // Helper function to determine whether or not 'a' is a multiple of 'b'
 bool IsMultiple(const size_t a, const size_t b)
