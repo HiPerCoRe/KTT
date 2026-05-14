@@ -130,7 +130,7 @@ protected:
         m_tuner.SetArguments(m_bottomScanDefinition, {m_inId, m_isumsId, m_outId, m_sizeId, m_shiftId});
     }
 
-    void InitTuningParameters() override
+    void InitTuningSpace() override
     {
         // Parameter for the length of OpenCL vector data types used in the kernels
         if (m_computeApi == ktt::ComputeApi::OpenCL)

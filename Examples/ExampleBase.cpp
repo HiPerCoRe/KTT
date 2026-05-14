@@ -111,7 +111,7 @@ void ExampleBase::PostInitialize()
 {
     InitData();
     InitKernel();
-    InitTuningParameters();
+    InitTuningSpace();
     InitSearcher();
 }
 

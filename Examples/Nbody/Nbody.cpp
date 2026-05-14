@@ -122,7 +122,7 @@ protected:
              m_dampingId, m_softeningSqrId, m_numberOfBodiesId});
     }
 
-    void InitTuningParameters() override
+    void InitTuningSpace() override
     {
         UseFastMath();
 

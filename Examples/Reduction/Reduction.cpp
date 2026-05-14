@@ -101,7 +101,7 @@ protected:
         });
     }
 
-    void InitTuningParameters() override 
+    void InitTuningSpace() override 
     {
         // get number of compute units
         const ktt::DeviceInfo di = m_tuner.GetCurrentDeviceInfo();

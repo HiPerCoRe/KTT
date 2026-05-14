@@ -151,7 +151,7 @@ protected:
         m_tuner.SetArguments(m_slidingPlaneDefinition, {widthId, heightId, depthId, srcId, coeffId, m_destId});
     }
 
-    void InitTuningParameters() override
+    void InitTuningSpace() override
     {
         // Add kernel parameters.
         // 0 - Blocked kernel, 1 - Sliding plane kernel

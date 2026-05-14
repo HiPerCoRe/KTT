@@ -56,7 +56,7 @@ protected:
                                    {m_dstId});
     }
     
-    void InitTuningParameters() override 
+    void InitTuningSpace() override 
     {
         // Create tuning space
         if (m_computeApi == ktt::ComputeApi::OpenCL)

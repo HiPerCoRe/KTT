@@ -260,7 +260,7 @@ protected:
         m_tuner.SetArguments(m_scanId, {m_scanOutDataId, m_scanInDataId, m_scanOneBlockSumId, m_numElementsId, m_fullBlockId, m_storeSumId});
     }
 
-    void InitTuningParameters() override
+    void InitTuningSpace() override
     {
         m_tuner.AddParameter(m_kernel, "SORT_BLOCK_SIZE", vector<uint64_t>{32, 64, 128, 256, 512, 1024});
         m_tuner.AddParameter(m_kernel, "SCAN_BLOCK_SIZE", vector<uint64_t>{32, 64, 128, 256, 512, 1024});

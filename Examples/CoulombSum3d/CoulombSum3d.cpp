@@ -98,7 +98,7 @@ protected:
              m_numberOfAtomsId, m_gridSpacingId, m_gridDimId, m_energyGridId});
     }
 
-    void InitTuningParameters() override
+    void InitTuningSpace() override
     {
         UseFastMath();
         UseOpenMP();

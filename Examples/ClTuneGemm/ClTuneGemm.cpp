@@ -68,7 +68,7 @@ protected:
             {m_kSizeMId, m_kSizeNId, m_kSizeKId, m_matAId, m_matBId, m_matCId});
     }
 
-    void InitTuningParameters() override
+    void InitTuningSpace() override
     {
         m_tuner.AddParameter(m_kernel, "MWG", vector<uint64_t>{16, 32, 64, 128});
         m_tuner.AddParameter(m_kernel, "NWG", vector<uint64_t>{16, 32, 64, 128});

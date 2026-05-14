@@ -46,7 +46,7 @@ protected:
     virtual void PostInitialize();
     virtual void InitData() = 0;
     virtual void InitKernel() = 0;
-    virtual void InitTuningParameters() = 0;
+    virtual void InitTuningSpace() = 0;
     virtual void InitSearcher();
 
     virtual std::unique_ptr<ktt::StopCondition> GetStopCondition();
