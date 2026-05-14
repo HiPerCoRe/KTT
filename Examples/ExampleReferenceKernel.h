@@ -43,5 +43,4 @@ protected:
         const std::vector<ktt::ArgumentId> &outputArguments,
         const float precision = 0.0001
     );
-    void InitReferenceOutputsDefault(const std::vector<ktt::ArgumentId> &outputArguments);
 };
