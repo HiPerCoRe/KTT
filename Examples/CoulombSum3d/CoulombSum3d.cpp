@@ -79,7 +79,7 @@ protected:
         }
     }
 
-    void InitKernels() override
+    void InitKernel() override
     {
         // Add all kernel arguments
         m_atomInfoId = m_tuner.AddArgumentVector(m_atomInfo, ktt::ArgumentAccessType::ReadOnly);

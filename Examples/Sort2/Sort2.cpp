@@ -109,7 +109,7 @@ protected:
         m_valuesIn = m_keysIn;
     }
 
-    void InitKernels() override
+    void InitKernel() override
     {
         // Declare kernels and their dimensions
         const ktt::DimensionVector ndRangeDimensions;

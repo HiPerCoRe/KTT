@@ -110,7 +110,7 @@ protected:
         }
     }
 
-    void InitKernels() override
+    void InitKernel() override
     {
         // kernel dimensions
         const ktt::DimensionVector ndRangeDimensions(m_width, m_height, m_depth);

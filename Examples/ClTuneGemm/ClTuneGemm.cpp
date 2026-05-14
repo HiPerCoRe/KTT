@@ -55,7 +55,7 @@ protected:
         FillBuffers<float>({&m_matA, &m_matB}, -2.0f, 2.0f);
     }
 
-    void InitKernels() override
+    void InitKernel() override
     {
         m_kSizeMId = m_tuner.AddArgumentScalar(m_kSizeM);
         m_kSizeNId = m_tuner.AddArgumentScalar(m_kSizeN);

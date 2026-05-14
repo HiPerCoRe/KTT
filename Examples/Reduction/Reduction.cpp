@@ -37,7 +37,7 @@ protected:
         FillBuffers<float>({&m_src}, 0, 1000);
     }
 
-    void InitKernels() override 
+    void InitKernel() override 
     {
         const uint32_t nUp = ((m_size+512-1)/512)*512; // maximum WG size used in tuning parameters
         const ktt::ArgumentId srcId = m_tuner.AddArgumentVector(m_src, ktt::ArgumentAccessType::ReadWrite);

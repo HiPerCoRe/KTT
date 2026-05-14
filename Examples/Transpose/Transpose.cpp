@@ -37,7 +37,7 @@ protected:
         FillBuffers<float>({&m_src});
     }
 
-    void InitKernels() override
+    void InitKernel() override
     {
         m_srcId = m_tuner.AddArgumentVector(m_src, ktt::ArgumentAccessType::ReadOnly);
         m_dstId = m_tuner.AddArgumentVector(m_dst, ktt::ArgumentAccessType::WriteOnly);

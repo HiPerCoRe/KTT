@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "tuner_api.h"
+#include "Ktt.h"
 
 #if defined(_MSC_VER)
     const std::string kernelFilePrefix = "";

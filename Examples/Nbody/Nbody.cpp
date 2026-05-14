@@ -93,7 +93,7 @@ protected:
         }
     }
 
-    void InitKernels() override
+    void InitKernel() override
     {
         // Add all arguments utilized by kernels
         m_oldBodyInfoId = m_tuner.AddArgumentVector(m_oldBodyInfo, ktt::ArgumentAccessType::ReadOnly);

@@ -39,7 +39,7 @@ protected:
         FillBuffers<unsigned int>({&m_in});
     }
 
-    void InitKernels() override
+    void InitKernel() override
     {
         // Declare kernels and their dimensions
         const ktt::DimensionVector ndRangeDimensions;

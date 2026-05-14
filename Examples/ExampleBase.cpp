@@ -110,7 +110,7 @@ ExampleBase::ExampleBase(
 void ExampleBase::PostInitialize() 
 {
     InitData();
-    InitKernels();
+    InitKernel();
     InitTuningParameters();
     InitSearcher();
 }
