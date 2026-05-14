@@ -108,7 +108,7 @@ REFACTORED_OUTPUT="$SCRIPT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
 
 if [ -f "$REFERENCE_OUTPUT" ] && [ -f "$REFACTORED_OUTPUT" ]; then
     echo "Comparing JSON outputs..."
-    python3 compare_sort_configs.py "$REFERENCE_OUTPUT" "$REFACTORED_OUTPUT"
+    python3 compare_configs.py "$REFERENCE_OUTPUT" "$REFACTORED_OUTPUT"
 else
     echo "JSON not found"
     exit 1
