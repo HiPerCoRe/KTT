@@ -9,15 +9,12 @@ class Sort2 : public ExampleReferenceComputation
 {
 protected:
     Sort2(
-        int argc,
-        char** argv,
+        std::shared_ptr<ExampleConfiguration> config,
         int defaultProblemSize,
-        string exampleFolderPath, string defaultKernelFileBaseName,
-        bool rapidTest,
-        bool useProfiling
+        string exampleFolderPath, string defaultKernelFileBaseName
     ):
-    ExampleReferenceComputation(argc, argv, defaultProblemSize,
-        exampleFolderPath, defaultKernelFileBaseName, rapidTest, useProfiling
+    ExampleReferenceComputation(config, defaultProblemSize,
+        exampleFolderPath, defaultKernelFileBaseName
     )
     {
         // problem size is in MiB

@@ -1,18 +1,14 @@
 #include "../ExampleReferenceComputation.h"
-#include "Api/Searcher/RandomSearcher.h"
-#include "Api/Searcher/Searcher.h"
-#include "Api/StopCondition/ConfigurationCount.h"
-#include "Api/StopCondition/StopCondition.h"
 #include <memory>
 
 using namespace std;
 
 class CoulombSum3d : public ExampleReferenceComputation {
 protected:
-    CoulombSum3d(int argc, char** argv, int defaultProblemSize, string exampleFolderPath,
-                 string defaultKernelFileBaseName, bool rapidTest, bool useProfiling) :
-        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath,
-                                    defaultKernelFileBaseName, rapidTest, useProfiling),
+    CoulombSum3d(std::shared_ptr<ExampleConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+                 string defaultKernelFileBaseName) :
+        ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath,
+                                    defaultKernelFileBaseName),
         // Since CoulombSum3d has O(n³) complexity (gridPoints × atoms), scale grid dimensions
         // with the cube root of problem size to keep total work proportional
         m_gridWidth(static_cast<size_t>(cbrt(m_problemSize)) * 128),
@@ -161,7 +157,7 @@ protected:
 
     void InitReference() override
     {
-        if (!m_rapidTest)
+        if (!m_config->rapidTest)
         {
             //TODO: this is temporary hack, there should be composition of zeroizing and Coulomb kernel,
             // otherwise, multiple profiling runs corrupt results
@@ -186,14 +182,6 @@ protected:
             });
             m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
         }
-    }
-
-    void InitSearcher() override {
-        m_tuner.SetSearcher(m_kernel, make_unique<ktt::RandomSearcher>());
-    }
-
-    unique_ptr<ktt::StopCondition> GetStopCondition() override {
-        return make_unique<ktt::ConfigurationCount>(100);
     }
 };
 

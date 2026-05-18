@@ -1,7 +1,5 @@
 #include "../ExampleReferenceKernel.h"
-#include "Api/Configuration/DimensionVector.h"
 #include <memory>
-#include <iostream>
 
 using namespace std;
 
@@ -12,12 +10,10 @@ bool IsMultiple(const size_t a, const size_t b)
 
 class ClTuneGemm : public ExampleReferenceKernel {
 protected:
-    ClTuneGemm(int argc, char** argv, int defaultProblemSize, string exampleFolderPath,
-               string defaultKernelFileBaseName, string defaultRefKernelFileBaseName,
-               bool rapidTest, bool useProfiling) :
-        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath,
-                               defaultKernelFileBaseName, defaultRefKernelFileBaseName,
-                               rapidTest, useProfiling),
+    ClTuneGemm(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+               string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
+        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath,
+                               defaultKernelFileBaseName, defaultRefKernelFileBaseName),
         // GEMM has O(m × n × k) complexity. For square matrices where m = n = k,
         // we scale with cube root of problem size to keep total work proportional
         m_kSizeM(static_cast<uint32_t>(sqrt(m_problemSize)) * 1024),
@@ -129,11 +125,6 @@ protected:
         InitReferenceKernelDefault("gemm_reference", m_referenceGridDimensions, m_referenceBlockDimensions,
             {m_kSizeMId, m_kSizeNId, m_kSizeKId, m_matAId, m_matBId, m_matCId},
             {m_matCId}, 0.001);
-    }
-
-    void InitSearcher() override
-    {
-        m_tuner.SetSearcher(m_kernel, make_unique<ktt::RandomSearcher>());
     }
 };
 

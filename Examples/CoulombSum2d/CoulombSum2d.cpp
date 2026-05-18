@@ -1,18 +1,14 @@
 #include "../ExampleReferenceKernel.h"
-#include "Api/Configuration/DimensionVector.h"
-#include "Api/StopCondition/ConfigurationCount.h"
-#include "Api/StopCondition/StopCondition.h"
 #include <memory>
 
 using namespace std;
 
 class CoulombSum2d : public ExampleReferenceKernel {
 protected:
-    CoulombSum2d(int argc, char** argv, int defaultProblemSize, string exampleFolderPath,
-                 string defaultKernelFileBaseName, string defaultRefKernelFileBaseName, bool rapidTest, bool useProfiling) :
-        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath,
-                               defaultKernelFileBaseName, defaultRefKernelFileBaseName,
-                               rapidTest, useProfiling),
+    CoulombSum2d(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+                 string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
+        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath,
+                               defaultKernelFileBaseName, defaultRefKernelFileBaseName),
         // Since CoulombSum2d has O(n²) complexity (gridPoints × atoms), scale grid dimensions
         // with the fourth root of problem size to keep total work proportional
         m_gridWidth(static_cast<size_t>(sqrt(m_problemSize)) * 16),
@@ -132,10 +128,6 @@ protected:
         InitReferenceKernelDefault("directCoulombSumReference", referenceNdRangeDimensions, referenceWorkGroupDimensions,
             {m_atomInfoId, m_numberOfAtomsId, m_gridSpacingId, m_energyGridId},
             {m_energyGridId}, 0.01);
-    }
-
-    unique_ptr<ktt::StopCondition> GetStopCondition() override {
-        return make_unique<ktt::ConfigurationCount>(1000);
     }
 };
 

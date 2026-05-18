@@ -2,19 +2,16 @@
 
 using namespace std;
 
-class Convolution3d: public ExampleReferenceComputation 
+class Convolution3d: public ExampleReferenceComputation
 {
 protected:
     Convolution3d(
-        int argc,
-        char** argv,
+        std::shared_ptr<ExampleConfiguration> config,
         int defaultProblemSize,
-        string exampleFolderPath, string defaultKernelFileBaseName,
-        bool rapidTest,
-        bool useProfiling
+        string exampleFolderPath, string defaultKernelFileBaseName
     ):
-    ExampleReferenceComputation(argc, argv, defaultProblemSize,
-        exampleFolderPath, defaultKernelFileBaseName, rapidTest, useProfiling
+    ExampleReferenceComputation(config, defaultProblemSize,
+        exampleFolderPath, defaultKernelFileBaseName
     )
     {
         // cbrt is cube root, so that problem size N roughly translates to N MiB of values
@@ -327,16 +324,6 @@ protected:
                 }
             }
         });
-    }
-
-    void InitSearcher() override
-    {
-        m_tuner.SetSearcher(m_kernel, make_unique<ktt::RandomSearcher>());
-    }
-
-    unique_ptr<ktt::StopCondition> GetStopCondition() override
-    {
-        return make_unique<ktt::ConfigurationCount>(400);
     }
 };
 

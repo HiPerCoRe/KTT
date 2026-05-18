@@ -5,12 +5,10 @@ using namespace std;
 
 class Nbody : public ExampleReferenceKernel {
 protected:
-    Nbody(int argc, char** argv, int defaultProblemSize, string exampleFolderPath,
-          string defaultKernelFileBaseName, string defaultRefKernelFileBaseName,
-          bool rapidTest, bool useProfiling) :
-        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath,
-                               defaultKernelFileBaseName, defaultRefKernelFileBaseName,
-                               rapidTest, useProfiling),
+    Nbody(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+          string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
+        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath,
+                               defaultKernelFileBaseName, defaultRefKernelFileBaseName),
         m_numberOfBodies(static_cast<size_t>(sqrt(m_problemSize)) * 1024),
         m_ndRangeDimensions(m_numberOfBodies, 1)
     {

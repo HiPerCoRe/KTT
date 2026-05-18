@@ -1,15 +1,13 @@
 #include "../ExampleReferenceComputation.h"
-#include <random>
 
 using namespace std;
 
 class Sort : public ExampleReferenceComputation
 {
 protected:
-    Sort(int argc, char** argv, int defaultProblemSize, string exampleFolderPath,
-         string defaultKernelFileBaseName, bool rapidTest = false, bool useProfiling = false) :
-        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
-                                    rapidTest, useProfiling)
+    Sort(std::shared_ptr<ExampleConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+         string defaultKernelFileBaseName) :
+        ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
     {
         m_size = m_problemSize * 1024 * 1024 / sizeof(unsigned int);
     }

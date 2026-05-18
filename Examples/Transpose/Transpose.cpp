@@ -6,10 +6,11 @@ using namespace std;
 
 class Transpose: public ExampleReferenceKernel {
 protected:
-    Transpose(int argc, char** argv, int defaultProblemSize, string exampleFolderPath, string defaultKernelFileBaseName, 
-              string defaultReferenceKernelFileBaseName, bool rapidTest, bool useProfiling): 
-        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
-                defaultReferenceKernelFileBaseName, rapidTest, useProfiling)
+    Transpose(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize,
+              string exampleFolderPath, string defaultKernelFileBaseName,
+              string defaultReferenceKernelFileBaseName):
+        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
+                defaultReferenceKernelFileBaseName)
     {
         m_width = 1024*static_cast<int>(sqrtf(m_problemSize));
         m_height = m_width;
