@@ -31,7 +31,6 @@ public:
     bool TryTrigger(int argc, char **argv, int &i) const {
         assert(i < argc);
         if (argv[i] != m_trigger) return false;
-        cout << m_trigger << endl;
         if (i + m_argumentCount >= argc)
         {
             cerr << m_trigger << " expects a value to be passed!" << endl;
@@ -147,7 +146,6 @@ void SetUpCommonOptions(vector<CliOption> &options, ExampleConfiguration *config
     options.emplace_back([config](const vector<string> &args) {
         config->useDynamicTuning = true;
         config->dynamicTuningTime = stod(args[0]);
-        cout << &config << endl;
     }, "--useDynamicTuning", "Enables a basic implementation of dynamic tuning."
     "The tuning will last <time> (double) seconds and then the only the best configuration will be run.",
     "<time>", 1);
@@ -181,8 +179,6 @@ ExampleConfiguration ProcessInput(int argc, char **argv) {
     SetUpCommonOptions(options, &config);
 
     IterateArguments(argc, argv, options);
-    cout << &config << endl;
-    cout << config.useDynamicTuning << " " << config.dynamicTuningTime << endl;
 
     return config;
 }
