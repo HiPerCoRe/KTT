@@ -3,5 +3,5 @@
 void ExampleReferenceComputation::PostInitialize() 
 {
     ExampleBase::PostInitialize();
-    InitReference();
+    if (!m_config->rapidTest) InitReference();
 }
