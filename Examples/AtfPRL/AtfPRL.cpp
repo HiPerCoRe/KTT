@@ -1,9 +1,6 @@
-#include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include <Ktt.h>
 
