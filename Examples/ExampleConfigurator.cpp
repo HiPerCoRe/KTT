@@ -31,6 +31,7 @@ public:
     bool TryTrigger(int argc, char **argv, int &i) const {
         assert(i < argc);
         if (argv[i] != m_trigger) return false;
+        cout << m_trigger << endl;
         if (i + m_argumentCount >= argc)
         {
             cerr << m_trigger << " expects a value to be passed!" << endl;
@@ -55,35 +56,31 @@ void SetUpCommonOptions(vector<CliOption> &options, ExampleConfiguration *config
         exit(0);
     }, "--help", "Show this help message and exit.");
 
-    options.emplace_back([&config](const vector<string> &) {
+    options.emplace_back([config](const vector<string> &) {
         config->rapidTest = true;
     }, "--rapidTest", "Run in rapid test mode");
 
-    options.emplace_back([&config](const vector<string> &) {
+    options.emplace_back([config](const vector<string> &) {
         config->useProfiling = true;
     }, "--profile", "Enable profiling");
 
-    options.emplace_back([&config](const vector<string> &args) {
+    options.emplace_back([config](const vector<string> &args) {
         config->platform = stoul(args[0]);
     }, "--platform", "Platform index (expects int)", "<index>", 1);
 
-    options.emplace_back([&config](const vector<string> &args) {
+    options.emplace_back([config](const vector<string> &args) {
         config->device = stoul(args[0]);
     }, "--device", "Device index (expects int)", "<index>", 1);
 
-    options.emplace_back([&config](const vector<string> &args) {
+    options.emplace_back([config](const vector<string> &args) {
         config->problemSize = stoi(args[0]);
-    }, "--size", "Problem size in MiB (expects int)", "<size>", 1);
+    }, "--problemSize", "Problem size in MiB (expects int)", "<size>", 1);
 
-    options.emplace_back([&config](const vector<string> &args) {
+    options.emplace_back([config](const vector<string> &args) {
         config->kernelFile = args[0];
     }, "--kernelPath", "Kernel file path (expects string)", "<path>", 1);
 
-    options.emplace_back([&config](const vector<string> &) {
-        config->useDynamicTuning = true;
-    }, "--dynamicTuning", "Enable dynamic tuning");
-
-    options.emplace_back([&config](const vector<string> &args) {
+    options.emplace_back([config](const vector<string> &args) {
         if (args[0] == "ds") {
             config->searcher = make_unique<ktt::DeterministicSearcher>();
         } else if (args[0] == "random") {
@@ -96,14 +93,14 @@ void SetUpCommonOptions(vector<CliOption> &options, ExampleConfiguration *config
         }
     }, "--searcher", "Searcher type (ds, random, mcmc)", "<type>", 1);
 
-    options.emplace_back([&config](const vector<string> &args) {
+    options.emplace_back([config](const vector<string> &args) {
         config->profileSearchModelPath = args[0];
         config->useProfiling = true;
     }, "--profileSearcher", 
     "Enable profile searcher and set path to model (expects string) (functions only on CUDA devices)",
     "<pathToModel>", 1);
 
-    options.emplace_back([&config](const vector<string> &args) {
+    options.emplace_back([config](const vector<string> &args) {
         if (args[0] == "confs") {
             config->stopCondition = make_unique<ktt::ConfigurationCount>(stoul(args[1]));
         } else if (args[0] == "fails") {
@@ -122,12 +119,16 @@ void SetUpCommonOptions(vector<CliOption> &options, ExampleConfiguration *config
     "total tuning duration in seconds (double), best configuration duration in milliseconds (double).",
     "<type> <limit>", 2);
 
-    options.emplace_back([&config](const vector<string> &args) {
+    options.emplace_back([config](const vector<string> &args) {
         config->preciseParams = ktt::PreciseMeasurementParameters(stoul(args[0]),
             stoul(args[1]), stod(args[2]));
-    }, "--setPreciseParams", "Set PreciseMeasurementParameters, calculationDurationMethod is the default Minimum, refer to KTT documentation for details.",
+    }, "--preciseParams", "Set PreciseMeasurementParameters, calculationDurationMethod is the default Minimum, refer to KTT documentation for details.",
     "<minTimeMs> <maxTimeMs> <maxPowerDiff>", 3);
-    options.emplace_back([&config](const vector<string> &args) {
+    options.emplace_back([config](const vector<string> &args) {
+        if (config->preciseParams == std::nullopt) {
+            cerr << "--preciseParams must be used before this option.\n";
+            exit(1);
+        }
         ktt::DurationCalculationMethod calcMethod = ktt::DurationCalculationMethod::Minimum;
         if (args[0] == "min") {}
         else if (args[0] == "median") {
@@ -135,13 +136,21 @@ void SetUpCommonOptions(vector<CliOption> &options, ExampleConfiguration *config
         } else if (args[0] == "avg") {
             calcMethod = ktt::DurationCalculationMethod::Average;
         } else {
-            cerr << "--setPreciseParamsCalcMethod expects one of (min, median, avg)\n";
+            cerr << "--preciseParamsCalcMethod expects one of (min, median, avg)\n";
             exit(1);
         }
         config->preciseParams->durationCalculationMethod = calcMethod;
-    }, "--setPreciseParamsCalcMethod", "Optionally set PreciseMeasurementParameters::durationCalculationMethod AFTER USING --setPreciseParams, expects one of "
+    }, "--preciseParamsCalcMethod", "Optionally set PreciseMeasurementParameters::durationCalculationMethod AFTER USING --preciseParams, expects one of "
     "(min, median, avg), refer to KTT documentation for details.",
     "<calcMethod>", 1);
+
+    options.emplace_back([config](const vector<string> &args) {
+        config->useDynamicTuning = true;
+        config->dynamicTuningTime = stod(args[0]);
+        cout << &config << endl;
+    }, "--useDynamicTuning", "Enables a basic implementation of dynamic tuning."
+    "The tuning will last <time> (double) seconds and then the only the best configuration will be run.",
+    "<time>", 1);
 }
 
 void SetUpRefKernelOption(vector<CliOption> &options, ExampleRefKernelConfiguration &config) {
@@ -151,11 +160,17 @@ void SetUpRefKernelOption(vector<CliOption> &options, ExampleRefKernelConfigurat
 }
 
 void IterateArguments(int argc, char **argv, const vector<CliOption> &options) {
-    for (int i = 0; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
+        bool triggered = false;
         for (const auto& option : options) {
             if (option.TryTrigger(argc, argv, i)) {
+                triggered = true;
                 break;
             }
+        }
+        if (!triggered) {
+            cerr << argv[i] << " is not a valid option.\n";
+            exit(1);
         }
     }
 }
@@ -166,6 +181,8 @@ ExampleConfiguration ProcessInput(int argc, char **argv) {
     SetUpCommonOptions(options, &config);
 
     IterateArguments(argc, argv, options);
+    cout << &config << endl;
+    cout << config.useDynamicTuning << " " << config.dynamicTuningTime << endl;
 
     return config;
 }

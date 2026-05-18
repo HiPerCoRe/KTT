@@ -7,21 +7,22 @@
 
 struct ExampleConfiguration
 {
-    bool rapidTest;
-    bool useProfiling;
-    unsigned platform;
-    unsigned device;
+    bool rapidTest = false;
+    bool useProfiling = false;
+    unsigned platform = 0;
+    unsigned device = 0;
     int problemSize = -1;
-    std::string kernelFile;
-    std::unique_ptr<ktt::StopCondition> stopCondition;
-    std::unique_ptr<ktt::Searcher> searcher;
-    std::string profileSearchModelPath;
-    std::optional<ktt::PreciseMeasurementParameters> preciseParams;
-    bool useDynamicTuning;
+    std::string kernelFile = "";
+    std::unique_ptr<ktt::StopCondition> stopCondition = nullptr;
+    std::unique_ptr<ktt::Searcher> searcher = nullptr;
+    std::string profileSearchModelPath = "";
+    std::optional<ktt::PreciseMeasurementParameters> preciseParams = std::nullopt;
+    bool useDynamicTuning = false;
+    double dynamicTuningTime = 0;
 };
 
 struct ExampleRefKernelConfiguration : public ExampleConfiguration {
-    std::string refKernelFile;
+    std::string refKernelFile = "";
 };
 
 ExampleConfiguration ProcessInput(int argc, char **argv);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Api/Output/KernelResult.h"
 #include "ExampleConfigurator.h"
 #include <Ktt.h>
 #include <memory>
@@ -47,8 +48,30 @@ protected:
     virtual void InitTuningSpace() = 0;
     void InitSearcher();
 
+    void RunDynamic();
+    void RunOffline();
+
     void UseFastMath();
     void UseOpenMP();
+
+    struct RunStats {
+        int totalRuns = 0;
+        int successfulRuns = 0;
+        double bestDuration = std::numeric_limits<double>::max();
+        std::string bestConfig;
+
+        void Update(ktt::KernelResult);
+    };
+
+    void PrintRunStats(const std::string& phaseName, const RunStats& stats, double throughput);
+    void PrintProgress(const std::string& phaseName, int currentRun, double elapsedSeconds,
+                       double timeBudget, double bestDuration, double throughput);
+
+    RunStats RunTuningPhase(const std::chrono::steady_clock::time_point& startTime,
+                            double timeBudgetSeconds, int printInterval);
+    RunStats RunExecutionPhase(const std::chrono::steady_clock::time_point& startTime,
+                               double timeBudgetSeconds, const ktt::KernelConfiguration& bestConfig,
+                               int printInterval);
 
     template <typename T>
     void FillBuffers(const std::vector<std::vector<T>*> &buffers, T minimum = 0, T maximum = 10) 
