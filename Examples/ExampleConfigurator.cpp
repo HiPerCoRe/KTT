@@ -1,4 +1,5 @@
 #include "ExampleConfigurator.h"
+#include "Api/Configuration/PreciseMeasurementParameters.h"
 #include <functional>
 #include <vector>
 #include <assert.h>
@@ -120,6 +121,27 @@ void SetUpCommonOptions(vector<CliOption> &options, ExampleConfiguration *config
     "<limit> is respectively configuration count (ulong), failed kernel run count (ulong), "
     "total tuning duration in seconds (double), best configuration duration in milliseconds (double).",
     "<type> <limit>", 2);
+
+    options.emplace_back([&config](const vector<string> &args) {
+        config->preciseParams = ktt::PreciseMeasurementParameters(stoul(args[0]),
+            stoul(args[1]), stod(args[2]));
+    }, "--setPreciseParams", "Set PreciseMeasurementParameters, calculationDurationMethod is the default Minimum, refer to KTT documentation for details.",
+    "<minTimeMs> <maxTimeMs> <maxPowerDiff>", 3);
+    options.emplace_back([&config](const vector<string> &args) {
+        ktt::DurationCalculationMethod calcMethod = ktt::DurationCalculationMethod::Minimum;
+        if (args[0] == "min") {}
+        else if (args[0] == "median") {
+            calcMethod = ktt::DurationCalculationMethod::Median;
+        } else if (args[0] == "avg") {
+            calcMethod = ktt::DurationCalculationMethod::Average;
+        } else {
+            cerr << "--setPreciseParamsCalcMethod expects one of (min, median, avg)\n";
+            exit(1);
+        }
+        config->preciseParams->durationCalculationMethod = calcMethod;
+    }, "--setPreciseParamsCalcMethod", "Optionally set PreciseMeasurementParameters::durationCalculationMethod AFTER USING --setPreciseParams, expects one of "
+    "(min, median, avg), refer to KTT documentation for details.",
+    "<calcMethod>", 1);
 }
 
 void SetUpRefKernelOption(vector<CliOption> &options, ExampleRefKernelConfiguration &config) {

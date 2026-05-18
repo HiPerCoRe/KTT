@@ -27,7 +27,7 @@ string ExampleBase::GetKernelFilePath(string exampleFolderPath, string baseName)
 void ExampleBase::Run()
 {
     // Perform tuning
-    const auto results = m_tuner.Tune(m_kernel, std::move(m_config->stopCondition));
+    const auto results = m_tuner.Tune(m_kernel, std::move(m_config->stopCondition), m_config->preciseParams);
     m_tuner.SaveResults(results, "Output", ktt::OutputFormat::XML);
     m_tuner.SaveResults(results, "Output", ktt::OutputFormat::JSON);
 

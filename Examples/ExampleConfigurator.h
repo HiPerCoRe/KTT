@@ -3,6 +3,7 @@
 #include "Ktt.h"
 #include <memory>
 #include <string>
+#include <optional>
 
 struct ExampleConfiguration
 {
@@ -15,7 +16,7 @@ struct ExampleConfiguration
     std::unique_ptr<ktt::StopCondition> stopCondition;
     std::unique_ptr<ktt::Searcher> searcher;
     std::string profileSearchModelPath;
-    ktt::PreciseMeasurementParameters preciseParams;
+    std::optional<ktt::PreciseMeasurementParameters> preciseParams;
     bool useDynamicTuning;
 };
 
