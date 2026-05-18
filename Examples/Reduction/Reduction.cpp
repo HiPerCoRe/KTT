@@ -20,7 +20,7 @@ protected:
         m_size = m_problemSize * 1024 * 1024;
     }
 
-    friend ExampleReferenceComputation;
+    friend ExampleBase;
 
     uint32_t m_size;
     vector<float> m_src, m_dest;

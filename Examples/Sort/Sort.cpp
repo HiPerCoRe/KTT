@@ -12,7 +12,7 @@ protected:
         m_size = m_problemSize * 1024 * 1024 / sizeof(unsigned int);
     }
 
-    friend ExampleReferenceComputation;
+    friend ExampleBase;
 
     uint32_t m_size;
     vector<unsigned int> m_in, m_out;

@@ -21,7 +21,7 @@ protected:
         m_size = m_problemSize * 1024 * 1024 / sizeof(unsigned int);
     }
 
-    friend ExampleReferenceComputation;
+    friend ExampleBase;
 
     int m_size;
     const unsigned int SORT_BITS = 32;

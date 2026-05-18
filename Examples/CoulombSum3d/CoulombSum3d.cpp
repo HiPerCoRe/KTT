@@ -21,7 +21,7 @@ protected:
     {
     }
 
-    friend ExampleReferenceComputation;
+    friend ExampleBase;
 
     size_t m_gridWidth;
     size_t m_gridHeight;
