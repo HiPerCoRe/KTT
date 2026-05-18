@@ -45,7 +45,7 @@ protected:
     virtual void InitData() = 0;
     virtual void InitKernel() = 0;
     virtual void InitTuningSpace() = 0;
-    virtual void InitSearcher();
+    void InitSearcher();
 
     void UseFastMath();
     void UseOpenMP();
