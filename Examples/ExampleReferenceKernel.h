@@ -1,26 +1,23 @@
 #pragma once
 #include "ExampleBase.h"
 
-class ExampleReferenceKernel : public ExampleBase 
+class ExampleReferenceKernel : public ExampleBase
 {
 public:
     ExampleReferenceKernel(
-        int argc,
-        char** argv, 
-        int defaultProblemSize, 
+        std::shared_ptr<ExampleRefKernelConfiguration> config,
+        int defaultProblemSize,
         std::string exampleFolderPath,
-        std::string defaultKernelFileBaseName, 
-        std::string defaultRefKernelFileBaseName,
-        bool rapidTest = false,
-        bool useProfiling = false);
+        std::string defaultKernelFileBaseName,
+        std::string defaultRefKernelFileBaseName);
 
     template <class T>
-    static std::unique_ptr<T> Create(int argc, char** argv, int defaultProblemSize, std::string exampleFolderPath, 
-                                     std::string defaultKernelFileBaseName, std::string defaultRefKernelFileBaseName,
-                                     bool rapidTest = false, bool useProfiling = false)
+    static std::unique_ptr<T> Create(int argc, char** argv, int defaultProblemSize, std::string exampleFolderPath,
+                                     std::string defaultKernelFileBaseName, std::string defaultRefKernelFileBaseName)
     {
-        std::unique_ptr<T> ex(new T(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
-                                    defaultRefKernelFileBaseName, rapidTest, useProfiling));
+        auto config = std::make_shared<ExampleRefKernelConfiguration>(RefKernelProcessInput(argc, argv));
+        std::unique_ptr<T> ex(new T(config, defaultProblemSize, exampleFolderPath,
+                                    defaultKernelFileBaseName, defaultRefKernelFileBaseName));
         ex->PostInitialize();
         return ex;
     }

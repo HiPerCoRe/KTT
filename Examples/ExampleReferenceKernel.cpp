@@ -1,31 +1,28 @@
 #include "ExampleReferenceKernel.h"
+#include <memory>
 
 using namespace std;
 
 ExampleReferenceKernel::ExampleReferenceKernel(
-    int argc, 
-    char** argv, 
-    int defaultProblemSize, 
+    shared_ptr<ExampleRefKernelConfiguration> config,
+    int defaultProblemSize,
     string exampleFolderPath,
-    string defaultKernelFileBaseName, 
-    string defaultRefKernelFileBaseName,
-    bool rapidTest,
-    bool useProfiling
-): 
-    ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
-                rapidTest, useProfiling)
+    string defaultKernelFileBaseName,
+    string defaultRefKernelFileBaseName
+) :
+    ExampleBase(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
 {
-    m_refKernelFile = GetKernelFilePath(exampleFolderPath, defaultRefKernelFileBaseName);
-    if (argc >= 6)
-    {
-        m_refKernelFile = string(argv[5]);
+    if (config->refKernelFile.empty()) {
+        m_refKernelFile = GetKernelFilePath(exampleFolderPath, defaultRefKernelFileBaseName);
+    } else {
+        m_refKernelFile = config->refKernelFile;
     }
 }
 
 void ExampleReferenceKernel::PostInitialize()
 {
     ExampleBase::PostInitialize();
-    InitReference();
+    if (!m_config->rapidTest) InitReference();
 }
 
 void ExampleReferenceKernel::InitReferenceKernelDefault(
@@ -42,11 +39,8 @@ void ExampleReferenceKernel::InitReferenceKernelDefault(
     m_tuner.SetArguments(m_refDefinition, arguments);
     m_refKernel = m_tuner.CreateSimpleKernel(refKernelName, m_refDefinition);
 
-    if (!m_rapidTest)
-    {
-        for (auto arg : outputArguments) {
-            m_tuner.SetReferenceKernel(arg, m_refKernel, ktt::KernelConfiguration());
-        }
-        m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, precision);
+    for (auto arg : outputArguments) {
+        m_tuner.SetReferenceKernel(arg, m_refKernel, ktt::KernelConfiguration());
     }
+    m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, precision);
 }
