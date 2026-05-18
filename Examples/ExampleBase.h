@@ -1,7 +1,8 @@
 #pragma once
 
-#include "KttTypes.h"
+#include "ExampleConfigurator.h"
 #include <Ktt.h>
+#include <memory>
 #include <random>
 #include <type_traits>
 
@@ -11,28 +12,25 @@
 
 class ExampleBase {
 protected:
-    ExampleBase(int argc, char** argv, int defaultProblemSize, std::string exampleFolderPath, 
-            std::string defaultKernelFileBaseName, bool rapidTest, bool useProfiling);
+    ExampleBase(std::shared_ptr<ExampleConfiguration> config, int defaultProblemSize, 
+        std::string exampleFolderPath, std::string defaultKernelFileBaseName);
 
 public:
     void Run();
 
     template <class T>
-    static std::unique_ptr<T> Create(int argc, char** argv, int defaultProblemSize, std::string exampleFolderPath,
-            std::string defaultKernelFileBaseName, bool rapidTest = false, bool useProfiling = false)
+    static std::unique_ptr<T> Create(int argc, char** argv, int defaultProblemSize, 
+            std::string exampleFolderPath, std::string defaultKernelFileBaseName)
     {
-        std::unique_ptr<T> ex(new T(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
-                                    rapidTest, useProfiling));
+        auto config = std::make_shared<ExampleConfiguration>(ProcessInput(argc, argv));
+        std::unique_ptr<T> ex(new T(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName));
         ex->PostInitialize();
         return ex;
     }
 
 protected:
     const ktt::ComputeApi m_computeApi;
-    // Toggle rapid test (e.g., disable output validation).
-    const bool m_rapidTest;
-    // Toggle kernel profiling.
-    const bool m_useProfiling;
+    std::shared_ptr<ExampleConfiguration> m_config;
 
     std::string m_kernelFile;
     ktt::Tuner m_tuner;
@@ -48,8 +46,6 @@ protected:
     virtual void InitKernel() = 0;
     virtual void InitTuningSpace() = 0;
     virtual void InitSearcher();
-
-    virtual std::unique_ptr<ktt::StopCondition> GetStopCondition();
 
     void UseFastMath();
     void UseOpenMP();

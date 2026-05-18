@@ -1,4 +1,6 @@
 #include "ExampleBase.h"
+#include "ComputeEngine/ComputeApi.h"
+#include "ExampleConfigurator.h"
 #include <assert.h>
 #include <vector>
 #include <iostream>
@@ -25,7 +27,7 @@ string ExampleBase::GetKernelFilePath(string exampleFolderPath, string baseName)
 void ExampleBase::Run()
 {
     // Perform tuning
-    const auto results = m_tuner.Tune(m_kernel, GetStopCondition());
+    const auto results = m_tuner.Tune(m_kernel, std::move(m_config->stopCondition));
     m_tuner.SaveResults(results, "Output", ktt::OutputFormat::XML);
     m_tuner.SaveResults(results, "Output", ktt::OutputFormat::JSON);
 
@@ -60,51 +62,33 @@ void ExampleBase::Run()
 }
 
 ExampleBase::ExampleBase(
-    int argc,
-    char** argv, 
-    int defaultProblemSize, 
+    shared_ptr<ExampleConfiguration> config,
+    int defaultProblemSize,
     string exampleFolderPath,
-    string defaultKernelFileBaseName,
-    bool rapidTest,
-    bool useProfiling
-):
+    string defaultKernelFileBaseName
+) :
     #if KTT_CUDA_EXAMPLE
     m_computeApi(ktt::ComputeApi::CUDA),
     #elif KTT_OPENCL_EXAMPLE
     m_computeApi(ktt::ComputeApi::OpenCL),
     #endif
-    m_rapidTest(rapidTest),
-    m_useProfiling(useProfiling),
-    m_tuner(
-        argc >= 2 ? stoul(string(argv[1])) : 0, // Get platform index.
-        argc >= 3 ? stoul(string(argv[2])) : 0, // Get device index.
-        m_computeApi
-    )
+    m_config(config),
+    m_tuner(config->platform, config->device, m_computeApi)
 {
-    assert(argv != NULL);
+    m_problemSize = config->problemSize >= 0 ? config->problemSize : defaultProblemSize;
+    m_kernelFile = config->kernelFile.empty()
+        ? GetKernelFilePath(exampleFolderPath, defaultKernelFileBaseName)
+        : config->kernelFile;
+    
 
-    m_problemSize = defaultProblemSize; // In MiB
-    if (argc >= 4)
-    {
-      m_problemSize = atoi(argv[3]);
-    }
-
-    m_kernelFile = GetKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
-    if (argc >= 5)
-    {
-        m_kernelFile = string(argv[4]);
-    }
-
-    if (m_useProfiling)
+    if (config->useProfiling)
     {
         printf("Executing with profiling switched ON.\n");
         m_tuner.SetProfiling(true);
     }
-  
-    // Create tuner object for chosen platform and device
+
     m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     m_tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
-
 }
 
 void ExampleBase::PostInitialize() 
@@ -137,14 +121,15 @@ void ExampleBase::UseOpenMP()
 
 void ExampleBase::InitSearcher()
 {
-    // Not necessary, since DS is the default. Demonstrates how a searcher can be set.
-    // TODO: Should be empty?
-    m_tuner.SetSearcher(m_kernel, std::make_unique<ktt::DeterministicSearcher>());
-}
-
-unique_ptr<ktt::StopCondition> ExampleBase::GetStopCondition() 
-{
-    return nullptr;
+    if (!m_config->profileSearchModelPath.empty()) {
+        if (m_computeApi != ktt::ComputeApi::CUDA) {
+            cerr << "Profile-based search can only be enabled on a CUDA device.\n";
+            exit(1);
+        }
+        m_tuner.SetProfileBasedSearcher(m_kernel, std::move(m_config->profileSearchModelPath));
+    } else if (m_config->searcher != nullptr) {
+        m_tuner.SetSearcher(m_kernel, std::move(m_config->searcher));
+    }
 }
 
 void ExampleBase::InitKernelDefault(const string &kernelFunctionName, const string &kernelName,
