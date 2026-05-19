@@ -44,7 +44,7 @@ enum class AtfSampleType
     PRL
 };
 
-constexpr AtfSampleType activeSample = AtfSampleType::Convolution;
+constexpr AtfSampleType activeSample = AtfSampleType::PRL;
 const std::string kernelPath = kernelPrefix + "../Examples/AtfSamples/";
 
 int main(int argc, char** argv)
