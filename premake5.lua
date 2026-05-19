@@ -429,7 +429,10 @@ end
 
 -- Base example list (examples available for both OpenCL and CUDA)
 baseExamples = {
-    {"AtfSamples", false},
+    {"AtfCCSD", false},
+    {"AtfConvolution", false},
+    {"AtfGEMM", false},
+    {"AtfPRL", false},
     {"Bicg", false},
     {"ClTuneConvolution", false},
     {"ClTuneGemm", false},
