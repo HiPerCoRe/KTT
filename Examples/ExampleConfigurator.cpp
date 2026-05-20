@@ -7,43 +7,33 @@
 
 using namespace std;
 
-class CliOption
-{
-    function<void (const vector<string> &)> m_callback;
-    const string m_trigger;
-    const string m_description;
-    const string m_argumentDescriptions;
-    const int m_argumentCount;
-
-public:
-    CliOption(function<void (const vector<string> &)> callback, const string &trigger, const string &description,
-              const string &argumentDescriptions = "", const int argumentCount = 0)
+CliOption::CliOption(function<void (const vector<string> &)> callback, const string &trigger, const string &description,
+              const string &argumentDescriptions, const int argumentCount)
         : m_callback(callback), m_trigger(trigger), m_description(description),
           m_argumentDescriptions(argumentDescriptions), m_argumentCount(argumentCount)
-    {
-    }
+{
+}
 
-    string get_string() const
-    {
-        return m_trigger + " " + m_argumentDescriptions + "\n\t" + m_description;
-    }
+string CliOption::get_string() const
+{
+    return m_trigger + " " + m_argumentDescriptions + "\n\t" + m_description;
+}
 
-    bool TryTrigger(int argc, char **argv, int &i) const {
-        assert(i < argc);
-        if (argv[i] != m_trigger) return false;
-        if (i + m_argumentCount >= argc)
-        {
-            cerr << m_trigger << " expects a value to be passed!" << endl;
-            exit(1);
-        }
-        vector<string> arguments;
-        for (int j = 0; j < m_argumentCount; ++j) {
-            arguments.push_back(argv[++i]);
-        }
-        m_callback(arguments);
-        return true;
+bool CliOption::TryTrigger(int argc, char **argv, int &i) const {
+    assert(i < argc);
+    if (argv[i] != m_trigger) return false;
+    if (i + m_argumentCount >= argc)
+    {
+        cerr << m_trigger << " expects a value to be passed!" << endl;
+        exit(1);
     }
-};
+    vector<string> arguments;
+    for (int j = 0; j < m_argumentCount; ++j) {
+        arguments.push_back(argv[++i]);
+    }
+    m_callback(arguments);
+    return true;
+}
 
 void SetUpCommonOptions(vector<CliOption> &options, ExampleConfiguration *config) {
     options.emplace_back([&options](const vector<string> &) {

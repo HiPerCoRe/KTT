@@ -4,6 +4,26 @@
 #include <memory>
 #include <string>
 #include <optional>
+#include <functional>
+#include <vector>
+#include <assert.h>
+
+class CliOption
+{
+    std::function<void (const std::vector<std::string> &)> m_callback;
+    const std::string m_trigger;
+    const std::string m_description;
+    const std::string m_argumentDescriptions;
+    const int m_argumentCount;
+
+public:
+    CliOption(std::function<void (const std::vector<std::string> &)> callback, const std::string &trigger, const std::string &description,
+              const std::string &argumentDescriptions = "", const int argumentCount = 0);
+
+    std::string get_string() const;
+
+    bool TryTrigger(int argc, char **argv, int &i) const;
+};
 
 struct ExampleConfiguration
 {
@@ -24,6 +44,10 @@ struct ExampleConfiguration
 struct ExampleRefKernelConfiguration : public ExampleConfiguration {
     std::string refKernelFile = "";
 };
+
+void SetUpCommonOptions(std::vector<CliOption> &options, ExampleConfiguration *config);
+void SetUpRefKernelOption(std::vector<CliOption> &options, ExampleRefKernelConfiguration &config);
+void IterateArguments(int argc, char **argv, const std::vector<CliOption> &options);
 
 ExampleConfiguration ProcessInput(int argc, char **argv);
 
