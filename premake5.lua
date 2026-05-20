@@ -451,7 +451,6 @@ baseExamples = {
 openClOnlyExamples = {
     {"Convolution3d"},
     {"CoulombSum2d"},
-    {"CoulombSum3dIterative"},
     {"Covariance"}
 }
 
