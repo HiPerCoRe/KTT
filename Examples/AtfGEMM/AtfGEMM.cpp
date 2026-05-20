@@ -10,9 +10,9 @@ protected:
         ExampleBase(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
     {
         // Keep OpenCL sizes as specified
-        m_inputSize1 = 2048;
-        m_inputSize2 = 2048;
-        m_inputSize3 = 2048;
+        m_inputSize1 = static_cast<uint64_t>(sqrt(m_problemSize)) * 1024;
+        m_inputSize2 = m_inputSize1;
+        m_inputSize3 = m_inputSize1;
 
         m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
 
@@ -328,7 +328,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<AtfGEMM> atfGEMM = AtfGEMM::Create<AtfGEMM>(argc, argv, 1, "Examples/AtfGEMM", "AtfGEMM");
+    unique_ptr<AtfGEMM> atfGEMM = AtfGEMM::Create<AtfGEMM>(argc, argv, 4, "Examples/AtfGEMM", "AtfGEMM");
     atfGEMM->Run();
 
     return 0;
