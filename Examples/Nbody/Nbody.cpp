@@ -14,13 +14,14 @@ protected:
         ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
                 defaultReferenceKernelFileBaseName)
     {
-        m_problemSize = 128 * 1024;
+        // The total number of computations grows quadratically with problem size, hence the sqrt.
+        m_numberOfBodies = static_cast<int>(sqrt(m_problemSize)) * 1024;
     }
 
     friend ExampleReferenceKernel;
 
     // Declare and initialize data
-    int &m_numberOfBodies = m_problemSize;
+    int m_numberOfBodies;
 
     const float timeDelta = 0.001f;
     const float damping = 0.5f;
@@ -193,7 +194,7 @@ protected:
 int main(int argc, char **argv)
 {
     unique_ptr<Nbody> nbody = Nbody::Create<Nbody>(
-        argc, argv, 1, "Examples/Nbody", "Nbody", "NbodyReference"
+        argc, argv, 16384, "Examples/Nbody", "Nbody", "NbodyReference"
     );
     nbody->Run();
 
