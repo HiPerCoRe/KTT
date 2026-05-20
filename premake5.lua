@@ -443,7 +443,8 @@ baseExamples = {
     {"Sort2"},
     {"Transpose"},
     {"Dummy"},
-    {"RodiniaHotspot", false, true}
+    {"RodiniaHotspot", false, true},
+    {"GemmBatch", false, true}
 }
 
 -- OpenCL-only examples
