@@ -5,158 +5,127 @@
  * power measurement.
  */
 
-#include <iostream>
-#include <random>
-#include <string>
-#include <vector>
+#include "../ExampleBase.h"
+#include <cstdint>
+#include <memory>
 #include <chrono>
+#include <optional>
 #include <thread>
-#include <stdlib.h>
+#include <vector>
 
-#include <Ktt.h>
+using namespace std;
 
-#if defined(_MSC_VER)
-const std::string kernelPrefix = "";
-#else
-const std::string kernelPrefix = "../";
-#endif
+class Dummy : public ExampleBase {
+protected:
+    Dummy(shared_ptr<ExampleConfiguration> config, int defaultProblemSize,
+          string exampleFolderPath, string defaultKernelFileBaseName) :
+        ExampleBase(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+    {
+        m_gridSize = 256;
+        m_atoms = 1024;
 
-#if KTT_CUDA_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/Dummy/Dummy.cu";
-    const auto computeApi = ktt::ComputeApi::CUDA;
-#elif KTT_OPENCL_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/Dummy/Dummy.cl";
-    const auto computeApi = ktt::ComputeApi::OpenCL;
-#endif
+        m_tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+        UseFastMath();
 
-// Sleep in the manipulator (can be randomized to 0, sleepDuration)
-// (makes power measurement more challenging due to changes in GPU temperature)
-const unsigned int sleepDuration = 1000;
-const bool randomizeSleep = true;
+        // Set precise measurement by default.
+        if (m_config->preciseParams == nullopt) {
+            m_config->preciseParams = ktt::PreciseMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
+        }
+    }
 
-// Toggle kernel profiling.
-const bool useProfiling = false;
+    friend ExampleBase;
 
-// Toggle robust power measurement (requires KTT built with --power-usage option).
-const bool useRobustPowerMeasurement = true;
+    // Sleep in the manipulator (can be randomized to 0, sleepDuration)
+    // (makes power measurement more challenging due to changes in GPU temperature)
+    const unsigned int sleepDuration = 0;
+    const bool randomizeSleep = true;
 
-int main(int argc, char** argv)
+    int m_gridSize;
+    int m_atoms;
+
+    vector<float> m_atomInfoX;
+    vector<float> m_atomInfoY;
+    vector<float> m_atomInfoZ;
+    vector<float> m_atomInfoW;
+    vector<float> m_atomInfo;
+    vector<float> m_energyGrid;
+
+    ktt::ArgumentId m_atomInfoId;
+    ktt::ArgumentId m_atomInfoXId;
+    ktt::ArgumentId m_atomInfoYId;
+    ktt::ArgumentId m_atomInfoZId;
+    ktt::ArgumentId m_atomInfoWId;
+    ktt::ArgumentId m_atomsId;
+    ktt::ArgumentId m_gridSpacingId;
+    ktt::ArgumentId m_gridDimId;
+    ktt::ArgumentId m_energyGridId;
+
+    float m_gridSpacing = 0.5f;
+
+    void InitData() override
+    {
+        m_atomInfoX.resize(m_atoms);
+        m_atomInfoY.resize(m_atoms);
+        m_atomInfoZ.resize(m_atoms);
+        m_atomInfoW.resize(m_atoms);
+        m_atomInfo.resize(4 * m_atoms);
+        m_energyGrid.resize(m_gridSize * m_gridSize * m_gridSize, 0.0f);
+
+        // Initialize atom position and charge data
+        FillBuffers<float>({&m_atomInfoX, &m_atomInfoY, &m_atomInfoZ}, 0.0f, 20.0f);
+        FillBuffers<float>({&m_atomInfoW}, 0.0f, 0.5f);
+
+        for (int i = 0; i < m_atoms; ++i)
+        {
+            m_atomInfo[4 * i] = m_atomInfoX[i];
+            m_atomInfo[4 * i + 1] = m_atomInfoY[i];
+            m_atomInfo[4 * i + 2] = m_atomInfoZ[i];
+            m_atomInfo[4 * i + 3] = m_atomInfoW[i];
+        }
+    }
+
+    void InitKernel() override
+    {
+        const ktt::DimensionVector ndRangeDimensions(m_gridSize / 32, m_gridSize / 4, m_gridSize);
+        const ktt::DimensionVector workGroupDimensions(32, 4);
+
+        m_atomInfoId = m_tuner.AddArgumentVector(m_atomInfo, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoXId = m_tuner.AddArgumentVector(m_atomInfoX, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoYId = m_tuner.AddArgumentVector(m_atomInfoY, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoZId = m_tuner.AddArgumentVector(m_atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoWId = m_tuner.AddArgumentVector(m_atomInfoW, ktt::ArgumentAccessType::ReadOnly);
+        m_atomsId = m_tuner.AddArgumentScalar(m_atoms);
+        m_gridSpacingId = m_tuner.AddArgumentScalar(m_gridSpacing);
+        m_gridDimId = m_tuner.AddArgumentScalar(m_gridSize);
+        m_energyGridId = m_tuner.AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::WriteOnly);
+
+        InitKernelDefault("directCoulombSum", "CoulombSum", ndRangeDimensions,
+                          {m_atomInfoId, m_atomInfoXId, m_atomInfoYId, m_atomInfoZId, m_atomInfoWId,
+                           m_atomsId, m_gridSpacingId, m_gridDimId, m_energyGridId});
+
+        m_tuner.SetLauncher(m_kernel, [this](ktt::ComputeInterface& interface)
+        {
+            uint64_t sleep = sleepDuration;
+            if (randomizeSleep)
+                sleep = (sleep*rand())/RAND_MAX;
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
+            interface.RunKernel(m_definition);
+        });
+    }
+
+    void InitTuningSpace() override
+    {
+        m_tuner.AddParameter(m_kernel, "DUMMY_1", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+        m_tuner.AddParameter(m_kernel, "DUMMY_2", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+        m_tuner.AddParameter(m_kernel, "DUMMY_3", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+        m_tuner.AddParameter(m_kernel, "DUMMY_4", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+    }
+};
+
+int main(int argc, char **argv)
 {
-    ktt::PlatformIndex platformIndex = 0;
-    ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = defaultKernelFile;
-
-    if (argc >= 2)
-    {
-        platformIndex = std::stoul(std::string(argv[1]));
-
-        if (argc >= 3)
-        {
-            deviceIndex = std::stoul(std::string(argv[2]));
-
-            if (argc >= 4)
-            {
-                kernelFile = std::string(argv[3]);
-            }
-        }
-    }
-
-    // Declare and initialize data
-    const int gridSize = 256;
-    //int atoms = 64;
-    int atoms = 1024;
-
-    const ktt::DimensionVector ndRangeDimensions(gridSize / 32, gridSize / 4, gridSize);
-    const ktt::DimensionVector workGroupDimensions(32, 4);
-
-    std::vector<float> atomInfoX(atoms);
-    std::vector<float> atomInfoY(atoms);
-    std::vector<float> atomInfoZ(atoms);
-    std::vector<float> atomInfoW(atoms);
-    std::vector<float> atomInfo(4 * atoms);
-    std::vector<float> energyGrid(gridSize * gridSize * gridSize, 0.0f);
-
-    // Initialize data
-    std::random_device device;
-    std::default_random_engine engine(device());
-    std::uniform_real_distribution<float> distribution(0.0f, 20.0f);
-    const float gridSpacing = 0.5f; // in Angstroms
-
-    for (int i = 0; i < atoms; ++i)
-    {
-        atomInfoX[i] = distribution(engine);
-        atomInfoY[i] = distribution(engine);
-        atomInfoZ[i] = distribution(engine);
-        atomInfoW[i] = distribution(engine) / 40.0f;
-        atomInfo[4 * i] = atomInfoX[i];
-        atomInfo[4 * i + 1] = atomInfoY[i];
-        atomInfo[4 * i + 2] = atomInfoZ[i];
-        atomInfo[4 * i + 3] = atomInfoW[i];
-    }
-
-    ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
-    tuner.SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
-    tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
-
-    if constexpr (computeApi == ktt::ComputeApi::OpenCL)
-    {
-        tuner.SetCompilerOptions("-cl-fast-relaxed-math");
-    }
-    else
-    {
-        tuner.SetCompilerOptions("-use_fast_math");
-
-        if constexpr (useProfiling)
-        {
-            printf("Executing with profiling switched ON.\n");
-            tuner.SetProfiling(true);
-        }
-    }
-
-    const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, ndRangeDimensions, workGroupDimensions);
-
-    const ktt::KernelId kernel = tuner.CreateSimpleKernel("CoulombSum", definition);
-
-    tuner.SetLauncher(kernel, [definition](ktt::ComputeInterface& interface)
-    {
-        /*uint64_t sleep = sleepDuration;
-        if (randomizeSleep)
-            sleep = (sleep*rand())/RAND_MAX;
-        std::this_thread::sleep_for(std::chrono::milliseconds(sleep));*/
-        interface.RunKernel(definition);
-    });
-
-    const ktt::ArgumentId aiId = tuner.AddArgumentVector(atomInfo, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId aixId = tuner.AddArgumentVector(atomInfoX, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId aiyId = tuner.AddArgumentVector(atomInfoY, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId aizId = tuner.AddArgumentVector(atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId aiwId = tuner.AddArgumentVector(atomInfoW, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId aId = tuner.AddArgumentScalar(atoms);
-    const ktt::ArgumentId gsId = tuner.AddArgumentScalar(gridSpacing);
-    const ktt::ArgumentId gridDim = tuner.AddArgumentScalar(gridSize);
-    const ktt::ArgumentId gridId = tuner.AddArgumentVector(energyGrid, ktt::ArgumentAccessType::WriteOnly);
-
-    // Create a tuning space big enough to not be exhausted until TuningDuration
-    tuner.AddParameter(kernel, "DUMMY_1", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-    tuner.AddParameter(kernel, "DUMMY_2", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-    tuner.AddParameter(kernel, "DUMMY_3", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-    tuner.AddParameter(kernel, "DUMMY_4", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-
-    tuner.SetArguments(definition, std::vector<ktt::ArgumentId>{aiId, aixId, aiyId, aizId, aiwId, aId, gsId, gridDim, gridId});
-
-    tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
-
-    // Configure robust measurement parameters if enabled
-    std::optional<ktt::PreciseMeasurementParameters> preciseParams;
-    if constexpr (useRobustPowerMeasurement)
-    {
-        // Minimum 2000ms, maximum 20000ms, 0.5% tolerance
-        preciseParams = ktt::PreciseMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
-    }
-
-    const auto results = tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(600), preciseParams);
-    tuner.SaveResults(results, "DummyOutput", ktt::OutputFormat::JSON);
-    tuner.SaveResults(results, "DummyOutput", ktt::OutputFormat::XML);
+    unique_ptr<Dummy> dummy = Dummy::Create<Dummy>(argc, argv, 0, "Examples/Dummy", "Dummy");
+    dummy->Run();
 
     return 0;
 }
