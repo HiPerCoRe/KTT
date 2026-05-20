@@ -8,8 +8,6 @@
 #include <vector>
 
 #include "../ExampleReferenceKernel.h"
-// #include "hotspot.h"
-// #include "hotspot_reference.h"
 
 using namespace std;
 
