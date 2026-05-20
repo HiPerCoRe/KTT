@@ -404,68 +404,66 @@ function addExampleProject(name, kernelExt, apiDefine, useRefVersions, shouldEna
 end
 
 -- Helper function to add OpenCL example with optional reference version
-function addOpenClExample(name, enableOpenMP)
+function addOpenClExample(name, enableOpenMP, noReference)
     addExampleProject(name, "OpenCl", "KTT_OPENCL_EXAMPLE", false, enableOpenMP)
-    if _OPTIONS["reference-versions"] then
+    if _OPTIONS["reference-versions"] and not noReference then
         addExampleProject(name, "OpenCl", "KTT_OPENCL_EXAMPLE", true, enableOpenMP)
     end
 end
 
 -- Helper function to add CUDA example with optional reference version
-function addCudaExample(name, enableOpenMP)
+function addCudaExample(name, enableOpenMP, noReference)
     addExampleProject(name, "Cuda", "KTT_CUDA_EXAMPLE", false, enableOpenMP)
-    if _OPTIONS["reference-versions"] then
+    if _OPTIONS["reference-versions"] and not noReference then
         addExampleProject(name, "Cuda", "KTT_CUDA_EXAMPLE", true, enableOpenMP)
     end
 end
 
 -- Helper function to add C++ example with optional reference version
-function addCppExample(name, enableOpenMP)
-    addExampleProject(name, "", "KTT_CPP_EXAMPLE", false, enableOpenMP)
-    if _OPTIONS["reference-versions"] then
-        addExampleProject(name, "", "KTT_CPP_EXAMPLE", true, enableOpenMP)
+function addCppExample(name, enableOpenMP, noReference)
+    addExampleProject(name, "Cpp", "KTT_CPP_EXAMPLE", false, enableOpenMP)
+    if _OPTIONS["reference-versions"] and not noReference then
+        addExampleProject(name, "Cpp", "KTT_CPP_EXAMPLE", true, enableOpenMP)
     end
 end
 
 -- Base example list (examples available for both OpenCL and CUDA)
 baseExamples = {
-    {"AtfCCSD", false},
-    {"AtfConvolution", false},
-    {"AtfGEMM", false},
-    {"AtfPRL", false},
-    {"Bicg", false},
-    {"ClTuneConvolution", false},
-    {"ClTuneGemm", false},
+    {"AtfCCSD"},
+    {"AtfConvolution"},
+    {"AtfGEMM"},
+    {"AtfPRL"},
+    {"Bicg"},
+    {"ClTuneConvolution"},
+    {"ClTuneGemm"},
     {"CoulombSum3d", true},      -- requires OpenMP
-    {"Nbody", false},
-    {"Reduction", false},
-    {"Sort", false},
-    {"Sort2", false},
-    {"Transpose", false},
-    {"Dummy", false}
+    {"Nbody"},
+    {"Reduction"},
+    {"Sort"},
+    {"Sort2"},
+    {"Transpose"},
+    {"Dummy"},
+    {"RodiniaHotspot", false, true}
 }
 
 -- OpenCL-only examples
 openClOnlyExamples = {
-    {"Convolution3d", false},
-    {"CoulombSum2d", false},
-    {"CoulombSum3dIterative", false},
-    {"Covariance", false}
+    {"Convolution3d"},
+    {"CoulombSum2d"},
+    {"CoulombSum3dIterative"},
+    {"Covariance"}
 }
 
 -- CUDA-only examples
 cudaOnlyExamples = {
-    {"KernelTunerConvolution", false},
-    {"KernelTunerPnpoly", false},
-    {"Microbenchmarks", false}
+    {"KernelTunerConvolution"},
+    {"KernelTunerPnpoly"},
+    {"Microbenchmarks"}
 }
 
 -- C++ examples
 cppExamples = {
-    {"CppSimple", false},
-    {"CppSimpleZeroCopy", false},
-    {"CppTranspose", false},
-    {"CoulombSum3dCpp", true}   -- requires OpenMP
+    {"CoulombSum3d", true}   -- requires OpenMP
 }
 
 -- Project configuration
@@ -690,11 +688,11 @@ if not _OPTIONS["no-examples"] then
 if openClProjects then
 
     for _, ex in ipairs(baseExamples) do
-        addOpenClExample(ex[1], ex[2])
+        addOpenClExample(ex[1], ex[2], ex[3])
     end
 
     for _, ex in ipairs(openClOnlyExamples) do
-        addOpenClExample(ex[1], ex[2])
+        addOpenClExample(ex[1], ex[2], ex[3])
     end
 
 end -- openClProjects
@@ -702,19 +700,19 @@ end -- openClProjects
 if cudaProjects then
 
     for _, ex in ipairs(baseExamples) do
-        addCudaExample(ex[1], ex[2])
+        addCudaExample(ex[1], ex[2], ex[3])
     end
 
     for _, ex in ipairs(cudaOnlyExamples) do
-        addCudaExample(ex[1], ex[2])
+        addCudaExample(ex[1], ex[2], ex[3])
     end
 
 end -- cudaProjects
 
 if cppProjects then
 
-    for _, ex in ipairs(cppProjects) do
-        addCppExample(ex[1], ex[2])
+    for _, ex in ipairs(cppExamples) do
+        addCppExample(ex[1], ex[2], ex[3])
     end
 
 end -- cppProjects
