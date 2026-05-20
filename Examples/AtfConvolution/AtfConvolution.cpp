@@ -10,8 +10,8 @@ protected:
         ExampleBase(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
     {
         // Keep OpenCL sizes as specified
-        m_inputSize1 = 4096;
-        m_inputSize2 = 4096;
+        m_inputSize1 = static_cast<int>(sqrt(m_problemSize)) * 1024;
+        m_inputSize2 = m_inputSize1;
 
         m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     }
@@ -196,7 +196,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<AtfConvolution> atfConvolution = AtfConvolution::Create<AtfConvolution>(argc, argv, 1, "Examples/AtfConvolution", "GaussianStatic1");
+    unique_ptr<AtfConvolution> atfConvolution = AtfConvolution::Create<AtfConvolution>(argc, argv, 16, "Examples/AtfConvolution", "GaussianStatic1");
     atfConvolution->Run();
 
     return 0;
