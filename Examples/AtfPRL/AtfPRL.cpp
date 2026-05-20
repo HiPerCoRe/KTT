@@ -1,4 +1,5 @@
 #include "../ExampleBase.h"
+#include <cstdint>
 #include <memory>
 
 using namespace std;
@@ -10,8 +11,8 @@ protected:
         ExampleBase(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
     {
         // Keep OpenCL sizes as specified
-        m_inputSize1 = 1024;
-        m_inputSize2 = 1024;
+        m_inputSize1 = static_cast<uint64_t>(sqrt(m_problemSize)) * 1024;
+        m_inputSize2 = m_inputSize1;
 
         m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     }
