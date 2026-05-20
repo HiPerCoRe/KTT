@@ -6,6 +6,7 @@
 #include <memory>
 #include <random>
 #include <type_traits>
+#include <optional>
 
 #ifndef RAND_MAX
 #define RAND_MAX UINT_MAX
@@ -40,7 +41,7 @@ protected:
     ktt::KernelDefinitionId m_definition;
     ktt::KernelId m_kernel;
 
-    static std::string GetKernelFilePath(std::string exampleFolderPath, std::string baseName);
+    static std::string GetKernelFilePath(std::string exampleFolderPath, std::string baseName, std::optional<std::string> suffix = std::nullopt);
 
     virtual void PostInitialize();
     virtual void InitData() = 0;

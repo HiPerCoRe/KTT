@@ -12,7 +12,7 @@
 
 using namespace std;
 
-string ExampleBase::GetKernelFilePath(string exampleFolderPath, string baseName)
+string ExampleBase::GetKernelFilePath(string exampleFolderPath, string baseName, optional<string> suffix)
 {
 #if defined(_MSC_VER)
     const string kernelPrefix = "../";
@@ -24,9 +24,11 @@ string ExampleBase::GetKernelFilePath(string exampleFolderPath, string baseName)
     const string defaultKernelFileSuffix = ".cu";
 #elif KTT_OPENCL_EXAMPLE
     const string defaultKernelFileSuffix = ".cl";
+#elif KTT_CPP_EXAMPLE
+    const string defaultKernelFileSuffix = ".cppkernel";
 #endif
 
-    return kernelPrefix + exampleFolderPath + "/" + baseName + defaultKernelFileSuffix;
+    return kernelPrefix + exampleFolderPath + "/" + baseName + (suffix == nullopt ?defaultKernelFileSuffix : suffix.value());
 }
 
 void ExampleBase::PrintRunStats(const string& phaseName, const RunStats& stats, double throughput)
@@ -193,6 +195,8 @@ ExampleBase::ExampleBase(
     m_computeApi(ktt::ComputeApi::CUDA),
     #elif KTT_OPENCL_EXAMPLE
     m_computeApi(ktt::ComputeApi::OpenCL),
+    #elif KTT_CPP_EXAMPLE
+    m_computeApi(ktt::ComputeApi::Cpp),
     #endif
     m_config(config),
     m_tuner(config->platform, config->device, m_computeApi)
