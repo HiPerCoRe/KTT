@@ -5,3 +5,4 @@ premake5.exe
 premake5
 *.swp
 
+__pycache__
