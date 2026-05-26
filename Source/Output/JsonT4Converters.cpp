@@ -119,6 +119,65 @@ void to_json(json& j, const as_T4<const KernelResult>& result)
         }
     }
 
+    // Add power measurements
+    if (!compResults.empty()) {
+        const auto& firstResult = compResults[0];
+        
+        if (firstResult.HasPowerData()) {
+            j["measurements"].push_back({
+                {"name", "power_usage"},
+                {"value", firstResult.GetPowerUsage()},
+                {"unit", "mW"}
+            });
+            
+            j["measurements"].push_back({
+                {"name", "energy_consumption"},
+                {"value", firstResult.GetEnergyConsumption()},
+                {"unit", "J"}
+            });
+        }
+        
+        if (firstResult.HasTemperatureData()) {
+            j["measurements"].push_back({
+                {"name", "temperature"},
+                {"value", firstResult.GetTemperature()},
+                {"unit", "°C"}
+            });
+        }
+        
+        if (firstResult.HasSMFrequencyData()) {
+            j["measurements"].push_back({
+                {"name", "sm_frequency"},
+                {"value", firstResult.GetSMFrequency()},
+                {"unit", "MHz"}
+            });
+        }
+        
+        if (firstResult.HasMemoryFrequencyData()) {
+            j["measurements"].push_back({
+                {"name", "memory_frequency"},
+                {"value", firstResult.GetMemoryFrequency()},
+                {"unit", "MHz"}
+            });
+        }
+        
+        if (firstResult.HasFanSpeedData()) {
+            j["measurements"].push_back({
+                {"name", "fan_speed"},
+                {"value", firstResult.GetFanSpeed()},
+                {"unit", "RPM"}
+            });
+        }
+        
+        if (firstResult.HasDurationStdevData()) {
+            j["measurements"].push_back({
+                {"name", "duration_stdev"},
+                {"value", time.ConvertFromNanosecondsDouble(firstResult.GetDurationStdev())},
+                {"unit", ""}
+            });
+        }
+    }
+
     if (!compResults.empty() && compResults[0].HasCompilationData()) {
         const KernelCompilationData& compilationData =  compResults[0].GetCompilationData();
         const DimensionVector& globalSize = compResults[0].GetGlobalSize();
@@ -208,15 +267,53 @@ void from_json(const json& j, as_T4<KernelResult>& result)
         j_measurements.erase(j_measurements.begin());
         std::vector<KernelProfilingCounter> counters;
 
-        for (const auto& j_counter : j_measurements) {
-            KernelProfilingCounter counter;
-            auto counterWrapper = as_T4(counter);
-            from_json(j_counter, counterWrapper);
-            counters.push_back(counter);
+        for (const auto& j_measurement : j_measurements) {
+            std::string name;
+            j_measurement.at("name").get_to(name);
+            
+            // Check if this is a power measurement (not a profiling counter)
+            if (name == "power_usage") {
+                uint32_t value;
+                j_measurement.at("value").get_to(value);
+                computationResult.SetPowerUsage(value);
+            } else if (name == "temperature") {
+                double value;
+                j_measurement.at("value").get_to(value);
+                computationResult.SetTemperature(value);
+            } else if (name == "sm_frequency") {
+                uint32_t value;
+                j_measurement.at("value").get_to(value);
+                computationResult.SetSMFrequency(value);
+            } else if (name == "memory_frequency") {
+                uint32_t value;
+                j_measurement.at("value").get_to(value);
+                computationResult.SetMemoryFrequency(value);
+            } else if (name == "fan_speed") {
+                int32_t value;
+                j_measurement.at("value").get_to(value);
+                computationResult.SetFanSpeed(value);
+            } else if (name == "duration_stdev") {
+                double value;
+                j_measurement.at("value").get_to(value);
+                const Nanoseconds durationStdevNs = time.ConvertToNanosecondsDouble(value);
+                computationResult.SetDurationStdev(durationStdevNs);
+            } else if (name == "energy_consumption") {
+                // Skip energy_consumption - it's computed, not stored
+                continue;
+            } else {
+                // It's a profiling counter
+                KernelProfilingCounter counter;
+                auto counterWrapper = as_T4(counter);
+                from_json(j_measurement, counterWrapper);
+                counters.push_back(counter);
+            }
         }
-        KernelProfilingData profilingData(counters);
-        auto uniqueData = std::make_unique<KernelProfilingData>(profilingData);
-        computationResult.SetProfilingData(std::move(uniqueData));
+        
+        if (!counters.empty()) {
+            KernelProfilingData profilingData(counters);
+            auto uniqueData = std::make_unique<KernelProfilingData>(profilingData);
+            computationResult.SetProfilingData(std::move(uniqueData));
+        }
     }
 
     if (j.contains("compilation_data"))
