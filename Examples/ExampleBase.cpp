@@ -40,9 +40,12 @@ void ExampleBase::PrintRunStats(const string& phaseName, const RunStats& stats, 
         cout << "Best configuration: " << stats.bestConfig << endl;
         cout << "Best duration: " << stats.bestDuration << " ns" << endl;
     }
-    cout << "Throughput: " << fixed << setprecision(2) << throughput << " runs/s" << endl;
-    cout.unsetf(ios_base::floatfield);
-    cout.precision(6);
+    if (throughput != -1) 
+    {
+        cout << "Throughput: " << fixed << setprecision(2) << throughput << " runs/s" << endl;
+        cout.unsetf(ios_base::floatfield);
+        cout.precision(6);
+    }
 }
 
 void ExampleBase::PrintProgress(const string& phaseName, int currentRun, double elapsedSeconds,

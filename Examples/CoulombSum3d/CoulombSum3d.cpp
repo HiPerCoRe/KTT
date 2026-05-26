@@ -1,5 +1,6 @@
 #include "../ExampleReferenceComputation.h"
 #include <cstdint>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,6 +37,9 @@ void SetUpCoulombSum3dOptions(vector<CliOption> &options, CoulombSum3dConfigurat
     options.emplace_back([&config](const vector<string> &args) {
         config.gridSpacing = stof(args[0]);
     }, "--spacing", "Set the grid spacing (expects float)", "<spacing>", 1);
+    options.emplace_back([&config](const vector<string> &) {
+        config.sepCompTuning = true;
+    }, "--sepCompTuning", "Enable separate compiler parameter tuning.");
 }
 
 CoulombSum3dConfiguration CoulombSum3dProcessInput(int argc, char **argv)
@@ -62,7 +66,8 @@ protected:
         m_ndRangeDimensions(m_gridWidth, m_gridHeight, m_gridDepth),
         m_workGroupDimensions{1, 1, 1},
         m_numberOfAtoms(config->numberOfAtoms),
-        m_gridSpacing(config->gridSpacing)
+        m_gridSpacing(config->gridSpacing),
+        m_sepCompTuning(config->sepCompTuning)
     {
     }
 
@@ -79,7 +84,31 @@ public:
         return ex;
     }
 
-private:
+    void Run()
+    {
+        ExampleBase::Run();
+
+        if (!m_sepCompTuning) return;
+        auto bestConfig = m_tuner.GetBestConfiguration(m_kernel);
+        if (!bestConfig.IsValid()) {
+            cout << "No valid configuration was found. Skippin separate compiler parameter tuning.\n";
+            return;
+        }
+        std::cout << "\nTuning compiler options on top of best kernel configuration..." << std::endl;
+        const auto optResults = m_tuner.TuneOptions(m_kernel, bestConfig);
+        m_tuner.SaveResults(optResults, "CoulombSumOptionsOutput", ktt::OutputFormat::JSON);
+
+        RunStats stats;
+
+        for (const auto& optResult : optResults)
+        {
+            stats.Update(optResult);
+        }
+
+        PrintRunStats("Option tuning stats", stats);
+    }
+
+protected:
     friend ExampleBase;
 
     size_t m_gridWidth;
@@ -93,6 +122,8 @@ private:
 
     const int m_numberOfAtoms;
     const float m_gridSpacing;
+
+    const bool m_sepCompTuning;
 
     vector<float> m_atomInfo;
     vector<float> m_atomInfoX;
@@ -110,6 +141,12 @@ private:
     ktt::ArgumentId m_gridSpacingId;
     ktt::ArgumentId m_gridDimId;
     ktt::ArgumentId m_energyGridId;
+
+    void AddCompilerParameter(const string &name, const vector<string> &values = {})
+    {
+        if (m_sepCompTuning) m_tuner.AddSeparateCompilerParameter(m_kernel, name, values);
+        else m_tuner.AddCompilerParameter(m_kernel, name, values);
+    }
 
     void InitData() override
     {
@@ -192,12 +229,27 @@ private:
 
                 auto vec = [](const vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1; };
                 m_tuner.AddConstraint(m_kernel, {"USE_SOA", "VECTOR_SIZE"}, vec);
+
+                // Individual math optimization flags replacing the global -cl-fast-relaxed-math.
+                // -cl-fast-relaxed-math ≈ -cl-finite-math-only + -cl-unsafe-math-optimizations,
+                // where -cl-unsafe-math-optimizations implies -cl-mad-enable, -cl-no-signed-zeros,
+                // and -cl-denorms-are-zero. Tuning them individually reveals which subset is sufficient.
+                AddCompilerParameter("-cl-mad-enable");
+                AddCompilerParameter("-cl-no-signed-zeros");
+                AddCompilerParameter("-cl-finite-math-only");
+                AddCompilerParameter("-cl-denorms-are-zero");
             }
             else // CUDA
             {
                 m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", vector<uint64_t>{0});
                 m_tuner.AddParameter(m_kernel, "USE_SOA", vector<uint64_t>{0, 1});
                 m_tuner.AddParameter(m_kernel, "VECTOR_SIZE", vector<uint64_t>{1});
+
+                // Register count limit: trades register file pressure for higher occupancy.
+                // Relevant here because energyValue[Z_ITERATIONS] can hold up to 32 floats,
+                // creating high register pressure at large Z_ITERATIONS values.
+                // 0 = unlimited (compiler decides), others force a ceiling.
+                AddCompilerParameter("--maxrregcount ", {"0", "32", "40", "48", "64"});
             }
         }
         else // CPP
@@ -206,9 +258,18 @@ private:
             m_tuner.AddParameter(m_kernel, "OMP_SCHEDULING", vector<uint64_t>{0, 1, 2});
             m_tuner.AddParameter(m_kernel, "OMP_SCHED_CHUNK", vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
             m_tuner.AddParameter(m_kernel, "TILE", vector<uint64_t>{0, 8, 16, 32, 64});
-            m_tuner.AddCompilerParameter(m_kernel, "-ffast-math", {});
-            m_tuner.AddCompilerParameter(m_kernel, "-O", {"1", "2", "3"});
-            m_tuner.AddCompilerParameter(m_kernel, "-funroll-loops");
+            
+            AddCompilerParameter("-ffast-math");
+            AddCompilerParameter("-O", {"1", "2", "3"});
+            AddCompilerParameter("-funroll-loops");
+            // Auto-vectorization of the inner atom loop (SIMD via AVX2/AVX512 enabled by -march=native).
+            AddCompilerParameter("-ftree-vectorize");
+            // Software prefetching of the atom SoA arrays in the inner loop (GCC-specific).
+            AddCompilerParameter("-fprefetch-loop-arrays");
+            // Allows the compiler to skip errno updates in math functions (lighter than -ffast-math,
+            // enables vectorization of sqrtf without full unsafe-math semantics).
+            AddCompilerParameter("-fno-math-errno");
+
             auto schedchunk = [](const vector<uint64_t>& vector) {return vector.at(0) == 2 || vector.at(1) == 2; };
             m_tuner.AddConstraint(m_kernel, {"OMP_SCHEDULING", "OMP_SCHED_CHUNK"}, schedchunk);
         }

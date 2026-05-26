@@ -64,7 +64,7 @@ protected:
         void Update(ktt::KernelResult);
     };
 
-    void PrintRunStats(const std::string& phaseName, const RunStats& stats, double throughput);
+    void PrintRunStats(const std::string& phaseName, const RunStats& stats, double throughput = -1);
     void PrintProgress(const std::string& phaseName, int currentRun, double elapsedSeconds,
                        double timeBudget, double bestDuration, double throughput);
 
