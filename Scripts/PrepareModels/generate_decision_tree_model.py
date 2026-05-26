@@ -147,6 +147,206 @@ def get_compute_capability(device_name, cli_override=None):
     )
 
 
+class T4Parser:
+    """Parser for T4 JSON format."""
+    
+    def extract_tuning_params(self, result):
+        """Extract tuning parameter names and values from configuration."""
+        config = result.get("configuration", {})
+        # Filter out compiler flags (keys starting with --)
+        params = {k: v for k, v in config.items() if not k.startswith("--")}
+        return params
+    
+    def extract_profiling_counters(self, result):
+        """Extract profiling counter names and values from measurements."""
+        measurements = result.get("measurements", [])
+        counters = {}
+        
+        for m in measurements:
+            name = m.get("name", "")
+            # Skip performance metrics and ignored measurements
+            if name in PERFORMANCE_METRICS_T4 or name in IGNORED_MEASUREMENTS_T4:
+                continue
+            counters[name] = m.get("value", 0.0)
+        
+        return counters
+    
+    def extract_sizes(self, result):
+        """Extract global and local sizes from compilation_data."""
+        comp_data = result.get("compilation_data", {})
+        global_size = comp_data.get("global_size", {"x": 1, "y": 1, "z": 1})
+        local_size = comp_data.get("local_size", {"x": 1, "y": 1, "z": 1})
+        
+        # Compute products to match old CSV format
+        global_product = global_size.get("x", 1) * global_size.get("y", 1) * global_size.get("z", 1)
+        local_product = local_size.get("x", 1) * local_size.get("y", 1) * local_size.get("z", 1)
+        
+        return {
+            "Global size": global_product,
+            "Local size": local_product,
+        }
+
+    def extract_compilation_data(self, result):
+        """Extract compilation data fields (work group size, memory sizes, registers)."""
+        comp_data = result.get("compilation_data", {})
+
+        return {
+            "Maximum work-group size": comp_data.get("max_work_group_size", 0),
+            "Local memory size": comp_data.get("local_memory_size", 0),
+            "Private memory size": comp_data.get("private_memory_size", 0),
+            "Constant memory size": comp_data.get("constant_memory_size", 0),
+            "Registers count": comp_data.get("registers", 0),
+        }
+
+    def has_profiling_data(self, result):
+        """Check if result has profiling counter data."""
+        if "compilation_data" not in result:
+            return False
+        
+        measurements = result.get("measurements", [])
+        if not measurements:
+            return False
+        
+        # Check if there's at least one profiling counter (non-performance metric)
+        for m in measurements:
+            name = m.get("name", "")
+            if name not in PERFORMANCE_METRICS_T4 and name not in IGNORED_MEASUREMENTS_T4:
+                return True
+        
+        return False
+    
+    def get_device_name(self, metadata):
+        """Extract device name from metadata."""
+        return metadata.get("device", None)
+
+
+class LegacyParser:
+    """Parser for Legacy JSON format."""
+    
+    def extract_tuning_params(self, result):
+        """Extract tuning parameter names and values from Configuration.Pairs."""
+        config_pairs = result.get("Configuration", [])
+        params = {}
+        
+        for pair in config_pairs:
+            name = pair.get("Name", "")
+            value = pair.get("Value", 0)
+            params[name] = value
+        
+        return params
+    
+    def extract_profiling_counters(self, result):
+        """Extract profiling counter names and values from ProfilingData.Counters."""
+        comp_results = result.get("ComputationResults", [])
+        if not comp_results:
+            return {}
+        
+        # Take first computation result
+        first_result = comp_results[0]
+        profiling_data = first_result.get("ProfilingData", {})
+        counters_list = profiling_data.get("Counters", [])
+        
+        counters = {}
+        for counter in counters_list:
+            name = counter.get("Name", "")
+            value = counter.get("Value", 0.0)
+            counters[name] = value
+        
+        return counters
+    
+    def extract_sizes(self, result):
+        """Extract global and local sizes from CompilationData."""
+        comp_results = result.get("ComputationResults", [])
+        if not comp_results:
+            return {
+                "Global size": 1,
+                "Local size": 1,
+            }
+        
+        first_result = comp_results[0]
+        global_size = first_result.get("GlobalSize", {"X": 1, "Y": 1, "Z": 1})
+        local_size = first_result.get("LocalSize", {"X": 1, "Y": 1, "Z": 1})
+        
+        # Compute products to match old CSV format
+        global_product = global_size.get("X", 1) * global_size.get("Y", 1) * global_size.get("Z", 1)
+        local_product = local_size.get("X", 1) * local_size.get("Y", 1) * local_size.get("Z", 1)
+        
+        return {
+            "Global size": global_product,
+            "Local size": local_product,
+        }
+    
+    def extract_compilation_data(self, result):
+        """Extract compilation data fields (work group size, memory sizes, registers)."""
+        comp_results = result.get("ComputationResults", [])
+        if not comp_results:
+            return {
+                "Maximum work-group size": 0,
+                "Local memory size": 0,
+                "Private memory size": 0,
+                "Constant memory size": 0,
+                "Registers count": 0,
+            }
+
+        first_result = comp_results[0]
+        comp_data = first_result.get("CompilationData", {})
+
+        return {
+            "Maximum work-group size": comp_data.get("MaxWorkGroupSize", 0),
+            "Local memory size": comp_data.get("LocalMemorySize", 0),
+            "Private memory size": comp_data.get("PrivateMemorySize", 0),
+            "Constant memory size": comp_data.get("ConstantMemorySize", 0),
+            "Registers count": comp_data.get("RegistersCount", 0),
+        }
+
+    def has_profiling_data(self, result):
+        """Check if result has profiling counter data."""
+        comp_results = result.get("ComputationResults", [])
+        if not comp_results:
+            return False
+        
+        first_result = comp_results[0]
+        
+        # Check compilation data exists
+        if "CompilationData" not in first_result:
+            return False
+        
+        # Check profiling data exists and has counters
+        profiling_data = first_result.get("ProfilingData", {})
+        counters = profiling_data.get("Counters", [])
+        
+        return len(counters) > 0
+    
+    def get_kernel_name(self, results):
+        """Get kernel name from results and validate consistency."""
+        if not results:
+            raise ValueError("No configurations found in input file")
+        
+        # Extract kernel names from all results
+        kernel_names = set()
+        for result in results:
+            comp_results = result.get("ComputationResults", [])
+            if comp_results:
+                kernel_func = comp_results[0].get("KernelFunction", "")
+                if kernel_func:
+                    kernel_names.add(kernel_func)
+        
+        if len(kernel_names) == 0:
+            raise ValueError("No kernel function names found in results")
+        
+        if len(kernel_names) > 1:
+            raise ValueError(
+                f"Input file contains multiple kernels: {sorted(kernel_names)}. "
+                f"Only single-kernel files supported."
+            )
+        
+        return kernel_names.pop()
+    
+    def get_device_name(self, metadata):
+        """Extract device name from metadata."""
+        return metadata.get("Device", None)
+
+
 if __name__ == '__main__':
     # parse command line
     arguments = docopt(__doc__)
