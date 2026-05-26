@@ -8,25 +8,26 @@ using namespace std;
 
 struct CoulombSum3dConfiguration : ExampleConfiguration
 {
-    uint64_t m_grid_width = 128;
-    uint64_t m_grid_height = 128;
-    uint64_t m_grid_depth = 128;
+    uint64_t gridWidth = 128;
+    uint64_t gridHeight = 128;
+    uint64_t gridDepth = 128;
     uint64_t numberOfAtoms = 256;
     float gridSpacing = 0.5f;
+    bool sepCompTuning = false;
 };
 
 void SetUpCoulombSum3dOptions(vector<CliOption> &options, CoulombSum3dConfiguration &config)
 {
     options.emplace_back([&config](const vector<string> &args) {
-        config.m_grid_width = stoul(args[0]);
+        config.gridWidth = stoul(args[0]);
     }, "--gridWidth", "Set the grid width (expects int), scaled proportionally with"
     " cbrt of problemSize", "<width>", 1);
     options.emplace_back([&config](const vector<string> &args) {
-        config.m_grid_height = stoul(args[0]);
+        config.gridHeight = stoul(args[0]);
     }, "--gridHeight", "Set the grid height (expects int), scaled proportionally with"
     " cbrt of problemSize", "<height>", 1);
     options.emplace_back([&config](const vector<string> &args) {
-        config.m_grid_depth = stoul(args[0]);
+        config.gridDepth = stoul(args[0]);
     }, "--gridDepth", "Set the grid depth (expects int), scaled proportionally with"
     " cbrt of problemSize", "<depth>", 1);
     options.emplace_back([&config](const vector<string> &args) {
@@ -55,9 +56,9 @@ protected:
                  string defaultKernelFileBaseName) :
         ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath,
                                     defaultKernelFileBaseName),
-        m_gridWidth(config->m_grid_width * static_cast<size_t>(cbrt(m_problemSize))),
-        m_gridHeight(config->m_grid_height * static_cast<size_t>(cbrt(m_problemSize))),
-        m_gridDepth(config->m_grid_depth * static_cast<size_t>(cbrt(m_problemSize))),
+        m_gridWidth(config->gridWidth * static_cast<size_t>(cbrt(m_problemSize))),
+        m_gridHeight(config->gridHeight * static_cast<size_t>(cbrt(m_problemSize))),
+        m_gridDepth(config->gridDepth * static_cast<size_t>(cbrt(m_problemSize))),
         m_ndRangeDimensions(m_gridWidth, m_gridHeight, m_gridDepth),
         m_workGroupDimensions{1, 1, 1},
         m_numberOfAtoms(config->numberOfAtoms),
