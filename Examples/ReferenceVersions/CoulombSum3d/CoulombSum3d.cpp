@@ -35,6 +35,11 @@ const bool useRobustPowerMeasurement = false;
 // Toggle usage of profile-based searcher
 const bool useProfileSearcher = false;
 
+// Toggle compiler parameter tuning mode.
+// - false: compiler flags are tuned together with kernel parameters via AddCompilerParameter
+// - true: compiler flags are tuned separately on top of the best kernel configuration via TuneOptions
+const bool separateCompilerTuning = false;
+
 int main(int argc, char** argv)
 {
     ktt::PlatformIndex platformIndex = 0;
@@ -95,7 +100,7 @@ int main(int argc, char** argv)
 
     if constexpr (computeApi == ktt::ComputeApi::OpenCL)
     {
-        tuner.SetCompilerOptions("-cl-fast-relaxed-math");
+        // Math optimization flags are broken into individual tunable compiler parameters below.
     }
     else if constexpr (computeApi == ktt::ComputeApi::CUDA)
     {
@@ -114,6 +119,16 @@ int main(int argc, char** argv)
 
     const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("directCoulombSum", kernelFile, ndRangeDimensions, workGroupDimensions);
     const ktt::KernelId kernel = tuner.CreateSimpleKernel("CoulombSum", definition);
+
+    // Helper: routes compiler parameters either into the main tuning space (AddCompilerParameter)
+    // or into the separate post-tune options space (AddSeparateCompilerParameter), depending on
+    // the separateCompilerTuning flag.
+    const auto addCompilerParam = [&](const std::string& name, const std::vector<std::string>& values = {}) {
+        if (separateCompilerTuning)
+            tuner.AddSeparateCompilerParameter(kernel, name, values);
+        else
+            tuner.AddCompilerParameter(kernel, name, values);
+    };
 
     const ktt::ArgumentId aiId = tuner.AddArgumentVector(atomInfo, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId aixId = tuner.AddArgumentVector(atomInfoX, ktt::ArgumentAccessType::ReadOnly);
@@ -156,12 +171,27 @@ int main(int argc, char** argv)
 
             auto vec = [](const std::vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1; };
             tuner.AddConstraint(kernel, { "USE_SOA", "VECTOR_SIZE" }, vec);
+
+            // Individual math optimization flags replacing the global -cl-fast-relaxed-math.
+            // -cl-fast-relaxed-math ≈ -cl-finite-math-only + -cl-unsafe-math-optimizations,
+            // where -cl-unsafe-math-optimizations implies -cl-mad-enable, -cl-no-signed-zeros,
+            // and -cl-denorms-are-zero. Tuning them individually reveals which subset is sufficient.
+            addCompilerParam("-cl-mad-enable");
+            addCompilerParam("-cl-no-signed-zeros");
+            addCompilerParam("-cl-finite-math-only");
+            addCompilerParam("-cl-denorms-are-zero");
         }
         else if constexpr (computeApi == ktt::ComputeApi::CUDA)
         {
             tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
             tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
             tuner.AddParameter(kernel, "VECTOR_SIZE", std::vector<uint64_t>{1});
+
+            // Register count limit: trades register file pressure for higher occupancy.
+            // Relevant here because energyValue[Z_ITERATIONS] can hold up to 32 floats,
+            // creating high register pressure at large Z_ITERATIONS values.
+            // 0 = unlimited (compiler decides), others force a ceiling.
+            addCompilerParam("--maxrregcount ", {"0", "32", "40", "48", "64"});
         }
     }
     else // CPP
@@ -170,9 +200,16 @@ int main(int argc, char** argv)
         tuner.AddParameter(kernel, "OMP_SCHEDULING", std::vector<uint64_t>{0, 1, 2});
         tuner.AddParameter(kernel, "OMP_SCHED_CHUNK", std::vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
         tuner.AddParameter(kernel, "TILE", std::vector<uint64_t>{0, 8, 16, 32, 64});
-        tuner.AddCompilerParameter(kernel, "-ffast-math", {});
-        tuner.AddCompilerParameter(kernel, "-O", {"1", "2", "3"});
-        tuner.AddCompilerParameter(kernel, "-funroll-loops");
+        addCompilerParam("-ffast-math");
+        addCompilerParam("-O", {"1", "2", "3"});
+        addCompilerParam("-funroll-loops");
+        // Auto-vectorization of the inner atom loop (SIMD via AVX2/AVX512 enabled by -march=native).
+        addCompilerParam("-ftree-vectorize");
+        // Software prefetching of the atom SoA arrays in the inner loop (GCC-specific).
+        addCompilerParam("-fprefetch-loop-arrays");
+        // Allows the compiler to skip errno updates in math functions (lighter than -ffast-math,
+        // enables vectorization of sqrtf without full unsafe-math semantics).
+        addCompilerParam("-fno-math-errno");
         auto schedchunk = [](const std::vector<uint64_t>& vector) {return vector.at(0) == 2 || vector.at(1) == 2; };
         tuner.AddConstraint(kernel, { "OMP_SCHEDULING", "OMP_SCHED_CHUNK" }, schedchunk);
     }
@@ -202,7 +239,7 @@ int main(int argc, char** argv)
         });
         tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
-    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
+    tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
 
 #if KTT_CUDA_EXAMPLE
     if constexpr (useProfileSearcher)
@@ -219,33 +256,66 @@ int main(int argc, char** argv)
         preciseParams = ktt::PreciseMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
     }
 
-    const auto results = tuner.Tune(kernel, /*std::make_unique<ktt::FailureFraction>(0.1, 10)*/ std::make_unique<ktt::ConfigurationCount>(100), preciseParams);
+    const auto results = tuner.Tune(kernel, /*std::make_unique<ktt::FailureFraction>(0.1, 10)*/ std::make_unique<ktt::ConfigurationCount>(5), preciseParams);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::JSON);
     tuner.SaveResults(results, "CoulombSumOutput_T4", ktt::OutputFormat::JSON_T4);
     tuner.SaveResults(results, "CoulombSumOutput", ktt::OutputFormat::XML);
 
     double bestDuration = std::numeric_limits<double>::max();
     std::string bestConfig;
+    const ktt::KernelResult* bestResult = nullptr;
     for (const auto& result : results)
     {
         double duration = result.GetTotalDuration();
         std::string config = result.GetConfiguration().GetString();
-        
+
         std::cout << "Configuration: " << config
                   << " -> Duration: " << duration << " ns"
                   << " -> Status: " << (result.GetStatus() == ktt::ResultStatus::Ok ? "OK" : "FAILED")
                   << std::endl;
-        
+
         if (result.GetStatus() == ktt::ResultStatus::Ok && duration < bestDuration)
         {
             bestDuration = duration;
             bestConfig = config;
+            bestResult = &result;
         }
     }
 
     if (!results.empty())
     {
         std::cout << "\nBest configuration: " << bestConfig << " with duration " << bestDuration << " ns (" << 1000.0*(double)atoms*(double)gridSize*(double)gridSize*(double)gridSize/bestDuration << "mevals/s)" << std::endl;
+    }
+
+    if (separateCompilerTuning && bestResult != nullptr)
+    {
+        std::cout << "\nTuning compiler options on top of best kernel configuration..." << std::endl;
+        const auto optResults = tuner.TuneOptions(kernel, bestResult->GetConfiguration());
+        tuner.SaveResults(optResults, "CoulombSumOptionsOutput", ktt::OutputFormat::JSON);
+
+        double bestOptDuration = std::numeric_limits<double>::max();
+        std::string bestOptConfig;
+        for (const auto& optResult : optResults)
+        {
+            double duration = optResult.GetTotalDuration();
+            std::string config = optResult.GetConfiguration().GetString();
+
+            std::cout << "Options configuration: " << config
+                      << " -> Duration: " << duration << " ns"
+                      << " -> Status: " << (optResult.GetStatus() == ktt::ResultStatus::Ok ? "OK" : "FAILED")
+                      << std::endl;
+
+            if (optResult.GetStatus() == ktt::ResultStatus::Ok && duration < bestOptDuration)
+            {
+                bestOptDuration = duration;
+                bestOptConfig = config;
+            }
+        }
+
+        if (!optResults.empty())
+        {
+            std::cout << "\nBest options configuration: " << bestOptConfig << " with duration " << bestOptDuration << " ns" << std::endl;
+        }
     }
 
     return 0;
