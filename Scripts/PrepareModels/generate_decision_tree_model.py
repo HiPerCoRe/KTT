@@ -54,6 +54,98 @@ np.set_printoptions(suppress=True)
 TEST_SIZE = 50
 SEED = 7
 
+# JSON Format Detection Constants
+PERFORMANCE_METRICS_T4 = {"time", "power_usage", "energy_consumption", "runtimes"}
+PERFORMANCE_METRICS_LEGACY = {"Duration", "PowerUsage", "EnergyConsumption"}
+IGNORED_MEASUREMENTS_T4 = {"temperature", "sm_frequency", "memory_frequency", "fan_speed", "duration_stdev"}
+IGNORED_MEASUREMENTS_LEGACY = {"Temperature", "SMFrequency", "MemoryFrequency", "FanSpeed", "DurationStdev"}
+
+# Device Compute Capability Lookup (sorted by word count desc, then length desc)
+DEVICE_COMPUTE_CAPABILITY = {
+    "RTX 5000 Ada": 8.9,
+    "RTX 500 Ada": 8.9,
+    "RTX 2080": 7.5,
+    "GTX 1070": 6.1,
+    "GTX 750": 5.0,
+    "GTX 680": 3.0,
+}
+
+def detect_format(json_data):
+    """
+    Detect JSON schema format.
+    
+    Returns: "T4" | "Legacy"
+    Raises: ValueError if format cannot be determined
+    """
+    # T4 indicators (lowercase keys)
+    if "metadata" in json_data and "configuration" in str(json_data):
+        return "T4"
+    
+    # Legacy indicators (PascalCase keys)
+    if "Metadata" in json_data and "KttVersion" in str(json_data.get("Metadata", {})):
+        return "Legacy"
+    
+    raise ValueError("Could not detect JSON format. Expected KTT Legacy or T4 schema.")
+
+def matches_device(lookup_key, device_name):
+    """
+    Check if all words in lookup_key appear as complete words in device_name.
+    Uses word-boundary regex matching to avoid false positives.
+    
+    Examples:
+        matches_device("RTX 5000 Ada", "NVIDIA RTX 5000 Ada Generation") → True
+        matches_device("RTX 5000 Ada", "NVIDIA RTX 500 Ada Generation") → False
+        matches_device("GTX 1070", "GeForce GTX 1070 Ti") → True
+    """
+    import re
+    device_lower = device_name.lower()
+    key_lower = lookup_key.lower()
+    
+    key_words = key_lower.split()
+    for word in key_words:
+        pattern = r'\b' + re.escape(word) + r'\b'
+        if not re.search(pattern, device_lower):
+            return False
+    return True
+
+def get_compute_capability(device_name, cli_override=None):
+    """
+    Extract compute capability from device name or CLI override.
+    
+    Returns: float (compute capability)
+    Raises: ValueError if device unknown and no CLI override
+    """
+    if cli_override:
+        if device_name:
+            print(f"Device detected: {device_name}")
+        print(f"Compute capability: {cli_override} (from --cc override)")
+        return cli_override
+    
+    if not device_name:
+        raise ValueError(
+            "No device name found in metadata and no --cc override provided. "
+            "Provide --cc argument."
+        )
+    
+    # Sort keys by word count (desc) then length (desc) for longest-match-first
+    sorted_keys = sorted(
+        DEVICE_COMPUTE_CAPABILITY.keys(),
+        key=lambda k: (len(k.split()), len(k)),
+        reverse=True
+    )
+    
+    for key in sorted_keys:
+        if matches_device(key, device_name):
+            cc = DEVICE_COMPUTE_CAPABILITY[key]
+            print(f"Device detected: {device_name}")
+            print(f"Compute capability: {cc} (matched: '{key}')")
+            return cc
+    
+    raise ValueError(
+        f"Unknown device '{device_name}'. "
+        f"Provide --cc argument or update device lookup table."
+    )
+
 
 if __name__ == '__main__':
     # parse command line
