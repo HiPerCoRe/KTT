@@ -1,26 +1,81 @@
 #include "../ExampleReferenceComputation.h"
+#include <cstdint>
 #include <memory>
+#include <string>
+#include <vector>
 
 using namespace std;
 
+struct CoulombSum3dConfiguration : ExampleConfiguration
+{
+    uint64_t m_grid_width = 128;
+    uint64_t m_grid_height = 128;
+    uint64_t m_grid_depth = 128;
+    uint64_t numberOfAtoms = 256;
+    float gridSpacing = 0.5f;
+};
+
+void SetUpCoulombSum3dOptions(vector<CliOption> &options, CoulombSum3dConfiguration &config)
+{
+    options.emplace_back([&config](const vector<string> &args) {
+        config.m_grid_width = stoul(args[0]);
+    }, "--gridWidth", "Set the grid width (expects int)", "<width>", 1);
+    options.emplace_back([&config](const vector<string> &args) {
+        config.m_grid_height = stoul(args[0]);
+    }, "--gridHeight", "Set the grid height (expects int)", "<height>", 1);
+    options.emplace_back([&config](const vector<string> &args) {
+        config.m_grid_depth = stoul(args[0]);
+    }, "--gridDepth", "Set the grid depth (expects int)", "<depth>", 1);
+    options.emplace_back([&config](const vector<string> &args) {
+        config.numberOfAtoms = stoul(args[0]);
+    }, "--atoms", "Set the number of atoms (expects int)", "<count>", 1);
+    options.emplace_back([&config](const vector<string> &args) {
+        config.gridSpacing = stof(args[0]);
+    }, "--spacing", "Set the grid spacing (expects float)", "<spacing>", 1);
+}
+
+CoulombSum3dConfiguration CoulombSum3dProcessInput(int argc, char **argv)
+{
+    CoulombSum3dConfiguration config;
+    vector<CliOption> options;
+    SetUpCommonOptions(options, &config);
+    SetUpCoulombSum3dOptions(options, config);
+
+    IterateArguments(argc, argv, options);
+
+    return config;
+}
+
 class CoulombSum3d : public ExampleReferenceComputation {
 protected:
-    CoulombSum3d(std::shared_ptr<ExampleConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+    CoulombSum3d(shared_ptr<CoulombSum3dConfiguration> config, int defaultProblemSize, string exampleFolderPath,
                  string defaultKernelFileBaseName) :
         ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath,
                                     defaultKernelFileBaseName),
-        // Since CoulombSum3d has O(n³) complexity (gridPoints × atoms), scale grid dimensions
-        // with the cube root of problem size to keep total work proportional
-        m_gridWidth(static_cast<size_t>(cbrt(m_problemSize)) * 128),
-        m_gridHeight(static_cast<size_t>(cbrt(m_problemSize)) * 128),
-        m_gridDepth(static_cast<size_t>(cbrt(m_problemSize)) * 128),
+        m_gridWidth(config->m_grid_width),
+        m_gridHeight(config->m_grid_height),
+        m_gridDepth(config->m_grid_depth),
         m_ndRangeDimensions(m_gridWidth, m_gridHeight, m_gridDepth),
         m_workGroupDimensions{1, 1, 1},
-        m_numberOfAtoms(256),
-        m_gridSpacing(0.5f)
+        m_numberOfAtoms(config->numberOfAtoms),
+        m_gridSpacing(config->gridSpacing)
     {
     }
 
+public:
+    static unique_ptr<CoulombSum3d> Create(
+        int argc, char** argv,
+        int defaultProblemSize,
+        string exampleFolderPath,
+        string defaultKernelFileBaseName
+    ) {
+        auto config = make_shared<CoulombSum3dConfiguration>(CoulombSum3dProcessInput(argc, argv));
+        unique_ptr<CoulombSum3d> ex(new CoulombSum3d(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName));
+        ex->PostInitialize();
+        return ex;
+    }
+
+private:
     friend ExampleBase;
 
     size_t m_gridWidth;
@@ -187,8 +242,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<CoulombSum3d> coulombSum3d = CoulombSum3d::Create<CoulombSum3d>(argc, argv, 8, "Examples/CoulombSum3d",
-        "CoulombSum3d");
+    unique_ptr<CoulombSum3d> coulombSum3d = CoulombSum3d::Create(argc, argv, 8, "Examples/CoulombSum3d", "CoulombSum3d");
     coulombSum3d->Run();
 
     return 0;
