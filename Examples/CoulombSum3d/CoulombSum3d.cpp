@@ -19,13 +19,16 @@ void SetUpCoulombSum3dOptions(vector<CliOption> &options, CoulombSum3dConfigurat
 {
     options.emplace_back([&config](const vector<string> &args) {
         config.m_grid_width = stoul(args[0]);
-    }, "--gridWidth", "Set the grid width (expects int)", "<width>", 1);
+    }, "--gridWidth", "Set the grid width (expects int), scaled proportionally with"
+    " cbrt of problemSize", "<width>", 1);
     options.emplace_back([&config](const vector<string> &args) {
         config.m_grid_height = stoul(args[0]);
-    }, "--gridHeight", "Set the grid height (expects int)", "<height>", 1);
+    }, "--gridHeight", "Set the grid height (expects int), scaled proportionally with"
+    " cbrt of problemSize", "<height>", 1);
     options.emplace_back([&config](const vector<string> &args) {
         config.m_grid_depth = stoul(args[0]);
-    }, "--gridDepth", "Set the grid depth (expects int)", "<depth>", 1);
+    }, "--gridDepth", "Set the grid depth (expects int), scaled proportionally with"
+    " cbrt of problemSize", "<depth>", 1);
     options.emplace_back([&config](const vector<string> &args) {
         config.numberOfAtoms = stoul(args[0]);
     }, "--atoms", "Set the number of atoms (expects int)", "<count>", 1);
@@ -52,9 +55,9 @@ protected:
                  string defaultKernelFileBaseName) :
         ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath,
                                     defaultKernelFileBaseName),
-        m_gridWidth(config->m_grid_width),
-        m_gridHeight(config->m_grid_height),
-        m_gridDepth(config->m_grid_depth),
+        m_gridWidth(config->m_grid_width * static_cast<size_t>(cbrt(m_problemSize))),
+        m_gridHeight(config->m_grid_height * static_cast<size_t>(cbrt(m_problemSize))),
+        m_gridDepth(config->m_grid_depth * static_cast<size_t>(cbrt(m_problemSize))),
         m_ndRangeDimensions(m_gridWidth, m_gridHeight, m_gridDepth),
         m_workGroupDimensions{1, 1, 1},
         m_numberOfAtoms(config->numberOfAtoms),
