@@ -132,18 +132,6 @@ protected:
   float m_Rx, m_Ry, m_Rz;
   float m_max_slope;
   float m_step;
-  // void usage(int argc, char **argv) {
-  //   fprintf(stderr, "Usage: %s <platform index> <device index> <kernel file> <m_grid_rows/m_grid_cols> <sim_time> <temp_file> <power_file> <output_file>\n", argv[0]);
-  //   fprintf(stderr, "\t <platform index> - the index of the platform, starting from 0\n");
-  //   fprintf(stderr, "\t <device index> - the index of the device, starting from 0\n");
-  //   fprintf(stderr, "\t <kernel file> - the path to kernel file\n");
-  //   fprintf(stderr, "\t <m_grid_rows/m_grid_cols>  - number of rows/cols in the grid (positive integer)\n");
-  //   fprintf(stderr, "\t <sim_time>   - number of iterations\n");
-  //   fprintf(stderr, "\t <temp_file>  - name of the file containing the initial temperature values of each cell\n");
-  //   fprintf(stderr, "\t <power_file> - name of the file containing the dissipated m_power values of each cell\n");
-  //   fprintf(stderr, "\t <output_file> - name of the output file\n");
-  //   exit(1);
-  // }
 
   const int EXPAND_RATE = 2; // add one iteration will extend the pyramid base by 2 per each borderline
 
@@ -179,8 +167,8 @@ protected:
     }
 
     output << std::fixed << std::setprecision(4);
-    for (int i = 0, index = 0; i < m_grid_rows; ++i) {
-      for (int j = 0; j < m_grid_cols; ++j, ++index) {
+    for (int i = 0; i < m_grid_rows; ++i) {
+      for (int j = 0; j < m_grid_cols; ++j) {
         output << i * m_grid_cols + j << "\t" << vect[i * m_grid_cols + j] << "\n";
       }
     }
