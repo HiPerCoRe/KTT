@@ -347,6 +347,50 @@ class LegacyParser:
         return metadata.get("Device", None)
 
 
+def build_dataframe(results, parser):
+    """
+    Build pandas DataFrame from parsed results.
+    
+    Returns: (X, Y, tuning_param_names, target_names)
+    """
+    rows = []
+    tuning_param_names = None
+    target_names = None
+    
+    for result in results:
+        if not parser.has_profiling_data(result):
+            continue
+        
+        tuning_params = parser.extract_tuning_params(result)
+        profiling_counters = parser.extract_profiling_counters(result)
+        sizes = parser.extract_sizes(result)
+        compilation_data = parser.extract_compilation_data(result)
+        
+        # Capture column names from first valid result
+        if tuning_param_names is None:
+            tuning_param_names = sorted(tuning_params.keys())
+            profiling_counter_names = sorted(profiling_counters.keys())
+        
+        row = {}
+        row.update(tuning_params)
+        row.update(sizes)
+        row.update(profiling_counters)
+        row.update(compilation_data)
+        rows.append(row)
+    
+    # Build DataFrame with deterministic column ordering
+    size_columns = ["Global size", "Local size"]
+    compilation_columns = ["Maximum work-group size", "Local memory size", "Private memory size",
+                          "Constant memory size", "Registers count"]
+    target_columns = size_columns + profiling_counter_names + compilation_columns
+    ordered_columns = tuning_param_names + target_columns
+    df = pd.DataFrame(rows, columns=ordered_columns)
+    
+    X = df[tuning_param_names].values
+    Y = df[target_columns].values
+    
+    return X, Y, tuning_param_names, target_columns
+
 if __name__ == '__main__':
     # parse command line
     arguments = docopt(__doc__)
