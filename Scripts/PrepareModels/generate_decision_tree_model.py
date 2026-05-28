@@ -1,52 +1,96 @@
-#This code is for predicting the value for profiling counter values
+#!/usr/bin/env python3
+"""
+Generate decision tree models to predict profiling counter values from tuning parameters.
 
-"""Generating train file for predicting the profiling counter values based on tuning parameters
+This script consumes KTT's native JSON output formats (Legacy or T4) and produces
+scikit-learn ExtraTreesRegressor models saved as .sav files with accompanying
+.sav.metadata.json files.
+
+## Input Format
+
+Supports two JSON schemas:
+- **T4 Format**: Lowercase keys (metadata, results, configuration, measurements)
+- **Legacy Format**: PascalCase keys (Metadata, Results, Configuration)
+
+Format is auto-detected. See KTT documentation for schema details.
+
+## Output Files
+
+1. **Model file** (.sav): Pickled scikit-learn ExtraTreesRegressor
+   - Naming: `<input_basename>_DT.sav`
+
+2. **Metadata file** (.sav.metadata.json): Training configuration
+   ```json
+   {
+     "cc": 8.9,
+     "tp": ["param1", "param2", ...],
+     "pc": ["Global size", "Local size", "counter1", "counter2", ...,
+           "Maximum work-group size", "Local memory size", "Private memory size",
+           "Constant memory size", "Registers count"]
+   }
+   ```
+
+## Usage Examples
+
+Basic usage (auto-detect everything):
+    python3 generate_decision_tree_model.py -i CoulombSumOutput.json
+
+With output directory:
+    python3 generate_decision_tree_model.py -i tuning.json --output-dir ./models
+
+Override compute capability:
+    python3 generate_decision_tree_model.py -i data.json --cc 7.5
+
+Custom train/test split:
+    python3 generate_decision_tree_model.py -i data.json --test-size 30 --random-seed 42
+
+## CLI Reference
 
 Usage:
-  generate_decision_tree_model.py -i <KTT_output> -t <tuningpar_interval> -c <counters_interval> --cc <compute_capability_GPU>
+  generate_decision_tree_model.py -i <input_json> [options]
+  generate_decision_tree_model.py -h | --help
 
 Options:
-  -h Show this screen.
-  -i Output CSV file from KTT (must include profiling counters)-This file will use as an input for the model.
-  -t Interval <i:j,[k,l,m]>  or i:j of tuning parameters indices (for example- 1:5,[7,9]  means cols 1 to 4 and 7 and 9).
-  -c Interval <i:j,[k,l,m]>  or i:j of profiler counter indices (for example- 1:5,[7,9]  means cols 1 to 4 and 7 and 9).
-  --cc compute capability of the GPU processor
+  -h --help                 Show this screen.
+  -i <input_json>           Path to KTT JSON output file (Legacy or T4 format).
+  --output-dir <dir>        Output directory for model files (default: input file's directory).
+  --cc <capability>         Override compute capability detection (e.g., 8.9).
+  --test-size <percent>     Test set size as percentage 0-100 [default: 50].
+  --random-seed <seed>      Random seed for train/test split [default: 7].
 
+## Requirements
+
+- Python 3.6+
+- scikit-learn
+- pandas
+- numpy
+- docopt
+
+## Device Support
+
+Automatic compute capability detection for:
+- RTX 5000 Ada (8.9)
+- RTX 500 Ada (8.9)
+- RTX 2080 (7.5)
+- GTX 1070 (6.1)
+- GTX 750 (5.0)
+- GTX 680 (3.0)
+
+Unknown devices require --cc override.
 """
 
 import os
-from sklearn.inspection import partial_dependence
-# To use this experimental feature, we need to explicitly ask for it:
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.datasets import fetch_california_housing
-from sklearn.impute import SimpleImputer
-from sklearn.impute import IterativeImputer
-from sklearn.linear_model import BayesianRidge
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.linear_model import LassoLars
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.neural_network import MLPRegressor
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import VotingRegressor
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import explained_variance_score
-from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import max_error
-from sklearn.metrics import r2_score
-from sklearn import model_selection
-from sklearn.model_selection import train_test_split
+from docopt import docopt
+import json
 import pickle
 import numpy as np
 import pandas as pd
 import datetime
-from docopt import docopt
-import json
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
+from sklearn.ensemble import ExtraTreesRegressor
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
 
 
 
@@ -392,92 +436,141 @@ def build_dataframe(results, parser):
     return X, Y, tuning_param_names, target_columns
 
 if __name__ == '__main__':
-    # parse command line
+    # Parse command line arguments
     arguments = docopt(__doc__)
-    tuningOutput = open(arguments['-i'])
-    #tuningInt = list(map(int, arguments['-t'].split(',')))
-    tuningRange = arguments['-t']
-    #countersInt = list(map(int, arguments['-c'].split(',')))
-    countersRange = arguments['-c']
-    #if (len(tuningInt) != 2) or (len(countersInt) != 2):
-    #    print("Intervals must be in format from,to!")
-    #    exit()
-
-    bench = os.path.splitext(arguments['-i'])[0]
-    data = pd.read_csv(tuningOutput)
-    array = data.values
-
+    
+    input_file = arguments['-i']
+    output_dir = arguments['--output-dir']
+    cc_override = float(arguments['--cc']) if arguments['--cc'] else None
+    test_size = int(arguments['--test-size'])
+    random_seed = int(arguments['--random-seed'])
+    
+    # Validate test size
+    if test_size < 0 or test_size > 100:
+        print("Error: --test-size must be between 0 and 100")
+        exit(1)
+    
+    # Load JSON file
     try:
-        rangeT = eval("np.r_[" + tuningRange + "]")
-        rangeC = eval("np.r_[" + countersRange + "]")
-    except:
-        print("Intervals must be in format <i:j,[k,l,m]> or i:j (for example- 1:5,[7,9]  means cols 1 to 4 and 7 and 9).")
-        exit()
-    #array[1:2,np.r_[1:2,7:10,[13,14]]]
-    #X = array[:,tuningInt[0]:tuningInt[1]+1]
-    X = array[:,rangeT]
-    #Y = array[:,countersInt[0]:countersInt[1]]  # Using profiling counter variables as dependent variables
-    Y = array[:,rangeC]
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=(TEST_SIZE/100), random_state=SEED)
-    columns_names = list(data.columns)
-    columns_number = len(data.columns)
-    # Estimate the score after iterative imputation of the missing values
-    # with different estimators
-    estimators = []
-    #estimators.append(('DT-simple', DecisionTreeRegressor(max_features='sqrt', random_state=0)))
-    estimators.append(('DT', ExtraTreesRegressor(n_estimators=10, random_state=0)))
-    #estimators.append(('Knn10', KNeighborsRegressor(n_neighbors=10)))
-
-    NumberOfModels = len(estimators)
-    ExprimentStart = datetime.datetime.now()
-    start = 0
-    end = 0
-    maxScore = 0
-    Bestmodel = ''
-    for name, imputer in estimators:
-        start = datetime.datetime.now()
-        imputer.fit(X_train, Y_train)
-        #saving model to a file for later usages
-        filename = str(bench) + "_" + str(name) + ".sav"
-        pickle.dump(imputer, open(filename, 'wb'))
-        #Computing the score of model
-        scoreTrain = imputer.score(X_train, Y_train)
-        #compute time elapsed
-        end = datetime.datetime.now()
-        durationTrain = end - start
-        #Predicting with Test or X_test dataset and then writing the predicted results to .csv
-        start = datetime.datetime.now()
-        predicted = imputer.predict(X_test)
-        scoreTest = imputer.score(X_test, Y_test)
-        if (scoreTest >= maxScore):
-            maxScore = scoreTest
-            Bestmodel = name
-        end = datetime.datetime.now()
-        durationTest = end - start
-        #Print some reports
-        print("Training Result for ", name, " and ", bench, " is :")
-        print("             Train Score is                : %", scoreTrain * 100)
-        print("             Test Score is                 : %", scoreTest * 100)
-        print("             Mean squared error is         : ", mean_squared_error(Y_test, predicted))
-        print("=======================================================================")
-
-        # Save metadata: tuning parameters, profiling counters
-        metadata = {}
-        metadata['cc'] = float(arguments['--cc'])
-        metadata['tp'] = []
-        metadata['pc'] = []
-        for col in rangeT:
-            metadata['tp'].append(str(data.columns[col]))
-        for col in rangeC:
-            metadata['pc'].append(str(data.columns[col]))
-        print(metadata)
-        filename = filename + ".metadata.json"
-        with open(filename, 'w', ) as fp:
-            json.dump(metadata, fp, indent=4)
-
-
-    ExprimentEnd = datetime.datetime.now()
-    TotalTime = ExprimentEnd - ExprimentStart
-    print(Bestmodel, ' : For ', str(bench), ' and test size ', TEST_SIZE, ' === Maximum score between these models are:', maxScore)
-    print("Total time that elapsed in this expriment is: ", TotalTime.total_seconds() * 1000)
-    print("=======================================================================")
+        with open(input_file, 'r') as f:
+            json_data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: Input file not found: {input_file}")
+        exit(1)
+    except json.JSONDecodeError as e:
+        print(f"Error: Failed to parse JSON: {e}")
+        exit(1)
+    
+    # Detect format
+    try:
+        format_type = detect_format(json_data)
+        print(f"Detected format: {format_type}")
+    except ValueError as e:
+        print(f"Error: {e}")
+        exit(1)
+    
+    # Create appropriate parser
+    if format_type == "T4":
+        parser = T4Parser()
+        if "results" not in json_data:
+            print("Error: Missing required field: 'results'")
+            exit(1)
+        results = json_data.get("results", [])
+        metadata = json_data.get("metadata", {})
+    else:  # Legacy
+        parser = LegacyParser()
+        if "Results" not in json_data:
+            print("Error: Missing required field: 'Results'")
+            exit(1)
+        results = json_data.get("Results", [])
+        metadata = json_data.get("Metadata", {})
+    
+    if not results:
+        print("Error: No configurations found in input file")
+        exit(1)
+    
+    # Extract device and compute capability
+    device_name = parser.get_device_name(metadata)
+    try:
+        compute_capability = get_compute_capability(device_name, cc_override)
+    except ValueError as e:
+        print(f"Error: {e}")
+        exit(1)
+    
+    # Validate kernel name for Legacy format (single kernel per file)
+    if format_type == "Legacy":
+        try:
+            kernel_name = parser.get_kernel_name(results)
+            print(f"Kernel: {kernel_name}")
+        except ValueError as e:
+            print(f"Error: {e}")
+            exit(1)
+    
+    # Build DataFrame
+    total_configs = len(results)
+    try:
+        X, Y, tuning_param_names, target_names = build_dataframe(results, parser)
+    except ValueError as e:
+        print(f"Error: {e}")
+        exit(1)
+    
+    filtered_count = total_configs - X.shape[0]
+    if filtered_count > 0:
+        print(f"Filtered out {filtered_count} configurations without profiling data")
+    print(f"Training on {X.shape[0]} configurations")
+    print(f"Features: {X.shape[1]} tuning parameters")
+    print(f"Targets: {Y.shape[1]} outputs (2 sizes + {Y.shape[1] - 7} profiling counters + 5 compilation fields)")
+    
+    # Train/test split
+    X_train, X_test, Y_train, Y_test = train_test_split(
+        X, Y, test_size=(test_size / 100), random_state=random_seed
+    )
+    
+    # Train model
+    print("Training ExtraTreesRegressor model...")
+    start_time = datetime.datetime.now()
+    model = ExtraTreesRegressor(n_estimators=10, random_state=0)
+    model.fit(X_train, Y_train)
+    end_time = datetime.datetime.now()
+    training_duration = end_time - start_time
+    
+    # Evaluate model
+    score_train = model.score(X_train, Y_train)
+    score_test = model.score(X_test, Y_test)
+    predicted = model.predict(X_test)
+    mse = mean_squared_error(Y_test, predicted)
+    
+    print(f"Training completed in {training_duration.total_seconds():.2f} seconds")
+    print(f"Train Score: {score_train * 100:.2f}%")
+    print(f"Test Score: {score_test * 100:.2f}%")
+    print(f"Mean Squared Error: {mse:.4f}")
+    
+    # Determine output directory and filename
+    input_dir = os.path.dirname(os.path.abspath(input_file))
+    output_dir_path = output_dir if output_dir else input_dir
+    os.makedirs(output_dir_path, exist_ok=True)
+    
+    input_basename = os.path.splitext(os.path.basename(input_file))[0]
+    
+    # Output filename: <input_basename>_DT.sav
+    model_filename = f"{input_basename}_DT.sav"
+    model_path = os.path.join(output_dir_path, model_filename)
+    
+    # Save model
+    with open(model_path, 'wb') as f:
+        pickle.dump(model, f)
+    print(f"Model saved: {model_path}")
+    
+    # Save metadata
+    metadata_output = {
+        "cc": compute_capability,
+        "tp": tuning_param_names,
+        "pc": target_names
+    }
+    
+    metadata_path = model_path + ".metadata.json"
+    with open(metadata_path, 'w') as f:
+        json.dump(metadata_output, f, indent=4)
+    print(f"Metadata saved: {metadata_path}")
+    
+    print("Done!")
