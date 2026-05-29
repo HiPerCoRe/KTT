@@ -46,8 +46,8 @@ int main(int argc, char **argv)
 {
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = kernelPrefix + "../Examples/ReferenceVersions/Convolution3d/Convolution3d.cl";
-    std::string referenceKernelFile = kernelPrefix + "../Examples/ReferenceVersions/Convolution3d/Convolution3dReference.cl";
+    std::string kernelFile = kernelPrefix + "../Examples/LegacyExamples/Convolution3d/Convolution3d.cl";
+    std::string referenceKernelFile = kernelPrefix + "../Examples/LegacyExamples/Convolution3d/Convolution3dReference.cl";
 
     if (argc >= 2)
     {

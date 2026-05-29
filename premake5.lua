@@ -387,7 +387,7 @@ function addExampleProject(name, kernelExt, apiDefine, useRefVersions, shouldEna
 
     local cppFiles
     if useRefVersions then
-        cppFiles = {"Examples/ReferenceVersions/" .. name .. "/*.cpp"}
+        cppFiles = {"Examples/LegacyExamples/" .. name .. "/*.cpp"}
     else
         cppFiles = {"Examples/*.cpp", "Examples/" .. name .. "/*.cpp"}
     end

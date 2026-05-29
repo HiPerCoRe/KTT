@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script to verify that the refactored example behaves identically to the original
 # by comparing the kernel configurations searched during tuning
-# Uses ReferenceVersions folder instead of git checkout to avoid changing repo state
+# Uses LegacyExamples folder instead of git checkout to avoid changing repo state
 #
 # Usage: ./verify_sort_refactor.sh <ExampleName>
 # Example: ./verify_sort_refactor.sh Sort
@@ -18,12 +18,12 @@ if [ -z "$EXAMPLE_NAME" ]; then
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BUILD_DIR="$SCRIPT_DIR/Build"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../.. && pwd)"
+BUILD_DIR="$PROJECT_DIR/Build"
 BIN_DIR="$BUILD_DIR/x86_64_Release"
-EXAMPLE_DIR="$SCRIPT_DIR/Examples/$EXAMPLE_NAME"
-REF_VERSIONS_DIR="$SCRIPT_DIR/Examples/ReferenceVersions/$EXAMPLE_NAME"
-REF_OUTPUT_JSON="$SCRIPT_DIR/${EXAMPLE_NAME}Reference_Output.json"
+EXAMPLE_DIR="$PROJECT_DIR/Examples/$EXAMPLE_NAME"
+REF_VERSIONS_DIR="$PROJECT_DIR/Examples/LegacyExamples/$EXAMPLE_NAME"
+REF_OUTPUT_JSON="$PROJECT_DIR/${EXAMPLE_NAME}Reference_Output.json"
 
 echo "=== $EXAMPLE_NAME Refactor Verification Script ==="
 echo ""
@@ -36,19 +36,19 @@ fi
 
 if [ ! -d "$REF_VERSIONS_DIR" ]; then
     echo "Error: Reference version directory not found: $REF_VERSIONS_DIR"
-    echo "The ReferenceVersions folder must contain the original version of the example."
+    echo "The LegacyExamples folder must contain the original version of the example."
     exit 1
 fi
 
 # Step 1: Build with reference versions enabled
 echo "Step 1: Generating build files with premake (reference-versions enabled)..."
-cd "$SCRIPT_DIR"
+cd "$PROJECT_DIR"
 
 premake5 gmake --reference-versions --no-cuda --platform=amd --cpp
 
 echo "Step 2: Building ${EXAMPLE_NAME}OpenCl and ${EXAMPLE_NAME}ReferenceOpenCl..."
 cd "$BUILD_DIR"
-make > /dev/null
+make config=release_x86_64
 
 OUTPUT_JSON="$BIN_DIR/Output.json"
 NAME_OUTPUT_JSON="$BIN_DIR/${EXAMPLE_NAME}Output.json"
@@ -89,26 +89,26 @@ rm $BIN_DIR/*.json || true
 
 # Save refactored version Output.json
 if [ -f "$OUTPUT_JSON" ]; then
-    cp "$OUTPUT_JSON" "$SCRIPT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
+    cp "$OUTPUT_JSON" "$PROJECT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
 elif [ -f "$NAME_OUTPUT_JSON" ]; then
-    cp "$NAME_OUTPUT_JSON" "$SCRIPT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
+    cp "$NAME_OUTPUT_JSON" "$PROJECT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
 else
     echo "Error: Refactored $EXAMPLE_NAME did not produce Output.json"
     exit 1
 fi
 
-cd "$SCRIPT_DIR"
+cd "$PROJECT_DIR"
 
 # Step 5: Compare configurations
 echo ""
 echo "Step 5: Comparing kernel configurations..."
 
 REFERENCE_OUTPUT="$REF_OUTPUT_JSON"
-REFACTORED_OUTPUT="$SCRIPT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
+REFACTORED_OUTPUT="$PROJECT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
 
 if [ -f "$REFERENCE_OUTPUT" ] && [ -f "$REFACTORED_OUTPUT" ]; then
     echo "Comparing JSON outputs..."
-    python3 compare_configs.py "$REFERENCE_OUTPUT" "$REFACTORED_OUTPUT"
+    python3 $PROJECT_DIR/Examples/LegacyExamples/compare_configs.py "$REFERENCE_OUTPUT" "$REFACTORED_OUTPUT"
 else
     echo "JSON not found"
     exit 1
@@ -118,9 +118,9 @@ fi
 echo ""
 echo "Cleaning up..."
 # rm "$REF_OUTPUT_JSON"
-rm "$SCRIPT_DIR/${EXAMPLE_NAME}Refactored_Output.json"
-rm "$SCRIPT_DIR/${EXAMPLE_NAME}Output.json"
-rm "$SCRIPT_DIR/Output.json"
+rm "$PROJECT_DIR/${EXAMPLE_NAME}Refactored_Output.json" || true
+rm "$PROJECT_DIR/${EXAMPLE_NAME}Output.json" || true
+rm "$PROJECT_DIR/Output.json" || true
 
 echo ""
 echo "Verification complete!"
