@@ -149,6 +149,9 @@ protected:
         m_tuner.AddParameter(m_kernel, "GLOBAL_SIZE", vector<uint64_t>{512, 1024, 2048, 4096, 8192, 16384, 32768});
         m_tuner.AddThreadModifier(m_kernel, {m_reduceDefinition, m_bottomScanDefinition},
             ktt::ModifierType::Global, ktt::ModifierDimension::X, "GLOBAL_SIZE", ktt::ModifierAction::Multiply);
+        m_tuner.AddThreadModifier(m_kernel, {m_reduceDefinition, m_bottomScanDefinition},
+            ktt::ModifierType::Global, ktt::ModifierDimension::X, "LOCAL_SIZE",
+            ktt::ModifierAction::Divide);
 
         auto workGroupConstraint = [](const vector<uint64_t>& vector) {return vector.at(0) != 128 || vector.at(1) != 32768;};
         m_tuner.AddConstraint(m_kernel, {"LOCAL_SIZE", "GLOBAL_SIZE"}, workGroupConstraint);
