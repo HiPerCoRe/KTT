@@ -1,14 +1,36 @@
 #!/usr/bin/env python3
 
+import os
 import sys
-from KatsBasedSearcher import KatsBasedSearcher
+import glob
+from pathlib import Path
+
+from ProfileBasedSearcher import ProfileBasedSearcher
 from modules.info import BatchInfo, ModelInfo
 
 import lib.pyktt as ktt
 import numpy
 
+LOG_DIRECTORY = './logs/xml/'
 
-def runTuning(deviceIndex: int, kernelFile: str):
+
+def GetLogPath(modelInfo: ModelInfo, batchInfo: BatchInfo) -> str:
+    runningGpu, profilingGpu = (
+        Path(modelInfo.counterPath).name.split('_')[0].split('-')
+    )
+
+    logPrefix = (
+        LOG_DIRECTORY
+        + f'{runningGpu}-{profilingGpu}/'
+        + f'b{batchInfo.batchSize}-n{batchInfo.neighborSize}-'
+        + f'r{batchInfo.randomSize}/'
+    )
+
+    existingLogs = glob.glob(logPrefix + '*.xml')
+    return logPrefix + f'output-{len(existingLogs) + 1}'
+
+
+def RunTuning(deviceIndex: int, kernelFile: str):
     numberOfAtoms = 256
     gridSize = 256
     gridSpacing = 0.5
@@ -109,6 +131,7 @@ def runTuning(deviceIndex: int, kernelFile: str):
         ktt.ModifierAction.Divide,
     )
     tuner.AddParameter(kernel, 'INNER_UNROLL_FACTOR', [0, 1, 2, 4, 8, 16, 32])
+    tuner.AddParameter(kernel, 'USE_CONSTANT_MEMORY', [0])
     tuner.AddParameter(kernel, 'USE_SOA', [0, 1])
     tuner.AddParameter(kernel, 'VECTOR_SIZE', [1])
     tuner.AddConstraint(
@@ -123,22 +146,29 @@ def runTuning(deviceIndex: int, kernelFile: str):
         lambda vector: vector[0] * vector[1] >= 64,
     )
 
-    # Make tuner use the searcher implemented in Python.
-    searcher = KatsBasedSearcher()
+    # Make tuner use the profiling searcher
+    searcher = ProfileBasedSearcher()
     tuner.SetSearcher(kernel, searcher)
 
-    modelInfo = ModelInfo(delta_path='', space_path='', counter_path='')
-    batchInfo = BatchInfo(batchSize=20, neighborSize=10, randomSize=10)
-
+    modelInfo = ModelInfo(
+        deltaPath='./models/1070_all_XGBRegressor.sav',
+        spacePath='./models/1070_coulomb_XGBRegressor.sav',
+        counterPath='./models/2080-1070_all_XGBRegressor.sav',
+    )
+    batchInfo = BatchInfo(batchSize=25, neighborSize=30, randomSize=20)
     searcher.Configure(tuner, modelInfo, batchInfo)
 
-    # Begin tuning utilizing the stop condition implemented in Python.
-    results = tuner.Tune(kernel)
-    tuner.SaveResults(results, 'TuningOutput', ktt.OutputFormat.JSON)
+    # Begin tuning utilizing the stop condition implemented in Python
+    results = tuner.Tune(kernel, ktt.ConfigurationCount(20))
+
+    logPath = GetLogPath(modelInfo, batchInfo)
+    os.makedirs(Path(logPath).parent, exist_ok=True)
+
+    tuner.SaveResults(results, logPath, ktt.OutputFormat.XML)
 
 
 if __name__ == '__main__':
     deviceIndex = int(sys.argv[1]) if len(sys.argv) >= 2 else 0
     kernelFile = sys.argv[2] if len(sys.argv) >= 3 else './CudaKernel.cu'
 
-    runTuning(deviceIndex, kernelFile)
+    RunTuning(deviceIndex, kernelFile)

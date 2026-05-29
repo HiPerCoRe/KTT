@@ -1,0 +1,4 @@
+--index-url https://download.pytorch.org/whl/cu130/
+
+torch==2.11.0+cu130
+torchmetrics
