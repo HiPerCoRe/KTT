@@ -9,6 +9,7 @@ import pickle
 
 # ---- Uncomment code in here if you want to use neural models.
 # ---- I don't like having a pytorch dependency (not just for the types).
+# ---- TODO: remove cupy dependency as well?
 
 # import torch
 # import torch.nn as nn
