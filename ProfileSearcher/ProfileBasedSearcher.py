@@ -44,7 +44,13 @@ class ProfileBasedSearcher(Searcher):
         self.deltaModel = loadModel(modelInfo.deltaPath)
 
     def OnInitialize(self):
-        self._FillBatchRandom(self.batch, self.batchInfo.batchSize)
+        candidateBatch = []
+        self._FillBatchRandom(candidateBatch, self.batchInfo.randomSize)
+
+        tuningSpace = self._BatchToSpacePredicted(candidateBatch)
+        scores = self._ScoreTuningSpace(tuningSpace, tuningSpace.counters[0])
+        self.batch = self._SelectBatchWeighted(candidateBatch, scores)
+
         self.currentConfiguration = self.batch.pop()
 
     def CalculateNextConfiguration(self, previousResult: KernelResult) -> bool:
@@ -56,6 +62,11 @@ class ProfileBasedSearcher(Searcher):
 
         # unlikely, the batch is emptied but no configuration ran properly
         if self.bestConfiguration is None:
+            print(
+                '[Warning] Searcher: Batch was emptied but no configuration ran properly'
+            )
+
+            # TODO: maybe do the same as OnInitialize() here?
             self._FillBatchRandom(self.batch, self.batchInfo.batchSize)
             self.currentConfiguration = self.batch.pop()
 
@@ -90,7 +101,13 @@ class ProfileBasedSearcher(Searcher):
 
         # we only do the profiling in case the batch is bigger than the batch size
         candidateSpace = self._BatchToSpacePredicted(candidateBatch)
-        candidateScores = self._ScoreTuningSpace(candidateSpace, previousResult)
+
+        counters = self._GetCounters(previousResult)
+        predictedCounters = self.counterModel.predict(counters)
+
+        candidateScores = self._ScoreTuningSpace(
+            candidateSpace, predictedCounters
+        )
 
         self.batch = self._SelectBatchWeighted(candidateBatch, candidateScores)
         self.currentConfiguration = self.batch.pop()
@@ -118,12 +135,9 @@ class ProfileBasedSearcher(Searcher):
         return selected
 
     def _ScoreTuningSpace(
-        self, space: TuningSpace, results: KernelResult
+        self, space: TuningSpace, currentCounters: NDArray
     ) -> NDArray:
-        counters = self._GetCounters(results)
-        predictedCounters = self.counterModel.predict(counters.to_numpy())
-
-        counterDeltas = predictedCounters - space.counters
+        counterDeltas = currentCounters - space.counters
         timeDeltas = self.deltaModel.predict(counterDeltas).reshape(-1, 1)
 
         minDelta, maxDelta = timeDeltas.min(), timeDeltas.max()
@@ -135,7 +149,7 @@ class ProfileBasedSearcher(Searcher):
 
         return scores
 
-    def _GetCounters(self, results: KernelResult) -> DataFrame:
+    def _GetCounters(self, results: KernelResult) -> NDArray:
         kernelResults = results.GetResults()
         result = kernelResults[0]
 
@@ -151,9 +165,11 @@ class ProfileBasedSearcher(Searcher):
         ]
 
         relevantCounters = stressCounters.join(artificialCounters)
-        return relevantCounters.reindex(
+        relevantCounters = relevantCounters.reindex(
             sorted(relevantCounters.columns), axis=1
         )
+
+        return relevantCounters.to_numpy()
 
     def _GenerateArtificialCounters(self, counters: DataFrame) -> DataFrame:
         dramUtilization = _GetRWUtilization(
