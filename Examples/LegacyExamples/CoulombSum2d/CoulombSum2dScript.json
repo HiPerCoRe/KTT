@@ -1,0 +1,132 @@
+{
+  "ConfigurationSpace": {
+    "TuningParameters": [
+      {
+        "Name": "INNER_UNROLL_FACTOR",
+        "Type": "uint",
+        "Values": "[0, 1, 2, 4, 8, 16, 32]"
+      },
+      {
+        "Name": "USE_CONSTANT_MEMORY",
+        "Type": "uint",
+        "Values": "[0, 1]"
+      },
+      {
+        "Name": "VECTOR_TYPE",
+        "Type": "uint",
+        "Values": "[1, 2, 4, 8]"
+      },
+      {
+        "Name": "USE_SOA",
+        "Type": "uint",
+        "Values": "[0, 1, 2]"
+      },
+      {
+        "Name": "OUTER_UNROLL_FACTOR",
+        "Type": "uint",
+        "Values": "[1, 2, 4, 8]"
+      },
+      {
+        "Name": "WORK_GROUP_SIZE_X",
+        "Type": "uint",
+        "Values": "[4, 8, 16, 32]"
+      },
+      {
+        "Name": "WORK_GROUP_SIZE_Y",
+        "Type": "uint",
+        "Values": "[1, 2, 4, 8, 16, 32]"
+      }
+    ],
+    "Conditions": [
+      {
+        "Parameters": ["VECTOR_TYPE", "USE_SOA"],
+        "Expression": "VECTOR_TYPE > 1 or USE_SOA != 2"
+      }
+    ]
+  },
+  "Budget": [
+    {
+      "Type": "TuningDuration",
+      "BudgetValue": 60
+    }
+  ],
+  "General": {
+    "TimeUnit": "Microseconds",
+    "OutputFile": "CoulombSum2dOutput",
+    "OutputFormat": "JSON"
+  },
+  "KernelSpecification": {
+    "Language": "OpenCL",
+    "CompilerOptions": ["-cl-fast-relaxed-math"],
+    "KernelName": "directCoulombSum",
+    "KernelFile": "CoulombSum2d.cl",
+    "GlobalSize": {
+      "X": "512 // OUTER_UNROLL_FACTOR",
+      "Y": "512"
+    },
+    "LocalSize": {
+      "X": "WORK_GROUP_SIZE_X",
+      "Y": "WORK_GROUP_SIZE_Y"
+    },
+    "Arguments": [
+      {
+        "Type": "float",
+        "Size": 16000,
+        "FillType": "Random",
+        "FillValue": 40.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Type": "float",
+        "Size": 4000,
+        "FillType": "Random",
+        "FillValue": 40.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Type": "float",
+        "Size": 4000,
+        "FillType": "Random",
+        "FillValue": 40.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Type": "float",
+        "Size": 4000,
+        "FillType": "Random",
+        "FillValue": 40.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Type": "float",
+        "Size": 4000,
+        "FillType": "Random",
+        "FillValue": 1.0,
+        "AccessType": "ReadOnly",
+        "MemoryType": "Vector"
+      },
+      {
+        "Type": "int32",
+        "FillValue": 4000,
+        "MemoryType": "Scalar"
+      },
+      {
+        "Type": "float",
+        "FillValue": 0.5,
+        "MemoryType": "Scalar"
+      },
+      {
+        "Type": "float",
+        "Size": 262144,
+        "FillType": "Constant",
+        "FillValue": 0.0,
+        "AccessType": "ReadWrite",
+        "MemoryType": "Vector"
+      }
+    ]
+  }
+}

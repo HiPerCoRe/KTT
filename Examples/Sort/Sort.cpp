@@ -1,197 +1,177 @@
-#include <iomanip>
-#include <iostream>
-#include <random>
-#include <string>
-#include <vector>
+#include "../ExampleReferenceComputation.h"
 
-#include <Ktt.h>
+using namespace std;
 
-#if defined(_MSC_VER)
-const std::string kernelPrefix = "";
-#else
-const std::string kernelPrefix = "../";
-#endif
+class Sort : public ExampleReferenceComputation
+{
+protected:
+    Sort(std::shared_ptr<ExampleConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+         string defaultKernelFileBaseName) :
+        ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+    {
+        m_size = m_problemSize * 1024 * 1024 / sizeof(unsigned int);
+    }
 
-#ifndef RAND_MAX
-#define RAND_MAX UINT_MAX
-#endif
+    friend ExampleBase;
 
-#if KTT_CUDA_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/Sort/Sort.cu";
-    const auto computeApi = ktt::ComputeApi::CUDA;
-#elif KTT_OPENCL_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/Sort/Sort.cl";
-    const auto computeApi = ktt::ComputeApi::OpenCL;
-#endif
+    uint32_t m_size;
+    vector<unsigned int> m_in, m_out;
+
+    ktt::ArgumentId m_inId;
+    ktt::ArgumentId m_outId;
+    ktt::ArgumentId m_sizeId;
+    ktt::ArgumentId m_shiftId;
+    ktt::ArgumentId m_isumsId;
+    ktt::ArgumentId m_numberOfGroupsId;
+
+    ktt::KernelDefinitionId m_reduceDefinition;
+    ktt::KernelDefinitionId m_topScanDefinition;
+    ktt::KernelDefinitionId m_bottomScanDefinition;
+
+    void InitData() override
+    {
+        // Create input and output vectors and initialize with pseudorandom numbers
+        m_in.resize(m_size);
+        m_out.resize(m_size);
+
+        FillBuffers<unsigned int>({&m_in});
+    }
+
+    void InitKernel() override
+    {
+        // Declare kernels and their dimensions
+        const ktt::DimensionVector ndRangeDimensions;
+        const ktt::DimensionVector workGroupDimensions;
+
+        m_reduceDefinition = m_tuner.AddKernelDefinitionFromFile("reduce", m_kernelFile, ndRangeDimensions, workGroupDimensions);
+        m_topScanDefinition = m_tuner.AddKernelDefinitionFromFile("top_scan", m_kernelFile, workGroupDimensions, workGroupDimensions);
+        m_bottomScanDefinition = m_tuner.AddKernelDefinitionFromFile("bottom_scan", m_kernelFile, ndRangeDimensions, workGroupDimensions);
+
+        // Add arguments for kernels
+        m_inId = m_tuner.AddArgumentVector(m_in, ktt::ArgumentAccessType::ReadWrite);
+        m_outId = m_tuner.AddArgumentVector(m_out, ktt::ArgumentAccessType::ReadWrite);
+        m_sizeId = m_tuner.AddArgumentScalar(m_size);
+        int shift = 0;
+        m_shiftId = m_tuner.AddArgumentScalar(shift); // Will be updated as the kernel execution is iterative
+
+        int numberOfGroups = 1;
+        int isumsSize = 16 * numberOfGroups;
+        // Vector argument will be updated in tuning manipulator as its size depends on the number of work-groups
+        m_isumsId = m_tuner.AddArgumentVector(vector<unsigned int>(isumsSize), ktt::ArgumentAccessType::ReadWrite);
+        m_numberOfGroupsId = m_tuner.AddArgumentScalar(numberOfGroups);
+
+        m_kernel = m_tuner.CreateCompositeKernel("Sort", {m_reduceDefinition, m_topScanDefinition, m_bottomScanDefinition},
+            [this](ktt::ComputeInterface& interface)
+        {
+            const int radix_width = 4;
+            const vector<ktt::ParameterPair>& parameterValues = interface.GetCurrentConfiguration().GetPairs();
+            uint64_t localSize = ktt::ParameterPair::GetParameterValue<uint64_t>(parameterValues, "LOCAL_SIZE");
+            uint64_t globalSize = ktt::ParameterPair::GetParameterValue<uint64_t>(parameterValues, "GLOBAL_SIZE");
+
+            int numberOfGroups = static_cast<int>(globalSize / localSize);
+            interface.UpdateScalarArgument(m_numberOfGroupsId, &numberOfGroups);
+            int isumsSize = 16 * numberOfGroups;
+
+            // Vector, read-write, must be added after global and local size are determined, as its size depends on the number of groups
+            interface.ResizeBuffer(m_isumsId, isumsSize * sizeof(unsigned int), false);
+
+            bool inOutSwapped = false;
+
+            for (int shift = 0; shift < static_cast<int>(sizeof(unsigned int) * 8); shift += radix_width)
+            {
+                // Like scan, we use a reduce-then-scan approach
+
+                // But before proceeding, update the shift appropriately for each kernel. This is how many bits to shift to the right used in binning.
+                interface.UpdateScalarArgument(m_shiftId, &shift);
+
+                // Also, the sort is not in place, so swap the input and output buffers on each pass.
+                const bool even = ((shift / radix_width) % 2 == 0) ? true : false;
+
+                if (even)
+                {
+                    interface.ChangeArguments(m_reduceDefinition, {m_inId, m_isumsId, m_sizeId, m_shiftId});
+                }
+                else
+                {
+                    interface.ChangeArguments(m_reduceDefinition, {m_outId, m_isumsId, m_sizeId, m_shiftId});
+                }
+
+                // Each thread block gets an equal portion of the input array, and computes occurrences of each digit.
+                interface.RunKernel(m_reduceDefinition);
+
+                // Next, a top-level exclusive scan is performed on the per block histograms. This is done by a single work group
+                // (note global size here is the same as local).
+                interface.RunKernel(m_topScanDefinition);
+
+                // Finally, a bottom-level scan is performed by each block that is seeded with the scanned histograms which rebins,
+                // locally scans, then scatters keys to global memory
+                interface.RunKernel(m_bottomScanDefinition);
+
+                // Also, the sort is not in place, so swap the input and output buffers on each pass.
+                interface.SwapArguments(m_bottomScanDefinition, m_inId, m_outId);
+
+                if (shift + radix_width < static_cast<int>(sizeof(unsigned int) * 8)) // Not the last iteration
+                {
+                    inOutSwapped = !inOutSwapped;
+                }
+            }
+
+            if (inOutSwapped)
+            {
+                // Copy contents of in to out, since they are swapped
+                interface.CopyBuffer(m_outId, m_inId);
+            }
+        });
+
+        m_tuner.SetArguments(m_reduceDefinition, {m_inId, m_isumsId, m_sizeId, m_shiftId});
+        m_tuner.SetArguments(m_topScanDefinition, {m_isumsId, m_numberOfGroupsId});
+        m_tuner.SetArguments(m_bottomScanDefinition, {m_inId, m_isumsId, m_outId, m_sizeId, m_shiftId});
+    }
+
+    void InitTuningSpace() override
+    {
+        // Parameter for the length of OpenCL vector data types used in the kernels
+        if (m_computeApi == ktt::ComputeApi::OpenCL)
+        {
+            m_tuner.AddParameter(m_kernel, "FPVECTNUM", vector<uint64_t>{4, 8, 16});
+        }
+        else
+        {
+            m_tuner.AddParameter(m_kernel, "FPVECTNUM", vector<uint64_t>{4});
+        }
+
+        // Local size below 128 does not work correctly, not even with the benchmark code
+        m_tuner.AddParameter(m_kernel, "LOCAL_SIZE", vector<uint64_t>{128, 256, 512});
+        m_tuner.AddThreadModifier(m_kernel, {m_reduceDefinition, m_topScanDefinition, m_bottomScanDefinition},
+            ktt::ModifierType::Local, ktt::ModifierDimension::X, "LOCAL_SIZE", ktt::ModifierAction::Multiply);
+
+        // Second kernel global size is always equal to local size
+        m_tuner.AddParameter(m_kernel, "GLOBAL_SIZE", vector<uint64_t>{512, 1024, 2048, 4096, 8192, 16384, 32768});
+        m_tuner.AddThreadModifier(m_kernel, {m_reduceDefinition, m_bottomScanDefinition},
+            ktt::ModifierType::Global, ktt::ModifierDimension::X, "GLOBAL_SIZE", ktt::ModifierAction::Multiply);
+        m_tuner.AddThreadModifier(m_kernel, {m_reduceDefinition, m_bottomScanDefinition},
+            ktt::ModifierType::Global, ktt::ModifierDimension::X, "LOCAL_SIZE",
+            ktt::ModifierAction::Divide);
+
+        auto workGroupConstraint = [](const vector<uint64_t>& vector) {return vector.at(0) != 128 || vector.at(1) != 32768;};
+        m_tuner.AddConstraint(m_kernel, {"LOCAL_SIZE", "GLOBAL_SIZE"}, workGroupConstraint);
+    }
+
+    void InitReference() override
+    {
+        m_tuner.SetReferenceComputation(m_outId, [this](void* buffer)
+        {
+            memcpy(buffer, m_in.data(), m_in.size() * sizeof(unsigned int));
+            unsigned int* intArray = static_cast<unsigned int*>(buffer);
+            sort(intArray, intArray + m_in.size());
+        });
+    }
+};
 
 int main(int argc, char** argv)
 {
-    ktt::PlatformIndex platformIndex = 0;
-    ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = defaultKernelFile;
-
-    if (argc >= 2)
-    {
-        platformIndex = std::stoul(std::string(argv[1]));
-
-        if (argc >= 3)
-        {
-            deviceIndex = std::stoul(std::string(argv[2]));
-
-            if (argc >= 4)
-            {
-                kernelFile = std::string(argv[3]);
-            }
-        }
-    }
-
-    int problemSize = 32; // In MiB
-
-    if (argc >= 5)
-    {
-      problemSize = atoi(argv[4]);
-    }
-  
-    int size = problemSize * 1024 * 1024 / sizeof(unsigned int);
-
-    // Create input and output vectors and initialize with pseudorandom numbers
-    std::vector<unsigned int> in(size);
-
-    srand((unsigned int)time(NULL));
-
-    for (int i = 0; i < size; ++i)
-    {
-        in[i] = rand();
-    }
-
-    // Create tuner object for chosen platform and device
-    ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
-    tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-    tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
-
-    // Declare kernels and their dimensions
-    std::vector<ktt::KernelDefinitionId> definitionIds(3);
-    const ktt::DimensionVector ndRangeDimensions;
-    const ktt::DimensionVector workGroupDimensions;
-
-    definitionIds[0] = tuner.AddKernelDefinitionFromFile("reduce", kernelFile, ndRangeDimensions, workGroupDimensions);
-    definitionIds[1] = tuner.AddKernelDefinitionFromFile("top_scan", kernelFile, workGroupDimensions, workGroupDimensions);
-    definitionIds[2] = tuner.AddKernelDefinitionFromFile("bottom_scan", kernelFile, ndRangeDimensions, workGroupDimensions);
-
-    // Add arguments for kernels
-    const ktt::ArgumentId inId = tuner.AddArgumentVector(in, ktt::ArgumentAccessType::ReadWrite);
-    const ktt::ArgumentId outId = tuner.AddArgumentVector(std::vector<unsigned int>(size), ktt::ArgumentAccessType::ReadWrite);
-    const ktt::ArgumentId sizeId = tuner.AddArgumentScalar(size);
-    const ktt::ArgumentId numberOfGroupsId = tuner.AddArgumentScalar(1);
-    int shift = 0;
-    const ktt::ArgumentId shiftId = tuner.AddArgumentScalar(shift); // Will be updated as the kernel execution is iterative
-  
-    int numberOfGroups = 1;
-    int isumsSize = 16 * numberOfGroups;
-    // Vector argument will be updated in tuning manipulator as its size depends on the number of work-groups
-    const ktt::ArgumentId isumsId = tuner.AddArgumentVector(std::vector<unsigned int>(isumsSize), ktt::ArgumentAccessType::ReadWrite);
-
-    const ktt::KernelId kernel = tuner.CreateCompositeKernel("Sort", definitionIds,
-        [&definitionIds, size, numberOfGroupsId, isumsId, shiftId, inId, outId, sizeId](ktt::ComputeInterface& interface)
-    {
-        const int radix_width = 4;
-        const std::vector<ktt::ParameterPair>& parameterValues = interface.GetCurrentConfiguration().GetPairs();
-        uint64_t localSize = ktt::ParameterPair::GetParameterValue<uint64_t>(parameterValues, "LOCAL_SIZE");
-        uint64_t globalSize = ktt::ParameterPair::GetParameterValue<uint64_t>(parameterValues, "GLOBAL_SIZE");
-
-        int numberOfGroups = static_cast<int>(globalSize / localSize);
-        interface.UpdateScalarArgument(numberOfGroupsId, &numberOfGroups);
-        int isumsSize = 16 * numberOfGroups;
-
-        // Vector, read-write, must be added after global and local size are determined, as its size depends on the number of groups
-        interface.ResizeBuffer(isumsId, isumsSize * sizeof(unsigned int), false);
-
-        bool inOutSwapped = false;
-
-        for (int shift = 0; shift < static_cast<int>(sizeof(unsigned int) * 8); shift += radix_width)
-        {
-            // Like scan, we use a reduce-then-scan approach
-
-            // But before proceeding, update the shift appropriately for each kernel. This is how many bits to shift to the right used in binning.
-            interface.UpdateScalarArgument(shiftId, &shift);
-
-            // Also, the sort is not in place, so swap the input and output buffers on each pass.
-            const bool even = ((shift / radix_width) % 2 == 0) ? true : false;
-
-            if (even)
-            {
-                interface.ChangeArguments(definitionIds[0], {inId, isumsId, sizeId, shiftId});
-            }
-            else
-            {
-                interface.ChangeArguments(definitionIds[0], {outId, isumsId, sizeId, shiftId});
-            }
-
-            // Each thread block gets an equal portion of the input array, and computes occurrences of each digit.
-            interface.RunKernel(definitionIds[0]);
-
-            // Next, a top-level exclusive scan is performed on the per block histograms. This is done by a single work group
-            // (note global size here is the same as local).
-            interface.RunKernel(definitionIds[1]);
-
-            // Finally, a bottom-level scan is performed by each block that is seeded with the scanned histograms which rebins,
-            // locally scans, then scatters keys to global memory
-            interface.RunKernel(definitionIds[2]);
-
-            // Also, the sort is not in place, so swap the input and output buffers on each pass.
-            interface.SwapArguments(definitionIds[2], inId, outId);
-
-            if (shift + radix_width < static_cast<int>(sizeof(unsigned int) * 8)) // Not the last iteration
-            {
-                inOutSwapped = !inOutSwapped;
-            }
-        }
-
-        if (inOutSwapped)
-        {
-            // Copy contents of in to out, since they are swapped
-            interface.CopyBuffer(outId, inId);
-        }
-    });
-
-    tuner.SetArguments(definitionIds[0], {inId, isumsId, sizeId, shiftId});
-    tuner.SetArguments(definitionIds[1], {isumsId, numberOfGroupsId});
-    tuner.SetArguments(definitionIds[2], {inId, isumsId, outId, sizeId, shiftId});
-
-    // Parameter for the length of OpenCL vector data types used in the kernels
-    if constexpr (computeApi == ktt::ComputeApi::OpenCL)
-    {
-        tuner.AddParameter(kernel, "FPVECTNUM", std::vector<uint64_t>{4, 8, 16});
-    }
-    else
-    {
-        tuner.AddParameter(kernel, "FPVECTNUM", std::vector<uint64_t>{4});
-    }
-
-    // Local size below 128 does not work correctly, not even with the benchmark code
-    tuner.AddParameter(kernel, "LOCAL_SIZE", std::vector<uint64_t>{128, 256, 512});
-    tuner.AddThreadModifier(kernel, definitionIds, ktt::ModifierType::Local, ktt::ModifierDimension::X, "LOCAL_SIZE",
-        ktt::ModifierAction::Multiply);
-
-    // Second kernel global size is always equal to local size
-    tuner.AddParameter(kernel, "GLOBAL_SIZE", std::vector<uint64_t>{512, 1024, 2048, 4096, 8192, 16384, 32768});
-    tuner.AddThreadModifier(kernel, {definitionIds[0], definitionIds[2]}, ktt::ModifierType::Global, ktt::ModifierDimension::X,
-        "GLOBAL_SIZE", ktt::ModifierAction::Multiply);
-    tuner.AddThreadModifier(kernel, {definitionIds[1]}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "LOCAL_SIZE",
-        ktt::ModifierAction::Multiply);
-
-    auto workGroupConstraint = [](const std::vector<uint64_t>& vector) {return vector.at(0) != 128 || vector.at(1) != 32768;};
-    tuner.AddConstraint(kernel, {"LOCAL_SIZE", "GLOBAL_SIZE"}, workGroupConstraint);
-
-    tuner.SetReferenceComputation(outId, [&in](void* buffer)
-    {
-        std::memcpy(buffer, in.data(), in.size() * sizeof(unsigned int));
-        unsigned int* intArray = static_cast<unsigned int*>(buffer);
-        std::sort(intArray, intArray + in.size());
-    });
-
-    const auto results = tuner.Tune(kernel);
-    tuner.SaveResults(results, "SortOutput", ktt::OutputFormat::JSON);
+    unique_ptr<Sort> sort = Sort::Create<Sort>(argc, argv, 32, "Examples/Sort", "Sort");
+    sort->Run();
 
     return 0;
 }

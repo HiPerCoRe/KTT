@@ -371,8 +371,99 @@ newoption
 
 newoption
 {
+    trigger = "reference-versions",
+    description = "Enables compilation of reference versions of examples"
+}
+
+newoption
+{
     trigger = "no-tutorials",
     description = "Disables compilation of tutorials"
+}
+
+-- Helper function to add example projects
+function addExampleProject(name, kernelExt, apiDefine, useRefVersions, shouldEnableOpenMP)
+    local projectName = name .. (useRefVersions and "Reference" or "") .. kernelExt
+
+    local cppFiles
+    if useRefVersions then
+        cppFiles = {"Examples/LegacyExamples/" .. name .. "/*.cpp"}
+    else
+        cppFiles = {"Examples/*.cpp", "Examples/" .. name .. "/*.cpp"}
+    end
+
+    project(projectName)
+        kind "ConsoleApp"
+        files {table.unpack(cppFiles)}
+        includedirs {"Source"}
+        defines {apiDefine}
+        links {"ktt"}
+        if shouldEnableOpenMP then
+            enableOpenMP()
+        end
+end
+
+-- Helper function to add OpenCL example with optional reference version
+function addOpenClExample(name, enableOpenMP, noReference)
+    addExampleProject(name, "OpenCl", "KTT_OPENCL_EXAMPLE", false, enableOpenMP)
+    if _OPTIONS["reference-versions"] and not noReference then
+        addExampleProject(name, "OpenCl", "KTT_OPENCL_EXAMPLE", true, enableOpenMP)
+    end
+end
+
+-- Helper function to add CUDA example with optional reference version
+function addCudaExample(name, enableOpenMP, noReference)
+    addExampleProject(name, "Cuda", "KTT_CUDA_EXAMPLE", false, enableOpenMP)
+    if _OPTIONS["reference-versions"] and not noReference then
+        addExampleProject(name, "Cuda", "KTT_CUDA_EXAMPLE", true, enableOpenMP)
+    end
+end
+
+-- Helper function to add C++ example with optional reference version
+function addCppExample(name, enableOpenMP, noReference)
+    addExampleProject(name, "Cpp", "KTT_CPP_EXAMPLE", false, enableOpenMP)
+    if _OPTIONS["reference-versions"] and not noReference then
+        addExampleProject(name, "Cpp", "KTT_CPP_EXAMPLE", true, enableOpenMP)
+    end
+end
+
+-- Base example list (examples available for both OpenCL and CUDA)
+baseExamples = {
+    {"AtfCCSD"},
+    {"AtfConvolution"},
+    {"AtfGEMM"},
+    {"AtfPRL"},
+    {"Bicg"},
+    {"ClTuneConvolution"},
+    {"ClTuneGemm"},
+    {"CoulombSum3d", true},      -- requires OpenMP
+    {"Nbody"},
+    {"Reduction"},
+    {"Sort"},
+    {"Sort2"},
+    {"Transpose"},
+    {"Dummy"},
+    {"RodiniaHotspot", false, true},
+    {"GemmBatch", false, true}
+}
+
+-- OpenCL-only examples
+openClOnlyExamples = {
+    {"Convolution3d"},
+    {"CoulombSum2d"},
+    {"Covariance"}
+}
+
+-- CUDA-only examples
+cudaOnlyExamples = {
+    {"KernelTunerConvolution"},
+    {"KernelTunerPnpoly"},
+    {"Microbenchmarks"}
+}
+
+-- C++ examples
+cppExamples = {
+    {"CoulombSum3d", true}   -- requires OpenMP
 }
 
 -- Project configuration
@@ -596,245 +687,33 @@ if not _OPTIONS["no-examples"] then
 
 if openClProjects then
 
-project "AtfSamplesOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/AtfSamples/*.cpp", "Examples/AtfSamples/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
+    for _, ex in ipairs(baseExamples) do
+        addOpenClExample(ex[1], ex[2], ex[3])
+    end
 
-project "BicgOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
+    for _, ex in ipairs(openClOnlyExamples) do
+        addOpenClExample(ex[1], ex[2], ex[3])
+    end
 
-project "ClTuneConvolutionOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/ClTuneConvolution/*.cpp", "Examples/ClTuneConvolution/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "ClTuneGemmOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/ClTuneGemm/*.cpp", "Examples/ClTuneGemm/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "Convolution3dOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/Convolution3d/*.cpp", "Examples/Convolution3d/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "CoulombSum2dOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/CoulombSum2d/*.cpp", "Examples/CoulombSum2d/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "CoulombSum3dOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-    enableOpenMP()
-
-project "CoulombSum3dIterativeOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/CoulombSum3dIterative/*.cpp", "Examples/CoulombSum3dIterative/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "CovarianceOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/Covariance/*.cpp", "Examples/Covariance/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "NbodyOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/Nbody/*.cpp", "Examples/Nbody/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "ReductionOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/Reduction/*.cpp", "Examples/Reduction/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "SortOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/Sort/*.cpp", "Examples/Sort/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "Sort2OpenCl"
-    kind "ConsoleApp"
-    files {"Examples/Sort2/*.cpp", "Examples/Sort2/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "TransposeOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/Transpose/*.cpp", "Examples/Transpose/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
-
-project "DummyOpenCl"
-    kind "ConsoleApp"
-    files {"Examples/Dummy/*.cpp", "Examples/Dummy/*.cl"}
-    includedirs {"Source"}
-    defines {"KTT_OPENCL_EXAMPLE"}
-    links {"ktt"}
 end -- openClProjects
     
 if cudaProjects then
 
-project "AtfSamplesCuda"
-    kind "ConsoleApp"
-    files {"Examples/AtfSamples/*.cpp", "Examples/AtfSamples/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
+    for _, ex in ipairs(baseExamples) do
+        addCudaExample(ex[1], ex[2], ex[3])
+    end
 
-project "BicgCuda"
-    kind "ConsoleApp"
-    files {"Examples/Bicg/*.cpp", "Examples/Bicg/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
+    for _, ex in ipairs(cudaOnlyExamples) do
+        addCudaExample(ex[1], ex[2], ex[3])
+    end
 
-project "ClTuneConvolutionCuda"
-    kind "ConsoleApp"
-    files {"Examples/ClTuneConvolution/*.cpp", "Examples/ClTuneConvolution/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-
-project "ClTuneGemmCuda"
-    kind "ConsoleApp"
-    files {"Examples/ClTuneGemm/*.cpp", "Examples/ClTuneGemm/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-
-project "CoulombSum3dCuda"
-    kind "ConsoleApp"
-    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-    enableOpenMP()
-
-project "NbodyCuda"
-    kind "ConsoleApp"
-    files {"Examples/Nbody/*.cpp", "Examples/Nbody/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-
-project "ReductionCuda"
-    kind "ConsoleApp"
-    files {"Examples/Reduction/*.cpp", "Examples/Reduction/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-
-project "SortCuda"
-    kind "ConsoleApp"
-    files {"Examples/Sort/*.cpp", "Examples/Sort/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-
-project "Sort2Cuda"
-    kind "ConsoleApp"
-    files {"Examples/Sort2/*.cpp", "Examples/Sort2/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-
-project "TransposeCuda"
-    kind "ConsoleApp"
-    files {"Examples/Transpose/*.cpp", "Examples/Transpose/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-
-project "KernelTunerConvolutionCuda"
-    kind "ConsoleApp"
-    files {"Examples/KernelTunerConvolution/*.cpp", "Examples/KernelTunerConvolution/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-
-project "KernelTunerPnpolyCuda"
-    kind "ConsoleApp"
-    files {"Examples/KernelTunerPnpoly/*.cpp", "Examples/KernelTunerPnpoly/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-
-project "DummyCuda"
-    kind "ConsoleApp"
-    files {"Examples/Dummy/*.cpp", "Examples/Dummy/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
-
-project "MicrobenchmarksCuda"
-    kind "ConsoleApp"
-    files {"Examples/Microbenchmarks/*.cpp", "Examples/Microbenchmarks/*.cu"}
-    includedirs {"Source"}
-    defines {"KTT_CUDA_EXAMPLE"}
-    links {"ktt"}
 end -- cudaProjects
 
 if cppProjects then
 
-project "CppSimple"
-    kind "ConsoleApp"
-    files {"Examples/CppSimple/CppSimple.cpp"}
-    includedirs {"Source"}
-    defines {"KTT_CPP_EXAMPLE"}
-    links {"ktt"}
-
-project "CppSimpleZeroCopy"
-    kind "ConsoleApp"
-    files {"Examples/CppSimple/CppSimpleZeroCopy.cpp"}
-    includedirs {"Source"}
-    defines {"KTT_CPP_EXAMPLE"}
-    links {"ktt"}
-
-project "CppTranspose"
-    kind "ConsoleApp"
-    files {"Examples/CppTranspose/*.cpp"}
-    includedirs {"Source"}
-    defines {"KTT_CPP_EXAMPLE"}
-    links {"ktt"}
-
-project "CoulombSum3dCpp"
-    kind "ConsoleApp"
-    files {"Examples/CoulombSum3d/*.cpp", "Examples/CoulombSum3d/*.cppkernel"}
-    includedirs {"Source"}
-    defines {"KTT_CPP_EXAMPLE"}
-    links {"ktt"}
-    enableOpenMP()
+    for _, ex in ipairs(cppExamples) do
+        addCppExample(ex[1], ex[2], ex[3])
+    end
 
 end -- cppProjects
     

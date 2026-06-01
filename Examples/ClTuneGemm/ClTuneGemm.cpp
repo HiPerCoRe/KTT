@@ -1,240 +1,138 @@
-#include <iostream>
-#include <random>
-#include <string>
-#include <vector>
+#include "../ExampleReferenceKernel.h"
+#include <memory>
 
-#include <Ktt.h>
+using namespace std;
 
-#if defined(_MSC_VER)
-const std::string kernelPrefix = "";
-#else
-const std::string kernelPrefix = "../";
-#endif
-
-#if KTT_CUDA_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/ClTuneGemm/ClTuneGemm.cu";
-    const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/ClTuneGemm/ClTuneGemmReference.cu";
-    const auto computeApi = ktt::ComputeApi::CUDA;
-#elif KTT_OPENCL_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/ClTuneGemm/ClTuneGemm.cl";
-    const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/ClTuneGemm/ClTuneGemmReference.cl";
-    const auto computeApi = ktt::ComputeApi::OpenCL;
-#endif
-
-// Toggle rapid test (e.g., disable output validation).
-const bool rapidTest = true;
-
-// Toggle kernel profiling.
-const bool useProfiling = false;
-
-// Reduced tuning parameters set, taken from CLTune.
-const bool useReducedSet = true;
-
-// Helper function to determine whether or not 'a' is a multiple of 'b'
 bool IsMultiple(const size_t a, const size_t b)
 {
-    return ((a / b) * b == a) ? true : false;
+    return a % b == 0;
 };
 
-int main(int argc, char** argv)
-{
-    ktt::PlatformIndex platformIndex = 0;
-    ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = defaultKernelFile;
-    std::string referenceKernelFile = defaultReferenceKernelFile;
-
-    if (argc >= 2)
+class ClTuneGemm : public ExampleReferenceKernel {
+protected:
+    ClTuneGemm(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+               string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
+        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath,
+                               defaultKernelFileBaseName, defaultRefKernelFileBaseName),
+        // GEMM has O(m × n × k) complexity. For square matrices where m = n = k,
+        // we scale with cube root of problem size to keep total work proportional
+        m_kSizeM(static_cast<uint32_t>(sqrt(m_problemSize)) * 1024),
+        m_kSizeN(static_cast<uint32_t>(sqrt(m_problemSize)) * 1024),
+        m_kSizeK(static_cast<uint32_t>(sqrt(m_problemSize)) * 1024),
+        m_gridDimensions(m_kSizeM, m_kSizeN)
     {
-        platformIndex = std::stoul(std::string(argv[1]));
+    }
 
-        if (argc >= 3)
+    friend ExampleReferenceKernel;
+
+    uint32_t m_kSizeM;
+    uint32_t m_kSizeN;
+    uint32_t m_kSizeK;
+
+    const ktt::DimensionVector m_gridDimensions;
+
+    vector<float> m_matA;
+    vector<float> m_matB;
+    vector<float> m_matC;
+
+    ktt::ArgumentId m_kSizeMId;
+    ktt::ArgumentId m_kSizeNId;
+    ktt::ArgumentId m_kSizeKId;
+    ktt::ArgumentId m_matAId;
+    ktt::ArgumentId m_matBId;
+    ktt::ArgumentId m_matCId;
+
+    void InitData() override
+    {
+        m_matA.resize(m_kSizeM * m_kSizeK);
+        m_matB.resize(m_kSizeN * m_kSizeK);
+        m_matC.resize(m_kSizeM * m_kSizeN, 0.0f);
+
+        FillBuffers<float>({&m_matA, &m_matB}, -2.0f, 2.0f);
+    }
+
+    void InitKernel() override
+    {
+        m_kSizeMId = m_tuner.AddArgumentScalar(m_kSizeM);
+        m_kSizeNId = m_tuner.AddArgumentScalar(m_kSizeN);
+        m_kSizeKId = m_tuner.AddArgumentScalar(m_kSizeK);
+        m_matAId = m_tuner.AddArgumentVector(m_matA, ktt::ArgumentAccessType::ReadOnly);
+        m_matBId = m_tuner.AddArgumentVector(m_matB, ktt::ArgumentAccessType::ReadOnly);
+        m_matCId = m_tuner.AddArgumentVector(m_matC, ktt::ArgumentAccessType::WriteOnly);
+
+        InitKernelDefault("gemm_fast", "Gemm", m_gridDimensions,
+            {m_kSizeMId, m_kSizeNId, m_kSizeKId, m_matAId, m_matBId, m_matCId});
+    }
+
+    void InitTuningSpace() override
+    {
+        m_tuner.AddParameter(m_kernel, "MWG", vector<uint64_t>{16, 32, 64, 128});
+        m_tuner.AddParameter(m_kernel, "NWG", vector<uint64_t>{16, 32, 64, 128});
+        m_tuner.AddParameter(m_kernel, "KWG", vector<uint64_t>{16, 32});
+        m_tuner.AddParameter(m_kernel, "MDIMC", vector<uint64_t>{8, 16, 32});
+        m_tuner.AddParameter(m_kernel, "NDIMC", vector<uint64_t>{8, 16, 32});
+        m_tuner.AddParameter(m_kernel, "MDIMA", vector<uint64_t>{8, 16, 32});
+        m_tuner.AddParameter(m_kernel, "NDIMB", vector<uint64_t>{8, 16, 32});
+        m_tuner.AddParameter(m_kernel, "KWI", vector<uint64_t>{2, 8});
+
+        if (m_computeApi == ktt::ComputeApi::OpenCL)
         {
-            deviceIndex = std::stoul(std::string(argv[2]));
-
-            if (argc >= 4)
-            {
-                kernelFile = std::string(argv[3]);
-
-                if (argc >= 5)
-                {
-                    referenceKernelFile = std::string(argv[4]);
-                }
-            }
-        }
-    }
-
-    uint32_t kSizeM;
-    uint32_t kSizeN;
-    uint32_t kSizeK;
-
-    if constexpr (!useProfiling)
-    {
-        kSizeM = 4096;
-        kSizeN = 4096;
-        kSizeK = 4096;
-    }
-    else
-    {
-        kSizeM = 4096 / 2;
-        kSizeN = 4096 / 2;
-        kSizeK = 4096 / 2;
-    }
-
-    const ktt::DimensionVector ndRangeDimensions(kSizeM, kSizeN);
-    const ktt::DimensionVector workGroupDimensions;
-    const ktt::DimensionVector referenceWorkGroupDimensions(8, 8);
-
-    // Initialize data
-    std::random_device device;
-    std::default_random_engine engine(device());
-    std::uniform_real_distribution<float> distribution(-2.0f, 2.0f);
-
-    std::vector<float> mat_a(kSizeM * kSizeK);
-    std::vector<float> mat_b(kSizeN * kSizeK);
-    std::vector<float> mat_c(kSizeM * kSizeN);
-
-    for (uint32_t i = 0; i < kSizeM * kSizeK; ++i)
-    {
-        mat_a[i] = distribution(engine);
-    }
-        
-    for (uint32_t i = 0; i < kSizeN * kSizeK; ++i)
-    {
-        mat_b[i] = distribution(engine);
-    }
-
-    for (uint32_t i = 0; i < kSizeM * kSizeN; ++i)
-    {
-        mat_c[i] = 0.0f;
-    } 
-
-    // Create tuner object for chosen platform and device
-    ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
-    tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-    tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
-
-    if constexpr (useProfiling)
-    {
-        printf("Executing with profiling switched ON.\n");
-        tuner.SetProfiling(true);
-    }
-
-    // Add two kernels to tuner, one of the kernels acts as reference kernel
-    const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("gemm_fast", kernelFile, ndRangeDimensions,
-        workGroupDimensions);
-    const ktt::KernelDefinitionId referenceDefinition = tuner.AddKernelDefinitionFromFile("gemm_reference", referenceKernelFile,
-        ndRangeDimensions, referenceWorkGroupDimensions);
-
-    const ktt::KernelId kernel = tuner.CreateSimpleKernel("Gemm", definition);
-    const ktt::KernelId referenceKernel = tuner.CreateSimpleKernel("GemmReference", referenceDefinition);
-
-    if constexpr (useReducedSet)
-    {
-        tuner.AddParameter(kernel, "MWG", std::vector<uint64_t>{16, 32, 64});
-        tuner.AddParameter(kernel, "NWG", std::vector<uint64_t>{16, 32, 64});
-        tuner.AddParameter(kernel, "KWG", std::vector<uint64_t>{32});
-        tuner.AddParameter(kernel, "MDIMC", std::vector<uint64_t>{8, 16, 32});
-        tuner.AddParameter(kernel, "NDIMC", std::vector<uint64_t>{8, 16, 32});
-        tuner.AddParameter(kernel, "MDIMA", std::vector<uint64_t>{8, 16, 32});
-        tuner.AddParameter(kernel, "NDIMB", std::vector<uint64_t>{8, 16, 32});
-        tuner.AddParameter(kernel, "KWI", std::vector<uint64_t>{2});
-        tuner.AddParameter(kernel, "VWM", std::vector<uint64_t>{1, 2, 4});
-        tuner.AddParameter(kernel, "VWN", std::vector<uint64_t>{1, 2, 4});
-        tuner.AddParameter(kernel, "STRM", std::vector<uint64_t>{0});
-        tuner.AddParameter(kernel, "STRN", std::vector<uint64_t>{0});
-        tuner.AddParameter(kernel, "SA", std::vector<uint64_t>{0, 1});
-        tuner.AddParameter(kernel, "SB", std::vector<uint64_t>{0, 1});
-        tuner.AddParameter(kernel, "PRECISION", std::vector<uint64_t>{32});
-    }
-    else
-    {
-        tuner.AddParameter(kernel, "MWG", std::vector<uint64_t>{16, 32, 64, 128});
-        tuner.AddParameter(kernel, "NWG", std::vector<uint64_t>{16, 32, 64, 128});
-        tuner.AddParameter(kernel, "KWG", std::vector<uint64_t>{16, 32});
-        tuner.AddParameter(kernel, "MDIMC", std::vector<uint64_t>{8, 16, 32});
-        tuner.AddParameter(kernel, "NDIMC", std::vector<uint64_t>{8, 16, 32});
-        tuner.AddParameter(kernel, "MDIMA", std::vector<uint64_t>{8, 16, 32});
-        tuner.AddParameter(kernel, "NDIMB", std::vector<uint64_t>{8, 16, 32});
-        tuner.AddParameter(kernel, "KWI", std::vector<uint64_t>{2, 8});
-
-        if constexpr (computeApi == ktt::ComputeApi::OpenCL)
-        {
-            tuner.AddParameter(kernel, "VWM", std::vector<uint64_t>{1, 2, 4, 8});
-            tuner.AddParameter(kernel, "VWN", std::vector<uint64_t>{1, 2, 4, 8});
+            m_tuner.AddParameter(m_kernel, "VWM", vector<uint64_t>{1, 2, 4, 8});
+            m_tuner.AddParameter(m_kernel, "VWN", vector<uint64_t>{1, 2, 4, 8});
         }
         else
         {
-            tuner.AddParameter(kernel, "VWM", std::vector<uint64_t>{1, 2, 4});
-            tuner.AddParameter(kernel, "VWN", std::vector<uint64_t>{1, 2, 4});
+            m_tuner.AddParameter(m_kernel, "VWM", vector<uint64_t>{1, 2, 4});
+            m_tuner.AddParameter(m_kernel, "VWN", vector<uint64_t>{1, 2, 4});
         }
 
-        tuner.AddParameter(kernel, "STRM", std::vector<uint64_t>{0, 1});
-        tuner.AddParameter(kernel, "STRN", std::vector<uint64_t>{0, 1});
-        tuner.AddParameter(kernel, "SA", std::vector<uint64_t>{0, 1});
-        tuner.AddParameter(kernel, "SB", std::vector<uint64_t>{0, 1});
-        tuner.AddParameter(kernel, "PRECISION", std::vector<uint64_t>{32});
+        m_tuner.AddParameter(m_kernel, "STRM", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "STRN", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "SA", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "SB", vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "PRECISION", vector<uint64_t>{32});
+
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "MWG", ktt::ModifierAction::Divide);
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "NWG", ktt::ModifierAction::Divide);
+
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "MDIMC", ktt::ModifierAction::Multiply);
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "NDIMC", ktt::ModifierAction::Multiply);
+
+        // Add conditions
+        // Sets constraints: Set-up the constraints functions to use. The constraints require a function
+        // object (in this case a lambda) which takes a vector of tuning parameter values and returns
+        // a boolean value whether or not the tuning configuration is legal. In this case, the helper
+        // function 'IsMultiple' is employed for convenience. In the calls to 'AddConstraint' below, the
+        // vector of parameter names (as strings) matches the input integer vector of the lambda's.
+        auto multipleOfX = [](const std::vector<uint64_t>& v) {return IsMultiple(v[0], v[1]);};
+        auto multipleOfXMulY = [](const std::vector<uint64_t>& v) {return IsMultiple(v[0], v[1] * v[2]);};
+        auto multipleOfXMulYDivZ = [](const std::vector<uint64_t>& v) {return IsMultiple(v[0], (v[1] * v[2]) / v[3]);};
+
+        m_tuner.AddConstraint(m_kernel, {"KWG", "KWI"}, multipleOfX);
+        m_tuner.AddConstraint(m_kernel, {"MWG", "MDIMC", "VWM"}, multipleOfXMulY);
+        m_tuner.AddConstraint(m_kernel, {"NWG", "NDIMC", "VWN"}, multipleOfXMulY);
+        m_tuner.AddConstraint(m_kernel, {"MWG", "MDIMA", "VWM"}, multipleOfXMulY);
+        m_tuner.AddConstraint(m_kernel, {"NWG", "NDIMB", "VWN"}, multipleOfXMulY);
+        m_tuner.AddConstraint(m_kernel, {"KWG", "MDIMC", "NDIMC", "MDIMA"}, multipleOfXMulYDivZ);
+        m_tuner.AddConstraint(m_kernel, {"KWG", "MDIMC", "NDIMC", "NDIMB"}, multipleOfXMulYDivZ);
     }
 
-    // Add kernel dimension modifiers based on added tuning parameters
-    auto globalModifier = [](const uint64_t size, const std::vector<uint64_t>& vector) {return size * vector.at(0) / vector.at(1);};
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, {"MDIMC", "MWG"}, globalModifier);
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, {"NDIMC", "NWG"}, globalModifier);
-
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "MDIMC", ktt::ModifierAction::Multiply);
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "NDIMC", ktt::ModifierAction::Multiply);
-
-    // Add all arguments utilized by kernels
-    const ktt::ArgumentId kSizeMId = tuner.AddArgumentScalar(kSizeM);
-    const ktt::ArgumentId kSizeNId = tuner.AddArgumentScalar(kSizeN);
-    const ktt::ArgumentId kSizeKId = tuner.AddArgumentScalar(kSizeK);
-    const ktt::ArgumentId matAId = tuner.AddArgumentVector(mat_a, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId matBId = tuner.AddArgumentVector(mat_b, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId matCId = tuner.AddArgumentVector(mat_c, ktt::ArgumentAccessType::WriteOnly);
-
-    // Add conditions
-    // Sets constraints: Set-up the constraints functions to use. The constraints require a function
-    // object (in this case a lambda) which takes a vector of tuning parameter values and returns
-    // a boolean value whether or not the tuning configuration is legal. In this case, the helper
-    // function 'IsMultiple' is employed for convenience. In the calls to 'AddConstraint' below, the
-    // vector of parameter names (as strings) matches the input integer vector of the lambda's.
-    auto multipleOfX = [](const std::vector<uint64_t>& v) {return IsMultiple(v[0], v[1]);};
-    auto multipleOfXMulY = [](const std::vector<uint64_t>& v) {return IsMultiple(v[0], v[1] * v[2]);};
-    auto multipleOfXMulYDivZ = [](const std::vector<uint64_t>& v) {return IsMultiple(v[0], (v[1] * v[2]) / v[3]);};
-
-    // Sets constraints: Requirement for unrolling the KWG loop
-    tuner.AddConstraint(kernel, {"KWG", "KWI"}, multipleOfX);
-
-    // Sets constraints: Required for integer MWI and NWI
-    tuner.AddConstraint(kernel, {"MWG", "MDIMC", "VWM"}, multipleOfXMulY);
-    tuner.AddConstraint(kernel, {"NWG", "NDIMC", "VWN"}, multipleOfXMulY);
-
-    // Sets constraints: Required for integer MWIA and NWIB
-    tuner.AddConstraint(kernel, {"MWG", "MDIMA", "VWM"}, multipleOfXMulY);
-    tuner.AddConstraint(kernel, {"NWG", "NDIMB", "VWN"}, multipleOfXMulY);
-
-    // Sets constraints: KWG has to be a multiple of KDIMA = ((MDIMC*NDIMC)/(MDIMA)) and KDIMB = (...)
-    tuner.AddConstraint(kernel, {"KWG", "MDIMC", "NDIMC", "MDIMA"}, multipleOfXMulYDivZ);
-    tuner.AddConstraint(kernel, {"KWG", "MDIMC", "NDIMC", "NDIMB"}, multipleOfXMulYDivZ);
-
-    tuner.SetArguments(definition, {kSizeMId, kSizeNId, kSizeKId, matAId, matBId, matCId});
-    tuner.SetArguments(referenceDefinition, {kSizeMId, kSizeNId, kSizeKId, matAId, matBId, matCId});
-
-    if constexpr (!rapidTest)
+    void InitReference() override
     {
-        tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001);
-        tuner.SetReferenceKernel(matCId, referenceKernel, ktt::KernelConfiguration());
+        ktt::DimensionVector m_referenceGridDimensions = m_gridDimensions;
+        const ktt::DimensionVector m_referenceBlockDimensions{8, 8};
+        m_referenceGridDimensions.Divide(m_referenceBlockDimensions);
+        InitReferenceKernelDefault("gemm_reference", m_referenceGridDimensions, m_referenceBlockDimensions,
+            {m_kSizeMId, m_kSizeNId, m_kSizeKId, m_matAId, m_matBId, m_matCId},
+            {m_matCId}, 0.001);
     }
+};
 
-
-    //Pre-heat GPU by 5 minutes of random searching tuning space
-    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
-    tuner.Tune(kernel, std::make_unique<ktt::TuningDuration>(300));
-    tuner.ClearConfigurationData(kernel);
-
-    //tuner.SetSearcher(kernel, std::make_unique<ktt::DeterministicSearcher>());
-    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
-    const auto results = tuner.Tune(kernel);
-    tuner.SaveResults(results, "GemmOutput", ktt::OutputFormat::XML);
+int main(int argc, char **argv)
+{
+    unique_ptr<ClTuneGemm> clTuneGemm = ClTuneGemm::Create<ClTuneGemm>(argc, argv, 16, "Examples/ClTuneGemm",
+        "ClTuneGemm", "ClTuneGemmReference");
+    clTuneGemm->Run();
 
     return 0;
-};
+}

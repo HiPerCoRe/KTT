@@ -1,260 +1,202 @@
-#include <iostream>
+#include "../ExampleReferenceKernel.h"
+#include <memory>
 #include <random>
 #include <string>
 #include <vector>
 
-#include <Ktt.h>
+using namespace std;
 
-#if defined(_MSC_VER)
-const std::string kernelPrefix = "";
-#else
-const std::string kernelPrefix = "../";
-#endif
-
-#if KTT_CUDA_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/Nbody/Nbody.cu";
-    const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/Nbody/NbodyReference.cu";
-    const auto computeApi = ktt::ComputeApi::CUDA;
-#elif KTT_OPENCL_EXAMPLE
-    const std::string defaultKernelFile = kernelPrefix + "../Examples/Nbody/Nbody.cl";
-    const std::string defaultReferenceKernelFile = kernelPrefix + "../Examples/Nbody/NbodyReference.cl";
-    const auto computeApi = ktt::ComputeApi::OpenCL;
-#endif
-
-// Toggle rapid test (e.g., disable output validation).
-const bool rapidTest = false;
-
-// Toggle kernel profiling.
-const bool useProfiling = false;
-
-// Add denser values to tuning parameters (useDenseParameters = true).
-const bool useDenseParameters = false;
-
-// Add wider ranges of tuning parameters (useWideParameters  = true).
-const bool useWideParameters = false;
-
-int main(int argc, char** argv)
-{
-    ktt::PlatformIndex platformIndex = 0;
-    ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = defaultKernelFile;
-    std::string referenceKernelFile = defaultReferenceKernelFile;
-
-    if (argc >= 2)
+class Nbody: public ExampleReferenceKernel {
+protected:
+    Nbody(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize,
+              string exampleFolderPath, string defaultKernelFileBaseName,
+              string defaultReferenceKernelFileBaseName):
+        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
+                defaultReferenceKernelFileBaseName)
     {
-        platformIndex = std::stoul(std::string(argv[1]));
-
-        if (argc >= 3)
-        {
-            deviceIndex = std::stoul(std::string(argv[2]));
-
-            if (argc >= 4)
-            {
-                kernelFile = std::string(argv[3]);
-
-                if (argc >= 5)
-                {
-                    referenceKernelFile = std::string(argv[4]);
-                }
-            }
-        }
+        // The total number of computations grows quadratically with problem size, hence the sqrt.
+        m_numberOfBodies = static_cast<int>(sqrt(m_problemSize)) * 1024;
     }
+
+    friend ExampleReferenceKernel;
 
     // Declare and initialize data
-    int numberOfBodies = 128 * 1024;
-
-    if constexpr (useProfiling)
-    {
-        numberOfBodies /= 8;
-    }
-
-    // Total NDRange size matches number of grid points
-    const ktt::DimensionVector ndRangeDimensions(numberOfBodies, 1);
-    const ktt::DimensionVector workGroupDimensions(1, 1);
-    const ktt::DimensionVector referenceWorkGroupDimensions(64);
+    int m_numberOfBodies;
 
     const float timeDelta = 0.001f;
     const float damping = 0.5f;
     const float softeningSqr = 0.1f * 0.1f;
-    std::vector<float> oldBodyInfo(4 * numberOfBodies);
-    std::vector<float> oldPosX(numberOfBodies);
-    std::vector<float> oldPosY(numberOfBodies);
-    std::vector<float> oldPosZ(numberOfBodies);
-    std::vector<float> bodyMass(numberOfBodies);
 
-    std::vector<float> newBodyInfo(4 * numberOfBodies, 0.f);
+    std::vector<float> m_oldBodyInfo;
+    std::vector<float> m_oldPosX, m_oldPosY, m_oldPosZ;
+    std::vector<float> m_bodyMass;
 
-    std::vector<float> oldBodyVel(4 * numberOfBodies);
-    std::vector<float> newBodyVel(4 * numberOfBodies);
-    std::vector<float> oldVelX(numberOfBodies);
-    std::vector<float> oldVelY(numberOfBodies);
-    std::vector<float> oldVelZ(numberOfBodies);
+    std::vector<float> m_newBodyInfo;
 
-    // Initialize data
-    std::random_device device;
-    std::default_random_engine engine(device());
-    std::uniform_real_distribution<float> distribution(0.0f, 20.0f);
+    std::vector<float> m_oldBodyVel;
+    std::vector<float> m_newBodyVel;
+    std::vector<float> m_oldVelX, m_oldVelY, m_oldVelZ;
 
-    for (int i = 0; i < numberOfBodies; ++i)
+    ktt::ArgumentId m_oldBodyInfoId;
+    ktt::ArgumentId m_oldPosXId, m_oldPosYId, m_oldPosZId;
+    ktt::ArgumentId m_massId;
+    ktt::ArgumentId m_newBodyInfoId;
+
+    ktt::ArgumentId m_oldVelId;
+    ktt::ArgumentId m_oldVelXId, m_oldVelYId, m_oldVelZId;
+    ktt::ArgumentId m_newBodyVelId;
+
+    ktt::ArgumentId m_deltaTimeId, m_dampingId, m_softeningSqrId;
+    ktt::ArgumentId m_numberOfBodiesId;
+
+    void InitData() override
     {
-        oldPosX[i] = distribution(engine);
-        oldPosY[i] = distribution(engine);
-        oldPosZ[i] = distribution(engine);
-        bodyMass[i] = distribution(engine);
+        // Total NDRange size matches number of grid points
+        m_oldBodyInfo.resize(4 * m_numberOfBodies);
+        m_oldPosX.resize(m_numberOfBodies);
+        m_oldPosY.resize(m_numberOfBodies);
+        m_oldPosZ.resize(m_numberOfBodies);
+        m_bodyMass.resize(m_numberOfBodies);
 
-        oldVelX[i] = distribution(engine);
-        oldVelY[i] = distribution(engine);
-        oldVelZ[i] = distribution(engine);
+        m_newBodyInfo.resize(4 * m_numberOfBodies, 0.f);
 
-        oldBodyInfo[4 * i] = oldPosX[i];
-        oldBodyInfo[4 * i + 1] = oldPosY[i];
-        oldBodyInfo[4 * i + 2] = oldPosZ[i];
-        oldBodyInfo[4 * i + 3] = bodyMass[i];
+        m_oldBodyVel.resize(4 * m_numberOfBodies);
+        m_newBodyVel.resize(4 * m_numberOfBodies);
+        m_oldVelX.resize(m_numberOfBodies);
+        m_oldVelY.resize(m_numberOfBodies);
+        m_oldVelZ.resize(m_numberOfBodies);
 
-        oldBodyVel[4 * i] = oldVelX[i];
-        oldBodyVel[4 * i + 1] = oldVelY[i];
-        oldBodyVel[4 * i + 2] = oldVelZ[i];
-        oldBodyVel[4 * i + 3] = 0.0f;
+        // Initialize data
+        std::random_device device;
+        std::default_random_engine engine(device());
+        std::uniform_real_distribution<float> distribution(0.0f, 20.0f);
+
+        FillBuffers({&m_oldPosX, &m_oldPosY, &m_oldPosZ, &m_bodyMass, &m_oldVelX, &m_oldVelY, &m_oldVelZ},
+        0.f, 20.f);
+
+        for (int i = 0; i < m_numberOfBodies; ++i)
+        {
+            m_oldBodyInfo[4 * i] = m_oldPosX[i];
+            m_oldBodyInfo[4 * i + 1] = m_oldPosY[i];
+            m_oldBodyInfo[4 * i + 2] = m_oldPosZ[i];
+            m_oldBodyInfo[4 * i + 3] = m_bodyMass[i];
+
+            m_oldBodyVel[4 * i] = m_oldVelX[i];
+            m_oldBodyVel[4 * i + 1] = m_oldVelY[i];
+            m_oldBodyVel[4 * i + 2] = m_oldVelZ[i];
+            m_oldBodyVel[4 * i + 3] = 0.0f;
+        }
+
+        m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+
+        if (m_computeApi == ktt::ComputeApi::OpenCL)
+        {
+            m_tuner.SetCompilerOptions("-cl-fast-relaxed-math");
+        }
+        else
+        {
+            m_tuner.SetCompilerOptions("-use_fast_math");
+        }
+
     }
 
-    ktt::Tuner tuner(platformIndex, deviceIndex, computeApi);
-    tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-    tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+    void InitKernel() override
+    {
+        const ktt::DimensionVector ndRangeDimensions(m_numberOfBodies, 1);
+        const ktt::DimensionVector workGroupDimensions(1, 1);
 
-    if constexpr (computeApi == ktt::ComputeApi::OpenCL)
-    {
-        tuner.SetCompilerOptions("-cl-fast-relaxed-math");
-    }
-    else
-    {
-        tuner.SetCompilerOptions("-use_fast_math");
-    }
+        // Add all arguments utilized by m_kernels
+        m_oldBodyInfoId = m_tuner.AddArgumentVector(m_oldBodyInfo, ktt::ArgumentAccessType::ReadOnly);
+        m_oldPosXId = m_tuner.AddArgumentVector(m_oldPosX, ktt::ArgumentAccessType::ReadOnly);
+        m_oldPosYId = m_tuner.AddArgumentVector(m_oldPosY, ktt::ArgumentAccessType::ReadOnly);
+        m_oldPosZId = m_tuner.AddArgumentVector(m_oldPosZ, ktt::ArgumentAccessType::ReadOnly);
+        m_massId = m_tuner.AddArgumentVector(m_bodyMass, ktt::ArgumentAccessType::ReadOnly);
+        m_newBodyInfoId = m_tuner.AddArgumentVector(m_newBodyInfo, ktt::ArgumentAccessType::WriteOnly);
 
-    if constexpr (useProfiling)
-    {
-        printf("Executing with profiling switched ON.\n");
-        tuner.SetProfiling(true);
-    }
+        m_oldVelId = m_tuner.AddArgumentVector(m_oldBodyVel, ktt::ArgumentAccessType::ReadOnly);
+        m_oldVelXId = m_tuner.AddArgumentVector(m_oldVelX, ktt::ArgumentAccessType::ReadOnly);
+        m_oldVelYId = m_tuner.AddArgumentVector(m_oldVelY, ktt::ArgumentAccessType::ReadOnly);
+        m_oldVelZId = m_tuner.AddArgumentVector(m_oldVelZ, ktt::ArgumentAccessType::ReadOnly);
+        m_newBodyVelId = m_tuner.AddArgumentVector(m_newBodyVel, ktt::ArgumentAccessType::WriteOnly);
 
-    // Add two kernels to tuner, one of the kernels acts as reference kernel
-    const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("nbody_kernel", kernelFile, ndRangeDimensions, workGroupDimensions);
-    const ktt::KernelDefinitionId referenceDefinition = tuner.AddKernelDefinitionFromFile("nbody_kernel_reference", referenceKernelFile, ndRangeDimensions,
-        referenceWorkGroupDimensions);
+        m_deltaTimeId = m_tuner.AddArgumentScalar(timeDelta);
+        m_dampingId = m_tuner.AddArgumentScalar(damping);
+        m_softeningSqrId = m_tuner.AddArgumentScalar(softeningSqr);
+        m_numberOfBodiesId = m_tuner.AddArgumentScalar(m_numberOfBodies);
 
-    const ktt::KernelId kernel = tuner.CreateSimpleKernel("Nbody", definition);
-    const ktt::KernelId referenceKernel = tuner.CreateSimpleKernel("NbodyReference", referenceDefinition);
+        InitKernelDefault("nbody_kernel", "Nbody", ndRangeDimensions, {m_deltaTimeId,
+            m_oldBodyInfoId, m_oldPosXId, m_oldPosYId, m_oldPosZId, m_massId, m_newBodyInfoId, // position
+            m_oldVelId, m_oldVelXId, m_oldVelYId, m_oldVelZId, m_newBodyVelId, // velocity
+            m_dampingId, m_softeningSqrId, m_numberOfBodiesId});
 
-    // Multiply work-group size in dimensions x and y by two parameters that follow (effectively setting work-group size to parameters' values)
-    if constexpr (!useDenseParameters && !useWideParameters)
-    {
-        tuner.AddParameter(kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{16, 32, 64, 128, 256, 512});
-    }
-    else if constexpr (!useWideParameters)
-    {
-        tuner.AddParameter(kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{64, 80, 96, 112, 128,160, 192, 224, 256, 320, 384, 448, 512});
-    }
-    else
-    {
-        tuner.AddParameter(kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{32, 64, 80, 96, 112, 128,160, 192, 224, 256, 320, 384, 448,
-            512, 640, 768, 894, 1024});
     }
 
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
-        ktt::ModifierAction::Multiply);
-
-    tuner.AddParameter(kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8, 16});
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
-        ktt::ModifierAction::Multiply);
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
-        ktt::ModifierAction::Multiply);
-
-    if constexpr (!useWideParameters)
+    void InitTuningSpace() override
     {
-        tuner.AddParameter(kernel, "OUTER_UNROLL_FACTOR", std::vector<uint64_t>{1, 2, 4, 8});
-    }
-    else
-    {
-        tuner.AddParameter(kernel, "OUTER_UNROLL_FACTOR", std::vector<uint64_t>{1, 2, 4, 8, 16, 32});
-    }
+        // Multiply work-group size in dimensions x and y by two parameters that follow (effectively setting work-group size to parameters' values)
+        m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{16, 32, 64, 128, 256, 512});
 
-    tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
-        ktt::ModifierAction::Divide);
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+            ktt::ModifierAction::Multiply);
 
-    if constexpr (!useDenseParameters)
-    {
-        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
-        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
-        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0});
-        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0});
+        m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8, 16});
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+            ktt::ModifierAction::Multiply);
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+            ktt::ModifierAction::Multiply);
 
-    }
-    else
-    {
-        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
-        tuner.AddParameter(kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32});
-    }
+        m_tuner.AddParameter(m_kernel, "OUTER_UNROLL_FACTOR", std::vector<uint64_t>{1, 2, 4, 8});
 
-    tuner.AddParameter(kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
-    tuner.AddParameter(kernel, "LOCAL_MEM", std::vector<uint64_t>{0, 1});
+        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
+            ktt::ModifierAction::Divide);
 
-    if constexpr (computeApi == ktt::ComputeApi::OpenCL)
-    {
-        tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
-        tuner.AddParameter(kernel, "VECTOR_TYPE", std::vector<uint64_t>{1, 2, 4, 8, 16});
-    }
-    else
-    {
-        tuner.AddParameter(kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
-        tuner.AddParameter(kernel, "VECTOR_TYPE", std::vector<uint64_t>{1, 2, 4});
-    }
+        m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+        m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+        // m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0});
+        // m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0});
 
-    // Add all arguments utilized by kernels
-    const ktt::ArgumentId oldBodyInfoId = tuner.AddArgumentVector(oldBodyInfo, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId oldPosXId = tuner.AddArgumentVector(oldPosX, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId oldPosYId = tuner.AddArgumentVector(oldPosY, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId oldPosZId = tuner.AddArgumentVector(oldPosZ, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId massId = tuner.AddArgumentVector(bodyMass, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId newBodyInfoId = tuner.AddArgumentVector(newBodyInfo, ktt::ArgumentAccessType::WriteOnly);
 
-    const ktt::ArgumentId oldVelId = tuner.AddArgumentVector(oldBodyVel, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId oldVelXId = tuner.AddArgumentVector(oldVelX, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId oldVelYId = tuner.AddArgumentVector(oldVelY, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId oldVelZId = tuner.AddArgumentVector(oldVelZ, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId newBodyVelId = tuner.AddArgumentVector(newBodyVel, ktt::ArgumentAccessType::WriteOnly);
+        m_tuner.AddParameter(m_kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
+        m_tuner.AddParameter(m_kernel, "LOCAL_MEM", std::vector<uint64_t>{0, 1});
 
-    const ktt::ArgumentId deltaTimeId = tuner.AddArgumentScalar(timeDelta);
-    const ktt::ArgumentId dampingId = tuner.AddArgumentScalar(damping);
-    const ktt::ArgumentId softeningSqrId = tuner.AddArgumentScalar(softeningSqr);
-    const ktt::ArgumentId numberOfBodiesId = tuner.AddArgumentScalar(numberOfBodies);
+        if (m_computeApi == ktt::ComputeApi::OpenCL)
+        {
+            m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
+            m_tuner.AddParameter(m_kernel, "VECTOR_TYPE", std::vector<uint64_t>{1, 2, 4, 8, 16});
+        }
+        else
+        {
+            m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
+            m_tuner.AddParameter(m_kernel, "VECTOR_TYPE", std::vector<uint64_t>{1, 2, 4});
+        }
 
-    // Add conditions
-    auto lteq = [](const std::vector<uint64_t>& vector) {return vector.at(0) <= vector.at(1);};
-    tuner.AddConstraint(kernel, {"INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR"}, lteq);
-    auto lteq256 = [](const std::vector<uint64_t>& vector) {return vector.at(0) * vector.at(1) <= 256;};
-    tuner.AddConstraint(kernel, {"INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2"}, lteq256);
-    auto vectorizedSoA = [](const std::vector<uint64_t>& vector) {return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1);};
-    tuner.AddConstraint(kernel, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
-    auto blockSize = [](const std::vector<uint64_t>& vector) {return (vector.at(0) * vector.at(1) >= 64) && (vector.at(0) * vector.at(1) <= 1024);};
-    tuner.AddConstraint(kernel, std::vector<std::string>{"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, blockSize);
-
-    // Set kernel arguments for both tuned kernel and reference kernel, order of arguments is important
-    tuner.SetArguments(definition, std::vector<ktt::ArgumentId>{deltaTimeId,
-        oldBodyInfoId, oldPosXId, oldPosYId, oldPosZId, massId, newBodyInfoId, // position
-        oldVelId, oldVelXId, oldVelYId, oldVelZId, newBodyVelId, // velocity
-        dampingId, softeningSqrId, numberOfBodiesId});
-    tuner.SetArguments(referenceDefinition, std::vector<ktt::ArgumentId>{deltaTimeId, oldBodyInfoId, newBodyInfoId, oldVelId, newBodyVelId,
-        dampingId, softeningSqrId});
-
-    if constexpr (!rapidTest)
-    {
-        tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001);
-        tuner.SetReferenceKernel(newBodyVelId, referenceKernel, ktt::KernelConfiguration());
-        tuner.SetReferenceKernel(newBodyInfoId, referenceKernel, ktt::KernelConfiguration());
+        // Add conditions
+        auto lteq = [](const std::vector<uint64_t>& vector) {return vector.at(0) <= vector.at(1);};
+        m_tuner.AddConstraint(m_kernel, {"INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR"}, lteq);
+        auto lteq256 = [](const std::vector<uint64_t>& vector) {return vector.at(0) * vector.at(1) <= 256;};
+        m_tuner.AddConstraint(m_kernel, {"INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2"}, lteq256);
+        auto vectorizedSoA = [](const std::vector<uint64_t>& vector) {return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1);};
+        m_tuner.AddConstraint(m_kernel, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
+        auto blockSize = [](const std::vector<uint64_t>& vector) {return (vector.at(0) * vector.at(1) >= 64) && (vector.at(0) * vector.at(1) <= 1024);};
+        m_tuner.AddConstraint(m_kernel, std::vector<std::string>{"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, blockSize);
     }
 
-    const auto results = tuner.Tune(kernel);
-    tuner.SaveResults(results, "NbodyOutput", ktt::OutputFormat::JSON);
-    tuner.SaveResults(results, "NbodyOutput", ktt::OutputFormat::XML);
+    void InitReference() override
+    {
+        const ktt::DimensionVector refNdRangeDimensions(m_numberOfBodies, 1);
+        const ktt::DimensionVector refWorkGroupDimensions(64);
+        InitReferenceKernelDefault("nbody_kernel_reference", refNdRangeDimensions, refWorkGroupDimensions, 
+            {m_deltaTimeId, m_oldBodyInfoId, m_newBodyInfoId, m_oldVelId, m_newBodyVelId,
+            m_dampingId, m_softeningSqrId}, {m_newBodyVelId, m_newBodyInfoId}, 0.001);
+    }
+};
+
+int main(int argc, char **argv)
+{
+    unique_ptr<Nbody> nbody = Nbody::Create<Nbody>(
+        argc, argv, 16384, "Examples/Nbody", "Nbody", "NbodyReference"
+    );
+    nbody->Run();
 
     return 0;
 }
