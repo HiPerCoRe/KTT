@@ -1,4 +1,3 @@
-docopt
 seaborn
 scikit-learn
 numpy
