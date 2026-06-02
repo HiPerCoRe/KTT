@@ -4,5 +4,4 @@ scikit-learn
 numpy
 pandas
 matplotlib
-alive-progress
 xgboost
