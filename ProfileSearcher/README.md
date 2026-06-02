@@ -7,6 +7,8 @@ of the random search with `./GraphResults.py [output-graph]`.
 
 ## Installing dependencies
 
+> Before installing it is recommended to set up a virtual enviroment.
+
 Dependencies for the newer GPUs (starting from Turing):
 ```bash
 pip isntall -r requirements/cu13-cupy.txt
@@ -14,7 +16,7 @@ pip install -r requirements/common.txt
 ```
 
 
-### Older GPUs ()
+### Older GPUs (Volta and older)
 
 > For these GPUs, the installed NVIDIA driver on linux **must** be
 > of version `<= 575xx` for profiling to work. Latest driver supporting

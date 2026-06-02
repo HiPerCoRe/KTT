@@ -1,3 +1,4 @@
+from modules.logging import Logger, LoggingLevel
 import numpy
 from numpy.typing import NDArray
 from pandas import DataFrame, Series
@@ -35,9 +36,16 @@ class ProfileBasedSearcher(Searcher):
     def __init__(self) -> None:
         super().__init__()
 
-    def Configure(self, tuner, modelInfo: ModelInfo, batchInfo: BatchInfo):
+    def Configure(
+        self,
+        tuner,
+        modelInfo: ModelInfo,
+        batchInfo: BatchInfo,
+        loggingLevel: LoggingLevel,
+    ):
         self.tuner = tuner
         self.batchInfo = batchInfo
+        self.logger = Logger(loggingLevel, 'Searcher:')
 
         self.spaceModel = loadModel(modelInfo.spacePath)
         self.counterModel = loadModel(modelInfo.counterPath)
@@ -62,17 +70,18 @@ class ProfileBasedSearcher(Searcher):
 
         # unlikely, the batch is emptied but no configuration ran properly
         if self.bestConfiguration is None:
-            print(
-                '[Warning] Searcher: Batch was emptied but no configuration ran properly'
+            self.logger.Warning(
+                'Batch was emptied but no configuration ran properly'
             )
 
-            # TODO: maybe do the same as OnInitialize() here?
             self._FillBatchRandom(self.batch, self.batchInfo.batchSize)
             self.currentConfiguration = self.batch.pop()
-
             return True
 
-        if self.bestDuration != -1:  # rerun best config with profiling on
+        if self.bestDuration != -1:
+            self.logger.Info(
+                'Rerunning the best configuration of the batch with profiling on'
+            )
             self.currentConfiguration = self.bestConfiguration
             self.bestDuration = -1
 
@@ -80,18 +89,21 @@ class ProfileBasedSearcher(Searcher):
             return True
 
         if not previousResult.IsValid():
-            print('[Error] Searcher: Profiling run failed, bailing out')
+            self.logger.Error('Profiling run failed, bailing out')
             self.tuner.SetProfiling(False)
             return False
 
-        # candidate configurations are made from neighbouring and random configurations
+        # made from neighbouring and random configurations
         candidateBatch = self._GetCandidateBatch()
-        if len(candidateBatch) <= self.batchInfo.batchSize:
-            print(
-                '[Info] Searcher: Too little configurations in the candidate batch'
-            )
-            print('[Info] Searcher: Skipping profiling the batch')
 
+        # we only do the profiling in case the batch is bigger than the batch size
+        if len(candidateBatch) <= self.batchInfo.batchSize:
+            self.logger.Info(
+                'Too little configurations in the candidate batch. '
+                + 'Skipping profiling the batch'
+            )
+
+            # TODO(?) do the profiling anyway, sort from best to worst or something
             self.batch = candidateBatch
             self.currentConfiguration = self.batch.pop()
             self.bestConfiguration = None
@@ -99,7 +111,6 @@ class ProfileBasedSearcher(Searcher):
 
             return True
 
-        # we only do the profiling in case the batch is bigger than the batch size
         candidateSpace = self._BatchToSpacePredicted(candidateBatch)
 
         counters = self._GetCounters(previousResult)
@@ -126,7 +137,7 @@ class ProfileBasedSearcher(Searcher):
         selected = []
 
         for _ in range(self.batchInfo.batchSize):
-            index = WeightedRandomStep(scores)
+            index = self._WeightedRandomStep(scores)
             selected.append(batch[index])
 
             scores[index] = 0.0
@@ -154,32 +165,45 @@ class ProfileBasedSearcher(Searcher):
         result = kernelResults[0]
 
         if len(kernelResults) != 1:
-            print('whuh we dont support this, usin kernel 0 counters')
+            self.logger.Warning(
+                'Seems like the tuner is configured to run multiple kernels. '
+                + "The profile-based searcher doesn't multiple "
+                + 'kernels, using only results from kernel 0.'
+            )
 
         counters = self._ExtractCounters(result)
+        self.logger.Debug(f'Found raw counters: {counters.shape[1]}')
 
         artificialCounters = self._GenerateArtificialCounters(counters)
+        self.logger.Debug(
+            f'Generated artificial counters: {artificialCounters.shape[1]}'
+        )
+
         stressCounters = counters.loc[
             :,
             [GetCounterType(c) == CounterType.Stress for c in counters.columns],
         ]
+        self.logger.Debug(f'Stress counters: {stressCounters.shape[1]}')
 
         relevantCounters = stressCounters.join(artificialCounters)
         relevantCounters = relevantCounters.reindex(
             sorted(relevantCounters.columns), axis=1
         )
 
+        self.logger.Debug(
+            f'Extracted relevant counters: {relevantCounters.shape[1]}'
+        )
         return relevantCounters.to_numpy()
 
     def _GenerateArtificialCounters(self, counters: DataFrame) -> DataFrame:
-        dramUtilization = _GetRWUtilization(
+        dramUtilization = _getRWUtilization(
             counters,
             ProfilingCounter.DRAM_RT,
             ProfilingCounter.DRAM_WT,
             ProfilingCounter.DRAM_U,
         )
 
-        l2Utilization = _GetRWUtilization(
+        l2Utilization = _getRWUtilization(
             counters,
             ProfilingCounter.L2_RT,
             ProfilingCounter.L2_WT,
@@ -191,7 +215,7 @@ class ProfileBasedSearcher(Searcher):
             if ProfilingCounter.SHR_U in counters.columns
             else ProfilingCounter.SM_E
         )
-        smUtilization = _GetRWUtilization(
+        smUtilization = _getRWUtilization(
             counters,
             ProfilingCounter.SHR_LT,
             ProfilingCounter.SHR_WT,
@@ -261,15 +285,20 @@ class ProfileBasedSearcher(Searcher):
         return TuningSpace(parameterSpace, counterSpace)
 
     def _GetCandidateBatch(self) -> Batch:
+        self.logger.Debug('Generating candidate batch')
+
         batch = self.GetNeighbourConfigurations(
             self.bestConfiguration,
             NEIGHBOUR_DISTANCE,
             self.batchInfo.neighborSize,
         )
         batch = self._GetUniqueConfigurations(batch)
-        size = self.batchInfo.neighborSize + self.batchInfo.randomSize
+        self.logger.Debug(f'Found neighbouring configurations: {len(batch)}')
 
+        size = self.batchInfo.neighborSize + self.batchInfo.randomSize
         self._FillBatchRandom(batch, size)
+
+        self.logger.Debug(f'Generated candidate batch of size: {len(batch)}')
         return batch
 
     def _UpdateBestConfiguration(self, previousResult: KernelResult):
@@ -295,32 +324,29 @@ class ProfileBasedSearcher(Searcher):
         uniqueIndices = set([self.GetIndex(c) for c in configurations])
         return [self.GetConfiguration(i) for i in uniqueIndices]
 
+    def _WeightedRandomStep(self, scores: NDArray) -> int:
+        """
+        Returns an index of where in the tuning space the next step is.
+        The value of the index is random, influenced by the weights in
+        `score_distribution`
+        """
+
+        # .sum() and .cumsum()[-1] are different, so
+        # cumulative sum is used for the random value
+        scoreCumsum = numpy.cumsum(scores)
+        randomValue = numpy.random.random() * scoreCumsum[-1]
+        indices = numpy.argwhere(randomValue < scoreCumsum)
+        if indices.shape[0] == 0:  # should be unreachable but left in here
+            self.logger.Error('Floating point addition bug happened again')
+            exit(-1)  # TODO: just take a random point instead
+
+        return indices[0, 0]
+
 
 # Other helper functions
 
 
-def WeightedRandomStep(scores: NDArray) -> int:
-    """
-    Returns an index of where in the tuning space the next step is.
-    The value of the index is random, influenced by the weights in
-    `score_distribution`
-    """
-
-    # .sum() and .cumsum()[-1] are different, so
-    # cumulative sum is used for the random value
-    scoreCumsum = numpy.cumsum(scores)
-    randomValue = numpy.random.random() * scoreCumsum[-1]
-    indices = numpy.argwhere(randomValue < scoreCumsum)
-    if indices.shape[0] == 0:
-        print("This error keeps on happening, although it shouldn't")
-        print('Random value:', randomValue)
-        print('Cumulative sum latest 10:', scoreCumsum[-10:])
-        exit(-1)
-
-    return indices[0, 0]
-
-
-def _GetRWUtilization(
+def _getRWUtilization(
     counters: DataFrame,
     readCounter: ProfilingCounter,
     writeCounter: ProfilingCounter,

@@ -6,6 +6,7 @@ import glob
 from pathlib import Path
 
 from ProfileBasedSearcher import ProfileBasedSearcher
+from modules.logging import LoggingLevel
 from modules.info import BatchInfo, ModelInfo
 
 import lib.pyktt as ktt
@@ -157,7 +158,7 @@ def runTuning(deviceIndex: int, kernelFile: str):
         counterPath='./models/2080-1070_all_XGBRegressor.sav',
     )
     batchInfo = BatchInfo(batchSize=10, neighborSize=40, randomSize=100)
-    searcher.Configure(tuner, modelInfo, batchInfo)
+    searcher.Configure(tuner, modelInfo, batchInfo, LoggingLevel.DEBUG)
 
     # Begin tuning utilizing the stop condition implemented in Python
     results = tuner.Tune(kernel, ktt.ConfigurationCount(50))
