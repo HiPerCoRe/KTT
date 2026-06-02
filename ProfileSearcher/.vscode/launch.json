@@ -2,12 +2,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run Usage Example",
+            "name": "Run usage example",
             "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "program": "${workspaceFolder}/ExampleUsage.py"
+        },
+        {
+            "name": "Graph model results (renders to logs/graph.svg)",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "program": "${workspaceFolder}/GraphResults.py",
+            "args": [
+                "logs/graph.svg"
+            ]
         }
     ]
 }
