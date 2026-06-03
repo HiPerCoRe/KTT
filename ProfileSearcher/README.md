@@ -18,7 +18,7 @@ Obvious dependency is `pyktt`: compile ktt with profiling and the python module
 
 Dependencies for the newer GPUs (starting from Turing):
 ```bash
-pip isntall -r requirements/cu13-cupy.txt
+pip isntall cupy-cuda13x
 pip install -r requirements/common.txt
 ```
 
@@ -33,7 +33,7 @@ pip install -r requirements/common.txt
 
 Dependencies for Volta and older architectures:
 ```bash
-pip install -r requirements/cu12-cupy.txt
+pip isntall cupy-cuda12x
 pip install -r requirements/common.txt
 ```
 
