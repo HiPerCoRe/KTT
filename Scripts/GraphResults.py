@@ -15,8 +15,11 @@ from matplotlib.figure import Figure
 
 
 # Change these to where you store the profiling results
-PROFILED_DIRECTORY = './logs/profiled/2080-1070/b10-n40-r100/'
-RANDOM_DIRECTORY = './logs/random/2080/'
+RESULT_DIRECTORIES = {
+    'New profile-based searcher': './logs/profiled/2080-1070/b10-n40-r100/',
+    # 'Old profile-based searcher': './logs/old-profiled/2080/b10-n40-r100/',
+    'Random searcher': './logs/random/2080/',
+}
 
 
 def parseResults(directory: str) -> DataFrame:
@@ -52,14 +55,14 @@ def parseResults(directory: str) -> DataFrame:
 
 
 def graphResults(outputPath: str | None):
-    profiledResults = parseResults(PROFILED_DIRECTORY)
-    profiledResults['name'] = 'Profiling'
+    results = []
 
-    randomResults = parseResults(RANDOM_DIRECTORY)
-    randomResults['name'] = 'Random'
+    for name, directory in RESULT_DIRECTORIES.items():
+        results.append(parseResults(directory))
+        results[-1]['name'] = name
 
     resultsPlot = lineplot(
-        data=pandas.concat([profiledResults, randomResults]),
+        data=pandas.concat(results),
         x='iteration',
         y='time',
         hue='name',

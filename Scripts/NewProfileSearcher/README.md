@@ -3,14 +3,14 @@
 This searcher uses profiling counters along with ML models to more effectively
 navigate through the tuning space. See `./ExampleUsage.py` on how
 to use the searcher. It's possible to compare it with the results
-of the random search with `./GraphResults.py [output-graph]`. 
+of the random search with `./GraphResults.py [output-graph]`.
 
 The searcher only supports tuning of CUDA single kernels.
 
 ## Installing dependencies
 
 Obvious dependency is `pyktt`: compile ktt with profiling and the python module
-(flags `--profiling=cupti[-legacy] --python`), put it into the `lib` folder.
+(flags `--profiling=cupti[-legacy] --python`), put it into the folder with the script.
 
 ### Other library dependencies
 
