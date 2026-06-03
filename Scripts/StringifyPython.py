@@ -10,13 +10,8 @@ def stringify(input_file: str):
         open(input_file, 'r') as input,
         open(output_file, 'w') as output,
     ):
-        output.write('std::string() +\n')
-
-        for line in input:
-            modifiedLine = line.replace('"', r'\"').rstrip()
-            output.write(f'"{modifiedLine}\\n" +\n')
-
-        output.write('"";')
+        output.write('std::string() + ')
+        output.write(f'R"(\n{input.read()})";')
 
     print(f'Stringified script stored into {output_file}')
 
