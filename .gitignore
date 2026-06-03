@@ -1,10 +1,16 @@
-.vs/*
-.vscode/*
+.vs/
+.vscode/
 Build/*
 premake5.exe
 premake5
 *.swp
 .cache
+
 compile_commands.json
-__pycache__/
 .clangd
+
+# Python
+env/
+__pycache__/
+*.pyc
+*.pyo
