@@ -21,11 +21,16 @@ public:
     // kernelName: name of the kernel function in the source.
     // source: full kernel source code.
     // compilerOptions: additional options for the compiler.
-    KernelFunction CompileKernel(const std::string& kernelName, const std::string& source, const std::string& compilerOptions);
+    // cacheKey: canonical kernel identity used as the on-disk cache key (see KernelComputeData::GetUniqueIdentifier).
+    KernelFunction CompileKernel(const std::string& kernelName, const std::string& source,
+        const std::string& compilerOptions, const std::string& cacheKey);
 
     // Set the compiler executable to use (e.g., "g++", "clang++").
     // Default is "g++".
     void SetCompiler(const std::string& compiler);
+
+    // Discard all compiled kernels from the process-private on-disk cache.
+    void ClearCache();
 
 private:
     class Impl;
