@@ -24,10 +24,6 @@
 #include <ComputeEngine/Cuda/Cupti/CuptiPass.h>
 #endif // KTT_PROFILING_CUPTI
 
-#ifdef KTT_POWER_USAGE_NVML
-#include <ComputeEngine/Cuda/Nvml/NvmlPowerSubscription.h>
-#endif // KTT_POWER_USAGE_NVML
-
 #include <iostream>
 
 
@@ -217,24 +213,24 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     timer.Stop();
 
 #if defined(KTT_POWER_USAGE_NVML)
-    // Power measurement is available - use full functionality
-    std::unique_ptr<NvmlPowerSubscription> subscription;
+    // Power measurement is available - use full functionality.
+    // NVML provides all readings; the background sampling thread is bracketed around each
+    // kernel launch via explicit StartCollection()/EndCollection() calls (no CUPTI needed).
     std::vector<uint32_t> sumPwr;
     std::vector<double> sumTemp;
     std::vector<uint32_t> sumSMFreq;
     std::vector<uint32_t> sumMemFreq;
     std::vector<int32_t> sumFanSpeed;
-    if (powerMeasurementAllowed) {
-        subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
-        //uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
-    }
     // Robust power measurement timer - only used when preciseParams is provided
     Timer pwrTimer;
     if (powerMeasurementAllowed && preciseParams.has_value())
     {
         pwrTimer.Start();
     }
-    
+
+    if (powerMeasurementAllowed) {
+        m_PowerManager->StartCollection();
+    }
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
     // Track number of iterations for power measurement (default: 1 for simple measurement)
     int consideredIters = 1;
@@ -243,6 +239,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     if (powerMeasurementAllowed && preciseParams.has_value())
     {
         action->WaitForFinish();
+        m_PowerManager->EndCollection();
         std::vector<ktt::Nanoseconds> durationSamples;
         durationSamples.push_back(action->GetDuration());
         consideredIters = 0;
@@ -258,8 +255,10 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
         
         while (looping) {
+            m_PowerManager->StartCollection();
             auto a = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
             a->WaitForFinish();
+            m_PowerManager->EndCollection();
             durationSamples.push_back(a->GetDuration());
             sumPwr.push_back(m_PowerManager->GetPowerUsage());
             sumTemp.push_back(m_PowerManager->GetTemperature());
@@ -314,6 +313,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         if (!preciseParams.has_value())
         {
             action->WaitForFinish();
+            m_PowerManager->EndCollection();
             sumPwr.push_back(m_PowerManager->GetPowerUsage());
             sumTemp.push_back(m_PowerManager->GetTemperature());
             sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
