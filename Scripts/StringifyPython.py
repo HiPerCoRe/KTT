@@ -1,23 +1,24 @@
+#!/bin/env python3
+from pathlib import Path
 import sys
 
-def main():
-    if len(sys.argv) < 2 :
-        print("Error: Python file to stringify must be given as a command line argument")
+
+def stringify(input_file: str):
+    output_file = f'{Path(input_file).stem}.h'
+
+    with (
+        open(input_file, 'r') as input,
+        open(output_file, 'w') as output,
+    ):
+        output.write('std::string() + ')
+        output.write(f'R"(\n{input.read()})";')
+
+    print(f'Stringified script stored into {output_file}')
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print(f'Usage: {sys.argv[0]} [python-file-to-stringify]')
         exit(1)
-    
-    file = open(sys.argv[1], "r")
-    lines = file.read().splitlines()
-    output = open("StringifyOutput.h", "w")
-    output.write("std::string("") +\n")
-    
-    for line in lines:
-        modifiedLine = line.replace('"', '\\"')
-        output.write("\"" + modifiedLine + "\\n\" +\n")
-    
-    output.write("\"\";")
-    file.close()
-    output.close()
-    
-if __name__ == "__main__":
-    main()
-    
+
+    stringify(sys.argv[1])
