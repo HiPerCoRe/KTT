@@ -240,6 +240,8 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     {
         action->WaitForFinish();
         m_PowerManager->EndCollection();
+        // Average only the samples taken while the kernel was actually executing on the GPU.
+        m_PowerManager->RestrictToExecutionWindow(action->GetDuration());
         std::vector<ktt::Nanoseconds> durationSamples;
         durationSamples.push_back(action->GetDuration());
         consideredIters = 0;
@@ -259,6 +261,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
             auto a = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
             a->WaitForFinish();
             m_PowerManager->EndCollection();
+            m_PowerManager->RestrictToExecutionWindow(a->GetDuration());
             durationSamples.push_back(a->GetDuration());
             sumPwr.push_back(m_PowerManager->GetPowerUsage());
             sumTemp.push_back(m_PowerManager->GetTemperature());
@@ -314,6 +317,7 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         {
             action->WaitForFinish();
             m_PowerManager->EndCollection();
+            m_PowerManager->RestrictToExecutionWindow(action->GetDuration());
             sumPwr.push_back(m_PowerManager->GetPowerUsage());
             sumTemp.push_back(m_PowerManager->GetTemperature());
             sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
