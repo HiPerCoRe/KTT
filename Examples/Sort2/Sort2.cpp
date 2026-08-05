@@ -112,37 +112,37 @@ protected:
         const ktt::DimensionVector ndRangeDimensions;
         const ktt::DimensionVector workGroupDimensions;
 
-        m_radixSortBlocks = m_tuner.AddKernelDefinitionFromFile("radixSortBlocks", m_kernelFile, ndRangeDimensions, workGroupDimensions);
-        m_findRadixOffsetsId = m_tuner.AddKernelDefinitionFromFile("findRadixOffsets", m_kernelFile, ndRangeDimensions, workGroupDimensions);
-        m_reorderDataId = m_tuner.AddKernelDefinitionFromFile("reorderData", m_kernelFile, ndRangeDimensions, workGroupDimensions);
-        m_vectorAddUniform4Id = m_tuner.AddKernelDefinitionFromFile("vectorAddUniform4", m_kernelFile, ndRangeDimensions, workGroupDimensions);
-        m_scanId = m_tuner.AddKernelDefinitionFromFile("scan", m_kernelFile, ndRangeDimensions, workGroupDimensions);
+        m_radixSortBlocks = m_tuner->AddKernelDefinitionFromFile("radixSortBlocks", m_kernelFile, ndRangeDimensions, workGroupDimensions);
+        m_findRadixOffsetsId = m_tuner->AddKernelDefinitionFromFile("findRadixOffsets", m_kernelFile, ndRangeDimensions, workGroupDimensions);
+        m_reorderDataId = m_tuner->AddKernelDefinitionFromFile("reorderData", m_kernelFile, ndRangeDimensions, workGroupDimensions);
+        m_vectorAddUniform4Id = m_tuner->AddKernelDefinitionFromFile("vectorAddUniform4", m_kernelFile, ndRangeDimensions, workGroupDimensions);
+        m_scanId = m_tuner->AddKernelDefinitionFromFile("scan", m_kernelFile, ndRangeDimensions, workGroupDimensions);
 
         // Add arguments for kernels
         // All parameters with foo values (empty vectors or scalar 1) will be updated in tuning manipulator, as their value depends on tuning parameters
-        const ktt::ArgumentId nbitsId = m_tuner.AddArgumentScalar(nbits);
-        m_startBitId = m_tuner.AddArgumentScalar(0);
-        const ktt::ArgumentId sizeId = m_tuner.AddArgumentScalar(m_size);
+        const ktt::ArgumentId nbitsId = m_tuner->AddArgumentScalar(nbits);
+        m_startBitId = m_tuner->AddArgumentScalar(0);
+        const ktt::ArgumentId sizeId = m_tuner->AddArgumentScalar(m_size);
 
-        const ktt::ArgumentId keysOutId = m_tuner.AddArgumentVector(m_keysOut, ktt::ArgumentAccessType::ReadWrite);
-        m_valuesOutId = m_tuner.AddArgumentVector(m_valuesOut, ktt::ArgumentAccessType::ReadWrite);
-        const ktt::ArgumentId keysInId = m_tuner.AddArgumentVector(m_keysIn, ktt::ArgumentAccessType::ReadWrite);
-        const ktt::ArgumentId valuesInId = m_tuner.AddArgumentVector(m_valuesIn, ktt::ArgumentAccessType::ReadWrite);
+        const ktt::ArgumentId keysOutId = m_tuner->AddArgumentVector(m_keysOut, ktt::ArgumentAccessType::ReadWrite);
+        m_valuesOutId = m_tuner->AddArgumentVector(m_valuesOut, ktt::ArgumentAccessType::ReadWrite);
+        const ktt::ArgumentId keysInId = m_tuner->AddArgumentVector(m_keysIn, ktt::ArgumentAccessType::ReadWrite);
+        const ktt::ArgumentId valuesInId = m_tuner->AddArgumentVector(m_valuesIn, ktt::ArgumentAccessType::ReadWrite);
 
-        m_countersId = m_tuner.AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
-        m_counterSumsId = m_tuner.AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
-        m_blockOffsetsId = m_tuner.AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
+        m_countersId = m_tuner->AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
+        m_counterSumsId = m_tuner->AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
+        m_blockOffsetsId = m_tuner->AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
 
-        m_scanNumBlocksId = m_tuner.AddArgumentScalar(1);
-        m_numElementsId = m_tuner.AddArgumentScalar(1);
+        m_scanNumBlocksId = m_tuner->AddArgumentScalar(1);
+        m_numElementsId = m_tuner->AddArgumentScalar(1);
 
-        m_scanOutDataId = m_tuner.AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
-        m_scanInDataId = m_tuner.AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadOnly);
-        m_scanOneBlockSumId = m_tuner.AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
-        m_fullBlockId = m_tuner.AddArgumentScalar(1);
-        m_storeSumId = m_tuner.AddArgumentScalar(1);
+        m_scanOutDataId = m_tuner->AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
+        m_scanInDataId = m_tuner->AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadOnly);
+        m_scanOneBlockSumId = m_tuner->AddArgumentVector(vector<unsigned int>(1), ktt::ArgumentAccessType::ReadWrite);
+        m_fullBlockId = m_tuner->AddArgumentScalar(1);
+        m_storeSumId = m_tuner->AddArgumentScalar(1);
 
-        m_kernel = m_tuner.CreateCompositeKernel("Sort", 
+        m_kernel = m_tuner->CreateCompositeKernel("Sort", 
             {m_radixSortBlocks, m_findRadixOffsetsId, m_reorderDataId, m_vectorAddUniform4Id, m_scanId}, 
             [this, nbitsId, keysOutId, keysInId, valuesInId,
             sizeId](ktt::ComputeInterface& interface)
@@ -242,36 +242,36 @@ protected:
         });
 
         //radixSortBlocks
-        m_tuner.SetArguments(m_radixSortBlocks, {nbitsId, m_startBitId, keysOutId, m_valuesOutId, keysInId, valuesInId});
+        m_tuner->SetArguments(m_radixSortBlocks, {nbitsId, m_startBitId, keysOutId, m_valuesOutId, keysInId, valuesInId});
 
         //findRadixOffsets
-        m_tuner.SetArguments(m_findRadixOffsetsId, {keysOutId, m_countersId, m_blockOffsetsId, m_startBitId, sizeId, m_scanNumBlocksId});
+        m_tuner->SetArguments(m_findRadixOffsetsId, {keysOutId, m_countersId, m_blockOffsetsId, m_startBitId, sizeId, m_scanNumBlocksId});
 
         //reorderData
-        m_tuner.SetArguments(m_reorderDataId, {m_startBitId, keysOutId, m_valuesOutId, keysInId, valuesInId, m_blockOffsetsId, m_counterSumsId, m_countersId, m_scanNumBlocksId});
+        m_tuner->SetArguments(m_reorderDataId, {m_startBitId, keysOutId, m_valuesOutId, keysInId, valuesInId, m_blockOffsetsId, m_counterSumsId, m_countersId, m_scanNumBlocksId});
 
         //vectorAddUniform
-        m_tuner.SetArguments(m_vectorAddUniform4Id, {m_scanOutDataId, m_scanOneBlockSumId, m_numElementsId});
+        m_tuner->SetArguments(m_vectorAddUniform4Id, {m_scanOutDataId, m_scanOneBlockSumId, m_numElementsId});
 
         //scan
-        m_tuner.SetArguments(m_scanId, {m_scanOutDataId, m_scanInDataId, m_scanOneBlockSumId, m_numElementsId, m_fullBlockId, m_storeSumId});
+        m_tuner->SetArguments(m_scanId, {m_scanOutDataId, m_scanInDataId, m_scanOneBlockSumId, m_numElementsId, m_fullBlockId, m_storeSumId});
     }
 
     void InitTuningSpace() override
     {
-        m_tuner.AddParameter(m_kernel, "SORT_BLOCK_SIZE", vector<uint64_t>{32, 64, 128, 256, 512, 1024});
-        m_tuner.AddParameter(m_kernel, "SCAN_BLOCK_SIZE", vector<uint64_t>{32, 64, 128, 256, 512, 1024});
-        m_tuner.AddParameter(m_kernel, "SORT_VECTOR", vector<uint64_t>{2, 4, 8});
-        m_tuner.AddParameter(m_kernel, "SCAN_VECTOR", vector<uint64_t>{2, 4, 8});
+        m_tuner->AddParameter(m_kernel, "SORT_BLOCK_SIZE", vector<uint64_t>{32, 64, 128, 256, 512, 1024});
+        m_tuner->AddParameter(m_kernel, "SCAN_BLOCK_SIZE", vector<uint64_t>{32, 64, 128, 256, 512, 1024});
+        m_tuner->AddParameter(m_kernel, "SORT_VECTOR", vector<uint64_t>{2, 4, 8});
+        m_tuner->AddParameter(m_kernel, "SCAN_VECTOR", vector<uint64_t>{2, 4, 8});
 
         auto workGroupConstraint = [](const vector<uint64_t>& vector) {return (float)vector.at(1) / vector.at(0) == (float)vector.at(2) / vector.at(3) &&
             !(vector.at(0) == 1024 && vector.at(1) == 1024 && vector.at(2) == 8 && vector.at(3) == 8);};
-        m_tuner.AddConstraint(m_kernel, {"SORT_BLOCK_SIZE", "SCAN_BLOCK_SIZE", "SORT_VECTOR", "SCAN_VECTOR"}, workGroupConstraint);
+        m_tuner->AddConstraint(m_kernel, {"SORT_BLOCK_SIZE", "SCAN_BLOCK_SIZE", "SORT_VECTOR", "SCAN_VECTOR"}, workGroupConstraint);
     }
 
     void InitReference() override
     {
-        m_tuner.SetReferenceComputation(m_valuesOutId, [this](void* buffer)
+        m_tuner->SetReferenceComputation(m_valuesOutId, [this](void* buffer)
         {
             memcpy(buffer, m_valuesIn.data(), m_valuesIn.size() * sizeof(unsigned int));
             unsigned int* intArray = static_cast<unsigned int*>(buffer);

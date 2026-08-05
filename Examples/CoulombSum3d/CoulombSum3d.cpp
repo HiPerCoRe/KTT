@@ -89,14 +89,14 @@ public:
         ExampleBase::Run();
 
         if (!m_sepCompTuning) return;
-        auto bestConfig = m_tuner.GetBestConfiguration(m_kernel);
+        auto bestConfig = m_tuner->GetBestConfiguration(m_kernel);
         if (!bestConfig.IsValid()) {
             cout << "No valid configuration was found. Skippin separate compiler parameter tuning.\n";
             return;
         }
         std::cout << "\nTuning compiler options on top of best kernel configuration..." << std::endl;
-        const auto optResults = m_tuner.TuneOptions(m_kernel, bestConfig);
-        m_tuner.SaveResults(optResults, "CoulombSumOptionsOutput", ktt::OutputFormat::JSON);
+        const auto optResults = m_tuner->TuneOptions(m_kernel, bestConfig);
+        m_tuner->SaveResults(optResults, "CoulombSumOptionsOutput", ktt::OutputFormat::JSON);
 
         RunStats stats;
 
@@ -144,8 +144,8 @@ protected:
 
     void AddCompilerParameter(const string &name, const vector<string> &values = {})
     {
-        if (m_sepCompTuning) m_tuner.AddSeparateCompilerParameter(m_kernel, name, values);
-        else m_tuner.AddCompilerParameter(m_kernel, name, values);
+        if (m_sepCompTuning) m_tuner->AddSeparateCompilerParameter(m_kernel, name, values);
+        else m_tuner->AddCompilerParameter(m_kernel, name, values);
     }
 
     void InitData() override
@@ -174,15 +174,15 @@ protected:
     void InitKernel() override
     {
         // Add all kernel arguments
-        m_atomInfoId = m_tuner.AddArgumentVector(m_atomInfo, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoXId = m_tuner.AddArgumentVector(m_atomInfoX, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoYId = m_tuner.AddArgumentVector(m_atomInfoY, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoZId = m_tuner.AddArgumentVector(m_atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoWId = m_tuner.AddArgumentVector(m_atomInfoW, ktt::ArgumentAccessType::ReadOnly);
-        m_numberOfAtomsId = m_tuner.AddArgumentScalar(m_numberOfAtoms);
-        m_gridSpacingId = m_tuner.AddArgumentScalar(m_gridSpacing);
-        m_gridDimId = m_tuner.AddArgumentScalar(static_cast<int>(m_gridWidth));
-        m_energyGridId = m_tuner.AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::WriteOnly);
+        m_atomInfoId = m_tuner->AddArgumentVector(m_atomInfo, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoXId = m_tuner->AddArgumentVector(m_atomInfoX, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoYId = m_tuner->AddArgumentVector(m_atomInfoY, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoZId = m_tuner->AddArgumentVector(m_atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoWId = m_tuner->AddArgumentVector(m_atomInfoW, ktt::ArgumentAccessType::ReadOnly);
+        m_numberOfAtomsId = m_tuner->AddArgumentScalar(m_numberOfAtoms);
+        m_gridSpacingId = m_tuner->AddArgumentScalar(m_gridSpacing);
+        m_gridDimId = m_tuner->AddArgumentScalar(static_cast<int>(m_gridWidth));
+        m_energyGridId = m_tuner->AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::WriteOnly);
 
         // Configure main kernel
         InitKernelDefault("directCoulombSum", "CoulombSum", m_ndRangeDimensions,
@@ -197,38 +197,38 @@ protected:
 
         if (m_computeApi == ktt::ComputeApi::OpenCL || m_computeApi == ktt::ComputeApi::CUDA)
         {
-            m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_X", vector<uint64_t>{16, 32});
-            m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+            m_tuner->AddParameter(m_kernel, "WORK_GROUP_SIZE_X", vector<uint64_t>{16, 32});
+            m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
                 ktt::ModifierAction::Multiply);
-            m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+            m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
                 ktt::ModifierAction::DivideCeil);
 
-            m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_Y", vector<uint64_t>{1, 2, 4, 8});
-            m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+            m_tuner->AddParameter(m_kernel, "WORK_GROUP_SIZE_Y", vector<uint64_t>{1, 2, 4, 8});
+            m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
                 ktt::ModifierAction::Multiply);
-            m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+            m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
                 ktt::ModifierAction::DivideCeil);
 
-            m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_Z", vector<uint64_t>{1});
-            m_tuner.AddParameter(m_kernel, "Z_ITERATIONS", vector<uint64_t>{1, 2, 4, 8, 16, 32});
-            m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS",
+            m_tuner->AddParameter(m_kernel, "WORK_GROUP_SIZE_Z", vector<uint64_t>{1});
+            m_tuner->AddParameter(m_kernel, "Z_ITERATIONS", vector<uint64_t>{1, 2, 4, 8, 16, 32});
+            m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z, "Z_ITERATIONS",
                 ktt::ModifierAction::DivideCeil);
 
-            m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR", vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+            m_tuner->AddParameter(m_kernel, "INNER_UNROLL_FACTOR", vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
 
             auto lt = [](const vector<uint64_t>& vector) {return vector.at(0) < vector.at(1);};
-            m_tuner.AddConstraint(m_kernel, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"}, lt);
+            m_tuner->AddConstraint(m_kernel, {"INNER_UNROLL_FACTOR", "Z_ITERATIONS"}, lt);
             auto par = [](const vector<uint64_t>& vector) {return vector.at(0) * vector.at(1) >= 64;};
-            m_tuner.AddConstraint(m_kernel, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, par);
+            m_tuner->AddConstraint(m_kernel, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, par);
 
             if (m_computeApi == ktt::ComputeApi::OpenCL)
             {
-                m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", vector<uint64_t>{0, 1});
-                m_tuner.AddParameter(m_kernel, "USE_SOA", vector<uint64_t>{0, 1});
-                m_tuner.AddParameter(m_kernel, "VECTOR_SIZE", vector<uint64_t>{1, 2 , 4, 8, 16});
+                m_tuner->AddParameter(m_kernel, "USE_CONSTANT_MEMORY", vector<uint64_t>{0, 1});
+                m_tuner->AddParameter(m_kernel, "USE_SOA", vector<uint64_t>{0, 1});
+                m_tuner->AddParameter(m_kernel, "VECTOR_SIZE", vector<uint64_t>{1, 2 , 4, 8, 16});
 
                 auto vec = [](const vector<uint64_t>& vector) {return vector.at(0) || vector.at(1) == 1; };
-                m_tuner.AddConstraint(m_kernel, {"USE_SOA", "VECTOR_SIZE"}, vec);
+                m_tuner->AddConstraint(m_kernel, {"USE_SOA", "VECTOR_SIZE"}, vec);
 
                 // Individual math optimization flags replacing the global -cl-fast-relaxed-math.
                 // -cl-fast-relaxed-math ≈ -cl-finite-math-only + -cl-unsafe-math-optimizations,
@@ -241,9 +241,9 @@ protected:
             }
             else // CUDA
             {
-                m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", vector<uint64_t>{0});
-                m_tuner.AddParameter(m_kernel, "USE_SOA", vector<uint64_t>{0, 1});
-                m_tuner.AddParameter(m_kernel, "VECTOR_SIZE", vector<uint64_t>{1});
+                m_tuner->AddParameter(m_kernel, "USE_CONSTANT_MEMORY", vector<uint64_t>{0});
+                m_tuner->AddParameter(m_kernel, "USE_SOA", vector<uint64_t>{0, 1});
+                m_tuner->AddParameter(m_kernel, "VECTOR_SIZE", vector<uint64_t>{1});
 
                 // Register count limit: trades register file pressure for higher occupancy.
                 // Relevant here because energyValue[Z_ITERATIONS] can hold up to 32 floats,
@@ -254,10 +254,10 @@ protected:
         }
         else // CPP
         {
-            m_tuner.AddParameter(m_kernel, "OMP_COLLAPSE", vector<uint64_t>{0, 1});
-            m_tuner.AddParameter(m_kernel, "OMP_SCHEDULING", vector<uint64_t>{0, 1, 2});
-            m_tuner.AddParameter(m_kernel, "OMP_SCHED_CHUNK", vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
-            m_tuner.AddParameter(m_kernel, "TILE", vector<uint64_t>{0, 8, 16, 32, 64});
+            m_tuner->AddParameter(m_kernel, "OMP_COLLAPSE", vector<uint64_t>{0, 1});
+            m_tuner->AddParameter(m_kernel, "OMP_SCHEDULING", vector<uint64_t>{0, 1, 2});
+            m_tuner->AddParameter(m_kernel, "OMP_SCHED_CHUNK", vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
+            m_tuner->AddParameter(m_kernel, "TILE", vector<uint64_t>{0, 8, 16, 32, 64});
             
             AddCompilerParameter("-ffast-math");
             AddCompilerParameter("-O", {"1", "2", "3"});
@@ -271,7 +271,7 @@ protected:
             AddCompilerParameter("-fno-math-errno");
 
             auto schedchunk = [](const vector<uint64_t>& vector) {return vector.at(0) == 2 || vector.at(1) == 2; };
-            m_tuner.AddConstraint(m_kernel, {"OMP_SCHEDULING", "OMP_SCHED_CHUNK"}, schedchunk);
+            m_tuner->AddConstraint(m_kernel, {"OMP_SCHEDULING", "OMP_SCHED_CHUNK"}, schedchunk);
         }
     }
 
@@ -281,7 +281,7 @@ protected:
         {
             //TODO: this is temporary hack, there should be composition of zeroizing and Coulomb kernel,
             // otherwise, multiple profiling runs corrupt results
-            m_tuner.SetReferenceComputation(m_energyGridId, [this](void* buffer) {
+            m_tuner->SetReferenceComputation(m_energyGridId, [this](void* buffer) {
                 float* grid = static_cast<float*>(buffer);
 
                 #pragma omp parallel for
@@ -300,7 +300,7 @@ protected:
                             grid[z * m_gridWidth * m_gridHeight + y * m_gridWidth + x] = e;
                         }
             });
-            m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
+            m_tuner->SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
         }
     }
 };

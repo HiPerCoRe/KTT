@@ -34,13 +34,13 @@ void ExampleReferenceKernel::InitReferenceKernelDefault(
         const float precision
     )
 {
-    m_refDefinition = m_tuner.AddKernelDefinitionFromFile(refKernelName, m_refKernelFile,
+    m_refDefinition = m_tuner->AddKernelDefinitionFromFile(refKernelName, m_refKernelFile,
         ndRangeDimensions, workGroupDimensions);
-    m_tuner.SetArguments(m_refDefinition, arguments);
-    m_refKernel = m_tuner.CreateSimpleKernel(refKernelName, m_refDefinition);
+    m_tuner->SetArguments(m_refDefinition, arguments);
+    m_refKernel = m_tuner->CreateSimpleKernel(refKernelName, m_refDefinition);
 
     for (auto arg : outputArguments) {
-        m_tuner.SetReferenceKernel(arg, m_refKernel, ktt::KernelConfiguration());
+        m_tuner->SetReferenceKernel(arg, m_refKernel, ktt::KernelConfiguration());
     }
-    m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, precision);
+    m_tuner->SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, precision);
 }

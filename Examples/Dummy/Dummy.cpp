@@ -24,7 +24,7 @@ protected:
         m_gridSize = 256;
         m_atoms = 1024;
 
-        m_tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+        m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
         UseFastMath();
 
         // Set precise measurement by default.
@@ -89,21 +89,21 @@ protected:
         const ktt::DimensionVector ndRangeDimensions(m_gridSize / 32, m_gridSize / 4, m_gridSize);
         const ktt::DimensionVector workGroupDimensions(32, 4);
 
-        m_atomInfoId = m_tuner.AddArgumentVector(m_atomInfo, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoXId = m_tuner.AddArgumentVector(m_atomInfoX, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoYId = m_tuner.AddArgumentVector(m_atomInfoY, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoZId = m_tuner.AddArgumentVector(m_atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoWId = m_tuner.AddArgumentVector(m_atomInfoW, ktt::ArgumentAccessType::ReadOnly);
-        m_atomsId = m_tuner.AddArgumentScalar(m_atoms);
-        m_gridSpacingId = m_tuner.AddArgumentScalar(m_gridSpacing);
-        m_gridDimId = m_tuner.AddArgumentScalar(m_gridSize);
-        m_energyGridId = m_tuner.AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::WriteOnly);
+        m_atomInfoId = m_tuner->AddArgumentVector(m_atomInfo, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoXId = m_tuner->AddArgumentVector(m_atomInfoX, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoYId = m_tuner->AddArgumentVector(m_atomInfoY, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoZId = m_tuner->AddArgumentVector(m_atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoWId = m_tuner->AddArgumentVector(m_atomInfoW, ktt::ArgumentAccessType::ReadOnly);
+        m_atomsId = m_tuner->AddArgumentScalar(m_atoms);
+        m_gridSpacingId = m_tuner->AddArgumentScalar(m_gridSpacing);
+        m_gridDimId = m_tuner->AddArgumentScalar(m_gridSize);
+        m_energyGridId = m_tuner->AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::WriteOnly);
 
         InitKernelDefault("directCoulombSum", "CoulombSum", ndRangeDimensions,
                           {m_atomInfoId, m_atomInfoXId, m_atomInfoYId, m_atomInfoZId, m_atomInfoWId,
                            m_atomsId, m_gridSpacingId, m_gridDimId, m_energyGridId});
 
-        m_tuner.SetLauncher(m_kernel, [this](ktt::ComputeInterface& interface)
+        m_tuner->SetLauncher(m_kernel, [this](ktt::ComputeInterface& interface)
         {
             uint64_t sleep = sleepDuration;
             if (randomizeSleep)
@@ -115,10 +115,10 @@ protected:
 
     void InitTuningSpace() override
     {
-        m_tuner.AddParameter(m_kernel, "DUMMY_1", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-        m_tuner.AddParameter(m_kernel, "DUMMY_2", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-        m_tuner.AddParameter(m_kernel, "DUMMY_3", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-        m_tuner.AddParameter(m_kernel, "DUMMY_4", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+        m_tuner->AddParameter(m_kernel, "DUMMY_1", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+        m_tuner->AddParameter(m_kernel, "DUMMY_2", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+        m_tuner->AddParameter(m_kernel, "DUMMY_3", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+        m_tuner->AddParameter(m_kernel, "DUMMY_4", vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
     }
 };
 
