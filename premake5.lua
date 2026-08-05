@@ -117,7 +117,7 @@ function linkLibrariesNvidia()
             links {"nvidia-ml"}
         end
         
-        if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" or _OPTIONS["power-usage"] then
+        if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" then
             includedirs {"$(CUDA_PATH)/extras/CUPTI/include"}
             libdirs {"$(CUDA_PATH)/extras/CUPTI/lib64"}
             links {"cupti"}
