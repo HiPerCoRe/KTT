@@ -1,5 +1,4 @@
 #include "CliComponent.h"
-#include "Api/Configuration/PreciseMeasurementParameters.h"
 #include <functional>
 #include <vector>
 #include <assert.h>
@@ -65,14 +64,4 @@ void CliComponent::ProcessInput(int argc, char **argv) {
             exit(1);
         }
     }
-}
-
-
-void SetUpCommonOptions(vector<CliOption> &options, ExampleConfiguration *config) {
-}
-
-void SetUpRefKernelOption(vector<CliOption> &options, ExampleRefKernelConfiguration &config) {
-    options.emplace_back([&config](const vector<string> &args) {
-        config.refKernelFile = args[0];
-    }, "--refKernelPath", "Reference kernel file path (expects string)", "<path>", 1);
 }
