@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Api/Configuration/PreciseMeasurementParameters.h"
-#include "Api/Output/KernelResult.h"
 #include "Api/Searcher/Searcher.h"
 #include "Api/StopCondition/StopCondition.h"
 #include "CliComponent.h"
+#include "RunStats.hpp"
 #include "KttTypes.h"
 #include <Ktt.h>
 #include <memory>
@@ -76,16 +76,6 @@ protected:
     void UseFastMath();
     void UseOpenMP();
 
-    struct RunStats {
-        int totalRuns = 0;
-        int successfulRuns = 0;
-        double bestDuration = std::numeric_limits<double>::max();
-        std::string bestConfig;
-
-        void Update(ktt::KernelResult);
-    };
-
-    void PrintRunStats(const std::string& phaseName, const RunStats& stats, double throughput = -1);
     void PrintProgress(const std::string& phaseName, int currentRun, double elapsedSeconds,
                        double timeBudget, double bestDuration, double throughput);
 
