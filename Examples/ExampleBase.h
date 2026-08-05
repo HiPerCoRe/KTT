@@ -4,6 +4,7 @@
 #include "Api/Searcher/Searcher.h"
 #include "Api/StopCondition/StopCondition.h"
 #include "CliComponent.h"
+#include "CompilerTuningComponent.h"
 #include "RunStats.hpp"
 #include "KttTypes.h"
 #include <Ktt.h>
@@ -39,13 +40,14 @@ protected:
     char **m_argv;
 
     std::string m_kernelFile;
-    std::unique_ptr<ktt::Tuner> m_tuner;
+    std::shared_ptr<ktt::Tuner> m_tuner;
     int m_problemSize;
 
     ktt::KernelDefinitionId m_definition;
     ktt::KernelId m_kernel;
 
     CliComponent m_cli;
+    CompilerTuningComponent m_compilerTuning;
 
     std::optional<ktt::PreciseMeasurementParameters> m_preciseParams;
     std::unique_ptr<ktt::StopCondition> m_stopCondition;

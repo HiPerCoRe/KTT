@@ -111,6 +111,8 @@ void ExampleBase::RunDynamic()
 
     tuningStats.Print("Tuning phase", tuningThroughput);
 
+    m_compilerTuning.Run();
+
     const auto bestConfigData = m_tuner->GetBestConfiguration(m_kernel);
 
     cout << "\n--- Running with best configuration ---" << endl;
@@ -151,6 +153,8 @@ void ExampleBase::RunOffline()
     stats.totalRuns = static_cast<int>(results.size());
 
     stats.Print("Offline tuning", throughput);
+
+    m_compilerTuning.Run();
 }
 
 void ExampleBase::Run()
@@ -174,7 +178,8 @@ ExampleBase::ExampleBase(
     m_computeApi(ktt::ComputeApi::Cpp),
     #endif
     m_argc(argc),
-    m_argv(argv)
+    m_argv(argv),
+    m_compilerTuning(m_tuner, m_kernel)
 {
     m_problemSize = defaultProblemSize;
     m_kernelFile = GetKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
@@ -286,6 +291,8 @@ void ExampleBase::InitCLI() {
     }, "--useDynamicTuning", "Enables a basic implementation of dynamic tuning."
     "The tuning will last <time> (double) seconds and then the only the best configuration will be run.",
     "<time>", 1});
+
+    m_compilerTuning.InitCLIOptions(m_cli);
 }
 
 void ExampleBase::ProcessCLI() {
