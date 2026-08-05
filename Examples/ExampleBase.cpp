@@ -32,23 +32,6 @@ string ExampleBase::GetKernelFilePath(string exampleFolderPath, string baseName,
     return kernelPrefix + exampleFolderPath + "/" + baseName + (suffix == nullopt ?defaultKernelFileSuffix : suffix.value());
 }
 
-void ExampleBase::PrintRunStats(const string& phaseName, const RunStats& stats, double throughput)
-{
-    cout << "\n--- " << phaseName << " complete ---" << endl;
-    cout << "Total runs: " << stats.totalRuns << endl;
-    cout << "Successful runs: " << stats.successfulRuns << "/" << stats.totalRuns << endl;
-    if (!stats.bestConfig.empty()) {
-        cout << "Best configuration: " << stats.bestConfig << endl;
-        cout << "Best duration: " << stats.bestDuration << " ns" << endl;
-    }
-    if (throughput != -1) 
-    {
-        cout << "Throughput: " << fixed << setprecision(2) << throughput << " runs/s" << endl;
-        cout.unsetf(ios_base::floatfield);
-        cout.precision(6);
-    }
-}
-
 void ExampleBase::PrintProgress(const string& phaseName, int currentRun, double elapsedSeconds,
                                 double timeBudget, double bestDuration, double throughput)
 {
@@ -60,20 +43,7 @@ void ExampleBase::PrintProgress(const string& phaseName, int currentRun, double 
     cout.precision(6);
 }
 
-void ExampleBase::RunStats::Update(ktt::KernelResult result) {
-    totalRuns++;
-
-    if (result.GetStatus() == ktt::ResultStatus::Ok) {
-        successfulRuns++;
-        double duration = result.GetTotalDuration();
-        if (duration < bestDuration) {
-            bestDuration = duration;
-            bestConfig = result.GetConfiguration().GetString();
-        }
-    }
-}
-
-ExampleBase::RunStats ExampleBase::RunTuningPhase(
+RunStats ExampleBase::RunTuningPhase(
     const std::chrono::steady_clock::time_point& startTime, double timeBudgetSeconds, int printInterval)
 {
     RunStats stats;
@@ -99,7 +69,7 @@ ExampleBase::RunStats ExampleBase::RunTuningPhase(
     return stats;
 }
 
-ExampleBase::RunStats ExampleBase::RunExecutionPhase(
+RunStats ExampleBase::RunExecutionPhase(
     const std::chrono::steady_clock::time_point& startTime, double timeBudgetSeconds,
     const ktt::KernelConfiguration& bestConfig, int printInterval)
 {
@@ -139,7 +109,7 @@ void ExampleBase::RunDynamic()
     double tuningElapsed = std::chrono::duration<double>(tuningPhaseEnd - startTime).count();
     double tuningThroughput = tuningElapsed > 0 ? tuningStats.totalRuns / tuningElapsed : 0;
 
-    PrintRunStats("Tuning phase", tuningStats, tuningThroughput);
+    tuningStats.Print("Tuning phase", tuningThroughput);
 
     const auto bestConfigData = m_tuner->GetBestConfiguration(m_kernel);
 
@@ -151,7 +121,7 @@ void ExampleBase::RunDynamic()
     double runElapsed = std::chrono::duration<double>(totalEndTime - runStartTime).count();
     double runThroughput = runElapsed > 0 ? runStats.totalRuns / runElapsed : 0;
 
-    PrintRunStats("Final statistics", runStats, runThroughput);
+    runStats.Print("Final statistics", runThroughput);
 }
 
 void ExampleBase::RunOffline()
@@ -180,7 +150,7 @@ void ExampleBase::RunOffline()
     }
     stats.totalRuns = static_cast<int>(results.size());
 
-    PrintRunStats("Offline tuning", stats, throughput);
+    stats.Print("Offline tuning", throughput);
 }
 
 void ExampleBase::Run()
