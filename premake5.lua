@@ -389,15 +389,24 @@ function addExampleProject(name, kernelExt, apiDefine, useRefVersions, shouldEna
     if useRefVersions then
         cppFiles = {"Examples/LegacyExamples/" .. name .. "/*.cpp"}
     else
-        cppFiles = {"Examples/*.cpp", "Examples/" .. name .. "/*.cpp"}
+        cppFiles = {"Examples/" .. name .. "/*.cpp"}
+    end
+
+    local exLib
+    if apiDefine == "KTT_CUDA_EXAMPLE" then
+        exLib = "ExamplesLibCuda"
+    elseif apiDefine == "KTT_OPENCL_EXAMPLE" then
+        exLib = "ExamplesLibOpenCl"
+    else
+        exLib = "ExamplesLibCpp"
     end
 
     project(projectName)
         kind "ConsoleApp"
         files {table.unpack(cppFiles)}
-        includedirs {"Source"}
+        includedirs {"Source", "Examples"}
         defines {apiDefine}
-        links {"ktt"}
+        links {"ktt", exLib}
         if shouldEnableOpenMP then
             enableOpenMP()
         end
@@ -682,7 +691,39 @@ end -- vulkanProjects
 
 end -- _OPTIONS["no-tutorials"]
 
--- Examples configuration 
+-- Examples shared library (compiled once, linked by all examples)
+if not _OPTIONS["no-examples"] then
+
+project "ExamplesLibCuda"
+    kind "StaticLib"
+    files
+    {
+        "Examples/*.cpp"
+    }
+    includedirs {"Source"}
+    defines {"KTT_CUDA_EXAMPLE"}
+
+project "ExamplesLibOpenCl"
+    kind "StaticLib"
+    files
+    {
+        "Examples/*.cpp"
+    }
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_EXAMPLE"}
+
+project "ExamplesLibCpp"
+    kind "StaticLib"
+    files
+    {
+        "Examples/*.cpp"
+    }
+    includedirs {"Source"}
+    defines {"KTT_CPP_EXAMPLE"}
+
+end -- _OPTIONS["no-examples"]
+
+-- Examples configuration
 if not _OPTIONS["no-examples"] then
 
 if openClProjects then
