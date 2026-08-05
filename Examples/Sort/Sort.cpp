@@ -43,24 +43,24 @@ protected:
         const ktt::DimensionVector ndRangeDimensions;
         const ktt::DimensionVector workGroupDimensions;
 
-        m_reduceDefinition = m_tuner.AddKernelDefinitionFromFile("reduce", m_kernelFile, ndRangeDimensions, workGroupDimensions);
-        m_topScanDefinition = m_tuner.AddKernelDefinitionFromFile("top_scan", m_kernelFile, workGroupDimensions, workGroupDimensions);
-        m_bottomScanDefinition = m_tuner.AddKernelDefinitionFromFile("bottom_scan", m_kernelFile, ndRangeDimensions, workGroupDimensions);
+        m_reduceDefinition = m_tuner->AddKernelDefinitionFromFile("reduce", m_kernelFile, ndRangeDimensions, workGroupDimensions);
+        m_topScanDefinition = m_tuner->AddKernelDefinitionFromFile("top_scan", m_kernelFile, workGroupDimensions, workGroupDimensions);
+        m_bottomScanDefinition = m_tuner->AddKernelDefinitionFromFile("bottom_scan", m_kernelFile, ndRangeDimensions, workGroupDimensions);
 
         // Add arguments for kernels
-        m_inId = m_tuner.AddArgumentVector(m_in, ktt::ArgumentAccessType::ReadWrite);
-        m_outId = m_tuner.AddArgumentVector(m_out, ktt::ArgumentAccessType::ReadWrite);
-        m_sizeId = m_tuner.AddArgumentScalar(m_size);
+        m_inId = m_tuner->AddArgumentVector(m_in, ktt::ArgumentAccessType::ReadWrite);
+        m_outId = m_tuner->AddArgumentVector(m_out, ktt::ArgumentAccessType::ReadWrite);
+        m_sizeId = m_tuner->AddArgumentScalar(m_size);
         int shift = 0;
-        m_shiftId = m_tuner.AddArgumentScalar(shift); // Will be updated as the kernel execution is iterative
+        m_shiftId = m_tuner->AddArgumentScalar(shift); // Will be updated as the kernel execution is iterative
 
         int numberOfGroups = 1;
         int isumsSize = 16 * numberOfGroups;
         // Vector argument will be updated in tuning manipulator as its size depends on the number of work-groups
-        m_isumsId = m_tuner.AddArgumentVector(vector<unsigned int>(isumsSize), ktt::ArgumentAccessType::ReadWrite);
-        m_numberOfGroupsId = m_tuner.AddArgumentScalar(numberOfGroups);
+        m_isumsId = m_tuner->AddArgumentVector(vector<unsigned int>(isumsSize), ktt::ArgumentAccessType::ReadWrite);
+        m_numberOfGroupsId = m_tuner->AddArgumentScalar(numberOfGroups);
 
-        m_kernel = m_tuner.CreateCompositeKernel("Sort", {m_reduceDefinition, m_topScanDefinition, m_bottomScanDefinition},
+        m_kernel = m_tuner->CreateCompositeKernel("Sort", {m_reduceDefinition, m_topScanDefinition, m_bottomScanDefinition},
             [this](ktt::ComputeInterface& interface)
         {
             const int radix_width = 4;
@@ -123,9 +123,9 @@ protected:
             }
         });
 
-        m_tuner.SetArguments(m_reduceDefinition, {m_inId, m_isumsId, m_sizeId, m_shiftId});
-        m_tuner.SetArguments(m_topScanDefinition, {m_isumsId, m_numberOfGroupsId});
-        m_tuner.SetArguments(m_bottomScanDefinition, {m_inId, m_isumsId, m_outId, m_sizeId, m_shiftId});
+        m_tuner->SetArguments(m_reduceDefinition, {m_inId, m_isumsId, m_sizeId, m_shiftId});
+        m_tuner->SetArguments(m_topScanDefinition, {m_isumsId, m_numberOfGroupsId});
+        m_tuner->SetArguments(m_bottomScanDefinition, {m_inId, m_isumsId, m_outId, m_sizeId, m_shiftId});
     }
 
     void InitTuningSpace() override
@@ -133,33 +133,33 @@ protected:
         // Parameter for the length of OpenCL vector data types used in the kernels
         if (m_computeApi == ktt::ComputeApi::OpenCL)
         {
-            m_tuner.AddParameter(m_kernel, "FPVECTNUM", vector<uint64_t>{4, 8, 16});
+            m_tuner->AddParameter(m_kernel, "FPVECTNUM", vector<uint64_t>{4, 8, 16});
         }
         else
         {
-            m_tuner.AddParameter(m_kernel, "FPVECTNUM", vector<uint64_t>{4});
+            m_tuner->AddParameter(m_kernel, "FPVECTNUM", vector<uint64_t>{4});
         }
 
         // Local size below 128 does not work correctly, not even with the benchmark code
-        m_tuner.AddParameter(m_kernel, "LOCAL_SIZE", vector<uint64_t>{128, 256, 512});
-        m_tuner.AddThreadModifier(m_kernel, {m_reduceDefinition, m_topScanDefinition, m_bottomScanDefinition},
+        m_tuner->AddParameter(m_kernel, "LOCAL_SIZE", vector<uint64_t>{128, 256, 512});
+        m_tuner->AddThreadModifier(m_kernel, {m_reduceDefinition, m_topScanDefinition, m_bottomScanDefinition},
             ktt::ModifierType::Local, ktt::ModifierDimension::X, "LOCAL_SIZE", ktt::ModifierAction::Multiply);
 
         // Second kernel global size is always equal to local size
-        m_tuner.AddParameter(m_kernel, "GLOBAL_SIZE", vector<uint64_t>{512, 1024, 2048, 4096, 8192, 16384, 32768});
-        m_tuner.AddThreadModifier(m_kernel, {m_reduceDefinition, m_bottomScanDefinition},
+        m_tuner->AddParameter(m_kernel, "GLOBAL_SIZE", vector<uint64_t>{512, 1024, 2048, 4096, 8192, 16384, 32768});
+        m_tuner->AddThreadModifier(m_kernel, {m_reduceDefinition, m_bottomScanDefinition},
             ktt::ModifierType::Global, ktt::ModifierDimension::X, "GLOBAL_SIZE", ktt::ModifierAction::Multiply);
-        m_tuner.AddThreadModifier(m_kernel, {m_reduceDefinition, m_bottomScanDefinition},
+        m_tuner->AddThreadModifier(m_kernel, {m_reduceDefinition, m_bottomScanDefinition},
             ktt::ModifierType::Global, ktt::ModifierDimension::X, "LOCAL_SIZE",
             ktt::ModifierAction::Divide);
 
         auto workGroupConstraint = [](const vector<uint64_t>& vector) {return vector.at(0) != 128 || vector.at(1) != 32768;};
-        m_tuner.AddConstraint(m_kernel, {"LOCAL_SIZE", "GLOBAL_SIZE"}, workGroupConstraint);
+        m_tuner->AddConstraint(m_kernel, {"LOCAL_SIZE", "GLOBAL_SIZE"}, workGroupConstraint);
     }
 
     void InitReference() override
     {
-        m_tuner.SetReferenceComputation(m_outId, [this](void* buffer)
+        m_tuner->SetReferenceComputation(m_outId, [this](void* buffer)
         {
             memcpy(buffer, m_in.data(), m_in.size() * sizeof(unsigned int));
             unsigned int* intArray = static_cast<unsigned int*>(buffer);

@@ -72,14 +72,14 @@ protected:
     void InitKernel() override
     {
         // Add all kernel arguments
-        m_atomInfoId = m_tuner.AddArgumentVector(m_atomInfo, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoXId = m_tuner.AddArgumentVector(m_atomInfoX, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoYId = m_tuner.AddArgumentVector(m_atomInfoY, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoZId = m_tuner.AddArgumentVector(m_atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
-        m_atomInfoWId = m_tuner.AddArgumentVector(m_atomInfoW, ktt::ArgumentAccessType::ReadOnly);
-        m_numberOfAtomsId = m_tuner.AddArgumentScalar(m_numberOfAtoms);
-        m_gridSpacingId = m_tuner.AddArgumentScalar(m_gridSpacing);
-        m_energyGridId = m_tuner.AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::ReadWrite);
+        m_atomInfoId = m_tuner->AddArgumentVector(m_atomInfo, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoXId = m_tuner->AddArgumentVector(m_atomInfoX, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoYId = m_tuner->AddArgumentVector(m_atomInfoY, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoZId = m_tuner->AddArgumentVector(m_atomInfoZ, ktt::ArgumentAccessType::ReadOnly);
+        m_atomInfoWId = m_tuner->AddArgumentVector(m_atomInfoW, ktt::ArgumentAccessType::ReadOnly);
+        m_numberOfAtomsId = m_tuner->AddArgumentScalar(m_numberOfAtoms);
+        m_gridSpacingId = m_tuner->AddArgumentScalar(m_gridSpacing);
+        m_energyGridId = m_tuner->AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::ReadWrite);
 
         // Configure main kernel
         InitKernelDefault("directCoulombSum", "CoulombSum", m_ndRangeDimensions,
@@ -91,31 +91,31 @@ protected:
     {
         UseFastMath();
 
-        m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR", vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
-        m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "VECTOR_TYPE", vector<uint64_t>{1, 2, 4, 8});
-        m_tuner.AddParameter(m_kernel, "USE_SOA", vector<uint64_t>{0, 1, 2});
+        m_tuner->AddParameter(m_kernel, "INNER_UNROLL_FACTOR", vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+        m_tuner->AddParameter(m_kernel, "USE_CONSTANT_MEMORY", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "VECTOR_TYPE", vector<uint64_t>{1, 2, 4, 8});
+        m_tuner->AddParameter(m_kernel, "USE_SOA", vector<uint64_t>{0, 1, 2});
 
         // Using vectorized SoA only makes sense when vectors are longer than 1.
         auto vectorizedSoA = [](const vector<uint64_t>& vector) {return vector[0] > 1 || vector[1] != 2;};
-        m_tuner.AddConstraint(m_kernel, {"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
+        m_tuner->AddConstraint(m_kernel, {"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
 
         // Divide NDRange in dimension x by OUTER_UNROLL_FACTOR.
-        m_tuner.AddParameter(m_kernel, "OUTER_UNROLL_FACTOR", vector<uint64_t>{1, 2, 4, 8});
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
+        m_tuner->AddParameter(m_kernel, "OUTER_UNROLL_FACTOR", vector<uint64_t>{1, 2, 4, 8});
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
             ktt::ModifierAction::Divide);
 
         // Multiply work-group size in dimensions x and y by the following parameters (effectively setting work-group size to their values).
-        m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_X", vector<uint64_t>{4, 8, 16, 32});
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+        m_tuner->AddParameter(m_kernel, "WORK_GROUP_SIZE_X", vector<uint64_t>{4, 8, 16, 32});
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
             ktt::ModifierAction::Multiply);
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
             ktt::ModifierAction::Divide);
 
-        m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_Y", vector<uint64_t>{1, 2, 4, 8, 16, 32});
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+        m_tuner->AddParameter(m_kernel, "WORK_GROUP_SIZE_Y", vector<uint64_t>{1, 2, 4, 8, 16, 32});
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
             ktt::ModifierAction::Multiply);
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
             ktt::ModifierAction::Divide);
     }
 

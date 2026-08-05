@@ -87,15 +87,15 @@ protected:
             m_oldBodyVel[4 * i + 3] = 0.0f;
         }
 
-        m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
 
         if (m_computeApi == ktt::ComputeApi::OpenCL)
         {
-            m_tuner.SetCompilerOptions("-cl-fast-relaxed-math");
+            m_tuner->SetCompilerOptions("-cl-fast-relaxed-math");
         }
         else
         {
-            m_tuner.SetCompilerOptions("-use_fast_math");
+            m_tuner->SetCompilerOptions("-use_fast_math");
         }
 
     }
@@ -106,23 +106,23 @@ protected:
         const ktt::DimensionVector workGroupDimensions(1, 1);
 
         // Add all arguments utilized by m_kernels
-        m_oldBodyInfoId = m_tuner.AddArgumentVector(m_oldBodyInfo, ktt::ArgumentAccessType::ReadOnly);
-        m_oldPosXId = m_tuner.AddArgumentVector(m_oldPosX, ktt::ArgumentAccessType::ReadOnly);
-        m_oldPosYId = m_tuner.AddArgumentVector(m_oldPosY, ktt::ArgumentAccessType::ReadOnly);
-        m_oldPosZId = m_tuner.AddArgumentVector(m_oldPosZ, ktt::ArgumentAccessType::ReadOnly);
-        m_massId = m_tuner.AddArgumentVector(m_bodyMass, ktt::ArgumentAccessType::ReadOnly);
-        m_newBodyInfoId = m_tuner.AddArgumentVector(m_newBodyInfo, ktt::ArgumentAccessType::WriteOnly);
+        m_oldBodyInfoId = m_tuner->AddArgumentVector(m_oldBodyInfo, ktt::ArgumentAccessType::ReadOnly);
+        m_oldPosXId = m_tuner->AddArgumentVector(m_oldPosX, ktt::ArgumentAccessType::ReadOnly);
+        m_oldPosYId = m_tuner->AddArgumentVector(m_oldPosY, ktt::ArgumentAccessType::ReadOnly);
+        m_oldPosZId = m_tuner->AddArgumentVector(m_oldPosZ, ktt::ArgumentAccessType::ReadOnly);
+        m_massId = m_tuner->AddArgumentVector(m_bodyMass, ktt::ArgumentAccessType::ReadOnly);
+        m_newBodyInfoId = m_tuner->AddArgumentVector(m_newBodyInfo, ktt::ArgumentAccessType::WriteOnly);
 
-        m_oldVelId = m_tuner.AddArgumentVector(m_oldBodyVel, ktt::ArgumentAccessType::ReadOnly);
-        m_oldVelXId = m_tuner.AddArgumentVector(m_oldVelX, ktt::ArgumentAccessType::ReadOnly);
-        m_oldVelYId = m_tuner.AddArgumentVector(m_oldVelY, ktt::ArgumentAccessType::ReadOnly);
-        m_oldVelZId = m_tuner.AddArgumentVector(m_oldVelZ, ktt::ArgumentAccessType::ReadOnly);
-        m_newBodyVelId = m_tuner.AddArgumentVector(m_newBodyVel, ktt::ArgumentAccessType::WriteOnly);
+        m_oldVelId = m_tuner->AddArgumentVector(m_oldBodyVel, ktt::ArgumentAccessType::ReadOnly);
+        m_oldVelXId = m_tuner->AddArgumentVector(m_oldVelX, ktt::ArgumentAccessType::ReadOnly);
+        m_oldVelYId = m_tuner->AddArgumentVector(m_oldVelY, ktt::ArgumentAccessType::ReadOnly);
+        m_oldVelZId = m_tuner->AddArgumentVector(m_oldVelZ, ktt::ArgumentAccessType::ReadOnly);
+        m_newBodyVelId = m_tuner->AddArgumentVector(m_newBodyVel, ktt::ArgumentAccessType::WriteOnly);
 
-        m_deltaTimeId = m_tuner.AddArgumentScalar(timeDelta);
-        m_dampingId = m_tuner.AddArgumentScalar(damping);
-        m_softeningSqrId = m_tuner.AddArgumentScalar(softeningSqr);
-        m_numberOfBodiesId = m_tuner.AddArgumentScalar(m_numberOfBodies);
+        m_deltaTimeId = m_tuner->AddArgumentScalar(timeDelta);
+        m_dampingId = m_tuner->AddArgumentScalar(damping);
+        m_softeningSqrId = m_tuner->AddArgumentScalar(softeningSqr);
+        m_numberOfBodiesId = m_tuner->AddArgumentScalar(m_numberOfBodies);
 
         InitKernelDefault("nbody_kernel", "Nbody", ndRangeDimensions, {m_deltaTimeId,
             m_oldBodyInfoId, m_oldPosXId, m_oldPosYId, m_oldPosZId, m_massId, m_newBodyInfoId, // position
@@ -134,51 +134,51 @@ protected:
     void InitTuningSpace() override
     {
         // Multiply work-group size in dimensions x and y by two parameters that follow (effectively setting work-group size to parameters' values)
-        m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{16, 32, 64, 128, 256, 512});
+        m_tuner->AddParameter(m_kernel, "WORK_GROUP_SIZE_X", std::vector<uint64_t>{16, 32, 64, 128, 256, 512});
 
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
             ktt::ModifierAction::Multiply);
 
-        m_tuner.AddParameter(m_kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8, 16});
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+        m_tuner->AddParameter(m_kernel, "WORK_GROUP_SIZE_Y", std::vector<uint64_t>{1, 2, 4, 8, 16});
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
             ktt::ModifierAction::Multiply);
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "WORK_GROUP_SIZE_Y",
             ktt::ModifierAction::Multiply);
 
-        m_tuner.AddParameter(m_kernel, "OUTER_UNROLL_FACTOR", std::vector<uint64_t>{1, 2, 4, 8});
+        m_tuner->AddParameter(m_kernel, "OUTER_UNROLL_FACTOR", std::vector<uint64_t>{1, 2, 4, 8});
 
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "OUTER_UNROLL_FACTOR",
             ktt::ModifierAction::Divide);
 
-        m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
-        m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
-        // m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0});
-        // m_tuner.AddParameter(m_kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0});
+        m_tuner->AddParameter(m_kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+        m_tuner->AddParameter(m_kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0, 1, 2, 4, 8, 16, 32});
+        // m_tuner->AddParameter(m_kernel, "INNER_UNROLL_FACTOR1", std::vector<uint64_t>{0});
+        // m_tuner->AddParameter(m_kernel, "INNER_UNROLL_FACTOR2", std::vector<uint64_t>{0});
 
 
-        m_tuner.AddParameter(m_kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "LOCAL_MEM", std::vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "USE_SOA", std::vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "LOCAL_MEM", std::vector<uint64_t>{0, 1});
 
         if (m_computeApi == ktt::ComputeApi::OpenCL)
         {
-            m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
-            m_tuner.AddParameter(m_kernel, "VECTOR_TYPE", std::vector<uint64_t>{1, 2, 4, 8, 16});
+            m_tuner->AddParameter(m_kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
+            m_tuner->AddParameter(m_kernel, "VECTOR_TYPE", std::vector<uint64_t>{1, 2, 4, 8, 16});
         }
         else
         {
-            m_tuner.AddParameter(m_kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
-            m_tuner.AddParameter(m_kernel, "VECTOR_TYPE", std::vector<uint64_t>{1, 2, 4});
+            m_tuner->AddParameter(m_kernel, "USE_CONSTANT_MEMORY", std::vector<uint64_t>{0});
+            m_tuner->AddParameter(m_kernel, "VECTOR_TYPE", std::vector<uint64_t>{1, 2, 4});
         }
 
         // Add conditions
         auto lteq = [](const std::vector<uint64_t>& vector) {return vector.at(0) <= vector.at(1);};
-        m_tuner.AddConstraint(m_kernel, {"INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR"}, lteq);
+        m_tuner->AddConstraint(m_kernel, {"INNER_UNROLL_FACTOR2", "OUTER_UNROLL_FACTOR"}, lteq);
         auto lteq256 = [](const std::vector<uint64_t>& vector) {return vector.at(0) * vector.at(1) <= 256;};
-        m_tuner.AddConstraint(m_kernel, {"INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2"}, lteq256);
+        m_tuner->AddConstraint(m_kernel, {"INNER_UNROLL_FACTOR1", "INNER_UNROLL_FACTOR2"}, lteq256);
         auto vectorizedSoA = [](const std::vector<uint64_t>& vector) {return (vector.at(0) == 1 && vector.at(1) == 0) || (vector.at(1) == 1);};
-        m_tuner.AddConstraint(m_kernel, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
+        m_tuner->AddConstraint(m_kernel, std::vector<std::string>{"VECTOR_TYPE", "USE_SOA"}, vectorizedSoA);
         auto blockSize = [](const std::vector<uint64_t>& vector) {return (vector.at(0) * vector.at(1) >= 64) && (vector.at(0) * vector.at(1) <= 1024);};
-        m_tuner.AddConstraint(m_kernel, std::vector<std::string>{"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, blockSize);
+        m_tuner->AddConstraint(m_kernel, std::vector<std::string>{"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, blockSize);
     }
 
     void InitReference() override

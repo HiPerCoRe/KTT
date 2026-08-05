@@ -53,12 +53,12 @@ protected:
 
     void InitKernel() override
     {
-        m_kSizeMId = m_tuner.AddArgumentScalar(m_kSizeM);
-        m_kSizeNId = m_tuner.AddArgumentScalar(m_kSizeN);
-        m_kSizeKId = m_tuner.AddArgumentScalar(m_kSizeK);
-        m_matAId = m_tuner.AddArgumentVector(m_matA, ktt::ArgumentAccessType::ReadOnly);
-        m_matBId = m_tuner.AddArgumentVector(m_matB, ktt::ArgumentAccessType::ReadOnly);
-        m_matCId = m_tuner.AddArgumentVector(m_matC, ktt::ArgumentAccessType::WriteOnly);
+        m_kSizeMId = m_tuner->AddArgumentScalar(m_kSizeM);
+        m_kSizeNId = m_tuner->AddArgumentScalar(m_kSizeN);
+        m_kSizeKId = m_tuner->AddArgumentScalar(m_kSizeK);
+        m_matAId = m_tuner->AddArgumentVector(m_matA, ktt::ArgumentAccessType::ReadOnly);
+        m_matBId = m_tuner->AddArgumentVector(m_matB, ktt::ArgumentAccessType::ReadOnly);
+        m_matCId = m_tuner->AddArgumentVector(m_matC, ktt::ArgumentAccessType::WriteOnly);
 
         InitKernelDefault("gemm_fast", "Gemm", m_gridDimensions,
             {m_kSizeMId, m_kSizeNId, m_kSizeKId, m_matAId, m_matBId, m_matCId});
@@ -66,37 +66,37 @@ protected:
 
     void InitTuningSpace() override
     {
-        m_tuner.AddParameter(m_kernel, "MWG", vector<uint64_t>{16, 32, 64, 128});
-        m_tuner.AddParameter(m_kernel, "NWG", vector<uint64_t>{16, 32, 64, 128});
-        m_tuner.AddParameter(m_kernel, "KWG", vector<uint64_t>{16, 32});
-        m_tuner.AddParameter(m_kernel, "MDIMC", vector<uint64_t>{8, 16, 32});
-        m_tuner.AddParameter(m_kernel, "NDIMC", vector<uint64_t>{8, 16, 32});
-        m_tuner.AddParameter(m_kernel, "MDIMA", vector<uint64_t>{8, 16, 32});
-        m_tuner.AddParameter(m_kernel, "NDIMB", vector<uint64_t>{8, 16, 32});
-        m_tuner.AddParameter(m_kernel, "KWI", vector<uint64_t>{2, 8});
+        m_tuner->AddParameter(m_kernel, "MWG", vector<uint64_t>{16, 32, 64, 128});
+        m_tuner->AddParameter(m_kernel, "NWG", vector<uint64_t>{16, 32, 64, 128});
+        m_tuner->AddParameter(m_kernel, "KWG", vector<uint64_t>{16, 32});
+        m_tuner->AddParameter(m_kernel, "MDIMC", vector<uint64_t>{8, 16, 32});
+        m_tuner->AddParameter(m_kernel, "NDIMC", vector<uint64_t>{8, 16, 32});
+        m_tuner->AddParameter(m_kernel, "MDIMA", vector<uint64_t>{8, 16, 32});
+        m_tuner->AddParameter(m_kernel, "NDIMB", vector<uint64_t>{8, 16, 32});
+        m_tuner->AddParameter(m_kernel, "KWI", vector<uint64_t>{2, 8});
 
         if (m_computeApi == ktt::ComputeApi::OpenCL)
         {
-            m_tuner.AddParameter(m_kernel, "VWM", vector<uint64_t>{1, 2, 4, 8});
-            m_tuner.AddParameter(m_kernel, "VWN", vector<uint64_t>{1, 2, 4, 8});
+            m_tuner->AddParameter(m_kernel, "VWM", vector<uint64_t>{1, 2, 4, 8});
+            m_tuner->AddParameter(m_kernel, "VWN", vector<uint64_t>{1, 2, 4, 8});
         }
         else
         {
-            m_tuner.AddParameter(m_kernel, "VWM", vector<uint64_t>{1, 2, 4});
-            m_tuner.AddParameter(m_kernel, "VWN", vector<uint64_t>{1, 2, 4});
+            m_tuner->AddParameter(m_kernel, "VWM", vector<uint64_t>{1, 2, 4});
+            m_tuner->AddParameter(m_kernel, "VWN", vector<uint64_t>{1, 2, 4});
         }
 
-        m_tuner.AddParameter(m_kernel, "STRM", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "STRN", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "SA", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "SB", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "PRECISION", vector<uint64_t>{32});
+        m_tuner->AddParameter(m_kernel, "STRM", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "STRN", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "SA", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "SB", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "PRECISION", vector<uint64_t>{32});
 
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "MWG", ktt::ModifierAction::Divide);
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "NWG", ktt::ModifierAction::Divide);
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "MWG", ktt::ModifierAction::Divide);
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, "NWG", ktt::ModifierAction::Divide);
 
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "MDIMC", ktt::ModifierAction::Multiply);
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "NDIMC", ktt::ModifierAction::Multiply);
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "MDIMC", ktt::ModifierAction::Multiply);
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "NDIMC", ktt::ModifierAction::Multiply);
 
         // Add conditions
         // Sets constraints: Set-up the constraints functions to use. The constraints require a function
@@ -108,13 +108,13 @@ protected:
         auto multipleOfXMulY = [](const std::vector<uint64_t>& v) {return IsMultiple(v[0], v[1] * v[2]);};
         auto multipleOfXMulYDivZ = [](const std::vector<uint64_t>& v) {return IsMultiple(v[0], (v[1] * v[2]) / v[3]);};
 
-        m_tuner.AddConstraint(m_kernel, {"KWG", "KWI"}, multipleOfX);
-        m_tuner.AddConstraint(m_kernel, {"MWG", "MDIMC", "VWM"}, multipleOfXMulY);
-        m_tuner.AddConstraint(m_kernel, {"NWG", "NDIMC", "VWN"}, multipleOfXMulY);
-        m_tuner.AddConstraint(m_kernel, {"MWG", "MDIMA", "VWM"}, multipleOfXMulY);
-        m_tuner.AddConstraint(m_kernel, {"NWG", "NDIMB", "VWN"}, multipleOfXMulY);
-        m_tuner.AddConstraint(m_kernel, {"KWG", "MDIMC", "NDIMC", "MDIMA"}, multipleOfXMulYDivZ);
-        m_tuner.AddConstraint(m_kernel, {"KWG", "MDIMC", "NDIMC", "NDIMB"}, multipleOfXMulYDivZ);
+        m_tuner->AddConstraint(m_kernel, {"KWG", "KWI"}, multipleOfX);
+        m_tuner->AddConstraint(m_kernel, {"MWG", "MDIMC", "VWM"}, multipleOfXMulY);
+        m_tuner->AddConstraint(m_kernel, {"NWG", "NDIMC", "VWN"}, multipleOfXMulY);
+        m_tuner->AddConstraint(m_kernel, {"MWG", "MDIMA", "VWM"}, multipleOfXMulY);
+        m_tuner->AddConstraint(m_kernel, {"NWG", "NDIMB", "VWN"}, multipleOfXMulY);
+        m_tuner->AddConstraint(m_kernel, {"KWG", "MDIMC", "NDIMC", "MDIMA"}, multipleOfXMulYDivZ);
+        m_tuner->AddConstraint(m_kernel, {"KWG", "MDIMC", "NDIMC", "NDIMB"}, multipleOfXMulYDivZ);
     }
 
     void InitReference() override

@@ -46,10 +46,10 @@ protected:
         const ktt::DimensionVector ndRangeDimensions(m_dataSize);
         const ktt::DimensionVector workGroupDimensions;
 
-        m_pointsId = m_tuner.AddArgumentVector(m_points, ktt::ArgumentAccessType::ReadOnly);
-        m_verticesId = m_tuner.AddArgumentVector(m_vertices, ktt::ArgumentAccessType::ReadOnly);
-        m_bitmapId = m_tuner.AddArgumentVector(m_bitmap, ktt::ArgumentAccessType::WriteOnly);
-        m_dataSizeId = m_tuner.AddArgumentScalar(m_dataSize);
+        m_pointsId = m_tuner->AddArgumentVector(m_points, ktt::ArgumentAccessType::ReadOnly);
+        m_verticesId = m_tuner->AddArgumentVector(m_vertices, ktt::ArgumentAccessType::ReadOnly);
+        m_bitmapId = m_tuner->AddArgumentVector(m_bitmap, ktt::ArgumentAccessType::WriteOnly);
+        m_dataSizeId = m_tuner->AddArgumentScalar(m_dataSize);
 
         InitKernelDefault("Pnpoly", "Pnpoly", ndRangeDimensions, {m_bitmapId, m_pointsId, m_verticesId, m_dataSizeId});
     }
@@ -59,7 +59,7 @@ protected:
         const ktt::DimensionVector referenceNdRangeDimensions(m_dataSize/256);
         const ktt::DimensionVector referenceWorkGroupDimensions(256);
 
-        m_vertSizeId = m_tuner.AddArgumentScalar(m_vertSize);
+        m_vertSizeId = m_tuner->AddArgumentScalar(m_vertSize);
 
         InitReferenceKernelDefault("PnpolyReference", referenceNdRangeDimensions, referenceWorkGroupDimensions,
                                    {m_bitmapId, m_pointsId, m_verticesId, m_dataSizeId, m_vertSizeId},
@@ -69,13 +69,13 @@ protected:
     void InitTuningSpace() override
     {
         // fake tuning parameters, encoding input
-        m_tuner.AddParameter(m_kernel, "VERTICES", vector<uint64_t>{m_vertSize});
+        m_tuner->AddParameter(m_kernel, "VERTICES", vector<uint64_t>{m_vertSize});
 
         // tuning parameters
-        m_tuner.AddParameter(m_kernel, "BLOCK_SIZE_X", vector<uint64_t>{32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800, 832, 864, 896, 928, 960, 992});
-        m_tuner.AddParameter(m_kernel, "TILE_SIZE", vector<uint64_t>{1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20});
-        m_tuner.AddParameter(m_kernel, "BETWEEN_METHOD", vector<uint64_t>{0, 1, 2, 3});
-        m_tuner.AddParameter(m_kernel, "USE_METHOD", vector<uint64_t>{0, 1, 2});
+        m_tuner->AddParameter(m_kernel, "BLOCK_SIZE_X", vector<uint64_t>{32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800, 832, 864, 896, 928, 960, 992});
+        m_tuner->AddParameter(m_kernel, "TILE_SIZE", vector<uint64_t>{1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20});
+        m_tuner->AddParameter(m_kernel, "BETWEEN_METHOD", vector<uint64_t>{0, 1, 2, 3});
+        m_tuner->AddParameter(m_kernel, "USE_METHOD", vector<uint64_t>{0, 1, 2});
 
         // Add kernel dimension modifiers based on added tuning parameters
         auto globalModifier = [](const uint64_t size, const vector<uint64_t>& vector)
@@ -83,10 +83,10 @@ protected:
             return (((size+vector.at(0)-1) / vector.at(0))+vector.at(1)-1) / vector.at(1);
         };
 
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, {"BLOCK_SIZE_X", "TILE_SIZE"},
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, {"BLOCK_SIZE_X", "TILE_SIZE"},
             globalModifier);
 
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "BLOCK_SIZE_X", ktt::ModifierAction::Multiply);
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "BLOCK_SIZE_X", ktt::ModifierAction::Multiply);
     }
 };
 

@@ -14,7 +14,7 @@ protected:
         m_inputSize1 = static_cast<uint64_t>(sqrt(m_problemSize)) * 1024;
         m_inputSize2 = m_inputSize1;
 
-        m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     }
 
     friend ExampleBase;
@@ -63,8 +63,8 @@ protected:
 
     void InitKernel() override
     {
-        m_aId = m_tuner.AddArgumentVector(m_a, ktt::ArgumentAccessType::ReadOnly);
-        m_bId = m_tuner.AddArgumentVector(m_b, ktt::ArgumentAccessType::ReadWrite);
+        m_aId = m_tuner->AddArgumentVector(m_a, ktt::ArgumentAccessType::ReadOnly);
+        m_bId = m_tuner->AddArgumentVector(m_b, ktt::ArgumentAccessType::ReadWrite);
 
         InitKernelDefault("rl_1", "PRL", ktt::DimensionVector(), {m_aId, m_bId});
     }
@@ -108,47 +108,47 @@ protected:
         auto NoPostInSecondKernelConstraint = [](const vector<uint64_t>& v) { return v[0] == 1 || (v[0] % v[1] == 0); };
 
         // Add parameters
-        m_tuner.AddParameter(m_kernel, "CACHE_L_CB", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "CACHE_P_CB", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "G_CB_RES_DEST_LEVEL", vector<uint64_t>{2});
-        m_tuner.AddParameter(m_kernel, "L_CB_RES_DEST_LEVEL", vector<uint64_t>{2, 1, 0});
-        m_tuner.AddParameter(m_kernel, "P_CB_RES_DEST_LEVEL", vector<uint64_t>{2, 1, 0});
+        m_tuner->AddParameter(m_kernel, "CACHE_L_CB", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "CACHE_P_CB", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "G_CB_RES_DEST_LEVEL", vector<uint64_t>{2});
+        m_tuner->AddParameter(m_kernel, "L_CB_RES_DEST_LEVEL", vector<uint64_t>{2, 1, 0});
+        m_tuner->AddParameter(m_kernel, "P_CB_RES_DEST_LEVEL", vector<uint64_t>{2, 1, 0});
 
-        m_tuner.AddParameter(m_kernel, "OCL_DIM_L_1", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "OCL_DIM_R_1", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "OCL_DIM_L_1", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "OCL_DIM_R_1", vector<uint64_t>{0, 1});
 
-        m_tuner.AddParameter(m_kernel, "INPUT_SIZE_L_1", vector<uint64_t>{m_inputSize1});
-        m_tuner.AddParameter(m_kernel, "L_CB_SIZE_L_1", ParameterRange(m_inputSize1));
-        m_tuner.AddParameter(m_kernel, "P_CB_SIZE_L_1", ParameterRange(m_inputSize1));
-        m_tuner.AddParameter(m_kernel, "NUM_WG_L_1", ParameterRange(m_inputSize1));
-        m_tuner.AddParameter(m_kernel, "NUM_WI_L_1", ParameterRange(m_inputSize1));
+        m_tuner->AddParameter(m_kernel, "INPUT_SIZE_L_1", vector<uint64_t>{m_inputSize1});
+        m_tuner->AddParameter(m_kernel, "L_CB_SIZE_L_1", ParameterRange(m_inputSize1));
+        m_tuner->AddParameter(m_kernel, "P_CB_SIZE_L_1", ParameterRange(m_inputSize1));
+        m_tuner->AddParameter(m_kernel, "NUM_WG_L_1", ParameterRange(m_inputSize1));
+        m_tuner->AddParameter(m_kernel, "NUM_WI_L_1", ParameterRange(m_inputSize1));
 
-        m_tuner.AddParameter(m_kernel, "INPUT_SIZE_R_1", vector<uint64_t>{m_inputSize2});
-        m_tuner.AddParameter(m_kernel, "L_CB_SIZE_R_1", ParameterRange(m_inputSize2));
-        m_tuner.AddParameter(m_kernel, "P_CB_SIZE_R_1", ParameterRange(m_inputSize2));
-        m_tuner.AddParameter(m_kernel, "NUM_WG_R_1", ParameterRange(m_inputSize2));
-        m_tuner.AddParameter(m_kernel, "NUM_WI_R_1", ParameterRange(m_inputSize2));
+        m_tuner->AddParameter(m_kernel, "INPUT_SIZE_R_1", vector<uint64_t>{m_inputSize2});
+        m_tuner->AddParameter(m_kernel, "L_CB_SIZE_R_1", ParameterRange(m_inputSize2));
+        m_tuner->AddParameter(m_kernel, "P_CB_SIZE_R_1", ParameterRange(m_inputSize2));
+        m_tuner->AddParameter(m_kernel, "NUM_WG_R_1", ParameterRange(m_inputSize2));
+        m_tuner->AddParameter(m_kernel, "NUM_WI_R_1", ParameterRange(m_inputSize2));
 
-        m_tuner.AddParameter(m_kernel, "L_REDUCTION", vector<uint64_t>{1});
-        m_tuner.AddParameter(m_kernel, "P_WRITE_BACK", vector<uint64_t>{0});
-        m_tuner.AddParameter(m_kernel, "L_WRITE_BACK", vector<uint64_t>{1});
+        m_tuner->AddParameter(m_kernel, "L_REDUCTION", vector<uint64_t>{1});
+        m_tuner->AddParameter(m_kernel, "P_WRITE_BACK", vector<uint64_t>{0});
+        m_tuner->AddParameter(m_kernel, "L_WRITE_BACK", vector<uint64_t>{1});
 
         // Add constraints
-        m_tuner.AddConstraint(m_kernel, {"G_CB_RES_DEST_LEVEL", "L_CB_RES_DEST_LEVEL", "P_CB_RES_DEST_LEVEL"}, DescendingConstraint);
-        m_tuner.AddConstraint(m_kernel, {"OCL_DIM_L_1", "OCL_DIM_R_1"}, UnequalConstraint);
+        m_tuner->AddConstraint(m_kernel, {"G_CB_RES_DEST_LEVEL", "L_CB_RES_DEST_LEVEL", "P_CB_RES_DEST_LEVEL"}, DescendingConstraint);
+        m_tuner->AddConstraint(m_kernel, {"OCL_DIM_L_1", "OCL_DIM_R_1"}, UnequalConstraint);
 
-        m_tuner.AddConstraint(m_kernel, {"L_CB_SIZE_L_1", "INPUT_SIZE_L_1"}, DividesConstraint);
-        m_tuner.AddConstraint(m_kernel, {"P_CB_SIZE_L_1", "L_CB_SIZE_L_1"}, DividesConstraint);
-        m_tuner.AddConstraint(m_kernel, {"NUM_WG_L_1", "INPUT_SIZE_L_1", "L_CB_SIZE_L_1"}, DividesDivConstraint);
-        m_tuner.AddConstraint(m_kernel, {"NUM_WI_L_1", "L_CB_SIZE_L_1", "P_CB_SIZE_L_1"}, DividesDivConstraint);
-        m_tuner.AddConstraint(m_kernel, {"NUM_WI_L_1", "INPUT_SIZE_L_1", "NUM_WG_L_1"}, LessThanOrEqualCeilDivConstraint);
+        m_tuner->AddConstraint(m_kernel, {"L_CB_SIZE_L_1", "INPUT_SIZE_L_1"}, DividesConstraint);
+        m_tuner->AddConstraint(m_kernel, {"P_CB_SIZE_L_1", "L_CB_SIZE_L_1"}, DividesConstraint);
+        m_tuner->AddConstraint(m_kernel, {"NUM_WG_L_1", "INPUT_SIZE_L_1", "L_CB_SIZE_L_1"}, DividesDivConstraint);
+        m_tuner->AddConstraint(m_kernel, {"NUM_WI_L_1", "L_CB_SIZE_L_1", "P_CB_SIZE_L_1"}, DividesDivConstraint);
+        m_tuner->AddConstraint(m_kernel, {"NUM_WI_L_1", "INPUT_SIZE_L_1", "NUM_WG_L_1"}, LessThanOrEqualCeilDivConstraint);
 
-        m_tuner.AddConstraint(m_kernel, {"L_CB_SIZE_R_1", "INPUT_SIZE_R_1"}, DividesConstraint);
-        m_tuner.AddConstraint(m_kernel, {"P_CB_SIZE_R_1", "L_CB_SIZE_R_1"}, DividesConstraint);
-        m_tuner.AddConstraint(m_kernel, {"NUM_WG_R_1", "INPUT_SIZE_R_1", "L_CB_SIZE_R_1"}, DividesDivConstraint);
-        m_tuner.AddConstraint(m_kernel, {"NUM_WI_R_1", "L_CB_SIZE_R_1", "P_CB_SIZE_R_1"}, DividesDivConstraint);
-        m_tuner.AddConstraint(m_kernel, {"NUM_WI_R_1", "INPUT_SIZE_R_1", "NUM_WG_R_1"}, LessThanOrEqualCeilDivConstraint);
-        m_tuner.AddConstraint(m_kernel, {"NUM_WG_R_1", "L_CB_SIZE_R_1"}, NoPostInSecondKernelConstraint);
+        m_tuner->AddConstraint(m_kernel, {"L_CB_SIZE_R_1", "INPUT_SIZE_R_1"}, DividesConstraint);
+        m_tuner->AddConstraint(m_kernel, {"P_CB_SIZE_R_1", "L_CB_SIZE_R_1"}, DividesConstraint);
+        m_tuner->AddConstraint(m_kernel, {"NUM_WG_R_1", "INPUT_SIZE_R_1", "L_CB_SIZE_R_1"}, DividesDivConstraint);
+        m_tuner->AddConstraint(m_kernel, {"NUM_WI_R_1", "L_CB_SIZE_R_1", "P_CB_SIZE_R_1"}, DividesDivConstraint);
+        m_tuner->AddConstraint(m_kernel, {"NUM_WI_R_1", "INPUT_SIZE_R_1", "NUM_WG_R_1"}, LessThanOrEqualCeilDivConstraint);
+        m_tuner->AddConstraint(m_kernel, {"NUM_WG_R_1", "L_CB_SIZE_R_1"}, NoPostInSecondKernelConstraint);
     }
 };
 

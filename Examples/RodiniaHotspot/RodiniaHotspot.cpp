@@ -179,11 +179,11 @@ protected:
   {
     #if USE_PROFILING == 1
     printf("Executing with profiling switched ON.\n");
-    m_tuner.setKernelProfiling(true);
+    m_tuner->setKernelProfiling(true);
     #endif
 
-    m_tuner.SetCompilerOptions("-I./");
-    m_tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+    m_tuner->SetCompilerOptions("-I./");
+    m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
 
     m_size = m_grid_rows*m_grid_cols;
     // --------------- pyramid parameters --------------- 
@@ -210,20 +210,20 @@ protected:
   void InitKernel() override
   {
     // Add all arguments utilized by kernels
-    m_iterationId = m_tuner.AddArgumentScalar(m_iteration);
-    m_powerId = m_tuner.AddArgumentVector(m_power, ktt::ArgumentAccessType::ReadOnly);
-    m_tempSrcId = m_tuner.AddArgumentVector(std::vector<float>(m_tempSrc), ktt::ArgumentAccessType::ReadWrite);
-    m_tempDstId = m_tuner.AddArgumentVector(std::vector<float>(m_tempDst), ktt::ArgumentAccessType::ReadWrite);
-    m_grid_colsId = m_tuner.AddArgumentScalar(m_grid_cols);
-    m_grid_rowsId = m_tuner.AddArgumentScalar(m_grid_rows);
+    m_iterationId = m_tuner->AddArgumentScalar(m_iteration);
+    m_powerId = m_tuner->AddArgumentVector(m_power, ktt::ArgumentAccessType::ReadOnly);
+    m_tempSrcId = m_tuner->AddArgumentVector(std::vector<float>(m_tempSrc), ktt::ArgumentAccessType::ReadWrite);
+    m_tempDstId = m_tuner->AddArgumentVector(std::vector<float>(m_tempDst), ktt::ArgumentAccessType::ReadWrite);
+    m_grid_colsId = m_tuner->AddArgumentScalar(m_grid_cols);
+    m_grid_rowsId = m_tuner->AddArgumentScalar(m_grid_rows);
 
-    m_borderColsId = m_tuner.AddArgumentScalar(m_borderCols);
-    m_borderRowsId = m_tuner.AddArgumentScalar(m_borderRows);
-    m_CapId = m_tuner.AddArgumentScalar(m_Cap);
-    m_RxId = m_tuner.AddArgumentScalar(m_Rx);
-    m_RyId = m_tuner.AddArgumentScalar(m_Ry);
-    m_RzId = m_tuner.AddArgumentScalar(m_Rz);
-    m_stepId = m_tuner.AddArgumentScalar(m_step);
+    m_borderColsId = m_tuner->AddArgumentScalar(m_borderCols);
+    m_borderRowsId = m_tuner->AddArgumentScalar(m_borderRows);
+    m_CapId = m_tuner->AddArgumentScalar(m_Cap);
+    m_RxId = m_tuner->AddArgumentScalar(m_Rx);
+    m_RyId = m_tuner->AddArgumentScalar(m_Ry);
+    m_RzId = m_tuner->AddArgumentScalar(m_Rz);
+    m_stepId = m_tuner->AddArgumentScalar(m_step);
 
     // Total NDRange m_size matches number of grid points
     const ktt::DimensionVector ndRangeDimensions;
@@ -232,7 +232,7 @@ protected:
         m_grid_colsId, m_grid_rowsId, m_borderColsId, m_borderRowsId,
         m_CapId, m_RxId, m_RyId, m_RzId, m_stepId });
     
-    m_tuner.SetLauncher(m_kernel, [this](ktt::ComputeInterface &interface) {
+    m_tuner->SetLauncher(m_kernel, [this](ktt::ComputeInterface &interface) {
       const vector<ktt::ParameterPair>& pairs = interface.GetCurrentConfiguration().GetPairs();
       uint64_t blocksizeRows = ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "BLOCK_SIZE_ROWS");
       uint64_t blocksizeCols = ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "BLOCK_SIZE_COLS");
@@ -277,21 +277,21 @@ protected:
   void InitTuningSpace() override
   {
     // Multiply workgroup m_size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    m_tuner.AddParameter(m_kernel, "BLOCK_SIZE_ROWS", vector<uint64_t>{8, 16, 32, 64});
-    m_tuner.AddParameter(m_kernel, "BLOCK_SIZE_COLS", vector<uint64_t>{8, 16, 32, 64});
-    m_tuner.AddParameter(m_kernel, "PYRAMID_HEIGHT", vector<uint64_t>{1, 2, 4, 8});
-    m_tuner.AddParameter(m_kernel, "WORK_GROUP_Y", vector<uint64_t>{4, 8, 16, 32, 64});
-    m_tuner.AddParameter(m_kernel, "LOCAL_MEMORY", vector<uint64_t>{0, 1});
-    m_tuner.AddParameter(m_kernel, "LOOP_UNROLL", vector<uint64_t>{0,1});
+    m_tuner->AddParameter(m_kernel, "BLOCK_SIZE_ROWS", vector<uint64_t>{8, 16, 32, 64});
+    m_tuner->AddParameter(m_kernel, "BLOCK_SIZE_COLS", vector<uint64_t>{8, 16, 32, 64});
+    m_tuner->AddParameter(m_kernel, "PYRAMID_HEIGHT", vector<uint64_t>{1, 2, 4, 8});
+    m_tuner->AddParameter(m_kernel, "WORK_GROUP_Y", vector<uint64_t>{4, 8, 16, 32, 64});
+    m_tuner->AddParameter(m_kernel, "LOCAL_MEMORY", vector<uint64_t>{0, 1});
+    m_tuner->AddParameter(m_kernel, "LOOP_UNROLL", vector<uint64_t>{0,1});
     // Add conditions
     auto enoughToCompute = [](const std::vector<size_t>& vector) {
       return vector.at(0)/(vector.at(2)*2) > 1 && vector.at(1)/(vector.at(2)*2) > 1;
     };
-    m_tuner.AddConstraint(m_kernel, {"BLOCK_SIZE_COLS", "WORK_GROUP_Y", "PYRAMID_HEIGHT"}, enoughToCompute);
+    m_tuner->AddConstraint(m_kernel, {"BLOCK_SIZE_COLS", "WORK_GROUP_Y", "PYRAMID_HEIGHT"}, enoughToCompute);
     auto workGroupSmaller = [](const std::vector<size_t>& vector) {return vector.at(0)<=vector.at(1);};
     auto workGroupDividable = [](const std::vector<size_t>& vector) {return vector.at(1)%vector.at(0) == 0;};
-    m_tuner.AddConstraint(m_kernel, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"}, workGroupSmaller);
-    m_tuner.AddConstraint(m_kernel, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"}, workGroupDividable);
+    m_tuner->AddConstraint(m_kernel, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"}, workGroupSmaller);
+    m_tuner->AddConstraint(m_kernel, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"}, workGroupDividable);
   }
 
   void InitReference() override
@@ -303,7 +303,7 @@ protected:
         m_grid_colsId, m_grid_rowsId, m_borderColsId, m_borderRowsId,
         m_CapId, m_RxId, m_RyId, m_RzId, m_stepId }, {m_tempDstId});
 
-    m_tuner.SetLauncher(m_refKernel, [this](ktt::ComputeInterface &interface) {
+    m_tuner->SetLauncher(m_refKernel, [this](ktt::ComputeInterface &interface) {
       int smallBlockCol = BLOCK_SIZE_REF-PYRAMID_HEIGHT_REF*EXPAND_RATE;
       int smallBlockRow = BLOCK_SIZE_REF-PYRAMID_HEIGHT_REF*EXPAND_RATE;
       int blockCols = m_grid_cols/smallBlockCol+((m_grid_cols%smallBlockCol==0)?0:1);
