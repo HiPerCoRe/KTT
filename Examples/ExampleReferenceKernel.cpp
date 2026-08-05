@@ -4,25 +4,29 @@
 using namespace std;
 
 ExampleReferenceKernel::ExampleReferenceKernel(
-    shared_ptr<ExampleRefKernelConfiguration> config,
+    int argc, char **argv,
     int defaultProblemSize,
     string exampleFolderPath,
     string defaultKernelFileBaseName,
     string defaultRefKernelFileBaseName
 ) :
-    ExampleBase(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+    ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
 {
-    if (config->refKernelFile.empty()) {
         m_refKernelFile = GetKernelFilePath(exampleFolderPath, defaultRefKernelFileBaseName);
-    } else {
-        m_refKernelFile = config->refKernelFile;
-    }
+}
+
+void ExampleReferenceKernel::InitCLI()
+{
+    ExampleBase::InitCLI();
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_refKernelFile = args[0];
+    }, "--refKernelPath", "Reference kernel file path (expects string)", "<path>", 1});
 }
 
 void ExampleReferenceKernel::PostInitialize()
 {
     ExampleBase::PostInitialize();
-    if (!m_config->rapidTest) InitReference();
+    if (m_rapidTest) InitReference();
 }
 
 void ExampleReferenceKernel::InitReferenceKernelDefault(
