@@ -7,106 +7,20 @@
 
 using namespace std;
 
-struct CoulombSum3dConfiguration : ExampleConfiguration
-{
-    uint64_t gridWidth = 128;
-    uint64_t gridHeight = 128;
-    uint64_t gridDepth = 128;
-    uint64_t numberOfAtoms = 256;
-    float gridSpacing = 0.5f;
-    bool sepCompTuning = false;
-};
-
-void SetUpCoulombSum3dOptions(vector<CliOption> &options, CoulombSum3dConfiguration &config)
-{
-    options.emplace_back([&config](const vector<string> &args) {
-        config.gridWidth = stoul(args[0]);
-    }, "--gridWidth", "Set the grid width (expects int), scaled proportionally with"
-    " cbrt of problemSize", "<width>", 1);
-    options.emplace_back([&config](const vector<string> &args) {
-        config.gridHeight = stoul(args[0]);
-    }, "--gridHeight", "Set the grid height (expects int), scaled proportionally with"
-    " cbrt of problemSize", "<height>", 1);
-    options.emplace_back([&config](const vector<string> &args) {
-        config.gridDepth = stoul(args[0]);
-    }, "--gridDepth", "Set the grid depth (expects int), scaled proportionally with"
-    " cbrt of problemSize", "<depth>", 1);
-    options.emplace_back([&config](const vector<string> &args) {
-        config.numberOfAtoms = stoul(args[0]);
-    }, "--atoms", "Set the number of atoms (expects int)", "<count>", 1);
-    options.emplace_back([&config](const vector<string> &args) {
-        config.gridSpacing = stof(args[0]);
-    }, "--spacing", "Set the grid spacing (expects float)", "<spacing>", 1);
-    options.emplace_back([&config](const vector<string> &) {
-        config.sepCompTuning = true;
-    }, "--sepCompTuning", "Enable separate compiler parameter tuning.");
-}
-
-CoulombSum3dConfiguration CoulombSum3dProcessInput(int argc, char **argv)
-{
-    CoulombSum3dConfiguration config;
-    vector<CliOption> options;
-    SetUpCommonOptions(options, &config);
-    SetUpCoulombSum3dOptions(options, config);
-
-    IterateArguments(argc, argv, options);
-
-    return config;
-}
-
 class CoulombSum3d : public ExampleReferenceComputation {
 protected:
-    CoulombSum3d(shared_ptr<CoulombSum3dConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+    CoulombSum3d(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
                  string defaultKernelFileBaseName) :
-        ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath,
+        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath,
                                     defaultKernelFileBaseName),
-        m_gridWidth(config->gridWidth * static_cast<size_t>(cbrt(m_problemSize))),
-        m_gridHeight(config->gridHeight * static_cast<size_t>(cbrt(m_problemSize))),
-        m_gridDepth(config->gridDepth * static_cast<size_t>(cbrt(m_problemSize))),
+        m_gridWidth(128 * static_cast<size_t>(cbrt(m_problemSize))),
+        m_gridHeight(128 * static_cast<size_t>(cbrt(m_problemSize))),
+        m_gridDepth(128 * static_cast<size_t>(cbrt(m_problemSize))),
         m_ndRangeDimensions(m_gridWidth, m_gridHeight, m_gridDepth),
         m_workGroupDimensions{1, 1, 1},
-        m_numberOfAtoms(config->numberOfAtoms),
-        m_gridSpacing(config->gridSpacing),
-        m_sepCompTuning(config->sepCompTuning)
-    {
-    }
-
-public:
-    static unique_ptr<CoulombSum3d> Create(
-        int argc, char** argv,
-        int defaultProblemSize,
-        string exampleFolderPath,
-        string defaultKernelFileBaseName
-    ) {
-        auto config = make_shared<CoulombSum3dConfiguration>(CoulombSum3dProcessInput(argc, argv));
-        unique_ptr<CoulombSum3d> ex(new CoulombSum3d(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName));
-        ex->PostInitialize();
-        return ex;
-    }
-
-    void Run()
-    {
-        ExampleBase::Run();
-
-        if (!m_sepCompTuning) return;
-        auto bestConfig = m_tuner->GetBestConfiguration(m_kernel);
-        if (!bestConfig.IsValid()) {
-            cout << "No valid configuration was found. Skippin separate compiler parameter tuning.\n";
-            return;
-        }
-        std::cout << "\nTuning compiler options on top of best kernel configuration..." << std::endl;
-        const auto optResults = m_tuner->TuneOptions(m_kernel, bestConfig);
-        m_tuner->SaveResults(optResults, "CoulombSumOptionsOutput", ktt::OutputFormat::JSON);
-
-        RunStats stats;
-
-        for (const auto& optResult : optResults)
-        {
-            stats.Update(optResult);
-        }
-
-        PrintRunStats("Option tuning stats", stats);
-    }
+        m_numberOfAtoms(256),
+        m_gridSpacing(0.5f)
+    {}
 
 protected:
     friend ExampleBase;
@@ -120,10 +34,8 @@ protected:
     const ktt::DimensionVector m_workGroupDimensions;
     const ktt::DimensionVector m_referenceWorkGroupDimensions{16, 16, 16};
 
-    const int m_numberOfAtoms;
-    const float m_gridSpacing;
-
-    const bool m_sepCompTuning;
+    int m_numberOfAtoms;
+    float m_gridSpacing;
 
     vector<float> m_atomInfo;
     vector<float> m_atomInfoX;
@@ -142,10 +54,27 @@ protected:
     ktt::ArgumentId m_gridDimId;
     ktt::ArgumentId m_energyGridId;
 
-    void AddCompilerParameter(const string &name, const vector<string> &values = {})
+    void InitCLI() override 
     {
-        if (m_sepCompTuning) m_tuner->AddSeparateCompilerParameter(m_kernel, name, values);
-        else m_tuner->AddCompilerParameter(m_kernel, name, values);
+        ExampleBase::InitCLI();
+        m_cli.AddOption({[this](const vector<string> &args) {
+            m_gridWidth = stoul(args[0]);
+        }, "--gridWidth", "Set the grid width (expects int), scaled proportionally with"
+        " cbrt of problemSize", "<width>", 1});
+        m_cli.AddOption({[this](const vector<string> &args) {
+            m_gridHeight = stoul(args[0]);
+        }, "--gridHeight", "Set the grid height (expects int), scaled proportionally with"
+        " cbrt of problemSize", "<height>", 1});
+        m_cli.AddOption({[this](const vector<string> &args) {
+            m_gridDepth = stoul(args[0]);
+        }, "--gridDepth", "Set the grid depth (expects int), scaled proportionally with"
+        " cbrt of problemSize", "<depth>", 1});
+        m_cli.AddOption({[this](const vector<string> &args) {
+            m_numberOfAtoms = stoul(args[0]);
+        }, "--atoms", "Set the number of atoms (expects int)", "<count>", 1});
+        m_cli.AddOption({[this](const vector<string> &args) {
+            m_gridSpacing = stof(args[0]);
+        }, "--spacing", "Set the grid spacing (expects float)", "<spacing>", 1});
     }
 
     void InitData() override
@@ -234,10 +163,10 @@ protected:
                 // -cl-fast-relaxed-math ≈ -cl-finite-math-only + -cl-unsafe-math-optimizations,
                 // where -cl-unsafe-math-optimizations implies -cl-mad-enable, -cl-no-signed-zeros,
                 // and -cl-denorms-are-zero. Tuning them individually reveals which subset is sufficient.
-                AddCompilerParameter("-cl-mad-enable");
-                AddCompilerParameter("-cl-no-signed-zeros");
-                AddCompilerParameter("-cl-finite-math-only");
-                AddCompilerParameter("-cl-denorms-are-zero");
+                m_compilerTuning.AddCompilerParameter("-cl-mad-enable");
+                m_compilerTuning.AddCompilerParameter("-cl-no-signed-zeros");
+                m_compilerTuning.AddCompilerParameter("-cl-finite-math-only");
+                m_compilerTuning.AddCompilerParameter("-cl-denorms-are-zero");
             }
             else // CUDA
             {
@@ -249,7 +178,7 @@ protected:
                 // Relevant here because energyValue[Z_ITERATIONS] can hold up to 32 floats,
                 // creating high register pressure at large Z_ITERATIONS values.
                 // 0 = unlimited (compiler decides), others force a ceiling.
-                AddCompilerParameter("--maxrregcount ", {"0", "32", "40", "48", "64"});
+                m_compilerTuning.AddCompilerParameter("--maxrregcount ", {"0", "32", "40", "48", "64"});
             }
         }
         else // CPP
@@ -259,16 +188,16 @@ protected:
             m_tuner->AddParameter(m_kernel, "OMP_SCHED_CHUNK", vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
             m_tuner->AddParameter(m_kernel, "TILE", vector<uint64_t>{0, 8, 16, 32, 64});
             
-            AddCompilerParameter("-ffast-math");
-            AddCompilerParameter("-O", {"1", "2", "3"});
-            AddCompilerParameter("-funroll-loops");
+            m_compilerTuning.AddCompilerParameter("-ffast-math");
+            m_compilerTuning.AddCompilerParameter("-O", {"1", "2", "3"});
+            m_compilerTuning.AddCompilerParameter("-funroll-loops");
             // Auto-vectorization of the inner atom loop (SIMD via AVX2/AVX512 enabled by -march=native).
-            AddCompilerParameter("-ftree-vectorize");
+            m_compilerTuning.AddCompilerParameter("-ftree-vectorize");
             // Software prefetching of the atom SoA arrays in the inner loop (GCC-specific).
-            AddCompilerParameter("-fprefetch-loop-arrays");
+            m_compilerTuning.AddCompilerParameter("-fprefetch-loop-arrays");
             // Allows the compiler to skip errno updates in math functions (lighter than -ffast-math,
             // enables vectorization of sqrtf without full unsafe-math semantics).
-            AddCompilerParameter("-fno-math-errno");
+            m_compilerTuning.AddCompilerParameter("-fno-math-errno");
 
             auto schedchunk = [](const vector<uint64_t>& vector) {return vector.at(0) == 2 || vector.at(1) == 2; };
             m_tuner->AddConstraint(m_kernel, {"OMP_SCHEDULING", "OMP_SCHED_CHUNK"}, schedchunk);
@@ -277,37 +206,34 @@ protected:
 
     void InitReference() override
     {
-        if (!m_config->rapidTest)
-        {
-            //TODO: this is temporary hack, there should be composition of zeroizing and Coulomb kernel,
-            // otherwise, multiple profiling runs corrupt results
-            m_tuner->SetReferenceComputation(m_energyGridId, [this](void* buffer) {
-                float* grid = static_cast<float*>(buffer);
+        //TODO: this is temporary hack, there should be composition of zeroizing and Coulomb kernel,
+        // otherwise, multiple profiling runs corrupt results
+        m_tuner->SetReferenceComputation(m_energyGridId, [this](void* buffer) {
+            float* grid = static_cast<float*>(buffer);
 
-                #pragma omp parallel for
-                for (size_t z = 0; z < m_gridDepth; z++)
-                    for (size_t y = 0; y < m_gridHeight; y++)
-                        for (size_t x = 0; x < m_gridWidth; x++)
-                        {
-                            float e = 0.0f;
-                            float gx = static_cast<float>(x) * m_gridSpacing;
-                            float gy = static_cast<float>(y) * m_gridSpacing;
-                            float gz = static_cast<float>(z) * m_gridSpacing;
-                            for (int a = 0; a < m_numberOfAtoms; a++)
-                                e += m_atomInfoW[a] * (1.0f / sqrtf((m_atomInfoX[a] - gx) * (m_atomInfoX[a] - gx) +
-                                    (m_atomInfoY[a] - gy) * (m_atomInfoY[a] - gy) +
-                                    (m_atomInfoZ[a] - gz) * (m_atomInfoZ[a] - gz)));
-                            grid[z * m_gridWidth * m_gridHeight + y * m_gridWidth + x] = e;
-                        }
-            });
-            m_tuner->SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
-        }
+            #pragma omp parallel for
+            for (size_t z = 0; z < m_gridDepth; z++)
+                for (size_t y = 0; y < m_gridHeight; y++)
+                    for (size_t x = 0; x < m_gridWidth; x++)
+                    {
+                        float e = 0.0f;
+                        float gx = static_cast<float>(x) * m_gridSpacing;
+                        float gy = static_cast<float>(y) * m_gridSpacing;
+                        float gz = static_cast<float>(z) * m_gridSpacing;
+                        for (int a = 0; a < m_numberOfAtoms; a++)
+                            e += m_atomInfoW[a] * (1.0f / sqrtf((m_atomInfoX[a] - gx) * (m_atomInfoX[a] - gx) +
+                                (m_atomInfoY[a] - gy) * (m_atomInfoY[a] - gy) +
+                                (m_atomInfoZ[a] - gz) * (m_atomInfoZ[a] - gz)));
+                        grid[z * m_gridWidth * m_gridHeight + y * m_gridWidth + x] = e;
+                    }
+        });
+        m_tuner->SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.01);
     }
 };
 
 int main(int argc, char **argv)
 {
-    unique_ptr<CoulombSum3d> coulombSum3d = CoulombSum3d::Create(argc, argv, 8, "Examples/CoulombSum3d", "CoulombSum3d");
+    unique_ptr<CoulombSum3d> coulombSum3d = CoulombSum3d::Create<CoulombSum3d>(argc, argv, 8, "Examples/CoulombSum3d", "CoulombSum3d");
     coulombSum3d->Run();
 
     return 0;
