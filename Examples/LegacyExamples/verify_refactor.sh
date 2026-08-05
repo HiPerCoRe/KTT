@@ -9,12 +9,21 @@
 
 set -e
 
+USAGE="Usage: $0 <ExampleName> <Compute API>
+Example: $0 Sort OpenCl"
 # Get example name from argument
 EXAMPLE_NAME="${1}"
 if [ -z "$EXAMPLE_NAME" ]; then
     echo "Error: Example name required"
-    echo "Usage: $0 <ExampleName>"
-    echo "Example: $0 Sort"
+    echo $USAGE
+    exit 1
+fi
+
+API_TYPE="${2}"
+if [ -z "$API_TYPE" ]; then
+    echo "Error: Compute API required"
+    echo "Usage: $0 <ExampleName> <Compute API>"
+    echo "Example: $0 Sort OpenCl"
     exit 1
 fi
 
@@ -46,7 +55,7 @@ cd "$PROJECT_DIR"
 
 premake5 gmake --reference-versions --no-cuda --platform=amd --cpp
 
-echo "Step 2: Building ${EXAMPLE_NAME}OpenCl and ${EXAMPLE_NAME}ReferenceOpenCl..."
+echo "Step 2: Building ${EXAMPLE_NAME}${API_TYPE} and ${EXAMPLE_NAME}Reference${API_TYPE}..."
 cd "$BUILD_DIR"
 make config=release_x86_64
 
@@ -63,7 +72,7 @@ if [ -f "$REF_OUTPUT_JSON" ]; then
 else
     cd "$BIN_DIR"
     rm $BIN_DIR/*.json || true
-    ./${EXAMPLE_NAME}ReferenceOpenCl || true
+    ./${EXAMPLE_NAME}Reference${API_TYPE} || true
 
     # Save reference version Output.json
     if [ -f "$OUTPUT_JSON" ]; then
@@ -85,7 +94,7 @@ echo ""
 echo "Step 4: Running refactored $EXAMPLE_NAME example..."
 cd "$BIN_DIR"
 rm $BIN_DIR/*.json || true
-./${EXAMPLE_NAME}OpenCl || true
+./${EXAMPLE_NAME}${API_TYPE} || true
 
 # Save refactored version Output.json
 if [ -f "$OUTPUT_JSON" ]; then
