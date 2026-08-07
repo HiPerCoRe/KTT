@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "../ExampleReferenceKernel.h"
-#include "ExampleBase.h"
 
 using namespace std;
 
@@ -128,18 +127,18 @@ protected:
   void InitCLI() override
   {
     ExampleReferenceKernel::InitCLI();
-  m_cli.AddOption({[this](const vector<string> &args) {
-    m_totalIterations = stoul(args[0]);
-  }, "--simIters", "Set the number of simulation iterations (expects int)", "<iterNum>", 1});
-  m_cli.AddOption({[this](const vector<string> &args) {
-    m_grid_rows = stoul(args[0]);
-    m_grid_cols = stoul(args[1]);
-  }, "--gridSize", "Set the grid m_size (expects int, int)", "<rows> <cols>", 2});
-  m_cli.AddOption({[this](const vector<string> &args) {
-    m_inTempFile = args[0];
-    m_inPowerFile = args[1];
-    m_outTempFile = args[2];
-  }, "--files", "Sets the files input temperature and m_power, and output temperature (expects string, string, string)", "<inTempFile> <inPowerFile> <outTempFile>", 3});
+    m_cli.AddOption({[this](const vector<string> &args) {
+      m_totalIterations = stoul(args[0]);
+    }, "--simIters", "Set the number of simulation iterations (expects int)", "<iterNum>", 1});
+    m_cli.AddOption({[this](const vector<string> &args) {
+      m_grid_rows = stoul(args[0]);
+      m_grid_cols = stoul(args[1]);
+    }, "--gridSize", "Set the grid m_size (expects int, int)", "<rows> <cols>", 2});
+    m_cli.AddOption({[this](const vector<string> &args) {
+      m_inTempFile = args[0];
+      m_inPowerFile = args[1];
+      m_outTempFile = args[2];
+    }, "--files", "Sets the files input temperature and m_power, and output temperature (expects string, string, string)", "<inTempFile> <inPowerFile> <outTempFile>", 3});
   }
 
   void InitData() override
