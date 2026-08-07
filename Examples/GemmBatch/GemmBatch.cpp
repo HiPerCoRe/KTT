@@ -7,9 +7,9 @@ using namespace std;
 
 class GemmBatch : public ExampleReferenceComputation {
 protected:
-    GemmBatch(std::shared_ptr<ExampleConfiguration> config, int defaultProblemSize,
+    GemmBatch(int argc, char **argv, int defaultProblemSize,
               std::string exampleFolderPath, std::string defaultKernelFileBaseName) :
-        ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
     {
         m_batch = m_problemSize * 16 * 1024;
     }

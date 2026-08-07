@@ -7,9 +7,9 @@ bool IsMultiple(size_t a, size_t b) { return a % b == 0; };
 
 class Covariance : public ExampleReferenceComputation {
 protected:
-    Covariance(shared_ptr<ExampleConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+    Covariance(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
                string defaultKernelFileBaseName) :
-        ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName),
+        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName),
         // Covariance has O(n × m²) complexity. For square matrices where n ≈ m,
         // we scale with cube root of problem size to keep total work proportional
         m_n(static_cast<int>(sqrt(m_problemSize)) * 1024),

@@ -9,11 +9,11 @@ class Sort2 : public ExampleReferenceComputation
 {
 protected:
     Sort2(
-        std::shared_ptr<ExampleConfiguration> config,
+        int argc, char **argv,
         int defaultProblemSize,
         string exampleFolderPath, string defaultKernelFileBaseName
     ):
-    ExampleReferenceComputation(config, defaultProblemSize,
+    ExampleReferenceComputation(argc, argv, defaultProblemSize,
         exampleFolderPath, defaultKernelFileBaseName
     )
     {

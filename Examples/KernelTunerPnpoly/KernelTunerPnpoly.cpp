@@ -6,10 +6,10 @@ using namespace std;
 
 class KernelTunerPnpoly: public ExampleReferenceKernel {
 protected:
-    KernelTunerPnpoly(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize,
+    KernelTunerPnpoly(int argc, char **argv, int defaultProblemSize,
               string exampleFolderPath, string defaultKernelFileBaseName,
               string defaultReferenceKernelFileBaseName):
-        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
+        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
                 defaultReferenceKernelFileBaseName)
     {
         m_dataSize = m_problemSize * 1024 * 1024;

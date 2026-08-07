@@ -5,9 +5,9 @@ using namespace std;
 
 class AtfCCSD : public ExampleBase {
 protected:
-    AtfCCSD(shared_ptr<ExampleConfiguration> config, int defaultProblemSize,
+    AtfCCSD(int argc, char **argv, int defaultProblemSize,
             string exampleFolderPath, string defaultKernelFileBaseName) :
-        ExampleBase(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
     {
         // Keep OpenCL sizes as specified
         m_inputSize1 = 24;

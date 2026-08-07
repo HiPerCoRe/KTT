@@ -5,9 +5,9 @@ using namespace std;
 
 class AtfGEMM : public ExampleBase {
 protected:
-    AtfGEMM(shared_ptr<ExampleConfiguration> config, int defaultProblemSize,
+    AtfGEMM(int argc, char **argv, int defaultProblemSize,
             string exampleFolderPath, string defaultKernelFileBaseName) :
-        ExampleBase(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
     {
         // Keep OpenCL sizes as specified
         m_inputSize1 = static_cast<uint64_t>(sqrt(m_problemSize)) * 1024;

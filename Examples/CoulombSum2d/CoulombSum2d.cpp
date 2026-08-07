@@ -5,9 +5,9 @@ using namespace std;
 
 class CoulombSum2d : public ExampleReferenceKernel {
 protected:
-    CoulombSum2d(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+    CoulombSum2d(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
                  string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
-        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath,
+        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath,
                                defaultKernelFileBaseName, defaultRefKernelFileBaseName),
         // Since CoulombSum2d has O(n²) complexity (gridPoints × atoms), scale grid dimensions
         // with the fourth root of problem size to keep total work proportional

@@ -8,10 +8,10 @@ using namespace std;
 
 class Nbody: public ExampleReferenceKernel {
 protected:
-    Nbody(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize,
+    Nbody(int argc, char **argv, int defaultProblemSize,
               string exampleFolderPath, string defaultKernelFileBaseName,
               string defaultReferenceKernelFileBaseName):
-        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
+        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
                 defaultReferenceKernelFileBaseName)
     {
         // The total number of computations grows quadratically with problem size, hence the sqrt.
