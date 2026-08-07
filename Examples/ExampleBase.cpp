@@ -111,7 +111,7 @@ void ExampleBase::RunDynamic()
 
     tuningStats.Print("Tuning phase", tuningThroughput);
 
-    m_compilerTuning.Run();
+    m_compilerTuning->Run();
 
     const auto bestConfigData = m_tuner->GetBestConfiguration(m_kernel);
 
@@ -154,7 +154,7 @@ void ExampleBase::RunOffline()
 
     stats.Print("Offline tuning", throughput);
 
-    m_compilerTuning.Run();
+    m_compilerTuning->Run();
 }
 
 void ExampleBase::Run()
@@ -179,7 +179,7 @@ ExampleBase::ExampleBase(
     #endif
     m_argc(argc),
     m_argv(argv),
-    m_compilerTuning(m_tuner, m_kernel)
+    m_compilerTuning(make_unique<NoCompilerTuning>(m_tuner, m_kernel))
 {
     m_problemSize = defaultProblemSize;
     m_kernelFile = GetKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
@@ -292,7 +292,7 @@ void ExampleBase::InitCLI() {
     "The tuning will last <time> (double) seconds and then the only the best configuration will be run.",
     "<time>", 1});
 
-    m_compilerTuning.InitCLIOptions(m_cli);
+    m_compilerTuning->InitCLIOptions(m_cli);
 }
 
 void ExampleBase::ProcessCLI() {
@@ -328,6 +328,11 @@ void ExampleBase::UseOpenMP()
     {
         m_tuner->SetCompilerOptions("-march=native -fopenmp");
     }
+}
+
+void ExampleBase::UseCompilerTuning()
+{
+    m_compilerTuning = make_unique<CompilerTuningComponent>(m_tuner, m_kernel);
 }
 
 void ExampleBase::InitSearcher()
