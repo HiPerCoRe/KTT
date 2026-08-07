@@ -17,9 +17,9 @@ using namespace std;
 
 class Dummy : public ExampleBase {
 protected:
-    Dummy(shared_ptr<ExampleConfiguration> config, int defaultProblemSize,
+    Dummy(int argc, char **argv, int defaultProblemSize,
           string exampleFolderPath, string defaultKernelFileBaseName) :
-        ExampleBase(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
     {
         m_gridSize = 256;
         m_atoms = 1024;
@@ -28,8 +28,8 @@ protected:
         UseFastMath();
 
         // Set precise measurement by default.
-        if (m_config->preciseParams == nullopt) {
-            m_config->preciseParams = ktt::PreciseMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
+        if (m_preciseParams == nullopt) {
+            m_preciseParams = ktt::PreciseMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
         }
     }
 

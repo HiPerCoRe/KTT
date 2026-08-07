@@ -5,9 +5,9 @@ using namespace std;
 class Sort : public ExampleReferenceComputation
 {
 protected:
-    Sort(std::shared_ptr<ExampleConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+    Sort(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
          string defaultKernelFileBaseName) :
-        ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
     {
         m_size = m_problemSize * 1024 * 1024 / sizeof(unsigned int);
     }

@@ -6,9 +6,9 @@ using namespace std;
 
 class Bicg : public ExampleReferenceComputation {
 protected:
-    Bicg(shared_ptr<ExampleConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+    Bicg(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
          string defaultKernelFileBaseName) :
-        ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName),
+        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName),
         // Bicg has O(m × n) complexity. For square matrices where m = n,
         // we scale with square root of problem size to keep total work proportional
         m_m(static_cast<int>(sqrt(m_problemSize)) * 1024),
@@ -80,7 +80,7 @@ protected:
             [this](ktt::ComputeInterface& interface)
             {
                 const vector<ktt::ParameterPair>& parameterValues = interface.GetCurrentConfiguration().GetPairs();
-                if (!m_config->useProfiling)
+                if (!m_useProfiling)
                 {
                     interface.RunKernel(m_definitionFused);
                 }

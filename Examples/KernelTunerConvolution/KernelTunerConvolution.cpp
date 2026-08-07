@@ -16,10 +16,10 @@ bool IsMultiple(const size_t a, const size_t b)
 
 class KernelTunerConvolution: public ExampleReferenceKernel {
 protected:
-    KernelTunerConvolution(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize,
+    KernelTunerConvolution(int argc, char **argv, int defaultProblemSize,
               string exampleFolderPath, string defaultKernelFileBaseName,
               string defaultReferenceKernelFileBaseName):
-        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
+        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
                 defaultReferenceKernelFileBaseName)
     {
         m_kSizeX = 1024*static_cast<int>(sqrtf(m_problemSize));

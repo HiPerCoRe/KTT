@@ -6,9 +6,9 @@ using namespace std;
 
 class ClTuneConvolution : public ExampleReferenceKernel {
 public:
-    ClTuneConvolution(shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+    ClTuneConvolution(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
                       string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
-        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultRefKernelFileBaseName),
+        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultRefKernelFileBaseName),
         kSizeX(4096),
         kSizeY(4096)
     {

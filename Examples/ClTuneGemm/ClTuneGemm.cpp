@@ -10,9 +10,9 @@ bool IsMultiple(const size_t a, const size_t b)
 
 class ClTuneGemm : public ExampleReferenceKernel {
 protected:
-    ClTuneGemm(std::shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+    ClTuneGemm(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
                string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
-        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath,
+        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath,
                                defaultKernelFileBaseName, defaultRefKernelFileBaseName),
         // GEMM has O(m × n × k) complexity. For square matrices where m = n = k,
         // we scale with cube root of problem size to keep total work proportional

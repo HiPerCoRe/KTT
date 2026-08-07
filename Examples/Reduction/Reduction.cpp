@@ -11,11 +11,11 @@ class Reduction : public ExampleReferenceComputation
 {
 protected:
     Reduction(
-        std::shared_ptr<ExampleConfiguration> config,
+        int argc, char **argv,
         int defaultProblemSize,
         string exampleFolderPath,
         string defaultKernelFileBaseName
-    ): ExampleReferenceComputation(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+    ): ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
     {
         m_size = m_problemSize * 1024 * 1024;
     }
