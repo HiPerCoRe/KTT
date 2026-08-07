@@ -8,72 +8,23 @@
 #include <vector>
 
 #include "../ExampleReferenceKernel.h"
+#include "ExampleBase.h"
 
 using namespace std;
 
-struct HotspotConfiguration : ExampleRefKernelConfiguration 
-{
-  uint64_t simIters = 2;
-  uint64_t m_grid_rows = 1024;
-  uint64_t m_grid_cols = m_grid_rows;
-  string inTempFile = "";
-  string inPowerFile = "";
-  string outTempFile = "";
-};
-
-void SetUpHotspotOptions(vector<CliOption> &options, HotspotConfiguration &config)
-{
-  options.emplace_back([&config](const vector<string> &args) {
-    config.simIters = stoul(args[0]);
-  }, "--simIters", "Set the number of simulation iterations (expects int)", "<iterNum>", 1);
-  options.emplace_back([&config](const vector<string> &args) {
-    config.m_grid_rows = stoul(args[0]);
-    config.m_grid_cols = stoul(args[1]);
-  }, "--gridSize", "Set the grid m_size (expects int, int)", "<rows> <cols>", 2);
-  options.emplace_back([&config](const vector<string> &args) {
-    config.inTempFile = args[0];
-    config.inPowerFile = args[1];
-    config.outTempFile = args[2];
-  }, "--files", "Sets the files input temperature and m_power, and output temperature (expects string, string, string)", "<inTempFile> <inPowerFile> <outTempFile>", 3);
-}
-
-HotspotConfiguration HotspotProcessInput(int argc, char **argv) 
-{
-  HotspotConfiguration config;
-  vector<CliOption> options;
-  SetUpCommonOptions(options, &config);
-  SetUpRefKernelOption(options, config);
-  SetUpHotspotOptions(options, config);
-
-  IterateArguments(argc, argv, options);
-
-  return config;
-}
-
 class Hotspot : public ExampleReferenceKernel {
-  Hotspot(shared_ptr<HotspotConfiguration> config, int defaultProblemSize, string exampleFolderPath, string defaultKernelFileBaseName, string defaultReferenceKernelFileBaseName):
-    ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultReferenceKernelFileBaseName)
+  Hotspot(int argc, char** argv, int defaultProblemSize, string exampleFolderPath, string defaultKernelFileBaseName, string defaultReferenceKernelFileBaseName):
+    ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultReferenceKernelFileBaseName)
   {
-    m_totalIterations = config->simIters;
-    m_grid_rows = config->m_grid_rows;
-    m_grid_cols = config->m_grid_cols;
-    m_inTempFile = config->inTempFile.empty() ? GetKernelFilePath(exampleFolderPath, "Data/temp_1024", "") : config->inTempFile;
-    m_inPowerFile = config->inPowerFile.empty() ? GetKernelFilePath(exampleFolderPath, "Data/power_1024", "") : config->inTempFile;
-    m_outTempFile = config->outTempFile.empty() ? "out.txt" : config->inTempFile;
+    m_totalIterations = 2;
+    m_grid_rows = 1024;
+    m_grid_cols = m_grid_rows;
+    m_inTempFile = GetKernelFilePath(exampleFolderPath, "Data/temp_1024", "");
+    m_inPowerFile = GetKernelFilePath(exampleFolderPath, "Data/power_1024", "");
+    m_outTempFile = "out.txt";
   }
-public:
-  static std::unique_ptr<Hotspot> Create(
-    int argc, char** argv, 
-    int defaultProblemSize,
-    std::string exampleFolderPath,
-    std::string defaultKernelFileBaseName, 
-    std::string defaultRefKernelFileBaseName
-  ) {
-    auto config = std::make_shared<HotspotConfiguration>(HotspotProcessInput(argc, argv));
-    std::unique_ptr<Hotspot> ex(new Hotspot(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultRefKernelFileBaseName));
-    ex->PostInitialize();
-    return ex;
-  }
+
+  friend ExampleReferenceKernel;
 
 protected:
 
@@ -174,6 +125,22 @@ protected:
     }
   }
 
+  void InitCLI() override
+  {
+    ExampleReferenceKernel::InitCLI();
+  m_cli.AddOption({[this](const vector<string> &args) {
+    m_totalIterations = stoul(args[0]);
+  }, "--simIters", "Set the number of simulation iterations (expects int)", "<iterNum>", 1});
+  m_cli.AddOption({[this](const vector<string> &args) {
+    m_grid_rows = stoul(args[0]);
+    m_grid_cols = stoul(args[1]);
+  }, "--gridSize", "Set the grid m_size (expects int, int)", "<rows> <cols>", 2});
+  m_cli.AddOption({[this](const vector<string> &args) {
+    m_inTempFile = args[0];
+    m_inPowerFile = args[1];
+    m_outTempFile = args[2];
+  }, "--files", "Sets the files input temperature and m_power, and output temperature (expects string, string, string)", "<inTempFile> <inPowerFile> <outTempFile>", 3});
+  }
 
   void InitData() override
   {
@@ -344,7 +311,7 @@ protected:
 
 int main(int argc, char** argv)
 {
-  unique_ptr<Hotspot> hotspot = Hotspot::Create(
+  unique_ptr<Hotspot> hotspot = ExampleReferenceKernel::Create<Hotspot>(
     argc, argv, 0, "Examples/RodiniaHotspot", "Hotspot", "HotspotReference"
   );
   hotspot->Run();
