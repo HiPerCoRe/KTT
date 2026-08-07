@@ -45,6 +45,7 @@ void CompilerTuningComponent::Run() {
 }
 
 void NoCompilerTuning::AddCompilerParameter(const string &, const vector<string> &) {
+    assert(false && "Example needs to call UseCompilerTuning() in the constructor to use this feature.");
 }
 
 void NoCompilerTuning::InitCLIOptions(CliComponent &) {

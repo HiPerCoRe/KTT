@@ -47,7 +47,7 @@ protected:
     ktt::KernelId m_kernel;
 
     CliComponent m_cli;
-    CompilerTuningComponent m_compilerTuning;
+    std::unique_ptr<CompilerTuningComponent> m_compilerTuning;
 
     std::optional<ktt::PreciseMeasurementParameters> m_preciseParams;
     std::unique_ptr<ktt::StopCondition> m_stopCondition;
@@ -77,6 +77,8 @@ protected:
 
     void UseFastMath();
     void UseOpenMP();
+
+    void UseCompilerTuning();
 
     void PrintProgress(const std::string& phaseName, int currentRun, double elapsedSeconds,
                        double timeBudget, double bestDuration, double throughput);

@@ -20,7 +20,9 @@ protected:
         m_workGroupDimensions{1, 1, 1},
         m_numberOfAtoms(256),
         m_gridSpacing(0.5f)
-    {}
+    {
+        UseCompilerTuning();
+    }
 
 protected:
     friend ExampleBase;
@@ -163,10 +165,10 @@ protected:
                 // -cl-fast-relaxed-math ≈ -cl-finite-math-only + -cl-unsafe-math-optimizations,
                 // where -cl-unsafe-math-optimizations implies -cl-mad-enable, -cl-no-signed-zeros,
                 // and -cl-denorms-are-zero. Tuning them individually reveals which subset is sufficient.
-                m_compilerTuning.AddCompilerParameter("-cl-mad-enable");
-                m_compilerTuning.AddCompilerParameter("-cl-no-signed-zeros");
-                m_compilerTuning.AddCompilerParameter("-cl-finite-math-only");
-                m_compilerTuning.AddCompilerParameter("-cl-denorms-are-zero");
+                m_compilerTuning->AddCompilerParameter("-cl-mad-enable");
+                m_compilerTuning->AddCompilerParameter("-cl-no-signed-zeros");
+                m_compilerTuning->AddCompilerParameter("-cl-finite-math-only");
+                m_compilerTuning->AddCompilerParameter("-cl-denorms-are-zero");
             }
             else // CUDA
             {
@@ -178,7 +180,7 @@ protected:
                 // Relevant here because energyValue[Z_ITERATIONS] can hold up to 32 floats,
                 // creating high register pressure at large Z_ITERATIONS values.
                 // 0 = unlimited (compiler decides), others force a ceiling.
-                m_compilerTuning.AddCompilerParameter("--maxrregcount ", {"0", "32", "40", "48", "64"});
+                m_compilerTuning->AddCompilerParameter("--maxrregcount ", {"0", "32", "40", "48", "64"});
             }
         }
         else // CPP
@@ -188,16 +190,16 @@ protected:
             m_tuner->AddParameter(m_kernel, "OMP_SCHED_CHUNK", vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
             m_tuner->AddParameter(m_kernel, "TILE", vector<uint64_t>{0, 8, 16, 32, 64});
             
-            m_compilerTuning.AddCompilerParameter("-ffast-math");
-            m_compilerTuning.AddCompilerParameter("-O", {"1", "2", "3"});
-            m_compilerTuning.AddCompilerParameter("-funroll-loops");
+            m_compilerTuning->AddCompilerParameter("-ffast-math");
+            m_compilerTuning->AddCompilerParameter("-O", {"1", "2", "3"});
+            m_compilerTuning->AddCompilerParameter("-funroll-loops");
             // Auto-vectorization of the inner atom loop (SIMD via AVX2/AVX512 enabled by -march=native).
-            m_compilerTuning.AddCompilerParameter("-ftree-vectorize");
+            m_compilerTuning->AddCompilerParameter("-ftree-vectorize");
             // Software prefetching of the atom SoA arrays in the inner loop (GCC-specific).
-            m_compilerTuning.AddCompilerParameter("-fprefetch-loop-arrays");
+            m_compilerTuning->AddCompilerParameter("-fprefetch-loop-arrays");
             // Allows the compiler to skip errno updates in math functions (lighter than -ffast-math,
             // enables vectorization of sqrtf without full unsafe-math semantics).
-            m_compilerTuning.AddCompilerParameter("-fno-math-errno");
+            m_compilerTuning->AddCompilerParameter("-fno-math-errno");
 
             auto schedchunk = [](const vector<uint64_t>& vector) {return vector.at(0) == 2 || vector.at(1) == 2; };
             m_tuner->AddConstraint(m_kernel, {"OMP_SCHEDULING", "OMP_SCHED_CHUNK"}, schedchunk);
