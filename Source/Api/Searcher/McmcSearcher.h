@@ -28,6 +28,7 @@ public:
 
     /** @fn McmcSearcher(const std::vector<double>& start)
       * Initializes MCMC searcher.
+      * @deprecated Use constructor which accepts kernel configuration.
       * @param start Optional parameter which specifies starting point for MCMC searcher.
       */
     [[deprecated("Use constructor which accepts kernel configuration.")]] McmcSearcher(const std::vector<double>& start);
