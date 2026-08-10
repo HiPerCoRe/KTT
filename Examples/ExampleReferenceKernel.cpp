@@ -1,16 +1,14 @@
 #include "ExampleReferenceKernel.h"
-#include <memory>
 
 using namespace std;
 
 ExampleReferenceKernel::ExampleReferenceKernel(
     int argc, char **argv,
-    int defaultProblemSize,
     string exampleFolderPath,
     string defaultKernelFileBaseName,
     string defaultRefKernelFileBaseName
 ) :
-    ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+    ExampleBase(argc, argv, exampleFolderPath, defaultKernelFileBaseName)
 {
         m_refKernelFile = GetKernelFilePath(exampleFolderPath, defaultRefKernelFileBaseName);
 }

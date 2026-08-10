@@ -19,17 +19,17 @@
 
 class ExampleBase {
 protected:
-    ExampleBase(int argc, char** argv, int defaultProblemSize, 
+    ExampleBase(int argc, char** argv, 
         std::string exampleFolderPath, std::string defaultKernelFileBaseName);
 
 public:
     void Run();
 
     template <class T>
-    static std::unique_ptr<T> Create(int argc, char** argv, int defaultProblemSize, 
+    static std::unique_ptr<T> Create(int argc, char** argv, 
             std::string exampleFolderPath, std::string defaultKernelFileBaseName)
     {
-        std::unique_ptr<T> ex(new T(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName));
+        std::unique_ptr<T> ex(new T(argc, argv, exampleFolderPath, defaultKernelFileBaseName));
         ex->PostInitialize();
         return ex;
     }
@@ -41,7 +41,6 @@ protected:
 
     std::string m_kernelFile;
     std::shared_ptr<ktt::Tuner> m_tuner;
-    int m_problemSize;
 
     ktt::KernelDefinitionId m_definition;
     ktt::KernelId m_kernel;

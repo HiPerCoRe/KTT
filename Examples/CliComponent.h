@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Ktt.h"
-#include <memory>
 #include <string>
-#include <optional>
 #include <functional>
 #include <vector>
 #include <assert.h>
@@ -23,6 +21,7 @@ public:
     std::string get_string() const;
 
     bool TryTrigger(int argc, char **argv, int &i) const;
+    static CliOption CreateGridOption(int numDimensions, ktt::DimensionVector &gridSize);
 };
 
 class CliComponent {

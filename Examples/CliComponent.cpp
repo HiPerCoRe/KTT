@@ -1,5 +1,7 @@
 #include "CliComponent.h"
+#include "Kernel/ModifierDimension.h"
 #include <functional>
+#include <string>
 #include <vector>
 #include <assert.h>
 #include <iostream>
@@ -32,6 +34,17 @@ bool CliOption::TryTrigger(int argc, char **argv, int &i) const {
     }
     m_callback(arguments);
     return true;
+}
+
+CliOption CliOption::CreateGridOption(int numDimensions, ktt::DimensionVector &gridSize) {
+    assert(numDimensions > 0 && numDimensions <= 3);
+    return CliOption({[&gridSize, numDimensions](const vector<string> &args){
+        ktt::ModifierDimension dims[] = {ktt::ModifierDimension::X, ktt::ModifierDimension::Y, ktt::ModifierDimension::Z};
+        for (int i = 0; i < numDimensions; ++i) {
+            gridSize.SetSize(dims[i], stoul(args[i]));
+        }
+    }, "--gridSize", "Set grid size, expects " + to_string(numDimensions) + " ints", 
+    string("<sizeX>") + (numDimensions >= 2 ? " <sizeY>" : "") + (numDimensions >= 3 ? " <sizeZ>" : "")});
 }
 
 CliComponent::CliComponent()

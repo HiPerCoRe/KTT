@@ -166,7 +166,7 @@ void ExampleBase::Run()
 ExampleBase::ExampleBase(
     int argc,
     char **argv,
-    int defaultProblemSize,
+   
     string exampleFolderPath,
     string defaultKernelFileBaseName
 ) :
@@ -182,7 +182,6 @@ ExampleBase::ExampleBase(
     m_compilerTuning(make_unique<NoCompilerTuning>(m_tuner, m_kernel)),
     m_preheatingSeconds(0)
 {
-    m_problemSize = defaultProblemSize;
     m_kernelFile = GetKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
 }
 
@@ -214,10 +213,6 @@ void ExampleBase::InitCLI() {
     m_cli.AddOption({[this](const vector<string> &args) {
         m_device = stoul(args[0]);
     }, "--device", "Device index (expects int)", "<index>", 1});
-
-    m_cli.AddOption({[this](const vector<string> &args) {
-        m_problemSize = stoi(args[0]);
-    }, "--problemSize", "Problem size in MiB (expects int)", "<size>", 1});
 
     m_cli.AddOption({[this](const vector<string> &args) {
         m_kernelFile = args[0];
