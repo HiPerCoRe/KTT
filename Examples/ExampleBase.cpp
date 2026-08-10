@@ -179,7 +179,8 @@ ExampleBase::ExampleBase(
     #endif
     m_argc(argc),
     m_argv(argv),
-    m_compilerTuning(make_unique<NoCompilerTuning>(m_tuner, m_kernel))
+    m_compilerTuning(make_unique<NoCompilerTuning>(m_tuner, m_kernel)),
+    m_preheatingSeconds(0)
 {
     m_problemSize = defaultProblemSize;
     m_kernelFile = GetKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
@@ -193,6 +194,7 @@ void ExampleBase::PostInitialize()
     InitData();
     InitKernel();
     InitTuningSpace();
+    Preheat();
     InitSearcher();
 }
 
@@ -286,6 +288,10 @@ void ExampleBase::InitCLI() {
     "<calcMethod>", 1});
 
     m_cli.AddOption({[this](const vector<string> &args) {
+        m_preheatingSeconds = stof(args[0]);
+    }, "--preheat", "Set time in seconds to spend preheating GPU before tuning starts. 0 (disabled) is default. Expects float.", "<time>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
         m_useDynamicTuning = true;
         m_dynamicTuningTime = stod(args[0]);
     }, "--useDynamicTuning", "Enables a basic implementation of dynamic tuning."
@@ -333,6 +339,16 @@ void ExampleBase::UseOpenMP()
 void ExampleBase::UseCompilerTuning()
 {
     m_compilerTuning = make_unique<CompilerTuningComponent>(m_tuner, m_kernel);
+}
+
+void ExampleBase::Preheat() {
+    if (m_preheatingSeconds > 0) {
+        cout << "\n--- Preheating GPU... ---" << endl;
+        m_tuner->SetSearcher(m_kernel, make_unique<ktt::RandomSearcher>());
+        m_tuner->Tune(m_kernel, make_unique<ktt::TuningDuration>(m_preheatingSeconds));
+        m_tuner->ClearConfigurationData(m_kernel);
+        cout << "--- Preheating complete ---\n" << endl;
+    }
 }
 
 void ExampleBase::InitSearcher()

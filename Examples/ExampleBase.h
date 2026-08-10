@@ -50,6 +50,7 @@ protected:
     std::unique_ptr<CompilerTuningComponent> m_compilerTuning;
 
     std::optional<ktt::PreciseMeasurementParameters> m_preciseParams;
+    float m_preheatingSeconds;
     std::unique_ptr<ktt::StopCondition> m_stopCondition;
     
     ktt::PlatformIndex m_platform;
@@ -70,6 +71,7 @@ protected:
     virtual void InitData() = 0;
     virtual void InitKernel() = 0;
     virtual void InitTuningSpace() = 0;
+    void Preheat();
     void InitSearcher();
 
     void RunDynamic();
