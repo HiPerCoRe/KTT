@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['faq_0',['KTT FAQ',['../md__docs_2_resources_2_faq.html',1,'']]]
+  ['deprecated_20list_0',['Deprecated List',['../deprecated.html',1,'']]]
 ];

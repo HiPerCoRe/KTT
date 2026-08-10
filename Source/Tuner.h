@@ -821,6 +821,7 @@ public:
       * configurations will be launched in order that depends on specified Searcher. This method can be used to test behaviour
       * and performance of newly implemented searchers. The provided results should correspond to the results output by the same
       * kernel during regular tuning.
+      * @deprecated Use SimulateTuning() method instead.
       * @param id Id of the kernel for simulated tuning.
       * @param results Results from which the kernel execution times will be retrieved.
       * @param iterations Number of iterations performed. If equal to 0, search of the entire tuning space is performed.
@@ -878,6 +879,7 @@ public:
 
     /** @fn void ClearData(const KernelId id)
       * Resets tuning process and clears generated configurations for the specified kernel.
+      * @deprecated Use ClearConfigurationData() method instead.
       * @param id Id of kernel whose data will be cleared.
       */
     [[deprecated("Use ClearConfigurationData() method instead.")]] void ClearData(const KernelId id);
@@ -1016,6 +1018,7 @@ public:
 
     /** @fn void Synchronize()
       * Blocks until all commands submitted to KTT device are completed.
+      * @deprecated Use SynchronizeDevice() or SynchronizeQueues() method instead.
       */
     [[deprecated("Use SynchronizeDevice() or SynchronizeQueues() method instead.")]] void Synchronize();
 
