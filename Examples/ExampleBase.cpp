@@ -298,6 +298,18 @@ void ExampleBase::InitCLI() {
     "The tuning will last <time> (double) seconds and then the only the best configuration will be run.",
     "<time>", 1});
 
+    m_cli.AddOption({[this](const vector<string> &args) {
+        if (args[0] == "off") m_tuner->SetLoggingLevel(ktt::LoggingLevel::Off);
+        else if (args[0] == "error") m_tuner->SetLoggingLevel(ktt::LoggingLevel::Error);
+        else if (args[0] == "warning") m_tuner->SetLoggingLevel(ktt::LoggingLevel::Warning);
+        else if (args[0] == "info") m_tuner->SetLoggingLevel(ktt::LoggingLevel::Info);
+        else if (args[0] == "debug") m_tuner->SetLoggingLevel(ktt::LoggingLevel::Debug);
+        else {
+            cerr << "--loggingLevel expects one of (off, error, warning, info, debug)";
+            exit(1);
+        }
+    }, "--loggingLevel", "Set the logging level, can be one of (off, error, warning, info, debug)", "<level>", 1});
+
     m_compilerTuning->InitCLIOptions(m_cli);
 }
 
