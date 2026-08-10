@@ -710,6 +710,10 @@ void CppEngine::SetKernelCacheCapacity(const uint64_t capacity)
 void CppEngine::ClearKernelCache()
 {
     m_KernelCache.Clear();
+    // Keep the on-disk cache consistent with the in-memory one. This also makes SetCompiler and
+    // SetCompilerOptions (which both call here) invalidate compiled binaries on disk - those inputs
+    // are not part of the per-kernel cache key, so they must drop the disk cache to stay correct.
+    m_Compiler.ClearCache();
 }
 
 void CppEngine::EnsureThreadContext()
@@ -739,7 +743,7 @@ std::shared_ptr<CppEngine::CppKernel> CppEngine::LoadKernel(const KernelComputeD
     CppCompiler::KernelFunction function;
     try
     {
-        function = m_Compiler.CompileKernel(kernelName, kernelSource, compilerOptions);
+        function = m_Compiler.CompileKernel(kernelName, kernelSource, compilerOptions, computeId);
     }
     catch (const KttException& e)
     {

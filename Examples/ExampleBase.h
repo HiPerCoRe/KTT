@@ -1,7 +1,12 @@
 #pragma once
 
-#include "Api/Output/KernelResult.h"
-#include "ExampleConfigurator.h"
+#include "Api/Configuration/PreciseMeasurementParameters.h"
+#include "Api/Searcher/Searcher.h"
+#include "Api/StopCondition/StopCondition.h"
+#include "CliComponent.h"
+#include "CompilerTuningComponent.h"
+#include "RunStats.hpp"
+#include "KttTypes.h"
 #include <Ktt.h>
 #include <memory>
 #include <random>
@@ -14,7 +19,7 @@
 
 class ExampleBase {
 protected:
-    ExampleBase(std::shared_ptr<ExampleConfiguration> config, int defaultProblemSize, 
+    ExampleBase(int argc, char** argv, int defaultProblemSize, 
         std::string exampleFolderPath, std::string defaultKernelFileBaseName);
 
 public:
@@ -24,26 +29,44 @@ public:
     static std::unique_ptr<T> Create(int argc, char** argv, int defaultProblemSize, 
             std::string exampleFolderPath, std::string defaultKernelFileBaseName)
     {
-        auto config = std::make_shared<ExampleConfiguration>(ProcessInput(argc, argv));
-        std::unique_ptr<T> ex(new T(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName));
+        std::unique_ptr<T> ex(new T(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName));
         ex->PostInitialize();
         return ex;
     }
 
 protected:
     const ktt::ComputeApi m_computeApi;
-    std::shared_ptr<ExampleConfiguration> m_config;
+    int m_argc;
+    char **m_argv;
 
     std::string m_kernelFile;
-    ktt::Tuner m_tuner;
+    std::shared_ptr<ktt::Tuner> m_tuner;
     int m_problemSize;
 
     ktt::KernelDefinitionId m_definition;
     ktt::KernelId m_kernel;
 
+    CliComponent m_cli;
+    std::unique_ptr<CompilerTuningComponent> m_compilerTuning;
+
+    std::optional<ktt::PreciseMeasurementParameters> m_preciseParams;
+    std::unique_ptr<ktt::StopCondition> m_stopCondition;
+    
+    ktt::PlatformIndex m_platform;
+    ktt::PlatformIndex m_device;
+    bool m_useProfiling;
+    bool m_rapidTest;
+    bool m_useDynamicTuning;
+    double m_dynamicTuningTime;
+    std::unique_ptr<ktt::Searcher> m_searcher;
+    std::string m_profileSearchModelPath;
+
     static std::string GetKernelFilePath(std::string exampleFolderPath, std::string baseName, std::optional<std::string> suffix = std::nullopt);
 
     virtual void PostInitialize();
+    virtual void InitCLI();
+    void ProcessCLI();
+    void InitTuner();
     virtual void InitData() = 0;
     virtual void InitKernel() = 0;
     virtual void InitTuningSpace() = 0;
@@ -55,16 +78,8 @@ protected:
     void UseFastMath();
     void UseOpenMP();
 
-    struct RunStats {
-        int totalRuns = 0;
-        int successfulRuns = 0;
-        double bestDuration = std::numeric_limits<double>::max();
-        std::string bestConfig;
+    void UseCompilerTuning();
 
-        void Update(ktt::KernelResult);
-    };
-
-    void PrintRunStats(const std::string& phaseName, const RunStats& stats, double throughput = -1);
     void PrintProgress(const std::string& phaseName, int currentRun, double elapsedSeconds,
                        double timeBudget, double bestDuration, double throughput);
 
