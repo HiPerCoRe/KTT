@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Kernel Tuning Toolkit: Related Pages</title>
+<title>Kernel Tuning Toolkit: Deprecated List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -69,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search/",'.html');
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('pages.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('deprecated.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -94,17 +94,26 @@ $(document).ready(function(){initNavTree('pages.html',''); initResizable(); });
 </div>
 </div>
 
-<div class="header">
-  <div class="headertitle"><div class="title">Related Pages</div></div>
+<div><div class="header">
+  <div class="headertitle"><div class="title">Deprecated List</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock">Here is a list of all related documentation pages:</div><div class="directory">
-<table class="directory">
-<tr id="row_0_" class="even"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><a class="el" href="md__docs_2_resources_2_faq.html" target="_self">KTT FAQ</a></td><td class="desc"></td></tr>
-<tr id="row_1_" class="odd"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><a class="el" href="deprecated.html" target="_self">Deprecated List</a></td><td class="desc"></td></tr>
-</table>
-</div><!-- directory -->
-</div><!-- contents -->
+<div class="textblock"><dl class="reflist">
+<dt>Member <a class="el" href="classktt_1_1_kernel_result.html#ada777a7053bf09118204e846239d6e10">ktt::KernelResult::GetExtraOverhead</a>  () const</dt>
+<dd><a class="anchor" id="_deprecated000005"></a>Use <a class="el" href="classktt_1_1_kernel_result.html#a0de59acb3292bb84f4ad0c5481326b36">GetDataMovementOverhead()</a> instead.  </dd>
+<dt>Member <a class="el" href="classktt_1_1_kernel_result.html#a5a6462e356db1bed3df35db5606a4a7c">ktt::KernelResult::SetExtraOverhead</a>  (const Nanoseconds overhead)</dt>
+<dd><a class="anchor" id="_deprecated000004"></a>Use <a class="el" href="classktt_1_1_kernel_result.html#a576f92ceb0ea480a74a859bb56d44a61">SetDataMovementOverhead()</a> instead.  </dd>
+<dt>Member <a class="el" href="classktt_1_1_mcmc_searcher.html#a8df1133d653a1e9dbad3c813efb42f73">ktt::McmcSearcher::McmcSearcher</a>  (const std::vector&lt; double &gt; &amp;start)</dt>
+<dd><a class="anchor" id="_deprecated000006"></a>Use constructor which accepts kernel configuration.  </dd>
+<dt>Member <a class="el" href="classktt_1_1_tuner.html#aa87f966ad499bd35c2c7526574a7ed34">ktt::Tuner::ClearData</a>  (const KernelId id)</dt>
+<dd><a class="anchor" id="_deprecated000002"></a>Use <a class="el" href="classktt_1_1_tuner.html#af42ce644ec24f9efdf677de13c86b813">ClearConfigurationData()</a> method instead.  </dd>
+<dt>Member <a class="el" href="classktt_1_1_tuner.html#acf0bb2189bf6c1210c42b0f1ddd93399">ktt::Tuner::SimulateKernelTuning</a>  (const KernelId id, const std::vector&lt; KernelResult &gt; &amp;results, const uint64_t iterations=0)</dt>
+<dd><a class="anchor" id="_deprecated000001"></a>Use <a class="el" href="classktt_1_1_tuner.html#a3679d4ac2025d73efbe37b74e6eca40d">SimulateTuning()</a> method instead.  </dd>
+<dt>Member <a class="el" href="classktt_1_1_tuner.html#a0c8667aa5703517c100b261a23eed0dd">ktt::Tuner::Synchronize</a>  ()</dt>
+<dd><a class="anchor" id="_deprecated000003"></a>Use <a class="el" href="classktt_1_1_tuner.html#aa38e76c15db1d25743288ebccd67df3b">SynchronizeDevice()</a> or <a class="el" href="classktt_1_1_tuner.html#ad1cc2c4aac72510f028ada44a0283fab">SynchronizeQueues()</a> method instead. </dd>
+</dl>
+</div></div><!-- contents -->
+</div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

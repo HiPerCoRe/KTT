@@ -1956,7 +1956,8 @@ template&lt;typename T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Resets tuning process and clears generated configurations for the specified kernel. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Resets tuning process and clears generated configurations for the specified kernel. </p><dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated:</a></b></dt><dd>Use <a class="el" href="classktt_1_1_tuner.html#af42ce644ec24f9efdf677de13c86b813">ClearConfigurationData()</a> method instead. </dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">id</td><td>Id of kernel whose data will be cleared. </td></tr>
   </table>
@@ -3556,7 +3557,8 @@ template&lt;typename T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Performs simulated tuning process for the specified kernel. The kernel is not tuned, execution times are read from the provided results. Creates configuration space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on specified <a class="el" href="classktt_1_1_searcher.html">Searcher</a>. This method can be used to test behaviour and performance of newly implemented searchers. The provided results should correspond to the results output by the same kernel during regular tuning. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Performs simulated tuning process for the specified kernel. The kernel is not tuned, execution times are read from the provided results. Creates configuration space based on combinations of provided kernel parameters and constraints. The configurations will be launched in order that depends on specified <a class="el" href="classktt_1_1_searcher.html">Searcher</a>. This method can be used to test behaviour and performance of newly implemented searchers. The provided results should correspond to the results output by the same kernel during regular tuning. </p><dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000001">Deprecated:</a></b></dt><dd>Use <a class="el" href="classktt_1_1_tuner.html#a3679d4ac2025d73efbe37b74e6eca40d">SimulateTuning()</a> method instead. </dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">id</td><td>Id of the kernel for simulated tuning. </td></tr>
     <tr><td class="paramname">results</td><td>Results from which the kernel execution times will be retrieved. </td></tr>
@@ -3625,7 +3627,7 @@ template&lt;typename T &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Blocks until all commands submitted to KTT device are completed. </p>
+<p>Blocks until all commands submitted to KTT device are completed. </p><dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000003">Deprecated:</a></b></dt><dd>Use <a class="el" href="classktt_1_1_tuner.html#aa38e76c15db1d25743288ebccd67df3b">SynchronizeDevice()</a> or <a class="el" href="classktt_1_1_tuner.html#ad1cc2c4aac72510f028ada44a0283fab">SynchronizeQueues()</a> method instead. </dd></dl>
 
 </div>
 </div>
