@@ -6,16 +6,15 @@ class ExampleReferenceKernel : public ExampleBase
 public:
     ExampleReferenceKernel(
         int argc, char **argv,
-        int defaultProblemSize,
         std::string exampleFolderPath,
         std::string defaultKernelFileBaseName,
         std::string defaultRefKernelFileBaseName);
 
     template <class T>
-    static std::unique_ptr<T> Create(int argc, char** argv, int defaultProblemSize, std::string exampleFolderPath,
+    static std::unique_ptr<T> Create(int argc, char** argv, std::string exampleFolderPath,
                                      std::string defaultKernelFileBaseName, std::string defaultRefKernelFileBaseName)
     {
-        std::unique_ptr<T> ex(new T(argc, argv, defaultProblemSize, exampleFolderPath,
+        std::unique_ptr<T> ex(new T(argc, argv, exampleFolderPath,
                                     defaultKernelFileBaseName, defaultRefKernelFileBaseName));
         ex->PostInitialize();
         return ex;

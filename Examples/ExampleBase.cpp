@@ -166,7 +166,7 @@ void ExampleBase::Run()
 ExampleBase::ExampleBase(
     int argc,
     char **argv,
-    int defaultProblemSize,
+   
     string exampleFolderPath,
     string defaultKernelFileBaseName
 ) :
@@ -182,7 +182,6 @@ ExampleBase::ExampleBase(
     m_compilerTuning(make_unique<NoCompilerTuning>(m_tuner, m_kernel)),
     m_preheatingSeconds(0)
 {
-    m_problemSize = defaultProblemSize;
     m_kernelFile = GetKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
 }
 
@@ -214,10 +213,6 @@ void ExampleBase::InitCLI() {
     m_cli.AddOption({[this](const vector<string> &args) {
         m_device = stoul(args[0]);
     }, "--device", "Device index (expects int)", "<index>", 1});
-
-    m_cli.AddOption({[this](const vector<string> &args) {
-        m_problemSize = stoi(args[0]);
-    }, "--problemSize", "Problem size in MiB (expects int)", "<size>", 1});
 
     m_cli.AddOption({[this](const vector<string> &args) {
         m_kernelFile = args[0];
@@ -351,6 +346,18 @@ void ExampleBase::UseOpenMP()
 void ExampleBase::UseCompilerTuning()
 {
     m_compilerTuning = make_unique<CompilerTuningComponent>(m_tuner, m_kernel);
+}
+
+void ExampleBase::UseInputSizeOption(int numDimensions, ktt::DimensionVector &inputSize)
+{
+    assert(numDimensions > 0 && numDimensions <= 3);
+    m_cli.AddOption(CliOption({[&inputSize, numDimensions](const vector<string> &args){
+        ktt::ModifierDimension dims[] = {ktt::ModifierDimension::X, ktt::ModifierDimension::Y, ktt::ModifierDimension::Z};
+        for (int i = 0; i < numDimensions; ++i) {
+            inputSize.SetSize(dims[i], stoul(args[i]));
+        }
+    }, "--inputSize", "Set input size, expects " + to_string(numDimensions) + " ints",
+    string("<sizeX>") + (numDimensions >= 2 ? " <sizeY>" : "") + (numDimensions >= 3 ? " <sizeZ>" : ""), numDimensions}));
 }
 
 void ExampleBase::Preheat() {
