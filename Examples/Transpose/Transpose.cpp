@@ -6,18 +6,17 @@ using namespace std;
 
 class Transpose: public ExampleReferenceKernel {
 protected:
-    Transpose(int argc, char **argv, int defaultProblemSize,
+    Transpose(int argc, char **argv,
               string exampleFolderPath, string defaultKernelFileBaseName,
               string defaultReferenceKernelFileBaseName):
-        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
-                defaultReferenceKernelFileBaseName)
-    {
-        m_width = 1024*static_cast<int>(sqrtf(m_problemSize));
-        m_height = m_width;
-    }
+        ExampleReferenceKernel(argc, argv, exampleFolderPath, defaultKernelFileBaseName,
+                defaultReferenceKernelFileBaseName),
+        m_gridSize(1024 * 8, 1024 * 8)
+    {}
 
     friend ExampleReferenceKernel;
 
+    ktt::DimensionVector m_gridSize;
     int m_width, m_height;
 
     vector<float> m_dst;
@@ -28,9 +27,17 @@ protected:
     ktt::ArgumentId m_widthId;
     ktt::ArgumentId m_heightId;
     
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(2, m_gridSize);
+    }
 
     void InitData() override 
     {
+        m_width = m_gridSize.GetSizeX();
+        m_height = m_gridSize.GetSizeY();
+        cout << m_width << "x" << m_height << endl;
         // Declare data variables
         m_dst.resize(m_width * m_height);
         m_src.resize(m_width * m_height);
@@ -118,7 +125,7 @@ protected:
 int main(int argc, char **argv)
 {
     unique_ptr<Transpose> transpose = Transpose::Create<Transpose>(
-        argc, argv, 64, "Examples/Transpose", "Transpose", "TransposeReference"
+        argc, argv, "Examples/Transpose", "Transpose", "TransposeReference"
     );
     transpose->Run();
 }
