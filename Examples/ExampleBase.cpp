@@ -356,7 +356,7 @@ void ExampleBase::UseInputSizeOption(int numDimensions, ktt::DimensionVector &in
         for (int i = 0; i < numDimensions; ++i) {
             inputSize.SetSize(dims[i], stoul(args[i]));
         }
-    }, "--inputSize", "Set input size, expects " + to_string(numDimensions) + " ints",
+    }, "--inputSize", "Set input size, expects " + to_string(numDimensions) + " int" + (numDimensions > 1 ? "s." : "."),
     string("<sizeX>") + (numDimensions >= 2 ? " <sizeY>" : "") + (numDimensions >= 3 ? " <sizeZ>" : ""), numDimensions}));
 }
 
