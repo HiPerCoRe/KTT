@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "Api/Configuration/DimensionVector.h"
 #include "ExampleReferenceComputation.h"
 
 using namespace std;
@@ -14,19 +15,26 @@ protected:
         int argc, char **argv,
         string exampleFolderPath,
         string defaultKernelFileBaseName
-    ): ExampleReferenceComputation(argc, argv, exampleFolderPath, defaultKernelFileBaseName)
-    {
-        m_size = 64 * 1024 * 1024;
-    }
+    ): ExampleReferenceComputation(argc, argv, exampleFolderPath, defaultKernelFileBaseName),
+        m_inputSize(64 * 1024 * 1024)
+    {}
 
     friend ExampleBase;
 
+    ktt::DimensionVector m_inputSize;
     uint32_t m_size;
     vector<float> m_src, m_dest;
     ktt::ArgumentId m_dstId;
+    
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(1, m_inputSize);
+    }
 
     void InitData() override
     {
+        m_size = m_inputSize.GetSizeX();
         const uint32_t sizeAlloc = ((m_size+16-1)/16)*16; // pad to the longest vector size
         m_src.resize(sizeAlloc, 0.0f);
         m_dest.resize(sizeAlloc, 0.0f);
