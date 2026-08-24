@@ -76,7 +76,9 @@ protected:
     void RunDynamic();
     void RunOffline();
 
+    bool m_useFastMath = false;
     void UseFastMath();
+    bool m_useOpenMP = false;
     void UseOpenMP();
 
     void UseCompilerTuning();

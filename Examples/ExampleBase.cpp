@@ -321,26 +321,34 @@ void ExampleBase::InitTuner() {
     }
     m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
+
+    if (m_useFastMath) {
+        if (m_computeApi == ktt::ComputeApi::OpenCL)
+        {
+            m_tuner->SetCompilerOptions("-cl-fast-relaxed-math");
+        }
+        else if (m_computeApi == ktt::ComputeApi::CUDA)
+        {
+            m_tuner->SetCompilerOptions("-use_fast_math");
+        }
+    }
+
+    if (m_useOpenMP) {
+        if (m_computeApi == ktt::ComputeApi::Cpp)
+        {
+            m_tuner->SetCompilerOptions("-march=native -fopenmp");
+        }
+    }
 }
 
 void ExampleBase::UseFastMath()
 {
-    if (m_computeApi == ktt::ComputeApi::OpenCL)
-    {
-        m_tuner->SetCompilerOptions("-cl-fast-relaxed-math");
-    }
-    else if (m_computeApi == ktt::ComputeApi::CUDA)
-    {
-        m_tuner->SetCompilerOptions("-use_fast_math");
-    }
+    m_useFastMath = true;
 }
 
 void ExampleBase::UseOpenMP()
 {
-    if (m_computeApi == ktt::ComputeApi::Cpp)
-    {
-        m_tuner->SetCompilerOptions("-march=native -fopenmp");
-    }
+    m_useOpenMP = true;
 }
 
 void ExampleBase::UseCompilerTuning()
