@@ -1,4 +1,5 @@
 #include "../ExampleReferenceKernel.h"
+#include "Api/Configuration/DimensionVector.h"
 #include <memory>
 #include <cmath>
 
@@ -6,11 +7,12 @@ using namespace std;
 
 class ClTuneConvolution : public ExampleReferenceKernel {
 public:
-    ClTuneConvolution(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
+    ClTuneConvolution(int argc, char **argv, string exampleFolderPath,
                       string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
-        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultRefKernelFileBaseName),
+        ExampleReferenceKernel(argc, argv, exampleFolderPath, defaultKernelFileBaseName, defaultRefKernelFileBaseName),
         kSizeX(4096),
-        kSizeY(4096)
+        kSizeY(4096),
+        m_problemSize(kSizeX, kSizeY)
     {
     }
 
@@ -21,6 +23,7 @@ public:
 
     uint32_t kSizeX;
     uint32_t kSizeY;
+    ktt::DimensionVector m_problemSize;
 
     vector<float> mat_a;
     vector<float> mat_b;
@@ -45,8 +48,17 @@ public:
     }
 
 protected:
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+
+        UseInputSizeOption(2, m_problemSize);
+    }
+
     void InitData() override
     {
+        kSizeX = m_problemSize.GetSizeX();
+        kSizeY = m_problemSize.GetSizeY();
         mat_a.resize((kSizeX + 2 * HFS) * (kSizeY + 2 * HFS), 0.0f);
         mat_b.resize(kSizeX * kSizeY, 0.0f);
         coeff.resize(FS * FS);
@@ -164,7 +176,7 @@ protected:
 
 int main(int argc, char** argv)
 {
-    unique_ptr<ClTuneConvolution> convolution = ClTuneConvolution::Create<ClTuneConvolution>(argc, argv, 1, "Examples/ClTuneConvolution", "ClTuneConvolution", "ClTuneConvolutionReference");
+    unique_ptr<ClTuneConvolution> convolution = ClTuneConvolution::Create<ClTuneConvolution>(argc, argv, "Examples/ClTuneConvolution", "ClTuneConvolution", "ClTuneConvolutionReference");
     convolution->Run();
 
     return 0;
