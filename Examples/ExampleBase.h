@@ -52,12 +52,12 @@ protected:
     float m_preheatingSeconds;
     std::unique_ptr<ktt::StopCondition> m_stopCondition;
     
-    ktt::PlatformIndex m_platform;
-    ktt::PlatformIndex m_device;
-    bool m_useProfiling;
-    bool m_rapidTest;
-    bool m_useDynamicTuning;
-    double m_dynamicTuningTime;
+    ktt::PlatformIndex m_platform = 0;
+    ktt::PlatformIndex m_device = 0;
+    bool m_useProfiling = 0;
+    bool m_rapidTest = 0;
+    bool m_useDynamicTuning = 0;
+    double m_dynamicTuningTime = 0;
     std::unique_ptr<ktt::Searcher> m_searcher;
     std::string m_profileSearchModelPath;
 
