@@ -26,7 +26,6 @@ protected:
         m_sleepDuration = 0;
         m_randomizeSleep = false;
 
-        m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
         UseFastMath();
 
         // Set precise measurement by default.
