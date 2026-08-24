@@ -5,14 +5,14 @@ using namespace std;
 
 class CoulombSum2d : public ExampleReferenceKernel {
 protected:
-    CoulombSum2d(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
+    CoulombSum2d(int argc, char **argv, string exampleFolderPath,
                  string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
-        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath,
+        ExampleReferenceKernel(argc, argv, exampleFolderPath,
                                defaultKernelFileBaseName, defaultRefKernelFileBaseName),
         // Since CoulombSum2d has O(n²) complexity (gridPoints × atoms), scale grid dimensions
         // with the fourth root of problem size to keep total work proportional
-        m_gridWidth(static_cast<size_t>(sqrt(m_problemSize)) * 16),
-        m_gridHeight(static_cast<size_t>(sqrt(m_problemSize)) * 16),
+        m_gridWidth(256),
+        m_gridHeight(256),
         m_ndRangeDimensions(m_gridWidth, m_gridHeight),
         m_numberOfAtoms(4000)
     {
@@ -24,11 +24,11 @@ protected:
     size_t m_gridHeight;
 
     // Total NDRange size matches number of grid points
-    const ktt::DimensionVector m_ndRangeDimensions;
+    ktt::DimensionVector m_ndRangeDimensions;
     const ktt::DimensionVector m_workGroupDimensions{1, 1};
 
-    const float m_gridSpacing = 0.5f;
-    const int m_numberOfAtoms;
+    float m_gridSpacing = 0.5f;
+    int m_numberOfAtoms;
 
     vector<float> m_atomInfo;
     vector<float> m_atomInfoX;
@@ -46,9 +46,23 @@ protected:
     ktt::ArgumentId m_gridSpacingId;
     ktt::ArgumentId m_energyGridId;
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(2, m_ndRangeDimensions);
+        m_cli.AddOption({[this](const vector<string> &args) {
+            m_numberOfAtoms = stoul(args[0]);
+        }, "--atoms", "Set the number of atoms (expects int)", "<count>", 1});
+        m_cli.AddOption({[this](const vector<string> &args) {
+            m_gridSpacing = stof(args[0]);
+        }, "--spacing", "Set the grid spacing (expects float)", "<spacing>", 1});
+    }
+
     void InitData() override
     {
         // Declare data variables
+        m_gridWidth = m_ndRangeDimensions.GetSizeX();
+        m_gridHeight = m_ndRangeDimensions.GetSizeY();
         const size_t numberOfGridPoints = m_gridWidth * m_gridHeight;
         m_atomInfo.resize(4 * m_numberOfAtoms);
         m_atomInfoX.resize(m_numberOfAtoms);
@@ -133,7 +147,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<CoulombSum2d> coulombSum2d = CoulombSum2d::Create<CoulombSum2d>(argc, argv, 256, "Examples/CoulombSum2d",
+    unique_ptr<CoulombSum2d> coulombSum2d = CoulombSum2d::Create<CoulombSum2d>(argc, argv, "Examples/CoulombSum2d",
         "CoulombSum2d", "CoulombSum2dReference");
     coulombSum2d->Run();
 

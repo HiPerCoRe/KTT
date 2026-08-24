@@ -5,9 +5,9 @@ using namespace std;
 
 class AtfCCSD : public ExampleBase {
 protected:
-    AtfCCSD(int argc, char **argv, int defaultProblemSize,
+    AtfCCSD(int argc, char **argv,
             string exampleFolderPath, string defaultKernelFileBaseName) :
-        ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleBase(argc, argv, exampleFolderPath, defaultKernelFileBaseName)
     {
         // Keep OpenCL sizes as specified
         m_inputSize1 = 24;
@@ -17,8 +17,6 @@ protected:
         m_inputSize5 = 16;
         m_inputSize6 = 16;
         m_inputSize7 = 24;
-
-        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
 
         const std::string atfSamplesPath1 = GetKernelFilePath(exampleFolderPath, "TcAbcdefGebcDfga1");
         const std::string atfSamplesPath2 = GetKernelFilePath(exampleFolderPath, "TcAbcdefGebcDfga2");
@@ -74,6 +72,22 @@ protected:
         return values;
     }
 
+    void InitCLI() override 
+    {
+        ExampleBase::InitCLI();
+        m_cli.AddOption({[this](const vector<string> &args) {
+                array<reference_wrapper<uint64_t>, 7> inputs = {
+                    m_inputSize1, m_inputSize2, m_inputSize3, m_inputSize4,
+                    m_inputSize5, m_inputSize6, m_inputSize7,
+                };
+                for (int i = 0; i < 7; i++) 
+                {
+                    inputs[i].get() = stoull(args[i]);
+                }
+            }, "--inputSize", "Sets input size (expects 7 ints)", "<a> <b> <c> <d> <e> <f> <g>", 7
+        });
+    }
+
     void InitData() override
     {
         // Initialize data buffers with fixed sizes
@@ -105,6 +119,7 @@ protected:
 
     void InitKernel() override
     {
+        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
         m_aId = m_tuner->AddArgumentVector(m_a, ktt::ArgumentAccessType::ReadOnly);
         m_bId = m_tuner->AddArgumentVector(m_b, ktt::ArgumentAccessType::ReadOnly);
         m_cId = m_tuner->AddArgumentVector(m_c, ktt::ArgumentAccessType::ReadWrite);
@@ -453,7 +468,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<AtfCCSD> atfCCSD = AtfCCSD::Create<AtfCCSD>(argc, argv, 1, "Examples/AtfCCSD", "AtfCCSD");
+    unique_ptr<AtfCCSD> atfCCSD = AtfCCSD::Create<AtfCCSD>(argc, argv, "Examples/AtfCCSD", "AtfCCSD");
     atfCCSD->Run();
 
     return 0;

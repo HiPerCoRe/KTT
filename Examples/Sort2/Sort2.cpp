@@ -1,5 +1,4 @@
 #include "../ExampleReferenceComputation.h"
-#include "KttTypes.h"
 #include <assert.h>
 #include <cstdint>
 
@@ -10,19 +9,17 @@ class Sort2 : public ExampleReferenceComputation
 protected:
     Sort2(
         int argc, char **argv,
-        int defaultProblemSize,
         string exampleFolderPath, string defaultKernelFileBaseName
     ):
-    ExampleReferenceComputation(argc, argv, defaultProblemSize,
-        exampleFolderPath, defaultKernelFileBaseName
+    ExampleReferenceComputation(argc, argv, exampleFolderPath, defaultKernelFileBaseName
     )
     {
-        // problem size is in MiB
-        m_size = m_problemSize * 1024 * 1024 / sizeof(unsigned int);
+        m_inputSize = ktt::DimensionVector(32 * 1024 * 1024);
     }
 
     friend ExampleBase;
 
+    ktt::DimensionVector m_inputSize;
     int m_size;
     const unsigned int SORT_BITS = 32;
     const unsigned int nbits = 4;
@@ -94,8 +91,17 @@ protected:
         }
     }
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(1, m_inputSize);
+    }
+
     void InitData() override
     {
+        // Input size is the number of elements directly
+        m_size = m_inputSize.GetSizeX();
+
         // Create input and output vectors and initialize with pseudorandom numbers
         m_keysIn.resize(m_size);
         m_keysOut.resize(m_size);
@@ -282,7 +288,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<Sort2> sort2 = Sort2::Create<Sort2>(argc, argv, 32, "Examples/Sort2", "Sort2");
+    unique_ptr<Sort2> sort2 = Sort2::Create<Sort2>(argc, argv, "Examples/Sort2", "Sort2");
     sort2->Run();
 
     return 0;

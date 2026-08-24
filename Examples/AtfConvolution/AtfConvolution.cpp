@@ -5,15 +5,15 @@ using namespace std;
 
 class AtfConvolution : public ExampleBase {
 protected:
-    AtfConvolution(int argc, char **argv, int defaultProblemSize,
+    AtfConvolution(int argc, char **argv,
                    string exampleFolderPath, string defaultKernelFileBaseName) :
-        ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleBase(argc, argv, exampleFolderPath, defaultKernelFileBaseName)
     {
         // Keep OpenCL sizes as specified
-        m_inputSize1 = static_cast<int>(sqrt(m_problemSize)) * 1024;
+        m_inputSize1 = 4 * 1024;
         m_inputSize2 = m_inputSize1;
 
-        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+        m_problemSize = ktt::DimensionVector(m_inputSize1, m_inputSize2);
     }
 
     friend ExampleBase;
@@ -21,6 +21,7 @@ protected:
     // Input sizes - kept as member variables
     uint64_t m_inputSize1;
     uint64_t m_inputSize2;
+    ktt::DimensionVector m_problemSize;
 
     // Data vectors
     vector<float> m_in;
@@ -45,8 +46,16 @@ protected:
         return values;
     }
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(2, m_problemSize);
+    }
+
     void InitData() override
     {
+        m_inputSize1 = m_problemSize.GetSizeX();
+        m_inputSize2 = m_problemSize.GetSizeY();
         // Initialize data buffers with fixed sizes
         m_in.resize(m_inputSize1 * m_inputSize2);
         m_out.resize((m_inputSize1 - 4) * (m_inputSize2 - 4));
@@ -70,6 +79,7 @@ protected:
 
     void InitKernel() override
     {
+        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
         m_inId = m_tuner->AddArgumentVector(m_in, ktt::ArgumentAccessType::ReadOnly);
         m_outId = m_tuner->AddArgumentVector(m_out, ktt::ArgumentAccessType::ReadWrite);
         m_intResId = m_tuner->AddArgumentVector(m_intRes, ktt::ArgumentAccessType::ReadWrite);
@@ -196,7 +206,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<AtfConvolution> atfConvolution = AtfConvolution::Create<AtfConvolution>(argc, argv, 16, "Examples/AtfConvolution", "GaussianStatic1");
+    unique_ptr<AtfConvolution> atfConvolution = AtfConvolution::Create<AtfConvolution>(argc, argv, "Examples/AtfConvolution", "GaussianStatic1");
     atfConvolution->Run();
 
     return 0;
