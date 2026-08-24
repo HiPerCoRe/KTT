@@ -12,8 +12,8 @@
 using namespace std;
 
 class Hotspot : public ExampleReferenceKernel {
-  Hotspot(int argc, char** argv, int defaultProblemSize, string exampleFolderPath, string defaultKernelFileBaseName, string defaultReferenceKernelFileBaseName):
-    ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultReferenceKernelFileBaseName)
+  Hotspot(int argc, char** argv, string exampleFolderPath, string defaultKernelFileBaseName, string defaultReferenceKernelFileBaseName):
+    ExampleReferenceKernel(argc, argv, exampleFolderPath, defaultKernelFileBaseName, defaultReferenceKernelFileBaseName)
   {
     m_totalIterations = 2;
     m_grid_rows = 1024;
@@ -311,7 +311,7 @@ protected:
 int main(int argc, char** argv)
 {
   unique_ptr<Hotspot> hotspot = ExampleReferenceKernel::Create<Hotspot>(
-    argc, argv, 0, "Examples/RodiniaHotspot", "Hotspot", "HotspotReference"
+    argc, argv, "Examples/RodiniaHotspot", "Hotspot", "HotspotReference"
   );
   hotspot->Run();
 
