@@ -1,7 +1,5 @@
 #include "../ExampleReferenceComputation.h"
-#include "Api/Configuration/DimensionVector.h"
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -10,13 +8,13 @@ using namespace std;
 
 class CoulombSum3d : public ExampleReferenceComputation {
 protected:
-    CoulombSum3d(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
+    CoulombSum3d(int argc, char **argv, string exampleFolderPath,
                  string defaultKernelFileBaseName) :
-        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath,
+        ExampleReferenceComputation(argc, argv, exampleFolderPath,
                                     defaultKernelFileBaseName),
-        m_gridWidth(128 * static_cast<size_t>(cbrt(m_problemSize))),
-        m_gridHeight(128 * static_cast<size_t>(cbrt(m_problemSize))),
-        m_gridDepth(128 * static_cast<size_t>(cbrt(m_problemSize))),
+        m_gridWidth(256),
+        m_gridHeight(256),
+        m_gridDepth(256),
         m_ndRangeDimensions(m_gridWidth, m_gridHeight, m_gridDepth),
         m_workGroupDimensions{1, 1, 1},
         m_numberOfAtoms(256),
@@ -62,16 +60,13 @@ protected:
         ExampleBase::InitCLI();
         m_cli.AddOption({[this](const vector<string> &args) {
             m_gridWidth = stoul(args[0]);
-        }, "--gridWidth", "Set the grid width (expects int), scaled proportionally with"
-        " cbrt of problemSize", "<width>", 1});
+        }, "--gridWidth", "Set the grid width (expects int)", "<width>", 1});
         m_cli.AddOption({[this](const vector<string> &args) {
             m_gridHeight = stoul(args[0]);
-        }, "--gridHeight", "Set the grid height (expects int), scaled proportionally with"
-        " cbrt of problemSize", "<height>", 1});
+        }, "--gridHeight", "Set the grid height (expects int)", "<height>", 1});
         m_cli.AddOption({[this](const vector<string> &args) {
             m_gridDepth = stoul(args[0]);
-        }, "--gridDepth", "Set the grid depth (expects int), scaled proportionally with"
-        " cbrt of problemSize", "<depth>", 1});
+        }, "--gridDepth", "Set the grid depth (expects int)", "<depth>", 1});
         m_cli.AddOption({[this](const vector<string> &args) {
             m_numberOfAtoms = stoul(args[0]);
         }, "--atoms", "Set the number of atoms (expects int)", "<count>", 1});
@@ -116,7 +111,7 @@ protected:
         m_gridDimId = m_tuner->AddArgumentScalar(static_cast<int>(m_gridWidth));
         m_energyGridId = m_tuner->AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::WriteOnly);
 
-        m_ndRangeDimensions = ktt::DimensionVector(m_gridWidth, m_gridHeight, m_gridDepth)
+        m_ndRangeDimensions = ktt::DimensionVector(m_gridWidth, m_gridHeight, m_gridDepth);
         // Configure main kernel
         InitKernelDefault("directCoulombSum", "CoulombSum", m_ndRangeDimensions,
             {m_atomInfoId, m_atomInfoXId, m_atomInfoYId, m_atomInfoZId, m_atomInfoWId,
@@ -237,7 +232,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<CoulombSum3d> coulombSum3d = CoulombSum3d::Create<CoulombSum3d>(argc, argv, 8, "Examples/CoulombSum3d", "CoulombSum3d");
+    unique_ptr<CoulombSum3d> coulombSum3d = CoulombSum3d::Create<CoulombSum3d>(argc, argv, "Examples/CoulombSum3d", "CoulombSum3d");
     coulombSum3d->Run();
 
     return 0;
