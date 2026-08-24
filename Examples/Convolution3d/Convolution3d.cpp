@@ -7,20 +7,22 @@ class Convolution3d: public ExampleReferenceComputation
 protected:
     Convolution3d(
         int argc, char **argv,
-        int defaultProblemSize,
         string exampleFolderPath, string defaultKernelFileBaseName
     ):
-    ExampleReferenceComputation(argc, argv, defaultProblemSize,
+    ExampleReferenceComputation(argc, argv,
         exampleFolderPath, defaultKernelFileBaseName
     )
     {
         // cbrt is cube root, so that problem size N roughly translates to N MiB of values
-        m_width = cbrt(m_problemSize)*256;
-        m_height = cbrt(m_problemSize)*128;
-        m_depth = cbrt(m_problemSize)*128;
+        m_width = 256;
+        m_height = 128;
+        m_depth = 128;
+        m_problemSize = ktt::DimensionVector(m_width, m_height, m_depth);
     }
 
     friend ExampleBase;
+
+    ktt::DimensionVector m_problemSize;
 
     int m_width, m_height, m_depth;
     ktt::KernelDefinitionId m_blockedDefinition, m_slidingPlaneDefinition;
@@ -51,8 +53,17 @@ protected:
         return (a / b) * b == a;
     }
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(3, m_problemSize);
+    }
+
     void InitData() override
     {
+        m_width = m_problemSize.GetSizeX();
+        m_height = m_problemSize.GetSizeY();
+        m_depth = m_problemSize.GetSizeZ();
         // Initialize data
         random_device device;
         default_random_engine engine(device());
@@ -330,7 +341,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<Convolution3d> convolution3d = Convolution3d::Create<Convolution3d>(argc, argv, 1, "Examples/Convolution3d",
+    unique_ptr<Convolution3d> convolution3d = Convolution3d::Create<Convolution3d>(argc, argv, "Examples/Convolution3d",
         "Convolution3d");
 
     // Launch kernel tuning
