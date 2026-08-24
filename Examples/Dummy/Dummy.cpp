@@ -17,9 +17,9 @@ using namespace std;
 
 class Dummy : public ExampleBase {
 protected:
-    Dummy(int argc, char **argv, int defaultProblemSize,
+    Dummy(int argc, char **argv,
           string exampleFolderPath, string defaultKernelFileBaseName) :
-        ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleBase(argc, argv, exampleFolderPath, defaultKernelFileBaseName)
     {
         m_gridSize = 256;
         m_atoms = 1024;
@@ -61,6 +61,20 @@ protected:
     ktt::ArgumentId m_energyGridId;
 
     float m_gridSpacing = 0.5f;
+
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+
+        m_cli.AddOption({[this](const vector<string> &args) {
+                m_gridSize = stoi(args[0]);
+            }, "--gridSize", "Set size of cube grid, will be A x A x A (expects int)", "<A>",1
+        });
+        m_cli.AddOption({[this](const vector<string> &args) {
+                m_atoms = stoi(args[0]);
+            }, "--atomsNum", "Set number of atoms (expects int)", "<atomsNum>",1
+        });
+    }
 
     void InitData() override
     {
@@ -124,7 +138,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<Dummy> dummy = Dummy::Create<Dummy>(argc, argv, 0, "Examples/Dummy", "Dummy");
+    unique_ptr<Dummy> dummy = Dummy::Create<Dummy>(argc, argv, "Examples/Dummy", "Dummy");
     dummy->Run();
 
     return 0;
