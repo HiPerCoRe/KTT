@@ -1,4 +1,5 @@
 #include "../ExampleReferenceComputation.h"
+#include "Api/Configuration/DimensionVector.h"
 #include <cstdint>
 #include <iostream>
 #include <memory>
@@ -32,7 +33,7 @@ protected:
     size_t m_gridDepth;
 
     // Total NDRange size matches number of grid points
-    const ktt::DimensionVector m_ndRangeDimensions;
+    ktt::DimensionVector m_ndRangeDimensions;
     const ktt::DimensionVector m_workGroupDimensions;
     const ktt::DimensionVector m_referenceWorkGroupDimensions{16, 16, 16};
 
@@ -115,6 +116,7 @@ protected:
         m_gridDimId = m_tuner->AddArgumentScalar(static_cast<int>(m_gridWidth));
         m_energyGridId = m_tuner->AddArgumentVector(m_energyGrid, ktt::ArgumentAccessType::WriteOnly);
 
+        m_ndRangeDimensions = ktt::DimensionVector(m_gridWidth, m_gridHeight, m_gridDepth)
         // Configure main kernel
         InitKernelDefault("directCoulombSum", "CoulombSum", m_ndRangeDimensions,
             {m_atomInfoId, m_atomInfoXId, m_atomInfoYId, m_atomInfoZId, m_atomInfoWId,
