@@ -1,5 +1,4 @@
 #include "../ExampleReferenceComputation.h"
-#include <memory>
 
 using namespace std;
 
@@ -7,21 +6,19 @@ bool IsMultiple(size_t a, size_t b) { return a % b == 0; };
 
 class Covariance : public ExampleReferenceComputation {
 protected:
-    Covariance(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
+    Covariance(int argc, char **argv, string exampleFolderPath,
                string defaultKernelFileBaseName) :
-        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName),
-        // Covariance has O(n × m²) complexity. For square matrices where n ≈ m,
-        // we scale with cube root of problem size to keep total work proportional
-        m_n(static_cast<int>(sqrt(m_problemSize)) * 1024),
-        m_m(static_cast<int>(sqrt(m_problemSize)) * 1024)
+        ExampleReferenceComputation(argc, argv, exampleFolderPath, defaultKernelFileBaseName),
+        m_n(1024),
+        m_m(1024)
     {
         m_refKernelFile = GetKernelFilePath(exampleFolderPath, "CovarianceReference");
         m_gemmFile = GetKernelFilePath(exampleFolderPath, "Gemm");
-        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
     }
 
     friend ExampleBase;
 
+    ktt::DimensionVector m_problemSize;
     int m_n;
     int m_m;
 
@@ -51,6 +48,12 @@ protected:
     ktt::KernelDefinitionId m_gemmDefinition;
     ktt::KernelDefinitionId m_triangularToSymmetricDefinition;
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(2, m_problemSize);
+    }
+
     void InitData() override
     {
         m_data.resize(m_m * m_n);
@@ -62,6 +65,7 @@ protected:
 
     void InitKernel() override
     {
+        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
         const float floatN = static_cast<float>(m_n);
         mMId = m_tuner->AddArgumentScalar(m_m);
         mNId = m_tuner->AddArgumentScalar(m_n);
@@ -283,7 +287,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<Covariance> covariance = Covariance::Create<Covariance>(argc, argv, 1, "Examples/Covariance", "Covariance");
+    unique_ptr<Covariance> covariance = Covariance::Create<Covariance>(argc, argv, "Examples/Covariance", "Covariance");
     covariance->Run();
 
     return 0;
