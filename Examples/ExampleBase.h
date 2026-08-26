@@ -30,6 +30,8 @@ public:
         return ex;
     }
 
+    virtual ~ExampleBase() = default;
+
 protected:
     const ktt::ComputeApi m_computeApi;
     int m_argc;
