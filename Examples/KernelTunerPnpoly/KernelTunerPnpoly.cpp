@@ -1,4 +1,4 @@
-#include "../ExampleReferenceKernel.h"
+#include "ExampleReferenceKernel.h"
 #include <memory>
 
 using namespace std;

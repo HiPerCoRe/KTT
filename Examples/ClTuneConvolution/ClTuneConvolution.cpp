@@ -1,4 +1,4 @@
-#include "../ExampleReferenceKernel.h"
+#include "ExampleReferenceKernel.h"
 #include "Api/Configuration/DimensionVector.h"
 #include <memory>
 #include <cmath>

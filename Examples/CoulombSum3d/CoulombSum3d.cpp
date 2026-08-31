@@ -1,4 +1,4 @@
-#include "../ExampleReferenceComputation.h"
+#include "ExampleReferenceComputation.h"
 #include <cstdint>
 #include <memory>
 #include <string>

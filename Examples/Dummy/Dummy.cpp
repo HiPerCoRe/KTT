@@ -5,7 +5,7 @@
  * power measurement.
  */
 
-#include "../ExampleBase.h"
+#include "ExampleBase.h"
 #include <cstdint>
 #include <memory>
 #include <chrono>

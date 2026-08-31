@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "../ExampleReferenceKernel.h"
+#include "ExampleReferenceKernel.h"
 #include "Api/Configuration/DimensionVector.h"
 
 using namespace std;

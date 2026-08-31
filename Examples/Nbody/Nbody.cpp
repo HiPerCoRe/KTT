@@ -1,4 +1,4 @@
-#include "../ExampleReferenceKernel.h"
+#include "ExampleReferenceKernel.h"
 #include <memory>
 #include <random>
 #include <string>

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "../ExampleReferenceComputation.h"
+#include "ExampleReferenceComputation.h"
 
 using namespace std;
 

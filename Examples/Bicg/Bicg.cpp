@@ -1,4 +1,4 @@
-#include "../ExampleReferenceComputation.h"
+#include "ExampleReferenceComputation.h"
 #include <memory>
 
 using namespace std;

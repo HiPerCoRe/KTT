@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "../ExampleReferenceKernel.h"
+#include "ExampleReferenceKernel.h"
 
 using namespace std;
 

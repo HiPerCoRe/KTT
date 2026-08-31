@@ -1,8 +1,8 @@
 #include "ExampleBase.h"
 // Include these and derive from them if Example uses 
 // a reference kernel/computation.
-// #include "../ExampleReferenceKernel.h"
-// #include "../ExampleReferenceComputation.h"
+// #include "ExampleReferenceKernel.h"
+// #include "ExampleReferenceComputation.h"
 
 using namespace std;
 
