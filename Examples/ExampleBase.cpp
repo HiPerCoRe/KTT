@@ -328,23 +328,36 @@ void ExampleBase::InitTuner() {
 void ExampleBase::CheckTunerFlags() 
 {
     if (m_tuner == nullptr) return;
+    string compilerOptions = "";
     if (m_useFastMath) {
         if (m_computeApi == ktt::ComputeApi::OpenCL)
         {
-            m_tuner->SetCompilerOptions("-cl-fast-relaxed-math");
+            compilerOptions += "-cl-fast-relaxed-math ";
         }
         else if (m_computeApi == ktt::ComputeApi::CUDA)
         {
-            m_tuner->SetCompilerOptions("-use_fast_math");
+            compilerOptions += "-use_fast_math ";
+        }
+        else if (!m_warnedFastMath)  // Don't warn twice
+        {
+            m_warnedFastMath = true;
+            cerr << "Warning: UseFastMath ignored -- ExampleBase supports fast math only for OpenCL and CUDA. "
+                    "C++ fast math flags depend on the compiler used.\n";
         }
     }
 
     if (m_useOpenMP) {
         if (m_computeApi == ktt::ComputeApi::Cpp)
         {
-            m_tuner->SetCompilerOptions("-march=native -fopenmp");
+            compilerOptions += "-march=native -fopenmp ";
+        }
+        else if (!m_warnedOpenMP)
+        {
+            m_warnedOpenMP = true;
+            cerr << "Warning: UseOpenMP ignored -- only makes sense for C++\n";
         }
     }
+    m_tuner->SetCompilerOptions(compilerOptions);
 }
 
 void ExampleBase::UseFastMath()
