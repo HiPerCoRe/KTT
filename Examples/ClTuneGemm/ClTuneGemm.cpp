@@ -49,7 +49,7 @@ protected:
                 m_kSizeM = stoi(args[0]);
                 m_kSizeN = stoi(args[1]);
                 m_kSizeK = stoi(args[2]);
-            }, "--matSizes", "Sets matrix sizes (expects 3 ints). Matrix sizes will be:"
+            }, "--matSizes", "Sets matrix sizes (expects 3 ints) for computation C = A x B. Matrix sizes will be:"
             "\n\tA: M x K\n\tB: K x N\n\tC: M x N", "<M> <N> <K>", 3
         });
     }

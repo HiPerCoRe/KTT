@@ -44,14 +44,14 @@ protected:
                 m_dimB = stoi(args[1]);
                 m_dimC = stoi(args[2]);
             }, "--matSize", "Set sizes of individual matrices (expects 3 ints)\n"
-            "\tWill compute C = AB, sizes being:\n"
+            "\tWill compute C = BA, sizes being:\n"
             "\tA: M x N\n\tB: K x M\n\tC: K x N", "<M> <N> <K>", 3
         });
     }
 
     void InitData() override
     {
-        std::cout << "Computing C = AB using " << m_batch << " matrices of sizes"
+        std::cout << "Computing C = BA using " << m_batch << " matrices of sizes"
             << std::endl
             << "A: " << m_dimA << " x " << m_dimB << std::endl
             << "B: " << m_dimC << " x " << m_dimA << std::endl
