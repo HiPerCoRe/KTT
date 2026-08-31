@@ -4,6 +4,7 @@
 #include "CompilerTuningComponent.h"
 #include "RunStats.hpp"
 #include <Ktt.h>
+#include <cstdint>
 #include <memory>
 #include <random>
 #include <type_traits>
@@ -77,6 +78,8 @@ protected:
     bool m_useProfiling = false;
     bool m_rapidTest = false;
     bool m_useDynamicTuning = false;
+    bool m_checkpointTuning = false;
+    uint64_t m_checkpointTuningIterations = 0;
     double m_dynamicTuningTime = 0;
     std::unique_ptr<ktt::Searcher> m_searcher;
     std::string m_profileSearchModelPath;
@@ -200,6 +203,7 @@ private:
     void CheckTunerFlags();
 
     void RunDynamic();
+    void RunCheckpoint();
     void RunOffline();
 
     void PrintProgress(const std::string& phaseName, int currentRun, double elapsedSeconds,

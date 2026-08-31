@@ -1,9 +1,5 @@
 #include "ExampleBase.h"
-#include "Api/Output/KernelResult.h"
-#include "ComputeEngine/ComputeApi.h"
-#include "CliComponent.h"
 #include "Utility/Logger/Logger.h"
-#include "Utility/Logger/LoggingLevel.h"
 #include <assert.h>
 #include <memory>
 #include <vector>
@@ -157,9 +153,47 @@ void ExampleBase::RunOffline()
     m_compilerTuning->Run();
 }
 
+void ExampleBase::RunCheckpoint() 
+{
+    m_tuner->InitializeConfigurationData(m_kernel);
+    uint64_t totalConfigurations = m_tuner->GetConfigurationsCount(m_kernel);
+    uint64_t exploredConfigurations = 0;
+    RunStats stats;
+    vector<ktt::KernelResult> results;
+    while (exploredConfigurations < totalConfigurations && (m_stopCondition == nullptr || !m_stopCondition->IsFulfilled())) 
+    {
+        for (uint64_t i = 0; i < m_checkpointTuningIterations; ++i) 
+        {
+            const auto result = m_tuner->TuneIteration(m_kernel, {}, false, m_preciseParams);
+            results.push_back(result);
+            stats.Update(result);
+
+            ++exploredConfigurations;
+            if (exploredConfigurations >= totalConfigurations) break;
+
+            if (m_stopCondition != nullptr) 
+            {
+                m_stopCondition->Update(result);
+                ktt::Logger::LogInfo(m_stopCondition->GetStatusString());
+                if (m_stopCondition->IsFulfilled()) break;
+            }
+        }
+        stats.Print("Tuning Checkpoint, explored " + to_string(exploredConfigurations) + "/" +
+            to_string(totalConfigurations) + " configurations"
+        );
+        m_tuner->SaveResults(results, "Checkpoint", ktt::OutputFormat::JSON);
+    }
+}
+
 void ExampleBase::Run()
 {
+    if (m_useDynamicTuning && m_checkpointTuning) 
+    {
+        cerr << "Error: Only one of dynamic tuning or checkpoint tuning can be enabled.\n";
+        exit(1);
+    }
     if (m_useDynamicTuning) RunDynamic();
+    else if (m_checkpointTuning) RunCheckpoint();
     else RunOffline();
 }
 
@@ -289,7 +323,7 @@ void ExampleBase::InitCLI() {
     m_cli.AddOption({[this](const vector<string> &args) {
         m_useDynamicTuning = true;
         m_dynamicTuningTime = stod(args[0]);
-    }, "--useDynamicTuning", "Enables a basic implementation of dynamic tuning."
+    }, "--useDynamicTuning", "Enables a basic implementation of dynamic tuning. Ignores --stopCondition."
     "The tuning will last <time> (double) seconds and then the only the best configuration will be run.",
     "<time>", 1});
 
@@ -304,6 +338,13 @@ void ExampleBase::InitCLI() {
             exit(1);
         }
     }, "--loggingLevel", "Set the logging level, can be one of (off, error, warning, info, debug)", "<level>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_checkpointTuning = true;
+        m_checkpointTuningIterations = stoul(args[0]);
+    }, "--useCheckpointTuning", "Tune N iterations, save partial results (checkpoint), continue. Takes --stopCondition into account."
+    " Each checkpoint overwrites the previous one, into Checkpoint.json,"
+    " as doing otherwise would duplicate previously saved data.", "<iterations>", 1});
 
     m_compilerTuning->InitCLIOptions(m_cli);
 }
