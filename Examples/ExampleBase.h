@@ -74,9 +74,9 @@ protected:
     
     ktt::PlatformIndex m_platform = 0;
     ktt::PlatformIndex m_device = 0;
-    bool m_useProfiling = 0;
-    bool m_rapidTest = 0;
-    bool m_useDynamicTuning = 0;
+    bool m_useProfiling = false;
+    bool m_rapidTest = false;
+    bool m_useDynamicTuning = false;
     double m_dynamicTuningTime = 0;
     std::unique_ptr<ktt::Searcher> m_searcher;
     std::string m_profileSearchModelPath;
@@ -134,13 +134,9 @@ protected:
     /** @fn Initializes the searcher based on CLI options passed by the user. Defaults to deterministic. */
     void InitSearcher();
 
-    void RunDynamic();
-    void RunOffline();
-
-    bool m_useFastMath = false;
     /** @fn Sets a flag to make the tuner use fast math. Must be called before InitTuner() to have an effect. */
     void UseFastMath();
-    bool m_useOpenMP = false;
+
     /** @fn Sets a flag to make the tuner use OpenMP. Must be called before InitTuner() to have an effect. */
     void UseOpenMP();
 
@@ -152,15 +148,6 @@ protected:
       * @param inputSize A reference to ktt::DimensionVector which will be modified depending on user input.
       */
     void UseInputSizeOption(int numDimensions, ktt::DimensionVector &inputSize);
-
-    void PrintProgress(const std::string& phaseName, int currentRun, double elapsedSeconds,
-                       double timeBudget, double bestDuration, double throughput);
-
-    RunStats RunTuningPhase(const std::chrono::steady_clock::time_point& startTime,
-                            double timeBudgetSeconds, int printInterval);
-    RunStats RunExecutionPhase(const std::chrono::steady_clock::time_point& startTime,
-                               double timeBudgetSeconds, const ktt::KernelConfiguration& bestConfig,
-                               int printInterval);
 
     /** @fn Helper method that fills buffers of a numerical type with random values from a uniform distribution.
       * @param buffers The buffers to be filled.
@@ -198,5 +185,22 @@ protected:
       * @param arguments Argument IDs. Must be in the same order as what the kernel function expects.
       */
     void InitKernelDefault(const std::string &kernelFunctionName, const std::string &kernelName,
-                            const ktt::DimensionVector &ndRangeDimensions, const std::vector<ktt::ArgumentId> &arguments);
+                           const ktt::DimensionVector &ndRangeDimensions, const std::vector<ktt::ArgumentId> &arguments);
+
+private:
+    bool m_useFastMath = false;
+    bool m_useOpenMP = false;
+
+    void RunDynamic();
+    void RunOffline();
+
+    void PrintProgress(const std::string& phaseName, int currentRun, double elapsedSeconds,
+                       double timeBudget, double bestDuration, double throughput);
+
+    RunStats RunTuningPhase(const std::chrono::steady_clock::time_point& startTime,
+                            double timeBudgetSeconds, int printInterval);
+    RunStats RunExecutionPhase(const std::chrono::steady_clock::time_point& startTime,
+                               double timeBudgetSeconds, const ktt::KernelConfiguration& bestConfig,
+                               int printInterval);
+
 };
