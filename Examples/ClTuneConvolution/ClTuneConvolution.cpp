@@ -104,7 +104,7 @@ protected:
     void InitTuningSpace() override
     {
         vector<uint64_t> blockRange = {8, 16, 32, 64};
-        vector<uint64_t> wptRange = {1, 2, 4, 8, 16};
+        vector<uint64_t> wptRange = {1, 2, 4, 8};
 
         m_tuner->AddParameter(m_kernel, "TBX", blockRange);
         m_tuner->AddParameter(m_kernel, "TBY", blockRange);
@@ -112,8 +112,7 @@ protected:
         m_tuner->AddParameter(m_kernel, "WPTX", wptRange);
         m_tuner->AddParameter(m_kernel, "WPTY", wptRange);
         m_tuner->AddParameter(m_kernel, "VECTOR", vector<uint64_t>{1, 2, 4});
-        m_tuner->AddParameter(m_kernel, "UNROLL_FACTOR1", vector<uint64_t>{0, 1, static_cast<uint64_t>(FS)});
-        m_tuner->AddParameter(m_kernel, "UNROLL_FACTOR2", vector<uint64_t>{0, 1, static_cast<uint64_t>(FS)});
+        m_tuner->AddParameter(m_kernel, "UNROLL_FACTOR", vector<uint64_t>{1, static_cast<uint64_t>(FS)});
         m_tuner->AddParameter(m_kernel, "PADDING", vector<uint64_t>{0, 1});
 
         vector<uint64_t> integers{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
