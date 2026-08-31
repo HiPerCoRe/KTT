@@ -21,7 +21,7 @@ protected:
         // See annotation for ExampleBase::InitTuner().
     }
 
-    // This friend declaration allows the Create() factory method to access protected constructor
+    // This friend declaration allows the Create() factory method to access protected constructor.
     // When inheriting ExampleReferenceKernel friend that class, it has a different Create().
     friend ExampleBase;
 
@@ -59,12 +59,11 @@ protected:
 
     void InitKernel() override
     {
-        // Register kernel arguments
+        // Register kernel arguments.
+        // Load the kernel from the kernel file (m_kernelFile).
+        // The kernel file should be in the same folder as this .cpp file.
 
-        // Load the kernel from the .cl/.cu/.cpp file
-        // The kernel file should be in the same folder as this .cpp file
-
-        // Optional use of the InitKernelDefault method
+        // Optional use of the InitKernelDefault method.
         // Example:
         // const ktt::DimensionVector ndRangeDimensions(m_problemSize);
         // InitKernelDefault("myKernelFunction", "My Kernel Name", ndRangeDimensions,
@@ -73,11 +72,11 @@ protected:
 
     void InitTuningSpace() override
     {
-        // Add tunable parameters for the kernel
+        // Add tunable parameters for the kernel.
 
-        // Add constraints to prune invalid parameter combinations
+        // Add constraints to prune invalid parameter combinations.
 
-        // Add thread modifiers to adjust global/local work sizes
+        // Add thread modifiers to adjust global/local work sizes.
 
         // If UseCompilerTuning() was called, you may:
         // m_compilerTuning->AddCompilerParameter("-O", {"1", "2", "3"}); // if tuning Cpp kernel
