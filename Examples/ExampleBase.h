@@ -134,10 +134,10 @@ protected:
     /** @fn Initializes the searcher based on CLI options passed by the user. Defaults to deterministic. */
     void InitSearcher();
 
-    /** @fn Sets a flag to make the tuner use fast math. Must be called before InitTuner() to have an effect. */
+    /** @fn Sets a flag to make the tuner use fast math. */
     void UseFastMath();
 
-    /** @fn Sets a flag to make the tuner use OpenMP. Must be called before InitTuner() to have an effect. */
+    /** @fn Sets a flag to make the tuner use OpenMP. */
     void UseOpenMP();
 
     /** @fn Initializes m_compilerTuning and enables the use of its AddCompilerParameter method. */
@@ -190,6 +190,8 @@ protected:
 private:
     bool m_useFastMath = false;
     bool m_useOpenMP = false;
+
+    void CheckTunerFlags();
 
     void RunDynamic();
     void RunOffline();

@@ -322,6 +322,12 @@ void ExampleBase::InitTuner() {
     m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
 
+    CheckTunerFlags();
+}
+
+void ExampleBase::CheckTunerFlags() 
+{
+    if (m_tuner == nullptr) return;
     if (m_useFastMath) {
         if (m_computeApi == ktt::ComputeApi::OpenCL)
         {
@@ -344,11 +350,13 @@ void ExampleBase::InitTuner() {
 void ExampleBase::UseFastMath()
 {
     m_useFastMath = true;
+    CheckTunerFlags();
 }
 
 void ExampleBase::UseOpenMP()
 {
     m_useOpenMP = true;
+    CheckTunerFlags();
 }
 
 void ExampleBase::UseCompilerTuning()
