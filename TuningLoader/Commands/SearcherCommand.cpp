@@ -1,3 +1,6 @@
+#include <cstdint>
+#include <optional>
+
 #include <Commands/SearcherCommand.h>
 #include <KttLoaderAssert.h>
 
@@ -12,6 +15,13 @@ SearcherCommand::SearcherCommand(const SearcherType type, const std::map<std::st
 void SearcherCommand::Execute(TunerContext& context)
 {
     std::unique_ptr<Searcher> searcher;
+
+    std::optional<uint64_t> seed;
+
+    if (m_Attributes.count("seed") > 0)
+    {
+        seed = std::stoull(m_Attributes["seed"]);
+    }
 
     switch (m_Type)
     {
@@ -36,11 +46,16 @@ void SearcherCommand::Execute(TunerContext& context)
           uint randomSize = 10;
           if (m_Attributes.count("randomSize") > 0)
             randomSize = std::stoul(m_Attributes["randomSize"]);
-          context.GetTuner().SetProfileBasedSearcher(context.GetKernelId(), m_Attributes["modelPath"], true, batchSize, neighborSize, randomSize);
+          context.GetTuner().SetProfileBasedSearcher(context.GetKernelId(), m_Attributes["modelPath"], true, batchSize, neighborSize, randomSize, seed);
           return;
         }
     default:
         KttLoaderError("Unhandled searcher type");
+    }
+
+    if (seed.has_value())
+    {
+        searcher->SetSeed(seed.value());
     }
 
     context.GetTuner().SetSearcher(context.GetKernelId(), std::move(searcher));
