@@ -1049,6 +1049,19 @@ public:
       */
     void SetCompilerOptions(const std::string& options, const bool overrideDefault = false);
 
+    /** @fn std::string GetCompilerOptions()
+      * Returns the currently set compute API compiler options.
+      * @return Currently set compiler options.
+      */
+    std::string GetCompilerOptions();
+
+    /** @fn void AddCompilerOptions(const std::string& options)
+      * Adds the specified options to the currently set compute API compiler options. The options are automatically prepended with a single
+      * space character.
+      * @param options Compiler options that will be appended.
+      */
+    void AddCompilerOptions(const std::string& options);
+
     /** @fn void SetCompiler(const std::string& compiler)
       * Sets the compiler executable to use for kernel compilation. This is only supported for the C++ backend.
       * For CUDA, OpenCL, and Vulkan backends, this method will throw an exception since they use built-in compilers.
