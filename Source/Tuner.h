@@ -584,6 +584,15 @@ public:
       */
     void SetReadOnlyArgumentCache(const bool flag);
 
+    /** @fn void SetWriteOnlyArgumentZero(const bool flag)
+      * When enabled, write-only kernel arguments are kept in GPU memory across configurations and zeroed in-place
+      * (via cuMemset) instead of being freed and reallocated for each configuration. This keeps buffer addresses
+      * stable across the tuning run, eliminating per-configuration variation in DRAM partition mapping that can
+      * otherwise cause measurement instability. Disabled by default.
+      * @param flag If true, write-only argument zeroing is enabled. It is disabled otherwise.
+      */
+    void SetWriteOnlyArgumentZero(const bool flag);
+
     /** @fn KernelResult Run(const KernelId id, const KernelConfiguration& configuration,
       * const std::vector<BufferOutputDescriptor>& output)
       * Runs kernel using the specified configuration.

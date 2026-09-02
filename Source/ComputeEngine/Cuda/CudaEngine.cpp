@@ -2,7 +2,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <map>
 #include <numeric>
+#include <set>
 
 #include <Api/KttException.h>
 #include <ComputeEngine/Cuda/Buffers/CudaDeviceBuffer.h>
@@ -166,6 +169,17 @@ void CudaEngine::Sanitize(const QueueId queueId)
 
     CudaStream& stream = *m_Streams[queueId];
     CheckError(cuMemsetD8Async(m_L2CacheDevicePtr, 0, m_L2CacheSize, stream.GetStream()), "cuMemsetD8Async");
+    CheckError(cuStreamSynchronize(stream.GetStream()), "cuStreamSynchronize");
+}
+
+void CudaEngine::ZeroBuffer(const ArgumentId& id, const QueueId queueId)
+{
+    if (!ContainsKey(m_Buffers, id) || !ContainsKey(m_Streams, queueId))
+        return;
+
+    auto& buffer = *m_Buffers[id];
+    CudaStream& stream = *m_Streams[queueId];
+    CheckError(cuMemsetD8Async(*buffer.GetBuffer(), 0, buffer.GetSize(), stream.GetStream()), "cuMemsetD8Async");
     CheckError(cuStreamSynchronize(stream.GetStream()), "cuStreamSynchronize");
 }
 
@@ -629,6 +643,31 @@ TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, cons
 
     m_Buffers[id] = std::move(buffer);
     m_TransferActions[actionId] = std::move(action);
+
+    // TEMPORARY: print GPU address of WriteOnly buffers and record steps where it changed
+    if (kernelArgument.GetAccessType() == ArgumentAccessType::WriteOnly)
+    {
+        struct AddrHistory { int step = 0; CUdeviceptr last = 0; std::vector<int> changeSteps; };
+        static std::map<ArgumentId, AddrHistory> s_history;
+        const CUdeviceptr addr = *m_Buffers[id]->GetBuffer();
+        auto& h = s_history[id];
+        h.step++;
+        if (h.step == 1)
+        {
+            h.last = addr;
+        }
+        else if (addr != h.last)
+        {
+            h.changeSteps.push_back(h.step);
+            h.last = addr;
+        }
+        std::cout << "[ADDR] WriteOnly '" << id << "' step=" << h.step
+                  << " -> 0x" << std::hex << addr << std::dec
+                  << " (changes=" << h.changeSteps.size() << " at steps=[";
+        for (size_t i = 0; i < h.changeSteps.size(); ++i)
+            std::cout << (i ? "," : "") << h.changeSteps[i];
+        std::cout << "])" << std::endl;
+    }
 
     return actionId;
 }

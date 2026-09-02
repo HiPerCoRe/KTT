@@ -72,6 +72,7 @@ public:
     void RemoveArgument(const ArgumentId& id);
     void SaveArgument(const ArgumentId& id, const std::string& file) const;
     void SetReadOnlyArgumentCache(const bool flag);
+    void SetWriteOnlyArgumentZero(const bool flag);
 
     // Kernel running and validation
     KernelResult RunKernel(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,

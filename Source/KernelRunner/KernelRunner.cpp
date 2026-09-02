@@ -19,7 +19,8 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
     m_Validator(std::make_unique<ResultValidator>(*this)),
     m_Engine(engine),
     m_ArgumentManager(argumentManager),
-    m_ReadOnlyCacheFlag(true)
+    m_ReadOnlyCacheFlag(true),
+    m_WriteOnlyZeroFlag(false)
     //m_ProfilingFlag(false)
 {}
 
@@ -87,6 +88,12 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
             continue;
         }
 
+        if (m_WriteOnlyZeroFlag && argument->GetAccessType() == ArgumentAccessType::WriteOnly && m_Engine.HasBuffer(id))
+        {
+            m_Engine.ZeroBuffer(id, m_ComputeLayer->GetDefaultQueue());
+            continue;
+        }
+
         const auto actionId = m_Engine.UploadArgument(*argument, m_ComputeLayer->GetDefaultQueue());
         m_Engine.WaitForTransferAction(actionId);
     }
@@ -110,6 +117,11 @@ void KernelRunner::CleanupBuffers(const Kernel& kernel)
             continue;
         }
 
+        if (m_WriteOnlyZeroFlag && argument->GetAccessType() == ArgumentAccessType::WriteOnly)
+        {
+            continue;
+        }
+
         m_Engine.ClearBuffer(id);
     }
 }
@@ -129,6 +141,11 @@ void KernelRunner::DownloadBuffers(const std::vector<BufferOutputDescriptor>& ou
 void KernelRunner::SetReadOnlyArgumentCache(const bool flag)
 {
     m_ReadOnlyCacheFlag = flag;
+}
+
+void KernelRunner::SetWriteOnlyArgumentZero(const bool flag)
+{
+    m_WriteOnlyZeroFlag = flag;
 }
 
 void KernelRunner::SetProfiling(const bool flag)

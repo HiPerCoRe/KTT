@@ -414,6 +414,18 @@ void Tuner::SetReadOnlyArgumentCache(const bool flag)
     }
 }
 
+void Tuner::SetWriteOnlyArgumentZero(const bool flag)
+{
+    try
+    {
+        m_Tuner->SetWriteOnlyArgumentZero(flag);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 KernelResult Tuner::Run(const KernelId id, const KernelConfiguration& configuration,
     const std::vector<BufferOutputDescriptor>& output)
 {
