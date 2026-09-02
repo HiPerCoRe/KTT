@@ -721,6 +721,18 @@ KernelConfiguration Tuner::GetBestConfiguration(const KernelId id) const
     }
 }
 
+void Tuner::SetUseGracefulInterrupt(bool use)
+{
+    try
+    {
+        m_Tuner->SetUseGracefulInterrupt(use);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 KernelConfiguration Tuner::CreateConfiguration(const KernelId id, const ParameterInput& parameters) const
 {
     try

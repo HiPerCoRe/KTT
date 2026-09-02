@@ -905,6 +905,14 @@ public:
       */
     KernelConfiguration GetBestConfiguration(const KernelId id) const;
 
+    /** @fn void SetUseGracefulInterrupt(bool use)
+      * Toggles graceful interruption of kernel tuning through the Tune method. When enabled, a SIGINT handler is registered at the beginning of tuning, and the
+      * tuning is stopped after the currently tested configuration finishes instead of being terminated immediately. The results of
+      * configurations tested so far are returned. Graceful interruption is disabled by default.
+      * @param use If true, tuning will be gracefully interrupted when SIGINT is received. It will be terminated immediately otherwise.
+      */
+    void SetUseGracefulInterrupt(bool use);
+
     /** @fn KernelConfiguration CreateConfiguration(const KernelId id, const ParameterInput& parameters) const
       * Creates and returns configuration for the specified kernel based on provided parameters and their values.
       * @param id Id of kernel for which the configuration will be created.
