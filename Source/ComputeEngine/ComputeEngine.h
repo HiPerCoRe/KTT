@@ -78,6 +78,8 @@ public:
 
     // Utility methods
     virtual void SetCompilerOptions(const std::string& options, const bool overrideDefault = false) = 0;
+    virtual std::string GetCompilerOptions();
+    virtual void AddCompilerOptions(const std::string& options);
     virtual void SetGlobalSizeType(const GlobalSizeType type) = 0;
     virtual void SetAutomaticGlobalSizeCorrection(const bool flag) = 0;
     virtual void SetKernelCacheCapacity(const uint64_t capacity) = 0;
