@@ -209,6 +209,11 @@ void TunerCore::SetReadOnlyArgumentCache(const bool flag)
     m_KernelRunner->SetReadOnlyArgumentCache(flag);
 }
 
+void TunerCore::SetWriteOnlyArgumentZero(const bool flag)
+{
+    m_KernelRunner->SetWriteOnlyArgumentZero(flag);
+}
+
 KernelResult TunerCore::RunKernel(const KernelId id, const KernelConfiguration& configuration, const KernelDimensions& dimensions,
     const std::vector<BufferOutputDescriptor>& output)
 {
