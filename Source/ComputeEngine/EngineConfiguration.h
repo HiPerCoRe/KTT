@@ -19,6 +19,7 @@ public:
     void SetGlobalSizeCorrection(const bool sizeCorrection);
 
     std::string GetCompilerOptions() const;
+    std::string GetStaticCompilerOptions() const;
     GlobalSizeType GetGlobalSizeType() const;
     bool GetGlobalSizeCorrection() const;
 
