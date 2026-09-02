@@ -97,7 +97,6 @@ public:
     void SetCompiler(const std::string& compiler) override;
 
 private:
-    EngineConfiguration m_Configuration;
     DeviceIndex m_DeviceIndex;
     DeviceInfo m_DeviceInfo;
     IdGenerator<ComputeActionId> m_ComputeIdGenerator;

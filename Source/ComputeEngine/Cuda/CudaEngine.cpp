@@ -31,7 +31,7 @@ namespace ktt
 {
 
 CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
-    m_Configuration(GlobalSizeType::CUDA),
+    ComputeEngine(GlobalSizeType::CUDA),
     m_DeviceIndex(deviceIndex),
     m_DeviceInfo(0, ""),
     m_KernelCache(10),
@@ -85,7 +85,7 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 }
 
 CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
-    m_Configuration(GlobalSizeType::CUDA),
+    ComputeEngine(GlobalSizeType::CUDA),
     m_DeviceIndex(0),
     m_DeviceInfo(0, ""),
     m_KernelCache(10),

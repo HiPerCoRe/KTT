@@ -1,3 +1,4 @@
+#include "ComputeEngine/ComputeEngine.h"
 #ifdef KTT_API_OPENCL
 
 #include <Api/KttException.h>
@@ -23,7 +24,7 @@ namespace ktt
 {
 
 OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
-    m_Configuration(GlobalSizeType::OpenCL),
+    ComputeEngine(GlobalSizeType::OpenCL),
     m_PlatformIndex(platformIndex),
     m_DeviceIndex(deviceIndex),
     m_DeviceInfo(0, ""),
@@ -84,7 +85,7 @@ OpenClEngine::OpenClEngine(const PlatformIndex platformIndex, const DeviceIndex 
 }
 
 OpenClEngine::OpenClEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
-    m_Configuration(GlobalSizeType::OpenCL),
+    ComputeEngine(GlobalSizeType::OpenCL),
     m_PlatformIndex(0),
     m_DeviceIndex(0),
     m_DeviceInfo(0, ""),

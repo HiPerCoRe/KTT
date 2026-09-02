@@ -9,6 +9,7 @@
 #include <Api/Info/PlatformInfo.h>
 #include <Api/Output/ComputationResult.h>
 #include <ComputeEngine/ComputeApi.h>
+#include <ComputeEngine/EngineConfiguration.h>
 #include <ComputeEngine/KernelComputeData.h>
 #include <ComputeEngine/GlobalSizeType.h>
 #include <ComputeEngine/TransferResult.h>
@@ -86,6 +87,11 @@ public:
 
     // Sanitizing processor to isolate measurements (L2 cache flushing etc.)
     virtual void Sanitize(const QueueId /*queueId*/) {}
+
+protected:
+    explicit ComputeEngine(ktt::GlobalSizeType globalSizeType);
+
+    EngineConfiguration m_Configuration;
 };
 
 } // namespace ktt
