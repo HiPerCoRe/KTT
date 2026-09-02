@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <random>
 #include <set>
 
@@ -11,11 +12,11 @@ class RandomIntGenerator
 {
 public:
     RandomIntGenerator();
+    explicit RandomIntGenerator(const uint64_t seed);
 
     IntegerType Generate(const IntegerType min, const IntegerType max, const std::set<IntegerType>& excluded);
 
 private:
-    std::random_device m_Device;
     std::default_random_engine m_Engine;
 
     IntegerType GenerateNumberInRange(const IntegerType min, const IntegerType max);

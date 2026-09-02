@@ -586,7 +586,18 @@ void InitializePythonTuner(py::module_& module)
             py::arg("stopCondition") = nullptr
         )
         .def("SetSearcher", &ktt::Tuner::SetSearcher)
-        .def("SetProfileBasedSearcher", &ktt::Tuner::SetProfileBasedSearcher)
+        .def
+        (
+            "SetProfileBasedSearcher",
+            &ktt::Tuner::SetProfileBasedSearcher,
+            py::arg("id"),
+            py::arg("modelPath"),
+            py::arg("useBuiltinModule") = true,
+            py::arg("batchSize") = 5,
+            py::arg("neighborSize") = 100,
+            py::arg("randomSize") = 10,
+            py::arg("seed") = py::none()
+        )
         .def
         (
             "InitializeConfigurationData",

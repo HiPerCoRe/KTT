@@ -17,6 +17,7 @@ namespace ktt
 ConfigurationData::ConfigurationData(Searcher& searcher, const Kernel& kernel, const bool isSeparateOptionsGroup,
     const KernelConfiguration& baseConfiguration) :
     m_BestConfiguration({KernelConfiguration(), InvalidDuration}),
+    m_Generator(searcher.HasSeed() ? RandomIntGenerator<uint64_t>(searcher.GetSeed()) : RandomIntGenerator<uint64_t>()),
     m_Searcher(searcher),
     m_Kernel(kernel),
     m_SearcherActive(false),

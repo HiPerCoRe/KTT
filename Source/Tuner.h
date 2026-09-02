@@ -830,6 +830,7 @@ public:
       * configurations will be launched in order that depends on specified Searcher. This method can be used to test behaviour
       * and performance of newly implemented searchers. The provided results should correspond to the results output by the same
       * kernel during regular tuning.
+      * @deprecated Use SimulateTuning() method instead.
       * @param id Id of the kernel for simulated tuning.
       * @param results Results from which the kernel execution times will be retrieved.
       * @param iterations Number of iterations performed. If equal to 0, search of the entire tuning space is performed.
@@ -856,12 +857,14 @@ public:
 
     /** @fn void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
       * Sets searcher which will be used during kernel tuning. If no searcher is specified, DeterministicSearcher will be used.
+      * Searchers which explore the configuration space randomly can be given a seed which makes the sequence of random numbers
+      * they draw reproducible. See Searcher::SetSeed method for more information.
       * @param id Id of kernel for which searcher will be set.
       * @param searcher Searcher which decides which kernel configuration will be launched next. See Searcher for more information.
       */
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
 
-    /** @fn void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10)
+    /** @fn void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10, const std::optional<uint64_t> seed = std::nullopt)
       * Sets profile-based searcher to be used during kernel tuning. This is special method for profile-based searcher, for other searchers, use SetSearcher.
       * @param id Id of kernel for which searcher will be set.
       * @param modelPath Path to a ML model file containing trained model for the tuned kernel.
@@ -870,8 +873,11 @@ public:
       * @param batchSize number of configuration from which the fastest one is profiled. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
       * @param neighborSize number of neighboring configurations that are used for batch selection. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
       * @param randomSize number of random configurations that are used for batch selection. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
+      * @param seed Optional seed for the source of randomness used by the searcher. See Searcher::SetSeed method for more information. Note that the seed
+      * makes the sequence of random numbers drawn by the searcher reproducible, but it does not make the tuning process deterministic, because the searcher
+      * also bases its decisions on profiling counters and kernel durations measured during tuning, which fluctuate between tuning runs.
       */
-    void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10);
+    void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10, const std::optional<uint64_t> seed = std::nullopt);
 
     /** @fn void InitializeConfigurationData(const KernelId id)
       * Generates configuration space and initializes searcher for the specified kernel.
@@ -887,6 +893,7 @@ public:
 
     /** @fn void ClearData(const KernelId id)
       * Resets tuning process and clears generated configurations for the specified kernel.
+      * @deprecated Use ClearConfigurationData() method instead.
       * @param id Id of kernel whose data will be cleared.
       */
     [[deprecated("Use ClearConfigurationData() method instead.")]] void ClearData(const KernelId id);
@@ -1025,6 +1032,7 @@ public:
 
     /** @fn void Synchronize()
       * Blocks until all commands submitted to KTT device are completed.
+      * @deprecated Use SynchronizeDevice() or SynchronizeQueues() method instead.
       */
     [[deprecated("Use SynchronizeDevice() or SynchronizeQueues() method instead.")]] void Synchronize();
 

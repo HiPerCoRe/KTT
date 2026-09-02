@@ -58,6 +58,7 @@ public:
 
     /** @fn void SetExtraOverhead(const Nanoseconds overhead)
       * Sets duration of buffer transfers (e.g., between host and device memory).
+      * @deprecated Use SetDataMovementOverhead() instead.
       * @param overhead Duration of buffer transfers.
       */
     [[deprecated("Use SetDataMovementOverhead() instead.")]] void SetExtraOverhead(const Nanoseconds overhead);
@@ -178,6 +179,7 @@ public:
 
     /** @fn Nanoseconds GetExtraOverhead() const
       * Retrieves duration of buffer transfers (e.g., between host and device memory).
+      * @deprecated Use GetDataMovementOverhead() instead.
       * @return Duration of buffer transfers.
       */
     [[deprecated("Use GetDataMovementOverhead() instead.")]] Nanoseconds GetExtraOverhead() const;

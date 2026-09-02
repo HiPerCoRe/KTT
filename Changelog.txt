@@ -1,3 +1,7 @@
+Version 2.3.1 (9/6/2026)
+* fixed compiler parameters tuning for all backends
+* re-worked CPP backend caching to be unique per KTT instance
+
 Version 2.3 (6/5/2026)
 * KTT supports autotuning of compiler switches
 * KTT can now autotune C/C++ kernels (initial implementation, does not support many features implemented for CUDA/OpenCL)
