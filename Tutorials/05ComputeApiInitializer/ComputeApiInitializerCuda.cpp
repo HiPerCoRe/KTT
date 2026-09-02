@@ -47,7 +47,11 @@ int main(int argc, char** argv)
     cuDeviceGet(&device, 0);
 
     CUcontext context;
+#if defined(CUDA_VERSION) && CUDA_VERSION >= 13000
+    cuCtxCreate(&context, nullptr, CU_CTX_SCHED_AUTO, device);
+#else
     cuCtxCreate(&context, CU_CTX_SCHED_AUTO, device);
+#endif
 
     CUstream stream;
     cuStreamCreate(&stream, CU_STREAM_DEFAULT);

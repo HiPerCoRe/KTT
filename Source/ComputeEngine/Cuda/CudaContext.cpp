@@ -14,7 +14,11 @@ CudaContext::CudaContext(const CudaDevice& device) :
     m_OwningContext(true)
 {
     Logger::LogDebug("Initializing CUDA context");
+#if defined(CUDA_VERSION) && CUDA_VERSION >= 13000
+    CheckError(cuCtxCreate(&m_Context, nullptr, CU_CTX_SCHED_AUTO | CU_CTX_MAP_HOST, m_Device), "cuCtxCreate");
+#else
     CheckError(cuCtxCreate(&m_Context, CU_CTX_SCHED_AUTO | CU_CTX_MAP_HOST, m_Device), "cuCtxCreate");
+#endif
 }
 
 CudaContext::CudaContext(ComputeContext context) :
