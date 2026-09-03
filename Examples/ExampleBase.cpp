@@ -1,10 +1,11 @@
 #include "ExampleBase.h"
 #include "Api/Output/KernelResult.h"
 #include "ComputeEngine/ComputeApi.h"
-#include "ExampleConfigurator.h"
+#include "CliComponent.h"
 #include "Utility/Logger/Logger.h"
 #include "Utility/Logger/LoggingLevel.h"
 #include <assert.h>
+#include <memory>
 #include <vector>
 #include <iostream>
 #include <chrono>
@@ -31,23 +32,6 @@ string ExampleBase::GetKernelFilePath(string exampleFolderPath, string baseName,
     return kernelPrefix + exampleFolderPath + "/" + baseName + (suffix == nullopt ?defaultKernelFileSuffix : suffix.value());
 }
 
-void ExampleBase::PrintRunStats(const string& phaseName, const RunStats& stats, double throughput)
-{
-    cout << "\n--- " << phaseName << " complete ---" << endl;
-    cout << "Total runs: " << stats.totalRuns << endl;
-    cout << "Successful runs: " << stats.successfulRuns << "/" << stats.totalRuns << endl;
-    if (!stats.bestConfig.empty()) {
-        cout << "Best configuration: " << stats.bestConfig << endl;
-        cout << "Best duration: " << stats.bestDuration << " ns" << endl;
-    }
-    if (throughput != -1) 
-    {
-        cout << "Throughput: " << fixed << setprecision(2) << throughput << " runs/s" << endl;
-        cout.unsetf(ios_base::floatfield);
-        cout.precision(6);
-    }
-}
-
 void ExampleBase::PrintProgress(const string& phaseName, int currentRun, double elapsedSeconds,
                                 double timeBudget, double bestDuration, double throughput)
 {
@@ -59,20 +43,7 @@ void ExampleBase::PrintProgress(const string& phaseName, int currentRun, double 
     cout.precision(6);
 }
 
-void ExampleBase::RunStats::Update(ktt::KernelResult result) {
-    totalRuns++;
-
-    if (result.GetStatus() == ktt::ResultStatus::Ok) {
-        successfulRuns++;
-        double duration = result.GetTotalDuration();
-        if (duration < bestDuration) {
-            bestDuration = duration;
-            bestConfig = result.GetConfiguration().GetString();
-        }
-    }
-}
-
-ExampleBase::RunStats ExampleBase::RunTuningPhase(
+RunStats ExampleBase::RunTuningPhase(
     const std::chrono::steady_clock::time_point& startTime, double timeBudgetSeconds, int printInterval)
 {
     RunStats stats;
@@ -85,7 +56,7 @@ ExampleBase::RunStats ExampleBase::RunTuningPhase(
             break;
         }
 
-        const auto result = m_tuner.TuneIteration(m_kernel, {}, false, m_config->preciseParams);
+        const auto result = m_tuner->TuneIteration(m_kernel, {}, false, m_preciseParams);
         stats.Update(result);
 
         if (stats.totalRuns % printInterval == 0 || stats.totalRuns == 1) {
@@ -98,7 +69,7 @@ ExampleBase::RunStats ExampleBase::RunTuningPhase(
     return stats;
 }
 
-ExampleBase::RunStats ExampleBase::RunExecutionPhase(
+RunStats ExampleBase::RunExecutionPhase(
     const std::chrono::steady_clock::time_point& startTime, double timeBudgetSeconds,
     const ktt::KernelConfiguration& bestConfig, int printInterval)
 {
@@ -112,7 +83,7 @@ ExampleBase::RunStats ExampleBase::RunExecutionPhase(
             break;
         }
 
-        const auto result = m_tuner.Run(m_kernel, bestConfig, {});
+        const auto result = m_tuner->Run(m_kernel, bestConfig, {});
         stats.Update(result);
 
         if (stats.totalRuns % printInterval == 0) {
@@ -129,7 +100,7 @@ void ExampleBase::RunDynamic()
 {
     ktt::Logger::GetLogger().SetLoggingLevel(ktt::LoggingLevel::Warning);
     const auto startTime = std::chrono::steady_clock::now();
-    const double timeBudgetSeconds = m_config->dynamicTuningTime > 0 ? m_config->dynamicTuningTime : 60.0;
+    const double timeBudgetSeconds = m_dynamicTuningTime > 0 ? m_dynamicTuningTime : 60.0;
     constexpr int printInterval = 50;
 
     RunStats tuningStats = RunTuningPhase(startTime, timeBudgetSeconds, printInterval);
@@ -138,9 +109,11 @@ void ExampleBase::RunDynamic()
     double tuningElapsed = std::chrono::duration<double>(tuningPhaseEnd - startTime).count();
     double tuningThroughput = tuningElapsed > 0 ? tuningStats.totalRuns / tuningElapsed : 0;
 
-    PrintRunStats("Tuning phase", tuningStats, tuningThroughput);
+    tuningStats.Print("Tuning phase", tuningThroughput);
 
-    const auto bestConfigData = m_tuner.GetBestConfiguration(m_kernel);
+    m_compilerTuning->Run();
+
+    const auto bestConfigData = m_tuner->GetBestConfiguration(m_kernel);
 
     cout << "\n--- Running with best configuration ---" << endl;
     const auto runStartTime = std::chrono::steady_clock::now();
@@ -150,16 +123,16 @@ void ExampleBase::RunDynamic()
     double runElapsed = std::chrono::duration<double>(totalEndTime - runStartTime).count();
     double runThroughput = runElapsed > 0 ? runStats.totalRuns / runElapsed : 0;
 
-    PrintRunStats("Final statistics", runStats, runThroughput);
+    runStats.Print("Final statistics", runThroughput);
 }
 
 void ExampleBase::RunOffline()
 {
     const auto startTime = std::chrono::steady_clock::now();
 
-    const auto results = m_tuner.Tune(m_kernel, std::move(m_config->stopCondition), m_config->preciseParams);
-    m_tuner.SaveResults(results, "Output", ktt::OutputFormat::XML);
-    m_tuner.SaveResults(results, "Output", ktt::OutputFormat::JSON);
+    const auto results = m_tuner->Tune(m_kernel, std::move(m_stopCondition), m_preciseParams);
+    m_tuner->SaveResults(results, "Output", ktt::OutputFormat::XML);
+    m_tuner->SaveResults(results, "Output", ktt::OutputFormat::JSON);
 
     const auto endTime = std::chrono::steady_clock::now();
     double elapsed = std::chrono::duration<double>(endTime - startTime).count();
@@ -179,17 +152,20 @@ void ExampleBase::RunOffline()
     }
     stats.totalRuns = static_cast<int>(results.size());
 
-    PrintRunStats("Offline tuning", stats, throughput);
+    stats.Print("Offline tuning", throughput);
+
+    m_compilerTuning->Run();
 }
 
 void ExampleBase::Run()
 {
-    if (m_config->useDynamicTuning) RunDynamic();
+    if (m_useDynamicTuning) RunDynamic();
     else RunOffline();
 }
 
 ExampleBase::ExampleBase(
-    shared_ptr<ExampleConfiguration> config,
+    int argc,
+    char **argv,
     int defaultProblemSize,
     string exampleFolderPath,
     string defaultKernelFileBaseName
@@ -201,42 +177,166 @@ ExampleBase::ExampleBase(
     #elif KTT_CPP_EXAMPLE
     m_computeApi(ktt::ComputeApi::Cpp),
     #endif
-    m_config(config),
-    m_tuner(config->platform, config->device, m_computeApi)
+    m_argc(argc),
+    m_argv(argv),
+    m_compilerTuning(make_unique<NoCompilerTuning>(m_tuner, m_kernel)),
+    m_preheatingSeconds(0)
 {
-    m_problemSize = config->problemSize >= 0 ? config->problemSize : defaultProblemSize;
-    m_kernelFile = config->kernelFile.empty()
-        ? GetKernelFilePath(exampleFolderPath, defaultKernelFileBaseName)
-        : config->kernelFile;
-    
-
-    if (config->useProfiling)
-    {
-        printf("Executing with profiling switched ON.\n");
-        m_tuner.SetProfiling(true);
-    }
-
-    m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
-    m_tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+    m_problemSize = defaultProblemSize;
+    m_kernelFile = GetKernelFilePath(exampleFolderPath, defaultKernelFileBaseName);
 }
 
 void ExampleBase::PostInitialize() 
 {
+    InitCLI();
+    ProcessCLI();
+    InitTuner();
     InitData();
     InitKernel();
     InitTuningSpace();
+    Preheat();
     InitSearcher();
+}
+
+void ExampleBase::InitCLI() {
+    m_cli.AddOption({[this](const vector<string> &) {
+        m_rapidTest = true;
+    }, "--rapidTest", "Run in rapid test mode"});
+
+    m_cli.AddOption({[this](const vector<string> &) {
+        m_useProfiling = true;
+    }, "--profile", "Enable profiling"});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_platform = stoul(args[0]);
+    }, "--platform", "Platform index (expects int)", "<index>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_device = stoul(args[0]);
+    }, "--device", "Device index (expects int)", "<index>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_problemSize = stoi(args[0]);
+    }, "--problemSize", "Problem size in MiB (expects int)", "<size>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_kernelFile = args[0];
+    }, "--kernelPath", "Kernel file path (expects string)", "<path>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        if (args[0] == "ds") {
+            m_searcher = make_unique<ktt::DeterministicSearcher>();
+        } else if (args[0] == "random") {
+            m_searcher = make_unique<ktt::RandomSearcher>();
+        } else if (args[0] == "mcmc") {
+            m_searcher = make_unique<ktt::McmcSearcher>();
+        } else {
+            cerr << "--searcher expects one of (ds, random, mcmc)\n";
+            exit(1);
+        }
+    }, "--searcher", "Searcher type (ds, random, mcmc)", "<type>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_profileSearchModelPath = args[0];
+        m_useProfiling = true;
+    }, "--profileSearcher", 
+    "Enable profile searcher and set path to model (expects string) (functions only on CUDA devices)",
+    "<pathToModel>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        if (args[0] == "confs") {
+            m_stopCondition = make_unique<ktt::ConfigurationCount>(stoul(args[1]));
+        } else if (args[0] == "fails") {
+            m_stopCondition = make_unique<ktt::FailureCount>(stoul(args[1]));
+        } else if (args[0] == "time") {
+            m_stopCondition = make_unique<ktt::TuningDuration>(stod(args[1]));
+        } else if (args[0] == "best") {
+            m_stopCondition = make_unique<ktt::ConfigurationDuration>(stod(args[1]));
+        } else {
+            cerr << "--stopCondition expects one of (confs, fails, time, best)\n";
+            exit(1);
+        }
+    }, "--stopCondition", 
+    "Set a stop condition. <type> can be confs, fails, time, best. "
+    "<limit> is respectively configuration count (ulong), failed kernel run count (ulong), "
+    "total tuning duration in seconds (double), best configuration duration in milliseconds (double).",
+    "<type> <limit>", 2});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_preciseParams = ktt::PreciseMeasurementParameters(stoul(args[0]),
+            stoul(args[1]), stod(args[2]));
+    }, "--preciseParams", "Set PreciseMeasurementParameters, calculationDurationMethod is the default Minimum, refer to KTT documentation for details.",
+    "<minTimeMs> <maxTimeMs> <maxPowerDiff>", 3});
+    m_cli.AddOption({[this](const vector<string> &args) {
+        if (m_preciseParams == std::nullopt) {
+            cerr << "--preciseParams must be used before this option.\n";
+            exit(1);
+        }
+        ktt::DurationCalculationMethod calcMethod = ktt::DurationCalculationMethod::Minimum;
+        if (args[0] == "min") {}
+        else if (args[0] == "median") {
+            calcMethod = ktt::DurationCalculationMethod::Median;
+        } else if (args[0] == "avg") {
+            calcMethod = ktt::DurationCalculationMethod::Average;
+        } else {
+            cerr << "--preciseParamsCalcMethod expects one of (min, median, avg)\n";
+            exit(1);
+        }
+        m_preciseParams->durationCalculationMethod = calcMethod;
+    }, "--preciseParamsCalcMethod", "Optionally set PreciseMeasurementParameters::durationCalculationMethod AFTER USING --preciseParams, expects one of "
+    "(min, median, avg), refer to KTT documentation for details.",
+    "<calcMethod>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_preheatingSeconds = stof(args[0]);
+    }, "--preheat", "Set time in seconds to spend preheating GPU before tuning starts. 0 (disabled) is default. Expects float.", "<time>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_useDynamicTuning = true;
+        m_dynamicTuningTime = stod(args[0]);
+    }, "--useDynamicTuning", "Enables a basic implementation of dynamic tuning."
+    "The tuning will last <time> (double) seconds and then the only the best configuration will be run.",
+    "<time>", 1});
+
+    m_cli.AddOption({[this](const vector<string> &args) {
+        if (args[0] == "off") m_tuner->SetLoggingLevel(ktt::LoggingLevel::Off);
+        else if (args[0] == "error") m_tuner->SetLoggingLevel(ktt::LoggingLevel::Error);
+        else if (args[0] == "warning") m_tuner->SetLoggingLevel(ktt::LoggingLevel::Warning);
+        else if (args[0] == "info") m_tuner->SetLoggingLevel(ktt::LoggingLevel::Info);
+        else if (args[0] == "debug") m_tuner->SetLoggingLevel(ktt::LoggingLevel::Debug);
+        else {
+            cerr << "--loggingLevel expects one of (off, error, warning, info, debug)";
+            exit(1);
+        }
+    }, "--loggingLevel", "Set the logging level, can be one of (off, error, warning, info, debug)", "<level>", 1});
+
+    m_compilerTuning->InitCLIOptions(m_cli);
+}
+
+void ExampleBase::ProcessCLI() {
+    m_cli.ProcessInput(m_argc, m_argv);
+}
+
+void ExampleBase::InitTuner() {
+    m_tuner = make_unique<ktt::Tuner>(m_platform, m_device, m_computeApi);
+    if (m_useProfiling)
+    {
+        printf("Executing with profiling switched ON.\n");
+        m_tuner->SetProfiling(true);
+    }
+    m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
+    m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
 }
 
 void ExampleBase::UseFastMath()
 {
     if (m_computeApi == ktt::ComputeApi::OpenCL)
     {
-        m_tuner.SetCompilerOptions("-cl-fast-relaxed-math");
+        m_tuner->SetCompilerOptions("-cl-fast-relaxed-math");
     }
     else if (m_computeApi == ktt::ComputeApi::CUDA)
     {
-        m_tuner.SetCompilerOptions("-use_fast_math");
+        m_tuner->SetCompilerOptions("-use_fast_math");
     }
 }
 
@@ -244,20 +344,35 @@ void ExampleBase::UseOpenMP()
 {
     if (m_computeApi == ktt::ComputeApi::Cpp)
     {
-        m_tuner.SetCompilerOptions("-march=native -fopenmp");
+        m_tuner->SetCompilerOptions("-march=native -fopenmp");
+    }
+}
+
+void ExampleBase::UseCompilerTuning()
+{
+    m_compilerTuning = make_unique<CompilerTuningComponent>(m_tuner, m_kernel);
+}
+
+void ExampleBase::Preheat() {
+    if (m_preheatingSeconds > 0) {
+        cout << "\n--- Preheating GPU... ---" << endl;
+        m_tuner->SetSearcher(m_kernel, make_unique<ktt::RandomSearcher>());
+        m_tuner->Tune(m_kernel, make_unique<ktt::TuningDuration>(m_preheatingSeconds));
+        m_tuner->ClearConfigurationData(m_kernel);
+        cout << "--- Preheating complete ---\n" << endl;
     }
 }
 
 void ExampleBase::InitSearcher()
 {
-    if (!m_config->profileSearchModelPath.empty()) {
+    if (!m_profileSearchModelPath.empty()) {
         if (m_computeApi != ktt::ComputeApi::CUDA) {
             cerr << "Profile-based search can only be enabled on a CUDA device.\n";
             exit(1);
         }
-        m_tuner.SetProfileBasedSearcher(m_kernel, std::move(m_config->profileSearchModelPath));
-    } else if (m_config->searcher != nullptr) {
-        m_tuner.SetSearcher(m_kernel, std::move(m_config->searcher));
+        m_tuner->SetProfileBasedSearcher(m_kernel, std::move(m_profileSearchModelPath));
+    } else if (m_searcher != nullptr) {
+        m_tuner->SetSearcher(m_kernel, std::move(m_searcher));
     }
 }
 
@@ -265,11 +380,11 @@ void ExampleBase::InitKernelDefault(const string &kernelFunctionName, const stri
                                  const ktt::DimensionVector &ndRangeDimensions, const vector<ktt::ArgumentId> &arguments)
 {
     // Create m_kernel and configure input/output
-    m_definition = m_tuner.AddKernelDefinitionFromFile(kernelFunctionName, m_kernelFile, ndRangeDimensions,
+    m_definition = m_tuner->AddKernelDefinitionFromFile(kernelFunctionName, m_kernelFile, ndRangeDimensions,
         ktt::DimensionVector());
-    m_tuner.SetArguments(m_definition, arguments);
+    m_tuner->SetArguments(m_definition, arguments);
         
-    m_kernel = m_tuner.CreateSimpleKernel(kernelName, m_definition);
+    m_kernel = m_tuner->CreateSimpleKernel(kernelName, m_definition);
     
 }
 
