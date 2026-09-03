@@ -326,6 +326,11 @@ KernelConfiguration TunerCore::GetBestConfiguration(const KernelId id) const
     return m_TuningRunner->GetBestConfiguration(id);
 }
 
+void TunerCore::SetUseGracefulInterrupt(bool use)
+{
+    m_TuningRunner->SetUseGracefulInterrupt(use);
+}
+
 KernelConfiguration TunerCore::CreateConfiguration(const KernelId id, const ParameterInput& parameters) const
 {
     const auto& kernel = m_KernelManager->GetKernel(id);
