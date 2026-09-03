@@ -712,6 +712,33 @@ The searcher API is public so that users can implement their own searchers. The 
 implementation. These include a method to get random unexplored configuration or neighboring configurations (configurations that differ in a small
 number of parameter values compared to the specified configuration).
 
+#### Seeding searchers
+
+Searchers which explore the configuration space randomly can be given a seed, either through a searcher constructor or through the `SetSeed()` method
+of the searcher. The seed must be assigned before the configuration space is generated for the corresponding kernel, i.e., before the first tuning method
+is called or before `InitializeConfigurationData()` is called.
+
+```cpp
+tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>(42));
+```
+
+The seed initializes both the random number generator which the framework uses to pick random configurations (`GetRandomConfiguration()`) and the generator
+owned by the searcher itself, if it has one. Both generators are seeded every time the configuration space is generated for the kernel, so a seeded searcher
+draws the same sequence of random numbers in every tuning run, including runs which follow `ClearConfigurationData()`. A searcher without a seed uses a randomly
+initialized generator instead, so its sequence of random numbers differs between runs. Each kernel has its own generator, so random numbers drawn while tuning
+one kernel never affect the sequence drawn for another kernel.
+
+Note that a seeded sequence of random numbers does not imply a fully deterministic tuning process:
+* `RandomSearcher` becomes fully deterministic, because it bases its decisions solely on the sequence of random numbers.
+* `McmcSearcher` and `ProfileBasedSearcher` **do not** become deterministic during regular tuning, even when the seed is set. Both searchers base their
+decisions on kernel durations and profiling counters measured during tuning, and these fluctuate between runs. Two runs of a seeded `McmcSearcher` may
+therefore explore different configurations.
+* All searchers become deterministic during simulated tuning (`SimulateTuning()`), because kernel durations are replayed from previously collected results
+instead of being measured.
+
+If a custom searcher owns its own random number generator, it should seed it by overriding the `OnSeed()` method, which the framework calls before
+`OnInitialize()` whenever a seed is assigned.
+
 ----
 
 ### Utility functions

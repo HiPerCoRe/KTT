@@ -11,9 +11,15 @@ bool IsMultiple(const size_t a, const size_t b)
 
 class ClTuneGemm : public ExampleReferenceKernel {
 protected:
+<<<<<<< HEAD
     ClTuneGemm(int argc, char **argv, string exampleFolderPath,
                string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
         ExampleReferenceKernel(argc, argv, exampleFolderPath,
+=======
+    ClTuneGemm(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
+               string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
+        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath,
+>>>>>>> development
                                defaultKernelFileBaseName, defaultRefKernelFileBaseName),
         m_kSizeM(4 * 1024),
         m_kSizeN(4 * 1024),
@@ -65,7 +71,10 @@ protected:
 
     void InitKernel() override
     {
+<<<<<<< HEAD
         m_gridDimensions = ktt::DimensionVector(m_kSizeM, m_kSizeN);
+=======
+>>>>>>> development
         m_kSizeMId = m_tuner->AddArgumentScalar(m_kSizeM);
         m_kSizeNId = m_tuner->AddArgumentScalar(m_kSizeN);
         m_kSizeKId = m_tuner->AddArgumentScalar(m_kSizeK);

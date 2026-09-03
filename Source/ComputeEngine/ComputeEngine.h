@@ -57,6 +57,7 @@ public:
     virtual void ClearBuffer(const ArgumentId& id) = 0;
     virtual void ClearBuffers() = 0;
     virtual bool HasBuffer(const ArgumentId& id) = 0;
+    virtual void ZeroBuffer(const ArgumentId& id, const QueueId queueId) {}
 
     // Queue methods
     virtual QueueId AddComputeQueue(ComputeQueue queue) = 0;

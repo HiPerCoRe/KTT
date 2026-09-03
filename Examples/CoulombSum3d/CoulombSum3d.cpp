@@ -232,7 +232,11 @@ protected:
 
 int main(int argc, char **argv)
 {
+<<<<<<< HEAD
     unique_ptr<CoulombSum3d> coulombSum3d = CoulombSum3d::Create<CoulombSum3d>(argc, argv, "Examples/CoulombSum3d", "CoulombSum3d");
+=======
+    unique_ptr<CoulombSum3d> coulombSum3d = CoulombSum3d::Create<CoulombSum3d>(argc, argv, 8, "Examples/CoulombSum3d", "CoulombSum3d");
+>>>>>>> development
     coulombSum3d->Run();
 
     return 0;

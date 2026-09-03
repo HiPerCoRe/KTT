@@ -127,6 +127,11 @@ protected:
 
         m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
             ktt::ModifierAction::Multiply);
+<<<<<<< HEAD
+=======
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
+            ktt::ModifierAction::Divide);
+>>>>>>> development
         m_tuner->AddParameter(m_kernel, "UNBOUNDED_WG", vector<uint64_t>{0, 1});
 
         m_tuner->AddParameter(m_kernel, "WG_NUM", vector<uint64_t>{0, cus, cus * 2, cus * 4, cus * 8, cus * 16});
