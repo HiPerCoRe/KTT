@@ -938,6 +938,31 @@ void Tuner::SetCompilerOptions(const std::string& options, const bool overrideDe
     }
 }
 
+std::string Tuner::GetCompilerOptions()
+{
+    try
+    {
+        return m_Tuner->GetCompilerOptions();
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return std::string();
+    }
+}
+
+void Tuner::AddCompilerOptions(const std::string& options)
+{
+    try
+    {
+        m_Tuner->AddCompilerOptions(options);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::SetGlobalSizeType(const GlobalSizeType type)
 {
     try

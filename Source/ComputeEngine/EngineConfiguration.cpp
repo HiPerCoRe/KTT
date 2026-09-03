@@ -38,6 +38,11 @@ std::string EngineConfiguration::GetCompilerOptions() const
     return m_StaticCompilerOptions + m_TuningCompilerOptions;
 }
 
+std::string EngineConfiguration::GetStaticCompilerOptions() const
+{
+    return m_StaticCompilerOptions;
+}
+
 GlobalSizeType EngineConfiguration::GetGlobalSizeType() const
 {
     return m_GlobalSizeType;

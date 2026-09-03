@@ -24,7 +24,7 @@ namespace ktt
 {
 
 CppEngine::CppEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
-    m_Configuration(GlobalSizeType::OpenCL), // TODO: decide appropriate global size type for C++
+    ComputeEngine(GlobalSizeType::OpenCL), // TODO: decide appropriate global size type for C++
     m_PlatformIndex(platformIndex),
     m_DeviceIndex(deviceIndex),
     m_DeviceInfo(0, ""),
@@ -51,7 +51,7 @@ CppEngine::CppEngine(const PlatformIndex platformIndex, const DeviceIndex device
 }
 
 CppEngine::CppEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
-    m_Configuration(GlobalSizeType::OpenCL),
+    ComputeEngine(GlobalSizeType::OpenCL),
     m_DeviceInfo(0, ""),
     m_KernelCache(10)
 {

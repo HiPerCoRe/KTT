@@ -9,6 +9,7 @@
 #include <Api/Info/PlatformInfo.h>
 #include <Api/Output/ComputationResult.h>
 #include <ComputeEngine/ComputeApi.h>
+#include <ComputeEngine/EngineConfiguration.h>
 #include <ComputeEngine/KernelComputeData.h>
 #include <ComputeEngine/GlobalSizeType.h>
 #include <ComputeEngine/TransferResult.h>
@@ -78,6 +79,8 @@ public:
 
     // Utility methods
     virtual void SetCompilerOptions(const std::string& options, const bool overrideDefault = false) = 0;
+    virtual std::string GetCompilerOptions();
+    virtual void AddCompilerOptions(const std::string& options);
     virtual void SetGlobalSizeType(const GlobalSizeType type) = 0;
     virtual void SetAutomaticGlobalSizeCorrection(const bool flag) = 0;
     virtual void SetKernelCacheCapacity(const uint64_t capacity) = 0;
@@ -87,6 +90,11 @@ public:
 
     // Sanitizing processor to isolate measurements (L2 cache flushing etc.)
     virtual void Sanitize(const QueueId /*queueId*/) {}
+
+protected:
+    explicit ComputeEngine(ktt::GlobalSizeType globalSizeType);
+
+    EngineConfiguration m_Configuration;
 };
 
 } // namespace ktt

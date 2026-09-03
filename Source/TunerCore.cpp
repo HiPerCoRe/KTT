@@ -462,6 +462,16 @@ void TunerCore::SetCompilerOptions(const std::string& options, const bool overri
     m_ComputeEngine->SetCompilerOptions(options, overrideDefault);
 }
 
+std::string TunerCore::GetCompilerOptions()
+{
+    return m_ComputeEngine->GetCompilerOptions();
+}
+
+void TunerCore::AddCompilerOptions(const std::string& options)
+{
+    m_ComputeEngine->AddCompilerOptions(options);
+}
+
 void TunerCore::SetCompiler(const std::string& compiler)
 {
     m_ComputeEngine->SetCompiler(compiler);

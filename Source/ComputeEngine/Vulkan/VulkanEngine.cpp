@@ -14,7 +14,7 @@ namespace ktt
 {
 
 VulkanEngine::VulkanEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
-    m_Configuration(GlobalSizeType::Vulkan),
+    ComputeEngine(GlobalSizeType::Vulkan),
     m_DeviceIndex(deviceIndex),
     m_DeviceInfo(0, ""),
     m_PipelineCache(10)

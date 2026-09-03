@@ -203,7 +203,6 @@ private:
         std::vector<std::future<ComputationResult>> pendingActions;
     };
 
-    EngineConfiguration m_Configuration;
     PlatformIndex m_PlatformIndex;
     DeviceIndex m_DeviceIndex;
     DeviceInfo m_DeviceInfo;
