@@ -1,18 +1,18 @@
-#include "../ExampleReferenceComputation.h"
+#include "ExampleReferenceComputation.h"
 #include <memory>
-#include <iostream>
 
 using namespace std;
 
 class Bicg : public ExampleReferenceComputation {
 protected:
-    Bicg(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
+    Bicg(int argc, char **argv, string exampleFolderPath,
          string defaultKernelFileBaseName) :
-        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName),
+        ExampleReferenceComputation(argc, argv, exampleFolderPath, defaultKernelFileBaseName),
         // Bicg has O(m × n) complexity. For square matrices where m = n,
         // we scale with square root of problem size to keep total work proportional
-        m_m(static_cast<int>(sqrt(m_problemSize)) * 1024),
-        m_n(static_cast<int>(sqrt(m_problemSize)) * 1024)
+        m_m(16 * 1024),
+        m_n(16 * 1024),
+        m_problemSize(m_m, m_n)
     {
     }
 
@@ -20,6 +20,7 @@ protected:
 
     int m_m;
     int m_n;
+    ktt::DimensionVector m_problemSize;
 
     const int WORK_GROUP_X = 256;
     const int WORK_GROUP_Y = 1;
@@ -45,8 +46,16 @@ protected:
     ktt::KernelDefinitionId m_definitionReduction1;
     ktt::KernelDefinitionId m_definitionReduction2;
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(2, m_problemSize);
+    }
+
     void InitData() override
     {
+        m_m = m_problemSize.GetSizeX();
+        m_n = m_problemSize.GetSizeY();
         m_A.resize(m_n * m_m);
         m_x1.resize(m_m);
         m_x2.resize(m_n);
@@ -174,7 +183,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<Bicg> bicg = Bicg::Create<Bicg>(argc, argv, 256, "Examples/Bicg", "Bicg");
+    unique_ptr<Bicg> bicg = Bicg::Create<Bicg>(argc, argv, "Examples/Bicg", "Bicg");
     bicg->Run();
 
     return 0;

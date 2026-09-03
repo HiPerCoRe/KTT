@@ -1,4 +1,5 @@
-#include "../ExampleReferenceKernel.h"
+#include "ExampleReferenceKernel.h"
+#include "Api/Configuration/DimensionVector.h"
 #include <memory>
 
 using namespace std;
@@ -10,15 +11,19 @@ bool IsMultiple(const size_t a, const size_t b)
 
 class ClTuneGemm : public ExampleReferenceKernel {
 protected:
+<<<<<<< HEAD
+    ClTuneGemm(int argc, char **argv, string exampleFolderPath,
+               string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
+        ExampleReferenceKernel(argc, argv, exampleFolderPath,
+=======
     ClTuneGemm(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
                string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
         ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath,
+>>>>>>> development
                                defaultKernelFileBaseName, defaultRefKernelFileBaseName),
-        // GEMM has O(m × n × k) complexity. For square matrices where m = n = k,
-        // we scale with cube root of problem size to keep total work proportional
-        m_kSizeM(static_cast<uint32_t>(sqrt(m_problemSize)) * 1024),
-        m_kSizeN(static_cast<uint32_t>(sqrt(m_problemSize)) * 1024),
-        m_kSizeK(static_cast<uint32_t>(sqrt(m_problemSize)) * 1024),
+        m_kSizeM(4 * 1024),
+        m_kSizeN(4 * 1024),
+        m_kSizeK(4 * 1024),
         m_gridDimensions(m_kSizeM, m_kSizeN)
     {
     }
@@ -29,7 +34,7 @@ protected:
     uint32_t m_kSizeN;
     uint32_t m_kSizeK;
 
-    const ktt::DimensionVector m_gridDimensions;
+    ktt::DimensionVector m_gridDimensions;
 
     vector<float> m_matA;
     vector<float> m_matB;
@@ -42,6 +47,19 @@ protected:
     ktt::ArgumentId m_matBId;
     ktt::ArgumentId m_matCId;
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+
+        m_cli.AddOption({[this](const vector<string> &args){
+                m_kSizeM = stoi(args[0]);
+                m_kSizeN = stoi(args[1]);
+                m_kSizeK = stoi(args[2]);
+            }, "--matSizes", "Sets matrix sizes (expects 3 ints) for computation C = A x B. Matrix sizes will be:"
+            "\n\tA: M x K\n\tB: K x N\n\tC: M x N", "<M> <N> <K>", 3
+        });
+    }
+
     void InitData() override
     {
         m_matA.resize(m_kSizeM * m_kSizeK);
@@ -53,6 +71,10 @@ protected:
 
     void InitKernel() override
     {
+<<<<<<< HEAD
+        m_gridDimensions = ktt::DimensionVector(m_kSizeM, m_kSizeN);
+=======
+>>>>>>> development
         m_kSizeMId = m_tuner->AddArgumentScalar(m_kSizeM);
         m_kSizeNId = m_tuner->AddArgumentScalar(m_kSizeN);
         m_kSizeKId = m_tuner->AddArgumentScalar(m_kSizeK);
@@ -130,7 +152,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<ClTuneGemm> clTuneGemm = ClTuneGemm::Create<ClTuneGemm>(argc, argv, 16, "Examples/ClTuneGemm",
+    unique_ptr<ClTuneGemm> clTuneGemm = ClTuneGemm::Create<ClTuneGemm>(argc, argv, "Examples/ClTuneGemm",
         "ClTuneGemm", "ClTuneGemmReference");
     clTuneGemm->Run();
 

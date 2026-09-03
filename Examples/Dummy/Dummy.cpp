@@ -5,7 +5,7 @@
  * power measurement.
  */
 
-#include "../ExampleBase.h"
+#include "ExampleBase.h"
 #include <cstdint>
 #include <memory>
 #include <chrono>
@@ -17,14 +17,15 @@ using namespace std;
 
 class Dummy : public ExampleBase {
 protected:
-    Dummy(int argc, char **argv, int defaultProblemSize,
+    Dummy(int argc, char **argv,
           string exampleFolderPath, string defaultKernelFileBaseName) :
-        ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleBase(argc, argv, exampleFolderPath, defaultKernelFileBaseName)
     {
         m_gridSize = 256;
         m_atoms = 1024;
+        m_sleepDuration = 0;
+        m_randomizeSleep = false;
 
-        m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
         UseFastMath();
 
         // Set precise measurement by default.
@@ -37,8 +38,8 @@ protected:
 
     // Sleep in the manipulator (can be randomized to 0, sleepDuration)
     // (makes power measurement more challenging due to changes in GPU temperature)
-    const unsigned int sleepDuration = 0;
-    const bool randomizeSleep = true;
+    unsigned int m_sleepDuration;
+    bool m_randomizeSleep;
 
     int m_gridSize;
     int m_atoms;
@@ -61,6 +62,29 @@ protected:
     ktt::ArgumentId m_energyGridId;
 
     float m_gridSpacing = 0.5f;
+
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+
+        m_cli.AddOption({[this](const vector<string> &args) {
+                m_gridSize = stoi(args[0]);
+            }, "--gridSize", "Set size of cube grid, will be A x A x A (expects int)", "<A>",1
+        });
+        m_cli.AddOption({[this](const vector<string> &args) {
+                m_atoms = stoi(args[0]);
+            }, "--atomsNum", "Set number of atoms (expects int)", "<atomsNum>",1
+        });
+        m_cli.AddOption({[this](const vector<string> &args) {
+                 m_sleepDuration = stoi(args[0]);
+            }, "--sleepDuration", "Set sleep duration in milliseconds (expects int)", "<ms>",1
+        });
+        m_cli.AddOption({[this](const vector<string> &) {
+                m_randomizeSleep = true;
+            }, "--useRandomizedSleep", "Enable sleep duration randomization. Makes power measurement more challenging due"
+            "to changes in GPU temperature."
+        });
+    }
 
     void InitData() override
     {
@@ -105,8 +129,8 @@ protected:
 
         m_tuner->SetLauncher(m_kernel, [this](ktt::ComputeInterface& interface)
         {
-            uint64_t sleep = sleepDuration;
-            if (randomizeSleep)
+            uint64_t sleep = m_sleepDuration;
+            if (m_randomizeSleep)
                 sleep = (sleep*rand())/RAND_MAX;
             std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
             interface.RunKernel(m_definition);
@@ -124,7 +148,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<Dummy> dummy = Dummy::Create<Dummy>(argc, argv, 0, "Examples/Dummy", "Dummy");
+    unique_ptr<Dummy> dummy = Dummy::Create<Dummy>(argc, argv, "Examples/Dummy", "Dummy");
     dummy->Run();
 
     return 0;

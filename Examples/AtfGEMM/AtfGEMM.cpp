@@ -1,20 +1,19 @@
-#include "../ExampleBase.h"
+#include "ExampleBase.h"
 #include <memory>
 
 using namespace std;
 
 class AtfGEMM : public ExampleBase {
 protected:
-    AtfGEMM(int argc, char **argv, int defaultProblemSize,
+    AtfGEMM(int argc, char **argv,
             string exampleFolderPath, string defaultKernelFileBaseName) :
-        ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleBase(argc, argv, exampleFolderPath, defaultKernelFileBaseName)
     {
         // Keep OpenCL sizes as specified
-        m_inputSize1 = static_cast<uint64_t>(sqrt(m_problemSize)) * 1024;
+        m_inputSize1 = 2 * 1024;
         m_inputSize2 = m_inputSize1;
         m_inputSize3 = m_inputSize1;
-
-        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+        m_problemSize = ktt::DimensionVector(m_inputSize1, m_inputSize2, m_inputSize3);
 
         m_kernelPath1 = GetKernelFilePath(exampleFolderPath, "Gemm1");
         m_kernelPath2 = GetKernelFilePath(exampleFolderPath, "Gemm2");
@@ -26,6 +25,7 @@ protected:
     uint64_t m_inputSize1;
     uint64_t m_inputSize2;
     uint64_t m_inputSize3;
+    ktt::DimensionVector m_problemSize;
 
     // Kernel paths
     std::string m_kernelPath1;
@@ -64,8 +64,17 @@ protected:
         return values;
     }
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(3, m_problemSize);
+    }
+
     void InitData() override
     {
+        m_inputSize1 = m_problemSize.GetSizeX();
+        m_inputSize2 = m_problemSize.GetSizeY();
+        m_inputSize3 = m_problemSize.GetSizeZ();
         // Initialize data buffers with fixed sizes
         m_a.resize(m_inputSize1 * m_inputSize3);
         m_b.resize(m_inputSize3 * m_inputSize2);
@@ -95,6 +104,10 @@ protected:
 
     void InitKernel() override
     {
+<<<<<<< HEAD
+        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+=======
+>>>>>>> development
         m_aId = m_tuner->AddArgumentVector(m_a, ktt::ArgumentAccessType::ReadOnly);
         m_bId = m_tuner->AddArgumentVector(m_b, ktt::ArgumentAccessType::ReadOnly);
         m_cId = m_tuner->AddArgumentVector(m_c, ktt::ArgumentAccessType::ReadWrite);
@@ -328,7 +341,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<AtfGEMM> atfGEMM = AtfGEMM::Create<AtfGEMM>(argc, argv, 4, "Examples/AtfGEMM", "AtfGEMM");
+    unique_ptr<AtfGEMM> atfGEMM = AtfGEMM::Create<AtfGEMM>(argc, argv, "Examples/AtfGEMM", "AtfGEMM");
     atfGEMM->Run();
 
     return 0;

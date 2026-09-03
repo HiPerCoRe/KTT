@@ -1,19 +1,20 @@
-#include "../ExampleReferenceComputation.h"
+#include "ExampleReferenceComputation.h"
 
 using namespace std;
 
 class Sort : public ExampleReferenceComputation
 {
 protected:
-    Sort(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
+    Sort(int argc, char **argv, string exampleFolderPath,
          string defaultKernelFileBaseName) :
-        ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleReferenceComputation(argc, argv, exampleFolderPath, defaultKernelFileBaseName),
+        m_inputSize(32 * 1024 * 1024) // Number of elements, not bytes
     {
-        m_size = m_problemSize * 1024 * 1024 / sizeof(unsigned int);
     }
 
     friend ExampleBase;
 
+    ktt::DimensionVector m_inputSize;
     uint32_t m_size;
     vector<unsigned int> m_in, m_out;
 
@@ -28,8 +29,17 @@ protected:
     ktt::KernelDefinitionId m_topScanDefinition;
     ktt::KernelDefinitionId m_bottomScanDefinition;
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(1, m_inputSize);
+    }
+
     void InitData() override
     {
+        // Input size is the number of elements directly
+        m_size = static_cast<uint32_t>(m_inputSize.GetSizeX());
+
         // Create input and output vectors and initialize with pseudorandom numbers
         m_in.resize(m_size);
         m_out.resize(m_size);
@@ -170,7 +180,7 @@ protected:
 
 int main(int argc, char** argv)
 {
-    unique_ptr<Sort> sort = Sort::Create<Sort>(argc, argv, 32, "Examples/Sort", "Sort");
+    unique_ptr<Sort> sort = Sort::Create<Sort>(argc, argv, "Examples/Sort", "Sort");
     sort->Run();
 
     return 0;

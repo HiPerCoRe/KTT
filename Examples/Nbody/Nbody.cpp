@@ -1,4 +1,4 @@
-#include "../ExampleReferenceKernel.h"
+#include "ExampleReferenceKernel.h"
 #include <memory>
 #include <random>
 #include <string>
@@ -8,19 +8,20 @@ using namespace std;
 
 class Nbody: public ExampleReferenceKernel {
 protected:
-    Nbody(int argc, char **argv, int defaultProblemSize,
+    Nbody(int argc, char **argv,
               string exampleFolderPath, string defaultKernelFileBaseName,
               string defaultReferenceKernelFileBaseName):
-        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
+        ExampleReferenceKernel(argc, argv, exampleFolderPath, defaultKernelFileBaseName,
                 defaultReferenceKernelFileBaseName)
     {
         // The total number of computations grows quadratically with problem size, hence the sqrt.
-        m_numberOfBodies = static_cast<int>(sqrt(m_problemSize)) * 1024;
+        m_inputSize = ktt::DimensionVector(128 * 1024);
     }
 
     friend ExampleReferenceKernel;
 
     // Declare and initialize data
+    ktt::DimensionVector m_inputSize;
     int m_numberOfBodies;
 
     const float timeDelta = 0.001f;
@@ -49,8 +50,15 @@ protected:
     ktt::ArgumentId m_deltaTimeId, m_dampingId, m_softeningSqrId;
     ktt::ArgumentId m_numberOfBodiesId;
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(1, m_inputSize);
+    }
+
     void InitData() override
     {
+        m_numberOfBodies = m_inputSize.GetSizeX();
         // Total NDRange size matches number of grid points
         m_oldBodyInfo.resize(4 * m_numberOfBodies);
         m_oldPosX.resize(m_numberOfBodies);
@@ -194,7 +202,7 @@ protected:
 int main(int argc, char **argv)
 {
     unique_ptr<Nbody> nbody = Nbody::Create<Nbody>(
-        argc, argv, 16384, "Examples/Nbody", "Nbody", "NbodyReference"
+        argc, argv, "Examples/Nbody", "Nbody", "NbodyReference"
     );
     nbody->Run();
 

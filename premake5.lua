@@ -404,7 +404,11 @@ function addExampleProject(name, kernelExt, apiDefine, useRefVersions, shouldEna
     project(projectName)
         kind "ConsoleApp"
         files {table.unpack(cppFiles)}
+<<<<<<< HEAD
+        includedirs {"Source", "Examples/Common"}
+=======
         includedirs {"Source", "Examples"}
+>>>>>>> development
         defines {apiDefine}
         links {"ktt", exLib}
         if shouldEnableOpenMP then
@@ -698,7 +702,11 @@ project "ExamplesLibCuda"
     kind "StaticLib"
     files
     {
+<<<<<<< HEAD
+        "Examples/Common/*.cpp"
+=======
         "Examples/*.cpp"
+>>>>>>> development
     }
     includedirs {"Source"}
     defines {"KTT_CUDA_EXAMPLE"}
@@ -707,7 +715,11 @@ project "ExamplesLibOpenCl"
     kind "StaticLib"
     files
     {
+<<<<<<< HEAD
+        "Examples/Common/*.cpp"
+=======
         "Examples/*.cpp"
+>>>>>>> development
     }
     includedirs {"Source"}
     defines {"KTT_OPENCL_EXAMPLE"}
@@ -716,7 +728,11 @@ project "ExamplesLibCpp"
     kind "StaticLib"
     files
     {
+<<<<<<< HEAD
+        "Examples/Common/*.cpp"
+=======
         "Examples/*.cpp"
+>>>>>>> development
     }
     includedirs {"Source"}
     defines {"KTT_CPP_EXAMPLE"}

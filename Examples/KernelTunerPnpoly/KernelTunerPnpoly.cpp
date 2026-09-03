@@ -1,4 +1,4 @@
-#include "../ExampleReferenceKernel.h"
+#include "ExampleReferenceKernel.h"
 #include <memory>
 
 using namespace std;
@@ -6,13 +6,13 @@ using namespace std;
 
 class KernelTunerPnpoly: public ExampleReferenceKernel {
 protected:
-    KernelTunerPnpoly(int argc, char **argv, int defaultProblemSize,
+    KernelTunerPnpoly(int argc, char **argv,
               string exampleFolderPath, string defaultKernelFileBaseName,
               string defaultReferenceKernelFileBaseName):
-        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
+        ExampleReferenceKernel(argc, argv, exampleFolderPath, defaultKernelFileBaseName,
                 defaultReferenceKernelFileBaseName)
     {
-        m_dataSize = m_problemSize * 1024 * 1024;
+        m_dataSize = 20 * 1024 * 1024;
         m_vertSize = 600;
     }
 
@@ -29,6 +29,22 @@ protected:
     ktt::ArgumentId m_verticesId;
     ktt::ArgumentId m_dataSizeId;
     ktt::ArgumentId m_vertSizeId;
+
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+
+        m_cli.AddOption({[this](const vector<string> &args) {
+                m_dataSize = stoul(args[0]);
+            }, "--dataSize", "Set the number of points to be tested for being inside the polygon (expects int)", 
+            "<pointNum>", 1
+        });
+        m_cli.AddOption({[this](const vector<string> &args) {
+                m_vertSize = stoul(args[0]);
+            }, "--vertSize", "Set the number of vertices in the polygon (expects int)", 
+            "<vertNum>", 1
+        });
+    }
 
     void InitData() override
     {
@@ -93,7 +109,7 @@ protected:
 int main(int argc, char **argv)
 {
     unique_ptr<KernelTunerPnpoly> knpnpoly = KernelTunerPnpoly::Create<KernelTunerPnpoly>(
-        argc, argv, 20, "Examples/KernelTunerPnpoly", "KernelTunerPnpoly", "KernelTunerPnpolyReference"
+        argc, argv, "Examples/KernelTunerPnpoly", "KernelTunerPnpoly", "KernelTunerPnpolyReference"
     );
     knpnpoly->Run();
 

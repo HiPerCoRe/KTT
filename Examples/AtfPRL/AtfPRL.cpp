@@ -1,4 +1,4 @@
-#include "../ExampleBase.h"
+#include "ExampleBase.h"
 #include <cstdint>
 #include <memory>
 
@@ -6,15 +6,14 @@ using namespace std;
 
 class AtfPRL : public ExampleBase {
 protected:
-    AtfPRL(int argc, char **argv, int defaultProblemSize,
+    AtfPRL(int argc, char **argv,
            string exampleFolderPath, string defaultKernelFileBaseName) :
-        ExampleBase(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
+        ExampleBase(argc, argv, exampleFolderPath, defaultKernelFileBaseName)
     {
         // Keep OpenCL sizes as specified
-        m_inputSize1 = static_cast<uint64_t>(sqrt(m_problemSize)) * 1024;
+        m_inputSize1 = 1024;
         m_inputSize2 = m_inputSize1;
-
-        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+        m_problemSize = ktt::DimensionVector(m_inputSize1, m_inputSize2);
     }
 
     friend ExampleBase;
@@ -22,6 +21,7 @@ protected:
     // Input sizes - kept as member variables
     uint64_t m_inputSize1;
     uint64_t m_inputSize2;
+    ktt::DimensionVector m_problemSize;
 
     // Data vectors
     vector<float> m_a;
@@ -44,8 +44,16 @@ protected:
         return values;
     }
 
+    void InitCLI() override
+    {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(2, m_problemSize);
+    }
+
     void InitData() override
     {
+        m_inputSize1 = m_problemSize.GetSizeX();
+        m_inputSize2 = m_problemSize.GetSizeY();
         // Initialize data buffers with fixed sizes
         m_a.resize(m_inputSize1 * m_inputSize1);
         m_b.resize(m_inputSize2 * m_inputSize2);
@@ -63,6 +71,10 @@ protected:
 
     void InitKernel() override
     {
+<<<<<<< HEAD
+        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+=======
+>>>>>>> development
         m_aId = m_tuner->AddArgumentVector(m_a, ktt::ArgumentAccessType::ReadOnly);
         m_bId = m_tuner->AddArgumentVector(m_b, ktt::ArgumentAccessType::ReadWrite);
 
@@ -154,7 +166,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    unique_ptr<AtfPRL> atfPRL = AtfPRL::Create<AtfPRL>(argc, argv, 1, "Examples/AtfPRL", "Rl1");
+    unique_ptr<AtfPRL> atfPRL = AtfPRL::Create<AtfPRL>(argc, argv, "Examples/AtfPRL", "Rl1");
     atfPRL->Run();
 
     return 0;

@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "../ExampleReferenceKernel.h"
+#include "ExampleReferenceKernel.h"
 #include "Api/Configuration/DimensionVector.h"
 
 using namespace std;
@@ -16,16 +16,15 @@ bool IsMultiple(const size_t a, const size_t b)
 
 class KernelTunerConvolution: public ExampleReferenceKernel {
 protected:
-    KernelTunerConvolution(int argc, char **argv, int defaultProblemSize,
+    KernelTunerConvolution(int argc, char **argv,
               string exampleFolderPath, string defaultKernelFileBaseName,
               string defaultReferenceKernelFileBaseName):
-        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName,
-                defaultReferenceKernelFileBaseName)
+        ExampleReferenceKernel(argc, argv, exampleFolderPath, defaultKernelFileBaseName,
+                defaultReferenceKernelFileBaseName),
+        ndRangeDimensions(1024 * 4, 1024 * 4)
     {
-        m_kSizeX = 1024*static_cast<int>(sqrtf(m_problemSize));
-        m_kSizeY = m_kSizeX;
-
-        ndRangeDimensions = ktt::DimensionVector(m_kSizeX, m_kSizeY);
+        m_kSizeX = ndRangeDimensions.GetSizeX();
+        m_kSizeY = ndRangeDimensions.GetSizeY();
     }
 
     friend ExampleReferenceKernel;
@@ -51,9 +50,17 @@ protected:
     ktt::ArgumentId m_filterXId;
     ktt::ArgumentId m_filterYId;
        
-
-    void InitData() override 
+    void InitCLI() override
     {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(2, ndRangeDimensions);
+    }
+
+    void InitData() override
+    {
+        m_kSizeX = ndRangeDimensions.GetSizeX();
+        m_kSizeY = ndRangeDimensions.GetSizeY();
+
         m_input.resize((m_kSizeX + 2 * HFS) * (m_kSizeY + 2 * HFS), 0.0f);
         m_output.resize(m_kSizeX * m_kSizeY, 0.0f);
         m_filter.resize((2*HFS+1)*(2*HFS+1));
@@ -127,7 +134,7 @@ protected:
 int main(int argc, char** argv)
 {
     unique_ptr<KernelTunerConvolution> ktConvolution = KernelTunerConvolution::Create<KernelTunerConvolution> (
-        argc, argv, 16, "Examples/KernelTunerConvolution", "KernelTunerConvolution", "KernelTunerConvolutionReference"
+        argc, argv, "Examples/KernelTunerConvolution", "KernelTunerConvolution", "KernelTunerConvolutionReference"
     );
     ktConvolution->Run();
 

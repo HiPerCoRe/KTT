@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "../ExampleReferenceComputation.h"
+#include "Api/Configuration/DimensionVector.h"
+#include "ExampleReferenceComputation.h"
 
 using namespace std;
 
@@ -12,30 +13,39 @@ class Reduction : public ExampleReferenceComputation
 protected:
     Reduction(
         int argc, char **argv,
-        int defaultProblemSize,
         string exampleFolderPath,
         string defaultKernelFileBaseName
-    ): ExampleReferenceComputation(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName)
-    {
-        m_size = m_problemSize * 1024 * 1024;
-    }
+    ): ExampleReferenceComputation(argc, argv, exampleFolderPath, defaultKernelFileBaseName),
+        m_inputSize(64 * 1024 * 1024)
+    {}
 
     friend ExampleBase;
 
+    ktt::DimensionVector m_inputSize;
     uint32_t m_size;
     vector<float> m_src, m_dest;
     ktt::ArgumentId m_dstId;
-
-    void InitData() override 
+    
+    void InitCLI() override
     {
+        ExampleBase::InitCLI();
+        UseInputSizeOption(1, m_inputSize);
+    }
+
+    void InitData() override
+    {
+        m_size = m_inputSize.GetSizeX();
         const uint32_t sizeAlloc = ((m_size+16-1)/16)*16; // pad to the longest vector size
-        m_src.resize(sizeAlloc);
-        m_dest.resize(sizeAlloc);
+        m_src.resize(sizeAlloc, 0.0f);
+        m_dest.resize(sizeAlloc, 0.0f);
         FillBuffers<float>({&m_src}, 0, 1000);
     }
 
-    void InitKernel() override 
+    void InitKernel() override
     {
+        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+        m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
+
         const uint32_t nUp = ((m_size+512-1)/512)*512; // maximum WG size used in tuning parameters
         const ktt::ArgumentId srcId = m_tuner->AddArgumentVector(m_src, ktt::ArgumentAccessType::ReadWrite);
         m_dstId = m_tuner->AddArgumentVector(m_dest, ktt::ArgumentAccessType::ReadWrite);
@@ -57,16 +67,24 @@ protected:
             // this may be done by thread modifier operators as well
             if (ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "UNBOUNDED_WG") == 0)
             {
-                myGlobalSize = ktt::DimensionVector(ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "WG_NUM"));
+                myGlobalSize = ktt::DimensionVector(ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "WG_NUM")
+                    * localSize.GetSizeX());
             }
 
             // execute reduction kernel
-            interface.RunKernel(m_definition, myGlobalSize, localSize);
+            if (!m_useProfiling)
+            {
+                interface.RunKernel(m_definition, myGlobalSize, localSize);
+            }
+            else
+            {
+                interface.RunKernelWithProfiling(m_definition, myGlobalSize, localSize);
+            }
 
             // execute kernel log n times, when atomics are not used 
             if (ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "USE_ATOMICS") == 0)
             {
-                uint32_t n = static_cast<uint32_t>(globalSize.GetSizeX());
+                uint32_t n = static_cast<uint32_t>(globalSize.GetSizeX() / localSize.GetSizeX());
                 uint32_t inOffset = 0;
                 uint32_t outOffset = n;
                 uint32_t vectorSize = static_cast<uint32_t>(ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "VECTOR_SIZE"));
@@ -77,7 +95,7 @@ protected:
                 {
                     interface.SwapArguments(m_definition, srcId, m_dstId);
                     myGlobalSize.SetSizeX((n + vectorSize - 1) / vectorSize);
-                    myGlobalSize.SetSizeX(((myGlobalSize.GetSizeX() - 1) / wgSize + 1));
+                    myGlobalSize.SetSizeX(((myGlobalSize.GetSizeX() - 1) / wgSize + 1) * wgSize);
                     
                     if (myGlobalSize == localSize)
                     {
@@ -98,7 +116,7 @@ protected:
         });
     }
 
-    void InitTuningSpace() override 
+    void InitTuningSpace() override
     {
         // get number of compute units
         const ktt::DeviceInfo di = m_tuner->GetCurrentDeviceInfo();
@@ -109,8 +127,11 @@ protected:
 
         m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
             ktt::ModifierAction::Multiply);
+<<<<<<< HEAD
+=======
         m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, "WORK_GROUP_SIZE_X",
             ktt::ModifierAction::Divide);
+>>>>>>> development
         m_tuner->AddParameter(m_kernel, "UNBOUNDED_WG", vector<uint64_t>{0, 1});
 
         m_tuner->AddParameter(m_kernel, "WG_NUM", vector<uint64_t>{0, cus, cus * 2, cus * 4, cus * 8, cus * 16});
@@ -136,7 +157,7 @@ protected:
         m_tuner->AddConstraint(m_kernel, {"UNBOUNDED_WG", "WORK_GROUP_SIZE_X"}, unboundedWG);
     }
 
-    void InitReference() override 
+    void InitReference() override
     {
         m_tuner->SetReferenceComputation(m_dstId, [this](void* buffer)
         {
@@ -175,8 +196,8 @@ protected:
 
 int main(int argc, char** argv)
 {
-    unique_ptr<Reduction> reduction = Reduction::Create<Reduction>(argc, argv, 64, "Examples/Reduction", "Reduction");
+    unique_ptr<Reduction> reduction = Reduction::Create<Reduction>(argc, argv, "Examples/Reduction", "Reduction");
     reduction->Run();
-    
+
     return 0;
 }
