@@ -79,10 +79,7 @@ protected:
 
     void InitKernel() override
     {
-<<<<<<< HEAD
         m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-=======
->>>>>>> development
         m_inId = m_tuner->AddArgumentVector(m_in, ktt::ArgumentAccessType::ReadOnly);
         m_outId = m_tuner->AddArgumentVector(m_out, ktt::ArgumentAccessType::ReadWrite);
         m_intResId = m_tuner->AddArgumentVector(m_intRes, ktt::ArgumentAccessType::ReadWrite);
