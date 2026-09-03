@@ -11,69 +11,19 @@
 
 using namespace std;
 
-struct HotspotConfiguration : ExampleRefKernelConfiguration 
-{
-  uint64_t simIters = 2;
-  uint64_t m_grid_rows = 1024;
-  uint64_t m_grid_cols = m_grid_rows;
-  string inTempFile = "";
-  string inPowerFile = "";
-  string outTempFile = "";
-};
-
-void SetUpHotspotOptions(vector<CliOption> &options, HotspotConfiguration &config)
-{
-  options.emplace_back([&config](const vector<string> &args) {
-    config.simIters = stoul(args[0]);
-  }, "--simIters", "Set the number of simulation iterations (expects int)", "<iterNum>", 1);
-  options.emplace_back([&config](const vector<string> &args) {
-    config.m_grid_rows = stoul(args[0]);
-    config.m_grid_cols = stoul(args[1]);
-  }, "--gridSize", "Set the grid m_size (expects int, int)", "<rows> <cols>", 2);
-  options.emplace_back([&config](const vector<string> &args) {
-    config.inTempFile = args[0];
-    config.inPowerFile = args[1];
-    config.outTempFile = args[2];
-  }, "--files", "Sets the files input temperature and m_power, and output temperature (expects string, string, string)", "<inTempFile> <inPowerFile> <outTempFile>", 3);
-}
-
-HotspotConfiguration HotspotProcessInput(int argc, char **argv) 
-{
-  HotspotConfiguration config;
-  vector<CliOption> options;
-  SetUpCommonOptions(options, &config);
-  SetUpRefKernelOption(options, config);
-  SetUpHotspotOptions(options, config);
-
-  IterateArguments(argc, argv, options);
-
-  return config;
-}
-
 class Hotspot : public ExampleReferenceKernel {
-  Hotspot(shared_ptr<HotspotConfiguration> config, int defaultProblemSize, string exampleFolderPath, string defaultKernelFileBaseName, string defaultReferenceKernelFileBaseName):
-    ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultReferenceKernelFileBaseName)
+  Hotspot(int argc, char** argv, int defaultProblemSize, string exampleFolderPath, string defaultKernelFileBaseName, string defaultReferenceKernelFileBaseName):
+    ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultReferenceKernelFileBaseName)
   {
-    m_totalIterations = config->simIters;
-    m_grid_rows = config->m_grid_rows;
-    m_grid_cols = config->m_grid_cols;
-    m_inTempFile = config->inTempFile.empty() ? GetKernelFilePath(exampleFolderPath, "Data/temp_1024", "") : config->inTempFile;
-    m_inPowerFile = config->inPowerFile.empty() ? GetKernelFilePath(exampleFolderPath, "Data/power_1024", "") : config->inTempFile;
-    m_outTempFile = config->outTempFile.empty() ? "out.txt" : config->inTempFile;
+    m_totalIterations = 2;
+    m_grid_rows = 1024;
+    m_grid_cols = m_grid_rows;
+    m_inTempFile = GetKernelFilePath(exampleFolderPath, "Data/temp_1024", "");
+    m_inPowerFile = GetKernelFilePath(exampleFolderPath, "Data/power_1024", "");
+    m_outTempFile = "out.txt";
   }
-public:
-  static std::unique_ptr<Hotspot> Create(
-    int argc, char** argv, 
-    int defaultProblemSize,
-    std::string exampleFolderPath,
-    std::string defaultKernelFileBaseName, 
-    std::string defaultRefKernelFileBaseName
-  ) {
-    auto config = std::make_shared<HotspotConfiguration>(HotspotProcessInput(argc, argv));
-    std::unique_ptr<Hotspot> ex(new Hotspot(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultRefKernelFileBaseName));
-    ex->PostInitialize();
-    return ex;
-  }
+
+  friend ExampleReferenceKernel;
 
 protected:
 
@@ -174,16 +124,32 @@ protected:
     }
   }
 
+  void InitCLI() override
+  {
+    ExampleReferenceKernel::InitCLI();
+    m_cli.AddOption({[this](const vector<string> &args) {
+      m_totalIterations = stoul(args[0]);
+    }, "--simIters", "Set the number of simulation iterations (expects int)", "<iterNum>", 1});
+    m_cli.AddOption({[this](const vector<string> &args) {
+      m_grid_rows = stoul(args[0]);
+      m_grid_cols = stoul(args[1]);
+    }, "--gridSize", "Set the grid m_size (expects int, int)", "<rows> <cols>", 2});
+    m_cli.AddOption({[this](const vector<string> &args) {
+      m_inTempFile = args[0];
+      m_inPowerFile = args[1];
+      m_outTempFile = args[2];
+    }, "--files", "Sets the files input temperature and m_power, and output temperature (expects string, string, string)", "<inTempFile> <inPowerFile> <outTempFile>", 3});
+  }
 
   void InitData() override
   {
     #if USE_PROFILING == 1
     printf("Executing with profiling switched ON.\n");
-    m_tuner.setKernelProfiling(true);
+    m_tuner->setKernelProfiling(true);
     #endif
 
-    m_tuner.SetCompilerOptions("-I./");
-    m_tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+    m_tuner->SetCompilerOptions("-I./");
+    m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
 
     m_size = m_grid_rows*m_grid_cols;
     // --------------- pyramid parameters --------------- 
@@ -210,20 +176,20 @@ protected:
   void InitKernel() override
   {
     // Add all arguments utilized by kernels
-    m_iterationId = m_tuner.AddArgumentScalar(m_iteration);
-    m_powerId = m_tuner.AddArgumentVector(m_power, ktt::ArgumentAccessType::ReadOnly);
-    m_tempSrcId = m_tuner.AddArgumentVector(std::vector<float>(m_tempSrc), ktt::ArgumentAccessType::ReadWrite);
-    m_tempDstId = m_tuner.AddArgumentVector(std::vector<float>(m_tempDst), ktt::ArgumentAccessType::ReadWrite);
-    m_grid_colsId = m_tuner.AddArgumentScalar(m_grid_cols);
-    m_grid_rowsId = m_tuner.AddArgumentScalar(m_grid_rows);
+    m_iterationId = m_tuner->AddArgumentScalar(m_iteration);
+    m_powerId = m_tuner->AddArgumentVector(m_power, ktt::ArgumentAccessType::ReadOnly);
+    m_tempSrcId = m_tuner->AddArgumentVector(std::vector<float>(m_tempSrc), ktt::ArgumentAccessType::ReadWrite);
+    m_tempDstId = m_tuner->AddArgumentVector(std::vector<float>(m_tempDst), ktt::ArgumentAccessType::ReadWrite);
+    m_grid_colsId = m_tuner->AddArgumentScalar(m_grid_cols);
+    m_grid_rowsId = m_tuner->AddArgumentScalar(m_grid_rows);
 
-    m_borderColsId = m_tuner.AddArgumentScalar(m_borderCols);
-    m_borderRowsId = m_tuner.AddArgumentScalar(m_borderRows);
-    m_CapId = m_tuner.AddArgumentScalar(m_Cap);
-    m_RxId = m_tuner.AddArgumentScalar(m_Rx);
-    m_RyId = m_tuner.AddArgumentScalar(m_Ry);
-    m_RzId = m_tuner.AddArgumentScalar(m_Rz);
-    m_stepId = m_tuner.AddArgumentScalar(m_step);
+    m_borderColsId = m_tuner->AddArgumentScalar(m_borderCols);
+    m_borderRowsId = m_tuner->AddArgumentScalar(m_borderRows);
+    m_CapId = m_tuner->AddArgumentScalar(m_Cap);
+    m_RxId = m_tuner->AddArgumentScalar(m_Rx);
+    m_RyId = m_tuner->AddArgumentScalar(m_Ry);
+    m_RzId = m_tuner->AddArgumentScalar(m_Rz);
+    m_stepId = m_tuner->AddArgumentScalar(m_step);
 
     // Total NDRange m_size matches number of grid points
     const ktt::DimensionVector ndRangeDimensions;
@@ -232,7 +198,7 @@ protected:
         m_grid_colsId, m_grid_rowsId, m_borderColsId, m_borderRowsId,
         m_CapId, m_RxId, m_RyId, m_RzId, m_stepId });
     
-    m_tuner.SetLauncher(m_kernel, [this](ktt::ComputeInterface &interface) {
+    m_tuner->SetLauncher(m_kernel, [this](ktt::ComputeInterface &interface) {
       const vector<ktt::ParameterPair>& pairs = interface.GetCurrentConfiguration().GetPairs();
       uint64_t blocksizeRows = ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "BLOCK_SIZE_ROWS");
       uint64_t blocksizeCols = ktt::ParameterPair::GetParameterValue<uint64_t>(pairs, "BLOCK_SIZE_COLS");
@@ -277,21 +243,21 @@ protected:
   void InitTuningSpace() override
   {
     // Multiply workgroup m_size in dimensions x and y by two parameters that follow (effectively setting workgroup size to parameters' values)
-    m_tuner.AddParameter(m_kernel, "BLOCK_SIZE_ROWS", vector<uint64_t>{8, 16, 32, 64});
-    m_tuner.AddParameter(m_kernel, "BLOCK_SIZE_COLS", vector<uint64_t>{8, 16, 32, 64});
-    m_tuner.AddParameter(m_kernel, "PYRAMID_HEIGHT", vector<uint64_t>{1, 2, 4, 8});
-    m_tuner.AddParameter(m_kernel, "WORK_GROUP_Y", vector<uint64_t>{4, 8, 16, 32, 64});
-    m_tuner.AddParameter(m_kernel, "LOCAL_MEMORY", vector<uint64_t>{0, 1});
-    m_tuner.AddParameter(m_kernel, "LOOP_UNROLL", vector<uint64_t>{0,1});
+    m_tuner->AddParameter(m_kernel, "BLOCK_SIZE_ROWS", vector<uint64_t>{8, 16, 32, 64});
+    m_tuner->AddParameter(m_kernel, "BLOCK_SIZE_COLS", vector<uint64_t>{8, 16, 32, 64});
+    m_tuner->AddParameter(m_kernel, "PYRAMID_HEIGHT", vector<uint64_t>{1, 2, 4, 8});
+    m_tuner->AddParameter(m_kernel, "WORK_GROUP_Y", vector<uint64_t>{4, 8, 16, 32, 64});
+    m_tuner->AddParameter(m_kernel, "LOCAL_MEMORY", vector<uint64_t>{0, 1});
+    m_tuner->AddParameter(m_kernel, "LOOP_UNROLL", vector<uint64_t>{0,1});
     // Add conditions
     auto enoughToCompute = [](const std::vector<size_t>& vector) {
       return vector.at(0)/(vector.at(2)*2) > 1 && vector.at(1)/(vector.at(2)*2) > 1;
     };
-    m_tuner.AddConstraint(m_kernel, {"BLOCK_SIZE_COLS", "WORK_GROUP_Y", "PYRAMID_HEIGHT"}, enoughToCompute);
+    m_tuner->AddConstraint(m_kernel, {"BLOCK_SIZE_COLS", "WORK_GROUP_Y", "PYRAMID_HEIGHT"}, enoughToCompute);
     auto workGroupSmaller = [](const std::vector<size_t>& vector) {return vector.at(0)<=vector.at(1);};
     auto workGroupDividable = [](const std::vector<size_t>& vector) {return vector.at(1)%vector.at(0) == 0;};
-    m_tuner.AddConstraint(m_kernel, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"}, workGroupSmaller);
-    m_tuner.AddConstraint(m_kernel, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"}, workGroupDividable);
+    m_tuner->AddConstraint(m_kernel, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"}, workGroupSmaller);
+    m_tuner->AddConstraint(m_kernel, {"WORK_GROUP_Y", "BLOCK_SIZE_ROWS"}, workGroupDividable);
   }
 
   void InitReference() override
@@ -303,7 +269,7 @@ protected:
         m_grid_colsId, m_grid_rowsId, m_borderColsId, m_borderRowsId,
         m_CapId, m_RxId, m_RyId, m_RzId, m_stepId }, {m_tempDstId});
 
-    m_tuner.SetLauncher(m_refKernel, [this](ktt::ComputeInterface &interface) {
+    m_tuner->SetLauncher(m_refKernel, [this](ktt::ComputeInterface &interface) {
       int smallBlockCol = BLOCK_SIZE_REF-PYRAMID_HEIGHT_REF*EXPAND_RATE;
       int smallBlockRow = BLOCK_SIZE_REF-PYRAMID_HEIGHT_REF*EXPAND_RATE;
       int blockCols = m_grid_cols/smallBlockCol+((m_grid_cols%smallBlockCol==0)?0:1);
@@ -344,7 +310,7 @@ protected:
 
 int main(int argc, char** argv)
 {
-  unique_ptr<Hotspot> hotspot = Hotspot::Create(
+  unique_ptr<Hotspot> hotspot = ExampleReferenceKernel::Create<Hotspot>(
     argc, argv, 0, "Examples/RodiniaHotspot", "Hotspot", "HotspotReference"
   );
   hotspot->Run();

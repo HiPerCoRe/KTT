@@ -6,11 +6,11 @@ class Convolution3d: public ExampleReferenceComputation
 {
 protected:
     Convolution3d(
-        std::shared_ptr<ExampleConfiguration> config,
+        int argc, char **argv,
         int defaultProblemSize,
         string exampleFolderPath, string defaultKernelFileBaseName
     ):
-    ExampleReferenceComputation(config, defaultProblemSize,
+    ExampleReferenceComputation(argc, argv, defaultProblemSize,
         exampleFolderPath, defaultKernelFileBaseName
     )
     {
@@ -114,12 +114,12 @@ protected:
         const ktt::DimensionVector workGroupDimensions;
 
         // Add 3 kernels to the tuner, one of them acts as reference kernel
-        m_blockedDefinition = m_tuner.AddKernelDefinitionFromFile("conv", m_kernelFile, ndRangeDimensions,
+        m_blockedDefinition = m_tuner->AddKernelDefinitionFromFile("conv", m_kernelFile, ndRangeDimensions,
             workGroupDimensions);
-        m_slidingPlaneDefinition = m_tuner.AddKernelDefinitionFromFile("conv2", m_kernelFile, ndRangeDimensions,
+        m_slidingPlaneDefinition = m_tuner->AddKernelDefinitionFromFile("conv2", m_kernelFile, ndRangeDimensions,
             workGroupDimensions);
 
-        m_kernel = m_tuner.CreateCompositeKernel("3D Convolution", {m_blockedDefinition, m_slidingPlaneDefinition},
+        m_kernel = m_tuner->CreateCompositeKernel("3D Convolution", {m_blockedDefinition, m_slidingPlaneDefinition},
             [this](ktt::ComputeInterface& interface)
         {
             const vector<ktt::ParameterPair>& parameterValues = interface.GetCurrentConfiguration().GetPairs();
@@ -136,48 +136,48 @@ protected:
         });
 
         // Add all arguments utilized by kernels
-        const ktt::ArgumentId widthId = m_tuner.AddArgumentScalar(m_width);
-        const ktt::ArgumentId heightId = m_tuner.AddArgumentScalar(m_height);
-        const ktt::ArgumentId depthId = m_tuner.AddArgumentScalar(m_depth);
-        const ktt::ArgumentId srcId = m_tuner.AddArgumentVector(m_src, ktt::ArgumentAccessType::ReadOnly);
-        const ktt::ArgumentId coeffId = m_tuner.AddArgumentVector(m_coeff, ktt::ArgumentAccessType::ReadOnly);
-        m_destId = m_tuner.AddArgumentVector(m_dest, ktt::ArgumentAccessType::WriteOnly);
+        const ktt::ArgumentId widthId = m_tuner->AddArgumentScalar(m_width);
+        const ktt::ArgumentId heightId = m_tuner->AddArgumentScalar(m_height);
+        const ktt::ArgumentId depthId = m_tuner->AddArgumentScalar(m_depth);
+        const ktt::ArgumentId srcId = m_tuner->AddArgumentVector(m_src, ktt::ArgumentAccessType::ReadOnly);
+        const ktt::ArgumentId coeffId = m_tuner->AddArgumentVector(m_coeff, ktt::ArgumentAccessType::ReadOnly);
+        m_destId = m_tuner->AddArgumentVector(m_dest, ktt::ArgumentAccessType::WriteOnly);
 
         // Set kernel arguments for both tuned kernel and reference kernel
-        m_tuner.SetArguments(m_blockedDefinition, {widthId, heightId, srcId, coeffId, m_destId});
-        m_tuner.SetArguments(m_slidingPlaneDefinition, {widthId, heightId, depthId, srcId, coeffId, m_destId});
+        m_tuner->SetArguments(m_blockedDefinition, {widthId, heightId, srcId, coeffId, m_destId});
+        m_tuner->SetArguments(m_slidingPlaneDefinition, {widthId, heightId, depthId, srcId, coeffId, m_destId});
     }
 
     void InitTuningSpace() override
     {
         // Add kernel parameters.
         // 0 - Blocked kernel, 1 - Sliding plane kernel
-        m_tuner.AddParameter(m_kernel, "ALGORITHM", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "TBX", vector<uint64_t>{8, 16, 32, 64});
-        m_tuner.AddParameter(m_kernel, "TBY", vector<uint64_t>{8, 16, 32, 64});
-        m_tuner.AddParameter(m_kernel, "TBZ", vector<uint64_t>{1, 2, 4, 8, 16, 32});
-        m_tuner.AddParameter(m_kernel, "LOCAL", vector<uint64_t>{0, 1, 2});
-        m_tuner.AddParameter(m_kernel, "WPTX", vector<uint64_t>{1, 2, 4, 8});
-        m_tuner.AddParameter(m_kernel, "WPTY", vector<uint64_t>{1, 2, 4, 8});
-        m_tuner.AddParameter(m_kernel, "WPTZ", vector<uint64_t>{1, 2, 4, 8});
-        m_tuner.AddParameter(m_kernel, "VECTOR", vector<uint64_t>{1, 2, 4});
-        m_tuner.AddParameter(m_kernel, "UNROLL_FACTOR", vector<uint64_t>{1, static_cast<uint64_t>(m_fs)});
-        m_tuner.AddParameter(m_kernel, "CONSTANT_COEFF", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "CACHE_WORK_TO_REGS", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "REVERSE_LOOP_ORDER", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "REVERSE_LOOP_ORDER2", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "REVERSE_LOOP_ORDER3", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "PADDING", vector<uint64_t>{0, 1});
-        m_tuner.AddParameter(m_kernel, "Z_ITERATIONS", vector<uint64_t>{4, 8, 16, 32});
+        m_tuner->AddParameter(m_kernel, "ALGORITHM", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "TBX", vector<uint64_t>{8, 16, 32, 64});
+        m_tuner->AddParameter(m_kernel, "TBY", vector<uint64_t>{8, 16, 32, 64});
+        m_tuner->AddParameter(m_kernel, "TBZ", vector<uint64_t>{1, 2, 4, 8, 16, 32});
+        m_tuner->AddParameter(m_kernel, "LOCAL", vector<uint64_t>{0, 1, 2});
+        m_tuner->AddParameter(m_kernel, "WPTX", vector<uint64_t>{1, 2, 4, 8});
+        m_tuner->AddParameter(m_kernel, "WPTY", vector<uint64_t>{1, 2, 4, 8});
+        m_tuner->AddParameter(m_kernel, "WPTZ", vector<uint64_t>{1, 2, 4, 8});
+        m_tuner->AddParameter(m_kernel, "VECTOR", vector<uint64_t>{1, 2, 4});
+        m_tuner->AddParameter(m_kernel, "UNROLL_FACTOR", vector<uint64_t>{1, static_cast<uint64_t>(m_fs)});
+        m_tuner->AddParameter(m_kernel, "CONSTANT_COEFF", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "CACHE_WORK_TO_REGS", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "REVERSE_LOOP_ORDER", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "REVERSE_LOOP_ORDER2", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "REVERSE_LOOP_ORDER3", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "PADDING", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "Z_ITERATIONS", vector<uint64_t>{4, 8, 16, 32});
 
         // Introduces a helper parameter to compute the proper number of threads for the LOCAL == 2 case.
         // In this case, the workgroup size (TBX by TBY) is extra large (TBX_XL by TBY_XL) because it uses
         // extra (halo) threads only to load the padding to local memory - they don't compute.
         vector<uint64_t> integers{1, 2, 3, 4, 8, 9, 10, 16, 17, 18, 32, 33, 34, 64, 65, 66};
 
-        m_tuner.AddParameter(m_kernel, "TBX_XL", integers);
-        m_tuner.AddParameter(m_kernel, "TBY_XL", integers);
-        m_tuner.AddParameter(m_kernel, "TBZ_XL", integers);
+        m_tuner->AddParameter(m_kernel, "TBX_XL", integers);
+        m_tuner->AddParameter(m_kernel, "TBY_XL", integers);
+        m_tuner->AddParameter(m_kernel, "TBZ_XL", integers);
 
         // Modify XY NDRange size for all kernels
         auto globalModifier = [](const uint64_t size, const vector<uint64_t>& v)
@@ -185,13 +185,13 @@ protected:
             return (size / (v[0] * v[1]));
         };
 
-        m_tuner.AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Global,
+        m_tuner->AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Global,
             ktt::ModifierDimension::X, {"TBX", "WPTX"}, globalModifier);
-        m_tuner.AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Global,
+        m_tuner->AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Global,
             ktt::ModifierDimension::Y, {"TBY", "WPTY"}, globalModifier);
 
         // Modify Z NDRange size for Blocked kernel
-        m_tuner.AddThreadModifier(m_kernel, {m_blockedDefinition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z,
+        m_tuner->AddThreadModifier(m_kernel, {m_blockedDefinition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z,
             {"TBZ", "WPTZ"}, globalModifier);
 
         // Modify Z NDRange size for Sliding plane kernel
@@ -200,15 +200,15 @@ protected:
             return (size / (v[0] * v[1] * v[2]));
         };
 
-        m_tuner.AddThreadModifier(m_kernel, {m_slidingPlaneDefinition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z,
+        m_tuner->AddThreadModifier(m_kernel, {m_slidingPlaneDefinition}, ktt::ModifierType::Global, ktt::ModifierDimension::Z,
             {"TBZ", "WPTZ", "Z_ITERATIONS"}, globalModifierZ);
 
         // Modify workgroup size for all kernels
-        m_tuner.AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Local,
+        m_tuner->AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Local,
             ktt::ModifierDimension::X, "TBX_XL", ktt::ModifierAction::Multiply);
-        m_tuner.AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Local,
+        m_tuner->AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Local,
             ktt::ModifierDimension::Y, "TBY_XL", ktt::ModifierAction::Multiply);
-        m_tuner.AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Local,
+        m_tuner->AddThreadModifier(m_kernel, {m_blockedDefinition, m_slidingPlaneDefinition}, ktt::ModifierType::Local,
             ktt::ModifierDimension::Z, "TBZ_XL", ktt::ModifierAction::Multiply);
 
         // For LOCAL == 2, extend block size by halo threads
@@ -224,13 +224,13 @@ protected:
             }
         };
 
-        m_tuner.AddConstraint(m_kernel, {"LOCAL", "TBX_XL", "TBX", "WPTX"}, HaloThreads);
-        m_tuner.AddConstraint(m_kernel, {"LOCAL", "TBY_XL", "TBY", "WPTY"}, HaloThreads);
-        m_tuner.AddConstraint(m_kernel, {"LOCAL", "TBZ_XL", "TBZ", "WPTZ"}, HaloThreads);
+        m_tuner->AddConstraint(m_kernel, {"LOCAL", "TBX_XL", "TBX", "WPTX"}, HaloThreads);
+        m_tuner->AddConstraint(m_kernel, {"LOCAL", "TBY_XL", "TBY", "WPTY"}, HaloThreads);
+        m_tuner->AddConstraint(m_kernel, {"LOCAL", "TBZ_XL", "TBZ", "WPTZ"}, HaloThreads);
 
         // Sets padding to zero in case local memory is not used
         auto padding = [](const vector<uint64_t>& v) { return (v[0] != 0 || v[1] == 0); };
-        m_tuner.AddConstraint(m_kernel, {"LOCAL", "PADDING"}, padding);
+        m_tuner->AddConstraint(m_kernel, {"LOCAL", "PADDING"}, padding);
 
         // GPUs have max. workgroup size
         auto maxWgSize = [this](const vector<uint64_t>& v)
@@ -238,7 +238,7 @@ protected:
             return v[0] * v[1] * v[2] <= m_maxWorkGroupSize;
         };
 
-        m_tuner.AddConstraint(m_kernel, {"TBX_XL", "TBY_XL", "TBZ_XL"}, maxWgSize);
+        m_tuner->AddConstraint(m_kernel, {"TBX_XL", "TBY_XL", "TBZ_XL"}, maxWgSize);
 
         // GPUs have max. local memory size
         auto maxLocalMemSize = [this](const vector<uint64_t>& v)
@@ -249,11 +249,11 @@ protected:
                 * sizeof(float) <= m_maxLocalMemorySize;
         };
 
-        m_tuner.AddConstraint(m_kernel, {"ALGORITHM", "LOCAL", "PADDING", "TBX_XL", "WPTX", "TBY_XL", "WPTY", "TBZ_XL", "WPTZ"},
+        m_tuner->AddConstraint(m_kernel, {"ALGORITHM", "LOCAL", "PADDING", "TBX_XL", "WPTX", "TBY_XL", "WPTY", "TBZ_XL", "WPTZ"},
             maxLocalMemSize);
 
         auto reverseCacheLoopsOrder = [](const vector<uint64_t>& v) { return v[0] == 1 || v[1] == 0; };
-        m_tuner.AddConstraint(m_kernel, {"CACHE_WORK_TO_REGS", "REVERSE_LOOP_ORDER3"}, reverseCacheLoopsOrder);
+        m_tuner->AddConstraint(m_kernel, {"CACHE_WORK_TO_REGS", "REVERSE_LOOP_ORDER3"}, reverseCacheLoopsOrder);
 
         // Sets the constrains on the vector size
         auto vectorConstraint = [this](const vector<uint64_t>& v)
@@ -268,7 +268,7 @@ protected:
             }
         };
 
-        m_tuner.AddConstraint(m_kernel, {"LOCAL", "VECTOR", "WPTX"}, vectorConstraint);
+        m_tuner->AddConstraint(m_kernel, {"LOCAL", "VECTOR", "WPTX"}, vectorConstraint);
 
         auto algorithm = [](const vector<uint64_t>& v)
         {
@@ -284,17 +284,17 @@ protected:
             }
         };
 
-        m_tuner.AddConstraint(m_kernel, {"ALGORITHM", "TBX", "TBY", "TBZ", "WPTX", "WPTY", "WPTZ", "LOCAL", "VECTOR", "UNROLL_FACTOR",
+        m_tuner->AddConstraint(m_kernel, {"ALGORITHM", "TBX", "TBY", "TBZ", "WPTX", "WPTY", "WPTZ", "LOCAL", "VECTOR", "UNROLL_FACTOR",
             "CONSTANT_COEFF", "CACHE_WORK_TO_REGS", "REVERSE_LOOP_ORDER", "REVERSE_LOOP_ORDER2", "REVERSE_LOOP_ORDER3"}, algorithm);
 
         auto slidingPlane = [](const vector<uint64_t>& v) { return v[0] == 1 || v[1] == 16; };
-        m_tuner.AddConstraint(m_kernel, {"ALGORITHM", "Z_ITERATIONS"}, slidingPlane);
+        m_tuner->AddConstraint(m_kernel, {"ALGORITHM", "Z_ITERATIONS"}, slidingPlane);
     }
 
     void InitReference() override
     {
-        m_tuner.SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
-        m_tuner.SetReferenceComputation(m_destId, [this](void* buffer)
+        m_tuner->SetValidationMethod(ktt::ValidationMethod::SideBySideComparison, 0.001f);
+        m_tuner->SetReferenceComputation(m_destId, [this](void* buffer)
         {
             float* output = static_cast<float*>(buffer);
 

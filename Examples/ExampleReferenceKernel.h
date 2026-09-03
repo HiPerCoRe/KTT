@@ -5,7 +5,7 @@ class ExampleReferenceKernel : public ExampleBase
 {
 public:
     ExampleReferenceKernel(
-        std::shared_ptr<ExampleRefKernelConfiguration> config,
+        int argc, char **argv,
         int defaultProblemSize,
         std::string exampleFolderPath,
         std::string defaultKernelFileBaseName,
@@ -15,8 +15,7 @@ public:
     static std::unique_ptr<T> Create(int argc, char** argv, int defaultProblemSize, std::string exampleFolderPath,
                                      std::string defaultKernelFileBaseName, std::string defaultRefKernelFileBaseName)
     {
-        auto config = std::make_shared<ExampleRefKernelConfiguration>(RefKernelProcessInput(argc, argv));
-        std::unique_ptr<T> ex(new T(config, defaultProblemSize, exampleFolderPath,
+        std::unique_ptr<T> ex(new T(argc, argv, defaultProblemSize, exampleFolderPath,
                                     defaultKernelFileBaseName, defaultRefKernelFileBaseName));
         ex->PostInitialize();
         return ex;
@@ -29,6 +28,7 @@ protected:
     ktt::KernelDefinitionId m_refDefinition;
     ktt::KernelId m_refKernel;
 
+    void InitCLI() override;
     void PostInitialize() override;
     virtual void InitReference() = 0;
 

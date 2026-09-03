@@ -6,9 +6,9 @@ using namespace std;
 
 class ClTuneConvolution : public ExampleReferenceKernel {
 public:
-    ClTuneConvolution(shared_ptr<ExampleRefKernelConfiguration> config, int defaultProblemSize, string exampleFolderPath,
+    ClTuneConvolution(int argc, char **argv, int defaultProblemSize, string exampleFolderPath,
                       string defaultKernelFileBaseName, string defaultRefKernelFileBaseName) :
-        ExampleReferenceKernel(config, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultRefKernelFileBaseName),
+        ExampleReferenceKernel(argc, argv, defaultProblemSize, exampleFolderPath, defaultKernelFileBaseName, defaultRefKernelFileBaseName),
         kSizeX(4096),
         kSizeY(4096)
     {
@@ -72,21 +72,21 @@ protected:
 
     void InitKernel() override
     {
-        m_tuner.SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
-        kSizeXId = m_tuner.AddArgumentScalar(kSizeX);
-        kSizeYId = m_tuner.AddArgumentScalar(kSizeY);
-        matAId = m_tuner.AddArgumentVector(mat_a, ktt::ArgumentAccessType::ReadOnly);
-        coeffId = m_tuner.AddArgumentVector(coeff, ktt::ArgumentAccessType::ReadOnly);
-        matBId = m_tuner.AddArgumentVector(mat_b, ktt::ArgumentAccessType::WriteOnly);
+        m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::OpenCL);
+        kSizeXId = m_tuner->AddArgumentScalar(kSizeX);
+        kSizeYId = m_tuner->AddArgumentScalar(kSizeY);
+        matAId = m_tuner->AddArgumentVector(mat_a, ktt::ArgumentAccessType::ReadOnly);
+        coeffId = m_tuner->AddArgumentVector(coeff, ktt::ArgumentAccessType::ReadOnly);
+        matBId = m_tuner->AddArgumentVector(mat_b, ktt::ArgumentAccessType::WriteOnly);
 
         const ktt::DimensionVector ndRangeDimensions(kSizeX, kSizeY);
         const ktt::DimensionVector workGroupDimensions;
 
-        m_definition = m_tuner.AddKernelDefinitionFromFile("conv", m_kernelFile, ndRangeDimensions, workGroupDimensions);
+        m_definition = m_tuner->AddKernelDefinitionFromFile("conv", m_kernelFile, ndRangeDimensions, workGroupDimensions);
 
-        m_kernel = m_tuner.CreateSimpleKernel("Convolution", m_definition);
+        m_kernel = m_tuner->CreateSimpleKernel("Convolution", m_definition);
 
-        m_tuner.SetArguments(m_definition, {kSizeXId, kSizeYId, matAId, coeffId, matBId});
+        m_tuner->SetArguments(m_definition, {kSizeXId, kSizeYId, matAId, coeffId, matBId});
     }
 
     void InitTuningSpace() override
@@ -94,15 +94,15 @@ protected:
         vector<uint64_t> blockRange = {8, 16, 32, 64};
         vector<uint64_t> wptRange = {1, 2, 4, 8, 16};
 
-        m_tuner.AddParameter(m_kernel, "TBX", blockRange);
-        m_tuner.AddParameter(m_kernel, "TBY", blockRange);
-        m_tuner.AddParameter(m_kernel, "LOCAL", vector<uint64_t>{0, 1, 2});
-        m_tuner.AddParameter(m_kernel, "WPTX", wptRange);
-        m_tuner.AddParameter(m_kernel, "WPTY", wptRange);
-        m_tuner.AddParameter(m_kernel, "VECTOR", vector<uint64_t>{1, 2, 4});
-        m_tuner.AddParameter(m_kernel, "UNROLL_FACTOR1", vector<uint64_t>{0, 1, static_cast<uint64_t>(FS)});
-        m_tuner.AddParameter(m_kernel, "UNROLL_FACTOR2", vector<uint64_t>{0, 1, static_cast<uint64_t>(FS)});
-        m_tuner.AddParameter(m_kernel, "PADDING", vector<uint64_t>{0, 1});
+        m_tuner->AddParameter(m_kernel, "TBX", blockRange);
+        m_tuner->AddParameter(m_kernel, "TBY", blockRange);
+        m_tuner->AddParameter(m_kernel, "LOCAL", vector<uint64_t>{0, 1, 2});
+        m_tuner->AddParameter(m_kernel, "WPTX", wptRange);
+        m_tuner->AddParameter(m_kernel, "WPTY", wptRange);
+        m_tuner->AddParameter(m_kernel, "VECTOR", vector<uint64_t>{1, 2, 4});
+        m_tuner->AddParameter(m_kernel, "UNROLL_FACTOR1", vector<uint64_t>{0, 1, static_cast<uint64_t>(FS)});
+        m_tuner->AddParameter(m_kernel, "UNROLL_FACTOR2", vector<uint64_t>{0, 1, static_cast<uint64_t>(FS)});
+        m_tuner->AddParameter(m_kernel, "PADDING", vector<uint64_t>{0, 1});
 
         vector<uint64_t> integers{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
             32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74};
@@ -111,19 +111,19 @@ protected:
         // In this case, the workgroup size (TBX by TBY) is extra large (TBX_XL by TBY_XL) because it uses
         // extra threads to compute the halo threads. How many extra threads are needed is dependend on
         // the filter size. Here we support a the TBX and TBY size plus up to 10 extra threads.
-        m_tuner.AddParameter(m_kernel, "TBX_XL", integers);
-        m_tuner.AddParameter(m_kernel, "TBY_XL", integers);
+        m_tuner->AddParameter(m_kernel, "TBX_XL", integers);
+        m_tuner->AddParameter(m_kernel, "TBY_XL", integers);
 
         // Add kernel dimension modifiers based on added tuning parameters
         auto globalModifier = [](const uint64_t size, const vector<uint64_t>& v) {
             return (size * v[0]) / (v[1] * v[2]);
         };
 
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, {"TBX_XL", "TBX", "WPTX"}, globalModifier);
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, {"TBY_XL", "TBY", "WPTY"}, globalModifier);
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::X, {"TBX_XL", "TBX", "WPTX"}, globalModifier);
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Global, ktt::ModifierDimension::Y, {"TBY_XL", "TBY", "WPTY"}, globalModifier);
 
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "TBX_XL", ktt::ModifierAction::Multiply);
-        m_tuner.AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "TBY_XL", ktt::ModifierAction::Multiply);
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "TBX_XL", ktt::ModifierAction::Multiply);
+        m_tuner->AddThreadModifier(m_kernel, {m_definition}, ktt::ModifierType::Local, ktt::ModifierDimension::Y, "TBY_XL", ktt::ModifierAction::Multiply);
 
         // Add constraints
         auto haloThreads = [this](const vector<uint64_t>& v) {
@@ -131,8 +131,8 @@ protected:
             else { return (v[1] == v[2]); } // Without halo threads
         };
 
-        m_tuner.AddConstraint(m_kernel, {"LOCAL", "TBX_XL", "TBX", "WPTX"}, haloThreads);
-        m_tuner.AddConstraint(m_kernel, {"LOCAL", "TBY_XL", "TBY", "WPTY"}, haloThreads);
+        m_tuner->AddConstraint(m_kernel, {"LOCAL", "TBX_XL", "TBX", "WPTX"}, haloThreads);
+        m_tuner->AddConstraint(m_kernel, {"LOCAL", "TBY_XL", "TBY", "WPTY"}, haloThreads);
 
         // Sets the constrains on the vector size
         auto vectorConstraint = [this](const vector<uint64_t>& v) {
@@ -140,16 +140,16 @@ protected:
             else { return IsMultiple(v[2], v[1]); }
         };
 
-        m_tuner.AddConstraint(m_kernel, {"LOCAL", "VECTOR", "WPTX"}, vectorConstraint);
+        m_tuner->AddConstraint(m_kernel, {"LOCAL", "VECTOR", "WPTX"}, vectorConstraint);
 
         // Sets padding to zero in case local memory is not used
         auto paddingConstraint = [](const vector<uint64_t>& v) { return (v[1] == 0 || v[0] != 0); };
-        m_tuner.AddConstraint(m_kernel, {"LOCAL", "PADDING"}, paddingConstraint);
+        m_tuner->AddConstraint(m_kernel, {"LOCAL", "PADDING"}, paddingConstraint);
 
         // Ensure divisibility
         auto divConstraint = [](const vector<uint64_t>& v) { return v[0] % v[1] == 0; };
-        m_tuner.AddConstraint(m_kernel, {"TBX", "WPTX"}, divConstraint);
-        m_tuner.AddConstraint(m_kernel, {"TBY", "WPTY"}, divConstraint);
+        m_tuner->AddConstraint(m_kernel, {"TBX", "WPTX"}, divConstraint);
+        m_tuner->AddConstraint(m_kernel, {"TBY", "WPTY"}, divConstraint);
     }
 
     void InitReference() override
