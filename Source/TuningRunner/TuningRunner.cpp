@@ -86,7 +86,6 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
 
         if (InterruptHandler::GetShouldInterrupt()) {
             Logger::LogInfo("Tuning stopped due to SIGINT, returning...");
-            InterruptHandler::UnregisterHandler();
             break;
         }
 
@@ -102,6 +101,9 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         {
             break;
         }
+    }
+    if (m_useGracefulInterrupt) {
+        InterruptHandler::UnregisterHandler();
     }
 
     Logger::LogInfo("Ending " + tuningMode + " tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
