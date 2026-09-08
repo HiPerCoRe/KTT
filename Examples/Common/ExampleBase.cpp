@@ -346,7 +346,7 @@ void ExampleBase::InitCLI() {
     " Each checkpoint overwrites the previous one, into Checkpoint.json,"
     " as doing otherwise would duplicate previously saved data.", "<iterations>", 1});
 
-    m_cli.AddOption({[this](const vector<string> &args) {
+    m_cli.AddOption({[this](const vector<string> &) {
         m_gracefulInterrupt = true;
     }, "--useGracefulInterrupt", "Enable a Tuner feature that lets the user interactively stop tuning and save progress with Ctrl-C"});
 
