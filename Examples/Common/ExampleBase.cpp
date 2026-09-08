@@ -346,6 +346,10 @@ void ExampleBase::InitCLI() {
     " Each checkpoint overwrites the previous one, into Checkpoint.json,"
     " as doing otherwise would duplicate previously saved data.", "<iterations>", 1});
 
+    m_cli.AddOption({[this](const vector<string> &args) {
+        m_gracefulInterrupt = true;
+    }, "--useGracefulInterrupt", "Enable a Tuner feature that lets the user interactively stop tuning and save progress with Ctrl-C"});
+
     m_compilerTuning->InitCLIOptions(m_cli);
 }
 
@@ -362,6 +366,8 @@ void ExampleBase::InitTuner() {
     }
     m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
+
+    if (m_gracefulInterrupt) m_tuner->SetUseGracefulInterrupt(true);
 
     CheckTunerFlags();
 }

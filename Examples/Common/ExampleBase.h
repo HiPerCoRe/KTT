@@ -79,6 +79,7 @@ protected:
     bool m_rapidTest = false;
     bool m_useDynamicTuning = false;
     bool m_checkpointTuning = false;
+    bool m_gracefulInterrupt = false;
     uint64_t m_checkpointTuningIterations = 0;
     double m_dynamicTuningTime = 0;
     std::unique_ptr<ktt::Searcher> m_searcher;
