@@ -46,9 +46,10 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         stopCondition->Initialize(configurationsCount);
     }
 
+    InterruptHandler interruptHandler;
     if (m_useGracefulInterrupt)
     {
-        InterruptHandler::RegisterHandler();
+        interruptHandler.Register();
     }
 
     std::vector<KernelResult> results;
@@ -101,9 +102,6 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         {
             break;
         }
-    }
-    if (m_useGracefulInterrupt) {
-        InterruptHandler::UnregisterHandler();
     }
 
     Logger::LogInfo("Ending " + tuningMode + " tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "

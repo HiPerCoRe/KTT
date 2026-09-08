@@ -1,13 +1,23 @@
+#pragma once
+
 #include <atomic>
 
-class InterruptHandler 
+class InterruptHandler
 {
 public:
+    InterruptHandler() = default;
+    ~InterruptHandler();
+
+    void Register();
     static bool GetShouldInterrupt();
-    static void RegisterHandler();
-    static void UnregisterHandler();
+    static void ResetShouldInterrupt();
+
 private:
+    void Unregister();
     static void HandleInterrupt(int signal);
-    static void (*m_oldHandler)(int);
+
+    bool m_registered = false;
+    void (*m_oldHandler)(int) = nullptr;
+    bool m_oldShouldInterrupt = false;
     static std::atomic<bool> m_shouldInterrupt;
 };
