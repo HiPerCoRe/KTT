@@ -1,7 +1,9 @@
-#include "InterruptHandler.h"
+#include "Api/StopCondition/InterruptSignal.h"
+#include "Api/Output/KernelResult.h"
 #include "Utility/Logger/Logger.h"
 #include <cassert>
 #include <cerrno>
+#include <cstdint>
 #include <cstring>
 #include <string>
 #include <csignal>
@@ -9,17 +11,19 @@
 using namespace std;
 using namespace ktt;
 
-atomic<bool> InterruptHandler::m_shouldInterrupt = false;
+atomic<bool> InterruptSignal::m_shouldInterrupt = false;
 
-InterruptHandler::~InterruptHandler()
+InterruptSignal::~InterruptSignal()
 {
     Unregister();
 }
 
-void InterruptHandler::Register()
+void InterruptSignal::Initialize(const uint64_t)
 {
     if (m_registered)
     {
+        ResetShouldInterrupt();
+        Logger::LogWarning("Attempted double InterruptSignal initialization. Resetting instead.");
         return;
     }
 
@@ -34,7 +38,7 @@ void InterruptHandler::Register()
     if (m_oldHandler == SIG_IGN)
     {
         signal(SIGINT, SIG_IGN);  // Conventionally, if parent ignored signal, it should stay ignored
-        Logger::LogWarning("SIGINT was ignored before this call, not installing handler.");
+        Logger::LogWarning("SIGINT had been ignored before this call, not installing handler.");
         return;
     }
     m_oldShouldInterrupt = m_shouldInterrupt;
@@ -43,7 +47,7 @@ void InterruptHandler::Register()
     m_registered = true;
 }
 
-void InterruptHandler::Unregister()
+void InterruptSignal::Unregister()
 {
     if (!m_registered || m_oldHandler == SIG_ERR)
     {
@@ -54,17 +58,24 @@ void InterruptHandler::Unregister()
     m_shouldInterrupt = m_oldShouldInterrupt;
 }
 
-bool InterruptHandler::GetShouldInterrupt()
+bool InterruptSignal::IsFulfilled() const 
 {
     return m_shouldInterrupt;
 }
 
-void InterruptHandler::ResetShouldInterrupt() 
+void InterruptSignal::ResetShouldInterrupt() 
 {
     m_shouldInterrupt = false;
 }
 
-void InterruptHandler::HandleInterrupt(int)
+void InterruptSignal::HandleInterrupt(int)
 {
     m_shouldInterrupt = true;
+}
+
+void InterruptSignal::Update(const KernelResult &) {}
+
+string InterruptSignal::GetStatusString() const 
+{
+    return "Waiting for SIGINT...";
 }
