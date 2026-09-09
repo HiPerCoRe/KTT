@@ -1,5 +1,8 @@
+#include "Api/StopCondition/InterruptSignal.h"
 #include "ExampleReferenceKernel.h"
 #include <memory>
+#include <thread>
+#include <chrono>
 
 using namespace std;
 
@@ -119,13 +122,38 @@ protected:
 
         auto wgSize = [](const vector<uint64_t>& v) {return v[0]*v[1] >= 32;};
         m_tuner->AddConstraint(m_kernel, {"WORK_GROUP_SIZE_X", "WORK_GROUP_SIZE_Y"}, wgSize);
+        m_stopCondition = make_unique<ktt::InterruptSignal>();
     }
 };
 
 int main(int argc, char **argv)
 {
+    {
+    ktt::InterruptSignal sig;
+    sig.Initialize();
+    while(true) 
+    {
+        this_thread::sleep_for(chrono::milliseconds(500));
+        cout << "Wasting time..." << endl;
+        if (sig.IsFulfilled()) break;
+    }
+    sig.Initialize();
+
     unique_ptr<Transpose> transpose = Transpose::Create<Transpose>(
         argc, argv, "Examples/Transpose", "Transpose", "TransposeReference"
     );
     transpose->Run();
+
+    while(true) 
+    {
+        this_thread::sleep_for(chrono::milliseconds(500));
+        cout << "Wasting time..." << endl;
+        if (sig.IsFulfilled()) break;
+    }
+    }
+    while(true) 
+    {
+        this_thread::sleep_for(chrono::milliseconds(500));
+        cout << "Wasting time..." << endl;
+    }
 }
