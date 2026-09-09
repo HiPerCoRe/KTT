@@ -1,4 +1,5 @@
 #include "ExampleBase.h"
+#include "Api/StopCondition/InterruptSignal.h"
 #include "Utility/Logger/Logger.h"
 #include <assert.h>
 #include <memory>
@@ -273,7 +274,17 @@ void ExampleBase::InitCLI() {
     "<pathToModel>", 1});
 
     m_cli.AddOption({[this](const vector<string> &args) {
-        if (args[0] == "confs") {
+        if (args[0] == "sigint") {
+            m_stopCondition = make_unique<ktt::InterruptSignal>();
+            if (args.size() != 1) {
+                CliOption::PrintArgCountRangeError("--stopCondition sigint", 1, 1);
+                exit(1);
+            }
+            // ignore args[1]
+        } else if (args.size() != 2) {
+                CliOption::PrintArgCountRangeError("--stopCondition <not sigint>", 2, 2);
+            exit(1);
+        } else if (args[0] == "confs") {
             m_stopCondition = make_unique<ktt::ConfigurationCount>(stoul(args[1]));
         } else if (args[0] == "fails") {
             m_stopCondition = make_unique<ktt::FailureCount>(stoul(args[1]));
@@ -286,10 +297,12 @@ void ExampleBase::InitCLI() {
             exit(1);
         }
     }, "--stopCondition", 
-    "Set a stop condition. <type> can be confs, fails, time, best. "
+    "Set a stop condition. <type> can be confs, fails, time, best, sigint. "
     "<limit> is respectively configuration count (ulong), failed kernel run count (ulong), "
-    "total tuning duration in seconds (double), best configuration duration in milliseconds (double).",
-    "<type> <limit>", 2});
+    "total tuning duration in seconds (double), best configuration duration in "
+    "milliseconds (double), and for sigint write -1 (it is required, but ignored "
+    "due to the way the CLI is structured)",
+    "<type> <limit>", 2, 1});
 
     m_cli.AddOption({[this](const vector<string> &args) {
         m_preciseParams = ktt::PreciseMeasurementParameters(stoul(args[0]),
@@ -346,10 +359,6 @@ void ExampleBase::InitCLI() {
     " Each checkpoint overwrites the previous one, into Checkpoint.json,"
     " as doing otherwise would duplicate previously saved data.", "<iterations>", 1});
 
-    m_cli.AddOption({[this](const vector<string> &) {
-        m_gracefulInterrupt = true;
-    }, "--useGracefulInterrupt", "Enable a Tuner feature that lets the user interactively stop tuning and save progress with Ctrl-C"});
-
     m_compilerTuning->InitCLIOptions(m_cli);
 }
 
@@ -366,8 +375,6 @@ void ExampleBase::InitTuner() {
     }
     m_tuner->SetGlobalSizeType(ktt::GlobalSizeType::CUDA);
     m_tuner->SetTimeUnit(ktt::TimeUnit::Microseconds);
-
-    if (m_gracefulInterrupt) m_tuner->SetUseGracefulInterrupt(true);
 
     CheckTunerFlags();
 }
@@ -423,12 +430,12 @@ void ExampleBase::UseCompilerTuning()
     m_compilerTuning = make_unique<CompilerTuningComponent>(m_tuner, m_kernel);
 }
 
-void ExampleBase::UseInputSizeOption(int numDimensions, ktt::DimensionVector &inputSize)
+void ExampleBase::UseInputSizeOption(size_t numDimensions, ktt::DimensionVector &inputSize)
 {
     assert(numDimensions > 0 && numDimensions <= 3);
     m_cli.AddOption(CliOption({[&inputSize, numDimensions](const vector<string> &args){
         ktt::ModifierDimension dims[] = {ktt::ModifierDimension::X, ktt::ModifierDimension::Y, ktt::ModifierDimension::Z};
-        for (int i = 0; i < numDimensions; ++i) {
+        for (size_t i = 0; i < numDimensions; ++i) {
             inputSize.SetSize(dims[i], stoul(args[i]));
         }
     }, "--inputSize", "Set input size, expects " + to_string(numDimensions) + " int" + (numDimensions > 1 ? "s." : "."),

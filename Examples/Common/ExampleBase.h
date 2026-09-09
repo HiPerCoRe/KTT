@@ -79,7 +79,6 @@ protected:
     bool m_rapidTest = false;
     bool m_useDynamicTuning = false;
     bool m_checkpointTuning = false;
-    bool m_gracefulInterrupt = false;
     uint64_t m_checkpointTuningIterations = 0;
     double m_dynamicTuningTime = 0;
     std::unique_ptr<ktt::Searcher> m_searcher;
@@ -155,7 +154,7 @@ protected:
       * @param numDimensions Number of dimensions that the input has.
       * @param inputSize A reference to ktt::DimensionVector which will be modified depending on user input.
       */
-    void UseInputSizeOption(int numDimensions, ktt::DimensionVector &inputSize);
+    void UseInputSizeOption(size_t numDimensions, ktt::DimensionVector &inputSize);
 
     /** @fn Helper method that fills buffers of a numerical type with random values from a uniform distribution.
       * @param buffers The buffers to be filled.
