@@ -18,7 +18,9 @@ Showcases basic features that will likely be involved in nearly every project.
 Showcases features that are good to know about, but might not be necessary for all projects.
 - KernelRunning: Shows that KTT can also run kernels <!-- TODO: Merge with dynamic tuning? -->
 
-<!-- TODO: dynamic tuning, groups, kernel launcher, composite kernel, searchers, compiler tuning, compiler options -->
+<!-- TODO: dynamic tuning, groups, kernel launcher, composite kernel, searchers, compiler tuning, compiler options, 
+           precise measurement (advanced?), power consumption optimization (advanced?), processing kernel results
+-->
 
 ## Advanced
 Showcases features that are unlikely to be necessary, but possibly useful for more advanced projects. 
