@@ -6,10 +6,12 @@
 
 using namespace std;
 
-CliOption::CliOption(function<void (const vector<string> &)> callback, const string &trigger, const string &description,
-              const string &argumentDescriptions, const int argumentCount)
+CliOption::CliOption(function<void (const vector<string> &)> callback, const string &trigger, 
+                     const string &description, const string &argumentDescriptions,
+                     const size_t argumentCount, optional<size_t> minArgumentCount)
         : m_callback(callback), m_trigger(trigger), m_description(description),
-          m_argumentDescriptions(argumentDescriptions), m_argumentCount(argumentCount)
+          m_argumentDescriptions(argumentDescriptions), m_argumentCount(argumentCount),
+          m_minArgumentCount(minArgumentCount.value_or(argumentCount))
 {
 }
 
@@ -18,17 +20,33 @@ string CliOption::get_string() const
     return m_trigger + " " + m_argumentDescriptions + "\n\t" + m_description;
 }
 
+void CliOption::PrintArgCountRangeError(string trigger, int low, int high) 
+{
+    assert(low <= high);
+    string range;
+    if (low == high) range = to_string(low);
+    else range = to_string(low) + "-" + to_string(high);
+    cerr << trigger << " expects " + range + " argument(s) to be passed!" << endl;
+}
+
 bool CliOption::TryTrigger(int argc, char **argv, int &i) const {
     assert(i < argc);
     if (argv[i] != m_trigger) return false;
-    if (i + m_argumentCount >= argc)
+    if (i + m_minArgumentCount >= static_cast<size_t>(argc))
     {
-        cerr << m_trigger << " expects a value to be passed!" << endl;
+        PrintArgCountRangeError(m_trigger, m_minArgumentCount, m_argumentCount);
         exit(1);
     }
     vector<string> arguments;
-    for (int j = 0; j < m_argumentCount; ++j) {
-        arguments.push_back(argv[++i]);
+    ++i;
+    while (i < argc && string(argv[i]).find("--") != 0) {
+        arguments.push_back(argv[i]);
+        ++i;
+    }
+    if (arguments.size() < m_minArgumentCount || arguments.size() > m_argumentCount)
+    {
+        PrintArgCountRangeError(m_trigger, m_minArgumentCount, m_argumentCount);
+        exit(1);
     }
     m_callback(arguments);
     return true;
