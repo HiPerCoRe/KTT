@@ -19,7 +19,7 @@ const std::string kernelPrefix = "../";
 
 int main(int argc, char** argv)
 {
-    std::string kernelFile = kernelPrefix + "../Tutorials/05ComputeApiInitializer/OpenClKernel.cl";
+    std::string kernelFile = kernelPrefix + "../Tutorials/03Advanced/05ComputeApiInitializer/OpenClKernel.cl";
 
     if (argc >= 2)
     {

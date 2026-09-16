@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 {
     // Initialize device index and path to kernel.
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = kernelPrefix + "../Tutorials/02KernelRunning/CudaKernel.cu";
+    std::string kernelFile = kernelPrefix + "../Tutorials/02Intermediate/02KernelRunning/CudaKernel.cu";
 
     if (argc >= 2)
     {

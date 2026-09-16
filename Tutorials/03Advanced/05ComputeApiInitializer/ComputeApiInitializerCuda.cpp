@@ -19,7 +19,7 @@ const std::string kernelPrefix = "../";
 
 int main(int argc, char** argv)
 {
-    std::string kernelFile = kernelPrefix + "../Tutorials/05ComputeApiInitializer/CudaKernel.cu";
+    std::string kernelFile = kernelPrefix + "../Tutorials/03Advanced/05ComputeApiInitializer/CudaKernel.cu";
 
     if (argc >= 2)
     {

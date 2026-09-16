@@ -18,7 +18,7 @@ const std::string kernelPrefix = "../";
 int main(int argc, char** argv)
 {
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = kernelPrefix + "../Tutorials/03KernelTuning/CudaKernel.cu";
+    std::string kernelFile = kernelPrefix + "../Tutorials/01Basic/03KernelTuning/CudaKernel.cu";
 
     if (argc >= 2)
     {

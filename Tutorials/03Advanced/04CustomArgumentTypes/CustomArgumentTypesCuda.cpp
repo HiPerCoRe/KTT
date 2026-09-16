@@ -42,7 +42,7 @@ bool CompareData(const void* resultPointer, const void* referencePointer)
 int main(int argc, char** argv)
 {
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = kernelPrefix + "../Tutorials/04CustomArgumentTypes/CudaKernel.cu";
+    std::string kernelFile = kernelPrefix + "../Tutorials/03Advanced/04CustomArgumentTypes/CudaKernel.cu";
 
     if (argc >= 2)
     {

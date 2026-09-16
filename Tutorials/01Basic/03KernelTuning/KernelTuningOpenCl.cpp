@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 {
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = kernelPrefix + "../Tutorials/03KernelTuning/OpenClKernel.cl";
+    std::string kernelFile = kernelPrefix + "../Tutorials/01Basic/03KernelTuning/OpenClKernel.cl";
 
     if (argc >= 2)
     {

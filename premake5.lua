@@ -589,38 +589,38 @@ if openClProjects then
 
 project "01InfoOpenCl"
     kind "ConsoleApp"
-    files {"Tutorials/01ComputeApiInfo/ComputeApiInfoOpenCl.cpp"}
+    files {"Tutorials/01Basic/01ComputeApiInfo/ComputeApiInfoOpenCl.cpp"}
     includedirs {"Source"}
     links {"ktt"}
 
 project "02KernelRunningOpenCl"
     kind "ConsoleApp"
-    files {"Tutorials/02KernelRunning/KernelRunningOpenCl.cpp", "Tutorials/02KernelRunning/OpenClKernel.cl"}
+    files {"Tutorials/02Intermediate/02KernelRunning/KernelRunningOpenCl.cpp", "Tutorials/02Intermediate/02KernelRunning/OpenClKernel.cl"}
     includedirs {"Source"}
     links {"ktt"}
 
 project "03KernelTuningOpenCl"
     kind "ConsoleApp"
-    files {"Tutorials/03KernelTuning/KernelTuningOpenCl.cpp", "Tutorials/03KernelTuning/OpenClKernel.cl"}
+    files {"Tutorials/01Basic/03KernelTuning/KernelTuningOpenCl.cpp", "Tutorials/01Basic/03KernelTuning/OpenClKernel.cl"}
     includedirs {"Source"}
     links {"ktt"}
 
 project "04CustomArgumentTypesOpenCl"
     kind "ConsoleApp"
-    files {"Tutorials/04CustomArgumentTypes/CustomArgumentTypesOpenCl.cpp", "Tutorials/04CustomArgumentTypes/OpenClKernel.cl"}
+    files {"Tutorials/03Advanced/04CustomArgumentTypes/CustomArgumentTypesOpenCl.cpp", "Tutorials/03Advanced/04CustomArgumentTypes/OpenClKernel.cl"}
     includedirs {"Source"}
     links {"ktt"}
 
 project "05ComputeApiInitializerOpenCl"
     kind "ConsoleApp"
-    files {"Tutorials/05ComputeApiInitializer/ComputeApiInitializerOpenCl.cpp", "Tutorials/05ComputeApiInitializer/OpenClKernel.cl"}
+    files {"Tutorials/03Advanced/05ComputeApiInitializer/ComputeApiInitializerOpenCl.cpp", "Tutorials/03Advanced/05ComputeApiInitializer/OpenClKernel.cl"}
     includedirs {"Source"}
     links {"ktt"}
     linkComputeLibraries()
 
 project "06VectorArgumentCustomizationOpenCl"
     kind "ConsoleApp"
-    files {"Tutorials/06VectorArgumentCustomization/VectorArgumentCustomizationOpenCl.cpp", "Tutorials/06VectorArgumentCustomization/OpenClKernel.cl"}
+    files {"Tutorials/03Advanced/06VectorArgumentCustomization/VectorArgumentCustomizationOpenCl.cpp", "Tutorials/03Advanced/06VectorArgumentCustomization/OpenClKernel.cl"}
     includedirs {"Source"}
     links {"ktt"}
     
@@ -630,38 +630,38 @@ if cudaProjects then
 
 project "01InfoCuda"
     kind "ConsoleApp"
-    files {"Tutorials/01ComputeApiInfo/ComputeApiInfoCuda.cpp"}
+    files {"Tutorials/01Basic/01ComputeApiInfo/ComputeApiInfoCuda.cpp"}
     includedirs {"Source"}
     links {"ktt"}
     
 project "02KernelRunningCuda"
     kind "ConsoleApp"
-    files {"Tutorials/02KernelRunning/KernelRunningCuda.cpp", "Tutorials/02KernelRunning/CudaKernel.cu"}
+    files {"Tutorials/02Intermediate/02KernelRunning/KernelRunningCuda.cpp", "Tutorials/02Intermediate/02KernelRunning/CudaKernel.cu"}
     includedirs {"Source"}
     links {"ktt"}
     
 project "03KernelTuningCuda"
     kind "ConsoleApp"
-    files {"Tutorials/03KernelTuning/KernelTuningCuda.cpp", "Tutorials/03KernelTuning/CudaKernel.cu"}
+    files {"Tutorials/01Basic/03KernelTuning/KernelTuningCuda.cpp", "Tutorials/01Basic/03KernelTuning/CudaKernel.cu"}
     includedirs {"Source"}
     links {"ktt"}
-    
+
 project "04CustomArgumentTypesCuda"
     kind "ConsoleApp"
-    files {"Tutorials/04CustomArgumentTypes/CustomArgumentTypesCuda.cpp", "Tutorials/04CustomArgumentTypes/CudaKernel.cu"}
+    files {"Tutorials/03Advanced/04CustomArgumentTypes/CustomArgumentTypesCuda.cpp", "Tutorials/03Advanced/04CustomArgumentTypes/CudaKernel.cu"}
     includedirs {"Source"}
     links {"ktt"}
 
 project "05ComputeApiInitializerCuda"
     kind "ConsoleApp"
-    files {"Tutorials/05ComputeApiInitializer/ComputeApiInitializerCuda.cpp", "Tutorials/05ComputeApiInitializer/CudaKernel.cu"}
+    files {"Tutorials/03Advanced/05ComputeApiInitializer/ComputeApiInitializerCuda.cpp", "Tutorials/03Advanced/05ComputeApiInitializer/CudaKernel.cu"}
     includedirs {"Source"}
     links {"ktt"}
     linkComputeLibraries()
 
 project "06VectorArgumentCustomizationCuda"
     kind "ConsoleApp"
-    files {"Tutorials/06VectorArgumentCustomization/VectorArgumentCustomizationCuda.cpp", "Tutorials/06VectorArgumentCustomization/CudaKernel.cu"}
+    files {"Tutorials/03Advanced/06VectorArgumentCustomization/VectorArgumentCustomizationCuda.cpp", "Tutorials/03Advanced/06VectorArgumentCustomization/CudaKernel.cu"}
     includedirs {"Source"}
     links {"ktt"}
 
@@ -671,19 +671,19 @@ if vulkanProjects then
 
 project "01InfoVulkan"
     kind "ConsoleApp"
-    files {"Tutorials/01ComputeApiInfo/ComputeApiInfoVulkan.cpp"}
+    files {"Tutorials/01Basic/01ComputeApiInfo/ComputeApiInfoVulkan.cpp"}
     includedirs {"Source"}
     links {"ktt"}
     
 project "02KernelRunningVulkan"
     kind "ConsoleApp"
-    files {"Tutorials/02KernelRunning/KernelRunningVulkan.cpp", "Tutorials/02KernelRunning/VulkanKernel.glsl"}
+    files {"Tutorials/02Intermediate/02KernelRunning/KernelRunningVulkan.cpp", "Tutorials/02Intermediate/02KernelRunning/VulkanKernel.glsl"}
     includedirs {"Source"}
     links {"ktt"}
     
 project "03KernelTuningVulkan"
     kind "ConsoleApp"
-    files {"Tutorials/03KernelTuning/KernelTuningVulkan.cpp", "Tutorials/03KernelTuning/VulkanKernel.glsl"}
+    files {"Tutorials/01Basic/03KernelTuning/KernelTuningVulkan.cpp", "Tutorials/01Basic/03KernelTuning/VulkanKernel.glsl"}
     includedirs {"Source"}
     links {"ktt"}
     
