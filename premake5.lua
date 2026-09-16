@@ -605,6 +605,12 @@ project "03KernelTuningOpenCl"
     includedirs {"Source"}
     links {"ktt"}
 
+project "03StopConditionsOpenCl"
+    kind "ConsoleApp"
+    files {"Tutorials/01Basic/03StopConditions/StopConditionsOpenCl.cpp", "Tutorials/01Basic/03StopConditions/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
+
 project "04CustomArgumentTypesOpenCl"
     kind "ConsoleApp"
     files {"Tutorials/03Advanced/04CustomArgumentTypes/CustomArgumentTypesOpenCl.cpp", "Tutorials/03Advanced/04CustomArgumentTypes/OpenClKernel.cl"}

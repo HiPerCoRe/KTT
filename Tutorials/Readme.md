@@ -11,8 +11,11 @@ Showcases basic features that will likely be involved in nearly every project.
 - KernelTuning: Basic kernel tuning tutorial; shows kernel arguments, reference computation, 
     tuning parameters, thread modifiers, and offline tuning. Has versions with C++ host code for tuning CUDA, OpenCL, and Vulkan,
     with Python host code for tuning CUDA, and with a JSON script for tuning CUDA.  <!-- TODO: split this? -->
+- StopConditions: Showcases the use of stop conditions on a very simple kernel. Includes a union stop condition.
 
-<!-- TODO: tuning constraints, stop conditions, cpp tuning(? if there's already python), debugging methods(?) -->
+<!-- TODO: tuning constraints, stop conditions, cpp tuning(? if there's already python), debugging methods(?)
+            TC: simplified Transpose that makes sure that area of tile is >= 32?
+-->
 
 ## Intermediate
 Showcases features that are good to know about, but might not be necessary for all projects.
@@ -20,6 +23,8 @@ Showcases features that are good to know about, but might not be necessary for a
 
 <!-- TODO: dynamic tuning, groups, kernel launcher, composite kernel, searchers, compiler tuning, compiler options, 
            precise measurement (advanced?), power consumption optimization (advanced?), processing kernel results
+           - groups, kernel launcher, composite can be in one file
+           - searcher: choose a premade one
 -->
 
 ## Advanced
