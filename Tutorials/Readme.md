@@ -7,13 +7,13 @@ Most are written in multiple versions -- C++ host code with a Cuda/OpenCL kernel
 
 ## Basic
 Showcases basic features that will likely be involved in nearly every project.
-- ComputeApiInfo: Sanity check that KTT is working correctly and can access the accelerator devices.
+- ComputeApiInfo: Sanity check that KTT is working correctly and can access the accelerator devices. <!-- modify so it just initializes tuner -->
 - KernelTuning: Basic kernel tuning tutorial; shows kernel arguments, reference computation, 
     tuning parameters, thread modifiers, and offline tuning. Has versions with C++ host code for tuning CUDA, OpenCL, and Vulkan,
     with Python host code for tuning CUDA, and with a JSON script for tuning CUDA.  <!-- TODO: split this? -->
 - StopConditions: Showcases the use of stop conditions on a very simple kernel. Includes a union stop condition.
 
-<!-- TODO: tuning constraints, stop conditions, cpp tuning(? if there's already python), debugging methods(?)
+<!-- TODO: tuning constraints, debugging methods(?) (show logging level), showcase multiple backends in one file
             TC: simplified Transpose that makes sure that area of tile is >= 32?
 -->
 
@@ -21,10 +21,10 @@ Showcases basic features that will likely be involved in nearly every project.
 Showcases features that are good to know about, but might not be necessary for all projects.
 - KernelRunning: Shows that KTT can also run kernels <!-- TODO: Merge with dynamic tuning? -->
 
-<!-- TODO: dynamic tuning, groups, kernel launcher, composite kernel, searchers, compiler tuning, compiler options, 
-           precise measurement (advanced?), power consumption optimization (advanced?), processing kernel results
+<!-- TODO: dynamic tuning, (kernel launcher, (groups, composite kernel -- mozna oddelit)), (compiler tuning, compiler options), 
+            processing kernel results, database stuff
            - groups, kernel launcher, composite can be in one file
-           - searcher: choose a premade one
+           - searcher: choose a premade one (try profiling searcher?)
 -->
 
 ## Advanced
@@ -42,6 +42,7 @@ Mostly customization of things usually hidden in KTT's internals.
     to KTT, e.g. to define a custom searcher or stop condition.
 - ProfileBasedSearcher: Shows a custom Python searcher that guides the search using profiling counters -- it periodically re-runs
     the best configuration with profiling enabled, and uses an ML model to predict profiling counters and score
-    the remaining tuning space configurations. (Demonstrated on a real application kernel.)
+    the remaining tuning space configurations. (Demonstrated on a real application kernel.) <!-- maybe drop -->
 
-<!-- TODO: custom searcher, stop condition, simulated tuning(?) etc -->
+<!-- TODO: custom searcher, stop condition, simulated tuning(?) -- when writing your own searcher you can easily see how fast it converges
+    precise measurement (advanced?), power consumption optimization (advanced?), etc -->
