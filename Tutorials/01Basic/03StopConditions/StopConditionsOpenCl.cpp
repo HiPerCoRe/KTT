@@ -1,8 +1,9 @@
-// KTT tutorial demonstrating kernel setup and tuning via KTT
+// KTT tutorial demonstrating stop conditions.
 // Users are recommended to start with KTT Introductory guide
 // at https://github.com/HiPerCoRe/KTT/blob/master/OnboardingGuide.md
 // before reading the tutorial's code.
 
+#include "Api/Searcher/RandomSearcher.h"
 #include "Api/StopCondition/InterruptSignal.h"
 #include "Api/StopCondition/StopCondition.h"
 #include "Api/StopCondition/TuningDuration.h"
@@ -22,6 +23,9 @@ const std::string kernelPrefix = "../";
 
 int main(int argc, char** argv)
 {
+    /******************************************************
+        Beginning of code identical to previous tutorial
+    ******************************************************/
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
     std::string kernelFile = kernelPrefix + "../Tutorials/01Basic/03StopConditions/OpenClKernel.cl";
@@ -77,8 +81,11 @@ int main(int argc, char** argv)
         param_values[i] = exp;
         exp *= 2;
     }
+    /******************************************************
+        End of identical code
+    ******************************************************/
 
-    // Set up tuning space. See KernelTuning for explanation.
+    // Modified from the previous tutorial to make tuning slower, so the effect of stop conditions is visible.
     tuner.AddParameter(kernel, "multiply_work_group_size", param_values);
     tuner.AddParameter(kernel, "REPETITIONS", std::vector<uint64_t>{2500, 5000, 10000});
     tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X, "multiply_work_group_size",
@@ -86,11 +93,17 @@ int main(int argc, char** argv)
 
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
 
+    // KTT stop conditions stop the tuning process when they are fulfilled. InterruptSignal stops when the program catches SIGINT,
+    // TuningDuration stops after N seconds have passed, and UnionCondition stops when any one of its components is fulfilled.
     std::vector<std::shared_ptr<ktt::StopCondition>> unionedConditions = {
         std::make_shared<ktt::InterruptSignal>(),
         std::make_shared<ktt::TuningDuration>(30),
     };
     std::unique_ptr<ktt::StopCondition> condition = std::make_unique<ktt::UnionCondition>(unionedConditions);
+
+    // The default deterministic searcher changes some variables faster than others, so in an incomplete search large "continuous"
+    // parts of the tuning space might not be explored at all. RandomSearcher ensures uniform exploration.
+    tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
 
     const std::vector<ktt::KernelResult> results = tuner.Tune(kernel, std::move(condition));
 
