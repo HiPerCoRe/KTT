@@ -12,9 +12,10 @@ Showcases basic features that will likely be involved in nearly every project.
     tuning parameters, thread modifiers, and offline tuning. Has versions with C++ host code for tuning CUDA, OpenCL, and Vulkan,
     with Python host code for tuning CUDA, and with a JSON script for tuning CUDA.  <!-- TODO: split this? -->
 - StopConditions: Showcases the use of stop conditions on a very simple kernel. Includes a union stop condition.
+- TuningConstraints: Showcases the use of tuning constraints to filter out configurations that would fail or be suboptimal,
+    demonstrated on a matrix transpose kernel with work-group size constrained through two tuning parameters.
 
-<!-- TODO: tuning constraints, debugging methods(?) (show logging level), showcase multiple backends in one file
-            TC: simplified Transpose that makes sure that area of tile is >= 32?
+<!-- TODO: debugging methods(?) (show logging level), showcase multiple backends in one file
 -->
 
 ## Intermediate

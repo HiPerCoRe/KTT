@@ -611,6 +611,12 @@ project "03StopConditionsOpenCl"
     includedirs {"Source"}
     links {"ktt"}
 
+project "03TuningConstraintsOpenCl"
+    kind "ConsoleApp"
+    files {"Tutorials/01Basic/03TuningConstraints/TuningConstraintsOpenCl.cpp", "Tutorials/01Basic/03TuningConstraints/OpenClKernel.cl"}
+    includedirs {"Source"}
+    links {"ktt"}
+
 project "04CustomArgumentTypesOpenCl"
     kind "ConsoleApp"
     files {"Tutorials/03Advanced/04CustomArgumentTypes/CustomArgumentTypesOpenCl.cpp", "Tutorials/03Advanced/04CustomArgumentTypes/OpenClKernel.cl"}
