@@ -1,4 +1,5 @@
 #include "ExampleBase.h"
+#include "Api/StopCondition/InterruptSignal.h"
 #include "Utility/Logger/Logger.h"
 #include <assert.h>
 #include <memory>
@@ -273,7 +274,17 @@ void ExampleBase::InitCLI() {
     "<pathToModel>", 1});
 
     m_cli.AddOption({[this](const vector<string> &args) {
-        if (args[0] == "confs") {
+        if (args[0] == "sigint") {
+            m_stopCondition = make_unique<ktt::InterruptSignal>();
+            if (args.size() != 1) {
+                CliOption::PrintArgCountRangeError("--stopCondition sigint", 1, 1);
+                exit(1);
+            }
+            // ignore args[1]
+        } else if (args.size() != 2) {
+                CliOption::PrintArgCountRangeError("--stopCondition <not sigint>", 2, 2);
+            exit(1);
+        } else if (args[0] == "confs") {
             m_stopCondition = make_unique<ktt::ConfigurationCount>(stoul(args[1]));
         } else if (args[0] == "fails") {
             m_stopCondition = make_unique<ktt::FailureCount>(stoul(args[1]));
@@ -286,10 +297,12 @@ void ExampleBase::InitCLI() {
             exit(1);
         }
     }, "--stopCondition", 
-    "Set a stop condition. <type> can be confs, fails, time, best. "
+    "Set a stop condition. <type> can be confs, fails, time, best, sigint. "
     "<limit> is respectively configuration count (ulong), failed kernel run count (ulong), "
-    "total tuning duration in seconds (double), best configuration duration in milliseconds (double).",
-    "<type> <limit>", 2});
+    "total tuning duration in seconds (double), best configuration duration in "
+    "milliseconds (double), and for sigint write -1 (it is required, but ignored "
+    "due to the way the CLI is structured)",
+    "<type> <limit>", 2, 1});
 
     m_cli.AddOption({[this](const vector<string> &args) {
         m_preciseParams = ktt::PreciseMeasurementParameters(stoul(args[0]),
@@ -369,15 +382,15 @@ void ExampleBase::InitTuner() {
 void ExampleBase::CheckTunerFlags() 
 {
     if (m_tuner == nullptr) return;
-    string compilerOptions = "";
+    m_tuner->SetCompilerOptions("");
     if (m_useFastMath) {
         if (m_computeApi == ktt::ComputeApi::OpenCL)
         {
-            compilerOptions += "-cl-fast-relaxed-math ";
+            m_tuner->AddCompilerOptions("-cl-fast-relaxed-math ");
         }
         else if (m_computeApi == ktt::ComputeApi::CUDA)
         {
-            compilerOptions += "-use_fast_math ";
+            m_tuner->AddCompilerOptions("-use_fast_math ");
         }
         else if (!m_warnedFastMath)  // Don't warn twice
         {
@@ -390,7 +403,7 @@ void ExampleBase::CheckTunerFlags()
     if (m_useOpenMP) {
         if (m_computeApi == ktt::ComputeApi::Cpp)
         {
-            compilerOptions += "-march=native -fopenmp ";
+            m_tuner->AddCompilerOptions("-march=native -fopenmp ");
         }
         else if (!m_warnedOpenMP)
         {
@@ -398,7 +411,6 @@ void ExampleBase::CheckTunerFlags()
             cerr << "Warning: UseOpenMP ignored -- only makes sense for C++\n";
         }
     }
-    m_tuner->SetCompilerOptions(compilerOptions);
 }
 
 void ExampleBase::UseFastMath()
@@ -418,12 +430,12 @@ void ExampleBase::UseCompilerTuning()
     m_compilerTuning = make_unique<CompilerTuningComponent>(m_tuner, m_kernel);
 }
 
-void ExampleBase::UseInputSizeOption(int numDimensions, ktt::DimensionVector &inputSize)
+void ExampleBase::UseInputSizeOption(size_t numDimensions, ktt::DimensionVector &inputSize)
 {
     assert(numDimensions > 0 && numDimensions <= 3);
     m_cli.AddOption(CliOption({[&inputSize, numDimensions](const vector<string> &args){
         ktt::ModifierDimension dims[] = {ktt::ModifierDimension::X, ktt::ModifierDimension::Y, ktt::ModifierDimension::Z};
-        for (int i = 0; i < numDimensions; ++i) {
+        for (size_t i = 0; i < numDimensions; ++i) {
             inputSize.SetSize(dims[i], stoul(args[i]));
         }
     }, "--inputSize", "Set input size, expects " + to_string(numDimensions) + " int" + (numDimensions > 1 ? "s." : "."),
