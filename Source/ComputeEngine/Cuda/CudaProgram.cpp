@@ -1,7 +1,6 @@
 #ifdef KTT_API_CUDA
 
-#include <algorithm>
-#include <regex>
+#include <sstream>
 #include <vector>
 #include <cuda.h>
 
@@ -49,20 +48,19 @@ void CudaProgram::Build(const std::string& compilerOptions) const
         CheckError(nvrtcAddNameExpression(m_Program, argument->GetSymbolName().c_str()), "nvrtcAddNameExpression");
     }
     
-    std::vector<std::string> individualOptions;
-    std::vector<const char*> individualOptionsChar;
+    std::vector<std::string> individualOptions;  // necessary to store the c_str() contents
+    std::vector<const char*> individualOptionsChar;  // just pointers, does not store anything
 
+    // TODO: Handle quotes as well?
     if (!compilerOptions.empty())
     {
-        std::regex separator(" ");
-        std::sregex_token_iterator iterator(compilerOptions.begin(), compilerOptions.end(), separator, -1);
-        std::copy(iterator, std::sregex_token_iterator(), std::back_inserter(individualOptions));
-
-        std::transform(individualOptions.begin(), individualOptions.end(), std::back_inserter(individualOptionsChar),
-            [](const std::string& sourceString)
+        std::istringstream optionsStream(compilerOptions);
+        std::string word;
+        while (optionsStream >> word) 
         {
-            return sourceString.data();
-        });
+            individualOptions.push_back(word);
+            individualOptionsChar.push_back(individualOptions.back().c_str());
+        }
     }
 
     const nvrtcResult result = nvrtcCompileProgram(m_Program, static_cast<int>(individualOptionsChar.size()),
