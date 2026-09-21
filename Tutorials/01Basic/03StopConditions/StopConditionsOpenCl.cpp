@@ -24,7 +24,7 @@ const std::string kernelPrefix = "../";
 int main(int argc, char** argv)
 {
     /******************************************************
-        Beginning of code identical to previous tutorial
+        Beginning of code identical to KernelTuning
     ******************************************************/
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;

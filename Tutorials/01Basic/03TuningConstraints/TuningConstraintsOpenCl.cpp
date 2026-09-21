@@ -17,6 +17,9 @@ const std::string kernelPrefix = "../";
 
 int main(int argc, char** argv)
 {
+    /******************************************************
+        Beginning of code similar to KernelTuning
+    ******************************************************/
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
     std::string kernelFile = kernelPrefix + "../Tutorials/01Basic/03TuningConstraints/OpenClKernel.cl";
@@ -73,6 +76,9 @@ int main(int argc, char** argv)
             }
         }
     });
+    /******************************************************
+        End of similar code
+    ******************************************************/
 
     // Work-group size in each dimension will be controlled by tuning parameters with values 1, 2, 4, ..., 512. Without any
     // constraints this gives 100 combinations of work-group sizes, most of which are either impractical or clearly suboptimal.

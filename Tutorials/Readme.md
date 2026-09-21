@@ -5,6 +5,8 @@ and the likelyhood of being necessary for a typical project.
 Each tutorial is a self-contained project. 
 Most are written in multiple versions -- C++ host code with a Cuda/OpenCL kernel, Python host code, etc.
 
+Tutorial projects have comments that delimit which parts of the code are similar to a different tutorial and which are unique.
+
 ## Basic
 Showcases basic features that will likely be involved in nearly every project.
 - ComputeApiInfo: Sanity check that KTT is working correctly and can access the accelerator devices. <!-- modify so it just initializes tuner -->
