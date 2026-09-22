@@ -1,0 +1,43 @@
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+
+#define STRINGIFY(x) #x
+#define EXPAND_AND_STRINGIFY(x) STRINGIFY(x)
+
+#define DO_PRAGMA(x) _Pragma(#x)
+
+extern "C" void vectorAddition(void **buffers, size_t *sizes)
+{
+    // Below code is largely copied from the example in the onboarding
+    // guide.
+
+    // Get element count from first vector argument's size.
+    // !NOTE! the need for division by sizeof(float)
+    size_t count = sizes[0] / sizeof(float);
+
+    // Access vector arguments
+    const float* a = static_cast<const float*>(buffers[0]);
+    const float* b = static_cast<const float*>(buffers[1]);
+    float* result = static_cast<float*>(buffers[2]);
+
+    // Reinterpret the size_t scalar value as float
+    // The scalar was passed as size_t (64-bit), but contains the bit pattern of a float (32-bit)
+    // We take the lower 32 bits and reinterpret them as float
+    uint32_t scalar_bits = static_cast<uint32_t>(sizes[3] & 0xFFFFFFFF);
+    float scalar;
+    static_assert(sizeof(scalar) == sizeof(scalar_bits), "Size mismatch");
+    memcpy(&scalar, &scalar_bits, sizeof(float));
+    
+    #if OMP_SCHEDULING == 0
+    #pragma omp parallel for schedule(static)
+    #elif OMP_SCHEDULING == 1
+    #pragma omp parallel for schedule(dynamic)
+    #else // OMP_SCHEDULING
+    DO_PRAGMA(message("omp parallel for schedule(guided, " EXPAND_AND_STRINGIFY(OMP_SCHED_CHUNK) ")"))
+    #endif // OMP_SCHEDULING
+    // Perform vector addition
+    for (size_t i = 0; i < count; ++i) {
+        result[i] = a[i] + b[i] + scalar;
+    }
+}

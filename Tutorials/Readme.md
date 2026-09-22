@@ -12,13 +12,14 @@ Showcases basic features that will likely be involved in nearly every project.
 - ComputeApiInfo: Sanity check that KTT is working correctly and can access the accelerator devices. <!-- modify so it just initializes tuner -->
 - KernelTuning: Basic kernel tuning tutorial; shows kernel arguments, reference computation, 
     tuning parameters, thread modifiers, and offline tuning. Has versions with C++ host code for tuning CUDA, OpenCL, and Vulkan,
-    with Python host code for tuning CUDA, and with a JSON script for tuning CUDA.  <!-- TODO: split this? -->
+    with Python host code for tuning CUDA, and with a JSON script for tuning CUDA.
 - StopConditions: Showcases the use of stop conditions on a very simple kernel. Includes a union stop condition.
 - TuningConstraints: Showcases the use of tuning constraints to filter out configurations that would fail or be suboptimal,
     demonstrated on a matrix transpose kernel with work-group size constrained through two tuning parameters.
+- MultipleBackends: Program adapted to work with multiple different compute APIs, showing how KTT is designed in a way that lets
+    these variants share most of the code.
 
-<!-- TODO: debugging methods(?) (show logging level), showcase multiple backends in one file
--->
+<!-- perhaps a tutorial specifically about reference kernel/computation -->
 
 ## Intermediate
 Showcases features that are good to know about, but might not be necessary for all projects.

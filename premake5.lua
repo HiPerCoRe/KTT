@@ -523,6 +523,13 @@ project "03TuningConstraintsOpenCl"
     includedirs {"Source"}
     links {"ktt"}
 
+project "03MultipleBackendsOpenCl"
+    kind "ConsoleApp"
+    files {"Tutorials/01Basic/03MultipleBackends/MultipleBackends.cpp", "Tutorials/01Basic/03MultipleBackends/OpenClKernel.cl"}
+    includedirs {"Source"}
+    defines {"KTT_OPENCL_TUTORIAL"}
+    links {"ktt"}
+
 project "04CustomArgumentTypesOpenCl"
     kind "ConsoleApp"
     files {"Tutorials/03Advanced/04CustomArgumentTypes/CustomArgumentTypesOpenCl.cpp", "Tutorials/03Advanced/04CustomArgumentTypes/OpenClKernel.cl"}
@@ -564,6 +571,13 @@ project "03KernelTuningCuda"
     includedirs {"Source"}
     links {"ktt"}
 
+project "03MultipleBackendsCuda"
+    kind "ConsoleApp"
+    files {"Tutorials/01Basic/03MultipleBackends/MultipleBackends.cpp", "Tutorials/01Basic/03MultipleBackends/CudaKernel.cu"}
+    includedirs {"Source"}
+    defines {"KTT_CUDA_TUTORIAL"}
+    links {"ktt"}
+
 project "04CustomArgumentTypesCuda"
     kind "ConsoleApp"
     files {"Tutorials/03Advanced/04CustomArgumentTypes/CustomArgumentTypesCuda.cpp", "Tutorials/03Advanced/04CustomArgumentTypes/CudaKernel.cu"}
@@ -584,6 +598,17 @@ project "06VectorArgumentCustomizationCuda"
     links {"ktt"}
 
 end -- cudaProjects
+
+if cppProjects then
+
+project "03MultipleBackendsCpp"
+    kind "ConsoleApp"
+    files {"Tutorials/01Basic/03MultipleBackends/MultipleBackends.cpp", "Tutorials/01Basic/03MultipleBackends/CppKernel.cppkernel"}
+    includedirs {"Source"}
+    defines {"KTT_CPP_TUTORIAL"}
+    links {"ktt"}
+
+end -- cppProjects
 
 if vulkanProjects then
 
