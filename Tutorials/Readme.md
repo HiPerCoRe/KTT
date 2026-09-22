@@ -9,7 +9,8 @@ Tutorial projects have comments that delimit which parts of the code are similar
 
 ## Basic
 Showcases basic features that will likely be involved in nearly every project.
-- ComputeApiInfo: Sanity check that KTT is working correctly and can access the accelerator devices. <!-- modify so it just initializes tuner -->
+- TunerInitialization: Basic tuner initialization. Also a sanity check that KTT is working correctly and can access the 
+    accelerator devices.
 - KernelTuning: Basic kernel tuning tutorial; shows kernel arguments, reference computation, 
     tuning parameters, thread modifiers, and offline tuning. Has versions with C++ host code for tuning CUDA, OpenCL, and Vulkan,
     with Python host code for tuning CUDA, and with a JSON script for tuning CUDA.

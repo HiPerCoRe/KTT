@@ -493,9 +493,9 @@ if not _OPTIONS["no-tutorials"] then
 
 if openClProjects then
 
-project "01InfoOpenCl"
+project "01TunerInitializationOpenCl"
     kind "ConsoleApp"
-    files {"Tutorials/01Basic/01ComputeApiInfo/ComputeApiInfoOpenCl.cpp"}
+    files {"Tutorials/01Basic/01TunerInitialization/TunerInitializationOpenCl.cpp"}
     includedirs {"Source"}
     links {"ktt"}
 
@@ -553,9 +553,9 @@ end -- openClProjects
 
 if cudaProjects then
 
-project "01InfoCuda"
+project "01TunerInitializationCuda"
     kind "ConsoleApp"
-    files {"Tutorials/01Basic/01ComputeApiInfo/ComputeApiInfoCuda.cpp"}
+    files {"Tutorials/01Basic/01TunerInitialization/TunerInitializationCuda.cpp"}
     includedirs {"Source"}
     links {"ktt"}
     
@@ -612,9 +612,9 @@ end -- cppProjects
 
 if vulkanProjects then
 
-project "01InfoVulkan"
+project "01TunerInitializationVulkan"
     kind "ConsoleApp"
-    files {"Tutorials/01Basic/01ComputeApiInfo/ComputeApiInfoVulkan.cpp"}
+    files {"Tutorials/01Basic/01TunerInitialization/TunerInitializationVulkan.cpp"}
     includedirs {"Source"}
     links {"ktt"}
     
