@@ -30,17 +30,9 @@ The `Building KTT` section contains detailed instructions on how to perform a bu
 Tutorials
 ---------
 Tutorials are short examples that serve as an introduction to the KTT framework. Each tutorial covers a specific part of
-the API. All tutorials are available for both OpenCL and CUDA backends. Most of the tutorials are also available for
-Vulkan. Tutorials assume that the reader has some knowledge about C++ and GPU programming. List of the currently available
-tutorials:
-
-* `Info`: Retrieving information about compute API platforms and devices through KTT API.
-* `KernelRunning`: Running simple kernel with KTT framework and retrieving output.
-* `KernelTuning`: Simple kernel tuning using a small number of tuning parameters and reference computation to validate output.
-* `CustomArgumentTypes`: Usage of kernel arguments with custom data types and validating the output with value comparator.
-* `ComputeApiInitializer`: Providing tuner with custom compute context, queues and buffers.
-* `VectorArgumentCustomization`: Showcasing different usage options for vector kernel arguments.
-* `PythonInterfaces`: Implementing custom searchers and stop conditions in Python, which can afterward be used with the tuner.
+the API. Most of them are available for OpenCL and CUDA, several also for Vulkan. Tutorials assume that the reader has some
+knowledge about C++ and GPU programming. The list of tutorials, grouped by difficulty and in the recommended reading order,
+is in [Tutorials/Readme.md](Tutorials/Readme.md). The tutorial folders are numbered in that same order.
 
 Examples
 --------
