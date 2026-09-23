@@ -7,6 +7,8 @@ Most are written in multiple versions -- C++ host code with a Cuda/OpenCL kernel
 
 Tutorial projects have comments that delimit which parts of the code are similar to a different tutorial and which are unique.
 
+Within each level, the tutorial folders are numbered from 01 in the reading order used below.
+
 ## Basic
 Showcases basic features that will likely be involved in nearly every project.
 - TunerInitialization: Basic tuner initialization. Also a sanity check that KTT is working correctly and can access the 

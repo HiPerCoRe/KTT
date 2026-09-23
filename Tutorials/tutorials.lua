@@ -28,7 +28,7 @@ tutorialApis =
 -- compute API headers too and needs to link the libraries.
 tutorialsUsingComputeApiHeaders =
 {
-    ["03Advanced/05ComputeApiInitializer"] = true,
+    ["03Advanced/02ComputeApiInitializer"] = true,
 }
 
 local function sorted(list)
