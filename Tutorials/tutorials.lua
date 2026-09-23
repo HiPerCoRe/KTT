@@ -7,6 +7,9 @@
 -- The kernel file of each variant is passed to its compilation as the KTT_TUTORIAL_KERNEL_FILE
 -- define, so that tutorial code never contains the path to its own folder.
 --
+-- Inside a level, tutorial folders are numbered from 01 with no gaps and no prefix used twice, in
+-- the order the tutorials are meant to be read. Generation warns when that does not hold.
+--
 -- There is a testing script in the Scripts folder that can be used to test if generation works correctly.
 -- The recorded project list will, however, become invalid whenever the folder structure is changed.
 -- In that case, run the script with the --update flag.
@@ -112,13 +115,79 @@ function addTutorial(tutorial)
     end
 end
 
+-- Warns when the numeric prefixes of the tutorials of one level do not describe a reading order:
+-- a prefix that several folders share, or prefixes that do not run in order from the first
+-- position.
+local function validateTutorialNumbering(level, tutorials)
+    local foldersByPrefix = {}
+    local prefixes = {}
+    local width = 0
+
+    for _, tutorial in ipairs(tutorials) do
+        local prefix = numberPrefix(tutorial)
+        local position = tonumber(prefix)
+        width = math.max(width, #prefix)
+
+        if not foldersByPrefix[position] then
+            foldersByPrefix[position] = {}
+            table.insert(prefixes, position)
+        end
+
+        table.insert(foldersByPrefix[position], path.getbasename(tutorial))
+    end
+
+    table.sort(prefixes)
+
+    local function formattedPrefix(position)
+        return string.format("%0" .. width .. "d", position)
+    end
+
+    local function correctNameExample()
+        local example = {}
+
+        for position = 1, math.min(#prefixes, 3) do
+            table.insert(example, formattedPrefix(position) .. "TutorialName")
+        end
+
+        return table.concat(example, ", ")
+    end
+
+    for _, prefix in ipairs(prefixes) do
+        local folders = foldersByPrefix[prefix]
+
+        if #folders > 1 then
+            printf("Warning: tutorials %s in level %s all have the prefix %s; every tutorial of a level needs a different prefix, in the form %s", table.concat(folders, ", "), level, formattedPrefix(prefix), correctNameExample())
+        end
+    end
+
+    local found = {}
+    local expected = {}
+
+    for position, prefix in ipairs(prefixes) do
+        table.insert(found, formattedPrefix(prefix))
+        table.insert(expected, formattedPrefix(position))
+    end
+
+    if table.concat(found, ", ") ~= table.concat(expected, ", ") then
+        printf("Warning: the tutorials of level %s do not run in order from the first position: found prefixes %s, expected %s, in the form %s", level, table.concat(found, ", "), table.concat(expected, ", "), correctNameExample())
+    end
+end
+
 function addAllTutorials()
     for _, level in ipairs(sorted(os.matchdirs("*"))) do
         if numberPrefix(level) then
+            local tutorials = {}
+
             for _, tutorial in ipairs(sorted(os.matchdirs(level .. "/*"))) do
                 if numberPrefix(tutorial) then
-                    addTutorial(tutorial)
+                    table.insert(tutorials, tutorial)
                 end
+            end
+
+            validateTutorialNumbering(level, tutorials)
+
+            for _, tutorial in ipairs(tutorials) do
+                addTutorial(tutorial)
             end
         end
     end

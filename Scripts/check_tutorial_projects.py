@@ -4,6 +4,7 @@ This script checks whether premake generates the same tutorial files as the last
 Useful when updating tutorials.lua or to catch unintended renames.
 
 Note: No checks are run on the actual code, so that has to be tested in other ways.
+Note: Warnings printed by the generator are always shown, but do not affect the test itself.
 
 Usage:
     python3 Scripts/check_tutorial_projects.py            # check
@@ -33,9 +34,19 @@ SDK_ENV_VARIABLES = ("OCL_ROOT", "INTELOCLSDKROOT", "CUDA_PATH", "VULKAN_SDK")
 # Tutorial projects always start with a digit.
 TUTORIAL_PROJECT = re.compile(r"^[0-9]")
 
+# Lines the generator uses to report a problem it does not stop for.
+GENERATOR_WARNING = re.compile(r"^Warning:")
+
 
 class GeneratorError(Exception):
     """The generator could not be run, so the project set is unknown."""
+
+
+def echo_generator_warnings(output):
+    """Repeat the warnings of the generator, which the check itself does not act on."""
+    for line in output.splitlines():
+        if GENERATOR_WARNING.match(line):
+            print(line)
 
 
 def find_premake(override=None):
@@ -77,6 +88,8 @@ def generate_project_set(premake, tmpdir, verbose=False):
 
     if verbose:
         sys.stdout.write(result.stdout)
+    else:
+        echo_generator_warnings(result.stdout)
 
     if result.returncode != 0:
         tail = "\n".join(result.stdout.splitlines()[-20:])
