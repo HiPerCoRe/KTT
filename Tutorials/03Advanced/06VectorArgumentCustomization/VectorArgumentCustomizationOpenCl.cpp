@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 {
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = kernelPrefix + "../Tutorials/03Advanced/06VectorArgumentCustomization/OpenClKernel.cl";
+    std::string kernelFile = kernelPrefix + KTT_TUTORIAL_KERNEL_FILE;
 
     if (argc >= 2)
     {

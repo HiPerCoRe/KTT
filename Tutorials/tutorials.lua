@@ -4,6 +4,8 @@
 -- variants are generated from those; if there's only one file (MultipleBackends), the variants are
 -- generated from the kernels present. See the tutorialApis table for what corresponds
 -- to each other.
+-- The kernel file of each variant is passed to its compilation as the KTT_TUTORIAL_KERNEL_FILE
+-- define, so that tutorial code never contains the path to its own folder.
 --
 -- There is a testing script in the Scripts folder that can be used to test if generation works correctly.
 -- The recorded project list will, however, become invalid whenever the folder structure is changed.
@@ -35,6 +37,15 @@ local function numberPrefix(folder)
     return string.match(path.getbasename(folder), "^%d+")
 end
 
+-- The kernel path passed to the host code as KTT_TUTORIAL_KERNEL_FILE, built with the same rule
+-- as the kernel file name in addTutorial. Passing the path from the build keeps tutorial sources
+-- free of the name of their own folder, so renaming a folder changes only the build, not the
+-- tutorial code. The leading "../" is kept from the paths the sources hardcoded before, so the
+-- string that the host code produces by prepending kernelPrefix is unchanged.
+function tutorialKernelFileDefine(kernelFile)
+    return 'KTT_TUTORIAL_KERNEL_FILE="../Tutorials/' .. kernelFile .. '"'
+end
+
 function tutorialApiOfHostFile(file)
     if path.getextension(file) ~= ".cpp" then
         return nil
@@ -51,13 +62,17 @@ function tutorialApiOfHostFile(file)
     return nil
 end
 
-function addTutorialProject(category, tutorial, api, tutorialFiles)
+function addTutorialProject(category, tutorial, api, tutorialFiles, kernelFile)
     project(category .. path.getbasename(tutorial) .. api.suffix)
         kind "ConsoleApp"
         files {table.unpack(tutorialFiles)}
         includedirs {"../Source"}
         defines {"KTT_" .. string.upper(api.suffix) .. "_TUTORIAL"}
         links {"ktt"}
+
+        if kernelFile then
+            defines {tutorialKernelFileDefine(kernelFile)}
+        end
 
         if tutorialsUsingComputeApiHeaders[tutorial] then
             linkComputeLibraries()
@@ -96,7 +111,7 @@ function addTutorial(tutorial)
                     table.insert(files, kernelFile)
                 end
 
-                addTutorialProject(category, tutorial, api, files)
+                addTutorialProject(category, tutorial, api, files, hasKernelFile and kernelFile)
             end
         end
     end

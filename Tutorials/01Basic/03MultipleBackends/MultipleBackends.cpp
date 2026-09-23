@@ -17,14 +17,13 @@ const std::string kernelPrefix = "";
 const std::string kernelPrefix = "../";
 #endif
 
+const std::string defaultKernelFile = kernelPrefix + KTT_TUTORIAL_KERNEL_FILE;
+
 #if defined(KTT_CUDA_TUTORIAL)
-    const std::string defaultKernelFile = kernelPrefix + "../Tutorials/01Basic/03MultipleBackends/CudaKernel.cu";
     const auto computeApi = ktt::ComputeApi::CUDA;
 #elif defined(KTT_OPENCL_TUTORIAL)
-    const std::string defaultKernelFile = kernelPrefix + "../Tutorials/01Basic/03MultipleBackends/OpenClKernel.cl";
     const auto computeApi = ktt::ComputeApi::OpenCL;
 #elif defined(KTT_CPP_TUTORIAL)
-    const std::string defaultKernelFile = kernelPrefix + "../Tutorials/01Basic/03MultipleBackends/CppKernel.cppkernel";
     const auto computeApi = ktt::ComputeApi::Cpp;
 #else
     #error "Tutorial must be compiled with KTT_CUDA_TUTORIAL, KTT_OPENCL_TUTORIAL or KTT_CPP_TUTORIAL defined."

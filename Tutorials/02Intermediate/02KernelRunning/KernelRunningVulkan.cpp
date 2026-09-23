@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 {
     // Initialize device index and path to kernel.
     ktt::DeviceIndex deviceIndex = 0;
-    std::string kernelFile = kernelPrefix + "../Tutorials/02Intermediate/02KernelRunning/VulkanKernel.glsl";
+    std::string kernelFile = kernelPrefix + KTT_TUTORIAL_KERNEL_FILE;
 
     if (argc >= 2)
     {
