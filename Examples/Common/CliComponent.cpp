@@ -69,7 +69,7 @@ void CliComponent::AddOption(const CliOption &cliOption) {
 }
 
 void CliComponent::ProcessInput(int argc, char **argv) {
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc;) {  // if TryTrigger succeeded, ++i at least once; if not, exit(1) -> no infinite loop
         bool triggered = false;
         for (const auto& option : m_options) {
             if (option.TryTrigger(argc, argv, i)) {
