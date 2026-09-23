@@ -45,9 +45,6 @@ Mostly customization of things usually hidden in KTT's internals.
     user-provided buffers directly instead of copying them. Has versions with C++ host code for tuning CUDA and OpenCL.
 - PythonInterfaces: Shows that it is possible to pass Python functions
     to KTT, e.g. to define a custom searcher or stop condition.
-- ProfileBasedSearcher: Shows a custom Python searcher that guides the search using profiling counters -- it periodically re-runs
-    the best configuration with profiling enabled, and uses an ML model to predict profiling counters and score
-    the remaining tuning space configurations. (Demonstrated on a real application kernel.) <!-- maybe drop -->
 
 <!-- TODO: custom searcher, stop condition, simulated tuning(?) -- when writing your own searcher you can easily see how fast it converges
     precise measurement (advanced?), power consumption optimization (advanced?), etc -->
