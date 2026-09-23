@@ -37,11 +37,6 @@ local function numberPrefix(folder)
     return string.match(path.getbasename(folder), "^%d+")
 end
 
--- The kernel path passed to the host code as KTT_TUTORIAL_KERNEL_FILE, built with the same rule
--- as the kernel file name in addTutorial. Passing the path from the build keeps tutorial sources
--- free of the name of their own folder, so renaming a folder changes only the build, not the
--- tutorial code. The leading "../" is kept from the paths the sources hardcoded before, so the
--- string that the host code produces by prepending kernelPrefix is unchanged.
 function tutorialKernelFileDefine(kernelFile)
     return 'KTT_TUTORIAL_KERNEL_FILE="../Tutorials/' .. kernelFile .. '"'
 end
