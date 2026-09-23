@@ -4,6 +4,10 @@
 -- variants are generated from those; if there's only one file (MultipleBackends), the variants are
 -- generated from the kernels present. See the tutorialApis table for what corresponds
 -- to each other.
+--
+-- There is a testing script in the Scripts folder that can be used to test if generation works correctly.
+-- The recorded project list will, however, become invalid whenever the folder structure is changed.
+-- In that case, run the script with the --update flag.
 
 assert(openClProjects ~= nil)
 
