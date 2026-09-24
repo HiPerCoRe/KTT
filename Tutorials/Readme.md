@@ -27,9 +27,10 @@ Showcases basic features that will likely be involved in nearly every project.
 ## Intermediate
 Showcases features that are good to know about, but might not be necessary for all projects.
 - KernelRunning: Shows that KTT can also run kernels <!-- TODO: Merge with dynamic tuning? -->
+- ProcessingKernelResults: A few basic ways that one can work with the kernel results after tuning.
 
-<!-- TODO: dynamic tuning, (kernel launcher, (groups, composite kernel -- mozna oddelit)), (compiler tuning, compiler options), 
-            processing kernel results, database stuff
+<!-- TODO: dynamic tuning, (kernel launcher, (groups, composite kernel -- mozna oddelit)), 
+            (compiler tuning, compiler options), database stuff, searcher
            - groups, kernel launcher, composite can be in one file
            - searcher: choose a premade one (try profiling searcher?)
 -->

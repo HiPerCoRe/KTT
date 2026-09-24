@@ -12,9 +12,10 @@
 0105MultipleBackendsCpp
 0105MultipleBackendsCuda
 0105MultipleBackendsOpenCl
-0201KernelRunningCuda
-0201KernelRunningOpenCl
-0201KernelRunningVulkan
+0201ProcessingKernelResultsOpenCl
+0202KernelRunningCuda
+0202KernelRunningOpenCl
+0202KernelRunningVulkan
 0301CustomArgumentTypesCuda
 0301CustomArgumentTypesOpenCl
 0302ComputeApiInitializerCuda
