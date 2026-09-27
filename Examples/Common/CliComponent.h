@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <functional>
 #include <vector>
@@ -8,11 +9,12 @@
 /** @class A value-class used for individual CLI options. Contains the trigger, description for --help, and the function to call when triggered. */
 class CliOption
 {
-    std::function<void (const std::vector<std::string> &)> m_callback;
+    const std::function<void (const std::vector<std::string> &)> m_callback;
     const std::string m_trigger;
     const std::string m_description;
     const std::string m_argumentDescriptions;
-    const int m_argumentCount;
+    const std::size_t m_argumentCount;
+    const std::size_t m_minArgumentCount;
 
 public:
     /** @fn Constructor.
@@ -22,8 +24,18 @@ public:
       * @param argumentDescriptions Default "". Argument descriptions that will be displayed next to the trigger in --help.
       * @param argumentCount Default 0. Number of arguments that will be passed to the callback after the option is triggered. It is strict: the user has to pass exactly this amount.
       */
-    CliOption(std::function<void (const std::vector<std::string> &)> callback, const std::string &trigger, const std::string &description,
-              const std::string &argumentDescriptions = "", const int argumentCount = 0);
+    CliOption(std::function<void (const std::vector<std::string> &)> callback, 
+              const std::string &trigger, const std::string &description,
+              const std::string &argumentDescriptions = "", const std::size_t argumentCount = 0,
+              const std::optional<std::size_t> minArgumentCount = std::nullopt
+            );
+
+    /** @fn Print an argument count error. Useful when defining callback lambdas with variable argument counts.
+      * @param trigger The trigger name, e.g. --stopCondition 
+      * @param low The lower range bound, if low == high, only prints one number. 
+      * @param high The higher range bound.
+      */
+    static void PrintArgCountRangeError(std:: string trigger, int low, int high);
 
     /** @fn Get a text representation of the option. Used by --help's callback */
     std::string get_string() const;

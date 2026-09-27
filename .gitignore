@@ -8,3 +8,5 @@ premake5
 *.swp
 .cache
 compile_commands.json
+__pycache__/
+*.pyc
