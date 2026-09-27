@@ -733,7 +733,7 @@ end -- vulkanProjects
 
 end -- _OPTIONS["no-tutorials"]
 
--- Examples shared library (compiled once, linked by all examples)
+-- Examples shared library and configuration
 if not _OPTIONS["no-examples"] then
 
 project "ExamplesLibCuda"
@@ -818,6 +818,7 @@ if cppProjects then
 
 end -- cppProjects
     
+    include "Examples/examples.lua"
 end -- _OPTIONS["no-examples"]
 
 -- Unit tests configuration   

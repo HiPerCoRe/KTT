@@ -40,7 +40,6 @@ public:
 private:
     KernelRunner& m_KernelRunner;
     std::unique_ptr<ConfigurationManager> m_ConfigurationManager;
-    bool m_useGracefulInterrupt = false;
 
     static const KernelResult& FindMatchingResult(const std::vector<KernelResult>& results, const KernelConfiguration& configuration);
 };

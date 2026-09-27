@@ -6,7 +6,6 @@
 #include <Utility/Logger/Logger.h>
 #include <Utility/Timer/ScopeTimer.h>
 #include <Utility/Timer/Timestamp.h>
-#include <Utility/InterruptHandler.h>
 
 namespace ktt
 {
@@ -46,11 +45,6 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         stopCondition->Initialize(configurationsCount);
     }
 
-    if (m_useGracefulInterrupt)
-    {
-        InterruptHandler::RegisterHandler();
-    }
-
     std::vector<KernelResult> results;
 //    KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
 
@@ -83,12 +77,6 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         //no need to explicitly recompute total overhead here, as it is computed on demand in GetTotalOverhead() method,
         // now with an updated searcher overhead value
         results.push_back(result);
-
-        if (InterruptHandler::GetShouldInterrupt()) {
-            Logger::LogInfo("Tuning stopped due to SIGINT, returning...");
-            InterruptHandler::UnregisterHandler();
-            break;
-        }
 
         if (stopCondition == nullptr)
         {

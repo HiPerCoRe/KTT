@@ -15,7 +15,7 @@ string ComputeEngine::GetCompilerOptions()
 void ComputeEngine::AddCompilerOptions(const std::string& options)
 {
     std::string allOptions = GetCompilerOptions();
-    allOptions += " ";
+    if (!allOptions.empty()) allOptions += " ";
     allOptions += options;
     SetCompilerOptions(allOptions, true);
 }

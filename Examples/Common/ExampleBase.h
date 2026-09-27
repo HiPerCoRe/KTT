@@ -154,7 +154,7 @@ protected:
       * @param numDimensions Number of dimensions that the input has.
       * @param inputSize A reference to ktt::DimensionVector which will be modified depending on user input.
       */
-    void UseInputSizeOption(int numDimensions, ktt::DimensionVector &inputSize);
+    void UseInputSizeOption(size_t numDimensions, ktt::DimensionVector &inputSize);
 
     /** @fn Helper method that fills buffers of a numerical type with random values from a uniform distribution.
       * @param buffers The buffers to be filled.
