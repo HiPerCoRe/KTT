@@ -17,7 +17,7 @@ namespace
 // the stored rows directly through the same connection.
 struct InMemoryConnection
 {
-    sqlite3* handle = nullptr;
+    sqlite3 *handle = nullptr;
 
     InMemoryConnection()
     {
@@ -31,9 +31,9 @@ struct InMemoryConnection
 };
 
 // Runs a query returning a single integer (e.g. a COUNT).
-int64_t QueryInt(sqlite3* connection, const std::string& sql)
+int64_t QueryInt(sqlite3 *connection, const std::string &sql)
 {
-    sqlite3_stmt* stmt = nullptr;
+    sqlite3_stmt *stmt = nullptr;
     sqlite3_prepare_v2(connection, sql.c_str(), -1, &stmt, nullptr);
     REQUIRE(sqlite3_step(stmt) == SQLITE_ROW);
     const int64_t value = sqlite3_column_int64(stmt, 0);
@@ -42,23 +42,23 @@ int64_t QueryInt(sqlite3* connection, const std::string& sql)
 }
 
 // Runs a query returning a single text value.
-std::string QueryText(sqlite3* connection, const std::string& sql)
+std::string QueryText(sqlite3 *connection, const std::string &sql)
 {
-    sqlite3_stmt* stmt = nullptr;
+    sqlite3_stmt *stmt = nullptr;
     sqlite3_prepare_v2(connection, sql.c_str(), -1, &stmt, nullptr);
     REQUIRE(sqlite3_step(stmt) == SQLITE_ROW);
-    const std::string value = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+    const std::string value = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
     sqlite3_finalize(stmt);
     return value;
 }
 
 // Loads the best results through the query API and captures the DeviceInfo passed to the device predicate.
-std::optional<ktt::db::DeviceInfo> LoadDeviceInfo(const ktt::db::Database& db, const ktt::db::TuningInfo& tuningInfo)
+std::optional<ktt::db::DeviceInfo> LoadDeviceInfo(const ktt::db::Database &db, const ktt::db::TuningInfo &tuningInfo)
 {
     std::optional<ktt::db::DeviceInfo> seen;
     const ktt::db::GetBestResultsQuery query{
         tuningInfo.spaceInfo,
-        std::function<bool(const ktt::db::DeviceInfo&)>([&seen](const ktt::db::DeviceInfo& device) {
+        std::function<bool(const ktt::db::DeviceInfo &)>([&seen](const ktt::db::DeviceInfo &device) {
             seen = device;
             return true;
         }),
@@ -86,10 +86,18 @@ TEST_CASE("Database stores the driver version and tuner of a run", "Database")
     REQUIRE(device.has_value());
     REQUIRE(device->driverVersion == "550.54.14");
 
-    REQUIRE(QueryText(connection.handle,
-        "SELECT tuner.name FROM tuning_run JOIN tuner ON tuner.id = tuning_run.tuner_id") == "KTT");
-    REQUIRE(QueryText(connection.handle,
-        "SELECT tuner.version FROM tuning_run JOIN tuner ON tuner.id = tuning_run.tuner_id") == "2.3.1");
+    REQUIRE(
+        QueryText(
+            connection.handle,
+            "SELECT tuner.name FROM tuning_run JOIN tuner ON tuner.id = tuning_run.tuner_id"
+        ) == "KTT"
+    );
+    REQUIRE(
+        QueryText(
+            connection.handle,
+            "SELECT tuner.version FROM tuning_run JOIN tuner ON tuner.id = tuning_run.tuner_id"
+        ) == "2.3.1"
+    );
 }
 
 TEST_CASE("Database defaults the tuner to the current KTT version", "Database")
@@ -172,8 +180,10 @@ TEST_CASE("Database stores the device identifier on the device", "Database")
 
     db.SaveResults(tuningInfo, {MakeResult("simpleKernel", 64, 5 * Millisecond)});
 
-    REQUIRE(QueryText(connection.handle, "SELECT device_identifier FROM device")
-        == "GPU-00000000-0000-0000-0000-000000000001");
+    REQUIRE(
+        QueryText(connection.handle, "SELECT device_identifier FROM device") ==
+        "GPU-00000000-0000-0000-0000-000000000001"
+    );
 
     const auto device = LoadDeviceInfo(db, tuningInfo);
     REQUIRE(device.has_value());
@@ -202,14 +212,14 @@ TEST_CASE("Database unique indexes reject duplicate device rows with unset field
     const ktt::db::Database db(connection.handle); // creates the schema
 
     // Inserted with all optional columns left at their defaults, which previously were NULL and slipped past the index.
-    const char* insertApi = "INSERT INTO device_api (compute_api_id) VALUES (4)";
+    const char *insertApi = "INSERT INTO device_api (compute_api_id) VALUES (4)";
     REQUIRE(sqlite3_exec(connection.handle, insertApi, nullptr, nullptr, nullptr) == SQLITE_OK);
     REQUIRE(sqlite3_exec(connection.handle, insertApi, nullptr, nullptr, nullptr) == SQLITE_CONSTRAINT);
 
-    const char* insertInfo = "INSERT INTO device_info (name, vendor, type) VALUES ('CPU', 'Vendor', 'CPU')";
+    const char *insertInfo = "INSERT INTO device_info (name, vendor, type) VALUES ('CPU', 'Vendor', 'CPU')";
     REQUIRE(sqlite3_exec(connection.handle, insertInfo, nullptr, nullptr, nullptr) == SQLITE_OK);
 
-    const char* insertDevice = "INSERT INTO device (device_info_id, device_api_id) VALUES (1, 1)";
+    const char *insertDevice = "INSERT INTO device (device_info_id, device_api_id) VALUES (1, 1)";
     REQUIRE(sqlite3_exec(connection.handle, insertDevice, nullptr, nullptr, nullptr) == SQLITE_OK);
     REQUIRE(sqlite3_exec(connection.handle, insertDevice, nullptr, nullptr, nullptr) == SQLITE_CONSTRAINT);
 }
@@ -231,15 +241,19 @@ TEST_CASE("Database sync copies the device identifier, driver version and tuner"
 
     InMemoryConnection connection;
     const ktt::db::Database db(connection.handle);
-    REQUIRE(db.SyncFromFile(path) == 1);
+    REQUIRE(db.Sync(ktt::db::Database(path)) == 1);
 
     const auto device = LoadDeviceInfo(db, tuningInfo);
     REQUIRE(device.has_value());
     REQUIRE(device->driverVersion == "550.54.14");
     REQUIRE(device->deviceIdentifier == "GPU-00000000-0000-0000-0000-000000000001");
 
-    REQUIRE(QueryText(connection.handle,
-        "SELECT tuner.version FROM tuning_run JOIN tuner ON tuner.id = tuning_run.tuner_id") == "2.3.1");
+    REQUIRE(
+        QueryText(
+            connection.handle,
+            "SELECT tuner.version FROM tuning_run JOIN tuner ON tuner.id = tuning_run.tuner_id"
+        ) == "2.3.1"
+    );
 
     std::filesystem::remove(path);
 }

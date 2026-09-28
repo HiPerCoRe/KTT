@@ -573,7 +573,8 @@ project "Ktt"
         "Libraries/CTPL-Ahajha/**",
         "Libraries/date-3/**",
         "Libraries/Json-3.9.1/**",
-        "Libraries/pugixml-1.11.4/**"
+        "Libraries/pugixml-1.11.4/**",
+        "Libraries/xxHash-0.8.4/**"
     }
     
     includedirs
@@ -582,7 +583,8 @@ project "Ktt"
         "Libraries/CTPL-Ahajha",
         "Libraries/date-3",
         "Libraries/Json-3.9.1",
-        "Libraries/pugixml-1.11.4"
+        "Libraries/pugixml-1.11.4",
+        "Libraries/xxHash-0.8.4"
     }
 
     if _OPTIONS["database"] then
@@ -853,7 +855,8 @@ project "Tests"
         "Libraries/CTPL-Ahajha/**",
         "Libraries/date-3/**",
         "Libraries/Json-3.9.1/**",
-        "Libraries/pugixml-1.11.4/**"
+        "Libraries/pugixml-1.11.4/**",
+        "Libraries/xxHash-0.8.4/**"
     }
     
     includedirs
@@ -863,7 +866,8 @@ project "Tests"
         "Libraries/CTPL-Ahajha",
         "Libraries/date-3",
         "Libraries/Json-3.9.1",
-        "Libraries/pugixml-1.11.4"
+        "Libraries/pugixml-1.11.4",
+        "Libraries/xxHash-0.8.4"
     }
     
     if _OPTIONS["no-opencl"] then

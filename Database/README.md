@@ -22,10 +22,16 @@ Capture results and persist them for later runs with `SaveResults`. You can atta
 
 ## Sync from another database
 
-`SyncFromFile` merges all tuning data from another database file into the current one. Runs are matched by their GUID, so
-runs that already exist are skipped — the operation is idempotent and safe to repeat. Each newly copied run
-brings along its tuning source, tuning space, device and results, and the copy runs inside a single
-transaction (a failure leaves the current database unchanged). The other database is opened read-only.
+`Sync` merges all tuning data from another `Database` into the current one. The other database may be
+constructed from a path, an in-memory database or an existing `sqlite3*` connection, and it is only read from. Runs are
+matched by their GUID, so runs that already exist are skipped — the operation is idempotent and safe to repeat. Each
+newly copied run brings along its tuning source, tuning space, device and results, and the copy runs inside a single
+transaction (a failure leaves the current database unchanged). Syncing a database from itself (the same connection, or
+the same file through any path) throws.
+
+```cpp
+db.Sync(ktt::db::Database(otherDatabasePath));
+```
 
 ## Output format and JSON indentation
 

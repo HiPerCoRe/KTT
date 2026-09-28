@@ -129,7 +129,7 @@ that option is given:
 ```cpp
 if (!m_dbSyncPath.empty())
 {
-    db.SyncFromFile(m_dbSyncPath);   // returns the number of runs newly added
+    db.Sync(ktt::db::Database(m_dbSyncPath));   // returns the number of runs newly added
 }
 ```
 
@@ -146,7 +146,7 @@ From [Database/Database.h](Database/Database.h):
 | `SimpleGetBestResults(source, limit = 50)` | Fastest stored results for a tuning problem. |
 | `GetBestResults(query)` | Best results with device / input-data predicates. |
 | `GetStatsForSource(sourceFingerprint)` | Aggregate counts (spaces, devices, runs, results) for a source; `std::nullopt` if unknown. |
-| `SyncFromFile(otherDatabasePath)` | Merge runs from another DB by GUID; returns count added. |
+| `Sync(const Database&)` | Merge runs from another DB (path, in-memory or connection) by GUID; returns count added. |
 
 ### Reading stats for a source
 

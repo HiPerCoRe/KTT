@@ -121,6 +121,6 @@ erDiagram
 - `tuner` records the tuner that produced a run, from `ktt::db::TuningInfo::tuner` (name is always `KTT`, version is
   `ktt::GetKttVersionString()`).
 - A `tuning_run` is uniquely identified across databases by its `guid`, which is what
-  `SyncFromFile` uses to skip already-imported runs.
-- `SyncFromFile` copies each run together with its `device` (including device identifier and driver version) and
+  `Sync` uses to skip already-imported runs.
+- `Sync` copies each run together with its `device` (including device identifier and driver version) and
   `tuner`.

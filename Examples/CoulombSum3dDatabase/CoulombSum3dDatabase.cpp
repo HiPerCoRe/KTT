@@ -45,7 +45,7 @@ public:
         // Skipped when --db-sync was not provided.
         if (!m_dbSyncPath.empty())
         {
-            db.SyncFromFile(m_dbSyncPath);
+            db.Sync(ktt::db::Database(m_dbSyncPath));
         }
 
         const auto tuningInfo = m_tuner->GetDatabaseTuningInfo(m_kernel);

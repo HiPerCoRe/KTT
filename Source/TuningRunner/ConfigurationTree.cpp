@@ -138,7 +138,7 @@ size_t ConfigurationTree::GetConfigurationFingerprint() const
             KttAssert(node->GetIndex() < parameter->GetValuesCount(), "Invalid node index for parameter values");
 
             const std::string value = parameter->GeneratePair(node->GetIndex()).GetValueString();
-            result = FingerprintUtility::HashFunction(result, std::hash<std::string>{}(value));
+            result = FingerprintUtility::HashFunction(result, FingerprintUtility::HashString(value));
         }
 
         // Add all children to the stack in reverse order

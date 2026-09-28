@@ -40,7 +40,7 @@ struct RunQueryResult
 
 /** @struct RunSyncRecord
  * Self-contained snapshot of a run together with the source, space and device data needed to
- * recreate it in another database. Produced by RunRepository::GetAllRuns and consumed by the sync logic.
+ * recreate it in another database. Produced by RunRepository::GetRuns and consumed by the sync logic.
  */
 struct RunSyncRecord
 {
@@ -98,14 +98,16 @@ public:
      */
     static bool RunExists(sqlite3* connection, const uuid& guid);
 
-    /** @fn static std::vector<RunSyncRecord> GetAllRuns(sqlite3* connection)
-     * Retrieves every run in the database together with the source, space and device data required to
-     * recreate it elsewhere. Intended for copying runs between databases.
+    /** @fn static std::vector<RunSyncRecord> GetRuns(sqlite3* connection, size_t offset, size_t limit)
+     * Retrieves runs in the database together with the source, space and device data required to recreate them
+     * elsewhere, with pagination support. Intended for copying runs between databases in batches.
      * @param connection SQLite database connection.
+     * @param offset Number of runs to skip (for pagination).
+     * @param limit Maximum number of runs to return. If 0, returns all runs.
      * @return Vector of RunSyncRecord objects, ordered by run ID.
      * @throw KttException If the query fails.
      */
-    static std::vector<RunSyncRecord> GetAllRuns(sqlite3* connection);
+    static std::vector<RunSyncRecord> GetRuns(sqlite3* connection, size_t offset, size_t limit);
 
     /** @fn static std::vector<RunQueryResult> GetRunsBySpaceId(sqlite3* connection, size_t spaceId, size_t offset,
      * size_t limit) Retrieves runs for a tuning space with pagination support. Useful for processing large result sets

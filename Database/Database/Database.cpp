@@ -27,16 +27,16 @@ namespace ktt::db
 static std::filesystem::path GetDefaultDatabaseDirectory()
 {
 #if defined(_MSC_VER)
-    // The wide variant is used because the narrow getenv returns the ANSI code page, which cannot represent every user
-    // name. C4996 (deprecated) is irrelevant here, the value is copied into the path right away.
-    #pragma warning(suppress : 4996)
-    if (const wchar_t* localAppData = _wgetenv(L"LOCALAPPDATA"); localAppData != nullptr && *localAppData != L'\0')
+// The wide variant is used because the narrow getenv returns the ANSI code page, which cannot represent every user
+// name. C4996 (deprecated) is irrelevant here, the value is copied into the path right away.
+#pragma warning(suppress : 4996)
+    if (const wchar_t *localAppData = _wgetenv(L"LOCALAPPDATA"); localAppData != nullptr && *localAppData != L'\0')
         return std::filesystem::path(localAppData) / "ktt";
 #else
-    if (const char* dataHome = std::getenv("XDG_DATA_HOME"); dataHome != nullptr && *dataHome != '\0')
+    if (const char *dataHome = std::getenv("XDG_DATA_HOME"); dataHome != nullptr && *dataHome != '\0')
         return std::filesystem::path(dataHome) / "ktt";
 
-    if (const char* home = std::getenv("HOME"); home != nullptr && *home != '\0')
+    if (const char *home = std::getenv("HOME"); home != nullptr && *home != '\0')
         return std::filesystem::path(home) / ".local" / "share" / "ktt";
 #endif // _MSC_VER
 
@@ -45,9 +45,33 @@ static std::filesystem::path GetDefaultDatabaseDirectory()
 
 // SQLite expects file names in UTF-8. path::string() uses the native narrow encoding instead, which on Windows is the
 // ANSI code page and breaks (or throws) on non-ASCII paths such as user names with diacritics.
-static std::string ToUtf8(const std::filesystem::path& path)
+static std::string ToUtf8(const std::filesystem::path &path)
 {
     return path.u8string();
+}
+
+// File behind a connection's main database; empty for in-memory and temporary databases
+static std::filesystem::path GetConnectionFilePath(sqlite3 *connection)
+{
+    const char *filename = sqlite3_db_filename(connection, "main");
+    return (filename != nullptr && *filename != '\0') ? std::filesystem::u8path(filename) : std::filesystem::path();
+}
+
+// True when both connections operate on the same database: the same handle, or the same file (also when reached
+// through a relative path, symlink or hard link)
+static bool IsSameDatabase(sqlite3 *first, sqlite3 *second)
+{
+    if (first == second)
+        return true;
+
+    const std::filesystem::path firstPath = GetConnectionFilePath(first);
+    const std::filesystem::path secondPath = GetConnectionFilePath(second);
+
+    if (firstPath.empty() || secondPath.empty())
+        return false;
+
+    std::error_code error;
+    return std::filesystem::equivalent(firstPath, secondPath, error);
 }
 
 Database::Database() : m_Connection(nullptr)
@@ -69,10 +93,10 @@ Database::Database(sqlite3 *connection) : m_Connection(connection), m_OwnsConnec
     if (m_Connection == nullptr)
         throw KttException("Cannot construct Database from a null SQLite connection");
 
-    const char *filename = sqlite3_db_filename(m_Connection, "main");
-    m_DatabasePath = (filename != nullptr) ? std::filesystem::u8path(filename) : std::filesystem::path();
+    const std::filesystem::path filePath = GetConnectionFilePath(m_Connection);
+    m_DatabasePath = filePath.empty() ? std::filesystem::path(":memory:") : filePath;
 
-    ktt::Logger::LogInfo("Initializing database from existing SQLite connection");
+    ktt::Logger::LogInfo("Initializing database from existing SQLite connection at " + ToUtf8(m_DatabasePath));
     sqlite3_exec(m_Connection, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
     Schema::CreateIfNotExists(m_Connection);
 }
@@ -138,7 +162,10 @@ void Database::SaveResults(const TuningInfo &tuningInfo, std::vector<KernelResul
              tuningInfo.spaceInfo.spaceFingerprint}
         );
 
-        const auto device = DeviceRepository::GetOrCreateDevice(m_Connection, Device::FromDeviceInfo(tuningInfo.device));
+        const auto device = DeviceRepository::GetOrCreateDevice(
+            m_Connection,
+            Device::FromDeviceInfo(tuningInfo.device)
+        );
 
         const auto tuner = TunerRepository::GetOrCreateTuner(
             m_Connection,
@@ -276,29 +303,25 @@ std::optional<SourceStats> Database::GetStatsForSource(const size_t sourceFinger
     return SourceRepository::GetStatsForSource(m_Connection, sourceFingerprint);
 }
 
-size_t Database::SyncFromFile(const std::filesystem::path &sourceDatabase) const
+size_t Database::Sync(const Database &other) const
 {
-    if (!std::filesystem::exists(sourceDatabase))
-        throw KttException("Cannot sync: database file does not exist: " + ToUtf8(sourceDatabase));
+    sqlite3 *source = other.m_Connection;
+    const std::string sourceName = ToUtf8(other.m_DatabasePath);
 
-    sqlite3 *source = nullptr;
-    const int open = sqlite3_open_v2(ToUtf8(sourceDatabase).c_str(), &source, SQLITE_OPEN_READONLY, nullptr);
+    if (IsSameDatabase(source, m_Connection))
+        throw KttException("Cannot sync: database cannot be synced from itself: " + sourceName);
 
-    if (open != SQLITE_OK)
-    {
-        const std::string error = sqlite3_errmsg(source);
-        sqlite3_close(source);
-        throw KttException("Failed to open source database for sync: " + error);
-    }
-
-    ktt::Logger::LogInfo("Syncing runs from " + ToUtf8(sourceDatabase) + " into " + ToUtf8(m_DatabasePath));
+    ktt::Logger::LogInfo("Syncing runs from " + sourceName + " into " + ToUtf8(m_DatabasePath));
 
     size_t inserted = 0;
-    try
-    {
-        TransactionGuard transaction(m_Connection);
+    size_t total = 0;
+    TransactionGuard transaction(m_Connection);
 
-        const auto records = RunRepository::GetAllRuns(source);
+    for (auto records = RunRepository::GetRuns(source, total, RunBatchSize);
+         !records.empty();
+         records = RunRepository::GetRuns(source, total, RunBatchSize))
+    {
+        total += records.size();
 
         for (const auto &record : records)
         {
@@ -315,7 +338,10 @@ size_t Database::SyncFromFile(const std::filesystem::path &sourceDatabase) const
                 {std::nullopt, *sourceRow.id, record.parameterFingerprint, record.spaceFingerprint}
             );
 
-            const auto device = DeviceRepository::GetOrCreateDevice(m_Connection, Device::FromDeviceInfo(record.deviceInfo));
+            const auto device = DeviceRepository::GetOrCreateDevice(
+                m_Connection,
+                Device::FromDeviceInfo(record.deviceInfo)
+            );
 
             const auto tuner = TunerRepository::GetOrCreateTuner(
                 m_Connection,
@@ -339,20 +365,15 @@ size_t Database::SyncFromFile(const std::filesystem::path &sourceDatabase) const
 
             ++inserted;
         }
-
-        transaction.Commit();
-
-        ktt::Logger::LogInfo(
-            "Database sync: " + std::to_string(inserted) + " new run(s) copied, " +
-            std::to_string(records.size() - inserted) + " already present"
-        );
-    } catch (...)
-    {
-        sqlite3_close(source);
-        throw;
     }
 
-    sqlite3_close(source);
+    transaction.Commit();
+
+    ktt::Logger::LogInfo(
+        "Database sync: " + std::to_string(inserted) + " new run(s) copied, " +
+        std::to_string(total - inserted) + " already present"
+    );
+
     return inserted;
 }
 

@@ -92,10 +92,10 @@ public:
     Database(const Database &) = delete;
     Database &operator=(const Database &) = delete;
 
-    /** @fn void SaveResults(const TuningInfo& source, std::vector<KernelResult> results, SaveOptions options = {}) const
-     * Saves kernel execution results for a specific tuning source and configuration.
-     * Stores results in the database, organizing them by source fingerprint, tuning space, device,
-     * and run information. Creates new records in the database schema if they don't exist.
+    /** @fn void SaveResults(const TuningInfo& source, std::vector<KernelResult> results, SaveOptions options = {})
+     * const Saves kernel execution results for a specific tuning source and configuration. Stores results in the
+     * database, organizing them by source fingerprint, tuning space, device, and run information. Creates new records
+     * in the database schema if they don't exist.
      * @param source The TuningInfo containing source fingerprint, space info, device info, and input data.
      * @param results Vector of KernelResult objects containing execution data to be stored.
      * @param options Output format and JSON indentation used to serialize the results.
@@ -130,17 +130,18 @@ public:
      */
     std::optional<SourceStats> GetStatsForSource(size_t sourceFingerprint) const;
 
-    /** @fn size_t SyncFromFile(const std::filesystem::path& otherDatabasePath) const
-     * Copies all tuning data from another database file into this database.
-     * The other database is opened read-only and every run it contains is copied over, together with its
-     * tuning source, tuning space, device and results. Runs are matched by their GUID, so runs that already
-     * exist in this database are skipped; this makes the operation idempotent and safe to repeat. The copy
-     * runs inside a single transaction, so a failure leaves this database unchanged.
-     * @param otherDatabasePath Path to the database file to sync data from.
+    /** @fn size_t Sync(const Database& other) const
+     * Copies all tuning data from another Database into this database.
+     * Every run the other database contains is copied over, together with its tuning source, tuning space, device
+     * and results. The other Database may have been constructed from a path, an in-memory database or an existing
+     * connection, and it is only read from. Runs are matched by their GUID, so runs that already exist in this
+     * database are skipped; this makes the operation idempotent and safe to repeat. The copy runs inside a single
+     * transaction, so a failure leaves this database unchanged.
+     * @param other The Database to sync data from.
      * @return Number of runs newly added to this database.
-     * @throw KttException If the file does not exist or the sync fails.
+     * @throw KttException If other is this database (or operates on the same file), or the sync fails.
      */
-    size_t SyncFromFile(const std::filesystem::path &otherDatabasePath) const;
+    size_t Sync(const Database &other) const;
 
 private:
     static constexpr size_t RunBatchSize = 500;

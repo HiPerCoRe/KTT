@@ -95,7 +95,7 @@ bool RunRepository::RunExists(sqlite3* connection, const uuid& guid)
     return statement.Step();
 }
 
-std::vector<RunSyncRecord> RunRepository::GetAllRuns(sqlite3* connection)
+std::vector<RunSyncRecord> RunRepository::GetRuns(sqlite3* connection, size_t offset, size_t limit)
 {
     Statement statement(connection,
         "SELECT tuning_run.id, tuning_run.guid, tuning_source.source_fingerprint, "
@@ -106,7 +106,13 @@ std::vector<RunSyncRecord> RunRepository::GetAllRuns(sqlite3* connection)
         " JOIN tuning_space ON tuning_space.id = tuning_run.space_id"
         " JOIN tuning_source ON tuning_source.id = tuning_space.source_id" +
         DeviceAndTunerJoins +
-        "ORDER BY tuning_run.id ASC");
+        "ORDER BY tuning_run.id ASC "
+        "LIMIT ? OFFSET ?");
+
+    const int64_t limitValue = limit == 0 ? -1 : static_cast<int64_t>(limit);
+    const int64_t offsetValue = limit == 0 ? 0 : static_cast<int64_t>(offset);
+    statement.BindInt64(1, limitValue);
+    statement.BindInt64(2, offsetValue);
 
     std::vector<RunSyncRecord> runs;
 
