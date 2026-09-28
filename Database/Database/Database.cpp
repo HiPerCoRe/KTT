@@ -303,7 +303,7 @@ std::optional<SourceStats> Database::GetStatsForSource(const size_t sourceFinger
     return SourceRepository::GetStatsForSource(m_Connection, sourceFingerprint);
 }
 
-size_t Database::Sync(const Database &other) const
+size_t Database::SyncFrom(const Database &other) const
 {
     sqlite3 *source = other.m_Connection;
     const std::string sourceName = ToUtf8(other.m_DatabasePath);
@@ -317,8 +317,7 @@ size_t Database::Sync(const Database &other) const
     size_t total = 0;
     TransactionGuard transaction(m_Connection);
 
-    for (auto records = RunRepository::GetRuns(source, total, RunBatchSize);
-         !records.empty();
+    for (auto records = RunRepository::GetRuns(source, total, RunBatchSize); !records.empty();
          records = RunRepository::GetRuns(source, total, RunBatchSize))
     {
         total += records.size();
@@ -370,8 +369,8 @@ size_t Database::Sync(const Database &other) const
     transaction.Commit();
 
     ktt::Logger::LogInfo(
-        "Database sync: " + std::to_string(inserted) + " new run(s) copied, " +
-        std::to_string(total - inserted) + " already present"
+        "Database sync: " + std::to_string(inserted) + " new run(s) copied, " + std::to_string(total - inserted) +
+        " already present"
     );
 
     return inserted;

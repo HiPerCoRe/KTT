@@ -141,7 +141,7 @@ public:
      * @return Number of runs newly added to this database.
      * @throw KttException If other is this database (or operates on the same file), or the sync fails.
      */
-    size_t Sync(const Database &other) const;
+    size_t SyncFrom(const Database &other) const;
 
 private:
     static constexpr size_t RunBatchSize = 500;

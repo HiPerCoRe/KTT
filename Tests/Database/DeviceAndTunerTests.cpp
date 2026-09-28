@@ -241,7 +241,7 @@ TEST_CASE("Database sync copies the device identifier, driver version and tuner"
 
     InMemoryConnection connection;
     const ktt::db::Database db(connection.handle);
-    REQUIRE(db.Sync(ktt::db::Database(path)) == 1);
+    REQUIRE(db.SyncFrom(ktt::db::Database(path)) == 1);
 
     const auto device = LoadDeviceInfo(db, tuningInfo);
     REQUIRE(device.has_value());
