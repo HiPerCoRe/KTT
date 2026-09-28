@@ -257,11 +257,6 @@ size_t TuningRunner::GetConfigurationFingerprint(const Kernel& kernel) const
     return m_ConfigurationManager->GetConfigurationFingerprint(id);
 }
 
-void TuningRunner::SetUseGracefulInterrupt(bool use)
-{
-    m_useGracefulInterrupt = use;
-}
-
 const KernelResult& TuningRunner::FindMatchingResult(const std::vector<KernelResult>& results,
     const KernelConfiguration& configuration)
 {

@@ -61,7 +61,9 @@ class KTT_API Database
 public:
     /** @fn Database()
      * Constructs a Database instance with the default database location.
-     * The default location is ~/.local/share/ktt/ktt.db. Creates the directory structure if it doesn't exist.
+     * The default location is %LOCALAPPDATA%\ktt\ktt.db on Windows and $XDG_DATA_HOME/ktt/ktt.db (falling back to
+     * ~/.local/share/ktt/ktt.db) elsewhere. Creates the directory structure if it doesn't exist.
+     * @throw KttException If the default location cannot be determined (the environment variables above are unset).
      */
     explicit Database();
 

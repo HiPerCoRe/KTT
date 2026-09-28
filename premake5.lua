@@ -109,12 +109,12 @@ function linkLibrariesNvidia()
         
     if not _OPTIONS["no-cuda"] then
         defines {"KTT_API_CUDA"}
-        links {"cuda", "nvrtc"}
+        -- nvidia-ml (NVML) ships with the NVIDIA driver; it is used to read the driver version and for power usage.
+        links {"cuda", "nvrtc", "nvidia-ml"}
         cudaProjects = true
         
         if _OPTIONS["power-usage"] then
             defines {"KTT_POWER_USAGE_NVML"}
-            links {"nvidia-ml"}
         end
         
         if _OPTIONS["profiling"] == "cupti-legacy" or _OPTIONS["profiling"] == "cupti" then
@@ -247,6 +247,24 @@ function linkPython()
     
     links {libraryName}
     return true
+end
+
+-- Compiles the bundled SQLite amalgamation into the current project, so the database extension does not depend on
+-- a system SQLite installation (there is none on Windows).
+function addSqlite()
+    local sqlitePath = "Libraries/sqlite-3.53.4"
+    files {sqlitePath .. "/sqlite3.c", sqlitePath .. "/sqlite3.h"}
+    includedirs {sqlitePath}
+
+    -- Third-party code, compiled as is.
+    filter {"files:" .. sqlitePath .. "/sqlite3.c"}
+        warnings "Off"
+
+    -- SQLite uses threads and dynamic loading of extensions.
+    filter {"system:linux"}
+        links {"pthread", "dl"}
+
+    filter {}
 end
 
 function linkAllLibraries()
@@ -571,7 +589,7 @@ project "Ktt"
         files {"Database/**"}
         includedirs {"Database"}
         defines {"KTT_DATABASE"}
-        links {"sqlite3"}
+        addSqlite()
     end
     
     
@@ -855,10 +873,18 @@ project "Tests"
     filter "action:gmake*"
         buildoptions {"-pthread"}
         linkoptions {"-pthread"}
-        
+
     filter {}
-    
+
+    if _OPTIONS["database"] then
+        -- Mirror the Ktt library project so the Tests/Database/ suite can exercise ktt::db::Database.
+        files {"Database/**"}
+        includedirs {"Database"}
+        defines {"KTT_DATABASE"}
+        addSqlite()
+    end
+
     defines {"KTT_LIBRARY", "KTT_TESTS"}
     linkAllLibraries()
-    
+
 end -- _OPTIONS["tests"]

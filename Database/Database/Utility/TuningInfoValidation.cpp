@@ -13,6 +13,9 @@ void ValidateTuningInfo(const TuningInfo &tuningInfo)
     if (spaceInfo.parameterFingerprint == 0 || spaceInfo.sourceFingerprint == 0 || spaceInfo.spaceFingerprint == 0)
         throw KttException("Invalid TuningInfo: spaceInfo fingerprints must all be non-zero");
 
+    if (tuningInfo.tuner.name.empty() || tuningInfo.tuner.version.empty())
+        throw KttException("Invalid TuningInfo: tuner name and version must not be empty");
+
     const auto &device = tuningInfo.device;
     if (device.name.empty())
         throw KttException("Invalid TuningInfo: device name must not be empty");

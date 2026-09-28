@@ -35,7 +35,6 @@ public:
     uint64_t GetConfigurationsCount(const KernelId id) const;
     KernelConfiguration GetBestConfiguration(const KernelId id) const;
     size_t GetConfigurationFingerprint(const Kernel &kernel) const;
-    void SetUseGracefulInterrupt(bool use);
 
 private:
     KernelRunner& m_KernelRunner;

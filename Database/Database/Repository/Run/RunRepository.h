@@ -19,11 +19,10 @@ struct Run
 {
     std::optional<size_t> id; ///< Unique database identifier.
     size_t spaceId; ///< Reference to tuning_space.
-    size_t deviceId; ///< Reference to device_info.
-    size_t deviceApiId; ///< Reference to device_api.
+    size_t deviceId; ///< Reference to device.
+    size_t tunerId; ///< Reference to tuner.
     ktt::OutputFormat outputFormat{}; ///< Output format used for the run.
     std::optional<std::string> inputData; ///< Optional input data for the run.
-    std::optional<std::string> deviceIdentifier; ///< Persistent hardware identifier of the device, nullable.
 };
 
 /** @struct RunQueryResult
@@ -35,6 +34,7 @@ struct RunQueryResult
     uuid guid{}; ///< Globally unique identifier of the run.
     std::optional<std::string> inputData; ///< Input data associated with the run.
     DeviceInfo deviceInfo{}; ///< Device details.
+    TunerInfo tuner{}; ///< Tuner that produced the run.
     ktt::OutputFormat outputFormat{}; ///< Output format used for the run.
 };
 
@@ -50,6 +50,7 @@ struct RunSyncRecord
     size_t parameterFingerprint{}; ///< Parameter fingerprint of the owning tuning space.
     size_t spaceFingerprint{}; ///< Space fingerprint of the owning tuning space.
     DeviceInfo deviceInfo{}; ///< Device the run was executed on.
+    TunerInfo tuner{}; ///< Tuner that produced the run.
     ktt::OutputFormat outputFormat{}; ///< Output format the run's results are serialized in.
     std::optional<std::string> inputData; ///< Optional input data associated with the run.
     std::string createdAt; ///< Original creation timestamp, preserved when copying the run.

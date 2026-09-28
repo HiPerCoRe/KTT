@@ -1,162 +1,136 @@
-#include <sqlite3.h>
-
-#include <Api/KttException.h>
 #include <Database/Repository/Device/DeviceRepository.h>
-#include <Database/Repository/Utility.h>
 
 namespace ktt::db
 {
-size_t DeviceRepository::CreateDevice(sqlite3* connection, const DbDeviceInfo& device)
+
+// Binds version_major, version_minor and extensions of a device_api row starting at index first, storing unset values
+// as their placeholders.
+static void BindDeviceApiVersionAndExtensions(Statement& statement, const int first, const DeviceApi& deviceApi)
 {
-    const char* deviceSql = R"(
+    statement.BindInt(first, deviceApi.cudaComputeCapabilityMajor.value_or(NoCudaComputeCapability));
+    statement.BindInt(first + 1, deviceApi.cudaComputeCapabilityMinor.value_or(NoCudaComputeCapability));
+    statement.BindText(first + 2, deviceApi.extensions.value_or(NoText));
+}
+
+size_t DeviceRepository::CreateDeviceInfo(sqlite3* connection, const DbDeviceInfo& device)
+{
+    Statement statement(connection, R"(
         INSERT INTO device_info
         (name, vendor, type)
         VALUES (?, ?, ?)
-    )";
+    )");
 
-    sqlite3_stmt* deviceStmt = DatabaseUtility::PrepareStatement(
-        connection,
-        deviceSql,
-        "Failed to prepare device INSERT statement: "
-    );
+    statement.BindText(1, device.name);
+    statement.BindText(2, device.vendor);
+    statement.BindText(3, device.type);
+    statement.Execute();
 
-    sqlite3_bind_text(deviceStmt, 1, device.name.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(deviceStmt, 2, device.vendor.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(deviceStmt, 3, device.type.c_str(), -1, SQLITE_TRANSIENT);
-
-    const int result = sqlite3_step(deviceStmt);
-
-    if (result != SQLITE_DONE)
-    {
-        const std::string error = sqlite3_errmsg(connection);
-        sqlite3_finalize(deviceStmt);
-        throw KttException("Failed to execute device INSERT statement: " + error);
-    }
-
-    sqlite3_finalize(deviceStmt);
     return sqlite3_last_insert_rowid(connection);
 }
 
 std::optional<DbDeviceInfo> DeviceRepository::GetDeviceInfo(sqlite3* connection, const DbDeviceInfo& device)
 {
-    const char* deviceSql = R"(
+    Statement statement(connection, R"(
         SELECT id, name, vendor, type
         FROM device_info
         WHERE name = ? AND vendor = ? AND type = ?
         LIMIT 1
-    )";
+    )");
 
-    sqlite3_stmt* deviceStmt = DatabaseUtility::PrepareStatement(
-        connection,
-        deviceSql,
-        "Failed to prepare device SELECT statement: "
-    );
+    statement.BindText(1, device.name);
+    statement.BindText(2, device.vendor);
+    statement.BindText(3, device.type);
 
-    sqlite3_bind_text(deviceStmt, 1, device.name.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(deviceStmt, 2, device.vendor.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(deviceStmt, 3, device.type.c_str(), -1, SQLITE_TRANSIENT);
-
-    const int result = sqlite3_step(deviceStmt);
-
-    if (result == SQLITE_DONE)
-    {
-        sqlite3_finalize(deviceStmt);
+    if (!statement.Step())
         return std::nullopt;
-    }
 
-    if (result != SQLITE_ROW)
-    {
-        const std::string error = sqlite3_errmsg(connection);
-        sqlite3_finalize(deviceStmt);
-        throw KttException("Failed to execute device SELECT statement: " + error);
-    }
-
-    const DbDeviceInfo output = DbDeviceInfo::FromRow(deviceStmt);
-    sqlite3_finalize(deviceStmt);
-    return output;
+    return DbDeviceInfo::FromRow(statement);
 }
 
 size_t DeviceRepository::CreateDeviceApi(sqlite3* connection, const DeviceApi& deviceApi)
 {
-    const char* deviceApiSql = R"(
+    Statement statement(connection, R"(
         INSERT INTO device_api
         (compute_api_id, version_major, version_minor, extensions)
         VALUES (?, ?, ?, ?)
-    )";
+    )");
 
-    sqlite3_stmt* deviceApiStmt = DatabaseUtility::PrepareStatement(
-        connection,
-        deviceApiSql,
-        "Failed to prepare device_api INSERT statement: "
-    );
+    statement.BindInt(1, static_cast<int>(deviceApi.computeApi));
+    BindDeviceApiVersionAndExtensions(statement, 2, deviceApi);
+    statement.Execute();
 
-    sqlite3_bind_int(deviceApiStmt, 1, static_cast<int>(deviceApi.computeApi));
-    DatabaseUtility::BindOptionalInt(deviceApiStmt, 2, deviceApi.cudaComputeCapabilityMajor);
-    DatabaseUtility::BindOptionalInt(deviceApiStmt, 3, deviceApi.cudaComputeCapabilityMinor);
-    DatabaseUtility::BindOptionalText(deviceApiStmt, 4, deviceApi.extensions);
-
-    const int result = sqlite3_step(deviceApiStmt);
-
-    if (result != SQLITE_DONE)
-    {
-        const std::string error = sqlite3_errmsg(connection);
-        sqlite3_finalize(deviceApiStmt);
-        throw KttException("Failed to execute device_api INSERT statement: " + error);
-    }
-
-    sqlite3_finalize(deviceApiStmt);
     return sqlite3_last_insert_rowid(connection);
 }
 
 std::optional<DeviceApi> DeviceRepository::GetDeviceApi(sqlite3* connection, const DeviceApi& deviceApi)
 {
-    const char* deviceApiSql = R"(
+    Statement statement(connection, R"(
         SELECT id, compute_api_id, version_major, version_minor, extensions
         FROM device_api
-        WHERE compute_api_id = ? AND version_major = ? AND version_minor = ? AND extensions IS ?
+        WHERE compute_api_id = ? AND version_major = ? AND version_minor = ? AND extensions = ?
         LIMIT 1
-    )";
+    )");
 
-    sqlite3_stmt* deviceApiStmt = DatabaseUtility::PrepareStatement(
-        connection,
-        deviceApiSql,
-        "Failed to prepare device_api SELECT statement: "
-    );
+    statement.BindInt(1, static_cast<int>(deviceApi.computeApi));
+    BindDeviceApiVersionAndExtensions(statement, 2, deviceApi);
 
-    sqlite3_bind_int(deviceApiStmt, 1, static_cast<int>(deviceApi.computeApi));
-    DatabaseUtility::BindOptionalInt(deviceApiStmt, 2, deviceApi.cudaComputeCapabilityMajor);
-    DatabaseUtility::BindOptionalInt(deviceApiStmt, 3, deviceApi.cudaComputeCapabilityMinor);
-    DatabaseUtility::BindOptionalText(deviceApiStmt, 4, deviceApi.extensions);
-
-    const int result = sqlite3_step(deviceApiStmt);
-
-    if (result == SQLITE_DONE)
-    {
-        sqlite3_finalize(deviceApiStmt);
+    if (!statement.Step())
         return std::nullopt;
-    }
 
-    if (result != SQLITE_ROW)
-    {
-        const std::string error = sqlite3_errmsg(connection);
-        sqlite3_finalize(deviceApiStmt);
-        throw KttException("Failed to execute device_api SELECT statement: " + error);
-    }
+    return DeviceApi::FromRow(statement);
+}
 
-    const DeviceApi output = DeviceApi::FromRow(deviceApiStmt);
-    sqlite3_finalize(deviceApiStmt);
-    return output;
+std::optional<DeviceApi> DeviceRepository::GetDeviceApiBySimpleQuery(sqlite3* connection, const DeviceApi& deviceApi)
+{
+    return GetDeviceApi(connection, deviceApi);
+}
+
+size_t DeviceRepository::CreateDevice(sqlite3* connection, const DbDevice& device)
+{
+    Statement statement(connection, R"(
+        INSERT INTO device
+        (device_info_id, device_api_id, device_identifier, driver_version)
+        VALUES (?, ?, ?, ?)
+    )");
+
+    statement.BindInt64(1, static_cast<int64_t>(device.deviceInfoId));
+    statement.BindInt64(2, static_cast<int64_t>(device.deviceApiId));
+    statement.BindText(3, device.deviceIdentifier);
+    statement.BindText(4, device.driverVersion);
+    statement.Execute();
+
+    return sqlite3_last_insert_rowid(connection);
+}
+
+std::optional<DbDevice> DeviceRepository::GetDevice(sqlite3* connection, const DbDevice& device)
+{
+    Statement statement(connection, R"(
+        SELECT id, device_info_id, device_api_id, device_identifier, driver_version
+        FROM device
+        WHERE device_info_id = ? AND device_api_id = ? AND device_identifier = ? AND driver_version = ?
+        LIMIT 1
+    )");
+
+    statement.BindInt64(1, static_cast<int64_t>(device.deviceInfoId));
+    statement.BindInt64(2, static_cast<int64_t>(device.deviceApiId));
+    statement.BindText(3, device.deviceIdentifier);
+    statement.BindText(4, device.driverVersion);
+
+    if (!statement.Step())
+        return std::nullopt;
+
+    return DbDevice::FromRow(statement);
 }
 
 Device DeviceRepository::GetOrCreateDevice(sqlite3* connection, const Device& device)
 {
     Device output = device;
 
-    const DbDeviceInfo deviceInfo{device.id, device.name, device.vendor, device.type};
-    if (auto existingDevice = GetDeviceInfo(connection, deviceInfo))
-        output.id = existingDevice->id;
+    const DbDeviceInfo deviceInfo{device.infoId, device.name, device.vendor, device.type};
+    if (auto existingDeviceInfo = GetDeviceInfo(connection, deviceInfo))
+        output.infoId = existingDeviceInfo->id;
     else
-        output.id = CreateDevice(connection, deviceInfo);
+        output.infoId = CreateDeviceInfo(connection, deviceInfo);
 
     const DeviceApi deviceApi{
         device.apiId,
@@ -171,76 +145,64 @@ Device DeviceRepository::GetOrCreateDevice(sqlite3* connection, const Device& de
     else
         output.apiId = CreateDeviceApi(connection, deviceApi);
 
+    const DbDevice dbDevice{device.id, *output.infoId, *output.apiId, device.deviceIdentifier, device.driverVersion};
+    if (auto existingDevice = GetDevice(connection, dbDevice))
+        output.id = existingDevice->id;
+    else
+        output.id = CreateDevice(connection, dbDevice);
+
     return output;
 }
 
-DbDeviceInfo DbDeviceInfo::FromRow(sqlite3_stmt* stmt)
+Device Device::FromDeviceInfo(const DeviceInfo& deviceInfo)
+{
+    Device device{};
+    device.name = deviceInfo.name;
+    device.vendor = deviceInfo.vendor;
+    device.type = deviceInfo.type;
+    device.computeApi = deviceInfo.computeApi;
+    device.extensions = deviceInfo.extensions;
+    device.cudaComputeCapabilityMajor = deviceInfo.cudaComputeCapabilityMajor;
+    device.cudaComputeCapabilityMinor = deviceInfo.cudaComputeCapabilityMinor;
+    device.deviceIdentifier = deviceInfo.deviceIdentifier.value_or(NoText);
+    device.driverVersion = deviceInfo.driverVersion;
+    return device;
+}
+
+DbDeviceInfo DbDeviceInfo::FromRow(const Statement& statement)
 {
     return DbDeviceInfo{
-        sqlite3_column_int64(stmt, 0),
-        reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)),
-        reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)),
-        reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3))
+        statement.GetSizeT(0),
+        statement.GetText(1),
+        statement.GetText(2),
+        statement.GetText(3)
     };
 }
 
-DeviceApi DeviceApi::FromRow(sqlite3_stmt* stmt)
+DeviceApi DeviceApi::FromRow(const Statement& statement)
 {
-    const bool extensionsIsNull = sqlite3_column_type(stmt, 4) == SQLITE_NULL;
-    const bool majorIsNull = sqlite3_column_type(stmt, 2) == SQLITE_NULL;
-    const bool minorIsNull = sqlite3_column_type(stmt, 3) == SQLITE_NULL;
+    const int major = statement.GetInt(2);
+    const int minor = statement.GetInt(3);
+    const std::string extensions = statement.GetText(4);
 
     return DeviceApi{
-        sqlite3_column_int64(stmt, 0),
-        static_cast<ComputeApi>(sqlite3_column_int(stmt, 1)),
-        extensionsIsNull ? std::nullopt : std::optional<std::string>(DatabaseUtility::ReadTextColumn(stmt, 4)),
-        majorIsNull ? std::nullopt : std::optional<int>(sqlite3_column_int(stmt, 2)),
-        minorIsNull ? std::nullopt : std::optional<int>(sqlite3_column_int(stmt, 3))
+        statement.GetSizeT(0),
+        static_cast<ComputeApi>(statement.GetInt(1)),
+        extensions.empty() ? std::nullopt : std::optional<std::string>(extensions),
+        major == NoCudaComputeCapability ? std::nullopt : std::optional<int>(major),
+        minor == NoCudaComputeCapability ? std::nullopt : std::optional<int>(minor)
     };
 }
 
-
-std::optional<DeviceApi> DeviceRepository::GetDeviceApiBySimpleQuery(sqlite3* connection, const DeviceApi& deviceApi)
+DbDevice DbDevice::FromRow(const Statement& statement)
 {
-    const char* deviceApiSql = R"(
-        SELECT id, compute_api_id, version_major, version_minor, extensions
-        FROM device_api
-                WHERE compute_api_id = ?
-                    AND version_major IS ?
-                    AND version_minor IS ?
-                    AND extensions IS ?
-        LIMIT 1
-    )";
-
-    sqlite3_stmt* deviceApiStmt = DatabaseUtility::PrepareStatement(
-        connection,
-        deviceApiSql,
-        "Failed to prepare device_api SELECT statement: "
-    );
-
-    sqlite3_bind_int(deviceApiStmt, 1, static_cast<int>(deviceApi.computeApi));
-    DatabaseUtility::BindOptionalInt(deviceApiStmt, 2, deviceApi.cudaComputeCapabilityMajor);
-    DatabaseUtility::BindOptionalInt(deviceApiStmt, 3, deviceApi.cudaComputeCapabilityMinor);
-    DatabaseUtility::BindOptionalText(deviceApiStmt, 4, deviceApi.extensions);
-
-    const int result = sqlite3_step(deviceApiStmt);
-
-    if (result == SQLITE_DONE)
-    {
-        sqlite3_finalize(deviceApiStmt);
-        return std::nullopt;
-    }
-
-    if (result != SQLITE_ROW)
-    {
-        const std::string error = sqlite3_errmsg(connection);
-        sqlite3_finalize(deviceApiStmt);
-        throw KttException("Failed to execute device_api SELECT statement: " + error);
-    }
-
-    const DeviceApi output = DeviceApi::FromRow(deviceApiStmt);
-    sqlite3_finalize(deviceApiStmt);
-    return output;
+    return DbDevice{
+        statement.GetSizeT(0),
+        statement.GetSizeT(1),
+        statement.GetSizeT(2),
+        statement.GetText(3),
+        statement.GetText(4)
+    };
 }
 
 } // namespace ktt::db

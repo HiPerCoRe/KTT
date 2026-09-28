@@ -10,7 +10,7 @@ Enable the database build option in premake5 (use the option `--database`), whic
 
 ## Load results and stats
 
-Open a `Database` (default location `~/.local/share/ktt/ktt.db`) and use `GetDatabaseTuningInfo` to key queries against a tuning problem:
+Open a `Database` (default location `~/.local/share/ktt/ktt.db` on Linux, or `$XDG_DATA_HOME/ktt/ktt.db` when set; `%LOCALAPPDATA%\ktt\ktt.db` on Windows) and use `GetDatabaseTuningInfo` to key queries against a tuning problem:
 
 - `SimpleGetBestResults` returns the fastest stored results for that tuning problem.
 - `GetBestResults` takes a `GetBestResultsQuery` with optional device and input-data predicates for fine-grained filtering.

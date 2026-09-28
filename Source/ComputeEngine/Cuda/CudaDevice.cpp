@@ -2,12 +2,35 @@
 
 #include <cstddef>
 #include <cstdio>
+#include <string>
+#include <nvml.h>
 
 #include <ComputeEngine/Cuda/CudaDevice.h>
 #include <ComputeEngine/Cuda/CudaUtility.h>
 
 namespace ktt
 {
+
+// NVIDIA driver version (e.g. "550.54.14"). The CUDA driver API only reports the supported CUDA version, so the
+// actual driver version is taken from NVML. It is the same for all devices, so it is queried once and cached.
+// Left empty if NVML cannot be initialized.
+static const std::string& GetNvidiaDriverVersion()
+{
+    static const std::string version = []()
+    {
+        if (nvmlInit_v2() != NVML_SUCCESS)
+        {
+            return std::string();
+        }
+
+        char buffer[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];
+        const bool success = nvmlSystemGetDriverVersion(buffer, sizeof(buffer)) == NVML_SUCCESS;
+        nvmlShutdown();
+        return success ? std::string(buffer) : std::string();
+    }();
+
+    return version;
+}
 
 CudaDevice::CudaDevice(const DeviceIndex index, const CUdevice device) :
     m_Index(index),
@@ -33,6 +56,7 @@ DeviceInfo CudaDevice::GetInfo() const
     result.SetVendor("NVIDIA Corporation");
     result.SetExtensions("N/A");
     result.SetDeviceType(DeviceType::GPU);
+    result.SetDriverVersion(GetNvidiaDriverVersion());
 
     // Persistent hardware identifier: the device UUID, formatted the same way as nvidia-smi ("GPU-<uuid>").
     // cuDeviceGetUuid is available since CUDA 9.2; leave the identifier empty if the driver rejects the call.

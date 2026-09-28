@@ -57,11 +57,27 @@ DeviceInfo VulkanPhysicalDevice::GetInfo() const
     VkPhysicalDeviceIDProperties idProperties{};
     idProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES;
 
+    // Driver version string (e.g. "550.54.14") exposed through Vulkan 1.2 core. Only chained when the device supports
+    // Vulkan 1.2, otherwise the driver version stays empty.
+    VkPhysicalDeviceDriverProperties driverProperties{};
+    driverProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES;
+    const bool hasDriverProperties = properties.apiVersion >= VK_API_VERSION_1_2;
+
+    if (hasDriverProperties)
+    {
+        idProperties.pNext = &driverProperties;
+    }
+
     VkPhysicalDeviceProperties2 properties2{};
     properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
     properties2.pNext = &idProperties;
 
     vkGetPhysicalDeviceProperties2(m_Device, &properties2);
+
+    if (hasDriverProperties)
+    {
+        result.SetDriverVersion(driverProperties.driverInfo);
+    }
 
     const auto* uuid = idProperties.deviceUUID;
     char identifier[37];

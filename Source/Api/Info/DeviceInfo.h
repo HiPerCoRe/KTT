@@ -46,6 +46,13 @@ public:
       */
     const std::string& GetDeviceIdentifier() const;
 
+    /** @fn const std::string& GetDriverVersion() const
+      * Getter for the version of the driver the device runs on, as reported by the vendor (e.g. "550.54.14" for
+      * NVIDIA). Empty when the version could not be retrieved or the device has no driver (C++ backend).
+      * @return Version of the device driver, or an empty string when unavailable.
+      */
+    const std::string& GetDriverVersion() const;
+
     /** @fn const std::string& GetVendor() const
       * Getter for name of device vendor retrieved from compute API.
       * @return Name of device vendor retrieved from compute API.
@@ -130,6 +137,12 @@ public:
       */
     void SetDeviceIdentifier(const std::string& deviceIdentifier);
 
+    /** @fn void SetDriverVersion(const std::string& driverVersion)
+      * Setter for the version of the device driver.
+      * @param driverVersion Version of the device driver.
+      */
+    void SetDriverVersion(const std::string& driverVersion);
+
     /** @fn void SetExtensions(const std::string& extensions)
       * Setter for list of supported device extensions.
       * @param extensions List of supported device extensions.
@@ -188,6 +201,7 @@ private:
     DeviceIndex m_Index;
     std::string m_Name;
     std::string m_DeviceIdentifier;
+    std::string m_DriverVersion;
     std::string m_Vendor;
     std::string m_Extensions;
     DeviceType m_DeviceType;

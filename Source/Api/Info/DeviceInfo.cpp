@@ -32,6 +32,11 @@ const std::string& DeviceInfo::GetDeviceIdentifier() const
     return m_DeviceIdentifier;
 }
 
+const std::string& DeviceInfo::GetDriverVersion() const
+{
+    return m_DriverVersion;
+}
+
 const std::string& DeviceInfo::GetVendor() const
 {
     return m_Vendor;
@@ -106,6 +111,7 @@ std::string DeviceInfo::GetString() const
     result += "Name: " + m_Name + "\n";
     result += "Device identifier: " + m_DeviceIdentifier + "\n";
     result += "Vendor: " + m_Vendor + "\n";
+    result += "Driver version: " + m_DriverVersion + "\n";
     result += "Device type: " + GetDeviceTypeString() + "\n";
     result += "Global memory size: " + std::to_string(m_GlobalMemorySize) + "\n";
     result += "Local memory size: " + std::to_string(m_LocalMemorySize) + "\n";
@@ -126,6 +132,11 @@ void DeviceInfo::SetVendor(const std::string& vendor)
 void DeviceInfo::SetDeviceIdentifier(const std::string& deviceIdentifier)
 {
     m_DeviceIdentifier = deviceIdentifier;
+}
+
+void DeviceInfo::SetDriverVersion(const std::string& driverVersion)
+{
+    m_DriverVersion = driverVersion;
 }
 
 void DeviceInfo::SetExtensions(const std::string& extensions)

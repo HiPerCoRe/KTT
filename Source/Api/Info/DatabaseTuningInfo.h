@@ -5,6 +5,7 @@
 #include <string>
 
 #include <ComputeEngine/ComputeApi.h>
+#include <KttPlatform.h>
 
 namespace ktt::db
 {
@@ -19,12 +20,22 @@ struct DeviceInfo
     std::optional<std::string> deviceIdentifier; ///< Persistent hardware identifier of the device (e.g. device UUID), empty when the compute API does not expose one
     std::string vendor; ///< Device vendor (e.g., "NVIDIA", "AMD")
     std::string type; ///< Device type (e.g., "GPU", "CPU")
+    std::string driverVersion; ///< Version of the device driver (e.g., "550.54.14"), empty when unknown or not applicable
     std::optional<std::string> extensions; ///< Supported device extensions (optional)
     std::optional<uint32_t>
         cudaComputeCapabilityMajor{}; ///< CUDA compute capability major version (optional, NVIDIA only)
     std::optional<uint32_t>
         cudaComputeCapabilityMinor{}; ///< CUDA compute capability minor version (optional, NVIDIA only)
     ComputeApi computeApi{ComputeApi::Cpp}; ///< Compute API used (CUDA, OpenCL, C++, etc.)
+};
+
+/** @struct TunerInfo
+ * Identifies the tuner (and its version) that produced the tuning results.
+ */
+struct TunerInfo
+{
+    std::string name{"KTT"}; ///< Name of the tuner
+    std::string version{GetKttVersionString()}; ///< Version of the tuner (e.g., "2.3.1")
 };
 
 /** @struct TuningSpaceInfo
@@ -45,6 +56,7 @@ struct TuningSpaceInfo
 struct TuningInfo
 {
     DeviceInfo device{}; ///< Information about the compute device used for tuning
+    TunerInfo tuner{}; ///< Tuner that produced the results
     std::optional<std::string> inputData{}; ///< Optional input data configuration (e.g., dataset identifier)
     TuningSpaceInfo spaceInfo{}; ///< Fingerprints identifying the tuning space
 };

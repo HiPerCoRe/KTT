@@ -53,6 +53,7 @@ DeviceInfo OpenClDevice::GetInfo() const
 
     const DeviceType type = GetDeviceType();
     result.SetDeviceType(type);
+    result.SetDriverVersion(GetInfoString(CL_DRIVER_VERSION));
 
 #ifdef CL_DEVICE_UUID_KHR
     // Persistent hardware identifier: the device UUID exposed by the cl_khr_device_uuid extension.

@@ -26,7 +26,8 @@ and skips it.
 
 ### Open the database
 
-Always needed. The default constructor uses `~/.local/share/ktt/ktt.db`,
+Always needed. The default constructor uses `~/.local/share/ktt/ktt.db` on Linux (`$XDG_DATA_HOME/ktt/ktt.db` when set) and
+`%LOCALAPPDATA%\ktt\ktt.db` on Windows,
 creating the directory and schema if needed:
 
 ```cpp
@@ -122,7 +123,7 @@ fields — the output format and the JSON indentation — look like this:
 Needs an open database.
 Merges every run from another database file into the local one. Runs are matched
 by GUID, so existing runs are skipped — idempotent and safe to repeat. In the
-example the path comes from the `--db` CLI option, and the sync only runs when
+example the path comes from the `--db-sync` CLI option, and the sync only runs when
 that option is given:
 
 ```cpp
@@ -138,7 +139,7 @@ From [Database/Database.h](Database/Database.h):
 
 | Method | Purpose |
 | --- | --- |
-| `Database()` | Open/create the default DB at `~/.local/share/ktt/ktt.db`. |
+| `Database()` | Open/create the default DB (`~/.local/share/ktt/ktt.db` on Linux, `%LOCALAPPDATA%\ktt\ktt.db` on Windows). |
 | `Database(std::filesystem::path)` | Open/create a DB at a custom path. |
 | `Database(sqlite3*)` | Adopt an already-open connection (not owned; caller closes it). |
 | `SaveResults(source, results, options = {})` | Persist a run's `KernelResult`s. |

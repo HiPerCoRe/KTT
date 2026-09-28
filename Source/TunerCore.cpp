@@ -402,6 +402,7 @@ ktt::db::TuningInfo TunerCore::GetDatabaseTuningInfo(const KernelId id) const
             d.name = deviceInfo.GetName();
             d.type = deviceInfo.GetDeviceTypeString();
             d.vendor = deviceInfo.GetVendor();
+            d.driverVersion = deviceInfo.GetDriverVersion();
 
             if (const auto& identifier = deviceInfo.GetDeviceIdentifier(); !identifier.empty())
             {
@@ -420,6 +421,7 @@ ktt::db::TuningInfo TunerCore::GetDatabaseTuningInfo(const KernelId id) const
             }
         }
         s.device = d;
+        s.tuner = ktt::db::TunerInfo{"KTT", GetKttVersionString()};
     }
     return s;
 }
