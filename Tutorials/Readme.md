@@ -16,6 +16,7 @@ Showcases basic features that will likely be involved in nearly every project.
 - KernelTuning: Basic kernel tuning tutorial; shows kernel arguments, reference computation, 
     tuning parameters, thread modifiers, and offline tuning. Has versions with C++ host code for tuning CUDA, OpenCL, and Vulkan,
     with Python host code for tuning CUDA, and with a JSON script for tuning CUDA.
+- ProcessingKernelResults: A few basic ways that one can work with the kernel results after tuning.
 - StopConditions: Showcases the use of stop conditions on a very simple kernel. Includes a union stop condition.
 - TuningConstraints: Showcases the use of tuning constraints to filter out configurations that would fail or be suboptimal,
     demonstrated on a matrix transpose kernel with work-group size constrained through two tuning parameters.
@@ -27,9 +28,10 @@ Showcases basic features that will likely be involved in nearly every project.
 ## Intermediate
 Showcases features that are good to know about, but might not be necessary for all projects.
 - KernelRunning: Shows that KTT can also run kernels <!-- TODO: Merge with dynamic tuning? -->
-- ProcessingKernelResults: A few basic ways that one can work with the kernel results after tuning.
+- KernelLauncher: KTT allows the user to define a custom kernel launcher. This tutorial shows how one can split the work between
+    GPU and CPU with this.
 
-<!-- TODO: dynamic tuning, (kernel launcher, (groups, composite kernel -- mozna oddelit)), 
+<!-- TODO: dynamic tuning, (~~kernel launcher~~, (groups, composite kernel -- mozna oddelit)), 
             (compiler tuning, compiler options), database stuff, searcher
            - groups, kernel launcher, composite can be in one file
            - searcher: choose a premade one (try profiling searcher?)
