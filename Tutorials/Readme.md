@@ -22,6 +22,7 @@ Showcases basic features that will likely be involved in nearly every project.
     demonstrated on a matrix transpose kernel with work-group size constrained through two tuning parameters.
 - MultipleBackends: Program adapted to work with multiple different compute APIs, showing how KTT is designed in a way that lets
     these variants share most of the code.
+- SearcherChoice: KTT allows one to choose from several pre-defined searchers.
 
 <!-- perhaps a tutorial specifically about reference kernel/computation -->
 
