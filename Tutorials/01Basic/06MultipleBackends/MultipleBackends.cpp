@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 
     if (computeApi == ktt::ComputeApi::Cpp)
     {
-        tuner.SetCompilerOptions("-march=native -fopenmp");
+        tuner.SetCompilerOptions("-O3 -march=native -fopenmp");
         tuner.AddParameter(kernel, "OMP_SCHEDULING", std::vector<uint64_t>{0, 1, 2});
         tuner.AddParameter(kernel, "OMP_SCHED_CHUNK", std::vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
 
