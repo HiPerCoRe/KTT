@@ -31,6 +31,8 @@ Showcases features that are good to know about, but might not be necessary for a
 - KernelRunning: Shows that KTT can also run kernels <!-- TODO: Merge with dynamic tuning? -->
 - KernelLauncher: KTT allows the user to define a custom kernel launcher. This tutorial shows how one can split the work between
     GPU and CPU with this.
+- ProfilingSearcher: Continues SearcherChoice with a focus on the profiling searcher. Its set-up is more
+    complicated than the others, which is why it has a dedicated tutorial.
 
 <!-- TODO: dynamic tuning, (~~kernel launcher~~, (groups, composite kernel -- mozna oddelit)), 
             (compiler tuning, compiler options), database stuff, searcher

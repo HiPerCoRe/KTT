@@ -1,0 +1,817 @@
+{
+  "Metadata": {
+    "ComputeApi": "CUDA",
+    "Device": "NVIDIA GeForce RTX 5050",
+    "GlobalSizeType": "CUDA",
+    "KttVersion": "2.3.1",
+    "Platform": "NVIDIA CUDA",
+    "TimeUnit": "Microseconds",
+    "Timestamp": "2026-09-29 15:10:26 UTC"
+  },
+  "Results": [
+    {
+      "CompilationOverhead": 13654.823,
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 12
+          },
+          "CompilationOverhead": 13646.238,
+          "Duration": 77.152,
+          "GlobalSize": {
+            "X": 32768,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "vectorAddition",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 13646.238,
+          "ProfilingData": {
+            "Counters": [
+              {
+                "Name": "dram__throughput.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 61.59942363112392
+              },
+              {
+                "Name": "lts__t_sectors.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 10.724865086813702
+              },
+              {
+                "Name": "lts__t_sectors_op_read.sum",
+                "Type": "Double",
+                "Value": 262738.0
+              },
+              {
+                "Name": "lts__t_sectors_op_write.sum",
+                "Type": "Double",
+                "Value": 132035.0
+              },
+              {
+                "Name": "l1tex__t_requests_pipe_lsu_mem_global_op_ld.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 2.672380925196088
+              },
+              {
+                "Name": "l1tex__t_requests_pipe_lsu_mem_global_op_ld.sum",
+                "Type": "Double",
+                "Value": 65536.0
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 0.9590652859810459
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_st.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__t_sectors_pipe_lsu_mem_local_op_ld.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__t_sectors_pipe_lsu_mem_local_op_st.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "sm__warps_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 31.66742529429315
+              },
+              {
+                "Name": "smsp__cycles_active.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 63.65530957133575
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp16_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum",
+                "Type": "Double",
+                "Value": 2097152.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp64_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_integer_pred_on.sum",
+                "Type": "Double",
+                "Value": 4194304.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_control_pred_on.sum",
+                "Type": "Double",
+                "Value": 1048576.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_memory_pred_on.sum",
+                "Type": "Double",
+                "Value": 10485760.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_misc_pred_on.sum",
+                "Type": "Double",
+                "Value": 2097152.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_conversion_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed.sum",
+                "Type": "Double",
+                "Value": 622592.0
+              },
+              {
+                "Name": "smsp__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 1.887817772475839
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_fp64.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_xu.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_lsu.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 3.013308056906904
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_tex.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__issue_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 7.156606635153897
+              },
+              {
+                "Name": "smsp__thread_inst_executed_per_inst_executed.ratio",
+                "Type": "Double",
+                "Value": 32.0
+              },
+              {
+                "Name": "smsp__thread_inst_executed_per_inst_executed.pct",
+                "Type": "Double",
+                "Value": 100.0
+              }
+            ],
+            "RemainingProfilingRuns": 0
+          }
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "multiply_block_size",
+          "Value": 32,
+          "ValueType": "UnsignedInt"
+        }
+      ],
+      "DataMovementOverhead": 7161.783,
+      "ExtraDuration": 0.0,
+      "KernelName": "Addition",
+      "PreciseMeasurementOverhead": 0.0,
+      "ProfilingOverhead": 79598.842,
+      "SearcherOverhead": 13.46,
+      "Status": "Ok",
+      "Timestamp": "2026-09-29 15:10:25 UTC",
+      "TotalDuration": 77.152,
+      "TotalOverhead": 97878.528,
+      "ValidationOverhead": 11368.366
+    },
+    {
+      "CompilationOverhead": 11324.837,
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 12
+          },
+          "CompilationOverhead": 11316.295,
+          "Duration": 58.848,
+          "GlobalSize": {
+            "X": 16384,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "vectorAddition",
+          "LocalSize": {
+            "X": 64,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 11316.295,
+          "ProfilingData": {
+            "Counters": [
+              {
+                "Name": "dram__throughput.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 93.62168351231838
+              },
+              {
+                "Name": "lts__t_sectors.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 16.932401798399056
+              },
+              {
+                "Name": "lts__t_sectors_op_read.sum",
+                "Type": "Double",
+                "Value": 262367.0
+              },
+              {
+                "Name": "lts__t_sectors_op_write.sum",
+                "Type": "Double",
+                "Value": 131261.0
+              },
+              {
+                "Name": "l1tex__t_requests_pipe_lsu_mem_global_op_ld.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 3.1300342586299705
+              },
+              {
+                "Name": "l1tex__t_requests_pipe_lsu_mem_global_op_ld.sum",
+                "Type": "Double",
+                "Value": 65536.0
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 1.5233278167246223
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_st.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__t_sectors_pipe_lsu_mem_local_op_ld.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__t_sectors_pipe_lsu_mem_local_op_st.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "sm__warps_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 84.09519442277974
+              },
+              {
+                "Name": "smsp__cycles_active.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 106.05386596500364
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp16_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum",
+                "Type": "Double",
+                "Value": 2097152.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp64_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_integer_pred_on.sum",
+                "Type": "Double",
+                "Value": 4194304.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_control_pred_on.sum",
+                "Type": "Double",
+                "Value": 1048576.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_memory_pred_on.sum",
+                "Type": "Double",
+                "Value": 10485760.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_misc_pred_on.sum",
+                "Type": "Double",
+                "Value": 2097152.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_conversion_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed.sum",
+                "Type": "Double",
+                "Value": 622592.0
+              },
+              {
+                "Name": "smsp__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 1.8222257582123553
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_fp64.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_xu.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_lsu.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 2.8727435871640927
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_tex.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__issue_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 6.82276601951472
+              },
+              {
+                "Name": "smsp__thread_inst_executed_per_inst_executed.ratio",
+                "Type": "Double",
+                "Value": 32.0
+              },
+              {
+                "Name": "smsp__thread_inst_executed_per_inst_executed.pct",
+                "Type": "Double",
+                "Value": 100.0
+              }
+            ],
+            "RemainingProfilingRuns": 0
+          }
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "multiply_block_size",
+          "Value": 64,
+          "ValueType": "UnsignedInt"
+        }
+      ],
+      "DataMovementOverhead": 5585.92,
+      "ExtraDuration": 0.0,
+      "KernelName": "Addition",
+      "PreciseMeasurementOverhead": 0.0,
+      "ProfilingOverhead": 64953.135,
+      "SearcherOverhead": 12.947,
+      "Status": "Ok",
+      "Timestamp": "2026-09-29 15:10:25 UTC",
+      "TotalDuration": 58.848,
+      "TotalOverhead": 79077.543,
+      "ValidationOverhead": 10792.121
+    },
+    {
+      "CompilationOverhead": 11155.149,
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 12
+          },
+          "CompilationOverhead": 11146.295,
+          "Duration": 58.24,
+          "GlobalSize": {
+            "X": 8192,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "vectorAddition",
+          "LocalSize": {
+            "X": 128,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 11146.295,
+          "ProfilingData": {
+            "Counters": [
+              {
+                "Name": "dram__throughput.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 93.6361821086262
+              },
+              {
+                "Name": "lts__t_sectors.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 16.973560084145003
+              },
+              {
+                "Name": "lts__t_sectors_op_read.sum",
+                "Type": "Double",
+                "Value": 262375.0
+              },
+              {
+                "Name": "lts__t_sectors_op_write.sum",
+                "Type": "Double",
+                "Value": 131796.0
+              },
+              {
+                "Name": "l1tex__t_requests_pipe_lsu_mem_global_op_ld.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 3.149724370281013
+              },
+              {
+                "Name": "l1tex__t_requests_pipe_lsu_mem_global_op_ld.sum",
+                "Type": "Double",
+                "Value": 65536.0
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 1.5229879715183403
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_st.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__t_sectors_pipe_lsu_mem_local_op_ld.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__t_sectors_pipe_lsu_mem_local_op_st.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "sm__warps_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 87.6649603016307
+              },
+              {
+                "Name": "smsp__cycles_active.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 105.34620229043112
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp16_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum",
+                "Type": "Double",
+                "Value": 2097152.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp64_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_integer_pred_on.sum",
+                "Type": "Double",
+                "Value": 4194304.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_control_pred_on.sum",
+                "Type": "Double",
+                "Value": 1048576.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_memory_pred_on.sum",
+                "Type": "Double",
+                "Value": 10485760.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_misc_pred_on.sum",
+                "Type": "Double",
+                "Value": 2097152.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_conversion_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed.sum",
+                "Type": "Double",
+                "Value": 622592.0
+              },
+              {
+                "Name": "smsp__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 1.8380776734003235
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_fp64.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_xu.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_lsu.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 2.891396060618461
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_tex.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__issue_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 6.867065643968845
+              },
+              {
+                "Name": "smsp__thread_inst_executed_per_inst_executed.ratio",
+                "Type": "Double",
+                "Value": 32.0
+              },
+              {
+                "Name": "smsp__thread_inst_executed_per_inst_executed.pct",
+                "Type": "Double",
+                "Value": 100.0
+              }
+            ],
+            "RemainingProfilingRuns": 0
+          }
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "multiply_block_size",
+          "Value": 128,
+          "ValueType": "UnsignedInt"
+        }
+      ],
+      "DataMovementOverhead": 5670.008,
+      "ExtraDuration": 0.0,
+      "KernelName": "Addition",
+      "PreciseMeasurementOverhead": 0.0,
+      "ProfilingOverhead": 65763.354,
+      "SearcherOverhead": 12.651,
+      "Status": "Ok",
+      "Timestamp": "2026-09-29 15:10:25 UTC",
+      "TotalDuration": 58.24,
+      "TotalOverhead": 79742.527,
+      "ValidationOverhead": 10807.194
+    },
+    {
+      "CompilationOverhead": 11141.758,
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 1024,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 12
+          },
+          "CompilationOverhead": 11132.984,
+          "Duration": 58.528,
+          "GlobalSize": {
+            "X": 4096,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "vectorAddition",
+          "LocalSize": {
+            "X": 256,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 11132.984,
+          "ProfilingData": {
+            "Counters": [
+              {
+                "Name": "dram__throughput.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 92.12662337662337
+              },
+              {
+                "Name": "lts__t_sectors.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 16.470490327933568
+              },
+              {
+                "Name": "lts__t_sectors_op_read.sum",
+                "Type": "Double",
+                "Value": 262385.0
+              },
+              {
+                "Name": "lts__t_sectors_op_write.sum",
+                "Type": "Double",
+                "Value": 131304.0
+              },
+              {
+                "Name": "l1tex__t_requests_pipe_lsu_mem_global_op_ld.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 3.0919595652309297
+              },
+              {
+                "Name": "l1tex__t_requests_pipe_lsu_mem_global_op_ld.sum",
+                "Type": "Double",
+                "Value": 65536.0
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 1.480791912764871
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_ld.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__data_pipe_lsu_wavefronts_mem_shared_op_st.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__t_sectors_pipe_lsu_mem_local_op_ld.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "l1tex__t_sectors_pipe_lsu_mem_local_op_st.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "sm__warps_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 84.18399060749341
+              },
+              {
+                "Name": "smsp__cycles_active.avg.pct_of_peak_sustained_elapsed",
+                "Type": "Double",
+                "Value": 105.9740404994419
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp16_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp32_pred_on.sum",
+                "Type": "Double",
+                "Value": 2097152.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_fp64_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_integer_pred_on.sum",
+                "Type": "Double",
+                "Value": 4194304.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_control_pred_on.sum",
+                "Type": "Double",
+                "Value": 1048576.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_memory_pred_on.sum",
+                "Type": "Double",
+                "Value": 10485760.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_misc_pred_on.sum",
+                "Type": "Double",
+                "Value": 2097152.0
+              },
+              {
+                "Name": "smsp__sass_thread_inst_executed_op_conversion_pred_on.sum",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed.sum",
+                "Type": "Double",
+                "Value": 622592.0
+              },
+              {
+                "Name": "smsp__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 1.7691866258448181
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_fp64.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_xu.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_lsu.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 2.7946314131009653
+              },
+              {
+                "Name": "smsp__inst_executed_pipe_tex.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 0.0
+              },
+              {
+                "Name": "smsp__issue_active.avg.pct_of_peak_sustained_active",
+                "Type": "Double",
+                "Value": 6.637249606114791
+              },
+              {
+                "Name": "smsp__thread_inst_executed_per_inst_executed.ratio",
+                "Type": "Double",
+                "Value": 32.0
+              },
+              {
+                "Name": "smsp__thread_inst_executed_per_inst_executed.pct",
+                "Type": "Double",
+                "Value": 100.0
+              }
+            ],
+            "RemainingProfilingRuns": 0
+          }
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "multiply_block_size",
+          "Value": 256,
+          "ValueType": "UnsignedInt"
+        }
+      ],
+      "DataMovementOverhead": 5548.833,
+      "ExtraDuration": 0.0,
+      "KernelName": "Addition",
+      "PreciseMeasurementOverhead": 0.0,
+      "ProfilingOverhead": 64600.104,
+      "SearcherOverhead": 2.581,
+      "Status": "Ok",
+      "Timestamp": "2026-09-29 15:10:26 UTC",
+      "TotalDuration": 58.528,
+      "TotalOverhead": 78526.911,
+      "ValidationOverhead": 10738.42
+    }
+  ]
+}
