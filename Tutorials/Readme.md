@@ -3,7 +3,7 @@
 This folder contains tutorials showcasing various KTT features, sorted by complexity level 
 and the likelyhood of being necessary for a typical project.
 Each tutorial is a self-contained project. 
-Most are written in multiple versions -- C++ host code with a Cuda/OpenCL kernel, Python host code, etc.
+Most are written in multiple versions -- C++ host code with a Cuda/OpenCL kernel, etc.
 
 Tutorial projects have comments that delimit which parts of the code are similar to a different tutorial and which are unique.
 
@@ -23,6 +23,7 @@ Showcases basic features that will likely be involved in nearly every project.
 - MultipleBackends: Program adapted to work with multiple different compute APIs, showing how KTT is designed in a way that lets
     these variants share most of the code.
 - SearcherChoice: KTT allows one to choose from several pre-defined searchers.
+- AlternateLanguages: Shows that KTT can also be used from Python or JSON scripts.
 
 <!-- perhaps a tutorial specifically about reference kernel/computation -->
 
