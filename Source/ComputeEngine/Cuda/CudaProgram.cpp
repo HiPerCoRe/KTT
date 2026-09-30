@@ -61,6 +61,7 @@ void CudaProgram::Build(const std::string& compilerOptions) const
             individualOptions.push_back(word);
             individualOptionsChar.push_back(individualOptions.back().c_str());
         }
+        
     }
 
     const nvrtcResult result = nvrtcCompileProgram(m_Program, static_cast<int>(individualOptionsChar.size()),

@@ -969,7 +969,7 @@ void CudaEngine::SetCompilerOptions(const std::string& options, const bool overr
             finalOptions += " ";
         }
 
-        finalOptions += GetDefaultCompilerOptions();
+        finalOptions = GetDefaultCompilerOptions() + " " + finalOptions;
     }
 
     m_Configuration.SetStaticCompilerOptions(finalOptions);
