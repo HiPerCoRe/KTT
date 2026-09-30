@@ -522,7 +522,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     return result;
 
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 }
 
@@ -533,7 +533,7 @@ void CudaEngine::SetProfilingCounters([[maybe_unused]] const std::vector<std::st
 #elif KTT_PROFILING_CUPTI
     m_MetricInterface->SetMetrics(counters);
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
@@ -542,7 +542,7 @@ bool CudaEngine::IsProfilingSessionActive([[maybe_unused]] const KernelComputeId
 #if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
     return ContainsKey(m_CuptiInstances, id);
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 }
 
@@ -575,7 +575,7 @@ uint64_t CudaEngine::GetRemainingProfilingRuns([[maybe_unused]] const KernelComp
     return m_CuptiInstances[id]->GetRemainingPassCount();
 
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 }
 
@@ -586,7 +586,7 @@ bool CudaEngine::HasAccurateRemainingProfilingRuns() const
 #elif KTT_PROFILING_CUPTI
     return false;
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
@@ -597,7 +597,7 @@ bool CudaEngine::SupportsMultiInstanceProfiling() const
 #elif KTT_PROFILING_CUPTI
     return false;
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 

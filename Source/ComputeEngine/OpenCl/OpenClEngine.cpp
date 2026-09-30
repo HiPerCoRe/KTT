@@ -339,7 +339,7 @@ ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const Ke
     result.SetDurationData(result.GetDuration(), result.GetOverhead(), result.GetCompilationOverhead(), result.GetProfilingOverhead() + timer.GetElapsedTime());
     return result;
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -348,7 +348,7 @@ void OpenClEngine::SetProfilingCounters([[maybe_unused]] const std::vector<std::
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     m_GpaContext->SetCounters(counters);
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -357,7 +357,7 @@ bool OpenClEngine::IsProfilingSessionActive([[maybe_unused]] const KernelCompute
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     return ContainsKey(m_GpaInstances, id);
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -371,7 +371,7 @@ uint64_t OpenClEngine::GetRemainingProfilingRuns([[maybe_unused]] const KernelCo
 
     return static_cast<uint64_t>(m_GpaInstances[id]->GetRemainingPassCount());
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -380,7 +380,7 @@ bool OpenClEngine::HasAccurateRemainingProfilingRuns() const
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     return true;
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -389,7 +389,7 @@ bool OpenClEngine::SupportsMultiInstanceProfiling() const
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     return false;
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -404,7 +404,7 @@ void OpenClEngine::SetProfiling(const bool profiling)
     m_Configuration.SetProfiling(profiling);
 #else
     if (profiling)
-        throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+        throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif
 }
 
