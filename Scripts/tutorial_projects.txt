@@ -13,9 +13,11 @@
 0106MultipleBackendsCpp
 0106MultipleBackendsCuda
 0106MultipleBackendsOpenCl
+0107SearcherChoiceOpenCl
 0201KernelRunningCuda
 0201KernelRunningOpenCl
 0201KernelRunningVulkan
+0202KernelLauncherOpenCl
 0301CustomArgumentTypesCuda
 0301CustomArgumentTypesOpenCl
 0302ComputeApiInitializerCuda
