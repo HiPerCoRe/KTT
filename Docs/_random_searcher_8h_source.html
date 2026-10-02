@@ -101,39 +101,44 @@ $(document).ready(function(){initNavTree('_random_searcher_8h_source.html',''); 
 <a href="_random_searcher_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#pragma once</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;<a class="code" href="_searcher_8h.html">Api/Searcher/Searcher.h</a>&gt;</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;<a class="code" href="_ktt_platform_8h.html">KttPlatform.h</a>&gt;</span></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacektt.html">ktt</a></div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>{</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
-<div class="foldopen" id="foldopen00015" data-start="{" data-end="};">
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html">   15</a></span><span class="keyword">class </span>KTT_API <a class="code hl_class" href="classktt_1_1_random_searcher.html">RandomSearcher</a> : <span class="keyword">public</span> <a class="code hl_class" href="classktt_1_1_searcher.html">Searcher</a></div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>{</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html#aa7a085151dd0da33343ed98eaac7173f">   21</a></span>    <a class="code hl_function" href="classktt_1_1_random_searcher.html#aa7a085151dd0da33343ed98eaac7173f">RandomSearcher</a>();</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html#ab583154ca3d44951a107f68672a81c4d">   23</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classktt_1_1_random_searcher.html#ab583154ca3d44951a107f68672a81c4d">OnInitialize</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;cstdint&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;<a class="code" href="_searcher_8h.html">Api/Searcher/Searcher.h</a>&gt;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;<a class="code" href="_ktt_platform_8h.html">KttPlatform.h</a>&gt;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacektt.html">ktt</a></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>{</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="foldopen" id="foldopen00017" data-start="{" data-end="};">
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html">   17</a></span><span class="keyword">class </span>KTT_API <a class="code hl_class" href="classktt_1_1_random_searcher.html">RandomSearcher</a> : <span class="keyword">public</span> <a class="code hl_class" href="classktt_1_1_searcher.html">Searcher</a></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>{</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html#aa7a085151dd0da33343ed98eaac7173f">   23</a></span>    <a class="code hl_function" href="classktt_1_1_random_searcher.html#aa7a085151dd0da33343ed98eaac7173f">RandomSearcher</a>();</div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html#aa8dbbec845feb323a87702e8072bf037">   25</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classktt_1_1_random_searcher.html#aa8dbbec845feb323a87702e8072bf037">CalculateNextConfiguration</a>(<span class="keyword">const</span> <a class="code hl_class" href="classktt_1_1_kernel_result.html">KernelResult</a>&amp; previousResult) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html#ac71348413937c204ea7c9e15dbd22b83">   26</a></span>    <a class="code hl_class" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> <a class="code hl_function" href="classktt_1_1_random_searcher.html#ac71348413937c204ea7c9e15dbd22b83">GetCurrentConfiguration</a>() <span class="keyword">const override</span>;</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <a class="code hl_class" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> m_CurrentConfiguration;</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>};</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html#ae1cbeb887d82c55b8658beca39dd72f1">   31</a></span>    <span class="keyword">explicit</span> <a class="code hl_function" href="classktt_1_1_random_searcher.html#ae1cbeb887d82c55b8658beca39dd72f1">RandomSearcher</a>(<span class="keyword">const</span> uint64_t seed);</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html#ab583154ca3d44951a107f68672a81c4d">   33</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classktt_1_1_random_searcher.html#ab583154ca3d44951a107f68672a81c4d">OnInitialize</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html#aa8dbbec845feb323a87702e8072bf037">   35</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classktt_1_1_random_searcher.html#aa8dbbec845feb323a87702e8072bf037">CalculateNextConfiguration</a>(<span class="keyword">const</span> <a class="code hl_class" href="classktt_1_1_kernel_result.html">KernelResult</a>&amp; previousResult) <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="classktt_1_1_random_searcher.html#ac71348413937c204ea7c9e15dbd22b83">   36</a></span>    <a class="code hl_class" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> <a class="code hl_function" href="classktt_1_1_random_searcher.html#ac71348413937c204ea7c9e15dbd22b83">GetCurrentConfiguration</a>() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <a class="code hl_class" href="classktt_1_1_kernel_configuration.html">KernelConfiguration</a> m_CurrentConfiguration;</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>};</div>
 </div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>} <span class="comment">// namespace ktt</span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>} <span class="comment">// namespace ktt</span></div>
 <div class="ttc" id="a_ktt_platform_8h_html"><div class="ttname"><a href="_ktt_platform_8h.html">KttPlatform.h</a></div></div>
 <div class="ttc" id="a_searcher_8h_html"><div class="ttname"><a href="_searcher_8h.html">Searcher.h</a></div></div>
 <div class="ttc" id="aclassktt_1_1_kernel_configuration_html"><div class="ttname"><a href="classktt_1_1_kernel_configuration.html">ktt::KernelConfiguration</a></div><div class="ttdef"><b>Definition</b> KernelConfiguration.h:19</div></div>
 <div class="ttc" id="aclassktt_1_1_kernel_result_html"><div class="ttname"><a href="classktt_1_1_kernel_result.html">ktt::KernelResult</a></div><div class="ttdef"><b>Definition</b> KernelResult.h:21</div></div>
-<div class="ttc" id="aclassktt_1_1_random_searcher_html"><div class="ttname"><a href="classktt_1_1_random_searcher.html">ktt::RandomSearcher</a></div><div class="ttdef"><b>Definition</b> RandomSearcher.h:16</div></div>
+<div class="ttc" id="aclassktt_1_1_random_searcher_html"><div class="ttname"><a href="classktt_1_1_random_searcher.html">ktt::RandomSearcher</a></div><div class="ttdef"><b>Definition</b> RandomSearcher.h:18</div></div>
 <div class="ttc" id="aclassktt_1_1_random_searcher_html_aa7a085151dd0da33343ed98eaac7173f"><div class="ttname"><a href="classktt_1_1_random_searcher.html#aa7a085151dd0da33343ed98eaac7173f">ktt::RandomSearcher::RandomSearcher</a></div><div class="ttdeci">RandomSearcher()</div></div>
 <div class="ttc" id="aclassktt_1_1_random_searcher_html_aa8dbbec845feb323a87702e8072bf037"><div class="ttname"><a href="classktt_1_1_random_searcher.html#aa8dbbec845feb323a87702e8072bf037">ktt::RandomSearcher::CalculateNextConfiguration</a></div><div class="ttdeci">bool CalculateNextConfiguration(const KernelResult &amp;previousResult) override</div></div>
 <div class="ttc" id="aclassktt_1_1_random_searcher_html_ab583154ca3d44951a107f68672a81c4d"><div class="ttname"><a href="classktt_1_1_random_searcher.html#ab583154ca3d44951a107f68672a81c4d">ktt::RandomSearcher::OnInitialize</a></div><div class="ttdeci">void OnInitialize() override</div></div>
 <div class="ttc" id="aclassktt_1_1_random_searcher_html_ac71348413937c204ea7c9e15dbd22b83"><div class="ttname"><a href="classktt_1_1_random_searcher.html#ac71348413937c204ea7c9e15dbd22b83">ktt::RandomSearcher::GetCurrentConfiguration</a></div><div class="ttdeci">KernelConfiguration GetCurrentConfiguration() const override</div></div>
-<div class="ttc" id="aclassktt_1_1_searcher_html"><div class="ttname"><a href="classktt_1_1_searcher.html">ktt::Searcher</a></div><div class="ttdef"><b>Definition</b> Searcher.h:23</div></div>
+<div class="ttc" id="aclassktt_1_1_random_searcher_html_ae1cbeb887d82c55b8658beca39dd72f1"><div class="ttname"><a href="classktt_1_1_random_searcher.html#ae1cbeb887d82c55b8658beca39dd72f1">ktt::RandomSearcher::RandomSearcher</a></div><div class="ttdeci">RandomSearcher(const uint64_t seed)</div></div>
+<div class="ttc" id="aclassktt_1_1_searcher_html"><div class="ttname"><a href="classktt_1_1_searcher.html">ktt::Searcher</a></div><div class="ttdef"><b>Definition</b> Searcher.h:24</div></div>
 <div class="ttc" id="anamespacektt_html"><div class="ttname"><a href="namespacektt.html">ktt</a></div><div class="ttdef"><b>Definition</b> KttPlatform.h:41</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

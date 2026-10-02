@@ -13,19 +13,19 @@ enum class ComputeApi
 {
     /** Tuner will use OpenCL as compute API.
       */
-    OpenCL,
+    OpenCL = 1,
 
     /** Tuner will use CUDA as compute API.
       */
-    CUDA,
+    CUDA = 2,
 
     /** Tuner will use Vulkan as compute API.
     */
-    Vulkan,
+    Vulkan = 3,
 
     /** Tuner will use C++ as compute API (CPU execution).
     */
-    Cpp
+    Cpp = 4
 };
 
 } // namespace ktt

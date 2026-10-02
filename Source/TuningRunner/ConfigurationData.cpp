@@ -10,6 +10,7 @@
 #include <Utility/Logger/Logger.h>
 #include <Utility/StlHelpers.h>
 #include <Utility/Timer/Timer.h>
+#include <Utility/Fingerprint/FingerprintUtility.h>
 
 namespace ktt
 {
@@ -229,6 +230,18 @@ KernelConfiguration ConfigurationData::GetBestConfiguration() const
 bool ConfigurationData::IsSeparateOptionsGroup() const
 {
     return m_IsSeparateOptionsGroup;
+}
+
+size_t ConfigurationData::GetConfigurationFingerprint() const
+{
+    size_t result = 0;
+
+    for (const auto& forest : m_Forests)
+    {
+        result = FingerprintUtility::HashFunction(result, forest->GetConfigurationFingerprint());
+    }
+
+    return result;
 }
 
 void ConfigurationData::InitializeConfigurations()

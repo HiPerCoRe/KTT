@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['samplecount_0',['sampleCount',['../structktt_1_1_duration_measurement_result.html#a1fac31c2ecf3b95a87ae0b205980a559',1,'ktt::DurationMeasurementResult']]],
-  ['standarddeviation_1',['standardDeviation',['../structktt_1_1_duration_measurement_result.html#abe8518f243874d7d6815573515d23c0b',1,'ktt::DurationMeasurementResult']]]
+  ['extensions_0',['extensions',['../structktt_1_1db_1_1_device_info.html#a7019ed31e787a35563e76b10fe0ca3fb',1,'ktt::db::DeviceInfo::extensions'],['../structktt_1_1db_1_1_device_api.html#aae47904d474ab191aed0418692b2ef06',1,'ktt::db::DeviceApi::extensions'],['../structktt_1_1db_1_1_device.html#ae290d2460af8795c41abc6b636bdc3dc',1,'ktt::db::Device::extensions']]]
 ];

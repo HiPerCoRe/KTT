@@ -8,7 +8,7 @@ namespace ktt
 class BasicConstraint : public KernelConstraint
 {
 public:
-    explicit BasicConstraint(const std::vector<const KernelParameter*>& parameters, ConstraintFunction function);
+    explicit BasicConstraint(const std::vector<const KernelParameter*>& parameters, ConstraintFunction function, int order);
 
     bool IsFulfilled(const std::vector<const ParameterValue*>& values) const override;
 

@@ -4,13 +4,21 @@ var hierarchy =
     [ "ktt::ComputationResult", "classktt_1_1_computation_result.html", null ],
     [ "ktt::ComputeApiInitializer", "classktt_1_1_compute_api_initializer.html", null ],
     [ "ktt::ComputeInterface", "classktt_1_1_compute_interface.html", null ],
+    [ "ktt::db::Database", "classktt_1_1db_1_1_database.html", null ],
+    [ "ktt::db::DatabaseUtility", "classktt_1_1db_1_1_database_utility.html", null ],
+    [ "ktt::db::DbDeviceInfo", "structktt_1_1db_1_1_db_device_info.html", null ],
+    [ "ktt::db::Device", "structktt_1_1db_1_1_device.html", null ],
+    [ "ktt::db::DeviceApi", "structktt_1_1db_1_1_device_api.html", null ],
+    [ "ktt::db::DeviceInfo", "structktt_1_1db_1_1_device_info.html", null ],
     [ "ktt::DeviceInfo", "classktt_1_1_device_info.html", null ],
+    [ "ktt::db::DeviceRepository", "classktt_1_1db_1_1_device_repository.html", null ],
     [ "ktt::DimensionVector", "classktt_1_1_dimension_vector.html", null ],
     [ "ktt::DurationMeasurementResult", "structktt_1_1_duration_measurement_result.html", null ],
     [ "ktt::EnableBitfieldOperators< ValidationMode >", "structktt_1_1_enable_bitfield_operators_3_01_validation_mode_01_4.html", null ],
     [ "std::exception", null, [
       [ "ktt::KttException", "classktt_1_1_ktt_exception.html", null ]
     ] ],
+    [ "ktt::db::GetBestResultsQuery", "structktt_1_1db_1_1_get_best_results_query.html", null ],
     [ "ktt::KernelCompilationData", "structktt_1_1_kernel_compilation_data.html", null ],
     [ "ktt::KernelConfiguration", "classktt_1_1_kernel_configuration.html", null ],
     [ "ktt::KernelProfilingCounter", "classktt_1_1_kernel_profiling_counter.html", null ],
@@ -19,11 +27,24 @@ var hierarchy =
     [ "ktt::ParameterPair", "classktt_1_1_parameter_pair.html", null ],
     [ "ktt::PlatformInfo", "classktt_1_1_platform_info.html", null ],
     [ "ktt::PreciseMeasurementParameters", "structktt_1_1_precise_measurement_parameters.html", null ],
+    [ "ktt::db::RawResult", "structktt_1_1db_1_1_raw_result.html", null ],
+    [ "ktt::db::ResultRepository", "classktt_1_1db_1_1_result_repository.html", null ],
+    [ "ktt::db::Run", "structktt_1_1db_1_1_run.html", null ],
+    [ "ktt::db::RunQueryResult", "structktt_1_1db_1_1_run_query_result.html", null ],
+    [ "ktt::db::RunRepository", "classktt_1_1db_1_1_run_repository.html", null ],
+    [ "ktt::db::RunSyncRecord", "structktt_1_1db_1_1_run_sync_record.html", null ],
+    [ "ktt::db::SaveOptions", "structktt_1_1db_1_1_save_options.html", null ],
+    [ "ktt::db::Schema", "classktt_1_1db_1_1_schema.html", null ],
     [ "ktt::Searcher", "classktt_1_1_searcher.html", [
       [ "ktt::DeterministicSearcher", "classktt_1_1_deterministic_searcher.html", null ],
       [ "ktt::McmcSearcher", "classktt_1_1_mcmc_searcher.html", null ],
       [ "ktt::RandomSearcher", "classktt_1_1_random_searcher.html", null ]
     ] ],
+    [ "ktt::db::Source", "structktt_1_1db_1_1_source.html", null ],
+    [ "ktt::db::SourceRepository", "classktt_1_1db_1_1_source_repository.html", null ],
+    [ "ktt::db::SourceStats", "structktt_1_1db_1_1_source_stats.html", null ],
+    [ "ktt::db::Space", "structktt_1_1db_1_1_space.html", null ],
+    [ "ktt::db::SpaceRepository", "classktt_1_1db_1_1_space_repository.html", null ],
     [ "ktt::StopCondition", "classktt_1_1_stop_condition.html", [
       [ "ktt::ConfigurationCount", "classktt_1_1_configuration_count.html", null ],
       [ "ktt::ConfigurationDuration", "classktt_1_1_configuration_duration.html", null ],
@@ -33,5 +54,9 @@ var hierarchy =
       [ "ktt::TuningDuration", "classktt_1_1_tuning_duration.html", null ],
       [ "ktt::UnionCondition", "classktt_1_1_union_condition.html", null ]
     ] ],
-    [ "ktt::Tuner", "classktt_1_1_tuner.html", null ]
+    [ "ktt::db::TransactionGuard", "classktt_1_1db_1_1_transaction_guard.html", null ],
+    [ "ktt::Tuner", "classktt_1_1_tuner.html", null ],
+    [ "ktt::db::TuningInfo", "structktt_1_1db_1_1_tuning_info.html", null ],
+    [ "ktt::db::TuningSpaceInfo", "structktt_1_1db_1_1_tuning_space_info.html", null ],
+    [ "ktt::db::UuidGenerator", "classktt_1_1db_1_1_uuid_generator.html", null ]
 ];
