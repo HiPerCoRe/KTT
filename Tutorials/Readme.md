@@ -30,6 +30,10 @@ Showcases basic features that will likely be involved in nearly every project.
 ## Intermediate
 Showcases features that are good to know about, but might not be necessary for all projects.
 - KernelRunning: Shows that KTT can also run kernels <!-- TODO: Merge with dynamic tuning? -->
+- DynamicTuning: An application can tune during runtime with KTT's dynamic tuning. It is possible to split processing time
+    between exploration of different configurations and exploitation of the best known one. One can also use the tuning runs
+    to already process actual input. Lastly, tuning can be restarted if input shape changes significantly enough, though that is
+    outside the scope of this tutorial.
 - KernelLauncher: KTT allows the user to define a custom kernel launcher. This tutorial shows how one can split the work between
     GPU and CPU with this.
 - CompositeKernel: A kernel can also be made of several kernel definitions that are tuned together. This tutorial splits a blur
@@ -37,7 +41,7 @@ Showcases features that are good to know about, but might not be necessary for a
     a common tuning parameter chooses in which direction the intermediate result is stored. There is also a practical explanation on
     the difference between kernel and kernel definition.
 
-<!-- TODO: dynamic tuning, (compiler tuning, compiler options), database stuff, profiling searcher (or move to advanced?) -->
+<!-- TODO: (compiler tuning, compiler options), database stuff, profiling searcher (or move to advanced?) -->
 
 ## Advanced
 Showcases features that are unlikely to be necessary, but possibly useful for more advanced projects. 
