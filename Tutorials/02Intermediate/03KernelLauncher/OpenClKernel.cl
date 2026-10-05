@@ -16,7 +16,6 @@ __kernel void reduce(__global float* input, __global float* result)
         barrier(CLK_LOCAL_MEM_FENCE);
     }
 
-    // Plain store, not an atomic add: each slot belongs to exactly one work group.
     if (localId == 0) {
         result[groupId] = partials[0];
     }
