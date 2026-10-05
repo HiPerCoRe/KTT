@@ -18,6 +18,7 @@
 0201KernelRunningOpenCl
 0201KernelRunningVulkan
 0202KernelLauncherOpenCl
+0203CompositeKernelOpenCl
 0301CustomArgumentTypesCuda
 0301CustomArgumentTypesOpenCl
 0302ComputeApiInitializerCuda

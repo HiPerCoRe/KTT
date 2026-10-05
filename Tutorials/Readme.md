@@ -32,12 +32,12 @@ Showcases features that are good to know about, but might not be necessary for a
 - KernelRunning: Shows that KTT can also run kernels <!-- TODO: Merge with dynamic tuning? -->
 - KernelLauncher: KTT allows the user to define a custom kernel launcher. This tutorial shows how one can split the work between
     GPU and CPU with this.
+- CompositeKernel: A kernel can also be made of several kernel definitions that are tuned together. This tutorial splits a blur
+    into two passes and runs them in order with a kernel launcher. The work-group size of every definition is tuned on its own, and
+    a common tuning parameter chooses in which direction the intermediate result is stored. There is also a practical explanation on
+    the difference between kernel and kernel definition.
 
-<!-- TODO: dynamic tuning, (~~kernel launcher~~, (groups, composite kernel -- mozna oddelit)), 
-            (compiler tuning, compiler options), database stuff, searcher
-           - groups, kernel launcher, composite can be in one file
-           - searcher: choose a premade one (try profiling searcher?)
--->
+<!-- TODO: dynamic tuning, (compiler tuning, compiler options), database stuff, profiling searcher (or move to advanced?) -->
 
 ## Advanced
 Showcases features that are unlikely to be necessary, but possibly useful for more advanced projects. 
@@ -53,5 +53,5 @@ Mostly customization of things usually hidden in KTT's internals.
 - PythonInterfaces: Shows that it is possible to pass Python functions
     to KTT, e.g. to define a custom searcher or stop condition.
 
-<!-- TODO: custom searcher, stop condition, simulated tuning(?) -- when writing your own searcher you can easily see how fast it converges
+<!-- TODO: custom searcher, stop condition, simulated tuning(?) -- when writing your own searcher you can easily see how fast it converges,
     precise measurement (advanced?), power consumption optimization (advanced?), etc -->
