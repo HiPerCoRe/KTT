@@ -29,7 +29,8 @@ Showcases basic features that will likely be involved in nearly every project.
 
 ## Intermediate
 Showcases features that are good to know about, but might not be necessary for all projects.
-- KernelRunning: Shows that KTT can also run kernels <!-- TODO: Merge with dynamic tuning? -->
+- KernelRunning: Shows that KTT can also run kernels <!-- TODO: Merge with dynamic tuning? Perhaps dedicate to transferring data 
+                                                                between kernel and host -->
 - DynamicTuning: An application can tune during runtime with KTT's dynamic tuning. It is possible to split processing time
     between exploration of different configurations and exploitation of the best known one. One can also use the tuning runs
     to already process actual input. Lastly, tuning can be restarted if input shape changes significantly enough, though that is
@@ -40,8 +41,11 @@ Showcases features that are good to know about, but might not be necessary for a
     into two passes and runs them in order with a kernel launcher. The work-group size of every definition is tuned on its own, and
     a common tuning parameter chooses in which direction the intermediate result is stored. There is also a practical explanation on
     the difference between kernel and kernel definition.
+- CompilerTuning: Explains the difference between compiler tuning and separate compiler tuning on a sample C++ kernel.
 
-<!-- TODO: (compiler tuning, compiler options), database stuff, profiling searcher (or move to advanced?) -->
+<!-- TODO: compiler options -- those are already in MultipleBackends, should i move to basic? does it even need its own tutorial?;
+           database stuff;
+           profiling searcher (or move to advanced?) -->
 
 ## Advanced
 Showcases features that are unlikely to be necessary, but possibly useful for more advanced projects. 
