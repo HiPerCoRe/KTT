@@ -52,6 +52,7 @@ Showcases features that are unlikely to be necessary, but possibly useful for mo
 Mostly customization of things usually hidden in KTT's internals.
 - CustomArgumentTypes: Shows that kernel arguments can also be of user-defined data types (e.g., structs);
     a user-defined comparison function is used by the tuner to validate results. Has versions with C++ host code for tuning CUDA and OpenCL.
+- CustomStopCondition: Demonstrates a simple custom implementation of a stop condition, should the ones provided by KTT be insufficient.
 - ComputeApiInitializer: Shows that compute API objects (context, streams, buffers) can be created externally and imported
     into KTT through a ComputeApiInitializer; existing device buffers can be added as arguments by handle.
     Has versions with C++ host code for tuning CUDA and OpenCL.
@@ -61,5 +62,5 @@ Mostly customization of things usually hidden in KTT's internals.
 - PythonInterfaces: Shows that it is possible to pass Python functions
     to KTT, e.g. to define a custom searcher or stop condition.
 
-<!-- TODO: custom searcher, stop condition, simulated tuning(?) -- when writing your own searcher you can easily see how fast it converges,
+<!-- TODO: custom searcher, simulated tuning(?) -- when writing your own searcher you can easily see how fast it converges,
     precise measurement (advanced?), power consumption optimization (advanced?), etc -->
