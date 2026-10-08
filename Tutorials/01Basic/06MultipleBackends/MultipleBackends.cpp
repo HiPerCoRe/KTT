@@ -96,6 +96,9 @@ int main(int argc, char** argv)
 
     if (computeApi == ktt::ComputeApi::Cpp)
     {
+        // This method sets which compiler options are used to compile every configuration. C++ will generally use OpenMP and various
+        // optimization options. It is also possible to create compiler option parameters, see Intermediate/CompilerTuning.
+        // All supported compute APIs have useful compiler options, so this method is good to know.
         tuner.SetCompilerOptions("-O3 -march=native -fopenmp");
         tuner.AddParameter(kernel, "OMP_SCHEDULING", std::vector<uint64_t>{0, 1, 2});
         tuner.AddParameter(kernel, "OMP_SCHED_CHUNK", std::vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
