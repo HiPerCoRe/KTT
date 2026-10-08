@@ -21,7 +21,7 @@ Showcases basic features that will likely be involved in nearly every project.
 - TuningConstraints: Showcases the use of tuning constraints to filter out configurations that would fail or be suboptimal,
     demonstrated on a matrix transpose kernel with work-group size constrained through two tuning parameters.
 - MultipleBackends: Program adapted to work with multiple different compute APIs, showing how KTT is designed in a way that lets
-    these variants share most of the code.
+    these variants share most of the code. The C++ part sets kernel compiler options through KTT's API and explains the process.
 - SearcherChoice: KTT allows one to choose from several pre-defined searchers.
 - AlternateLanguages: Shows that KTT can also be used from Python or JSON scripts.
 
@@ -41,7 +41,7 @@ Showcases features that are good to know about, but might not be necessary for a
     into two passes and runs them in order with a kernel launcher. The work-group size of every definition is tuned on its own, and
     a common tuning parameter chooses in which direction the intermediate result is stored. There is also a practical explanation on
     the difference between kernel and kernel definition.
-- CompilerTuning: Explains the difference between compiler tuning and separate compiler tuning on a sample C++ kernel.
+- CompilerTuning: Explains the difference between compiler options, compiler tuning, and separate compiler tuning on a sample C++ kernel.
 
 <!-- TODO: compiler options -- those are already in MultipleBackends, should i move to basic? does it even need its own tutorial?;
            database stuff;
