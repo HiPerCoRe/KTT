@@ -83,6 +83,9 @@ int main(int argc, char** argv)
     ******************************************************/
 
     // Taken from Cpp section of MultipleBackends
+    // As mentioned in MultipleBackends, this method sets compiler options which will always be used, as opposed to 
+    // Add(Separate)CompilerParameter. All supported compute APIs have useful compiler options, so this method is
+    // good to know.
     tuner.SetCompilerOptions("-fopenmp");
     tuner.AddParameter(kernel, "OMP_SCHEDULING", std::vector<uint64_t>{0, 1, 2});
     tuner.AddParameter(kernel, "OMP_SCHED_CHUNK", std::vector<uint64_t>{2, 4, 8, 16, 32, 64, 128});
