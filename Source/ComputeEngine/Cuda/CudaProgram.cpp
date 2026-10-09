@@ -56,12 +56,24 @@ void CudaProgram::Build(const std::string& compilerOptions) const
     {
         std::istringstream optionsStream(compilerOptions);
         std::string word;
-        while (optionsStream >> word) 
+
+        while (optionsStream >> word)
         {
             individualOptions.push_back(word);
-            individualOptionsChar.push_back(individualOptions.back().c_str());
         }
-        
+
+        // The pointers must be taken only once the vector above has stopped growing. push_back may
+        // reallocate it, and a string short enough to live in the std::string small-string buffer is
+        // carried inside the object itself, so reallocation moves its characters and any c_str()
+        // taken earlier is left dangling. Longer strings keep their heap buffer and survive, which is
+        // why this used to fail only for short options such as -DR=128, and only once the option
+        // count grew past the vector's current capacity.
+        individualOptionsChar.reserve(individualOptions.size());
+
+        for (const auto& option : individualOptions)
+        {
+            individualOptionsChar.push_back(option.c_str());
+        }
     }
 
     const nvrtcResult result = nvrtcCompileProgram(m_Program, static_cast<int>(individualOptionsChar.size()),
