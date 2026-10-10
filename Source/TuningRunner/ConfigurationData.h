@@ -3,6 +3,7 @@
 #include <set>
 #include <utility>
 #include <vector>
+#include <memory>
 
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Searcher/Searcher.h>
@@ -10,6 +11,9 @@
 #include <TuningRunner/ConfigurationForest.h>
 #include <Utility/RandomIntGenerator.h>
 #include <KttTypes.h>
+#include <Api/Configuration/RefinementParameters.h>
+#include <Api/Configuration/TuningPhase.h>
+#include <TuningRunner/ConfigurationRefinement.h>
 
 namespace ktt
 {
@@ -18,7 +22,8 @@ class ConfigurationData
 {
 public:
     explicit ConfigurationData(Searcher& searcher, const Kernel& kernel, const bool isSeparateOptionsGroup = false,
-        const KernelConfiguration& baseConfiguration = KernelConfiguration());
+        const KernelConfiguration& baseConfiguration = KernelConfiguration(),
+        const RefinementParameters& refinementParameters = RefinementParameters());
     ~ConfigurationData();
 
     bool CalculateNextConfiguration(const KernelResult& previousResult);
@@ -37,6 +42,11 @@ public:
     KernelConfiguration GetCurrentConfiguration() const;
     KernelConfiguration GetBestConfiguration() const;
 
+    bool IsExplorationFinished() const;
+    TuningPhase GetPhase() const;
+    void FinishExploration();
+    void SetRefinementParameters(const RefinementParameters& parameters);
+
     bool IsSeparateOptionsGroup() const;
 
 private:
@@ -49,6 +59,14 @@ private:
     bool m_SearcherActive;
     bool m_IsSeparateOptionsGroup;
     KernelConfiguration m_BaseConfiguration;
+
+    std::vector<std::pair<KernelConfiguration, Nanoseconds>> m_History;
+    bool m_ExplorationFinishedByUser;
+    RefinementParameters m_RefinementParameters;
+    std::unique_ptr<ConfigurationRefinement> m_Refinement;
+    KernelConfiguration m_RefinementWinner;
+
+    void TransitionToRefinement();
 
     void InitializeConfigurations();
     void UpdateBestConfiguration(const KernelResult& previousResult);

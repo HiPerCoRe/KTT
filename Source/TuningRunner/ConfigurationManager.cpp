@@ -22,8 +22,37 @@ void ConfigurationManager::SetSearcher(const KernelId id, std::unique_ptr<Search
     m_Searchers[id] = std::move(searcher);
 }
 
+void ConfigurationManager::SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
+{
+    Logger::LogDebug("Setting refinement parameters for kernel with id " + std::to_string(id));
+    m_RefinementParameters[id] = parameters;
+
+    if (HasData(id))
+    {
+        m_ConfigurationData[id]->SetRefinementParameters(parameters);
+    }
+}
+
+void ConfigurationManager::FinishExploration(const KernelId id)
+{
+    if (HasData(id))
+    {
+        m_ConfigurationData[id]->FinishExploration();
+    }
+}
+
+TuningPhase ConfigurationManager::GetTuningPhase(const KernelId id) const
+{
+    if (!HasData(id))
+    {
+        return TuningPhase::Finished;
+    }
+
+    return m_ConfigurationData.find(id)->second->GetPhase();
+}
+
 void ConfigurationManager::InitializeData(const Kernel& kernel, const bool isSeparateOptionsGroup,
-    const KernelConfiguration& baseConfiguration)
+                                          const KernelConfiguration& baseConfiguration)
 {
     const auto id = kernel.GetId();
     Logger::LogDebug("Initializing configuration data for kernel " + kernel.GetName());
@@ -33,7 +62,12 @@ void ConfigurationManager::InitializeData(const Kernel& kernel, const bool isSep
         m_Searchers[id] = std::make_unique<DeterministicSearcher>();
     }
 
-    m_ConfigurationData[id] = std::make_unique<ConfigurationData>(*m_Searchers[id], kernel, isSeparateOptionsGroup, baseConfiguration);
+    RefinementParameters refParams;
+    if (ContainsKey(m_RefinementParameters, id))
+    {
+        refParams = m_RefinementParameters[id];
+    }
+    m_ConfigurationData[id] = std::make_unique<ConfigurationData>(*m_Searchers[id], kernel, isSeparateOptionsGroup, baseConfiguration, refParams);
 }
 
 void ConfigurationManager::ClearData(const KernelId id, const bool clearSearcher)
