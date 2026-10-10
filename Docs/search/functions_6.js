@@ -10,6 +10,7 @@ var searchData=
   ['hasprofilingdata_7',['HasProfilingData',['../classktt_1_1_computation_result.html#a1df9421da7d98b039219703fd50367eb',1,'ktt::ComputationResult']]],
   ['hasremainingprofilingruns_8',['hasremainingprofilingruns',['../classktt_1_1_computation_result.html#a32e32e26bcda0c6181d88a5ce1365850',1,'ktt::ComputationResult::HasRemainingProfilingRuns()'],['../classktt_1_1_kernel_profiling_data.html#a6515eaea540104d99c6c340070c3688b',1,'ktt::KernelProfilingData::HasRemainingProfilingRuns()'],['../classktt_1_1_kernel_result.html#a1fa061eaec6b9f756d59cd6c988f2e69',1,'ktt::KernelResult::HasRemainingProfilingRuns()']]],
   ['hassamevalue_9',['HasSameValue',['../classktt_1_1_parameter_pair.html#a63d30900d44bcba18d0bbc29f0bea9ac',1,'ktt::ParameterPair']]],
-  ['hassmfrequencydata_10',['HasSMFrequencyData',['../classktt_1_1_computation_result.html#aa997cf5f621e11d814efa5875f81bf99',1,'ktt::ComputationResult']]],
-  ['hastemperaturedata_11',['HasTemperatureData',['../classktt_1_1_computation_result.html#a4f3484444e6456a3d87164b908c00716',1,'ktt::ComputationResult']]]
+  ['hasseed_10',['HasSeed',['../classktt_1_1_searcher.html#a5844bd4eb30a43b7e8b4c8c73a7c2a37',1,'ktt::Searcher']]],
+  ['hassmfrequencydata_11',['HasSMFrequencyData',['../classktt_1_1_computation_result.html#aa997cf5f621e11d814efa5875f81bf99',1,'ktt::ComputationResult']]],
+  ['hastemperaturedata_12',['HasTemperatureData',['../classktt_1_1_computation_result.html#a4f3484444e6456a3d87164b908c00716',1,'ktt::ComputationResult']]]
 ];

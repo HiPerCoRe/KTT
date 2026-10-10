@@ -110,5 +110,14 @@ KernelConfiguration ConfigurationManager::GetBestConfiguration(const KernelId id
 
     return m_ConfigurationData.find(id)->second->GetBestConfiguration();
 }
+size_t ConfigurationManager::GetConfigurationFingerprint(const KernelId id) const
+{
+    if (!HasData(id))
+    {
+        throw KttException("The configuration fingerprint can only be retrieved for kernels with initialized configuration data");
+    }
+
+    return m_ConfigurationData.find(id)->second->GetConfigurationFingerprint();
+}
 
 } // namespace ktt

@@ -27,6 +27,7 @@ public:
     KernelConfiguration GetConfiguration(const uint64_t index) const;
     uint64_t GetLocalConfigurationIndex(const KernelConfiguration& configuration) const;
     bool IsConfigurationValid(const KernelConfiguration& configuration) const;
+    size_t GetConfigurationFingerprint() const;
 
 private:
     std::vector<KernelParameterGroup> m_Subgroups;

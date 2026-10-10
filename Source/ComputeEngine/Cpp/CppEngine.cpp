@@ -639,6 +639,7 @@ std::vector<DeviceInfo> CppEngine::GetDeviceInfo(const PlatformIndex platformInd
     DeviceInfo info(0, cpuName);
     info.SetVendor(vendor);
     info.SetExtensions("C++");
+    // info.SetDeviceIdentifier(""); // C++ backend does not populate DeviceInfo::DeviceIdentifier.
     info.SetGlobalMemorySize(memorySize);
     info.SetLocalMemorySize(0);
     info.SetMaxWorkGroupSize(1024); // arbitrary

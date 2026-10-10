@@ -34,6 +34,7 @@ public:
     void ClearConfigurationData(const KernelId id, const bool clearSearcher = false);
     uint64_t GetConfigurationsCount(const KernelId id) const;
     KernelConfiguration GetBestConfiguration(const KernelId id) const;
+    size_t GetConfigurationFingerprint(const Kernel &kernel) const;
 
 private:
     KernelRunner& m_KernelRunner;

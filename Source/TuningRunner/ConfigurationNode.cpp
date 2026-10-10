@@ -116,7 +116,7 @@ uint64_t ConfigurationNode::ComputeLocalIndex(const std::vector<size_t>& paramet
             result += child->ComputeLocalIndex(parameterIndices);
             break;
         }
-        
+
         result += child->GetConfigurationsCount();
     }
 
@@ -174,6 +174,11 @@ size_t ConfigurationNode::GetChildrenCount() const
 uint64_t ConfigurationNode::GetConfigurationsCount() const
 {
     return m_ConfigurationsCount;
+}
+
+const std::vector<std::unique_ptr<ConfigurationNode>>& ConfigurationNode::GetChildren() const
+{
+    return m_Children;
 }
 
 void ConfigurationNode::AddChild(const size_t index)

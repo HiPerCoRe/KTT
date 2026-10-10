@@ -2,6 +2,7 @@
 #include <TuningRunner/ConfigurationForest.h>
 #include <Utility/ErrorHandling/Assert.h>
 #include <Utility/StlHelpers.h>
+#include <Utility/Fingerprint/FingerprintUtility.h>
 
 namespace ktt
 {
@@ -39,7 +40,7 @@ bool ConfigurationForest::IsBuilt() const
     {
         result &= tree->IsBuilt();
     }
-    
+
     return result;
 }
 
@@ -106,7 +107,7 @@ uint64_t ConfigurationForest::GetLocalConfigurationIndex(const KernelConfigurati
         result += multiplier * localIndex;
         multiplier *= tree->GetConfigurationsCount();
     }
-    
+
     return result;
 }
 
@@ -120,6 +121,16 @@ bool ConfigurationForest::IsConfigurationValid(const KernelConfiguration& config
         result &= tree->IsConfigurationValid(configuration);
     }
 
+    return result;
+}
+size_t ConfigurationForest::GetConfigurationFingerprint() const
+{
+    size_t result = 0;
+
+    for (const auto& tree : m_Trees)
+    {
+        result = FingerprintUtility::HashFunction(result, tree->GetConfigurationFingerprint());
+    }
     return result;
 }
 
