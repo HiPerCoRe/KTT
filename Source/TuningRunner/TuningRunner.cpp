@@ -115,11 +115,23 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimen
     }
 
     KernelConfiguration configuration;
+    const TuningPhase currentPhase = m_ConfigurationManager->GetTuningPhase(id);
 
-    if (m_ConfigurationManager->IsDataProcessed(id))
+    if (currentPhase == TuningPhase::Finished)
     {
         configuration = m_ConfigurationManager->GetBestConfiguration(id);
         Logger::LogInfo("Launching the best configuration for kernel " + kernel.GetName());
+    }
+    else if (currentPhase == TuningPhase::Refinement)
+    {
+        configuration = m_ConfigurationManager->GetCurrentConfiguration(id);
+        Logger::LogInfo("Launching candidate configuration in refinement phase for kernel " + kernel.GetName());
+
+        if (m_KernelRunner.IsProfilingActive())
+        {
+            Logger::LogWarning("Profiling is forcibly disabled during the refinement phase.");
+            m_KernelRunner.SetProfiling(false);
+        }
     }
     else
     {
@@ -136,7 +148,7 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimen
 
     KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, dimensions, mode, output, true);
 
-    if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns() && !m_ConfigurationManager->IsDataProcessed(id))
+    if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns() && currentPhase != TuningPhase::Finished)
     {
         const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
         {
