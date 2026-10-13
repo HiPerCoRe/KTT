@@ -204,6 +204,18 @@ void TunerCore::SaveArgument(const ArgumentId& id, const std::string& file) cons
     m_ArgumentManager->SaveArgument(id, file);
 }
 
+void TunerCore::UpdateScalarArgument(const ArgumentId& id, const void* data)
+{
+    auto& argument = m_ArgumentManager->GetArgument(id);
+
+    if (argument.GetMemoryType() != ArgumentMemoryType::Scalar)
+    {
+        throw KttException("Argument with id " + id + " is not a scalar argument");
+    }
+
+    argument.SetOwnedData(data, argument.GetDataSize());
+}
+
 void TunerCore::SetReadOnlyArgumentCache(const bool flag)
 {
     m_KernelRunner->SetReadOnlyArgumentCache(flag);
@@ -435,6 +447,18 @@ void TunerCore::WaitForComputeAction(const ComputeActionId id)
 void TunerCore::WaitForTransferAction(const TransferActionId id)
 {
     m_ComputeEngine->WaitForTransferAction(id);
+}
+
+void TunerCore::UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize)
+{
+    const auto actionId = m_ComputeEngine->UpdateArgument(id, m_ComputeEngine->GetDefaultQueue(), data, dataSize);
+    m_ComputeEngine->WaitForTransferAction(actionId);
+}
+
+void TunerCore::DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize)
+{
+    const auto actionId = m_ComputeEngine->DownloadArgument(id, m_ComputeEngine->GetDefaultQueue(), destination, dataSize);
+    m_ComputeEngine->WaitForTransferAction(actionId);
 }
 
 void TunerCore::SynchronizeQueue(const QueueId queueId)
