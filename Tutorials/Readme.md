@@ -29,8 +29,9 @@ Showcases basic features that will likely be involved in nearly every project.
 
 ## Intermediate
 Showcases features that are good to know about, but might not be necessary for all projects.
-- KernelRunning: Shows that KTT can also run kernels <!-- TODO: Merge with dynamic tuning? Perhaps dedicate to transferring data 
-                                                                between kernel and host -->
+- KernelRunning: Shows how to run kernels without tuning, to process actual input data. Includes a demonstration on how to
+    transfer new data to the kernel between runs, and how to retrieve that data after each run. In effect, this tutorial lets
+    one learn how to use KTT in place of a traditional compute API.
 - DynamicTuning: An application can tune during runtime with KTT's dynamic tuning. It is possible to split processing time
     between exploration of different configurations and exploitation of the best known one. One can also use the tuning runs
     to already process actual input. Lastly, tuning can be restarted if input shape changes significantly enough, though that is
@@ -53,6 +54,7 @@ Mostly customization of things usually hidden in KTT's internals.
     a user-defined comparison function is used by the tuner to validate results. Has versions with C++ host code for tuning CUDA and OpenCL.
 - CustomStopCondition: Demonstrates a simple custom implementation of a stop condition, should the ones provided by KTT be insufficient.
 - CustomSearcher: Demonstrates how to implement a basic custom searcher and suggests useful base Searcher methods.
+- SimulatedTuning: One can record a full tuning run for a particular kernel and then simulate
 - ComputeApiInitializer: Shows that compute API objects (context, streams, buffers) can be created externally and imported
     into KTT through a ComputeApiInitializer; existing device buffers can be added as arguments by handle.
     Has versions with C++ host code for tuning CUDA and OpenCL.

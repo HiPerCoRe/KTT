@@ -37,53 +37,54 @@ int main(int argc, char** argv)
         }
     }
 
-    // Declare kernel parameters and data variables.
     const size_t numberOfElements = 1024 * 1024;
-    // Dimensions of ND-range and work-group are specified with DimensionVector. Only single dimension is utilized in this
-    // tutorial. In general, DimensionVector supports up to three dimensions.
     const ktt::DimensionVector ndRangeDimensions(numberOfElements);
     const ktt::DimensionVector workGroupDimensions(256);
     
     std::vector<float> a(numberOfElements);
     std::vector<float> b(numberOfElements);
     std::vector<float> result(numberOfElements, 0.0f);
+    float scalar= 3.0f;
 
-    // Initialize data
     for (size_t i = 0; i < numberOfElements; ++i)
     {
         a[i] = static_cast<float>(i);
         b[i] = static_cast<float>(i + 1);
     }
 
-    // Create new tuner for the specified platform and device, tuner uses OpenCL as compute API.
     ktt::Tuner tuner(platformIndex, deviceIndex, ktt::ComputeApi::OpenCL);
 
-    // Add new kernel definition. Specify kernel function name, path to source file, default ND-range dimensions and work-group
-    // dimensions. KTT returns handle to the newly added definition, which can be used to reference it in other API methods.
     const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("vectorAddition", kernelFile, ndRangeDimensions,
         workGroupDimensions);
 
-    // Add new kernel arguments to tuner. Argument data is copied from std::vector containers. Specify whether the arguments are
-    // used as input or output. KTT returns handle to the newly added argument, which can be used to reference it in other API
-    // methods. 
     const ktt::ArgumentId aId = tuner.AddArgumentVector(a, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId bId = tuner.AddArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
+    const ktt::ArgumentId scalarId = tuner.AddArgumentScalar(scalar);
+    tuner.SetArguments(definition, {aId, bId, resultId, scalarId});
 
-    // Set arguments for the kernel definition. The order of argument ids must match the order of arguments inside corresponding
-    // CUDA kernel function.
-    tuner.SetArguments(definition, {aId, bId, resultId});
-
-    // Create simple kernel from the specified definition. Specify name which will be used during logging and output operations.
-    // In more complex scenarios, kernels can have multiple definitions. Definitions can be shared between multiple kernels.
     const ktt::KernelId kernel = tuner.CreateSimpleKernel("Addition", definition);
 
-    // Set time unit used during printing of kernel duration. The default time unit is milliseconds, but since computation in
-    // this tutorial is very short, microseconds are used instead.
+    // By default KTT makes a copy of the input data once and then doesn't update that copy. The intended solution is to update
+    // input data explicitly in the kernel launcher. For scalars, it is the only solution. For vectors, another solution is to
+    // set the argument to be referenced from user data, without making a KTT-managed copy (see overloads of AddArgumentVector),
+    // and then disable caching of read-only arguments, so they are pulled from user data every (tuning) run.
+    //
+    // Do note that any operations inside the kernel launcher will be included in the total duration measurement, and so could
+    // skew the best configuration selection, or the searcher behavior. In this case the effect should not be significant,
+    // because all configurations transfer the same amount of data, so they should be slowed roughly equally.
+    tuner.SetLauncher(kernel, [&a, &aId, &b, &bId, &scalar, &scalarId, &definition](ktt::ComputeInterface &interface){
+        interface.UpdateBuffer(aId, a.data());
+        interface.UpdateBuffer(bId, b.data());
+        interface.UpdateScalarArgument(scalarId, &scalar);
+        // Do not forget to also run the kernel definition.
+        interface.RunKernel(definition);
+    });
+
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
 
-    // Run the specified kernel. The second argument is related to kernel tuning and will be described in further tutorials.
-    // In this case, it remains empty. The third argument is used to retrieve the kernel output. For each kernel argument that
+    // Run the specified kernel. The second argument would contain the configuration that the kernel should run with, 
+    // if there were any. The third argument is used to retrieve the kernel output. For each kernel argument that
     // is retrieved, one BufferOutputDescriptor must be specified. Each of these descriptors contains id of the retrieved argument
     // and memory location where the argument data will be stored. Optionally, it can also include number of bytes to be retrieved,
     // if only a part of the argument is needed. Here, the data is stored back into result buffer which was created earlier. Note
@@ -91,13 +92,37 @@ int main(int argc, char** argv)
     tuner.Run(kernel, {}, {ktt::BufferOutputDescriptor(resultId, result.data())});
 
     // Print first ten elements from the result to check they were computed correctly.
-    std::cout << "Printing the first 10 elements from result: ";
-
+    std::cout << "\nPrinting the first 10 elements from result: \n";
     for (size_t i = 0; i < 10; ++i)
     {
         std::cout << result[i] << " ";
     }
+    std::cout << "\n\n";
 
+    a.clear();
+    b.clear();
+    a.resize(numberOfElements, 0);
+    b.resize(numberOfElements, 0);
+
+    tuner.Run(kernel, {}, {ktt::BufferOutputDescriptor(resultId, result.data())});
+    // Print first ten elements from the result to check they were computed correctly.
+    std::cout << "\nPrinting the first 10 elements from result after zeroing input buffers but leaving scalar = 3.0: \n";
+    for (size_t i = 0; i < 10; ++i)
+    {
+        std::cout << result[i] << " ";
+    }
+    std::cout << "\n\n";
+
+    scalar = 0;
+
+    tuner.Run(kernel, {}, {ktt::BufferOutputDescriptor(resultId, result.data())});
+    // Print first ten elements from the result to check they were computed correctly.
+    std::cout << "\nPrinting the first 10 elements from result after zeroing scalar as well: \n";
+    for (size_t i = 0; i < 10; ++i)
+    {
+        std::cout << result[i] << " ";
+    }
     std::cout << std::endl;
+
     return 0;
 }

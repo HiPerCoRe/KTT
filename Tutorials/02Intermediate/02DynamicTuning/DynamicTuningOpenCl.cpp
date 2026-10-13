@@ -4,6 +4,7 @@
 // at https://github.com/HiPerCoRe/KTT/blob/master/OnboardingGuide.md
 // before reading the tutorial's code.
 
+#include "Api/ComputeInterface.h"
 #include "Api/Output/BufferOutputDescriptor.h"
 #include "Api/Searcher/RandomSearcher.h"
 #include "KernelRunner/ValidationMode.h"
@@ -30,14 +31,12 @@ double SecondsSince(const std::chrono::steady_clock::time_point& start)
     return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
 }
 
-// Simulates real input. The scalar is a vector with a single element because KTT copies the data of scalar arguments
-// and would keep using the value that the argument was created with.
-void GetNewData(size_t inputSize, std::vector<float> &a, std::vector<float> &b, std::vector<float> &scalar)
+// Simulates real input.
+void GetNewData(size_t inputSize, std::vector<float> &a, std::vector<float> &b, float &scalar)
 {
     a.resize(inputSize);
     b.resize(inputSize);
-    scalar.resize(1);
-    scalar[0] = static_cast<float>(rand() % 32);
+    scalar = static_cast<float>(rand() % 32);
 
     for (size_t i = 0; i < inputSize; ++i)
     {
@@ -83,7 +82,7 @@ int main(int argc, char** argv)
     
     std::vector<float> a;
     std::vector<float> b;
-    std::vector<float> scalar;
+    float scalar;
     GetNewData(numberOfElements, a, b, scalar);
     std::vector<float> result(numberOfElements, 0.0f);
 
@@ -95,13 +94,10 @@ int main(int argc, char** argv)
     // The input vectors are refilled before every kernel run, so KTT reads their data directly instead of keeping a copy
     // of their content at the time the arguments were created. The vectors must stay valid and must not reallocate while
     // the tuner uses them.
-    const ktt::ArgumentId aId = tuner.AddArgumentVector(a, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryLocation::Device,
-        ktt::ArgumentManagementType::Framework, true);
-    const ktt::ArgumentId bId = tuner.AddArgumentVector(b, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryLocation::Device,
-        ktt::ArgumentManagementType::Framework, true);
+    const ktt::ArgumentId aId = tuner.AddArgumentVector(a, ktt::ArgumentAccessType::ReadOnly);
+    const ktt::ArgumentId bId = tuner.AddArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
-    const ktt::ArgumentId scalarId = tuner.AddArgumentVector(scalar, ktt::ArgumentAccessType::ReadOnly,
-        ktt::ArgumentMemoryLocation::Device, ktt::ArgumentManagementType::Framework, true);
+    const ktt::ArgumentId scalarId = tuner.AddArgumentScalar(scalar);
     tuner.SetArguments(definition, {aId, bId, resultId, scalarId});
 
     const ktt::KernelId kernel = tuner.CreateSimpleKernel("Addition", definition);
@@ -112,7 +108,7 @@ int main(int argc, char** argv)
 
         for (size_t i = 0; i < a.size(); ++i)
         {
-            resultArray[i] = a[i] + b[i] + scalar[0];
+            resultArray[i] = a[i] + b[i] + scalar;
         }
     });
 
@@ -129,10 +125,6 @@ int main(int argc, char** argv)
     tuner.AddParameter(kernel, "DUMMY_B", std::vector<uint64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
     tuner.AddThreadModifier(kernel, {definition}, ktt::ModifierType::Local, ktt::ModifierDimension::X,
         "multiply_work_group_size", ktt::ModifierAction::Multiply);
-
-    // Read-only arguments are cached in device memory and uploaded only once by default. New input data before each run
-    // requires the cache to be off, together with arguments that reference the user data.
-    tuner.SetReadOnlyArgumentCache(false);
 
     // Every kernel run of the tuning loop would otherwise log an information message, which would bury the printed
     // statistics.
@@ -156,6 +148,18 @@ int main(int argc, char** argv)
 
     tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
 
+    // By default KTT makes a copy of the input data once and then doesn't update this copy. The intended solution is to update
+    // input data explicitly in the kernel launcher. For scalars, it is the only solution. For vectors, another solution is to
+    // set the argument to be referenced from user data, without making a KTT-managed copy (see overloads of AddArgumentVector),
+    // and then disable caching of read-only arguments, so they are pulled from user data every (tuning) run.
+    tuner.SetLauncher(kernel, [&a, &aId, &b, &bId, &scalar, &scalarId, &definition](ktt::ComputeInterface &interface){
+        interface.UpdateBuffer(aId, a.data());
+        interface.UpdateBuffer(bId, b.data());
+        interface.UpdateScalarArgument(scalarId, &scalar);
+        // Do not forget to also run the kernel definition.
+        interface.RunKernel(definition);
+    });
+
     while (SecondsSince(tuningStart) < tuningBudgetSeconds && iterationCount < maxIterations)
     {
         // Dynamic tuning uses the TuneIteration method. It runs a single configuration and returns a kernel result with timings, 
@@ -173,6 +177,8 @@ int main(int argc, char** argv)
         // variants of a kernel are correct, output validation can be disabled with, for example:
         // tuner.SetValidationMode(ktt::ValidationMode::None);
         // It is also possible to not define a reference computation/kernel in the first place.
+
+        // Note that this change only reaches the kernel because of explicit updates in the kernel launcher defined above.
         GetNewData(numberOfElements, a, b, scalar);
 
         if (SecondsSince(lastProgressPrint) >= 1)
