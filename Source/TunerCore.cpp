@@ -449,9 +449,29 @@ void TunerCore::WaitForTransferAction(const TransferActionId id)
     m_ComputeEngine->WaitForTransferAction(id);
 }
 
-void TunerCore::UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize)
+void TunerCore::UploadBuffer(const ArgumentId& id, const void *dataPtr, size_t dataSize)
 {
-    const auto actionId = m_ComputeEngine->UpdateArgument(id, m_ComputeEngine->GetDefaultQueue(), data, dataSize);
+    auto& argument = m_ArgumentManager->GetArgument(id);
+
+    if (argument.GetMemoryType() != ArgumentMemoryType::Vector)
+    {
+        throw KttException("Argument with id " + id + " is not a vector argument");
+    }
+
+    if (argument.HasUserBuffer())
+    {
+        throw KttException("Argument with id " + id + " has buffer owned by user and cannot be uploaded by tuner");
+    }
+
+    if (dataPtr == nullptr) dataPtr = argument.GetData();
+    if (dataSize == 0) dataSize = argument.GetDataSize();
+
+    const auto queue = m_ComputeEngine->GetDefaultQueue();
+
+    const auto actionId = m_ComputeEngine->HasBuffer(id)
+        ? m_ComputeEngine->UpdateArgument(id, queue, argument.GetData(), argument.GetDataSize())
+        : m_ComputeEngine->UploadArgument(argument, queue);
+
     m_ComputeEngine->WaitForTransferAction(actionId);
 }
 

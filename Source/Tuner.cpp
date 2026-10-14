@@ -438,11 +438,11 @@ void Tuner::SetWriteOnlyArgumentZero(const bool flag)
     }
 }
 
-void Tuner::UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize)
+void Tuner::UploadBuffer(const ArgumentId& id, const void *dataPtr, const size_t dataSize)
 {
     try
     {
-        m_Tuner->UpdateBuffer(id, data, dataSize);
+        m_Tuner->UploadBuffer(id, dataPtr, dataSize);
     }
     catch (const KttException& exception)
     {

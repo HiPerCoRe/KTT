@@ -602,18 +602,20 @@ public:
       */
     void SetWriteOnlyArgumentZero(const bool flag);
 
-    /** @fn void UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize = 0)
-      * Updates data in compute buffer of the specified vector argument. The transfer is submitted to the default queue and the
-      * method returns after it is finished. This is useful when argument data change between kernel runs and the data should be
-      * transferred without running a kernel. The compute buffer of the argument must already exist, which is the case after the
-      * argument has been uploaded to the device for the first time (e.g., by a previous call to Run() or TuneIteration()).
-      * @param id Id of vector argument which will be updated.
-      * @param data Pointer to new data for vector argument. Its size must be equal or greater than the specified data size.
-      * The data must have matching kernel argument data type.
-      * @param dataSize Size in bytes of buffer portion which will be updated, starting with the first byte. If zero, the entire
-      * buffer will be updated.
+    /** @fn void UploadBuffer(const ArgumentId& id)
+      * Uploads data into the compute buffer of a specified vector argument. 
+      * If the compute buffer of the argument does not exist yet, it is created and the data are uploaded into it, 
+      * which is the same behavior as ComputeInterface::UploadBuffer().
+      * If the buffer already exists, its content is replaced without any allocations.
+      * @param id Id of vector argument which will be uploaded. The argument's management type should be User, not Framework,
+      * to avoid duplicate work and possible inconsistencies.
+      * @param dataPtr Pointer to the raw data in host memory. If dataPtr is nullptr, the data are taken from 
+      * the argument, which means either a copy managed by KTT, or a reference back to user data 
+      * (see argument referenceUserData of Tuner::AddArgumentVector).
+      * @param dataSize Size in bytes of buffer portion which will be uploaded from the specified source, starting with the first
+      * byte. If zero, the entire buffer will be uploaded.
       */
-    void UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize = 0);
+    void UploadBuffer(const ArgumentId& id, const void *dataPtr = nullptr, const size_t dataSize = 0);
 
     /** @fn void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0)
       * Downloads the specified vector argument from its compute buffer. The transfer is submitted to the default queue and the

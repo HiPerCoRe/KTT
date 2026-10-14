@@ -68,7 +68,8 @@ int main(int argc, char** argv)
     // methods. 
     const ktt::ArgumentId aId = tuner.AddArgumentVector(a, ktt::ArgumentAccessType::ReadOnly);
     const ktt::ArgumentId bId = tuner.AddArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
+    const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAccessType::WriteOnly,
+        ktt::ArgumentMemoryLocation::Device, ktt::ArgumentManagementType::User, true);
 
     // Set arguments for the kernel definition. The order of argument ids must match the order of arguments inside corresponding
     // CUDA kernel function.
@@ -88,7 +89,9 @@ int main(int argc, char** argv)
     // and memory location where the argument data will be stored. Optionally, it can also include number of bytes to be retrieved,
     // if only a part of the argument is needed. Here, the data is stored back into result buffer which was created earlier. Note
     // that the memory location size needs to be equal or greater than the retrieved argument size.
-    tuner.Run(kernel, {}, {ktt::BufferOutputDescriptor(resultId, result.data())});
+    tuner.UploadBuffer(resultId);
+    tuner.Run(kernel, {}, {});
+    tuner.DownloadBuffer(resultId, result.data());
 
     // Print first ten elements from the result to check they were computed correctly.
     std::cout << "Printing the first 10 elements from result: ";
