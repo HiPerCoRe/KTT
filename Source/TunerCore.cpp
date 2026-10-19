@@ -449,10 +449,39 @@ void TunerCore::WaitForTransferAction(const TransferActionId id)
     m_ComputeEngine->WaitForTransferAction(id);
 }
 
-void TunerCore::UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize)
+void TunerCore::UploadBuffer(const ArgumentId& id, const void *dataPtr, size_t dataSize)
 {
-    const auto actionId = m_ComputeEngine->UpdateArgument(id, m_ComputeEngine->GetDefaultQueue(), data, dataSize);
-    m_ComputeEngine->WaitForTransferAction(actionId);
+    auto& argument = m_ArgumentManager->GetArgument(id);
+
+    if (argument.GetMemoryType() != ArgumentMemoryType::Vector)
+    {
+        throw KttException("Argument with id " + id + " is not a vector argument");
+    }
+
+    if (argument.HasUserBuffer())
+    {
+        throw KttException("Argument with id " + id + " has buffer owned by user and cannot be uploaded by tuner");
+    }
+
+    bool customSource = false;
+    if (dataPtr == nullptr) dataPtr = argument.GetData();
+    else customSource = true;
+    if (dataSize == 0) dataSize = argument.GetDataSize();
+    else customSource = true;
+
+    const auto queue = m_ComputeEngine->GetDefaultQueue();
+
+    if (!m_ComputeEngine->HasBuffer(id)) 
+    {
+        const auto actionId = m_ComputeEngine->UploadArgument(argument, queue);
+        m_ComputeEngine->WaitForTransferAction(actionId);
+    } 
+    // This strange workaround is necessary since UploadArgument doesn't support custom dataPtr or dataSize
+    if (m_ComputeEngine->HasBuffer(id) || customSource)
+    {
+        const auto actionId = m_ComputeEngine->UpdateArgument(id, queue, dataPtr, dataSize);
+        m_ComputeEngine->WaitForTransferAction(actionId);
+    }
 }
 
 void TunerCore::DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize)
