@@ -453,16 +453,6 @@ void TunerCore::UpdateBuffer(const ArgumentId& id, const void *dataPtr, size_t d
 {
     auto& argument = m_ArgumentManager->GetArgument(id);
 
-    if (argument.GetMemoryType() != ArgumentMemoryType::Vector)
-    {
-        throw KttException("Argument with id " + id + " is not a vector argument");
-    }
-
-    if (argument.HasUserBuffer())
-    {
-        throw KttException("Argument with id " + id + " has buffer owned by user and cannot be uploaded by tuner");
-    }
-
     bool customSource = false;
     if (dataPtr == nullptr) dataPtr = argument.GetData();
     else customSource = true;
