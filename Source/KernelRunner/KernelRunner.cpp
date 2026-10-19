@@ -74,12 +74,6 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
 
         if (argument->GetManagementType() == ArgumentManagementType::User)
         {
-            if (!kernel.HasLauncher() && !argument->HasUserBuffer())
-            {
-                Logger::LogWarning("Kernel argument with id " + id + " has buffer managed by user, but its "
-                    + "associated kernel " + kernel.GetName() + " does not have a launcher defined by user");
-            }
-
             continue;
         }
 
