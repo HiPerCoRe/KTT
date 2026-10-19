@@ -449,7 +449,7 @@ void TunerCore::WaitForTransferAction(const TransferActionId id)
     m_ComputeEngine->WaitForTransferAction(id);
 }
 
-void TunerCore::UploadBuffer(const ArgumentId& id, const void *dataPtr, size_t dataSize)
+void TunerCore::UpdateBuffer(const ArgumentId& id, const void *dataPtr, size_t dataSize)
 {
     auto& argument = m_ArgumentManager->GetArgument(id);
 

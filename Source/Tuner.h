@@ -602,10 +602,9 @@ public:
       */
     void SetWriteOnlyArgumentZero(const bool flag);
 
-    /** @fn void UploadBuffer(const ArgumentId& id)
-      * Uploads data into the compute buffer of a specified vector argument. 
-      * If the compute buffer of the argument does not exist yet, it is created and the data are uploaded into it, 
-      * which is the same behavior as ComputeInterface::UploadBuffer().
+    /** @fn void UpdateBuffer(const ArgumentId& id)
+      * Updates data in the compute buffer of a specified vector argument. Same behavior as ComputeInterface::UpdateBuffer():
+      * If the compute buffer of the argument does not exist yet, it is created and the data are uploaded into it.
       * If the buffer already exists, its content is replaced without any allocations.
       * @param id Id of vector argument which will be uploaded. The argument's management type should be User, not Framework,
       * to avoid duplicate work and possible inconsistencies.
@@ -615,7 +614,7 @@ public:
       * @param dataSize Size in bytes of buffer portion which will be uploaded from the specified source, starting with the first
       * byte. If zero, the entire buffer will be uploaded.
       */
-    void UploadBuffer(const ArgumentId& id, const void *dataPtr = nullptr, const size_t dataSize = 0);
+    void UpdateBuffer(const ArgumentId& id, const void *dataPtr = nullptr, const size_t dataSize = 0);
 
     /** @fn void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0)
       * Downloads the specified vector argument from its compute buffer. The transfer is submitted to the default queue and the

@@ -120,7 +120,7 @@ public:
     void RemoveComputeQueue(const QueueId id);
     void WaitForComputeAction(const ComputeActionId id);
     void WaitForTransferAction(const TransferActionId id);
-    void UploadBuffer(const ArgumentId& id, const void *dataPtr, size_t dataSize);
+    void UpdateBuffer(const ArgumentId& id, const void *dataPtr, size_t dataSize);
     void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0);
     void SynchronizeQueue(const QueueId queueId);
     void SynchronizeQueues();
