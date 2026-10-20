@@ -88,7 +88,7 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
             continue;
         }
 
-        const auto actionId = m_Engine.UploadArgument(*argument, m_ComputeLayer->GetDefaultQueue());
+        const auto actionId = m_Engine.UpdateArgument(*argument, m_ComputeLayer->GetDefaultQueue());
         m_Engine.WaitForTransferAction(actionId);
     }
 }

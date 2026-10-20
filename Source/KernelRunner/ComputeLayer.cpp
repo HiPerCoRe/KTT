@@ -195,20 +195,12 @@ void ComputeLayer::UpdateLocalArgument(const ArgumentId& id, const size_t dataSi
 
 void ComputeLayer::UploadBuffer(const ArgumentId& id)
 {
-    Timer timer;
-    timer.Start();
-
-    const auto actionId = UploadBufferAsync(id, GetDefaultQueue());
-    WaitForTransferAction(actionId);
-
-    timer.Stop();
-    GetData().IncreaseOverhead(timer.GetElapsedTime());
+    return UpdateBuffer(id);
 }
 
 TransferActionId ComputeLayer::UploadBufferAsync(const ArgumentId& id, const QueueId queue)
 {
-    auto& argument = m_ArgumentManager.GetArgument(id);
-    return m_ComputeEngine.UploadArgument(argument, queue);
+    return UpdateBufferAsync(id, queue);
 }
 
 void ComputeLayer::DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize)
@@ -244,7 +236,8 @@ void ComputeLayer::UpdateBuffer(const ArgumentId& id, const void* data, const si
 TransferActionId ComputeLayer::UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
     const size_t dataSize)
 {
-    return m_ComputeEngine.UpdateArgument(id, queue, data, dataSize);
+    auto& kernelArgument = m_ArgumentManager.GetArgument(id);
+    return m_ComputeEngine.UpdateArgument(kernelArgument, queue, data, dataSize);
 }
 
 void ComputeLayer::CopyBuffer(const ArgumentId& destination, const ArgumentId& source, const size_t dataSize)

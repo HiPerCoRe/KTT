@@ -21,7 +21,7 @@ TEST_CASE("Working with Vulkan buffer", "VulkanEngine")
 
     SECTION("Zeroing argument buffer")
     {
-        const auto uploadAction = engine.UploadArgument(argument, engine.GetDefaultQueue());
+        const auto uploadAction = engine.UpdateArgument(argument, engine.GetDefaultQueue());
         engine.WaitForTransferAction(uploadAction);
 
         engine.ZeroBuffer(argument.GetId(), engine.GetDefaultQueue());
@@ -45,7 +45,7 @@ TEST_CASE("Working with Vulkan buffer", "VulkanEngine")
             ktt::ArgumentManagementType::Framework);
         charArgument.SetOwnedData(charData.data(), charData.size());
 
-        const auto uploadAction = engine.UploadArgument(charArgument, engine.GetDefaultQueue());
+        const auto uploadAction = engine.UpdateArgument(charArgument, engine.GetDefaultQueue());
         engine.WaitForTransferAction(uploadAction);
 
         engine.ZeroBuffer(charArgument.GetId(), engine.GetDefaultQueue());

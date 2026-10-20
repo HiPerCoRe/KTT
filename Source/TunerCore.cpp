@@ -453,25 +453,10 @@ void TunerCore::UpdateBuffer(const ArgumentId& id, const void *dataPtr, size_t d
 {
     auto& argument = m_ArgumentManager->GetArgument(id);
 
-    bool customSource = false;
-    if (dataPtr == nullptr) dataPtr = argument.GetData();
-    else customSource = true;
-    if (dataSize == 0) dataSize = argument.GetDataSize();
-    else customSource = true;
-
     const auto queue = m_ComputeEngine->GetDefaultQueue();
 
-    if (!m_ComputeEngine->HasBuffer(id)) 
-    {
-        const auto actionId = m_ComputeEngine->UploadArgument(argument, queue);
-        m_ComputeEngine->WaitForTransferAction(actionId);
-    } 
-    // This strange workaround is necessary since UploadArgument doesn't support custom dataPtr or dataSize
-    if (m_ComputeEngine->HasBuffer(id) || customSource)
-    {
-        const auto actionId = m_ComputeEngine->UpdateArgument(id, queue, dataPtr, dataSize);
-        m_ComputeEngine->WaitForTransferAction(actionId);
-    }
+    const auto actionId = m_ComputeEngine->UpdateArgument(argument, queue, dataPtr, dataSize);
+    m_ComputeEngine->WaitForTransferAction(actionId);
 }
 
 void TunerCore::DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize)
