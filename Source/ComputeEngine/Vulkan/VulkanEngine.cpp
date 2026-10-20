@@ -329,6 +329,23 @@ bool VulkanEngine::HasBuffer(const ArgumentId& id)
     return ContainsKey(m_Buffers, id);
 }
 
+void VulkanEngine::ZeroBuffer(const ArgumentId& id, const QueueId queueId)
+{
+    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + id + " was not found");
+    }
+
+    auto& buffer = *m_Buffers[id];
+    // ZeroData waits for completion of the zeroing command buffer, so the returned action is already finished.
+    buffer.ZeroData(*m_Queues[static_cast<size_t>(queueId)], *m_CommandPool, *m_QueryPool);
+}
+
 QueueId VulkanEngine::AddComputeQueue([[maybe_unused]] ComputeQueue queue)
 {
     throw KttException("Support for compute queue addition is not yet available for Vulkan backend");

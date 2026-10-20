@@ -476,6 +476,22 @@ bool CppEngine::HasBuffer(const ArgumentId& id)
     return m_Buffers.find(id) != m_Buffers.end();
 }
 
+void CppEngine::ZeroBuffer(const ArgumentId& id, const QueueId queueId)
+{
+    auto bufferIt = m_Buffers.find(id);
+    if (bufferIt == m_Buffers.end())
+    {
+        throw KttException("Buffer for argument with id " + id + " was not found");
+    }
+    if (m_Queues.find(queueId) == m_Queues.end())
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    auto& buffer = bufferIt->second;
+    memset(buffer.data, 0, buffer.size);
+}
+
 // Queue methods
 QueueId CppEngine::AddComputeQueue(ComputeQueue queue)
 {

@@ -632,6 +632,27 @@ bool OpenClEngine::HasBuffer(const ArgumentId& id)
     return ContainsKey(m_Buffers, id);
 }
 
+void OpenClEngine::ZeroBuffer(const ArgumentId& id, const QueueId queueId) 
+{
+    if (!ContainsKey(m_Buffers, id)) 
+    {
+        throw KttException("Buffer for argument with id " + id + " was not found");
+    }
+    if (!ContainsKey(m_Queues, queueId)) 
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    auto& buffer = *m_Buffers[id];
+    auto& queue = *m_Queues[queueId];
+    // The size of the filled region must be a multiple of the pattern size, so a one byte pattern is used
+    // to support buffers of arbitrary size.
+    unsigned char zero = 0;
+    CheckError(clEnqueueFillBuffer(queue.GetQueue(), buffer.GetBuffer(), &zero, sizeof(zero), 0, buffer.GetSize(),
+        0, NULL, NULL), "clEnqueueFillBuffer");  
+    SynchronizeQueue(queueId); 
+}
+
 QueueId OpenClEngine::AddComputeQueue(ComputeQueue queue)
 {
     if (!m_Context->IsUserOwned())

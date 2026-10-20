@@ -32,6 +32,9 @@ public:
         VulkanQueryPool& queryPool, const VulkanBuffer& source, const VkDeviceSize dataSize);
     std::unique_ptr<VulkanTransferAction> CopyData(const VulkanQueue& queue, const VulkanCommandPool& commandPool,
         VulkanQueryPool& queryPool, std::unique_ptr<VulkanBuffer> stagingSource, const VkDeviceSize dataSize);
+    // Zeroes the whole buffer. Waits for completion, so the returned action is already finished.
+    std::unique_ptr<VulkanTransferAction> ZeroData(const VulkanQueue& queue, const VulkanCommandPool& commandPool,
+        VulkanQueryPool& queryPool);
 
     VkBuffer GetBuffer() const;
     KernelArgument& GetArgument() const;
