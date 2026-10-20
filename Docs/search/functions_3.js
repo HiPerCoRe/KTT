@@ -1,10 +1,13 @@
 var searchData=
 [
-  ['decreaseremainingprofilingruns_0',['DecreaseRemainingProfilingRuns',['../classktt_1_1_kernel_profiling_data.html#a5e33137f931a103ed97ede31c81bdbdc',1,'ktt::KernelProfilingData']]],
-  ['deterministicsearcher_1',['DeterministicSearcher',['../classktt_1_1_deterministic_searcher.html#a4cad95c610c4c18178482e6619a30b3b',1,'ktt::DeterministicSearcher']]],
-  ['deviceinfo_2',['DeviceInfo',['../classktt_1_1_device_info.html#a1c2302c00b2b32f1524ee1c961db4541',1,'ktt::DeviceInfo']]],
-  ['dimensionvector_3',['dimensionvector',['../classktt_1_1_dimension_vector.html#a481f83a511def47ab7124ed7461024ce',1,'ktt::DimensionVector::DimensionVector()'],['../classktt_1_1_dimension_vector.html#a1bfbb2a72cff5585a671c5272848b3b1',1,'ktt::DimensionVector::DimensionVector(const size_t sizeX)'],['../classktt_1_1_dimension_vector.html#ac40ec611802bf43b67515c04f7b7775f',1,'ktt::DimensionVector::DimensionVector(const size_t sizeX, const size_t sizeY)'],['../classktt_1_1_dimension_vector.html#a48e9f835e901fcce7f57bf17b1aeb05c',1,'ktt::DimensionVector::DimensionVector(const size_t sizeX, const size_t sizeY, const size_t sizeZ)'],['../classktt_1_1_dimension_vector.html#a548756d91eafa34a429dbc5de0473b74',1,'ktt::DimensionVector::DimensionVector(const std::vector&lt; size_t &gt; &amp;vector)']]],
-  ['divide_4',['Divide',['../classktt_1_1_dimension_vector.html#ab390902241d5d5d544e67e5a8944d0b4',1,'ktt::DimensionVector']]],
-  ['downloadbuffer_5',['DownloadBuffer',['../classktt_1_1_compute_interface.html#ab822ca7c42c45c083d6880f2bad1f8b9',1,'ktt::ComputeInterface']]],
-  ['downloadbufferasync_6',['DownloadBufferAsync',['../classktt_1_1_compute_interface.html#a38fe1b2e0d03b2e1c75d3158ac3e8e35',1,'ktt::ComputeInterface']]]
+  ['database_0',['database',['../classktt_1_1db_1_1_database.html#a313f8dc716926c09c8c400f6f22d40c1',1,'ktt::db::Database::Database()'],['../classktt_1_1db_1_1_database.html#a4566c98b3b01bdb3ff702e48d599d7cc',1,'ktt::db::Database::Database(std::filesystem::path databasePath)'],['../classktt_1_1db_1_1_database.html#a968647ed3ea8e3c5ba8dfc525e704396',1,'ktt::db::Database::Database(sqlite3 *connection)']]],
+  ['decreaseremainingprofilingruns_1',['DecreaseRemainingProfilingRuns',['../classktt_1_1_kernel_profiling_data.html#a5e33137f931a103ed97ede31c81bdbdc',1,'ktt::KernelProfilingData']]],
+  ['deserializeresult_2',['DeserializeResult',['../classktt_1_1db_1_1_database_utility.html#aea1e349ba67927ef485c47ffd75b7877',1,'ktt::db::DatabaseUtility']]],
+  ['deserializeresultjsont4_3',['DeserializeResultJsonT4',['../namespacektt_1_1db.html#a7a9732ae76710690fcdbe9595338bf4f',1,'ktt::db']]],
+  ['deterministicsearcher_4',['DeterministicSearcher',['../classktt_1_1_deterministic_searcher.html#a4cad95c610c4c18178482e6619a30b3b',1,'ktt::DeterministicSearcher']]],
+  ['deviceinfo_5',['DeviceInfo',['../classktt_1_1_device_info.html#a1c2302c00b2b32f1524ee1c961db4541',1,'ktt::DeviceInfo']]],
+  ['dimensionvector_6',['dimensionvector',['../classktt_1_1_dimension_vector.html#a481f83a511def47ab7124ed7461024ce',1,'ktt::DimensionVector::DimensionVector()'],['../classktt_1_1_dimension_vector.html#a1bfbb2a72cff5585a671c5272848b3b1',1,'ktt::DimensionVector::DimensionVector(const size_t sizeX)'],['../classktt_1_1_dimension_vector.html#ac40ec611802bf43b67515c04f7b7775f',1,'ktt::DimensionVector::DimensionVector(const size_t sizeX, const size_t sizeY)'],['../classktt_1_1_dimension_vector.html#a48e9f835e901fcce7f57bf17b1aeb05c',1,'ktt::DimensionVector::DimensionVector(const size_t sizeX, const size_t sizeY, const size_t sizeZ)'],['../classktt_1_1_dimension_vector.html#a548756d91eafa34a429dbc5de0473b74',1,'ktt::DimensionVector::DimensionVector(const std::vector&lt; size_t &gt; &amp;vector)']]],
+  ['divide_7',['Divide',['../classktt_1_1_dimension_vector.html#ab390902241d5d5d544e67e5a8944d0b4',1,'ktt::DimensionVector']]],
+  ['downloadbuffer_8',['DownloadBuffer',['../classktt_1_1_compute_interface.html#ab822ca7c42c45c083d6880f2bad1f8b9',1,'ktt::ComputeInterface']]],
+  ['downloadbufferasync_9',['DownloadBufferAsync',['../classktt_1_1_compute_interface.html#a38fe1b2e0d03b2e1c75d3158ac3e8e35',1,'ktt::ComputeInterface']]]
 ];

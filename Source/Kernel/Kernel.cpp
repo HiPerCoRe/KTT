@@ -35,19 +35,19 @@ void Kernel::AddParameter(const KernelParameter& parameter)
 void Kernel::AddConstraint(const std::vector<std::string>& parameterNames, ConstraintFunction function)
 {
     const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, false);
-    m_Constraints.push_back(std::make_unique<BasicConstraint>(parameters, function));
+    m_Constraints.push_back(std::make_unique<BasicConstraint>(parameters, function, m_Constraints.size()));
 }
 
 void Kernel::AddGenericConstraint(const std::vector<std::string>& parameterNames, GenericConstraintFunction function)
 {
     const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, true);
-    m_Constraints.push_back(std::make_unique<GenericConstraint>(parameters, function));
+    m_Constraints.push_back(std::make_unique<GenericConstraint>(parameters, function, m_Constraints.size()));
 }
 
 void Kernel::AddScriptConstraint(const std::vector<std::string>& parameterNames, const std::string& script)
 {
     const std::vector<const KernelParameter*> parameters = PreprocessConstraintParameters(parameterNames, true);
-    m_Constraints.push_back(std::make_unique<ScriptConstraint>(parameters, script));
+    m_Constraints.push_back(std::make_unique<ScriptConstraint>(parameters, script, m_Constraints.size()));
 }
 
 void Kernel::AddThreadModifier(const ModifierType type, const ModifierDimension dimension, const ThreadModifier& modifier)

@@ -10,8 +10,8 @@
 namespace ktt
 {
 
-ScriptConstraint::ScriptConstraint(const std::vector<const KernelParameter*>& parameters, const std::string& script) :
-    KernelConstraint(parameters),
+ScriptConstraint::ScriptConstraint(const std::vector<const KernelParameter*>& parameters, const std::string& script, int order) :
+    KernelConstraint(parameters, order),
     m_Script(script)
 {
 #ifndef KTT_PYTHON

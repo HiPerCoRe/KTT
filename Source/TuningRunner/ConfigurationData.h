@@ -36,6 +36,7 @@ public:
     bool IsProcessed() const;
     KernelConfiguration GetCurrentConfiguration() const;
     KernelConfiguration GetBestConfiguration() const;
+    size_t GetConfigurationFingerprint() const;
 
     bool IsSeparateOptionsGroup() const;
 

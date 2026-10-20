@@ -21,7 +21,11 @@ enum class ExceptionReason
 
     /** Compute device limits were exceeded (e.g., local size was too large, shared memory usage was too high).
       */
-    DeviceLimitsExceeded
+    DeviceLimitsExceeded,
+
+    /** General database error.
+      */
+    Database
 };
 
 } // namespace ktt

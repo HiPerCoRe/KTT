@@ -1,5 +1,9 @@
 #ifdef KTT_API_OPENCL
 
+#include <cstdio>
+
+#include <CL/cl_ext.h>
+
 #include <ComputeEngine/OpenCl/OpenClDevice.h>
 #include <ComputeEngine/OpenCl/OpenClUtility.h>
 #include <Utility/StringUtility.h>
@@ -49,6 +53,23 @@ DeviceInfo OpenClDevice::GetInfo() const
 
     const DeviceType type = GetDeviceType();
     result.SetDeviceType(type);
+    result.SetDriverVersion(GetInfoString(CL_DRIVER_VERSION));
+
+#ifdef CL_DEVICE_UUID_KHR
+    // Persistent hardware identifier: the device UUID exposed by the cl_khr_device_uuid extension.
+    // Leave the identifier empty when the device or driver does not support the extension.
+    cl_uchar uuid[CL_UUID_SIZE_KHR];
+
+    if (clGetDeviceInfo(m_Id, CL_DEVICE_UUID_KHR, sizeof(uuid), uuid, nullptr) == CL_SUCCESS)
+    {
+        char identifier[37];
+        std::snprintf(identifier, sizeof(identifier),
+            "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+            uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5], uuid[6], uuid[7],
+            uuid[8], uuid[9], uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]);
+        result.SetDeviceIdentifier(identifier);
+    }
+#endif // CL_DEVICE_UUID_KHR
 
     const auto globalMemorySize = GetInfoWithType<uint64_t>(CL_DEVICE_GLOBAL_MEM_SIZE);
     result.SetGlobalMemorySize(globalMemorySize);

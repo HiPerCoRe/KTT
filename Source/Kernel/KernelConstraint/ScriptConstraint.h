@@ -8,7 +8,7 @@ namespace ktt
 class ScriptConstraint : public KernelConstraint
 {
 public:
-    explicit ScriptConstraint(const std::vector<const KernelParameter*>& parameters, const std::string& script);
+    explicit ScriptConstraint(const std::vector<const KernelParameter*>& parameters, const std::string& script, int order);
 
     bool IsFulfilled(const std::vector<const ParameterValue*>& values) const override;
 

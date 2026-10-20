@@ -13,10 +13,11 @@ namespace ktt
 class KernelConstraint
 {
 public:
-    KernelConstraint(const std::vector<const KernelParameter*>& parameters);
+    KernelConstraint(const std::vector<const KernelParameter*>& parameters, int order);
     virtual ~KernelConstraint() = default;
 
     const std::vector<const KernelParameter*>& GetParameters() const;
+    int GetOrder() const;
     bool AffectsParameter(const std::string& name) const;
     bool HasAllParameters(const std::set<std::string>& parameterNames) const;
     uint64_t GetAffectedParameterCount(const std::set<std::string>& parameterNames) const;
@@ -26,6 +27,7 @@ public:
 protected:
     std::vector<const KernelParameter*> m_Parameters;
     std::vector<std::string> m_ParameterNames;
+    int m_Order;
 };
 
 } // namespace ktt

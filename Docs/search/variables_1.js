@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['invalidargumentid_0',['InvalidArgumentId',['../namespacektt.html#a06314e7380eb0baeb140510fcae36003',1,'ktt']]],
-  ['invalidduration_1',['InvalidDuration',['../namespacektt.html#a903bdfdf84555ceb9eba5dc578c446bb',1,'ktt']]],
-  ['invalidkerneldefinitionid_2',['InvalidKernelDefinitionId',['../namespacektt.html#a275bc1cfb6ac089034630c96f78285d4',1,'ktt']]],
-  ['invalidkernelid_3',['InvalidKernelId',['../namespacektt.html#af007a5e422c999a5a8f4fd1d875cc7bf',1,'ktt']]],
-  ['invalidqueueid_4',['InvalidQueueId',['../namespacektt.html#ad611ee0e290241acfe5dcec46fce712c',1,'ktt']]]
+  ['computeapi_0',['computeapi',['../structktt_1_1db_1_1_device_info.html#a480826d1f99d9b16f0d90ee893e63eab',1,'ktt::db::DeviceInfo::computeApi'],['../structktt_1_1db_1_1_device_api.html#aa574da825723aa832aa1f6b7667cfeff',1,'ktt::db::DeviceApi::computeApi'],['../structktt_1_1db_1_1_device.html#abd041a21e9980bdd245f3a972a6a2d24',1,'ktt::db::Device::computeApi']]],
+  ['createdat_1',['createdAt',['../structktt_1_1db_1_1_run_sync_record.html#aaceb1fffd40d69ad5d43fa104a685bf8',1,'ktt::db::RunSyncRecord']]],
+  ['cudacomputecapabilitymajor_2',['cudacomputecapabilitymajor',['../structktt_1_1db_1_1_device_info.html#a8c3982541cb98480ee05ba40905693e3',1,'ktt::db::DeviceInfo::cudaComputeCapabilityMajor'],['../structktt_1_1db_1_1_device_api.html#a85cb0401cd57fd6f58c0b0a37cb4320d',1,'ktt::db::DeviceApi::cudaComputeCapabilityMajor'],['../structktt_1_1db_1_1_device.html#a26dab7bd67cc17b0d4c62a81ea478e66',1,'ktt::db::Device::cudaComputeCapabilityMajor']]],
+  ['cudacomputecapabilityminor_3',['cudacomputecapabilityminor',['../structktt_1_1db_1_1_device_info.html#afc7735eae3b774f90ecc1edaf3580969',1,'ktt::db::DeviceInfo::cudaComputeCapabilityMinor'],['../structktt_1_1db_1_1_device_api.html#a1093adf33a584a759c145ec3f0d9ce83',1,'ktt::db::DeviceApi::cudaComputeCapabilityMinor'],['../structktt_1_1db_1_1_device.html#acebab768c9468d734f9d1e4c53ce1759',1,'ktt::db::Device::cudaComputeCapabilityMinor']]]
 ];

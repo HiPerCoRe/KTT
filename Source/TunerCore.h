@@ -5,6 +5,7 @@
 #include <string>
 
 #include <Api/ComputeApiInitializer.h>
+#include <Api/Info/DatabaseTuningInfo.h>
 #include <ComputeEngine/ComputeApi.h>
 #include <ComputeEngine/ComputeEngine.h>
 #include <Kernel/KernelManager.h>
@@ -107,6 +108,7 @@ public:
     std::string GetKernelSource(const KernelId id, const KernelConfiguration& configuration) const;
     std::string GetKernelDefinitionSource(const KernelDefinitionId id, const KernelConfiguration& configuration) const;
     KernelResult GetBestResult(const std::vector<KernelResult>& results) const;
+    ktt::db::TuningInfo GetDatabaseTuningInfo(const KernelId id) const;
 
     // Result printing
     static void SetTimeUnit(const TimeUnit unit);

@@ -772,13 +772,26 @@ std::string Tuner::GetKernelDefinitionSource(const KernelDefinitionId id, const 
     }
 }
 
+ktt::db::TuningInfo Tuner::GetDatabaseTuningInfo(const KernelId id) const
+{
+    try
+    {
+        return m_Tuner->GetDatabaseTuningInfo(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return ktt::db::TuningInfo();
+    }
+}
+
 void Tuner::SetTimeUnit(const TimeUnit unit)
 {
     TunerCore::SetTimeUnit(unit);
 }
 
 KernelResult Tuner::GetBestResult(const std::vector<KernelResult>& results) const
-{   
+{
     try
     {
         return m_Tuner->GetBestResult(results);

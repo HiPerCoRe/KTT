@@ -4,8 +4,8 @@
 namespace ktt
 {
 
-GenericConstraint::GenericConstraint(const std::vector<const KernelParameter*>& parameters, GenericConstraintFunction function) :
-    KernelConstraint(parameters),
+GenericConstraint::GenericConstraint(const std::vector<const KernelParameter*>& parameters, GenericConstraintFunction function, const int order) :
+    KernelConstraint(parameters, order),
     m_GenericFunction(function)
 {
     if (m_GenericFunction == nullptr)

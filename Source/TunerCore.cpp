@@ -1,4 +1,7 @@
+#include <cctype>
 #include <fstream>
+#include <iostream>
+#include <limits>
 
 #include <Api/KttException.h>
 #include <ComputeEngine/Cuda/CudaEngine.h>
@@ -8,14 +11,16 @@
 #include <Output/Deserializer/JsonDeserializer.h>
 #include <Output/Deserializer/JsonT4Deserializer.h>
 #include <Output/Deserializer/XmlDeserializer.h>
+#include <Output/JsonConverters.h>
 #include <Output/Serializer/JsonSerializer.h>
 #include <Output/Serializer/JsonT4Serializer.h>
 #include <Output/Serializer/XmlSerializer.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
 #include <Output/TunerMetadata.h>
 #include <Utility/ErrorHandling/Assert.h>
-#include <Utility/Logger/Logger.h>
 #include <Utility/FileSystem.h>
+#include <Utility/Fingerprint/FingerprintUtility.h>
+#include <Utility/Logger/Logger.h>
 #include <TunerCore.h>
 
 namespace ktt
@@ -371,6 +376,54 @@ KernelResult TunerCore::GetBestResult(const std::vector<KernelResult>& results) 
             bestIdx = i;
         }
     return results[bestIdx];
+}
+
+ktt::db::TuningInfo TunerCore::GetDatabaseTuningInfo(const KernelId id) const
+{
+    const auto& kernel = m_KernelManager->GetKernel(id);
+    const auto& parameters = kernel.GetParameters();
+    const auto& sources = kernel.GetDefinitions();
+    const auto constraints = kernel.GetConstraints();
+    const auto deviceInfo = GetCurrentDeviceInfo();
+
+    ktt::db::TuningInfo s;
+    {
+        ktt::db::TuningSpaceInfo spaceInfo;
+        {
+            spaceInfo.spaceFingerprint = m_TuningRunner->GetConfigurationFingerprint(kernel);
+            spaceInfo.parameterFingerprint = FingerprintUtility::GetFingerprintOfParameters(parameters);
+            spaceInfo.sourceFingerprint = FingerprintUtility::GetFingerprintOfDefinitions(sources);
+        }
+        s.spaceInfo = spaceInfo;
+
+        ktt::db::DeviceInfo d;
+        {
+            d.computeApi = m_ComputeEngine->GetComputeApi();
+            d.name = deviceInfo.GetName();
+            d.type = deviceInfo.GetDeviceTypeString();
+            d.vendor = deviceInfo.GetVendor();
+            d.driverVersion = deviceInfo.GetDriverVersion();
+
+            if (const auto& identifier = deviceInfo.GetDeviceIdentifier(); !identifier.empty())
+            {
+                d.deviceIdentifier = identifier;
+            }
+
+            if (d.computeApi == ComputeApi::OpenCL || d.computeApi == ComputeApi::Vulkan)
+            {
+                d.extensions = deviceInfo.GetExtensions();
+            }
+
+            if (d.computeApi == ComputeApi::CUDA)
+            {
+                d.cudaComputeCapabilityMajor = deviceInfo.GetCudaComputeCapabilityMajor();
+                d.cudaComputeCapabilityMinor = deviceInfo.GetCudaComputeCapabilityMinor();
+            }
+        }
+        s.device = d;
+        s.tuner = ktt::db::TunerInfo{"KTT", GetKttVersionString()};
+    }
+    return s;
 }
 
 void TunerCore::SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format,
