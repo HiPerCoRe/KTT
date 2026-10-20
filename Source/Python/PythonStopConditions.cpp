@@ -53,6 +53,19 @@ void InitializePythonStopConditions(py::module_& module)
 
     py::class_<ktt::TuningDuration, ktt::StopCondition, py::smart_holder>(module, "TuningDuration")
         .def(py::init<const double>());
+
+    py::class_<ktt::FailureCount, ktt::StopCondition, py::smart_holder>(module, "FailureCount")
+        .def(py::init<const uint64_t>(), py::arg("maxFailures"));
+
+    py::class_<ktt::FailureFraction, ktt::StopCondition, py::smart_holder>(module, "FailureFraction")
+        .def(py::init<const double, const uint64_t>(), py::arg("fraction"), py::arg("minCount") = 0);
+
+    py::class_<ktt::UnionCondition, ktt::StopCondition, py::smart_holder>(module, "UnionCondition")
+        .def(py::init<const std::vector<std::shared_ptr<ktt::StopCondition>>&>(), py::arg("conditions"));
+
+    py::class_<ktt::InterruptSignal, ktt::StopCondition, py::smart_holder>(module, "InterruptSignal")
+        .def(py::init<>())
+        .def_static("ResetShouldInterrupt", &ktt::InterruptSignal::ResetShouldInterrupt);
 }
 
 #endif // KTT_PYTHON
