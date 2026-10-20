@@ -61,6 +61,7 @@ public:
     void ClearBuffer(const ArgumentId& id) override;
     void ClearBuffers() override;
     bool HasBuffer(const ArgumentId& id) override;
+    void ZeroBuffer(const ArgumentId& id, const QueueId queueId) override;
 
     // Queue methods
     QueueId AddComputeQueue(ComputeQueue queue) override;

@@ -120,6 +120,93 @@ std::unique_ptr<VulkanTransferAction> VulkanBuffer::CopyData(const VulkanQueue& 
     return CopyDataInternal(queue, queryPool, source, dataSize, std::move(action));
 }
 
+std::unique_ptr<VulkanTransferAction> VulkanBuffer::ZeroData(const VulkanQueue& queue, const VulkanCommandPool& commandPool,
+    VulkanQueryPool& queryPool)
+{
+    const auto id = m_Generator.GenerateId();
+    auto action = std::make_unique<VulkanTransferAction>(id, queue.GetId(), &m_Device, &commandPool, &queryPool);
+
+    Logger::LogDebug("Zeroing Vulkan buffer with id " + m_Argument.GetId());
+
+    // Fill command only accepts sizes that are a multiple of four. Remaining tail bytes are copied from a small
+    // staging buffer. The fence is waited upon inside this method, so the staging buffer stays alive until the
+    // command buffer finishes. The returned action is therefore already finished when this method returns.
+    const VkDeviceSize fillSize = (m_BufferSize / 4) * 4;
+    const VkDeviceSize tailSize = m_BufferSize - fillSize;
+
+    VkBuffer stagingBuffer = VK_NULL_HANDLE;
+    VmaAllocation stagingAllocation = nullptr;
+
+    const VkCommandBufferBeginInfo beginInfo =
+    {
+        VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        nullptr,
+        VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        nullptr
+    };
+
+    CheckError(vkBeginCommandBuffer(action->GetCommandBuffer(), &beginInfo), "vkBeginCommandBuffer");
+
+    vkCmdResetQueryPool(action->GetCommandBuffer(), queryPool.GetPool(), action->GetFirstQueryId(), 2);
+    vkCmdWriteTimestamp(action->GetCommandBuffer(), VK_PIPELINE_STAGE_TRANSFER_BIT, queryPool.GetPool(),
+        action->GetFirstQueryId());
+
+    if (fillSize > 0)
+    {
+        vkCmdFillBuffer(action->GetCommandBuffer(), m_Buffer, 0, fillSize, 0);
+    }
+
+    if (tailSize > 0)
+    {
+        const VkBufferCreateInfo bufferInfo =
+        {
+            VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            nullptr,
+            0,
+            tailSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_SHARING_MODE_EXCLUSIVE,
+            0,
+            nullptr
+        };
+
+        VmaAllocationCreateInfo allocationInfo = {};
+        allocationInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+
+        CheckError(vmaCreateBuffer(m_Allocator, &bufferInfo, &allocationInfo, &stagingBuffer, &stagingAllocation,
+            nullptr), "vmaCreateBuffer");
+
+        void* data;
+        CheckError(vmaMapMemory(m_Allocator, stagingAllocation, &data), "vmaMapMemory");
+        memset(data, 0, static_cast<size_t>(tailSize));
+        vmaUnmapMemory(m_Allocator, stagingAllocation);
+
+        const VkBufferCopy copyRegion =
+        {
+            0,
+            fillSize,
+            tailSize
+        };
+
+        vkCmdCopyBuffer(action->GetCommandBuffer(), stagingBuffer, m_Buffer, 1, &copyRegion);
+    }
+
+    vkCmdWriteTimestamp(action->GetCommandBuffer(), VK_PIPELINE_STAGE_TRANSFER_BIT, queryPool.GetPool(),
+        action->GetSecondQueryId());
+
+    CheckError(vkEndCommandBuffer(action->GetCommandBuffer()), "vkEndCommandBuffer");
+
+    queue.SubmitCommand(action->GetCommandBuffer(), action->GetFence());
+    action->WaitForFinish();
+
+    if (stagingBuffer != VK_NULL_HANDLE)
+    {
+        vmaDestroyBuffer(m_Allocator, stagingBuffer, stagingAllocation);
+    }
+
+    return action;
+}
+
 VkBuffer VulkanBuffer::GetBuffer() const
 {
     return m_Buffer;
