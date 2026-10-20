@@ -174,8 +174,14 @@ void CudaEngine::Sanitize(const QueueId queueId)
 
 void CudaEngine::ZeroBuffer(const ArgumentId& id, const QueueId queueId)
 {
-    if (!ContainsKey(m_Buffers, id) || !ContainsKey(m_Streams, queueId))
-        return;
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + id + " was not found");
+    }
+    if (!ContainsKey(m_Streams, queueId))
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
 
     auto& buffer = *m_Buffers[id];
     CudaStream& stream = *m_Streams[queueId];
