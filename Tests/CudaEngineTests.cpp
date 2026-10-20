@@ -82,7 +82,7 @@ TEST_CASE("Working with CUDA buffer", "CudaEngine")
     {
         std::vector<float> scalarData(1, 1.0f);
         ktt::KernelArgument scalarArgument(ktt::ArgumentId("1"), sizeof(float), ktt::ArgumentDataType::Float,
-            ktt::ArgumentMemoryLocation::Device, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryType::Scalar,
+            ktt::ArgumentMemoryLocation::Undefined, ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryType::Scalar,
             ktt::ArgumentManagementType::Framework);
         scalarArgument.SetOwnedData(scalarData.data(), scalarData.size() * sizeof(float));
 
