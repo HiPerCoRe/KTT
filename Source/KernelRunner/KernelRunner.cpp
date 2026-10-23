@@ -74,12 +74,6 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
 
         if (argument->GetManagementType() == ArgumentManagementType::User)
         {
-            if (!kernel.HasLauncher() && !argument->HasUserBuffer())
-            {
-                Logger::LogWarning("Kernel argument with id " + id + " has buffer managed by user, but its "
-                    + "associated kernel " + kernel.GetName() + " does not have a launcher defined by user");
-            }
-
             continue;
         }
 
@@ -94,7 +88,7 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
             continue;
         }
 
-        const auto actionId = m_Engine.UploadArgument(*argument, m_ComputeLayer->GetDefaultQueue());
+        const auto actionId = m_Engine.UpdateArgument(*argument, m_ComputeLayer->GetDefaultQueue());
         m_Engine.WaitForTransferAction(actionId);
     }
 }

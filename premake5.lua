@@ -636,10 +636,16 @@ project "Tests"
         or (not _OPTIONS["platform"] and not _OPTIONS["no-opencl"]
             and (os.getenv("OCL_ROOT") ~= nil or os.getenv("INTELOCLSDKROOT") ~= nil or os.getenv("CUDA_PATH") ~= nil))
     local cppDefined = _OPTIONS["cpp"] ~= nil and _OPTIONS["platform"] == nil
+    local cudaDefined = (_OPTIONS["platform"] == "nvidia" or (not _OPTIONS["platform"] and os.getenv("CUDA_PATH") ~= nil))
+        and not _OPTIONS["no-cuda"]
     local vulkanDefined = _OPTIONS["vulkan"] ~= nil
 
     if not openClDefined then
         removefiles {"Tests/OpenClEngineTests.cpp", "Tests/Kernels/SimpleOpenClKernel.cl"}
+    end
+
+    if not cudaDefined then
+        removefiles {"Tests/CudaEngineTests.cpp"}
     end
 
     if not cppDefined then
