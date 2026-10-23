@@ -1,3 +1,4 @@
+#include "KttTypes.h"
 #ifdef KTT_PYTHON
 #include <pybind11/stl.h>
 #endif // KTT_PYTHON
@@ -455,6 +456,18 @@ void Tuner::DownloadBuffer(const ArgumentId& id, void* destination, const size_t
     try
     {
         m_Tuner->DownloadBuffer(id, destination, dataSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::ClearBuffer(const ArgumentId& id)
+{
+    try 
+    {
+        m_Tuner->ClearBuffer(id);
     }
     catch (const KttException& exception)
     {

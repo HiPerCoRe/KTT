@@ -465,6 +465,11 @@ void TunerCore::DownloadBuffer(const ArgumentId& id, void* destination, const si
     m_ComputeEngine->WaitForTransferAction(actionId);
 }
 
+void TunerCore::ClearBuffer(const ArgumentId& id)
+{
+    m_ComputeEngine->ClearBuffer(id);
+}
+
 void TunerCore::SynchronizeQueue(const QueueId queueId)
 {
     m_ComputeEngine->SynchronizeQueue(queueId);

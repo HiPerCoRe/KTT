@@ -122,6 +122,7 @@ public:
     void WaitForTransferAction(const TransferActionId id);
     void UpdateBuffer(const ArgumentId& id, const void *dataPtr, size_t dataSize);
     void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0);
+    void ClearBuffer(const ArgumentId& id);
     void SynchronizeQueue(const QueueId queueId);
     void SynchronizeQueues();
     void SynchronizeDevice();

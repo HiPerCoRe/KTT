@@ -628,6 +628,13 @@ public:
       */
     void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0);
 
+    /** @fn void ClearBuffer(const ArgumentId& id) = 0
+      * Removes compute buffer for the specified vector argument. This method should be used mainly with arguments with
+      * ::ArgumentManagementType set to User.
+      * @param id Id of vector argument whose buffer will be removed.
+      */
+    void ClearBuffer(const ArgumentId& id);
+
     /** @fn KernelResult Run(const KernelId id, const KernelConfiguration& configuration,
       * const std::vector<BufferOutputDescriptor>& output)
       * Runs kernel using the specified configuration.
