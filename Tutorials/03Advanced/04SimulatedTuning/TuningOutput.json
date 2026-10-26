@@ -1,0 +1,197 @@
+{
+  "Metadata": {
+    "ComputeApi": "OpenCL",
+    "Device": "AMD Radeon Graphics (radeonsi, renoir, ACO, DRM 3.64, 6.18.49-1-MANJARO)",
+    "GlobalSizeType": "OpenCL",
+    "KttVersion": "2.3.1",
+    "Platform": "rusticl",
+    "TimeUnit": "Microseconds",
+    "Timestamp": "2026-10-26 15:34:41 UTC"
+  },
+  "Results": [
+    {
+      "CompilationOverhead": 2052.727,
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 512,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 0
+          },
+          "CompilationOverhead": 2052.727,
+          "Duration": 572.6,
+          "GlobalSize": {
+            "X": 1048576,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "vectorAddition",
+          "LocalSize": {
+            "X": 32,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 2052.727
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "multiply_work_group_size",
+          "Value": 32,
+          "ValueType": "UnsignedInt"
+        }
+      ],
+      "DataMovementOverhead": 4276.966,
+      "ExtraDuration": 0.0,
+      "KernelName": "Addition",
+      "PreciseMeasurementOverhead": 0.0,
+      "ProfilingOverhead": 0.0,
+      "SearcherOverhead": 34.105,
+      "Status": "Ok",
+      "Timestamp": "2026-10-26 15:34:41 UTC",
+      "TotalDuration": 572.6,
+      "TotalOverhead": 10257.466,
+      "ValidationOverhead": 3893.668
+    },
+    {
+      "CompilationOverhead": 1816.214,
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 512,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 0
+          },
+          "CompilationOverhead": 1816.214,
+          "Duration": 357.32,
+          "GlobalSize": {
+            "X": 1048576,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "vectorAddition",
+          "LocalSize": {
+            "X": 64,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 1816.214
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "multiply_work_group_size",
+          "Value": 64,
+          "ValueType": "UnsignedInt"
+        }
+      ],
+      "DataMovementOverhead": 790.748,
+      "ExtraDuration": 0.0,
+      "KernelName": "Addition",
+      "PreciseMeasurementOverhead": 0.0,
+      "ProfilingOverhead": 0.0,
+      "SearcherOverhead": 12.805,
+      "Status": "Ok",
+      "Timestamp": "2026-10-26 15:34:41 UTC",
+      "TotalDuration": 357.32,
+      "TotalOverhead": 4536.814,
+      "ValidationOverhead": 1917.047
+    },
+    {
+      "CompilationOverhead": 1140.282,
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 512,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 0
+          },
+          "CompilationOverhead": 1140.282,
+          "Duration": 349.56,
+          "GlobalSize": {
+            "X": 1048576,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "vectorAddition",
+          "LocalSize": {
+            "X": 128,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 1140.282
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "multiply_work_group_size",
+          "Value": 128,
+          "ValueType": "UnsignedInt"
+        }
+      ],
+      "DataMovementOverhead": 746.497,
+      "ExtraDuration": 0.0,
+      "KernelName": "Addition",
+      "PreciseMeasurementOverhead": 0.0,
+      "ProfilingOverhead": 0.0,
+      "SearcherOverhead": 15.239,
+      "Status": "Ok",
+      "Timestamp": "2026-10-26 15:34:41 UTC",
+      "TotalDuration": 349.56,
+      "TotalOverhead": 3479.776,
+      "ValidationOverhead": 1577.758
+    },
+    {
+      "CompilationOverhead": 1269.97,
+      "ComputationResults": [
+        {
+          "CompilationData": {
+            "ConstantMemorySize": 0,
+            "LocalMemorySize": 0,
+            "MaxWorkGroupSize": 512,
+            "PrivateMemorySize": 0,
+            "RegistersCount": 0
+          },
+          "CompilationOverhead": 1269.97,
+          "Duration": 409.78,
+          "GlobalSize": {
+            "X": 1048576,
+            "Y": 1,
+            "Z": 1
+          },
+          "KernelFunction": "vectorAddition",
+          "LocalSize": {
+            "X": 256,
+            "Y": 1,
+            "Z": 1
+          },
+          "Overhead": 1269.97
+        }
+      ],
+      "Configuration": [
+        {
+          "Name": "multiply_work_group_size",
+          "Value": 256,
+          "ValueType": "UnsignedInt"
+        }
+      ],
+      "DataMovementOverhead": 750.931,
+      "ExtraDuration": 0.0,
+      "KernelName": "Addition",
+      "PreciseMeasurementOverhead": 0.0,
+      "ProfilingOverhead": 0.0,
+      "SearcherOverhead": 2.185,
+      "Status": "Ok",
+      "Timestamp": "2026-10-26 15:34:41 UTC",
+      "TotalDuration": 409.78,
+      "TotalOverhead": 3736.514,
+      "ValidationOverhead": 1713.428
+    }
+  ]
+}
