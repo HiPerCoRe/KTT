@@ -95,7 +95,8 @@ int main(int argc, char** argv)
         ktt::OutputFormat::JSON); // Note that file extension is not needed. KTT infers it from OutputFormat.
 
     // SimulateTuning does not run any kernels, and instead supplies the durations loaded from prior results.
-    // All configurations should be explored in these prior results.
+    // All configurations should be explored in these prior results (typically done by calling Tuner::Tune(...) with a deterministic
+    // searcher and no stop condition and then saving the results -- the results used here were taken from a KernelTuning run).
     // This is mainly useful when developing new searchers, to observe how well it traverses the search space and
     // iterate through different versions without too much waiting.
     const std::vector<ktt::KernelResult> new_results = tuner.SimulateTuning(kernel, results);
