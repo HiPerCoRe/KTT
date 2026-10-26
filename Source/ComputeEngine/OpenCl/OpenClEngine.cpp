@@ -339,7 +339,7 @@ ComputationResult OpenClEngine::RunKernelWithProfiling([[maybe_unused]] const Ke
     result.SetDurationData(result.GetDuration(), result.GetOverhead(), result.GetCompilationOverhead(), result.GetProfilingOverhead() + timer.GetElapsedTime());
     return result;
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -348,7 +348,7 @@ void OpenClEngine::SetProfilingCounters([[maybe_unused]] const std::vector<std::
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     m_GpaContext->SetCounters(counters);
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -357,7 +357,7 @@ bool OpenClEngine::IsProfilingSessionActive([[maybe_unused]] const KernelCompute
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     return ContainsKey(m_GpaInstances, id);
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -371,7 +371,7 @@ uint64_t OpenClEngine::GetRemainingProfilingRuns([[maybe_unused]] const KernelCo
 
     return static_cast<uint64_t>(m_GpaInstances[id]->GetRemainingPassCount());
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -380,7 +380,7 @@ bool OpenClEngine::HasAccurateRemainingProfilingRuns() const
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     return true;
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -389,7 +389,7 @@ bool OpenClEngine::SupportsMultiInstanceProfiling() const
 #if defined(KTT_PROFILING_GPA) || defined(KTT_PROFILING_GPA_LEGACY)
     return false;
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_GPA || KTT_PROFILING_GPA_LEGACY
 }
 
@@ -404,53 +404,17 @@ void OpenClEngine::SetProfiling(const bool profiling)
     m_Configuration.SetProfiling(profiling);
 #else
     if (profiling)
-        throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+        throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif
 }
 
-
-TransferActionId OpenClEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
+TransferActionId OpenClEngine::UpdateArgument(KernelArgument& kernelArgument, const QueueId queueId, const void* data,
+    const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
     const auto id = kernelArgument.GetId();
-    Logger::LogDebug("Uploading buffer for argument with id " + id);
-
-    if (!ContainsKey(m_Queues, queueId))
-    {
-        throw KttException("Invalid queue index: " + std::to_string(queueId));
-    }
-
-    if (ContainsKey(m_Buffers, id))
-    {
-        throw KttException("Buffer for argument with id " + id + " already exists");
-    }
-
-    if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
-    {
-        throw KttException("Argument with id " + id + " is not a vector and cannot be uploaded into buffer");
-    }
-
-    auto buffer = CreateBuffer(kernelArgument);
-    timer.Stop();
-
-    auto action = buffer->UploadData(*m_Queues[queueId], kernelArgument.GetData(),
-        kernelArgument.GetDataSize());
-    action->IncreaseOverhead(timer.GetElapsedTime());
-    const auto actionId = action->GetId();
-
-    m_Buffers[id] = std::move(buffer);
-    m_TransferActions[actionId] = std::move(action);
-
-    return actionId;
-}
-
-TransferActionId OpenClEngine::UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
-    const size_t dataSize)
-{
-    Timer timer;
-    timer.Start();
 
     Logger::LogDebug("Updating buffer for argument with id " + id);
 
@@ -459,14 +423,27 @@ TransferActionId OpenClEngine::UpdateArgument(const ArgumentId& id, const QueueI
         throw KttException("Invalid queue index: " + std::to_string(queueId));
     }
 
+    if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
+    {
+        throw KttException("Argument with id " + id + " is not a vector, UpdateArgument only handles the vector memory type.");
+    }
+
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + id + " was not found");
+        Logger::LogDebug("Buffer for argument with id " + id + " was not found, creating new one");
+        auto buffer = CreateBuffer(kernelArgument);
+
+        m_Buffers[id] = std::move(buffer);
     }
 
     auto& buffer = *m_Buffers[id];
+    const void *actualData = data;
+    if (actualData == nullptr) 
+    {
+        Logger::LogDebug("Data pointer is null, uploading data saved in the kernel argument with id " + id);
+        actualData = kernelArgument.GetData();
+    }
     size_t actualDataSize = dataSize;
-
     if (actualDataSize == 0)
     {
         actualDataSize = buffer.GetSize();
@@ -474,7 +451,7 @@ TransferActionId OpenClEngine::UpdateArgument(const ArgumentId& id, const QueueI
 
     timer.Stop();
 
-    auto action = buffer.UploadData(*m_Queues[queueId], data, actualDataSize);
+    auto action = buffer.UploadData(*m_Queues[queueId], actualData, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
     m_TransferActions[actionId] = std::move(action);
@@ -630,6 +607,27 @@ void OpenClEngine::ClearBuffers()
 bool OpenClEngine::HasBuffer(const ArgumentId& id)
 {
     return ContainsKey(m_Buffers, id);
+}
+
+void OpenClEngine::ZeroBuffer(const ArgumentId& id, const QueueId queueId) 
+{
+    if (!ContainsKey(m_Buffers, id)) 
+    {
+        throw KttException("Buffer for argument with id " + id + " was not found");
+    }
+    if (!ContainsKey(m_Queues, queueId)) 
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    auto& buffer = *m_Buffers[id];
+    auto& queue = *m_Queues[queueId];
+    // The size of the filled region must be a multiple of the pattern size, so a one byte pattern is used
+    // to support buffers of arbitrary size.
+    unsigned char zero = 0;
+    CheckError(clEnqueueFillBuffer(queue.GetQueue(), buffer.GetBuffer(), &zero, sizeof(zero), 0, buffer.GetSize(),
+        0, NULL, NULL), "clEnqueueFillBuffer");  
+    SynchronizeQueue(queueId); 
 }
 
 QueueId OpenClEngine::AddComputeQueue(ComputeQueue queue)

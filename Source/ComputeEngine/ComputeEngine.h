@@ -44,9 +44,8 @@ public:
     virtual void SetProfiling(const bool profiling) = 0;
 
     // Buffer methods
-    virtual TransferActionId UploadArgument(KernelArgument& kernelArgument, const QueueId queueId) = 0;
-    virtual TransferActionId UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
-        const size_t dataSize) = 0;
+    virtual TransferActionId UpdateArgument(KernelArgument& kernelArgument, const QueueId queueId, const void* data = nullptr,
+        const size_t dataSize = 0) = 0;
     virtual TransferActionId DownloadArgument(const ArgumentId& id, const QueueId queueId, void* destination,
         const size_t dataSize) = 0;
     virtual TransferActionId CopyArgument(const ArgumentId& destination, const QueueId queueId, const ArgumentId& source,
@@ -58,7 +57,7 @@ public:
     virtual void ClearBuffer(const ArgumentId& id) = 0;
     virtual void ClearBuffers() = 0;
     virtual bool HasBuffer(const ArgumentId& id) = 0;
-    virtual void ZeroBuffer(const ArgumentId& id, const QueueId queueId) {}
+    virtual void ZeroBuffer(const ArgumentId& id, const QueueId queueId) = 0;
 
     // Queue methods
     virtual QueueId AddComputeQueue(ComputeQueue queue) = 0;

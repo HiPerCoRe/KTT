@@ -1,3 +1,4 @@
+#include "KttTypes.h"
 #ifdef KTT_PYTHON
 #include <pybind11/stl.h>
 #endif // KTT_PYTHON
@@ -390,6 +391,18 @@ ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize, con
     }
 }
 
+void Tuner::UpdateScalarArgument(const ArgumentId& id, const void* data)
+{
+    try
+    {
+        m_Tuner->UpdateScalarArgument(id, data);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::RemoveArgument(const ArgumentId& id)
 {
     try
@@ -419,6 +432,42 @@ void Tuner::SetWriteOnlyArgumentZero(const bool flag)
     try
     {
         m_Tuner->SetWriteOnlyArgumentZero(flag);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::UpdateBuffer(const ArgumentId& id, const void *dataPtr, const size_t dataSize)
+{
+    try
+    {
+        m_Tuner->UpdateBuffer(id, dataPtr, dataSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize)
+{
+    try
+    {
+        m_Tuner->DownloadBuffer(id, destination, dataSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::ClearBuffer(const ArgumentId& id)
+{
+    try 
+    {
+        m_Tuner->ClearBuffer(id);
     }
     catch (const KttException& exception)
     {

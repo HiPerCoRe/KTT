@@ -48,8 +48,8 @@ TEST_CASE("Kernel handling operations", "KernelManager")
     SECTION("Parameter with same name cannot be added twice")
     {
         manager.AddParameter(kernel, "param", std::vector<ktt::ParameterValue>{static_cast<uint64_t>(1), static_cast<uint64_t>(2),
-            static_cast<uint64_t>(3)}, "");
-        REQUIRE_THROWS_AS(manager.AddParameter(kernel, "param", std::vector<ktt::ParameterValue>{static_cast<uint64_t>(3)}, ""),
+            static_cast<uint64_t>(3)}, "", false);
+        REQUIRE_THROWS_AS(manager.AddParameter(kernel, "param", std::vector<ktt::ParameterValue>{static_cast<uint64_t>(3)}, "", false),
             ktt::KttException);
     }
 }
@@ -64,8 +64,8 @@ TEST_CASE("Adding preprocessor definitions to kernel source", "KernelManager")
     const ktt::KernelId kernel = manager.CreateKernel("kernel", {definition});
 
     manager.AddParameter(kernel, "param_one", std::vector<ktt::ParameterValue>{static_cast<uint64_t>(1), static_cast<uint64_t>(2),
-        static_cast<uint64_t>(3)}, "");
-    manager.AddParameter(kernel, "param_two", std::vector<ktt::ParameterValue>{static_cast<uint64_t>(5), static_cast<uint64_t>(10)}, "");
+        static_cast<uint64_t>(3)}, "", false);
+    manager.AddParameter(kernel, "param_two", std::vector<ktt::ParameterValue>{static_cast<uint64_t>(5), static_cast<uint64_t>(10)}, "", false);
 
     SECTION("Kernel configuration prefix is generated correctly")
     {

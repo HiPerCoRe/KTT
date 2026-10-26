@@ -185,52 +185,60 @@ void VulkanEngine::SetProfiling(const bool profiling)
     throw KttException("Profiling is not yet supported for Vulkan backend");
 }
 
-TransferActionId VulkanEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
+TransferActionId VulkanEngine::UpdateArgument(KernelArgument& kernelArgument, const QueueId queueId, const void* data,
+    const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
     const auto id = kernelArgument.GetId();
-    Logger::LogDebug("Uploading buffer for argument with id " + id);
+    Logger::LogDebug("Updating buffer for argument with id " + id);
 
     if (queueId >= static_cast<QueueId>(m_Queues.size()))
     {
         throw KttException("Invalid queue index: " + std::to_string(queueId));
     }
 
-    if (ContainsKey(m_Buffers, id))
-    {
-        throw KttException("Buffer for argument with id " + id + " already exists");
-    }
-
     if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
     {
-        throw KttException("Argument with id " + id + " is not a vector and cannot be uploaded into buffer");
+        throw KttException("Argument with id " + id + " is not a vector, UpdateArgument only handles the vector memory type.");
     }
 
-    auto stagingBuffer = std::make_unique<VulkanBuffer>(kernelArgument, m_TransferIdGenerator, *m_Device, *m_Allocator,
+    if (!ContainsKey(m_Buffers, id))
+    {
+        Logger::LogDebug("Buffer for argument with id " + id + " was not found, creating new one");
+        auto buffer = CreateBuffer(kernelArgument);
+
+        m_Buffers[id] = std::move(buffer);
+    }
+
+    auto& buffer = *m_Buffers[id];
+    const void* actualData = data;
+    if (actualData == nullptr)
+    {
+        Logger::LogDebug("Data pointer is null, uploading data saved in the kernel argument with id " + id);
+        actualData = kernelArgument.GetData();
+    }
+    size_t actualDataSize = dataSize;
+
+    if (actualDataSize == 0)
+    {
+        actualDataSize = buffer.GetSize();
+    }
+
+    auto stagingBuffer = std::make_unique<VulkanBuffer>(buffer.GetArgument(), m_TransferIdGenerator, *m_Device, *m_Allocator,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
-    auto stagingAction = stagingBuffer->UploadData(kernelArgument.GetData(), kernelArgument.GetDataSize());
+    auto stagingAction = stagingBuffer->UploadData(actualData, actualDataSize);
     stagingAction->WaitForFinish();
-    auto buffer = CreateBuffer(kernelArgument);
 
     timer.Stop();
 
-    auto action = buffer->CopyData(*m_Queues[static_cast<size_t>(queueId)], *m_CommandPool, *m_QueryPool, std::move(stagingBuffer),
-        kernelArgument.GetDataSize());
+    auto action = buffer.CopyData(*m_Queues[static_cast<size_t>(queueId)], *m_CommandPool, *m_QueryPool,
+        std::move(stagingBuffer), actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
-
-    m_Buffers[id] = std::move(buffer);
     m_TransferActions[actionId] = std::move(action);
-
     return actionId;
-}
-
-TransferActionId VulkanEngine::UpdateArgument([[maybe_unused]] const ArgumentId& id, [[maybe_unused]] const QueueId queueId,
-    [[maybe_unused]] const void* data, [[maybe_unused]] const size_t dataSize)
-{
-    throw KttException("Support for argument update is not yet available for Vulkan backend");
 }
 
 TransferActionId VulkanEngine::DownloadArgument(const ArgumentId& id, const QueueId queueId, void* destination,
@@ -327,6 +335,23 @@ void VulkanEngine::ClearBuffers()
 bool VulkanEngine::HasBuffer(const ArgumentId& id)
 {
     return ContainsKey(m_Buffers, id);
+}
+
+void VulkanEngine::ZeroBuffer(const ArgumentId& id, const QueueId queueId)
+{
+    if (queueId >= static_cast<QueueId>(m_Queues.size()))
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + id + " was not found");
+    }
+
+    auto& buffer = *m_Buffers[id];
+    // ZeroData waits for completion of the zeroing command buffer, so the returned action is already finished.
+    buffer.ZeroData(*m_Queues[static_cast<size_t>(queueId)], *m_CommandPool, *m_QueryPool);
 }
 
 QueueId VulkanEngine::AddComputeQueue([[maybe_unused]] ComputeQueue queue)

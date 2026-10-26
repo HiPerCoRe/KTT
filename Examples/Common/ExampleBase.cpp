@@ -390,7 +390,7 @@ void ExampleBase::CheckTunerFlags()
         }
         else if (m_computeApi == ktt::ComputeApi::CUDA)
         {
-            m_tuner->AddCompilerOptions("-use_fast_math");
+            m_tuner->AddCompilerOptions("--use_fast_math");
         }
         else if (!m_warnedFastMath)  // Don't warn twice
         {

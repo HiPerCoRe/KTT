@@ -525,8 +525,31 @@ project "Tests"
         "Libraries/pugixml-1.11.4"
     }
     
-    if _OPTIONS["no-opencl"] then
+    -- Engine tests include engine headers which are only compiled when the corresponding compute API is enabled,
+    -- so each engine test is removed when its API define is not set by the configuration above.
+    local openClDefined = (_OPTIONS["platform"] == "amd" or _OPTIONS["platform"] == "intel")
+        or (_OPTIONS["platform"] == "nvidia" and not _OPTIONS["no-opencl"])
+        or (not _OPTIONS["platform"] and not _OPTIONS["no-opencl"]
+            and (os.getenv("OCL_ROOT") ~= nil or os.getenv("INTELOCLSDKROOT") ~= nil or os.getenv("CUDA_PATH") ~= nil))
+    local cppDefined = _OPTIONS["cpp"] ~= nil and _OPTIONS["platform"] == nil
+    local cudaDefined = (_OPTIONS["platform"] == "nvidia" or (not _OPTIONS["platform"] and os.getenv("CUDA_PATH") ~= nil))
+        and not _OPTIONS["no-cuda"]
+    local vulkanDefined = _OPTIONS["vulkan"] ~= nil
+
+    if not openClDefined then
         removefiles {"Tests/OpenClEngineTests.cpp", "Tests/Kernels/SimpleOpenClKernel.cl"}
+    end
+
+    if not cudaDefined then
+        removefiles {"Tests/CudaEngineTests.cpp"}
+    end
+
+    if not cppDefined then
+        removefiles {"Tests/CppEngineTests.cpp"}
+    end
+
+    if not vulkanDefined then
+        removefiles {"Tests/VulkanEngineTests.cpp"}
     end
     
     filter "action:gmake*"
