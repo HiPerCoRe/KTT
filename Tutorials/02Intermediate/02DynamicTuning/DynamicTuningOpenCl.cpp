@@ -55,7 +55,7 @@ void WriteResult(const std::vector<float> &result)
 int main(int argc, char** argv)
 {
     /******************************************************
-        Beginning of code similar to KernelTuning
+        Beginning of code similar to KernelRunning
     ******************************************************/
     ktt::PlatformIndex platformIndex = 0;
     ktt::DeviceIndex deviceIndex = 0;
@@ -91,16 +91,22 @@ int main(int argc, char** argv)
     const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("vectorAddition", kernelFile, ndRangeDimensions,
         workGroupDimensions);
 
-    // The input vectors are refilled before every kernel run, so KTT reads their data directly instead of keeping a copy
-    // of their content at the time the arguments were created. The vectors must stay valid and must not reallocate while
-    // the tuner uses them.
-    const ktt::ArgumentId aId = tuner.AddArgumentVector(a, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId bId = tuner.AddArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
+    const ktt::ArgumentId aId = tuner.AddArgumentVector(a, ktt::ArgumentAccessType::ReadOnly,
+        ktt::ArgumentMemoryLocation::Device, ktt::ArgumentManagementType::User, true);
+    const ktt::ArgumentId bId = tuner.AddArgumentVector(b, ktt::ArgumentAccessType::ReadOnly,
+        ktt::ArgumentMemoryLocation::Device, ktt::ArgumentManagementType::User, true);
+
+    const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAccessType::WriteOnly,
+        ktt::ArgumentMemoryLocation::Device, ktt::ArgumentManagementType::User, true);
     const ktt::ArgumentId scalarId = tuner.AddArgumentScalar(scalar);
     tuner.SetArguments(definition, {aId, bId, resultId, scalarId});
 
     const ktt::KernelId kernel = tuner.CreateSimpleKernel("Addition", definition);
+
+    // There is no need to update input buffers as that is done before every tuning iteration in any case.
+    // The first time a buffer is updated, KTT automatically allocates memory on the device before writing data. 
+    // On subsequent updates, it only writes the data.
+    tuner.UpdateBuffer(resultId);
 
     tuner.SetReferenceComputation(resultId, [&a, &b, &scalar](void* buffer)
     {
@@ -148,24 +154,28 @@ int main(int argc, char** argv)
 
     tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
 
-    // By default KTT makes a copy of the input data once and then doesn't update this copy. The intended solution is to update
-    // input data explicitly in the kernel launcher. For scalars, it is the only solution. For vectors, another solution is to
-    // set the argument to be referenced from user data, without making a KTT-managed copy (see overloads of AddArgumentVector),
-    // and then disable caching of read-only arguments, so they are pulled from user data every (tuning) run.
-    tuner.SetLauncher(kernel, [&a, &aId, &b, &bId, &scalar, &scalarId, &definition](ktt::ComputeInterface &interface){
-        interface.UpdateBuffer(aId, a.data());
-        interface.UpdateBuffer(bId, b.data());
-        interface.UpdateScalarArgument(scalarId, &scalar);
-        // Do not forget to also run the kernel definition.
-        interface.RunKernel(definition);
-    });
+    // Regenerating the reference output because of frequent input changes and comparing against it could be very slow. 
+    // If one is confident that all variants of a kernel are correct, output validation can be disabled with, 
+    // for example:
+    tuner.SetValidationMode(ktt::ValidationMode::None);
+    // It is also possible to not define a reference computation/kernel in the first place.
+    // Disabling validation for dynamic tuning (at least in release configurations) is intended, to increase
+    // performance.
+
 
     while (SecondsSince(tuningStart) < tuningBudgetSeconds && iterationCount < maxIterations)
     {
+        // As per KernelRunning, it is recommended to use Tuner argument management methods to manually handle data.
+        //
+        // In reality, when dynamic tuning is integrated into an application, there will already be a buffer management
+        // system in place. See ComputeApiInitializer in the Advanced tutorials for this.
+        tuner.UpdateBuffer(aId);
+        tuner.UpdateBuffer(bId);
+
         // Dynamic tuning uses the TuneIteration method. It runs a single configuration and returns a kernel result with timings, 
         // which could be used to e.g. determine if tuning should be stopped.
         // Second argument can contain descriptors of output buffers, much like RunKernel, so an application can already process
-        // input while tuning. If input changes between iterations, it is necessary to set the flag for recomputing reference;
+        // input while tuning. If input changes between iterations, it is necessary to set the flag for recomputing reference (in the case that validation is enabled);
         // it may also be necessary to restart tuning altogether, since a different kind of input could have a different optimal
         // configuration. PreciseMeasurementParameters can also be set for more stable timings. Once all configurations have been 
         // launched, further calls launch the best configuration found so far.
@@ -173,12 +183,7 @@ int main(int argc, char** argv)
         ++iterationCount;
         WriteResult(result);
 
-        // Generating the reference output because of frequent input changes could be very slow. If one is confident that all
-        // variants of a kernel are correct, output validation can be disabled with, for example:
-        // tuner.SetValidationMode(ktt::ValidationMode::None);
-        // It is also possible to not define a reference computation/kernel in the first place.
-
-        // Note that this change only reaches the kernel because of explicit updates in the kernel launcher defined above.
+        // Note that this change only reaches the kernel because of explicit updates with Tuner::UpdateBuffer(...).
         GetNewData(numberOfElements, a, b, scalar);
 
         if (SecondsSince(lastProgressPrint) >= 1)
@@ -204,7 +209,10 @@ int main(int argc, char** argv)
     {
         // Compiled kernel definitions are saved in a cache, so repeated runs of the same configuration avoid
         // having to recompile it. As a result, the overhead of using KTT for running kernels is negligible.
-        tuner.Run(kernel, bestConfiguration, {});
+        tuner.UpdateBuffer(aId);
+        tuner.UpdateBuffer(bId);
+        tuner.Run(kernel, bestConfiguration, {ktt::BufferOutputDescriptor(resultId, result.data())});
+        WriteResult(result);
         ++iterationCount;
 
         if (SecondsSince(lastProgressPrint) >= 1)
